@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis UGCs - UGC STUDIO</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <!-- Logo -->
+                <a href="/" class="logo">
+                    <div class="logo-icon">
+                        <span class="logo-letter">a</span>
+                    </div>
+                    <span class="logo-text">UGC STUDIO</span>
+                </a>
+
+                <!-- Navegación Principal -->
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a href="/biblioteca" class="nav-link">
+                                <span>Biblioteca</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/mis-ugcs" class="nav-link active">
+                                <span>Mis UGCs</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/planes" class="nav-link">
+                                <span>Planes</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/perfil" class="nav-link">
+                                <span>Perfil</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <!-- Botón Crear UGC -->
+                <button class="btn-primary btn-create-ugc">
+                    <span>Crear UGC</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Breadcrumbs -->
+    <div class="breadcrumbs">
+        <div class="container">
+            <nav class="breadcrumb-nav">
+                <a href="/" class="breadcrumb-link">Home</a>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-current">Mis UGCs</span>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Header de Mis UGCs -->
+            <section class="ugcs-header">
+                <div class="ugcs-title-section">
+                    <h1 class="title-hero">Mis UGCs</h1>
+                    <p class="ugcs-description">
+                        Descubre el poder de tu creatividad. Cada UGC generado es una historia que conecta con tu audiencia.
+                    </p>
+                </div>
+                
+                <!-- Filtros y Búsqueda -->
+                <div class="ugcs-controls">
+                    <div class="search-box">
+                        <input type="text" placeholder="Buscar UGCs..." class="search-input">
+                        <button class="search-btn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                    <div class="filter-controls">
+                        <select class="filter-select">
+                            <option value="all">Todos los tipos</option>
+                            <option value="video">Videos</option>
+                            <option value="image">Imágenes</option>
+                            <option value="copy">Copies</option>
+                        </select>
+                        <select class="filter-select">
+                            <option value="all">Todas las fechas</option>
+                            <option value="today">Hoy</option>
+                            <option value="week">Esta semana</option>
+                            <option value="month">Este mes</option>
+                        </select>
+                        <button class="btn-secondary">
+                            <i class="fas fa-filter"></i>
+                            Más filtros
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pestañas de UGCs -->
+            <section class="ugcs-tabs-section">
+                <div class="ugcs-tabs">
+                    <button class="ugcs-tab active" data-tab="recientes">
+                        <i class="fas fa-clock"></i>
+                        <span>Recientes</span>
+                        <span class="tab-count">12</span>
+                    </button>
+                    <button class="ugcs-tab" data-tab="favoritos">
+                        <i class="fas fa-heart"></i>
+                        <span>Favoritos</span>
+                        <span class="tab-count">5</span>
+                    </button>
+                    <button class="ugcs-tab" data-tab="por-producto">
+                        <i class="fas fa-box"></i>
+                        <span>Por Producto</span>
+                    </button>
+                    <button class="ugcs-tab" data-tab="por-fecha">
+                        <i class="fas fa-calendar"></i>
+                        <span>Por Fecha</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Contenido de UGCs -->
+            <section class="ugcs-content">
+                <!-- Tab Recientes -->
+                <div class="tab-content active" id="recientes">
+                    <div class="ugc-grid">
+                        <!-- UGC 1 -->
+                        <div class="ugc-card">
+                            <div class="ugc-preview">
+                                <img src="https://via.placeholder.com/350x220/FD624F/FFFFFF?text=Video+UGC" alt="UGC Preview">
+                                <div class="ugc-overlay">
+                                    <button class="btn-play">
+                                        <i class="fas fa-play"></i>
+                                    </button>
+                                </div>
+                                <div class="ugc-actions-overlay">
+                                    <button class="btn-action" title="Favorito">
+                                        <i class="fas fa-heart"></i>
+                                    </button>
+                                    <button class="btn-action" title="Descargar">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button class="btn-action" title="Compartir">
+                                        <i class="fas fa-share"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="ugc-info">
+                                <h3 class="ugc-title">Proteína Whey - Beneficios</h3>
+                                <p class="ugc-type">Video • Instagram Reels</p>
+                                <div class="ugc-meta">
+                                    <span class="ugc-date">Hace 2 horas</span>
+                                    <span class="ugc-status success">Completado</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- UGC 2 -->
+                        <div class="ugc-card">
+                            <div class="ugc-preview">
+                                <img src="https://via.placeholder.com/350x220/4A90E2/FFFFFF?text=Tech+UGC" alt="UGC Preview">
+                                <div class="ugc-overlay">
+                                    <button class="btn-play">
+                                        <i class="fas fa-play"></i>
+                                    </button>
+                                </div>
+                                <div class="ugc-actions-overlay">
+                                    <button class="btn-action" title="Favorito">
+                                        <i class="fas fa-heart"></i>
+                                    </button>
+                                    <button class="btn-action" title="Descargar">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button class="btn-action" title="Compartir">
+                                        <i class="fas fa-share"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="ugc-info">
+                                <h3 class="ugc-title">TechPhone Pro - Unboxing</h3>
+                                <p class="ugc-type">Imagen • Instagram Post</p>
+                                <div class="ugc-meta">
+                                    <span class="ugc-date">Hace 3 horas</span>
+                                    <span class="ugc-status success">Completado</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- UGC 3 -->
+                        <div class="ugc-card">
+                            <div class="ugc-preview">
+                                <img src="https://via.placeholder.com/350x220/50C878/FFFFFF?text=Eco+UGC" alt="UGC Preview">
+                                <div class="ugc-overlay">
+                                    <button class="btn-play">
+                                        <i class="fas fa-play"></i>
+                                    </button>
+                                </div>
+                                <div class="ugc-actions-overlay">
+                                    <button class="btn-action" title="Favorito">
+                                        <i class="fas fa-heart"></i>
+                                    </button>
+                                    <button class="btn-action" title="Descargar">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button class="btn-action" title="Compartir">
+                                        <i class="fas fa-share"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="ugc-info">
+                                <h3 class="ugc-title">EcoStyle - Moda Sostenible</h3>
+                                <p class="ugc-type">Video • TikTok</p>
+                                <div class="ugc-meta">
+                                    <span class="ugc-date">Hace 5 horas</span>
+                                    <span class="ugc-status success">Completado</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- UGC 4 -->
+                        <div class="ugc-card">
+                            <div class="ugc-preview">
+                                <img src="https://via.placeholder.com/350x220/FF6B6B/FFFFFF?text=Audio+UGC" alt="UGC Preview">
+                                <div class="ugc-overlay">
+                                    <button class="btn-play">
+                                        <i class="fas fa-play"></i>
+                                    </button>
+                                </div>
+                                <div class="ugc-actions-overlay">
+                                    <button class="btn-action" title="Favorito">
+                                        <i class="fas fa-heart"></i>
+                                    </button>
+                                    <button class="btn-action" title="Descargar">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button class="btn-action" title="Compartir">
+                                        <i class="fas fa-share"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="ugc-info">
+                                <h3 class="ugc-title">AudioMax - Calidad Premium</h3>
+                                <p class="ugc-type">Imagen • Facebook Ads</p>
+                                <div class="ugc-meta">
+                                    <span class="ugc-date">Hace 1 día</span>
+                                    <span class="ugc-status success">Completado</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- UGC 5 -->
+                        <div class="ugc-card">
+                            <div class="ugc-preview">
+                                <img src="https://via.placeholder.com/350x220/F39C12/FFFFFF?text=Lifestyle+UGC" alt="UGC Preview">
+                                <div class="ugc-overlay">
+                                    <button class="btn-play">
+                                        <i class="fas fa-play"></i>
+                                    </button>
+                                </div>
+                                <div class="ugc-actions-overlay">
+                                    <button class="btn-action" title="Favorito">
+                                        <i class="fas fa-heart"></i>
+                                    </button>
+                                    <button class="btn-action" title="Descargar">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button class="btn-action" title="Compartir">
+                                        <i class="fas fa-share"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="ugc-info">
+                                <h3 class="ugc-title">Receta Saludable - Chef Diego</h3>
+                                <p class="ugc-type">Video • YouTube Shorts</p>
+                                <div class="ugc-meta">
+                                    <span class="ugc-date">Hace 2 días</span>
+                                    <span class="ugc-status success">Completado</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- UGC 6 -->
+                        <div class="ugc-card">
+                            <div class="ugc-preview">
+                                <img src="https://via.placeholder.com/350x220/9B59B6/FFFFFF?text=Fitness+UGC" alt="UGC Preview">
+                                <div class="ugc-overlay">
+                                    <button class="btn-play">
+                                        <i class="fas fa-play"></i>
+                                    </button>
+                                </div>
+                                <div class="ugc-actions-overlay">
+                                    <button class="btn-action" title="Favorito">
+                                        <i class="fas fa-heart"></i>
+                                    </button>
+                                    <button class="btn-action" title="Descargar">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button class="btn-action" title="Compartir">
+                                        <i class="fas fa-share"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="ugc-info">
+                                <h3 class="ugc-title">Lifestyle Fitness - Ana</h3>
+                                <p class="ugc-type">Imagen • Instagram Story</p>
+                                <div class="ugc-meta">
+                                    <span class="ugc-date">Hace 3 días</span>
+                                    <span class="ugc-status success">Completado</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Paginación -->
+                    <div class="pagination">
+                        <button class="pagination-btn disabled">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button class="pagination-btn active">1</button>
+                        <button class="pagination-btn">2</button>
+                        <button class="pagination-btn">3</button>
+                        <button class="pagination-btn">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tab Favoritos -->
+                <div class="tab-content" id="favoritos">
+                    <div class="ugc-grid">
+                        <!-- UGCs favoritos aquí -->
+                        <div class="empty-state">
+                            <i class="fas fa-heart"></i>
+                            <h3>No tienes UGCs favoritos aún</h3>
+                            <p>Marca como favoritos los UGCs que más te gusten</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Por Producto -->
+                <div class="tab-content" id="por-producto">
+                    <div class="product-filter-grid">
+                        <!-- Filtros por producto -->
+                        <div class="product-filter-card">
+                            <img src="https://via.placeholder.com/80x80/FD624F/FFFFFF?text=PW" alt="Proteína Whey">
+                            <h4>Proteína Whey Premium</h4>
+                            <span class="ugc-count">3 UGCs</span>
+                        </div>
+                        <div class="product-filter-card">
+                            <img src="https://via.placeholder.com/80x80/4A90E2/FFFFFF?text=TP" alt="TechPhone Pro">
+                            <h4>TechPhone Pro</h4>
+                            <span class="ugc-count">2 UGCs</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Por Fecha -->
+                <div class="tab-content" id="por-fecha">
+                    <div class="date-filter">
+                        <div class="date-group">
+                            <h4>Hoy</h4>
+                            <div class="ugc-list">
+                                <!-- UGCs de hoy -->
+                            </div>
+                        </div>
+                        <div class="date-group">
+                            <h4>Ayer</h4>
+                            <div class="ugc-list">
+                                <!-- UGCs de ayer -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3 class="footer-title">Soporte</h3>
+                    <ul class="footer-links">
+                        <li><a href="#help">Centro de Ayuda</a></li>
+                        <li><a href="#tutorials">Tutoriales</a></li>
+                        <li><a href="#contact">Contacto</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3 class="footer-title">Legal</h3>
+                    <ul class="footer-links">
+                        <li><a href="#terms">Términos de Uso</a></li>
+                        <li><a href="#privacy">Privacidad</a></li>
+                        <li><a href="#cookies">Cookies</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3 class="footer-title">UGC STUDIO</h3>
+                    <p class="footer-description">
+                        La plataforma creativa que transforma ideas en contenido que conecta con tu audiencia
+                    </p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 UGC STUDIO. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/mis-ugcs.js"></script>
+</body>
+</html>

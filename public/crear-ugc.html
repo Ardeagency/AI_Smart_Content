@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear UGC - UGC STUDIO</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <!-- Logo -->
+                <a href="/" class="logo">
+                    <div class="logo-icon">
+                        <span class="logo-letter">a</span>
+                    </div>
+                    <span class="logo-text">UGC STUDIO</span>
+                </a>
+
+                <!-- Navegación Principal -->
+                <nav class="nav">
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a href="/biblioteca" class="nav-link">
+                                <span>Biblioteca</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/mis-ugcs" class="nav-link">
+                                <span>Mis UGCs</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/planes" class="nav-link">
+                                <span>Planes</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/perfil" class="nav-link">
+                                <span>Perfil</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <!-- Botón Crear UGC -->
+                <button class="btn-primary btn-create-ugc active">
+                    <span>Crear UGC</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Breadcrumbs -->
+    <div class="breadcrumbs">
+        <div class="container">
+            <nav class="breadcrumb-nav">
+                <a href="/" class="breadcrumb-link">Home</a>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-current">Crear UGC</span>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Header de Crear UGC -->
+            <section class="create-header">
+                <div class="create-title-section">
+                    <h1 class="title-hero">Crea tu UGC Perfecto</h1>
+                    <p class="create-description">
+                        Selecciona un producto, elige un avatar y configura los parámetros para generar contenido único.
+                    </p>
+                </div>
+                
+                <!-- Progreso -->
+                <div class="create-progress">
+                    <div class="progress-step active" data-step="1">
+                        <div class="step-number">1</div>
+                        <span class="step-label">Producto</span>
+                    </div>
+                    <div class="progress-line"></div>
+                    <div class="progress-step" data-step="2">
+                        <div class="step-number">2</div>
+                        <span class="step-label">Avatar</span>
+                    </div>
+                    <div class="progress-line"></div>
+                    <div class="progress-step" data-step="3">
+                        <div class="step-number">3</div>
+                        <span class="step-label">Configuración</span>
+                    </div>
+                    <div class="progress-line"></div>
+                    <div class="progress-step" data-step="4">
+                        <div class="step-number">4</div>
+                        <span class="step-label">Generar</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Contenido de Creación -->
+            <section class="create-content">
+                <!-- Paso 1: Seleccionar Producto -->
+                <div class="create-step active" id="step-1">
+                    <div class="step-header">
+                        <h2 class="step-title">Selecciona un Producto</h2>
+                        <p class="step-description">Elige el producto o servicio para el que quieres crear UGC</p>
+                    </div>
+
+                    <div class="product-selection">
+                        <div class="product-grid">
+                            <!-- Producto 1 -->
+                            <div class="product-select-card active" data-product="1">
+                                <div class="product-image">
+                                    <img src="https://via.placeholder.com/200x150/FD624F/FFFFFF?text=Proteína+Whey" alt="Proteína Whey">
+                                </div>
+                                <div class="product-info">
+                                    <h3 class="product-name">Proteína Whey Premium</h3>
+                                    <p class="product-category">Fitness & Wellness</p>
+                                    <div class="product-tags">
+                                        <span class="tag">Fitness</span>
+                                        <span class="tag">Proteína</span>
+                                    </div>
+                                </div>
+                                <div class="product-selected">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                            </div>
+
+                            <!-- Producto 2 -->
+                            <div class="product-select-card" data-product="2">
+                                <div class="product-image">
+                                    <img src="https://via.placeholder.com/200x150/4A90E2/FFFFFF?text=TechPhone+Pro" alt="TechPhone Pro">
+                                </div>
+                                <div class="product-info">
+                                    <h3 class="product-name">TechPhone Pro</h3>
+                                    <p class="product-category">Tecnología</p>
+                                    <div class="product-tags">
+                                        <span class="tag">Tech</span>
+                                        <span class="tag">Smartphone</span>
+                                    </div>
+                                </div>
+                                <div class="product-selected">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                            </div>
+
+                            <!-- Producto 3 -->
+                            <div class="product-select-card" data-product="3">
+                                <div class="product-image">
+                                    <img src="https://via.placeholder.com/200x150/50C878/FFFFFF?text=EcoStyle" alt="EcoStyle">
+                                </div>
+                                <div class="product-info">
+                                    <h3 class="product-name">Camiseta Eco Cotton</h3>
+                                    <p class="product-category">Moda Sostenible</p>
+                                    <div class="product-tags">
+                                        <span class="tag">Eco</span>
+                                        <span class="tag">Moda</span>
+                                    </div>
+                                </div>
+                                <div class="product-selected">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                            </div>
+
+                            <!-- Agregar Producto -->
+                            <div class="product-select-card add-product">
+                                <div class="add-content">
+                                    <i class="fas fa-plus"></i>
+                                    <h3>Agregar Producto</h3>
+                                    <p>Sube un nuevo producto</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-actions">
+                        <button class="btn-secondary" disabled>Anterior</button>
+                        <button class="btn-primary" onclick="nextStep()">Siguiente</button>
+                    </div>
+                </div>
+
+                <!-- Paso 2: Elegir Avatar -->
+                <div class="create-step" id="step-2">
+                    <div class="step-header">
+                        <h2 class="step-title">Elige un Avatar</h2>
+                        <p class="step-description">Selecciona el avatar que representará tu marca en el UGC</p>
+                    </div>
+
+                    <div class="avatar-selection">
+                        <div class="avatar-grid">
+                            <!-- Avatar 1 -->
+                            <div class="avatar-select-card active" data-avatar="1">
+                                <div class="avatar-image">
+                                    <img src="https://via.placeholder.com/120x120/FD624F/FFFFFF?text=AF" alt="Ana Fitness">
+                                </div>
+                                <div class="avatar-info">
+                                    <h3 class="avatar-name">Ana Fitness</h3>
+                                    <p class="avatar-role">Modelo Fitness</p>
+                                    <div class="avatar-stats">
+                                        <span class="stat">Fitness</span>
+                                        <span class="stat">Salud</span>
+                                    </div>
+                                </div>
+                                <div class="avatar-selected">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                            </div>
+
+                            <!-- Avatar 2 -->
+                            <div class="avatar-select-card" data-avatar="2">
+                                <div class="avatar-image">
+                                    <img src="https://via.placeholder.com/120x120/4A90E2/FFFFFF?text=MT" alt="Marco Tech">
+                                </div>
+                                <div class="avatar-info">
+                                    <h3 class="avatar-name">Marco Tech</h3>
+                                    <p class="avatar-role">Especialista Tech</p>
+                                    <div class="avatar-stats">
+                                        <span class="stat">Tech</span>
+                                        <span class="stat">Innovación</span>
+                                    </div>
+                                </div>
+                                <div class="avatar-selected">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                            </div>
+
+                            <!-- Avatar 3 -->
+                            <div class="avatar-select-card" data-avatar="3">
+                                <div class="avatar-image">
+                                    <img src="https://via.placeholder.com/120x120/50C878/FFFFFF?text=SE" alt="Sofia Eco">
+                                </div>
+                                <div class="avatar-info">
+                                    <h3 class="avatar-name">Sofia Eco</h3>
+                                    <p class="avatar-role">Influencer Sostenible</p>
+                                    <div class="avatar-stats">
+                                        <span class="stat">Eco</span>
+                                        <span class="stat">Lifestyle</span>
+                                    </div>
+                                </div>
+                                <div class="avatar-selected">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                            </div>
+
+                            <!-- Avatar 4 -->
+                            <div class="avatar-select-card" data-avatar="4">
+                                <div class="avatar-image">
+                                    <img src="https://via.placeholder.com/120x120/F39C12/FFFFFF?text=DC" alt="Diego Chef">
+                                </div>
+                                <div class="avatar-info">
+                                    <h3 class="avatar-name">Diego Chef</h3>
+                                    <p class="avatar-role">Chef Profesional</p>
+                                    <div class="avatar-stats">
+                                        <span class="stat">Cocina</span>
+                                        <span class="stat">Salud</span>
+                                    </div>
+                                </div>
+                                <div class="avatar-selected">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                            </div>
+
+                            <!-- Crear Avatar -->
+                            <div class="avatar-select-card add-avatar">
+                                <div class="add-content">
+                                    <i class="fas fa-plus"></i>
+                                    <h3>Crear Avatar</h3>
+                                    <p>Diseña un nuevo avatar</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-actions">
+                        <button class="btn-secondary" onclick="prevStep()">Anterior</button>
+                        <button class="btn-primary" onclick="nextStep()">Siguiente</button>
+                    </div>
+                </div>
+
+                <!-- Paso 3: Configurar Parámetros -->
+                <div class="create-step" id="step-3">
+                    <div class="step-header">
+                        <h2 class="step-title">Configura los Parámetros</h2>
+                        <p class="step-description">Personaliza el estilo y formato de tu UGC</p>
+                    </div>
+
+                    <div class="config-section">
+                        <div class="config-grid">
+                            <!-- Tipo de UGC -->
+                            <div class="config-card">
+                                <h3 class="config-title">Tipo de UGC</h3>
+                                <div class="config-options">
+                                    <label class="option-item">
+                                        <input type="radio" name="ugc-type" value="video" checked>
+                                        <div class="option-content">
+                                            <i class="fas fa-video"></i>
+                                            <span>Video</span>
+                                        </div>
+                                    </label>
+                                    <label class="option-item">
+                                        <input type="radio" name="ugc-type" value="image">
+                                        <div class="option-content">
+                                            <i class="fas fa-image"></i>
+                                            <span>Imagen</span>
+                                        </div>
+                                    </label>
+                                    <label class="option-item">
+                                        <input type="radio" name="ugc-type" value="copy">
+                                        <div class="option-content">
+                                            <i class="fas fa-file-text"></i>
+                                            <span>Copy</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Formato de Salida -->
+                            <div class="config-card">
+                                <h3 class="config-title">Formato de Salida</h3>
+                                <div class="config-options">
+                                    <label class="option-item">
+                                        <input type="radio" name="format" value="1080x1920" checked>
+                                        <div class="option-content">
+                                            <span>1080x1920</span>
+                                            <small>Stories</small>
+                                        </div>
+                                    </label>
+                                    <label class="option-item">
+                                        <input type="radio" name="format" value="1080x1080">
+                                        <div class="option-content">
+                                            <span>1080x1080</span>
+                                            <small>Post</small>
+                                        </div>
+                                    </label>
+                                    <label class="option-item">
+                                        <input type="radio" name="format" value="1920x1080">
+                                        <div class="option-content">
+                                            <span>1920x1080</span>
+                                            <small>Landscape</small>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Estilo -->
+                            <div class="config-card">
+                                <h3 class="config-title">Estilo</h3>
+                                <select class="form-select">
+                                    <option value="nike">Nike - Deportivo</option>
+                                    <option value="apple">Apple - Minimalista</option>
+                                    <option value="vicio">Vicio - Irreverente</option>
+                                    <option value="custom">Personalizado</option>
+                                </select>
+                            </div>
+
+                            <!-- Plataforma -->
+                            <div class="config-card">
+                                <h3 class="config-title">Plataforma</h3>
+                                <div class="checkbox-group">
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" checked>
+                                        <span>Instagram</span>
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" checked>
+                                        <span>TikTok</span>
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox">
+                                        <span>YouTube</span>
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox">
+                                        <span>Facebook</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Idioma -->
+                            <div class="config-card">
+                                <h3 class="config-title">Idioma</h3>
+                                <select class="form-select">
+                                    <option value="es">Español</option>
+                                    <option value="en">English</option>
+                                    <option value="fr">Français</option>
+                                </select>
+                            </div>
+
+                            <!-- Descripción Adicional -->
+                            <div class="config-card full-width">
+                                <h3 class="config-title">Descripción Adicional</h3>
+                                <textarea class="form-textarea" rows="4" placeholder="Describe el contexto, mensaje o características específicas que quieres en el UGC..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step-actions">
+                        <button class="btn-secondary" onclick="prevStep()">Anterior</button>
+                        <button class="btn-primary" onclick="nextStep()">Siguiente</button>
+                    </div>
+                </div>
+
+                <!-- Paso 4: Generar -->
+                <div class="create-step" id="step-4">
+                    <div class="step-header">
+                        <h2 class="step-title">Generar UGC</h2>
+                        <p class="step-description">Revisa tu configuración y genera tu contenido</p>
+                    </div>
+
+                    <div class="generation-summary">
+                        <div class="summary-card">
+                            <h3 class="summary-title">Resumen de Configuración</h3>
+                            <div class="summary-content">
+                                <div class="summary-item">
+                                    <span class="summary-label">Producto:</span>
+                                    <span class="summary-value">Proteína Whey Premium</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Avatar:</span>
+                                    <span class="summary-value">Ana Fitness</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Tipo:</span>
+                                    <span class="summary-value">Video</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Formato:</span>
+                                    <span class="summary-value">1080x1920 (Stories)</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Estilo:</span>
+                                    <span class="summary-value">Nike - Deportivo</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label">Plataformas:</span>
+                                    <span class="summary-value">Instagram, TikTok</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="generation-cost">
+                            <div class="cost-info">
+                                <span class="cost-label">Costo:</span>
+                                <span class="cost-value">3 créditos</span>
+                            </div>
+                            <div class="credits-remaining">
+                                <span class="credits-label">Créditos disponibles:</span>
+                                <span class="credits-value">127</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="generation-actions">
+                        <button class="btn-secondary" onclick="prevStep()">Anterior</button>
+                        <button class="btn-primary btn-generate" onclick="generateUGC()">
+                            <i class="fas fa-magic"></i>
+                            <span>Generar UGC</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Modal de Generación -->
+    <div class="modal" id="generation-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Generando tu UGC</h3>
+            </div>
+            <div class="modal-body">
+                <div class="generation-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <div class="progress-text" id="progress-text">Iniciando generación...</div>
+                </div>
+                <div class="generation-steps">
+                    <div class="generation-step active">
+                        <i class="fas fa-cog fa-spin"></i>
+                        <span>Procesando configuración...</span>
+                    </div>
+                    <div class="generation-step">
+                        <i class="fas fa-palette"></i>
+                        <span>Aplicando estilo visual...</span>
+                    </div>
+                    <div class="generation-step">
+                        <i class="fas fa-video"></i>
+                        <span>Generando contenido...</span>
+                    </div>
+                    <div class="generation-step">
+                        <i class="fas fa-check"></i>
+                        <span>Finalizando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3 class="footer-title">Soporte</h3>
+                    <ul class="footer-links">
+                        <li><a href="#help">Centro de Ayuda</a></li>
+                        <li><a href="#tutorials">Tutoriales</a></li>
+                        <li><a href="#contact">Contacto</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3 class="footer-title">Legal</h3>
+                    <ul class="footer-links">
+                        <li><a href="#terms">Términos de Uso</a></li>
+                        <li><a href="#privacy">Privacidad</a></li>
+                        <li><a href="#cookies">Cookies</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3 class="footer-title">UGC STUDIO</h3>
+                    <p class="footer-description">
+                        La plataforma creativa que transforma ideas en contenido que conecta con tu audiencia
+                    </p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 UGC STUDIO. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/crear-ugc.js"></script>
+</body>
+</html>
