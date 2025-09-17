@@ -1,34 +1,31 @@
 {
   "name": "ugc-user-profile",
   "version": "1.0.0",
-  "description": "Sistema de perfil de usuario con PostgreSQL",
+  "description": "UGC Studio - Plataforma de generación de contenido User Generated Content",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
-    "migrate": "node migrations/migrate.js",
-    "seed": "node seeds/seed.js",
-    "db:test": "node scripts/test-connection.js",
-    "db:populate": "node scripts/populate-fictitious-data.js",
-    "db:diagnose": "node scripts/database-diagnostics.js",
-    "db:check-relations": "node scripts/check-relationships.js",
-    "db:full-check": "npm run db:diagnose && npm run db:check-relations"
+    "dev": "netlify dev",
+    "test": "node scripts/test-supabase-connection.js",
+    "seed": "node seeds/seed.js"
   },
   "keywords": [
-    "postgresql",
-    "user-profile",
-    "ugc"
+    "ugc",
+    "content-generation",
+    "supabase",
+    "nodejs",
+    "express"
   ],
   "author": "ARDE AGENCY",
   "license": "MIT",
   "dependencies": {
+    "@supabase/supabase-js": "^2.57.4",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "helmet": "^7.1.0",
     "multer": "^2.0.2",
-    "pg": "^8.11.3"
+    "serverless-http": "^4.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

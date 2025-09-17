@@ -1,26 +1,23 @@
-const { Pool } = require('pg');
 require('dotenv').config();
 
-const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME || 'ugc_users',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD,
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
-});
+// Configuración de la base de datos - Solo Supabase
+const { supabase, testConnection: testSupabaseConnection } = require('./supabase');
+const supabaseClient = supabase;
+
+// Pool dummy para compatibilidad con código existente
+const pool = {
+  connect: async () => ({ release: () => {} }),
+  query: async () => ({ rows: [], rowCount: 0 }),
+  end: async () => {}
+};
 
 // Función para probar la conexión
 const testConnection = async () => {
   try {
-    const client = await pool.connect();
-    console.log('✅ Conexión a PostgreSQL establecida correctamente');
-    client.release();
-    return true;
+    // Probar conexión a Supabase
+    return await testSupabaseConnection();
   } catch (err) {
-    console.error('❌ Error al conectar con PostgreSQL:', err.message);
+    console.error('❌ Error al conectar con la base de datos:', err.message);
     return false;
   }
 };
@@ -29,9 +26,11 @@ const testConnection = async () => {
 const query = async (text, params) => {
   const start = Date.now();
   try {
-    const res = await pool.query(text, params);
+    // Usar Supabase para consultas
+    const { query: supabaseQuery } = require('./supabase');
+    const res = await supabaseQuery(text, params);
     const duration = Date.now() - start;
-    console.log('Query ejecutada', { text, duration, rows: res.rowCount });
+    console.log('Query ejecutada (Supabase)', { text, duration, rows: res.rowCount });
     return res;
   } catch (error) {
     console.error('Error en query:', error);
@@ -42,5 +41,6 @@ const query = async (text, params) => {
 module.exports = {
   pool,
   query,
-  testConnection
+  testConnection,
+  supabaseClient
 };

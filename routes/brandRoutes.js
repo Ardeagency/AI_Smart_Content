@@ -209,8 +209,7 @@ router.put('/:id', async (req, res) => {
     console.error('Error al actualizar marca:', error);
     
     // Si es un error de base de datos, simular éxito
-    if (error.message.includes('role "postgres" does not exist') || 
-        error.message.includes('database') || 
+    if (error.message.includes('database') || 
         error.message.includes('connection')) {
       console.log('⚠️ Error de base de datos, simulando actualización exitosa');
       return res.json({

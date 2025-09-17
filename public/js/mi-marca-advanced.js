@@ -161,7 +161,7 @@ class AdvancedBrandManager {
                 this.updateUI();
                 this.showNotification('Logo actualizado exitosamente', 'success');
                 
-                // Guardar en PostgreSQL
+                // Guardar en Supabase
                 await this.saveToDatabase({ logo_url: imageUrl });
             }
         };
@@ -184,7 +184,7 @@ class AdvancedBrandManager {
                 this.updateUI();
                 this.showNotification('Imagen del local actualizada exitosamente', 'success');
                 
-                // Guardar en PostgreSQL
+                // Guardar en Supabase
                 await this.saveToDatabase({ local_image_url: imageUrl });
             }
         };
@@ -248,7 +248,7 @@ class AdvancedBrandManager {
             this.updateColorPalette();
             this.showNotification('Colores actualizados exitosamente', 'success');
             
-            // Guardar en PostgreSQL
+            // Guardar en Supabase
             await this.saveToDatabase({ paleta_colores: newColors });
             
             modal.remove();
@@ -326,7 +326,7 @@ class AdvancedBrandManager {
                 sloganEl.textContent = newText;
                 this.showNotification('Eslogan actualizado exitosamente', 'success');
                 
-                // Guardar en PostgreSQL
+                // Guardar en Supabase
                 await this.saveToDatabase({ eslogan: newText });
             } else {
                 sloganEl.textContent = currentText;
@@ -360,7 +360,7 @@ class AdvancedBrandManager {
                 descEl.textContent = newText;
                 this.showNotification('Descripción actualizada exitosamente', 'success');
                 
-                // Guardar en PostgreSQL
+                // Guardar en Supabase
                 await this.saveToDatabase({ identidad_proposito: newText });
             } else {
                 descEl.textContent = currentText;
@@ -428,7 +428,7 @@ class AdvancedBrandManager {
             this.updateToneTags();
             this.showNotification('Tono de comunicación actualizado exitosamente', 'success');
             
-            // Guardar en PostgreSQL
+            // Guardar en Supabase
             await this.saveToDatabase({ tono_comunicacion: selectedTones });
             
             modal.remove();
@@ -454,7 +454,7 @@ class AdvancedBrandManager {
                 audienceEl.textContent = newText;
                 this.showNotification('Público objetivo actualizado exitosamente', 'success');
                 
-                // Guardar en PostgreSQL
+                // Guardar en Supabase
                 await this.saveToDatabase({ publico_objetivo: newText });
             } else {
                 audienceEl.textContent = currentText;
@@ -469,10 +469,10 @@ class AdvancedBrandManager {
         });
     }
 
-    // Guardar datos en PostgreSQL
+    // Guardar datos en Supabase
     async saveToDatabase(data) {
         try {
-            console.log('💾 Guardando en PostgreSQL:', data);
+            console.log('💾 Guardando en Supabase:', data);
             
             const response = await fetch('/api/brands/1', {
                 method: 'PUT',
@@ -488,11 +488,11 @@ class AdvancedBrandManager {
                 console.log('✅ Datos guardados exitosamente:', result.message);
                 this.showNotification('Datos guardados correctamente', 'success');
             } else {
-                console.log('⚠️ Error al guardar en PostgreSQL:', result.message || 'Error desconocido');
+                console.log('⚠️ Error al guardar en Supabase:', result.message || 'Error desconocido');
                 this.showNotification('Error al guardar, usando almacenamiento local', 'error');
             }
         } catch (error) {
-            console.log('⚠️ Error de conexión a PostgreSQL:', error);
+            console.log('⚠️ Error de conexión a Supabase:', error);
             this.showNotification('Error de conexión, usando almacenamiento local', 'error');
         }
     }

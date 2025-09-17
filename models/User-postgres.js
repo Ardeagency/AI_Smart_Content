@@ -3,7 +3,6 @@ const { supabaseClient } = require('../config/database');
 
 class User {
   constructor(userData) {
-    this.id = userData.id;
     this.user_id = userData.user_id;
     this.nombre = userData.nombre;
     this.apellido = userData.apellido;
@@ -24,8 +23,6 @@ class User {
     this.tema = userData.tema || 'claro';
     this.notificaciones_email = userData.notificaciones_email !== undefined ? userData.notificaciones_email : true;
     this.notificaciones_push = userData.notificaciones_push !== undefined ? userData.notificaciones_push : true;
-    this.creado_en = userData.creado_en;
-    this.actualizado_en = userData.actualizado_en;
   }
 
   // Método para hashear la contraseña
@@ -47,35 +44,27 @@ class User {
       const user = new User(userData);
       await user.hashPassword();
 
-      const { data, error } = await supabaseClient
-        .from('users')
-        .insert([{
-          user_id: user.user_id,
-          nombre: user.nombre,
-          apellido: user.apellido,
-          correo: user.correo,
-          contrasena: user.contrasena,
-          telefono: user.telefono,
-          acceso: user.acceso,
-          activo: user.activo,
-          email_verificado: user.email_verificado,
-          marca: user.marca,
-          avatar_url: user.avatar_url,
-          biografia: user.biografia,
-          sitio_web: user.sitio_web,
-          pais: user.pais,
-          ciudad: user.ciudad,
-          zona_horaria: user.zona_horaria,
-          idioma: user.idioma,
-          tema: user.tema,
-          notificaciones_email: user.notificaciones_email,
-          notificaciones_push: user.notificaciones_push
-        }])
-        .select()
-        .single();
+      const sql = `
+        INSERT INTO users (
+          user_id, nombre, apellido, correo, contrasena, telefono, 
+          acceso, activo, email_verificado,
+          marca, avatar_url, biografia, sitio_web, pais, ciudad,
+          zona_horaria, idioma, tema, notificaciones_email, notificaciones_push
+        ) VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
+        ) RETURNING *
+      `;
 
-      if (error) throw error;
-      return new User(data);
+      const values = [
+        user.user_id, user.nombre, user.apellido, user.correo, user.contrasena,
+        user.telefono, user.acceso, user.activo,
+        user.email_verificado, user.marca, user.avatar_url, user.biografia,
+        user.sitio_web, user.pais, user.ciudad, user.zona_horaria, user.idioma,
+        user.tema, user.notificaciones_email, user.notificaciones_push
+      ];
+
+      const result = await query(sql, values);
+      return new User(result.rows[0]);
     } catch (error) {
       throw new Error(`Error al crear usuario: ${error.message}`);
     }
@@ -84,18 +73,14 @@ class User {
   // Método para buscar usuario por ID
   static async findById(id) {
     try {
-      const { data, error } = await supabaseClient
-        .from('users')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) {
-        if (error.code === 'PGRST116') return null; // No encontrado
-        throw error;
+      const sql = 'SELECT * FROM users WHERE id = $1';
+      const result = await query(sql, [id]);
+      
+      if (result.rows.length === 0) {
+        return null;
       }
-
-      return new User(data);
+      
+      return new User(result.rows[0]);
     } catch (error) {
       throw new Error(`Error al buscar usuario por ID: ${error.message}`);
     }
@@ -104,78 +89,124 @@ class User {
   // Método para buscar usuario por user_id
   static async findByUserId(userId) {
     try {
-      const { data, error } = await supabaseClient
-        .from('users')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (error) {
-        if (error.code === 'PGRST116') return null; // No encontrado
-        throw error;
+      const sql = 'SELECT * FROM users WHERE user_id = $1';
+      const result = await query(sql, [userId]);
+      
+      if (result.rows.length === 0) {
+        return null;
       }
-
-      return new User(data);
+      
+      return new User(result.rows[0]);
     } catch (error) {
       throw new Error(`Error al buscar usuario por user_id: ${error.message}`);
     }
   }
 
-  // Método para buscar usuario por email
+  // Método para buscar usuario por correo
   static async findByEmail(email) {
     try {
-      const { data, error } = await supabaseClient
-        .from('users')
-        .select('*')
-        .eq('correo', email)
-        .single();
-
-      if (error) {
-        if (error.code === 'PGRST116') return null; // No encontrado
-        throw error;
+      const sql = 'SELECT * FROM users WHERE correo = $1';
+      const result = await query(sql, [email]);
+      
+      if (result.rows.length === 0) {
+        return null;
       }
-
-      return new User(data);
+      
+      return new User(result.rows[0]);
     } catch (error) {
-      throw new Error(`Error al buscar usuario por email: ${error.message}`);
+      throw new Error(`Error al buscar usuario por correo: ${error.message}`);
     }
   }
 
-  // Método para obtener todos los usuarios
-  static async getAll(options = {}) {
+  // Método para actualizar usuario
+  async update(updateData) {
+    try {
+      const fields = [];
+      const values = [];
+      let paramCount = 1;
+
+      // Construir la consulta dinámicamente
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key] !== undefined && key !== 'id' && key !== 'user_id') {
+          fields.push(`${key} = $${paramCount}`);
+          values.push(updateData[key]);
+          paramCount++;
+        }
+      });
+
+      if (fields.length === 0) {
+        throw new Error('No hay campos para actualizar');
+      }
+
+      values.push(this.id);
+      const sql = `UPDATE users SET ${fields.join(', ')} WHERE id = $${paramCount} RETURNING *`;
+      
+      const result = await query(sql, values);
+      return new User(result.rows[0]);
+    } catch (error) {
+      throw new Error(`Error al actualizar usuario: ${error.message}`);
+    }
+  }
+
+  // Método para eliminar usuario (soft delete)
+  async delete() {
+    try {
+      const sql = 'UPDATE users SET activo = false WHERE id = $1 RETURNING *';
+      const result = await query(sql, [this.id]);
+      return new User(result.rows[0]);
+    } catch (error) {
+      throw new Error(`Error al eliminar usuario: ${error.message}`);
+    }
+  }
+
+  // Método para actualizar último acceso
+  async updateLastAccess() {
+    try {
+      const sql = 'UPDATE users SET ultimo_acceso = CURRENT_TIMESTAMP WHERE id = $1';
+      await query(sql, [this.id]);
+    } catch (error) {
+      throw new Error(`Error al actualizar último acceso: ${error.message}`);
+    }
+  }
+
+  // Método para obtener todos los usuarios (con paginación)
+  static async findAll(options = {}) {
     try {
       const { 
         page = 1, 
         limit = 10, 
         acceso = null, 
-        activo = null, 
-        marca = null,
-        orderBy = 'creado_en',
-        orderDirection = 'desc'
+        activo = null,
+        marca = null 
       } = options;
 
-      let query = supabaseClient
-        .from('users')
-        .select('*')
-        .order(orderBy, { ascending: orderDirection === 'asc' })
-        .range((page - 1) * limit, page * limit - 1);
+      let sql = 'SELECT * FROM users WHERE 1=1';
+      const values = [];
+      let paramCount = 1;
 
       if (acceso) {
-        query = query.eq('acceso', acceso);
+        sql += ` AND acceso = $${paramCount}`;
+        values.push(acceso);
+        paramCount++;
       }
 
       if (activo !== null) {
-        query = query.eq('activo', activo);
+        sql += ` AND activo = $${paramCount}`;
+        values.push(activo);
+        paramCount++;
       }
 
       if (marca) {
-        query = query.eq('marca', marca);
+        sql += ` AND marca = $${paramCount}`;
+        values.push(marca);
+        paramCount++;
       }
 
-      const { data, error } = await query;
+      sql += ` ORDER BY creado_en DESC LIMIT $${paramCount} OFFSET $${paramCount + 1}`;
+      values.push(limit, (page - 1) * limit);
 
-      if (error) throw error;
-      return data.map(row => new User(row));
+      const result = await query(sql, values);
+      return result.rows.map(row => new User(row));
     } catch (error) {
       throw new Error(`Error al obtener usuarios: ${error.message}`);
     }
@@ -211,57 +242,6 @@ class User {
     }
   }
 
-  // Método para actualizar usuario
-  async update(updateData) {
-    try {
-      const { data, error } = await supabaseClient
-        .from('users')
-        .update(updateData)
-        .eq('id', this.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      // Actualizar propiedades locales
-      Object.assign(this, data);
-      return this;
-    } catch (error) {
-      throw new Error(`Error al actualizar usuario: ${error.message}`);
-    }
-  }
-
-  // Método para eliminar usuario (soft delete)
-  async delete() {
-    try {
-      const { data, error } = await supabaseClient
-        .from('users')
-        .update({ activo: false })
-        .eq('id', this.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return new User(data);
-    } catch (error) {
-      throw new Error(`Error al eliminar usuario: ${error.message}`);
-    }
-  }
-
-  // Método para actualizar último acceso
-  async updateLastAccess() {
-    try {
-      const { error } = await supabaseClient
-        .from('users')
-        .update({ ultimo_acceso: new Date().toISOString() })
-        .eq('id', this.id);
-
-      if (error) throw error;
-    } catch (error) {
-      throw new Error(`Error al actualizar último acceso: ${error.message}`);
-    }
-  }
-
   // Método para obtener datos públicos del usuario (sin información sensible)
   getPublicData() {
     return {
@@ -287,14 +267,6 @@ class User {
       notificaciones_push: this.notificaciones_push,
       creado_en: this.creado_en,
       actualizado_en: this.actualizado_en
-    };
-  }
-
-  // Método para obtener datos completos del usuario (incluyendo información sensible)
-  getFullData() {
-    return {
-      ...this.getPublicData(),
-      contrasena: this.contrasena
     };
   }
 }

@@ -97,3 +97,6 @@ temp/
 
 # Uploads directory
 public/uploads/
+
+# Local Netlify folder
+.netlify

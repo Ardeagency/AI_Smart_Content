@@ -18,7 +18,7 @@ class BrandManager {
         this.setupEventListeners();
     }
 
-    // Cargar datos de la marca desde PostgreSQL
+    // Cargar datos de la marca desde Supabase
     async loadBrandData() {
         try {
             const response = await fetch('/api/brands/1'); // Asumiendo que el usuario tiene ID 1

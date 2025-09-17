@@ -1,19 +1,19 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const serverless = require('serverless-http');
 require('dotenv').config();
 
-const { testConnection } = require('./config/database');
-const userRoutes = require('./routes/userRoutes');
-const brandRoutes = require('./routes/brandRoutes');
-const productRoutes = require('./routes/productRoutes');
-const avatarRoutes = require('./routes/avatarRoutes');
-const visualResourceRoutes = require('./routes/visualResourceRoutes');
-const generationConfigRoutes = require('./routes/generationConfigRoutes');
-const generationResultRoutes = require('./routes/generationResultRoutes');
+const { testConnection } = require('../../config/database');
+const userRoutes = require('../../routes/userRoutes');
+const brandRoutes = require('../../routes/brandRoutes');
+const productRoutes = require('../../routes/productRoutes');
+const avatarRoutes = require('../../routes/avatarRoutes');
+const visualResourceRoutes = require('../../routes/visualResourceRoutes');
+const generationConfigRoutes = require('../../routes/generationConfigRoutes');
+const generationResultRoutes = require('../../routes/generationResultRoutes');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 // Middlewares de seguridad
 app.use(helmet({
@@ -110,36 +110,5 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Iniciar servidor
-const startServer = async () => {
-  try {
-    // Probar conexión a la base de datos
-    console.log('🔍 Verificando conexión a la base de datos...');
-    const dbConnected = await testConnection();
-
-    if (!dbConnected) {
-      console.log('⚠️  Base de datos no disponible - Modo visualización únicamente');
-      console.log('💡 Para funcionalidad completa, configura PostgreSQL');
-      // No salir del proceso, permitir que el servidor se inicie para la visualización del frontend
-    }
-
-    app.listen(PORT, () => {
-      console.log(`🚀 Servidor ejecutándose en puerto ${PORT}`);
-      console.log(`🌐 Interfaz web: http://localhost:${PORT}`);
-      console.log(`📊 Health check: http://localhost:${PORT}/health`);
-      console.log(`👥 API de usuarios: http://localhost:${PORT}/api/users`);
-      console.log(`🏢 API de marcas: http://localhost:${PORT}/api/brands`);
-      console.log(`📦 API de productos: http://localhost:${PORT}/api/products`);
-      console.log(`👤 API de avatares: http://localhost:${PORT}/api/avatars`);
-      console.log(`🎨 API de recursos visuales: http://localhost:${PORT}/api/visual-resources`);
-      console.log(`⚙️ API de configuraciones: http://localhost:${PORT}/api/generation-configs`);
-      console.log(`📊 API de resultados: http://localhost:${PORT}/api/generation-results`);
-      console.log(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`);
-    });
-  } catch (error) {
-    console.error('💥 Error al iniciar el servidor:', error);
-    process.exit(1);
-  }
-};
-
-startServer();
+// Exportar el handler para Netlify Functions
+module.exports.handler = serverless(app);

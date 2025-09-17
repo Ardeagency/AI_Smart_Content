@@ -22,7 +22,7 @@ router.get('/', async (req, res) => {
     };
 
     const [users, total] = await Promise.all([
-      User.findAll(options),
+      User.getAll(options),
       User.count(options)
     ]);
 
