@@ -3,59 +3,373 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UGC STUDIO - Inspirado en Artlist</title>
+    <title>UGC STUDIO - Genera Contenido UGC con IA</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/landing.css">
 </head>
 <body>
-    <div class="app-container">
-        <aside class="sidebar">
-            <div class="sidebar-header">
+    <div class="app-container landing-page">
+        <!-- Header de Navegación -->
+        <header class="main-header">
+            <div class="container">
+                <div class="header-content">
                 <div class="logo">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
                     <span class="logo-text">UGC STUDIO</span>
-                </div>
-            </div>
-            
-            <nav class="sidebar-nav">
-                <ul class="nav-list">
-                    <li class="nav-item"><a href="#" class="nav-link active"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg><span class="nav-text">Inicio</span></a></li>
-                    <li class="nav-item"><a href="#" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="3" x2="9" y2="9"></line></svg><span class="nav-text">Studio</span></a></li>
-                    <li class="nav-item"><a href="#" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v15H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg><span class="nav-text">Biblioteca</span></a></li>
-                    <li class="nav-item"><a href="#" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg><span class="nav-text">Mis Productos</span></a></li>
-                    <li class="nav-item"><a href="#" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><span class="nav-text">Mi Marca</span></a></li>
-                    <li class="nav-item"><a href="#" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg><span class="nav-text">Mis Avatares</span></a></li>
-                </ul>
-            </nav>
-
-            <div class="sidebar-footer">
-                <div class="user-profile">
-                    <img src="https://i.pravatar.cc/40?u=a042581f4e29026704d" alt="Avatar de usuario" class="user-avatar">
-                    <div class="user-info">
-                        <span class="user-name">Olivia Rhye</span>
-                        <span class="user-plan">Plan Pro</span>
+                    </div>
+                    <nav class="main-nav">
+                        <a href="#features" class="nav-link">Características</a>
+                        <a href="#pricing" class="nav-link">Precios</a>
+                        <a href="#about" class="nav-link">Acerca de</a>
+                    </nav>
+                    <div class="header-actions">
+                        <a href="login.html" class="btn btn-secondary">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Iniciar Sesión
+                        </a>
+                        <a href="datos-usuario.html" class="btn btn-primary">
+                            <i class="fas fa-rocket"></i>
+                            Comenzar Ahora
+                        </a>
                     </div>
                 </div>
             </div>
-        </aside>
+        </header>
 
-        <main class="main-content">
-            <header class="main-header">
-                <div class="header-content">
-                    <h1 class="page-title">Biblioteca de Estilos</h1>
-                    <p class="page-subtitle">Explora, busca y selecciona el estilo perfecto para tu próximo contenido.</p>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <h1 class="hero-title">
+                            Genera Contenido UGC
+                            <span class="gradient-text">Profesional</span>
+                            con IA
+                        </h1>
+                        <p class="hero-description">
+                            Crea contenido de usuario generado de alta calidad para tus productos y servicios. 
+                            Personaliza avatares, escenarios y estilos para generar contenido único y atractivo.
+                        </p>
+                        <div class="hero-actions">
+                            <a href="datos-usuario.html" class="btn btn-primary btn-large">
+                                <i class="fas fa-play"></i>
+                                Comenzar Ahora
+                            </a>
+                            <a href="#demo" class="btn btn-secondary btn-large">
+                                <i class="fas fa-play-circle"></i>
+                                Ver Demo
+                            </a>
+                        </div>
+                        <div class="hero-stats">
+                            <div class="stat">
+                                <span class="stat-number">10K+</span>
+                                <span class="stat-label">Contenidos Generados</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-number">500+</span>
+                                <span class="stat-label">Usuarios Activos</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-number">99%</span>
+                                <span class="stat-label">Satisfacción</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hero-visual">
+                        <div class="hero-image">
+                            <div class="image-placeholder">
+                                <i class="fas fa-magic"></i>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="header-actions">
-                    <button class="btn btn-primary">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                        <span>Crear Contenido</span>
-                    </button>
+            </div>
+        </section>
+
+        <!-- How it Works Section -->
+        <section class="how-it-works">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">Cómo funciona</h2>
+                    <p class="section-description">
+                        En solo 4 pasos simples, tendrás contenido UGC profesional listo para usar
+                    </p>
                 </div>
-            </header>
+                <div class="steps-container">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3 class="step-title">Configura tu Perfil</h3>
+                            <p class="step-description">Completa tu información personal y preferencias de cuenta.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3 class="step-title">Define tu Marca</h3>
+                            <p class="step-description">Configura la identidad visual y personalidad de tu marca.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3 class="step-title">Agrega Productos</h3>
+                            <p class="step-description">Sube información e imágenes de tus productos o servicios.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h3 class="step-title">Genera Contenido</h3>
+                            <p class="step-description">Configura tus preferencias y deja que la IA haga el resto.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features" id="features">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">¿Por qué elegir UGC STUDIO?</h2>
+                    <p class="section-description">
+                        Herramientas avanzadas de IA para crear contenido UGC personalizado y profesional
+                    </p>
+                </div>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-magic"></i>
+                        </div>
+                        <h3 class="feature-title">Generación Inteligente</h3>
+                        <p class="feature-description">
+                            IA avanzada que entiende tu marca y genera contenido único y relevante para tu audiencia.
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-palette"></i>
+                        </div>
+                        <h3 class="feature-title">Personalización Total</h3>
+                        <p class="feature-description">
+                            Personaliza avatares, escenarios, colores y estilos para que el contenido refleje tu marca.
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-rocket"></i>
+                        </div>
+                        <h3 class="feature-title">Resultados Rápidos</h3>
+                        <p class="feature-description">
+                            Genera contenido de alta calidad en minutos, no en horas o días.
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3 class="feature-title">Derechos Completos</h3>
+                        <p class="feature-description">
+                            Obtén todos los derechos de uso comercial del contenido generado.
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h3 class="feature-title">Múltiples Formatos</h3>
+                        <p class="feature-description">
+                            Genera contenido para Instagram, TikTok, YouTube y más plataformas.
+                        </p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3 class="feature-title">Analytics Avanzados</h3>
+                        <p class="feature-description">
+                            Analiza el rendimiento de tu contenido y optimiza tus estrategias.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pricing Section -->
+        <section class="pricing" id="pricing">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">Planes y Precios</h2>
+                    <p class="section-description">
+                        Elige el plan que mejor se adapte a tus necesidades
+                    </p>
+                </div>
+                <div class="pricing-grid">
+                    <div class="pricing-card">
+                        <div class="pricing-header">
+                            <h3 class="plan-name">Básico</h3>
+                            <div class="plan-price">
+                                <span class="currency">$</span>
+                                <span class="amount">0</span>
+                                <span class="period">/mes</span>
+                            </div>
+                        </div>
+                        <div class="plan-features">
+                            <ul class="features-list">
+                                <li><i class="fas fa-check"></i> 10 contenidos por mes</li>
+                                <li><i class="fas fa-check"></i> 1 producto</li>
+                                <li><i class="fas fa-check"></i> Resolución estándar</li>
+                                <li><i class="fas fa-check"></i> Soporte por email</li>
+                            </ul>
+                        </div>
+                        <div class="plan-action">
+                            <a href="datos-usuario.html" class="btn btn-secondary">Comenzar Ahora</a>
+                        </div>
+                    </div>
+                    <div class="pricing-card featured">
+                        <div class="pricing-badge">Más Popular</div>
+                        <div class="pricing-header">
+                            <h3 class="plan-name">Pro</h3>
+                            <div class="plan-price">
+                                <span class="currency">$</span>
+                                <span class="amount">29</span>
+                                <span class="period">/mes</span>
+                            </div>
+                        </div>
+                        <div class="plan-features">
+                            <ul class="features-list">
+                                <li><i class="fas fa-check"></i> 100 contenidos por mes</li>
+                                <li><i class="fas fa-check"></i> 10 productos</li>
+                                <li><i class="fas fa-check"></i> Resolución HD</li>
+                                <li><i class="fas fa-check"></i> Soporte prioritario</li>
+                                <li><i class="fas fa-check"></i> Analytics avanzados</li>
+                            </ul>
+                        </div>
+                        <div class="plan-action">
+                            <a href="datos-usuario.html" class="btn btn-primary">Comenzar Prueba</a>
+                        </div>
+                    </div>
+                    <div class="pricing-card">
+                        <div class="pricing-header">
+                            <h3 class="plan-name">Empresa</h3>
+                            <div class="plan-price">
+                                <span class="currency">$</span>
+                                <span class="amount">99</span>
+                                <span class="period">/mes</span>
+                            </div>
+                        </div>
+                        <div class="plan-features">
+                            <ul class="features-list">
+                                <li><i class="fas fa-check"></i> Contenidos ilimitados</li>
+                                <li><i class="fas fa-check"></i> Productos ilimitados</li>
+                                <li><i class="fas fa-check"></i> Resolución 4K</li>
+                                <li><i class="fas fa-check"></i> Soporte 24/7</li>
+                                <li><i class="fas fa-check"></i> API personalizada</li>
+                                <li><i class="fas fa-check"></i> Equipo colaborativo</li>
+                </ul>
+                        </div>
+                        <div class="plan-action">
+                            <a href="datos-usuario.html" class="btn btn-secondary">Contactar Ventas</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta">
+            <div class="container">
+                <div class="cta-content">
+                    <h2 class="cta-title">¿Listo para comenzar?</h2>
+                    <p class="cta-description">
+                        Únete a cientos de marcas que ya están generando contenido UGC profesional con nuestra plataforma.
+                    </p>
+                    <div class="cta-actions">
+                        <a href="datos-usuario.html" class="btn btn-primary btn-large">
+                            <i class="fas fa-rocket"></i>
+                            Comenzar Ahora
+                        </a>
+                        <a href="login.html" class="btn btn-secondary btn-large">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Iniciar Sesión
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-brand">
+                        <div class="logo">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                            <span class="logo-text">UGC STUDIO</span>
+                        </div>
+                        <p class="footer-description">
+                            Genera contenido UGC profesional con IA. Personaliza, crea y comparte contenido único para tu marca.
+                        </p>
+                    </div>
+                    <div class="footer-links">
+                        <div class="footer-column">
+                            <h4 class="footer-title">Producto</h4>
+                            <ul class="footer-list">
+                                <li><a href="#features">Características</a></li>
+                                <li><a href="#pricing">Precios</a></li>
+                                <li><a href="#demo">Demo</a></li>
+                                <li><a href="#api">API</a></li>
+                            </ul>
+                        </div>
+                        <div class="footer-column">
+                            <h4 class="footer-title">Soporte</h4>
+                            <ul class="footer-list">
+                                <li><a href="#help">Centro de Ayuda</a></li>
+                                <li><a href="#contact">Contacto</a></li>
+                                <li><a href="#status">Estado del Sistema</a></li>
+                                <li><a href="#community">Comunidad</a></li>
+                            </ul>
+                        </div>
+                        <div class="footer-column">
+                            <h4 class="footer-title">Empresa</h4>
+                            <ul class="footer-list">
+                                <li><a href="#about">Acerca de</a></li>
+                                <li><a href="#blog">Blog</a></li>
+                                <li><a href="#careers">Carreras</a></li>
+                                <li><a href="#press">Prensa</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p class="footer-copyright">
+                        © 2024 UGC STUDIO. Todos los derechos reservados.
+                    </p>
+                    <div class="footer-legal">
+                        <a href="#privacy">Privacidad</a>
+                        <a href="#terms">Términos</a>
+                        <a href="#cookies">Cookies</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script src="js/landing.js"></script>
+</body>
+</html>
 
             <section class="filter-bar">
                 <div class="search-wrapper">

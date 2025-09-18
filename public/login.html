@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - UGC STUDIO</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/auth.css">
+</head>
+<body>
+    <div class="auth-container">
+        <!-- Header de Autenticación -->
+        <header class="auth-header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="logo">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                        <span class="logo-text">UGC STUDIO</span>
+                    </div>
+                    <div class="auth-links">
+                        <a href="index.html" class="auth-link">
+                            <i class="fas fa-home"></i>
+                            Inicio
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Contenido Principal -->
+        <main class="auth-main">
+            <div class="container">
+                <div class="auth-content">
+                    <!-- Panel de Login -->
+                    <div class="auth-panel">
+                        <div class="auth-header-panel">
+                            <h1 class="auth-title">Iniciar Sesión</h1>
+                            <p class="auth-description">Accede a tu cuenta para continuar generando contenido UGC</p>
+                        </div>
+
+                        <!-- Formulario de Login -->
+                        <form class="auth-form" id="loginForm">
+                            <div class="form-group">
+                                <label for="email" class="form-label">Correo Electrónico</label>
+                                <div class="input-group">
+                                    <i class="fas fa-envelope input-icon"></i>
+                                    <input type="email" id="email" name="email" class="form-input" required placeholder="tu@email.com">
+                                </div>
+                                <span class="form-hint">Ingresa tu correo electrónico registrado</span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="password" class="form-label">Contraseña</label>
+                                <div class="input-group">
+                                    <i class="fas fa-lock input-icon"></i>
+                                    <input type="password" id="password" name="password" class="form-input" required placeholder="Tu contraseña">
+                                    <button type="button" class="password-toggle" onclick="togglePassword()">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <span class="form-hint">Ingresa tu contraseña</span>
+                            </div>
+
+                            <div class="form-options">
+                                <label class="checkbox-item">
+                                    <input type="checkbox" id="remember_me" name="remember_me">
+                                    <span class="checkmark"></span>
+                                    <span class="checkbox-text">Recordarme</span>
+                                </label>
+                                <a href="#" class="forgot-password" onclick="showForgotPassword()">¿Olvidaste tu contraseña?</a>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-large">
+                                <i class="fas fa-sign-in-alt"></i>
+                                Iniciar Sesión
+                            </button>
+                        </form>
+
+                        <!-- Divider -->
+                        <div class="auth-divider">
+                            <span>o</span>
+                        </div>
+
+                        <!-- Login Social -->
+                        <div class="social-login">
+                            <button class="btn btn-social btn-google" onclick="loginWithGoogle()">
+                                <i class="fab fa-google"></i>
+                                Continuar con Google
+                            </button>
+                            <button class="btn btn-social btn-facebook" onclick="loginWithFacebook()">
+                                <i class="fab fa-facebook-f"></i>
+                                Continuar con Facebook
+                            </button>
+                        </div>
+
+                        <!-- Enlaces de Navegación -->
+                        <div class="auth-footer">
+                            <p class="auth-question">
+                                ¿No tienes una cuenta?
+                                <a href="configuracion.html" class="auth-link-primary">Regístrate aquí</a>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Panel de Información -->
+                    <div class="auth-info">
+                        <div class="info-content">
+                            <h2 class="info-title">Bienvenido de vuelta</h2>
+                            <p class="info-description">
+                                Accede a tu cuenta para continuar creando contenido UGC personalizado y gestionar tus proyectos.
+                            </p>
+                            
+                            <div class="info-features">
+                                <div class="feature-item">
+                                    <i class="fas fa-magic"></i>
+                                    <div class="feature-content">
+                                        <h3>Generación Inteligente</h3>
+                                        <p>IA avanzada para crear contenido único</p>
+                                    </div>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-palette"></i>
+                                    <div class="feature-content">
+                                        <h3>Personalización Total</h3>
+                                        <p>Adapta el contenido a tu marca</p>
+                                    </div>
+                                </div>
+                                <div class="feature-item">
+                                    <i class="fas fa-rocket"></i>
+                                    <div class="feature-content">
+                                        <h3>Resultados Rápidos</h3>
+                                        <p>Genera contenido en minutos</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Modal de Recuperación de Contraseña -->
+        <div class="modal" id="forgotPasswordModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Recuperar Contraseña</h3>
+                    <button class="modal-close" onclick="closeForgotPassword()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.</p>
+                    <form id="forgotPasswordForm">
+                        <div class="form-group">
+                            <label for="reset_email" class="form-label">Correo Electrónico</label>
+                            <div class="input-group">
+                                <i class="fas fa-envelope input-icon"></i>
+                                <input type="email" id="reset_email" name="reset_email" class="form-input" required placeholder="tu@email.com">
+                            </div>
+                        </div>
+                        <div class="modal-actions">
+                            <button type="button" class="btn btn-secondary" onclick="closeForgotPassword()">
+                                Cancelar
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                Enviar Enlace
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>

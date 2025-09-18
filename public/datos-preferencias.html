@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preferencias de UGC - UGC STUDIO</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="css/forms.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header de Configuración -->
+        <header class="config-header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="logo">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                        <span class="logo-text">UGC STUDIO</span>
+                    </div>
+                    <div class="progress-indicator">
+                        <span class="progress-text">Preferencias UGC</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 100%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+
+        <!-- Contenido Principal -->
+        <main class="main-content">
+            <div class="container">
+                <div class="form-container">
+                    <div class="form-header">
+                        <h1 class="form-title">Preferencias de UGC</h1>
+                        <p class="form-description">Configura cómo quieres que se genere tu contenido UGC personalizado</p>
+                    </div>
+
+                    <form class="data-form" id="preferencesDataForm">
+                        <!-- Configuración General -->
+                        <section class="form-section">
+                            <h2 class="section-title">
+                                <i class="fas fa-cog"></i>
+                                Configuración General
+                            </h2>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="tipo_contenido" class="form-label required">Tipo de Contenido Principal</label>
+                                    <select id="tipo_contenido" name="tipo_contenido" class="form-select" required>
+                                        <option value="">Selecciona el tipo</option>
+                                        <option value="video">Video</option>
+                                        <option value="imagen">Imagen</option>
+                                        <option value="carousel">Carousel (Múltiples imágenes)</option>
+                                        <option value="story">Story</option>
+                                        <option value="reel">Reel</option>
+                                        <option value="post">Post</option>
+                                        <option value="mixto">Mixto (Varios tipos)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="plataforma_principal" class="form-label required">Plataforma Principal</label>
+                                    <select id="plataforma_principal" name="plataforma_principal" class="form-select" required>
+                                        <option value="">Selecciona la plataforma</option>
+                                        <option value="instagram">Instagram</option>
+                                        <option value="tiktok">TikTok</option>
+                                        <option value="youtube">YouTube</option>
+                                        <option value="facebook">Facebook</option>
+                                        <option value="twitter">Twitter</option>
+                                        <option value="linkedin">LinkedIn</option>
+                                        <option value="pinterest">Pinterest</option>
+                                        <option value="snapchat">Snapchat</option>
+                                        <option value="otro">Otra</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="frecuencia_generacion" class="form-label">Frecuencia de Generación</label>
+                                    <select id="frecuencia_generacion" name="frecuencia_generacion" class="form-select">
+                                        <option value="diaria">Diaria</option>
+                                        <option value="semanal">Semanal</option>
+                                        <option value="quincenal">Quincenal</option>
+                                        <option value="mensual">Mensual</option>
+                                        <option value="personalizada">Personalizada</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="cantidad_contenido" class="form-label">Cantidad de Contenido</label>
+                                    <input type="number" id="cantidad_contenido" name="cantidad_contenido" class="form-input" min="1" max="100" value="5">
+                                    <span class="form-hint">Número de piezas de contenido por generación</span>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Estilo Visual -->
+                        <section class="form-section">
+                            <h2 class="section-title">
+                                <i class="fas fa-palette"></i>
+                                Estilo Visual
+                            </h2>
+                            <div class="form-grid">
+                                <div class="form-group full-width">
+                                    <label class="form-label">Estilo de Contenido</label>
+                                    <div class="checkbox-group style-grid">
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" name="estilo_contenido" value="profesional">
+                                            <span class="checkmark"></span>
+                                            <div class="checkbox-content">
+                                                <span class="checkbox-title">Profesional</span>
+                                            </div>
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" name="estilo_contenido" value="casual">
+                                            <span class="checkmark"></span>
+                                            <div class="checkbox-content">
+                                                <span class="checkbox-title">Casual</span>
+                                            </div>
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" name="estilo_contenido" value="minimalista">
+                                            <span class="checkmark"></span>
+                                            <div class="checkbox-content">
+                                                <span class="checkbox-title">Minimalista</span>
+                                            </div>
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" name="estilo_contenido" value="colorido">
+                                            <span class="checkmark"></span>
+                                            <div class="checkbox-content">
+                                                <span class="checkbox-title">Colorido</span>
+                                            </div>
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" name="estilo_contenido" value="vintage">
+                                            <span class="checkmark"></span>
+                                            <div class="checkbox-content">
+                                                <span class="checkbox-title">Vintage</span>
+                                            </div>
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" name="estilo_contenido" value="moderno">
+                                            <span class="checkmark"></span>
+                                            <div class="checkbox-content">
+                                                <span class="checkbox-title">Moderno</span>
+                                            </div>
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" name="estilo_contenido" value="elegante">
+                                            <span class="checkmark"></span>
+                                            <div class="checkbox-content">
+                                                <span class="checkbox-title">Elegante</span>
+                                            </div>
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" name="estilo_contenido" value="divertido">
+                                            <span class="checkmark"></span>
+                                            <div class="checkbox-content">
+                                                <span class="checkbox-title">Divertido</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="filtros_preferidos" class="form-label">Filtros Preferidos</label>
+                                    <select id="filtros_preferidos" name="filtros_preferidos" class="form-select">
+                                        <option value="ninguno">Sin filtros</option>
+                                        <option value="suaves">Filtros suaves</option>
+                                        <option value="vibrantes">Filtros vibrantes</option>
+                                        <option value="blanco_negro">Blanco y negro</option>
+                                        <option value="sepia">Sepia</option>
+                                        <option value="vintage">Vintage</option>
+                                        <option value="dramatico">Dramático</option>
+                                        <option value="personalizado">Personalizado</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="iluminacion" class="form-label">Tipo de Iluminación</label>
+                                    <select id="iluminacion" name="iluminacion" class="form-select">
+                                        <option value="natural">Natural</option>
+                                        <option value="artificial">Artificial</option>
+                                        <option value="mixta">Mixta</option>
+                                        <option value="dramatica">Dramática</option>
+                                        <option value="suave">Suave</option>
+                                        <option value="intensa">Intensa</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Configuración de Avatares -->
+                        <section class="form-section">
+                            <h2 class="section-title">
+                                <i class="fas fa-user-circle"></i>
+                                Configuración de Avatares
+                            </h2>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="tipo_avatar" class="form-label required">Tipo de Avatar</label>
+                                    <select id="tipo_avatar" name="tipo_avatar" class="form-select" required>
+                                        <option value="">Selecciona el tipo</option>
+                                        <option value="realista">Realista</option>
+                                        <option value="anime">Anime</option>
+                                        <option value="cartoon">Cartoon</option>
+                                        <option value="3d">3D</option>
+                                        <option value="ilustracion">Ilustración</option>
+                                        <option value="fotorealista">Fotorealista</option>
+                                        <option value="abstracto">Abstracto</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="genero_avatar" class="form-label">Género del Avatar</label>
+                                    <select id="genero_avatar" name="genero_avatar" class="form-select">
+                                        <option value="masculino">Masculino</option>
+                                        <option value="femenino">Femenino</option>
+                                        <option value="no_binario">No binario</option>
+                                        <option value="mixto">Mixto</option>
+                                        <option value="sin_preferencia">Sin preferencia</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="edad_avatar" class="form-label">Rango de Edad</label>
+                                    <select id="edad_avatar" name="edad_avatar" class="form-select">
+                                        <option value="18-25">18-25 años</option>
+                                        <option value="26-35">26-35 años</option>
+                                        <option value="36-45">36-45 años</option>
+                                        <option value="46-55">46-55 años</option>
+                                        <option value="55+">55+ años</option>
+                                        <option value="mixto">Mixto</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="etnia_avatar" class="form-label">Etnia del Avatar</label>
+                                    <select id="etnia_avatar" name="etnia_avatar" class="form-select">
+                                        <option value="latino">Latino</option>
+                                        <option value="caucasico">Caucásico</option>
+                                        <option value="afroamericano">Afroamericano</option>
+                                        <option value="asiatico">Asiático</option>
+                                        <option value="indigena">Indígena</option>
+                                        <option value="mixto">Mixto</option>
+                                        <option value="sin_preferencia">Sin preferencia</option>
+                                    </select>
+                                </div>
+                                <div class="form-group full-width">
+                                    <label for="caracteristicas_avatar" class="form-label">Características Específicas</label>
+                                    <textarea id="caracteristicas_avatar" name="caracteristicas_avatar" class="form-textarea" rows="3" placeholder="Describe características específicas del avatar: cabello, ojos, complexión, estilo de vestir, etc."></textarea>
+                                    <span class="form-hint">Detalles específicos sobre la apariencia del avatar</span>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Configuración de Escenarios -->
+                        <section class="form-section">
+                            <h2 class="section-title">
+                                <i class="fas fa-image"></i>
+                                Configuración de Escenarios
+                            </h2>
+                            <div class="form-grid">
+                                <div class="form-group full-width">
+                                    <label class="form-label">Tipos de Escenarios</label>
+                                    <div class="checkbox-group scenario-grid">
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" name="tipos_escenarios" value="hogar">
+                                            <span class="checkmark"></span>
+                                            <div class="checkbox-content">
+                                                <span class="checkbox-title">Hogar</span>
+                                            </div>
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" name="tipos_escenarios" value="oficina">
+                                            <span class="checkmark"></span>
+                                            <div class="checkbox-content">
+                                                <span class="checkbox-title">Oficina</span>
+                                            </div>
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" name="tipos_escenarios" value="exterior">
+                                            <span class="checkmark"></span>
+                                            <div class="checkbox-content">
+                                                <span class="checkbox-title">Exterior</span>
+                                            </div>
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" name="tipos_escenarios" value="gym">
+                                            <span class="checkmark"></span>
+                                            <div class="checkbox-content">
+                                                <span class="checkbox-title">Gym</span>
+                                            </div>
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" name="tipos_escenarios" value="cocina">
+                                            <span class="checkmark"></span>
+                                            <div class="checkbox-content">
+                                                <span class="checkbox-title">Cocina</span>
+                                            </div>
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" name="tipos_escenarios" value="estudio">
+                                            <span class="checkmark"></span>
+                                            <div class="checkbox-content">
+                                                <span class="checkbox-title">Estudio</span>
+                                            </div>
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" name="tipos_escenarios" value="playa">
+                                            <span class="checkmark"></span>
+                                            <div class="checkbox-content">
+                                                <span class="checkbox-title">Playa</span>
+                                            </div>
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" name="tipos_escenarios" value="montana">
+                                            <span class="checkmark"></span>
+                                            <div class="checkbox-content">
+                                                <span class="checkbox-title">Montaña</span>
+                                            </div>
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" name="tipos_escenarios" value="ciudad">
+                                            <span class="checkmark"></span>
+                                            <div class="checkbox-content">
+                                                <span class="checkbox-title">Ciudad</span>
+                                            </div>
+                                        </label>
+                                        <label class="checkbox-item">
+                                            <input type="checkbox" name="tipos_escenarios" value="abstracto">
+                                            <span class="checkmark"></span>
+                                            <div class="checkbox-content">
+                                                <span class="checkbox-title">Abstracto</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="estilo_escenario" class="form-label">Estilo de Escenario</label>
+                                    <select id="estilo_escenario" name="estilo_escenario" class="form-select">
+                                        <option value="moderno">Moderno</option>
+                                        <option value="clasico">Clásico</option>
+                                        <option value="minimalista">Minimalista</option>
+                                        <option value="rustico">Rústico</option>
+                                        <option value="industrial">Industrial</option>
+                                        <option value="bohemio">Bohemio</option>
+                                        <option value="elegante">Elegante</option>
+                                        <option value="colorido">Colorido</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="hora_dia" class="form-label">Hora del Día</label>
+                                    <select id="hora_dia" name="hora_dia" class="form-select">
+                                        <option value="amanecer">Amanecer</option>
+                                        <option value="manana">Mañana</option>
+                                        <option value="mediodia">Mediodía</option>
+                                        <option value="tarde">Tarde</option>
+                                        <option value="atardecer">Atardecer</option>
+                                        <option value="noche">Noche</option>
+                                        <option value="mixto">Mixto</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Configuración de Texto y Copy -->
+                        <section class="form-section">
+                            <h2 class="section-title">
+                                <i class="fas fa-font"></i>
+                                Configuración de Texto y Copy
+                            </h2>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="tono_copy" class="form-label required">Tono del Copy</label>
+                                    <select id="tono_copy" name="tono_copy" class="form-select" required>
+                                        <option value="">Selecciona el tono</option>
+                                        <option value="profesional">Profesional</option>
+                                        <option value="amigable">Amigable</option>
+                                        <option value="divertido">Divertido</option>
+                                        <option value="inspirador">Inspirador</option>
+                                        <option value="urgente">Urgente</option>
+                                        <option value="educativo">Educativo</option>
+                                        <option value="emocional">Emocional</option>
+                                        <option value="directo">Directo</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="longitud_texto" class="form-label">Longitud del Texto</label>
+                                    <select id="longitud_texto" name="longitud_texto" class="form-select">
+                                        <option value="corto">Corto (1-2 líneas)</option>
+                                        <option value="medio">Medio (3-4 líneas)</option>
+                                        <option value="largo">Largo (5+ líneas)</option>
+                                        <option value="mixto">Mixto</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="idioma_contenido" class="form-label">Idioma del Contenido</label>
+                                    <select id="idioma_contenido" name="idioma_contenido" class="form-select">
+                                        <option value="es">Español</option>
+                                        <option value="en">English</option>
+                                        <option value="fr">Français</option>
+                                        <option value="pt">Português</option>
+                                        <option value="mixto">Mixto</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="incluir_hashtags" class="form-label">Incluir Hashtags</label>
+                                    <select id="incluir_hashtags" name="incluir_hashtags" class="form-select">
+                                        <option value="si">Sí</option>
+                                        <option value="no">No</option>
+                                        <option value="opcional">Opcional</option>
+                                    </select>
+                                </div>
+                                <div class="form-group full-width">
+                                    <label for="mensaje_clave" class="form-label">Mensaje Clave</label>
+                                    <textarea id="mensaje_clave" name="mensaje_clave" class="form-textarea" rows="3" placeholder="¿Cuál es el mensaje principal que quieres transmitir?"></textarea>
+                                    <span class="form-hint">El mensaje principal que debe aparecer en el contenido</span>
+                                </div>
+                                <div class="form-group full-width">
+                                    <label for="call_to_action" class="form-label">Call to Action</label>
+                                    <input type="text" id="call_to_action" name="call_to_action" class="form-input" placeholder="Comprar ahora, Descubre más, Suscríbete...">
+                                    <span class="form-hint">Acción que quieres que realice el usuario</span>
+                                </div>
+                            </div>
+                        </section>
+
+
+
+                        <!-- Botones de Navegación -->
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="window.location.href='datos-productos.html'">
+                                <i class="fas fa-arrow-left"></i>
+                                Volver a Productos
+                            </button>
+                            <button type="submit" class="btn btn-primary btn-large">
+                                <i class="fas fa-check"></i>
+                                Finalizar Configuración
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script src="js/preferences-data-form.js"></script>
+</body>
+</html>
