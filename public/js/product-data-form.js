@@ -354,22 +354,20 @@ class ProductDataForm {
 
     async submitToSupabase(productData) {
         try {
-            // Simular llamada a Supabase
-            console.log('Enviando datos del producto a Supabase:', productData);
+            // Usar la API de Supabase
+            const result = await window.supabaseAPI.createProduct(productData);
             
-            // Aquí iría la llamada real a Supabase
-            // const response = await fetch('/api/products', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify(productData)
-            // });
+            if (!result.success) {
+                throw new Error(result.message);
+            }
             
-            // Simular delay de red
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            return { success: true, message: 'Producto creado exitosamente' };
+            return {
+                success: true,
+                data: result.data,
+                message: result.message
+            };
         } catch (error) {
-            throw new Error('Error de conexión con la base de datos');
+            throw new Error(error.message || 'Error de conexión con la base de datos');
         }
     }
 

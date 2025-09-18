@@ -191,34 +191,25 @@ class AuthSystem {
 
     async authenticateUser(email, password) {
         try {
-            // Simular llamada a Supabase Auth
-            console.log('Autenticando usuario:', email);
+            // Usar la API de Supabase
+            const result = await window.supabaseAPI.signIn(email, password);
             
-            // Aquí iría la llamada real a Supabase
-            // const { data, error } = await supabase.auth.signInWithPassword({
-            //     email: email,
-            //     password: password
-            // });
+            if (!result.success) {
+                return {
+                    success: false,
+                    message: result.message
+                };
+            }
             
-            // Simular delay de red
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            
-            // Simular respuesta exitosa
             return {
                 success: true,
-                user: {
-                    id: 'user_' + Date.now(),
-                    email: email,
-                    name: email.split('@')[0],
-                    avatar: null,
-                    created_at: new Date().toISOString()
-                },
-                token: 'token_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+                user: result.data.user,
+                token: result.data.auth.session?.access_token || 'token_' + Date.now()
             };
         } catch (error) {
             return {
                 success: false,
-                message: 'Credenciales inválidas'
+                message: error.message || 'Error de autenticación'
             };
         }
     }

@@ -201,22 +201,20 @@ class UserDataForm {
 
     async submitToSupabase(userData) {
         try {
-            // Simular llamada a Supabase
-            console.log('Enviando datos a Supabase:', userData);
+            // Usar la API de Supabase
+            const result = await window.supabaseAPI.createUser(userData);
             
-            // Aquí iría la llamada real a Supabase
-            // const response = await fetch('/api/users', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify(userData)
-            // });
+            if (!result.success) {
+                throw new Error(result.message);
+            }
             
-            // Simular delay de red
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            return { success: true, message: 'Usuario creado exitosamente' };
+            return {
+                success: true,
+                data: result.data,
+                message: result.message
+            };
         } catch (error) {
-            throw new Error('Error de conexión con la base de datos');
+            throw new Error(error.message || 'Error de conexión con la base de datos');
         }
     }
 

@@ -387,22 +387,20 @@ class BrandDataForm {
 
     async submitToSupabase(brandData) {
         try {
-            // Simular llamada a Supabase
-            console.log('Enviando datos de marca a Supabase:', brandData);
+            // Usar la API de Supabase
+            const result = await window.supabaseAPI.createBrand(brandData);
             
-            // Aquí iría la llamada real a Supabase
-            // const response = await fetch('/api/brands', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify(brandData)
-            // });
+            if (!result.success) {
+                throw new Error(result.message);
+            }
             
-            // Simular delay de red
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            return { success: true, message: 'Marca creada exitosamente' };
+            return {
+                success: true,
+                data: result.data,
+                message: result.message
+            };
         } catch (error) {
-            throw new Error('Error de conexión con la base de datos');
+            throw new Error(error.message || 'Error de conexión con la base de datos');
         }
     }
 

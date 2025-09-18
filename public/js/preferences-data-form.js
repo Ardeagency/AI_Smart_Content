@@ -398,22 +398,20 @@ class PreferencesDataForm {
 
     async submitToSupabase(preferencesData) {
         try {
-            // Simular llamada a Supabase
-            console.log('Enviando preferencias a Supabase:', preferencesData);
+            // Usar la API de Supabase
+            const result = await window.supabaseAPI.createUgcPreferences(preferencesData);
             
-            // Aquí iría la llamada real a Supabase
-            // const response = await fetch('/api/preferences', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify(preferencesData)
-            // });
+            if (!result.success) {
+                throw new Error(result.message);
+            }
             
-            // Simular delay de red
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            
-            return { success: true, message: 'Preferencias guardadas exitosamente' };
+            return {
+                success: true,
+                data: result.data,
+                message: result.message
+            };
         } catch (error) {
-            throw new Error('Error de conexión con la base de datos');
+            throw new Error(error.message || 'Error de conexión con la base de datos');
         }
     }
 
