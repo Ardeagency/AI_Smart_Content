@@ -139,6 +139,9 @@ CREATE TABLE ugc_preferences (
     mensaje_clave TEXT,
     call_to_action VARCHAR(200),
     
+    -- Configuración Técnica
+    aspect_ratio VARCHAR(20) CHECK (aspect_ratio IN ('1:1', '16:9', '9:16', '4:5', '1.91:1', 'personalizado')),
+    
     -- Metadatos
     estado VARCHAR(20) DEFAULT 'activo' CHECK (estado IN ('activo', 'inactivo', 'borrador')),
     es_plantilla BOOLEAN DEFAULT false,
@@ -159,6 +162,7 @@ CREATE INDEX idx_ugc_preferences_activo ON ugc_preferences(activo);
 CREATE INDEX idx_ugc_preferences_creado_en ON ugc_preferences(creado_en);
 CREATE INDEX idx_ugc_preferences_estilo_gin ON ugc_preferences USING GIN(estilo_contenido);
 CREATE INDEX idx_ugc_preferences_escenarios_gin ON ugc_preferences USING GIN(tipos_escenarios);
+CREATE INDEX idx_ugc_preferences_aspect_ratio ON ugc_preferences(aspect_ratio);
 
 -- =====================================================
 -- 5. TABLA GENERATION_RESULTS
@@ -303,6 +307,7 @@ SELECT
     up.incluir_hashtags,
     up.mensaje_clave,
     up.call_to_action,
+    up.aspect_ratio,
     up.estado,
     up.creado_en,
     u.nombre as usuario_nombre,
@@ -329,6 +334,7 @@ COMMENT ON COLUMN products.tipo_producto IS 'Tipo de producto: producto_fisico, 
 COMMENT ON COLUMN ugc_preferences.plataforma_principal IS 'Plataforma objetivo: instagram, tiktok, youtube, facebook, twitter, linkedin, pinterest, snapchat, otro';
 COMMENT ON COLUMN ugc_preferences.estilo_contenido IS 'Array de estilos visuales: profesional, casual, minimalista, colorido, vintage, moderno, elegante, divertido';
 COMMENT ON COLUMN ugc_preferences.tipos_escenarios IS 'Array de escenarios: hogar, oficina, exterior, gym, cocina, estudio, playa, montana, ciudad, abstracto';
+COMMENT ON COLUMN ugc_preferences.aspect_ratio IS 'Relación de aspecto para el contenido: 1:1 (cuadrado), 16:9 (landscape), 9:16 (vertical), 4:5 (Instagram post), 1.91:1 (Facebook), personalizado';
 
 -- =====================================================
 -- 9. VERIFICACIÓN DE CREACIÓN
