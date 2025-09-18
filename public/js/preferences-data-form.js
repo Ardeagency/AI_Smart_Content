@@ -81,13 +81,17 @@ class PreferencesDataForm {
         const plataforma = document.getElementById('plataforma_principal').value;
         const aspectRatioField = document.getElementById('aspect_ratio');
         
-        if (plataforma === 'instagram' || plataforma === 'tiktok' || plataforma === 'youtube') {
-            if (!aspectRatioField) {
-                this.createAspectRatioField();
-            }
-        } else {
-            if (aspectRatioField) {
-                aspectRatioField.parentNode.remove();
+        // El campo aspect_ratio ahora está siempre visible en el HTML
+        // Solo actualizamos el valor por defecto según la plataforma
+        if (aspectRatioField) {
+            if (plataforma === 'instagram') {
+                aspectRatioField.value = '4:5'; // Instagram Post
+            } else if (plataforma === 'tiktok' || plataforma === 'youtube') {
+                aspectRatioField.value = '9:16'; // Vertical
+            } else if (plataforma === 'facebook') {
+                aspectRatioField.value = '1.91:1'; // Facebook
+            } else {
+                aspectRatioField.value = '1:1'; // Cuadrado por defecto
             }
         }
     }
@@ -109,23 +113,6 @@ class PreferencesDataForm {
 
 
 
-    createAspectRatioField() {
-        const container = document.querySelector('.form-grid');
-        const aspectRatioDiv = document.createElement('div');
-        aspectRatioDiv.className = 'form-group';
-        aspectRatioDiv.innerHTML = `
-            <label for="aspect_ratio" class="form-label">Relación de Aspecto</label>
-            <select id="aspect_ratio" name="aspect_ratio" class="form-select">
-                <option value="1:1">1:1 (Cuadrado)</option>
-                <option value="16:9">16:9 (Landscape)</option>
-                <option value="9:16">9:16 (Vertical)</option>
-                <option value="4:5">4:5 (Instagram Post)</option>
-                <option value="1.91:1">1.91:1 (Facebook)</option>
-            </select>
-            <span class="form-hint">Formato recomendado para la plataforma</span>
-        `;
-        container.appendChild(aspectRatioDiv);
-    }
 
     createHashtagsField() {
         const container = document.querySelector('.form-grid');
@@ -277,6 +264,11 @@ class PreferencesDataForm {
                 cleanData[field] = preferencesData[field];
             }
         });
+        
+        // Asegurar que aspect_ratio tenga un valor por defecto si no está definido
+        if (!cleanData.aspect_ratio) {
+            cleanData.aspect_ratio = '1:1'; // Valor por defecto
+        }
         
         // Limpiar el objeto original y reemplazarlo con datos limpios
         Object.keys(preferencesData).forEach(key => {
