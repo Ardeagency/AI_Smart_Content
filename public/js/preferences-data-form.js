@@ -241,50 +241,51 @@ class PreferencesDataForm {
     }
 
     processSpecificConfigurations(preferencesData) {
-        // Configuración de avatar
-        if (preferencesData.tipo_avatar || preferencesData.genero_avatar || preferencesData.edad_avatar) {
-            preferencesData.configuracion_avatar = {
-                tipo: preferencesData.tipo_avatar,
-                genero: preferencesData.genero_avatar,
-                edad: preferencesData.edad_avatar,
-                etnia: preferencesData.etnia_avatar,
-                caracteristicas: preferencesData.caracteristicas_avatar
-            };
-        }
-
-        // Configuración de escenarios
-        if (preferencesData.tipos_escenarios && preferencesData.tipos_escenarios.length > 0) {
-            preferencesData.configuracion_escenarios = {
-                tipos: preferencesData.tipos_escenarios,
-                estilo: preferencesData.estilo_escenario,
-                hora_dia: preferencesData.hora_dia
-            };
-        }
-
-        // Configuración de copy
-        if (preferencesData.tono_copy || preferencesData.longitud_texto) {
-            preferencesData.configuracion_copy = {
-                tono: preferencesData.tono_copy,
-                longitud: preferencesData.longitud_texto,
-                idioma: preferencesData.idioma_contenido,
-                incluir_hashtags: preferencesData.incluir_hashtags,
-                hashtags_personalizados: preferencesData.hashtags_personalizados,
-                mensaje_clave: preferencesData.mensaje_clave,
-                call_to_action: preferencesData.call_to_action
-            };
-        }
-
-        // Configuración técnica
-        preferencesData.configuracion_tecnica = {
-            aspect_ratio: preferencesData.aspect_ratio
-        };
-
-        // Configuración de notificaciones
-        preferencesData.configuracion_notificaciones = {
-            notificar_generacion: preferencesData.notificar_generacion || false,
-            notificar_errores: preferencesData.notificar_errores || false,
-            notificar_actualizaciones: preferencesData.notificar_actualizaciones || false
-        };
+        // Limpiar datos para enviar solo las columnas que existen en la tabla
+        const cleanData = {};
+        
+        // Campos básicos que existen en la tabla
+        const allowedFields = [
+            'plataforma_principal',
+            'estilo_contenido',
+            'filtros_preferidos',
+            'iluminacion',
+            'tipo_avatar',
+            'genero_avatar',
+            'edad_avatar',
+            'etnia_avatar',
+            'caracteristicas_avatar',
+            'tipos_escenarios',
+            'estilo_escenario',
+            'hora_dia',
+            'tono_copy',
+            'longitud_texto',
+            'idioma_contenido',
+            'incluir_hashtags',
+            'mensaje_clave',
+            'call_to_action',
+            'aspect_ratio',
+            'user_id',
+            'activo',
+            'creado_en',
+            'actualizado_en'
+        ];
+        
+        // Solo incluir campos que existen en la tabla
+        allowedFields.forEach(field => {
+            if (preferencesData[field] !== undefined) {
+                cleanData[field] = preferencesData[field];
+            }
+        });
+        
+        // Limpiar el objeto original y reemplazarlo con datos limpios
+        Object.keys(preferencesData).forEach(key => {
+            delete preferencesData[key];
+        });
+        
+        Object.assign(preferencesData, cleanData);
+        
+        console.log('🧹 Datos limpiados para Supabase:', preferencesData);
     }
 
     getUserId() {
