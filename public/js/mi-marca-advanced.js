@@ -122,9 +122,9 @@ class BrandEditor {
             gap: 0.5rem;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         `;
-
+        
         document.body.appendChild(notification);
-
+        
         setTimeout(() => {
             if (document.body.contains(notification)) {
                 document.body.removeChild(notification);

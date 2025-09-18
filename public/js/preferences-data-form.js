@@ -14,6 +14,8 @@ class PreferencesDataForm {
         this.bindEvents();
         this.loadSavedData();
         this.setupValidation();
+        this.setupAdvancedValidation();
+        this.setupContextIntegration();
     }
 
     bindEvents() {
@@ -290,7 +292,37 @@ class PreferencesDataForm {
         return savedData.user?.user_id || 'temp_user_' + Date.now();
     }
 
+    setupAdvancedValidation() {
+        // Configurar validación avanzada si está disponible
+        if (window.validationManager) {
+            window.validationManager.setupRealTimeValidation(this.form, 'preferences');
+        }
+    }
+
+    setupContextIntegration() {
+        // Integrar con el sistema de contexto
+        if (window.contextManager) {
+            // Escuchar cambios en el contexto
+            window.contextManager.on('dataChanged', (event) => {
+                if (event.detail.type === 'preferences') {
+                    this.populateForm(event.detail.data);
+                }
+            });
+        }
+    }
+
     validateForm() {
+        // Usar sistema de validación avanzado si está disponible
+        if (window.validationManager) {
+            const result = window.validationManager.validateUgcPreferences(this.form);
+            if (!result.isValid) {
+                this.showValidationErrors(result.errors);
+                return false;
+            }
+            return true;
+        }
+
+        // Fallback a validación básica
         let isValid = true;
         const requiredFields = this.form.querySelectorAll('[required]');
 
@@ -305,6 +337,9 @@ class PreferencesDataForm {
         if (estilosContenido.length === 0) {
             this.showNotification('Selecciona al menos un estilo de contenido', 'error');
             isValid = false;
+        } else {
+            // Limpiar notificación de error si hay estilos seleccionados
+            this.clearStyleError();
         }
 
         // Validar que al menos un tipo de escenario esté seleccionado
@@ -315,6 +350,17 @@ class PreferencesDataForm {
         }
 
         return isValid;
+    }
+
+    showValidationErrors(errors) {
+        errors.forEach(error => {
+            const field = this.form.querySelector(`[name="${error.field}"]`);
+            if (field) {
+                this.showFieldError(field, error.message);
+            } else {
+                this.showNotification(error.message, 'error');
+            }
+        });
     }
 
     async handleSubmit() {
@@ -334,18 +380,32 @@ class PreferencesDataForm {
             // Recopilar datos
             const preferencesData = this.collectFormData();
             
+            // Guardar en contexto global
+            if (window.contextManager) {
+                window.contextManager.setData('preferences', preferencesData);
+            }
+            
             // Guardar en localStorage temporalmente
             this.saveToLocalStorage(preferencesData);
             
-            // Simular envío a Supabase
+            // Enviar a Supabase
             await this.submitToSupabase(preferencesData);
+            
+            // Marcar paso como completo
+            if (window.navigationManager) {
+                window.navigationManager.markStepComplete('preferences');
+            }
             
             // Mostrar éxito y redirigir
             this.showNotification('¡Configuración completada exitosamente!', 'success');
             
-            // Redirigir al login
+            // Redirigir al siguiente paso
             setTimeout(() => {
-                window.location.href = 'datos-productos.html';
+                if (window.navigationManager) {
+                    window.navigationManager.navigateNext();
+                } else {
+                    window.location.href = 'datos-productos.html';
+                }
             }, 2000);
 
         } catch (error) {
@@ -428,7 +488,25 @@ class PreferencesDataForm {
         this.updateHashtagFields();
     }
 
+    clearStyleError() {
+        // Remover notificaciones de error de estilos
+        const existingNotifications = document.querySelectorAll('.notification-error');
+        existingNotifications.forEach(notification => {
+            if (notification.textContent.includes('estilo de contenido')) {
+                notification.remove();
+            }
+        });
+    }
+
     showNotification(message, type = 'info') {
+        // Remover notificaciones existentes del mismo tipo
+        const existingNotifications = document.querySelectorAll(`.notification-${type}`);
+        existingNotifications.forEach(notification => {
+            if (notification.textContent.includes(message)) {
+                notification.remove();
+            }
+        });
+
         // Crear notificación
         const notification = document.createElement('div');
         notification.className = `notification notification-${type}`;
