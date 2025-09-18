@@ -112,10 +112,7 @@ CREATE TABLE ugc_preferences (
     product_id INTEGER REFERENCES products(id) ON DELETE SET NULL,
     
     -- Configuración General
-    tipo_contenido VARCHAR(50) NOT NULL CHECK (tipo_contenido IN ('video', 'imagen', 'carousel', 'story', 'reel', 'post', 'mixto')),
     plataforma_principal VARCHAR(50) NOT NULL CHECK (plataforma_principal IN ('instagram', 'tiktok', 'youtube', 'facebook', 'twitter', 'linkedin', 'pinterest', 'snapchat', 'otro')),
-    frecuencia_generacion VARCHAR(20) DEFAULT 'semanal' CHECK (frecuencia_generacion IN ('diaria', 'semanal', 'quincenal', 'mensual', 'personalizada')),
-    cantidad_contenido INTEGER DEFAULT 5 CHECK (cantidad_contenido > 0 AND cantidad_contenido <= 100),
     
     -- Estilo Visual
     estilo_contenido TEXT[], -- profesional, casual, minimalista, colorido, vintage, moderno, elegante, divertido
@@ -156,7 +153,6 @@ CREATE TABLE ugc_preferences (
 CREATE INDEX idx_ugc_preferences_user_id ON ugc_preferences(user_id);
 CREATE INDEX idx_ugc_preferences_brand_id ON ugc_preferences(brand_id);
 CREATE INDEX idx_ugc_preferences_product_id ON ugc_preferences(product_id);
-CREATE INDEX idx_ugc_preferences_tipo_contenido ON ugc_preferences(tipo_contenido);
 CREATE INDEX idx_ugc_preferences_plataforma ON ugc_preferences(plataforma_principal);
 CREATE INDEX idx_ugc_preferences_estado ON ugc_preferences(estado);
 CREATE INDEX idx_ugc_preferences_activo ON ugc_preferences(activo);
@@ -289,10 +285,7 @@ WHERE p.activo = true;
 CREATE VIEW ugc_preferences_complete AS
 SELECT 
     up.id,
-    up.tipo_contenido,
     up.plataforma_principal,
-    up.frecuencia_generacion,
-    up.cantidad_contenido,
     up.estilo_contenido,
     up.filtros_preferidos,
     up.iluminacion,
@@ -333,7 +326,6 @@ COMMENT ON TABLE generation_results IS 'Resultados de generación de contenido U
 
 COMMENT ON COLUMN products.imagenes_producto IS 'Array JSON con exactamente 4 URLs de imágenes del producto';
 COMMENT ON COLUMN products.tipo_producto IS 'Tipo de producto: producto_fisico, producto_digital, servicio, curso, software, evento, otro';
-COMMENT ON COLUMN ugc_preferences.tipo_contenido IS 'Tipo principal de contenido a generar: video, imagen, carousel, story, reel, post, mixto';
 COMMENT ON COLUMN ugc_preferences.plataforma_principal IS 'Plataforma objetivo: instagram, tiktok, youtube, facebook, twitter, linkedin, pinterest, snapchat, otro';
 COMMENT ON COLUMN ugc_preferences.estilo_contenido IS 'Array de estilos visuales: profesional, casual, minimalista, colorido, vintage, moderno, elegante, divertido';
 COMMENT ON COLUMN ugc_preferences.tipos_escenarios IS 'Array de escenarios: hogar, oficina, exterior, gym, cocina, estudio, playa, montana, ciudad, abstracto';

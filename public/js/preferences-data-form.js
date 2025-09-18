@@ -37,10 +37,6 @@ class PreferencesDataForm {
     setupValidation() {
         // Reglas de validación
         this.validationRules = {
-            tipo_contenido: {
-                required: true,
-                message: 'Selecciona el tipo de contenido principal'
-            },
             plataforma_principal: {
                 required: true,
                 message: 'Selecciona la plataforma principal'
@@ -62,15 +58,8 @@ class PreferencesDataForm {
 
     setupConditionalFields() {
         // Mostrar/ocultar campos según selecciones
-        const tipoContenido = document.getElementById('tipo_contenido');
         const plataformaPrincipal = document.getElementById('plataforma_principal');
         const incluirHashtags = document.getElementById('incluir_hashtags');
-
-        if (tipoContenido) {
-            tipoContenido.addEventListener('change', () => {
-                this.updateContentTypeFields();
-            });
-        }
 
         if (plataformaPrincipal) {
             plataformaPrincipal.addEventListener('change', () => {
@@ -83,23 +72,8 @@ class PreferencesDataForm {
                 this.updateHashtagFields();
             });
         }
-
     }
 
-    updateContentTypeFields() {
-        const tipoContenido = document.getElementById('tipo_contenido').value;
-        const duracionField = document.getElementById('duracion_contenido');
-        
-        if (tipoContenido === 'video' || tipoContenido === 'reel') {
-            if (!duracionField) {
-                this.createDurationField();
-            }
-        } else {
-            if (duracionField) {
-                duracionField.parentNode.remove();
-            }
-        }
-    }
 
     updatePlatformFields() {
         const plataforma = document.getElementById('plataforma_principal').value;
@@ -132,17 +106,6 @@ class PreferencesDataForm {
     }
 
 
-    createDurationField() {
-        const container = document.querySelector('.form-grid');
-        const durationDiv = document.createElement('div');
-        durationDiv.className = 'form-group';
-        durationDiv.innerHTML = `
-            <label for="duracion_contenido" class="form-label">Duración del Video (segundos)</label>
-            <input type="number" id="duracion_contenido" name="duracion_contenido" class="form-input" min="5" max="300" value="30">
-            <span class="form-hint">Duración recomendada para el contenido de video</span>
-        `;
-        container.appendChild(durationDiv);
-    }
 
     createAspectRatioField() {
         const container = document.querySelector('.form-grid');
@@ -311,7 +274,6 @@ class PreferencesDataForm {
 
         // Configuración técnica
         preferencesData.configuracion_tecnica = {
-            duracion_contenido: preferencesData.duracion_contenido,
             aspect_ratio: preferencesData.aspect_ratio
         };
 
@@ -462,10 +424,8 @@ class PreferencesDataForm {
     }
 
     updateConditionalFields() {
-        this.updateContentTypeFields();
         this.updatePlatformFields();
         this.updateHashtagFields();
-        this.updateWatermarkFields();
     }
 
     showNotification(message, type = 'info') {
