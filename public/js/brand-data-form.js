@@ -372,7 +372,7 @@ class BrandDataForm {
             
             // Redirigir al siguiente paso
             setTimeout(() => {
-                window.location.href = 'datos-productos.html';
+                window.location.href = 'datos-usuario.html';
             }, 1500);
 
         } catch (error) {

@@ -383,7 +383,7 @@ class PreferencesDataForm {
             
             // Redirigir al login
             setTimeout(() => {
-                window.location.href = 'login.html';
+                window.location.href = 'datos-productos.html';
             }, 2000);
 
         } catch (error) {

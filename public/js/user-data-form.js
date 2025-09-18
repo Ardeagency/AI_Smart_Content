@@ -45,6 +45,16 @@ class UserDataForm {
                 required: true,
                 pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
                 message: 'Ingresa un correo electrónico válido'
+            },
+            contrasena: {
+                required: true,
+                minLength: 6,
+                message: 'La contraseña debe tener al menos 6 caracteres'
+            },
+            confirmar_contrasena: {
+                required: true,
+                match: 'contrasena',
+                message: 'Las contraseñas no coinciden'
             }
         };
     }
@@ -75,6 +85,15 @@ class UserDataForm {
         if (rules.pattern && value && !rules.pattern.test(value)) {
             this.showFieldError(field, rules.message);
             return false;
+        }
+
+        // Validar coincidencia de contraseñas
+        if (rules.match && value) {
+            const matchField = this.form.querySelector(`[name="${rules.match}"]`);
+            if (matchField && value !== matchField.value) {
+                this.showFieldError(field, rules.message);
+                return false;
+            }
         }
 
         // Marcar como válido
@@ -136,6 +155,9 @@ class UserDataForm {
         userData.email_verificado = false;
         userData.creado_en = new Date().toISOString();
         userData.actualizado_en = new Date().toISOString();
+        
+        // Remover confirmar_contrasena del objeto final
+        delete userData.confirmar_contrasena;
 
         return userData;
     }
@@ -184,9 +206,9 @@ class UserDataForm {
             // Mostrar éxito y continuar
             this.showNotification('Datos del usuario guardados exitosamente', 'success');
             
-            // Redirigir al siguiente paso
+            // Redirigir al login
             setTimeout(() => {
-                window.location.href = 'datos-marca.html';
+                window.location.href = 'login.html';
             }, 1500);
 
         } catch (error) {
@@ -288,6 +310,20 @@ class UserDataForm {
     }
 }
 
+// Función global para mostrar/ocultar contraseñas
+function togglePassword(fieldId) {
+    const passwordInput = document.getElementById(fieldId);
+    const toggleBtn = passwordInput.parentNode.querySelector('.password-toggle i');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleBtn.className = 'fas fa-eye-slash';
+    } else {
+        passwordInput.type = 'password';
+        toggleBtn.className = 'fas fa-eye';
+    }
+}
+
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
     new UserDataForm();
@@ -343,6 +379,44 @@ style.textContent = `
     
     .remove-avatar:hover {
         background: #dc2626;
+    }
+    
+    .password-input {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    
+    .password-input .form-input {
+        padding-right: 3rem;
+    }
+    
+    .password-toggle {
+        position: absolute;
+        right: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #6b7280;
+        cursor: pointer;
+        padding: 0.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 0.375rem;
+        transition: color 0.2s;
+    }
+    
+    .password-toggle:hover {
+        color: #374151;
+    }
+    
+    .password-toggle:focus {
+        outline: none;
+        color: #00d4ff;
     }
 `;
 document.head.appendChild(style);

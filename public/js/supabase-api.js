@@ -25,9 +25,37 @@ class SupabaseAPI {
         try {
             if (!this.client) throw new Error('Cliente de Supabase no disponible');
             
+            // Primero crear el usuario en Supabase Auth
+            const { data: authData, error: authError } = await this.client.auth.signUp({
+                email: userData.correo,
+                password: userData.contrasena,
+                options: {
+                    data: {
+                        nombre: userData.nombre,
+                        apellido: userData.apellido
+                    }
+                }
+            });
+            
+            if (authError) throw authError;
+            
+            // Luego crear el registro en la tabla users
+            const userRecord = {
+                user_id: authData.user.id,
+                nombre: userData.nombre,
+                apellido: userData.apellido,
+                correo: userData.correo,
+                contrasena: userData.contrasena, // En producción, esto debería ser hasheado
+                acceso: userData.acceso,
+                activo: userData.activo,
+                email_verificado: userData.email_verificado,
+                creado_en: userData.creado_en,
+                actualizado_en: userData.actualizado_en
+            };
+            
             const { data, error } = await this.client
                 .from('users')
-                .insert([userData])
+                .insert([userRecord])
                 .select()
                 .single();
                 
@@ -35,7 +63,10 @@ class SupabaseAPI {
             
             return {
                 success: true,
-                data: data,
+                data: {
+                    auth: authData,
+                    user: data
+                },
                 message: 'Usuario creado exitosamente'
             };
         } catch (error) {

@@ -339,7 +339,7 @@ class ProductDataForm {
             
             // Redirigir al siguiente paso
             setTimeout(() => {
-                window.location.href = 'datos-preferencias.html';
+                window.location.href = 'datos-marca.html';
             }, 1500);
 
         } catch (error) {
