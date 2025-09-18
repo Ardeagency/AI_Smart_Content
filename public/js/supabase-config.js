@@ -18,8 +18,15 @@ function initSupabase() {
             return null;
         }
         
-        supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
-        console.log('✅ Supabase inicializado correctamente');
+        // Solo crear cliente si no existe uno global
+        if (!window.supabaseClient) {
+            supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+            window.supabaseClient = supabase;
+            console.log('✅ Supabase inicializado correctamente');
+        } else {
+            supabase = window.supabaseClient;
+            console.log('✅ Usando cliente de Supabase existente');
+        }
     }
     return supabase;
 }

@@ -39,27 +39,37 @@ class NavigationManager {
 
     // ===== NAVEGACIÓN =====
     navigateTo(stepId, options = {}) {
+        console.log('🧭 NavigationManager: navigateTo llamado con', stepId, options);
+        
         const step = this.steps.find(s => s.id === stepId);
         if (!step) {
-            console.error(`Step '${stepId}' not found`);
+            console.error(`❌ Step '${stepId}' not found`);
             return false;
         }
 
+        console.log('🧭 NavigationManager: Step encontrado', step);
+
         // Validar si se puede navegar a este paso
         if (!this.canNavigateTo(step.step)) {
+            console.log('❌ NavigationManager: No se puede navegar a este paso');
             this.showNavigationError(stepId);
             return false;
         }
 
+        console.log('✅ NavigationManager: Navegación permitida');
+
         // Validar formulario actual si es necesario
         if (options.validateCurrent && !this.validateCurrentForm()) {
+            console.log('❌ NavigationManager: Validación de formulario falló');
             return false;
         }
 
         // Guardar progreso actual
         this.saveProgress();
+        console.log('💾 NavigationManager: Progreso guardado');
 
         // Navegar
+        console.log('🚀 NavigationManager: Navegando a', step.url);
         if (options.replace) {
             window.location.replace(step.url);
         } else {
@@ -71,10 +81,15 @@ class NavigationManager {
 
     navigateNext(options = {}) {
         const nextStep = this.currentStep + 1;
+        console.log('🧭 NavigationManager: Intentando navegar al siguiente paso', nextStep);
+        
         if (nextStep < this.steps.length) {
             const step = this.steps[nextStep];
+            console.log('🧭 NavigationManager: Navegando a', step.id, step.url);
             return this.navigateTo(step.id, options);
         }
+        
+        console.log('🧭 NavigationManager: No hay más pasos disponibles');
         return false;
     }
 

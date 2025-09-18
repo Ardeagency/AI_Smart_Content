@@ -364,11 +364,16 @@ class PreferencesDataForm {
     }
 
     async handleSubmit() {
+        console.log('🚀 Iniciando envío de formulario de preferencias');
+        
         // Validar formulario
         if (!this.validateForm()) {
+            console.log('❌ Validación falló');
             this.showNotification('Por favor, corrige los errores en el formulario', 'error');
             return;
         }
+
+        console.log('✅ Validación exitosa');
 
         // Mostrar loading
         const submitBtn = this.form.querySelector('button[type="submit"]');
@@ -379,37 +384,47 @@ class PreferencesDataForm {
         try {
             // Recopilar datos
             const preferencesData = this.collectFormData();
+            console.log('📊 Datos recopilados:', preferencesData);
             
             // Guardar en contexto global
             if (window.contextManager) {
                 window.contextManager.setData('preferences', preferencesData);
+                console.log('💾 Datos guardados en contexto global');
             }
             
             // Guardar en localStorage temporalmente
             this.saveToLocalStorage(preferencesData);
+            console.log('💾 Datos guardados en localStorage');
             
             // Enviar a Supabase
+            console.log('🔄 Enviando a Supabase...');
             await this.submitToSupabase(preferencesData);
+            console.log('✅ Datos enviados a Supabase exitosamente');
             
             // Marcar paso como completo
             if (window.navigationManager) {
                 window.navigationManager.markStepComplete('preferences');
+                console.log('✅ Paso marcado como completo');
             }
             
             // Mostrar éxito y redirigir
             this.showNotification('¡Configuración completada exitosamente!', 'success');
             
             // Redirigir al siguiente paso
+            console.log('🔄 Redirigiendo al siguiente paso...');
             setTimeout(() => {
+                console.log('🚀 Ejecutando redirección...');
                 if (window.navigationManager) {
+                    console.log('🧭 Usando NavigationManager');
                     window.navigationManager.navigateNext();
                 } else {
+                    console.log('🧭 Usando redirección directa');
                     window.location.href = 'datos-productos.html';
                 }
             }, 2000);
 
         } catch (error) {
-            console.error('Error al guardar preferencias:', error);
+            console.error('❌ Error al guardar preferencias:', error);
             this.showNotification('Error al guardar la configuración. Inténtalo de nuevo.', 'error');
         } finally {
             // Restaurar botón
@@ -553,8 +568,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Agregar estilos adicionales
-const style = document.createElement('style');
-style.textContent = `
+const preferencesStyle = document.createElement('style');
+preferencesStyle.textContent = `
     .style-grid,
     .scenario-grid {
         display: grid;
@@ -604,4 +619,4 @@ style.textContent = `
         border-top: 1px solid var(--border-color);
     }
 `;
-document.head.appendChild(style);
+document.head.appendChild(preferencesStyle);
