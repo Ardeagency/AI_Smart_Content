@@ -1,0 +1,401 @@
+/* ===== ESTILOS ESPECÍFICOS PARA PÁGINAS DEL DASHBOARD ===== */
+
+/* Estilos específicos para páginas del dashboard */
+.dashboard-page .app-container {
+    display: flex !important;
+    min-height: 100vh !important;
+    flex-direction: row !important;
+}
+
+.dashboard-page .sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--primary-bg);
+    border-right: 1px solid var(--border-color);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.dashboard-page .sidebar-header {
+    margin-bottom: 40px;
+}
+
+.dashboard-page .sidebar-nav {
+    flex-grow: 1;
+}
+
+.dashboard-page .sidebar-footer {
+    margin-top: auto;
+    width: 100%;
+}
+
+.dashboard-page .user-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.dashboard-page .main-content {
+    flex: 1;
+    display: block;
+    overflow-x: hidden;
+    background-color: var(--secondary-bg);
+    padding: 0;
+}
+
+.dashboard-page .main-header {
+    background-color: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1.5rem 2rem;
+    margin-bottom: 32px;
+}
+
+.dashboard-page .header-content {
+    display: block;
+    width: 100%;
+}
+
+.dashboard-page .page-title {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.dashboard-page .page-subtitle {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.dashboard-page .header-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+/* Grids y layouts específicos del dashboard */
+.dashboard-page .products-grid,
+.dashboard-page .avatars-grid,
+.dashboard-page .brand-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    padding: 2rem;
+}
+
+.dashboard-page .brand-section {
+    margin-bottom: 3rem;
+}
+
+.dashboard-page .section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+    padding: 0 2rem;
+}
+
+.dashboard-page .brand-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    padding: 0 2rem 2rem;
+}
+
+/* Cards específicas */
+.dashboard-page .product-card,
+.dashboard-page .avatar-card,
+.dashboard-page .brand-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    transition: all var(--transition-speed) ease;
+}
+
+.dashboard-page .product-card:hover,
+.dashboard-page .avatar-card:hover,
+.dashboard-page .brand-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-color: var(--accent-color);
+}
+
+/* Filter bar */
+.dashboard-page .filter-bar {
+    background-color: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.dashboard-page .search-wrapper {
+    position: relative;
+    flex: 1;
+    max-width: 400px;
+}
+
+.dashboard-page .search-input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    background-color: var(--secondary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+}
+
+.dashboard-page .search-input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(253, 98, 79, 0.1);
+}
+
+.dashboard-page .search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    width: 20px;
+    height: 20px;
+}
+
+.dashboard-page .filter-wrapper {
+    display: flex;
+    gap: 1rem;
+}
+
+.dashboard-page .filter-select select {
+    padding: 0.75rem 1rem;
+    background-color: var(--secondary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    min-width: 150px;
+}
+
+.dashboard-page .filter-select select:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+/* Responsive design para dashboard */
+@media (max-width: 1024px) {
+    .dashboard-page .products-grid,
+    .dashboard-page .avatars-grid,
+    .dashboard-page .brand-cards {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+        padding: 1rem;
+    }
+    
+    .dashboard-page .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+    
+    .dashboard-page .search-wrapper {
+        max-width: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-page .app-container {
+        flex-direction: column;
+    }
+    
+    .dashboard-page .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .dashboard-page .main-header {
+        padding: 1rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .dashboard-page .header-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    
+    .dashboard-page .products-grid,
+    .dashboard-page .avatars-grid,
+    .dashboard-page .brand-cards {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+    }
+    
+    .dashboard-page .section-title {
+        padding: 0 1rem;
+    }
+    
+    .dashboard-page .brand-cards {
+        padding: 0 1rem 1rem;
+    }
+}
+
+/* Asegurar que no haya scroll horizontal en páginas del dashboard */
+.dashboard-page {
+    overflow-x: hidden;
+}
+
+.dashboard-page .main-content {
+    overflow-x: hidden;
+}
+
+/* Corrección específica para el layout del dashboard */
+.dashboard-page .app-container {
+    display: flex !important;
+    min-height: 100vh !important;
+    flex-direction: row !important;
+    width: 100% !important;
+}
+
+.dashboard-page .sidebar {
+    width: var(--sidebar-width) !important;
+    min-width: var(--sidebar-width) !important;
+    max-width: var(--sidebar-width) !important;
+    flex-shrink: 0 !important;
+}
+
+.dashboard-page .main-content {
+    flex: 1 !important;
+    width: calc(100% - var(--sidebar-width)) !important;
+    min-width: 0 !important;
+}
+
+/* Asegurar que los elementos del sidebar estén alineados correctamente */
+.dashboard-page .sidebar-header .logo {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    color: var(--text-primary) !important;
+    margin-bottom: 40px !important;
+    width: 100% !important;
+}
+
+.dashboard-page .nav-list {
+    list-style: none !important;
+    width: 100% !important;
+}
+
+.dashboard-page .nav-item {
+    width: 100% !important;
+}
+
+.dashboard-page .nav-link {
+    display: flex !important;
+    align-items: center !important;
+    gap: 16px !important;
+    padding: 12px 16px !important;
+    margin-bottom: 8px !important;
+    border-radius: 8px !important;
+    text-decoration: none !important;
+    color: var(--text-secondary) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Estilos para elementos específicos de marca */
+.dashboard-page .color-palette {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.dashboard-page .color-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dashboard-page .color-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+}
+
+.dashboard-page .tone-tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.dashboard-page .tone-tag {
+    background-color: var(--accent-color);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* Estilos para avatares */
+.dashboard-page .avatar-image {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.dashboard-page .avatar-photo {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.dashboard-page .avatar-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity var(--transition-speed) ease;
+    border-radius: 8px;
+}
+
+.dashboard-page .avatar-card:hover .avatar-overlay {
+    opacity: 1;
+}
+
+/* Estilos para productos */
+.dashboard-page .product-image {
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.dashboard-page .image-placeholder {
+    width: 100%;
+    height: 200px;
+    background-color: var(--secondary-bg);
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+}
+
+.dashboard-page .image-placeholder svg {
+    width: 48px;
+    height: 48px;
+}

@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración Inicial - UGC Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/onboarding.css">
+</head>
+<body>
+    <!-- Background Elements -->
+    <div class="onboarding-background">
+        <div class="bg-gradient-1"></div>
+        <div class="bg-gradient-2"></div>
+        <div class="bg-grid"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="onboarding-header">
+        <div class="header-content">
+            <div class="logo">
+                <h2>UGC Studio</h2>
+            </div>
+            <div class="progress-info">
+                <span class="step-counter"><span id="currentStep">1</span> de <span id="totalSteps">25</span></span>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="onboarding-main">
+        <div class="form-container">
+            
+            <!-- SECCIÓN 1: PRODUCTO (Steps 1-7) -->
+            
+            <!-- Step 1: Nombre del Producto -->
+            <div class="question-slide active" data-step="1">
+                <div class="question-content">
+                    <div class="question-header">
+                        <div class="question-icon">
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <h1 class="question-title">¿Cómo se llama tu producto o servicio?</h1>
+                        <p class="question-subtitle">Este será el protagonista de tu contenido UGC</p>
+                    </div>
+                    
+                    <div class="question-form">
+                        <div class="input-group">
+                            <label>Nombre del producto o servicio</label>
+                            <input type="text" id="nombre_producto" placeholder="Ej: iPhone 15 Pro, Curso de Marketing Digital, etc." maxlength="100">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Tipo de Producto -->
+            <div class="question-slide" data-step="2">
+                <div class="question-content">
+                    <div class="question-header">
+                        <div class="question-icon">
+                            <i class="fas fa-tag"></i>
+                        </div>
+                        <h1 class="question-title">¿Qué tipo de producto o servicio es?</h1>
+                        <p class="question-subtitle">Esto nos ayuda a entender cómo presentarlo mejor</p>
+                    </div>
+                    
+                    <div class="question-form">
+                        <div class="options-grid">
+                            <div class="option-card" data-value="producto_fisico">
+                                <div class="option-icon"><i class="fas fa-cube"></i></div>
+                                <span>Producto Físico</span>
+                                <small>Algo tangible que se puede tocar</small>
+                            </div>
+                            <div class="option-card" data-value="producto_digital">
+                                <div class="option-icon"><i class="fas fa-laptop"></i></div>
+                                <span>Producto Digital</span>
+                                <small>Apps, ebooks, plantillas</small>
+                            </div>
+                            <div class="option-card" data-value="servicio">
+                                <div class="option-icon"><i class="fas fa-handshake"></i></div>
+                                <span>Servicio</span>
+                                <small>Consultoría, limpieza, etc.</small>
+                            </div>
+                            <div class="option-card" data-value="curso">
+                                <div class="option-icon"><i class="fas fa-graduation-cap"></i></div>
+                                <span>Curso</span>
+                                <small>Formación y educación</small>
+                            </div>
+                            <div class="option-card" data-value="software">
+                                <div class="option-icon"><i class="fas fa-code"></i></div>
+                                <span>Software</span>
+                                <small>Aplicaciones y programas</small>
+                            </div>
+                            <div class="option-card" data-value="evento">
+                                <div class="option-icon"><i class="fas fa-calendar"></i></div>
+                                <span>Evento</span>
+                                <small>Conferencias, talleres, shows</small>
+                            </div>
+                        </div>
+                        <input type="hidden" id="tipo_producto">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Categoría -->
+            <div class="question-slide" data-step="3">
+                <div class="question-content">
+                    <div class="question-header">
+                        <div class="question-icon">
+                            <i class="fas fa-list"></i>
+                        </div>
+                        <h1 class="question-title">¿En qué categoría encaja mejor?</h1>
+                        <p class="question-subtitle">Selecciona la categoría principal</p>
+                    </div>
+                    
+                    <div class="question-form">
+                        <div class="input-group">
+                            <label>Categoría del producto</label>
+                            <input type="text" id="categoria" placeholder="Ej: Tecnología, Belleza, Hogar, Educación..." maxlength="50">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Subcategoría -->
+            <div class="question-slide" data-step="4">
+                <div class="question-content">
+                    <div class="question-header">
+                        <div class="question-icon">
+                            <i class="fas fa-sitemap"></i>
+                        </div>
+                        <h1 class="question-title">¿Podrías ser más específico?</h1>
+                        <p class="question-subtitle">Subcategoría para personalizar mejor el contenido</p>
+                    </div>
+                    
+                    <div class="question-form">
+                        <div class="input-group">
+                            <label>Subcategoría (opcional)</label>
+                            <input type="text" id="subcategoria" placeholder="Ej: Smartphones, Skincare, Muebles de oficina..." maxlength="50">
+                            <small class="input-hint">Puedes omitir este paso si no aplica</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 5: Descripción -->
+            <div class="question-slide" data-step="5">
+                <div class="question-content">
+                    <div class="question-header">
+                        <div class="question-icon">
+                            <i class="fas fa-edit"></i>
+                        </div>
+                        <h1 class="question-title">Describe tu producto en detalle</h1>
+                        <p class="question-subtitle">Una buena descripción genera mejor contenido</p>
+                    </div>
+                    
+                    <div class="question-form">
+                        <div class="input-group">
+                            <label>Descripción del producto</label>
+                            <textarea id="descripcion" placeholder="Describe las características, funciones, materiales, para qué sirve, qué problema resuelve..." maxlength="1000" rows="5"></textarea>
+                            <div class="char-counter">
+                                <span id="charCount">0</span>/1000 caracteres
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 6: Características Principales -->
+            <div class="question-slide" data-step="6">
+                <div class="question-content">
+                    <div class="question-header">
+                        <div class="question-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <h1 class="question-title">¿Cuáles son sus características más importantes?</h1>
+                        <p class="question-subtitle">Las features que más destacan de tu producto</p>
+                    </div>
+                    
+                    <div class="question-form">
+                        <div class="characteristics-form">
+                            <div class="input-group">
+                                <label>Característica #1</label>
+                                <input type="text" id="caracteristica_1" placeholder="Ej: Cámara de 48MP con IA" maxlength="100">
+                            </div>
+                            <div class="input-group">
+                                <label>Característica #2</label>
+                                <input type="text" id="caracteristica_2" placeholder="Ej: Batería de 5000mAh" maxlength="100">
+                            </div>
+                            <div class="input-group">
+                                <label>Característica #3</label>
+                                <input type="text" id="caracteristica_3" placeholder="Ej: Resistente al agua IP68" maxlength="100">
+                            </div>
+                            <div class="input-group">
+                                <label>Característica #4 (opcional)</label>
+                                <input type="text" id="caracteristica_4" placeholder="Otra característica importante..." maxlength="100">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 7: Fotos del Producto -->
+            <div class="question-slide" data-step="7">
+                <div class="question-content">
+                    <div class="question-header">
+                        <div class="question-icon">
+                            <i class="fas fa-camera"></i>
+                        </div>
+                        <h1 class="question-title">Sube 4 fotos de tu producto</h1>
+                        <p class="question-subtitle">Estas imágenes nos ayudarán a generar UGC más realista</p>
+                    </div>
+                    
+                    <div class="question-form">
+                        <div class="image-upload-container">
+                            <div class="upload-grid">
+                                <div class="upload-slot" data-slot="1">
+                                    <input type="file" id="imagen_1" accept="image/*" hidden>
+                                    <div class="upload-placeholder">
+                                        <i class="fas fa-plus"></i>
+                                        <span>Foto #1</span>
+                                    </div>
+                                    <div class="upload-preview" style="display: none;">
+                                        <img src="" alt="Preview 1">
+                                        <button type="button" class="remove-image">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="upload-slot" data-slot="2">
+                                    <input type="file" id="imagen_2" accept="image/*" hidden>
+                                    <div class="upload-placeholder">
+                                        <i class="fas fa-plus"></i>
+                                        <span>Foto #2</span>
+                                    </div>
+                                    <div class="upload-preview" style="display: none;">
+                                        <img src="" alt="Preview 2">
+                                        <button type="button" class="remove-image">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="upload-slot" data-slot="3">
+                                    <input type="file" id="imagen_3" accept="image/*" hidden>
+                                    <div class="upload-placeholder">
+                                        <i class="fas fa-plus"></i>
+                                        <span>Foto #3</span>
+                                    </div>
+                                    <div class="upload-preview" style="display: none;">
+                                        <img src="" alt="Preview 3">
+                                        <button type="button" class="remove-image">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="upload-slot" data-slot="4">
+                                    <input type="file" id="imagen_4" accept="image/*" hidden>
+                                    <div class="upload-placeholder">
+                                        <i class="fas fa-plus"></i>
+                                        <span>Foto #4</span>
+                                    </div>
+                                    <div class="upload-preview" style="display: none;">
+                                        <img src="" alt="Preview 4">
+                                        <button type="button" class="remove-image">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="upload-info">
+                                <p><i class="fas fa-info-circle"></i> Sube al menos 2 fotos para continuar. Formatos soportados: JPG, PNG. Máximo 5MB por imagen.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 2: PREFERENCIAS UGC (Steps 8-25) -->
+            
+            <!-- Step 8: Plataforma Principal -->
+            <div class="question-slide" data-step="8">
+                <div class="question-content">
+                    <div class="question-header">
+                        <div class="question-icon">
+                            <i class="fas fa-share-alt"></i>
+                        </div>
+                        <h1 class="question-title">¿En qué plataforma usarás principalmente el contenido?</h1>
+                        <p class="question-subtitle">Esto optimiza el formato y estilo</p>
+                    </div>
+                    
+                    <div class="question-form">
+                        <div class="options-grid">
+                            <div class="option-card" data-value="instagram">
+                                <div class="option-icon"><i class="fab fa-instagram"></i></div>
+                                <span>Instagram</span>
+                            </div>
+                            <div class="option-card" data-value="tiktok">
+                                <div class="option-icon"><i class="fab fa-tiktok"></i></div>
+                                <span>TikTok</span>
+                            </div>
+                            <div class="option-card" data-value="youtube">
+                                <div class="option-icon"><i class="fab fa-youtube"></i></div>
+                                <span>YouTube</span>
+                            </div>
+                            <div class="option-card" data-value="facebook">
+                                <div class="option-icon"><i class="fab fa-facebook"></i></div>
+                                <span>Facebook</span>
+                            </div>
+                            <div class="option-card" data-value="linkedin">
+                                <div class="option-icon"><i class="fab fa-linkedin"></i></div>
+                                <span>LinkedIn</span>
+                            </div>
+                            <div class="option-card" data-value="twitter">
+                                <div class="option-icon"><i class="fab fa-twitter"></i></div>
+                                <span>Twitter/X</span>
+                            </div>
+                        </div>
+                        <input type="hidden" id="plataforma_principal">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 9: Tipo de Contenido UGC -->
+            <div class="question-slide" data-step="9">
+                <div class="question-content">
+                    <div class="question-header">
+                        <div class="question-icon">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        <h1 class="question-title">¿Qué tipo de contenido UGC te interesa?</h1>
+                        <p class="question-subtitle">Puedes seleccionar múltiples opciones</p>
+                    </div>
+                    
+                    <div class="question-form">
+                        <div class="multi-select-options">
+                            <div class="option-card multi-select" data-value="video">
+                                <div class="option-icon"><i class="fas fa-video"></i></div>
+                                <span>Videos</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="foto">
+                                <div class="option-icon"><i class="fas fa-camera"></i></div>
+                                <span>Fotos</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="reseña">
+                                <div class="option-icon"><i class="fas fa-star"></i></div>
+                                <span>Reseñas</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="unboxing">
+                                <div class="option-icon"><i class="fas fa-box-open"></i></div>
+                                <span>Unboxing</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="tutorial">
+                                <div class="option-icon"><i class="fas fa-graduation-cap"></i></div>
+                                <span>Tutoriales</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="comparacion">
+                                <div class="option-icon"><i class="fas fa-balance-scale"></i></div>
+                                <span>Comparaciones</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="tipo_contenido">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 10: Presupuesto Mensual -->
+            <div class="question-slide" data-step="10">
+                <div class="question-content">
+                    <div class="question-header">
+                        <div class="question-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <h1 class="question-title">¿Cuál es tu presupuesto mensual para UGC?</h1>
+                        <p class="question-subtitle">Esto nos ayuda a sugerir creadores adecuados</p>
+                    </div>
+                    
+                    <div class="question-form">
+                        <div class="range-input-container">
+                            <div class="range-wrapper">
+                                <input type="range" id="presupuesto_mensual" min="100" max="10000" step="100" value="1000">
+                                <div class="range-labels">
+                                    <span>$100</span>
+                                    <span class="range-value">$1,000</span>
+                                    <span>$10,000+</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 11: Número de Creadores -->
+            <div class="question-slide" data-step="11">
+                <div class="question-content">
+                    <div class="question-header">
+                        <div class="question-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h1 class="question-title">¿Con cuántos creadores te gustaría trabajar?</h1>
+                        <p class="question-subtitle">Mensualmente</p>
+                    </div>
+                    
+                    <div class="question-form">
+                        <div class="range-input-container">
+                            <div class="range-wrapper">
+                                <input type="range" id="numero_creadores" min="1" max="50" step="1" value="5">
+                                <div class="range-labels">
+                                    <span>1</span>
+                                    <span class="range-value">5</span>
+                                    <span>50+</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 12: Frecuencia de Contenido -->
+            <div class="question-slide" data-step="12">
+                <div class="question-content">
+                    <div class="question-header">
+                        <div class="question-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <h1 class="question-title">¿Con qué frecuencia necesitas contenido?</h1>
+                        <p class="question-subtitle">Selecciona la opción que mejor se adapte a tus necesidades</p>
+                    </div>
+                    
+                    <div class="question-form">
+                        <div class="options-grid">
+                            <div class="option-card" data-value="diario">
+                                <div class="option-icon"><i class="fas fa-clock"></i></div>
+                                <span>Diario</span>
+                            </div>
+                            <div class="option-card" data-value="semanal">
+                                <div class="option-icon"><i class="fas fa-calendar-week"></i></div>
+                                <span>Semanal</span>
+                            </div>
+                            <div class="option-card" data-value="quincenal">
+                                <div class="option-icon"><i class="fas fa-calendar"></i></div>
+                                <span>Quincenal</span>
+                            </div>
+                            <div class="option-card" data-value="mensual">
+                                <div class="option-icon"><i class="fas fa-calendar-alt"></i></div>
+                                <span>Mensual</span>
+                            </div>
+                        </div>
+                        <input type="hidden" id="frecuencia_contenido">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 13: Duración Preferida -->
+            <div class="question-slide" data-step="13">
+                <div class="question-content">
+                    <div class="question-header">
+                        <div class="question-icon">
+                            <i class="fas fa-stopwatch"></i>
+                        </div>
+                        <h1 class="question-title">¿Cuál es la duración ideal para tus videos?</h1>
+                        <p class="question-subtitle">Para contenido de video UGC</p>
+                    </div>
+                    
+                    <div class="question-form">
+                        <div class="options-grid">
+                            <div class="option-card" data-value="15-30s">
+                                <div class="option-icon"><i class="fas fa-bolt"></i></div>
+                                <span>15-30 segundos</span>
+                                <small>Ideal para TikTok/Instagram Reels</small>
+                            </div>
+                            <div class="option-card" data-value="30-60s">
+                                <div class="option-icon"><i class="fas fa-play-circle"></i></div>
+                                <span>30-60 segundos</span>
+                                <small>Perfecto para redes sociales</small>
+                            </div>
+                            <div class="option-card" data-value="1-3min">
+                                <div class="option-icon"><i class="fas fa-video"></i></div>
+                                <span>1-3 minutos</span>
+                                <small>Contenido más detallado</small>
+                            </div>
+                            <div class="option-card" data-value="3min+">
+                                <div class="option-icon"><i class="fas fa-film"></i></div>
+                                <span>Más de 3 minutos</span>
+                                <small>Para YouTube o reviews</small>
+                            </div>
+                        </div>
+                        <input type="hidden" id="duracion_preferida">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 14: Tono de Comunicación -->
+            <div class="question-slide" data-step="14">
+                <div class="question-content">
+                    <div class="question-header">
+                        <div class="question-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <h1 class="question-title">¿Qué tono prefieres para tu contenido?</h1>
+                        <p class="question-subtitle">Puedes seleccionar múltiples opciones</p>
+                    </div>
+                    
+                    <div class="question-form">
+                        <div class="multi-select-options">
+                            <div class="option-card multi-select" data-value="profesional">
+                                <div class="option-icon"><i class="fas fa-briefcase"></i></div>
+                                <span>Profesional</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="casual">
+                                <div class="option-icon"><i class="fas fa-smile"></i></div>
+                                <span>Casual</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="divertido">
+                                <div class="option-icon"><i class="fas fa-laugh"></i></div>
+                                <span>Divertido</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="educativo">
+                                <div class="option-icon"><i class="fas fa-graduation-cap"></i></div>
+                                <span>Educativo</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="inspiracional">
+                                <div class="option-icon"><i class="fas fa-lightbulb"></i></div>
+                                <span>Inspiracional</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="tono_comunicacion">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 15: Audiencia Objetivo -->
+            <div class="question-slide" data-step="15">
+                <div class="question-content">
+                    <div class="question-header">
+                        <div class="question-icon">
+                            <i class="fas fa-bullseye"></i>
+                        </div>
+                        <h1 class="question-title">¿Cuál es tu audiencia objetivo?</h1>
+                        <p class="question-subtitle">Describe a quién te diriges</p>
+                    </div>
+                    
+                    <div class="question-form">
+                        <div class="text-input-container">
+                            <textarea id="audiencia_objetivo" placeholder="Ej: Mujeres de 25-35 años interesadas en fitness y estilo de vida saludable..." maxlength="500" rows="4"></textarea>
+                            <div class="char-counter">0/500</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 16: Ubicación Geográfica -->
+            <div class="question-slide" data-step="16">
+                <div class="question-content">
+                    <div class="question-header">
+                        <div class="question-icon">
+                            <i class="fas fa-globe-americas"></i>
+                        </div>
+                        <h1 class="question-title">¿En qué regiones te enfocarás?</h1>
+                        <p class="question-subtitle">Puedes seleccionar múltiples ubicaciones</p>
+                    </div>
+                    
+                    <div class="question-form">
+                        <div class="multi-select-options">
+                            <div class="option-card multi-select" data-value="mexico">
+                                <div class="option-icon"><i class="fas fa-flag"></i></div>
+                                <span>México</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="usa">
+                                <div class="option-icon"><i class="fas fa-flag-usa"></i></div>
+                                <span>Estados Unidos</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="latam">
+                                <div class="option-icon"><i class="fas fa-map"></i></div>
+                                <span>Latinoamérica</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="global">
+                                <div class="option-icon"><i class="fas fa-globe"></i></div>
+                                <span>Global</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="ubicacion_geografica">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 17: Hashtags Relevantes -->
+            <div class="question-slide" data-step="17">
+                <div class="question-content">
+                    <div class="question-header">
+                        <div class="question-icon">
+                            <i class="fas fa-hashtag"></i>
+                        </div>
+                        <h1 class="question-title">Hashtags o temas relevantes</h1>
+                        <p class="question-subtitle">Ayúdanos a entender tu nicho (separados por comas)</p>
+                    </div>
+                    
+                    <div class="question-form">
+                        <div class="text-input-container">
+                            <input type="text" id="hashtags_relevantes" placeholder="Ej: #fitness, #healthylifestyle, #workout, #nutrition..." maxlength="200">
+                            <div class="char-counter">0/200</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 18: Experiencia Previa -->
+            <div class="question-slide" data-step="18">
+                <div class="question-content">
+                    <div class="question-header">
+                        <div class="question-icon">
+                            <i class="fas fa-history"></i>
+                        </div>
+                        <h1 class="question-title">¿Has trabajado con UGC antes?</h1>
+                        <p class="question-subtitle">Tu experiencia nos ayuda a personalizar el servicio</p>
+                    </div>
+                    
+                    <div class="question-form">
+                        <div class="options-grid">
+                            <div class="option-card" data-value="nunca">
+                                <div class="option-icon"><i class="fas fa-seedling"></i></div>
+                                <span>Nunca</span>
+                                <small>Primera vez con UGC</small>
+                            </div>
+                            <div class="option-card" data-value="poco">
+                                <div class="option-icon"><i class="fas fa-leaf"></i></div>
+                                <span>Poca experiencia</span>
+                                <small>He probado algunas campañas</small>
+                            </div>
+                            <div class="option-card" data-value="moderada">
+                                <div class="option-icon"><i class="fas fa-tree"></i></div>
+                                <span>Experiencia moderada</span>
+                                <small>Varios meses de campañas</small>
+                            </div>
+                            <div class="option-card" data-value="experto">
+                                <div class="option-icon"><i class="fas fa-award"></i></div>
+                                <span>Experto</span>
+                                <small>Más de un año de experiencia</small>
+                            </div>
+                        </div>
+                        <input type="hidden" id="experiencia_previa">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 19: Métricas de Éxito -->
+            <div class="question-slide" data-step="19">
+                <div class="question-content">
+                    <div class="question-header">
+                        <div class="question-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h1 class="question-title">¿Qué métricas son más importantes para ti?</h1>
+                        <p class="question-subtitle">Puedes seleccionar múltiples opciones</p>
+                    </div>
+                    
+                    <div class="question-form">
+                        <div class="multi-select-options">
+                            <div class="option-card multi-select" data-value="engagement">
+                                <div class="option-icon"><i class="fas fa-heart"></i></div>
+                                <span>Engagement</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="alcance">
+                                <div class="option-icon"><i class="fas fa-eye"></i></div>
+                                <span>Alcance</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="conversiones">
+                                <div class="option-icon"><i class="fas fa-shopping-cart"></i></div>
+                                <span>Conversiones</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="awareness">
+                                <div class="option-icon"><i class="fas fa-lightbulb"></i></div>
+                                <span>Brand Awareness</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="credibilidad">
+                                <div class="option-icon"><i class="fas fa-shield-alt"></i></div>
+                                <span>Credibilidad</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="metricas_exito">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 20: Otras Preferencias -->
+            <div class="question-slide" data-step="20">
+                <div class="question-content">
+                    <div class="question-header">
+                        <div class="question-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <h1 class="question-title">¿Alguna preferencia adicional?</h1>
+                        <p class="question-subtitle">Comparte cualquier detalle especial que debamos considerar</p>
+                    </div>
+                    
+                    <div class="question-form">
+                        <div class="text-input-container">
+                            <textarea id="otras_preferencias" placeholder="Ej: Prefiero creadores que hablen español, enfoque en sostenibilidad, etc..." maxlength="500" rows="4"></textarea>
+                            <div class="char-counter">0/500</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 21: Nombre de la Marca -->
+            <div class="question-slide" data-step="21">
+                <div class="question-content">
+                    <div class="question-header">
+                        <div class="question-icon">
+                            <i class="fas fa-trademark"></i>
+                        </div>
+                        <h1 class="question-title">¿Cuál es el nombre de tu marca?</h1>
+                        <p class="question-subtitle">Información básica de tu empresa</p>
+                    </div>
+                    
+                    <div class="question-form">
+                        <div class="text-input-container">
+                            <input type="text" id="nombre_marca" placeholder="Nombre de tu marca o empresa..." maxlength="100" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 22: Sitio Web -->
+            <div class="question-slide" data-step="22">
+                <div class="question-content">
+                    <div class="question-header">
+                        <div class="question-icon">
+                            <i class="fas fa-globe"></i>
+                        </div>
+                        <h1 class="question-title">¿Tienes sitio web?</h1>
+                        <p class="question-subtitle">Comparte el URL de tu website</p>
+                    </div>
+                    
+                    <div class="question-form">
+                        <div class="text-input-container">
+                            <input type="url" id="sitio_web" placeholder="https://tu-marca.com" maxlength="200">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 23: Redes Sociales -->
+            <div class="question-slide" data-step="23">
+                <div class="question-content">
+                    <div class="question-header">
+                        <div class="question-icon">
+                            <i class="fas fa-share-alt"></i>
+                        </div>
+                        <h1 class="question-title">Enlaces a tus redes sociales</h1>
+                        <p class="question-subtitle">Ayúdanos a conocer mejor tu marca</p>
+                    </div>
+                    
+                    <div class="question-form">
+                        <div class="social-links-container">
+                            <div class="social-input">
+                                <i class="fab fa-instagram"></i>
+                                <input type="text" id="instagram" placeholder="@tu_instagram">
+                            </div>
+                            <div class="social-input">
+                                <i class="fab fa-tiktok"></i>
+                                <input type="text" id="tiktok" placeholder="@tu_tiktok">
+                            </div>
+                            <div class="social-input">
+                                <i class="fab fa-facebook"></i>
+                                <input type="text" id="facebook" placeholder="facebook.com/tu-pagina">
+                            </div>
+                            <div class="social-input">
+                                <i class="fab fa-youtube"></i>
+                                <input type="text" id="youtube" placeholder="youtube.com/@tu-canal">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 24: Industria -->
+            <div class="question-slide" data-step="24">
+                <div class="question-content">
+                    <div class="question-header">
+                        <div class="question-icon">
+                            <i class="fas fa-industry"></i>
+                        </div>
+                        <h1 class="question-title">¿En qué industria opera tu marca?</h1>
+                        <p class="question-subtitle">Esto nos ayuda a encontrar creadores especializados</p>
+                    </div>
+                    
+                    <div class="question-form">
+                        <div class="options-grid">
+                            <div class="option-card" data-value="belleza">
+                                <div class="option-icon"><i class="fas fa-heart"></i></div>
+                                <span>Belleza</span>
+                            </div>
+                            <div class="option-card" data-value="moda">
+                                <div class="option-icon"><i class="fas fa-tshirt"></i></div>
+                                <span>Moda</span>
+                            </div>
+                            <div class="option-card" data-value="tecnologia">
+                                <div class="option-icon"><i class="fas fa-laptop"></i></div>
+                                <span>Tecnología</span>
+                            </div>
+                            <div class="option-card" data-value="fitness">
+                                <div class="option-icon"><i class="fas fa-dumbbell"></i></div>
+                                <span>Fitness</span>
+                            </div>
+                            <div class="option-card" data-value="hogar">
+                                <div class="option-icon"><i class="fas fa-home"></i></div>
+                                <span>Hogar</span>
+                            </div>
+                            <div class="option-card" data-value="comida">
+                                <div class="option-icon"><i class="fas fa-utensils"></i></div>
+                                <span>Comida</span>
+                            </div>
+                            <div class="option-card" data-value="otro">
+                                <div class="option-icon"><i class="fas fa-ellipsis-h"></i></div>
+                                <span>Otro</span>
+                            </div>
+                        </div>
+                        <input type="hidden" id="industria">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 25: Descripción de la Marca -->
+            <div class="question-slide" data-step="25">
+                <div class="question-content">
+                    <div class="question-header">
+                        <div class="question-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <h1 class="question-title">Cuéntanos sobre tu marca</h1>
+                        <p class="question-subtitle">Una breve descripción de lo que hace tu marca y su propuesta de valor</p>
+                    </div>
+                    
+                    <div class="question-form">
+                        <div class="text-input-container">
+                            <textarea id="descripcion_marca" placeholder="Ej: Somos una marca de cosméticos naturales enfocada en el cuidado sostenible de la piel..." maxlength="1000" rows="6"></textarea>
+                            <div class="char-counter">0/1000</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Success Screen -->
+            <div class="question-slide" data-step="success" style="display: none;">
+                <div class="question-content">
+                    <div class="success-animation">
+                        <div class="success-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <h1 class="success-title">¡Perfecto! Tu perfil está completo</h1>
+                        <p class="success-subtitle">Estamos preparando tu experiencia personalizada en UGC Studio</p>
+                        
+                        <div class="success-actions">
+                            <button class="btn-primary" id="btnGoToDashboard">
+                                Ir al Dashboard
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="navigation-buttons">
+                <button class="btn-back" id="btnBack" disabled>
+                    <i class="fas fa-arrow-left"></i>
+                    Atrás
+                </button>
+                <button class="btn-next" id="btnNext" disabled>
+                    Continuar
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+
+            <!-- Skip Option -->
+            <div class="skip-section">
+                <button class="btn-skip" id="btnSkip">
+                    Completar después
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="onboarding-footer">
+        <p>UGC Studio • Configuración Inicial • <span id="timeEstimate">8 min restantes</span></p>
+    </footer>
+
+    <script src="js/onboarding-complete.js"></script>
+</body>
+</html>

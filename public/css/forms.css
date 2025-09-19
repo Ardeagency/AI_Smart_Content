@@ -508,17 +508,12 @@ section, div, form, main {
 /* ===== ESTILOS CRÍTICOS FINALES - MÁXIMA PRIORIDAD ===== */
 /* Estos estilos van al final para sobrescribir TODO */
 
-/* Forzar layout vertical en TODOS los elementos */
-* {
-    box-sizing: border-box !important;
-}
-
-/* Eliminar cualquier comportamiento de carrusel o horizontal */
-.app-container,
-.main-content,
-.form-container,
-.form-section,
-.form-group {
+/* Estilos específicos para páginas de formularios */
+.form-page .app-container,
+.form-page .main-content,
+.form-page .form-container,
+.form-page .form-section,
+.form-page .form-group {
     display: block !important;
     width: 100% !important;
     float: none !important;
@@ -527,14 +522,14 @@ section, div, form, main {
     overflow: visible !important;
 }
 
-.form-group {
+.form-page .form-group {
     display: flex !important;
     flex-direction: column !important;
     width: 100% !important;
     margin-bottom: 1.5rem !important;
 }
 
-.form-actions {
+.form-page .form-actions {
     display: flex !important;
     flex-direction: row !important;
     justify-content: space-between !important;
@@ -542,15 +537,14 @@ section, div, form, main {
     width: 100% !important;
 }
 
-/* Asegurar que no haya scroll horizontal */
-html, body {
+/* Asegurar que no haya scroll horizontal solo en páginas de formularios */
+.form-page {
     overflow-x: hidden !important;
     width: 100% !important;
     max-width: 100% !important;
 }
 
-/* Asegurar que el contenedor principal no use flexbox horizontal */
-.app-container {
+.form-page .app-container {
     display: block !important;
     flex-direction: column !important;
     width: 100% !important;

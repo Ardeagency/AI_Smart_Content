@@ -1,383 +1,313 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planes - UGC STUDIO</title>
+    <title>Planes - UGC Generator</title>
     <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/planes.css">
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
-        <div class="container">
-            <div class="header-content">
-                <!-- Logo -->
-                <a href="/" class="logo">
-                    <div class="logo-icon">
-                        <span class="logo-letter">a</span>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="logo">
+                        <h1>UGC Generator</h1>
                     </div>
-                    <span class="logo-text">UGC STUDIO</span>
-                </a>
-
-                <!-- Navegación Principal -->
-                <nav class="nav">
-                    <ul class="nav-list">
-                        <li class="nav-item">
-                            <a href="/biblioteca" class="nav-link">
-                                <span>Biblioteca</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/mis-ugcs" class="nav-link">
-                                <span>Mis UGCs</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/planes" class="nav-link active">
-                                <span>Planes</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="/perfil" class="nav-link">
-                                <span>Perfil</span>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-
-                <!-- Botón Crear UGC -->
-                <button class="btn-primary btn-create-ugc">
-                    <span>Crear UGC</span>
-                </button>
+                    <nav class="main-nav">
+                        <a href="index.html" class="nav-link">Inicio</a>
+                        <a href="login.html" class="nav-link">Iniciar Sesión</a>
+                    </nav>
+                </div>
             </div>
-        </div>
-    </header>
+        </header>
 
-    <!-- Breadcrumbs -->
-    <div class="breadcrumbs">
-        <div class="container">
-            <nav class="breadcrumb-nav">
-                <a href="/" class="breadcrumb-link">Home</a>
-                <span class="breadcrumb-separator">/</span>
-                <span class="breadcrumb-current">Planes</span>
-            </nav>
-        </div>
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="container">
+                <!-- Hero Section -->
+                <section class="hero-section">
+                    <div class="hero-content">
+                        <h1 class="hero-title">Power your creativity with the right plan for you</h1>
+                        <div class="plan-type-selector">
+                            <button class="selector-btn active" data-type="standard">Standard</button>
+                            <button class="selector-btn" data-type="business">Business</button>
+                        </div>
+                        <p class="hero-subtitle">For content creators, freelancers, and companies of up to 50 people</p>
+                    </div>
+                </section>
+
+                <!-- Pricing Section -->
+                <section class="pricing-section">
+                    <div class="pricing-container">
+                        <!-- Plan Music & SFX -->
+                        <div class="pricing-card">
+                            <div class="plan-header">
+                                <h3 class="plan-name">Music & SFX</h3>
+                                <div class="plan-price">
+                                    <span class="currency">USD</span>
+                                    <span class="amount">9</span>
+                                    <span class="price-decimal">.99</span>
+                                    <span class="period">/month</span>
+                                </div>
+                            </div>
+                            <div class="plan-action">
+                                <button class="plan-button" onclick="selectPlan('music')">
+                                    Get Started
+                                </button>
+                            </div>
+                            <div class="plan-features">
+                                <h4 class="features-title">Customize your plan with:</h4>
+                                <ul class="features-list">
+                                    <li class="feature-item">
+                                        <span class="feature-icon">✓</span>
+                                        <span class="feature-text">Music</span>
+                                    </li>
+                                    <li class="feature-item">
+                                        <span class="feature-icon">✓</span>
+                                        <span class="feature-text">Stems</span>
+                                    </li>
+                                    <li class="feature-item">
+                                        <span class="feature-icon">✓</span>
+                                        <span class="feature-text">Sound effects</span>
+                                    </li>
+                                    <li class="feature-item">
+                                        <span class="feature-icon">✓</span>
+                                        <span class="feature-text">Extension for Premiere Pro</span>
+                                        <span class="info-icon">ℹ</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Plan AI Suite -->
+                        <div class="pricing-card featured">
+                            <div class="plan-badge">MOST POPULAR</div>
+                            <div class="plan-header">
+                                <h3 class="plan-name">
+                                    <span class="sparkle-icon">✨</span>
+                                    AI Suite
+                                </h3>
+                                <div class="plan-price">
+                                    <span class="currency">USD</span>
+                                    <span class="amount">11</span>
+                                    <span class="price-decimal">.99</span>
+                                    <span class="period">/month</span>
+                                </div>
+                            </div>
+                            <div class="plan-action">
+                                <button class="plan-button" onclick="selectPlan('ai')">
+                                    Get Started
+                                </button>
+                            </div>
+                            <div class="plan-features">
+                                <h4 class="features-title">Use your credits flexibly to generate:</h4>
+                                <ul class="features-list">
+                                    <li class="feature-item">
+                                        <span class="feature-icon">✓</span>
+                                        <span class="feature-text">AI videos</span>
+                                        <span class="tag">Veo 3</span>
+                                    </li>
+                                    <li class="feature-item">
+                                        <span class="feature-icon">✓</span>
+                                        <span class="feature-text">AI images</span>
+                                        <span class="tag">Nano Banana</span>
+                                        <span class="banana-icon">🍌</span>
+                                    </li>
+                                    <li class="feature-item">
+                                        <span class="feature-icon">✓</span>
+                                        <span class="feature-text">AI voiceovers</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Plan Footage & Templates -->
+                        <div class="pricing-card">
+                            <div class="plan-header">
+                                <h3 class="plan-name">Footage & Templates</h3>
+                                <div class="plan-price">
+                                    <span class="currency">USD</span>
+                                    <span class="amount">31</span>
+                                    <span class="price-decimal">.99</span>
+                                    <span class="period">/month</span>
+                                </div>
+                            </div>
+                            <div class="plan-action">
+                                <button class="plan-button" onclick="selectPlan('footage')">
+                                    Get Started
+                                </button>
+                            </div>
+                            <div class="plan-features">
+                                <h4 class="features-title">Plan includes:</h4>
+                                <ul class="features-list">
+                                    <li class="feature-item">
+                                        <span class="feature-icon">✓</span>
+                                        <span class="feature-text">Footage</span>
+                                        <span class="info-icon">ℹ</span>
+                                    </li>
+                                    <li class="feature-item">
+                                        <span class="feature-icon">✓</span>
+                                        <span class="feature-text">Video templates</span>
+                                        <span class="info-icon">ℹ</span>
+                                    </li>
+                                    <li class="feature-item">
+                                        <span class="feature-icon">✓</span>
+                                        <span class="feature-text">LUTs</span>
+                                    </li>
+                                    <li class="feature-item">
+                                        <span class="feature-icon">✓</span>
+                                        <span class="feature-text">Extension for Premiere Pro</span>
+                                        <span class="info-icon">ℹ</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Plan UGC Max -->
+                        <div class="pricing-card max-plan">
+                            <div class="plan-badge">BEST VALUE</div>
+                            <div class="plan-header">
+                                <h3 class="plan-name">
+                                    <span class="sparkle-icon">✨</span>
+                                    UGC Max
+                                </h3>
+                                <div class="plan-price">
+                                    <span class="currency">USD</span>
+                                    <span class="amount">39</span>
+                                    <span class="price-decimal">.99</span>
+                                    <span class="period">/month</span>
+                                </div>
+                            </div>
+                            <div class="plan-action">
+                                <button class="plan-button max-button" onclick="selectPlan('max')">
+                                    Get Started
+                                </button>
+                            </div>
+                            <div class="plan-features">
+                                <h4 class="features-title">Plan includes:</h4>
+                                <ul class="features-list">
+                                    <li class="feature-item">
+                                        <span class="feature-icon">✓</span>
+                                        <span class="feature-text">AI videos</span>
+                                        <span class="tag">Veo 3</span>
+                                    </li>
+                                    <li class="feature-item">
+                                        <span class="feature-icon">✓</span>
+                                        <span class="feature-text">AI images</span>
+                                        <span class="tag">Nano Banana</span>
+                                        <span class="banana-icon">🍌</span>
+                                    </li>
+                                    <li class="feature-item">
+                                        <span class="feature-icon">✓</span>
+                                        <span class="feature-text">AI voiceovers</span>
+                                    </li>
+                                    <li class="feature-item">
+                                        <span class="feature-icon">✓</span>
+                                        <span class="feature-text">Music & stems</span>
+                                    </li>
+                                    <li class="feature-item">
+                                        <span class="feature-icon">✓</span>
+                                        <span class="feature-text">Sound effects</span>
+                                    </li>
+                                    <li class="feature-item">
+                                        <span class="feature-icon">✓</span>
+                                        <span class="feature-text">Footage</span>
+                                        <span class="info-icon">ℹ</span>
+                                    </li>
+                                    <li class="feature-item">
+                                        <span class="feature-icon">✓</span>
+                                        <span class="feature-text">Video templates</span>
+                                        <span class="info-icon">ℹ</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- FAQ Section -->
+                <section class="faq-section">
+                    <div class="faq-container">
+                        <h2 class="faq-title">Preguntas Frecuentes</h2>
+                        <div class="faq-list">
+                            <div class="faq-item">
+                                <button class="faq-question" onclick="toggleFaq(this)">
+                                    <span>¿Puedo cambiar de plan en cualquier momento?</span>
+                                    <span class="faq-icon">+</span>
+                                </button>
+                                <div class="faq-answer">
+                                    <p>Sí, puedes cambiar de plan en cualquier momento. Los cambios se aplicarán en tu próxima facturación.</p>
+                                </div>
+                            </div>
+                            <div class="faq-item">
+                                <button class="faq-question" onclick="toggleFaq(this)">
+                                    <span>¿Hay un período de prueba gratuito?</span>
+                                    <span class="faq-icon">+</span>
+                                </button>
+                                <div class="faq-answer">
+                                    <p>Sí, ofrecemos una prueba gratuita de 14 días para todos los planes. No se requiere tarjeta de crédito.</p>
+                                </div>
+                            </div>
+                            <div class="faq-item">
+                                <button class="faq-question" onclick="toggleFaq(this)">
+                                    <span>¿Qué métodos de pago aceptan?</span>
+                                    <span class="faq-icon">+</span>
+                                </button>
+                                <div class="faq-answer">
+                                    <p>Aceptamos tarjetas de crédito, débito, PayPal y transferencias bancarias.</p>
+                                </div>
+                            </div>
+                            <div class="faq-item">
+                                <button class="faq-question" onclick="toggleFaq(this)">
+                                    <span>¿Puedo cancelar mi suscripción?</span>
+                                    <span class="faq-icon">+</span>
+                                </button>
+                                <div class="faq-answer">
+                                    <p>Sí, puedes cancelar tu suscripción en cualquier momento desde tu panel de control.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-section">
+                        <h4>UGC Generator</h4>
+                        <p>Genera contenido UGC de alta calidad para tu marca</p>
+                    </div>
+                    <div class="footer-section">
+                        <h4>Enlaces</h4>
+                        <ul>
+                            <li><a href="index.html">Inicio</a></li>
+                            <li><a href="login.html">Iniciar Sesión</a></li>
+                            <li><a href="#contact">Contacto</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-section">
+                        <h4>Soporte</h4>
+                        <ul>
+                            <li><a href="#help">Ayuda</a></li>
+                            <li><a href="#privacy">Privacidad</a></li>
+                            <li><a href="#terms">Términos</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2024 UGC Generator. Todos los derechos reservados.</p>
+                </div>
+            </div>
+        </footer>
     </div>
 
-    <!-- Main Content -->
-    <main class="main">
-        <div class="container">
-            <!-- Header de Planes -->
-            <section class="plans-header">
-                <div class="plans-title-section">
-                    <h1 class="title-hero">Elige tu Plan Perfecto</h1>
-                    <p class="plans-description">
-                        Desbloquea todo el potencial de tu creatividad con planes diseñados para cada necesidad.
-                    </p>
-                </div>
-            </section>
-
-            <!-- Plan Actual -->
-            <section class="current-plan-section">
-                <div class="current-plan-card">
-                    <div class="plan-status-indicator">
-                        <div class="status-dot active"></div>
-                        <span class="status-text">Plan Activo</span>
-                    </div>
-                    <div class="current-plan-info">
-                        <h2 class="current-plan-name">Plan Pro</h2>
-                        <p class="current-plan-description">3 resultados por request • Sin límite mensual</p>
-                        <div class="credits-display">
-                            <span class="credits-label">Créditos disponibles</span>
-                            <span class="credits-number">127</span>
-                        </div>
-                        <div class="plan-stats">
-                            <div class="stat-item">
-                                <span class="stat-label">UGCs generados este mes:</span>
-                                <span class="stat-value">23</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">Próxima renovación:</span>
-                                <span class="stat-value">15 días</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="current-plan-actions">
-                        <button class="btn-secondary">Gestionar Plan</button>
-                        <button class="btn-primary">Comprar Créditos</button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Comparación de Planes -->
-            <section class="plans-comparison">
-                <div class="comparison-header">
-                    <h2 class="section-title">Comparar Planes</h2>
-                    <div class="billing-toggle">
-                        <span class="billing-label">Mensual</span>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="billing-toggle">
-                            <span class="toggle-slider"></span>
-                        </label>
-                        <span class="billing-label">Anual <span class="discount-badge">-20%</span></span>
-                    </div>
-                </div>
-
-                <div class="plans-grid">
-                    <!-- Plan Básico -->
-                    <div class="plan-card">
-                        <div class="plan-header">
-                            <h3 class="plan-name">Básico</h3>
-                            <div class="plan-price">
-                                <span class="price-currency">$</span>
-                                <span class="price-amount">29</span>
-                                <span class="price-period">/mes</span>
-                            </div>
-                            <p class="plan-description">Perfecto para empezar</p>
-                        </div>
-                        <div class="plan-features">
-                            <ul class="features-list">
-                                <li class="feature-item">
-                                    <i class="fas fa-check"></i>
-                                    <span>1 resultado por request</span>
-                                </li>
-                                <li class="feature-item">
-                                    <i class="fas fa-check"></i>
-                                    <span>50 UGCs por mes</span>
-                                </li>
-                                <li class="feature-item">
-                                    <i class="fas fa-check"></i>
-                                    <span>3 productos máximo</span>
-                                </li>
-                                <li class="feature-item">
-                                    <i class="fas fa-check"></i>
-                                    <span>2 avatares</span>
-                                </li>
-                                <li class="feature-item">
-                                    <i class="fas fa-check"></i>
-                                    <span>Soporte por email</span>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="plan-actions">
-                            <button class="btn-secondary">Seleccionar</button>
-                        </div>
-                    </div>
-
-                    <!-- Plan Pro (Actual) -->
-                    <div class="plan-card plan-card-featured">
-                        <div class="plan-badge">Actual</div>
-                        <div class="plan-header">
-                            <h3 class="plan-name">Pro</h3>
-                            <div class="plan-price">
-                                <span class="price-currency">$</span>
-                                <span class="price-amount">79</span>
-                                <span class="price-period">/mes</span>
-                            </div>
-                            <p class="plan-description">Para creadores serios</p>
-                        </div>
-                        <div class="plan-features">
-                            <ul class="features-list">
-                                <li class="feature-item">
-                                    <i class="fas fa-check"></i>
-                                    <span>3 resultados por request</span>
-                                </li>
-                                <li class="feature-item">
-                                    <i class="fas fa-check"></i>
-                                    <span>UGCs ilimitados</span>
-                                </li>
-                                <li class="feature-item">
-                                    <i class="fas fa-check"></i>
-                                    <span>Productos ilimitados</span>
-                                </li>
-                                <li class="feature-item">
-                                    <i class="fas fa-check"></i>
-                                    <span>Avatares ilimitados</span>
-                                </li>
-                                <li class="feature-item">
-                                    <i class="fas fa-check"></i>
-                                    <span>Prioridad en generación</span>
-                                </li>
-                                <li class="feature-item">
-                                    <i class="fas fa-check"></i>
-                                    <span>Soporte prioritario</span>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="plan-actions">
-                            <button class="btn-primary">Plan Actual</button>
-                        </div>
-                    </div>
-
-                    <!-- Plan Enterprise -->
-                    <div class="plan-card">
-                        <div class="plan-header">
-                            <h3 class="plan-name">Enterprise</h3>
-                            <div class="plan-price">
-                                <span class="price-currency">$</span>
-                                <span class="price-amount">199</span>
-                                <span class="price-period">/mes</span>
-                            </div>
-                            <p class="plan-description">Para equipos grandes</p>
-                        </div>
-                        <div class="plan-features">
-                            <ul class="features-list">
-                                <li class="feature-item">
-                                    <i class="fas fa-check"></i>
-                                    <span>5 resultados por request</span>
-                                </li>
-                                <li class="feature-item">
-                                    <i class="fas fa-check"></i>
-                                    <span>UGCs ilimitados</span>
-                                </li>
-                                <li class="feature-item">
-                                    <i class="fas fa-check"></i>
-                                    <span>Productos ilimitados</span>
-                                </li>
-                                <li class="feature-item">
-                                    <i class="fas fa-check"></i>
-                                    <span>Avatares ilimitados</span>
-                                </li>
-                                <li class="feature-item">
-                                    <i class="fas fa-check"></i>
-                                    <span>API personalizada</span>
-                                </li>
-                                <li class="feature-item">
-                                    <i class="fas fa-check"></i>
-                                    <span>Múltiples usuarios</span>
-                                </li>
-                                <li class="feature-item">
-                                    <i class="fas fa-check"></i>
-                                    <span>Soporte dedicado</span>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="plan-actions">
-                            <button class="btn-secondary">Contactar Ventas</button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Compra de Créditos -->
-            <section class="credits-purchase">
-                <div class="credits-header">
-                    <h2 class="section-title">Comprar Créditos Adicionales</h2>
-                    <p class="credits-description">Añade créditos extra cuando los necesites</p>
-                </div>
-
-                <div class="credits-packages">
-                    <div class="credits-package">
-                        <div class="package-amount">50</div>
-                        <div class="package-price">$19</div>
-                        <div class="package-price-per">$0.38 por crédito</div>
-                        <button class="btn-secondary">Comprar</button>
-                    </div>
-                    <div class="credits-package credits-package-popular">
-                        <div class="package-badge">Más Popular</div>
-                        <div class="package-amount">100</div>
-                        <div class="package-price">$35</div>
-                        <div class="package-price-per">$0.35 por crédito</div>
-                        <button class="btn-primary">Comprar</button>
-                    </div>
-                    <div class="credits-package">
-                        <div class="package-amount">250</div>
-                        <div class="package-price">$79</div>
-                        <div class="package-price-per">$0.32 por crédito</div>
-                        <button class="btn-secondary">Comprar</button>
-                    </div>
-                    <div class="credits-package">
-                        <div class="package-amount">500</div>
-                        <div class="package-price">$149</div>
-                        <div class="package-price-per">$0.30 por crédito</div>
-                        <button class="btn-secondary">Comprar</button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Historial de Pagos -->
-            <section class="payment-history">
-                <div class="history-header">
-                    <h2 class="section-title">Historial de Pagos</h2>
-                    <button class="btn-secondary">
-                        <i class="fas fa-download"></i>
-                        Descargar Facturas
-                    </button>
-                </div>
-
-                <div class="history-table">
-                    <div class="table-header">
-                        <div class="table-cell">Fecha</div>
-                        <div class="table-cell">Descripción</div>
-                        <div class="table-cell">Monto</div>
-                        <div class="table-cell">Estado</div>
-                        <div class="table-cell">Acciones</div>
-                    </div>
-                    <div class="table-row">
-                        <div class="table-cell">15 Sep 2024</div>
-                        <div class="table-cell">Plan Pro - Mensual</div>
-                        <div class="table-cell">$79.00</div>
-                        <div class="table-cell">
-                            <span class="status-badge success">Pagado</span>
-                        </div>
-                        <div class="table-cell">
-                            <button class="btn-icon">
-                                <i class="fas fa-download"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="table-row">
-                        <div class="table-cell">10 Sep 2024</div>
-                        <div class="table-cell">100 Créditos Adicionales</div>
-                        <div class="table-cell">$35.00</div>
-                        <div class="table-cell">
-                            <span class="status-badge success">Pagado</span>
-                        </div>
-                        <div class="table-cell">
-                            <button class="btn-icon">
-                                <i class="fas fa-download"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </div>
-    </main>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3 class="footer-title">Soporte</h3>
-                    <ul class="footer-links">
-                        <li><a href="#help">Centro de Ayuda</a></li>
-                        <li><a href="#tutorials">Tutoriales</a></li>
-                        <li><a href="#contact">Contacto</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h3 class="footer-title">Legal</h3>
-                    <ul class="footer-links">
-                        <li><a href="#terms">Términos de Uso</a></li>
-                        <li><a href="#privacy">Privacidad</a></li>
-                        <li><a href="#cookies">Cookies</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h3 class="footer-title">UGC STUDIO</h3>
-                    <p class="footer-description">
-                        La plataforma creativa que transforma ideas en contenido que conecta con tu audiencia
-                    </p>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2024 UGC STUDIO. Todos los derechos reservados.</p>
-            </div>
-        </div>
-    </footer>
-
+    <!-- Scripts -->
     <script src="js/main.js"></script>
     <script src="js/planes.js"></script>
 </body>

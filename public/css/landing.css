@@ -51,13 +51,13 @@ section {
     position: relative !important;
 }
 
-/* Sobrescribir estilos del styles.css que causan layout horizontal */
-.app-container {
+/* Estilos específicos para la landing page */
+.landing-page .app-container {
     display: block !important;
     flex-direction: column !important;
 }
 
-.app-container.landing-page {
+.landing-page .app-container.landing-page {
     display: block !important;
     flex-direction: column !important;
     width: 100% !important;
@@ -65,19 +65,16 @@ section {
     min-height: 100vh !important;
 }
 
-/* Asegurar que el body no tenga flex */
-body {
+.landing-page body {
     display: block !important;
     flex-direction: column !important;
 }
 
-/* Forzar que main sea block */
-main {
+.landing-page main {
     display: block !important;
     flex: none !important;
 }
 
-/* Estilos específicos para la landing page */
 .landing-page {
     display: block !important;
     width: 100% !important;
@@ -85,8 +82,13 @@ main {
     overflow-x: hidden !important;
 }
 
-/* Asegurar que todas las secciones se apilen verticalmente */
-.hero, .how-it-works, .features, .pricing, .cta, .footer {
+/* Asegurar que todas las secciones se apilen verticalmente en landing page */
+.landing-page .hero, 
+.landing-page .how-it-works, 
+.landing-page .features, 
+.landing-page .pricing, 
+.landing-page .cta, 
+.landing-page .footer {
     display: block !important;
     width: 100% !important;
     float: none !important;
