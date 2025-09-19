@@ -3,7 +3,7 @@
 class CompleteOnboardingForm {
     constructor() {
         this.currentStep = 1;
-        this.totalSteps = 25;
+        this.totalSteps = 19;
         this.formData = {
             // Producto
             nombre_producto: '',
@@ -18,16 +18,10 @@ class CompleteOnboardingForm {
             // UGC Preferences
             plataforma_principal: '',
             tipo_contenido: [],
-            presupuesto_mensual: 1000,
-            numero_creadores: 5,
-            frecuencia_contenido: '',
-            duracion_preferida: '',
             tono_comunicacion: [],
             audiencia_objetivo: '',
             ubicacion_geografica: [],
             hashtags_relevantes: '',
-            experiencia_previa: '',
-            metricas_exito: [],
             otras_preferencias: '',
             
             // Brand
@@ -178,8 +172,6 @@ class CompleteOnboardingForm {
             }
         });
 
-        // Range inputs (Steps 10, 11)
-        this.bindRangeInputs();
         
         // Text areas and inputs for remaining steps
         this.bindTextInputs();
@@ -188,29 +180,6 @@ class CompleteOnboardingForm {
         this.bindSocialInputs();
     }
 
-    bindRangeInputs() {
-        // Step 10: Presupuesto mensual
-        const presupuestoRange = document.getElementById('presupuesto_mensual');
-        if (presupuestoRange) {
-            presupuestoRange.addEventListener('input', (e) => {
-                const value = parseInt(e.target.value);
-                this.formData.presupuesto_mensual = value;
-                this.updateRangeValue(e.target, `$${value.toLocaleString()}`);
-                this.validateCurrentStep();
-            });
-        }
-
-        // Step 11: Número de creadores
-        const creadoresRange = document.getElementById('numero_creadores');
-        if (creadoresRange) {
-            creadoresRange.addEventListener('input', (e) => {
-                const value = parseInt(e.target.value);
-                this.formData.numero_creadores = value;
-                this.updateRangeValue(e.target, value.toString());
-                this.validateCurrentStep();
-            });
-        }
-    }
 
     bindTextInputs() {
         // Step 15: Audiencia objetivo
@@ -393,16 +362,10 @@ class CompleteOnboardingForm {
             2: 'tipo_producto',
             8: 'plataforma_principal',
             9: 'tipo_contenido',
-            10: 'presupuesto_mensual',
-            11: 'numero_creadores',
-            12: 'frecuencia_contenido',
-            13: 'duracion_preferida',
             14: 'tono_comunicacion',
             15: 'audiencia_objetivo',
             16: 'ubicacion_geografica',
             17: 'hashtags_relevantes',
-            18: 'experiencia_previa',
-            19: 'metricas_exito',
             20: 'otras_preferencias',
             21: 'nombre_marca',
             22: 'sitio_web',
@@ -419,14 +382,14 @@ class CompleteOnboardingForm {
         
         if (field) {
             // Para campos que son arrays por defecto (multi-select)
-            const arrayFields = ['tipo_contenido', 'tono_comunicacion', 'ubicacion_geografica', 'metricas_exito'];
+            const arrayFields = ['tipo_contenido', 'tono_comunicacion', 'ubicacion_geografica'];
             
             if (arrayFields.includes(field)) {
                 if (!Array.isArray(this.formData[field])) {
                     this.formData[field] = [];
                 }
                 // Para single select que debe ser array, reemplazar
-                if (field === 'tipo_contenido' || field === 'ubicacion_geografica' || field === 'metricas_exito') {
+                if (field === 'tipo_contenido' || field === 'ubicacion_geografica') {
                     this.formData[field] = [value];
                 }
             } else {
@@ -474,18 +437,6 @@ class CompleteOnboardingForm {
             case 9:
                 isValid = this.validateStep9();
                 break;
-            case 10:
-                isValid = this.validateStep10();
-                break;
-            case 11:
-                isValid = this.validateStep11();
-                break;
-            case 12:
-                isValid = this.validateStep12();
-                break;
-            case 13:
-                isValid = this.validateStep13();
-                break;
             case 14:
                 isValid = this.validateStep14();
                 break;
@@ -497,12 +448,6 @@ class CompleteOnboardingForm {
                 break;
             case 17:
                 isValid = this.validateStep17();
-                break;
-            case 18:
-                isValid = this.validateStep18();
-                break;
-            case 19:
-                isValid = this.validateStep19();
                 break;
             case 20:
                 isValid = true; // Optional
@@ -594,21 +539,6 @@ class CompleteOnboardingForm {
         return !!this.formData.plataforma_principal;
     }
 
-    validateStep10() {
-        return this.formData.presupuesto_mensual > 0;
-    }
-
-    validateStep11() {
-        return this.formData.numero_creadores > 0;
-    }
-
-    validateStep12() {
-        return !!this.formData.frecuencia_contenido;
-    }
-
-    validateStep13() {
-        return !!this.formData.duracion_preferida;
-    }
 
     validateStep14() {
         const tono = this.formData.tono_comunicacion || [];
@@ -620,14 +550,6 @@ class CompleteOnboardingForm {
         return Array.isArray(ubicacion) && ubicacion.length > 0;
     }
 
-    validateStep18() {
-        return !!this.formData.experiencia_previa;
-    }
-
-    validateStep19() {
-        const metricas = this.formData.metricas_exito || [];
-        return Array.isArray(metricas) && metricas.length > 0;
-    }
 
     validateStep24() {
         return !!this.formData.industria;

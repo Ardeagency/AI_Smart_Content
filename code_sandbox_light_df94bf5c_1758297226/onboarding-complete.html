@@ -23,7 +23,7 @@
                 <h2>UGC Studio</h2>
             </div>
             <div class="progress-info">
-                <span class="step-counter"><span id="currentStep">1</span> de <span id="totalSteps">25</span></span>
+                <span class="step-counter"><span id="currentStep">1</span> de <span id="totalSteps">19</span></span>
                 <div class="progress-bar">
                     <div class="progress-fill" id="progressFill"></div>
                 </div>
@@ -373,131 +373,9 @@
                 </div>
             </div>
 
-            <!-- Step 10: Presupuesto Mensual -->
-            <div class="question-slide" data-step="10">
-                <div class="question-content">
-                    <div class="question-header">
-                        <div class="question-icon">
-                            <i class="fas fa-dollar-sign"></i>
-                        </div>
-                        <h1 class="question-title">¿Cuál es tu presupuesto mensual para UGC?</h1>
-                        <p class="question-subtitle">Esto nos ayuda a sugerir creadores adecuados</p>
-                    </div>
-                    
-                    <div class="question-form">
-                        <div class="range-input-container">
-                            <div class="range-wrapper">
-                                <input type="range" id="presupuesto_mensual" min="100" max="10000" step="100" value="1000">
-                                <div class="range-labels">
-                                    <span>$100</span>
-                                    <span class="range-value">$1,000</span>
-                                    <span>$10,000+</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Step 11: Número de Creadores -->
-            <div class="question-slide" data-step="11">
-                <div class="question-content">
-                    <div class="question-header">
-                        <div class="question-icon">
-                            <i class="fas fa-users"></i>
-                        </div>
-                        <h1 class="question-title">¿Con cuántos creadores te gustaría trabajar?</h1>
-                        <p class="question-subtitle">Mensualmente</p>
-                    </div>
-                    
-                    <div class="question-form">
-                        <div class="range-input-container">
-                            <div class="range-wrapper">
-                                <input type="range" id="numero_creadores" min="1" max="50" step="1" value="5">
-                                <div class="range-labels">
-                                    <span>1</span>
-                                    <span class="range-value">5</span>
-                                    <span>50+</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Step 12: Frecuencia de Contenido -->
-            <div class="question-slide" data-step="12">
-                <div class="question-content">
-                    <div class="question-header">
-                        <div class="question-icon">
-                            <i class="fas fa-calendar-alt"></i>
-                        </div>
-                        <h1 class="question-title">¿Con qué frecuencia necesitas contenido?</h1>
-                        <p class="question-subtitle">Selecciona la opción que mejor se adapte a tus necesidades</p>
-                    </div>
-                    
-                    <div class="question-form">
-                        <div class="options-grid">
-                            <div class="option-card" data-value="diario">
-                                <div class="option-icon"><i class="fas fa-clock"></i></div>
-                                <span>Diario</span>
-                            </div>
-                            <div class="option-card" data-value="semanal">
-                                <div class="option-icon"><i class="fas fa-calendar-week"></i></div>
-                                <span>Semanal</span>
-                            </div>
-                            <div class="option-card" data-value="quincenal">
-                                <div class="option-icon"><i class="fas fa-calendar"></i></div>
-                                <span>Quincenal</span>
-                            </div>
-                            <div class="option-card" data-value="mensual">
-                                <div class="option-icon"><i class="fas fa-calendar-alt"></i></div>
-                                <span>Mensual</span>
-                            </div>
-                        </div>
-                        <input type="hidden" id="frecuencia_contenido">
-                    </div>
-                </div>
-            </div>
 
-            <!-- Step 13: Duración Preferida -->
-            <div class="question-slide" data-step="13">
-                <div class="question-content">
-                    <div class="question-header">
-                        <div class="question-icon">
-                            <i class="fas fa-stopwatch"></i>
-                        </div>
-                        <h1 class="question-title">¿Cuál es la duración ideal para tus videos?</h1>
-                        <p class="question-subtitle">Para contenido de video UGC</p>
-                    </div>
-                    
-                    <div class="question-form">
-                        <div class="options-grid">
-                            <div class="option-card" data-value="15-30s">
-                                <div class="option-icon"><i class="fas fa-bolt"></i></div>
-                                <span>15-30 segundos</span>
-                                <small>Ideal para TikTok/Instagram Reels</small>
-                            </div>
-                            <div class="option-card" data-value="30-60s">
-                                <div class="option-icon"><i class="fas fa-play-circle"></i></div>
-                                <span>30-60 segundos</span>
-                                <small>Perfecto para redes sociales</small>
-                            </div>
-                            <div class="option-card" data-value="1-3min">
-                                <div class="option-icon"><i class="fas fa-video"></i></div>
-                                <span>1-3 minutos</span>
-                                <small>Contenido más detallado</small>
-                            </div>
-                            <div class="option-card" data-value="3min+">
-                                <div class="option-icon"><i class="fas fa-film"></i></div>
-                                <span>Más de 3 minutos</span>
-                                <small>Para YouTube o reviews</small>
-                            </div>
-                        </div>
-                        <input type="hidden" id="duracion_preferida">
-                    </div>
-                </div>
-            </div>
 
             <!-- Step 14: Tono de Comunicación -->
             <div class="question-slide" data-step="14">
@@ -622,88 +500,7 @@
                 </div>
             </div>
 
-            <!-- Step 18: Experiencia Previa -->
-            <div class="question-slide" data-step="18">
-                <div class="question-content">
-                    <div class="question-header">
-                        <div class="question-icon">
-                            <i class="fas fa-history"></i>
-                        </div>
-                        <h1 class="question-title">¿Has trabajado con UGC antes?</h1>
-                        <p class="question-subtitle">Tu experiencia nos ayuda a personalizar el servicio</p>
-                    </div>
-                    
-                    <div class="question-form">
-                        <div class="options-grid">
-                            <div class="option-card" data-value="nunca">
-                                <div class="option-icon"><i class="fas fa-seedling"></i></div>
-                                <span>Nunca</span>
-                                <small>Primera vez con UGC</small>
-                            </div>
-                            <div class="option-card" data-value="poco">
-                                <div class="option-icon"><i class="fas fa-leaf"></i></div>
-                                <span>Poca experiencia</span>
-                                <small>He probado algunas campañas</small>
-                            </div>
-                            <div class="option-card" data-value="moderada">
-                                <div class="option-icon"><i class="fas fa-tree"></i></div>
-                                <span>Experiencia moderada</span>
-                                <small>Varios meses de campañas</small>
-                            </div>
-                            <div class="option-card" data-value="experto">
-                                <div class="option-icon"><i class="fas fa-award"></i></div>
-                                <span>Experto</span>
-                                <small>Más de un año de experiencia</small>
-                            </div>
-                        </div>
-                        <input type="hidden" id="experiencia_previa">
-                    </div>
-                </div>
-            </div>
 
-            <!-- Step 19: Métricas de Éxito -->
-            <div class="question-slide" data-step="19">
-                <div class="question-content">
-                    <div class="question-header">
-                        <div class="question-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <h1 class="question-title">¿Qué métricas son más importantes para ti?</h1>
-                        <p class="question-subtitle">Puedes seleccionar múltiples opciones</p>
-                    </div>
-                    
-                    <div class="question-form">
-                        <div class="multi-select-options">
-                            <div class="option-card multi-select" data-value="engagement">
-                                <div class="option-icon"><i class="fas fa-heart"></i></div>
-                                <span>Engagement</span>
-                                <div class="checkbox-indicator"></div>
-                            </div>
-                            <div class="option-card multi-select" data-value="alcance">
-                                <div class="option-icon"><i class="fas fa-eye"></i></div>
-                                <span>Alcance</span>
-                                <div class="checkbox-indicator"></div>
-                            </div>
-                            <div class="option-card multi-select" data-value="conversiones">
-                                <div class="option-icon"><i class="fas fa-shopping-cart"></i></div>
-                                <span>Conversiones</span>
-                                <div class="checkbox-indicator"></div>
-                            </div>
-                            <div class="option-card multi-select" data-value="awareness">
-                                <div class="option-icon"><i class="fas fa-lightbulb"></i></div>
-                                <span>Brand Awareness</span>
-                                <div class="checkbox-indicator"></div>
-                            </div>
-                            <div class="option-card multi-select" data-value="credibilidad">
-                                <div class="option-icon"><i class="fas fa-shield-alt"></i></div>
-                                <span>Credibilidad</span>
-                                <div class="checkbox-indicator"></div>
-                            </div>
-                        </div>
-                        <input type="hidden" id="metricas_exito">
-                    </div>
-                </div>
-            </div>
 
             <!-- Step 20: Otras Preferencias -->
             <div class="question-slide" data-step="20">
