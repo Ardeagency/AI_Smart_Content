@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración Inicial - UGC Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/onboarding-new.css">
+</head>
+<body>
+    <!-- Background Elements -->
+    <div class="background-grid"></div>
+    <div class="floating-particles"></div>
+
+    <!-- Header -->
+    <header class="onboarding-header">
+        <div class="header-container">
+            <div class="logo">
+                <i class="fas fa-cube"></i>
+                <span>UGC Studio</span>
+            </div>
+            <div class="progress-info">
+                <span class="step-counter">Paso <span id="currentStep">1</span> de <span id="totalSteps">33</span></span>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="onboarding-main">
+        <div class="form-container">
+            
+            <!-- SECCIÓN 1: PERFIL DE USUARIO -->
+            
+            <!-- Step 1: Nombre completo -->
+            <div class="question-slide active" data-step="1" data-section="perfil">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-user"></i>
+                        <span>Perfil de Usuario</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿Cuál es tu nombre completo?</h1>
+                        <p class="question-subtitle">Nos ayuda a personalizar tu experiencia</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="text-input-container">
+                            <input type="text" id="nombre_completo" placeholder="Ej: María José García" maxlength="100" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: País -->
+            <div class="question-slide" data-step="2" data-section="perfil">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-user"></i>
+                        <span>Perfil de Usuario</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿En qué país te encuentras?</h1>
+                        <p class="question-subtitle">Para ajustar configuraciones regionales</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="options-grid">
+                            <div class="option-card" data-value="mexico">
+                                <div class="option-icon">🇲🇽</div>
+                                <span>México</span>
+                            </div>
+                            <div class="option-card" data-value="colombia">
+                                <div class="option-icon">🇨🇴</div>
+                                <span>Colombia</span>
+                            </div>
+                            <div class="option-card" data-value="argentina">
+                                <div class="option-icon">🇦🇷</div>
+                                <span>Argentina</span>
+                            </div>
+                            <div class="option-card" data-value="spain">
+                                <div class="option-icon">🇪🇸</div>
+                                <span>España</span>
+                            </div>
+                            <div class="option-card" data-value="usa">
+                                <div class="option-icon">🇺🇸</div>
+                                <span>Estados Unidos</span>
+                            </div>
+                            <div class="option-card" data-value="otro">
+                                <div class="option-icon">🌍</div>
+                                <span>Otro</span>
+                            </div>
+                        </div>
+                        <input type="hidden" id="pais_usuario">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Idioma preferido -->
+            <div class="question-slide" data-step="3" data-section="perfil">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-user"></i>
+                        <span>Perfil de Usuario</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿Cuál es tu idioma preferido?</h1>
+                        <p class="question-subtitle">Para la plataforma y los contenidos generados</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="options-grid">
+                            <div class="option-card" data-value="español">
+                                <div class="option-icon"><i class="fas fa-language"></i></div>
+                                <span>Español</span>
+                                <small>Castellano</small>
+                            </div>
+                            <div class="option-card" data-value="ingles">
+                                <div class="option-icon"><i class="fas fa-language"></i></div>
+                                <span>Inglés</span>
+                                <small>English</small>
+                            </div>
+                            <div class="option-card" data-value="portugues">
+                                <div class="option-icon"><i class="fas fa-language"></i></div>
+                                <span>Portugués</span>
+                                <small>Português</small>
+                            </div>
+                            <div class="option-card" data-value="frances">
+                                <div class="option-icon"><i class="fas fa-language"></i></div>
+                                <span>Francés</span>
+                                <small>Français</small>
+                            </div>
+                        </div>
+                        <input type="hidden" id="idioma_preferido">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Plan deseado -->
+            <div class="question-slide" data-step="4" data-section="perfil">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-user"></i>
+                        <span>Perfil de Usuario</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿Qué plan deseas iniciar?</h1>
+                        <p class="question-subtitle">Puedes cambiarlo después en cualquier momento</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="plan-cards">
+                            <div class="plan-card" data-value="gratis">
+                                <div class="plan-header">
+                                    <div class="plan-icon">
+                                        <i class="fas fa-rocket"></i>
+                                    </div>
+                                    <h3>Gratis</h3>
+                                    <div class="plan-price">$0<small>/mes</small></div>
+                                </div>
+                                <div class="plan-features">
+                                    <div class="feature">✓ 1 UGC por mes</div>
+                                    <div class="feature">✓ 1 avatar básico</div>
+                                    <div class="feature">✓ Estilos limitados</div>
+                                </div>
+                            </div>
+                            <div class="plan-card" data-value="basico">
+                                <div class="plan-header">
+                                    <div class="plan-icon">
+                                        <i class="fas fa-star"></i>
+                                    </div>
+                                    <h3>Básico</h3>
+                                    <div class="plan-price">$29<small>/mes</small></div>
+                                </div>
+                                <div class="plan-features">
+                                    <div class="feature">✓ 10 UGC por mes</div>
+                                    <div class="feature">✓ 3 avatars personalizados</div>
+                                    <div class="feature">✓ Todos los estilos</div>
+                                </div>
+                            </div>
+                            <div class="plan-card popular" data-value="pro">
+                                <div class="plan-badge">Más Popular</div>
+                                <div class="plan-header">
+                                    <div class="plan-icon">
+                                        <i class="fas fa-crown"></i>
+                                    </div>
+                                    <h3>Pro</h3>
+                                    <div class="plan-price">$79<small>/mes</small></div>
+                                </div>
+                                <div class="plan-features">
+                                    <div class="feature">✓ 50 UGC por mes</div>
+                                    <div class="feature">✓ Avatars ilimitados</div>
+                                    <div class="feature">✓ IA avanzada</div>
+                                    <div class="feature">✓ Soporte prioritario</div>
+                                </div>
+                            </div>
+                            <div class="plan-card" data-value="enterprise">
+                                <div class="plan-header">
+                                    <div class="plan-icon">
+                                        <i class="fas fa-building"></i>
+                                    </div>
+                                    <h3>Enterprise</h3>
+                                    <div class="plan-price">Personalizado</div>
+                                </div>
+                                <div class="plan-features">
+                                    <div class="feature">✓ UGC ilimitados</div>
+                                    <div class="feature">✓ API dedicada</div>
+                                    <div class="feature">✓ Soporte 24/7</div>
+                                    <div class="feature">✓ Custom features</div>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="plan_deseado">
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 2: PROYECTO INICIAL (MARCA) -->
+            
+            <!-- Step 5: Nombre de marca -->
+            <div class="question-slide" data-step="5" data-section="marca">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-trademark"></i>
+                        <span>Proyecto Inicial - Marca</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿Cuál es el nombre de tu marca o proyecto?</h1>
+                        <p class="question-subtitle">El nombre que aparecerá en tus contenidos</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="text-input-container">
+                            <input type="text" id="nombre_marca" placeholder="Ej: NaturalGlow Cosmetics" maxlength="100" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 6: Sitio web o red social -->
+            <div class="question-slide" data-step="6" data-section="marca">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-trademark"></i>
+                        <span>Proyecto Inicial - Marca</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿Tienes un sitio web o red social de referencia?</h1>
+                        <p class="question-subtitle">Para conocer mejor tu marca (opcional)</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="social-links-container">
+                            <div class="social-input">
+                                <i class="fas fa-globe"></i>
+                                <input type="url" id="sitio_web" placeholder="https://tu-marca.com">
+                            </div>
+                            <div class="social-input">
+                                <i class="fab fa-instagram"></i>
+                                <input type="text" id="instagram_url" placeholder="@tu_instagram o URL completa">
+                            </div>
+                            <div class="social-input">
+                                <i class="fab fa-tiktok"></i>
+                                <input type="text" id="tiktok_url" placeholder="@tu_tiktok o URL completa">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 7: Mercado objetivo -->
+            <div class="question-slide" data-step="7" data-section="marca">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-trademark"></i>
+                        <span>Proyecto Inicial - Marca</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿En qué país o mercado se enfoca tu marca?</h1>
+                        <p class="question-subtitle">Puedes seleccionar múltiples mercados</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="multi-select-options">
+                            <div class="option-card multi-select" data-value="mexico">
+                                <div class="option-icon">🇲🇽</div>
+                                <span>México</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="colombia">
+                                <div class="option-icon">🇨🇴</div>
+                                <span>Colombia</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="argentina">
+                                <div class="option-icon">🇦🇷</div>
+                                <span>Argentina</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="spain">
+                                <div class="option-icon">🇪🇸</div>
+                                <span>España</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="usa">
+                                <div class="option-icon">🇺🇸</div>
+                                <span>Estados Unidos</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="latam">
+                                <div class="option-icon">🌎</div>
+                                <span>Toda Latinoamérica</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="mercado_objetivo">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 8: Idiomas para contenido -->
+            <div class="question-slide" data-step="8" data-section="marca">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-trademark"></i>
+                        <span>Proyecto Inicial - Marca</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿En qué idiomas necesitas generar contenido?</h1>
+                        <p class="question-subtitle">Puedes elegir varios idiomas</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="multi-select-options">
+                            <div class="option-card multi-select" data-value="español">
+                                <div class="option-icon"><i class="fas fa-language"></i></div>
+                                <span>Español</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="ingles">
+                                <div class="option-icon"><i class="fas fa-language"></i></div>
+                                <span>Inglés</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="portugues">
+                                <div class="option-icon"><i class="fas fa-language"></i></div>
+                                <span>Portugués</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="frances">
+                                <div class="option-icon"><i class="fas fa-language"></i></div>
+                                <span>Francés</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="idiomas_contenido">
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 3: LINEAMIENTOS DE MARCA -->
+            
+            <!-- Step 9: Tono de voz -->
+            <div class="question-slide" data-step="9" data-section="lineamientos">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-palette"></i>
+                        <span>Lineamientos de Marca</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿Cuál es el tono de voz de tu marca?</h1>
+                        <p class="question-subtitle">Esto definirá el estilo de comunicación</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="options-grid">
+                            <div class="option-card" data-value="amigable">
+                                <div class="option-icon"><i class="fas fa-smile"></i></div>
+                                <span>Amigable</span>
+                                <small>Cercano y familiar</small>
+                            </div>
+                            <div class="option-card" data-value="premium">
+                                <div class="option-icon"><i class="fas fa-gem"></i></div>
+                                <span>Premium</span>
+                                <small>Elegante y sofisticado</small>
+                            </div>
+                            <div class="option-card" data-value="tecnico">
+                                <div class="option-icon"><i class="fas fa-cog"></i></div>
+                                <span>Técnico</span>
+                                <small>Preciso y especializado</small>
+                            </div>
+                            <div class="option-card" data-value="irreverente">
+                                <div class="option-icon"><i class="fas fa-fire"></i></div>
+                                <span>Irreverente</span>
+                                <small>Atrevido y diferente</small>
+                            </div>
+                            <div class="option-card" data-value="divertido">
+                                <div class="option-icon"><i class="fas fa-laugh"></i></div>
+                                <span>Divertido</span>
+                                <small>Dinámico y entretenido</small>
+                            </div>
+                            <div class="option-card" data-value="profesional">
+                                <div class="option-icon"><i class="fas fa-briefcase"></i></div>
+                                <span>Profesional</span>
+                                <small>Formal y confiable</small>
+                            </div>
+                        </div>
+                        <input type="hidden" id="tono_voz">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 10: Palabras a usar siempre -->
+            <div class="question-slide" data-step="10" data-section="lineamientos">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-palette"></i>
+                        <span>Lineamientos de Marca</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿Qué palabras o frases quieres que siempre se usen?</h1>
+                        <p class="question-subtitle">Términos clave de tu marca (separados por comas)</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="text-input-container">
+                            <textarea id="palabras_usar" placeholder="Ej: natural, sustentable, premium, innovador, auténtico" maxlength="300" rows="4"></textarea>
+                            <div class="char-counter">0/300</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 11: Palabras a evitar -->
+            <div class="question-slide" data-step="11" data-section="lineamientos">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-palette"></i>
+                        <span>Lineamientos de Marca</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿Qué palabras o frases deben evitarse?</h1>
+                        <p class="question-subtitle">Términos que no representan tu marca (opcional)</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="text-input-container">
+                            <textarea id="palabras_evitar" placeholder="Ej: barato, común, ordinario, artificial" maxlength="300" rows="4"></textarea>
+                            <div class="char-counter">0/300</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 12: Reglas creativas -->
+            <div class="question-slide" data-step="12" data-section="lineamientos">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-palette"></i>
+                        <span>Lineamientos de Marca</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿Hay reglas creativas específicas?</h1>
+                        <p class="question-subtitle">Do's & Don'ts: colores, claims prohibidos, estilo, etc.</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="text-input-container">
+                            <textarea id="reglas_creativas" placeholder="Ej: Siempre usar colores verdes y blancos. Nunca usar rojo. No hacer claims médicos. Evitar fondos oscuros." maxlength="500" rows="5"></textarea>
+                            <div class="char-counter">0/500</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 13: Logo oficial -->
+            <div class="question-slide" data-step="13" data-section="lineamientos">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-palette"></i>
+                        <span>Lineamientos de Marca</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">Sube tu logo oficial</h1>
+                        <p class="question-subtitle">Formato PNG o SVG preferiblemente</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="upload-container single-upload">
+                            <div class="upload-zone" id="logoUpload">
+                                <input type="file" id="logo_file" accept="image/*,.svg" hidden>
+                                <div class="upload-placeholder">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <h3>Arrastra tu logo aquí</h3>
+                                    <p>o haz clic para seleccionar</p>
+                                    <small>PNG, JPG, SVG - Máx 5MB</small>
+                                </div>
+                                <div class="upload-preview" style="display: none;">
+                                    <img src="" alt="Logo Preview">
+                                    <div class="upload-info">
+                                        <span class="file-name"></span>
+                                        <span class="file-size"></span>
+                                    </div>
+                                    <button type="button" class="remove-file">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 14: Archivos adicionales de identidad -->
+            <div class="question-slide" data-step="14" data-section="lineamientos">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-palette"></i>
+                        <span>Lineamientos de Marca</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿Deseas subir otros archivos de identidad?</h1>
+                        <p class="question-subtitle">Manual de marca, tipografías, paletas, PDFs (opcional)</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="upload-container multiple-upload">
+                            <div class="upload-zone" id="brandFilesUpload">
+                                <input type="file" id="brand_files" multiple accept="image/*,.pdf,.zip,.doc,.docx" hidden>
+                                <div class="upload-placeholder">
+                                    <i class="fas fa-folder-plus"></i>
+                                    <h3>Archivos de identidad de marca</h3>
+                                    <p>Arrastra múltiples archivos aquí</p>
+                                    <small>PDF, ZIP, DOC, Imágenes - Máx 10MB c/u</small>
+                                </div>
+                            </div>
+                            <div class="uploaded-files" id="brandFilesList" style="display: none;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 4: PRODUCTO PRINCIPAL -->
+            
+            <!-- Step 15: Tipo de producto -->
+            <div class="question-slide" data-step="15" data-section="producto">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-box"></i>
+                        <span>Producto Principal</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿Qué tipo de producto o servicio es?</h1>
+                        <p class="question-subtitle">Selecciona la categoría que mejor describe tu producto</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="options-grid">
+                            <div class="option-card" data-value="bebida">
+                                <div class="option-icon"><i class="fas fa-glass-water"></i></div>
+                                <span>Bebida</span>
+                            </div>
+                            <div class="option-card" data-value="cosmetico">
+                                <div class="option-icon"><i class="fas fa-heart"></i></div>
+                                <span>Cosmético</span>
+                            </div>
+                            <div class="option-card" data-value="app">
+                                <div class="option-icon"><i class="fas fa-mobile-alt"></i></div>
+                                <span>App/Software</span>
+                            </div>
+                            <div class="option-card" data-value="suplemento">
+                                <div class="option-icon"><i class="fas fa-pills"></i></div>
+                                <span>Suplemento</span>
+                            </div>
+                            <div class="option-card" data-value="ropa">
+                                <div class="option-icon"><i class="fas fa-tshirt"></i></div>
+                                <span>Ropa/Moda</span>
+                            </div>
+                            <div class="option-card" data-value="electronico">
+                                <div class="option-icon"><i class="fas fa-laptop"></i></div>
+                                <span>Electrónico</span>
+                            </div>
+                            <div class="option-card" data-value="servicio">
+                                <div class="option-icon"><i class="fas fa-handshake"></i></div>
+                                <span>Servicio</span>
+                            </div>
+                            <div class="option-card" data-value="otro">
+                                <div class="option-icon"><i class="fas fa-ellipsis-h"></i></div>
+                                <span>Otro</span>
+                            </div>
+                        </div>
+                        <input type="hidden" id="tipo_producto">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 16: Descripción corta -->
+            <div class="question-slide" data-step="16" data-section="producto">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-box"></i>
+                        <span>Producto Principal</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">Escribe una descripción corta de tu producto</h1>
+                        <p class="question-subtitle">¿Qué es y para qué sirve?</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="text-input-container">
+                            <textarea id="descripcion_producto" placeholder="Ej: Crema hidratante facial con ingredientes naturales que nutre y protege la piel diariamente." maxlength="300" rows="4" required></textarea>
+                            <div class="char-counter">0/300</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 17: Beneficios principales -->
+            <div class="question-slide" data-step="17" data-section="producto">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-box"></i>
+                        <span>Producto Principal</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿Cuáles son los 3 beneficios principales?</h1>
+                        <p class="question-subtitle">Los puntos más importantes que debe conocer tu audiencia</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="benefits-container">
+                            <div class="benefit-input">
+                                <div class="benefit-number">1</div>
+                                <input type="text" id="beneficio_1" placeholder="Primer beneficio principal..." maxlength="100" required>
+                            </div>
+                            <div class="benefit-input">
+                                <div class="benefit-number">2</div>
+                                <input type="text" id="beneficio_2" placeholder="Segundo beneficio principal..." maxlength="100" required>
+                            </div>
+                            <div class="benefit-input">
+                                <div class="benefit-number">3</div>
+                                <input type="text" id="beneficio_3" placeholder="Tercer beneficio principal..." maxlength="100" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 18: Diferenciación -->
+            <div class="question-slide" data-step="18" data-section="producto">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-box"></i>
+                        <span>Producto Principal</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿Qué diferencia tu producto de la competencia?</h1>
+                        <p class="question-subtitle">Tu ventaja única o propuesta de valor</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="text-input-container">
+                            <textarea id="diferenciacion" placeholder="Ej: Único producto con certificación orgánica y fórmula patentada que actúa en 24 horas." maxlength="400" rows="4"></textarea>
+                            <div class="char-counter">0/400</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 19: Modo de uso -->
+            <div class="question-slide" data-step="19" data-section="producto">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-box"></i>
+                        <span>Producto Principal</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">Describe el modo de uso</h1>
+                        <p class="question-subtitle">Pasos, dosis, frecuencia, tiempos</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="text-input-container">
+                            <textarea id="modo_uso" placeholder="Ej: Aplicar una pequeña cantidad en rostro limpio, masajear suavemente y usar 2 veces al día, mañana y noche." maxlength="500" rows="5"></textarea>
+                            <div class="char-counter">0/500</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 20: Ingredientes/especificaciones -->
+            <div class="question-slide" data-step="20" data-section="producto">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-box"></i>
+                        <span>Producto Principal</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">Lista los ingredientes o especificaciones clave</h1>
+                        <p class="question-subtitle">Componentes, materiales o características técnicas importantes</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="text-input-container">
+                            <textarea id="ingredientes" placeholder="Ej: Ácido hialurónico, Vitamina E, Aloe vera, Sin parabenos, Dermatológicamente testado" maxlength="400" rows="4"></textarea>
+                            <div class="char-counter">0/400</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 21: Precio -->
+            <div class="question-slide" data-step="21" data-section="producto">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-box"></i>
+                        <span>Producto Principal</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿Cuál es el precio de tu producto?</h1>
+                        <p class="question-subtitle">Precio de venta al público</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="price-input-container">
+                            <div class="currency-select">
+                                <select id="moneda">
+                                    <option value="USD">USD $</option>
+                                    <option value="MXN">MXN $</option>
+                                    <option value="COP">COP $</option>
+                                    <option value="ARS">ARS $</option>
+                                    <option value="EUR">EUR €</option>
+                                </select>
+                            </div>
+                            <input type="number" id="precio_producto" placeholder="0.00" step="0.01" min="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 22: Variantes -->
+            <div class="question-slide" data-step="22" data-section="producto">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-box"></i>
+                        <span>Producto Principal</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿Qué variantes existen?</h1>
+                        <p class="question-subtitle">Sabores, tamaños, modelos, colores (opcional)</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="text-input-container">
+                            <textarea id="variantes_producto" placeholder="Ej: 3 tamaños (50ml, 100ml, 200ml), 2 tipos (piel grasa, piel seca)" maxlength="300" rows="3"></textarea>
+                            <div class="char-counter">0/300</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 23: 4 Imágenes principales del producto -->
+            <div class="question-slide" data-step="23" data-section="producto">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-box"></i>
+                        <span>Producto Principal</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">Sube 4 imágenes principales del producto</h1>
+                        <p class="question-subtitle">Estas fotos se usarán para generar contenido UGC realista</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="product-images-grid">
+                            <div class="upload-slot" data-slot="1">
+                                <input type="file" id="imagen_producto_1" accept="image/*" hidden>
+                                <div class="upload-placeholder">
+                                    <i class="fas fa-plus"></i>
+                                    <span>Imagen #1</span>
+                                    <small>Principal</small>
+                                </div>
+                                <div class="upload-preview" style="display: none;">
+                                    <img src="" alt="Producto 1">
+                                    <button type="button" class="remove-image">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="upload-slot" data-slot="2">
+                                <input type="file" id="imagen_producto_2" accept="image/*" hidden>
+                                <div class="upload-placeholder">
+                                    <i class="fas fa-plus"></i>
+                                    <span>Imagen #2</span>
+                                    <small>Secundaria</small>
+                                </div>
+                                <div class="upload-preview" style="display: none;">
+                                    <img src="" alt="Producto 2">
+                                    <button type="button" class="remove-image">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="upload-slot" data-slot="3">
+                                <input type="file" id="imagen_producto_3" accept="image/*" hidden>
+                                <div class="upload-placeholder">
+                                    <i class="fas fa-plus"></i>
+                                    <span>Imagen #3</span>
+                                    <small>Detalle</small>
+                                </div>
+                                <div class="upload-preview" style="display: none;">
+                                    <img src="" alt="Producto 3">
+                                    <button type="button" class="remove-image">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="upload-slot" data-slot="4">
+                                <input type="file" id="imagen_producto_4" accept="image/*" hidden>
+                                <div class="upload-placeholder">
+                                    <i class="fas fa-plus"></i>
+                                    <span>Imagen #4</span>
+                                    <small>Contexto</small>
+                                </div>
+                                <div class="upload-preview" style="display: none;">
+                                    <img src="" alt="Producto 4">
+                                    <button type="button" class="remove-image">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="upload-info-box">
+                            <div class="info-item">
+                                <i class="fas fa-info-circle"></i>
+                                <span>Sube mínimo 2 imágenes para continuar</span>
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-image"></i>
+                                <span>Formatos: JPG, PNG • Máx 5MB cada una</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 24: Galería adicional -->
+            <div class="question-slide" data-step="24" data-section="producto">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-box"></i>
+                        <span>Producto Principal</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">Sube imágenes o videos adicionales</h1>
+                        <p class="question-subtitle">Galería del producto (opcional)</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="upload-container multiple-upload">
+                            <div class="upload-zone" id="productGalleryUpload">
+                                <input type="file" id="galeria_producto" multiple accept="image/*,video/*" hidden>
+                                <div class="upload-placeholder">
+                                    <i class="fas fa-images"></i>
+                                    <h3>Galería del producto</h3>
+                                    <p>Arrastra múltiples archivos aquí</p>
+                                    <small>Imágenes y videos - Máx 10MB c/u</small>
+                                </div>
+                            </div>
+                            <div class="uploaded-files" id="productGalleryList" style="display: none;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 5: AVATAR O CREADOR -->
+            
+            <!-- Step 25: Tipo de creador -->
+            <div class="question-slide" data-step="25" data-section="avatar">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Avatar o Creador</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿Qué tipo de creador prefieres?</h1>
+                        <p class="question-subtitle">Para protagonizar tus contenidos UGC</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="creator-types">
+                            <div class="creator-card" data-value="avatar_ia">
+                                <div class="creator-image">
+                                    <i class="fas fa-robot"></i>
+                                </div>
+                                <div class="creator-info">
+                                    <h3>Avatar IA Estilizado</h3>
+                                    <p>Personaje digital totalmente personalizable</p>
+                                    <div class="creator-features">
+                                        <span>✓ Consistencia perfecta</span>
+                                        <span>✓ Disponible 24/7</span>
+                                        <span>✓ Múltiples estilos</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="creator-card" data-value="creador_humano">
+                                <div class="creator-image">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="creator-info">
+                                    <h3>Creador Humano</h3>
+                                    <p>Personas reales para mayor autenticidad</p>
+                                    <div class="creator-features">
+                                        <span>✓ Máxima autenticidad</span>
+                                        <span>✓ Emociones naturales</span>
+                                        <span>✓ Conexión real</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="tipo_creador">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 26: Rango de edad -->
+            <div class="question-slide" data-step="26" data-section="avatar">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Avatar o Creador</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿Cuál es el rango de edad aproximado?</h1>
+                        <p class="question-subtitle">Del avatar o creador que prefieres</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="options-grid">
+                            <div class="option-card" data-value="18-25">
+                                <div class="option-icon"><i class="fas fa-seedling"></i></div>
+                                <span>18-25 años</span>
+                                <small>Joven y dinámico</small>
+                            </div>
+                            <div class="option-card" data-value="26-35">
+                                <div class="option-icon"><i class="fas fa-leaf"></i></div>
+                                <span>26-35 años</span>
+                                <small>Adulto joven</small>
+                            </div>
+                            <div class="option-card" data-value="36-45">
+                                <div class="option-icon"><i class="fas fa-tree"></i></div>
+                                <span>36-45 años</span>
+                                <small>Adulto maduro</small>
+                            </div>
+                            <div class="option-card" data-value="46-55">
+                                <div class="option-icon"><i class="fas fa-user-tie"></i></div>
+                                <span>46-55 años</span>
+                                <small>Experiencia senior</small>
+                            </div>
+                            <div class="option-card" data-value="mixto">
+                                <div class="option-icon"><i class="fas fa-users"></i></div>
+                                <span>Mixto</span>
+                                <small>Diferentes edades</small>
+                            </div>
+                        </div>
+                        <input type="hidden" id="rango_edad">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 27: Género -->
+            <div class="question-slide" data-step="27" data-section="avatar">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Avatar o Creador</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿Cuál es el género del avatar?</h1>
+                        <p class="question-subtitle">Selecciona la representación que prefieres</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="options-grid">
+                            <div class="option-card" data-value="femenino">
+                                <div class="option-icon"><i class="fas fa-female"></i></div>
+                                <span>Femenino</span>
+                            </div>
+                            <div class="option-card" data-value="masculino">
+                                <div class="option-icon"><i class="fas fa-male"></i></div>
+                                <span>Masculino</span>
+                            </div>
+                            <div class="option-card" data-value="neutral">
+                                <div class="option-icon"><i class="fas fa-genderless"></i></div>
+                                <span>Neutral</span>
+                            </div>
+                            <div class="option-card" data-value="mixto">
+                                <div class="option-icon"><i class="fas fa-users"></i></div>
+                                <span>Mixto</span>
+                            </div>
+                        </div>
+                        <input type="hidden" id="genero_avatar">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 28: Apariencia física -->
+            <div class="question-slide" data-step="28" data-section="avatar">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Avatar o Creador</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿Cómo quieres que se vea?</h1>
+                        <p class="question-subtitle">Describe la apariencia: tez, cabello, complexión, estilo</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="text-input-container">
+                            <textarea id="apariencia_fisica" placeholder="Ej: Persona latina, cabello castaño, complexión atlética, estilo casual pero cuidado, sonrisa natural." maxlength="400" rows="4"></textarea>
+                            <div class="char-counter">0/400</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 29: Energía -->
+            <div class="question-slide" data-step="29" data-section="avatar">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Avatar o Creador</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿Qué energía debe transmitir?</h1>
+                        <p class="question-subtitle">La personalidad que debe proyectar</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="options-grid">
+                            <div class="option-card" data-value="cercano">
+                                <div class="option-icon"><i class="fas fa-heart"></i></div>
+                                <span>Cercano</span>
+                                <small>Amigable y accesible</small>
+                            </div>
+                            <div class="option-card" data-value="aspiracional">
+                                <div class="option-icon"><i class="fas fa-star"></i></div>
+                                <span>Aspiracional</span>
+                                <small>Exitoso e inspirador</small>
+                            </div>
+                            <div class="option-card" data-value="energico">
+                                <div class="option-icon"><i class="fas fa-bolt"></i></div>
+                                <span>Enérgico</span>
+                                <small>Dinámico y motivador</small>
+                            </div>
+                            <div class="option-card" data-value="tecnico">
+                                <div class="option-icon"><i class="fas fa-brain"></i></div>
+                                <span>Técnico</span>
+                                <small>Experto y confiable</small>
+                            </div>
+                        </div>
+                        <input type="hidden" id="energia_avatar">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 30: Idiomas del avatar -->
+            <div class="question-slide" data-step="30" data-section="avatar">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Avatar o Creador</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿Qué idiomas debe hablar tu avatar?</h1>
+                        <p class="question-subtitle">Puedes seleccionar múltiples idiomas</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="multi-select-options">
+                            <div class="option-card multi-select" data-value="español">
+                                <div class="option-icon"><i class="fas fa-language"></i></div>
+                                <span>Español</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="ingles">
+                                <div class="option-icon"><i class="fas fa-language"></i></div>
+                                <span>Inglés</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="portugues">
+                                <div class="option-icon"><i class="fas fa-language"></i></div>
+                                <span>Portugués</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="frances">
+                                <div class="option-icon"><i class="fas fa-language"></i></div>
+                                <span>Francés</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="idiomas_avatar">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 31: Valores -->
+            <div class="question-slide" data-step="31" data-section="avatar">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Avatar o Creador</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿Qué valores debe proyectar?</h1>
+                        <p class="question-subtitle">Puedes seleccionar múltiples valores</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="multi-select-options">
+                            <div class="option-card multi-select" data-value="confianza">
+                                <div class="option-icon"><i class="fas fa-shield-alt"></i></div>
+                                <span>Confianza</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="lujo">
+                                <div class="option-icon"><i class="fas fa-gem"></i></div>
+                                <span>Lujo</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="sostenibilidad">
+                                <div class="option-icon"><i class="fas fa-leaf"></i></div>
+                                <span>Sostenibilidad</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="diversion">
+                                <div class="option-icon"><i class="fas fa-smile-beam"></i></div>
+                                <span>Diversión</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="autenticidad">
+                                <div class="option-icon"><i class="fas fa-heart"></i></div>
+                                <span>Autenticidad</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                            <div class="option-card multi-select" data-value="innovacion">
+                                <div class="option-icon"><i class="fas fa-lightbulb"></i></div>
+                                <span>Innovación</span>
+                                <div class="checkbox-indicator"></div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="valores_avatar">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 32: Características de voz -->
+            <div class="question-slide" data-step="32" data-section="avatar">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Avatar o Creador</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿Cómo quieres que sea su voz?</h1>
+                        <p class="question-subtitle">Describe el timbre, acento, velocidad</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="voice-characteristics">
+                            <div class="voice-option">
+                                <label>Timbre de voz:</label>
+                                <div class="voice-buttons">
+                                    <button type="button" class="voice-btn" data-voice="timbre" data-value="grave">Grave</button>
+                                    <button type="button" class="voice-btn" data-voice="timbre" data-value="medio">Medio</button>
+                                    <button type="button" class="voice-btn" data-voice="timbre" data-value="agudo">Agudo</button>
+                                </div>
+                            </div>
+                            <div class="voice-option">
+                                <label>Velocidad:</label>
+                                <div class="voice-buttons">
+                                    <button type="button" class="voice-btn" data-voice="velocidad" data-value="lenta">Lenta</button>
+                                    <button type="button" class="voice-btn" data-voice="velocidad" data-value="normal">Normal</button>
+                                    <button type="button" class="voice-btn" data-voice="velocidad" data-value="rapida">Rápida</button>
+                                </div>
+                            </div>
+                            <div class="voice-option">
+                                <label>Acento:</label>
+                                <select id="acento_voz">
+                                    <option value="">Seleccionar acento</option>
+                                    <option value="neutro">Neutro</option>
+                                    <option value="mexicano">Mexicano</option>
+                                    <option value="colombiano">Colombiano</option>
+                                    <option value="argentino">Argentino</option>
+                                    <option value="español">Español</option>
+                                    <option value="americano">Americano (inglés)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <input type="hidden" id="caracteristicas_voz">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 33: Referencias opcionales -->
+            <div class="question-slide" data-step="33" data-section="avatar">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-user-circle"></i>
+                        <span>Avatar o Creador</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">Sube referencias del avatar</h1>
+                        <p class="question-subtitle">Imagen y/o video de referencia (opcional)</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="reference-uploads">
+                            <div class="upload-section">
+                                <h3>Imagen de referencia</h3>
+                                <div class="upload-container single-upload">
+                                    <div class="upload-zone" id="avatarImageUpload">
+                                        <input type="file" id="avatar_imagen_ref" accept="image/*" hidden>
+                                        <div class="upload-placeholder">
+                                            <i class="fas fa-user-plus"></i>
+                                            <p>Sube una foto de referencia</p>
+                                            <small>JPG, PNG - Máx 5MB</small>
+                                        </div>
+                                        <div class="upload-preview" style="display: none;">
+                                            <img src="" alt="Avatar Reference">
+                                            <button type="button" class="remove-file">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="upload-section">
+                                <h3>Video de referencia</h3>
+                                <div class="upload-container single-upload">
+                                    <div class="upload-zone" id="avatarVideoUpload">
+                                        <input type="file" id="avatar_video_ref" accept="video/*" hidden>
+                                        <div class="upload-placeholder">
+                                            <i class="fas fa-video"></i>
+                                            <p>Sube un video de referencia</p>
+                                            <small>MP4, MOV - Máx 20MB</small>
+                                        </div>
+                                        <div class="upload-preview" style="display: none;">
+                                            <video controls></video>
+                                            <div class="upload-info">
+                                                <span class="file-name"></span>
+                                                <span class="file-size"></span>
+                                            </div>
+                                            <button type="button" class="remove-file">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Success Screen -->
+            <div class="question-slide" data-step="success" style="display: none;">
+                <div class="question-content">
+                    <div class="success-animation">
+                        <div class="success-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <h1 class="success-title">¡Configuración Completada!</h1>
+                        <p class="success-subtitle">Tu perfil UGC está listo. Vamos al dashboard para empezar a crear contenido.</p>
+                        
+                        <div class="success-stats">
+                            <div class="stat">
+                                <div class="stat-number">33</div>
+                                <div class="stat-label">Preguntas completadas</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-number">5</div>
+                                <div class="stat-label">Secciones configuradas</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-number">100%</div>
+                                <div class="stat-label">Perfil completo</div>
+                            </div>
+                        </div>
+                        
+                        <div class="success-actions">
+                            <button class="btn-primary" id="btnGoToDashboard">
+                                <i class="fas fa-rocket"></i>
+                                Ir al Dashboard
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="navigation-buttons">
+                <button class="btn-back" id="btnBack" disabled>
+                    <i class="fas fa-arrow-left"></i>
+                    Atrás
+                </button>
+                <button class="btn-next" id="btnNext" disabled>
+                    Continuar
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+
+            <!-- Skip Option -->
+            <div class="skip-section">
+                <button class="btn-skip" id="btnSkip">
+                    Completar después
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/onboarding-new.js"></script>
+</body>
+</html>

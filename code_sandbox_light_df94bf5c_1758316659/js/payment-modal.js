@@ -449,8 +449,8 @@ class PaymentModal {
                 sessionStorage.setItem('selectedPlan', JSON.stringify(this.selectedPlan));
             }
             
-            // Redirect to onboarding page
-            window.location.href = 'onboarding-complete.html';
+            // Redirect to new onboarding page
+            window.location.href = 'onboarding-new.html';
         }, 2500);
     }
 
