@@ -1,5 +1,39 @@
 /* Planes - Specific Styles */
 
+/* Updated Pricing Elements */
+.original-price {
+    margin-top: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    align-items: center;
+}
+
+.crossed-price {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+.discount-badge {
+    background: linear-gradient(45deg, #34d399, #10b981);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.plan-price .period {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    display: block;
+    margin-top: 0.25rem;
+}
+
 /* Pricing Hero Section */
 .pricing-hero {
     min-height: 70vh;

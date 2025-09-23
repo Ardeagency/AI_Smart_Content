@@ -1,6 +1,17 @@
-# UGC Studio - Landing Page
+# 🎬 UGC Studio - Plataforma de Generación de Contenido UGC
 
-Una landing page futurista y minimalista para UGC Studio, una plataforma de generación de contenido UGC (User Generated Content) realista con control avanzado de prompts y sistema automatizado complejo.
+[![Netlify Status](https://api.netlify.com/api/v1/badges/placeholder/deploy-status)](https://ugc-studio.netlify.app)
+[![Vercel](https://img.shields.io/badge/vercel-deployed-black)](https://ugc-studio.vercel.app)
+[![GitHub](https://img.shields.io/github/license/yourusername/ugc-studio)](LICENSE)
+[![Version](https://img.shields.io/badge/version-2.0.0-blue)](package.json)
+
+> **Plataforma completa para generación de contenido UGC con backend serverless, integración Supabase y sistema de analytics en tiempo real.**
+
+## 🚀 Demo en Vivo
+
+- **🌐 Netlify**: [ugc-studio.netlify.app](https://ugc-studio.netlify.app)  
+- **⚡ Vercel**: [ugc-studio.vercel.app](https://ugc-studio.vercel.app)
+- **📱 GitHub Pages**: [yourusername.github.io/ugc-studio](https://yourusername.github.io/ugc-studio)
 
 ## 🚀 Características Implementadas
 

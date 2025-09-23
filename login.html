@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - UGC Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            background: var(--bg-primary);
+            min-height: 100vh;
+            display: flex;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .login-container {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        .login-left {
+            flex: 1;
+            background: linear-gradient(135deg, 
+                rgba(253, 98, 79, 0.1) 0%, 
+                rgba(253, 98, 79, 0.05) 50%, 
+                transparent 100%),
+                url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(253,98,79,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-left::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(253, 98, 79, 0.1) 0%, transparent 70%);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(-20px, -20px) rotate(180deg); }
+        }
+
+        .login-brand {
+            text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .login-brand h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .login-brand .accent {
+            color: var(--primary-color);
+        }
+
+        .login-brand p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 400px;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .login-features {
+            display: grid;
+            gap: 1rem;
+            max-width: 400px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-item:hover {
+            background: rgba(253, 98, 79, 0.05);
+            border-color: rgba(253, 98, 79, 0.2);
+        }
+
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-color), #e73c1e);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        .login-right {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background: var(--bg-card);
+        }
+
+        .login-form-container {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-header h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .login-header p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .login-form {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: grid;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .form-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1rem;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: var(--primary-color);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(253, 98, 79, 0.1);
+        }
+
+        .form-input.error {
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .form-input.success {
+            border-color: #34d399;
+            background: rgba(52, 211, 153, 0.05);
+        }
+
+        .password-input-container {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .password-toggle:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .field-error {
+            color: #ef4444;
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+
+        .login-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 1rem 0;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .remember-me input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary-color);
+        }
+
+        .forgot-password {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+
+        .login-button {
+            background: linear-gradient(135deg, var(--primary-color), #e73c1e);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .login-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(253, 98, 79, 0.4);
+        }
+
+        .login-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .login-button.processing {
+            opacity: 0.8;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        .login-button.processing .spinner {
+            display: block;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .login-footer p {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .signup-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .signup-link:hover {
+            text-decoration: underline;
+        }
+
+        .social-login {
+            margin-top: 1.5rem;
+        }
+
+        .social-login p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .social-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .social-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .social-btn:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                flex-direction: column;
+            }
+
+            .login-left {
+                min-height: 40vh;
+                padding: 1rem;
+            }
+
+            .login-brand h1 {
+                font-size: 2rem;
+            }
+
+            .login-features {
+                display: none;
+            }
+
+            .login-right {
+                padding: 1rem;
+            }
+
+            .social-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <!-- Left Side - Branding -->
+        <div class="login-left">
+            <div class="login-brand">
+                <h1>UGC <span class="accent">Studio</span></h1>
+                <p>La plataforma definitiva para la generación de contenido UGC con IA avanzada.</p>
+                
+                <div class="login-features">
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <div>
+                            <strong>IA de Vanguardia</strong>
+                            <p>Veo 3 + NanoBanana + Seedream</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-magic"></i>
+                        </div>
+                        <div>
+                            <strong>Control Avanzado</strong>
+                            <p>Prompts personalizados y A/B Testing</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-rocket"></i>
+                        </div>
+                        <div>
+                            <strong>Automatización</strong>
+                            <p>Generación masiva de contenido</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side - Login Form -->
+        <div class="login-right">
+            <div class="login-form-container">
+                <div class="login-header">
+                    <h2>Iniciar Sesión</h2>
+                    <p>Accede a tu cuenta de UGC Studio</p>
+                </div>
+
+                <form class="login-form" id="loginForm">
+                    <div class="form-group">
+                        <label class="form-label" for="emailInput">Email</label>
+                        <input 
+                            type="email" 
+                            id="emailInput" 
+                            class="form-input" 
+                            placeholder="tu@email.com"
+                            required
+                        >
+                        <div class="field-error" id="emailError"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="passwordInput">Contraseña</label>
+                        <div class="password-input-container">
+                            <input 
+                                type="password" 
+                                id="passwordInput" 
+                                class="form-input" 
+                                placeholder="Tu contraseña"
+                                required
+                            >
+                            <button type="button" class="password-toggle" id="passwordToggle">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="field-error" id="passwordError"></div>
+                    </div>
+
+                    <div class="login-options">
+                        <label class="remember-me">
+                            <input type="checkbox" id="rememberMe">
+                            Recordarme
+                        </label>
+                        <a href="#" class="forgot-password" onclick="showForgotPassword()">
+                            ¿Olvidaste tu contraseña?
+                        </a>
+                    </div>
+
+                    <button type="submit" class="login-button" id="loginButton">
+                        <div class="spinner"></div>
+                        <span>Iniciar Sesión</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </form>
+
+                <div class="social-login">
+                    <p>O continúa con:</p>
+                    <div class="social-buttons">
+                        <a href="#" class="social-btn" onclick="loginWithGoogle()">
+                            <i class="fab fa-google"></i>
+                            Google
+                        </a>
+                        <a href="#" class="social-btn" onclick="loginWithGitHub()">
+                            <i class="fab fa-github"></i>
+                            GitHub
+                        </a>
+                    </div>
+                </div>
+
+                <div class="login-footer">
+                    <p>¿No tienes una cuenta?</p>
+                    <a href="planes.html" class="signup-link">Crear cuenta gratuita</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/analytics-throttle.js"></script>
+    <script src="js/data-collector.js"></script>
+    <script src="js/local-database.js"></script>
+    <script src="js/analytics-engine.js"></script>
+    <script src="js/supabase-client.js"></script>
+    
+    <script>
+        class LoginHandler {
+            constructor() {
+                this.isProcessing = false;
+                this.isRedirecting = false;
+                this.init();
+            }
+
+            init() {
+                this.clearPreviousState();
+                this.bindEvents();
+                this.setupValidation();
+                // Delay auth check to ensure all services are loaded
+                setTimeout(() => {
+                    this.checkAuthStatus();
+                }, 1000);
+            }
+
+            clearPreviousState() {
+                // Clear any previous redirection flags
+                this.isRedirecting = false;
+                
+                // Remove any temporary tokens or states
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.has('code') || urlParams.has('state')) {
+                    // Clear OAuth parameters from URL without reloading
+                    const cleanUrl = window.location.origin + window.location.pathname;
+                    window.history.replaceState({}, document.title, cleanUrl);
+                }
+                
+                console.log('🧹 Estado previo limpiado');
+            }
+
+            bindEvents() {
+                // Form submission
+                document.getElementById('loginForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleLogin();
+                });
+
+                // Password toggle
+                document.getElementById('passwordToggle').addEventListener('click', () => {
+                    this.togglePasswordVisibility();
+                });
+
+                // Real-time validation
+                document.getElementById('emailInput').addEventListener('blur', () => {
+                    this.validateEmail();
+                });
+
+                document.getElementById('passwordInput').addEventListener('blur', () => {
+                    this.validatePassword();
+                });
+            }
+
+            setupValidation() {
+                // Email validation
+                const emailInput = document.getElementById('emailInput');
+                emailInput.addEventListener('input', () => {
+                    this.clearFieldError('emailError');
+                    emailInput.classList.remove('error', 'success');
+                });
+
+                // Password validation
+                const passwordInput = document.getElementById('passwordInput');
+                passwordInput.addEventListener('input', () => {
+                    this.clearFieldError('passwordError');
+                    passwordInput.classList.remove('error', 'success');
+                });
+            }
+
+            async checkAuthStatus() {
+                try {
+                    if (window.supabaseClient?.isReady()) {
+                        const { data: session } = await window.supabaseClient.supabase.auth.getSession();
+                        if (session?.session?.user) {
+                            console.log('🔍 Usuario ya autenticado, verificando tipo de usuario...');
+                            
+                            // Don't auto-redirect, use the same logic as manual login
+                            await this.handlePostLoginRedirect(session.session.user);
+                        }
+                    }
+                } catch (error) {
+                    console.log('ℹ️ No hay sesión activa o error verificando sesión:', error);
+                }
+            }
+
+            validateEmail() {
+                const input = document.getElementById('emailInput');
+                const errorDiv = document.getElementById('emailError');
+                const value = input.value.trim();
+
+                if (!value) {
+                    this.showFieldError(errorDiv, 'El email es requerido');
+                    input.classList.add('error');
+                    return false;
+                }
+
+                const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+                if (!emailRegex.test(value)) {
+                    this.showFieldError(errorDiv, 'Formato de email inválido');
+                    input.classList.add('error');
+                    return false;
+                }
+
+                this.hideFieldError(errorDiv);
+                input.classList.remove('error');
+                input.classList.add('success');
+                return true;
+            }
+
+            validatePassword() {
+                const input = document.getElementById('passwordInput');
+                const errorDiv = document.getElementById('passwordError');
+                const value = input.value;
+
+                if (!value) {
+                    this.showFieldError(errorDiv, 'La contraseña es requerida');
+                    input.classList.add('error');
+                    return false;
+                }
+
+                this.hideFieldError(errorDiv);
+                input.classList.remove('error');
+                input.classList.add('success');
+                return true;
+            }
+
+            showFieldError(errorDiv, message) {
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+            }
+
+            hideFieldError(errorDiv) {
+                errorDiv.style.display = 'none';
+            }
+
+            clearFieldError(errorId) {
+                const errorDiv = document.getElementById(errorId);
+                if (errorDiv) {
+                    errorDiv.style.display = 'none';
+                }
+            }
+
+            togglePasswordVisibility() {
+                const passwordInput = document.getElementById('passwordInput');
+                const toggleIcon = document.querySelector('#passwordToggle i');
+
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    toggleIcon.className = 'fas fa-eye-slash';
+                } else {
+                    passwordInput.type = 'password';
+                    toggleIcon.className = 'fas fa-eye';
+                }
+            }
+
+            async handleLogin() {
+                if (this.isProcessing) return;
+
+                const loginButton = document.getElementById('loginButton');
+                
+                // Validate fields
+                const isValidEmail = this.validateEmail();
+                const isValidPassword = this.validatePassword();
+
+                if (!isValidEmail || !isValidPassword) {
+                    return;
+                }
+
+                this.isProcessing = true;
+                loginButton.classList.add('processing');
+                loginButton.disabled = true;
+
+                try {
+                    const email = document.getElementById('emailInput').value.trim();
+                    const password = document.getElementById('passwordInput').value;
+                    const rememberMe = document.getElementById('rememberMe').checked;
+
+                    console.log('🔄 Iniciando sesión...');
+
+                    if (!window.supabaseClient?.isReady()) {
+                        throw new Error('Supabase no está disponible');
+                    }
+
+                    // Attempt login
+                    const { data, error } = await window.supabaseClient.supabase.auth.signInWithPassword({
+                        email: email,
+                        password: password
+                    });
+
+                    if (error) {
+                        throw error;
+                    }
+
+                    console.log('✅ Login exitoso:', data.user.email);
+
+                    // Save remember me preference
+                    if (rememberMe) {
+                        localStorage.setItem('rememberLogin', 'true');
+                    }
+
+                    // Track login event
+                    try {
+                        if (window.analyticsEngine && typeof window.analyticsEngine.track === 'function') {
+                            window.analyticsEngine.track('user_login', {
+                                email: email,
+                                remember_me: rememberMe
+                            });
+                        }
+                    } catch (error) {
+                        console.warn('⚠️ Error en analytics tracking:', error);
+                    }
+
+                    // Check if it's first login and redirect accordingly
+                    await this.handlePostLoginRedirect(data.user);
+
+                } catch (error) {
+                    console.error('❌ Error en login:', error);
+                    this.handleLoginError(error);
+                } finally {
+                    this.isProcessing = false;
+                    loginButton.classList.remove('processing');
+                    loginButton.disabled = false;
+                }
+            }
+
+            async handlePostLoginRedirect(user) {
+                console.log('🔍 Verificando si es primer inicio de sesión...');
+                
+                // Prevent multiple redirections
+                if (this.isRedirecting) {
+                    console.log('⚠️ Ya hay una redirección en progreso, ignorando...');
+                    return;
+                }
+                
+                this.isRedirecting = true;
+                
+                try {
+                    // Store user info first to avoid data loss
+                    if (window.AppState) {
+                        window.AppState.login({
+                            id: user.id,
+                            email: user.email,
+                            name: user.user_metadata?.full_name || user.email
+                        });
+                    }
+                    
+                    // Check if user has any projects, products, or brand guidelines
+                    const isFirstLogin = await this.checkIfFirstLogin(user.id);
+                    
+                    if (isFirstLogin) {
+                        console.log('🎯 Primer inicio de sesión detectado - redirigiendo a onboarding');
+                        
+                        // Track first login event
+                        try {
+                            if (window.analyticsEngine && typeof window.analyticsEngine.track === 'function') {
+                                window.analyticsEngine.track('first_login', {
+                                    user_id: user.id,
+                                    email: user.email
+                                });
+                            }
+                        } catch (error) {
+                            console.warn('⚠️ Error en analytics tracking (first_login):', error);
+                        }
+                        
+                        // Add a small delay to ensure state is saved
+                        setTimeout(() => {
+                            window.location.href = 'onboarding-new.html';
+                        }, 100);
+                    } else {
+                        console.log('👤 Usuario con datos existentes - redirigiendo a dashboard');
+                        
+                        // Track returning user login
+                        try {
+                            if (window.analyticsEngine && typeof window.analyticsEngine.track === 'function') {
+                                window.analyticsEngine.track('returning_user_login', {
+                                    user_id: user.id,
+                                    email: user.email
+                                });
+                            }
+                        } catch (error) {
+                            console.warn('⚠️ Error en analytics tracking (returning_user_login):', error);
+                        }
+                        
+                        // Add a small delay to ensure state is saved
+                        setTimeout(() => {
+                            window.location.href = 'dashboard.html';
+                        }, 100);
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Error verificando primer login:', error);
+                    // En caso de error, redirigir al dashboard por defecto
+                    console.log('⚠️ Error en verificación - redirigiendo a dashboard por defecto');
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 100);
+                } finally {
+                    // Reset redirect flag after a delay
+                    setTimeout(() => {
+                        this.isRedirecting = false;
+                    }, 2000);
+                }
+            }
+
+            async checkIfFirstLogin(userId) {
+                try {
+                    if (!window.supabaseClient?.isReady()) {
+                        throw new Error('Supabase no está disponible');
+                    }
+
+                    console.log('🔍 Verificando tablas para usuario:', userId);
+
+                    // Check projects table
+                    const { data: projects, error: projectsError } = await window.supabaseClient.supabase
+                        .from('projects')
+                        .select('id')
+                        .eq('user_id', userId)
+                        .limit(1);
+
+                    if (projectsError) {
+                        console.error('❌ Error consultando proyectos:', projectsError);
+                        // Si hay error de permisos, intenta con cliente admin
+                        return await this.checkIfFirstLoginWithAdmin(userId);
+                    }
+
+                    // If user has projects, check other tables to be more thorough
+                    if (projects && projects.length > 0) {
+                        console.log('✅ Usuario tiene proyectos:', projects.length);
+                        
+                        // Check for products and brand guidelines
+                        const projectId = projects[0].id;
+                        
+                        const [productsResult, brandResult] = await Promise.all([
+                            window.supabaseClient.supabase
+                                .from('products')
+                                .select('id')
+                                .eq('project_id', projectId)
+                                .limit(1),
+                            window.supabaseClient.supabase
+                                .from('brand_guidelines')
+                                .select('id')
+                                .eq('project_id', projectId)
+                                .limit(1)
+                        ]);
+
+                        const hasProducts = productsResult.data && productsResult.data.length > 0;
+                        const hasBrand = brandResult.data && brandResult.data.length > 0;
+
+                        console.log('📊 Datos del usuario:', {
+                            projects: projects.length,
+                            products: hasProducts ? productsResult.data.length : 0,
+                            brand: hasBrand ? brandResult.data.length : 0
+                        });
+
+                        // User is considered "not first login" if they have projects and either products or brand
+                        return !(hasProducts || hasBrand);
+                    }
+
+                    console.log('🎯 Usuario sin proyectos - es primer inicio de sesión');
+                    return true; // No projects = first login
+
+                } catch (error) {
+                    console.error('❌ Error en checkIfFirstLogin:', error);
+                    // In case of error, assume not first login to avoid loops
+                    return false;
+                }
+            }
+
+            async checkIfFirstLoginWithAdmin(userId) {
+                try {
+                    console.log('🔄 Intentando verificación con cliente administrativo...');
+                    
+                    const adminClient = window.supabaseClient.getAdminClient();
+                    if (!adminClient) {
+                        console.log('⚠️ Cliente admin no disponible, asumiendo no es primer login');
+                        return false;
+                    }
+
+                    // Check projects with admin client
+                    const { data: projects, error: projectsError } = await adminClient
+                        .from('projects')
+                        .select('id')
+                        .eq('user_id', userId)
+                        .limit(1);
+
+                    if (projectsError) {
+                        console.error('❌ Error con cliente admin:', projectsError);
+                        return false;
+                    }
+
+                    console.log('📊 Proyectos encontrados con admin:', projects?.length || 0);
+                    return !projects || projects.length === 0;
+
+                } catch (error) {
+                    console.error('❌ Error en verificación admin:', error);
+                    return false;
+                }
+            }
+
+            handleLoginError(error) {
+                let errorMessage = 'Error al iniciar sesión';
+
+                if (error.message.includes('Invalid login credentials')) {
+                    errorMessage = 'Email o contraseña incorrectos';
+                } else if (error.message.includes('Email not confirmed')) {
+                    errorMessage = 'Debes verificar tu email antes de iniciar sesión';
+                } else if (error.message.includes('rate_limit')) {
+                    errorMessage = 'Demasiados intentos. Espera unos minutos';
+                } else if (error.message.includes('network')) {
+                    errorMessage = 'Error de conexión. Verifica tu internet';
+                }
+
+                this.showErrorModal(errorMessage, error.message.includes('Email not confirmed'));
+            }
+
+            showErrorModal(message, isEmailNotConfirmed = false) {
+                const modal = document.createElement('div');
+                modal.className = 'error-modal';
+                modal.innerHTML = `
+                    <div class="error-modal-overlay" onclick="this.parentElement.remove()">
+                        <div class="error-modal-content" onclick="event.stopPropagation()">
+                            <div class="error-icon">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <h3>Error de Inicio de Sesión</h3>
+                            <p>${message}</p>
+                            ${isEmailNotConfirmed ? `
+                                <div class="error-actions">
+                                    <button onclick="this.closest('.error-modal').remove()" class="btn-secondary">
+                                        Cerrar
+                                    </button>
+                                    <a href="verify-email.html" class="btn-primary">
+                                        Verificar Email
+                                    </a>
+                                </div>
+                            ` : `
+                                <button onclick="this.closest('.error-modal').remove()" class="btn-primary">
+                                    Intentar de Nuevo
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+
+                // Add modal styles
+                const style = document.createElement('style');
+                style.textContent = `
+                    .error-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10000; }
+                    .error-modal-overlay { background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+                    .error-modal-content { background: var(--bg-card); border: 2px solid #ef4444; border-radius: 20px; padding: 2rem; max-width: 400px; width: 90%; text-align: center; }
+                    .error-icon { width: 60px; height: 60px; background: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; color: white; font-size: 1.5rem; }
+                    .error-modal h3 { color: #ef4444; margin-bottom: 1rem; }
+                    .error-modal p { color: var(--text-secondary); margin-bottom: 1.5rem; }
+                    .error-actions { display: flex; gap: 1rem; justify-content: center; }
+                    .btn-primary, .btn-secondary { padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 600; cursor: pointer; border: none; }
+                    .btn-primary { background: var(--primary-color); color: white; }
+                    .btn-secondary { background: transparent; color: var(--text-secondary); border: 1px solid rgba(255,255,255,0.2); }
+                `;
+                
+                document.head.appendChild(style);
+                document.body.appendChild(modal);
+            }
+        }
+
+        // Social login functions
+        async function loginWithGoogle() {
+            try {
+                if (window.supabaseClient?.isReady()) {
+                    const { data, error } = await window.supabaseClient.supabase.auth.signInWithOAuth({
+                        provider: 'google',
+                        options: {
+                            redirectTo: `${window.location.origin}/auth-callback.html`
+                        }
+                    });
+                    
+                    if (error) throw error;
+                }
+            } catch (error) {
+                console.error('Error with Google login:', error);
+            }
+        }
+
+        async function loginWithGitHub() {
+            try {
+                if (window.supabaseClient?.isReady()) {
+                    const { data, error } = await window.supabaseClient.supabase.auth.signInWithOAuth({
+                        provider: 'github',
+                        options: {
+                            redirectTo: `${window.location.origin}/auth-callback.html`
+                        }
+                    });
+                    
+                    if (error) throw error;
+                }
+            } catch (error) {
+                console.error('Error with GitHub login:', error);
+            }
+        }
+
+        function showForgotPassword() {
+            // Implement forgot password functionality
+            alert('Funcionalidad de recuperación de contraseña próximamente');
+        }
+
+        // Testing functions for first login detection
+        window.testFirstLoginDetection = async function(userId = null) {
+            console.log('🧪 Testing first login detection...');
+            
+            if (!window.supabaseClient?.isReady()) {
+                console.error('❌ Supabase no está disponible');
+                return;
+            }
+
+            // Use current user or provided userId
+            let testUserId = userId;
+            if (!testUserId) {
+                const { data: { user } } = await window.supabaseClient.supabase.auth.getUser();
+                if (!user) {
+                    console.error('❌ No hay usuario logueado para probar');
+                    return;
+                }
+                testUserId = user.id;
+            }
+
+            const loginHandler = new LoginHandler();
+            const isFirstLogin = await loginHandler.checkIfFirstLogin(testUserId);
+            
+            console.log('📊 Resultado de la prueba:');
+            console.log('👤 Usuario ID:', testUserId);
+            console.log('🎯 Es primer login:', isFirstLogin);
+            
+            return {
+                userId: testUserId,
+                isFirstLogin: isFirstLogin
+            };
+        };
+
+        window.simulateFirstLoginFlow = async function() {
+            console.log('🎬 Simulando flujo de primer login...');
+            
+            const { data: { user } } = await window.supabaseClient.supabase.auth.getUser();
+            if (!user) {
+                console.error('❌ No hay usuario logueado');
+                return;
+            }
+
+            const loginHandler = new LoginHandler();
+            await loginHandler.handlePostLoginRedirect(user);
+        };
+
+        window.debugUserTables = async function(userId = null) {
+            console.log('🔍 Debugging tablas del usuario...');
+            
+            if (!window.supabaseClient?.isReady()) {
+                console.error('❌ Supabase no está disponible');
+                return;
+            }
+
+            let testUserId = userId;
+            if (!testUserId) {
+                const { data: { user } } = await window.supabaseClient.supabase.auth.getUser();
+                if (!user) {
+                    console.error('❌ No hay usuario logueado');
+                    return;
+                }
+                testUserId = user.id;
+            }
+
+            const results = {
+                userId: testUserId,
+                profile: null,
+                projects: null,
+                products: null,
+                brand: null,
+                subscriptions: null,
+                summary: {
+                    hasProfile: false,
+                    hasProjects: false,
+                    hasProducts: false,
+                    hasBrand: false,
+                    hasSubscriptions: false,
+                    isFirstLogin: true
+                }
+            };
+
+            try {
+                // Check user profile
+                const { data: profile, error: profileError } = await window.supabaseClient.supabase
+                    .from('user_profiles')
+                    .select('*')
+                    .eq('user_id', testUserId);
+
+                results.profile = { data: profile, error: profileError };
+                results.summary.hasProfile = profile && profile.length > 0;
+                console.log('👤 Perfil de usuario:', profile, profileError);
+
+                // Check projects
+                const { data: projects, error: projectsError } = await window.supabaseClient.supabase
+                    .from('projects')
+                    .select('*')
+                    .eq('user_id', testUserId);
+
+                results.projects = { data: projects, error: projectsError };
+                results.summary.hasProjects = projects && projects.length > 0;
+                console.log('📁 Proyectos:', projects, projectsError);
+
+                if (projects && projects.length > 0) {
+                    const projectId = projects[0].id;
+
+                    // Check products
+                    const { data: products, error: productsError } = await window.supabaseClient.supabase
+                        .from('products')
+                        .select('*')
+                        .eq('project_id', projectId);
+
+                    results.products = { data: products, error: productsError };
+                    results.summary.hasProducts = products && products.length > 0;
+                    console.log('📦 Productos:', products, productsError);
+
+                    // Check brand guidelines
+                    const { data: brand, error: brandError } = await window.supabaseClient.supabase
+                        .from('brand_guidelines')
+                        .select('*')
+                        .eq('project_id', projectId);
+
+                    results.brand = { data: brand, error: brandError };
+                    results.summary.hasBrand = brand && brand.length > 0;
+                    console.log('🎨 Marca:', brand, brandError);
+                }
+
+                // Check subscriptions
+                const { data: subscriptions, error: subscriptionsError } = await window.supabaseClient.supabase
+                    .from('subscriptions')
+                    .select('*')
+                    .eq('user_id', testUserId);
+
+                results.subscriptions = { data: subscriptions, error: subscriptionsError };
+                results.summary.hasSubscriptions = subscriptions && subscriptions.length > 0;
+                console.log('💳 Suscripciones:', subscriptions, subscriptionsError);
+
+                // Determine if first login
+                results.summary.isFirstLogin = !results.summary.hasProjects || 
+                    (results.summary.hasProjects && !results.summary.hasProducts && !results.summary.hasBrand);
+
+                console.log('📊 RESUMEN COMPLETO:', results.summary);
+                console.log(`🎯 Resultado: ${results.summary.isFirstLogin ? 'PRIMER LOGIN (→ onboarding)' : 'USUARIO EXISTENTE (→ dashboard)'}`);
+
+                return results;
+
+            } catch (error) {
+                console.error('❌ Error en debug:', error);
+                return { error: error.message, results };
+            }
+        };
+
+        // Function to clear user data for testing
+        window.clearUserDataForTesting = async function() {
+            console.log('🧪 Limpiando datos de usuario para testing...');
+            
+            if (!window.supabaseClient?.isReady()) {
+                console.error('❌ Supabase no está disponible');
+                return;
+            }
+
+            const { data: { user } } = await window.supabaseClient.supabase.auth.getUser();
+            if (!user) {
+                console.error('❌ No hay usuario logueado');
+                return;
+            }
+
+            try {
+                // Note: This is only for testing! Use with caution
+                const adminClient = window.supabaseClient.getAdminClient();
+                if (adminClient) {
+                    console.log('⚠️ ADVERTENCIA: Eliminando datos de prueba...');
+                    
+                    // Delete in reverse order of dependencies
+                    await adminClient.from('brand_guidelines').delete().eq('project_id', user.id);
+                    await adminClient.from('products').delete().eq('project_id', user.id);
+                    await adminClient.from('projects').delete().eq('user_id', user.id);
+                    
+                    console.log('✅ Datos de prueba eliminados');
+                } else {
+                    console.log('⚠️ Cliente admin no disponible - no se pueden eliminar datos');
+                }
+            } catch (error) {
+                console.error('❌ Error limpiando datos:', error);
+            }
+        };
+
+        // Function to check current auth state
+        window.checkAuthState = async function() {
+            console.log('🔐 Verificando estado de autenticación...');
+            
+            const state = {
+                supabaseReady: window.supabaseClient?.isReady() || false,
+                session: null,
+                user: null,
+                appState: null,
+                loginHandler: null
+            };
+
+            if (state.supabaseReady) {
+                const { data: session } = await window.supabaseClient.supabase.auth.getSession();
+                state.session = session?.session || null;
+                state.user = session?.session?.user || null;
+            }
+
+            if (window.AppState) {
+                state.appState = window.AppState.getUser();
+            }
+
+            state.loginHandler = {
+                exists: !!window.loginHandler,
+                isProcessing: window.loginHandler?.isProcessing || false,
+                isRedirecting: window.loginHandler?.isRedirecting || false
+            };
+
+            console.log('📊 Estado de autenticación:', state);
+            return state;
+        };
+
+        // Initialize login handler when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.loginHandler = new LoginHandler();
+        });
+    </script>
+</body>
+</html>

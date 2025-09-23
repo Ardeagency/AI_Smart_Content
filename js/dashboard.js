@@ -417,6 +417,16 @@ class UGCDashboard {
         this.selectedStyles.clear();
         this.selectedStyles.add(styleId);
         
+        // Notify UGC Generator about style selection
+        if (window.ugcGenerator && this.stylesData[styleId]) {
+            window.ugcGenerator.setSelectedStyle({
+                id: styleId,
+                name: this.stylesData[styleId].name,
+                description: this.stylesData[styleId].description,
+                tags: this.stylesData[styleId].tags
+            });
+        }
+        
         console.log('Style selected:', styleId);
     }
 

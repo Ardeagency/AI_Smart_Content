@@ -127,11 +127,40 @@ function initPlanAnimations() {
                     planBtn.style.transform = 'scale(1)';
                 }, 150);
                 
-                // Open payment modal directly
+                // Get plan features and pricing info
+                const planPricing = {
+                    'starter': {
+                        currentPrice: 0,
+                        originalPrice: 49000,
+                        features: ['1 UGC por ejecución', '1 Video HD', '1 Imagen optimizada'],
+                        ugcCount: 1
+                    },
+                    'pro': {
+                        currentPrice: 0,
+                        originalPrice: 149000,
+                        features: ['3 UGC por ejecución', '3 Videos HD', '3 Imágenes optimizadas', 'A/B Testing'],
+                        ugcCount: 3
+                    },
+                    'enterprise': {
+                        currentPrice: 0,
+                        originalPrice: 299000,
+                        features: ['6 UGC por ejecución', '6 Videos HD', '6 Imágenes optimizadas', 'Análisis avanzado'],
+                        ugcCount: 6
+                    }
+                };
+
+                const currentPlanInfo = planPricing[planType] || planPricing['pro'];
+
+                // Open payment modal directly with enhanced data
                 const planData = {
                     name: planName,
                     type: planType,
-                    price: '$0'
+                    price: currentPlanInfo.currentPrice === 0 ? 'Gratis' : `$${(currentPlanInfo.currentPrice / 1000).toFixed(0)}K COP`,
+                    originalPrice: currentPlanInfo.originalPrice,
+                    features: currentPlanInfo.features,
+                    ugcCount: currentPlanInfo.ugcCount,
+                    savings: currentPlanInfo.currentPrice === 0 ? '100%' : '0%',
+                    popular: planType === 'pro'
                 };
                 
                 // Check if payment modal is available
@@ -464,7 +493,12 @@ function initCTAButtons() {
             const defaultPlan = {
                 name: 'Plan Profesional',
                 type: 'pro',
-                price: '$0'
+                price: 'Gratis',
+                originalPrice: 149000,
+                features: ['3 UGC por ejecución', '3 Videos HD', '3 Imágenes optimizadas', 'A/B Testing'],
+                ugcCount: 3,
+                savings: '100%',
+                popular: true
             };
             
             // Check if payment modal is available

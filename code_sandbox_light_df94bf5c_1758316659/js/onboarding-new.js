@@ -6,7 +6,6 @@ class NewOnboardingForm {
         this.totalSteps = 33;
         this.formData = {
             // Sección 1: Perfil de usuario
-            nombre_completo: '',
             pais_usuario: '',
             idioma_preferido: '',
             plan_deseado: '',
@@ -115,7 +114,7 @@ class NewOnboardingForm {
     bindInputEvents() {
         // Text inputs
         const textInputs = [
-            'nombre_completo', 'nombre_marca', 'sitio_web', 'instagram_url', 'tiktok_url',
+            'nombre_marca', 'sitio_web', 'instagram_url', 'tiktok_url',
             'palabras_usar', 'palabras_evitar', 'reglas_creativas', 'descripcion_producto',
             'beneficio_1', 'beneficio_2', 'beneficio_3', 'diferenciacion', 'modo_uso',
             'ingredientes', 'precio_producto', 'variantes_producto', 'apariencia_fisica'
@@ -128,6 +127,16 @@ class NewOnboardingForm {
                     this.formData[id] = e.target.value;
                     this.updateCharCounter(e.target);
                     this.validateCurrentStep();
+                    
+                    // Disparar evento de cambio de datos
+                    document.dispatchEvent(new CustomEvent('onboarding:data_change', {
+                        detail: {
+                            field: id,
+                            value: e.target.value,
+                            step: this.currentStep,
+                            isValid: this.validateField(id, e.target.value)
+                        }
+                    }));
                 });
 
                 input.addEventListener('keypress', (e) => {
@@ -279,7 +288,7 @@ class NewOnboardingForm {
 
     getFieldNameForStep(step) {
         const stepMapping = {
-            1: 'nombre_completo',
+            1: null, // nombre_completo removed
             2: 'pais_usuario',
             3: 'idioma_preferido',
             4: 'plan_deseado',
@@ -322,7 +331,8 @@ class NewOnboardingForm {
         
         switch(this.currentStep) {
             case 1:
-                isValid = this.formData.nombre_completo.length >= 2;
+                // Step 1 validation removed (nombre_completo)
+                isValid = true;
                 break;
             case 5:
                 isValid = this.formData.nombre_marca.length >= 2;
@@ -418,6 +428,15 @@ class NewOnboardingForm {
             return;
         }
 
+        // Disparar evento de completar step
+        document.dispatchEvent(new CustomEvent('onboarding:step_complete', {
+            detail: {
+                step: this.currentStep,
+                section: this.getCurrentSection(),
+                data: this.getStepData(this.currentStep)
+            }
+        }));
+
         this.isTransitioning = true;
         this.currentStep++;
         this.transitionToStep('next');
@@ -464,6 +483,14 @@ class NewOnboardingForm {
                 nextSlide.style.transform = '';
                 nextSlide.style.opacity = '';
                 this.isTransitioning = false;
+                
+                // Disparar evento de inicio de step
+                document.dispatchEvent(new CustomEvent('onboarding:step_start', {
+                    detail: {
+                        step: this.currentStep,
+                        section: this.getCurrentSection()
+                    }
+                }));
                 
                 // Focus first input if available
                 const firstInput = nextSlide.querySelector('input[type="text"], textarea');
@@ -1013,7 +1040,22 @@ class NewOnboardingForm {
             version: 'new_complete'
         };
 
-        // Save to localStorage for demo
+        // Save to app state if available
+        if (window.AppState) {
+            window.AppState.setOnboardingData(this.formData);
+            
+            // Create user profile
+            const userProfile = {
+                name: 'Usuario',
+                email: 'usuario@email.com', // Default email
+                plan: this.formData.plan_deseado || 'pro',
+                createdAt: new Date().toISOString()
+            };
+            
+            window.AppState.login(userProfile);
+        }
+
+        // Save to localStorage for demo compatibility
         localStorage.setItem('ugc_user_data', JSON.stringify(userData));
         
         console.log('Complete onboarding data:', userData);
@@ -1063,7 +1105,183 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Initialize when DOM is ready
+// ========================
+// SUPABASE INTEGRATION
+// ========================
+
+/**
+ * Integración de Supabase para el onboarding
+ */
+class OnboardingSupabaseIntegration {
+    /**
+     * Guardar datos de onboarding en Supabase
+     */
+    static async saveOnboardingDataToSupabase(formData, uploadedFiles) {
+        if (!window.supabaseClient?.isReady()) {
+            throw new Error('Supabase no está disponible');
+        }
+
+        // Obtener usuario actual del sessionStorage
+        const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+        if (!currentUser.id) {
+            throw new Error('Usuario no identificado');
+        }
+
+        try {
+            // 1. Actualizar datos del usuario con onboarding completo
+            await window.supabaseClient.saveOnboardingData(currentUser.id, this.formData);
+
+            // 2. Crear proyecto de marca
+            const brandProject = {
+                name: this.formData.nombre_marca || 'Mi Marca',
+                description: `Proyecto de marca para ${this.formData.nombre_marca}`,
+                project_type: 'brand',
+                settings: {
+                    sitio_web: this.formData.sitio_web,
+                    instagram_url: this.formData.instagram_url,
+                    tiktok_url: this.formData.tiktok_url,
+                    mercado_objetivo: this.formData.mercado_objetivo,
+                    idiomas_contenido: this.formData.idiomas_contenido,
+                    tono_voz: this.formData.tono_voz,
+                    palabras_usar: this.formData.palabras_usar,
+                    palabras_evitar: this.formData.palabras_evitar,
+                    reglas_creativas: this.formData.reglas_creativas
+                }
+            };
+
+            const project = await window.supabaseClient.saveProject(currentUser.id, brandProject);
+            console.log('✅ Proyecto de marca guardado:', project);
+
+            // 3. Crear producto principal
+            const mainProduct = {
+                name: this.formData.tipo_producto || 'Mi Producto',
+                description: this.formData.descripcion_producto,
+                category: this.formData.tipo_producto,
+                brand: this.formData.nombre_marca,
+                price: parseFloat(this.formData.precio_producto) || 0,
+                currency: this.formData.moneda || 'USD',
+                specifications: {
+                    beneficios: [
+                        this.formData.beneficio_1,
+                        this.formData.beneficio_2,
+                        this.formData.beneficio_3
+                    ].filter(b => b),
+                    modo_uso: this.formData.modo_uso,
+                    ingredientes: this.formData.ingredientes,
+                    diferenciacion: this.formData.diferenciacion,
+                    variantes: this.formData.variantes_producto
+                },
+                images: Array.from(this.uploadedFiles.values())
+                    .filter(f => f.type === 'product')
+                    .map(f => f.url || f.name)
+            };
+
+            const product = await window.supabaseClient.saveProduct(currentUser.id, mainProduct);
+            console.log('✅ Producto principal guardado:', product);
+
+            // 4. Crear avatar/creador
+            const avatar = {
+                name: `Avatar ${this.formData.tipo_creador}`,
+                avatar_type: this.formData.tipo_creador === 'IA' ? 'ai' : 'human',
+                description: `Avatar creado durante onboarding`,
+                characteristics: {
+                    rango_edad: this.formData.rango_edad,
+                    genero: this.formData.genero_avatar,
+                    apariencia: this.formData.apariencia_fisica,
+                    energia: this.formData.energia_avatar,
+                    idiomas: this.formData.idiomas_avatar,
+                    valores: this.formData.valores_avatar
+                },
+                appearance: {
+                    descripcion: this.formData.apariencia_fisica,
+                    energia: this.formData.energia_avatar
+                },
+                voice_settings: {
+                    timbre: this.formData.timbre_voz,
+                    velocidad: this.formData.velocidad_voz,
+                    acento: this.formData.acento_voz
+                },
+                metadata: {
+                    referencias_imagen: this.uploadedFiles.get('avatar_imagen_ref')?.name,
+                    referencias_video: this.uploadedFiles.get('avatar_video_ref')?.name
+                }
+            };
+
+            const savedAvatar = await window.supabaseClient.saveAvatar(currentUser.id, avatar);
+            console.log('✅ Avatar guardado:', savedAvatar);
+
+            // 5. Registrar evento de onboarding completado
+            try {
+                if (window.analyticsEngine && typeof window.analyticsEngine.track === 'function') {
+                    window.analyticsEngine.track('onboarding_completed', {
+                        steps_completed: this.totalSteps,
+                        brand_name: this.formData.nombre_marca,
+                        product_type: this.formData.tipo_producto,
+                        avatar_type: this.formData.tipo_creador,
+                        completion_time: Date.now()
+                    });
+                }
+            } catch (error) {
+                console.warn('⚠️ Error en analytics tracking (onboarding_completed):', error);
+            }
+
+            console.log('✅ Datos de onboarding guardados en Supabase exitosamente');
+            return true;
+
+        } catch (error) {
+            console.error('❌ Error guardando datos en Supabase:', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Método actualizado para guardar datos con Supabase
+     */
+    async saveDataAndRedirect(skipped) {
+        try {
+            // Intentar guardar en Supabase primero
+            if (!skipped && window.supabaseClient?.isReady()) {
+                await OnboardingSupabaseIntegration.saveOnboardingDataToSupabase(this.formData, this.uploadedFiles);
+            }
+        } catch (error) {
+            console.error('Error guardando en Supabase:', error);
+            // Continuar con guardado local como fallback
+        }
+        
+        // Prepare data for saving
+        const userData = {
+            formData: this.formData,
+            uploadedFiles: Array.from(this.uploadedFiles.entries()),
+            completedAt: new Date().toISOString(),
+            skipped: skipped,
+            version: 'new_complete'
+        };
+
+        // Save to app state if available
+        if (window.AppState) {
+            window.AppState.setOnboardingData(this.formData);
+            
+            // Create user profile
+            const userProfile = {
+                name: 'Usuario',
+                email: 'usuario@email.com', // Default email
+                plan: this.formData.plan_deseado || 'pro',
+                createdAt: new Date().toISOString()
+            };
+            
+            window.AppState.login(userProfile);
+        }
+
+        // Save to localStorage for demo compatibility
+        localStorage.setItem('ugc_user_data', JSON.stringify(userData));
+        
+        console.log('Complete onboarding data:', userData);
+        
+        // Redirect to dashboard
+        window.location.href = 'dashboard.html';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     new NewOnboardingForm();
 });

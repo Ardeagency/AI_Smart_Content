@@ -6,7 +6,8 @@
     <title>UGC Studio - Generación Avanzada de Contenido UGC</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/payment-modal.css">
 </head>
 <body>
     <!-- Navigation -->
@@ -243,6 +244,22 @@
         </div>
     </footer>
 
-    <script src="js/main.js"></script>
+    <!-- Configuration Script (Must be first) -->
+    <script src="../js/config.js"></script>
+    
+    <!-- Analytics Throttle (Must be before analytics) -->
+    <script src="../js/analytics-throttle.js"></script>
+    
+    <!-- Backend Serverless Scripts -->
+    <script src="../js/data-collector.js"></script>
+    <script src="../js/local-database.js"></script>
+    <script src="../js/analytics-engine.js"></script>
+    <script src="../js/serverless-api.js"></script>
+    <script src="../js/backend-integrator.js"></script>
+    <script src="../js/supabase-client.js"></script>
+    <script src="../js/supabase-sync.js"></script>
+    
+    <!-- Application Scripts -->
+    <script src="../js/main.js"></script>
 </body>
 </html>

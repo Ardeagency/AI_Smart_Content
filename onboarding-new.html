@@ -6,7 +6,7 @@
     <title>Configuración Inicial - UGC Studio</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/onboarding-new.css">
+    <link rel="stylesheet" href="../css/onboarding-new.css">
 </head>
 <body>
     <!-- Background Elements -->
@@ -21,7 +21,7 @@
                 <span>UGC Studio</span>
             </div>
             <div class="progress-info">
-                <span class="step-counter">Paso <span id="currentStep">1</span> de <span id="totalSteps">33</span></span>
+                <span class="step-counter">Paso <span id="currentStep">1</span> de <span id="totalSteps">29</span></span>
                 <div class="progress-bar">
                     <div class="progress-fill" id="progressFill"></div>
                 </div>
@@ -35,189 +35,12 @@
             
             <!-- SECCIÓN 1: PERFIL DE USUARIO -->
             
-            <!-- Step 1: Nombre completo -->
-            <div class="question-slide active" data-step="1" data-section="perfil">
-                <div class="question-content">
-                    <div class="section-badge">
-                        <i class="fas fa-user"></i>
-                        <span>Perfil de Usuario</span>
-                    </div>
-                    <div class="question-header">
-                        <h1 class="question-title">¿Cuál es tu nombre completo?</h1>
-                        <p class="question-subtitle">Nos ayuda a personalizar tu experiencia</p>
-                    </div>
-                    <div class="question-form">
-                        <div class="text-input-container">
-                            <input type="text" id="nombre_completo" placeholder="Ej: María José García" maxlength="100" required>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Step 2: País -->
-            <div class="question-slide" data-step="2" data-section="perfil">
-                <div class="question-content">
-                    <div class="section-badge">
-                        <i class="fas fa-user"></i>
-                        <span>Perfil de Usuario</span>
-                    </div>
-                    <div class="question-header">
-                        <h1 class="question-title">¿En qué país te encuentras?</h1>
-                        <p class="question-subtitle">Para ajustar configuraciones regionales</p>
-                    </div>
-                    <div class="question-form">
-                        <div class="options-grid">
-                            <div class="option-card" data-value="mexico">
-                                <div class="option-icon">🇲🇽</div>
-                                <span>México</span>
-                            </div>
-                            <div class="option-card" data-value="colombia">
-                                <div class="option-icon">🇨🇴</div>
-                                <span>Colombia</span>
-                            </div>
-                            <div class="option-card" data-value="argentina">
-                                <div class="option-icon">🇦🇷</div>
-                                <span>Argentina</span>
-                            </div>
-                            <div class="option-card" data-value="spain">
-                                <div class="option-icon">🇪🇸</div>
-                                <span>España</span>
-                            </div>
-                            <div class="option-card" data-value="usa">
-                                <div class="option-icon">🇺🇸</div>
-                                <span>Estados Unidos</span>
-                            </div>
-                            <div class="option-card" data-value="otro">
-                                <div class="option-icon">🌍</div>
-                                <span>Otro</span>
-                            </div>
-                        </div>
-                        <input type="hidden" id="pais_usuario">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Step 3: Idioma preferido -->
-            <div class="question-slide" data-step="3" data-section="perfil">
-                <div class="question-content">
-                    <div class="section-badge">
-                        <i class="fas fa-user"></i>
-                        <span>Perfil de Usuario</span>
-                    </div>
-                    <div class="question-header">
-                        <h1 class="question-title">¿Cuál es tu idioma preferido?</h1>
-                        <p class="question-subtitle">Para la plataforma y los contenidos generados</p>
-                    </div>
-                    <div class="question-form">
-                        <div class="options-grid">
-                            <div class="option-card" data-value="español">
-                                <div class="option-icon"><i class="fas fa-language"></i></div>
-                                <span>Español</span>
-                                <small>Castellano</small>
-                            </div>
-                            <div class="option-card" data-value="ingles">
-                                <div class="option-icon"><i class="fas fa-language"></i></div>
-                                <span>Inglés</span>
-                                <small>English</small>
-                            </div>
-                            <div class="option-card" data-value="portugues">
-                                <div class="option-icon"><i class="fas fa-language"></i></div>
-                                <span>Portugués</span>
-                                <small>Português</small>
-                            </div>
-                            <div class="option-card" data-value="frances">
-                                <div class="option-icon"><i class="fas fa-language"></i></div>
-                                <span>Francés</span>
-                                <small>Français</small>
-                            </div>
-                        </div>
-                        <input type="hidden" id="idioma_preferido">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Step 4: Plan deseado -->
-            <div class="question-slide" data-step="4" data-section="perfil">
-                <div class="question-content">
-                    <div class="section-badge">
-                        <i class="fas fa-user"></i>
-                        <span>Perfil de Usuario</span>
-                    </div>
-                    <div class="question-header">
-                        <h1 class="question-title">¿Qué plan deseas iniciar?</h1>
-                        <p class="question-subtitle">Puedes cambiarlo después en cualquier momento</p>
-                    </div>
-                    <div class="question-form">
-                        <div class="plan-cards">
-                            <div class="plan-card" data-value="gratis">
-                                <div class="plan-header">
-                                    <div class="plan-icon">
-                                        <i class="fas fa-rocket"></i>
-                                    </div>
-                                    <h3>Gratis</h3>
-                                    <div class="plan-price">$0<small>/mes</small></div>
-                                </div>
-                                <div class="plan-features">
-                                    <div class="feature">✓ 1 UGC por mes</div>
-                                    <div class="feature">✓ 1 avatar básico</div>
-                                    <div class="feature">✓ Estilos limitados</div>
-                                </div>
-                            </div>
-                            <div class="plan-card" data-value="basico">
-                                <div class="plan-header">
-                                    <div class="plan-icon">
-                                        <i class="fas fa-star"></i>
-                                    </div>
-                                    <h3>Básico</h3>
-                                    <div class="plan-price">$29<small>/mes</small></div>
-                                </div>
-                                <div class="plan-features">
-                                    <div class="feature">✓ 10 UGC por mes</div>
-                                    <div class="feature">✓ 3 avatars personalizados</div>
-                                    <div class="feature">✓ Todos los estilos</div>
-                                </div>
-                            </div>
-                            <div class="plan-card popular" data-value="pro">
-                                <div class="plan-badge">Más Popular</div>
-                                <div class="plan-header">
-                                    <div class="plan-icon">
-                                        <i class="fas fa-crown"></i>
-                                    </div>
-                                    <h3>Pro</h3>
-                                    <div class="plan-price">$79<small>/mes</small></div>
-                                </div>
-                                <div class="plan-features">
-                                    <div class="feature">✓ 50 UGC por mes</div>
-                                    <div class="feature">✓ Avatars ilimitados</div>
-                                    <div class="feature">✓ IA avanzada</div>
-                                    <div class="feature">✓ Soporte prioritario</div>
-                                </div>
-                            </div>
-                            <div class="plan-card" data-value="enterprise">
-                                <div class="plan-header">
-                                    <div class="plan-icon">
-                                        <i class="fas fa-building"></i>
-                                    </div>
-                                    <h3>Enterprise</h3>
-                                    <div class="plan-price">Personalizado</div>
-                                </div>
-                                <div class="plan-features">
-                                    <div class="feature">✓ UGC ilimitados</div>
-                                    <div class="feature">✓ API dedicada</div>
-                                    <div class="feature">✓ Soporte 24/7</div>
-                                    <div class="feature">✓ Custom features</div>
-                                </div>
-                            </div>
-                        </div>
-                        <input type="hidden" id="plan_deseado">
-                    </div>
-                </div>
-            </div>
 
             <!-- SECCIÓN 2: PROYECTO INICIAL (MARCA) -->
             
-            <!-- Step 5: Nombre de marca -->
-            <div class="question-slide" data-step="5" data-section="marca">
+            <!-- Step 1: Nombre de marca -->
+            <div class="question-slide active" data-step="1" data-section="marca">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-trademark"></i>
@@ -235,8 +58,8 @@
                 </div>
             </div>
 
-            <!-- Step 6: Sitio web o red social -->
-            <div class="question-slide" data-step="6" data-section="marca">
+            <!-- Step 5: Sitio web o red social -->
+            <div class="question-slide" data-step="2" data-section="marca">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-trademark"></i>
@@ -265,8 +88,8 @@
                 </div>
             </div>
 
-            <!-- Step 7: Mercado objetivo -->
-            <div class="question-slide" data-step="7" data-section="marca">
+            <!-- Step 6: Mercado objetivo -->
+            <div class="question-slide" data-step="3" data-section="marca">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-trademark"></i>
@@ -314,8 +137,8 @@
                 </div>
             </div>
 
-            <!-- Step 8: Idiomas para contenido -->
-            <div class="question-slide" data-step="8" data-section="marca">
+            <!-- Step 7: Idiomas para contenido -->
+            <div class="question-slide" data-step="4" data-section="marca">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-trademark"></i>
@@ -355,8 +178,8 @@
 
             <!-- SECCIÓN 3: LINEAMIENTOS DE MARCA -->
             
-            <!-- Step 9: Tono de voz -->
-            <div class="question-slide" data-step="9" data-section="lineamientos">
+            <!-- Step 8: Tono de voz -->
+            <div class="question-slide" data-step="5" data-section="lineamientos">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-palette"></i>
@@ -404,8 +227,8 @@
                 </div>
             </div>
 
-            <!-- Step 10: Palabras a usar siempre -->
-            <div class="question-slide" data-step="10" data-section="lineamientos">
+            <!-- Step 9: Palabras a usar siempre -->
+            <div class="question-slide" data-step="6" data-section="lineamientos">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-palette"></i>
@@ -424,8 +247,8 @@
                 </div>
             </div>
 
-            <!-- Step 11: Palabras a evitar -->
-            <div class="question-slide" data-step="11" data-section="lineamientos">
+            <!-- Step 10: Palabras a evitar -->
+            <div class="question-slide" data-step="7" data-section="lineamientos">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-palette"></i>
@@ -444,8 +267,8 @@
                 </div>
             </div>
 
-            <!-- Step 12: Reglas creativas -->
-            <div class="question-slide" data-step="12" data-section="lineamientos">
+            <!-- Step 11: Reglas creativas -->
+            <div class="question-slide" data-step="8" data-section="lineamientos">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-palette"></i>
@@ -464,8 +287,8 @@
                 </div>
             </div>
 
-            <!-- Step 13: Logo oficial -->
-            <div class="question-slide" data-step="13" data-section="lineamientos">
+            <!-- Step 12: Logo oficial -->
+            <div class="question-slide" data-step="9" data-section="lineamientos">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-palette"></i>
@@ -501,8 +324,8 @@
                 </div>
             </div>
 
-            <!-- Step 14: Archivos adicionales de identidad -->
-            <div class="question-slide" data-step="14" data-section="lineamientos">
+            <!-- Step 13: Archivos adicionales de identidad -->
+            <div class="question-slide" data-step="10" data-section="lineamientos">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-palette"></i>
@@ -531,8 +354,8 @@
 
             <!-- SECCIÓN 4: PRODUCTO PRINCIPAL -->
             
-            <!-- Step 15: Tipo de producto -->
-            <div class="question-slide" data-step="15" data-section="producto">
+            <!-- Step 14: Tipo de producto -->
+            <div class="question-slide" data-step="11" data-section="producto">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-box"></i>
@@ -582,8 +405,8 @@
                 </div>
             </div>
 
-            <!-- Step 16: Descripción corta -->
-            <div class="question-slide" data-step="16" data-section="producto">
+            <!-- Step 15: Descripción corta -->
+            <div class="question-slide" data-step="12" data-section="producto">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-box"></i>
@@ -602,8 +425,8 @@
                 </div>
             </div>
 
-            <!-- Step 17: Beneficios principales -->
-            <div class="question-slide" data-step="17" data-section="producto">
+            <!-- Step 16: Beneficios principales -->
+            <div class="question-slide" data-step="13" data-section="producto">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-box"></i>
@@ -632,8 +455,8 @@
                 </div>
             </div>
 
-            <!-- Step 18: Diferenciación -->
-            <div class="question-slide" data-step="18" data-section="producto">
+            <!-- Step 17: Diferenciación -->
+            <div class="question-slide" data-step="14" data-section="producto">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-box"></i>
@@ -652,8 +475,8 @@
                 </div>
             </div>
 
-            <!-- Step 19: Modo de uso -->
-            <div class="question-slide" data-step="19" data-section="producto">
+            <!-- Step 18: Modo de uso -->
+            <div class="question-slide" data-step="15" data-section="producto">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-box"></i>
@@ -672,8 +495,8 @@
                 </div>
             </div>
 
-            <!-- Step 20: Ingredientes/especificaciones -->
-            <div class="question-slide" data-step="20" data-section="producto">
+            <!-- Step 19: Ingredientes/especificaciones -->
+            <div class="question-slide" data-step="16" data-section="producto">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-box"></i>
@@ -692,8 +515,8 @@
                 </div>
             </div>
 
-            <!-- Step 21: Precio -->
-            <div class="question-slide" data-step="21" data-section="producto">
+            <!-- Step 20: Precio -->
+            <div class="question-slide" data-step="17" data-section="producto">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-box"></i>
@@ -720,8 +543,8 @@
                 </div>
             </div>
 
-            <!-- Step 22: Variantes -->
-            <div class="question-slide" data-step="22" data-section="producto">
+            <!-- Step 21: Variantes -->
+            <div class="question-slide" data-step="18" data-section="producto">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-box"></i>
@@ -740,8 +563,8 @@
                 </div>
             </div>
 
-            <!-- Step 23: 4 Imágenes principales del producto -->
-            <div class="question-slide" data-step="23" data-section="producto">
+            <!-- Step 22: 4 Imágenes principales del producto -->
+            <div class="question-slide" data-step="19" data-section="producto">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-box"></i>
@@ -828,8 +651,8 @@
                 </div>
             </div>
 
-            <!-- Step 24: Galería adicional -->
-            <div class="question-slide" data-step="24" data-section="producto">
+            <!-- Step 23: Galería adicional -->
+            <div class="question-slide" data-step="20" data-section="producto">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-box"></i>
@@ -858,8 +681,8 @@
 
             <!-- SECCIÓN 5: AVATAR O CREADOR -->
             
-            <!-- Step 25: Tipo de creador -->
-            <div class="question-slide" data-step="25" data-section="avatar">
+            <!-- Step 24: Tipo de creador -->
+            <div class="question-slide" data-step="21" data-section="avatar">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-user-circle"></i>
@@ -905,8 +728,8 @@
                 </div>
             </div>
 
-            <!-- Step 26: Rango de edad -->
-            <div class="question-slide" data-step="26" data-section="avatar">
+            <!-- Step 25: Rango de edad -->
+            <div class="question-slide" data-step="22" data-section="avatar">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-user-circle"></i>
@@ -949,8 +772,8 @@
                 </div>
             </div>
 
-            <!-- Step 27: Género -->
-            <div class="question-slide" data-step="27" data-section="avatar">
+            <!-- Step 26: Género -->
+            <div class="question-slide" data-step="23" data-section="avatar">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-user-circle"></i>
@@ -984,8 +807,8 @@
                 </div>
             </div>
 
-            <!-- Step 28: Apariencia física -->
-            <div class="question-slide" data-step="28" data-section="avatar">
+            <!-- Step 27: Apariencia física -->
+            <div class="question-slide" data-step="24" data-section="avatar">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-user-circle"></i>
@@ -1004,8 +827,8 @@
                 </div>
             </div>
 
-            <!-- Step 29: Energía -->
-            <div class="question-slide" data-step="29" data-section="avatar">
+            <!-- Step 28: Energía -->
+            <div class="question-slide" data-step="25" data-section="avatar">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-user-circle"></i>
@@ -1043,8 +866,8 @@
                 </div>
             </div>
 
-            <!-- Step 30: Idiomas del avatar -->
-            <div class="question-slide" data-step="30" data-section="avatar">
+            <!-- Step 29: Idiomas del avatar -->
+            <div class="question-slide" data-step="26" data-section="avatar">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-user-circle"></i>
@@ -1082,8 +905,8 @@
                 </div>
             </div>
 
-            <!-- Step 31: Valores -->
-            <div class="question-slide" data-step="31" data-section="avatar">
+            <!-- Step 30: Valores -->
+            <div class="question-slide" data-step="27" data-section="avatar">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-user-circle"></i>
@@ -1131,8 +954,8 @@
                 </div>
             </div>
 
-            <!-- Step 32: Características de voz -->
-            <div class="question-slide" data-step="32" data-section="avatar">
+            <!-- Step 31: Características de voz -->
+            <div class="question-slide" data-step="28" data-section="avatar">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-user-circle"></i>
@@ -1178,8 +1001,8 @@
                 </div>
             </div>
 
-            <!-- Step 33: Referencias opcionales -->
-            <div class="question-slide" data-step="33" data-section="avatar">
+            <!-- Step 32: Referencias opcionales -->
+            <div class="question-slide" data-step="29" data-section="avatar">
                 <div class="question-content">
                     <div class="section-badge">
                         <i class="fas fa-user-circle"></i>
@@ -1251,7 +1074,7 @@
                         
                         <div class="success-stats">
                             <div class="stat">
-                                <div class="stat-number">33</div>
+                                <div class="stat-number">31</div>
                                 <div class="stat-label">Preguntas completadas</div>
                             </div>
                             <div class="stat">
@@ -1296,6 +1119,24 @@
         </div>
     </main>
 
-    <script src="js/onboarding-new.js"></script>
+    <!-- Configuration Script (Must be first) -->
+    <script src="../js/config.js"></script>
+    
+    <!-- Analytics Throttle (Must be before analytics) -->
+    <script src="../js/analytics-throttle.js"></script>
+    
+    <!-- Backend Serverless Scripts -->
+    <script src="../js/data-collector.js"></script>
+    <script src="../js/local-database.js"></script>
+    <script src="../js/analytics-engine.js"></script>
+    <script src="../js/serverless-api.js"></script>
+    <script src="../js/backend-integrator.js"></script>
+    <script src="../js/supabase-client.js"></script>
+    <script src="../js/supabase-sync.js"></script>
+    
+    <!-- Application Scripts -->
+    <script src="../js/app-state.js"></script>
+    <script src="../js/onboarding-data-collector.js"></script>
+    <script src="../js/onboarding-new.js"></script>
 </body>
 </html>

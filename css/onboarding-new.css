@@ -229,6 +229,80 @@ body {
     color: var(--text-muted);
 }
 
+/* Input Validation States */
+.text-input-container input.error,
+.text-input-container textarea.error {
+    border-color: var(--error-color) !important;
+    background: rgba(255, 68, 68, 0.1) !important;
+    box-shadow: 0 0 20px rgba(255, 68, 68, 0.3) !important;
+}
+
+.text-input-container input.success,
+.text-input-container textarea.success {
+    border-color: var(--success-color) !important;
+    background: rgba(0, 217, 255, 0.05) !important;
+    box-shadow: 0 0 20px rgba(0, 217, 255, 0.2) !important;
+}
+
+.input-error-message {
+    position: absolute;
+    bottom: -1.5rem;
+    left: 0;
+    right: 0;
+    color: var(--error-color);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-align: left;
+    margin-top: 0.5rem;
+    padding: 0.25rem 0;
+    display: none;
+    animation: slideInError 0.3s ease-out;
+}
+
+@keyframes slideInError {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Social Input Validation */
+.social-input input.error {
+    border-color: var(--error-color) !important;
+    background: rgba(255, 68, 68, 0.1) !important;
+}
+
+.social-input input.success {
+    border-color: var(--success-color) !important;
+    background: rgba(0, 217, 255, 0.05) !important;
+}
+
+/* Benefit Input Validation */
+.benefit-input input.error {
+    border-color: var(--error-color) !important;
+    background: rgba(255, 68, 68, 0.1) !important;
+}
+
+.benefit-input input.success {
+    border-color: var(--success-color) !important;
+    background: rgba(0, 217, 255, 0.05) !important;
+}
+
+/* File Input Validation */
+.file-upload-container.error {
+    border-color: var(--error-color) !important;
+    background: rgba(255, 68, 68, 0.1) !important;
+}
+
+.file-upload-container.success {
+    border-color: var(--success-color) !important;
+    background: rgba(0, 217, 255, 0.05) !important;
+}
+
 .char-counter {
     position: absolute;
     bottom: 12px;

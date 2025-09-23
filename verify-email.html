@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificación de Email - UGC Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script>
+        // Force full page display on load
+        (function() {
+            // Remove any modal overlays that might persist
+            document.addEventListener('DOMContentLoaded', function() {
+                // Clean up any modal remnants
+                const modalSelectors = [
+                    '.payment-overlay',
+                    '.modal-overlay', 
+                    '#paymentOverlay',
+                    '#successOverlay',
+                    '#errorOverlay',
+                    '.error-modal',
+                    '[id*="modal"]',
+                    '[class*="modal"]:not(.verification-container)',
+                    '[class*="overlay"]'
+                ];
+                
+                modalSelectors.forEach(selector => {
+                    const elements = document.querySelectorAll(selector);
+                    elements.forEach(element => element.remove());
+                });
+                
+                // Ensure body styles are reset
+                document.body.style.overflow = 'auto';
+                document.body.style.position = 'static';
+                document.body.style.height = '100%';
+                document.body.style.filter = 'none';
+                document.body.style.backdropFilter = 'none';
+                
+                console.log('✅ Página de verificación cargada en pantalla completa');
+            });
+        })();
+    </script>
+    <style>
+        /* Force full page display - not modal */
+        * {
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            position: static !important;
+            z-index: 1 !important;
+            overflow: auto !important;
+        }
+        
+        body {
+            background: var(--bg-primary) !important;
+            min-height: 100vh !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-family: 'Inter', sans-serif !important;
+            /* Remove any modal-like properties */
+            position: static !important;
+            top: auto !important;
+            left: auto !important;
+            right: auto !important;
+            bottom: auto !important;
+            transform: none !important;
+            filter: none !important;
+            backdrop-filter: none !important;
+        }
+
+        .verification-container {
+            max-width: 600px;
+            width: 90%;
+            padding: 3rem;
+            background: var(--bg-card);
+            border: 2px solid rgba(253, 98, 79, 0.2);
+            border-radius: 24px;
+            text-align: center;
+            box-shadow: 0 40px 120px rgba(0, 0, 0, 0.4);
+        }
+
+        .verification-icon {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #34d399, #10b981);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            font-size: 3rem;
+            color: white;
+            box-shadow: 0 20px 60px rgba(52, 211, 153, 0.3);
+            animation: checkAnimation 1s ease-in-out;
+        }
+
+        @keyframes checkAnimation {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .verification-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .verification-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .verification-email {
+            background: rgba(253, 98, 79, 0.1);
+            border: 1px solid rgba(253, 98, 79, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .verification-email strong {
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+
+        .verification-steps {
+            text-align: left;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .verification-steps h3 {
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            gap: 1rem;
+        }
+
+        .step-number {
+            background: var(--primary-color);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            flex-shrink: 0;
+            margin-top: 0.125rem;
+        }
+
+        .step-text {
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .verification-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), #e73c1e);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(253, 98, 79, 0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.4);
+            color: var(--text-primary);
+        }
+
+        .verification-help {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .verification-help h4 {
+            color: #3b82f6;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .verification-help p {
+            color: var(--text-secondary);
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        .resend-section {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .resend-timer {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .verification-container {
+                padding: 2rem;
+                margin: 1rem;
+            }
+
+            .verification-title {
+                font-size: 2rem;
+            }
+
+            .verification-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 300px;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="verification-container">
+        <div class="verification-icon">
+            <i class="fas fa-envelope-check"></i>
+        </div>
+
+        <h1 class="verification-title">¡Registro Exitoso!</h1>
+        <p class="verification-subtitle">
+            Te hemos enviado un correo de verificación para completar tu registro en UGC Studio.
+        </p>
+
+        <div class="verification-email">
+            <p>Correo enviado a:</p>
+            <strong id="userEmail">tu-email@ejemplo.com</strong>
+        </div>
+
+        <div class="verification-steps">
+            <h3><i class="fas fa-list-check"></i> Próximos pasos:</h3>
+            
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-text">
+                    Revisa tu bandeja de entrada y la carpeta de spam
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-text">
+                    Haz clic en el enlace de verificación en el correo
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-text">
+                    Inicia sesión con tu email y contraseña
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-text">
+                    ¡Comienza a crear contenido UGC increíble!
+                </div>
+            </div>
+        </div>
+
+        <div class="verification-actions">
+            <a href="login.html" class="btn btn-primary">
+                <i class="fas fa-sign-in-alt"></i>
+                Ir a Iniciar Sesión
+            </a>
+            <button onclick="openEmailClient()" class="btn btn-outline">
+                <i class="fas fa-envelope-open"></i>
+                Abrir Email
+            </button>
+        </div>
+
+        <div class="verification-help">
+            <h4><i class="fas fa-question-circle"></i> ¿No recibiste el correo?</h4>
+            <p>
+                Revisa tu carpeta de spam o correo no deseado. El correo puede tardar hasta 5 minutos en llegar.
+            </p>
+        </div>
+
+        <div class="resend-section">
+            <div class="resend-timer" id="resendTimer">
+                Podrás reenviar el correo en <span id="countdown">60</span> segundos
+            </div>
+            <button id="resendButton" class="btn btn-outline" onclick="resendVerificationEmail()" disabled>
+                <i class="fas fa-paper-plane"></i>
+                Reenviar Correo
+            </button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script>
+        // Get email from URL parameters or localStorage
+        function getEmailFromParams() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const emailFromUrl = urlParams.get('email');
+            const emailFromStorage = localStorage.getItem('verificationEmail');
+            
+            console.log('📧 Email desde URL:', emailFromUrl);
+            console.log('📧 Email desde localStorage:', emailFromStorage);
+            
+            const email = emailFromUrl || emailFromStorage || 'tu-email@ejemplo.com';
+            
+            console.log('📧 Email final a mostrar:', email);
+            
+            return email;
+        }
+
+        // Initialize page
+        function initVerificationPage() {
+            const email = getEmailFromParams();
+            document.getElementById('userEmail').textContent = email;
+            
+            // Start countdown timer
+            startResendTimer();
+        }
+
+        // Start resend countdown timer
+        function startResendTimer() {
+            let countdown = 60;
+            const countdownEl = document.getElementById('countdown');
+            const resendButton = document.getElementById('resendButton');
+            const timerEl = document.getElementById('resendTimer');
+
+            const timer = setInterval(() => {
+                countdown--;
+                countdownEl.textContent = countdown;
+
+                if (countdown <= 0) {
+                    clearInterval(timer);
+                    resendButton.disabled = false;
+                    timerEl.style.display = 'none';
+                    resendButton.style.opacity = '1';
+                }
+            }, 1000);
+        }
+
+        // Resend verification email
+        async function resendVerificationEmail() {
+            const resendButton = document.getElementById('resendButton');
+            const email = getEmailFromParams();
+
+            resendButton.disabled = true;
+            resendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+
+            try {
+                if (window.supabaseClient?.isReady()) {
+                    const { error } = await window.supabaseClient.supabase.auth.resend({
+                        type: 'signup',
+                        email: email
+                    });
+
+                    if (error) {
+                        throw error;
+                    }
+
+                    // Show success message
+                    resendButton.innerHTML = '<i class="fas fa-check"></i> Correo Reenviado';
+                    resendButton.style.background = 'linear-gradient(135deg, #34d399, #10b981)';
+                    resendButton.style.color = 'white';
+
+                    // Restart timer
+                    setTimeout(() => {
+                        resendButton.innerHTML = '<i class="fas fa-paper-plane"></i> Reenviar Correo';
+                        resendButton.style.background = '';
+                        resendButton.style.color = '';
+                        startResendTimer();
+                    }, 3000);
+
+                } else {
+                    throw new Error('Supabase no está disponible');
+                }
+            } catch (error) {
+                console.error('Error reenviando email:', error);
+                resendButton.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error al Reenviar';
+                resendButton.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+                resendButton.style.color = 'white';
+
+                setTimeout(() => {
+                    resendButton.innerHTML = '<i class="fas fa-paper-plane"></i> Reenviar Correo';
+                    resendButton.style.background = '';
+                    resendButton.style.color = '';
+                    resendButton.disabled = false;
+                }, 3000);
+            }
+        }
+
+        // Open default email client
+        function openEmailClient() {
+            const email = getEmailFromParams();
+            window.location.href = `mailto:${email}`;
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initVerificationPage);
+    </script>
+</body>
+</html>
