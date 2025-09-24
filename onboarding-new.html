@@ -21,7 +21,7 @@
                 <span>UGC Studio</span>
             </div>
             <div class="progress-info">
-                <span class="step-counter">Paso <span id="currentStep">1</span> de <span id="totalSteps">29</span></span>
+                <span class="step-counter">Paso <span id="currentStep">1</span> de <span id="totalSteps">35</span></span>
                 <div class="progress-bar">
                     <div class="progress-fill" id="progressFill"></div>
                 </div>
@@ -1062,6 +1062,237 @@
                 </div>
             </div>
 
+            <!-- Step 30: Objetivo principal de la campaña -->
+            <div class="question-slide" data-step="30" data-section="offers">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-bullseye"></i>
+                        <span>Objetivos de Campaña</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿Cuál es el objetivo principal de tu campaña?</h1>
+                        <p class="question-subtitle">Define el objetivo principal que quieres lograr con tu contenido UGC</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="text-input-container">
+                            <textarea 
+                                id="main_objective" 
+                                placeholder="Ej: Aumentar las ventas del producto X en un 30% durante el próximo trimestre"
+                                maxlength="500"
+                                required
+                            ></textarea>
+                            <div class="char-counter">0/500</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 31: Descripción de la oferta -->
+            <div class="question-slide" data-step="31" data-section="offers">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-bullseye"></i>
+                        <span>Objetivos de Campaña</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">Describe tu oferta o promoción</h1>
+                        <p class="question-subtitle">¿Qué ofertas especiales, descuentos o promociones tienes para esta campaña?</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="text-input-container">
+                            <textarea 
+                                id="offer_desc" 
+                                placeholder="Ej: 20% de descuento en la primera compra, envío gratis, garantía de 30 días..."
+                                maxlength="300"
+                            ></textarea>
+                            <div class="char-counter">0/300</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 32: Call to Action -->
+            <div class="question-slide" data-step="32" data-section="offers">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-bullseye"></i>
+                        <span>Objetivos de Campaña</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿Cuál es tu Call to Action?</h1>
+                        <p class="question-subtitle">¿Qué acción quieres que tome tu audiencia después de ver el contenido?</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="form-row">
+                            <div class="text-input-container">
+                                <input 
+                                    type="text" 
+                                    id="cta" 
+                                    placeholder="Ej: Compra ahora, Visita nuestra tienda, Descarga la app"
+                                    maxlength="100"
+                                    required
+                                >
+                            </div>
+                            <div class="text-input-container">
+                                <input 
+                                    type="url" 
+                                    id="cta_url" 
+                                    placeholder="https://tu-sitio.com/landing"
+                                    maxlength="200"
+                                    required
+                                >
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 33: KPIs a medir -->
+            <div class="question-slide" data-step="33" data-section="offers">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-bullseye"></i>
+                        <span>Objetivos de Campaña</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿Qué métricas quieres medir?</h1>
+                        <p class="question-subtitle">Selecciona los KPIs que son importantes para tu campaña</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="options-grid">
+                            <div class="option-card multi-select" data-value="ventas">
+                                <div class="option-icon">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                                <div class="option-content">
+                                    <h3>Ventas</h3>
+                                    <p>Conversión y revenue</p>
+                                </div>
+                            </div>
+                            <div class="option-card multi-select" data-value="engagement">
+                                <div class="option-icon">
+                                    <i class="fas fa-heart"></i>
+                                </div>
+                                <div class="option-content">
+                                    <h3>Engagement</h3>
+                                    <p>Likes, comentarios, shares</p>
+                                </div>
+                            </div>
+                            <div class="option-card multi-select" data-value="alcance">
+                                <div class="option-icon">
+                                    <i class="fas fa-eye"></i>
+                                </div>
+                                <div class="option-content">
+                                    <h3>Alcance</h3>
+                                    <p>Impresiones y reach</p>
+                                </div>
+                            </div>
+                            <div class="option-card multi-select" data-value="brand_awareness">
+                                <div class="option-icon">
+                                    <i class="fas fa-bullhorn"></i>
+                                </div>
+                                <div class="option-content">
+                                    <h3>Brand Awareness</h3>
+                                    <p>Reconocimiento de marca</p>
+                                </div>
+                            </div>
+                            <div class="option-card multi-select" data-value="leads">
+                                <div class="option-icon">
+                                    <i class="fas fa-user-plus"></i>
+                                </div>
+                                <div class="option-content">
+                                    <h3>Leads</h3>
+                                    <p>Captación de prospectos</p>
+                                </div>
+                            </div>
+                            <div class="option-card multi-select" data-value="traffic">
+                                <div class="option-icon">
+                                    <i class="fas fa-link"></i>
+                                </div>
+                                <div class="option-content">
+                                    <h3>Tráfico Web</h3>
+                                    <p>Visitas al sitio web</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 34: Persona del comprador -->
+            <div class="question-slide" data-step="34" data-section="audience">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-users"></i>
+                        <span>Audiencia Objetivo</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">Describe a tu buyer persona</h1>
+                        <p class="question-subtitle">¿Quién es tu cliente ideal? Describe sus características principales</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="text-input-container">
+                            <textarea 
+                                id="buyer_persona" 
+                                placeholder="Ej: Mujer de 25-35 años, interesada en productos naturales, preocupada por el medio ambiente, con poder adquisitivo medio-alto, activa en redes sociales..."
+                                maxlength="1000"
+                                required
+                            ></textarea>
+                            <div class="char-counter">0/1000</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 35: Intereses y pain points -->
+            <div class="question-slide" data-step="35" data-section="audience">
+                <div class="question-content">
+                    <div class="section-badge">
+                        <i class="fas fa-users"></i>
+                        <span>Audiencia Objetivo</span>
+                    </div>
+                    <div class="question-header">
+                        <h1 class="question-title">¿Cuáles son los intereses y dolores de tu audiencia?</h1>
+                        <p class="question-subtitle">Ayúdanos a entender mejor a tu audiencia objetivo</p>
+                    </div>
+                    <div class="question-form">
+                        <div class="form-section">
+                            <h3>Intereses</h3>
+                            <div class="text-input-container">
+                                <textarea 
+                                    id="interests" 
+                                    placeholder="Ej: Fitness, sostenibilidad, tecnología, moda, viajes..."
+                                    maxlength="500"
+                                ></textarea>
+                                <div class="char-counter">0/500</div>
+                            </div>
+                        </div>
+                        <div class="form-section">
+                            <h3>Pain Points (Problemas que enfrentan)</h3>
+                            <div class="text-input-container">
+                                <textarea 
+                                    id="pains" 
+                                    placeholder="Ej: Falta de tiempo, productos caros, calidad dudosa, dificultad para encontrar opciones..."
+                                    maxlength="500"
+                                ></textarea>
+                                <div class="char-counter">0/500</div>
+                            </div>
+                        </div>
+                        <div class="form-section">
+                            <h3>Contextos de uso</h3>
+                            <div class="text-input-container">
+                                <textarea 
+                                    id="contexts" 
+                                    placeholder="Ej: En casa, en el trabajo, durante el ejercicio, en eventos sociales..."
+                                    maxlength="500"
+                                ></textarea>
+                                <div class="char-counter">0/500</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Success Screen -->
             <div class="question-slide" data-step="success" style="display: none;">
                 <div class="question-content">
@@ -1074,11 +1305,11 @@
                         
                         <div class="success-stats">
                             <div class="stat">
-                                <div class="stat-number">31</div>
+                                <div class="stat-number">35</div>
                                 <div class="stat-label">Preguntas completadas</div>
                             </div>
                             <div class="stat">
-                                <div class="stat-number">5</div>
+                                <div class="stat-number">7</div>
                                 <div class="stat-label">Secciones configuradas</div>
                             </div>
                             <div class="stat">

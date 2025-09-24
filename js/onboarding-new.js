@@ -3,7 +3,7 @@
 class NewOnboardingForm {
     constructor() {
         this.currentStep = 1;
-        this.totalSteps = 29;
+        this.totalSteps = 35;
         this.formData = {
             // Sección 2: Proyecto inicial (Marca)
             nombre_marca: '',
@@ -49,10 +49,23 @@ class NewOnboardingForm {
             valores_avatar: [],
             caracteristicas_voz: {},
             avatar_imagen_ref: null,
-            avatar_video_ref: null
+            avatar_video_ref: null,
+            
+            // Sección 6: Objetivos de Campaña (Offers)
+            main_objective: '',
+            offer_desc: '',
+            cta: '',
+            cta_url: '',
+            kpis: [],
+            
+            // Sección 7: Audiencia Objetivo (Audience)
+            buyer_persona: '',
+            interests: '',
+            pains: '',
+            contexts: ''
         };
         
-        this.optionalSteps = [2, 3, 4, 7, 8, 9, 10, 12, 16, 18, 20, 22, 24, 29];
+        this.optionalSteps = [2, 3, 4, 7, 8, 9, 10, 12, 16, 18, 20, 22, 24, 29, 31];
         this.uploadedFiles = {};
         
         this.init();
@@ -65,7 +78,7 @@ class NewOnboardingForm {
             this.setupAfterDOM();
         }
     }
-
+    
     setupAfterDOM() {
         this.bindEvents();
         this.bindInputEvents();
@@ -105,8 +118,8 @@ class NewOnboardingForm {
                            'palabras_usar', 'palabras_evitar', 'reglas_creativas',
                            'descripcion_producto', 'beneficio_1', 'beneficio_2', 'beneficio_3',
                            'diferenciacion', 'modo_uso', 'ingredientes', 'variantes_producto',
-                           'apariencia_fisica', 'precio_producto'];
-        
+                           'apariencia_fisica', 'precio_producto', 'cta', 'cta_url'];
+
         textInputs.forEach(id => {
             const input = document.getElementById(id);
             if (input) {
@@ -124,7 +137,8 @@ class NewOnboardingForm {
         // Textarea inputs
         const textareaInputs = ['palabras_usar', 'palabras_evitar', 'reglas_creativas',
                                'descripcion_producto', 'diferenciacion', 'modo_uso', 
-                               'ingredientes', 'variantes_producto', 'apariencia_fisica'];
+                               'ingredientes', 'variantes_producto', 'apariencia_fisica',
+                               'main_objective', 'offer_desc', 'buyer_persona', 'interests', 'pains', 'contexts'];
         
         textareaInputs.forEach(id => {
             const textarea = document.getElementById(id);
@@ -205,12 +219,12 @@ class NewOnboardingForm {
         const value = card.dataset.value;
         
         if (card.classList.contains('selected')) {
-            if (!this.formData[fieldName].includes(value)) {
-                this.formData[fieldName].push(value);
+                if (!this.formData[fieldName].includes(value)) {
+                    this.formData[fieldName].push(value);
+                }
+            } else {
+                this.formData[fieldName] = this.formData[fieldName].filter(v => v !== value);
             }
-        } else {
-            this.formData[fieldName] = this.formData[fieldName].filter(v => v !== value);
-        }
         
         this.updateNavigationButtons();
     }
@@ -316,7 +330,12 @@ class NewOnboardingForm {
             'diferenciacion': 10,
             'modo_uso': 10,
             'ingredientes': 5,
-            'apariencia_fisica': 10
+            'apariencia_fisica': 10,
+            'main_objective': 10,
+            'buyer_persona': 20,
+            'interests': 5,
+            'pains': 5,
+            'contexts': 5
         };
         return minLengths[input.id] || 1;
     }
@@ -365,7 +384,13 @@ class NewOnboardingForm {
             26: 'idiomas_avatar',
             27: 'valores_avatar',
             28: 'caracteristicas_voz',
-            29: 'avatar_imagen_ref'
+            29: 'avatar_imagen_ref',
+            30: 'main_objective',
+            31: 'offer_desc',
+            32: 'cta',
+            33: 'kpis',
+            34: 'buyer_persona',
+            35: 'interests'
         };
         return fieldMap[step];
     }
@@ -449,7 +474,7 @@ class NewOnboardingForm {
                 break;
                 
             case 10: // Brand files - optional
-                isValid = true;
+                    isValid = true;
                 break;
                 
             case 11: // Tipo de producto
@@ -580,6 +605,64 @@ class NewOnboardingForm {
             case 29: // Referencias - optional
                 isValid = true;
                 break;
+                
+            case 30: // Objetivo principal
+                const mainObjective = document.getElementById('main_objective');
+                if (mainObjective && mainObjective.value.trim().length < 10) {
+                    this.showInputError(mainObjective, 'Mínimo 10 caracteres');
+                    isValid = false;
+                }
+                break;
+                
+            case 31: // Descripción de oferta - optional
+                isValid = true;
+                break;
+                
+            case 32: // Call to Action
+                const cta = document.getElementById('cta');
+                const ctaUrl = document.getElementById('cta_url');
+                if (cta && cta.value.trim().length < 3) {
+                    this.showInputError(cta, 'Mínimo 3 caracteres');
+                    isValid = false;
+                }
+                if (ctaUrl && ctaUrl.value.trim() && !this.isValidUrl(ctaUrl.value.trim())) {
+                    this.showInputError(ctaUrl, 'Formato de URL inválido');
+                    isValid = false;
+                }
+                break;
+                
+            case 33: // KPIs
+                if (this.formData.kpis.length === 0) {
+                    isValid = false;
+                }
+                break;
+                
+            case 34: // Buyer persona
+                const buyerPersona = document.getElementById('buyer_persona');
+                if (buyerPersona && buyerPersona.value.trim().length < 20) {
+                    this.showInputError(buyerPersona, 'Mínimo 20 caracteres');
+                    isValid = false;
+                }
+                break;
+                
+            case 35: // Intereses y pain points
+                const interests = document.getElementById('interests');
+                const pains = document.getElementById('pains');
+                const contexts = document.getElementById('contexts');
+                
+                if (interests && interests.value.trim().length > 0 && interests.value.trim().length < 5) {
+                    this.showInputError(interests, 'Mínimo 5 caracteres');
+                    isValid = false;
+                }
+                if (pains && pains.value.trim().length > 0 && pains.value.trim().length < 5) {
+                    this.showInputError(pains, 'Mínimo 5 caracteres');
+                    isValid = false;
+                }
+                if (contexts && contexts.value.trim().length > 0 && contexts.value.trim().length < 5) {
+                    this.showInputError(contexts, 'Mínimo 5 caracteres');
+                    isValid = false;
+                }
+                break;
         }
 
         return isValid;
@@ -607,7 +690,7 @@ class NewOnboardingForm {
             this.currentStep--;
             this.showStep(this.currentStep);
             this.updateProgress();
-            this.updateNavigationButtons();
+        this.updateNavigationButtons();
         }
     }
 
@@ -874,36 +957,36 @@ class NewOnboardingForm {
         const preview = uploadZone.querySelector('.upload-preview');
 
         if (!fileInput || !placeholder || !preview) return;
-
+        
         // Click to upload
-        uploadZone.addEventListener('click', () => {
+            uploadZone.addEventListener('click', () => {
             fileInput.click();
-        });
-
+            });
+        
         // File selection
         fileInput.addEventListener('change', (e) => {
-            const files = Array.from(e.target.files);
+                const files = Array.from(e.target.files);
             
             if (files.length > 0) {
                 this.handleFileUpload(files, fieldName, multiple, placeholder, preview);
             }
         });
-
+        
         // Drag and drop
-        uploadZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
+            uploadZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
             uploadZone.classList.add('drag-over');
-        });
-
-        uploadZone.addEventListener('dragleave', () => {
-            uploadZone.classList.remove('drag-over');
-        });
-
-        uploadZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadZone.classList.remove('drag-over');
+            });
             
-            const files = Array.from(e.dataTransfer.files);
+            uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('drag-over');
+            });
+            
+            uploadZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+            uploadZone.classList.remove('drag-over');
+                
+                const files = Array.from(e.dataTransfer.files);
             if (files.length > 0) {
                 this.handleFileUpload(files, fieldName, multiple, placeholder, preview);
             }
@@ -925,29 +1008,29 @@ class NewOnboardingForm {
     }
 
     showSingleFilePreview(file, preview) {
-        const img = preview.querySelector('img');
-        const video = preview.querySelector('video');
-        const fileName = preview.querySelector('.file-name');
-        const fileSize = preview.querySelector('.file-size');
-
-        if (file.type.startsWith('image/') && img) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        } else if (file.type.startsWith('video/') && video) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                video.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
+            const img = preview.querySelector('img');
+            const video = preview.querySelector('video');
+            const fileName = preview.querySelector('.file-name');
+            const fileSize = preview.querySelector('.file-size');
+            
+            if (file.type.startsWith('image/') && img) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            } else if (file.type.startsWith('video/') && video) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    video.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+            
+            if (fileName) fileName.textContent = file.name;
+            if (fileSize) fileSize.textContent = this.formatFileSize(file.size);
         }
-
-        if (fileName) fileName.textContent = file.name;
-        if (fileSize) fileSize.textContent = this.formatFileSize(file.size);
-    }
-
+        
     showMultipleFilePreview(files, preview) {
         const filesList = preview.parentNode.querySelector('.uploaded-files');
         if (filesList) {
@@ -955,16 +1038,16 @@ class NewOnboardingForm {
             filesList.style.display = 'block';
             
             files.forEach(file => {
-                const fileItem = document.createElement('div');
+            const fileItem = document.createElement('div');
                 fileItem.className = 'file-item';
-                fileItem.innerHTML = `
+            fileItem.innerHTML = `
                     <span class="file-name">${file.name}</span>
                     <span class="file-size">${this.formatFileSize(file.size)}</span>
-                    <button type="button" class="remove-file">
-                        <i class="fas fa-times"></i>
-                    </button>
-                `;
-                filesList.appendChild(fileItem);
+                <button type="button" class="remove-file">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            filesList.appendChild(fileItem);
             });
         }
     }
