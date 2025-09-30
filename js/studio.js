@@ -122,7 +122,7 @@ class StudioManager {
         try {
             if (!this.userId) return;
 
-            // Cargar proyectos del usuario (que son las marcas)
+            // Cargar proyectos del usuario (espacios de trabajo)
             const { data: projects, error } = await this.supabase
                 .from('projects')
                 .select(`
@@ -138,12 +138,14 @@ class StudioManager {
                 .order('created_at', { ascending: false });
 
             if (error) {
-                console.error('Error loading brands:', error);
-                this.showNotification('Error cargando marcas', 'error');
+                console.error('Error loading projects:', error);
+                this.showNotification('Error cargando proyectos', 'error');
                 return;
             }
 
+            // Los proyectos son los espacios de trabajo (marcas)
             this.brands = projects || [];
+            console.log('Proyectos cargados:', this.brands);
             this.renderBrands();
 
         } catch (error) {
@@ -400,6 +402,8 @@ class StudioManager {
         }
 
         brandGrid.innerHTML = '';
+        
+        console.log('Renderizando marcas:', this.brands);
         
         if (!this.brands || this.brands.length === 0) {
             console.log('No hay marcas para mostrar');
