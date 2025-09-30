@@ -339,28 +339,7 @@ class UGCStudio {
         try {
             console.log('👤 Cargando datos para usuario:', this.currentUserId);
 
-            // Cargar proyectos del usuario
-            const { data: projects, error: projectsError } = await this.supabase
-                .from('projects')
-                .select('*')
-                .eq('user_id', this.currentUserId)
-                .order('created_at', { ascending: false });
-
-            if (projectsError) {
-                console.error('Error cargando proyectos:', projectsError);
-                this.loadDemoData();
-                return;
-            }
-
-            if (projects && projects.length > 0) {
-                this.currentProjectId = projects[0].id;
-                console.log('📁 Proyecto actual:', this.currentProjectId);
-            } else {
-                console.log('📝 No hay proyectos, creando uno por defecto');
-                await this.createDefaultProject(this.currentUserId);
-            }
-
-            // Cargar marcas del usuario
+            // Cargar marcas del usuario (esto también carga los proyectos)
             await this.loadUserBrands();
             
             // Cargar productos del usuario
@@ -383,16 +362,39 @@ class UGCStudio {
      * Cargar marcas del usuario
      */
     async loadUserBrands() {
-        if (!this.currentProjectId) {
-            console.log('📝 No hay proyecto seleccionado, cargando datos demo');
+        if (!this.currentUserId) {
+            console.log('📝 No hay usuario autenticado, cargando datos demo');
             this.loadDemoBrands();
             return;
         }
 
         try {
-            console.log('🔄 Cargando marcas para proyecto:', this.currentProjectId);
+            console.log('🔄 Cargando marcas para usuario:', this.currentUserId);
 
-            // Cargar las marcas del proyecto actual
+            // Primero obtener los proyectos del usuario (como en brands.js)
+            const { data: projects, error: projectsError } = await this.supabase
+                .from('projects')
+                .select('id, name, website, country, languages, created_at')
+                .eq('user_id', this.currentUserId)
+                .order('created_at', { ascending: false });
+
+            if (projectsError) {
+                console.error('Error cargando proyectos:', projectsError);
+                this.loadDemoBrands();
+                return;
+            }
+
+            if (!projects || projects.length === 0) {
+                console.log('📝 No hay proyectos, cargando datos demo');
+                this.loadDemoBrands();
+                return;
+            }
+
+            // Usar el primer proyecto como proyecto actual
+            this.currentProjectId = projects[0].id;
+            console.log('📁 Proyecto actual:', this.currentProjectId);
+
+            // Ahora cargar las marcas (brand_guidelines) del proyecto actual
             const { data: brands, error } = await this.supabase
                 .from('brand_guidelines')
                 .select('*')
@@ -435,6 +437,12 @@ class UGCStudio {
      * Cargar productos del usuario
      */
     async loadUserProducts() {
+        if (!this.currentUserId) {
+            console.log('📝 No hay usuario autenticado, cargando datos demo');
+            this.loadDemoProducts();
+            return;
+        }
+
         if (!this.currentProjectId) {
             console.log('📝 No hay proyecto seleccionado, cargando datos demo');
             this.loadDemoProducts();
@@ -491,6 +499,12 @@ class UGCStudio {
      * Cargar ofertas del usuario
      */
     async loadUserOffers() {
+        if (!this.currentUserId) {
+            console.log('📝 No hay usuario autenticado, cargando datos demo');
+            this.loadDemoOffers();
+            return;
+        }
+
         if (!this.currentProjectId) {
             console.log('📝 No hay proyecto seleccionado, cargando datos demo');
             this.loadDemoOffers();
