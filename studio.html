@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Studio - UGC Studio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="css/navigation.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/studio.css">
+</head>
+<body>
+    <!-- Partículas de fondo -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Overlay para navegación móvil -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <!-- Header Principal -->
+    <header class="main-header">
+        <div class="header-left">
+            <button class="hamburger-menu" id="hamburgerMenu">
+                <div class="hamburger-line"></div>
+                <div class="hamburger-line"></div>
+                <div class="hamburger-line"></div>
+            </button>
+            <a href="main-dashboard.html" class="main-logo">
+                <i class="fas fa-cube"></i>
+                <span>UGC Studio</span>
+            </a>
+        </div>
+        <div class="header-right">
+            <div class="credits-display">
+                <i class="fas fa-coins"></i>
+                <span id="creditsCount">150</span>
+            </div>
+            <button class="btn btn-primary" id="saveProject">
+                <i class="fas fa-save"></i>
+                <span>Guardar Proyecto</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Navegación Lateral -->
+    <nav class="side-navigation" id="sideNavigation">
+        <!-- Header del panel -->
+        <div class="nav-header">
+            <div class="nav-user">
+                <div class="nav-user-avatar" id="navUserAvatar">U</div>
+                <div class="nav-user-info">
+                    <div class="nav-user-name" id="navUserName">Usuario Demo</div>
+                    <div class="nav-user-plan" id="navUserPlan">
+                        <i class="fas fa-crown"></i>
+                        <span>Plan Starter</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navegación principal -->
+        <div class="nav-content">
+            <div class="nav-section">
+                <div class="nav-item">
+                    <a href="main-dashboard.html" class="nav-link">
+                        <i class="fas fa-home nav-icon"></i>
+                        <span class="nav-text">Panel Principal</span>
+                    </a>
+                </div>
+                <div class="nav-item active">
+                    <a href="studio.html" class="nav-link">
+                        <i class="fas fa-magic nav-icon"></i>
+                        <span class="nav-text">Studio</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="brands.html" class="nav-link">
+                        <i class="fas fa-building nav-icon"></i>
+                        <span class="nav-text">Marcas</span>
+                        <span class="nav-count" id="brandsCount">0</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="catalog.html" class="nav-link">
+                        <i class="fas fa-palette nav-icon"></i>
+                        <span class="nav-text">Catálogo</span>
+                        <span class="nav-count" id="catalogCount">0</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="library.html" class="nav-link">
+                        <i class="fas fa-folder nav-icon"></i>
+                        <span class="nav-text">Biblioteca</span>
+                        <span class="nav-count" id="libraryCount">0</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer del panel -->
+        <div class="nav-footer">
+            <div class="nav-actions">
+                <button class="nav-action-btn" title="Configuración">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <button class="nav-action-btn" title="Ayuda">
+                    <i class="fas fa-question-circle"></i>
+                </button>
+                <button class="nav-action-btn" title="Cerrar Sesión">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <main class="main-content">
+        <!-- Breadcrumb -->
+        <div class="breadcrumb">
+            <span class="breadcrumb-item">
+                <a href="main-dashboard.html">Panel Principal</a>
+            </span>
+            <i class="fas fa-chevron-right breadcrumb-separator"></i>
+            <span class="breadcrumb-item active">Studio</span>
+        </div>
+
+        <!-- Layout Principal del Studio -->
+        <div class="studio-layout">
+            
+            <!-- Sidebar Izquierdo - Iconos Verticales -->
+            <nav class="icon-sidebar left-sidebar">
+                <div class="sidebar-icons">
+                    <button class="icon-button" data-panel="marca" title="Marca">
+                        <i data-lucide="building-2"></i>
+                    </button>
+                    <button class="icon-button" data-panel="producto" title="Producto">
+                        <i data-lucide="box"></i>
+                    </button>
+                    <button class="icon-button" data-panel="oferta" title="Oferta">
+                        <i data-lucide="tag"></i>
+                    </button>
+                    <button class="icon-button" data-panel="temas" title="Temas">
+                        <i data-lucide="hash"></i>
+                    </button>
+                    <button class="icon-button" data-panel="categoria" title="Categoría">
+                        <i data-lucide="folder"></i>
+                    </button>
+                </div>
+            </nav>
+
+            <!-- Canvas Central -->
+            <main class="canvas-area">
+                <div class="canvas-placeholder">
+                    <i data-lucide="monitor" class="placeholder-icon"></i>
+                    <span class="placeholder-text">Canvas de Preview</span>
+                </div>
+            </main>
+
+            <!-- Sidebar Derecho - Iconos Verticales -->
+            <nav class="icon-sidebar right-sidebar">
+                <div class="sidebar-icons">
+                    <button class="icon-button" data-panel="estilos" title="Estilos">
+                        <i data-lucide="palette"></i>
+                    </button>
+                    <button class="icon-button" data-panel="formato" title="Formato">
+                        <i data-lucide="layout"></i>
+                    </button>
+                    <button class="icon-button" data-panel="pais" title="País">
+                        <i data-lucide="globe"></i>
+                    </button>
+                    <button class="icon-button" data-panel="idioma" title="Idioma">
+                        <i data-lucide="languages"></i>
+                    </button>
+                    <button class="icon-button" data-panel="acento" title="Acento">
+                        <i data-lucide="mic"></i>
+                    </button>
+                    <button class="icon-button" data-panel="genero" title="Género">
+                        <i data-lucide="users"></i>
+                    </button>
+                    <button class="icon-button" data-panel="edad" title="Edad">
+                        <i data-lucide="calendar"></i>
+                    </button>
+                    <button class="icon-button" data-panel="creatividad" title="Creatividad IA">
+                        <i data-lucide="brain"></i>
+                    </button>
+                </div>
+            </nav>
+        </div>
+    </main>
+
+    <!-- Paneles Flotantes -->
+    
+    <!-- Modal Marca -->
+    <div class="brand-modal-overlay" id="modal-marca">
+        <div class="brand-modal">
+            <div class="brand-modal-header">
+                <button class="brand-modal-close" data-close="marca">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3 class="brand-modal-title">Marca</h3>
+                <p class="brand-modal-subtitle">Selecciona la marca para tu contenido UGC</p>
+            </div>
+            <div class="brand-modal-body">
+                <div class="brand-grid">
+                    <div class="brand-card selected" data-brand="mi-marca">
+                        <div class="brand-avatar">M</div>
+                        <div class="brand-info">
+                            <span class="brand-name">Mi Marca</span>
+                            <span class="brand-category">Tecnología</span>
+                        </div>
+                        <i data-lucide="check" class="selection-indicator"></i>
+                    </div>
+                    <div class="brand-card" data-brand="tech-corp">
+                        <div class="brand-avatar tech">T</div>
+                        <div class="brand-info">
+                            <span class="brand-name">Tech Corp</span>
+                            <span class="brand-category">Software</span>
+                        </div>
+                    </div>
+                    <div class="brand-card" data-brand="startup-x">
+                        <div class="brand-avatar startup">S</div>
+                        <div class="brand-info">
+                            <span class="brand-name">StartupX</span>
+                            <span class="brand-category">Innovación</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="add-new-button">
+                    <i data-lucide="plus"></i>
+                    <span>Nueva Marca</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Producto -->
+    <div class="brand-modal-overlay" id="modal-producto">
+        <div class="brand-modal">
+            <div class="brand-modal-header">
+                <button class="brand-modal-close" data-close="producto">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3 class="brand-modal-title">Producto</h3>
+                <p class="brand-modal-subtitle">Selecciona el producto para tu contenido UGC</p>
+            </div>
+            <div class="brand-modal-body">
+                <div class="product-list">
+                    <div class="product-item" data-product="laptop">
+                        <i data-lucide="laptop" class="product-icon"></i>
+                        <span class="product-name">Laptop Pro 15"</span>
+                    </div>
+                    <div class="product-item" data-product="smartphone">
+                        <i data-lucide="smartphone" class="product-icon"></i>
+                        <span class="product-name">Smartphone X1</span>
+                    </div>
+                    <div class="product-item" data-product="headphones">
+                        <i data-lucide="headphones" class="product-icon"></i>
+                        <span class="product-name">Auriculares Premium</span>
+                    </div>
+                    <div class="product-item" data-product="tablet">
+                        <i data-lucide="tablet" class="product-icon"></i>
+                        <span class="product-name">Tablet Design</span>
+                    </div>
+                </div>
+                <button class="add-new-button">
+                    <i data-lucide="plus"></i>
+                    <span>Nuevo Producto</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Oferta -->
+    <div class="brand-modal-overlay" id="modal-oferta">
+        <div class="brand-modal">
+            <div class="brand-modal-header">
+                <button class="brand-modal-close" data-close="oferta">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3 class="brand-modal-title">Oferta</h3>
+                <p class="brand-modal-subtitle">Selecciona o crea una oferta para tu contenido UGC</p>
+            </div>
+            <div class="brand-modal-body">
+                <div class="offer-list">
+                    <div class="offer-item">
+                        <div class="offer-badge">-50%</div>
+                        <div class="offer-info">
+                            <span class="offer-name">Black Friday</span>
+                            <span class="offer-period">Nov 24-30</span>
+                        </div>
+                    </div>
+                    <div class="offer-item">
+                        <div class="offer-badge new">NEW</div>
+                        <div class="offer-info">
+                            <span class="offer-name">Lanzamiento</span>
+                            <span class="offer-period">Limitada</span>
+                        </div>
+                    </div>
+                    <div class="offer-item">
+                        <div class="offer-badge">-25%</div>
+                        <div class="offer-info">
+                            <span class="offer-name">Primavera</span>
+                            <span class="offer-period">Mar 1-31</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="inline-form">
+                    <input type="text" placeholder="Nombre de la oferta" class="form-input">
+                    <div class="form-row">
+                        <input type="text" placeholder="% desc." class="form-input-small">
+                        <button class="btn-add">
+                            <i data-lucide="plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Temas -->
+    <div class="brand-modal-overlay" id="modal-temas">
+        <div class="brand-modal">
+            <div class="brand-modal-header">
+                <button class="brand-modal-close" data-close="temas">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3 class="brand-modal-title">Temas</h3>
+                <p class="brand-modal-subtitle">Selecciona los temas para tu contenido UGC</p>
+            </div>
+            <div class="brand-modal-body">
+                <div class="chip-grid">
+                    <div class="chip active" data-theme="tecnologia">
+                        <i data-lucide="cpu"></i>
+                        <span>Tecnología</span>
+                    </div>
+                    <div class="chip" data-theme="lifestyle">
+                        <i data-lucide="heart"></i>
+                        <span>Lifestyle</span>
+                    </div>
+                    <div class="chip active" data-theme="gaming">
+                        <i data-lucide="gamepad-2"></i>
+                        <span>Gaming</span>
+                    </div>
+                    <div class="chip" data-theme="fitness">
+                        <i data-lucide="dumbbell"></i>
+                        <span>Fitness</span>
+                    </div>
+                    <div class="chip" data-theme="business">
+                        <i data-lucide="briefcase"></i>
+                        <span>Business</span>
+                    </div>
+                    <div class="chip" data-theme="educacion">
+                        <i data-lucide="graduation-cap"></i>
+                        <span>Educación</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Categoría -->
+    <div class="brand-modal-overlay" id="modal-categoria">
+        <div class="brand-modal">
+            <div class="brand-modal-header">
+                <button class="brand-modal-close" data-close="categoria">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3 class="brand-modal-title">Categoría</h3>
+                <p class="brand-modal-subtitle">Selecciona la categoría de tu contenido UGC</p>
+            </div>
+            <div class="brand-modal-body">
+                <div class="category-grid">
+                    <div class="category-card selected" data-category="unboxing">
+                        <i data-lucide="package-open"></i>
+                        <span>Unboxing</span>
+                    </div>
+                    <div class="category-card" data-category="review">
+                        <i data-lucide="star"></i>
+                        <span>Reseña</span>
+                    </div>
+                    <div class="category-card" data-category="testimonial">
+                        <i data-lucide="message-circle"></i>
+                        <span>Testimonial</span>
+                    </div>
+                    <div class="category-card" data-category="tutorial">
+                        <i data-lucide="play-circle"></i>
+                        <span>Tutorial</span>
+                    </div>
+                    <div class="category-card" data-category="comparativa">
+                        <i data-lucide="git-compare"></i>
+                        <span>Comparativa</span>
+                    </div>
+                    <div class="category-card" data-category="haul">
+                        <i data-lucide="shopping-bag"></i>
+                        <span>Haul</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Estilos -->
+    <div class="brand-modal-overlay" id="modal-estilos">
+        <div class="brand-modal">
+            <div class="brand-modal-header">
+                <button class="brand-modal-close" data-close="estilos">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3 class="brand-modal-title">Estilos</h3>
+                <p class="brand-modal-subtitle">Selecciona el estilo visual para tu contenido UGC</p>
+            </div>
+            <div class="brand-modal-body">
+                <div class="style-grid">
+                    <div class="style-card selected">
+                        <div class="style-preview casual"></div>
+                        <span class="style-name">Casual & Natural</span>
+                    </div>
+                    <div class="style-card">
+                        <div class="style-preview professional"></div>
+                        <span class="style-name">Profesional</span>
+                    </div>
+                    <div class="style-card">
+                        <div class="style-preview energetic"></div>
+                        <span class="style-name">Energético</span>
+                    </div>
+                    <div class="style-card">
+                        <div class="style-preview minimal"></div>
+                        <span class="style-name">Minimalista</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Formato -->
+    <div class="brand-modal-overlay" id="modal-formato">
+        <div class="brand-modal">
+            <div class="brand-modal-header">
+                <button class="brand-modal-close" data-close="formato">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3 class="brand-modal-title">Formato</h3>
+                <p class="brand-modal-subtitle">Selecciona el formato de video para tu contenido UGC</p>
+            </div>
+            <div class="brand-modal-body">
+                <div class="format-options">
+                    <button class="format-option selected" data-format="horizontal">
+                        <i data-lucide="monitor"></i>
+                        <div class="format-info">
+                            <span class="format-name">Horizontal</span>
+                            <span class="format-ratio">16:9</span>
+                        </div>
+                    </button>
+                    <button class="format-option" data-format="square">
+                        <i data-lucide="square"></i>
+                        <div class="format-info">
+                            <span class="format-name">Cuadrado</span>
+                            <span class="format-ratio">1:1</span>
+                        </div>
+                    </button>
+                    <button class="format-option" data-format="vertical">
+                        <i data-lucide="smartphone"></i>
+                        <div class="format-info">
+                            <span class="format-name">Vertical</span>
+                            <span class="format-ratio">9:16</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal País -->
+    <div class="brand-modal-overlay" id="modal-pais">
+        <div class="brand-modal">
+            <div class="brand-modal-header">
+                <button class="brand-modal-close" data-close="pais">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3 class="brand-modal-title">País</h3>
+                <p class="brand-modal-subtitle">Selecciona el país objetivo para tu contenido UGC</p>
+            </div>
+            <div class="brand-modal-body">
+                <div class="select-list">
+                    <div class="select-item selected" data-country="es">
+                        <span class="country-flag">🇪🇸</span>
+                        <span class="country-name">España</span>
+                    </div>
+                    <div class="select-item" data-country="mx">
+                        <span class="country-flag">🇲🇽</span>
+                        <span class="country-name">México</span>
+                    </div>
+                    <div class="select-item" data-country="ar">
+                        <span class="country-flag">🇦🇷</span>
+                        <span class="country-name">Argentina</span>
+                    </div>
+                    <div class="select-item" data-country="co">
+                        <span class="country-flag">🇨🇴</span>
+                        <span class="country-name">Colombia</span>
+                    </div>
+                    <div class="select-item" data-country="us">
+                        <span class="country-flag">🇺🇸</span>
+                        <span class="country-name">Estados Unidos</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Idioma -->
+    <div class="brand-modal-overlay" id="modal-idioma">
+        <div class="brand-modal">
+            <div class="brand-modal-header">
+                <button class="brand-modal-close" data-close="idioma">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3 class="brand-modal-title">Idioma</h3>
+                <p class="brand-modal-subtitle">Selecciona el idioma para tu contenido UGC</p>
+            </div>
+            <div class="brand-modal-body">
+                <div class="select-list">
+                    <div class="select-item selected" data-lang="es">Español</div>
+                    <div class="select-item" data-lang="en">Inglés</div>
+                    <div class="select-item" data-lang="fr">Francés</div>
+                    <div class="select-item" data-lang="it">Italiano</div>
+                    <div class="select-item" data-lang="pt">Portugués</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Acento -->
+    <div class="brand-modal-overlay" id="modal-acento">
+        <div class="brand-modal">
+            <div class="brand-modal-header">
+                <button class="brand-modal-close" data-close="acento">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3 class="brand-modal-title">Acento</h3>
+                <p class="brand-modal-subtitle">Selecciona el acento para tu contenido UGC</p>
+            </div>
+            <div class="brand-modal-body">
+                <div class="select-list">
+                    <div class="select-item selected" data-accent="neutral">Neutro</div>
+                    <div class="select-item" data-accent="spain">Español (España)</div>
+                    <div class="select-item" data-accent="mexican">Mexicano</div>
+                    <div class="select-item" data-accent="argentinian">Argentino</div>
+                    <div class="select-item" data-accent="colombian">Colombiano</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Género -->
+    <div class="brand-modal-overlay" id="modal-genero">
+        <div class="brand-modal">
+            <div class="brand-modal-header">
+                <button class="brand-modal-close" data-close="genero">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3 class="brand-modal-title">Género</h3>
+                <p class="brand-modal-subtitle">Selecciona el género para tu contenido UGC</p>
+            </div>
+            <div class="brand-modal-body">
+                <div class="toggle-options">
+                    <button class="toggle-option selected" data-gender="male">
+                        <i data-lucide="user"></i>
+                        <span>Masculino</span>
+                    </button>
+                    <button class="toggle-option" data-gender="female">
+                        <i data-lucide="user"></i>
+                        <span>Femenino</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edad -->
+    <div class="brand-modal-overlay" id="modal-edad">
+        <div class="brand-modal">
+            <div class="brand-modal-header">
+                <button class="brand-modal-close" data-close="edad">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3 class="brand-modal-title">Edad</h3>
+                <p class="brand-modal-subtitle">Selecciona el rango de edad para tu contenido UGC</p>
+            </div>
+            <div class="brand-modal-body">
+                <div class="age-chips">
+                    <div class="age-chip active" data-age="18-24">18-24</div>
+                    <div class="age-chip active" data-age="25-34">25-34</div>
+                    <div class="age-chip" data-age="35-44">35-44</div>
+                    <div class="age-chip" data-age="45-54">45-54</div>
+                    <div class="age-chip" data-age="55+">55+</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Creatividad -->
+    <div class="brand-modal-overlay" id="modal-creatividad">
+        <div class="brand-modal">
+            <div class="brand-modal-header">
+                <button class="brand-modal-close" data-close="creatividad">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3 class="brand-modal-title">Creatividad IA</h3>
+                <p class="brand-modal-subtitle">Ajusta el nivel de creatividad para la generación de guiones</p>
+            </div>
+            <div class="brand-modal-body">
+                <div class="creativity-control">
+                    <div class="slider-labels">
+                        <span class="slider-label">Conservador</span>
+                        <span class="slider-label">Creativo</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="creativity-slider" min="0" max="100" value="75" id="creativity-range">
+                        <div class="slider-value">75</div>
+                    </div>
+                    <div class="slider-tooltip">
+                        <small>Controla qué tan innovadores serán los guiones generados</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="progress-section">
+            <span class="progress-label">Configuración completada</span>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 88%"></div>
+            </div>
+            <span class="progress-percentage">88%</span>
+        </div>
+        <button class="btn btn-primary" id="generate-btn">
+            <span>Generar Guiones (Step 2)</span>
+            <i data-lucide="arrow-right"></i>
+        </button>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/supabase-config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/studio.js"></script>
+</body>
+</html>
