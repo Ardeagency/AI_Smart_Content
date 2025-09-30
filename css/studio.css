@@ -232,10 +232,11 @@ body {
 
 .studio-layout {
     display: grid;
-    grid-template-columns: var(--sidebar-width) 1fr var(--sidebar-width);
+    grid-template-columns: 60px 1fr 60px;
     height: calc(100vh - 80px);
     gap: 0;
     position: relative;
+    width: 100%;
 }
 
 /* =======================================
@@ -243,15 +244,16 @@ body {
    ======================================= */
 
 .icon-sidebar {
-    width: var(--sidebar-width);
-    background-color: var(--bg-sidebar);
+    width: 60px;
+    background-color: rgba(26, 26, 26, 0.8);
     backdrop-filter: blur(20px);
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: var(--space-lg) 0;
+    padding: 20px 0;
     position: relative;
     z-index: 100;
+    min-height: 100%;
 }
 
 .left-sidebar {
@@ -271,29 +273,32 @@ body {
 .icon-button {
     width: 40px;
     height: 40px;
-    background: none;
-    border: none;
-    border-radius: var(--radius-sm);
-    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #a3a3a3;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all var(--transition-fast);
+    transition: all 0.2s ease;
     position: relative;
+    margin: 4px 0;
 }
 
 .icon-button:hover {
-    color: var(--text-primary);
-    background-color: var(--bg-hover);
+    color: #ffffff;
+    background-color: rgba(253, 98, 79, 0.2);
+    border-color: rgba(253, 98, 79, 0.5);
     transform: translateY(-1px);
-    box-shadow: var(--shadow-subtle);
+    box-shadow: 0 4px 12px rgba(253, 98, 79, 0.3);
 }
 
 .icon-button.active {
-    color: var(--accent-primary);
-    background-color: var(--bg-selected);
-    box-shadow: var(--shadow-glow);
+    color: #ffffff;
+    background-color: rgba(253, 98, 79, 0.3);
+    border-color: rgba(253, 98, 79, 0.8);
+    box-shadow: 0 0 20px rgba(253, 98, 79, 0.4);
 }
 
 .icon-button i {
@@ -307,20 +312,21 @@ body {
 
 .canvas-area {
     flex: 1;
-    background-color: var(--bg-primary);
+    background-color: #000000;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .canvas-placeholder {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--space-lg);
-    color: var(--text-muted);
-    opacity: 0.3;
+    gap: 16px;
+    color: #a3a3a3;
+    opacity: 0.6;
 }
 
 .placeholder-icon {
