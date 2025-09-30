@@ -264,8 +264,8 @@ class StudioManager {
     loadDemoData() {
         // Datos de ejemplo para modo demo
         this.brands = [
-            { id: 'demo-1', projects: { name: 'Mi Marca Demo' }, tone_of_voice: 'Cercano' },
-            { id: 'demo-2', projects: { name: 'Tech Corp' }, tone_of_voice: 'Profesional' }
+            { id: 'demo-1', name: 'Mi Marca Demo', country: 'España' },
+            { id: 'demo-2', name: 'Tech Corp', country: 'México' }
         ];
         this.products = [
             { id: 'prod-1', product_type: 'Laptop', short_desc: 'Laptop Pro 15"', price: 1299 },
@@ -369,18 +369,28 @@ class StudioManager {
 
     renderBrands() {
         const brandGrid = document.querySelector('#modal-marca .brand-grid');
-        if (!brandGrid) return;
+        if (!brandGrid) {
+            console.error('No se encontró el contenedor de marcas');
+            return;
+        }
 
         brandGrid.innerHTML = '';
+        
+        if (!this.brands || this.brands.length === 0) {
+            console.log('No hay marcas para mostrar');
+            return;
+        }
         
         this.brands.forEach(brand => {
             const brandCard = document.createElement('div');
             brandCard.className = 'brand-card';
+            const brandName = brand.name || (brand.projects && brand.projects.name) || 'Sin nombre';
+            const brandCountry = brand.country || 'Sin país';
             brandCard.innerHTML = `
-                <div class="brand-avatar">${brand.name.charAt(0).toUpperCase()}</div>
+                <div class="brand-avatar">${brandName.charAt(0).toUpperCase()}</div>
                 <div class="brand-info">
-                    <span class="brand-name">${brand.name}</span>
-                    <span class="brand-category">${brand.country || 'Sin país'}</span>
+                    <span class="brand-name">${brandName}</span>
+                    <span class="brand-category">${brandCountry}</span>
                 </div>
             `;
             
@@ -404,9 +414,17 @@ class StudioManager {
 
     renderProducts() {
         const productList = document.querySelector('#modal-producto .product-list');
-        if (!productList) return;
+        if (!productList) {
+            console.error('No se encontró el contenedor de productos');
+            return;
+        }
 
         productList.innerHTML = '';
+        
+        if (!this.products || this.products.length === 0) {
+            console.log('No hay productos para mostrar');
+            return;
+        }
         
         this.products.forEach(product => {
             const productItem = document.createElement('div');
@@ -439,9 +457,17 @@ class StudioManager {
 
     renderOffers() {
         const offerList = document.querySelector('#modal-oferta .offer-list');
-        if (!offerList) return;
+        if (!offerList) {
+            console.error('No se encontró el contenedor de ofertas');
+            return;
+        }
 
         offerList.innerHTML = '';
+        
+        if (!this.offers || this.offers.length === 0) {
+            console.log('No hay ofertas para mostrar');
+            return;
+        }
         
         this.offers.forEach(offer => {
             const offerItem = document.createElement('div');
@@ -621,4 +647,16 @@ class StudioManager {
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
     window.studioManager = new StudioManager();
+    
+    // Inicializar iconos Lucide
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+});
+
+// También inicializar cuando la ventana se carga completamente
+window.addEventListener('load', () => {
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
 });
