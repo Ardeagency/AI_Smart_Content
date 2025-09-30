@@ -252,20 +252,88 @@ class UGCStudio {
     /**
      * Cargar datos de demo
      */
-    loadDemoData() {
-        // Cargar marcas de demo
+    async loadDemoData() {
+        // Intentar cargar datos reales desde Supabase primero
+        if (this.supabase) {
+            try {
+                await this.loadRealData();
+                return;
+            } catch (error) {
+                console.warn('No se pudieron cargar datos reales, usando datos demo:', error);
+            }
+        }
+        
+        // Cargar datos demo como fallback
         this.loadDemoBrands();
-        
-        // Cargar productos de demo
         this.loadDemoProducts();
-        
-        // Cargar ofertas de demo
         this.loadDemoOffers();
-        
-        // Cargar temas de demo
         this.loadDemoThemes();
+        this.loadDemoCategories();
+    }
+
+    /**
+     * Cargar datos reales desde Supabase
+     */
+    async loadRealData() {
+        // Cargar marcas
+        const { data: brands, error: brandsError } = await this.supabase
+            .from('brand_guidelines')
+            .select('*')
+            .order('created_at', { ascending: false });
         
-        // Cargar categorías de demo
+        if (!brandsError && brands) {
+            this.demoBrands = brands.map(brand => ({
+                id: brand.id,
+                name: brand.name,
+                logo: brand.logo_file_id,
+                website: brand.website,
+                tone: brand.tone_of_voice
+            }));
+            this.updateBrandDropdown();
+        }
+
+        // Cargar productos
+        const { data: products, error: productsError } = await this.supabase
+            .from('products')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (!productsError && products) {
+            this.demoProducts = products.map(product => ({
+                id: product.id,
+                name: product.name,
+                description: product.short_desc,
+                benefits: product.benefits || [],
+                price: product.price,
+                main_image: product.main_image_id,
+                brand_id: product.brand_id
+            }));
+            this.updateProductDropdown();
+        }
+
+        // Cargar ofertas
+        const { data: offers, error: offersError } = await this.supabase
+            .from('offers')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (!offersError && offers) {
+            this.demoOffers = offers.map(offer => ({
+                id: offer.id,
+                name: offer.name,
+                objective: offer.main_objective,
+                description: offer.offer_desc,
+                cta: offer.cta,
+                cta_url: offer.cta_url,
+                valid_until: offer.offer_valid_until,
+                brand_id: offer.brand_id,
+                product_id: offer.product_id
+            }));
+            this.updateOfferDropdown();
+        }
+
+        // Cargar temas (generados dinámicamente)
+        this.loadDemoThemes();
         this.loadDemoCategories();
     }
 
@@ -682,14 +750,48 @@ class UGCStudio {
         try {
             this.showLoading('brandModal', 'Creando marca...');
             
-            // Simular guardado (reemplazar con Supabase)
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            let logo_url = null;
+            
+            // Subir logo a Supabase Storage si existe
+            if (formData.logo_file) {
+                const fileExt = formData.logo_file.name.split('.').pop();
+                const fileName = `brand_logo_${Date.now()}.${fileExt}`;
+                const filePath = `brands/${fileName}`;
+                
+                const { data: uploadData, error: uploadError } = await this.supabase.storage
+                    .from('ugc-assets')
+                    .upload(filePath, formData.logo_file);
+                
+                if (uploadError) throw uploadError;
+                
+                const { data: urlData } = this.supabase.storage
+                    .from('ugc-assets')
+                    .getPublicUrl(filePath);
+                
+                logo_url = urlData.publicUrl;
+            }
+            
+            // Guardar marca en Supabase
+            const { data, error } = await this.supabase
+                .from('brand_guidelines')
+                .insert([{
+                    name: formData.name,
+                    website: formData.website || null,
+                    tone_of_voice: formData.tone || null,
+                    logo_file_id: logo_url,
+                    project_id: this.currentProjectId || null,
+                    created_at: new Date().toISOString()
+                }])
+                .select()
+                .single();
+            
+            if (error) throw error;
             
             // Agregar a la lista local
             const newBrand = {
-                id: Date.now(),
+                id: data.id,
                 name: formData.name,
-                logo: formData.logo_file ? URL.createObjectURL(formData.logo_file) : null,
+                logo: logo_url,
                 website: formData.website,
                 tone: formData.tone
             };
@@ -702,7 +804,7 @@ class UGCStudio {
             
         } catch (error) {
             console.error('Error al crear marca:', error);
-            this.showNotification('Error al crear la marca', 'error');
+            this.showNotification(`Error al crear la marca: ${error.message}`, 'error');
         } finally {
             this.hideLoading('brandModal');
         }
@@ -726,16 +828,52 @@ class UGCStudio {
         try {
             this.showLoading('productModal', 'Creando producto...');
             
-            // Simular guardado
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            let main_image_url = null;
+            
+            // Subir imagen principal a Supabase Storage si existe
+            if (formData.main_image) {
+                const fileExt = formData.main_image.name.split('.').pop();
+                const fileName = `product_main_${Date.now()}.${fileExt}`;
+                const filePath = `products/${fileName}`;
+                
+                const { data: uploadData, error: uploadError } = await this.supabase.storage
+                    .from('ugc-assets')
+                    .upload(filePath, formData.main_image);
+                
+                if (uploadError) throw uploadError;
+                
+                const { data: urlData } = this.supabase.storage
+                    .from('ugc-assets')
+                    .getPublicUrl(filePath);
+                
+                main_image_url = urlData.publicUrl;
+            }
+            
+            // Guardar producto en Supabase
+            const { data, error } = await this.supabase
+                .from('products')
+                .insert([{
+                    name: formData.name,
+                    short_desc: formData.description,
+                    benefits: formData.benefits,
+                    price: formData.price,
+                    main_image_id: main_image_url,
+                    brand_id: this.configData.brand?.id || null,
+                    project_id: this.currentProjectId || null,
+                    created_at: new Date().toISOString()
+                }])
+                .select()
+                .single();
+            
+            if (error) throw error;
             
             const newProduct = {
-                id: Date.now(),
+                id: data.id,
                 name: formData.name,
                 description: formData.description,
                 benefits: formData.benefits,
                 price: formData.price,
-                main_image: formData.main_image ? URL.createObjectURL(formData.main_image) : null,
+                main_image: main_image_url,
                 brand_id: this.configData.brand?.id || null
             };
             
@@ -747,7 +885,7 @@ class UGCStudio {
             
         } catch (error) {
             console.error('Error al crear producto:', error);
-            this.showNotification('Error al crear el producto', 'error');
+            this.showNotification(`Error al crear el producto: ${error.message}`, 'error');
         } finally {
             this.hideLoading('productModal');
         }
@@ -772,11 +910,28 @@ class UGCStudio {
         try {
             this.showLoading('offerModal', 'Creando oferta...');
             
-            // Simular guardado
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            // Guardar oferta en Supabase
+            const { data, error } = await this.supabase
+                .from('offers')
+                .insert([{
+                    name: formData.name,
+                    main_objective: formData.objective,
+                    offer_desc: formData.description,
+                    cta: formData.cta,
+                    cta_url: formData.cta_url || null,
+                    offer_valid_until: formData.valid_until || null,
+                    brand_id: this.configData.brand?.id || null,
+                    product_id: this.configData.product?.id || null,
+                    project_id: this.currentProjectId || null,
+                    created_at: new Date().toISOString()
+                }])
+                .select()
+                .single();
+            
+            if (error) throw error;
             
             const newOffer = {
-                id: Date.now(),
+                id: data.id,
                 name: formData.name,
                 objective: formData.objective,
                 description: formData.description,
@@ -795,7 +950,7 @@ class UGCStudio {
             
         } catch (error) {
             console.error('Error al crear oferta:', error);
-            this.showNotification('Error al crear la oferta', 'error');
+            this.showNotification(`Error al crear la oferta: ${error.message}`, 'error');
         } finally {
             this.hideLoading('offerModal');
         }
