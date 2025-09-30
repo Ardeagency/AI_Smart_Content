@@ -85,31 +85,8 @@ class UGCStudio {
             });
         });
 
-        // Toggles de selectores - usar event delegation
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('[onclick*="toggleSelector"]')) {
-                const element = e.target.closest('[onclick*="toggleSelector"]');
-                const onclick = element.getAttribute('onclick');
-                const match = onclick.match(/toggleSelector\('(\w+)'\)/);
-                if (match) {
-                    e.preventDefault();
-                    this.toggleSelector(match[1]);
-                }
-            }
-        });
-
-        // Dropdowns - usar event delegation
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('[onclick*="toggleDropdown"]')) {
-                const element = e.target.closest('[onclick*="toggleDropdown"]');
-                const onclick = element.getAttribute('onclick');
-                const match = onclick.match(/toggleDropdown\('(\w+)'\)/);
-                if (match) {
-                    e.preventDefault();
-                    this.toggleDropdown(match[1]);
-                }
-            }
-        });
+        // Los toggles se manejan directamente con los atributos onclick
+        // No necesitamos event listeners adicionales aquí
 
         // Tags inputs
         document.querySelectorAll('.tags-input').forEach(container => {
@@ -205,8 +182,11 @@ class UGCStudio {
      * Toggle de selectores
      */
     toggleSelector(selectorType) {
+        console.log('toggleSelector called with:', selectorType);
         const content = document.getElementById(`${selectorType}-content`);
         const toggle = document.getElementById(`${selectorType}-toggle`);
+        
+        console.log('Elements found:', { content, toggle });
         
         if (content && toggle) {
             content.classList.toggle('active');
@@ -217,6 +197,10 @@ class UGCStudio {
             if (icon) {
                 icon.style.transform = content.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
             }
+            
+            console.log('Toggle completed. Active:', content.classList.contains('active'));
+        } else {
+            console.error('Elements not found for selector:', selectorType);
         }
     }
 
@@ -224,8 +208,11 @@ class UGCStudio {
      * Toggle de dropdowns
      */
     toggleDropdown(dropdownType) {
+        console.log('toggleDropdown called with:', dropdownType);
         const menu = document.getElementById(`${dropdownType}-dropdown-menu`);
         const btn = document.getElementById(`${dropdownType}-dropdown-btn`);
+        
+        console.log('Elements found:', { menu, btn });
         
         if (menu && btn) {
             // Cerrar otros dropdowns
@@ -234,6 +221,10 @@ class UGCStudio {
             // Toggle del dropdown actual
             menu.classList.toggle('active');
             btn.classList.toggle('active');
+            
+            console.log('Dropdown toggle completed. Active:', menu.classList.contains('active'));
+        } else {
+            console.error('Elements not found for dropdown:', dropdownType);
         }
     }
 
@@ -1686,14 +1677,55 @@ window.toggleSection = (targetId) => {
 };
 
 window.toggleSelector = (selectorType) => {
-    if (window.ugcStudio) {
-        window.ugcStudio.toggleSelector(selectorType);
+    console.log('Global toggleSelector called with:', selectorType);
+    
+    // Función directa sin depender del objeto ugcStudio
+    const content = document.getElementById(`${selectorType}-content`);
+    const toggle = document.getElementById(`${selectorType}-toggle`);
+    
+    console.log('Elements found:', { content, toggle });
+    
+    if (content && toggle) {
+        content.classList.toggle('active');
+        toggle.classList.toggle('active');
+        
+        // Rotar el ícono
+        const icon = toggle.querySelector('i');
+        if (icon) {
+            icon.style.transform = content.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
+        
+        console.log('Toggle completed. Active:', content.classList.contains('active'));
+    } else {
+        console.error('Elements not found for selector:', selectorType);
     }
 };
 
 window.toggleDropdown = (dropdownType) => {
-    if (window.ugcStudio) {
-        window.ugcStudio.toggleDropdown(dropdownType);
+    console.log('Global toggleDropdown called with:', dropdownType);
+    
+    // Función directa sin depender del objeto ugcStudio
+    const menu = document.getElementById(`${dropdownType}-dropdown-menu`);
+    const btn = document.getElementById(`${dropdownType}-dropdown-btn`);
+    
+    console.log('Elements found:', { menu, btn });
+    
+    if (menu && btn) {
+        // Cerrar otros dropdowns
+        document.querySelectorAll('.dropdown-menu.active').forEach(dropdown => {
+            dropdown.classList.remove('active');
+        });
+        document.querySelectorAll('.dropdown-btn.active').forEach(button => {
+            button.classList.remove('active');
+        });
+        
+        // Toggle del dropdown actual
+        menu.classList.toggle('active');
+        btn.classList.toggle('active');
+        
+        console.log('Dropdown toggle completed. Active:', menu.classList.contains('active'));
+    } else {
+        console.error('Elements not found for dropdown:', dropdownType);
     }
 };
 
