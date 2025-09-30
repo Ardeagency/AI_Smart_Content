@@ -39,6 +39,12 @@ class UGCStudio {
         console.log('🎬 Inicializando UGC Studio');
         
         try {
+            // Esperar a que Supabase esté listo
+            await this.waitForSupabase();
+            
+            // Verificar autenticación
+            await this.checkAuthentication();
+            
             // Configurar Supabase
             await this.setupSupabase();
             
@@ -58,18 +64,66 @@ class UGCStudio {
     }
 
     /**
+     * Esperar a que Supabase esté listo
+     */
+    async waitForSupabase() {
+        let attempts = 0;
+        const maxAttempts = 30;
+        
+        while (attempts < maxAttempts) {
+            if (window.supabaseClient && window.supabaseClient.isReady()) {
+                console.log('✅ Supabase está listo');
+                return;
+            }
+            
+            console.log(`⏳ Esperando Supabase... intento ${attempts + 1}/${maxAttempts}`);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            attempts++;
+        }
+        
+        throw new Error('Supabase no está disponible después de esperar');
+    }
+
+    /**
+     * Verificar autenticación
+     */
+    async checkAuthentication() {
+        try {
+            const { data: { session }, error } = await window.supabaseClient.supabase.auth.getSession();
+            
+            if (error) {
+                console.error('Error verificando sesión:', error);
+                throw new Error('Error de autenticación');
+            }
+            
+            if (!session) {
+                console.log('❌ No hay sesión activa');
+                // No redirigir automáticamente, permitir modo demo
+                return;
+            }
+            
+            console.log('✅ Usuario autenticado:', session.user.email);
+            this.currentUserId = session.user.id;
+            
+        } catch (error) {
+            console.error('❌ Error verificando autenticación:', error);
+            // No lanzar error, permitir modo demo
+        }
+    }
+
+    /**
      * Configurar Supabase
      */
     async setupSupabase() {
         try {
             if (window.supabaseClient && window.supabaseClient.supabase) {
                 this.supabase = window.supabaseClient.supabase;
-                console.log('Supabase disponible');
+                console.log('✅ Supabase disponible');
             } else {
-                console.log('Supabase no disponible, usando modo demo');
+                console.log('⚠️ Supabase no disponible, usando modo demo');
             }
         } catch (error) {
-            console.error('Error configurando Supabase:', error);
+            console.error('❌ Error configurando Supabase:', error);
         }
     }
 
@@ -264,103 +318,103 @@ class UGCStudio {
      * Cargar datos del usuario desde Supabase
      */
     async loadUserData() {
-        // Obtener el usuario actual
-        const { data: { user }, error: userError } = await this.supabase.auth.getUser();
-        
-        if (userError || !user) {
-            throw new Error('Usuario no autenticado');
+        if (!this.currentUserId) {
+            console.log('⚠️ No hay usuario autenticado, usando modo demo');
+            this.loadDemoData();
+            return;
         }
 
-        console.log('👤 Usuario autenticado:', user.email);
+        try {
+            console.log('👤 Cargando datos para usuario:', this.currentUserId);
 
-        // Cargar proyectos del usuario
-        const { data: projects, error: projectsError } = await this.supabase
-            .from('projects')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false });
+            // Cargar proyectos del usuario
+            const { data: projects, error: projectsError } = await this.supabase
+                .from('projects')
+                .select('*')
+                .eq('user_id', this.currentUserId)
+                .order('created_at', { ascending: false });
 
-        if (projectsError) {
-            console.error('Error cargando proyectos:', projectsError);
-        } else if (projects && projects.length > 0) {
-            this.currentProjectId = projects[0].id;
-            console.log('📁 Proyecto actual:', this.currentProjectId);
-        } else {
-            console.log('📝 No hay proyectos, creando uno por defecto');
-            await this.createDefaultProject(user.id);
+            if (projectsError) {
+                console.error('Error cargando proyectos:', projectsError);
+                this.loadDemoData();
+                return;
+            }
+
+            if (projects && projects.length > 0) {
+                this.currentProjectId = projects[0].id;
+                console.log('📁 Proyecto actual:', this.currentProjectId);
+            } else {
+                console.log('📝 No hay proyectos, creando uno por defecto');
+                await this.createDefaultProject(this.currentUserId);
+            }
+
+            // Cargar marcas del usuario
+            await this.loadUserBrands();
+            
+            // Cargar productos del usuario
+            await this.loadUserProducts();
+            
+            // Cargar ofertas del usuario
+            await this.loadUserOffers();
+            
+            // Cargar temas y categorías (estos son estáticos)
+            this.loadDemoThemes();
+            this.loadDemoCategories();
+
+        } catch (error) {
+            console.error('❌ Error cargando datos del usuario:', error);
+            this.loadDemoData();
         }
-
-        // Cargar marcas del usuario
-        await this.loadUserBrands(user.id);
-        
-        // Cargar productos del usuario
-        await this.loadUserProducts(user.id);
-        
-        // Cargar ofertas del usuario
-        await this.loadUserOffers(user.id);
-        
-        // Cargar temas y categorías (estos son estáticos)
-        this.loadDemoThemes();
-        this.loadDemoCategories();
     }
 
     /**
      * Cargar marcas del usuario
      */
-    async loadUserBrands(userId) {
-        console.log('🔄 Cargando marcas para usuario:', userId);
-        
-        // Primero obtener los proyectos del usuario
-        const { data: projects, error: projectsError } = await this.supabase
-            .from('projects')
-            .select('id')
-            .eq('user_id', userId);
-
-        if (projectsError) {
-            console.error('Error cargando proyectos:', projectsError);
+    async loadUserBrands() {
+        if (!this.currentProjectId) {
+            console.log('📝 No hay proyecto seleccionado, cargando datos demo');
             this.loadDemoBrands();
             return;
         }
 
-        if (!projects || projects.length === 0) {
-            console.log('📝 No hay proyectos, cargando datos demo');
-            this.loadDemoBrands();
-            return;
-        }
+        try {
+            console.log('🔄 Cargando marcas para proyecto:', this.currentProjectId);
 
-        const projectIds = projects.map(p => p.id);
-        console.log('📁 IDs de proyectos:', projectIds);
+            // Cargar las marcas del proyecto actual
+            const { data: brands, error } = await this.supabase
+                .from('brand_guidelines')
+                .select('*')
+                .eq('project_id', this.currentProjectId)
+                .order('created_at', { ascending: false });
 
-        // Ahora cargar las marcas de esos proyectos
-        const { data: brands, error } = await this.supabase
-            .from('brand_guidelines')
-            .select('*')
-            .in('project_id', projectIds)
-            .order('created_at', { ascending: false });
+            if (error) {
+                console.error('Error cargando marcas:', error);
+                this.loadDemoBrands();
+                return;
+            }
 
-        if (error) {
-            console.error('Error cargando marcas:', error);
-            this.loadDemoBrands();
-            return;
-        }
+            if (brands && brands.length > 0) {
+                this.demoBrands = brands.map(brand => ({
+                    id: brand.id,
+                    name: brand.name || 'Marca sin nombre',
+                    logo: brand.logo_file_id,
+                    website: brand.website,
+                    tone: brand.tone_of_voice,
+                    keywords_yes: brand.keywords_yes || [],
+                    keywords_no: brand.keywords_no || [],
+                    dos_donts: brand.dos_donts,
+                    brand_assets: brand.brand_assets,
+                    reference_links: brand.reference_links || []
+                }));
+                this.updateBrandDropdown();
+                console.log('🏷️ Marcas cargadas:', this.demoBrands.length);
+            } else {
+                console.log('📝 No hay marcas, cargando datos demo');
+                this.loadDemoBrands();
+            }
 
-        if (brands && brands.length > 0) {
-            this.demoBrands = brands.map(brand => ({
-                id: brand.id,
-                name: brand.name,
-                logo: brand.logo_file_id,
-                website: brand.website,
-                tone: brand.tone_of_voice,
-                keywords_yes: brand.keywords_yes || [],
-                keywords_no: brand.keywords_no || [],
-                dos_donts: brand.dos_donts,
-                brand_assets: brand.brand_assets,
-                reference_links: brand.reference_links || []
-            }));
-            this.updateBrandDropdown();
-            console.log('🏷️ Marcas cargadas:', this.demoBrands.length);
-        } else {
-            console.log('📝 No hay marcas, cargando datos demo');
+        } catch (error) {
+            console.error('❌ Error cargando marcas:', error);
             this.loadDemoBrands();
         }
     }
@@ -368,64 +422,55 @@ class UGCStudio {
     /**
      * Cargar productos del usuario
      */
-    async loadUserProducts(userId) {
-        console.log('🔄 Cargando productos para usuario:', userId);
-        
-        // Primero obtener los proyectos del usuario
-        const { data: projects, error: projectsError } = await this.supabase
-            .from('projects')
-            .select('id')
-            .eq('user_id', userId);
-
-        if (projectsError) {
-            console.error('Error cargando proyectos:', projectsError);
+    async loadUserProducts() {
+        if (!this.currentProjectId) {
+            console.log('📝 No hay proyecto seleccionado, cargando datos demo');
             this.loadDemoProducts();
             return;
         }
 
-        if (!projects || projects.length === 0) {
-            console.log('📝 No hay proyectos, cargando datos demo');
-            this.loadDemoProducts();
-            return;
-        }
+        try {
+            console.log('🔄 Cargando productos para proyecto:', this.currentProjectId);
 
-        const projectIds = projects.map(p => p.id);
-        console.log('📁 IDs de proyectos:', projectIds);
+            // Cargar los productos del proyecto actual
+            const { data: products, error } = await this.supabase
+                .from('products')
+                .select('*')
+                .eq('project_id', this.currentProjectId)
+                .order('created_at', { ascending: false });
 
-        // Ahora cargar los productos de esos proyectos
-        const { data: products, error } = await this.supabase
-            .from('products')
-            .select('*')
-            .in('project_id', projectIds)
-            .order('created_at', { ascending: false });
+            if (error) {
+                console.error('Error cargando productos:', error);
+                this.loadDemoProducts();
+                return;
+            }
 
-        if (error) {
-            console.error('Error cargando productos:', error);
-            this.loadDemoProducts();
-            return;
-        }
+            if (products && products.length > 0) {
+                this.demoProducts = products.map(product => ({
+                    id: product.id,
+                    name: product.name || 'Producto sin nombre',
+                    description: product.short_desc,
+                    product_type: product.product_type,
+                    benefits: product.benefits || [],
+                    differentiators: product.differentiators || [],
+                    ingredients: product.ingredients || [],
+                    usage_steps: product.usage_steps || [],
+                    price: product.price,
+                    variants: product.variants || [],
+                    availability: product.availability,
+                    main_image: product.main_image_id,
+                    gallery_images: product.gallery_file_ids || [],
+                    project_id: product.project_id
+                }));
+                this.updateProductDropdown();
+                console.log('📦 Productos cargados:', this.demoProducts.length);
+            } else {
+                console.log('📝 No hay productos, cargando datos demo');
+                this.loadDemoProducts();
+            }
 
-        if (products && products.length > 0) {
-            this.demoProducts = products.map(product => ({
-                id: product.id,
-                name: product.name,
-                description: product.short_desc,
-                product_type: product.product_type,
-                benefits: product.benefits || [],
-                differentiators: product.differentiators || [],
-                ingredients: product.ingredients || [],
-                usage_steps: product.usage_steps || [],
-                price: product.price,
-                variants: product.variants || [],
-                availability: product.availability,
-                main_image: product.main_image_id,
-                gallery_images: product.gallery_file_ids || [],
-                project_id: product.project_id
-            }));
-            this.updateProductDropdown();
-            console.log('📦 Productos cargados:', this.demoProducts.length);
-        } else {
-            console.log('📝 No hay productos, cargando datos demo');
+        } catch (error) {
+            console.error('❌ Error cargando productos:', error);
             this.loadDemoProducts();
         }
     }
@@ -433,59 +478,50 @@ class UGCStudio {
     /**
      * Cargar ofertas del usuario
      */
-    async loadUserOffers(userId) {
-        console.log('🔄 Cargando ofertas para usuario:', userId);
-        
-        // Primero obtener los proyectos del usuario
-        const { data: projects, error: projectsError } = await this.supabase
-            .from('projects')
-            .select('id')
-            .eq('user_id', userId);
-
-        if (projectsError) {
-            console.error('Error cargando proyectos:', projectsError);
+    async loadUserOffers() {
+        if (!this.currentProjectId) {
+            console.log('📝 No hay proyecto seleccionado, cargando datos demo');
             this.loadDemoOffers();
             return;
         }
 
-        if (!projects || projects.length === 0) {
-            console.log('📝 No hay proyectos, cargando datos demo');
-            this.loadDemoOffers();
-            return;
-        }
+        try {
+            console.log('🔄 Cargando ofertas para proyecto:', this.currentProjectId);
 
-        const projectIds = projects.map(p => p.id);
-        console.log('📁 IDs de proyectos:', projectIds);
+            // Cargar las ofertas del proyecto actual
+            const { data: offers, error } = await this.supabase
+                .from('offers')
+                .select('*')
+                .eq('project_id', this.currentProjectId)
+                .order('created_at', { ascending: false });
 
-        // Ahora cargar las ofertas de esos proyectos
-        const { data: offers, error } = await this.supabase
-            .from('offers')
-            .select('*')
-            .in('project_id', projectIds)
-            .order('created_at', { ascending: false });
+            if (error) {
+                console.error('Error cargando ofertas:', error);
+                this.loadDemoOffers();
+                return;
+            }
 
-        if (error) {
-            console.error('Error cargando ofertas:', error);
-            this.loadDemoOffers();
-            return;
-        }
+            if (offers && offers.length > 0) {
+                this.demoOffers = offers.map(offer => ({
+                    id: offer.id,
+                    name: offer.name || 'Oferta sin nombre',
+                    objective: offer.main_objective,
+                    description: offer.offer_desc,
+                    cta: offer.cta,
+                    cta_url: offer.cta_url,
+                    valid_until: offer.offer_valid_until,
+                    kpis: offer.kpis || [],
+                    project_id: offer.project_id
+                }));
+                this.updateOfferDropdown();
+                console.log('🎯 Ofertas cargadas:', this.demoOffers.length);
+            } else {
+                console.log('📝 No hay ofertas, cargando datos demo');
+                this.loadDemoOffers();
+            }
 
-        if (offers && offers.length > 0) {
-            this.demoOffers = offers.map(offer => ({
-                id: offer.id,
-                name: offer.name,
-                objective: offer.main_objective,
-                description: offer.offer_desc,
-                cta: offer.cta,
-                cta_url: offer.cta_url,
-                valid_until: offer.offer_valid_until,
-                kpis: offer.kpis || [],
-                project_id: offer.project_id
-            }));
-            this.updateOfferDropdown();
-            console.log('🎯 Ofertas cargadas:', this.demoOffers.length);
-        } else {
-            console.log('📝 No hay ofertas, cargando datos demo');
+        } catch (error) {
+            console.error('❌ Error cargando ofertas:', error);
             this.loadDemoOffers();
         }
     }
@@ -604,18 +640,8 @@ class UGCStudio {
      * Cargar marcas de demo (fallback cuando no hay datos)
      */
     loadDemoBrands() {
-        console.log('📝 Cargando marcas demo como fallback');
-        this.demoBrands = [
-            {
-                id: 'demo-1',
-                name: 'Mi Primera Marca',
-                logo: null,
-                website: 'https://ejemplo.com',
-                tone: 'cercano',
-                keywords_yes: ['calidad', 'innovación'],
-                keywords_no: ['barato', 'básico']
-            }
-        ];
+        console.log('📝 No hay marcas disponibles');
+        this.demoBrands = [];
         this.updateBrandDropdown();
     }
 
@@ -623,25 +649,8 @@ class UGCStudio {
      * Cargar productos de demo (fallback cuando no hay datos)
      */
     loadDemoProducts() {
-        console.log('📝 Cargando productos demo como fallback');
-        this.demoProducts = [
-            {
-                id: 'demo-1',
-                name: 'Mi Primer Producto',
-                description: 'Un producto increíble para comenzar',
-                product_type: 'producto',
-                benefits: ['calidad', 'durabilidad'],
-                differentiators: ['único', 'innovador'],
-                ingredients: ['ingrediente 1', 'ingrediente 2'],
-                usage_steps: ['paso 1', 'paso 2'],
-                price: 99.99,
-                variants: [],
-                availability: 'disponible',
-                main_image: null,
-                gallery_images: [],
-                project_id: this.currentProjectId
-            }
-        ];
+        console.log('📝 No hay productos disponibles');
+        this.demoProducts = [];
         this.updateProductDropdown();
     }
 
@@ -649,20 +658,8 @@ class UGCStudio {
      * Cargar ofertas de demo (fallback cuando no hay datos)
      */
     loadDemoOffers() {
-        console.log('📝 Cargando ofertas demo como fallback');
-        this.demoOffers = [
-            {
-                id: 'demo-1',
-                name: 'Mi Primera Oferta',
-                objective: 'awareness',
-                description: 'Una oferta especial para nuevos clientes',
-                cta: 'Aprovecha ahora',
-                cta_url: 'https://ejemplo.com/oferta',
-                valid_until: null,
-                kpis: [],
-                project_id: this.currentProjectId
-            }
-        ];
+        console.log('📝 No hay ofertas disponibles');
+        this.demoOffers = [];
         this.updateOfferDropdown();
     }
 
