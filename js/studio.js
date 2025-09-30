@@ -41,8 +41,8 @@ class StudioManager {
     async init() {
         try {
             await this.waitForSupabase();
-            await this.checkAuthentication();
             this.setupSupabase();
+            await this.checkAuthentication();
             await this.loadUserData();
             this.setupEventListeners();
             this.initializeLucideIcons();
@@ -73,18 +73,30 @@ class StudioManager {
 
     async checkAuthentication() {
         try {
+            if (!this.supabase) {
+                console.log('Supabase no está disponible, continuando en modo demo');
+                return;
+            }
+
             const { data: { session } } = await this.supabase.auth.getSession();
-            if (session) {
+            if (session && session.user) {
                 this.userId = session.user.id;
+                console.log('Usuario autenticado:', this.userId);
+            } else {
+                console.log('No hay sesión activa, continuando en modo demo');
             }
         } catch (error) {
-            console.log('No hay sesión activa, continuando en modo demo');
+            console.log('Error verificando autenticación:', error);
+            console.log('Continuando en modo demo');
         }
     }
 
     setupSupabase() {
         if (window.supabaseClient && window.supabaseClient.supabase) {
             this.supabase = window.supabaseClient.supabase;
+            console.log('Supabase configurado correctamente');
+        } else {
+            console.log('Supabase no está disponible en window.supabaseClient');
         }
     }
 
