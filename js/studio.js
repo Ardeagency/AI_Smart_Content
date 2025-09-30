@@ -285,6 +285,9 @@ class UGCStudio {
         } else if (projects && projects.length > 0) {
             this.currentProjectId = projects[0].id;
             console.log('📁 Proyecto actual:', this.currentProjectId);
+        } else {
+            console.log('📝 No hay proyectos, creando uno por defecto');
+            await this.createDefaultProject(user.id);
         }
 
         // Cargar marcas del usuario
@@ -305,17 +308,39 @@ class UGCStudio {
      * Cargar marcas del usuario
      */
     async loadUserBrands(userId) {
+        console.log('🔄 Cargando marcas para usuario:', userId);
+        
+        // Primero obtener los proyectos del usuario
+        const { data: projects, error: projectsError } = await this.supabase
+            .from('projects')
+            .select('id')
+            .eq('user_id', userId);
+
+        if (projectsError) {
+            console.error('Error cargando proyectos:', projectsError);
+            this.loadDemoBrands();
+            return;
+        }
+
+        if (!projects || projects.length === 0) {
+            console.log('📝 No hay proyectos, cargando datos demo');
+            this.loadDemoBrands();
+            return;
+        }
+
+        const projectIds = projects.map(p => p.id);
+        console.log('📁 IDs de proyectos:', projectIds);
+
+        // Ahora cargar las marcas de esos proyectos
         const { data: brands, error } = await this.supabase
             .from('brand_guidelines')
-            .select(`
-                *,
-                projects!inner(user_id)
-            `)
-            .eq('projects.user_id', userId)
+            .select('*')
+            .in('project_id', projectIds)
             .order('created_at', { ascending: false });
 
         if (error) {
             console.error('Error cargando marcas:', error);
+            this.loadDemoBrands();
             return;
         }
 
@@ -344,17 +369,39 @@ class UGCStudio {
      * Cargar productos del usuario
      */
     async loadUserProducts(userId) {
+        console.log('🔄 Cargando productos para usuario:', userId);
+        
+        // Primero obtener los proyectos del usuario
+        const { data: projects, error: projectsError } = await this.supabase
+            .from('projects')
+            .select('id')
+            .eq('user_id', userId);
+
+        if (projectsError) {
+            console.error('Error cargando proyectos:', projectsError);
+            this.loadDemoProducts();
+            return;
+        }
+
+        if (!projects || projects.length === 0) {
+            console.log('📝 No hay proyectos, cargando datos demo');
+            this.loadDemoProducts();
+            return;
+        }
+
+        const projectIds = projects.map(p => p.id);
+        console.log('📁 IDs de proyectos:', projectIds);
+
+        // Ahora cargar los productos de esos proyectos
         const { data: products, error } = await this.supabase
             .from('products')
-            .select(`
-                *,
-                projects!inner(user_id)
-            `)
-            .eq('projects.user_id', userId)
+            .select('*')
+            .in('project_id', projectIds)
             .order('created_at', { ascending: false });
 
         if (error) {
             console.error('Error cargando productos:', error);
+            this.loadDemoProducts();
             return;
         }
 
@@ -387,17 +434,39 @@ class UGCStudio {
      * Cargar ofertas del usuario
      */
     async loadUserOffers(userId) {
+        console.log('🔄 Cargando ofertas para usuario:', userId);
+        
+        // Primero obtener los proyectos del usuario
+        const { data: projects, error: projectsError } = await this.supabase
+            .from('projects')
+            .select('id')
+            .eq('user_id', userId);
+
+        if (projectsError) {
+            console.error('Error cargando proyectos:', projectsError);
+            this.loadDemoOffers();
+            return;
+        }
+
+        if (!projects || projects.length === 0) {
+            console.log('📝 No hay proyectos, cargando datos demo');
+            this.loadDemoOffers();
+            return;
+        }
+
+        const projectIds = projects.map(p => p.id);
+        console.log('📁 IDs de proyectos:', projectIds);
+
+        // Ahora cargar las ofertas de esos proyectos
         const { data: offers, error } = await this.supabase
             .from('offers')
-            .select(`
-                *,
-                projects!inner(user_id)
-            `)
-            .eq('projects.user_id', userId)
+            .select('*')
+            .in('project_id', projectIds)
             .order('created_at', { ascending: false });
 
         if (error) {
             console.error('Error cargando ofertas:', error);
+            this.loadDemoOffers();
             return;
         }
 
@@ -418,6 +487,38 @@ class UGCStudio {
         } else {
             console.log('📝 No hay ofertas, cargando datos demo');
             this.loadDemoOffers();
+        }
+    }
+
+    /**
+     * Crear proyecto por defecto
+     */
+    async createDefaultProject(userId) {
+        try {
+            console.log('🔄 Creando proyecto por defecto...');
+            
+            const { data: project, error } = await this.supabase
+                .from('projects')
+                .insert([{
+                    name: 'Mi Proyecto UGC',
+                    website: null,
+                    country: 'ES',
+                    languages: ['es'],
+                    user_id: userId
+                }])
+                .select()
+                .single();
+
+            if (error) {
+                console.error('Error creando proyecto:', error);
+                return;
+            }
+
+            this.currentProjectId = project.id;
+            console.log('✅ Proyecto creado:', this.currentProjectId);
+            
+        } catch (error) {
+            console.error('Error creando proyecto por defecto:', error);
         }
     }
 
@@ -504,7 +605,17 @@ class UGCStudio {
      */
     loadDemoBrands() {
         console.log('📝 Cargando marcas demo como fallback');
-        this.demoBrands = [];
+        this.demoBrands = [
+            {
+                id: 'demo-1',
+                name: 'Mi Primera Marca',
+                logo: null,
+                website: 'https://ejemplo.com',
+                tone: 'cercano',
+                keywords_yes: ['calidad', 'innovación'],
+                keywords_no: ['barato', 'básico']
+            }
+        ];
         this.updateBrandDropdown();
     }
 
@@ -513,7 +624,24 @@ class UGCStudio {
      */
     loadDemoProducts() {
         console.log('📝 Cargando productos demo como fallback');
-        this.demoProducts = [];
+        this.demoProducts = [
+            {
+                id: 'demo-1',
+                name: 'Mi Primer Producto',
+                description: 'Un producto increíble para comenzar',
+                product_type: 'producto',
+                benefits: ['calidad', 'durabilidad'],
+                differentiators: ['único', 'innovador'],
+                ingredients: ['ingrediente 1', 'ingrediente 2'],
+                usage_steps: ['paso 1', 'paso 2'],
+                price: 99.99,
+                variants: [],
+                availability: 'disponible',
+                main_image: null,
+                gallery_images: [],
+                project_id: this.currentProjectId
+            }
+        ];
         this.updateProductDropdown();
     }
 
@@ -522,7 +650,19 @@ class UGCStudio {
      */
     loadDemoOffers() {
         console.log('📝 Cargando ofertas demo como fallback');
-        this.demoOffers = [];
+        this.demoOffers = [
+            {
+                id: 'demo-1',
+                name: 'Mi Primera Oferta',
+                objective: 'awareness',
+                description: 'Una oferta especial para nuevos clientes',
+                cta: 'Aprovecha ahora',
+                cta_url: 'https://ejemplo.com/oferta',
+                valid_until: null,
+                kpis: [],
+                project_id: this.currentProjectId
+            }
+        ];
         this.updateOfferDropdown();
     }
 
