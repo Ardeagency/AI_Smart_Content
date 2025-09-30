@@ -221,7 +221,7 @@ body {
 
 .main-content {
     margin-left: 0;
-    padding-top: 0;
+    padding-top: 70px;
     min-height: 100vh;
     transition: margin-left 0.3s ease;
 }
@@ -233,7 +233,7 @@ body {
 .studio-layout {
     display: grid;
     grid-template-columns: 60px 1fr 60px;
-    height: calc(100vh - 80px);
+    height: calc(100vh - 70px - 80px);
     gap: 0;
     position: relative;
     width: 100%;
