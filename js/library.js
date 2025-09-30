@@ -54,77 +54,26 @@ class LibraryManager {
 
             if (error) {
                 console.error('Error loading files:', error);
-                // Show mock data for demo
-                this.loadMockFiles();
+                this.files = [];
+                this.filteredFiles = [];
                 return;
             }
 
             this.files = files || [];
-            
-            // If no real files, show mock data for demo
-            if (this.files.length === 0) {
-                this.loadMockFiles();
-            } else {
-                this.filteredFiles = [...this.files];
-            }
+            this.filteredFiles = [...this.files];
             
             this.updateFolderCounts();
             
         } catch (error) {
             console.error('Error in loadFiles:', error);
-            this.loadMockFiles();
+            this.files = [];
+            this.filteredFiles = [];
         } finally {
             this.showLoading(false);
         }
     }
 
-    loadMockFiles() {
-        // Mock data for demonstration
-        this.files = this.generateMockFiles();
-        this.filteredFiles = [...this.files];
-        this.updateFolderCounts();
-    }
 
-    generateMockFiles() {
-        const fileTypes = ['image', 'video', 'audio', 'document'];
-        const categories = ['avatars', 'ugcs', 'styles', 'templates', 'uploads'];
-        const mockFiles = [];
-
-        for (let i = 1; i <= 50; i++) {
-            const fileType = fileTypes[Math.floor(Math.random() * fileTypes.length)];
-            const category = categories[Math.floor(Math.random() * categories.length)];
-            const extensions = {
-                image: ['jpg', 'png', 'gif', 'webp'],
-                video: ['mp4', 'mov', 'avi', 'mkv'],
-                audio: ['mp3', 'wav', 'aac', 'ogg'],
-                document: ['pdf', 'doc', 'txt', 'psd']
-            };
-            
-            const extension = extensions[fileType][Math.floor(Math.random() * extensions[fileType].length)];
-            
-            mockFiles.push({
-                id: `file_${i}`,
-                name: `Archivo_UGC_${i}.${extension}`,
-                file_type: fileType,
-                file_size: Math.floor(Math.random() * 10000000) + 100000, // 100KB to 10MB
-                file_url: fileType === 'image' ? `https://picsum.photos/800/600?random=${i}` : null,
-                category: category,
-                tags: this.generateRandomFileTags(),
-                project_id: Math.random() > 0.5 ? `project_${Math.floor(Math.random() * 5) + 1}` : null,
-                created_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-                updated_at: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString()
-            });
-        }
-
-        return mockFiles;
-    }
-
-    generateRandomFileTags() {
-        const allTags = ['ugc', 'contenido', 'social', 'marketing', 'creativo', 'producto', 'lifestyle', 'tutorial', 'reseña', 'unboxing'];
-        const numTags = Math.floor(Math.random() * 4) + 1;
-        const shuffled = allTags.sort(() => 0.5 - Math.random());
-        return shuffled.slice(0, numTags);
-    }
 
     renderFiles() {
         const gallery = document.getElementById('filesGallery');

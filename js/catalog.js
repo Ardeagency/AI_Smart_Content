@@ -50,8 +50,8 @@ class CatalogManager {
 
             if (error) {
                 console.error('Error loading styles:', error);
-                // Show mock data for demo
-                this.loadMockStyles();
+                this.styles = [];
+                this.filteredStyles = [];
                 return;
             }
 
@@ -60,61 +60,14 @@ class CatalogManager {
             
         } catch (error) {
             console.error('Error in loadStyles:', error);
-            // Show mock data for demo
-            this.loadMockStyles();
+            this.styles = [];
+            this.filteredStyles = [];
         } finally {
             this.showLoading(false);
         }
     }
 
-    loadMockStyles() {
-        // Mock data for demonstration
-        this.styles = this.generateMockStyles();
-        this.filteredStyles = [...this.styles];
-    }
 
-    generateMockStyles() {
-        const categories = ['beauty', 'fashion', 'tech', 'food', 'fitness', 'lifestyle'];
-        const formats = ['vertical', 'square', 'horizontal'];
-        const mockStyles = [];
-
-        for (let i = 1; i <= 100; i++) {
-            const category = categories[Math.floor(Math.random() * categories.length)];
-            const format = formats[Math.floor(Math.random() * formats.length)];
-            
-            mockStyles.push({
-                id: `style_${i}`,
-                name: `Estilo UGC #${i}`,
-                description: `Plantilla de contenido UGC perfecta para ${category}. Incluye elementos visuales modernos y llamativos.`,
-                category: category,
-                format: format,
-                preview_image_url: `https://picsum.photos/400/600?random=${i}`,
-                price: Math.random() > 0.7 ? Math.floor(Math.random() * 50) + 10 : 0,
-                is_premium: Math.random() > 0.6,
-                tags: this.generateRandomTags(category),
-                popularity_score: Math.floor(Math.random() * 1000),
-                created_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString()
-            });
-        }
-
-        return mockStyles;
-    }
-
-    generateRandomTags(category) {
-        const tagsByCategory = {
-            beauty: ['maquillaje', 'skincare', 'tutorial', 'producto', 'reseña'],
-            fashion: ['outfit', 'style', 'tendencia', 'look', 'ropa'],
-            tech: ['gadget', 'review', 'unboxing', 'tecnología', 'innovación'],
-            food: ['receta', 'cocina', 'saludable', 'delicioso', 'tutorial'],
-            fitness: ['ejercicio', 'rutina', 'salud', 'entrenamiento', 'bienestar'],
-            lifestyle: ['día', 'rutina', 'vida', 'experiencia', 'motivación']
-        };
-
-        const categoryTags = tagsByCategory[category] || [];
-        const numTags = Math.floor(Math.random() * 3) + 2;
-        
-        return categoryTags.slice(0, numTags);
-    }
 
     renderStyles() {
         const gallery = document.getElementById('stylesGallery');

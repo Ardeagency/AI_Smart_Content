@@ -307,8 +307,11 @@ class UGCStudio {
     async loadUserBrands(userId) {
         const { data: brands, error } = await this.supabase
             .from('brand_guidelines')
-            .select('*')
-            .eq('user_id', userId)
+            .select(`
+                *,
+                projects!inner(user_id)
+            `)
+            .eq('projects.user_id', userId)
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -324,7 +327,10 @@ class UGCStudio {
                 website: brand.website,
                 tone: brand.tone_of_voice,
                 keywords_yes: brand.keywords_yes || [],
-                keywords_no: brand.keywords_no || []
+                keywords_no: brand.keywords_no || [],
+                dos_donts: brand.dos_donts,
+                brand_assets: brand.brand_assets,
+                reference_links: brand.reference_links || []
             }));
             this.updateBrandDropdown();
             console.log('🏷️ Marcas cargadas:', this.demoBrands.length);
@@ -340,8 +346,11 @@ class UGCStudio {
     async loadUserProducts(userId) {
         const { data: products, error } = await this.supabase
             .from('products')
-            .select('*')
-            .eq('user_id', userId)
+            .select(`
+                *,
+                projects!inner(user_id)
+            `)
+            .eq('projects.user_id', userId)
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -354,13 +363,17 @@ class UGCStudio {
                 id: product.id,
                 name: product.name,
                 description: product.short_desc,
+                product_type: product.product_type,
                 benefits: product.benefits || [],
                 differentiators: product.differentiators || [],
                 ingredients: product.ingredients || [],
                 usage_steps: product.usage_steps || [],
                 price: product.price,
+                variants: product.variants || [],
+                availability: product.availability,
                 main_image: product.main_image_id,
-                brand_id: product.brand_id
+                gallery_images: product.gallery_file_ids || [],
+                project_id: product.project_id
             }));
             this.updateProductDropdown();
             console.log('📦 Productos cargados:', this.demoProducts.length);
@@ -376,8 +389,11 @@ class UGCStudio {
     async loadUserOffers(userId) {
         const { data: offers, error } = await this.supabase
             .from('offers')
-            .select('*')
-            .eq('user_id', userId)
+            .select(`
+                *,
+                projects!inner(user_id)
+            `)
+            .eq('projects.user_id', userId)
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -394,8 +410,8 @@ class UGCStudio {
                 cta: offer.cta,
                 cta_url: offer.cta_url,
                 valid_until: offer.offer_valid_until,
-                brand_id: offer.brand_id,
-                product_id: offer.product_id
+                kpis: offer.kpis || [],
+                project_id: offer.project_id
             }));
             this.updateOfferDropdown();
             console.log('🎯 Ofertas cargadas:', this.demoOffers.length);
@@ -484,88 +500,30 @@ class UGCStudio {
     }
 
     /**
-     * Cargar marcas de demo
+     * Cargar marcas de demo (fallback cuando no hay datos)
      */
     loadDemoBrands() {
-        const brands = [
-            { id: 1, name: 'Nike', website: 'nike.com', logo: null },
-            { id: 2, name: 'Adidas', website: 'adidas.com', logo: null },
-            { id: 3, name: 'Apple', website: 'apple.com', logo: null },
-            { id: 4, name: 'Samsung', website: 'samsung.com', logo: null }
-        ];
-
-        const menu = document.getElementById('brand-dropdown-menu');
-        if (menu) {
-            menu.innerHTML = brands.map(brand => `
-                <div class="brand-dropdown-item" onclick="selectBrand(${brand.id}, '${brand.name}', '${brand.website}')">
-                    <div class="brand-logo-small">
-                        <div class="brand-logo-placeholder">
-                            <i class="fas fa-tag"></i>
-                        </div>
-                    </div>
-                    <div class="brand-info">
-                        <div class="brand-name">${brand.name}</div>
-                        <div class="brand-website">${brand.website}</div>
-                    </div>
-                </div>
-            `).join('');
-        }
+        console.log('📝 Cargando marcas demo como fallback');
+        this.demoBrands = [];
+        this.updateBrandDropdown();
     }
 
     /**
-     * Cargar productos de demo
+     * Cargar productos de demo (fallback cuando no hay datos)
      */
     loadDemoProducts() {
-        const products = [
-            { id: 1, name: 'Air Max 270', price: '$120', image: null },
-            { id: 2, name: 'iPhone 15', price: '$999', image: null },
-            { id: 3, name: 'Galaxy S24', price: '$899', image: null },
-            { id: 4, name: 'MacBook Pro', price: '$1999', image: null }
-        ];
-
-        const menu = document.getElementById('product-dropdown-menu');
-        if (menu) {
-            menu.innerHTML = products.map(product => `
-                <div class="product-dropdown-item" onclick="selectProduct(${product.id}, '${product.name}', '${product.price}')">
-                    <div class="product-image-small">
-                        <div class="product-image-placeholder">
-                            <i class="fas fa-box"></i>
-                        </div>
-                    </div>
-                    <div class="product-info">
-                        <div class="product-name">${product.name}</div>
-                        <div class="product-price">${product.price}</div>
-                    </div>
-                </div>
-            `).join('');
-        }
+        console.log('📝 Cargando productos demo como fallback');
+        this.demoProducts = [];
+        this.updateProductDropdown();
     }
 
     /**
-     * Cargar ofertas de demo
+     * Cargar ofertas de demo (fallback cuando no hay datos)
      */
     loadDemoOffers() {
-        const offers = [
-            { id: 1, name: 'Descuento 20%', cta: 'Compra ahora' },
-            { id: 2, name: 'Envío gratis', cta: 'Aprovecha' },
-            { id: 3, name: '2x1', cta: 'Oferta limitada' },
-            { id: 4, name: 'Black Friday', cta: 'Hasta 50% off' }
-        ];
-
-        const menu = document.getElementById('offer-dropdown-menu');
-        if (menu) {
-            menu.innerHTML = offers.map(offer => `
-                <div class="offer-dropdown-item" onclick="selectOffer(${offer.id}, '${offer.name}', '${offer.cta}')">
-                    <div class="offer-icon">
-                        <i class="fas fa-percentage"></i>
-                    </div>
-                    <div class="offer-info">
-                        <div class="offer-name">${offer.name}</div>
-                        <div class="offer-cta">${offer.cta}</div>
-                    </div>
-                </div>
-            `).join('');
-        }
+        console.log('📝 Cargando ofertas demo como fallback');
+        this.demoOffers = [];
+        this.updateOfferDropdown();
     }
 
     /**
@@ -917,10 +875,9 @@ class UGCStudio {
                 logo_url = urlData.publicUrl;
             }
             
-            // Obtener usuario actual
-            const { data: { user }, error: userError } = await this.supabase.auth.getUser();
-            if (userError || !user) {
-                throw new Error('Usuario no autenticado');
+            // Verificar que tenemos un proyecto
+            if (!this.currentProjectId) {
+                throw new Error('No hay proyecto seleccionado');
             }
 
             // Guardar marca en Supabase
@@ -931,9 +888,13 @@ class UGCStudio {
                     website: formData.website || null,
                     tone_of_voice: formData.tone || null,
                     logo_file_id: logo_url,
-                    project_id: this.currentProjectId || null,
-                    user_id: user.id,
-                    created_at: new Date().toISOString()
+                    project_id: this.currentProjectId,
+                    keywords_yes: [],
+                    keywords_no: [],
+                    dos_donts: null,
+                    brand_assets: null,
+                    reference_links: [],
+                    brand_file_ids: []
                 }])
                 .select()
                 .single();
@@ -1007,10 +968,9 @@ class UGCStudio {
                 main_image_url = urlData.publicUrl;
             }
             
-            // Obtener usuario actual
-            const { data: { user }, error: userError } = await this.supabase.auth.getUser();
-            if (userError || !user) {
-                throw new Error('Usuario no autenticado');
+            // Verificar que tenemos un proyecto
+            if (!this.currentProjectId) {
+                throw new Error('No hay proyecto seleccionado');
             }
 
             // Guardar producto en Supabase
@@ -1018,14 +978,18 @@ class UGCStudio {
                 .from('products')
                 .insert([{
                     name: formData.name,
+                    product_type: 'producto', // Tipo por defecto
                     short_desc: formData.description,
                     benefits: formData.benefits,
+                    differentiators: [],
+                    usage_steps: [],
+                    ingredients: [],
                     price: formData.price,
+                    variants: [],
+                    availability: 'disponible',
                     main_image_id: main_image_url,
-                    brand_id: this.configData.brand?.id || null,
-                    project_id: this.currentProjectId || null,
-                    user_id: user.id,
-                    created_at: new Date().toISOString()
+                    gallery_file_ids: [],
+                    project_id: this.currentProjectId
                 }])
                 .select()
                 .single();
@@ -1080,27 +1044,22 @@ class UGCStudio {
         try {
             this.showLoading('offerModal', 'Creando oferta...');
             
-            // Obtener usuario actual
-            const { data: { user }, error: userError } = await this.supabase.auth.getUser();
-            if (userError || !user) {
-                throw new Error('Usuario no autenticado');
+            // Verificar que tenemos un proyecto
+            if (!this.currentProjectId) {
+                throw new Error('No hay proyecto seleccionado');
             }
 
             // Guardar oferta en Supabase
             const { data, error } = await this.supabase
                 .from('offers')
                 .insert([{
-                    name: formData.name,
                     main_objective: formData.objective,
                     offer_desc: formData.description,
-                    cta: formData.cta,
-                    cta_url: formData.cta_url || null,
                     offer_valid_until: formData.valid_until || null,
-                    brand_id: this.configData.brand?.id || null,
-                    product_id: this.configData.product?.id || null,
-                    project_id: this.currentProjectId || null,
-                    user_id: user.id,
-                    created_at: new Date().toISOString()
+                    cta: formData.cta,
+                    cta_url: formData.cta_url || '',
+                    kpis: [],
+                    project_id: this.currentProjectId
                 }])
                 .select()
                 .single();
