@@ -1,48 +1,147 @@
-/* =======================================
-   UGC Studio - JavaScript Cinematográfico
-   ======================================= */
+/**
+ * Studio Manager - UGC Studio
+ * Maneja la funcionalidad completa del Studio con datos reales de Supabase
+ */
 
-class UGCStudioCinematic {
+class StudioManager {
     constructor() {
-        this.state = {
-            activeModal: null,
-            selectedBrand: 'mi-marca',
-            selectedProduct: null,
-            selectedOffer: null,
-            selectedCategory: 'unboxing',
-            selectedStyle: 'casual',
-            selectedFormat: 'horizontal',
-            selectedCountry: 'es',
-            selectedLanguage: 'es',
-            selectedAccent: 'neutral',
-            selectedGender: 'male',
-            selectedAges: ['18-24', '25-34'],
-            selectedThemes: ['tecnologia', 'gaming'],
-            creativityLevel: 75,
-            progress: 0
+        this.supabase = null;
+        this.userId = null;
+        this.currentProjectId = null;
+        
+        // Estado global de configuración
+        this.studioConfig = {
+            brand: null,
+            product: null,
+            offer: null,
+            themes: [],
+            category: null,
+            style: null,
+            format: 'horizontal',
+            location: { 
+                country: 'ES', 
+                language: 'es', 
+                accent: 'neutral' 
+            },
+            gender: 'masculino',
+            age: '25-34',
+            creativity: 75,
         };
+        
+        // Datos cargados
+        this.brands = [];
+        this.products = [];
+        this.offers = [];
+        this.avatars = [];
+        this.styleCatalog = [];
         
         this.init();
     }
 
-    init() {
-        this.initializeLucideIcons();
-        this.setupIconButtons();
-        this.setupModalClosing();
-        this.setupInteractions();
-        this.setupProgressTracking();
-        this.setupKeyboardShortcuts();
-        
-        // Inicializar estado visual
-        setTimeout(() => {
-            this.updateProgress();
-            this.initializeActiveStates();
-        }, 100);
+    async init() {
+        try {
+            await this.waitForSupabase();
+            await this.checkAuthentication();
+            this.setupSupabase();
+            await this.loadUserData();
+            this.setupEventListeners();
+            this.initializeLucideIcons();
+        } catch (error) {
+            console.error('Error initializing Studio:', error);
+            this.showNotification('Error inicializando Studio', 'error');
+        }
     }
 
     /* =======================================
        Inicialización
        ======================================= */
+
+    async waitForSupabase() {
+        let attempts = 0;
+        const maxAttempts = 50;
+        
+        while (attempts < maxAttempts) {
+            if (window.supabaseClient && window.supabaseClient.supabase) {
+                return;
+            }
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+        
+        throw new Error('Supabase no está disponible después de esperar');
+    }
+
+    async checkAuthentication() {
+        try {
+            const { data: { session } } = await this.supabase.auth.getSession();
+            if (session) {
+                this.userId = session.user.id;
+            }
+        } catch (error) {
+            console.log('No hay sesión activa, continuando en modo demo');
+        }
+    }
+
+    setupSupabase() {
+        if (window.supabaseClient && window.supabaseClient.supabase) {
+            this.supabase = window.supabaseClient.supabase;
+        }
+    }
+
+    async loadUserData() {
+        if (!this.supabase || !this.userId) {
+            console.log('Modo demo: cargando datos de ejemplo');
+            this.loadDemoData();
+            return;
+        }
+
+        try {
+            // Cargar proyecto actual del usuario
+            const { data: projects } = await this.supabase
+                .from('projects')
+                .select('*')
+                .eq('user_id', this.userId)
+                .order('created_at', { ascending: false })
+                .limit(1);
+
+            if (projects && projects.length > 0) {
+                this.currentProjectId = projects[0].id;
+            } else {
+                // Crear proyecto por defecto
+                this.currentProjectId = await this.createDefaultProject();
+            }
+
+            // Cargar datos relacionados
+            await Promise.all([
+                this.loadBrands(),
+                this.loadProducts(),
+                this.loadOffers(),
+                this.loadAvatars(),
+                this.loadStyleCatalog()
+            ]);
+
+        } catch (error) {
+            console.error('Error loading user data:', error);
+            this.loadDemoData();
+        }
+    }
+
+    async createDefaultProject() {
+        const { data, error } = await this.supabase
+            .from('projects')
+            .insert([{
+                user_id: this.userId,
+                name: 'Proyecto Principal',
+                website: '',
+                country: 'ES',
+                languages: ['es']
+            }])
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data.id;
+    }
 
     initializeLucideIcons() {
         if (typeof lucide !== 'undefined') {
@@ -50,713 +149,436 @@ class UGCStudioCinematic {
         }
     }
 
-    initializeActiveStates() {
-        // Marcar elementos seleccionados por defecto
-        this.selectBrand(this.state.selectedBrand);
-        this.selectCategory(this.state.selectedCategory);
-        this.selectStyle(this.state.selectedStyle);
-        this.selectFormat(this.state.selectedFormat);
-        this.selectCountry(this.state.selectedCountry);
-        this.selectLanguage(this.state.selectedLanguage);
-        this.selectAccent(this.state.selectedAccent);
-        this.selectGender(this.state.selectedGender);
-        
-        // Activar temas y edades seleccionados
-        this.state.selectedThemes.forEach(theme => {
-            const chip = document.querySelector(`[data-theme="${theme}"]`);
-            if (chip) chip.classList.add('active');
-        });
-        
-        this.state.selectedAges.forEach(age => {
-            const chip = document.querySelector(`[data-age="${age}"]`);
-            if (chip) chip.classList.add('active');
-        });
+    async loadBrands() {
+        if (!this.currentProjectId) return;
+
+        const { data } = await this.supabase
+            .from('brand_guidelines')
+            .select(`
+                id,
+                project_id,
+                tone_of_voice,
+                keywords_yes,
+                keywords_no,
+                dos_donts,
+                logo_file_id,
+                brand_file_ids,
+                projects!inner(name, website)
+            `)
+            .eq('project_id', this.currentProjectId);
+
+        this.brands = data || [];
+        this.renderBrands();
     }
 
-    /* =======================================
-       Manejo de Paneles Flotantes
-       ======================================= */
+    async loadProducts() {
+        if (!this.currentProjectId) return;
 
-    setupIconButtons() {
-        const iconButtons = document.querySelectorAll('.icon-button');
-        
-        iconButtons.forEach(button => {
+        const { data } = await this.supabase
+            .from('products')
+            .select(`
+                id,
+                project_id,
+                product_type,
+                short_desc,
+                benefits,
+                differentiators,
+                usage_steps,
+                ingredients,
+                price,
+                variants,
+                main_image_id,
+                gallery_file_ids
+            `)
+            .eq('project_id', this.currentProjectId);
+
+        this.products = data || [];
+        this.renderProducts();
+    }
+
+    async loadOffers() {
+        if (!this.currentProjectId) return;
+
+        const { data } = await this.supabase
+            .from('offers')
+            .select(`
+                id,
+                project_id,
+                main_objective,
+                offer_desc,
+                cta,
+                cta_url,
+                offer_valid_until
+            `)
+            .eq('project_id', this.currentProjectId);
+
+        this.offers = data || [];
+        this.renderOffers();
+    }
+
+    async loadAvatars() {
+        if (!this.currentProjectId) return;
+
+        const { data } = await this.supabase
+            .from('avatars')
+            .select(`
+                id,
+                project_id,
+                avatar_type,
+                traits,
+                energy,
+                gender,
+                voice,
+                languages,
+                values,
+                avatar_image_id,
+                avatar_video_id
+            `)
+            .eq('project_id', this.currentProjectId);
+
+        this.avatars = data || [];
+        this.renderAvatars();
+    }
+
+    async loadStyleCatalog() {
+        if (!this.currentProjectId) return;
+
+        const { data } = await this.supabase
+            .from('style_catalog')
+            .select(`
+                id,
+                project_id,
+                prompt,
+                video_file_id,
+                name,
+                label,
+                category,
+                filters,
+                config
+            `)
+            .eq('project_id', this.currentProjectId);
+
+        this.styleCatalog = data || [];
+        this.renderStyles();
+    }
+
+    loadDemoData() {
+        // Datos de ejemplo para modo demo
+        this.brands = [
+            { id: 'demo-1', projects: { name: 'Mi Marca Demo' }, tone_of_voice: 'Cercano' },
+            { id: 'demo-2', projects: { name: 'Tech Corp' }, tone_of_voice: 'Profesional' }
+        ];
+        this.products = [
+            { id: 'prod-1', product_type: 'Laptop', short_desc: 'Laptop Pro 15"', price: 1299 },
+            { id: 'prod-2', product_type: 'Smartphone', short_desc: 'Smartphone X1', price: 799 }
+        ];
+        this.offers = [
+            { id: 'offer-1', main_objective: 'Ventas', offer_desc: '20% OFF', cta: 'Comprar Ahora' }
+        ];
+        this.avatars = [
+            { id: 'avatar-1', avatar_type: 'Humano', gender: 'masculino', energy: 'Energético' }
+        ];
+        this.styleCatalog = [
+            { id: 'style-1', name: 'Casual & Natural', category: 'Lifestyle' },
+            { id: 'style-2', name: 'Profesional', category: 'Business' }
+        ];
+
+        this.renderBrands();
+        this.renderProducts();
+        this.renderOffers();
+        this.renderAvatars();
+        this.renderStyles();
+    }
+
+    setupEventListeners() {
+        // Botones de sidebar
+        document.querySelectorAll('.icon-button').forEach(button => {
             button.addEventListener('click', (e) => {
-                const modalName = button.getAttribute('data-panel');
-                this.openModal(modalName);
+                const panelName = button.getAttribute('data-panel');
+                this.toggleFloatingPanel(panelName);
             });
         });
+
+        // Botón generar guiones
+        const generateBtn = document.getElementById('generate-btn');
+        if (generateBtn) {
+            generateBtn.addEventListener('click', () => this.handleGenerateScripts());
+        }
+
+        // Slider de creatividad
+        const creativitySlider = document.getElementById('creativity-range');
+        if (creativitySlider) {
+            creativitySlider.addEventListener('input', (e) => {
+                this.studioConfig.creativity = parseInt(e.target.value);
+                this.updateSliderValue(e.target.value);
+            });
+        }
+
+        // Cerrar modales al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('brand-modal-overlay')) {
+                const modalName = e.target.id.replace('modal-', '');
+                this.closeModal(modalName);
+            }
+        });
+
+        // Atajos de teclado
+        this.setupKeyboardShortcuts();
+    }
+
+    toggleFloatingPanel(panelName) {
+        const modal = document.getElementById(`modal-${panelName}`);
+        if (modal) {
+            if (modal.classList.contains('active')) {
+                this.closeModal(panelName);
+            } else {
+                this.openModal(panelName);
+            }
+        }
     }
 
     openModal(modalName) {
         const modal = document.getElementById(`modal-${modalName}`);
         const button = document.querySelector(`[data-panel="${modalName}"]`);
         
-        if (!modal) return;
-        
-        // Cerrar modal activo si existe
-        if (this.state.activeModal) {
-            this.closeModal(this.state.activeModal);
-        }
-        
-        // Activar modal
-        modal.classList.add('active');
-        
-        // Activar botón
-        if (button) {
-            button.classList.add('active');
-        }
-        
-        // Actualizar estado
-        this.state.activeModal = modalName;
-        
-        // Enfocar primer elemento interactivo
-        setTimeout(() => {
-            const firstInteractive = modal.querySelector('button, .brand-card, .product-item, .chip, input');
-            if (firstInteractive) {
-                firstInteractive.focus();
+        if (modal) {
+            // Cerrar modal activo si existe
+            document.querySelectorAll('.brand-modal-overlay.active').forEach(m => {
+                m.classList.remove('active');
+            });
+            
+            modal.classList.add('active');
+            
+            if (button) {
+                button.classList.add('active');
             }
-        }, 200);
+        }
     }
 
     closeModal(modalName) {
         const modal = document.getElementById(`modal-${modalName}`);
         const button = document.querySelector(`[data-panel="${modalName}"]`);
         
-        if (!modal) return;
-        
-        // Desactivar modal
-        modal.classList.remove('active');
-        
-        // Desactivar botón
-        if (button) {
-            button.classList.remove('active');
-        }
-        
-        // Actualizar estado
-        this.state.activeModal = null;
-    }
-
-    setupModalClosing() {
-        // Botones de cerrar
-        const closeButtons = document.querySelectorAll('.brand-modal-close');
-        closeButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                const modalName = button.getAttribute('data-close');
-                this.closeModal(modalName);
-            });
-        });
-        
-        // Cerrar al hacer clic en overlay
-        const modals = document.querySelectorAll('.brand-modal-overlay');
-        modals.forEach(modal => {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    const modalName = modal.id.replace('modal-', '');
-                    this.closeModal(modalName);
-                }
-            });
-        });
-        
-        // Prevenir cierre al hacer clic dentro del modal
-        const modalBodies = document.querySelectorAll('.brand-modal');
-        modalBodies.forEach(modal => {
-            modal.addEventListener('click', (e) => {
-                e.stopPropagation();
-            });
-        });
-    }
-
-    /* =======================================
-       Interacciones de Contenido
-       ======================================= */
-
-    setupInteractions() {
-        // Marcas
-        this.setupBrandSelection();
-        
-        // Productos
-        this.setupProductSelection();
-        
-        // Ofertas
-        this.setupOfferSelection();
-        
-        // Temas
-        this.setupThemeSelection();
-        
-        // Categorías
-        this.setupCategorySelection();
-        
-        // Estilos
-        this.setupStyleSelection();
-        
-        // Formato
-        this.setupFormatSelection();
-        
-        // Localización
-        this.setupLocalizationSelection();
-        
-        // Género
-        this.setupGenderSelection();
-        
-        // Edad
-        this.setupAgeSelection();
-        
-        // Creatividad
-        this.setupCreativitySlider();
-        
-        // Formulario inline
-        this.setupInlineForm();
-        
-        // Botones de acción
-        this.setupActionButtons();
-    }
-
-    setupBrandSelection() {
-        const brandCards = document.querySelectorAll('.brand-card');
-        
-        brandCards.forEach(card => {
-            card.addEventListener('click', () => {
-                const brandId = card.getAttribute('data-brand');
-                this.selectBrand(brandId);
-            });
-        });
-    }
-
-    selectBrand(brandId) {
-        // Remover selección previa
-        document.querySelectorAll('.brand-card').forEach(card => {
-            card.classList.remove('selected');
-        });
-        
-        // Seleccionar nueva marca
-        const selectedCard = document.querySelector(`[data-brand="${brandId}"]`);
-        if (selectedCard) {
-            selectedCard.classList.add('selected');
-        }
-        
-        this.state.selectedBrand = brandId;
-        this.updateProgress();
-        
-        // Filtrar productos (simulado)
-        this.filterProductsByBrand(brandId);
-    }
-
-    filterProductsByBrand(brandId) {
-        // Aquí simularíamos el filtrado real de productos
-        this.state.selectedProduct = null;
-        
-        // Remover selecciones de productos
-        document.querySelectorAll('.product-item').forEach(item => {
-            item.classList.remove('selected');
-        });
-        
-        this.updateProgress();
-    }
-
-    setupProductSelection() {
-        const productItems = document.querySelectorAll('.product-item');
-        
-        productItems.forEach(item => {
-            item.addEventListener('click', () => {
-                const productId = item.getAttribute('data-product');
-                this.selectProduct(productId);
-            });
-        });
-    }
-
-    selectProduct(productId) {
-        // Remover selección previa
-        document.querySelectorAll('.product-item').forEach(item => {
-            item.classList.remove('selected');
-        });
-        
-        // Seleccionar nuevo producto
-        const selectedItem = document.querySelector(`[data-product="${productId}"]`);
-        if (selectedItem) {
-            selectedItem.classList.add('selected');
-        }
-        
-        this.state.selectedProduct = productId;
-        this.updateProgress();
-    }
-
-    setupOfferSelection() {
-        const offerItems = document.querySelectorAll('.offer-item');
-        
-        offerItems.forEach(item => {
-            item.addEventListener('click', () => {
-                // Remover selección previa
-                offerItems.forEach(o => o.classList.remove('selected'));
-                
-                // Seleccionar oferta
-                item.classList.add('selected');
-                
-                const offerName = item.querySelector('.offer-name').textContent;
-                this.state.selectedOffer = offerName;
-                this.updateProgress();
-            });
-        });
-    }
-
-    setupThemeSelection() {
-        const chips = document.querySelectorAll('.chip[data-theme]');
-        
-        chips.forEach(chip => {
-            chip.addEventListener('click', () => {
-                const themeId = chip.getAttribute('data-theme');
-                this.toggleTheme(themeId);
-            });
-        });
-    }
-
-    toggleTheme(themeId) {
-        const chip = document.querySelector(`[data-theme="${themeId}"]`);
-        if (!chip) return;
-        
-        chip.classList.toggle('active');
-        
-        // Actualizar array de temas seleccionados
-        if (chip.classList.contains('active')) {
-            if (!this.state.selectedThemes.includes(themeId)) {
-                this.state.selectedThemes.push(themeId);
+        if (modal) {
+            modal.classList.remove('active');
+            
+            if (button) {
+                button.classList.remove('active');
             }
-        } else {
-            this.state.selectedThemes = this.state.selectedThemes.filter(t => t !== themeId);
         }
-        
-        this.updateProgress();
     }
 
-    setupCategorySelection() {
-        const categoryCards = document.querySelectorAll('.category-card');
+    renderBrands() {
+        const brandGrid = document.querySelector('#modal-marca .brand-grid');
+        if (!brandGrid) return;
+
+        brandGrid.innerHTML = '';
         
-        categoryCards.forEach(card => {
-            card.addEventListener('click', () => {
-                const categoryId = card.getAttribute('data-category');
-                this.selectCategory(categoryId);
+        this.brands.forEach(brand => {
+            const brandCard = document.createElement('div');
+            brandCard.className = 'brand-card';
+            brandCard.innerHTML = `
+                <div class="brand-avatar">${brand.projects.name.charAt(0)}</div>
+                <div class="brand-info">
+                    <span class="brand-name">${brand.projects.name}</span>
+                    <span class="brand-category">${brand.tone_of_voice || 'Sin categoría'}</span>
+                </div>
+            `;
+            
+            brandCard.addEventListener('click', () => {
+                this.selectBrand(brand);
             });
+            
+            brandGrid.appendChild(brandCard);
         });
+
+        // Botón agregar nueva marca
+        const addButton = document.createElement('button');
+        addButton.className = 'add-new-button';
+        addButton.innerHTML = `
+            <i data-lucide="plus"></i>
+            <span>Nueva Marca</span>
+        `;
+        addButton.addEventListener('click', () => this.createNewBrand());
+        brandGrid.appendChild(addButton);
     }
 
-    selectCategory(categoryId) {
-        // Remover selección previa
-        document.querySelectorAll('.category-card').forEach(card => {
-            card.classList.remove('selected');
-        });
-        
-        // Seleccionar nueva categoría
-        const selectedCard = document.querySelector(`[data-category="${categoryId}"]`);
-        if (selectedCard) {
-            selectedCard.classList.add('selected');
-        }
-        
-        this.state.selectedCategory = categoryId;
-        this.updateProgress();
-    }
+    renderProducts() {
+        const productList = document.querySelector('#modal-producto .product-list');
+        if (!productList) return;
 
-    setupStyleSelection() {
-        const styleCards = document.querySelectorAll('.style-card');
+        productList.innerHTML = '';
         
-        styleCards.forEach(card => {
-            card.addEventListener('click', () => {
-                // Remover selección previa
-                styleCards.forEach(c => c.classList.remove('selected'));
-                
-                // Seleccionar nuevo estilo
-                card.classList.add('selected');
-                
-                const styleName = card.querySelector('.style-name').textContent;
-                this.state.selectedStyle = styleName.toLowerCase().replace(/\s+/g, '-');
-                this.updateProgress();
+        this.products.forEach(product => {
+            const productItem = document.createElement('div');
+            productItem.className = 'product-item';
+            productItem.innerHTML = `
+                <i data-lucide="box" class="product-icon"></i>
+                <span class="product-name">${product.short_desc}</span>
+            `;
+            
+            productItem.addEventListener('click', () => {
+                this.selectProduct(product);
             });
+            
+            productList.appendChild(productItem);
         });
+
+        // Botón agregar nuevo producto
+        const addButton = document.createElement('button');
+        addButton.className = 'add-new-button';
+        addButton.innerHTML = `
+            <i data-lucide="plus"></i>
+            <span>Nuevo Producto</span>
+        `;
+        addButton.addEventListener('click', () => this.createNewProduct());
+        productList.appendChild(addButton);
     }
 
-    selectStyle(styleId) {
-        const styleCards = document.querySelectorAll('.style-card');
-        styleCards.forEach((card, index) => {
-            card.classList.remove('selected');
-            if (index === 0 && styleId === 'casual') { // Casual & Natural es el primero
-                card.classList.add('selected');
-            }
-        });
-    }
+    renderOffers() {
+        const offerList = document.querySelector('#modal-oferta .offer-list');
+        if (!offerList) return;
 
-    setupFormatSelection() {
-        const formatOptions = document.querySelectorAll('.format-option');
+        offerList.innerHTML = '';
         
-        formatOptions.forEach(option => {
-            option.addEventListener('click', () => {
-                const formatId = option.getAttribute('data-format');
-                this.selectFormat(formatId);
+        this.offers.forEach(offer => {
+            const offerItem = document.createElement('div');
+            offerItem.className = 'offer-item';
+            offerItem.innerHTML = `
+                <div class="offer-badge">${offer.main_objective}</div>
+                <div class="offer-info">
+                    <span class="offer-name">${offer.offer_desc}</span>
+                    <span class="offer-period">${offer.cta}</span>
+                </div>
+            `;
+            
+            offerItem.addEventListener('click', () => {
+                this.selectOffer(offer);
             });
+            
+            offerList.appendChild(offerItem);
         });
     }
 
-    selectFormat(formatId) {
-        // Remover selección previa
-        document.querySelectorAll('.format-option').forEach(option => {
-            option.classList.remove('selected');
-        });
-        
-        // Seleccionar nuevo formato
-        const selectedOption = document.querySelector(`[data-format="${formatId}"]`);
-        if (selectedOption) {
-            selectedOption.classList.add('selected');
-        }
-        
-        this.state.selectedFormat = formatId;
-        this.updateProgress();
+    renderAvatars() {
+        // Implementar renderizado de avatares
+        console.log('Avatares cargados:', this.avatars);
     }
 
-    setupLocalizationSelection() {
-        // País
-        const countryItems = document.querySelectorAll('.select-item[data-country]');
-        countryItems.forEach(item => {
-            item.addEventListener('click', () => {
-                const countryId = item.getAttribute('data-country');
-                this.selectCountry(countryId);
+    renderStyles() {
+        const styleGrid = document.querySelector('#modal-estilos .style-grid');
+        if (!styleGrid) return;
+
+        styleGrid.innerHTML = '';
+        
+        this.styleCatalog.forEach(style => {
+            const styleCard = document.createElement('div');
+            styleCard.className = 'style-card';
+            styleCard.innerHTML = `
+                <div class="style-preview ${style.category.toLowerCase()}"></div>
+                <span class="style-name">${style.name}</span>
+            `;
+            
+            styleCard.addEventListener('click', () => {
+                this.selectStyle(style);
             });
-        });
-        
-        // Idioma
-        const langItems = document.querySelectorAll('.select-item[data-lang]');
-        langItems.forEach(item => {
-            item.addEventListener('click', () => {
-                const langId = item.getAttribute('data-lang');
-                this.selectLanguage(langId);
-            });
-        });
-        
-        // Acento
-        const accentItems = document.querySelectorAll('.select-item[data-accent]');
-        accentItems.forEach(item => {
-            item.addEventListener('click', () => {
-                const accentId = item.getAttribute('data-accent');
-                this.selectAccent(accentId);
-            });
+            
+            styleGrid.appendChild(styleCard);
         });
     }
 
-    selectCountry(countryId) {
-        const items = document.querySelectorAll('.select-item[data-country]');
-        items.forEach(item => {
-            item.classList.remove('selected');
-            if (item.getAttribute('data-country') === countryId) {
-                item.classList.add('selected');
-            }
-        });
-        
-        this.state.selectedCountry = countryId;
-        this.updateProgress();
+    selectBrand(brand) {
+        this.studioConfig.brand = brand;
+        this.updateBrandSelection(brand);
+        this.closeModal('marca');
+        this.updateConfigDisplay();
     }
 
-    selectLanguage(langId) {
-        const items = document.querySelectorAll('.select-item[data-lang]');
-        items.forEach(item => {
-            item.classList.remove('selected');
-            if (item.getAttribute('data-lang') === langId) {
-                item.classList.add('selected');
-            }
-        });
-        
-        this.state.selectedLanguage = langId;
-        this.updateProgress();
+    selectProduct(product) {
+        this.studioConfig.product = product;
+        this.updateProductSelection(product);
+        this.closeModal('producto');
+        this.updateConfigDisplay();
     }
 
-    selectAccent(accentId) {
-        const items = document.querySelectorAll('.select-item[data-accent]');
-        items.forEach(item => {
-            item.classList.remove('selected');
-            if (item.getAttribute('data-accent') === accentId) {
-                item.classList.add('selected');
-            }
-        });
-        
-        this.state.selectedAccent = accentId;
-        this.updateProgress();
+    selectOffer(offer) {
+        this.studioConfig.offer = offer;
+        this.updateOfferSelection(offer);
+        this.closeModal('oferta');
+        this.updateConfigDisplay();
     }
 
-    setupGenderSelection() {
-        const toggleOptions = document.querySelectorAll('.toggle-option');
-        
-        toggleOptions.forEach(option => {
-            option.addEventListener('click', () => {
-                const genderId = option.getAttribute('data-gender');
-                this.selectGender(genderId);
-            });
-        });
+    selectStyle(style) {
+        this.studioConfig.style = style;
+        this.updateStyleSelection(style);
+        this.closeModal('estilos');
+        this.updateConfigDisplay();
     }
 
-    selectGender(genderId) {
-        // Remover selección previa
-        document.querySelectorAll('.toggle-option').forEach(option => {
-            option.classList.remove('selected');
-        });
-        
-        // Seleccionar género
-        const selectedOption = document.querySelector(`[data-gender="${genderId}"]`);
-        if (selectedOption) {
-            selectedOption.classList.add('selected');
-        }
-        
-        this.state.selectedGender = genderId;
-        this.updateProgress();
+    updateBrandSelection(brand) {
+        console.log('Marca seleccionada:', brand);
     }
 
-    setupAgeSelection() {
-        const ageChips = document.querySelectorAll('.age-chip');
-        
-        ageChips.forEach(chip => {
-            chip.addEventListener('click', () => {
-                const ageRange = chip.getAttribute('data-age');
-                this.toggleAge(ageRange);
-            });
-        });
+    updateProductSelection(product) {
+        console.log('Producto seleccionado:', product);
     }
 
-    toggleAge(ageRange) {
-        const chip = document.querySelector(`[data-age="${ageRange}"]`);
-        if (!chip) return;
-        
-        chip.classList.toggle('active');
-        
-        // Actualizar array de edades seleccionadas
-        if (chip.classList.contains('active')) {
-            if (!this.state.selectedAges.includes(ageRange)) {
-                this.state.selectedAges.push(ageRange);
-            }
-        } else {
-            this.state.selectedAges = this.state.selectedAges.filter(a => a !== ageRange);
-        }
-        
-        this.updateProgress();
+    updateOfferSelection(offer) {
+        console.log('Oferta seleccionada:', offer);
     }
 
-    setupCreativitySlider() {
-        const slider = document.getElementById('creativity-range');
+    updateStyleSelection(style) {
+        console.log('Estilo seleccionado:', style);
+    }
+
+    updateConfigDisplay() {
+        console.log('Configuración actual:', this.studioConfig);
+    }
+
+    updateSliderValue(value) {
         const valueDisplay = document.querySelector('.slider-value');
-        
-        if (slider && valueDisplay) {
-            slider.addEventListener('input', (e) => {
-                const value = parseInt(e.target.value);
-                valueDisplay.textContent = value;
-                this.state.creativityLevel = value;
-                this.updateProgress();
-            });
-            
-            // Inicializar valor
-            valueDisplay.textContent = slider.value;
+        if (valueDisplay) {
+            valueDisplay.textContent = value;
         }
     }
 
-    setupInlineForm() {
-        const addBtn = document.querySelector('.btn-add');
-        if (addBtn) {
-            addBtn.addEventListener('click', () => {
-                this.createNewOffer();
-            });
-        }
-        
-        // Envío con Enter
-        const nameInput = document.querySelector('.form-input');
-        const discountInput = document.querySelector('.form-input-small');
-        
-        [nameInput, discountInput].forEach(input => {
-            if (input) {
-                input.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') {
-                        this.createNewOffer();
-                    }
-                });
-            }
-        });
-    }
-
-    createNewOffer() {
-        const nameInput = document.querySelector('.form-input');
-        const discountInput = document.querySelector('.form-input-small');
-        
-        if (nameInput && discountInput && nameInput.value.trim() && discountInput.value.trim()) {
-            this.showNotification('Oferta creada exitosamente', 'success');
-            
-            // Limpiar formulario
-            nameInput.value = '';
-            discountInput.value = '';
-            
-            this.state.selectedOffer = nameInput.value;
-            this.updateProgress();
-        } else {
-            this.showNotification('Completa todos los campos de la oferta', 'error');
-        }
-    }
-
-    setupActionButtons() {
-        // Botón principal de generar
-        const generateBtn = document.getElementById('generate-btn');
-        if (generateBtn) {
-            generateBtn.addEventListener('click', () => {
-                this.handleGenerateScripts();
-            });
-        }
-
-        // Botón de guardar proyecto
-        const saveBtn = document.querySelector('.btn-outline');
-        if (saveBtn) {
-            saveBtn.addEventListener('click', () => {
-                this.handleSaveProject();
-            });
-        }
-
-        // Botones "add new"
-        const addNewBtns = document.querySelectorAll('.add-new-button');
-        addNewBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const text = btn.querySelector('span').textContent;
-                this.showNotification(`Función "${text}" próximamente disponible`);
-            });
-        });
-    }
-
-    /* =======================================
-       Seguimiento de Progreso
-       ======================================= */
-
-    setupProgressTracking() {
-        this.updateProgress();
-    }
-
-    updateProgress() {
-        let completedItems = 0;
-        const totalItems = 9; // Número de configuraciones principales
-        
-        // Verificar configuraciones completadas
-        if (this.state.selectedBrand) completedItems++;
-        if (this.state.selectedProduct) completedItems++;
-        if (this.state.selectedCategory) completedItems++;
-        if (this.state.selectedThemes.length > 0) completedItems++;
-        if (this.state.selectedStyle) completedItems++;
-        if (this.state.selectedFormat) completedItems++;
-        if (this.state.selectedAges.length > 0) completedItems++;
-        if (this.state.selectedGender) completedItems++;
-        if (this.state.creativityLevel > 0) completedItems++;
-        
-        // Calcular porcentaje
-        const percentage = Math.round((completedItems / totalItems) * 100);
-        
-        // Actualizar barra de progreso
-        const progressFill = document.querySelector('.progress-fill');
-        const progressPercentage = document.querySelector('.progress-percentage');
-        
-        if (progressFill && progressPercentage) {
-            progressFill.style.width = `${percentage}%`;
-            progressPercentage.textContent = `${percentage}%`;
-        }
-        
-        this.state.progress = percentage;
-        
-        // Cambiar estado del botón si está completo
-        this.updateGenerateButton();
-    }
-
-    updateGenerateButton() {
-        const generateBtn = document.getElementById('generate-btn');
-        if (!generateBtn) return;
-        
-        if (this.state.progress >= 80) {
-            generateBtn.classList.add('ready');
-            const span = generateBtn.querySelector('span');
-            if (span && !span.textContent.includes('✓')) {
-                span.textContent = '✓ ' + span.textContent;
-            }
-        }
-    }
-
-    /* =======================================
-       Acciones Principales
-       ======================================= */
-
-    handleGenerateScripts() {
-        // Validar configuración mínima
-        if (!this.validateMinimalConfiguration()) {
-            this.showNotification('Completa la configuración básica antes de generar', 'error');
+    async handleGenerateScripts() {
+        if (!this.studioConfig.brand || !this.studioConfig.product) {
+            this.showNotification('Selecciona al menos una marca y un producto', 'error');
             return;
         }
-        
-        // Mostrar proceso de generación
-        this.showNotification('Generando guiones con IA...', 'success');
-        
-        // Simular proceso de generación
-        const btn = document.getElementById('generate-btn');
-        const originalHTML = btn.innerHTML;
-        
-        btn.innerHTML = '<i data-lucide="loader-2"></i><span>Generando...</span>';
-        btn.disabled = true;
-        lucide.createIcons();
-        
-        setTimeout(() => {
-            btn.innerHTML = originalHTML;
-            btn.disabled = false;
-            lucide.createIcons();
+
+        try {
+            this.showNotification('Generando guiones...', 'info');
             
-            this.showNotification('¡Guiones generados exitosamente!', 'success');
-            console.log('Navegando al Step 2 - Editor de Guiones');
-        }, 3000);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            console.log('Enviando configuración al backend:', this.studioConfig);
+            
+            this.showNotification('Guiones generados exitosamente', 'success');
+            
+        } catch (error) {
+            console.error('Error generating scripts:', error);
+            this.showNotification('Error generando guiones', 'error');
+        }
     }
 
-    handleSaveProject() {
-        const projectData = this.collectProjectData();
-        
-        // Guardar en localStorage
-        localStorage.setItem('ugc_studio_project', JSON.stringify(projectData));
-        
-        this.showNotification('Proyecto guardado correctamente', 'success');
+    createNewBrand() {
+        console.log('Crear nueva marca');
     }
 
-    validateMinimalConfiguration() {
-        return (
-            this.state.selectedBrand &&
-            this.state.selectedProduct &&
-            this.state.selectedCategory &&
-            this.state.selectedThemes.length > 0
-        );
+    createNewProduct() {
+        console.log('Crear nuevo producto');
     }
-
-    collectProjectData() {
-        return {
-            ...this.state,
-            timestamp: new Date().toISOString(),
-            version: '2.0'
-        };
-    }
-
-    /* =======================================
-       Atajos de Teclado
-       ======================================= */
 
     setupKeyboardShortcuts() {
         document.addEventListener('keydown', (e) => {
-            // Escape - Cerrar panel activo
             if (e.key === 'Escape') {
-                if (this.state.activeModal) {
-                    this.closeModal(this.state.activeModal);
-                }
+                document.querySelectorAll('.brand-modal-overlay.active').forEach(modal => {
+                    modal.classList.remove('active');
+                });
             }
             
-            // Ctrl/Cmd + S - Guardar proyecto
-            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-                e.preventDefault();
-                this.handleSaveProject();
-            }
-            
-            // Ctrl/Cmd + Enter - Generar guiones
-            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                e.preventDefault();
-                this.handleGenerateScripts();
-            }
-            
-            // Números 1-5 para modales izquierdos
             if (e.key >= '1' && e.key <= '5' && !e.ctrlKey && !e.metaKey) {
                 const modals = ['marca', 'producto', 'oferta', 'temas', 'categoria'];
                 const modalIndex = parseInt(e.key) - 1;
@@ -765,7 +587,6 @@ class UGCStudioCinematic {
                 }
             }
             
-            // Shift + números 1-8 para modales derechos
             if (e.shiftKey && e.key >= '1' && e.key <= '8') {
                 const modals = ['estilos', 'formato', 'pais', 'idioma', 'acento', 'genero', 'edad', 'creatividad'];
                 const modalIndex = parseInt(e.key) - 1;
@@ -776,109 +597,12 @@ class UGCStudioCinematic {
         });
     }
 
-    /* =======================================
-       Sistema de Notificaciones
-       ======================================= */
-
     showNotification(message, type = 'info') {
-        // Remover notificación existente
-        const existingNotification = document.querySelector('.notification');
-        if (existingNotification) {
-            existingNotification.remove();
-        }
-        
-        const notification = document.createElement('div');
-        notification.className = `notification notification-${type}`;
-        notification.innerHTML = `
-            <div class="notification-content">
-                <i data-lucide="${this.getNotificationIcon(type)}"></i>
-                <span>${message}</span>
-            </div>
-        `;
-        
-        // Estilos cinematográficos
-        Object.assign(notification.style, {
-            position: 'fixed',
-            top: '80px',
-            right: '24px',
-            padding: '12px 20px',
-            borderRadius: '12px',
-            color: 'white',
-            fontSize: '13px',
-            fontWeight: '500',
-            zIndex: '9999',
-            minWidth: '280px',
-            backgroundColor: this.getNotificationColor(type),
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
-            transform: 'translateX(400px)',
-            transition: 'all 0.3s ease',
-            display: 'flex',
-            alignItems: 'center'
-        });
-        
-        notification.querySelector('.notification-content').style.cssText = `
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        `;
-        
-        document.body.appendChild(notification);
-        
-        // Inicializar icono
-        lucide.createIcons();
-        
-        // Animación de entrada
-        setTimeout(() => {
-            notification.style.transform = 'translateX(0)';
-        }, 100);
-        
-        // Auto-remover después de 4 segundos
-        setTimeout(() => {
-            notification.style.transform = 'translateX(400px)';
-            setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.remove();
-                }
-            }, 300);
-        }, 4000);
-    }
-
-    getNotificationIcon(type) {
-        const icons = {
-            info: 'info',
-            success: 'check-circle',
-            error: 'alert-circle',
-            warning: 'alert-triangle'
-        };
-        return icons[type] || 'info';
-    }
-
-    getNotificationColor(type) {
-        const colors = {
-            info: 'rgba(59, 130, 246, 0.9)',
-            success: 'rgba(16, 185, 129, 0.9)',
-            error: 'rgba(239, 68, 68, 0.9)',
-            warning: 'rgba(245, 158, 11, 0.9)'
-        };
-        return colors[type] || 'rgba(59, 130, 246, 0.9)';
+        console.log(`${type.toUpperCase()}: ${message}`);
     }
 }
 
-/* =======================================
-   Inicialización
-   ======================================= */
-
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
-    window.ugcStudio = new UGCStudioCinematic();
-    console.log('UGC Studio Cinematográfico inicializado correctamente');
-});
-
-// Reinicializar iconos cuando sea necesario
-window.addEventListener('load', () => {
-    if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
-    }
+    window.studioManager = new StudioManager();
 });
