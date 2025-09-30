@@ -986,7 +986,51 @@ class StudioManager {
     // Administración de configuraciones y envío al webhook
     // =======================================
 
-    generateConfigJSON() {
+    // Función para convertir archivo a base64
+    async fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+    }
+
+    // Función para obtener archivos de Supabase Storage
+    async getFileFromSupabase(bucket, path) {
+        try {
+            if (!this.supabase) return null;
+            
+            const { data, error } = await this.supabase.storage
+                .from(bucket)
+                .download(path);
+            
+            if (error) {
+                console.error('Error downloading file:', error);
+                return null;
+            }
+            
+            return data;
+        } catch (error) {
+            console.error('Error getting file from Supabase:', error);
+            return null;
+        }
+    }
+
+    // Función para convertir archivo de Supabase a base64
+    async supabaseFileToBase64(bucket, path) {
+        try {
+            const file = await this.getFileFromSupabase(bucket, path);
+            if (!file) return null;
+            
+            return await this.fileToBase64(file);
+        } catch (error) {
+            console.error('Error converting Supabase file to base64:', error);
+            return null;
+        }
+    }
+
+    async generateConfigJSON() {
         // Generar JSON con todas las configuraciones seleccionadas
         const configData = {
             // Metadatos
@@ -1000,7 +1044,12 @@ class StudioManager {
                 name: this.studioConfig.brand.name,
                 country: this.studioConfig.brand.country,
                 website: this.studioConfig.brand.website,
-                languages: this.studioConfig.brand.languages
+                languages: this.studioConfig.brand.languages,
+                // Archivos de la marca (logo, assets)
+                files: {
+                    logo: null, // Se llenará con base64 si existe
+                    assets: []  // Array de archivos base64
+                }
             } : null,
             
             product: this.studioConfig.product ? {
@@ -1010,7 +1059,12 @@ class StudioManager {
                 differentiators: this.studioConfig.product.differentiators,
                 ingredients: this.studioConfig.product.ingredients,
                 price: this.studioConfig.product.price,
-                usage_steps: this.studioConfig.product.usage_steps
+                usage_steps: this.studioConfig.product.usage_steps,
+                // Archivos del producto
+                files: {
+                    main_image: null, // Imagen principal en base64
+                    gallery: []       // Galería de imágenes en base64
+                }
             } : null,
             
             offer: this.studioConfig.offer ? {
@@ -1033,18 +1087,33 @@ class StudioManager {
                 energy: this.studioConfig.ugc.energy,
                 gender: this.studioConfig.ugc.gender,
                 languages: this.studioConfig.ugc.languages,
-                values: this.studioConfig.ugc.values
+                values: this.studioConfig.ugc.values,
+                // Archivos del avatar
+                files: {
+                    avatar_image: null, // Imagen del avatar en base64
+                    avatar_video: null  // Video del avatar en base64
+                }
             } : null,
             
             // Configuraciones estéticas
-            aesthetics: this.studioConfig.aesthetics,
+            aesthetics: {
+                ...this.studioConfig.aesthetics,
+                // Archivos de música
+                files: {
+                    music: null // Archivo de música en base64
+                }
+            },
             
             // Configuraciones de escenarios
             scenario: this.studioConfig.scenario ? {
                 id: this.studioConfig.scenario.id,
                 location: this.studioConfig.scenario.location,
                 ambience: this.studioConfig.scenario.ambience,
-                background: this.studioConfig.scenario.background
+                background: this.studioConfig.scenario.background,
+                // Archivos de referencia visual
+                files: {
+                    references: [] // Array de archivos de referencia en base64
+                }
             } : null,
             
             // Configuraciones de formato
@@ -1062,13 +1131,155 @@ class StudioManager {
             category: this.studioConfig.category
         };
 
+        // Cargar archivos como base64
+        await this.loadFilesAsBase64(configData);
+
         return configData;
+    }
+
+    // Función para cargar todos los archivos como base64
+    async loadFilesAsBase64(configData) {
+        try {
+            // Cargar archivos de la marca
+            if (configData.brand) {
+                // Buscar logo de la marca en brand_guidelines
+                const brandGuidelines = this.brands.find(b => b.id === configData.brand.id);
+                if (brandGuidelines && brandGuidelines.logo_file_id) {
+                    configData.brand.files.logo = await this.supabaseFileToBase64('files', brandGuidelines.logo_file_id);
+                }
+                
+                // Buscar assets de la marca
+                if (brandGuidelines && brandGuidelines.brand_assets) {
+                    for (const assetId of brandGuidelines.brand_assets) {
+                        const assetBase64 = await this.supabaseFileToBase64('files', assetId);
+                        if (assetBase64) {
+                            configData.brand.files.assets.push(assetBase64);
+                        }
+                    }
+                }
+
+                // Cargar archivos locales de la marca (si el usuario subió archivos)
+                await this.loadLocalFiles('brand', configData.brand.files);
+            }
+
+            // Cargar archivos del producto
+            if (configData.product) {
+                const product = this.products.find(p => p.id === configData.product.id);
+                if (product) {
+                    // Imagen principal
+                    if (product.main_image_id) {
+                        configData.product.files.main_image = await this.supabaseFileToBase64('files', product.main_image_id);
+                    }
+                    
+                    // Galería de imágenes
+                    if (product.gallery_file_ids) {
+                        for (const imageId of product.gallery_file_ids) {
+                            const imageBase64 = await this.supabaseFileToBase64('files', imageId);
+                            if (imageBase64) {
+                                configData.product.files.gallery.push(imageBase64);
+                            }
+                        }
+                    }
+                }
+
+                // Cargar archivos locales del producto
+                await this.loadLocalFiles('producto', configData.product.files);
+            }
+
+            // Cargar archivos del UGC
+            if (configData.ugc) {
+                const ugc = this.ugc.find(u => u.id === configData.ugc.id);
+                if (ugc) {
+                    // Imagen del avatar
+                    if (ugc.avatar_image_id) {
+                        configData.ugc.files.avatar_image = await this.supabaseFileToBase64('files', ugc.avatar_image_id);
+                    }
+                    
+                    // Video del avatar
+                    if (ugc.avatar_video_id) {
+                        configData.ugc.files.avatar_video = await this.supabaseFileToBase64('files', ugc.avatar_video_id);
+                    }
+                }
+
+                // Cargar archivos locales del UGC
+                await this.loadLocalFiles('ugc', configData.ugc.files);
+            }
+
+            // Cargar archivos de música de estética
+            if (configData.aesthetics && this.aesthetics.music_file_id) {
+                configData.aesthetics.files.music = await this.supabaseFileToBase64('files', this.aesthetics.music_file_id);
+            }
+
+            // Cargar archivos locales de estética
+            await this.loadLocalFiles('estetica', configData.aesthetics.files);
+
+            // Cargar archivos de referencia de escenarios
+            if (configData.scenario && this.scenarios.find(s => s.id === configData.scenario.id)) {
+                const scenario = this.scenarios.find(s => s.id === configData.scenario.id);
+                if (scenario && scenario.reference_file_ids) {
+                    for (const refId of scenario.reference_file_ids) {
+                        const refBase64 = await this.supabaseFileToBase64('files', refId);
+                        if (refBase64) {
+                            configData.scenario.files.references.push(refBase64);
+                        }
+                    }
+                }
+
+                // Cargar archivos locales de escenarios
+                await this.loadLocalFiles('escenarios', configData.scenario.files);
+            }
+
+        } catch (error) {
+            console.error('Error loading files as base64:', error);
+        }
+    }
+
+    // Función para cargar archivos locales subidos por el usuario
+    async loadLocalFiles(section, filesObject) {
+        try {
+            // Buscar inputs de archivo en los modales
+            const modal = document.getElementById(`modal-${section}`);
+            if (!modal) return;
+
+            // Buscar todos los inputs de archivo en el modal
+            const fileInputs = modal.querySelectorAll('input[type="file"]');
+            
+            for (const input of fileInputs) {
+                if (input.files && input.files.length > 0) {
+                    for (const file of input.files) {
+                        const base64 = await this.fileToBase64(file);
+                        
+                        // Determinar el tipo de archivo basado en el input
+                        if (input.id.includes('logo') || input.id.includes('imagen')) {
+                            if (filesObject.logo === null) {
+                                filesObject.logo = base64;
+                            } else {
+                                filesObject.assets.push(base64);
+                            }
+                        } else if (input.id.includes('gallery') || input.id.includes('galeria')) {
+                            filesObject.gallery.push(base64);
+                        } else if (input.id.includes('video')) {
+                            filesObject.avatar_video = base64;
+                        } else if (input.id.includes('music') || input.id.includes('musica')) {
+                            filesObject.music = base64;
+                        } else if (input.id.includes('reference') || input.id.includes('referencia')) {
+                            filesObject.references.push(base64);
+                        } else {
+                            // Archivo genérico
+                            filesObject.assets.push(base64);
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error loading local files:', error);
+        }
     }
 
     async sendToWebhook(configData) {
         try {
-            // URL del webhook (configurar según tu endpoint)
-            const webhookUrl = 'https://tu-webhook-endpoint.com/generate-scripts';
+            // URL del webhook real
+            const webhookUrl = 'https://ardeagency.app.n8n.cloud/webhook-test/4635dddf-f8f9-4cc2-be0f-54e1c542d702';
             
             const response = await fetch(webhookUrl, {
                 method: 'POST',
@@ -1110,8 +1321,8 @@ class StudioManager {
             // Mostrar loading
             this.showLoading();
 
-            // Generar JSON de configuración
-            const configData = this.generateConfigJSON();
+            // Generar JSON de configuración con archivos
+            const configData = await this.generateConfigJSON();
             console.log('Configuración generada:', configData);
 
             // Enviar al webhook
