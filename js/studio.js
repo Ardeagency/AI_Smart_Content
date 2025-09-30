@@ -68,7 +68,7 @@ class UGCStudio {
      */
     async waitForSupabase() {
         let attempts = 0;
-        const maxAttempts = 30;
+        const maxAttempts = 50; // Aumentar intentos
         
         while (attempts < maxAttempts) {
             if (window.supabaseClient && window.supabaseClient.isReady()) {
@@ -77,11 +77,16 @@ class UGCStudio {
             }
             
             console.log(`⏳ Esperando Supabase... intento ${attempts + 1}/${maxAttempts}`);
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise(resolve => setTimeout(resolve, 200)); // Reducir tiempo de espera
             attempts++;
         }
         
-        throw new Error('Supabase no está disponible después de esperar');
+        console.error('❌ Supabase no está disponible después de esperar');
+        console.error('window.supabaseClient:', window.supabaseClient);
+        console.error('window.supabase:', window.supabase);
+        
+        // No lanzar error, permitir modo demo
+        console.log('⚠️ Continuando en modo demo sin Supabase');
     }
 
     /**
@@ -89,11 +94,16 @@ class UGCStudio {
      */
     async checkAuthentication() {
         try {
+            if (!window.supabaseClient || !window.supabaseClient.supabase) {
+                console.log('⚠️ Supabase no disponible, saltando verificación de autenticación');
+                return;
+            }
+
             const { data: { session }, error } = await window.supabaseClient.supabase.auth.getSession();
             
             if (error) {
                 console.error('Error verificando sesión:', error);
-                throw new Error('Error de autenticación');
+                return;
             }
             
             if (!session) {
@@ -121,9 +131,11 @@ class UGCStudio {
                 console.log('✅ Supabase disponible');
             } else {
                 console.log('⚠️ Supabase no disponible, usando modo demo');
+                this.supabase = null;
             }
         } catch (error) {
             console.error('❌ Error configurando Supabase:', error);
+            this.supabase = null;
         }
     }
 
