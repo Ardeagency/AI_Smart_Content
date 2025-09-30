@@ -35,6 +35,13 @@ class StudioManager {
         this.avatars = [];
         this.styleCatalog = [];
         
+        // Nuevas secciones
+        this.audience = {};
+        this.ugc = [];
+        this.compliance = {};
+        this.aesthetics = {};
+        this.scenarios = [];
+        
         this.init();
     }
 
@@ -114,7 +121,12 @@ class StudioManager {
                 this.loadProducts(),
                 this.loadOffers(),
                 this.loadAvatars(),
-                this.loadStyleCatalog()
+                this.loadStyleCatalog(),
+                this.loadAudience(),
+                this.loadUGC(),
+                this.loadCompliance(),
+                this.loadAesthetics(),
+                this.loadScenarios()
             ]);
 
         } catch (error) {
@@ -313,6 +325,155 @@ class StudioManager {
         }
     }
 
+    // =======================================
+    // Nuevas secciones: Audiencia, UGC, Cumplimientos, Estética, Escenarios
+    // =======================================
+
+    async loadAudience() {
+        try {
+            if (!this.userId) return;
+
+            // Cargar datos de audiencia desde user_profiles
+            const { data: profile, error } = await this.supabase
+                .from('user_profiles')
+                .select('*')
+                .eq('user_id', this.userId)
+                .single();
+
+            if (error) {
+                console.error('Error loading audience:', error);
+                return;
+            }
+
+            this.audience = profile || {};
+            this.renderAudience();
+
+        } catch (error) {
+            console.error('Error in loadAudience:', error);
+        }
+    }
+
+    async loadUGC() {
+        try {
+            if (!this.userId) return;
+
+            // Cargar avatares UGC de todos los proyectos del usuario
+            const { data: ugc, error } = await this.supabase
+                .from('avatars')
+                .select(`
+                    id,
+                    project_id,
+                    avatar_type,
+                    traits,
+                    energy,
+                    gender,
+                    voice,
+                    languages,
+                    values,
+                    avatar_image_id,
+                    avatar_video_id,
+                    projects!inner(name, website)
+                `)
+                .eq('projects.user_id', this.userId);
+
+            if (error) {
+                console.error('Error loading UGC:', error);
+                return;
+            }
+
+            this.ugc = ugc || [];
+            this.renderUGC();
+
+        } catch (error) {
+            console.error('Error in loadUGC:', error);
+        }
+    }
+
+    async loadCompliance() {
+        try {
+            if (!this.userId) return;
+
+            // Cargar datos de cumplimiento desde user_profiles o crear estructura por defecto
+            const { data: profile, error } = await this.supabase
+                .from('user_profiles')
+                .select('compliance_settings')
+                .eq('user_id', this.userId)
+                .single();
+
+            if (error && error.code !== 'PGRST116') {
+                console.error('Error loading compliance:', error);
+                return;
+            }
+
+            this.compliance = profile?.compliance_settings || {
+                regulations: [],
+                declarations: [],
+                restrictions: [],
+                disclaimers: '',
+                min_age: '13'
+            };
+            this.renderCompliance();
+
+        } catch (error) {
+            console.error('Error in loadCompliance:', error);
+        }
+    }
+
+    async loadAesthetics() {
+        try {
+            if (!this.userId) return;
+
+            // Cargar configuración estética desde user_profiles
+            const { data: profile, error } = await this.supabase
+                .from('user_profiles')
+                .select('aesthetics_settings')
+                .eq('user_id', this.userId)
+                .single();
+
+            if (error && error.code !== 'PGRST116') {
+                console.error('Error loading aesthetics:', error);
+                return;
+            }
+
+            this.aesthetics = profile?.aesthetics_settings || {
+                mood: 'motivador',
+                colors: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4'],
+                lighting: 'natural',
+                camera: 'close-up',
+                pace: 'medio',
+                overlays: []
+            };
+            this.renderAesthetics();
+
+        } catch (error) {
+            console.error('Error in loadAesthetics:', error);
+        }
+    }
+
+    async loadScenarios() {
+        try {
+            if (!this.userId) return;
+
+            // Cargar escenarios desde una tabla dedicada o user_profiles
+            const { data: profile, error } = await this.supabase
+                .from('user_profiles')
+                .select('scenarios_settings')
+                .eq('user_id', this.userId)
+                .single();
+
+            if (error && error.code !== 'PGRST116') {
+                console.error('Error loading scenarios:', error);
+                return;
+            }
+
+            this.scenarios = profile?.scenarios_settings || [];
+            this.renderScenarios();
+
+        } catch (error) {
+            console.error('Error in loadScenarios:', error);
+        }
+    }
+
     loadDemoData() {
         // Modo demo sin datos - solo limpiar arrays
         this.brands = [];
@@ -320,12 +481,24 @@ class StudioManager {
         this.offers = [];
         this.avatars = [];
         this.styleCatalog = [];
+        
+        // Nuevas secciones
+        this.audience = {};
+        this.ugc = [];
+        this.compliance = {};
+        this.aesthetics = {};
+        this.scenarios = [];
 
         this.renderBrands();
         this.renderProducts();
         this.renderOffers();
         this.renderAvatars();
         this.renderStyles();
+        this.renderAudience();
+        this.renderUGC();
+        this.renderCompliance();
+        this.renderAesthetics();
+        this.renderScenarios();
     }
 
     setupEventListeners() {
@@ -688,6 +861,98 @@ class StudioManager {
 
     showNotification(message, type = 'info') {
         console.log(`${type.toUpperCase()}: ${message}`);
+    }
+
+    // =======================================
+    // Funciones de renderizado para nuevas secciones
+    // =======================================
+
+    renderAudience() {
+        // Renderizar datos de audiencia en el modal
+        console.log('Renderizando audiencia:', this.audience);
+    }
+
+    renderUGC() {
+        const ugcGrid = document.querySelector('#ugc-grid');
+        if (!ugcGrid) return;
+
+        ugcGrid.innerHTML = '';
+        
+        if (!this.ugc || this.ugc.length === 0) {
+            ugcGrid.innerHTML = '<p class="no-data">No hay avatares UGC disponibles</p>';
+            return;
+        }
+
+        this.ugc.forEach(avatar => {
+            const avatarCard = document.createElement('div');
+            avatarCard.className = 'ugc-card';
+            avatarCard.innerHTML = `
+                <div class="ugc-avatar">
+                    <i data-lucide="user-circle"></i>
+                </div>
+                <div class="ugc-info">
+                    <span class="ugc-type">${avatar.avatar_type || 'Avatar'}</span>
+                    <span class="ugc-gender">${avatar.gender || 'No especificado'}</span>
+                </div>
+            `;
+            
+            avatarCard.addEventListener('click', () => {
+                this.selectUGC(avatar);
+            });
+            
+            ugcGrid.appendChild(avatarCard);
+        });
+    }
+
+    renderCompliance() {
+        // Renderizar configuración de cumplimiento
+        console.log('Renderizando cumplimientos:', this.compliance);
+    }
+
+    renderAesthetics() {
+        // Renderizar configuración estética
+        console.log('Renderizando estética:', this.aesthetics);
+    }
+
+    renderScenarios() {
+        const scenariosGrid = document.querySelector('#escenarios-grid');
+        if (!scenariosGrid) return;
+
+        scenariosGrid.innerHTML = '';
+        
+        if (!this.scenarios || this.scenarios.length === 0) {
+            scenariosGrid.innerHTML = '<p class="no-data">No hay escenarios disponibles</p>';
+            return;
+        }
+
+        this.scenarios.forEach(scenario => {
+            const scenarioCard = document.createElement('div');
+            scenarioCard.className = 'scenario-card';
+            scenarioCard.innerHTML = `
+                <div class="scenario-preview"></div>
+                <div class="scenario-info">
+                    <span class="scenario-location">${scenario.location || 'Sin ubicación'}</span>
+                    <span class="scenario-ambience">${scenario.ambience || 'Sin ambiente'}</span>
+                </div>
+            `;
+            
+            scenarioCard.addEventListener('click', () => {
+                this.selectScenario(scenario);
+            });
+            
+            scenariosGrid.appendChild(scenarioCard);
+        });
+    }
+
+    // Funciones de selección para nuevas secciones
+    selectUGC(avatar) {
+        this.studioConfig.ugc = avatar;
+        this.showNotification('Avatar UGC seleccionado', 'success');
+    }
+
+    selectScenario(scenario) {
+        this.studioConfig.scenario = scenario;
+        this.showNotification('Escenario seleccionado', 'success');
     }
 }
 

@@ -5,7 +5,7 @@
 class UGCStudioCinematic {
     constructor() {
         this.state = {
-            activePanel: null,
+            activeModal: null,
             selectedBrand: 'mi-marca',
             selectedProduct: null,
             selectedOffer: null,
@@ -28,7 +28,7 @@ class UGCStudioCinematic {
     init() {
         this.initializeLucideIcons();
         this.setupIconButtons();
-        this.setupPanelClosing();
+        this.setupModalClosing();
         this.setupInteractions();
         this.setupProgressTracking();
         this.setupKeyboardShortcuts();
@@ -82,39 +82,25 @@ class UGCStudioCinematic {
         
         iconButtons.forEach(button => {
             button.addEventListener('click', (e) => {
-                const panelName = button.getAttribute('data-panel');
-                this.togglePanel(panelName);
+                const modalName = button.getAttribute('data-panel');
+                this.openModal(modalName);
             });
         });
     }
 
-    togglePanel(panelName) {
-        // Si el panel ya está abierto, cerrarlo
-        if (this.state.activePanel === panelName) {
-            this.closePanel(panelName);
-            return;
+    openModal(modalName) {
+        const modal = document.getElementById(`modal-${modalName}`);
+        const button = document.querySelector(`[data-panel="${modalName}"]`);
+        
+        if (!modal) return;
+        
+        // Cerrar modal activo si existe
+        if (this.state.activeModal) {
+            this.closeModal(this.state.activeModal);
         }
         
-        // Cerrar panel activo y abrir nuevo
-        if (this.state.activePanel) {
-            this.closePanel(this.state.activePanel);
-        }
-        
-        this.openPanel(panelName);
-    }
-
-    openPanel(panelName) {
-        const panel = document.getElementById(`panel-${panelName}`);
-        const overlay = document.getElementById('panel-overlay');
-        const button = document.querySelector(`[data-panel="${panelName}"]`);
-        
-        if (!panel) return;
-        
-        // Activar overlay
-        overlay.classList.add('active');
-        
-        // Activar panel
-        panel.classList.add('active');
+        // Activar modal
+        modal.classList.add('active');
         
         // Activar botón
         if (button) {
@@ -122,29 +108,25 @@ class UGCStudioCinematic {
         }
         
         // Actualizar estado
-        this.state.activePanel = panelName;
+        this.state.activeModal = modalName;
         
         // Enfocar primer elemento interactivo
         setTimeout(() => {
-            const firstInteractive = panel.querySelector('button, .brand-card, .product-item, .chip, input');
+            const firstInteractive = modal.querySelector('button, .brand-card, .product-item, .chip, input');
             if (firstInteractive) {
                 firstInteractive.focus();
             }
         }, 200);
     }
 
-    closePanel(panelName) {
-        const panel = document.getElementById(`panel-${panelName}`);
-        const overlay = document.getElementById('panel-overlay');
-        const button = document.querySelector(`[data-panel="${panelName}"]`);
+    closeModal(modalName) {
+        const modal = document.getElementById(`modal-${modalName}`);
+        const button = document.querySelector(`[data-panel="${modalName}"]`);
         
-        if (!panel) return;
+        if (!modal) return;
         
-        // Desactivar panel
-        panel.classList.remove('active');
-        
-        // Desactivar overlay
-        overlay.classList.remove('active');
+        // Desactivar modal
+        modal.classList.remove('active');
         
         // Desactivar botón
         if (button) {
@@ -152,31 +134,34 @@ class UGCStudioCinematic {
         }
         
         // Actualizar estado
-        this.state.activePanel = null;
+        this.state.activeModal = null;
     }
 
-    setupPanelClosing() {
+    setupModalClosing() {
         // Botones de cerrar
-        const closeButtons = document.querySelectorAll('.panel-close');
+        const closeButtons = document.querySelectorAll('.brand-modal-close');
         closeButtons.forEach(button => {
             button.addEventListener('click', (e) => {
-                const panelName = button.getAttribute('data-close');
-                this.closePanel(panelName);
+                const modalName = button.getAttribute('data-close');
+                this.closeModal(modalName);
             });
         });
         
         // Cerrar al hacer clic en overlay
-        const overlay = document.getElementById('panel-overlay');
-        overlay.addEventListener('click', () => {
-            if (this.state.activePanel) {
-                this.closePanel(this.state.activePanel);
-            }
+        const modals = document.querySelectorAll('.brand-modal-overlay');
+        modals.forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    const modalName = modal.id.replace('modal-', '');
+                    this.closeModal(modalName);
+                }
+            });
         });
         
-        // Prevenir cierre al hacer clic dentro del panel
-        const panels = document.querySelectorAll('.floating-panel');
-        panels.forEach(panel => {
-            panel.addEventListener('click', (e) => {
+        // Prevenir cierre al hacer clic dentro del modal
+        const modalBodies = document.querySelectorAll('.brand-modal');
+        modalBodies.forEach(modal => {
+            modal.addEventListener('click', (e) => {
                 e.stopPropagation();
             });
         });
@@ -754,8 +739,8 @@ class UGCStudioCinematic {
         document.addEventListener('keydown', (e) => {
             // Escape - Cerrar panel activo
             if (e.key === 'Escape') {
-                if (this.state.activePanel) {
-                    this.closePanel(this.state.activePanel);
+                if (this.state.activeModal) {
+                    this.closeModal(this.state.activeModal);
                 }
             }
             
@@ -771,21 +756,21 @@ class UGCStudioCinematic {
                 this.handleGenerateScripts();
             }
             
-            // Números 1-5 para paneles izquierdos
+            // Números 1-5 para modales izquierdos
             if (e.key >= '1' && e.key <= '5' && !e.ctrlKey && !e.metaKey) {
-                const panels = ['marca', 'producto', 'oferta', 'temas', 'categoria'];
-                const panelIndex = parseInt(e.key) - 1;
-                if (panels[panelIndex]) {
-                    this.togglePanel(panels[panelIndex]);
+                const modals = ['marca', 'producto', 'oferta', 'temas', 'categoria'];
+                const modalIndex = parseInt(e.key) - 1;
+                if (modals[modalIndex]) {
+                    this.openModal(modals[modalIndex]);
                 }
             }
             
-            // Shift + números 1-8 para paneles derechos
+            // Shift + números 1-8 para modales derechos
             if (e.shiftKey && e.key >= '1' && e.key <= '8') {
-                const panels = ['estilos', 'formato', 'pais', 'idioma', 'acento', 'genero', 'edad', 'creatividad'];
-                const panelIndex = parseInt(e.key) - 1;
-                if (panels[panelIndex]) {
-                    this.togglePanel(panels[panelIndex]);
+                const modals = ['estilos', 'formato', 'pais', 'idioma', 'acento', 'genero', 'edad', 'creatividad'];
+                const modalIndex = parseInt(e.key) - 1;
+                if (modals[modalIndex]) {
+                    this.openModal(modals[modalIndex]);
                 }
             }
         });

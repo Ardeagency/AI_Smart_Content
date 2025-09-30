@@ -136,6 +136,15 @@
                     <button class="icon-button" data-panel="categoria" title="Categoría">
                         <i data-lucide="folder"></i>
                     </button>
+                    <button class="icon-button" data-panel="audiencia" title="Audiencia">
+                        <i data-lucide="target"></i>
+                    </button>
+                    <button class="icon-button" data-panel="ugc" title="UGC">
+                        <i data-lucide="user-circle"></i>
+                    </button>
+                    <button class="icon-button" data-panel="cumplimientos" title="Cumplimientos">
+                        <i data-lucide="shield-check"></i>
+                    </button>
                 </div>
             </nav>
 
@@ -173,6 +182,12 @@
                     </button>
                     <button class="icon-button" data-panel="creatividad" title="Creatividad IA">
                         <i data-lucide="brain"></i>
+                    </button>
+                    <button class="icon-button" data-panel="estetica" title="Estética">
+                        <i data-lucide="sparkles"></i>
+                    </button>
+                    <button class="icon-button" data-panel="escenarios" title="Escenarios">
+                        <i data-lucide="map-pin"></i>
                     </button>
                 </div>
             </nav>
@@ -611,6 +626,343 @@
                     </div>
                     <div class="slider-tooltip">
                         <small>Controla qué tan innovadores serán los guiones generados</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Audiencia -->
+    <div class="brand-modal-overlay" id="modal-audiencia">
+        <div class="brand-modal">
+            <div class="brand-modal-header">
+                <button class="brand-modal-close" data-close="audiencia">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3 class="brand-modal-title">Audiencia</h3>
+                <p class="brand-modal-subtitle">Define el perfil de tu audiencia objetivo</p>
+            </div>
+            <div class="brand-modal-body">
+                <div class="form-group">
+                    <label class="form-label">Persona Compradora</label>
+                    <textarea class="form-textarea" id="audiencia-persona" placeholder="Ej: Mujer, 25-34 años, deportista, interesada en fitness y bienestar"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Intereses</label>
+                    <div class="tags-input-container">
+                        <input type="text" class="tags-input" id="audiencia-intereses" placeholder="Escribe un interés y presiona Enter">
+                        <div class="tags-display" id="audiencia-intereses-tags"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Dolores/Problemas</label>
+                    <div class="tags-input-container">
+                        <input type="text" class="tags-input" id="audiencia-dolores" placeholder="Escribe un dolor y presiona Enter">
+                        <div class="tags-display" id="audiencia-dolores-tags"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Contextos</label>
+                    <div class="tags-input-container">
+                        <input type="text" class="tags-input" id="audiencia-contextos" placeholder="Escribe un contexto y presiona Enter">
+                        <div class="tags-display" id="audiencia-contextos-tags"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Idiomas</label>
+                    <select class="form-select" id="audiencia-idiomas" multiple>
+                        <option value="es">Español</option>
+                        <option value="en">Inglés</option>
+                        <option value="pt">Portugués</option>
+                        <option value="fr">Francés</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal UGC -->
+    <div class="brand-modal-overlay" id="modal-ugc">
+        <div class="brand-modal">
+            <div class="brand-modal-header">
+                <button class="brand-modal-close" data-close="ugc">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3 class="brand-modal-title">UGC</h3>
+                <p class="brand-modal-subtitle">Configura los avatares para tu contenido UGC</p>
+            </div>
+            <div class="brand-modal-body">
+                <div class="ugc-grid" id="ugc-grid">
+                    <!-- Los avatares se cargarán dinámicamente -->
+                </div>
+                <div class="form-group">
+                    <button class="btn-primary" id="create-ugc-btn">
+                        <i class="fas fa-plus"></i>
+                        Crear Nuevo UGC
+                    </button>
+                </div>
+                <div class="ugc-form" id="ugc-form" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Tipo de Avatar</label>
+                        <select class="form-select" id="ugc-tipo">
+                            <option value="actor">Actor</option>
+                            <option value="influencer">Influencer</option>
+                            <option value="narrador">Narrador</option>
+                            <option value="testimonial">Testimonial</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Rasgos de Personalidad</label>
+                        <div class="tags-input-container">
+                            <input type="text" class="tags-input" id="ugc-rasgos" placeholder="Escribe un rasgo y presiona Enter">
+                            <div class="tags-display" id="ugc-rasgos-tags"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Género</label>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="ugc-genero" value="masculino">
+                                <span>Masculino</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="ugc-genero" value="femenino">
+                                <span>Femenino</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="ugc-genero" value="neutro">
+                                <span>Neutro</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Energía</label>
+                        <select class="form-select" id="ugc-energia">
+                            <option value="baja">Baja</option>
+                            <option value="media">Media</option>
+                            <option value="alta">Alta</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Idiomas</label>
+                        <select class="form-select" id="ugc-idiomas" multiple>
+                            <option value="es">Español</option>
+                            <option value="en">Inglés</option>
+                            <option value="pt">Portugués</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Valores</label>
+                        <div class="tags-input-container">
+                            <input type="text" class="tags-input" id="ugc-valores" placeholder="Escribe un valor y presiona Enter">
+                            <div class="tags-display" id="ugc-valores-tags"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Imagen del Avatar</label>
+                        <input type="file" class="form-file" id="ugc-imagen" accept="image/*">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Video del Avatar (Opcional)</label>
+                        <input type="file" class="form-file" id="ugc-video" accept="video/*">
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn-secondary" id="cancel-ugc-btn">Cancelar</button>
+                        <button class="btn-primary" id="save-ugc-btn">Guardar UGC</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cumplimientos -->
+    <div class="brand-modal-overlay" id="modal-cumplimientos">
+        <div class="brand-modal">
+            <div class="brand-modal-header">
+                <button class="brand-modal-close" data-close="cumplimientos">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3 class="brand-modal-title">Cumplimientos</h3>
+                <p class="brand-modal-subtitle">Configura los requisitos de cumplimiento para tu contenido</p>
+            </div>
+            <div class="brand-modal-body">
+                <div class="form-group">
+                    <label class="form-label">Regulaciones</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="cumplimiento-fda">
+                            <span>FDA (Alimentos/Suplementos)</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="cumplimiento-ftc">
+                            <span>FTC (Publicidad)</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="cumplimiento-coppa">
+                            <span>COPPA (Menores de 13)</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="cumplimiento-gdpr">
+                            <span>GDPR (Europa)</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Declaraciones Requeridas</label>
+                    <div class="tags-input-container">
+                        <input type="text" class="tags-input" id="cumplimiento-declaraciones" placeholder="Escribe una declaración y presiona Enter">
+                        <div class="tags-display" id="cumplimiento-declaraciones-tags"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Restricciones de Contenido</label>
+                    <div class="tags-input-container">
+                        <input type="text" class="tags-input" id="cumplimiento-restricciones" placeholder="Escribe una restricción y presiona Enter">
+                        <div class="tags-display" id="cumplimiento-restricciones-tags"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Disclaimers</label>
+                    <textarea class="form-textarea" id="cumplimiento-disclaimers" placeholder="Ej: Los resultados pueden variar. Consulta a tu médico antes de usar este producto."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Edad Mínima</label>
+                    <select class="form-select" id="cumplimiento-edad">
+                        <option value="13">13+</option>
+                        <option value="16">16+</option>
+                        <option value="18">18+</option>
+                        <option value="21">21+</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Estética -->
+    <div class="brand-modal-overlay" id="modal-estetica">
+        <div class="brand-modal">
+            <div class="brand-modal-header">
+                <button class="brand-modal-close" data-close="estetica">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3 class="brand-modal-title">Estética</h3>
+                <p class="brand-modal-subtitle">Define el estilo visual de tu contenido UGC</p>
+            </div>
+            <div class="brand-modal-body">
+                <div class="form-group">
+                    <label class="form-label">Estado de Ánimo</label>
+                    <select class="form-select" id="estetica-mood">
+                        <option value="motivador">Motivador</option>
+                        <option value="relajado">Relajado</option>
+                        <option value="aspiracional">Aspiracional</option>
+                        <option value="profesional">Profesional</option>
+                        <option value="divertido">Divertido</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Paleta de Colores</label>
+                    <div class="color-picker-container">
+                        <input type="color" class="color-picker" id="estetica-color1" value="#ff6b6b">
+                        <input type="color" class="color-picker" id="estetica-color2" value="#4ecdc4">
+                        <input type="color" class="color-picker" id="estetica-color3" value="#45b7d1">
+                        <input type="color" class="color-picker" id="estetica-color4" value="#96ceb4">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Iluminación</label>
+                    <select class="form-select" id="estetica-iluminacion">
+                        <option value="natural">Natural</option>
+                        <option value="estudio">Estudio</option>
+                        <option value="calida">Cálida</option>
+                        <option value="fria">Fría</option>
+                        <option value="dramatica">Dramática</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Ángulo de Cámara</label>
+                    <select class="form-select" id="estetica-camara">
+                        <option value="close-up">Close-up</option>
+                        <option value="45-grados">45°</option>
+                        <option value="movimiento">Movimiento</option>
+                        <option value="estatico">Estático</option>
+                        <option value="aereo">Aéreo</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Ritmo</label>
+                    <select class="form-select" id="estetica-ritmo">
+                        <option value="lento">Lento</option>
+                        <option value="medio">Medio</option>
+                        <option value="rapido">Rápido</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Música</label>
+                    <input type="file" class="form-file" id="estetica-musica" accept="audio/*">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Overlays</label>
+                    <div class="tags-input-container">
+                        <input type="text" class="tags-input" id="estetica-overlays" placeholder="Escribe un overlay y presiona Enter">
+                        <div class="tags-display" id="estetica-overlays-tags"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Escenarios -->
+    <div class="brand-modal-overlay" id="modal-escenarios">
+        <div class="brand-modal">
+            <div class="brand-modal-header">
+                <button class="brand-modal-close" data-close="escenarios">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3 class="brand-modal-title">Escenarios</h3>
+                <p class="brand-modal-subtitle">Define los escenarios y ubicaciones para tu contenido</p>
+            </div>
+            <div class="brand-modal-body">
+                <div class="escenarios-grid" id="escenarios-grid">
+                    <!-- Los escenarios se cargarán dinámicamente -->
+                </div>
+                <div class="form-group">
+                    <button class="btn-primary" id="create-escenario-btn">
+                        <i class="fas fa-plus"></i>
+                        Crear Nuevo Escenario
+                    </button>
+                </div>
+                <div class="escenario-form" id="escenario-form" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Ubicación Principal</label>
+                        <input type="text" class="form-input" id="escenario-ubicacion" placeholder="Ej: Gimnasio, Cocina, Oficina">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Ambiente</label>
+                        <select class="form-select" id="escenario-ambiente">
+                            <option value="urbano">Urbano</option>
+                            <option value="natural">Natural</option>
+                            <option value="minimalista">Minimalista</option>
+                            <option value="industrial">Industrial</option>
+                            <option value="moderno">Moderno</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Fondo</label>
+                        <select class="form-select" id="escenario-fondo">
+                            <option value="liso">Fondo Liso</option>
+                            <option value="paisaje">Paisaje</option>
+                            <option value="oficina">Oficina</option>
+                            <option value="casa">Casa</option>
+                            <option value="exterior">Exterior</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Referencias Visuales</label>
+                        <input type="file" class="form-file" id="escenario-referencias" accept="image/*,video/*" multiple>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn-secondary" id="cancel-escenario-btn">Cancelar</button>
+                        <button class="btn-primary" id="save-escenario-btn">Guardar Escenario</button>
                     </div>
                 </div>
             </div>
