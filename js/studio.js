@@ -150,22 +150,21 @@ class StudioManager {
     }
 
     async loadBrands() {
-        if (!this.currentProjectId) return;
+        if (!this.userId) return;
 
         const { data } = await this.supabase
-            .from('brand_guidelines')
+            .from('projects')
             .select(`
                 id,
-                project_id,
-                tone_of_voice,
-                keywords_yes,
-                keywords_no,
-                dos_donts,
-                logo_file_id,
-                brand_file_ids,
-                projects!inner(name, website)
+                name,
+                website,
+                country,
+                languages,
+                created_at,
+                updated_at
             `)
-            .eq('project_id', this.currentProjectId);
+            .eq('user_id', this.userId)
+            .order('created_at', { ascending: false });
 
         this.brands = data || [];
         this.renderBrands();
@@ -378,10 +377,10 @@ class StudioManager {
             const brandCard = document.createElement('div');
             brandCard.className = 'brand-card';
             brandCard.innerHTML = `
-                <div class="brand-avatar">${brand.projects.name.charAt(0)}</div>
+                <div class="brand-avatar">${brand.name.charAt(0).toUpperCase()}</div>
                 <div class="brand-info">
-                    <span class="brand-name">${brand.projects.name}</span>
-                    <span class="brand-category">${brand.tone_of_voice || 'Sin categoría'}</span>
+                    <span class="brand-name">${brand.name}</span>
+                    <span class="brand-category">${brand.country || 'Sin país'}</span>
                 </div>
             `;
             
@@ -392,7 +391,7 @@ class StudioManager {
             brandGrid.appendChild(brandCard);
         });
 
-        // Botón agregar nueva marca
+        // Solo UN botón agregar nueva marca
         const addButton = document.createElement('button');
         addButton.className = 'add-new-button';
         addButton.innerHTML = `
@@ -414,7 +413,10 @@ class StudioManager {
             productItem.className = 'product-item';
             productItem.innerHTML = `
                 <i data-lucide="box" class="product-icon"></i>
-                <span class="product-name">${product.short_desc}</span>
+                <div class="product-info">
+                    <span class="product-name">${product.short_desc}</span>
+                    <span class="product-price">$${product.price}</span>
+                </div>
             `;
             
             productItem.addEventListener('click', () => {
@@ -424,7 +426,7 @@ class StudioManager {
             productList.appendChild(productItem);
         });
 
-        // Botón agregar nuevo producto
+        // Solo UN botón agregar nuevo producto
         const addButton = document.createElement('button');
         addButton.className = 'add-new-button';
         addButton.innerHTML = `
@@ -458,6 +460,16 @@ class StudioManager {
             
             offerList.appendChild(offerItem);
         });
+
+        // Solo UN botón agregar nueva oferta
+        const addButton = document.createElement('button');
+        addButton.className = 'add-new-button';
+        addButton.innerHTML = `
+            <i data-lucide="plus"></i>
+            <span>Nueva Oferta</span>
+        `;
+        addButton.addEventListener('click', () => this.createNewOffer());
+        offerList.appendChild(addButton);
     }
 
     renderAvatars() {
@@ -569,6 +581,10 @@ class StudioManager {
 
     createNewProduct() {
         console.log('Crear nuevo producto');
+    }
+
+    createNewOffer() {
+        console.log('Crear nueva oferta');
     }
 
     setupKeyboardShortcuts() {
