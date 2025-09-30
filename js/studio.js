@@ -90,28 +90,13 @@ class StudioManager {
 
     async loadUserData() {
         if (!this.supabase || !this.userId) {
-            console.log('Modo demo: cargando datos de ejemplo');
+            console.log('Modo demo: sin datos');
             this.loadDemoData();
             return;
         }
 
         try {
-            // Cargar proyecto actual del usuario
-            const { data: projects } = await this.supabase
-                .from('projects')
-                .select('*')
-                .eq('user_id', this.userId)
-                .order('created_at', { ascending: false })
-                .limit(1);
-
-            if (projects && projects.length > 0) {
-                this.currentProjectId = projects[0].id;
-            } else {
-                // Crear proyecto por defecto
-                this.currentProjectId = await this.createDefaultProject();
-            }
-
-            // Cargar datos relacionados
+            // Cargar todos los datos del usuario
             await Promise.all([
                 this.loadBrands(),
                 this.loadProducts(),
@@ -126,22 +111,6 @@ class StudioManager {
         }
     }
 
-    async createDefaultProject() {
-        const { data, error } = await this.supabase
-            .from('projects')
-            .insert([{
-                user_id: this.userId,
-                name: 'Proyecto Principal',
-                website: '',
-                country: 'ES',
-                languages: ['es']
-            }])
-            .select()
-            .single();
-
-        if (error) throw error;
-        return data.id;
-    }
 
     initializeLucideIcons() {
         if (typeof lucide !== 'undefined') {
@@ -150,137 +119,193 @@ class StudioManager {
     }
 
     async loadBrands() {
-        if (!this.userId) return;
+        try {
+            if (!this.userId) return;
 
-        const { data } = await this.supabase
-            .from('projects')
-            .select(`
-                id,
-                name,
-                website,
-                country,
-                languages,
-                created_at,
-                updated_at
-            `)
-            .eq('user_id', this.userId)
-            .order('created_at', { ascending: false });
+            // Cargar proyectos del usuario (que son las marcas)
+            const { data: projects, error } = await this.supabase
+                .from('projects')
+                .select(`
+                    id,
+                    name,
+                    website,
+                    country,
+                    languages,
+                    created_at,
+                    updated_at
+                `)
+                .eq('user_id', this.userId)
+                .order('created_at', { ascending: false });
 
-        this.brands = data || [];
-        this.renderBrands();
+            if (error) {
+                console.error('Error loading brands:', error);
+                this.showNotification('Error cargando marcas', 'error');
+                return;
+            }
+
+            this.brands = projects || [];
+            this.renderBrands();
+
+        } catch (error) {
+            console.error('Error in loadBrands:', error);
+            this.showNotification('Error cargando marcas', 'error');
+        }
     }
 
     async loadProducts() {
-        if (!this.currentProjectId) return;
+        try {
+            if (!this.userId) return;
 
-        const { data } = await this.supabase
-            .from('products')
-            .select(`
-                id,
-                project_id,
-                product_type,
-                short_desc,
-                benefits,
-                differentiators,
-                usage_steps,
-                ingredients,
-                price,
-                variants,
-                main_image_id,
-                gallery_file_ids
-            `)
-            .eq('project_id', this.currentProjectId);
+            // Cargar productos de todos los proyectos del usuario
+            const { data: products, error } = await this.supabase
+                .from('products')
+                .select(`
+                    id,
+                    project_id,
+                    product_type,
+                    short_desc,
+                    benefits,
+                    differentiators,
+                    usage_steps,
+                    ingredients,
+                    price,
+                    variants,
+                    main_image_id,
+                    gallery_file_ids,
+                    projects!inner(name, website)
+                `)
+                .eq('projects.user_id', this.userId);
 
-        this.products = data || [];
-        this.renderProducts();
+            if (error) {
+                console.error('Error loading products:', error);
+                this.showNotification('Error cargando productos', 'error');
+                return;
+            }
+
+            this.products = products || [];
+            this.renderProducts();
+
+        } catch (error) {
+            console.error('Error in loadProducts:', error);
+            this.showNotification('Error cargando productos', 'error');
+        }
     }
 
     async loadOffers() {
-        if (!this.currentProjectId) return;
+        try {
+            if (!this.userId) return;
 
-        const { data } = await this.supabase
-            .from('offers')
-            .select(`
-                id,
-                project_id,
-                main_objective,
-                offer_desc,
-                cta,
-                cta_url,
-                offer_valid_until
-            `)
-            .eq('project_id', this.currentProjectId);
+            // Cargar ofertas de todos los proyectos del usuario
+            const { data: offers, error } = await this.supabase
+                .from('offers')
+                .select(`
+                    id,
+                    project_id,
+                    main_objective,
+                    offer_desc,
+                    cta,
+                    cta_url,
+                    offer_valid_until,
+                    projects!inner(name, website)
+                `)
+                .eq('projects.user_id', this.userId);
 
-        this.offers = data || [];
-        this.renderOffers();
+            if (error) {
+                console.error('Error loading offers:', error);
+                this.showNotification('Error cargando ofertas', 'error');
+                return;
+            }
+
+            this.offers = offers || [];
+            this.renderOffers();
+
+        } catch (error) {
+            console.error('Error in loadOffers:', error);
+            this.showNotification('Error cargando ofertas', 'error');
+        }
     }
 
     async loadAvatars() {
-        if (!this.currentProjectId) return;
+        try {
+            if (!this.userId) return;
 
-        const { data } = await this.supabase
-            .from('avatars')
-            .select(`
-                id,
-                project_id,
-                avatar_type,
-                traits,
-                energy,
-                gender,
-                voice,
-                languages,
-                values,
-                avatar_image_id,
-                avatar_video_id
-            `)
-            .eq('project_id', this.currentProjectId);
+            // Cargar avatares de todos los proyectos del usuario
+            const { data: avatars, error } = await this.supabase
+                .from('avatars')
+                .select(`
+                    id,
+                    project_id,
+                    avatar_type,
+                    traits,
+                    energy,
+                    gender,
+                    voice,
+                    languages,
+                    values,
+                    avatar_image_id,
+                    avatar_video_id,
+                    projects!inner(name, website)
+                `)
+                .eq('projects.user_id', this.userId);
 
-        this.avatars = data || [];
-        this.renderAvatars();
+            if (error) {
+                console.error('Error loading avatars:', error);
+                this.showNotification('Error cargando avatares', 'error');
+                return;
+            }
+
+            this.avatars = avatars || [];
+            this.renderAvatars();
+
+        } catch (error) {
+            console.error('Error in loadAvatars:', error);
+            this.showNotification('Error cargando avatares', 'error');
+        }
     }
 
     async loadStyleCatalog() {
-        if (!this.currentProjectId) return;
+        try {
+            if (!this.userId) return;
 
-        const { data } = await this.supabase
-            .from('style_catalog')
-            .select(`
-                id,
-                project_id,
-                prompt,
-                video_file_id,
-                name,
-                label,
-                category,
-                filters,
-                config
-            `)
-            .eq('project_id', this.currentProjectId);
+            // Cargar estilos de todos los proyectos del usuario
+            const { data: styles, error } = await this.supabase
+                .from('style_catalog')
+                .select(`
+                    id,
+                    project_id,
+                    prompt,
+                    video_file_id,
+                    name,
+                    label,
+                    category,
+                    filters,
+                    config,
+                    projects!inner(name, website)
+                `)
+                .eq('projects.user_id', this.userId);
 
-        this.styleCatalog = data || [];
-        this.renderStyles();
+            if (error) {
+                console.error('Error loading styles:', error);
+                this.showNotification('Error cargando estilos', 'error');
+                return;
+            }
+
+            this.styleCatalog = styles || [];
+            this.renderStyles();
+
+        } catch (error) {
+            console.error('Error in loadStyleCatalog:', error);
+            this.showNotification('Error cargando estilos', 'error');
+        }
     }
 
     loadDemoData() {
-        // Datos de ejemplo para modo demo
-        this.brands = [
-            { id: 'demo-1', name: 'Mi Marca Demo', country: 'España' },
-            { id: 'demo-2', name: 'Tech Corp', country: 'México' }
-        ];
-        this.products = [
-            { id: 'prod-1', product_type: 'Laptop', short_desc: 'Laptop Pro 15"', price: 1299 },
-            { id: 'prod-2', product_type: 'Smartphone', short_desc: 'Smartphone X1', price: 799 }
-        ];
-        this.offers = [
-            { id: 'offer-1', main_objective: 'Ventas', offer_desc: '20% OFF', cta: 'Comprar Ahora' }
-        ];
-        this.avatars = [
-            { id: 'avatar-1', avatar_type: 'Humano', gender: 'masculino', energy: 'Energético' }
-        ];
-        this.styleCatalog = [
-            { id: 'style-1', name: 'Casual & Natural', category: 'Lifestyle' },
-            { id: 'style-2', name: 'Profesional', category: 'Business' }
-        ];
+        // Modo demo sin datos - solo limpiar arrays
+        this.brands = [];
+        this.products = [];
+        this.offers = [];
+        this.avatars = [];
+        this.styleCatalog = [];
 
         this.renderBrands();
         this.renderProducts();
@@ -429,10 +454,12 @@ class StudioManager {
         this.products.forEach(product => {
             const productItem = document.createElement('div');
             productItem.className = 'product-item';
+            const projectName = product.projects ? product.projects.name : 'Sin proyecto';
             productItem.innerHTML = `
                 <i data-lucide="box" class="product-icon"></i>
                 <div class="product-info">
                     <span class="product-name">${product.short_desc}</span>
+                    <span class="product-brand">${projectName}</span>
                     <span class="product-price">$${product.price}</span>
                 </div>
             `;
@@ -472,10 +499,12 @@ class StudioManager {
         this.offers.forEach(offer => {
             const offerItem = document.createElement('div');
             offerItem.className = 'offer-item';
+            const projectName = offer.projects ? offer.projects.name : 'Sin proyecto';
             offerItem.innerHTML = `
                 <div class="offer-badge">${offer.main_objective}</div>
                 <div class="offer-info">
                     <span class="offer-name">${offer.offer_desc}</span>
+                    <span class="offer-brand">${projectName}</span>
                     <span class="offer-period">${offer.cta}</span>
                 </div>
             `;
@@ -512,9 +541,11 @@ class StudioManager {
         this.styleCatalog.forEach(style => {
             const styleCard = document.createElement('div');
             styleCard.className = 'style-card';
+            const projectName = style.projects ? style.projects.name : 'Sin proyecto';
             styleCard.innerHTML = `
-                <div class="style-preview ${style.category.toLowerCase()}"></div>
-                <span class="style-name">${style.name}</span>
+                <div class="style-preview ${style.category ? style.category.toLowerCase() : 'default'}"></div>
+                <span class="style-name">${style.name || 'Sin nombre'}</span>
+                <span class="style-brand">${projectName}</span>
             `;
             
             styleCard.addEventListener('click', () => {
