@@ -73,6 +73,7 @@ CREATE TABLE public.brand_guidelines (
   created_at timestamp with time zone DEFAULT now(),
   logo_file_id uuid,
   brand_file_ids ARRAY DEFAULT '{}'::uuid[],
+  name text NOT NULL DEFAULT 'Nueva Marca'::text,
   CONSTRAINT brand_guidelines_pkey PRIMARY KEY (id),
   CONSTRAINT brand_guidelines_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id),
   CONSTRAINT brand_guidelines_logo_file_id_fkey FOREIGN KEY (logo_file_id) REFERENCES public.files(id)
@@ -147,8 +148,10 @@ CREATE TABLE public.payments (
   period_start timestamp with time zone,
   period_end timestamp with time zone,
   created_at timestamp with time zone DEFAULT now(),
+  user_id uuid,
   CONSTRAINT payments_pkey PRIMARY KEY (id),
-  CONSTRAINT payments_subscription_id_fkey FOREIGN KEY (subscription_id) REFERENCES public.subscriptions(id)
+  CONSTRAINT payments_subscription_id_fkey FOREIGN KEY (subscription_id) REFERENCES public.subscriptions(id),
+  CONSTRAINT payments_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.products (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -165,6 +168,7 @@ CREATE TABLE public.products (
   created_at timestamp with time zone DEFAULT now(),
   main_image_id uuid,
   gallery_file_ids ARRAY DEFAULT '{}'::uuid[],
+  name text NOT NULL DEFAULT 'Nuevo Producto'::text,
   CONSTRAINT products_pkey PRIMARY KEY (id),
   CONSTRAINT products_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id),
   CONSTRAINT products_main_image_id_fkey FOREIGN KEY (main_image_id) REFERENCES public.files(id)

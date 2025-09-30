@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Principal - UGC Studio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="css/navigation.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+    <!-- Partículas de fondo -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Overlay para navegación móvil -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <!-- Header Principal -->
+    <header class="main-header">
+        <div class="header-left">
+            <button class="hamburger-menu" id="hamburgerMenu">
+                <div class="hamburger-line"></div>
+                <div class="hamburger-line"></div>
+                <div class="hamburger-line"></div>
+            </button>
+            <a href="#" class="main-logo">
+                <i class="fas fa-cube"></i>
+                <span>UGC Studio</span>
+            </a>
+        </div>
+        <div class="header-right">
+            <button class="btn btn-primary" onclick="window.location.href='onboarding-new.html'">
+                <i class="fas fa-plus"></i>
+                <span>Nuevo Proyecto</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Navegación Lateral -->
+    <nav class="side-navigation" id="sideNavigation">
+        <!-- Header del panel -->
+        <div class="nav-header">
+            <div class="nav-user-info">
+                <div class="nav-user-avatar" id="navUserAvatar">U</div>
+                <div class="nav-user-details">
+                    <h4 id="navUserName">Cargando...</h4>
+                    <div class="nav-user-plan" id="navUserPlan">
+                        <i class="fas fa-crown"></i>
+                        <span>Plan Starter</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menú Principal -->
+        <div class="nav-menu">
+            <div class="nav-section">
+                <div class="nav-section-title">Principal</div>
+                <div class="nav-item">
+                    <a href="main-dashboard.html" class="nav-link active">
+                        <i class="fas fa-home nav-icon"></i>
+                        <span class="nav-text">Panel Principal</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="studio.html" class="nav-link">
+                        <i class="fas fa-magic nav-icon"></i>
+                        <span class="nav-text">Studio</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Contenido</div>
+                <div class="nav-item">
+                    <a href="catalog.html" class="nav-link">
+                        <i class="fas fa-images nav-icon"></i>
+                        <span class="nav-text">Catálogo</span>
+                        <span class="nav-badge">1.2K</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="brands.html" class="nav-link">
+                        <i class="fas fa-trademark nav-icon"></i>
+                        <span class="nav-text">Marcas</span>
+                        <span class="nav-badge secondary" id="brandsCount">0</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="library.html" class="nav-link">
+                        <i class="fas fa-folder nav-icon"></i>
+                        <span class="nav-text">Biblioteca</span>
+                        <span class="nav-badge secondary" id="libraryCount">0</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Cuenta</div>
+                <div class="nav-item">
+                    <a href="settings.html" class="nav-link">
+                        <i class="fas fa-cog nav-icon"></i>
+                        <span class="nav-text">Configuración</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="billing.html" class="nav-link">
+                        <i class="fas fa-credit-card nav-icon"></i>
+                        <span class="nav-text">Facturación</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer del panel -->
+        <div class="nav-footer">
+            <button class="nav-logout" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Cerrar Sesión</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <main class="main-content">
+        <div class="content-container">
+            <!-- Breadcrumbs -->
+            <nav class="breadcrumbs">
+                <span class="breadcrumb-item active">Panel Principal</span>
+            </nav>
+
+            <!-- Dashboard Layout -->
+            <div class="dashboard-layout">
+                <!-- Header del Dashboard -->
+                <div class="dashboard-header">
+                    <div>
+                        <h1 class="dashboard-title">Bienvenido de vuelta</h1>
+                        <p class="dashboard-subtitle">Aquí tienes un resumen de tu actividad y proyectos</p>
+                    </div>
+                    <div class="dashboard-actions">
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-download"></i>
+                            <span>Exportar Datos</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Métricas Principales -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i class="fas fa-video"></i>
+                            </div>
+                            <div class="metric-change positive">
+                                <i class="fas fa-arrow-up"></i>
+                                <span>+12%</span>
+                            </div>
+                        </div>
+                        <div class="metric-value" id="totalUGCs">0</div>
+                        <div class="metric-label">UGCs Creados</div>
+                        <div class="metric-sublabel">Este mes</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i class="fas fa-coins"></i>
+                            </div>
+                            <div class="metric-change neutral">
+                                <span>0%</span>
+                            </div>
+                        </div>
+                        <div class="metric-value" id="creditsRemaining">∞</div>
+                        <div class="metric-label">Créditos Restantes</div>
+                        <div class="metric-sublabel">Plan actual</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i class="fas fa-trademark"></i>
+                            </div>
+                            <div class="metric-change positive">
+                                <i class="fas fa-arrow-up"></i>
+                                <span>+2</span>
+                            </div>
+                        </div>
+                        <div class="metric-value" id="totalBrands">0</div>
+                        <div class="metric-label">Marcas Activas</div>
+                        <div class="metric-sublabel">Total configuradas</div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <div class="metric-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="metric-change positive">
+                                <i class="fas fa-arrow-up"></i>
+                                <span>+24%</span>
+                            </div>
+                        </div>
+                        <div class="metric-value" id="conversionRate">0%</div>
+                        <div class="metric-label">Tasa de Conversión</div>
+                        <div class="metric-sublabel">Promedio mensual</div>
+                    </div>
+                </div>
+
+                <!-- Información del Usuario y Plan -->
+                <div class="user-info-section">
+                    <div class="user-profile-card">
+                        <div class="user-profile-header">
+                            <div class="user-avatar-large" id="userAvatarLarge">U</div>
+                            <div class="user-details">
+                                <h3 id="userFullName">Cargando...</h3>
+                                <div class="user-email" id="userEmail">user@example.com</div>
+                                <div class="user-location">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span id="userCountry">País</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="user-stats">
+                            <div class="user-stat">
+                                <div class="user-stat-value" id="memberSince">0</div>
+                                <div class="user-stat-label">Días como miembro</div>
+                            </div>
+                            <div class="user-stat">
+                                <div class="user-stat-value" id="totalProjects">0</div>
+                                <div class="user-stat-label">Proyectos totales</div>
+                            </div>
+                            <div class="user-stat">
+                                <div class="user-stat-value" id="totalFiles">0</div>
+                                <div class="user-stat-label">Archivos subidos</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="plan-info-card">
+                        <div class="plan-badge">
+                            <i class="fas fa-crown"></i>
+                            <span id="planBadgeText">Plan Starter</span>
+                        </div>
+                        <div class="plan-header">
+                            <h3 class="plan-name" id="planName">Plan Starter</h3>
+                            <div class="plan-price" id="planPrice">Gratis</div>
+                            <div class="plan-period" id="planPeriod">por tiempo limitado</div>
+                        </div>
+
+                        <div class="plan-usage">
+                            <div class="usage-item">
+                                <div class="usage-label">Último Pago</div>
+                                <div class="usage-value" id="lastPayment">N/A</div>
+                            </div>
+                            <div class="usage-item">
+                                <div class="usage-label">Próximo Pago</div>
+                                <div class="usage-value" id="nextPayment">N/A</div>
+                            </div>
+                            <div class="usage-item">
+                                <span class="usage-label">Créditos Usados</span>
+                                <span class="usage-value" id="creditsUsed">0 / ∞</span>
+                                <div class="usage-progress">
+                                    <div class="usage-fill" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acciones Rápidas -->
+                <div class="quick-actions">
+                    <a href="onboarding-new.html" class="quick-action-card">
+                        <div class="quick-action-icon">
+                            <i class="fas fa-plus"></i>
+                        </div>
+                        <h4 class="quick-action-title">Nuevo Proyecto</h4>
+                        <p class="quick-action-description">Crea una nueva marca y configura tu primer UGC</p>
+                    </a>
+
+                    <a href="catalog.html" class="quick-action-card">
+                        <div class="quick-action-icon">
+                            <i class="fas fa-images"></i>
+                        </div>
+                        <h4 class="quick-action-title">Explorar Catálogo</h4>
+                        <p class="quick-action-description">Descubre estilos y plantillas para tus contenidos</p>
+                    </a>
+
+                    <a href="brands.html" class="quick-action-card">
+                        <div class="quick-action-icon">
+                            <i class="fas fa-trademark"></i>
+                        </div>
+                        <h4 class="quick-action-title">Gestionar Marcas</h4>
+                        <p class="quick-action-description">Edita y organiza la información de tus marcas</p>
+                    </a>
+
+                    <a href="library.html" class="quick-action-card">
+                        <div class="quick-action-icon">
+                            <i class="fas fa-folder"></i>
+                        </div>
+                        <h4 class="quick-action-title">Mi Biblioteca</h4>
+                        <p class="quick-action-description">Accede a todos tus avatares y contenidos creados</p>
+                    </a>
+                </div>
+
+                <!-- Actividad Reciente -->
+                <div class="activity-section">
+                    <div class="section-header">
+                        <h2 class="section-title">
+                            <i class="fas fa-clock"></i>
+                            Actividad Reciente
+                        </h2>
+                        <a href="#" class="view-all-btn">Ver todo</a>
+                    </div>
+
+                    <div class="activity-timeline" id="activityTimeline">
+                        <div class="activity-item">
+                            <div class="activity-icon">
+                                <i class="fas fa-user-plus"></i>
+                            </div>
+                            <div class="activity-content">
+                                <h4 class="activity-title">¡Bienvenido a UGC Studio!</h4>
+                                <p class="activity-description">Tu cuenta ha sido creada exitosamente</p>
+                                <div class="activity-time">
+                                    <i class="fas fa-calendar"></i>
+                                    <span>Hace unos momentos</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,810 @@
+/* =========================================
+   SECCIÓN MARCAS - UGC STUDIO
+   ========================================= */
+
+/* =========================================
+   LAYOUT PRINCIPAL
+   ========================================= */
+
+.brands-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding: 2rem;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+.brands-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.brands-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--text-primary), var(--primary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.brands-subtitle {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: 0;
+}
+
+.brands-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* =========================================
+   FILTROS Y BÚSQUEDA
+   ========================================= */
+
+.brands-filters {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    display: grid;
+    grid-template-columns: 2fr 1fr auto;
+    gap: 1rem;
+    align-items: center;
+}
+
+.search-container {
+    position: relative;
+}
+
+.search-input {
+    width: 100%;
+    padding: 12px 16px 12px 45px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    transition: var(--transition);
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 3px rgba(253, 98, 79, 0.1);
+}
+
+.search-input::placeholder {
+    color: var(--text-muted);
+}
+
+.search-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.filter-select {
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.filter-select option {
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+
+/* =========================================
+   GALERÍA DE MARCAS
+   ========================================= */
+
+.brands-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.brand-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: var(--transition);
+    cursor: pointer;
+    position: relative;
+}
+
+.brand-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(253, 98, 79, 0.4);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+}
+
+.brand-header {
+    position: relative;
+    padding: 2rem;
+    background: linear-gradient(135deg, rgba(253, 98, 79, 0.1), rgba(253, 98, 79, 0.05));
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.brand-logo {
+    width: 80px;
+    height: 80px;
+    background: var(--bg-dark);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    overflow: hidden;
+    position: relative;
+}
+
+.brand-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 14px;
+}
+
+.brand-logo-placeholder {
+    color: var(--text-muted);
+    font-size: 2rem;
+}
+
+.brand-name {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.brand-website {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.brand-website:hover {
+    color: var(--primary-color);
+}
+
+.brand-actions {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    gap: 8px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.brand-card:hover .brand-actions {
+    opacity: 1;
+}
+
+.brand-action-btn {
+    width: 36px;
+    height: 36px;
+    background: rgba(0, 0, 0, 0.7);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+}
+
+.brand-action-btn:hover {
+    background: var(--primary-color);
+    transform: scale(1.1);
+}
+
+.brand-action-btn.danger:hover {
+    background: var(--error-color);
+}
+
+.brand-content {
+    padding: 1.5rem;
+}
+
+.brand-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.brand-info-item {
+    text-align: center;
+}
+
+.brand-info-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.25rem;
+}
+
+.brand-info-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.brand-description {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.brand-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 1.5rem;
+}
+
+.brand-tag {
+    background: rgba(253, 98, 79, 0.1);
+    color: var(--primary-color);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+.brand-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.brand-stats {
+    display: flex;
+    gap: 1rem;
+}
+
+.brand-stat {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.brand-stat i {
+    font-size: 0.9rem;
+}
+
+.brand-manage-btn {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.brand-manage-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(253, 98, 79, 0.4);
+}
+
+/* =========================================
+   MODAL DE MARCA
+   ========================================= */
+
+.brand-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--transition);
+}
+
+.brand-modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.brand-modal {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    transform: scale(0.9) translateY(20px);
+    transition: var(--transition);
+}
+
+.brand-modal-overlay.active .brand-modal {
+    transform: scale(1) translateY(0);
+}
+
+.brand-modal-header {
+    padding: 2rem 2rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+}
+
+.brand-modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 40px;
+    height: 40px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: var(--transition);
+}
+
+.brand-modal-close:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.brand-modal-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.brand-modal-subtitle {
+    color: var(--text-secondary);
+    font-size: 1rem;
+}
+
+.brand-modal-body {
+    padding: 2rem;
+}
+
+.brand-form {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.form-section {
+    margin-bottom: 2rem;
+}
+
+.form-section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-section-title i {
+    color: var(--primary-color);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.form-input,
+.form-textarea,
+.form-select {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    transition: var(--transition);
+    font-family: inherit;
+}
+
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 3px rgba(253, 98, 79, 0.1);
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+    color: var(--text-muted);
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.form-select option {
+    background: var(--bg-card);
+    color: var(--text-primary);
+}
+
+/* Upload de logo */
+.logo-upload {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.logo-preview {
+    width: 120px;
+    height: 120px;
+    background: var(--bg-dark);
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+    overflow: hidden;
+    position: relative;
+}
+
+.logo-preview:hover {
+    border-color: var(--primary-color);
+    background: rgba(253, 98, 79, 0.05);
+}
+
+.logo-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.logo-placeholder {
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.logo-placeholder i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.logo-upload-btn {
+    padding: 8px 16px;
+    background: rgba(253, 98, 79, 0.1);
+    border: 1px solid rgba(253, 98, 79, 0.3);
+    border-radius: 8px;
+    color: var(--primary-color);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.logo-upload-btn:hover {
+    background: rgba(253, 98, 79, 0.2);
+}
+
+.brand-modal-footer {
+    padding: 1rem 2rem 2rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.modal-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.modal-btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: white;
+}
+
+.modal-btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(253, 98, 79, 0.4);
+}
+
+.modal-btn-secondary {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.modal-btn-secondary:hover {
+    color: var(--text-primary);
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* =========================================
+   ESTADO VACÍO
+   ========================================= */
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-secondary);
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    font-size: 1rem;
+    margin-bottom: 2rem;
+}
+
+.empty-state-btn {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.empty-state-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(253, 98, 79, 0.4);
+}
+
+/* =========================================
+   LOADING STATE
+   ========================================= */
+
+.loading-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.loading-brand-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    overflow: hidden;
+    animation: pulse 2s infinite;
+}
+
+.loading-brand-header {
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.02);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.loading-brand-logo {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    margin-bottom: 1rem;
+}
+
+.loading-brand-name {
+    width: 120px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+}
+
+.loading-brand-website {
+    width: 80px;
+    height: 14px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+}
+
+.loading-brand-content {
+    padding: 1.5rem;
+}
+
+.loading-brand-description {
+    height: 14px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    margin-bottom: 0.75rem;
+}
+
+.loading-brand-description:last-child {
+    width: 60%;
+}
+
+/* =========================================
+   RESPONSIVE DESIGN
+   ========================================= */
+
+@media (max-width: 1200px) {
+    .brands-filters {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .brands-gallery {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .brands-layout {
+        padding: 1rem;
+        gap: 1.5rem;
+    }
+    
+    .brands-header {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+    
+    .brands-title {
+        font-size: 2rem;
+    }
+    
+    .brands-actions {
+        justify-content: center;
+    }
+    
+    .brands-gallery {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .brand-modal {
+        width: 95%;
+        margin: 1rem;
+        max-height: 95vh;
+    }
+    
+    .brand-modal-header {
+        padding: 1.5rem 1.5rem 1rem;
+    }
+    
+    .brand-modal-body {
+        padding: 1.5rem;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .brand-modal-footer {
+        padding: 1rem 1.5rem 1.5rem;
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .brands-layout {
+        padding: 0.5rem;
+    }
+    
+    .brands-filters {
+        padding: 1rem;
+    }
+    
+    .brand-card {
+        margin: 0;
+    }
+    
+    .brand-header {
+        padding: 1.5rem;
+    }
+    
+    .brand-content {
+        padding: 1rem;
+    }
+    
+    .brand-info {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .brand-modal {
+        width: 100%;
+        height: 100vh;
+        max-height: none;
+        border-radius: 0;
+    }
+}

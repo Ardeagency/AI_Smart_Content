@@ -3,7 +3,13 @@
 class NewOnboardingForm {
     constructor() {
         this.currentStep = 1;
-        this.totalSteps = 35;
+        this.totalSteps = 44;
+        
+        // Cargar datos desde localStorage si existen
+        this.loadFromLocalStorage();
+        
+        // Si no hay datos guardados, inicializar con valores por defecto
+        if (!this.formData) {
         this.formData = {
             // Sección 2: Proyecto inicial (Marca)
             nombre_marca: '',
@@ -23,6 +29,7 @@ class NewOnboardingForm {
             
             // Sección 4: Producto principal
             tipo_producto: '',
+            nombre_producto: '',
             descripcion_producto: '',
             beneficio_1: '',
             beneficio_2: '',
@@ -48,6 +55,7 @@ class NewOnboardingForm {
             idiomas_avatar: [],
             valores_avatar: [],
             caracteristicas_voz: {},
+            acento_voz: '',
             avatar_imagen_ref: null,
             avatar_video_ref: null,
             
@@ -62,13 +70,163 @@ class NewOnboardingForm {
             buyer_persona: '',
             interests: '',
             pains: '',
-            contexts: ''
-        };
+            contexts: '',
+            
+            // Sección 8: Estética Audiovisual (Aesthetics)
+            mood: '',
+            lighting: '',
+            camera: '',
+            pace: '',
+            
+            // Sección 9: Distribución (Distribution)
+            platforms: [],
+            formats: [],
+            
+            // Sección 10: Escenarios (Scenarios)
+            main_location: '',
+            ambience: '',
+            
+            
+            // Sección 12: Notas adicionales
+            founder_prefs: '',
+            restrictions: ''
+            };
+        }
         
-        this.optionalSteps = [2, 3, 4, 7, 8, 9, 10, 12, 16, 18, 20, 22, 24, 29, 31];
+        // REESTRUCTURACIÓN DE PASOS OPCIONALES BASADA EN LÓGICA DE NEGOCIO
+        this.optionalSteps = [
+            // MARCA - Opcionales
+            2,   // Sitio web/redes sociales
+            7,   // Palabras a evitar
+            8,   // Reglas creativas
+            10,  // Brand files adicionales
+            // NOTA: Mercado objetivo (3) y idiomas (4) son OBLIGATORIOS
+            
+            // PRODUCTO - Opcionales  
+            15,  // Diferenciación (nice to have)
+            16,  // Modo de uso (puede no aplicar)
+            17,  // Ingredientes (puede no aplicar)
+            18,  // Precio (puede ser confidencial)
+            19,  // Variantes del producto
+            
+            // AVATAR - Opcionales
+            22,  // Rango de edad específico
+            24,  // Apariencia física detallada  
+            29,  // Referencias visuales
+            
+            // OFFERS - Opcionales
+            31,  // Descripción de oferta detallada
+            
+            // AUDIENCIA - Opcionales
+            35,  // Intereses y pain points (contexto adicional)
+            
+            // ESTÉTICA - Opcionales (toda la sección)
+            36,  // Mood
+            37,  // Lighting  
+            38,  // Camera
+            39,  // Pace
+            
+            // DISTRIBUCIÓN - Opcionales
+            42,  // Ubicación principal
+            
+            // SCENARIOS - Opcionales  
+            43,  // Ambiente/ambience
+            
+            // NOTAS - Opcionales
+            44   // Preferencias del fundador
+        ];
         this.uploadedFiles = {};
+        this.isProcessingOnboarding = false; // Flag para prevenir múltiples procesamientos
         
         this.init();
+    }
+
+    // === PERSISTENCIA EN LOCALSTORAGE ===
+    
+    loadFromLocalStorage() {
+        try {
+            const savedData = localStorage.getItem('ugc_onboarding_data');
+            const savedStep = localStorage.getItem('ugc_onboarding_step');
+            
+            if (savedData) {
+                this.formData = JSON.parse(savedData);
+                console.log('📦 Datos cargados desde localStorage:', Object.keys(this.formData).length, 'campos');
+            }
+            
+            if (savedStep) {
+                this.currentStep = parseInt(savedStep);
+                console.log('📍 Paso restaurado:', this.currentStep);
+            }
+        } catch (error) {
+            console.warn('⚠️ Error cargando desde localStorage:', error);
+            this.formData = null; // Forzar inicialización por defecto
+        }
+    }
+    
+    saveToLocalStorage() {
+        try {
+            localStorage.setItem('ugc_onboarding_data', JSON.stringify(this.formData));
+            localStorage.setItem('ugc_onboarding_step', this.currentStep.toString());
+        } catch (error) {
+            console.warn('⚠️ Error guardando en localStorage:', error);
+        }
+    }
+    
+    clearLocalStorage() {
+        localStorage.removeItem('ugc_onboarding_data');
+        localStorage.removeItem('ugc_onboarding_step');
+        console.log('🗑️ localStorage limpiado');
+    }
+    
+    restoreStepData(currentSlide, step) {
+        const fieldName = this.getFieldNameForStep(step);
+        
+        // Restaurar selección de opciones
+        if (fieldName && this.formData[fieldName]) {
+            const selectedOption = currentSlide.querySelector(`[data-value="${this.formData[fieldName]}"]`);
+            if (selectedOption && !selectedOption.classList.contains('multi-select')) {
+                selectedOption.classList.add('selected');
+                console.log(`🔄 Restaurada selección: ${fieldName} = ${this.formData[fieldName]}`);
+            }
+        }
+
+        // Restaurar multi-select options
+        if (fieldName && Array.isArray(this.formData[fieldName])) {
+            this.formData[fieldName].forEach(value => {
+                const selectedOption = currentSlide.querySelector(`[data-value="${value}"]`);
+                if (selectedOption && selectedOption.classList.contains('multi-select')) {
+                    selectedOption.classList.add('selected');
+                }
+            });
+            console.log(`🔄 Restauradas opciones múltiples: ${fieldName} = [${this.formData[fieldName].join(', ')}]`);
+        }
+        
+        // Restaurar voice options
+        if (this.formData.caracteristicas_voz && typeof this.formData.caracteristicas_voz === 'object') {
+            Object.entries(this.formData.caracteristicas_voz).forEach(([voiceType, value]) => {
+                const voiceBtn = currentSlide.querySelector(`[data-voice="${voiceType}"][data-value="${value}"]`);
+                if (voiceBtn) {
+                    voiceBtn.classList.add('selected');
+                }
+            });
+        }
+        
+        // Restaurar input values
+        const textInputs = currentSlide.querySelectorAll('input[type="text"], input[type="url"], input[type="number"], textarea, select');
+        textInputs.forEach(input => {
+            if (this.formData[input.id]) {
+                input.value = this.formData[input.id];
+                console.log(`🔄 Restaurado input: ${input.id} = ${this.formData[input.id]}`);
+            }
+        });
+        
+        // Actualizar contadores de caracteres
+        const textareas = currentSlide.querySelectorAll('textarea');
+        textareas.forEach(textarea => {
+            if (textarea.value) {
+                this.updateCharCounter(textarea);
+            }
+        });
     }
 
     init() {
@@ -80,22 +238,22 @@ class NewOnboardingForm {
     }
     
     setupAfterDOM() {
+        console.log('Setting up onboarding form...');
         this.bindEvents();
         this.bindInputEvents();
         this.bindOptionEvents();
         this.initializeFirstStep();
         this.initializeUploads();
         this.updateNavigationButtons();
+        console.log('Onboarding form setup complete');
     }
 
     bindEvents() {
         const btnNext = document.getElementById('btnNext');
         const btnBack = document.getElementById('btnBack');
-        const btnSkip = document.getElementById('btnSkip');
 
         if (btnNext) btnNext.addEventListener('click', () => this.nextStep());
         if (btnBack) btnBack.addEventListener('click', () => this.prevStep());
-        if (btnSkip) btnSkip.addEventListener('click', () => this.skipToEnd());
 
         // Keyboard navigation
         document.addEventListener('keydown', (e) => {
@@ -114,11 +272,13 @@ class NewOnboardingForm {
 
     bindInputEvents() {
         // Text inputs
-        const textInputs = ['nombre_marca', 'sitio_web', 'instagram_url', 'tiktok_url', 
+        const textInputs = ['nombre_marca', 'nombre_producto', 'sitio_web', 'instagram_url', 'tiktok_url', 
                            'palabras_usar', 'palabras_evitar', 'reglas_creativas',
                            'descripcion_producto', 'beneficio_1', 'beneficio_2', 'beneficio_3',
                            'diferenciacion', 'modo_uso', 'ingredientes', 'variantes_producto',
-                           'apariencia_fisica', 'precio_producto', 'cta', 'cta_url'];
+                           'apariencia_fisica', 'precio_producto', 'main_objective', 'offer_desc',
+                           'cta', 'cta_url', 'buyer_persona', 'interests', 'pains', 'contexts',
+                           'founder_prefs', 'restrictions'];
 
         textInputs.forEach(id => {
             const input = document.getElementById(id);
@@ -193,7 +353,12 @@ class NewOnboardingForm {
 
     selectOption(card) {
         const fieldName = this.getFieldNameForStep(this.currentStep);
-        if (!fieldName) return;
+        console.log(`🎯 selectOption - Step ${this.currentStep}, fieldName: "${fieldName}", value: "${card.dataset.value}"`);
+        
+        if (!fieldName) {
+            console.log(`❌ No fieldName for step ${this.currentStep}`);
+            return;
+        }
 
         // Remove previous selection
         const container = card.closest('.options-grid, .creator-types, .voice-characteristics');
@@ -207,6 +372,8 @@ class NewOnboardingForm {
         card.classList.add('selected');
         const value = card.dataset.value;
         
+        console.log(`✅ Added .selected class to card, value: "${value}"`);
+        
         this.updateFormData(fieldName, value);
         this.updateNavigationButtons();
     }
@@ -218,6 +385,11 @@ class NewOnboardingForm {
         card.classList.toggle('selected');
         const value = card.dataset.value;
         
+        // Ensure the field is an array
+        if (!Array.isArray(this.formData[fieldName])) {
+            this.formData[fieldName] = [];
+        }
+        
         if (card.classList.contains('selected')) {
                 if (!this.formData[fieldName].includes(value)) {
                     this.formData[fieldName].push(value);
@@ -226,6 +398,8 @@ class NewOnboardingForm {
                 this.formData[fieldName] = this.formData[fieldName].filter(v => v !== value);
             }
         
+        // Update hidden input
+        this.updateHiddenInputs();
         this.updateNavigationButtons();
     }
 
@@ -251,6 +425,13 @@ class NewOnboardingForm {
     updateFormData(fieldName, value) {
         if (fieldName && this.formData.hasOwnProperty(fieldName)) {
             this.formData[fieldName] = value;
+            console.log(`📝 Updated ${fieldName}:`, value);
+            console.log(`📋 Current formData:`, this.formData);
+            
+            // Guardar automáticamente en localStorage
+            this.saveToLocalStorage();
+        } else {
+            console.warn(`⚠️ Field ${fieldName} not found in formData`);
         }
     }
 
@@ -367,17 +548,17 @@ class NewOnboardingForm {
             9: 'logo_file',
             10: 'brand_files',
             11: 'tipo_producto',
-            12: 'descripcion_producto',
-            13: 'beneficio_1',
-            14: 'diferenciacion',
-            15: 'modo_uso',
-            16: 'ingredientes',
-            17: 'precio_producto',
-            18: 'variantes_producto',
-            19: 'imagen_producto_1',
-            20: 'galeria_producto',
+            12: 'nombre_producto',
+            13: 'descripcion_producto',
+            14: 'beneficio_1',
+            15: 'diferenciacion',
+            16: 'modo_uso',
+            17: 'ingredientes',
+            18: 'precio_producto',
+            19: 'variantes_producto',
+            20: 'imagen_producto_1', // 4 Imágenes principales
             21: 'tipo_creador',
-            22: 'rango_edad',
+            22: 'rango_edad', 
             23: 'genero_avatar',
             24: 'apariencia_fisica',
             25: 'energia_avatar',
@@ -390,14 +571,26 @@ class NewOnboardingForm {
             32: 'cta',
             33: 'kpis',
             34: 'buyer_persona',
-            35: 'interests'
+            35: 'interests',
+            36: 'mood',
+            37: 'lighting',
+            38: 'camera',
+            39: 'pace',
+            40: 'platforms',
+            41: 'formats',
+            42: 'main_location',
+            43: 'ambience',
+            44: 'founder_prefs'
         };
         return fieldMap[step];
     }
 
     validateCurrentStep() {
         const currentSlide = document.querySelector(`[data-step="${this.currentStep}"]`);
-        if (!currentSlide) return false;
+        if (!currentSlide) {
+            console.log('❌ No current slide found for step:', this.currentStep);
+            return false;
+        }
 
         let isValid = true;
 
@@ -405,26 +598,49 @@ class NewOnboardingForm {
         const requiredInputs = currentSlide.querySelectorAll('input[required], textarea[required]');
         requiredInputs.forEach(input => {
             if (!input.value.trim()) {
+                console.log(`❌ Required input empty:`, input.id, input.value);
                 this.showInputError(input, 'Este campo es obligatorio');
                 isValid = false;
             } else {
+                console.log(`✅ Required input valid:`, input.id, input.value);
                 this.clearInputError(input);
             }
         });
 
-        // Check selected options
-        const selectedOption = currentSlide.querySelector('.option-card.selected, .creator-card.selected');
-        if (!selectedOption && !this.optionalSteps.includes(this.currentStep)) {
-            isValid = false;
+        // Check selected options (only for steps that have options)
+        const hasOptions = currentSlide.querySelector('.option-card, .creator-card');
+        
+        if (hasOptions) {
+            const selectedOption = currentSlide.querySelector('.option-card.selected, .creator-card.selected');
+            const allCards = currentSlide.querySelectorAll('.option-card, .creator-card');
+            
+            console.log(`🔍 Step ${this.currentStep} option validation:`);
+            console.log(`   - hasOptions: ${!!hasOptions}`);
+            console.log(`   - selectedOption: ${!!selectedOption}`);
+            console.log(`   - isOptional: ${this.optionalSteps.includes(this.currentStep)}`);
+            console.log(`   - Total cards: ${allCards.length}`);
+            
+            allCards.forEach((card, i) => {
+                console.log(`   - Card ${i}: value="${card.dataset.value}", selected=${card.classList.contains('selected')}`);
+            });
+            
+            if (!selectedOption && !this.optionalSteps.includes(this.currentStep)) {
+                console.log(`❌ No option selected for required step ${this.currentStep}`);
+                isValid = false;
+            }
         }
 
         // Step-specific validation
         switch (this.currentStep) {
             case 1: // Nombre de marca
                 const nombreMarca = document.getElementById('nombre_marca');
+                console.log('Validating step 1 - nombre_marca:', nombreMarca?.value);
                 if (nombreMarca && nombreMarca.value.trim().length < 2) {
+                    console.log('Step 1 validation failed - too short');
                     this.showInputError(nombreMarca, 'Mínimo 2 caracteres');
                     isValid = false;
+                } else {
+                    console.log('Step 1 validation passed');
                 }
                 break;
                 
@@ -483,7 +699,24 @@ class NewOnboardingForm {
                 }
                 break;
                 
-            case 12: // Descripción producto
+            case 12: // Nombre producto
+                const nombreProducto = document.getElementById('nombre_producto');
+                console.log('Validating step 12 - nombre_producto:', nombreProducto?.value);
+                if (nombreProducto && nombreProducto.value.trim().length < 2) {
+                    console.log('Step 12 validation failed - too short');
+                    this.showInputError(nombreProducto, 'Mínimo 2 caracteres');
+                    isValid = false;
+                } else {
+                    console.log('Step 12 validation passed');
+                    // Asegurar que el valor se guarde en formData
+                    if (nombreProducto) {
+                        this.formData.nombre_producto = nombreProducto.value.trim();
+                        console.log('Step 12 - formData updated:', this.formData.nombre_producto);
+                    }
+                }
+                break;
+                
+            case 13: // Descripción producto
                 const descripcion = document.getElementById('descripcion_producto');
                 if (descripcion && descripcion.value.trim().length < 10) {
                     this.showInputError(descripcion, 'Mínimo 10 caracteres');
@@ -491,50 +724,49 @@ class NewOnboardingForm {
                 }
                 break;
                 
-            case 13: // Beneficios
+            case 14: // Beneficios - Solo el primero es obligatorio
                 const beneficio1 = document.getElementById('beneficio_1');
                 const beneficio2 = document.getElementById('beneficio_2');
                 const beneficio3 = document.getElementById('beneficio_3');
                 
+                // OBLIGATORIO: Al menos el primer beneficio
                 if (beneficio1 && beneficio1.value.trim().length < 5) {
                     this.showInputError(beneficio1, 'Mínimo 5 caracteres');
                     isValid = false;
                 }
-                if (beneficio2 && beneficio2.value.trim().length < 5) {
+                
+                // OPCIONALES: Beneficios 2 y 3 - solo validar si no están vacíos
+                if (beneficio2 && beneficio2.value.trim().length > 0 && beneficio2.value.trim().length < 5) {
                     this.showInputError(beneficio2, 'Mínimo 5 caracteres');
                     isValid = false;
                 }
-                if (beneficio3 && beneficio3.value.trim().length < 5) {
+                if (beneficio3 && beneficio3.value.trim().length > 0 && beneficio3.value.trim().length < 5) {
                     this.showInputError(beneficio3, 'Mínimo 5 caracteres');
                     isValid = false;
                 }
                 break;
                 
-            case 14: // Diferenciación
-                const diferenciacion = document.getElementById('diferenciacion');
-                if (diferenciacion && diferenciacion.value.trim().length < 10) {
-                    this.showInputError(diferenciacion, 'Mínimo 10 caracteres');
-                    isValid = false;
-                }
+            case 15: // Diferenciación - optional
+                isValid = true;
                 break;
                 
-            case 15: // Modo de uso
+            case 16: // Modo de uso
                 const modoUso = document.getElementById('modo_uso');
-                if (modoUso && modoUso.value.trim().length < 10) {
+                if (modoUso && modoUso.value.trim().length > 0 && modoUso.value.trim().length < 10) {
                     this.showInputError(modoUso, 'Mínimo 10 caracteres');
                     isValid = false;
                 }
                 break;
                 
-            case 16: // Ingredientes
+            case 17: // Ingredientes
                 const ingredientes = document.getElementById('ingredientes');
-                if (ingredientes && ingredientes.value.trim().length < 5) {
+                if (ingredientes && ingredientes.value.trim().length > 0 && ingredientes.value.trim().length < 5) {
                     this.showInputError(ingredientes, 'Mínimo 5 caracteres');
                     isValid = false;
                 }
                 break;
                 
-            case 17: // Precio
+            case 18: // Precio
                 const precio = document.getElementById('precio_producto');
                 if (precio && (!precio.value || parseFloat(precio.value) <= 0)) {
                     this.showInputError(precio, 'Precio debe ser mayor a 0');
@@ -542,20 +774,23 @@ class NewOnboardingForm {
                 }
                 break;
                 
-            case 18: // Variantes - optional
+            case 19: // Variantes - optional
                 isValid = true;
                 break;
                 
-            case 19: // Imágenes producto
+            case 20: // Imágenes producto
                 const imagen1 = document.getElementById('imagen_producto_1');
                 const imagen2 = document.getElementById('imagen_producto_2');
-                if ((!imagen1 || !imagen1.files[0]) && (!imagen2 || !imagen2.files[0])) {
+                const hasImage1 = imagen1 && imagen1.files[0];
+                const hasImage2 = imagen2 && imagen2.files[0];
+                const hasFormDataImage1 = this.formData.imagen_producto_1;
+                const hasFormDataImage2 = this.formData.imagen_producto_2;
+                
+                // Check if at least 2 images are provided (either from DOM or formData)
+                const imageCount = [hasImage1, hasImage2, hasFormDataImage1, hasFormDataImage2].filter(Boolean).length;
+                if (imageCount < 2) {
                     isValid = false;
                 }
-                break;
-                
-            case 20: // Galería - optional
-                isValid = true;
                 break;
                 
             case 21: // Tipo creador
@@ -663,6 +898,51 @@ class NewOnboardingForm {
                     isValid = false;
                 }
                 break;
+                
+            case 36: // Mood - opcional
+                isValid = true;
+                break;
+                
+            case 37: // Lighting - opcional
+                isValid = true;
+                break;
+                
+            case 38: // Camera - opcional
+                isValid = true;
+                break;
+                
+            case 39: // Pace - opcional
+                isValid = true;
+                break;
+                
+            case 40: // Platforms
+                if (this.formData.platforms.length === 0) {
+                    isValid = false;
+                }
+                break;
+                
+            case 41: // Formats
+                if (this.formData.formats.length === 0) {
+                    isValid = false;
+                }
+                break;
+                
+            case 42: // Main location - opcional
+                isValid = true;
+                break;
+                
+            case 43: // Ambience - opcional
+                isValid = true;
+                break;
+                
+            case 44: // Founder prefs - opcional
+                isValid = true;
+                break;
+                
+            default:
+                console.log(`⚠️ Step ${this.currentStep} - No validation case found`);
+                isValid = true; // Para steps no definidos, permitir continuar
+                break;
         }
 
         return isValid;
@@ -680,6 +960,9 @@ class NewOnboardingForm {
             this.showStep(this.currentStep);
             this.updateProgress();
             this.updateNavigationButtons();
+            
+            // Guardar paso actual
+            this.saveToLocalStorage();
         } else {
             this.completeOnboarding();
         }
@@ -687,20 +970,19 @@ class NewOnboardingForm {
 
     prevStep() {
         if (this.currentStep > 1) {
+            // Collect data from current step before going back
+            this.collectStepData();
+            
             this.currentStep--;
             this.showStep(this.currentStep);
             this.updateProgress();
         this.updateNavigationButtons();
+            
+            // Guardar paso actual
+            this.saveToLocalStorage();
         }
     }
 
-    skipToEnd() {
-        this.showLoadingState('Completando configuración...');
-        
-        setTimeout(() => {
-            this.completeOnboarding(true);
-        }, 2000);
-    }
 
     showStep(step) {
         // Hide all steps
@@ -712,6 +994,9 @@ class NewOnboardingForm {
         const currentSlide = document.querySelector(`[data-step="${step}"]`);
         if (currentSlide) {
             currentSlide.classList.add('active');
+            
+            // Restaurar datos guardados para este step
+            this.restoreStepData(currentSlide, step);
         }
 
         // Update step counter
@@ -719,6 +1004,54 @@ class NewOnboardingForm {
         if (stepCounter) {
             stepCounter.textContent = step;
         }
+
+        // Restore visual state for current step
+        this.restoreStepState(step);
+    }
+
+    restoreStepState(step) {
+        const currentSlide = document.querySelector(`[data-step="${step}"]`);
+        if (!currentSlide) return;
+
+        // Restore single select options
+        const fieldName = this.getFieldNameForStep(step);
+        if (fieldName && this.formData[fieldName]) {
+            const selectedOption = currentSlide.querySelector(`[data-value="${this.formData[fieldName]}"]`);
+            if (selectedOption && !selectedOption.classList.contains('multi-select')) {
+                selectedOption.classList.add('selected');
+            }
+        }
+
+        // Restore multi-select options
+        if (fieldName && Array.isArray(this.formData[fieldName])) {
+            this.formData[fieldName].forEach(value => {
+                const selectedOption = currentSlide.querySelector(`[data-value="${value}"]`);
+                if (selectedOption && selectedOption.classList.contains('multi-select')) {
+                    selectedOption.classList.add('selected');
+                }
+            });
+        }
+        
+        // Restore voice options
+        if (this.formData.caracteristicas_voz && typeof this.formData.caracteristicas_voz === 'object') {
+            Object.entries(this.formData.caracteristicas_voz).forEach(([voiceType, value]) => {
+                const voiceBtn = currentSlide.querySelector(`[data-voice="${voiceType}"][data-value="${value}"]`);
+                if (voiceBtn) {
+                    voiceBtn.classList.add('selected');
+                }
+            });
+        }
+        
+        // Restore input values
+        const textInputs = currentSlide.querySelectorAll('input[type="text"], input[type="url"], input[type="number"], textarea, select');
+        textInputs.forEach(input => {
+            if (input.id && this.formData.hasOwnProperty(input.id)) {
+                input.value = this.formData[input.id] || '';
+            }
+        });
+
+        // Update hidden inputs
+        this.updateHiddenInputs();
     }
 
     updateProgress() {
@@ -732,18 +1065,17 @@ class NewOnboardingForm {
     updateNavigationButtons() {
         const btnNext = document.getElementById('btnNext');
         const btnBack = document.getElementById('btnBack');
-        const btnSkip = document.getElementById('btnSkip');
+
+        const isValid = this.validateCurrentStep();
+        console.log(`🔄 Step ${this.currentStep} validation: ${isValid ? '✅ VALID' : '❌ INVALID'}`);
 
         if (btnNext) {
-            btnNext.disabled = !this.validateCurrentStep();
+            btnNext.disabled = !isValid;
+            console.log(`🎯 Button state: ${btnNext.disabled ? 'DISABLED' : 'ENABLED'}`);
         }
 
         if (btnBack) {
             btnBack.disabled = this.currentStep === 1;
-        }
-
-        if (btnSkip) {
-            btnSkip.style.display = this.currentStep < this.totalSteps ? 'block' : 'none';
         }
     }
 
@@ -767,20 +1099,31 @@ class NewOnboardingForm {
             }
         });
 
-        // Collect file inputs
+        // Collect file inputs (only if not already set by handleFileUpload)
         const fileInputs = currentSlide.querySelectorAll('input[type="file"]');
         fileInputs.forEach(input => {
             if (input.id && this.formData.hasOwnProperty(input.id)) {
-                if (input.multiple) {
-                    this.formData[input.id] = Array.from(input.files);
-                } else {
-                    this.formData[input.id] = input.files[0] || null;
+                // Only update if the formData field is null/empty
+                if (!this.formData[input.id] || (Array.isArray(this.formData[input.id]) && this.formData[input.id].length === 0)) {
+                    if (input.multiple) {
+                        this.formData[input.id] = Array.from(input.files);
+                    } else {
+                        this.formData[input.id] = input.files[0] || null;
+                    }
                 }
             }
         });
 
-        // Collect selected options
-        const selectedOption = currentSlide.querySelector('.option-card.selected, .creator-card.selected');
+        // Collect hidden inputs (for multi-select values)
+        const hiddenInputs = currentSlide.querySelectorAll('input[type="hidden"]');
+        hiddenInputs.forEach(input => {
+            if (input.id && this.formData.hasOwnProperty(input.id)) {
+                this.formData[input.id] = input.value;
+            }
+        });
+
+        // Collect selected options (single select)
+        const selectedOption = currentSlide.querySelector('.option-card.selected:not(.multi-select), .creator-card.selected');
         if (selectedOption) {
             const fieldName = this.getFieldNameForStep(this.currentStep);
             if (fieldName) {
@@ -796,27 +1139,129 @@ class NewOnboardingForm {
                 this.formData[fieldName] = Array.from(selectedMultiOptions).map(option => option.dataset.value);
             }
         }
+
+        // Update hidden inputs for multi-select fields
+        this.updateHiddenInputs();
     }
 
-    completeOnboarding(skipped = false) {
-        this.hideLoadingState();
-        
-        if (!skipped) {
-            this.collectAllFormData();
-            this.saveOnboardingData();
+    updateHiddenInputs() {
+        // Update hidden inputs for multi-select fields
+        const currentSlide = document.querySelector(`[data-step="${this.currentStep}"]`);
+        if (!currentSlide) return;
+
+        // Update mercado_objetivo hidden input
+        const mercadoInput = currentSlide.querySelector('#mercado_objetivo');
+        if (mercadoInput && Array.isArray(this.formData.mercado_objetivo)) {
+            mercadoInput.value = this.formData.mercado_objetivo.join(',');
+        }
+
+        // Update idiomas_contenido hidden input
+        const idiomasInput = currentSlide.querySelector('#idiomas_contenido');
+        if (idiomasInput && Array.isArray(this.formData.idiomas_contenido)) {
+            idiomasInput.value = this.formData.idiomas_contenido.join(',');
+        }
+
+        // Update idiomas_avatar hidden input
+        const idiomasAvatarInput = currentSlide.querySelector('#idiomas_avatar');
+        if (idiomasAvatarInput && Array.isArray(this.formData.idiomas_avatar)) {
+            idiomasAvatarInput.value = this.formData.idiomas_avatar.join(',');
+        }
+
+        // Update valores_avatar hidden input
+        const valoresInput = currentSlide.querySelector('#valores_avatar');
+        if (valoresInput && Array.isArray(this.formData.valores_avatar)) {
+            valoresInput.value = this.formData.valores_avatar.join(',');
+        }
+
+        // Update kpis hidden input
+        const kpisInput = currentSlide.querySelector('#kpis');
+        if (kpisInput && Array.isArray(this.formData.kpis)) {
+            kpisInput.value = this.formData.kpis.join(',');
+        }
+
+        // Update caracteristicas_voz hidden input
+        const vozInput = currentSlide.querySelector('#caracteristicas_voz');
+        if (vozInput && this.formData.caracteristicas_voz) {
+            vozInput.value = JSON.stringify(this.formData.caracteristicas_voz);
+        }
+    }
+
+    async completeOnboarding(skipped = false) {
+        // Protección contra múltiples ejecuciones
+        if (this.isProcessingOnboarding) {
+            console.log('⏳ Onboarding ya está siendo procesado...');
+            return;
         }
         
-        this.showSuccessPage();
+        this.isProcessingOnboarding = true;
+        
+        try {
+            console.log('Completando onboarding...');
+            
+            if (!skipped) {
+                // Mostrar indicador de carga
+                this.showLoadingState('Procesando datos...');
+                
+                // Recolectar todos los datos del formulario
+                const formData = this.collectAllFormData();
+                console.log('Datos recolectados:', formData);
+                
+                // Guardar datos localmente como respaldo
+                this.saveOnboardingData();
+                
+                // Importar y usar las utilidades de Supabase
+                const { processOnboardingData } = await import('./supabase-utils.js');
+                
+                // Procesar y enviar datos a Supabase
+                const result = await processOnboardingData(formData);
+                
+                if (result.success) {
+                    console.log('✅ Onboarding completado exitosamente. Project ID:', result.projectId);
+                    this.hideLoadingState();
+                    this.showSuccessPage();
+                    
+                    // Limpiar localStorage después del éxito
+                    this.clearLocalStorage();
+                } else {
+                    console.error('❌ Error procesando onboarding:', result.error);
+                    this.hideLoadingState();
+                    this.showError(`Error al completar la configuración: ${result.error}`);
+                }
+            } else {
+                this.hideLoadingState();
+                this.showSuccessPage();
+            }
+            
+        } catch (error) {
+            console.error('❌ Error completando onboarding:', error);
+            this.hideLoadingState();
+            this.showError('Error al completar la configuración. Por favor, inténtalo de nuevo.');
+        } finally {
+            // Resetear el flag después de 3 segundos
+            setTimeout(() => {
+                this.isProcessingOnboarding = false;
+            }, 3000);
+        }
     }
 
     collectAllFormData() {
         // Collect all form data from all steps
+        const originalStep = this.currentStep;
+        
         for (let step = 1; step <= this.totalSteps; step++) {
+            this.currentStep = step;
             const slide = document.querySelector(`[data-step="${step}"]`);
             if (slide) {
                 this.collectStepData();
             }
         }
+        
+        // Restore original step
+        this.currentStep = originalStep;
+        
+        // Return the collected form data
+        console.log('📋 FormData completo recolectado:', this.formData);
+        return this.formData;
     }
 
     saveOnboardingData() {
@@ -833,31 +1278,68 @@ class NewOnboardingForm {
     }
 
     showSuccessPage() {
-        // Hide form
-        document.querySelector('.form-container').style.display = 'none';
+        console.log('🎉 Mostrando pantalla de éxito...');
+        
+        // Hide current form slide
+        document.querySelectorAll('.question-slide').forEach(slide => {
+            slide.classList.remove('active');
+        });
+        
+        // Hide navigation buttons
+        const navButtons = document.querySelector('.navigation-buttons');
+        if (navButtons) {
+            navButtons.style.display = 'none';
+        }
         
         // Show success screen
         const successSlide = document.querySelector('[data-step="success"]');
         if (successSlide) {
             successSlide.style.display = 'block';
             successSlide.classList.add('active');
+            console.log('✅ Pantalla de éxito activada');
+        } else {
+            console.error('❌ No se encontró el slide de éxito');
         }
         
         // Update progress to 100%
-        this.updateProgress();
-        
-        // Update step counter
-        const stepCounter = document.getElementById('currentStep');
-        if (stepCounter) {
-            stepCounter.textContent = this.totalSteps;
+        const progressFill = document.getElementById('progressFill');
+        if (progressFill) {
+            progressFill.style.width = '100%';
         }
         
         // Add click handler for dashboard button
         const btnGoToDashboard = document.getElementById('btnGoToDashboard');
         if (btnGoToDashboard) {
             btnGoToDashboard.addEventListener('click', () => {
-                window.location.href = '/dashboard.html';
+                console.log('🚀 Navegando al dashboard...');
+                window.location.href = 'main-dashboard.html';
             });
+        }
+    }
+
+    showError(message) {
+        // Crear o mostrar modal de error
+        let errorModal = document.getElementById('errorModal');
+        if (!errorModal) {
+            errorModal = document.createElement('div');
+            errorModal.id = 'errorModal';
+            errorModal.className = 'error-modal';
+            errorModal.innerHTML = `
+                <div class="error-content">
+                    <div class="error-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h3>Error</h3>
+                    <p id="errorMessage">${message}</p>
+                    <button class="btn-primary" onclick="this.closest('.error-modal').remove()">
+                        Entendido
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(errorModal);
+        } else {
+            document.getElementById('errorMessage').textContent = message;
+            errorModal.style.display = 'flex';
         }
     }
 
@@ -927,17 +1409,12 @@ class NewOnboardingForm {
 
         // Product images upload
         for (let i = 1; i <= 4; i++) {
-            const productImageUpload = document.getElementById(`imagen_producto_${i}`);
-            if (productImageUpload) {
-                this.setupFileUpload(productImageUpload, `imagen_producto_${i}`);
+            const uploadSlot = document.querySelector(`[data-slot="${i}"]`);
+            if (uploadSlot) {
+                this.setupFileUpload(uploadSlot, `imagen_producto_${i}`);
             }
         }
 
-        // Product gallery upload
-        const productGalleryUpload = document.getElementById('productGalleryUpload');
-        if (productGalleryUpload) {
-            this.setupFileUpload(productGalleryUpload, 'galeria_producto', true);
-        }
 
         // Avatar reference uploads
         const avatarImageUpload = document.getElementById('avatarImageUpload');
@@ -954,9 +1431,32 @@ class NewOnboardingForm {
     setupFileUpload(uploadZone, fieldName, multiple = false) {
         const fileInput = uploadZone.querySelector('input[type="file"]');
         const placeholder = uploadZone.querySelector('.upload-placeholder');
-        const preview = uploadZone.querySelector('.upload-preview');
+        const preview = multiple ? 
+            uploadZone.parentElement.querySelector('.uploaded-files') : 
+            uploadZone.querySelector('.upload-preview');
 
-        if (!fileInput || !placeholder || !preview) return;
+        console.log(`🔧 Configurando subida de archivos para ${fieldName}:`, {
+            uploadZone: !!uploadZone,
+            fileInput: !!fileInput,
+            placeholder: !!placeholder,
+            preview: !!preview,
+            multiple: multiple
+        });
+
+        if (!fileInput || !placeholder) {
+            console.error(`❌ Elementos faltantes para ${fieldName}:`, {
+                fileInput: !!fileInput,
+                placeholder: !!placeholder,
+                preview: !!preview
+            });
+            return;
+        }
+        
+        // Para multiple upload, el preview es opcional ya que puede no existir inicialmente
+        if (!multiple && !preview) {
+            console.error(`❌ Preview faltante para upload único ${fieldName}`);
+            return;
+        }
         
         // Click to upload
             uploadZone.addEventListener('click', () => {
@@ -994,16 +1494,33 @@ class NewOnboardingForm {
     }
 
     handleFileUpload(files, fieldName, multiple, placeholder, preview) {
+        console.log(`📁 Manejando subida de archivos para ${fieldName}:`, {
+            files: files.length,
+            multiple: multiple,
+            fieldName: fieldName
+        });
+
         if (multiple) {
             this.formData[fieldName] = files;
             this.showMultipleFilePreview(files, preview);
+            placeholder.style.display = 'none';
+            if (preview) preview.style.display = 'block';
         } else {
             this.formData[fieldName] = files[0];
             this.showSingleFilePreview(files[0], preview);
-        }
-        
         placeholder.style.display = 'none';
         preview.style.display = 'block';
+        }
+        
+        // Add remove functionality
+        const removeButton = preview.querySelector('.remove-image, .remove-file');
+        if (removeButton) {
+            removeButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.removeFile(fieldName, placeholder, preview);
+            });
+        }
+        
         this.updateNavigationButtons();
     }
 
@@ -1027,15 +1544,43 @@ class NewOnboardingForm {
                 reader.readAsDataURL(file);
             }
             
+            // Only update file info if elements exist
             if (fileName) fileName.textContent = file.name;
             if (fileSize) fileSize.textContent = this.formatFileSize(file.size);
         }
+
+    removeFile(fieldName, placeholder, preview) {
+        // Clear form data
+        this.formData[fieldName] = null;
+        
+        // Clear file input
+        const fileInput = preview.parentNode.querySelector('input[type="file"]');
+        if (fileInput) {
+            fileInput.value = '';
+        }
+        
+        // Reset UI
+        placeholder.style.display = 'block';
+        preview.style.display = 'none';
+        
+        // Clear preview content
+        const img = preview.querySelector('img');
+        const video = preview.querySelector('video');
+        if (img) img.src = '';
+        if (video) video.src = '';
+        
+        this.updateNavigationButtons();
+    }
         
     showMultipleFilePreview(files, preview) {
-        const filesList = preview.parentNode.querySelector('.uploaded-files');
-        if (filesList) {
-            filesList.innerHTML = '';
-            filesList.style.display = 'block';
+        if (!preview) {
+            console.warn('Preview element not found for multiple file upload');
+            return;
+        }
+        
+        // El preview ya es el elemento .uploaded-files
+        preview.innerHTML = '';
+        preview.style.display = 'block';
             
             files.forEach(file => {
             const fileItem = document.createElement('div');
@@ -1047,9 +1592,8 @@ class NewOnboardingForm {
                     <i class="fas fa-times"></i>
                 </button>
             `;
-            filesList.appendChild(fileItem);
+            preview.appendChild(fileItem);
             });
-        }
     }
 
     formatFileSize(bytes) {
@@ -1066,11 +1610,134 @@ document.addEventListener('DOMContentLoaded', () => {
     window.onboardingForm = new NewOnboardingForm();
 });
 
+// === FUNCIONES GLOBALES PARA DEBUGGING ===
+
+// Función para limpiar todo y empezar de nuevo
+window.resetOnboarding = function() {
+    if (window.onboardingForm) {
+        window.onboardingForm.clearLocalStorage();
+        location.reload();
+    }
+};
+
+// Función para ver todos los datos guardados
+window.showSavedData = function() {
+    const savedData = localStorage.getItem('ugc_onboarding_data');
+    const savedStep = localStorage.getItem('ugc_onboarding_step');
+    
+    console.log('📊 DATOS GUARDADOS:');
+    console.log('📍 Paso actual:', savedStep);
+    
+    if (savedData) {
+        const data = JSON.parse(savedData);
+        console.log('📋 FormData completo:', data);
+        
+        // Mostrar solo campos que tienen datos
+        const filledFields = Object.entries(data)
+            .filter(([key, value]) => {
+                if (Array.isArray(value)) return value.length > 0;
+                if (typeof value === 'object') return Object.keys(value).length > 0;
+                return value && value.toString().trim() !== '';
+            });
+            
+        console.log(`✅ ${filledFields.length} campos con datos:`);
+        filledFields.forEach(([key, value]) => {
+            console.log(`   ${key}:`, value);
+        });
+    } else {
+        console.log('❌ No hay datos guardados');
+    }
+};
+
+// Función para ir a un step específico (para debugging)
+window.goToStep = function(step) {
+    if (window.onboardingForm && step >= 1 && step <= 45) {
+        window.onboardingForm.currentStep = step;
+        window.onboardingForm.showStep(step);
+        window.onboardingForm.updateProgress();
+        window.onboardingForm.updateNavigationButtons();
+        window.onboardingForm.saveToLocalStorage();
+        console.log(`🎯 Navegado al step ${step}`);
+    } else {
+        console.error('❌ Step inválido o formulario no inicializado');
+    }
+};
+
+// Función para llenar datos de prueba rápidamente
+window.fillTestData = function() {
+    if (!window.onboardingForm) return;
+    
+    const testData = {
+        nombre_marca: 'Mi Marca Test',
+        sitio_web: 'https://test.com',
+        mercado_objetivo: ['colombia'],
+        idiomas_contenido: ['es'],
+        tono_voz: 'amigable',
+        palabras_usar: 'natural, orgánico, saludable',
+        tipo_producto: 'cosmetico',
+        nombre_producto: 'Crema Hidratante Test',
+        descripcion_producto: 'Una crema hidratante natural que nutre la piel diariamente.',
+        beneficio_1: 'Hidratación profunda',
+        precio_producto: '25.99',
+        tipo_creador: 'creador_humano',
+        genero_avatar: 'femenino',
+        energia_avatar: 'calmado',
+        idiomas_avatar: ['es'],
+        valores_avatar: ['naturalidad'],
+        caracteristicas_voz: {timbre: 'medio', acento: 'neutro'},
+        main_objective: 'Aumentar awareness de la marca y generar confianza',
+        cta: 'Compra ahora',
+        kpis: ['engagement'],
+        buyer_persona: 'Mujer de 25-35 años, interesada en productos naturales, activa en redes sociales',
+        platforms: ['instagram'],
+        formats: ['1:1']
+    };
+    
+    Object.assign(window.onboardingForm.formData, testData);
+    window.onboardingForm.saveToLocalStorage();
+    
+    console.log('🚀 Datos de prueba cargados! Usa goToStep() para navegar o refresca la página');
+};
+
+console.log(`
+🎮 COMANDOS DE DEBUGGING DISPONIBLES:
+• showSavedData()    - Ver todos los datos guardados
+• resetOnboarding()  - Limpiar todo y empezar de nuevo  
+• goToStep(20)       - Ir directamente al step 20
+• fillTestData()     - Llenar datos de prueba rápidamente
+`);
+
 // Global debugging functions
 window.debugOnboarding = () => {
     console.log('Current Step:', window.onboardingForm.currentStep);
     console.log('Form Data:', window.onboardingForm.formData);
     console.log('Validation:', window.onboardingForm.validateCurrentStep());
+};
+
+window.debugContinueButton = () => {
+    const btnNext = document.getElementById('btnNext');
+    const currentSlide = document.querySelector(`[data-step="${window.onboardingForm.currentStep}"]`);
+    const nombreMarca = document.getElementById('nombre_marca');
+    
+    console.log('=== DEBUG CONTINUE BUTTON ===');
+    console.log('Button exists:', !!btnNext);
+    console.log('Button disabled:', btnNext?.disabled);
+    console.log('Current step:', window.onboardingForm.currentStep);
+    console.log('Current slide exists:', !!currentSlide);
+    console.log('Nombre marca input exists:', !!nombreMarca);
+    console.log('Nombre marca value:', nombreMarca?.value);
+    console.log('Nombre marca length:', nombreMarca?.value?.length);
+    console.log('Validation result:', window.onboardingForm.validateCurrentStep());
+    console.log('Form data nombre_marca:', window.onboardingForm.formData.nombre_marca);
+    console.log('=============================');
+};
+
+window.testValidation = () => {
+    console.log('=== TEST VALIDATION ===');
+    const result = window.onboardingForm.validateCurrentStep();
+    console.log('Validation result:', result);
+    console.log('=======================');
+    return result;
 };
 
 window.forceCompleteOnboarding = () => {

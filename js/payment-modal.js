@@ -937,12 +937,41 @@ class PaymentModal {
     }
 
     async createUserInSupabase(userData) {
+        // Esperar a que Supabase esté listo
+        let attempts = 0;
+        const maxAttempts = 30; // 3 segundos máximo
+        
+        while (attempts < maxAttempts) {
+            if (window.supabaseClient?.isReady()) {
+                break;
+            }
+            
+            console.log(`⏳ Esperando Supabase... intento ${attempts + 1}/${maxAttempts}`);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+        
         if (!window.supabaseClient?.isReady()) {
-            throw new Error('Sistema de base de datos no disponible');
+            console.error('❌ Diagnóstico de Supabase:');
+            console.error('- window.supabaseClient exists:', !!window.supabaseClient);
+            console.error('- isReady():', window.supabaseClient?.isReady?.());
+            console.error('- supabase client:', window.supabaseClient?.supabase);
+            throw new Error('Sistema de base de datos no disponible después de esperar');
         }
 
         try {
             console.log('🔄 Iniciando registro de usuario en Supabase...');
+            
+            // Limpiar sesiones corruptas antes de intentar registro
+            try {
+                const { data: session, error: sessionError } = await window.supabaseClient.supabase.auth.getSession();
+                if (sessionError && sessionError.message.includes('Invalid Refresh Token')) {
+                    console.log('🧹 Limpiando sesión corrupta antes del registro...');
+                    await window.supabaseClient.cleanCorruptSessions();
+                }
+            } catch (cleanError) {
+                console.log('⚠️ Error limpiando sesión (continuando):', cleanError.message);
+            }
             
             // 1. Crear usuario con autenticación de Supabase
             const authResult = await window.supabaseClient.supabase.auth.signUp({
@@ -959,6 +988,14 @@ class PaymentModal {
 
             if (authResult.error) {
                 console.error('❌ Error en autenticación Supabase:', authResult.error);
+                
+                // Si es error de refresh token, limpiar y reintentar
+                if (authResult.error.message.includes('Invalid Refresh Token')) {
+                    console.log('🔄 Detectado error de refresh token, limpiando y reintentando...');
+                    await window.supabaseClient.cleanCorruptSessions();
+                    throw new Error('Sesión expirada. Por favor, recarga la página e intenta de nuevo.');
+                }
+                
                 throw new Error(authResult.error.message);
             }
 
@@ -1852,8 +1889,28 @@ class PaymentModal {
 // Initialize payment modal
 let paymentModal;
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     console.log('🔄 Inicializando PaymentModal...');
+    
+    // Esperar a que Supabase esté listo antes de inicializar PaymentModal
+    let attempts = 0;
+    const maxAttempts = 50; // 5 segundos máximo
+    
+    while (attempts < maxAttempts) {
+        if (window.supabaseClient?.isReady()) {
+            console.log('✅ Supabase listo, inicializando PaymentModal...');
+            break;
+        }
+        
+        console.log(`⏳ Esperando Supabase antes de inicializar PaymentModal... ${attempts + 1}/${maxAttempts}`);
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+    }
+    
+    if (!window.supabaseClient?.isReady()) {
+        console.warn('⚠️ PaymentModal inicializado sin Supabase (puede causar errores en registro)');
+    }
+    
     paymentModal = new PaymentModal();
     console.log('✅ PaymentModal inicializado correctamente');
 });
@@ -2304,6 +2361,32 @@ window.testRegistrationFlow = async function(testEmail = null) {
 };
 
 // Test with known duplicate to test duplicate handling
+// Quick diagnostic function
+window.quickDiagnostic = function() {
+    console.log('🔍 DIAGNÓSTICO RÁPIDO:');
+    console.log('1. window.supabaseClient exists:', !!window.supabaseClient);
+    console.log('2. supabaseClient.isReady():', window.supabaseClient?.isReady?.());
+    console.log('3. paymentModal exists:', !!window.paymentModal);
+    console.log('4. window.supabase library:', !!window.supabase);
+    
+    if (window.supabaseClient?.isReady()) {
+        console.log('✅ Todo está listo para usar');
+        
+        // Test básico
+        window.supabaseClient.supabase.auth.getSession()
+            .then(({ data, error }) => {
+                if (error) {
+                    console.log('⚠️ Error en auth test:', error.message);
+                } else {
+                    console.log('✅ Auth test exitoso');
+                }
+            });
+    } else {
+        console.log('❌ Supabase no está listo');
+        console.log('💡 Ejecuta debugSupabase() para más detalles');
+    }
+};
+
 window.testDuplicateHandling = function() {
     console.log('🧪 Probando manejo de usuarios duplicados...');
     testRegistrationFlow('duplicate-test@ugcstudio.com');

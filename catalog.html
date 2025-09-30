@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo - UGC Studio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="css/navigation.css">
+    <link rel="stylesheet" href="css/catalog.css">
+</head>
+<body>
+    <!-- Partículas de fondo -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Overlay para navegación móvil -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <!-- Header Principal -->
+    <header class="main-header">
+        <div class="header-left">
+            <button class="hamburger-menu" id="hamburgerMenu">
+                <div class="hamburger-line"></div>
+                <div class="hamburger-line"></div>
+                <div class="hamburger-line"></div>
+            </button>
+            <a href="main-dashboard.html" class="main-logo">
+                <i class="fas fa-cube"></i>
+                <span>UGC Studio</span>
+            </a>
+        </div>
+        <div class="header-right">
+            <button class="btn btn-secondary">
+                <i class="fas fa-heart"></i>
+                <span>Favoritos</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Navegación Lateral -->
+    <nav class="side-navigation" id="sideNavigation">
+        <!-- Header del panel -->
+        <div class="nav-header">
+            <div class="nav-user-info">
+                <div class="nav-user-avatar" id="navUserAvatar">U</div>
+                <div class="nav-user-details">
+                    <h4 id="navUserName">Cargando...</h4>
+                    <div class="nav-user-plan" id="navUserPlan">
+                        <i class="fas fa-crown"></i>
+                        <span>Plan Starter</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menú Principal -->
+        <div class="nav-menu">
+            <div class="nav-section">
+                <div class="nav-section-title">Principal</div>
+                <div class="nav-item">
+                    <a href="main-dashboard.html" class="nav-link">
+                        <i class="fas fa-home nav-icon"></i>
+                        <span class="nav-text">Panel Principal</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="studio.html" class="nav-link">
+                        <i class="fas fa-magic nav-icon"></i>
+                        <span class="nav-text">Studio</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Contenido</div>
+                <div class="nav-item">
+                    <a href="catalog.html" class="nav-link active">
+                        <i class="fas fa-images nav-icon"></i>
+                        <span class="nav-text">Catálogo</span>
+                        <span class="nav-badge">1.2K</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="brands.html" class="nav-link">
+                        <i class="fas fa-trademark nav-icon"></i>
+                        <span class="nav-text">Marcas</span>
+                        <span class="nav-badge secondary" id="brandsCount">0</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="library.html" class="nav-link">
+                        <i class="fas fa-folder nav-icon"></i>
+                        <span class="nav-text">Biblioteca</span>
+                        <span class="nav-badge secondary" id="libraryCount">0</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Cuenta</div>
+                <div class="nav-item">
+                    <a href="settings.html" class="nav-link">
+                        <i class="fas fa-cog nav-icon"></i>
+                        <span class="nav-text">Configuración</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="billing.html" class="nav-link">
+                        <i class="fas fa-credit-card nav-icon"></i>
+                        <span class="nav-text">Facturación</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer del panel -->
+        <div class="nav-footer">
+            <button class="nav-logout" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Cerrar Sesión</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <main class="main-content">
+        <div class="content-container">
+            <!-- Breadcrumbs -->
+            <nav class="breadcrumbs">
+                <a href="main-dashboard.html" class="breadcrumb-item">Panel Principal</a>
+                <span class="breadcrumb-separator">></span>
+                <span class="breadcrumb-item active">Catálogo</span>
+            </nav>
+
+            <!-- Catalog Layout -->
+            <div class="catalog-layout">
+                <!-- Header del Catálogo -->
+                <div class="catalog-header">
+                    <div>
+                        <h1 class="catalog-title">Catálogo de Estilos</h1>
+                        <p class="catalog-subtitle">Explora nuestra biblioteca de estilos y plantillas UGC</p>
+                    </div>
+                    <div class="catalog-actions">
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-filter"></i>
+                            <span>Filtros</span>
+                        </button>
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-download"></i>
+                            <span>Exportar</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filtros y Búsqueda -->
+                <div class="catalog-filters">
+                    <div class="search-container">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="catalogSearch" class="search-input" placeholder="Buscar estilos, categorías, palabras clave...">
+                    </div>
+                    <select id="categoryFilter" class="filter-select">
+                        <option value="all">Todas las categorías</option>
+                        <option value="beauty">Belleza</option>
+                        <option value="fashion">Moda</option>
+                        <option value="tech">Tecnología</option>
+                        <option value="food">Alimentación</option>
+                        <option value="fitness">Fitness</option>
+                        <option value="lifestyle">Lifestyle</option>
+                    </select>
+                    <select id="formatFilter" class="filter-select">
+                        <option value="all">Todos los formatos</option>
+                        <option value="vertical">Vertical 9:16</option>
+                        <option value="square">Cuadrado 1:1</option>
+                        <option value="horizontal">Horizontal 16:9</option>
+                    </select>
+                    <div class="view-toggle">
+                        <button class="view-btn active" data-view="grid">
+                            <i class="fas fa-th"></i>
+                        </button>
+                        <button class="view-btn" data-view="list">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Categorías -->
+                <div class="catalog-categories">
+                    <button class="category-chip active" data-category="all">
+                        <span>Todos</span>
+                        <span class="category-count">1,247</span>
+                    </button>
+                    <button class="category-chip" data-category="beauty">
+                        <span>Belleza</span>
+                        <span class="category-count">342</span>
+                    </button>
+                    <button class="category-chip" data-category="fashion">
+                        <span>Moda</span>
+                        <span class="category-count">289</span>
+                    </button>
+                    <button class="category-chip" data-category="tech">
+                        <span>Tecnología</span>
+                        <span class="category-count">156</span>
+                    </button>
+                    <button class="category-chip" data-category="food">
+                        <span>Alimentación</span>
+                        <span class="category-count">198</span>
+                    </button>
+                    <button class="category-chip" data-category="fitness">
+                        <span>Fitness</span>
+                        <span class="category-count">134</span>
+                    </button>
+                    <button class="category-chip" data-category="lifestyle">
+                        <span>Lifestyle</span>
+                        <span class="category-count">128</span>
+                    </button>
+                </div>
+
+                <!-- Galería de Estilos -->
+                <div class="styles-gallery" id="stylesGallery">
+                    <!-- Loading State -->
+                    <div class="loading-grid" id="catalogLoading" style="display: none;">
+                        <!-- Loading cards will be generated by JS -->
+                    </div>
+
+                    <!-- Empty State -->
+                    <div class="empty-state" id="catalogEmpty" style="display: none;">
+                        <i class="fas fa-search"></i>
+                        <h3>No se encontraron estilos</h3>
+                        <p>Intenta con otros términos de búsqueda o filtros diferentes</p>
+                    </div>
+
+                    <!-- Styles will be loaded here -->
+                </div>
+
+                <!-- Paginación -->
+                <div class="catalog-pagination" id="catalogPagination" style="display: none;">
+                    <button class="pagination-btn" disabled>
+                        <i class="fas fa-chevron-left"></i>
+                        Anterior
+                    </button>
+                    <span class="pagination-info">1 - 20 de 1,247</span>
+                    <button class="pagination-btn">
+                        Siguiente
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/catalog.js"></script>
+</body>
+</html>

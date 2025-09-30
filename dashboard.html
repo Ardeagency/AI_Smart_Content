@@ -3,1128 +3,282 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel - UGC Studio</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>UGC Studio - Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../css/dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/login.css">
+    <style>
+        .dashboard-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: var(--bg-primary);
+        }
+        
+        .dashboard-card {
+            background: rgba(26, 26, 26, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 60px 40px;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(253, 98, 79, 0.1);
+        }
+        
+        .dashboard-icon {
+            font-size: 4rem;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 20px rgba(253, 98, 79, 0.5));
+        }
+        
+        .dashboard-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+        
+        .dashboard-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .dashboard-actions {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+        
+        .dashboard-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .dashboard-btn:hover {
+            background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(253, 98, 79, 0.4);
+        }
+        
+        .dashboard-btn.outline {
+            background: transparent;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .dashboard-btn.outline:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .user-info {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .logout-btn {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-secondary);
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .logout-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+    </style>
 </head>
 <body>
-    <!-- Navigation Header -->
-    <nav class="main-nav">
-        <div class="nav-container">
-            <!-- Left Section: Menu Button + Logo -->
-            <div class="nav-left">
-                <button class="menu-toggle" id="menuToggle">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <div class="logo">
-                    <i class="fas fa-cube"></i>
-                    <span>UGC Studio</span>
-                </div>
-            </div>
-
-            <!-- Right Section -->
-            <div class="nav-right">
-                <button class="btn-generate">
-                    <i class="fas fa-magic"></i>
-                    Generar UGC
-                </button>
-                
-                <div class="user-menu">
-                    <div class="user-avatar">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div class="dropdown-menu">
-                        <a href="#" class="dropdown-item" data-page="perfil">
-                            <i class="fas fa-user-cog"></i>
-                            Perfil
-                        </a>
-                        <a href="#" class="dropdown-item">
-                            <i class="fas fa-cog"></i>
-                            Configuración
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item">
-                            <i class="fas fa-sign-out-alt"></i>
-                            Cerrar Sesión
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Slide Navigation Menu -->
-    <div class="slide-menu" id="slideMenu">
-        <div class="slide-menu-content">
-            <div class="slide-menu-header">
-                <div class="menu-logo">
-                    <i class="fas fa-cube"></i>
-                    <span>UGC Studio</span>
-                </div>
-                <button class="menu-close" id="menuClose">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <div class="slide-menu-items">
-                <div class="menu-item active" data-page="panel">
-                    <i class="fas fa-th-large"></i>
-                    <span>Panel</span>
-                </div>
-                <div class="menu-item" data-page="studio">
-                    <i class="fas fa-video"></i>
-                    <span>Studio</span>
-                </div>
-                <div class="menu-item" data-page="productos">
-                    <i class="fas fa-box"></i>
-                    <span>Productos</span>
-                </div>
-                <div class="menu-item" data-page="marca">
-                    <i class="fas fa-trademark"></i>
-                    <span>Marca</span>
-                </div>
-                <div class="menu-item" data-page="avatars">
-                    <i class="fas fa-user-circle"></i>
-                    <span>Avatars</span>
-                </div>
-            </div>
-            
-            <div class="slide-menu-footer">
-                <div class="menu-user-info">
-                    <div class="user-avatar-menu">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div class="user-details">
-                        <span class="user-name">Usuario</span>
-                        <span class="user-plan">Plan Pro</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Menu Overlay -->
-    <div class="menu-overlay" id="menuOverlay"></div>
-
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Panel Page (Default) -->
-        <div class="page-content active" id="panel-page">
-            <!-- Header Section -->
-            <div class="page-header">
-                <div class="header-content">
-                    <h1 class="page-title">Catálogo de Estilos</h1>
-                    <p class="page-subtitle">Explora y selecciona el estilo perfecto para tu contenido UGC</p>
-                </div>
-                
-                <!-- Search and Filters -->
-                <div class="search-section">
-                    <div class="search-bar">
-                        <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Buscar estilos..." id="styleSearch">
-                    </div>
-                    <div class="filter-tags">
-                        <button class="filter-tag active" data-filter="all">Todos</button>
-                        <button class="filter-tag" data-filter="cinematic">Cinemático</button>
-                        <button class="filter-tag" data-filter="fashion">Moda</button>
-                        <button class="filter-tag" data-filter="lifestyle">Lifestyle</button>
-                        <button class="filter-tag" data-filter="product">Producto</button>
-                        <button class="filter-tag" data-filter="beauty">Belleza</button>
-                        <button class="filter-tag" data-filter="tech">Tecnología</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Style Catalog Grid -->
-            <div class="styles-grid" id="stylesGrid">
-                <!-- Style Card 1: Multipurpose -->
-                <div class="style-card" data-style="multipurpose" data-tags="cinematic,lifestyle">
-                    <div class="card-media">
-                        <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop" alt="Multipurpose Style">
-                        <div class="media-overlay">
-                            <button class="play-btn">
-                                <i class="fas fa-play"></i>
-                            </button>
-                        </div>
-                        <div class="selected-indicator">
-                            <i class="fas fa-check"></i>
-                            Seleccionado
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <h3 class="style-name">Multipurpose</h3>
-                        <p class="style-description">120+ estilos versátiles</p>
-                        <div class="style-tags">
-                            <span class="tag">CINEMÁTICO</span>
-                            <span class="tag">STORYTELLING</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Style Card 2: Studio Portrait -->
-                <div class="style-card" data-style="studio-portrait" data-tags="fashion,beauty">
-                    <div class="card-media">
-                        <img src="https://images.unsplash.com/photo-1494790108755-2616c27484e5?w=400&h=300&fit=crop" alt="Studio Portrait Style">
-                        <div class="media-overlay">
-                            <button class="play-btn">
-                                <i class="fas fa-play"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <h3 class="style-name">Studio Portrait</h3>
-                        <p class="style-description">Retratos profesionales</p>
-                        <div class="style-tags">
-                            <span class="tag">E-COMMERCE</span>
-                            <span class="tag">FASHION</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Style Card 3: Macro Lens -->
-                <div class="style-card" data-style="macro-lens" data-tags="product,tech">
-                    <div class="card-media">
-                        <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop" alt="Macro Lens Style">
-                        <div class="media-overlay">
-                            <div class="video-indicator">
-                                <i class="fas fa-video"></i>
-                                VIDEO
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <h3 class="style-name">Macro Lens</h3>
-                        <p class="style-description">Detalles extremos</p>
-                        <div class="style-tags">
-                            <span class="tag">CINEMÁTICO</span>
-                            <span class="tag">BACKGROUNDS</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Style Card 4: Children Storytelling -->
-                <div class="style-card" data-style="children-story" data-tags="lifestyle,cinematic">
-                    <div class="card-media">
-                        <img src="https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=400&h=300&fit=crop" alt="Children Storytelling Style">
-                        <div class="media-overlay">
-                            <div class="video-indicator">
-                                <i class="fas fa-video"></i>
-                                VIDEO
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <h3 class="style-name">Children Story</h3>
-                        <p class="style-description">Narrativa infantil</p>
-                        <div class="style-tags">
-                            <span class="tag">CHILDREN</span>
-                            <span class="tag">STORYTELLING</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Style Card 5: Digital Design -->
-                <div class="style-card" data-style="digital-design" data-tags="tech,product">
-                    <div class="card-media">
-                        <img src="https://images.unsplash.com/photo-1558655146-d09347e92766?w=400&h=300&fit=crop" alt="Digital Design Style">
-                        <div class="media-overlay">
-                            <button class="play-btn">
-                                <i class="fas fa-play"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <h3 class="style-name">Digital Design</h3>
-                        <p class="style-description">Estética moderna</p>
-                        <div class="style-tags">
-                            <span class="tag">DIGITAL DESIGN</span>
-                            <span class="tag">BACKGROUNDS</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Style Card 6: Marketing Cinematic -->
-                <div class="style-card" data-style="marketing-cinematic" data-tags="cinematic,beauty">
-                    <div class="card-media">
-                        <img src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&h=300&fit=crop" alt="Marketing Cinematic Style">
-                        <div class="media-overlay">
-                            <div class="video-indicator">
-                                <i class="fas fa-video"></i>
-                                VIDEO
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <h3 class="style-name">Marketing Cinematic</h3>
-                        <p class="style-description">Comercial elegante</p>
-                        <div class="style-tags">
-                            <span class="tag">MARKETING</span>
-                            <span class="tag">CINEMATIC</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Style Card 7: Lifestyle Natural -->
-                <div class="style-card" data-style="lifestyle-natural" data-tags="lifestyle,beauty">
-                    <div class="card-media">
-                        <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&h=300&fit=crop" alt="Lifestyle Natural Style">
-                        <div class="media-overlay">
-                            <button class="play-btn">
-                                <i class="fas fa-play"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <h3 class="style-name">Lifestyle Natural</h3>
-                        <p class="style-description">Autenticidad casual</p>
-                        <div class="style-tags">
-                            <span class="tag">LIFESTYLE</span>
-                            <span class="tag">NATURAL</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Style Card 8: Urban Fashion -->
-                <div class="style-card" data-style="urban-fashion" data-tags="fashion,lifestyle">
-                    <div class="card-media">
-                        <img src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=400&h=300&fit=crop" alt="Urban Fashion Style">
-                        <div class="media-overlay">
-                            <div class="video-indicator">
-                                <i class="fas fa-video"></i>
-                                VIDEO
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <h3 class="style-name">Urban Fashion</h3>
-                        <p class="style-description">Moda urbana moderna</p>
-                        <div class="style-tags">
-                            <span class="tag">FASHION</span>
-                            <span class="tag">URBAN</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Style Card 9: Tech Minimal -->
-                <div class="style-card" data-style="tech-minimal" data-tags="tech,product">
-                    <div class="card-media">
-                        <img src="https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=300&fit=crop" alt="Tech Minimal Style">
-                        <div class="media-overlay">
-                            <button class="play-btn">
-                                <i class="fas fa-play"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <h3 class="style-name">Tech Minimal</h3>
-                        <p class="style-description">Elegancia tecnológica</p>
-                        <div class="style-tags">
-                            <span class="tag">TECH</span>
-                            <span class="tag">MINIMAL</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Load More Button -->
-                <div class="load-more-section">
-                    <button class="btn-load-more">
-                        <i class="fas fa-plus"></i>
-                        Cargar más estilos
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Studio Page -->
-        <div class="page-content" id="studio-page">
-            <div class="page-header">
-                <h1 class="page-title">Studio de Creación</h1>
-                <p class="page-subtitle">Gestiona tus proyectos y configuraciones de UGC</p>
-                
-                <div class="page-actions">
-                    <button class="btn-primary" id="newProjectBtn">
-                        <i class="fas fa-plus"></i>
-                        Nuevo Proyecto
-                    </button>
-                    <button class="btn-secondary" id="importProjectBtn">
-                        <i class="fas fa-upload"></i>
-                        Importar
-                    </button>
-                </div>
-            </div>
-
-            <!-- Projects Grid -->
-            <div class="projects-section">
-                <div class="section-header">
-                    <h3>Mis Proyectos</h3>
-                    <div class="view-controls">
-                        <button class="view-btn active" data-view="grid">
-                            <i class="fas fa-th-large"></i>
-                        </button>
-                        <button class="view-btn" data-view="list">
-                            <i class="fas fa-list"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="projects-grid" id="projectsGrid">
-                    <!-- Projects will be loaded here -->
-                </div>
-
-                <div class="empty-state" id="emptyProjects" style="display: none;">
-                    <div class="empty-icon">
-                        <i class="fas fa-folder-open"></i>
-                    </div>
-                    <h3>No tienes proyectos aún</h3>
-                    <p>Crea tu primer proyecto para comenzar a generar contenido UGC</p>
-                    <button class="btn-primary" id="createFirstProject">
-                        <i class="fas fa-plus"></i>
-                        Crear Primer Proyecto
-                    </button>
-                </div>
-            </div>
-
-            <!-- Recent Activity -->
-            <div class="activity-section">
-                <h3>Actividad Reciente</h3>
-                <div class="activity-list" id="activityList">
-                    <!-- Activity items will be loaded here -->
-                </div>
-            </div>
-        </div>
-
-        <!-- Productos Page -->
-        <div class="page-content" id="productos-page">
-            <div class="page-header">
-                <h1 class="page-title">Productos</h1>
-                <p class="page-subtitle">Gestiona tu catálogo de productos</p>
-                
-                <div class="page-actions">
-                    <button class="btn-primary" id="addProductBtn">
-                        <i class="fas fa-plus"></i>
-                        Agregar Producto
-                    </button>
-                    <button class="btn-secondary" id="importProductsBtn">
-                        <i class="fas fa-upload"></i>
-                        Importar CSV
-                    </button>
-                </div>
-            </div>
-
-            <!-- Products Filter -->
-            <div class="filter-section">
-                <div class="search-container">
-                    <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Buscar productos..." id="productSearch">
-                </div>
-                <div class="filter-tags">
-                    <button class="filter-tag active" data-filter="all">Todos</button>
-                    <button class="filter-tag" data-filter="bebida">Bebidas</button>
-                    <button class="filter-tag" data-filter="cosmetico">Cosméticos</button>
-                    <button class="filter-tag" data-filter="app">Software</button>
-                    <button class="filter-tag" data-filter="suplemento">Suplementos</button>
-                    <button class="filter-tag" data-filter="ropa">Moda</button>
-                    <button class="filter-tag" data-filter="electronico">Electrónicos</button>
-                </div>
-            </div>
-
-            <!-- Products Grid -->
-            <div class="products-grid" id="productsGrid">
-                <!-- Products will be loaded here -->
-            </div>
-
-            <div class="empty-state" id="emptyProducts" style="display: none;">
-                <div class="empty-icon">
-                    <i class="fas fa-shopping-bag"></i>
-                </div>
-                <h3>No tienes productos registrados</h3>
-                <p>Agrega productos a tu catálogo para generar contenido personalizado</p>
-                <button class="btn-primary" id="addFirstProduct">
-                    <i class="fas fa-plus"></i>
-                    Agregar Primer Producto
-                </button>
-            </div>
-        </div>
-
-        <!-- Marca Page -->
-        <div class="page-content" id="marca-page">
-            <div class="page-header">
-                <h1 class="page-title">Identidad de Marca</h1>
-                <p class="page-subtitle">Gestiona la identidad visual y lineamientos de tu marca</p>
-                
-                <div class="page-actions">
-                    <button class="btn-primary" id="editBrandBtn">
-                        <i class="fas fa-edit"></i>
-                        Editar Marca
-                    </button>
-                    <button class="btn-secondary" id="exportBrandBtn">
-                        <i class="fas fa-download"></i>
-                        Exportar Guía
-                    </button>
-                </div>
-            </div>
-
-            <!-- Brand Overview -->
-            <div class="brand-overview">
-                <div class="brand-card">
-                    <div class="brand-logo">
-                        <div class="logo-placeholder" id="brandLogo">
-                            <i class="fas fa-image"></i>
-                        </div>
-                        <button class="upload-logo-btn" id="uploadLogoBtn">
-                            <i class="fas fa-upload"></i>
-                        </button>
-                    </div>
-                    <div class="brand-info">
-                        <h2 id="brandName">Mi Marca</h2>
-                        <p id="brandDescription">Descripción de la marca</p>
-                        <div class="brand-stats">
-                            <div class="stat">
-                                <span class="stat-value" id="brandProjects">0</span>
-                                <span class="stat-label">Proyectos</span>
-                            </div>
-                            <div class="stat">
-                                <span class="stat-value" id="brandAssets">0</span>
-                                <span class="stat-label">Assets</span>
-                            </div>
-                            <div class="stat">
-                                <span class="stat-value" id="brandStyles">0</span>
-                                <span class="stat-label">Estilos</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Brand Guidelines -->
-            <div class="guidelines-section">
-                <div class="guidelines-grid">
-                    <div class="guideline-card">
-                        <div class="card-header">
-                            <h3><i class="fas fa-palette"></i> Colores</h3>
-                            <button class="edit-btn" data-section="colors">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                        </div>
-                        <div class="color-palette" id="brandColors">
-                            <div class="color-item" style="background: #FD624F;">
-                                <span>#FD624F</span>
-                            </div>
-                            <div class="color-item" style="background: #000000;">
-                                <span>#000000</span>
-                            </div>
-                            <div class="color-item" style="background: #ffffff;">
-                                <span>#FFFFFF</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="guideline-card">
-                        <div class="card-header">
-                            <h3><i class="fas fa-font"></i> Tipografía</h3>
-                            <button class="edit-btn" data-section="typography">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                        </div>
-                        <div class="typography-list" id="brandFonts">
-                            <div class="font-item">
-                                <span class="font-name">Inter</span>
-                                <span class="font-usage">Principal</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="guideline-card">
-                        <div class="card-header">
-                            <h3><i class="fas fa-comment-alt"></i> Tono de Voz</h3>
-                            <button class="edit-btn" data-section="tone">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                        </div>
-                        <div class="tone-content" id="brandTone">
-                            <p>Amigable y profesional</p>
-                        </div>
-                    </div>
-
-                    <div class="guideline-card">
-                        <div class="card-header">
-                            <h3><i class="fas fa-list-ul"></i> Lineamientos</h3>
-                            <button class="edit-btn" data-section="guidelines">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                        </div>
-                        <div class="guidelines-content" id="brandGuidelines">
-                            <div class="guideline-item">
-                                <h4>Do's</h4>
-                                <ul id="brandDos">
-                                    <li>Usar colores consistentes</li>
-                                    <li>Mantener tono amigable</li>
-                                </ul>
-                            </div>
-                            <div class="guideline-item">
-                                <h4>Don'ts</h4>
-                                <ul id="brandDonts">
-                                    <li>Usar colores fuera de la paleta</li>
-                                    <li>Tono agresivo</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Brand Assets -->
-            <div class="assets-section">
-                <div class="section-header">
-                    <h3>Assets de Marca</h3>
-                    <button class="btn-secondary" id="uploadAssetBtn">
-                        <i class="fas fa-plus"></i>
-                        Subir Asset
-                    </button>
-                </div>
-                <div class="assets-grid" id="brandAssets">
-                    <!-- Assets will be loaded here -->
-                </div>
-            </div>
-        </div>
-
-        <!-- Avatars Page -->
-        <div class="page-content" id="avatars-page">
-            <div class="page-header">
-                <h1 class="page-title">Avatars</h1>
-                <p class="page-subtitle">Gestiona tus avatars y creadores de contenido</p>
-                
-                <div class="page-actions">
-                    <button class="btn-primary" id="createAvatarBtn">
-                        <i class="fas fa-user-plus"></i>
-                        Crear Avatar
-                    </button>
-                    <button class="btn-secondary" id="importAvatarBtn">
-                        <i class="fas fa-upload"></i>
-                        Importar Configuración
-                    </button>
-                </div>
-            </div>
-
-            <!-- Avatar Types -->
-            <div class="avatar-types-section">
-                <h3>Tipos de Avatar</h3>
-                <div class="avatar-types-grid">
-                    <div class="avatar-type-card" data-type="ai">
-                        <div class="type-icon">
-                            <i class="fas fa-robot"></i>
-                        </div>
-                        <h4>Avatar IA</h4>
-                        <p>Personaje digital completamente personalizable</p>
-                        <div class="type-features">
-                            <span>✓ Consistencia perfecta</span>
-                            <span>✓ Disponible 24/7</span>
-                            <span>✓ Múltiples estilos</span>
-                        </div>
-                        <button class="btn-outline" data-create="ai">Crear Avatar IA</button>
-                    </div>
-                    
-                    <div class="avatar-type-card" data-type="human">
-                        <div class="type-icon">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <h4>Creador Humano</h4>
-                        <p>Configuración para trabajar con personas reales</p>
-                        <div class="type-features">
-                            <span>✓ Máxima autenticidad</span>
-                            <span>✓ Emociones naturales</span>
-                            <span>✓ Conexión real</span>
-                        </div>
-                        <button class="btn-outline" data-create="human">Configurar Humano</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Current Avatars -->
-            <div class="avatars-section">
-                <div class="section-header">
-                    <h3>Mis Avatars</h3>
-                    <div class="view-controls">
-                        <button class="view-btn active" data-view="grid">
-                            <i class="fas fa-th-large"></i>
-                        </button>
-                        <button class="view-btn" data-view="list">
-                            <i class="fas fa-list"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="avatars-grid" id="avatarsGrid">
-                    <!-- Avatars will be loaded here -->
-                </div>
-
-                <div class="empty-state" id="emptyAvatars" style="display: none;">
-                    <div class="empty-icon">
-                        <i class="fas fa-user-friends"></i>
-                    </div>
-                    <h3>No tienes avatars configurados</h3>
-                    <p>Crea tu primer avatar para generar contenido personalizado</p>
-                    <button class="btn-primary" id="createFirstAvatar">
-                        <i class="fas fa-user-plus"></i>
-                        Crear Primer Avatar
-                    </button>
-                </div>
-            </div>
-
-            <!-- Avatar Analytics -->
-            <div class="avatar-analytics">
-                <h3>Rendimiento de Avatars</h3>
-                <div class="analytics-grid">
-                    <div class="analytics-card">
-                        <div class="metric">
-                            <span class="metric-value" id="totalUGC">0</span>
-                            <span class="metric-label">UGC Generados</span>
-                        </div>
-                        <div class="metric-trend">
-                            <i class="fas fa-arrow-up"></i>
-                            <span>+12%</span>
-                        </div>
-                    </div>
-                    
-                    <div class="analytics-card">
-                        <div class="metric">
-                            <span class="metric-value" id="engagementRate">0%</span>
-                            <span class="metric-label">Engagement Promedio</span>
-                        </div>
-                        <div class="metric-trend">
-                            <i class="fas fa-arrow-up"></i>
-                            <span>+5%</span>
-                        </div>
-                    </div>
-                    
-                    <div class="analytics-card">
-                        <div class="metric">
-                            <span class="metric-value" id="activeAvatars">0</span>
-                            <span class="metric-label">Avatars Activos</span>
-                        </div>
-                        <div class="metric-trend">
-                            <i class="fas fa-minus"></i>
-                            <span>-</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Perfil Page -->
-        <div class="page-content" id="perfil-page">
-            <div class="page-header">
-                <h1 class="page-title">Mi Perfil</h1>
-                <p class="page-subtitle">Gestiona tu cuenta y configuraciones</p>
-            </div>
-
-            <!-- Profile Info -->
-            <div class="profile-section">
-                <div class="profile-card">
-                    <div class="profile-avatar">
-                        <div class="avatar-placeholder" id="userAvatar">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <button class="change-avatar-btn" id="changeAvatarBtn">
-                            <i class="fas fa-camera"></i>
-                        </button>
-                    </div>
-                    <div class="profile-info">
-                        <h2 id="userName">Usuario</h2>
-                        <p id="userEmail">usuario@email.com</p>
-                        <div class="profile-badges">
-                            <span class="badge" id="userPlan">Plan Pro</span>
-                            <span class="badge" id="memberSince">Miembro desde 2024</span>
-                        </div>
-                    </div>
-                    <div class="profile-actions">
-                        <button class="btn-primary" id="editProfileBtn">
-                            <i class="fas fa-edit"></i>
-                            Editar Perfil
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Account Settings -->
-            <div class="settings-section">
-                <h3>Configuración de Cuenta</h3>
-                <div class="settings-grid">
-                    <div class="setting-card">
-                        <div class="setting-header">
-                            <h4><i class="fas fa-globe"></i> Idioma</h4>
-                        </div>
-                        <div class="setting-content">
-                            <select id="languageSelect">
-                                <option value="es">Español</option>
-                                <option value="en">English</option>
-                                <option value="pt">Português</option>
-                                <option value="fr">Français</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="setting-card">
-                        <div class="setting-header">
-                            <h4><i class="fas fa-bell"></i> Notificaciones</h4>
-                        </div>
-                        <div class="setting-content">
-                            <div class="toggle-group">
-                                <div class="toggle-item">
-                                    <label>Email notifications</label>
-                                    <div class="toggle-switch">
-                                        <input type="checkbox" id="emailNotifications" checked>
-                                        <span class="slider"></span>
-                                    </div>
-                                </div>
-                                <div class="toggle-item">
-                                    <label>Push notifications</label>
-                                    <div class="toggle-switch">
-                                        <input type="checkbox" id="pushNotifications" checked>
-                                        <span class="slider"></span>
-                                    </div>
-                                </div>
-                                <div class="toggle-item">
-                                    <label>Marketing emails</label>
-                                    <div class="toggle-switch">
-                                        <input type="checkbox" id="marketingEmails">
-                                        <span class="slider"></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="setting-card">
-                        <div class="setting-header">
-                            <h4><i class="fas fa-shield-alt"></i> Privacidad</h4>
-                        </div>
-                        <div class="setting-content">
-                            <div class="toggle-group">
-                                <div class="toggle-item">
-                                    <label>Perfil público</label>
-                                    <div class="toggle-switch">
-                                        <input type="checkbox" id="publicProfile">
-                                        <span class="slider"></span>
-                                    </div>
-                                </div>
-                                <div class="toggle-item">
-                                    <label>Analytics compartidos</label>
-                                    <div class="toggle-switch">
-                                        <input type="checkbox" id="shareAnalytics">
-                                        <span class="slider"></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="setting-card">
-                        <div class="setting-header">
-                            <h4><i class="fas fa-credit-card"></i> Facturación</h4>
-                        </div>
-                        <div class="setting-content">
-                            <div class="billing-info">
-                                <p>Plan actual: <strong id="currentPlan">Pro</strong></p>
-                                <p>Próximo pago: <strong id="nextPayment">Nunca (Gratis)</strong></p>
-                                <div class="billing-actions">
-                                    <button class="btn-outline" id="manageBillingBtn">
-                                        Gestionar Facturación
-                                    </button>
-                                    <button class="btn-outline" id="upgradeBtn">
-                                        Actualizar Plan
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Data Management -->
-            <div class="data-section">
-                <h3>Gestión de Datos</h3>
-                <div class="data-actions">
-                    <button class="btn-secondary" id="exportDataBtn">
-                        <i class="fas fa-download"></i>
-                        Exportar Datos
-                    </button>
-                    <button class="btn-secondary" id="importDataBtn">
-                        <i class="fas fa-upload"></i>
-                        Importar Datos
-                    </button>
-                    <button class="btn-danger" id="deleteAccountBtn">
-                        <i class="fas fa-trash"></i>
-                        Eliminar Cuenta
-                    </button>
-                </div>
-            </div>
-
-            <!-- Usage Stats -->
-            <div class="usage-section">
-                <h3>Estadísticas de Uso</h3>
-                <div class="usage-stats">
-                    <div class="stat-item">
-                        <div class="stat-icon">
-                            <i class="fas fa-folder"></i>
-                        </div>
-                        <div class="stat-info">
-                            <span class="stat-value" id="totalProjects">0</span>
-                            <span class="stat-label">Proyectos Creados</span>
-                        </div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-icon">
-                            <i class="fas fa-play-circle"></i>
-                        </div>
-                        <div class="stat-info">
-                            <span class="stat-value" id="totalGenerations">0</span>
-                            <span class="stat-label">UGC Generados</span>
-                        </div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-icon">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="stat-info">
-                            <span class="stat-value" id="timeSpent">0h</span>
-                            <span class="stat-label">Tiempo en Plataforma</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- Style Detail Modal -->
-    <div class="modal-overlay" id="styleModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title" id="modalTitle">Multipurpose</h2>
-                <button class="modal-close">
-                    <i class="fas fa-times"></i>
-                </button>
-                <div class="modal-selected">
-                    <i class="fas fa-check"></i>
-                    Seleccionado
-                </div>
-            </div>
-            
-            <div class="modal-body">
-                <div class="modal-description">
-                    <p>Genera increíbles visuales en cualquier estilo — simplemente describe tu look deseado en el prompt.</p>
-                </div>
-                
-                <h3>Explora assets generados usando este estilo</h3>
-                
-                <div class="modal-grid" id="modalGrid">
-                    <!-- Dynamic content will be loaded here -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- UGC Generation Modal -->
-    <div class="modal-overlay" id="ugcGenerationModal">
-        <div class="modal-content ugc-modal">
-            <div class="modal-header">
-                <h2 class="modal-title">Generar UGC</h2>
-                <button class="modal-close" id="closeUGCModal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <div class="modal-body">
-                <div class="generation-form">
-                    <div class="form-section">
-                        <h3><i class="fas fa-magic"></i> Configuración de Generación</h3>
-                        
-                        <div class="form-group">
-                            <label>Estilo seleccionado</label>
-                            <div class="selected-style" id="selectedStyleDisplay">
-                                <span>Selecciona un estilo del catálogo</span>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Proyecto</label>
-                            <select id="projectSelect">
-                                <option value="">Seleccionar proyecto...</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Producto</label>
-                            <select id="productSelect">
-                                <option value="">Seleccionar producto...</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Avatar/Creador</label>
-                            <select id="avatarSelect">
-                                <option value="">Seleccionar avatar...</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Prompt personalizado (opcional)</label>
-                            <textarea id="customPrompt" placeholder="Describe aspectos específicos que quieres incluir en el UGC..." rows="3"></textarea>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Cantidad de variaciones</label>
-                            <div class="quantity-selector">
-                                <button type="button" class="qty-btn" data-qty="1">1</button>
-                                <button type="button" class="qty-btn" data-qty="3">3</button>
-                                <button type="button" class="qty-btn active" data-qty="6">6</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-section">
-                        <h3><i class="fas fa-cog"></i> Configuración Avanzada</h3>
-                        
-                        <div class="advanced-options">
-                            <div class="option-group">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="includeSubtitles" checked>
-                                    <span class="checkmark"></span>
-                                    Incluir subtítulos
-                                </label>
-                            </div>
-                            
-                            <div class="option-group">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="includeCTA" checked>
-                                    <span class="checkmark"></span>
-                                    Incluir CTA automático
-                                </label>
-                            </div>
-                            
-                            <div class="option-group">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="includeBranding">
-                                    <span class="checkmark"></span>
-                                    Incluir logo de marca
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Formato de salida</label>
-                            <div class="format-options">
-                                <label class="radio-label">
-                                    <input type="radio" name="format" value="video" checked>
-                                    <span class="radio-custom"></span>
-                                    Video (MP4)
-                                </label>
-                                <label class="radio-label">
-                                    <input type="radio" name="format" value="image">
-                                    <span class="radio-custom"></span>
-                                    Imagen (JPG)
-                                </label>
-                                <label class="radio-label">
-                                    <input type="radio" name="format" value="both">
-                                    <span class="radio-custom"></span>
-                                    Ambos
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="generation-summary">
-                    <h3>Resumen de Generación</h3>
-                    <div class="summary-content">
-                        <div class="summary-item">
-                            <span class="label">Estilo:</span>
-                            <span class="value" id="summaryStyle">-</span>
-                        </div>
-                        <div class="summary-item">
-                            <span class="label">Cantidad:</span>
-                            <span class="value" id="summaryQuantity">6 variaciones</span>
-                        </div>
-                        <div class="summary-item">
-                            <span class="label">Formato:</span>
-                            <span class="value" id="summaryFormat">Video (MP4)</span>
-                        </div>
-                        <div class="summary-item">
-                            <span class="label">Tiempo estimado:</span>
-                            <span class="value">2-3 minutos</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-actions">
-                    <button class="btn-secondary" id="cancelGeneration">
-                        Cancelar
-                    </button>
-                    <button class="btn-primary" id="startGeneration">
-                        <i class="fas fa-magic"></i>
-                        Generar UGC
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Generation Progress Modal -->
-    <div class="modal-overlay" id="generationProgressModal">
-        <div class="modal-content progress-modal">
-            <div class="modal-header">
-                <h2 class="modal-title">Generando UGC</h2>
-            </div>
-            
-            <div class="modal-body">
-                <div class="progress-container">
-                    <div class="progress-circle">
-                        <svg viewBox="0 0 100 100">
-                            <circle cx="50" cy="50" r="45" stroke="#333" stroke-width="10" fill="none"/>
-                            <circle id="progressCircle" cx="50" cy="50" r="45" stroke="#FD624F" stroke-width="10" fill="none" 
-                                    stroke-dasharray="283" stroke-dashoffset="283"/>
-                        </svg>
-                        <div class="progress-text">
-                            <span id="progressPercent">0%</span>
-                        </div>
-                    </div>
-                    
-                    <div class="progress-steps">
-                        <div class="step active" id="step1">
-                            <i class="fas fa-brain"></i>
-                            <span>Analizando configuración</span>
-                        </div>
-                        <div class="step" id="step2">
-                            <i class="fas fa-palette"></i>
-                            <span>Aplicando estilo</span>
-                        </div>
-                        <div class="step" id="step3">
-                            <i class="fas fa-video"></i>
-                            <span>Generando contenido</span>
-                        </div>
-                        <div class="step" id="step4">
-                            <i class="fas fa-check"></i>
-                            <span>Finalizando</span>
-                        </div>
-                    </div>
-                    
-                    <div class="progress-message" id="progressMessage">
-                        Preparando generación...
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Onboarding Verification (Must be first) -->
-    <script src="../js/onboarding-verification.js"></script>
+    <!-- Partículas de fondo -->
+    <div class="particles" id="particles"></div>
     
-    <!-- Application Scripts -->
-    <script src="../js/app-state.js"></script>
-    <script src="../js/dashboard.js"></script>
-    <script src="../js/dashboard-extended.js"></script>
-    <script src="../js/ugc-generator.js"></script>
-    <script src="../js/dashboard-supabase.js"></script>
+    <!-- Botón de logout -->
+    <button class="logout-btn" onclick="logout()">
+        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+    </button>
+    
+    <!-- Info del usuario -->
+    <div class="user-info" id="userInfo">
+        <i class="fas fa-user"></i> <span id="userName">Cargando...</span>
+    </div>
+    
+    <!-- Contenedor principal -->
+    <div class="dashboard-container">
+        <div class="dashboard-card">
+            <div class="dashboard-icon">
+                <i class="fas fa-rocket"></i>
+            </div>
+            
+            <h1 class="dashboard-title">¡Dashboard en construcción!</h1>
+            
+            <p class="dashboard-subtitle">
+                Tu dashboard estará disponible pronto. Mientras tanto, puedes crear un nuevo proyecto o gestionar tus configuraciones.
+            </p>
+            
+            <div class="dashboard-actions">
+                <a href="onboarding-new.html" class="dashboard-btn">
+                    <i class="fas fa-plus"></i>
+                    Crear Nuevo Proyecto
+                </a>
+                
+                <button class="dashboard-btn outline" onclick="showUserProjects()">
+                    <i class="fas fa-folder"></i>
+                    Ver Proyectos
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script>
+        let authManager;
+        
+        // Inicializar página
+        document.addEventListener('DOMContentLoaded', async () => {
+            await waitForSupabase();
+            await loadUserInfo();
+            createParticles();
+        });
+        
+        // Esperar a que Supabase esté disponible
+        async function waitForSupabase() {
+            let attempts = 0;
+            while ((!window.supabaseClient || !window.supabaseClient.isReady()) && attempts < 30) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                attempts++;
+            }
+            
+            if (!window.supabaseClient || !window.supabaseClient.isReady()) {
+                console.error('Supabase no está disponible');
+                window.location.href = 'login.html';
+                return;
+            }
+        }
+        
+        // Cargar información del usuario
+        async function loadUserInfo() {
+            try {
+                const { data: { session } } = await window.supabaseClient.supabase.auth.getSession();
+                
+                if (!session) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                const userName = session.user.user_metadata?.full_name || session.user.email;
+                document.getElementById('userName').textContent = userName;
+                
+            } catch (error) {
+                console.error('Error cargando usuario:', error);
+                window.location.href = 'login.html';
+            }
+        }
+        
+        // Mostrar proyectos del usuario
+        async function showUserProjects() {
+            try {
+                const { data: { session } } = await window.supabaseClient.supabase.auth.getSession();
+                
+                if (!session) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                const { data: projects, error } = await window.supabaseClient.supabase
+                    .from('projects')
+                    .select('id, name, created_at')
+                    .eq('user_id', session.user.id)
+                    .order('created_at', { ascending: false });
+                
+                if (error) {
+                    alert('Error cargando proyectos: ' + error.message);
+                    return;
+                }
+                
+                if (projects.length === 0) {
+                    alert('No tienes proyectos aún. ¡Crea tu primer proyecto!');
+                } else {
+                    const projectList = projects.map(p => 
+                        `• ${p.name} (${new Date(p.created_at).toLocaleDateString()})`
+                    ).join('\n');
+                    
+                    alert(`Tus proyectos:\n\n${projectList}`);
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error cargando proyectos');
+            }
+        }
+        
+        // Cerrar sesión
+        async function logout() {
+            try {
+                await window.supabaseClient.supabase.auth.signOut();
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Error cerrando sesión:', error);
+                window.location.href = 'login.html';
+            }
+        }
+        
+        // Crear partículas de fondo
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 50;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                // Posición inicial aleatoria
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 20 + 's';
+                particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+                
+                // Tamaño aleatorio
+                const size = 1 + Math.random() * 2;
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+
+                particlesContainer.appendChild(particle);
+            }
+        }
+    </script>
 </body>
 </html>

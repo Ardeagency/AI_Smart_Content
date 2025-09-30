@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marcas - UGC Studio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="css/navigation.css">
+    <link rel="stylesheet" href="css/brands.css">
+</head>
+<body>
+    <!-- Partículas de fondo -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Overlay para navegación móvil -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <!-- Header Principal -->
+    <header class="main-header">
+        <div class="header-left">
+            <button class="hamburger-menu" id="hamburgerMenu">
+                <div class="hamburger-line"></div>
+                <div class="hamburger-line"></div>
+                <div class="hamburger-line"></div>
+            </button>
+            <a href="main-dashboard.html" class="main-logo">
+                <i class="fas fa-cube"></i>
+                <span>UGC Studio</span>
+            </a>
+        </div>
+        <div class="header-right">
+            <button class="btn btn-primary" onclick="openBrandModal('create')">
+                <i class="fas fa-plus"></i>
+                <span>Nueva Marca</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Navegación Lateral -->
+    <nav class="side-navigation" id="sideNavigation">
+        <!-- Header del panel -->
+        <div class="nav-header">
+            <div class="nav-user-info">
+                <div class="nav-user-avatar" id="navUserAvatar">U</div>
+                <div class="nav-user-details">
+                    <h4 id="navUserName">Cargando...</h4>
+                    <div class="nav-user-plan" id="navUserPlan">
+                        <i class="fas fa-crown"></i>
+                        <span>Plan Starter</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menú Principal -->
+        <div class="nav-menu">
+            <div class="nav-section">
+                <div class="nav-section-title">Principal</div>
+                <div class="nav-item">
+                    <a href="main-dashboard.html" class="nav-link">
+                        <i class="fas fa-home nav-icon"></i>
+                        <span class="nav-text">Panel Principal</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="studio.html" class="nav-link">
+                        <i class="fas fa-magic nav-icon"></i>
+                        <span class="nav-text">Studio</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Contenido</div>
+                <div class="nav-item">
+                    <a href="catalog.html" class="nav-link">
+                        <i class="fas fa-images nav-icon"></i>
+                        <span class="nav-text">Catálogo</span>
+                        <span class="nav-badge">1.2K</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="brands.html" class="nav-link active">
+                        <i class="fas fa-trademark nav-icon"></i>
+                        <span class="nav-text">Marcas</span>
+                        <span class="nav-badge secondary" id="brandsCount">0</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="library.html" class="nav-link">
+                        <i class="fas fa-folder nav-icon"></i>
+                        <span class="nav-text">Biblioteca</span>
+                        <span class="nav-badge secondary" id="libraryCount">0</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Cuenta</div>
+                <div class="nav-item">
+                    <a href="settings.html" class="nav-link">
+                        <i class="fas fa-cog nav-icon"></i>
+                        <span class="nav-text">Configuración</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="billing.html" class="nav-link">
+                        <i class="fas fa-credit-card nav-icon"></i>
+                        <span class="nav-text">Facturación</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer del panel -->
+        <div class="nav-footer">
+            <button class="nav-logout" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Cerrar Sesión</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <main class="main-content">
+        <div class="content-container">
+            <!-- Breadcrumbs -->
+            <nav class="breadcrumbs">
+                <a href="main-dashboard.html" class="breadcrumb-item">Panel Principal</a>
+                <span class="breadcrumb-separator">></span>
+                <span class="breadcrumb-item active">Marcas</span>
+            </nav>
+
+            <!-- Brands Layout -->
+            <div class="brands-layout">
+                <!-- Header de Marcas -->
+                <div class="brands-header">
+                    <div>
+                        <h1 class="brands-title">Mis Marcas</h1>
+                        <p class="brands-subtitle">Gestiona la información y contenido de tus marcas</p>
+                    </div>
+                    <div class="brands-actions">
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-download"></i>
+                            <span>Exportar</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filtros y Búsqueda -->
+                <div class="brands-filters">
+                    <div class="search-container">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="brandsSearch" class="search-input" placeholder="Buscar marcas...">
+                    </div>
+                    <select id="brandsFilter" class="filter-select">
+                        <option value="all">Todas las marcas</option>
+                        <option value="active">Activas</option>
+                        <option value="draft">Borradores</option>
+                        <option value="archived">Archivadas</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="openBrandModal('create')">
+                        <i class="fas fa-plus"></i>
+                        <span>Nueva Marca</span>
+                    </button>
+                </div>
+
+                <!-- Galería de Marcas -->
+                <div class="brands-gallery" id="brandsGallery">
+                    <!-- Loading State -->
+                    <div class="loading-grid" id="brandsLoading" style="display: none;">
+                        <div class="loading-brand-card">
+                            <div class="loading-brand-header">
+                                <div class="loading-brand-logo"></div>
+                                <div class="loading-brand-name"></div>
+                                <div class="loading-brand-website"></div>
+                            </div>
+                            <div class="loading-brand-content">
+                                <div class="loading-brand-description"></div>
+                                <div class="loading-brand-description"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div class="empty-state" id="brandsEmpty" style="display: none;">
+                        <i class="fas fa-trademark"></i>
+                        <h3>No tienes marcas aún</h3>
+                        <p>Crea tu primera marca para empezar a generar contenido UGC personalizado</p>
+                        <button class="empty-state-btn" onclick="openBrandModal('create')">
+                            <i class="fas fa-plus"></i>
+                            Crear Primera Marca
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal de Marca -->
+    <div class="brand-modal-overlay" id="brandModalOverlay">
+        <div class="brand-modal">
+            <div class="brand-modal-header">
+                <button class="brand-modal-close" onclick="closeBrandModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h2 class="brand-modal-title" id="brandModalTitle">Nueva Marca</h2>
+                <p class="brand-modal-subtitle" id="brandModalSubtitle">Configura la información básica de tu marca</p>
+            </div>
+
+            <div class="brand-modal-body">
+                <form id="brandForm" class="brand-form">
+                    <!-- Información Básica -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">
+                            <i class="fas fa-info-circle"></i>
+                            Información Básica
+                        </h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="brandName">Nombre de la Marca *</label>
+                                <input type="text" id="brandName" class="form-input" placeholder="Ej: NaturalGlow" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="brandWebsite">Sitio Web</label>
+                                <input type="url" id="brandWebsite" class="form-input" placeholder="https://tu-marca.com">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="brandDescription">Descripción</label>
+                            <textarea id="brandDescription" class="form-textarea" placeholder="Describe tu marca, sus valores y propuesta de valor..." rows="3"></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="brandCountry">País Principal</label>
+                                <select id="brandCountry" class="form-select">
+                                    <option value="">Seleccionar país</option>
+                                    <option value="Mexico">México</option>
+                                    <option value="Colombia">Colombia</option>
+                                    <option value="Argentina">Argentina</option>
+                                    <option value="España">España</option>
+                                    <option value="Estados Unidos">Estados Unidos</option>
+                                    <option value="Chile">Chile</option>
+                                    <option value="Peru">Perú</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="brandLanguages">Idiomas</label>
+                                <select id="brandLanguages" class="form-select" multiple>
+                                    <option value="Español">Español</option>
+                                    <option value="Inglés">Inglés</option>
+                                    <option value="Portugués">Portugués</option>
+                                    <option value="Francés">Francés</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Logo -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">
+                            <i class="fas fa-image"></i>
+                            Logo de la Marca
+                        </h3>
+                        
+                        <div class="logo-upload">
+                            <div class="logo-preview" id="logoPreview" onclick="document.getElementById('logoFile').click()">
+                                <div class="logo-placeholder">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Subir Logo</span>
+                                </div>
+                            </div>
+                            <input type="file" id="logoFile" accept="image/*" style="display: none;" onchange="handleLogoUpload(event)">
+                            <button type="button" class="logo-upload-btn" onclick="document.getElementById('logoFile').click()">
+                                Seleccionar Archivo
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Redes Sociales -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">
+                            <i class="fas fa-share-alt"></i>
+                            Redes Sociales
+                        </h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="brandInstagram">Instagram</label>
+                                <input type="text" id="brandInstagram" class="form-input" placeholder="@tu_marca">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="brandTiktok">TikTok</label>
+                                <input type="text" id="brandTiktok" class="form-input" placeholder="@tu_marca">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="brandFacebook">Facebook</label>
+                                <input type="text" id="brandFacebook" class="form-input" placeholder="Tu Marca">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="brandYoutube">YouTube</label>
+                                <input type="text" id="brandYoutube" class="form-input" placeholder="@tu_marca">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="brand-modal-footer">
+                <button type="button" class="modal-btn modal-btn-secondary" onclick="closeBrandModal()">
+                    Cancelar
+                </button>
+                <button type="submit" form="brandForm" class="modal-btn modal-btn-primary" id="brandSaveBtn">
+                    <i class="fas fa-save"></i>
+                    Guardar Marca
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/brands.js"></script>
+</body>
+</html>

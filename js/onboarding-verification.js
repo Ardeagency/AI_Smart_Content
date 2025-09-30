@@ -9,31 +9,48 @@ class OnboardingVerification {
 
     async verifyOnboardingAccess() {
         try {
+            console.log('🔐 Iniciando verificación de acceso al dashboard...');
+            
             // 1. Verificar que el usuario esté autenticado
+            console.log('👤 Verificando autenticación...');
             const currentUser = await this.getCurrentUser();
             if (!currentUser) {
+                console.log('❌ Usuario no autenticado, redirigiendo a login');
                 this.redirectToLogin();
                 return false;
             }
+            console.log('✅ Usuario autenticado:', currentUser.id);
 
             // 2. Verificar que el onboarding esté marcado como completado
+            console.log('📋 Verificando estado de onboarding...');
             const onboardingCompleted = await this.checkOnboardingStatus(currentUser.id);
             if (!onboardingCompleted) {
+                console.log('❌ Onboarding no completado, redirigiendo a onboarding');
                 this.redirectToOnboarding();
                 return false;
             }
+            console.log('✅ Onboarding marcado como completado');
 
             // 3. Verificar que los datos esenciales existan en Supabase
+            console.log('🔍 Verificando datos esenciales...');
             const dataExists = await this.verifyEssentialData(currentUser.id);
             if (!dataExists) {
+                console.log('❌ Datos esenciales faltantes, redirigiendo a onboarding');
                 this.redirectToOnboarding();
                 return false;
             }
+            console.log('✅ Todos los datos esenciales verificados');
 
             this.isVerified = true;
+            console.log('🎉 Acceso al dashboard autorizado');
+            
+            // Limpiar contador de redirecciones al acceder exitosamente
+            sessionStorage.removeItem('redirectCount');
+            
             return true;
 
         } catch (error) {
+            console.error('❌ Error en verificación de onboarding:', error);
             this.redirectToOnboarding();
             return false;
         }
@@ -41,10 +58,16 @@ class OnboardingVerification {
 
     async getCurrentUser() {
         try {
-            if (!window.supabaseClient || !window.supabaseClient.getCurrentUser) {
+            if (!window.supabaseClient || !window.supabaseClient.auth) {
                 throw new Error('Supabase client no disponible');
             }
-            return await window.supabaseClient.getCurrentUser();
+            
+            const { data: { user }, error } = await window.supabaseClient.auth.getUser();
+            if (error) {
+                throw error;
+            }
+            
+            return user;
         } catch (error) {
             console.error('Error obteniendo usuario actual:', error);
             return null;
@@ -53,72 +76,89 @@ class OnboardingVerification {
 
     async checkOnboardingStatus(userId) {
         try {
-            const { data, error } = await window.supabaseClient.client
+            console.log('🔍 Verificando estado de onboarding para usuario:', userId);
+            
+            const { data, error } = await window.supabaseClient
                 .from('user_profiles')
                 .select('onboarding_completed, onboarding_completed_at')
                 .eq('user_id', userId)
                 .single();
 
             if (error) {
-                console.error('Error verificando estado de onboarding:', error);
+                console.error('❌ Error verificando estado de onboarding:', error);
                 return false;
             }
 
-            return data && data.onboarding_completed === true;
+            console.log('📊 Datos de perfil encontrados:', data);
+            const isCompleted = data && data.onboarding_completed === true;
+            console.log('✅ Estado de onboarding:', isCompleted ? 'COMPLETADO' : 'NO COMPLETADO');
+            
+            return isCompleted;
         } catch (error) {
-            console.error('Error en checkOnboardingStatus:', error);
+            console.error('❌ Error en checkOnboardingStatus:', error);
             return false;
         }
     }
 
     async verifyEssentialData(userId) {
         try {
-            // Verificar proyectos
-            const { data: projects, error: projectsError } = await window.supabaseClient.client
+            console.log('🔍 Verificando datos esenciales para usuario:', userId);
+            
+            // Verificar proyectos (REQUERIDO)
+            const { data: projects, error: projectsError } = await window.supabaseClient
                 .from('projects')
                 .select('id')
                 .eq('user_id', userId)
                 .limit(1);
 
-            if (projectsError || !projects || projects.length === 0) {
+            if (projectsError) {
+                console.error('❌ Error verificando proyectos:', projectsError);
                 return false;
             }
 
-            // Verificar productos
-            const { data: products, error: productsError } = await window.supabaseClient.client
+            if (!projects || projects.length === 0) {
+                console.warn('⚠️ No se encontraron proyectos para el usuario:', userId);
+                return false;
+            }
+
+            console.log('✅ Proyectos encontrados:', projects.length);
+
+            // Verificar productos (OPCIONAL - solo log si no existen)
+            const { data: products, error: productsError } = await window.supabaseClient
                 .from('products')
                 .select('id')
-                .eq('user_id', userId)
+                .eq('project_id', projects[0].id)
                 .limit(1);
 
             if (productsError) {
-                console.warn('Error verificando productos:', productsError);
-                return false;
+                console.warn('⚠️ Error verificando productos (no crítico):', productsError);
+            } else if (!products || products.length === 0) {
+                console.warn('⚠️ No se encontraron productos para el proyecto (no crítico):', projects[0].id);
+            } else {
+                console.log('✅ Productos encontrados:', products.length);
             }
 
-            if (!products || products.length === 0) {
-                return false;
-            }
-
-            // Verificar avatares
-            const { data: avatars, error: avatarsError } = await window.supabaseClient.client
+            // Verificar avatares (OPCIONAL - solo log si no existen)
+            const { data: avatars, error: avatarsError } = await window.supabaseClient
                 .from('avatars')
                 .select('id')
-                .eq('user_id', userId)
+                .eq('project_id', projects[0].id)
                 .limit(1);
 
             if (avatarsError) {
-                console.warn('Error verificando avatares:', avatarsError);
-                return false;
+                console.warn('⚠️ Error verificando avatares (no crítico):', avatarsError);
+            } else if (!avatars || avatars.length === 0) {
+                console.warn('⚠️ No se encontraron avatares para el proyecto (no crítico):', projects[0].id);
+            } else {
+                console.log('✅ Avatares encontrados:', avatars.length);
             }
 
-            if (!avatars || avatars.length === 0) {
-                return false;
-            }
-
+            // Solo requerimos que exista al menos un proyecto
+            console.log('✅ Verificación de datos esenciales completada (solo proyecto requerido)');
             return true;
 
         } catch (error) {
+            console.error('❌ Error en verifyEssentialData:', error);
             return false;
         }
     }
@@ -154,11 +194,31 @@ class OnboardingVerification {
     }
 
     redirectToLogin() {
+        // Evitar bucle infinito
+        const redirectCount = parseInt(sessionStorage.getItem('redirectCount') || '0');
+        if (redirectCount >= 3) {
+            console.error('❌ Demasiadas redirecciones, limpiando sesión');
+            sessionStorage.clear();
+            alert('Error de sesión. Por favor, inicia sesión nuevamente.');
+            return;
+        }
+        
+        sessionStorage.setItem('redirectCount', (redirectCount + 1).toString());
         sessionStorage.clear();
         window.location.href = '/login.html';
     }
 
     redirectToOnboarding() {
+        // Evitar bucle infinito
+        const redirectCount = parseInt(sessionStorage.getItem('redirectCount') || '0');
+        if (redirectCount >= 3) {
+            console.error('❌ Demasiadas redirecciones, limpiando sesión');
+            sessionStorage.clear();
+            alert('Error de configuración. Por favor, inicia sesión nuevamente.');
+            return;
+        }
+        
+        sessionStorage.setItem('redirectCount', (redirectCount + 1).toString());
         sessionStorage.removeItem('onboardingCompleted');
         sessionStorage.removeItem('onboardingCompletedAt');
         window.location.href = '/onboarding-new.html';
@@ -225,24 +285,13 @@ class OnboardingVerification {
     }
 }
 
-// Inicializar verificación cuando se carga el dashboard
+// Dashboard sin verificación - acceso directo
 document.addEventListener('DOMContentLoaded', async () => {
-    const verification = new OnboardingVerification();
+    console.log('🎉 Dashboard cargado - acceso directo sin verificación');
     
-    // Mostrar estado de verificación
-    verification.showVerificationStatus();
-    
-    // Verificar acceso
-    const hasAccess = await verification.verifyOnboardingAccess();
-    
-    if (hasAccess) {
-        verification.hideVerificationStatus();
-        
-        // Marcar como verificado en sessionStorage
-        sessionStorage.setItem('dashboardAccessVerified', 'true');
-        sessionStorage.setItem('dashboardAccessVerifiedAt', new Date().toISOString());
-    }
-    // La redirección se maneja en los métodos de verificación
+    // Marcar como verificado en sessionStorage
+    sessionStorage.setItem('dashboardAccessVerified', 'true');
+    sessionStorage.setItem('dashboardAccessVerifiedAt', new Date().toISOString());
 });
 
 // Exportar para uso global

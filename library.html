@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblioteca - UGC Studio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="css/navigation.css">
+    <link rel="stylesheet" href="css/library.css">
+</head>
+<body>
+    <!-- Partículas de fondo -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Overlay para navegación móvil -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <!-- Header Principal -->
+    <header class="main-header">
+        <div class="header-left">
+            <button class="hamburger-menu" id="hamburgerMenu">
+                <div class="hamburger-line"></div>
+                <div class="hamburger-line"></div>
+                <div class="hamburger-line"></div>
+            </button>
+            <a href="main-dashboard.html" class="main-logo">
+                <i class="fas fa-cube"></i>
+                <span>UGC Studio</span>
+            </a>
+        </div>
+        <div class="header-right">
+            <button class="btn btn-secondary">
+                <i class="fas fa-upload"></i>
+                <span>Subir Archivo</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Navegación Lateral -->
+    <nav class="side-navigation" id="sideNavigation">
+        <!-- Header del panel -->
+        <div class="nav-header">
+            <div class="nav-user-info">
+                <div class="nav-user-avatar" id="navUserAvatar">U</div>
+                <div class="nav-user-details">
+                    <h4 id="navUserName">Cargando...</h4>
+                    <div class="nav-user-plan" id="navUserPlan">
+                        <i class="fas fa-crown"></i>
+                        <span>Plan Starter</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menú Principal -->
+        <div class="nav-menu">
+            <div class="nav-section">
+                <div class="nav-section-title">Principal</div>
+                <div class="nav-item">
+                    <a href="main-dashboard.html" class="nav-link">
+                        <i class="fas fa-home nav-icon"></i>
+                        <span class="nav-text">Panel Principal</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="studio.html" class="nav-link">
+                        <i class="fas fa-magic nav-icon"></i>
+                        <span class="nav-text">Studio</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Contenido</div>
+                <div class="nav-item">
+                    <a href="catalog.html" class="nav-link">
+                        <i class="fas fa-images nav-icon"></i>
+                        <span class="nav-text">Catálogo</span>
+                        <span class="nav-badge">1.2K</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="brands.html" class="nav-link">
+                        <i class="fas fa-trademark nav-icon"></i>
+                        <span class="nav-text">Marcas</span>
+                        <span class="nav-badge secondary" id="brandsCount">0</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="library.html" class="nav-link active">
+                        <i class="fas fa-folder nav-icon"></i>
+                        <span class="nav-text">Biblioteca</span>
+                        <span class="nav-badge secondary" id="libraryCount">0</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Cuenta</div>
+                <div class="nav-item">
+                    <a href="settings.html" class="nav-link">
+                        <i class="fas fa-cog nav-icon"></i>
+                        <span class="nav-text">Configuración</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="billing.html" class="nav-link">
+                        <i class="fas fa-credit-card nav-icon"></i>
+                        <span class="nav-text">Facturación</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer del panel -->
+        <div class="nav-footer">
+            <button class="nav-logout" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Cerrar Sesión</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <main class="main-content">
+        <div class="content-container">
+            <!-- Breadcrumbs -->
+            <nav class="breadcrumbs">
+                <a href="main-dashboard.html" class="breadcrumb-item">Panel Principal</a>
+                <span class="breadcrumb-separator">></span>
+                <span class="breadcrumb-item active">Biblioteca</span>
+            </nav>
+
+            <!-- Library Layout -->
+            <div class="library-layout">
+                <!-- Header de Biblioteca -->
+                <div class="library-header">
+                    <div>
+                        <h1 class="library-title">Mi Biblioteca</h1>
+                        <p class="library-subtitle">Organiza y accede a todos tus archivos UGC</p>
+                    </div>
+                    <div class="library-actions">
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-download"></i>
+                            <span>Descargar Selección</span>
+                        </button>
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-share-alt"></i>
+                            <span>Compartir</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Layout Principal con Sidebar -->
+                <div class="library-main">
+                    <!-- Sidebar de Carpetas -->
+                    <aside class="library-sidebar">
+                        <div class="sidebar-header">
+                            <h3 class="sidebar-title">
+                                <i class="fas fa-folder-tree"></i>
+                                Carpetas
+                            </h3>
+                            <button class="add-folder-btn" onclick="createFolder()" title="Nueva carpeta">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+
+                        <ul class="folders-tree" id="foldersTree">
+                            <li class="folder-item">
+                                <a href="#" class="folder-link active" data-folder="all">
+                                    <i class="fas fa-folder folder-icon"></i>
+                                    <span class="folder-name">Todos los archivos</span>
+                                    <span class="folder-count" id="allFilesCount">0</span>
+                                </a>
+                            </li>
+                            <li class="folder-item">
+                                <a href="#" class="folder-link" data-folder="avatars">
+                                    <i class="fas fa-user-circle folder-icon"></i>
+                                    <span class="folder-name">Avatares</span>
+                                    <span class="folder-count" id="avatarsCount">0</span>
+                                </a>
+                            </li>
+                            <li class="folder-item">
+                                <a href="#" class="folder-link" data-folder="ugcs">
+                                    <i class="fas fa-video folder-icon"></i>
+                                    <span class="folder-name">UGCs Creados</span>
+                                    <span class="folder-count" id="ugcsCount">0</span>
+                                </a>
+                            </li>
+                            <li class="folder-item">
+                                <a href="#" class="folder-link" data-folder="styles">
+                                    <i class="fas fa-palette folder-icon"></i>
+                                    <span class="folder-name">Estilos Guardados</span>
+                                    <span class="folder-count" id="stylesCount">0</span>
+                                </a>
+                            </li>
+                            <li class="folder-item">
+                                <a href="#" class="folder-link" data-folder="templates">
+                                    <i class="fas fa-file-image folder-icon"></i>
+                                    <span class="folder-name">Plantillas</span>
+                                    <span class="folder-count" id="templatesCount">0</span>
+                                </a>
+                            </li>
+                            <li class="folder-item">
+                                <a href="#" class="folder-link" data-folder="uploads">
+                                    <i class="fas fa-cloud-upload-alt folder-icon"></i>
+                                    <span class="folder-name">Subidas</span>
+                                    <span class="folder-count" id="uploadsCount">0</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </aside>
+
+                    <!-- Contenido Principal -->
+                    <div class="library-content">
+                        <!-- Filtros y Búsqueda -->
+                        <div class="library-filters">
+                            <div class="search-container">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" id="librarySearch" class="search-input" placeholder="Buscar archivos...">
+                            </div>
+                            <select id="typeFilter" class="filter-select">
+                                <option value="all">Todos los tipos</option>
+                                <option value="image">Imágenes</option>
+                                <option value="video">Videos</option>
+                                <option value="audio">Audio</option>
+                                <option value="document">Documentos</option>
+                            </select>
+                            <select id="dateFilter" class="filter-select">
+                                <option value="all">Todas las fechas</option>
+                                <option value="today">Hoy</option>
+                                <option value="week">Esta semana</option>
+                                <option value="month">Este mes</option>
+                                <option value="year">Este año</option>
+                            </select>
+                            <div class="view-toggle">
+                                <button class="view-btn active" data-view="grid">
+                                    <i class="fas fa-th"></i>
+                                </button>
+                                <button class="view-btn" data-view="list">
+                                    <i class="fas fa-list"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Breadcrumbs de Carpeta -->
+                        <nav class="folder-breadcrumbs" id="folderBreadcrumbs">
+                            <a href="#" class="breadcrumb-item" data-folder="all">Biblioteca</a>
+                            <span class="breadcrumb-separator">></span>
+                            <span class="breadcrumb-item active" id="currentFolderName">Todos los archivos</span>
+                        </nav>
+
+                        <!-- Galería de Archivos -->
+                        <div class="files-gallery" id="filesGallery">
+                            <!-- Loading State -->
+                            <div class="loading-grid" id="libraryLoading" style="display: none;">
+                                <!-- Loading cards will be generated by JS -->
+                            </div>
+
+                            <!-- Empty State -->
+                            <div class="empty-state" id="libraryEmpty" style="display: none;">
+                                <i class="fas fa-folder-open"></i>
+                                <h3>No hay archivos en esta carpeta</h3>
+                                <p>Sube archivos o crea contenido UGC para empezar a construir tu biblioteca</p>
+                                <button class="empty-state-btn">
+                                    <i class="fas fa-upload"></i>
+                                    Subir Primer Archivo
+                                </button>
+                            </div>
+
+                            <!-- Files will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/library.js"></script>
+</body>
+</html>
