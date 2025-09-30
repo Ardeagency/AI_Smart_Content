@@ -142,9 +142,6 @@
                     <button class="icon-button" data-panel="ugc" title="UGC">
                         <i data-lucide="user-circle"></i>
                     </button>
-                    <button class="icon-button" data-panel="cumplimientos" title="Cumplimientos">
-                        <i data-lucide="shield-check"></i>
-                    </button>
                 </div>
             </nav>
 
@@ -770,69 +767,6 @@
                         <button class="btn-secondary" id="cancel-ugc-btn">Cancelar</button>
                         <button class="btn-primary" id="save-ugc-btn">Guardar UGC</button>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Cumplimientos -->
-    <div class="brand-modal-overlay" id="modal-cumplimientos">
-        <div class="brand-modal">
-            <div class="brand-modal-header">
-                <button class="brand-modal-close" data-close="cumplimientos">
-                    <i class="fas fa-times"></i>
-                </button>
-                <h3 class="brand-modal-title">Cumplimientos</h3>
-                <p class="brand-modal-subtitle">Configura los requisitos de cumplimiento para tu contenido</p>
-            </div>
-            <div class="brand-modal-body">
-                <div class="form-group">
-                    <label class="form-label">Regulaciones</label>
-                    <div class="checkbox-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="cumplimiento-fda">
-                            <span>FDA (Alimentos/Suplementos)</span>
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="cumplimiento-ftc">
-                            <span>FTC (Publicidad)</span>
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="cumplimiento-coppa">
-                            <span>COPPA (Menores de 13)</span>
-                        </label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="cumplimiento-gdpr">
-                            <span>GDPR (Europa)</span>
-                        </label>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Declaraciones Requeridas</label>
-                    <div class="tags-input-container">
-                        <input type="text" class="tags-input" id="cumplimiento-declaraciones" placeholder="Escribe una declaración y presiona Enter">
-                        <div class="tags-display" id="cumplimiento-declaraciones-tags"></div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Restricciones de Contenido</label>
-                    <div class="tags-input-container">
-                        <input type="text" class="tags-input" id="cumplimiento-restricciones" placeholder="Escribe una restricción y presiona Enter">
-                        <div class="tags-display" id="cumplimiento-restricciones-tags"></div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Disclaimers</label>
-                    <textarea class="form-textarea" id="cumplimiento-disclaimers" placeholder="Ej: Los resultados pueden variar. Consulta a tu médico antes de usar este producto."></textarea>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Edad Mínima</label>
-                    <select class="form-select" id="cumplimiento-edad">
-                        <option value="13">13+</option>
-                        <option value="16">16+</option>
-                        <option value="18">18+</option>
-                        <option value="21">21+</option>
-                    </select>
                 </div>
             </div>
         </div>

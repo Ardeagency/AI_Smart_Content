@@ -11,11 +11,39 @@ class StudioManager {
         
         // Estado global de configuración
         this.studioConfig = {
+            // Configuraciones principales
             brand: null,
             product: null,
             offer: null,
             themes: [],
             category: null,
+            
+            // Configuraciones de audiencia
+            audience: {
+                persona: '',
+                interests: [],
+                pains: [],
+                contexts: [],
+                languages: []
+            },
+            
+            // Configuraciones de UGC
+            ugc: null,
+            
+            // Configuraciones estéticas
+            aesthetics: {
+                mood: 'motivador',
+                colors: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4'],
+                lighting: 'natural',
+                camera: 'close-up',
+                pace: 'medio',
+                overlays: []
+            },
+            
+            // Configuraciones de escenarios
+            scenario: null,
+            
+            // Configuraciones de formato y localización
             style: null,
             format: 'horizontal',
             location: { 
@@ -38,7 +66,6 @@ class StudioManager {
         // Nuevas secciones
         this.audience = {};
         this.ugc = [];
-        this.compliance = {};
         this.aesthetics = {};
         this.scenarios = [];
         
@@ -124,7 +151,6 @@ class StudioManager {
                 this.loadStyleCatalog(),
                 this.loadAudience(),
                 this.loadUGC(),
-                this.loadCompliance(),
                 this.loadAesthetics(),
                 this.loadScenarios()
             ]);
@@ -389,24 +415,6 @@ class StudioManager {
         }
     }
 
-    async loadCompliance() {
-        try {
-            if (!this.userId) return;
-
-            // Usar configuración por defecto para cumplimientos
-            this.compliance = {
-                regulations: [],
-                declarations: [],
-                restrictions: [],
-                disclaimers: '',
-                min_age: '13'
-            };
-            this.renderCompliance();
-
-        } catch (error) {
-            console.error('Error in loadCompliance:', error);
-        }
-    }
 
     async loadAesthetics() {
         try {
@@ -467,7 +475,6 @@ class StudioManager {
         // Nuevas secciones
         this.audience = {};
         this.ugc = [];
-        this.compliance = {};
         this.aesthetics = {};
         this.scenarios = [];
 
@@ -478,7 +485,6 @@ class StudioManager {
         this.renderStyles();
         this.renderAudience();
         this.renderUGC();
-        this.renderCompliance();
         this.renderAesthetics();
         this.renderScenarios();
     }
@@ -894,23 +900,6 @@ class StudioManager {
         });
     }
 
-    renderCompliance() {
-        // Renderizar configuración de cumplimiento
-        console.log('Renderizando cumplimientos:', this.compliance);
-        
-        // Llenar campos del formulario con valores por defecto
-        if (this.compliance) {
-            const edadField = document.getElementById('cumplimiento-edad');
-            if (edadField) {
-                edadField.value = this.compliance.min_age || '13';
-            }
-            
-            const disclaimersField = document.getElementById('cumplimiento-disclaimers');
-            if (disclaimersField) {
-                disclaimersField.value = this.compliance.disclaimers || '';
-            }
-        }
-    }
 
     renderAesthetics() {
         // Renderizar configuración estética
@@ -984,11 +973,200 @@ class StudioManager {
     selectUGC(avatar) {
         this.studioConfig.ugc = avatar;
         this.showNotification('Avatar UGC seleccionado', 'success');
+        this.updateConfigDisplay();
     }
 
     selectScenario(scenario) {
         this.studioConfig.scenario = scenario;
         this.showNotification('Escenario seleccionado', 'success');
+        this.updateConfigDisplay();
+    }
+
+    // =======================================
+    // Administración de configuraciones y envío al webhook
+    // =======================================
+
+    generateConfigJSON() {
+        // Generar JSON con todas las configuraciones seleccionadas
+        const configData = {
+            // Metadatos
+            timestamp: new Date().toISOString(),
+            user_id: this.userId,
+            project_id: this.currentProjectId,
+            
+            // Configuraciones principales
+            brand: this.studioConfig.brand ? {
+                id: this.studioConfig.brand.id,
+                name: this.studioConfig.brand.name,
+                country: this.studioConfig.brand.country,
+                website: this.studioConfig.brand.website,
+                languages: this.studioConfig.brand.languages
+            } : null,
+            
+            product: this.studioConfig.product ? {
+                id: this.studioConfig.product.id,
+                name: this.studioConfig.product.short_desc,
+                benefits: this.studioConfig.product.benefits,
+                differentiators: this.studioConfig.product.differentiators,
+                ingredients: this.studioConfig.product.ingredients,
+                price: this.studioConfig.product.price,
+                usage_steps: this.studioConfig.product.usage_steps
+            } : null,
+            
+            offer: this.studioConfig.offer ? {
+                id: this.studioConfig.offer.id,
+                objective: this.studioConfig.offer.main_objective,
+                description: this.studioConfig.offer.offer_desc,
+                cta: this.studioConfig.offer.cta,
+                cta_url: this.studioConfig.offer.cta_url,
+                valid_until: this.studioConfig.offer.offer_valid_until
+            } : null,
+            
+            // Configuraciones de audiencia
+            audience: this.studioConfig.audience,
+            
+            // Configuraciones de UGC
+            ugc: this.studioConfig.ugc ? {
+                id: this.studioConfig.ugc.id,
+                type: this.studioConfig.ugc.avatar_type,
+                traits: this.studioConfig.ugc.traits,
+                energy: this.studioConfig.ugc.energy,
+                gender: this.studioConfig.ugc.gender,
+                languages: this.studioConfig.ugc.languages,
+                values: this.studioConfig.ugc.values
+            } : null,
+            
+            // Configuraciones estéticas
+            aesthetics: this.studioConfig.aesthetics,
+            
+            // Configuraciones de escenarios
+            scenario: this.studioConfig.scenario ? {
+                id: this.studioConfig.scenario.id,
+                location: this.studioConfig.scenario.location,
+                ambience: this.studioConfig.scenario.ambience,
+                background: this.studioConfig.scenario.background
+            } : null,
+            
+            // Configuraciones de formato
+            format: {
+                style: this.studioConfig.style,
+                format: this.studioConfig.format,
+                location: this.studioConfig.location,
+                gender: this.studioConfig.gender,
+                age: this.studioConfig.age,
+                creativity: this.studioConfig.creativity
+            },
+            
+            // Temas y categoría
+            themes: this.studioConfig.themes,
+            category: this.studioConfig.category
+        };
+
+        return configData;
+    }
+
+    async sendToWebhook(configData) {
+        try {
+            // URL del webhook (configurar según tu endpoint)
+            const webhookUrl = 'https://tu-webhook-endpoint.com/generate-scripts';
+            
+            const response = await fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.userId}` // o tu token de autenticación
+                },
+                body: JSON.stringify(configData)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            this.showNotification('Configuración enviada exitosamente', 'success');
+            return result;
+
+        } catch (error) {
+            console.error('Error sending to webhook:', error);
+            this.showNotification('Error enviando configuración al webhook', 'error');
+            throw error;
+        }
+    }
+
+    async handleGenerateScripts() {
+        try {
+            // Validar configuración mínima
+            if (!this.studioConfig.brand) {
+                this.showNotification('Selecciona una marca antes de generar guiones', 'error');
+                return;
+            }
+
+            if (!this.studioConfig.product) {
+                this.showNotification('Selecciona un producto antes de generar guiones', 'error');
+                return;
+            }
+
+            // Mostrar loading
+            this.showLoading();
+
+            // Generar JSON de configuración
+            const configData = this.generateConfigJSON();
+            console.log('Configuración generada:', configData);
+
+            // Enviar al webhook
+            const result = await this.sendToWebhook(configData);
+            
+            // Mostrar resultado
+            this.showScriptsResult(result);
+
+        } catch (error) {
+            console.error('Error generating scripts:', error);
+            this.showNotification('Error generando guiones', 'error');
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    showScriptsResult(result) {
+        // Mostrar resultado en el canvas central
+        const canvasArea = document.querySelector('.canvas-area');
+        if (canvasArea) {
+            canvasArea.innerHTML = `
+                <div class="scripts-result">
+                    <h3>Guiones Generados</h3>
+                    <div class="scripts-content">
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    showLoading() {
+        const canvasArea = document.querySelector('.canvas-area');
+        if (canvasArea) {
+            canvasArea.innerHTML = `
+                <div class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <p>Generando guiones...</p>
+                </div>
+            `;
+        }
+    }
+
+    hideLoading() {
+        // Restaurar placeholder si no hay resultado
+        const canvasArea = document.querySelector('.canvas-area');
+        if (canvasArea && !canvasArea.querySelector('.scripts-result')) {
+            canvasArea.innerHTML = `
+                <div class="canvas-placeholder">
+                    <i data-lucide="monitor" class="placeholder-icon"></i>
+                    <span class="placeholder-text">Canvas de Preview</span>
+                </div>
+            `;
+            lucide.createIcons();
+        }
     }
 }
 
