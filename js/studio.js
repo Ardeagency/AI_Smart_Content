@@ -393,19 +393,8 @@ class StudioManager {
         try {
             if (!this.userId) return;
 
-            // Cargar datos de cumplimiento desde user_profiles o crear estructura por defecto
-            const { data: profile, error } = await this.supabase
-                .from('user_profiles')
-                .select('compliance_settings')
-                .eq('user_id', this.userId)
-                .single();
-
-            if (error && error.code !== 'PGRST116') {
-                console.error('Error loading compliance:', error);
-                return;
-            }
-
-            this.compliance = profile?.compliance_settings || {
+            // Usar configuración por defecto para cumplimientos
+            this.compliance = {
                 regulations: [],
                 declarations: [],
                 restrictions: [],
@@ -423,19 +412,8 @@ class StudioManager {
         try {
             if (!this.userId) return;
 
-            // Cargar configuración estética desde user_profiles
-            const { data: profile, error } = await this.supabase
-                .from('user_profiles')
-                .select('aesthetics_settings')
-                .eq('user_id', this.userId)
-                .single();
-
-            if (error && error.code !== 'PGRST116') {
-                console.error('Error loading aesthetics:', error);
-                return;
-            }
-
-            this.aesthetics = profile?.aesthetics_settings || {
+            // Usar configuración por defecto para estética
+            this.aesthetics = {
                 mood: 'motivador',
                 colors: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4'],
                 lighting: 'natural',
@@ -454,19 +432,23 @@ class StudioManager {
         try {
             if (!this.userId) return;
 
-            // Cargar escenarios desde una tabla dedicada o user_profiles
-            const { data: profile, error } = await this.supabase
-                .from('user_profiles')
-                .select('scenarios_settings')
-                .eq('user_id', this.userId)
-                .single();
-
-            if (error && error.code !== 'PGRST116') {
-                console.error('Error loading scenarios:', error);
-                return;
-            }
-
-            this.scenarios = profile?.scenarios_settings || [];
+            // Usar configuración por defecto para escenarios
+            this.scenarios = [
+                {
+                    id: 'default-1',
+                    location: 'Gimnasio',
+                    ambience: 'urbano',
+                    background: 'liso',
+                    project_name: 'Escenario por defecto'
+                },
+                {
+                    id: 'default-2', 
+                    location: 'Cocina',
+                    ambience: 'natural',
+                    background: 'casa',
+                    project_name: 'Escenario por defecto'
+                }
+            ];
             this.renderScenarios();
 
         } catch (error) {
@@ -870,6 +852,14 @@ class StudioManager {
     renderAudience() {
         // Renderizar datos de audiencia en el modal
         console.log('Renderizando audiencia:', this.audience);
+        
+        // Llenar campos del formulario si hay datos
+        if (this.audience && this.audience.full_name) {
+            const personaField = document.getElementById('audiencia-persona');
+            if (personaField) {
+                personaField.value = `${this.audience.full_name}, ${this.audience.country || 'Sin país'}, ${this.audience.language || 'Sin idioma'}`;
+            }
+        }
     }
 
     renderUGC() {
@@ -907,11 +897,57 @@ class StudioManager {
     renderCompliance() {
         // Renderizar configuración de cumplimiento
         console.log('Renderizando cumplimientos:', this.compliance);
+        
+        // Llenar campos del formulario con valores por defecto
+        if (this.compliance) {
+            const edadField = document.getElementById('cumplimiento-edad');
+            if (edadField) {
+                edadField.value = this.compliance.min_age || '13';
+            }
+            
+            const disclaimersField = document.getElementById('cumplimiento-disclaimers');
+            if (disclaimersField) {
+                disclaimersField.value = this.compliance.disclaimers || '';
+            }
+        }
     }
 
     renderAesthetics() {
         // Renderizar configuración estética
         console.log('Renderizando estética:', this.aesthetics);
+        
+        // Llenar campos del formulario con valores por defecto
+        if (this.aesthetics) {
+            const moodField = document.getElementById('estetica-mood');
+            if (moodField) {
+                moodField.value = this.aesthetics.mood || 'motivador';
+            }
+            
+            const lightingField = document.getElementById('estetica-iluminacion');
+            if (lightingField) {
+                lightingField.value = this.aesthetics.lighting || 'natural';
+            }
+            
+            const cameraField = document.getElementById('estetica-camara');
+            if (cameraField) {
+                cameraField.value = this.aesthetics.camera || 'close-up';
+            }
+            
+            const paceField = document.getElementById('estetica-ritmo');
+            if (paceField) {
+                paceField.value = this.aesthetics.pace || 'medio';
+            }
+            
+            // Llenar color pickers
+            if (this.aesthetics.colors) {
+                this.aesthetics.colors.forEach((color, index) => {
+                    const colorField = document.getElementById(`estetica-color${index + 1}`);
+                    if (colorField) {
+                        colorField.value = color;
+                    }
+                });
+            }
+        }
     }
 
     renderScenarios() {
