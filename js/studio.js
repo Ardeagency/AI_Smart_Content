@@ -148,8 +148,8 @@ class StudioManager {
         }
 
         try {
-            // Cargar todos los datos del usuario
-            await Promise.all([
+            // Cargar todos los datos del usuario (con manejo individual de errores)
+            const loadPromises = [
                 this.loadBrands(),
                 this.loadProducts(),
                 this.loadOffers(),
@@ -162,7 +162,10 @@ class StudioManager {
                 this.loadBrandGuidelines(),
                 this.loadCompliance(),
                 this.loadDistribution()
-            ]);
+            ];
+
+            // Ejecutar todas las cargas, pero no fallar si alguna falla
+            await Promise.allSettled(loadPromises);
 
             // Pre-poblar configuraciones con datos del usuario
             this.prePopulateConfigurations();
@@ -598,20 +601,27 @@ class StudioManager {
                     project_id,
                     platforms,
                     formats,
-                    durations,
                     utm_params,
                     ab_variables,
-                    projects!inner(name, website)
+                    created_at,
+                    projects!inner(
+                        id,
+                        name,
+                        website
+                    )
                 `)
-                .eq('projects.user_id', this.userId);
+                .eq('projects.user_id', this.userId)
+                .order('created_at', { ascending: false });
 
             if (error) {
                 console.error('Error loading distribution:', error);
+                // No fallar la carga completa por un error de distribución
+                this.distribution = [];
                 return;
             }
 
             this.distribution = distribution || [];
-            this.renderDistribution();
+            console.log('Distribución cargada desde Supabase:', this.distribution);
 
         } catch (error) {
             console.error('Error in loadDistribution:', error);
@@ -628,30 +638,29 @@ class StudioManager {
         // Pre-seleccionar la primera marca si existe
         if (this.brands.length > 0) {
             this.studioConfig.brand = this.brands[0];
-            this.updateBrandSelection(this.brands[0]);
+            console.log('Marca seleccionada:', this.studioConfig.brand);
+            this.updateBrandFields(this.studioConfig.brand);
         }
 
         // Pre-seleccionar el primer producto si existe
         if (this.products.length > 0) {
             this.studioConfig.product = this.products[0];
-            this.updateProductSelection(this.products[0]);
+            console.log('Producto seleccionado:', this.studioConfig.product);
+            this.updateProductFields(this.studioConfig.product);
         }
 
         // Pre-seleccionar la primera oferta si existe
         if (this.offers.length > 0) {
             this.studioConfig.offer = this.offers[0];
-            this.updateOfferSelection(this.offers[0]);
+            console.log('Oferta seleccionada:', this.studioConfig.offer);
+            this.updateOfferFields(this.studioConfig.offer);
         }
 
-        // Pre-poblar configuración de audiencia
-        if (this.audience && this.audience.full_name) {
-            this.studioConfig.audience = {
-                persona: `${this.audience.full_name}, ${this.audience.country || 'Sin país'}, ${this.audience.language || 'es'}`,
-                interests: [],
-                pains: [],
-                contexts: [],
-                languages: [this.audience.language || 'es']
-            };
+        // Pre-seleccionar la primera audiencia si existe
+        if (this.audience && this.audience.length > 0) {
+            this.studioConfig.audience = this.audience[0];
+            console.log('Audiencia seleccionada:', this.studioConfig.audience);
+            this.updateAudienceFields(this.studioConfig.audience);
         }
 
         // Pre-poblar configuración de ubicación
