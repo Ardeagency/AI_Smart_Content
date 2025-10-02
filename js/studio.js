@@ -325,10 +325,35 @@ class StudioManager {
     async loadAvatars() {
         try {
             console.log('=== CARGANDO AVATARES ===');
+            console.log('UserId actual:', this.userId);
             if (!this.userId) {
                 console.log('No hay userId, saltando carga de avatares');
                 return;
             }
+
+            // Primero verificar si hay proyectos del usuario
+            const { data: projects, error: projectsError } = await this.supabase
+                .from('projects')
+                .select('id, name, user_id')
+                .eq('user_id', this.userId);
+            
+            console.log('Proyectos del usuario:', projects);
+            console.log('Error en proyectos:', projectsError);
+
+            if (!projects || projects.length === 0) {
+                console.log('No hay proyectos para el usuario, no se pueden cargar avatares');
+                this.avatars = [];
+                return;
+            }
+
+            // Verificar si hay avatares en general
+            const { data: allAvatars, error: allAvatarsError } = await this.supabase
+                .from('avatars')
+                .select('id, project_id, avatar_type')
+                .limit(5);
+            
+            console.log('Avatares en la base de datos (muestra):', allAvatars);
+            console.log('Error en avatares generales:', allAvatarsError);
 
             // Cargar avatares de todos los proyectos del usuario
             const { data: avatars, error } = await this.supabase
@@ -343,9 +368,6 @@ class StudioManager {
                     voice,
                     languages,
                     values,
-                    age,
-                    country,
-                    accents,
                     avatar_image_id,
                     avatar_video_id,
                     created_at,
@@ -366,6 +388,23 @@ class StudioManager {
             this.avatars = avatars || [];
             console.log('Avatares cargados desde Supabase:', this.avatars);
             console.log('Número de avatares:', this.avatars.length);
+            
+            // Log detallado de cada avatar
+            this.avatars.forEach((avatar, index) => {
+                console.log(`Avatar ${index + 1}:`, {
+                    id: avatar.id,
+                    avatar_type: avatar.avatar_type,
+                    traits: avatar.traits,
+                    energy: avatar.energy,
+                    gender: avatar.gender,
+                    voice: avatar.voice,
+                    languages: avatar.languages,
+                    values: avatar.values,
+                    avatar_image_id: avatar.avatar_image_id,
+                    avatar_video_id: avatar.avatar_video_id
+                });
+            });
+            
             this.renderAvatars();
 
         } catch (error) {
@@ -2445,26 +2484,31 @@ class StudioManager {
             });
         }
 
-        // Actualizar edad
+        // Actualizar edad (usar valor por defecto si no existe en la tabla)
         const ageSlider = document.getElementById('age-slider');
         const ageDisplay = document.getElementById('age-display');
-        if (ageSlider && avatar.age) {
-            ageSlider.value = avatar.age;
-            if (ageDisplay) ageDisplay.textContent = avatar.age;
+        if (ageSlider) {
+            const age = avatar.age || 25; // Valor por defecto
+            ageSlider.value = age;
+            if (ageDisplay) ageDisplay.textContent = age;
         }
 
-        // Actualizar país
+        // Actualizar país (usar valor por defecto si no existe en la tabla)
         const countrySelect = document.getElementById('country-select');
-        if (countrySelect && avatar.country) {
-            countrySelect.value = avatar.country;
+        if (countrySelect) {
+            const country = avatar.country || 'ES'; // Valor por defecto
+            countrySelect.value = country;
         }
 
-        // Actualizar acentos
-        if (avatar.accents && Array.isArray(avatar.accents)) {
-            avatar.accents.forEach(accent => {
-                const checkbox = document.getElementById(`accent-${accent.toLowerCase()}`);
-                if (checkbox) checkbox.checked = true;
-            });
+        // Actualizar acentos (usar acento basado en país si no existe en la tabla)
+        if (avatar.country) {
+            const accent = this.getAccentFromCountry(avatar.country);
+            const accentCheckbox = document.getElementById(`accent-${accent}`);
+            if (accentCheckbox) accentCheckbox.checked = true;
+        } else {
+            // Usar acento por defecto
+            const defaultAccentCheckbox = document.getElementById('accent-neutral');
+            if (defaultAccentCheckbox) defaultAccentCheckbox.checked = true;
         }
 
         // Cargar imagen de avatar si existe
