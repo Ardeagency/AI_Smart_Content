@@ -505,7 +505,7 @@ body {
     top: 60px; /* Comenzar después del header */
     height: calc(100vh - 60px); /* Altura total menos header */
     z-index: 100;
-    overflow-y: auto;
+    overflow-y: auto; /* Permitir scroll vertical */
     padding: 0;
 }
 
