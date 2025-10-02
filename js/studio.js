@@ -1998,7 +1998,7 @@ class StudioManager {
         console.log(`Mostrando sidebar sección ${sectionNumber}`);
         
         // Ocultar todos los sidebars
-        const sidebar1 = document.querySelector('.studio-sidebar:not(#sidebar-section-2):not(#sidebar-section-3)');
+        const sidebar1 = document.getElementById('sidebar-section-1');
         const sidebar2 = document.getElementById('sidebar-section-2');
         const sidebar3 = document.getElementById('sidebar-section-3');
         

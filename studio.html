@@ -133,7 +133,7 @@
         <div class="studio-layout">
             
             <!-- Sidebar Unificado Izquierdo -->
-            <nav class="studio-sidebar">
+            <nav class="studio-sidebar" id="sidebar-section-1">
                 <!-- Configuraciones integradas directamente -->
                 
                 <!-- Marca -->
@@ -486,12 +486,8 @@
                 </button>
     </div>
 
-                <!-- Botón de prueba temporal -->
-                <div class="config-section" style="margin-top: 10px; padding: 10px; background: rgba(0, 255, 0, 0.1); border: 1px solid #00ff00; border-radius: 4px;">
-                    <button onclick="alert('Botón de prueba funcionando!')" style="width: 100%; padding: 8px; background: #00ff00; color: #000; border: none; border-radius: 4px; font-weight: bold;">
-                        🧪 BOTÓN DE PRUEBA
-                </button>
-            </div>
+                <!-- Espaciado para forzar scroll -->
+                <div style="height: 200px; background: linear-gradient(180deg, transparent 0%, rgba(253, 98, 79, 0.05) 50%, transparent 100%); margin: 20px 0;"></div>
             </nav>
 
             <!-- Sidebar 2: Configuración UGC -->
@@ -711,7 +707,10 @@
             <button class="btn btn-primary" onclick="window.studioManager.showSidebarSection(3)" style="margin-left: 10px;">
                 ➡️ Siguiente → Sidebar 3
             </button>
-                    </div>
+        </div>
+        
+        <!-- Espaciado para forzar scroll -->
+        <div style="height: 200px; background: linear-gradient(180deg, transparent 0%, rgba(253, 98, 79, 0.05) 50%, transparent 100%); margin: 20px 0;"></div>
     </nav>
 
     <!-- Sidebar 3: Configuración de Formato -->
@@ -1050,7 +1049,10 @@
             <button class="btn btn-primary" onclick="window.studioManager.generateScripts()" style="margin-left: 10px;">
                 🚀 Generar Guiones
             </button>
-                    </div>
+        </div>
+        
+        <!-- Espaciado para forzar scroll -->
+        <div style="height: 200px; background: linear-gradient(180deg, transparent 0%, rgba(253, 98, 79, 0.05) 50%, transparent 100%); margin: 20px 0;"></div>
     </nav>
 
             <!-- Canvas Central -->

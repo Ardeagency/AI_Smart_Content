@@ -500,33 +500,44 @@ body {
     border-right: 1px solid #333;
     position: fixed;
     left: 0;
-    top: 60px; /* Comenzar después del header */
-    height: calc(100vh - 60px); /* Altura total menos header */
+    top: 60px;
+    height: calc(100vh - 60px);
     z-index: 100;
-    overflow-y: auto; /* Permitir scroll vertical */
-    overflow-x: hidden; /* Ocultar scroll horizontal */
-    padding: 0; /* Remover padding que puede interferir */
-    display: block; /* Cambiar de flex a block para mejor scroll */
-    box-sizing: border-box; /* Incluir padding en el cálculo de tamaño */
-}
-
-/* Padding general para el contenido del sidebar */
-.studio-sidebar > * {
-    padding: 0 16px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    padding: 0;
+    display: block;
     box-sizing: border-box;
 }
 
-/* Asegurar que el contenido tenga altura suficiente para scroll */
+/* Contenido del sidebar con padding */
+.studio-sidebar h3 {
+    color: #FD624F;
+    font-size: 14px;
+    font-weight: bold;
+    margin: 0;
+    padding: 16px 16px 8px 16px;
+    text-align: center;
+    border-bottom: 1px solid #333;
+    padding-bottom: 8px;
+}
+
 .studio-sidebar .config-section {
-    min-height: auto;
-    margin-bottom: 16px;
     padding: 16px;
+    margin-bottom: 0;
     box-sizing: border-box;
+    min-height: 50px; /* Altura mínima para cada sección */
 }
 
-/* Asegurar que el contenido del sidebar tenga altura mínima */
+/* Espaciado adicional al final de cada sidebar */
+.studio-sidebar .config-section:last-child {
+    margin-bottom: 50px; /* Espacio adicional al final */
+}
+
+/* Forzar scroll en sidebar */
 .studio-sidebar {
-    min-height: calc(100vh - 60px);
+    overflow-y: scroll !important;
+    -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
 }
 
 /* Scrollbar personalizado para el sidebar */
@@ -551,6 +562,18 @@ body {
 
 .studio-sidebar::-webkit-scrollbar-thumb:active {
     background-color: #FD624F;
+}
+
+/* Asegurar que el contenido tenga altura suficiente para scroll */
+.studio-sidebar {
+    min-height: calc(100vh - 60px);
+}
+
+.studio-sidebar::after {
+    content: '';
+    display: block;
+    height: 100px; /* Más espacio para asegurar scroll */
+    width: 100%;
 }
 
 /* Canvas central */
@@ -1093,22 +1116,7 @@ input[type="range"]::-moz-range-thumb {
     border-color: #FD624F;
 }
 
-/* Estilos específicos para sidebar sección 2 */
-#sidebar-section-2 {
-    width: 260px;
-    background: #1a1a1a;
-    border-right: 1px solid #333;
-    position: fixed;
-    left: 0;
-    top: 60px;
-    height: calc(100vh - 60px);
-    z-index: 100;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 0;
-    display: block;
-    box-sizing: border-box;
-}
+/* Estilos específicos para sidebar sección 2 - hereda de .studio-sidebar */
 
 #sidebar-section-2 h3 {
     color: #FD624F;
@@ -1121,22 +1129,7 @@ input[type="range"]::-moz-range-thumb {
     padding-bottom: 8px;
 }
 
-/* Estilos específicos para sidebar sección 3 */
-#sidebar-section-3 {
-    width: 260px;
-    background: #1a1a1a;
-    border-right: 1px solid #333;
-    position: fixed;
-    left: 0;
-    top: 60px;
-    height: calc(100vh - 60px);
-    z-index: 100;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 0;
-    display: block;
-    box-sizing: border-box;
-}
+/* Estilos específicos para sidebar sección 3 - hereda de .studio-sidebar */
 
 #sidebar-section-3 h3 {
     color: #FD624F;
