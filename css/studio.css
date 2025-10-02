@@ -963,6 +963,17 @@ body {
     accent-color: #FD624F;
 }
 
+.element-item.no-data {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    cursor: default;
+}
+
+.element-item.no-data:hover {
+    background: rgba(255, 255, 255, 0.02);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
 .config-card .checkbox-group {
     display: grid;
     grid-template-columns: 1fr 1fr;

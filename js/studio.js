@@ -1768,6 +1768,7 @@ class StudioManager {
     updateProductElementDetails(elementType, data) {
         console.log(`=== ACTUALIZANDO DETALLES DE ${elementType.toUpperCase()} ===`);
         console.log('Datos recibidos:', data);
+        console.log('Tipo de datos:', typeof data);
         
         const detailsContainer = document.getElementById(`${elementType}-details`);
         const listContainer = document.getElementById(`${elementType}-list`);
@@ -1789,27 +1790,65 @@ class StudioManager {
         // Mostrar el contenedor
         detailsContainer.style.display = 'block';
 
-        // Procesar datos según el tipo
+        // Procesar datos según el tipo y elemento específico
         let items = [];
         
         if (Array.isArray(data)) {
-            items = data;
+            // Si es un array, usar directamente
+            items = data.filter(item => item && item.trim() !== '');
         } else if (typeof data === 'string') {
-            items = [data];
-        } else if (typeof data === 'object') {
-            // Para precio, mostrar el valor específico
-            if (elementType === 'price') {
-                items = [`$${data.amount || data} ${data.currency || ''}`.trim()];
+            // Si es string, dividir por comas o usar como único elemento
+            if (data.includes(',')) {
+                items = data.split(',').map(item => item.trim()).filter(item => item);
             } else {
-                items = Object.values(data);
+                items = [data];
             }
+        } else if (typeof data === 'object' && data !== null) {
+            // Manejar objetos específicos según el tipo
+            if (elementType === 'price') {
+                // Para precio, mostrar información estructurada
+                if (data.amount) {
+                    items = [`$${data.amount} ${data.currency || 'USD'}`];
+                } else if (data.value) {
+                    items = [`$${data.value} ${data.currency || 'USD'}`];
+                } else {
+                    items = [`$${data}`];
+                }
+            } else if (elementType === 'variants') {
+                // Para variantes, mostrar cada variante
+                if (data.colors) items.push(...data.colors.map(c => `Color: ${c}`));
+                if (data.sizes) items.push(...data.sizes.map(s => `Talla: ${s}`));
+                if (data.models) items.push(...data.models.map(m => `Modelo: ${m}`));
+                if (data.types) items.push(...data.types.map(t => `Tipo: ${t}`));
+            } else if (elementType === 'availability') {
+                // Para disponibilidad, mostrar información específica
+                if (data.stock) items.push(`Stock: ${data.stock}`);
+                if (data.status) items.push(`Estado: ${data.status}`);
+                if (data.regions) items.push(...data.regions.map(r => `Región: ${r}`));
+                if (data.channels) items.push(...data.channels.map(c => `Canal: ${c}`));
+            } else {
+                // Para otros objetos, extraer valores
+                items = Object.values(data).filter(value => 
+                    value && typeof value === 'string' && value.trim() !== ''
+                );
+            }
+        }
+
+        // Si no hay items después del procesamiento, mostrar mensaje
+        if (items.length === 0) {
+            const noDataItem = document.createElement('div');
+            noDataItem.className = 'element-item no-data';
+            noDataItem.innerHTML = `<span style="color: #666; font-style: italic;">Sin datos disponibles</span>`;
+            listContainer.appendChild(noDataItem);
+            console.log(`No se encontraron elementos válidos para ${elementType}`);
+            return;
         }
 
         console.log(`Elementos a mostrar para ${elementType}:`, items);
 
         // Crear elementos de la lista
         items.forEach((item, index) => {
-            if (!item) return;
+            if (!item || item.trim() === '') return;
             
             const elementItem = document.createElement('div');
             elementItem.className = 'element-item';
