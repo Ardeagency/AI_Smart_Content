@@ -2431,8 +2431,14 @@ class StudioManager {
     }
 
     updateAvatarFields(avatar) {
-        console.log('=== ACTUALIZANDO CAMPOS DE AVATAR ===');
-        console.log('Datos de avatar recibidos:', avatar);
+        try {
+            console.log('=== ACTUALIZANDO CAMPOS DE AVATAR ===');
+            console.log('Datos de avatar recibidos:', avatar);
+            
+            if (!avatar) {
+                console.log('No hay datos de avatar para actualizar');
+                return;
+            }
         
         // Actualizar tipo de personaje
         const characterType = document.getElementById('character-type');
@@ -2440,30 +2446,57 @@ class StudioManager {
             characterType.value = avatar.avatar_type || '';
         }
 
-        // Actualizar checkboxes de rasgos
-        if (avatar.traits && Array.isArray(avatar.traits)) {
-            avatar.traits.forEach(trait => {
-                const checkbox = document.getElementById(`trait-${trait.toLowerCase()}`);
-                if (checkbox) checkbox.checked = true;
+        // Actualizar checkboxes de rasgos (traits es JSONB)
+        if (avatar.traits) {
+            let traitsArray = [];
+            if (Array.isArray(avatar.traits)) {
+                traitsArray = avatar.traits;
+            } else if (typeof avatar.traits === 'object' && avatar.traits !== null) {
+                // Si es un objeto, convertir a array de valores
+                traitsArray = Object.values(avatar.traits).filter(value => typeof value === 'string');
+            } else if (typeof avatar.traits === 'string') {
+                // Si es string, dividir por comas
+                traitsArray = avatar.traits.split(',').map(t => t.trim());
+            }
+            
+            traitsArray.forEach(trait => {
+                if (trait && typeof trait === 'string') {
+                    const checkbox = document.getElementById(`trait-${trait.toLowerCase()}`);
+                    if (checkbox) checkbox.checked = true;
+                }
             });
         }
 
         // Actualizar energía
-        if (avatar.energy) {
+        if (avatar.energy && typeof avatar.energy === 'string') {
             const energyCheckbox = document.getElementById(`energy-${avatar.energy.toLowerCase()}`);
             if (energyCheckbox) energyCheckbox.checked = true;
         }
 
         // Actualizar género
-        if (avatar.gender) {
+        if (avatar.gender && typeof avatar.gender === 'string') {
             const genderCheckbox = document.getElementById(`gender-${avatar.gender.toLowerCase()}`);
             if (genderCheckbox) genderCheckbox.checked = true;
         }
 
-        // Actualizar voz
+        // Actualizar voz (voice es JSONB, puede ser objeto o array)
         if (avatar.voice) {
-            const voiceCheckbox = document.getElementById(`voice-${avatar.voice.toLowerCase()}`);
-            if (voiceCheckbox) voiceCheckbox.checked = true;
+            let voiceValue = '';
+            if (typeof avatar.voice === 'string') {
+                voiceValue = avatar.voice;
+            } else if (typeof avatar.voice === 'object' && avatar.voice !== null) {
+                // Si es un objeto, tomar el primer valor o una propiedad específica
+                if (Array.isArray(avatar.voice)) {
+                    voiceValue = avatar.voice[0] || '';
+                } else {
+                    voiceValue = avatar.voice.type || avatar.voice.name || Object.values(avatar.voice)[0] || '';
+                }
+            }
+            
+            if (voiceValue) {
+                const voiceCheckbox = document.getElementById(`voice-${voiceValue.toLowerCase()}`);
+                if (voiceCheckbox) voiceCheckbox.checked = true;
+            }
         }
 
         // Actualizar idioma
@@ -2476,11 +2509,13 @@ class StudioManager {
             }
         }
 
-        // Actualizar valores
+        // Actualizar valores (values es ARRAY)
         if (avatar.values && Array.isArray(avatar.values)) {
             avatar.values.forEach(value => {
-                const checkbox = document.getElementById(`value-${value.toLowerCase()}`);
-                if (checkbox) checkbox.checked = true;
+                if (value && typeof value === 'string') {
+                    const checkbox = document.getElementById(`value-${value.toLowerCase()}`);
+                    if (checkbox) checkbox.checked = true;
+                }
             });
         }
 
@@ -2521,7 +2556,11 @@ class StudioManager {
             this.loadAvatarVideo(avatar.avatar_video_id, 'avatar-video-preview');
         }
 
-        console.log('Campos de avatar actualizados correctamente');
+            console.log('Campos de avatar actualizados correctamente');
+        } catch (error) {
+            console.error('Error actualizando campos de avatar:', error);
+            console.error('Datos de avatar que causaron el error:', avatar);
+        }
     }
 
     updateAudiencePersona(persona) {
