@@ -148,6 +148,9 @@ class StudioManager {
         }
 
         try {
+            // Inicializar campos del sidebar primero
+            this.initializeSidebarFields();
+            
             // Cargar todos los datos del usuario (con manejo individual de errores)
             const loadPromises = [
                 this.loadBrands(),
@@ -697,9 +700,6 @@ class StudioManager {
         if (this.styleCatalog.length > 0) {
             this.studioConfig.style = this.styleCatalog[0];
         }
-
-        // Inicializar campos del sidebar primero
-        this.initializeSidebarFields();
 
         // Poblar dropdowns del sidebar integrado
         this.populateDropdowns();
