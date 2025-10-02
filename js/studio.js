@@ -1751,8 +1751,103 @@ class StudioManager {
         if (productVariants) productVariants.checked = product.variants && product.variants.length > 0;
         if (productAvailability) productAvailability.checked = !!product.availability;
 
+        // Actualizar elementos específicos de productos
+        this.updateProductElementDetails('benefits', product.benefits);
+        this.updateProductElementDetails('differentiators', product.differentiators);
+        this.updateProductElementDetails('usage_steps', product.usage_steps);
+        this.updateProductElementDetails('ingredients', product.ingredients);
+        this.updateProductElementDetails('price', product.price);
+        this.updateProductElementDetails('variants', product.variants);
+        this.updateProductElementDetails('availability', product.availability);
+
         // Actualizar imágenes
         this.updateProductImages(product);
+    }
+
+    // Función para actualizar los detalles específicos de cada elemento del producto
+    updateProductElementDetails(elementType, data) {
+        console.log(`=== ACTUALIZANDO DETALLES DE ${elementType.toUpperCase()} ===`);
+        console.log('Datos recibidos:', data);
+        
+        const detailsContainer = document.getElementById(`${elementType}-details`);
+        const listContainer = document.getElementById(`${elementType}-list`);
+        
+        if (!detailsContainer || !listContainer) {
+            console.log(`Contenedores no encontrados para ${elementType}`);
+            return;
+        }
+
+        // Limpiar contenido anterior
+        listContainer.innerHTML = '';
+
+        if (!data || (Array.isArray(data) && data.length === 0)) {
+            console.log(`No hay datos para ${elementType}`);
+            detailsContainer.style.display = 'none';
+            return;
+        }
+
+        // Mostrar el contenedor
+        detailsContainer.style.display = 'block';
+
+        // Procesar datos según el tipo
+        let items = [];
+        
+        if (Array.isArray(data)) {
+            items = data;
+        } else if (typeof data === 'string') {
+            items = [data];
+        } else if (typeof data === 'object') {
+            // Para precio, mostrar el valor específico
+            if (elementType === 'price') {
+                items = [`$${data.amount || data} ${data.currency || ''}`.trim()];
+            } else {
+                items = Object.values(data);
+            }
+        }
+
+        console.log(`Elementos a mostrar para ${elementType}:`, items);
+
+        // Crear elementos de la lista
+        items.forEach((item, index) => {
+            if (!item) return;
+            
+            const elementItem = document.createElement('div');
+            elementItem.className = 'element-item';
+            elementItem.innerHTML = `
+                <input type="checkbox" id="${elementType}-item-${index}" 
+                       onchange="window.studioManager.toggleElementItem('${elementType}', ${index}, this.checked)">
+                <label for="${elementType}-item-${index}">${item}</label>
+            `;
+            
+            listContainer.appendChild(elementItem);
+        });
+
+        console.log(`Detalles de ${elementType} actualizados con ${items.length} elementos`);
+    }
+
+    // Función para manejar la selección de elementos específicos
+    toggleElementItem(elementType, index, isChecked) {
+        console.log(`Elemento ${elementType}-${index} ${isChecked ? 'seleccionado' : 'deseleccionado'}`);
+        
+        // Aquí puedes agregar lógica para guardar qué elementos específicos quiere destacar el usuario
+        if (!this.studioConfig.product.selectedElements) {
+            this.studioConfig.product.selectedElements = {};
+        }
+        
+        if (!this.studioConfig.product.selectedElements[elementType]) {
+            this.studioConfig.product.selectedElements[elementType] = [];
+        }
+        
+        if (isChecked) {
+            if (!this.studioConfig.product.selectedElements[elementType].includes(index)) {
+                this.studioConfig.product.selectedElements[elementType].push(index);
+            }
+        } else {
+            this.studioConfig.product.selectedElements[elementType] = 
+                this.studioConfig.product.selectedElements[elementType].filter(i => i !== index);
+        }
+        
+        console.log('Elementos seleccionados:', this.studioConfig.product.selectedElements);
     }
 
     updateProductImages(product) {

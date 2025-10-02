@@ -915,6 +915,54 @@ body {
     height: auto;
 }
 
+/* Estilos para elementos específicos de productos */
+.element-details {
+    margin-top: 8px;
+    margin-left: 20px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+.element-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.element-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.element-item:hover {
+    background: rgba(253, 98, 79, 0.1);
+    border-color: #FD624F;
+}
+
+.element-item input[type="checkbox"] {
+    margin: 0;
+    width: 12px;
+    height: 12px;
+}
+
+.element-item.selected {
+    background: rgba(253, 98, 79, 0.2);
+    border: 1px solid #FD624F;
+}
+
+.element-item.selected input[type="checkbox"] {
+    accent-color: #FD624F;
+}
+
 .config-card .checkbox-group {
     display: grid;
     grid-template-columns: 1fr 1fr;
