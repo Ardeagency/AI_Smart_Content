@@ -46,52 +46,73 @@
     <nav class="side-navigation" id="sideNavigation">
         <!-- Header del panel -->
         <div class="nav-header">
-            <div class="nav-user">
-                <div class="nav-user-avatar" id="navUserAvatar">U</div>
-                <div class="nav-user-info">
-                    <div class="nav-user-name" id="navUserName">Usuario Demo</div>
+            <div class="nav-user-info">
+                <div class="nav-user-avatar" id="navUserAvatar">NT</div>
+                <div class="nav-user-details">
+                    <h4 id="navUserName">Nathalie Toro</h4>
                     <div class="nav-user-plan" id="navUserPlan">
-                        <i class="fas fa-crown"></i>
+                        <i class="fas fa-rocket"></i>
                         <span>Plan Starter</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Navegación principal -->
-        <div class="nav-content">
+        <!-- Menú Principal -->
+        <div class="nav-menu">
             <div class="nav-section">
+                <div class="nav-section-title">Principal</div>
                 <div class="nav-item">
                     <a href="main-dashboard.html" class="nav-link">
                         <i class="fas fa-home nav-icon"></i>
                         <span class="nav-text">Panel Principal</span>
                     </a>
                 </div>
-                <div class="nav-item active">
-                    <a href="studio.html" class="nav-link">
+                <div class="nav-item">
+                    <a href="studio.html" class="nav-link active">
                         <i class="fas fa-magic nav-icon"></i>
                         <span class="nav-text">Studio</span>
                     </a>
                 </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Contenido</div>
                 <div class="nav-item">
-                    <a href="brands.html" class="nav-link">
-                        <i class="fas fa-building nav-icon"></i>
-                        <span class="nav-text">Marcas</span>
-                        <span class="nav-count" id="brandsCount">0</span>
+                    <a href="catalog.html" class="nav-link">
+                        <i class="fas fa-images nav-icon"></i>
+                        <span class="nav-text">Catálogo</span>
+                        <span class="nav-badge">1.2K</span>
                     </a>
                 </div>
                 <div class="nav-item">
-                    <a href="catalog.html" class="nav-link">
-                        <i class="fas fa-palette nav-icon"></i>
-                        <span class="nav-text">Catálogo</span>
-                        <span class="nav-count" id="catalogCount">0</span>
+                    <a href="brands.html" class="nav-link">
+                        <i class="fas fa-trademark nav-icon"></i>
+                        <span class="nav-text">Marcas</span>
+                        <span class="nav-badge secondary" id="brandsCount">1</span>
                     </a>
                 </div>
                 <div class="nav-item">
                     <a href="library.html" class="nav-link">
                         <i class="fas fa-folder nav-icon"></i>
                         <span class="nav-text">Biblioteca</span>
-                        <span class="nav-count" id="libraryCount">0</span>
+                        <span class="nav-badge secondary" id="libraryCount">4</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">Cuenta</div>
+                <div class="nav-item">
+                    <a href="settings.html" class="nav-link">
+                        <i class="fas fa-cog nav-icon"></i>
+                        <span class="nav-text">Configuración</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="billing.html" class="nav-link">
+                        <i class="fas fa-credit-card nav-icon"></i>
+                        <span class="nav-text">Facturación</span>
                     </a>
                 </div>
             </div>
@@ -99,17 +120,10 @@
 
         <!-- Footer del panel -->
         <div class="nav-footer">
-            <div class="nav-actions">
-                <button class="nav-action-btn" title="Configuración">
-                    <i class="fas fa-cog"></i>
-                </button>
-                <button class="nav-action-btn" title="Ayuda">
-                    <i class="fas fa-question-circle"></i>
-                </button>
-                <button class="nav-action-btn" title="Cerrar Sesión">
-                    <i class="fas fa-sign-out-alt"></i>
-                </button>
-            </div>
+            <button class="nav-logout" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Cerrar Sesión</span>
+            </button>
         </div>
     </nav>
 
@@ -118,30 +132,324 @@
         <!-- Layout Principal del Studio -->
         <div class="studio-layout">
             
-            <!-- Sidebar Izquierdo - Iconos Verticales -->
-            <nav class="icon-sidebar left-sidebar">
-                <div class="sidebar-icons">
-                    <button class="icon-button" data-panel="marca" title="Marca">
-                        <i data-lucide="building-2"></i>
-                    </button>
-                    <button class="icon-button" data-panel="producto" title="Producto">
-                        <i data-lucide="box"></i>
-                    </button>
-                    <button class="icon-button" data-panel="oferta" title="Oferta">
-                        <i data-lucide="tag"></i>
-                    </button>
-                    <button class="icon-button" data-panel="temas" title="Temas">
-                        <i data-lucide="hash"></i>
-                    </button>
-                    <button class="icon-button" data-panel="categoria" title="Categoría">
-                        <i data-lucide="folder"></i>
-                    </button>
-                    <button class="icon-button" data-panel="audiencia" title="Audiencia">
-                        <i data-lucide="target"></i>
-                    </button>
-                    <button class="icon-button" data-panel="ugc" title="UGC">
-                        <i data-lucide="user-circle"></i>
-                    </button>
+            <!-- Sidebar Unificado Izquierdo -->
+            <nav class="studio-sidebar">
+                <!-- Configuraciones integradas directamente -->
+                
+                <!-- Marca -->
+                <div class="config-section">
+                    <h4>🔹 Marca</h4>
+                    <div class="config-field">
+                        <label>Seleccionar marca:</label>
+                        <div class="dropdown-container">
+                            <select id="brand-selector" onchange="window.studioManager.selectBrandFromDropdown(this.value)">
+                                <option value="">Seleccionar marca...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="config-field">
+                        <label>Logo:</label>
+                        <div class="image-preview" id="brand-logo-preview">
+                            <div class="no-image">Sin logo</div>
+                        </div>
+                    </div>
+                    <div class="config-field">
+                        <label>Nombre:</label>
+                        <span class="readonly-field" id="brand-name">Ninguna</span>
+                    </div>
+                    <div class="config-field">
+                        <label>Tono de voz:</label>
+                        <input type="text" id="brand-tone" placeholder="Ej: Profesional, Casual, Innovador..." 
+                               onchange="window.studioManager.updateBrandTone(this.value)">
+                    </div>
+                    <div class="config-field">
+                        <label>Palabras clave:</label>
+                        <input type="text" id="brand-keywords" placeholder="Separadas por comas..." 
+                               onchange="window.studioManager.updateBrandKeywords(this.value)">
+                    </div>
+                    <div class="config-field">
+                        <label>Palabras prohibidas:</label>
+                        <input type="text" id="brand-prohibited" placeholder="Separadas por comas..." 
+                               onchange="window.studioManager.updateBrandProhibited(this.value)">
+                    </div>
+                    <div class="config-field">
+                        <label>Enlaces de referencia:</label>
+                        <div class="reference-links" id="brand-references">
+                            <span class="no-links">Sin enlaces</span>
+                        </div>
+                    </div>
+                    <div class="config-field">
+                        <button class="btn btn-secondary" onclick="window.studioManager.createNewBrand()">
+                            ➕ Agregar nueva marca
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Productos -->
+                <div class="config-section">
+                    <h4>🔹 Productos</h4>
+                    <div class="config-field">
+                        <label>Seleccionar producto:</label>
+                        <div class="dropdown-container">
+                            <select id="product-selector" onchange="window.studioManager.selectProductFromDropdown(this.value)">
+                                <option value="">Seleccionar producto...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="config-field">
+                        <label>Tipo:</label>
+                        <span class="readonly-field" id="product-type">Sin categoría</span>
+                    </div>
+                    <div class="config-field">
+                        <label>Descripción corta:</label>
+                        <input type="text" id="product-description" placeholder="Descripción del producto..." 
+                               onchange="window.studioManager.updateProductDescription(this.value)">
+                    </div>
+                    <div class="config-field">
+                        <label>Elementos a destacar:</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="product-benefits" onchange="window.studioManager.toggleProductElement('benefits', this.checked)">
+                                <span>Beneficios</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="product-differentiators" onchange="window.studioManager.toggleProductElement('differentiators', this.checked)">
+                                <span>Diferenciadores</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="product-usage-steps" onchange="window.studioManager.toggleProductElement('usage_steps', this.checked)">
+                                <span>Pasos de uso</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="product-ingredients" onchange="window.studioManager.toggleProductElement('ingredients', this.checked)">
+                                <span>Ingredientes</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="product-price" onchange="window.studioManager.toggleProductElement('price', this.checked)">
+                                <span>Precio</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="product-variants" onchange="window.studioManager.toggleProductElement('variants', this.checked)">
+                                <span>Variantes</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="product-availability" onchange="window.studioManager.toggleProductElement('availability', this.checked)">
+                                <span>Disponibilidad</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="config-field">
+                        <label>Nombre:</label>
+                        <span class="readonly-field" id="product-name">Sin nombre</span>
+                    </div>
+                    <div class="config-field">
+                        <label>Imágenes:</label>
+                        <div class="image-slots">
+                            <div class="image-slot" id="product-image-1">
+                                <div class="no-image">➕ Agregar</div>
+                            </div>
+                            <div class="image-slot" id="product-image-2">
+                                <div class="no-image">➕ Agregar</div>
+                            </div>
+                            <div class="image-slot" id="product-image-3">
+                                <div class="no-image">➕ Agregar</div>
+                            </div>
+                            <div class="image-slot" id="product-image-4">
+                                <div class="no-image">➕ Agregar</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="config-field">
+                        <button class="btn btn-secondary" onclick="window.studioManager.createNewProduct()">
+                            ➕ Nuevo producto
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Oferta -->
+                <div class="config-section">
+                    <h4>🔹 Oferta</h4>
+                    <div class="config-field">
+                        <label>Seleccionar oferta:</label>
+                        <div class="dropdown-container">
+                            <select id="offer-selector" onchange="window.studioManager.selectOfferFromDropdown(this.value)">
+                                <option value="">Seleccionar oferta...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="config-field">
+                        <label>Objetivo principal:</label>
+                        <input type="text" id="offer-objective" placeholder="Objetivo de la oferta..." 
+                               onchange="window.studioManager.updateOfferObjective(this.value)">
+                    </div>
+                    <div class="config-field">
+                        <label>Descuento (%):</label>
+                        <input type="number" id="offer-discount" placeholder="0" min="0" max="100" 
+                               onchange="window.studioManager.updateOfferDiscount(this.value)">
+                    </div>
+                    <div class="config-field">
+                        <label>Validez hasta:</label>
+                        <input type="date" id="offer-validity" onchange="window.studioManager.updateOfferValidity(this.value)">
+                    </div>
+                    <div class="config-field">
+                        <label>Call to Action:</label>
+                        <input type="text" id="offer-cta" placeholder="Ej: ¡Compra ahora!" 
+                               onchange="window.studioManager.updateOfferCTA(this.value)">
+                    </div>
+                    <div class="config-field">
+                        <label>URL de CTA:</label>
+                        <input type="url" id="offer-cta-url" placeholder="https://..." 
+                               onchange="window.studioManager.updateOfferCTAUrl(this.value)">
+                    </div>
+                    <div class="config-field">
+                        <label>Identificadores:</label>
+                        <input type="text" id="offer-tags" placeholder="Separados por comas..." 
+                               onchange="window.studioManager.updateOfferTags(this.value)">
+                    </div>
+                    <div class="config-field button-group">
+                        <button class="btn btn-secondary" onclick="window.studioManager.createNewOffer()">
+                            ➕ Crear nueva oferta
+                        </button>
+                        <button class="btn btn-danger" onclick="window.studioManager.removeOffer()">
+                            ❌ Quitar oferta
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Audiencia -->
+                <div class="config-section">
+                    <h4>🔹 Audiencia</h4>
+                    <div class="config-field">
+                        <label>Seleccionar audiencia:</label>
+                        <div class="dropdown-container">
+                            <select id="audience-selector" onchange="window.studioManager.selectAudienceFromDropdown(this.value)">
+                                <option value="">Seleccionar audiencia...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="config-field">
+                        <label>Comprador-persona:</label>
+                        <input type="text" id="audience-persona" placeholder="Descripción del comprador ideal..." 
+                               onchange="window.studioManager.updateAudiencePersona(this.value)">
+                    </div>
+                    <div class="config-field">
+                        <label>Intereses:</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="interest-tecnologia" onchange="window.studioManager.toggleAudienceInterest('tecnologia', this.checked)">
+                                <span>Tecnología</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="interest-moda" onchange="window.studioManager.toggleAudienceInterest('moda', this.checked)">
+                                <span>Moda</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="interest-deportes" onchange="window.studioManager.toggleAudienceInterest('deportes', this.checked)">
+                                <span>Deportes</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="interest-viajes" onchange="window.studioManager.toggleAudienceInterest('viajes', this.checked)">
+                                <span>Viajes</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="interest-cocina" onchange="window.studioManager.toggleAudienceInterest('cocina', this.checked)">
+                                <span>Cocina</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="config-field">
+                        <label>Esfuerzos/Dolores:</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="pain-tiempo" onchange="window.studioManager.toggleAudiencePain('tiempo', this.checked)">
+                                <span>Falta de tiempo</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="pain-dinero" onchange="window.studioManager.toggleAudiencePain('dinero', this.checked)">
+                                <span>Presupuesto limitado</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="pain-conocimiento" onchange="window.studioManager.toggleAudiencePain('conocimiento', this.checked)">
+                                <span>Falta de conocimiento</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="pain-confianza" onchange="window.studioManager.toggleAudiencePain('confianza', this.checked)">
+                                <span>Falta de confianza</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="config-field">
+                        <label>Contexto:</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="context-trabajo" onchange="window.studioManager.toggleAudienceContext('trabajo', this.checked)">
+                                <span>Trabajo</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="context-casa" onchange="window.studioManager.toggleAudienceContext('casa', this.checked)">
+                                <span>Casa</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="context-movil" onchange="window.studioManager.toggleAudienceContext('movil', this.checked)">
+                                <span>Móvil</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="context-social" onchange="window.studioManager.toggleAudienceContext('social', this.checked)">
+                                <span>Redes sociales</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="config-field">
+                        <label>Idiomas:</label>
+                        <div class="multi-select">
+                            <select multiple id="audience-languages" onchange="window.studioManager.updateAudienceLanguages(this.selectedOptions)">
+                                <option value="es">Español</option>
+                                <option value="en">Inglés</option>
+                                <option value="fr">Francés</option>
+                                <option value="pt">Portugués</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="config-field button-group">
+                        <button class="btn btn-secondary" onclick="window.studioManager.createNewAudience()">
+                            ➕ Nueva audiencia
+                        </button>
+                        <button class="btn btn-danger" onclick="window.studioManager.removeAudience()">
+                            ❌ Quitar audiencia
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Categoría -->
+                <div class="config-section">
+                    <h4>🔹 Categoría</h4>
+                    <div class="config-field">
+                        <label>Categoría seleccionada:</label>
+                        <span class="readonly-field" id="selected-category">Ninguna</span>
+                    </div>
+                    <div class="config-field">
+                        <button class="btn btn-primary" onclick="window.studioManager.openCategoryLibrary()">
+                            📚 Abrir biblioteca de categorías
+                        </button>
+                    </div>
+                    <div class="config-field">
+                        <label>Categorías populares:</label>
+                        <div class="category-tags">
+                            <span class="category-tag" onclick="window.studioManager.selectCategory('Tecnología')">Tecnología</span>
+                            <span class="category-tag" onclick="window.studioManager.selectCategory('Moda')">Moda</span>
+                            <span class="category-tag" onclick="window.studioManager.selectCategory('Belleza')">Belleza</span>
+                            <span class="category-tag" onclick="window.studioManager.selectCategory('Hogar')">Hogar</span>
+                            <span class="category-tag" onclick="window.studioManager.selectCategory('Deportes')">Deportes</span>
+                            <span class="category-tag" onclick="window.studioManager.selectCategory('Alimentación')">Alimentación</span>
+                            <span class="category-tag" onclick="window.studioManager.selectCategory('Salud')">Salud</span>
+                            <span class="category-tag" onclick="window.studioManager.selectCategory('Entretenimiento')">Entretenimiento</span>
+                        </div>
+                    </div>
+                    <div class="config-field">
+                        <label>Buscar categoría:</label>
+                        <input type="text" id="category-search" placeholder="Escribir para buscar..." 
+                               onkeyup="window.studioManager.searchCategories(this.value)">
+                    </div>
                 </div>
             </nav>
 
@@ -152,757 +460,9 @@
                     <span class="placeholder-text">Canvas de Preview</span>
                 </div>
             </main>
-
-            <!-- Sidebar Derecho - Iconos Verticales -->
-            <nav class="icon-sidebar right-sidebar">
-                <div class="sidebar-icons">
-                    <button class="icon-button" data-panel="estilos" title="Estilos">
-                        <i data-lucide="palette"></i>
-                    </button>
-                    <button class="icon-button" data-panel="formato" title="Formato">
-                        <i data-lucide="layout"></i>
-                    </button>
-                    <button class="icon-button" data-panel="pais" title="País">
-                        <i data-lucide="globe"></i>
-                    </button>
-                    <button class="icon-button" data-panel="idioma" title="Idioma">
-                        <i data-lucide="languages"></i>
-                    </button>
-                    <button class="icon-button" data-panel="acento" title="Acento">
-                        <i data-lucide="mic"></i>
-                    </button>
-                    <button class="icon-button" data-panel="genero" title="Género">
-                        <i data-lucide="users"></i>
-                    </button>
-                    <button class="icon-button" data-panel="edad" title="Edad">
-                        <i data-lucide="calendar"></i>
-                    </button>
-                    <button class="icon-button" data-panel="creatividad" title="Creatividad IA">
-                        <i data-lucide="brain"></i>
-                    </button>
-                    <button class="icon-button" data-panel="estetica" title="Estética">
-                        <i data-lucide="sparkles"></i>
-                    </button>
-                    <button class="icon-button" data-panel="escenarios" title="Escenarios">
-                        <i data-lucide="map-pin"></i>
-                    </button>
-                </div>
-            </nav>
         </div>
     </main>
-
-    <!-- Paneles Flotantes -->
     
-    <!-- Modal Marca -->
-    <div class="brand-modal-overlay" id="modal-marca">
-        <div class="brand-modal">
-            <div class="brand-modal-header">
-                <button class="brand-modal-close" data-close="marca">
-                    <i class="fas fa-times"></i>
-                </button>
-                <h3 class="brand-modal-title">Marca</h3>
-                <p class="brand-modal-subtitle">Selecciona la marca para tu contenido UGC</p>
-            </div>
-            <div class="brand-modal-body">
-                <div class="brand-grid">
-                    <div class="brand-card selected" data-brand="mi-marca">
-                        <div class="brand-avatar">M</div>
-                        <div class="brand-info">
-                            <span class="brand-name">Mi Marca</span>
-                            <span class="brand-category">Tecnología</span>
-                        </div>
-                        <i data-lucide="check" class="selection-indicator"></i>
-                    </div>
-                    <div class="brand-card" data-brand="tech-corp">
-                        <div class="brand-avatar tech">T</div>
-                        <div class="brand-info">
-                            <span class="brand-name">Tech Corp</span>
-                            <span class="brand-category">Software</span>
-                        </div>
-                    </div>
-                    <div class="brand-card" data-brand="startup-x">
-                        <div class="brand-avatar startup">S</div>
-                        <div class="brand-info">
-                            <span class="brand-name">StartupX</span>
-                            <span class="brand-category">Innovación</span>
-                        </div>
-                    </div>
-                </div>
-                <button class="add-new-button">
-                    <i data-lucide="plus"></i>
-                    <span>Nueva Marca</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Producto -->
-    <div class="brand-modal-overlay" id="modal-producto">
-        <div class="brand-modal">
-            <div class="brand-modal-header">
-                <button class="brand-modal-close" data-close="producto">
-                    <i class="fas fa-times"></i>
-                </button>
-                <h3 class="brand-modal-title">Producto</h3>
-                <p class="brand-modal-subtitle">Selecciona el producto para tu contenido UGC</p>
-            </div>
-            <div class="brand-modal-body">
-                <div class="product-list">
-                    <div class="product-item" data-product="laptop">
-                        <i data-lucide="laptop" class="product-icon"></i>
-                        <span class="product-name">Laptop Pro 15"</span>
-                    </div>
-                    <div class="product-item" data-product="smartphone">
-                        <i data-lucide="smartphone" class="product-icon"></i>
-                        <span class="product-name">Smartphone X1</span>
-                    </div>
-                    <div class="product-item" data-product="headphones">
-                        <i data-lucide="headphones" class="product-icon"></i>
-                        <span class="product-name">Auriculares Premium</span>
-                    </div>
-                    <div class="product-item" data-product="tablet">
-                        <i data-lucide="tablet" class="product-icon"></i>
-                        <span class="product-name">Tablet Design</span>
-                    </div>
-                </div>
-                <button class="add-new-button">
-                    <i data-lucide="plus"></i>
-                    <span>Nuevo Producto</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Oferta -->
-    <div class="brand-modal-overlay" id="modal-oferta">
-        <div class="brand-modal">
-            <div class="brand-modal-header">
-                <button class="brand-modal-close" data-close="oferta">
-                    <i class="fas fa-times"></i>
-                </button>
-                <h3 class="brand-modal-title">Oferta</h3>
-                <p class="brand-modal-subtitle">Selecciona o crea una oferta para tu contenido UGC</p>
-            </div>
-            <div class="brand-modal-body">
-                <div class="offer-list">
-                    <div class="offer-item">
-                        <div class="offer-badge">-50%</div>
-                        <div class="offer-info">
-                            <span class="offer-name">Black Friday</span>
-                            <span class="offer-period">Nov 24-30</span>
-                        </div>
-                    </div>
-                    <div class="offer-item">
-                        <div class="offer-badge new">NEW</div>
-                        <div class="offer-info">
-                            <span class="offer-name">Lanzamiento</span>
-                            <span class="offer-period">Limitada</span>
-                        </div>
-                    </div>
-                    <div class="offer-item">
-                        <div class="offer-badge">-25%</div>
-                        <div class="offer-info">
-                            <span class="offer-name">Primavera</span>
-                            <span class="offer-period">Mar 1-31</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="inline-form">
-                    <input type="text" placeholder="Nombre de la oferta" class="form-input">
-                    <div class="form-row">
-                        <input type="text" placeholder="% desc." class="form-input-small">
-                        <button class="btn-add">
-                            <i data-lucide="plus"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Temas -->
-    <div class="brand-modal-overlay" id="modal-temas">
-        <div class="brand-modal">
-            <div class="brand-modal-header">
-                <button class="brand-modal-close" data-close="temas">
-                    <i class="fas fa-times"></i>
-                </button>
-                <h3 class="brand-modal-title">Temas</h3>
-                <p class="brand-modal-subtitle">Selecciona los temas para tu contenido UGC</p>
-            </div>
-            <div class="brand-modal-body">
-                <div class="chip-grid">
-                    <div class="chip active" data-theme="tecnologia">
-                        <i data-lucide="cpu"></i>
-                        <span>Tecnología</span>
-                    </div>
-                    <div class="chip" data-theme="lifestyle">
-                        <i data-lucide="heart"></i>
-                        <span>Lifestyle</span>
-                    </div>
-                    <div class="chip active" data-theme="gaming">
-                        <i data-lucide="gamepad-2"></i>
-                        <span>Gaming</span>
-                    </div>
-                    <div class="chip" data-theme="fitness">
-                        <i data-lucide="dumbbell"></i>
-                        <span>Fitness</span>
-                    </div>
-                    <div class="chip" data-theme="business">
-                        <i data-lucide="briefcase"></i>
-                        <span>Business</span>
-                    </div>
-                    <div class="chip" data-theme="educacion">
-                        <i data-lucide="graduation-cap"></i>
-                        <span>Educación</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Categoría -->
-    <div class="brand-modal-overlay" id="modal-categoria">
-        <div class="brand-modal">
-            <div class="brand-modal-header">
-                <button class="brand-modal-close" data-close="categoria">
-                    <i class="fas fa-times"></i>
-                </button>
-                <h3 class="brand-modal-title">Categoría</h3>
-                <p class="brand-modal-subtitle">Selecciona la categoría de tu contenido UGC</p>
-            </div>
-            <div class="brand-modal-body">
-                <div class="category-grid">
-                    <div class="category-card selected" data-category="unboxing">
-                        <i data-lucide="package-open"></i>
-                        <span>Unboxing</span>
-                    </div>
-                    <div class="category-card" data-category="review">
-                        <i data-lucide="star"></i>
-                        <span>Reseña</span>
-                    </div>
-                    <div class="category-card" data-category="testimonial">
-                        <i data-lucide="message-circle"></i>
-                        <span>Testimonial</span>
-                    </div>
-                    <div class="category-card" data-category="tutorial">
-                        <i data-lucide="play-circle"></i>
-                        <span>Tutorial</span>
-                    </div>
-                    <div class="category-card" data-category="comparativa">
-                        <i data-lucide="git-compare"></i>
-                        <span>Comparativa</span>
-                    </div>
-                    <div class="category-card" data-category="haul">
-                        <i data-lucide="shopping-bag"></i>
-                        <span>Haul</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Estilos -->
-    <div class="brand-modal-overlay" id="modal-estilos">
-        <div class="brand-modal">
-            <div class="brand-modal-header">
-                <button class="brand-modal-close" data-close="estilos">
-                    <i class="fas fa-times"></i>
-                </button>
-                <h3 class="brand-modal-title">Estilos</h3>
-                <p class="brand-modal-subtitle">Selecciona el estilo visual para tu contenido UGC</p>
-            </div>
-            <div class="brand-modal-body">
-                <div class="style-grid">
-                    <div class="style-card selected">
-                        <div class="style-preview casual"></div>
-                        <span class="style-name">Casual & Natural</span>
-                    </div>
-                    <div class="style-card">
-                        <div class="style-preview professional"></div>
-                        <span class="style-name">Profesional</span>
-                    </div>
-                    <div class="style-card">
-                        <div class="style-preview energetic"></div>
-                        <span class="style-name">Energético</span>
-                    </div>
-                    <div class="style-card">
-                        <div class="style-preview minimal"></div>
-                        <span class="style-name">Minimalista</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Formato -->
-    <div class="brand-modal-overlay" id="modal-formato">
-        <div class="brand-modal">
-            <div class="brand-modal-header">
-                <button class="brand-modal-close" data-close="formato">
-                    <i class="fas fa-times"></i>
-                </button>
-                <h3 class="brand-modal-title">Formato</h3>
-                <p class="brand-modal-subtitle">Selecciona el formato de video para tu contenido UGC</p>
-            </div>
-            <div class="brand-modal-body">
-                <div class="format-options">
-                    <button class="format-option selected" data-format="horizontal">
-                        <i data-lucide="monitor"></i>
-                        <div class="format-info">
-                            <span class="format-name">Horizontal</span>
-                            <span class="format-ratio">16:9</span>
-                        </div>
-                    </button>
-                    <button class="format-option" data-format="square">
-                        <i data-lucide="square"></i>
-                        <div class="format-info">
-                            <span class="format-name">Cuadrado</span>
-                            <span class="format-ratio">1:1</span>
-                        </div>
-                    </button>
-                    <button class="format-option" data-format="vertical">
-                        <i data-lucide="smartphone"></i>
-                        <div class="format-info">
-                            <span class="format-name">Vertical</span>
-                            <span class="format-ratio">9:16</span>
-                        </div>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal País -->
-    <div class="brand-modal-overlay" id="modal-pais">
-        <div class="brand-modal">
-            <div class="brand-modal-header">
-                <button class="brand-modal-close" data-close="pais">
-                    <i class="fas fa-times"></i>
-                </button>
-                <h3 class="brand-modal-title">País</h3>
-                <p class="brand-modal-subtitle">Selecciona el país objetivo para tu contenido UGC</p>
-            </div>
-            <div class="brand-modal-body">
-                <div class="select-list">
-                    <div class="select-item selected" data-country="es">
-                        <span class="country-flag">🇪🇸</span>
-                        <span class="country-name">España</span>
-                    </div>
-                    <div class="select-item" data-country="mx">
-                        <span class="country-flag">🇲🇽</span>
-                        <span class="country-name">México</span>
-                    </div>
-                    <div class="select-item" data-country="ar">
-                        <span class="country-flag">🇦🇷</span>
-                        <span class="country-name">Argentina</span>
-                    </div>
-                    <div class="select-item" data-country="co">
-                        <span class="country-flag">🇨🇴</span>
-                        <span class="country-name">Colombia</span>
-                    </div>
-                    <div class="select-item" data-country="us">
-                        <span class="country-flag">🇺🇸</span>
-                        <span class="country-name">Estados Unidos</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Idioma -->
-    <div class="brand-modal-overlay" id="modal-idioma">
-        <div class="brand-modal">
-            <div class="brand-modal-header">
-                <button class="brand-modal-close" data-close="idioma">
-                    <i class="fas fa-times"></i>
-                </button>
-                <h3 class="brand-modal-title">Idioma</h3>
-                <p class="brand-modal-subtitle">Selecciona el idioma para tu contenido UGC</p>
-            </div>
-            <div class="brand-modal-body">
-                <div class="select-list">
-                    <div class="select-item selected" data-lang="es">Español</div>
-                    <div class="select-item" data-lang="en">Inglés</div>
-                    <div class="select-item" data-lang="fr">Francés</div>
-                    <div class="select-item" data-lang="it">Italiano</div>
-                    <div class="select-item" data-lang="pt">Portugués</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Acento -->
-    <div class="brand-modal-overlay" id="modal-acento">
-        <div class="brand-modal">
-            <div class="brand-modal-header">
-                <button class="brand-modal-close" data-close="acento">
-                    <i class="fas fa-times"></i>
-                </button>
-                <h3 class="brand-modal-title">Acento</h3>
-                <p class="brand-modal-subtitle">Selecciona el acento para tu contenido UGC</p>
-            </div>
-            <div class="brand-modal-body">
-                <div class="select-list">
-                    <div class="select-item selected" data-accent="neutral">Neutro</div>
-                    <div class="select-item" data-accent="spain">Español (España)</div>
-                    <div class="select-item" data-accent="mexican">Mexicano</div>
-                    <div class="select-item" data-accent="argentinian">Argentino</div>
-                    <div class="select-item" data-accent="colombian">Colombiano</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Género -->
-    <div class="brand-modal-overlay" id="modal-genero">
-        <div class="brand-modal">
-            <div class="brand-modal-header">
-                <button class="brand-modal-close" data-close="genero">
-                    <i class="fas fa-times"></i>
-                </button>
-                <h3 class="brand-modal-title">Género</h3>
-                <p class="brand-modal-subtitle">Selecciona el género para tu contenido UGC</p>
-            </div>
-            <div class="brand-modal-body">
-                <div class="toggle-options">
-                    <button class="toggle-option selected" data-gender="male">
-                        <i data-lucide="user"></i>
-                        <span>Masculino</span>
-                    </button>
-                    <button class="toggle-option" data-gender="female">
-                        <i data-lucide="user"></i>
-                        <span>Femenino</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Edad -->
-    <div class="brand-modal-overlay" id="modal-edad">
-        <div class="brand-modal">
-            <div class="brand-modal-header">
-                <button class="brand-modal-close" data-close="edad">
-                    <i class="fas fa-times"></i>
-                </button>
-                <h3 class="brand-modal-title">Edad</h3>
-                <p class="brand-modal-subtitle">Selecciona el rango de edad para tu contenido UGC</p>
-            </div>
-            <div class="brand-modal-body">
-                <div class="age-chips">
-                    <div class="age-chip active" data-age="18-24">18-24</div>
-                    <div class="age-chip active" data-age="25-34">25-34</div>
-                    <div class="age-chip" data-age="35-44">35-44</div>
-                    <div class="age-chip" data-age="45-54">45-54</div>
-                    <div class="age-chip" data-age="55+">55+</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Creatividad -->
-    <div class="brand-modal-overlay" id="modal-creatividad">
-        <div class="brand-modal">
-            <div class="brand-modal-header">
-                <button class="brand-modal-close" data-close="creatividad">
-                    <i class="fas fa-times"></i>
-                </button>
-                <h3 class="brand-modal-title">Creatividad IA</h3>
-                <p class="brand-modal-subtitle">Ajusta el nivel de creatividad para la generación de guiones</p>
-            </div>
-            <div class="brand-modal-body">
-                <div class="creativity-control">
-                    <div class="slider-labels">
-                        <span class="slider-label">Conservador</span>
-                        <span class="slider-label">Creativo</span>
-                    </div>
-                    <div class="slider-container">
-                        <input type="range" class="creativity-slider" min="0" max="100" value="75" id="creativity-range">
-                        <div class="slider-value">75</div>
-                    </div>
-                    <div class="slider-tooltip">
-                        <small>Controla qué tan innovadores serán los guiones generados</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Audiencia -->
-    <div class="brand-modal-overlay" id="modal-audiencia">
-        <div class="brand-modal">
-            <div class="brand-modal-header">
-                <button class="brand-modal-close" data-close="audiencia">
-                    <i class="fas fa-times"></i>
-                </button>
-                <h3 class="brand-modal-title">Audiencia</h3>
-                <p class="brand-modal-subtitle">Define el perfil de tu audiencia objetivo</p>
-            </div>
-            <div class="brand-modal-body">
-                <div class="form-group">
-                    <label class="form-label">Persona Compradora</label>
-                    <textarea class="form-textarea" id="audiencia-persona" placeholder="Ej: Mujer, 25-34 años, deportista, interesada en fitness y bienestar"></textarea>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Intereses</label>
-                    <div class="tags-input-container">
-                        <input type="text" class="tags-input" id="audiencia-intereses" placeholder="Escribe un interés y presiona Enter">
-                        <div class="tags-display" id="audiencia-intereses-tags"></div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Dolores/Problemas</label>
-                    <div class="tags-input-container">
-                        <input type="text" class="tags-input" id="audiencia-dolores" placeholder="Escribe un dolor y presiona Enter">
-                        <div class="tags-display" id="audiencia-dolores-tags"></div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Contextos</label>
-                    <div class="tags-input-container">
-                        <input type="text" class="tags-input" id="audiencia-contextos" placeholder="Escribe un contexto y presiona Enter">
-                        <div class="tags-display" id="audiencia-contextos-tags"></div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Idiomas</label>
-                    <select class="form-select" id="audiencia-idiomas" multiple>
-                        <option value="es">Español</option>
-                        <option value="en">Inglés</option>
-                        <option value="pt">Portugués</option>
-                        <option value="fr">Francés</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal UGC -->
-    <div class="brand-modal-overlay" id="modal-ugc">
-        <div class="brand-modal">
-            <div class="brand-modal-header">
-                <button class="brand-modal-close" data-close="ugc">
-                    <i class="fas fa-times"></i>
-                </button>
-                <h3 class="brand-modal-title">UGC</h3>
-                <p class="brand-modal-subtitle">Configura los avatares para tu contenido UGC</p>
-            </div>
-            <div class="brand-modal-body">
-                <div class="ugc-grid" id="ugc-grid">
-                    <!-- Los avatares se cargarán dinámicamente -->
-                </div>
-                <div class="form-group">
-                    <button class="btn-primary" id="create-ugc-btn">
-                        <i class="fas fa-plus"></i>
-                        Crear Nuevo UGC
-                    </button>
-                </div>
-                <div class="ugc-form" id="ugc-form" style="display: none;">
-                    <div class="form-group">
-                        <label class="form-label">Tipo de Avatar</label>
-                        <select class="form-select" id="ugc-tipo">
-                            <option value="actor">Actor</option>
-                            <option value="influencer">Influencer</option>
-                            <option value="narrador">Narrador</option>
-                            <option value="testimonial">Testimonial</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Rasgos de Personalidad</label>
-                        <div class="tags-input-container">
-                            <input type="text" class="tags-input" id="ugc-rasgos" placeholder="Escribe un rasgo y presiona Enter">
-                            <div class="tags-display" id="ugc-rasgos-tags"></div>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Género</label>
-                        <div class="radio-group">
-                            <label class="radio-label">
-                                <input type="radio" name="ugc-genero" value="masculino">
-                                <span>Masculino</span>
-                            </label>
-                            <label class="radio-label">
-                                <input type="radio" name="ugc-genero" value="femenino">
-                                <span>Femenino</span>
-                            </label>
-                            <label class="radio-label">
-                                <input type="radio" name="ugc-genero" value="neutro">
-                                <span>Neutro</span>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Energía</label>
-                        <select class="form-select" id="ugc-energia">
-                            <option value="baja">Baja</option>
-                            <option value="media">Media</option>
-                            <option value="alta">Alta</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Idiomas</label>
-                        <select class="form-select" id="ugc-idiomas" multiple>
-                            <option value="es">Español</option>
-                            <option value="en">Inglés</option>
-                            <option value="pt">Portugués</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Valores</label>
-                        <div class="tags-input-container">
-                            <input type="text" class="tags-input" id="ugc-valores" placeholder="Escribe un valor y presiona Enter">
-                            <div class="tags-display" id="ugc-valores-tags"></div>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Imagen del Avatar</label>
-                        <input type="file" class="form-file" id="ugc-imagen" accept="image/*">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Video del Avatar (Opcional)</label>
-                        <input type="file" class="form-file" id="ugc-video" accept="video/*">
-                    </div>
-                    <div class="form-actions">
-                        <button class="btn-secondary" id="cancel-ugc-btn">Cancelar</button>
-                        <button class="btn-primary" id="save-ugc-btn">Guardar UGC</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Estética -->
-    <div class="brand-modal-overlay" id="modal-estetica">
-        <div class="brand-modal">
-            <div class="brand-modal-header">
-                <button class="brand-modal-close" data-close="estetica">
-                    <i class="fas fa-times"></i>
-                </button>
-                <h3 class="brand-modal-title">Estética</h3>
-                <p class="brand-modal-subtitle">Define el estilo visual de tu contenido UGC</p>
-            </div>
-            <div class="brand-modal-body">
-                <div class="form-group">
-                    <label class="form-label">Estado de Ánimo</label>
-                    <select class="form-select" id="estetica-mood">
-                        <option value="motivador">Motivador</option>
-                        <option value="relajado">Relajado</option>
-                        <option value="aspiracional">Aspiracional</option>
-                        <option value="profesional">Profesional</option>
-                        <option value="divertido">Divertido</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Paleta de Colores</label>
-                    <div class="color-picker-container">
-                        <input type="color" class="color-picker" id="estetica-color1" value="#ff6b6b">
-                        <input type="color" class="color-picker" id="estetica-color2" value="#4ecdc4">
-                        <input type="color" class="color-picker" id="estetica-color3" value="#45b7d1">
-                        <input type="color" class="color-picker" id="estetica-color4" value="#96ceb4">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Iluminación</label>
-                    <select class="form-select" id="estetica-iluminacion">
-                        <option value="natural">Natural</option>
-                        <option value="estudio">Estudio</option>
-                        <option value="calida">Cálida</option>
-                        <option value="fria">Fría</option>
-                        <option value="dramatica">Dramática</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Ángulo de Cámara</label>
-                    <select class="form-select" id="estetica-camara">
-                        <option value="close-up">Close-up</option>
-                        <option value="45-grados">45°</option>
-                        <option value="movimiento">Movimiento</option>
-                        <option value="estatico">Estático</option>
-                        <option value="aereo">Aéreo</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Ritmo</label>
-                    <select class="form-select" id="estetica-ritmo">
-                        <option value="lento">Lento</option>
-                        <option value="medio">Medio</option>
-                        <option value="rapido">Rápido</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Música</label>
-                    <input type="file" class="form-file" id="estetica-musica" accept="audio/*">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Overlays</label>
-                    <div class="tags-input-container">
-                        <input type="text" class="tags-input" id="estetica-overlays" placeholder="Escribe un overlay y presiona Enter">
-                        <div class="tags-display" id="estetica-overlays-tags"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Escenarios -->
-    <div class="brand-modal-overlay" id="modal-escenarios">
-        <div class="brand-modal">
-            <div class="brand-modal-header">
-                <button class="brand-modal-close" data-close="escenarios">
-                    <i class="fas fa-times"></i>
-                </button>
-                <h3 class="brand-modal-title">Escenarios</h3>
-                <p class="brand-modal-subtitle">Define los escenarios y ubicaciones para tu contenido</p>
-            </div>
-            <div class="brand-modal-body">
-                <div class="escenarios-grid" id="escenarios-grid">
-                    <!-- Los escenarios se cargarán dinámicamente -->
-                </div>
-                <div class="form-group">
-                    <button class="btn-primary" id="create-escenario-btn">
-                        <i class="fas fa-plus"></i>
-                        Crear Nuevo Escenario
-                    </button>
-                </div>
-                <div class="escenario-form" id="escenario-form" style="display: none;">
-                    <div class="form-group">
-                        <label class="form-label">Ubicación Principal</label>
-                        <input type="text" class="form-input" id="escenario-ubicacion" placeholder="Ej: Gimnasio, Cocina, Oficina">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Ambiente</label>
-                        <select class="form-select" id="escenario-ambiente">
-                            <option value="urbano">Urbano</option>
-                            <option value="natural">Natural</option>
-                            <option value="minimalista">Minimalista</option>
-                            <option value="industrial">Industrial</option>
-                            <option value="moderno">Moderno</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Fondo</label>
-                        <select class="form-select" id="escenario-fondo">
-                            <option value="liso">Fondo Liso</option>
-                            <option value="paisaje">Paisaje</option>
-                            <option value="oficina">Oficina</option>
-                            <option value="casa">Casa</option>
-                            <option value="exterior">Exterior</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Referencias Visuales</label>
-                        <input type="file" class="form-file" id="escenario-referencias" accept="image/*,video/*" multiple>
-                    </div>
-                    <div class="form-actions">
-                        <button class="btn-secondary" id="cancel-escenario-btn">Cancelar</button>
-                        <button class="btn-primary" id="save-escenario-btn">Guardar Escenario</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Footer -->
     <footer class="footer">
         <button class="btn btn-primary" id="generate-btn">

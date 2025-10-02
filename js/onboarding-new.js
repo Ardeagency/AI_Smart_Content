@@ -1,12 +1,15 @@
 // New Onboarding JavaScript - Complete UGC Setup (Standalone)
+// VERSION 2 - Sin localStorage, sin saltos de pasos
+
+console.log('🚀 CARGANDO VERSIÓN 2 - Sin localStorage');
 
 class NewOnboardingForm {
     constructor() {
         this.currentStep = 1;
         this.totalSteps = 44;
         
-        // Cargar datos desde localStorage si existen
-        this.loadFromLocalStorage();
+        // Inicializar sin cargar datos locales
+        this.currentStep = 1;
         
         // Si no hay datos guardados, inicializar con valores por defecto
         if (!this.formData) {
@@ -141,93 +144,10 @@ class NewOnboardingForm {
         this.init();
     }
 
-    // === PERSISTENCIA EN LOCALSTORAGE ===
+    // === PERSISTENCIA ELIMINADA ===
+    // No se usa localStorage para evitar saltos de pasos
     
-    loadFromLocalStorage() {
-        try {
-            const savedData = localStorage.getItem('ugc_onboarding_data');
-            const savedStep = localStorage.getItem('ugc_onboarding_step');
-            
-            if (savedData) {
-                this.formData = JSON.parse(savedData);
-                console.log('📦 Datos cargados desde localStorage:', Object.keys(this.formData).length, 'campos');
-            }
-            
-            if (savedStep) {
-                this.currentStep = parseInt(savedStep);
-                console.log('📍 Paso restaurado:', this.currentStep);
-            }
-        } catch (error) {
-            console.warn('⚠️ Error cargando desde localStorage:', error);
-            this.formData = null; // Forzar inicialización por defecto
-        }
-    }
-    
-    saveToLocalStorage() {
-        try {
-            localStorage.setItem('ugc_onboarding_data', JSON.stringify(this.formData));
-            localStorage.setItem('ugc_onboarding_step', this.currentStep.toString());
-        } catch (error) {
-            console.warn('⚠️ Error guardando en localStorage:', error);
-        }
-    }
-    
-    clearLocalStorage() {
-        localStorage.removeItem('ugc_onboarding_data');
-        localStorage.removeItem('ugc_onboarding_step');
-        console.log('🗑️ localStorage limpiado');
-    }
-    
-    restoreStepData(currentSlide, step) {
-        const fieldName = this.getFieldNameForStep(step);
-        
-        // Restaurar selección de opciones
-        if (fieldName && this.formData[fieldName]) {
-            const selectedOption = currentSlide.querySelector(`[data-value="${this.formData[fieldName]}"]`);
-            if (selectedOption && !selectedOption.classList.contains('multi-select')) {
-                selectedOption.classList.add('selected');
-                console.log(`🔄 Restaurada selección: ${fieldName} = ${this.formData[fieldName]}`);
-            }
-        }
-
-        // Restaurar multi-select options
-        if (fieldName && Array.isArray(this.formData[fieldName])) {
-            this.formData[fieldName].forEach(value => {
-                const selectedOption = currentSlide.querySelector(`[data-value="${value}"]`);
-                if (selectedOption && selectedOption.classList.contains('multi-select')) {
-                    selectedOption.classList.add('selected');
-                }
-            });
-            console.log(`🔄 Restauradas opciones múltiples: ${fieldName} = [${this.formData[fieldName].join(', ')}]`);
-        }
-        
-        // Restaurar voice options
-        if (this.formData.caracteristicas_voz && typeof this.formData.caracteristicas_voz === 'object') {
-            Object.entries(this.formData.caracteristicas_voz).forEach(([voiceType, value]) => {
-                const voiceBtn = currentSlide.querySelector(`[data-voice="${voiceType}"][data-value="${value}"]`);
-                if (voiceBtn) {
-                    voiceBtn.classList.add('selected');
-                }
-            });
-        }
-        
-        // Restaurar input values
-        const textInputs = currentSlide.querySelectorAll('input[type="text"], input[type="url"], input[type="number"], textarea, select');
-        textInputs.forEach(input => {
-            if (this.formData[input.id]) {
-                input.value = this.formData[input.id];
-                console.log(`🔄 Restaurado input: ${input.id} = ${this.formData[input.id]}`);
-            }
-        });
-        
-        // Actualizar contadores de caracteres
-        const textareas = currentSlide.querySelectorAll('textarea');
-        textareas.forEach(textarea => {
-            if (textarea.value) {
-                this.updateCharCounter(textarea);
-            }
-        });
-    }
+    // Función restoreStepData eliminada - no se necesita sin localStorage
 
     init() {
         if (document.readyState === 'loading') {
@@ -428,8 +348,8 @@ class NewOnboardingForm {
             console.log(`📝 Updated ${fieldName}:`, value);
             console.log(`📋 Current formData:`, this.formData);
             
-            // Guardar automáticamente en localStorage
-            this.saveToLocalStorage();
+            // Actualizar botones de navegación después de actualizar datos
+            this.updateNavigationButtons();
         } else {
             console.warn(`⚠️ Field ${fieldName} not found in formData`);
         }
@@ -586,9 +506,17 @@ class NewOnboardingForm {
     }
 
     validateCurrentStep() {
+        console.log('🔍 VALIDATING STEP:', this.currentStep, 'Total steps:', this.totalSteps);
+        
         const currentSlide = document.querySelector(`[data-step="${this.currentStep}"]`);
         if (!currentSlide) {
             console.log('❌ No current slide found for step:', this.currentStep);
+            return false;
+        }
+
+        // Verificar que el step esté dentro del rango válido
+        if (this.currentStep < 1 || this.currentStep > this.totalSteps) {
+            console.log('❌ Step fuera del rango válido:', this.currentStep, 'Rango válido: 1-' + this.totalSteps);
             return false;
         }
 
@@ -635,12 +563,16 @@ class NewOnboardingForm {
             case 1: // Nombre de marca
                 const nombreMarca = document.getElementById('nombre_marca');
                 console.log('Validating step 1 - nombre_marca:', nombreMarca?.value);
-                if (nombreMarca && nombreMarca.value.trim().length < 2) {
-                    console.log('Step 1 validation failed - too short');
+                if (!nombreMarca) {
+                    console.log('Step 1 validation failed - input not found');
+                    isValid = false;
+                } else if (!nombreMarca.value || nombreMarca.value.trim().length < 2) {
+                    console.log('Step 1 validation failed - too short or empty');
                     this.showInputError(nombreMarca, 'Mínimo 2 caracteres');
                     isValid = false;
                 } else {
                     console.log('Step 1 validation passed');
+                    this.clearInputError(nombreMarca);
                 }
                 break;
                 
@@ -960,9 +892,6 @@ class NewOnboardingForm {
             this.showStep(this.currentStep);
             this.updateProgress();
             this.updateNavigationButtons();
-            
-            // Guardar paso actual
-            this.saveToLocalStorage();
         } else {
             this.completeOnboarding();
         }
@@ -976,10 +905,7 @@ class NewOnboardingForm {
             this.currentStep--;
             this.showStep(this.currentStep);
             this.updateProgress();
-        this.updateNavigationButtons();
-            
-            // Guardar paso actual
-            this.saveToLocalStorage();
+            this.updateNavigationButtons();
         }
     }
 
@@ -994,9 +920,6 @@ class NewOnboardingForm {
         const currentSlide = document.querySelector(`[data-step="${step}"]`);
         if (currentSlide) {
             currentSlide.classList.add('active');
-            
-            // Restaurar datos guardados para este step
-            this.restoreStepData(currentSlide, step);
         }
 
         // Update step counter
@@ -1005,54 +928,10 @@ class NewOnboardingForm {
             stepCounter.textContent = step;
         }
 
-        // Restore visual state for current step
-        this.restoreStepState(step);
+        // No se restaura estado visual - inicio limpio
     }
 
-    restoreStepState(step) {
-        const currentSlide = document.querySelector(`[data-step="${step}"]`);
-        if (!currentSlide) return;
-
-        // Restore single select options
-        const fieldName = this.getFieldNameForStep(step);
-        if (fieldName && this.formData[fieldName]) {
-            const selectedOption = currentSlide.querySelector(`[data-value="${this.formData[fieldName]}"]`);
-            if (selectedOption && !selectedOption.classList.contains('multi-select')) {
-                selectedOption.classList.add('selected');
-            }
-        }
-
-        // Restore multi-select options
-        if (fieldName && Array.isArray(this.formData[fieldName])) {
-            this.formData[fieldName].forEach(value => {
-                const selectedOption = currentSlide.querySelector(`[data-value="${value}"]`);
-                if (selectedOption && selectedOption.classList.contains('multi-select')) {
-                    selectedOption.classList.add('selected');
-                }
-            });
-        }
-        
-        // Restore voice options
-        if (this.formData.caracteristicas_voz && typeof this.formData.caracteristicas_voz === 'object') {
-            Object.entries(this.formData.caracteristicas_voz).forEach(([voiceType, value]) => {
-                const voiceBtn = currentSlide.querySelector(`[data-voice="${voiceType}"][data-value="${value}"]`);
-                if (voiceBtn) {
-                    voiceBtn.classList.add('selected');
-                }
-            });
-        }
-        
-        // Restore input values
-        const textInputs = currentSlide.querySelectorAll('input[type="text"], input[type="url"], input[type="number"], textarea, select');
-        textInputs.forEach(input => {
-            if (input.id && this.formData.hasOwnProperty(input.id)) {
-                input.value = this.formData[input.id] || '';
-            }
-        });
-
-        // Update hidden inputs
-        this.updateHiddenInputs();
-    }
+    // Función restoreStepState eliminada - no se necesita sin localStorage
 
     updateProgress() {
         const progressFill = document.getElementById('progressFill');
@@ -1063,8 +942,18 @@ class NewOnboardingForm {
     }
 
     updateNavigationButtons() {
+        console.log('🔄 UPDATE NAVIGATION BUTTONS - Current step:', this.currentStep);
+        
         const btnNext = document.getElementById('btnNext');
         const btnBack = document.getElementById('btnBack');
+
+        // Verificar que el step actual esté dentro del rango válido
+        if (this.currentStep < 1 || this.currentStep > this.totalSteps) {
+            console.log(`❌ Step ${this.currentStep} fuera del rango válido (1-${this.totalSteps})`);
+            if (btnNext) btnNext.disabled = true;
+            if (btnBack) btnBack.disabled = this.currentStep === 1;
+            return;
+        }
 
         const isValid = this.validateCurrentStep();
         console.log(`🔄 Step ${this.currentStep} validation: ${isValid ? '✅ VALID' : '❌ INVALID'}`);
@@ -1210,7 +1099,7 @@ class NewOnboardingForm {
                 this.saveOnboardingData();
                 
                 // Importar y usar las utilidades de Supabase
-                const { processOnboardingData } = await import('./supabase-utils.js');
+                const { processOnboardingData } = await import('./supabase-utils.js?v=2');
                 
                 // Procesar y enviar datos a Supabase
                 const result = await processOnboardingData(formData);
@@ -1221,7 +1110,8 @@ class NewOnboardingForm {
                     this.showSuccessPage();
                     
                     // Limpiar localStorage después del éxito
-                    this.clearLocalStorage();
+                    localStorage.clear();
+                    console.log('🗑️ localStorage limpiado después del éxito');
                 } else {
                     console.error('❌ Error procesando onboarding:', result.error);
                     this.hideLoadingState();
@@ -1245,19 +1135,8 @@ class NewOnboardingForm {
     }
 
     collectAllFormData() {
-        // Collect all form data from all steps
-        const originalStep = this.currentStep;
-        
-        for (let step = 1; step <= this.totalSteps; step++) {
-            this.currentStep = step;
-            const slide = document.querySelector(`[data-step="${step}"]`);
-            if (slide) {
-                this.collectStepData();
-            }
-        }
-        
-        // Restore original step
-        this.currentStep = originalStep;
+        // Solo recolectar datos del step actual y los datos ya guardados
+        this.collectStepData();
         
         // Return the collected form data
         console.log('📋 FormData completo recolectado:', this.formData);
@@ -1385,8 +1264,14 @@ class NewOnboardingForm {
     }
 
     initializeFirstStep() {
-        this.showStep(1);
+        console.log('🚀 INITIALIZING FIRST STEP');
+        // Siempre iniciar desde el step 1
+        this.currentStep = 1;
+        console.log('📍 Step establecido a:', this.currentStep);
+        
+        this.showStep(this.currentStep);
         this.updateProgress();
+        this.updateNavigationButtons();
     }
 
     initializeUploads() {
@@ -1614,8 +1499,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Función para limpiar todo y empezar de nuevo
 window.resetOnboarding = function() {
+    console.log('🔄 REINICIANDO ONBOARDING - Limpiando todo');
+    
+    // Limpiar localStorage completamente
+    localStorage.clear();
+    console.log('🗑️ localStorage completamente limpiado');
+    
     if (window.onboardingForm) {
-        window.onboardingForm.clearLocalStorage();
+        // Forzar reinicio desde step 1
+        window.onboardingForm.currentStep = 1;
+        window.onboardingForm.showStep(1);
+        window.onboardingForm.updateProgress();
+        window.onboardingForm.updateNavigationButtons();
+        console.log('🔄 Onboarding reiniciado desde step 1');
+    } else {
+        console.log('⚠️ Onboarding form no encontrado, recargando página...');
         location.reload();
     }
 };
@@ -1623,10 +1521,9 @@ window.resetOnboarding = function() {
 // Función para ver todos los datos guardados
 window.showSavedData = function() {
     const savedData = localStorage.getItem('ugc_onboarding_data');
-    const savedStep = localStorage.getItem('ugc_onboarding_step');
     
     console.log('📊 DATOS GUARDADOS:');
-    console.log('📍 Paso actual:', savedStep);
+    console.log('📍 Paso actual:', window.onboardingForm?.currentStep);
     
     if (savedData) {
         const data = JSON.parse(savedData);
@@ -1649,18 +1546,10 @@ window.showSavedData = function() {
     }
 };
 
-// Función para ir a un step específico (para debugging)
+// Función para ir a un step específico (para debugging) - DESHABILITADA
 window.goToStep = function(step) {
-    if (window.onboardingForm && step >= 1 && step <= 45) {
-        window.onboardingForm.currentStep = step;
-        window.onboardingForm.showStep(step);
-        window.onboardingForm.updateProgress();
-        window.onboardingForm.updateNavigationButtons();
-        window.onboardingForm.saveToLocalStorage();
-        console.log(`🎯 Navegado al step ${step}`);
-    } else {
-        console.error('❌ Step inválido o formulario no inicializado');
-    }
+    console.warn('⚠️ Función goToStep deshabilitada para evitar saltos de pasos');
+    console.log('📍 Step actual:', window.onboardingForm?.currentStep);
 };
 
 // Función para llenar datos de prueba rápidamente
@@ -1701,11 +1590,30 @@ window.fillTestData = function() {
 
 console.log(`
 🎮 COMANDOS DE DEBUGGING DISPONIBLES:
-• showSavedData()    - Ver todos los datos guardados
-• resetOnboarding()  - Limpiar todo y empezar de nuevo  
-• goToStep(20)       - Ir directamente al step 20
-• fillTestData()     - Llenar datos de prueba rápidamente
+• showSavedData()         - Ver todos los datos guardados
+• resetOnboarding()       - Limpiar todo y empezar de nuevo  
+• debugStep45()           - Investigar problema del step 45
+• checkVersion()          - Verificar versión cargada
+• checkAuthStatus()       - Verificar estado de autenticación
+• refreshAuth()           - Refrescar sesión de autenticación
+• checkBucketStatus()     - Verificar estado del bucket
+• applyFilesTablePolicies() - Aplicar políticas RLS de tabla files ⭐
+• testFilesInsert()       - Probar inserción en tabla files
+• verifyFilesTable()      - Verificar estructura de tabla files
+• testImageUpload()       - Probar subida de imágenes
+• fillTestData()          - Llenar datos de prueba rápidamente
+
+⚠️ NOTA: Los buckets se configuran desde el Dashboard de Supabase
 `);
+
+// Función para verificar la versión
+window.checkVersion = () => {
+    console.log('🔍 VERIFICANDO VERSIÓN:');
+    console.log('✅ VERSIÓN 2 CARGADA - Sin localStorage');
+    console.log('📍 Step actual:', window.onboardingForm?.currentStep);
+    console.log('📊 Total steps:', window.onboardingForm?.totalSteps);
+    console.log('🗄️ localStorage vacío:', Object.keys(localStorage).length === 0);
+};
 
 // Global debugging functions
 window.debugOnboarding = () => {
@@ -1742,4 +1650,35 @@ window.testValidation = () => {
 
 window.forceCompleteOnboarding = () => {
     window.onboardingForm.completeOnboarding();
+};
+
+// Función para investigar el problema del step 45
+window.debugStep45 = () => {
+    console.log('🔍 DEBUGGING STEP 45 ISSUE');
+    console.log('Current step:', window.onboardingForm?.currentStep);
+    console.log('Total steps:', window.onboardingForm?.totalSteps);
+    console.log('Form data keys:', Object.keys(window.onboardingForm?.formData || {}));
+    
+    // Verificar si hay algún slide con data-step="45"
+    const slide45 = document.querySelector('[data-step="45"]');
+    console.log('Slide 45 exists:', !!slide45);
+    
+    // Verificar todos los slides disponibles
+    const allSlides = document.querySelectorAll('.question-slide');
+    console.log('Total slides found:', allSlides.length);
+    allSlides.forEach(slide => {
+        const step = slide.getAttribute('data-step');
+        console.log('Slide step:', step, 'Active:', slide.classList.contains('active'));
+    });
+    
+    // Verificar si hay algún valor en localStorage que cause el problema
+    const savedData = localStorage.getItem('ugc_onboarding_data');
+    const savedStep = localStorage.getItem('ugc_onboarding_step');
+    console.log('Saved data exists:', !!savedData);
+    console.log('Saved step:', savedStep);
+    
+    if (savedData) {
+        const data = JSON.parse(savedData);
+        console.log('Saved data keys:', Object.keys(data));
+    }
 };

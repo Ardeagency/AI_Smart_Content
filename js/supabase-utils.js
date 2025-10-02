@@ -1,10 +1,16 @@
 /**
  * Utilidades para Supabase - UGC Studio
  * Funciones para manejo de datos, archivos y persistencia
+ * VERSIÓN 2 - Campos corregidos para public.files
  */
+console.log('🚀 CARGANDO SUPABASE-UTILS VERSIÓN 2 - Campos corregidos');
 
 // Usar el cliente de Supabase ya configurado
 const SUPABASE_BUCKET = 'ugc'
+
+// NOTA: Los buckets se crean desde el Dashboard de Supabase o con scripts administrativos
+// No se pueden crear desde el frontend con RLS activo
+// El bucket 'ugc' debe existir previamente en Supabase Storage
 
 // Helper para normalizar arrays
 function normalizeToArray(value, defaultValue = []) {
@@ -114,6 +120,9 @@ export async function uploadAndRegisterFile(file, userId, projectId, kind) {
             return { success: false, error: 'No se proporcionó archivo' }
         }
 
+        // El bucket 'ugc' debe existir previamente en Supabase
+        // No se puede crear desde el frontend con RLS activo
+
         // Validar tamaño del archivo (10MB máximo)
         const maxSize = 10 * 1024 * 1024
         if (file.size > maxSize) {
@@ -122,12 +131,21 @@ export async function uploadAndRegisterFile(file, userId, projectId, kind) {
 
         // Validar tipo de archivo según el kind
         const allowedTypes = {
-            'logo': ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'],
-            'brand_asset': ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'application/pdf', 'application/zip', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
-            'product_image': ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
-            'product_gallery': ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/quicktime', 'video/x-msvideo'],
-            'avatar_ref_image': ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
-            'avatar_ref_video': ['video/mp4', 'video/quicktime', 'video/x-msvideo']
+            'logo': ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/bmp', 'image/tiff'],
+            'brand_asset': [
+                'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/bmp', 'image/tiff',
+                'application/pdf', 'application/zip', 'application/x-rar-compressed', 'application/x-7z-compressed',
+                'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+            ],
+            'product_image': ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/tiff'],
+            'product_gallery': [
+                'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/tiff',
+                'video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/webm', 'video/avi'
+            ],
+            'avatar_ref_image': ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/tiff'],
+            'avatar_ref_video': ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/webm', 'video/avi']
         }
 
         if (allowedTypes[kind] && !allowedTypes[kind].includes(file.type)) {
@@ -163,36 +181,47 @@ export async function uploadAndRegisterFile(file, userId, projectId, kind) {
                 filePath = `users/${userId}/brands/${projectId}/assets/${fileName}`
         }
 
-        // Subir archivo a Storage
+        // 1. Subir archivo a Storage
+        console.log(`📤 Subiendo archivo a Supabase Storage...`)
+        console.log(`   - Bucket: ${SUPABASE_BUCKET}`)
+        console.log(`   - Path: ${filePath}`)
+        console.log(`   - Tamaño: ${file.size} bytes`)
+        console.log(`   - Tipo: ${file.type}`)
+        
         const supabase = await getSupabaseClient();
         const { data: uploadData, error: uploadError } = await supabase.storage
             .from(SUPABASE_BUCKET)
             .upload(filePath, file, {
-                upsert: false,
+                upsert: true,
                 cacheControl: '3600'
             })
 
         if (uploadError) {
-            console.error('Error subiendo archivo:', uploadError)
+            console.error('❌ Error subiendo archivo:', uploadError)
+            console.error('   - Código:', uploadError.statusCode)
+            console.error('   - Mensaje:', uploadError.message)
+            console.error('   - Error:', uploadError.error)
             return { success: false, error: `Error subiendo archivo: ${uploadError.message}` }
         }
 
-        // Registrar archivo en la tabla files según tu estructura
+        console.log(`✅ Archivo subido exitosamente:`, uploadData)
+
+        // 2. Registrar archivo en la tabla public.files usando supabase-js
         const fileRecord = {
+            project_id: projectId,
             user_id: userId,
-            product_id: kind.includes('product') ? projectId : null,
-            brand_id: kind.includes('brand') || kind === 'logo' ? projectId : null,
-            avatar_id: kind.includes('avatar') ? projectId : null,
             path: filePath,
-            type: file.type,
-            size: file.size,
+            bucket: SUPABASE_BUCKET,
+            file_type: file.type,
             category: kind,
-            description: file.name || null
+            description: file.name || `Archivo ${kind} subido por el usuario`
         }
+
+        console.log(`📝 Registrando archivo en tabla files:`, fileRecord)
 
         const { data: fileData, error: fileError } = await supabase
             .from('files')
-            .insert(fileRecord)
+            .insert([fileRecord])
             .select('id')
             .single()
 
@@ -204,7 +233,8 @@ export async function uploadAndRegisterFile(file, userId, projectId, kind) {
             return { success: false, error: `Error registrando archivo: ${fileError.message}` }
         }
 
-        console.log(`✅ Archivo subido exitosamente: ${file.name} -> ${filePath}`)
+        console.log(`✅ Archivo registrado exitosamente: ${file.name} -> ${filePath}`)
+        console.log(`   - File ID: ${fileData.id}`)
         return { success: true, fileId: fileData.id }
 
     } catch (error) {
@@ -856,12 +886,46 @@ export async function processOnboardingData(formData) {
     try {
         console.log('🚀 Procesando datos del onboarding...')
         
-        // Obtener usuario actual
+        // Obtener usuario actual con verificación robusta
         const supabase = await getSupabaseClient();
-        const { data: { user }, error: userError } = await supabase.auth.getUser()
-        if (userError || !user) {
+        console.log('🔍 Verificando autenticación del usuario...');
+        
+        // Primero verificar la sesión
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        console.log('📋 Sesión encontrada:', {
+            hasSession: !!session,
+            user: session?.user ? { id: session.user.id, email: session.user.email } : null,
+            error: sessionError
+        });
+        
+        // Si hay sesión, usar el usuario de la sesión
+        let user = session?.user;
+        
+        // Si no hay sesión o usuario, intentar getUser()
+        if (!user) {
+            console.log('🔄 No hay sesión, intentando getUser()...');
+            const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser();
+            
+            console.log('👤 Resultado de getUser():', {
+                user: currentUser ? { id: currentUser.id, email: currentUser.email } : null,
+                error: userError,
+                hasUser: !!currentUser
+            });
+            
+            if (userError) {
+                console.error('❌ Error de autenticación:', userError);
+                return { success: false, error: `Error de autenticación: ${userError.message}` }
+            }
+            
+            user = currentUser;
+        }
+        
+        if (!user) {
+            console.error('❌ Usuario no encontrado en sesión ni en getUser()');
             return { success: false, error: 'Usuario no autenticado' }
         }
+        
+        console.log('✅ Usuario autenticado correctamente:', { id: user.id, email: user.email });
 
         const userId = user.id
 
@@ -947,3 +1011,458 @@ export async function processOnboardingData(formData) {
         return { success: false, error: `Error inesperado: ${error.message}` }
     }
 }
+
+// Función para verificar el estado del bucket y archivos
+window.checkBucketStatus = async () => {
+    try {
+        console.log('🔍 VERIFICANDO ESTADO DEL BUCKET:');
+        console.log('⚠️ NOTA: Los buckets se crean desde el Dashboard de Supabase, no desde el frontend');
+        
+        const supabase = await getSupabaseClient();
+        
+        // Verificar buckets disponibles
+        const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+        if (bucketsError) {
+            console.error('❌ Error listando buckets:', bucketsError);
+            return;
+        }
+        
+        console.log('📦 Buckets disponibles:', buckets.map(b => b.id));
+        
+        // Verificar si el bucket 'ugc' existe
+        const ugcBucket = buckets.find(b => b.id === 'ugc');
+        if (ugcBucket) {
+            console.log('✅ Bucket "ugc" encontrado:', ugcBucket);
+            
+            // Listar archivos en el bucket
+            const { data: files, error: filesError } = await supabase.storage
+                .from('ugc')
+                .list('', { limit: 100 });
+                
+            if (filesError) {
+                console.error('❌ Error listando archivos:', filesError);
+            } else {
+                console.log('📁 Archivos en el bucket:', files);
+            }
+        } else {
+            console.log('❌ Bucket "ugc" no encontrado');
+            console.log('💡 SOLUCIÓN: Crear el bucket desde el Dashboard de Supabase');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error verificando bucket:', error);
+    }
+};
+
+// Función para probar la subida de archivos
+window.testFileUpload = async (fileInputId = 'logo_file') => {
+    try {
+        console.log('🧪 PROBANDO SUBIDA DE ARCHIVOS...');
+        
+        const fileInput = document.getElementById(fileInputId);
+        if (!fileInput) {
+            console.error('❌ Input de archivo no encontrado:', fileInputId);
+            return;
+        }
+        
+        if (!fileInput.files || fileInput.files.length === 0) {
+            console.error('❌ No hay archivos seleccionados');
+            return;
+        }
+        
+        const file = fileInput.files[0];
+        console.log('📁 Archivo seleccionado:', {
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            lastModified: file.lastModified
+        });
+        
+        // Obtener usuario actual
+        const supabase = await getSupabaseClient();
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user) {
+            console.error('❌ Usuario no autenticado:', userError);
+            return;
+        }
+        
+        console.log('👤 Usuario autenticado:', user.id);
+        
+        // Crear un proyecto de prueba
+        const testProjectId = 'test-' + Date.now();
+        console.log('🆔 ID de proyecto de prueba:', testProjectId);
+        
+        // Probar subida de archivo
+        const result = await uploadAndRegisterFile(file, user.id, testProjectId, 'logo');
+        
+        if (result.success) {
+            console.log('✅ PRUEBA EXITOSA - Archivo subido correctamente');
+            console.log('   - File ID:', result.fileId);
+            
+            // Verificar que el archivo existe en el bucket
+            const { data: files, error: listError } = await supabase.storage
+                .from('ugc')
+                .list(`users/${user.id}/brands/${testProjectId}/`);
+                
+            if (listError) {
+                console.error('❌ Error verificando archivo:', listError);
+            } else {
+                console.log('📁 Archivos en el directorio:', files);
+            }
+        } else {
+            console.error('❌ PRUEBA FALLIDA:', result.error);
+        }
+        
+    } catch (error) {
+        console.error('❌ Error en prueba de subida:', error);
+    }
+};
+
+// Función para verificar el estado de autenticación
+window.checkAuthStatus = async () => {
+    try {
+        console.log('🔍 VERIFICANDO ESTADO DE AUTENTICACIÓN...');
+        
+        const supabase = await getSupabaseClient();
+        
+        // Verificar sesión actual
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        console.log('📋 Sesión actual:', {
+            hasSession: !!session,
+            user: session?.user ? { id: session.user.id, email: session.user.email } : null,
+            error: sessionError
+        });
+        
+        // Verificar usuario actual
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        console.log('👤 Usuario actual:', {
+            hasUser: !!user,
+            user: user ? { id: user.id, email: user.email } : null,
+            error: userError
+        });
+        
+        // Verificar si hay token de acceso
+        const accessToken = supabase.auth.session?.access_token || supabase.auth.getSession()?.data?.session?.access_token;
+        console.log('🔑 Token de acceso:', {
+            hasToken: !!accessToken,
+            tokenLength: accessToken ? accessToken.length : 0
+        });
+        
+        return {
+            hasSession: !!session,
+            hasUser: !!user,
+            hasToken: !!accessToken,
+            user: user,
+            session: session
+        };
+        
+    } catch (error) {
+        console.error('❌ Error verificando autenticación:', error);
+        return null;
+    }
+};
+
+// Función para aplicar políticas RLS de la tabla files
+window.applyFilesTablePolicies = async () => {
+    try {
+        console.log('🔧 APLICANDO POLÍTICAS RLS DE LA TABLA FILES...');
+        
+        const supabase = await getSupabaseClient();
+        
+        // Políticas RLS para la tabla files
+        const policies = [
+            {
+                name: "Allow authenticated users to insert files",
+                sql: `CREATE POLICY "Allow authenticated users to insert files" ON public.files
+                      FOR INSERT WITH CHECK (
+                          auth.role() = 'authenticated' 
+                          AND auth.uid() = user_id
+                      );`
+            },
+            {
+                name: "Allow users to view their own files",
+                sql: `CREATE POLICY "Allow users to view their own files" ON public.files
+                      FOR SELECT USING (
+                          auth.role() = 'authenticated' 
+                          AND auth.uid() = user_id
+                      );`
+            },
+            {
+                name: "Allow users to update their own files",
+                sql: `CREATE POLICY "Allow users to update their own files" ON public.files
+                      FOR UPDATE USING (
+                          auth.role() = 'authenticated' 
+                          AND auth.uid() = user_id
+                      );`
+            },
+            {
+                name: "Allow users to delete their own files",
+                sql: `CREATE POLICY "Allow users to delete their own files" ON public.files
+                      FOR DELETE USING (
+                          auth.role() = 'authenticated' 
+                          AND auth.uid() = user_id
+                      );`
+            }
+        ];
+        
+        console.log('📋 Aplicando políticas RLS de files...');
+        
+        // Habilitar RLS en la tabla files
+        console.log('🔧 Habilitando RLS en tabla files...');
+        const { error: rlsError } = await supabase.rpc('exec_sql', { 
+            sql: 'ALTER TABLE public.files ENABLE ROW LEVEL SECURITY;' 
+        });
+        
+        if (rlsError) {
+            console.warn('⚠️ Error habilitando RLS (puede que ya esté habilitado):', rlsError);
+        } else {
+            console.log('✅ RLS habilitado en tabla files');
+        }
+        
+        // Aplicar cada política
+        for (const policy of policies) {
+            try {
+                console.log(`🔧 Aplicando política: ${policy.name}`);
+                
+                // Primero eliminar la política existente si existe
+                await supabase.rpc('exec_sql', { 
+                    sql: `DROP POLICY IF EXISTS "${policy.name}" ON public.files;` 
+                });
+                
+                // Crear la nueva política
+                const { error } = await supabase.rpc('exec_sql', { 
+                    sql: policy.sql 
+                });
+                
+                if (error) {
+                    console.error(`❌ Error aplicando política ${policy.name}:`, error);
+                } else {
+                    console.log(`✅ Política ${policy.name} aplicada correctamente`);
+                }
+                
+            } catch (error) {
+                console.error(`❌ Error en política ${policy.name}:`, error);
+            }
+        }
+        
+        console.log('✅ Políticas RLS de files aplicadas');
+        return { success: true };
+        
+    } catch (error) {
+        console.error('❌ Error aplicando políticas RLS de files:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+// Función para probar inserción en tabla files
+window.testFilesInsert = async () => {
+    try {
+        console.log('🧪 PROBANDO INSERCIÓN EN TABLA FILES...');
+        
+        const supabase = await getSupabaseClient();
+        
+        // Verificar autenticación
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user) {
+            console.error('❌ Usuario no autenticado:', userError);
+            return { success: false, error: 'Usuario no autenticado' };
+        }
+        
+        console.log('👤 Usuario autenticado:', { id: user.id, email: user.email });
+        
+        // Crear un registro de prueba
+        const testRecord = {
+            project_id: '00000000-0000-0000-0000-000000000000', // UUID de prueba
+            user_id: user.id,
+            path: 'test/path/example.jpg',
+            bucket: 'ugc',
+            file_type: 'image/jpeg',
+            category: 'test',
+            description: 'Archivo de prueba para verificar RLS'
+        };
+        
+        console.log('📝 Insertando registro de prueba:', testRecord);
+        
+        const { data, error } = await supabase
+            .from('files')
+            .insert([testRecord])
+            .select('id')
+            .single();
+            
+        if (error) {
+            console.error('❌ Error insertando en tabla files:', error);
+            return { success: false, error: error.message };
+        }
+        
+        console.log('✅ Registro insertado exitosamente:', data);
+        
+        // Limpiar el registro de prueba
+        const { error: deleteError } = await supabase
+            .from('files')
+            .delete()
+            .eq('id', data.id);
+            
+        if (deleteError) {
+            console.warn('⚠️ Error eliminando registro de prueba:', deleteError);
+        } else {
+            console.log('🧹 Registro de prueba eliminado');
+        }
+        
+        return { success: true, data: data };
+        
+    } catch (error) {
+        console.error('❌ Error probando inserción en files:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+// Función para verificar campos de la tabla files
+window.verifyFilesTable = async () => {
+    try {
+        console.log('🔍 VERIFICANDO ESTRUCTURA DE LA TABLA FILES...');
+        
+        const supabase = await getSupabaseClient();
+        
+        // Intentar hacer un select simple para ver la estructura
+        const { data, error } = await supabase
+            .from('files')
+            .select('*')
+            .limit(1);
+            
+        if (error) {
+            console.error('❌ Error consultando tabla files:', error);
+            return { success: false, error: error.message };
+        }
+        
+        console.log('✅ Tabla files accesible');
+        console.log('📋 Estructura esperada:', {
+            id: 'uuid (PK)',
+            project_id: 'uuid (FK)',
+            user_id: 'uuid (FK)', 
+            path: 'text',
+            bucket: 'text',
+            file_type: 'text',
+            category: 'text',
+            description: 'text',
+            created_at: 'timestamp'
+        });
+        
+        if (data && data.length > 0) {
+            console.log('📄 Ejemplo de registro:', data[0]);
+        } else {
+            console.log('📄 Tabla vacía - no hay registros de ejemplo');
+        }
+        
+        return { success: true, data: data };
+        
+    } catch (error) {
+        console.error('❌ Error verificando tabla files:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+// Función para forzar recarga de sesión
+window.refreshAuth = async () => {
+    try {
+        console.log('🔄 REFRESCANDO AUTENTICACIÓN...');
+        
+        const supabase = await getSupabaseClient();
+        
+        // Intentar refrescar la sesión
+        const { data: { session }, error } = await supabase.auth.refreshSession();
+        
+        if (error) {
+            console.error('❌ Error refrescando sesión:', error);
+            return { success: false, error: error.message };
+        }
+        
+        if (session) {
+            console.log('✅ Sesión refrescada exitosamente:', {
+                user: session.user ? { id: session.user.id, email: session.user.email } : null,
+                expiresAt: session.expires_at
+            });
+            return { success: true, session: session };
+        } else {
+            console.log('⚠️ No hay sesión para refrescar');
+            return { success: false, error: 'No hay sesión activa' };
+        }
+        
+    } catch (error) {
+        console.error('❌ Error refrescando autenticación:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+// Función específica para probar subida de imágenes
+window.testImageUpload = async () => {
+    try {
+        console.log('🖼️ PROBANDO SUBIDA DE IMÁGENES...');
+        
+        // Crear un input temporal para seleccionar imagen
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.multiple = false;
+        
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            console.log('📸 Imagen seleccionada:', {
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                lastModified: file.lastModified
+            });
+            
+            // Verificar que es una imagen
+            if (!file.type.startsWith('image/')) {
+                console.error('❌ El archivo no es una imagen:', file.type);
+                return;
+            }
+            
+            // Obtener usuario actual
+            const supabase = await getSupabaseClient();
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
+            if (userError || !user) {
+                console.error('❌ Usuario no autenticado:', userError);
+                return;
+            }
+            
+            // Probar subida de imagen
+            const testProjectId = 'test-image-' + Date.now();
+            const result = await uploadAndRegisterFile(file, user.id, testProjectId, 'product_image');
+            
+            if (result.success) {
+                console.log('✅ IMAGEN SUBIDA EXITOSAMENTE');
+                console.log('   - File ID:', result.fileId);
+                
+                // Obtener URL pública de la imagen
+                const { data: urlData } = supabase.storage
+                    .from('ugc')
+                    .getPublicUrl(`users/${user.id}/products/${testProjectId}/main.${file.name.split('.').pop()}`);
+                
+                console.log('🔗 URL pública de la imagen:', urlData.publicUrl);
+                
+                // Verificar que la imagen es accesible
+                const img = new Image();
+                img.onload = () => {
+                    console.log('✅ Imagen verificada - Se puede cargar correctamente');
+                    console.log('   - Dimensiones:', img.width + 'x' + img.height);
+                };
+                img.onerror = () => {
+                    console.error('❌ Error cargando imagen desde URL pública');
+                };
+                img.src = urlData.publicUrl;
+                
+            } else {
+                console.error('❌ ERROR SUBIENDO IMAGEN:', result.error);
+            }
+        };
+        
+        input.click();
+        
+    } catch (error) {
+        console.error('❌ Error en prueba de imagen:', error);
+    }
+};

@@ -115,6 +115,38 @@ CREATE TABLE public.files (
   CONSTRAINT files_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
   CONSTRAINT files_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id)
 );
+
+-- Habilitar RLS en la tabla files
+ALTER TABLE public.files ENABLE ROW LEVEL SECURITY;
+
+-- Políticas RLS para la tabla files
+-- Permitir a usuarios autenticados insertar archivos
+CREATE POLICY "Allow authenticated users to insert files" ON public.files
+FOR INSERT WITH CHECK (
+  auth.role() = 'authenticated' 
+  AND auth.uid() = user_id
+);
+
+-- Permitir a usuarios ver sus propios archivos
+CREATE POLICY "Allow users to view their own files" ON public.files
+FOR SELECT USING (
+  auth.role() = 'authenticated' 
+  AND auth.uid() = user_id
+);
+
+-- Permitir a usuarios actualizar sus propios archivos
+CREATE POLICY "Allow users to update their own files" ON public.files
+FOR UPDATE USING (
+  auth.role() = 'authenticated' 
+  AND auth.uid() = user_id
+);
+
+-- Permitir a usuarios eliminar sus propios archivos
+CREATE POLICY "Allow users to delete their own files" ON public.files
+FOR DELETE USING (
+  auth.role() = 'authenticated' 
+  AND auth.uid() = user_id
+);
 CREATE TABLE public.notes (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   project_id uuid NOT NULL,
