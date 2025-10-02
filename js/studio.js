@@ -2596,8 +2596,23 @@ class StudioManager {
     // Administración de configuraciones y envío al webhook
     // =======================================
 
-    // Función para convertir archivo a base64
+    // Función para convertir archivo a base64 (solo el string base64)
     async fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => {
+                const result = reader.result;
+                // Extraer solo el base64 sin el prefijo data:image/...
+                const base64 = result.split(',')[1];
+                resolve(base64);
+            };
+            reader.onerror = error => reject(error);
+        });
+    }
+
+    // Función para convertir archivo a data URL completa
+    async fileToDataURL(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
@@ -2930,7 +2945,7 @@ class StudioManager {
             for (const input of fileInputs) {
                 if (input.files && input.files.length > 0) {
                     for (const file of input.files) {
-                        const base64 = await this.fileToBase64(file);
+                        const base64 = await this.fileToDataURL(file);
                         
                         // Determinar el tipo de archivo basado en el input
                         if (input.id.includes('logo') || input.id.includes('imagen')) {
