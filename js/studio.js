@@ -687,11 +687,11 @@ class StudioManager {
             this.studioConfig.style = this.styleCatalog[0];
         }
 
+        // Inicializar campos del sidebar primero
+        this.initializeSidebarFields();
+
         // Poblar dropdowns del sidebar integrado
         this.populateDropdowns();
-
-        // Inicializar campos del sidebar
-        this.initializeSidebarFields();
 
         // Actualizar la visualización
         this.updateConfigDisplay();
@@ -1587,7 +1587,8 @@ class StudioManager {
     }
 
     updateBrandFields(brand) {
-        console.log('Actualizando campos de marca:', brand);
+        console.log('=== ACTUALIZANDO CAMPOS DE MARCA ===');
+        console.log('Datos de marca recibidos:', brand);
         
         // Actualizar campos del sidebar integrado
         const brandName = document.getElementById('brand-name');
@@ -1596,6 +1597,14 @@ class StudioManager {
         const brandProhibited = document.getElementById('brand-prohibited');
         const brandReferences = document.getElementById('brand-references');
         const brandLogoPreview = document.getElementById('brand-logo-preview');
+
+        console.log('Elementos HTML encontrados:');
+        console.log('- brandName:', !!brandName);
+        console.log('- brandTone:', !!brandTone);
+        console.log('- brandKeywords:', !!brandKeywords);
+        console.log('- brandProhibited:', !!brandProhibited);
+        console.log('- brandReferences:', !!brandReferences);
+        console.log('- brandLogoPreview:', !!brandLogoPreview);
 
         if (brandName) {
             brandName.textContent = brand.name || 'Sin nombre';
@@ -1698,10 +1707,18 @@ class StudioManager {
     }
 
     updateProductFields(product) {
+        console.log('=== ACTUALIZANDO CAMPOS DE PRODUCTO ===');
+        console.log('Datos de producto recibidos:', product);
+        
         // Actualizar campos del sidebar integrado
         const productType = document.getElementById('product-type');
         const productDescription = document.getElementById('product-description');
         const productName = document.getElementById('product-name');
+
+        console.log('Elementos HTML encontrados:');
+        console.log('- productType:', !!productType);
+        console.log('- productDescription:', !!productDescription);
+        console.log('- productName:', !!productName);
         const productBenefits = document.getElementById('product-benefits');
         const productDifferentiators = document.getElementById('product-differentiators');
         const productUsageSteps = document.getElementById('product-usage-steps');
