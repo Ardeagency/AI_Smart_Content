@@ -324,7 +324,11 @@ class StudioManager {
 
     async loadAvatars() {
         try {
-            if (!this.userId) return;
+            console.log('=== CARGANDO AVATARES ===');
+            if (!this.userId) {
+                console.log('No hay userId, saltando carga de avatares');
+                return;
+            }
 
             // Cargar avatares de todos los proyectos del usuario
             const { data: avatars, error } = await this.supabase
@@ -339,9 +343,17 @@ class StudioManager {
                     voice,
                     languages,
                     values,
+                    age,
+                    country,
+                    accents,
                     avatar_image_id,
                     avatar_video_id,
-                    projects!inner(name, website)
+                    created_at,
+                    projects!inner(
+                        id,
+                        name,
+                        user_id
+                    )
                 `)
                 .eq('projects.user_id', this.userId);
 
@@ -352,6 +364,8 @@ class StudioManager {
             }
 
             this.avatars = avatars || [];
+            console.log('Avatares cargados desde Supabase:', this.avatars);
+            console.log('Número de avatares:', this.avatars.length);
             this.renderAvatars();
 
         } catch (error) {
@@ -646,6 +660,7 @@ class StudioManager {
         console.log('- products:', this.products.length, this.products);
         console.log('- offers:', this.offers.length, this.offers);
         console.log('- audience:', this.audience?.length || 0, this.audience);
+        console.log('- avatars:', this.avatars?.length || 0, this.avatars);
         
         // Pre-seleccionar la primera marca si existe
         if (this.brands.length > 0) {
@@ -675,6 +690,13 @@ class StudioManager {
             this.studioConfig.audience = this.audience[0];
             console.log('Audiencia seleccionada:', this.studioConfig.audience);
             this.updateAudienceFields(this.studioConfig.audience);
+        }
+
+        // Pre-seleccionar el primer avatar si existe
+        if (this.avatars && this.avatars.length > 0) {
+            this.studioConfig.avatar = this.avatars[0];
+            console.log('Avatar seleccionado:', this.studioConfig.avatar);
+            this.updateAvatarFields(this.studioConfig.avatar);
         }
 
         // Pre-poblar configuración de ubicación
@@ -820,6 +842,29 @@ class StudioManager {
                 audienceSelector.appendChild(option);
             });
         }
+
+        // Poblar dropdown de avatares
+        const avatarSelector = document.getElementById('avatar-selector');
+        if (avatarSelector) {
+            avatarSelector.innerHTML = '<option value="">Seleccionar avatar...</option>';
+            this.avatars.forEach(avatar => {
+                const option = document.createElement('option');
+                option.value = avatar.id;
+                option.textContent = `${avatar.avatar_type || 'Avatar'} - ${avatar.traits?.join(', ') || 'Sin rasgos'}`;
+                if (this.studioConfig.avatar && this.studioConfig.avatar.id === avatar.id) {
+                    option.selected = true;
+                }
+                avatarSelector.appendChild(option);
+            });
+        }
+
+        console.log('Dropdowns poblados:', {
+            brands: this.brands.length,
+            products: this.products.length,
+            offers: this.offers.length,
+            audience: this.audience.length,
+            avatars: this.avatars.length
+        });
     }
 
     getAccentFromCountry(country) {
@@ -2134,6 +2179,56 @@ class StudioManager {
         }
     }
 
+    async loadAvatarImage(imageFileId, container) {
+        try {
+            console.log('Cargando imagen de avatar con ID:', imageFileId);
+            const imageBase64 = await this.supabaseFileToBase64(imageFileId);
+            console.log('Imagen de avatar cargada (base64 length):', imageBase64 ? imageBase64.length : 0);
+            
+            if (imageBase64) {
+                // Detectar el tipo de imagen basado en el header del base64
+                const imageType = this.detectImageType(imageBase64);
+                const dataUrl = `data:image/${imageType};base64,${imageBase64}`;
+                
+                container.innerHTML = `<img src="${dataUrl}" alt="Avatar" class="preview-image">`;
+                console.log('Imagen de avatar mostrada con tipo:', imageType);
+            } else {
+                container.innerHTML = '<div class="no-image">➕ Agregar imagen</div>';
+                console.log('No se pudo cargar la imagen de avatar');
+            }
+        } catch (error) {
+            console.error('Error loading avatar image:', error);
+            container.innerHTML = '<div class="no-image">Error cargando imagen</div>';
+        }
+    }
+
+    async loadAvatarVideo(videoFileId, container) {
+        try {
+            console.log('Cargando video de avatar con ID:', videoFileId);
+            const videoBase64 = await this.supabaseFileToBase64(videoFileId);
+            console.log('Video de avatar cargado (base64 length):', videoBase64 ? videoBase64.length : 0);
+            
+            if (videoBase64) {
+                // Para videos, asumimos MP4 por defecto
+                const dataUrl = `data:video/mp4;base64,${videoBase64}`;
+                
+                container.innerHTML = `
+                    <video controls class="preview-video">
+                        <source src="${dataUrl}" type="video/mp4">
+                        Tu navegador no soporta el elemento video.
+                    </video>
+                `;
+                console.log('Video de avatar mostrado');
+            } else {
+                container.innerHTML = '<div class="no-video">➕ Agregar video</div>';
+                console.log('No se pudo cargar el video de avatar');
+            }
+        } catch (error) {
+            console.error('Error loading avatar video:', error);
+            container.innerHTML = '<div class="no-video">Error cargando video</div>';
+        }
+    }
+
     updateProductDescription(description) {
         if (this.studioConfig.product) {
             this.studioConfig.product.short_desc = description;
@@ -2294,6 +2389,95 @@ class StudioManager {
                 option.selected = audience.language_codes.includes(option.value);
             });
         }
+    }
+
+    updateAvatarFields(avatar) {
+        console.log('=== ACTUALIZANDO CAMPOS DE AVATAR ===');
+        console.log('Datos de avatar recibidos:', avatar);
+        
+        // Actualizar tipo de personaje
+        const characterType = document.getElementById('character-type');
+        if (characterType) {
+            characterType.value = avatar.avatar_type || '';
+        }
+
+        // Actualizar checkboxes de rasgos
+        if (avatar.traits && Array.isArray(avatar.traits)) {
+            avatar.traits.forEach(trait => {
+                const checkbox = document.getElementById(`trait-${trait.toLowerCase()}`);
+                if (checkbox) checkbox.checked = true;
+            });
+        }
+
+        // Actualizar energía
+        if (avatar.energy) {
+            const energyCheckbox = document.getElementById(`energy-${avatar.energy.toLowerCase()}`);
+            if (energyCheckbox) energyCheckbox.checked = true;
+        }
+
+        // Actualizar género
+        if (avatar.gender) {
+            const genderCheckbox = document.getElementById(`gender-${avatar.gender.toLowerCase()}`);
+            if (genderCheckbox) genderCheckbox.checked = true;
+        }
+
+        // Actualizar voz
+        if (avatar.voice) {
+            const voiceCheckbox = document.getElementById(`voice-${avatar.voice.toLowerCase()}`);
+            if (voiceCheckbox) voiceCheckbox.checked = true;
+        }
+
+        // Actualizar idioma
+        const avatarLanguage = document.getElementById('avatar-language');
+        if (avatarLanguage && avatar.languages) {
+            if (Array.isArray(avatar.languages)) {
+                avatarLanguage.value = avatar.languages[0] || '';
+            } else {
+                avatarLanguage.value = avatar.languages;
+            }
+        }
+
+        // Actualizar valores
+        if (avatar.values && Array.isArray(avatar.values)) {
+            avatar.values.forEach(value => {
+                const checkbox = document.getElementById(`value-${value.toLowerCase()}`);
+                if (checkbox) checkbox.checked = true;
+            });
+        }
+
+        // Actualizar edad
+        const ageSlider = document.getElementById('age-slider');
+        const ageDisplay = document.getElementById('age-display');
+        if (ageSlider && avatar.age) {
+            ageSlider.value = avatar.age;
+            if (ageDisplay) ageDisplay.textContent = avatar.age;
+        }
+
+        // Actualizar país
+        const countrySelect = document.getElementById('country-select');
+        if (countrySelect && avatar.country) {
+            countrySelect.value = avatar.country;
+        }
+
+        // Actualizar acentos
+        if (avatar.accents && Array.isArray(avatar.accents)) {
+            avatar.accents.forEach(accent => {
+                const checkbox = document.getElementById(`accent-${accent.toLowerCase()}`);
+                if (checkbox) checkbox.checked = true;
+            });
+        }
+
+        // Cargar imagen de avatar si existe
+        if (avatar.avatar_image_id) {
+            this.loadAvatarImage(avatar.avatar_image_id, 'avatar-image-preview');
+        }
+
+        // Cargar video de avatar si existe
+        if (avatar.avatar_video_id) {
+            this.loadAvatarVideo(avatar.avatar_video_id, 'avatar-video-preview');
+        }
+
+        console.log('Campos de avatar actualizados correctamente');
     }
 
     updateAudiencePersona(persona) {
