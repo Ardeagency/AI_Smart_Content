@@ -681,9 +681,63 @@ class StudioManager {
         // Poblar dropdowns del sidebar integrado
         this.populateDropdowns();
 
+        // Inicializar campos del sidebar
+        this.initializeSidebarFields();
+
         // Actualizar la visualización
         this.updateConfigDisplay();
         this.showNotification('Configuraciones pre-pobladas con tus datos', 'success');
+    }
+
+    initializeSidebarFields() {
+        // Inicializar campos de marca
+        const brandName = document.getElementById('brand-name');
+        const brandTone = document.getElementById('brand-tone');
+        const brandKeywords = document.getElementById('brand-keywords');
+        const brandProhibited = document.getElementById('brand-prohibited');
+        const brandReferences = document.getElementById('brand-references');
+        const brandLogoPreview = document.getElementById('brand-logo-preview');
+
+        if (brandName) brandName.textContent = 'Selecciona una marca';
+        if (brandTone) brandTone.value = '';
+        if (brandKeywords) brandKeywords.value = '';
+        if (brandProhibited) brandProhibited.value = '';
+        if (brandReferences) brandReferences.innerHTML = '<span class="no-links">Sin enlaces</span>';
+        if (brandLogoPreview) brandLogoPreview.innerHTML = '<div class="no-image">Sin logo</div>';
+
+        // Inicializar campos de producto
+        const productType = document.getElementById('product-type');
+        const productDescription = document.getElementById('product-description');
+        const productName = document.getElementById('product-name');
+
+        if (productType) productType.textContent = 'Selecciona un producto';
+        if (productDescription) productDescription.value = '';
+        if (productName) productName.textContent = 'Selecciona un producto';
+
+        // Inicializar campos de oferta
+        const offerObjective = document.getElementById('offer-objective');
+        const offerDiscount = document.getElementById('offer-discount');
+        const offerValidity = document.getElementById('offer-validity');
+        const offerCTA = document.getElementById('offer-cta');
+        const offerCTAUrl = document.getElementById('offer-cta-url');
+        const offerTags = document.getElementById('offer-tags');
+
+        if (offerObjective) offerObjective.value = '';
+        if (offerDiscount) offerDiscount.value = '';
+        if (offerValidity) offerValidity.value = '';
+        if (offerCTA) offerCTA.value = '';
+        if (offerCTAUrl) offerCTAUrl.value = '';
+        if (offerTags) offerTags.value = '';
+
+        // Inicializar campos de audiencia
+        const audiencePersona = document.getElementById('audience-persona');
+        if (audiencePersona) audiencePersona.value = '';
+
+        // Inicializar categoría
+        const selectedCategory = document.getElementById('selected-category');
+        if (selectedCategory) selectedCategory.textContent = 'Selecciona una categoría';
+
+        console.log('Campos del sidebar inicializados');
     }
 
     populateDropdowns() {
