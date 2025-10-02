@@ -185,7 +185,11 @@ class StudioManager {
 
     async loadBrands() {
         try {
-            if (!this.userId) return;
+            console.log('=== CARGANDO MARCAS ===');
+            if (!this.userId) {
+                console.log('No hay userId, saltando carga de marcas');
+                return;
+            }
 
             // Cargar brand_guidelines con datos del proyecto
             const { data: brands, error } = await this.supabase
@@ -633,13 +637,20 @@ class StudioManager {
     // =======================================
 
     prePopulateConfigurations() {
-        console.log('Pre-poblando configuraciones con datos del usuario...');
+        console.log('=== PRE-POBLANDO CONFIGURACIONES ===');
+        console.log('Datos disponibles:');
+        console.log('- brands:', this.brands.length, this.brands);
+        console.log('- products:', this.products.length, this.products);
+        console.log('- offers:', this.offers.length, this.offers);
+        console.log('- audience:', this.audience?.length || 0, this.audience);
         
         // Pre-seleccionar la primera marca si existe
         if (this.brands.length > 0) {
             this.studioConfig.brand = this.brands[0];
             console.log('Marca seleccionada:', this.studioConfig.brand);
             this.updateBrandFields(this.studioConfig.brand);
+        } else {
+            console.log('No hay marcas disponibles');
         }
 
         // Pre-seleccionar el primer producto si existe
@@ -1829,6 +1840,9 @@ class StudioManager {
     }
 
     updateOfferFields(offer) {
+        console.log('=== ACTUALIZANDO CAMPOS DE OFERTA ===');
+        console.log('Datos de oferta recibidos:', offer);
+        
         // Actualizar campos del sidebar integrado
         const offerObjective = document.getElementById('offer-objective');
         const offerDiscount = document.getElementById('offer-discount');
@@ -1836,6 +1850,14 @@ class StudioManager {
         const offerCTA = document.getElementById('offer-cta');
         const offerCTAUrl = document.getElementById('offer-cta-url');
         const offerTags = document.getElementById('offer-tags');
+
+        console.log('Elementos HTML encontrados:');
+        console.log('- offerObjective:', !!offerObjective);
+        console.log('- offerDiscount:', !!offerDiscount);
+        console.log('- offerValidity:', !!offerValidity);
+        console.log('- offerCTA:', !!offerCTA);
+        console.log('- offerCTAUrl:', !!offerCTAUrl);
+        console.log('- offerTags:', !!offerTags);
 
         if (offerObjective) offerObjective.value = offer.main_objective || '';
         if (offerDiscount) offerDiscount.value = offer.kpis?.discount || '';
@@ -1907,9 +1929,16 @@ class StudioManager {
     }
 
     updateAudienceFields(audience) {
+        console.log('=== ACTUALIZANDO CAMPOS DE AUDIENCIA ===');
+        console.log('Datos de audiencia recibidos:', audience);
+        
         // Actualizar campos del sidebar integrado
         const audiencePersona = document.getElementById('audience-persona');
         const audienceLanguages = document.getElementById('audience-languages');
+
+        console.log('Elementos HTML encontrados:');
+        console.log('- audiencePersona:', !!audiencePersona);
+        console.log('- audienceLanguages:', !!audienceLanguages);
 
         if (audiencePersona) audiencePersona.value = audience.buyer_persona?.description || '';
         
