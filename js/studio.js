@@ -1998,18 +1998,338 @@ class StudioManager {
         console.log(`Mostrando sidebar sección ${sectionNumber}`);
         
         // Ocultar todos los sidebars
-        const sidebar1 = document.querySelector('.studio-sidebar:not(#sidebar-section-2)');
+        const sidebar1 = document.querySelector('.studio-sidebar:not(#sidebar-section-2):not(#sidebar-section-3)');
         const sidebar2 = document.getElementById('sidebar-section-2');
+        const sidebar3 = document.getElementById('sidebar-section-3');
         
         if (sidebar1) sidebar1.style.display = 'none';
         if (sidebar2) sidebar2.style.display = 'none';
+        if (sidebar3) sidebar3.style.display = 'none';
         
         // Mostrar el sidebar seleccionado
         if (sectionNumber === 1) {
             if (sidebar1) sidebar1.style.display = 'block';
         } else if (sectionNumber === 2) {
             if (sidebar2) sidebar2.style.display = 'block';
+        } else if (sectionNumber === 3) {
+            if (sidebar3) sidebar3.style.display = 'block';
         }
+    }
+
+    // =======================================
+    // Configuración de Avatar UGC
+    // =======================================
+
+    // =======================================
+    // Sección 3: Configuración de Formato
+    // =======================================
+
+    // Estilos
+    selectStyleFromDropdown(styleId) {
+        console.log('Seleccionando estilo:', styleId);
+        if (styleId) {
+            const style = this.styleCatalog.find(s => s.id === styleId);
+            if (style) {
+                this.studioConfig.style = style;
+                this.updateStyleFields(style);
+            }
+        }
+    }
+
+    updateStyleFields(style) {
+        console.log('Actualizando campos de estilo:', style);
+        const stylePrompt = document.getElementById('style-prompt');
+        if (stylePrompt && style.prompt) {
+            stylePrompt.value = style.prompt;
+        }
+    }
+
+    removeStyle() {
+        console.log('Removiendo estilo');
+        this.studioConfig.style = null;
+        const stylePrompt = document.getElementById('style-prompt');
+        if (stylePrompt) stylePrompt.value = '';
+        this.showNotification('Estilo removido', 'info');
+    }
+
+    // Estética
+    selectAestheticFromDropdown(aestheticId) {
+        console.log('Seleccionando estética:', aestheticId);
+        if (aestheticId) {
+            const aesthetic = this.aesthetics.find(a => a.id === aestheticId);
+            if (aesthetic) {
+                this.studioConfig.aesthetic = aesthetic;
+                this.updateAestheticFields(aesthetic);
+            }
+        }
+    }
+
+    updateAestheticFields(aesthetic) {
+        console.log('Actualizando campos de estética:', aesthetic);
+        
+        // Actualizar ánimo
+        if (aesthetic.mood) {
+            const moodCheckbox = document.getElementById(`mood-${aesthetic.mood.toLowerCase()}`);
+            if (moodCheckbox) moodCheckbox.checked = true;
+        }
+
+        // Actualizar paleta
+        if (aesthetic.palette && Array.isArray(aesthetic.palette)) {
+            aesthetic.palette.forEach(color => {
+                const paletteCheckbox = document.getElementById(`palette-${color.toLowerCase()}`);
+                if (paletteCheckbox) paletteCheckbox.checked = true;
+            });
+        }
+
+        // Actualizar iluminación
+        if (aesthetic.lighting) {
+            const lightingCheckbox = document.getElementById(`lighting-${aesthetic.lighting.toLowerCase()}`);
+            if (lightingCheckbox) lightingCheckbox.checked = true;
+        }
+
+        // Actualizar cámara
+        if (aesthetic.camera) {
+            const cameraCheckbox = document.getElementById(`camera-${aesthetic.camera.toLowerCase()}`);
+            if (cameraCheckbox) cameraCheckbox.checked = true;
+        }
+
+        // Actualizar paso/ritmo
+        if (aesthetic.pace) {
+            const paceCheckbox = document.getElementById(`pace-${aesthetic.pace.toLowerCase()}`);
+            if (paceCheckbox) paceCheckbox.checked = true;
+        }
+    }
+
+    // Toggle functions para estética
+    toggleMood(mood, isChecked) {
+        console.log(`Mood ${mood}: ${isChecked}`);
+        if (!this.studioConfig.aesthetic) this.studioConfig.aesthetic = {};
+        if (!this.studioConfig.aesthetic.moods) this.studioConfig.aesthetic.moods = [];
+        
+        if (isChecked) {
+            if (!this.studioConfig.aesthetic.moods.includes(mood)) {
+                this.studioConfig.aesthetic.moods.push(mood);
+            }
+        } else {
+            this.studioConfig.aesthetic.moods = this.studioConfig.aesthetic.moods.filter(m => m !== mood);
+        }
+    }
+
+    togglePalette(palette, isChecked) {
+        console.log(`Palette ${palette}: ${isChecked}`);
+        if (!this.studioConfig.aesthetic) this.studioConfig.aesthetic = {};
+        if (!this.studioConfig.aesthetic.palettes) this.studioConfig.aesthetic.palettes = [];
+        
+        if (isChecked) {
+            if (!this.studioConfig.aesthetic.palettes.includes(palette)) {
+                this.studioConfig.aesthetic.palettes.push(palette);
+            }
+        } else {
+            this.studioConfig.aesthetic.palettes = this.studioConfig.aesthetic.palettes.filter(p => p !== palette);
+        }
+    }
+
+    toggleLighting(lighting, isChecked) {
+        console.log(`Lighting ${lighting}: ${isChecked}`);
+        if (!this.studioConfig.aesthetic) this.studioConfig.aesthetic = {};
+        if (!this.studioConfig.aesthetic.lightings) this.studioConfig.aesthetic.lightings = [];
+        
+        if (isChecked) {
+            if (!this.studioConfig.aesthetic.lightings.includes(lighting)) {
+                this.studioConfig.aesthetic.lightings.push(lighting);
+            }
+        } else {
+            this.studioConfig.aesthetic.lightings = this.studioConfig.aesthetic.lightings.filter(l => l !== lighting);
+        }
+    }
+
+    toggleCamera(camera, isChecked) {
+        console.log(`Camera ${camera}: ${isChecked}`);
+        if (!this.studioConfig.aesthetic) this.studioConfig.aesthetic = {};
+        if (!this.studioConfig.aesthetic.cameras) this.studioConfig.aesthetic.cameras = [];
+        
+        if (isChecked) {
+            if (!this.studioConfig.aesthetic.cameras.includes(camera)) {
+                this.studioConfig.aesthetic.cameras.push(camera);
+            }
+        } else {
+            this.studioConfig.aesthetic.cameras = this.studioConfig.aesthetic.cameras.filter(c => c !== camera);
+        }
+    }
+
+    togglePace(pace, isChecked) {
+        console.log(`Pace ${pace}: ${isChecked}`);
+        if (!this.studioConfig.aesthetic) this.studioConfig.aesthetic = {};
+        if (!this.studioConfig.aesthetic.paces) this.studioConfig.aesthetic.paces = [];
+        
+        if (isChecked) {
+            if (!this.studioConfig.aesthetic.paces.includes(pace)) {
+                this.studioConfig.aesthetic.paces.push(pace);
+            }
+        } else {
+            this.studioConfig.aesthetic.paces = this.studioConfig.aesthetic.paces.filter(p => p !== pace);
+        }
+    }
+
+    createNewAesthetic() {
+        console.log('Creando nueva estética');
+        this.showNotification('Función de crear estética en desarrollo', 'info');
+    }
+
+    removeAesthetic() {
+        console.log('Removiendo estética');
+        this.studioConfig.aesthetic = null;
+        // Limpiar checkboxes
+        document.querySelectorAll('input[type="checkbox"][id^="mood-"], input[type="checkbox"][id^="palette-"], input[type="checkbox"][id^="lighting-"], input[type="checkbox"][id^="camera-"], input[type="checkbox"][id^="pace-"]').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        this.showNotification('Estética removida', 'info');
+    }
+
+    toggleFreeMode(type) {
+        console.log(`Modo libre para ${type}`);
+        this.showNotification(`Modo libre para ${type} en desarrollo`, 'info');
+    }
+
+    // Formato
+    togglePlatform(platform, isChecked) {
+        console.log(`Platform ${platform}: ${isChecked}`);
+        if (!this.studioConfig.format) this.studioConfig.format = {};
+        if (!this.studioConfig.format.platforms) this.studioConfig.format.platforms = [];
+        
+        if (isChecked) {
+            if (!this.studioConfig.format.platforms.includes(platform)) {
+                this.studioConfig.format.platforms.push(platform);
+            }
+        } else {
+            this.studioConfig.format.platforms = this.studioConfig.format.platforms.filter(p => p !== platform);
+        }
+    }
+
+    toggleFormat(format, isChecked) {
+        console.log(`Format ${format}: ${isChecked}`);
+        if (!this.studioConfig.format) this.studioConfig.format = {};
+        if (!this.studioConfig.format.formats) this.studioConfig.format.formats = [];
+        
+        if (isChecked) {
+            if (!this.studioConfig.format.formats.includes(format)) {
+                this.studioConfig.format.formats.push(format);
+            }
+        } else {
+            this.studioConfig.format.formats = this.studioConfig.format.formats.filter(f => f !== format);
+        }
+    }
+
+    // Escenario
+    selectScenarioFromDropdown(scenarioId) {
+        console.log('Seleccionando escenario:', scenarioId);
+        if (scenarioId) {
+            const scenario = this.scenarios.find(s => s.id === scenarioId);
+            if (scenario) {
+                this.studioConfig.scenario = scenario;
+                this.updateScenarioFields(scenario);
+            }
+        }
+    }
+
+    updateScenarioFields(scenario) {
+        console.log('Actualizando campos de escenario:', scenario);
+        
+        // Actualizar ubicación
+        if (scenario.main_location) {
+            const locationCheckbox = document.getElementById(`location-${scenario.main_location.toLowerCase()}`);
+            if (locationCheckbox) locationCheckbox.checked = true;
+        }
+
+        // Actualizar ambiente
+        if (scenario.ambience) {
+            const ambienceCheckbox = document.getElementById(`ambience-${scenario.ambience.toLowerCase()}`);
+            if (ambienceCheckbox) ambienceCheckbox.checked = true;
+        }
+
+        // Actualizar higiene
+        if (scenario.hygiene) {
+            const hygieneCheckbox = document.getElementById(`hygiene-${scenario.hygiene.toLowerCase()}`);
+            if (hygieneCheckbox) hygieneCheckbox.checked = true;
+        }
+
+        // Actualizar fondo
+        if (scenario.backdrop) {
+            const backdropCheckbox = document.getElementById(`backdrop-${scenario.backdrop.toLowerCase()}`);
+            if (backdropCheckbox) backdropCheckbox.checked = true;
+        }
+    }
+
+    // Toggle functions para escenario
+    toggleLocation(location, isChecked) {
+        console.log(`Location ${location}: ${isChecked}`);
+        if (!this.studioConfig.scenario) this.studioConfig.scenario = {};
+        if (!this.studioConfig.scenario.locations) this.studioConfig.scenario.locations = [];
+        
+        if (isChecked) {
+            if (!this.studioConfig.scenario.locations.includes(location)) {
+                this.studioConfig.scenario.locations.push(location);
+            }
+        } else {
+            this.studioConfig.scenario.locations = this.studioConfig.scenario.locations.filter(l => l !== location);
+        }
+    }
+
+    toggleAmbience(ambience, isChecked) {
+        console.log(`Ambience ${ambience}: ${isChecked}`);
+        if (!this.studioConfig.scenario) this.studioConfig.scenario = {};
+        if (!this.studioConfig.scenario.ambiences) this.studioConfig.scenario.ambiences = [];
+        
+        if (isChecked) {
+            if (!this.studioConfig.scenario.ambiences.includes(ambience)) {
+                this.studioConfig.scenario.ambiences.push(ambience);
+            }
+        } else {
+            this.studioConfig.scenario.ambiences = this.studioConfig.scenario.ambiences.filter(a => a !== ambience);
+        }
+    }
+
+    toggleHygiene(hygiene, isChecked) {
+        console.log(`Hygiene ${hygiene}: ${isChecked}`);
+        if (!this.studioConfig.scenario) this.studioConfig.scenario = {};
+        if (!this.studioConfig.scenario.hygienes) this.studioConfig.scenario.hygienes = [];
+        
+        if (isChecked) {
+            if (!this.studioConfig.scenario.hygienes.includes(hygiene)) {
+                this.studioConfig.scenario.hygienes.push(hygiene);
+            }
+        } else {
+            this.studioConfig.scenario.hygienes = this.studioConfig.scenario.hygienes.filter(h => h !== hygiene);
+        }
+    }
+
+    toggleBackdrop(backdrop, isChecked) {
+        console.log(`Backdrop ${backdrop}: ${isChecked}`);
+        if (!this.studioConfig.scenario) this.studioConfig.scenario = {};
+        if (!this.studioConfig.scenario.backdrops) this.studioConfig.scenario.backdrops = [];
+        
+        if (isChecked) {
+            if (!this.studioConfig.scenario.backdrops.includes(backdrop)) {
+                this.studioConfig.scenario.backdrops.push(backdrop);
+            }
+        } else {
+            this.studioConfig.scenario.backdrops = this.studioConfig.scenario.backdrops.filter(b => b !== backdrop);
+        }
+    }
+
+    createNewScenario() {
+        console.log('Creando nuevo escenario');
+        this.showNotification('Función de crear escenario en desarrollo', 'info');
+    }
+
+    // IA
+    updateCreativity(value) {
+        console.log('Actualizando creatividad:', value);
+        const display = document.getElementById('creativity-display');
+        if (display) display.textContent = value;
+        
+        if (!this.studioConfig.ai) this.studioConfig.ai = {};
+        this.studioConfig.ai.creativity = parseInt(value);
     }
 
     // =======================================
