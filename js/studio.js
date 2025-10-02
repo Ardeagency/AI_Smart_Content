@@ -3768,7 +3768,23 @@ class StudioManager {
             
             // Temas y categoría
             themes: this.studioConfig.themes,
-            category: this.studioConfig.category
+            category: this.studioConfig.category,
+            
+            // Instrucciones específicas para el webhook
+            webhook_instructions: {
+                expected_response_format: "guiones",
+                response_should_contain: [
+                    "tipo_guion",
+                    "titulo_sugerido", 
+                    "clips",
+                    "clip_numero",
+                    "escena",
+                    "voz"
+                ],
+                generate_multiple_scripts: true,
+                script_types: ["Enfoque Persona", "Enfoque Demo", "Enfoque Producto"],
+                max_clips_per_script: 3
+            }
         };
 
         // Cargar archivos como base64
@@ -3935,19 +3951,42 @@ class StudioManager {
             // URL del webhook real
             const webhookUrl = 'https://ardeagency.app.n8n.cloud/webhook-test/4635dddf-f8f9-4cc2-be0f-54e1c542d702';
             
+            // Verificar que los archivos se estén enviando correctamente
+            console.log('=== VERIFICACIÓN DE ARCHIVOS ===');
+            if (configData.brand?.files) {
+                console.log('Brand files:', {
+                    logo: configData.brand.files.logo ? `Base64 length: ${configData.brand.files.logo.length}` : 'No logo',
+                    assets: configData.brand.files.assets?.length || 0
+                });
+            }
+            if (configData.product?.files) {
+                console.log('Product files:', {
+                    main_image: configData.product.files.main_image ? `Base64 length: ${configData.product.files.main_image.length}` : 'No main image',
+                    gallery: configData.product.files.gallery?.length || 0
+                });
+            }
+            if (configData.ugc?.files) {
+                console.log('UGC files:', {
+                    avatar_image: configData.ugc.files.avatar_image ? `Base64 length: ${configData.ugc.files.avatar_image.length}` : 'No avatar image',
+                    avatar_video: configData.ugc.files.avatar_video ? `Base64 length: ${configData.ugc.files.avatar_video.length}` : 'No avatar video'
+                });
+            }
+            
             console.log('Enviando datos al webhook:', {
                 url: webhookUrl,
                 dataSize: JSON.stringify(configData).length,
                 userId: this.userId,
-                hasSupabase: !!this.supabase
+                hasSupabase: !!this.supabase,
+                expectedResponseFormat: configData.webhook_instructions?.expected_response_format
             });
             
             const response = await fetch(webhookUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-User-ID': this.userId || 'demo-user', // Cambiar a header personalizado
-                    'X-Project-ID': this.currentProjectId || 'demo-project'
+                    'X-User-ID': this.userId || 'demo-user',
+                    'X-Project-ID': this.currentProjectId || 'demo-project',
+                    'X-Expected-Response': 'guiones'
                 },
                 body: JSON.stringify(configData)
             });
@@ -3966,8 +4005,16 @@ class StudioManager {
 
             const result = await response.json();
             console.log('Resultado del webhook:', result);
-            this.showNotification('Configuración enviada exitosamente', 'success');
-            return result;
+            
+            // Validar que la respuesta tenga el formato esperado
+            if (this.validateWebhookResponse(result)) {
+                this.showNotification('Guiones generados exitosamente', 'success');
+                return result;
+            } else {
+                console.warn('Respuesta del webhook no tiene el formato esperado:', result);
+                this.showNotification('Respuesta recibida pero formato inesperado', 'warning');
+                return result;
+            }
 
         } catch (error) {
             console.error('Error sending to webhook:', error);
@@ -3976,6 +4023,91 @@ class StudioManager {
         }
     }
 
+    // Función para validar la respuesta del webhook
+    validateWebhookResponse(result) {
+        try {
+            // Verificar que la respuesta tenga la estructura esperada
+            if (!result || typeof result !== 'object') {
+                console.error('Respuesta no es un objeto:', result);
+                return false;
+            }
+
+            // Verificar que tenga la propiedad 'guiones'
+            if (!result.guiones || !Array.isArray(result.guiones)) {
+                console.error('Respuesta no tiene guiones array:', result);
+                return false;
+            }
+
+            // Verificar que cada guión tenga la estructura correcta
+            for (const guion of result.guiones) {
+                if (!guion.tipo_guion || !guion.titulo_sugerido || !guion.clips) {
+                    console.error('Guión no tiene estructura correcta:', guion);
+                    return false;
+                }
+
+                // Verificar que clips sea un array
+                if (!Array.isArray(guion.clips)) {
+                    console.error('Clips no es un array:', guion.clips);
+                    return false;
+                }
+
+                // Verificar que cada clip tenga la estructura correcta
+                for (const clip of guion.clips) {
+                    if (typeof clip.clip_numero !== 'number' || 
+                        !clip.escena || 
+                        !clip.voz) {
+                        console.error('Clip no tiene estructura correcta:', clip);
+                        return false;
+                    }
+                }
+            }
+
+            console.log('Respuesta del webhook validada correctamente');
+            return true;
+        } catch (error) {
+            console.error('Error validando respuesta del webhook:', error);
+            return false;
+        }
+    }
+
+    // Función de prueba para verificar el envío de archivos
+    async testWebhook() {
+        try {
+            console.log('=== INICIANDO PRUEBA DE WEBHOOK ===');
+            this.showLoading();
+            
+            // Generar configuración de prueba
+            const configData = await this.generateConfigJSON();
+            
+            // Mostrar resumen de archivos en consola
+            console.log('=== RESUMEN DE ARCHIVOS ENVIADOS ===');
+            console.log('Brand files:', {
+                logo: configData.brand?.files?.logo ? `✅ Logo: ${configData.brand.files.logo.length} caracteres` : '❌ Sin logo',
+                assets: configData.brand?.files?.assets?.length || 0
+            });
+            console.log('Product files:', {
+                main_image: configData.product?.files?.main_image ? `✅ Imagen principal: ${configData.product.files.main_image.length} caracteres` : '❌ Sin imagen principal',
+                gallery: configData.product?.files?.gallery?.length || 0
+            });
+            console.log('UGC files:', {
+                avatar_image: configData.ugc?.files?.avatar_image ? `✅ Imagen avatar: ${configData.ugc.files.avatar_image.length} caracteres` : '❌ Sin imagen avatar',
+                avatar_video: configData.ugc?.files?.avatar_video ? `✅ Video avatar: ${configData.ugc.files.avatar_video.length} caracteres` : '❌ Sin video avatar'
+            });
+            
+            // Enviar al webhook
+            const result = await this.sendToWebhook(configData);
+            
+            // Mostrar resultado
+            this.showNotification('Prueba de webhook completada. Revisa la consola para detalles.', 'success');
+            console.log('Resultado de la prueba:', result);
+            
+        } catch (error) {
+            console.error('Error en prueba de webhook:', error);
+            this.showNotification(`Error en prueba: ${error.message}`, 'error');
+        } finally {
+            this.hideLoading();
+        }
+    }
 
     async handleGenerateScripts() {
         try {
