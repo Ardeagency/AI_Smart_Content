@@ -478,6 +478,230 @@
                                onkeyup="window.studioManager.searchCategories(this.value)">
                     </div>
                 </div>
+
+                <!-- Botón Siguiente -->
+                <div class="config-section">
+                    <button class="btn btn-primary" onclick="window.studioManager.showSidebarSection(2)">
+                        Siguiente → Sidebar 2
+                    </button>
+                </div>
+            </nav>
+
+            <!-- Sidebar 2: Configuración UGC -->
+            <nav class="studio-sidebar" id="sidebar-section-2" style="display: none;">
+                <h3>Sección 2: Configuración UGC</h3>
+                
+                <!-- Avatar -->
+                <div class="config-section">
+                    <h4>🔹 Avatar</h4>
+                    <div class="config-field">
+                        <label>Seleccionar avatar:</label>
+                        <div class="dropdown-container">
+                            <select id="avatar-selector" onchange="window.studioManager.selectAvatarFromDropdown(this.value)">
+                                <option value="">Seleccionar avatar...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="config-field">
+                        <label>Tipo de personaje:</label>
+                        <div class="dropdown-container">
+                            <select id="character-type" onchange="window.studioManager.updateCharacterType(this.value)">
+                                <option value="">Seleccionar tipo...</option>
+                                <option value="realista">Realista</option>
+                                <option value="animado">Animado</option>
+                                <option value="abstracto">Abstracto</option>
+                                <option value="minimalista">Minimalista</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="config-field">
+                        <label>Rasgos:</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="trait-professional" onchange="window.studioManager.toggleTrait('professional', this.checked)">
+                                <span>Profesional</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="trait-friendly" onchange="window.studioManager.toggleTrait('friendly', this.checked)">
+                                <span>Amigable</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="trait-energetic" onchange="window.studioManager.toggleTrait('energetic', this.checked)">
+                                <span>Energético</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="trait-sophisticated" onchange="window.studioManager.toggleTrait('sophisticated', this.checked)">
+                                <span>Sofisticado</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="config-field">
+                        <label>Energía:</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="energy-calm" onchange="window.studioManager.toggleEnergy('calm', this.checked)">
+                                <span>Tranquila</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="energy-dynamic" onchange="window.studioManager.toggleEnergy('dynamic', this.checked)">
+                                <span>Dinámica</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="energy-intense" onchange="window.studioManager.toggleEnergy('intense', this.checked)">
+                                <span>Intensa</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="energy-playful" onchange="window.studioManager.toggleEnergy('playful', this.checked)">
+                                <span>Juguetona</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="config-field">
+                        <label>Género:</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="gender-male" onchange="window.studioManager.toggleGender('male', this.checked)">
+                                <span>Masculino</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="gender-female" onchange="window.studioManager.toggleGender('female', this.checked)">
+                                <span>Femenino</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="gender-neutral" onchange="window.studioManager.toggleGender('neutral', this.checked)">
+                                <span>Neutral</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="config-field">
+                        <label>Voz:</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="voice-deep" onchange="window.studioManager.toggleVoice('deep', this.checked)">
+                                <span>Grave</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="voice-high" onchange="window.studioManager.toggleVoice('high', this.checked)">
+                                <span>Aguda</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="voice-smooth" onchange="window.studioManager.toggleVoice('smooth', this.checked)">
+                                <span>Suave</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="voice-rough" onchange="window.studioManager.toggleVoice('rough', this.checked)">
+                                <span>Rasposa</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="config-field">
+                        <label>Idioma:</label>
+                        <div class="dropdown-container">
+                            <select id="avatar-language" onchange="window.studioManager.updateAvatarLanguage(this.value)">
+                                <option value="">Seleccionar idioma...</option>
+                                <option value="es">Español</option>
+                                <option value="en">English</option>
+                                <option value="fr">Français</option>
+                                <option value="de">Deutsch</option>
+                                <option value="pt">Português</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="config-field">
+                        <label>Valores:</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="value-authenticity" onchange="window.studioManager.toggleValue('authenticity', this.checked)">
+                                <span>Autenticidad</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="value-innovation" onchange="window.studioManager.toggleValue('innovation', this.checked)">
+                                <span>Innovación</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="value-quality" onchange="window.studioManager.toggleValue('quality', this.checked)">
+                                <span>Calidad</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="value-sustainability" onchange="window.studioManager.toggleValue('sustainability', this.checked)">
+                                <span>Sostenibilidad</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="config-field">
+                        <label>Edad:</label>
+                        <input type="range" id="avatar-age" min="18" max="65" value="25" 
+                               onchange="window.studioManager.updateAvatarAge(this.value)">
+                        <span id="age-display">25 años</span>
+                    </div>
+                    <div class="config-field">
+                        <label>País:</label>
+                        <div class="dropdown-container">
+                            <select id="avatar-country" onchange="window.studioManager.updateAvatarCountry(this.value)">
+                                <option value="">Seleccionar país...</option>
+                                <option value="mx">México</option>
+                                <option value="es">España</option>
+                                <option value="ar">Argentina</option>
+                                <option value="co">Colombia</option>
+                                <option value="us">Estados Unidos</option>
+                                <option value="uk">Reino Unido</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="config-field">
+                        <label>Acento:</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="accent-neutral" onchange="window.studioManager.toggleAccent('neutral', this.checked)">
+                                <span>Neutral</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="accent-mexican" onchange="window.studioManager.toggleAccent('mexican', this.checked)">
+                                <span>Mexicano</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="accent-argentine" onchange="window.studioManager.toggleAccent('argentine', this.checked)">
+                                <span>Argentino</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="accent-spanish" onchange="window.studioManager.toggleAccent('spanish', this.checked)">
+                                <span>Español</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="config-field">
+                        <label>Imágenes de referencia:</label>
+                        <div class="image-selector" id="avatar-reference-images">
+                            <div class="image-slot" onclick="document.getElementById('avatar-image-input').click()">
+                                <span>➕ Agregar imagen</span>
+                            </div>
+                            <input type="file" id="avatar-image-input" multiple accept="image/*" style="display: none;" 
+                                   onchange="window.studioManager.handleAvatarImageUpload(this.files)">
+                        </div>
+                    </div>
+                    <div class="config-field">
+                        <label>Video de referencia:</label>
+                        <div class="video-selector" id="avatar-reference-video">
+                            <div class="video-slot" onclick="document.getElementById('avatar-video-input').click()">
+                                <span>➕ Agregar video</span>
+                            </div>
+                            <input type="file" id="avatar-video-input" accept="video/*" style="display: none;" 
+                                   onchange="window.studioManager.handleAvatarVideoUpload(this.files)">
+                        </div>
+                    </div>
+                    <div class="config-field">
+                        <button class="btn btn-secondary" onclick="window.studioManager.createNewAvatar()">
+                            ➕ Crear nuevo avatar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Botón Anterior -->
+                <div class="config-section">
+                    <button class="btn btn-secondary" onclick="window.studioManager.showSidebarSection(1)">
+                        ← Anterior
+                    </button>
+                </div>
             </nav>
 
             <!-- Canvas Central -->

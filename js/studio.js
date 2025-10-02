@@ -1751,6 +1751,15 @@ class StudioManager {
         if (productVariants) productVariants.checked = product.variants && product.variants.length > 0;
         if (productAvailability) productAvailability.checked = !!product.availability;
 
+        // Mostrar/ocultar contenedores de detalles basado en el estado del checkbox
+        this.toggleElementDetails('benefits', productBenefits?.checked);
+        this.toggleElementDetails('differentiators', productDifferentiators?.checked);
+        this.toggleElementDetails('usage_steps', productUsageSteps?.checked);
+        this.toggleElementDetails('ingredients', productIngredients?.checked);
+        this.toggleElementDetails('price', productPrice?.checked);
+        this.toggleElementDetails('variants', productVariants?.checked);
+        this.toggleElementDetails('availability', productAvailability?.checked);
+
         // Actualizar elementos específicos de productos
         this.updateProductElementDetails('benefits', product.benefits);
         this.updateProductElementDetails('differentiators', product.differentiators);
@@ -1887,6 +1896,185 @@ class StudioManager {
         }
         
         console.log('Elementos seleccionados:', this.studioConfig.product.selectedElements);
+    }
+
+    // Función para mostrar/ocultar contenedores de detalles
+    toggleElementDetails(elementType, isChecked) {
+        const detailsContainer = document.getElementById(`${elementType}-details`);
+        if (detailsContainer) {
+            detailsContainer.style.display = isChecked ? 'block' : 'none';
+        }
+    }
+
+    // =======================================
+    // Navegación entre sidebars
+    // =======================================
+
+    showSidebarSection(sectionNumber) {
+        console.log(`Mostrando sidebar sección ${sectionNumber}`);
+        
+        // Ocultar todos los sidebars
+        const sidebar1 = document.querySelector('.studio-sidebar:not(#sidebar-section-2)');
+        const sidebar2 = document.getElementById('sidebar-section-2');
+        
+        if (sidebar1) sidebar1.style.display = 'none';
+        if (sidebar2) sidebar2.style.display = 'none';
+        
+        // Mostrar el sidebar seleccionado
+        if (sectionNumber === 1) {
+            if (sidebar1) sidebar1.style.display = 'block';
+        } else if (sectionNumber === 2) {
+            if (sidebar2) sidebar2.style.display = 'block';
+        }
+    }
+
+    // =======================================
+    // Configuración de Avatar UGC
+    // =======================================
+
+    selectAvatarFromDropdown(avatarId) {
+        console.log('Avatar seleccionado:', avatarId);
+        // Implementar lógica de selección de avatar
+    }
+
+    updateCharacterType(characterType) {
+        console.log('Tipo de personaje actualizado:', characterType);
+        if (!this.studioConfig.avatar) this.studioConfig.avatar = {};
+        this.studioConfig.avatar.characterType = characterType;
+    }
+
+    toggleTrait(trait, isChecked) {
+        console.log(`Rasgo ${trait} ${isChecked ? 'activado' : 'desactivado'}`);
+        if (!this.studioConfig.avatar) this.studioConfig.avatar = {};
+        if (!this.studioConfig.avatar.traits) this.studioConfig.avatar.traits = [];
+        
+        if (isChecked) {
+            if (!this.studioConfig.avatar.traits.includes(trait)) {
+                this.studioConfig.avatar.traits.push(trait);
+            }
+        } else {
+            this.studioConfig.avatar.traits = this.studioConfig.avatar.traits.filter(t => t !== trait);
+        }
+    }
+
+    toggleEnergy(energy, isChecked) {
+        console.log(`Energía ${energy} ${isChecked ? 'activada' : 'desactivada'}`);
+        if (!this.studioConfig.avatar) this.studioConfig.avatar = {};
+        if (!this.studioConfig.avatar.energy) this.studioConfig.avatar.energy = [];
+        
+        if (isChecked) {
+            if (!this.studioConfig.avatar.energy.includes(energy)) {
+                this.studioConfig.avatar.energy.push(energy);
+            }
+        } else {
+            this.studioConfig.avatar.energy = this.studioConfig.avatar.energy.filter(e => e !== energy);
+        }
+    }
+
+    toggleGender(gender, isChecked) {
+        console.log(`Género ${gender} ${isChecked ? 'activado' : 'desactivado'}`);
+        if (!this.studioConfig.avatar) this.studioConfig.avatar = {};
+        if (!this.studioConfig.avatar.gender) this.studioConfig.avatar.gender = [];
+        
+        if (isChecked) {
+            if (!this.studioConfig.avatar.gender.includes(gender)) {
+                this.studioConfig.avatar.gender.push(gender);
+            }
+        } else {
+            this.studioConfig.avatar.gender = this.studioConfig.avatar.gender.filter(g => g !== gender);
+        }
+    }
+
+    toggleVoice(voice, isChecked) {
+        console.log(`Voz ${voice} ${isChecked ? 'activada' : 'desactivada'}`);
+        if (!this.studioConfig.avatar) this.studioConfig.avatar = {};
+        if (!this.studioConfig.avatar.voice) this.studioConfig.avatar.voice = [];
+        
+        if (isChecked) {
+            if (!this.studioConfig.avatar.voice.includes(voice)) {
+                this.studioConfig.avatar.voice.push(voice);
+            }
+        } else {
+            this.studioConfig.avatar.voice = this.studioConfig.avatar.voice.filter(v => v !== voice);
+        }
+    }
+
+    updateAvatarLanguage(language) {
+        console.log('Idioma del avatar actualizado:', language);
+        if (!this.studioConfig.avatar) this.studioConfig.avatar = {};
+        this.studioConfig.avatar.language = language;
+    }
+
+    toggleValue(value, isChecked) {
+        console.log(`Valor ${value} ${isChecked ? 'activado' : 'desactivado'}`);
+        if (!this.studioConfig.avatar) this.studioConfig.avatar = {};
+        if (!this.studioConfig.avatar.values) this.studioConfig.avatar.values = [];
+        
+        if (isChecked) {
+            if (!this.studioConfig.avatar.values.includes(value)) {
+                this.studioConfig.avatar.values.push(value);
+            }
+        } else {
+            this.studioConfig.avatar.values = this.studioConfig.avatar.values.filter(v => v !== value);
+        }
+    }
+
+    updateAvatarAge(age) {
+        console.log('Edad del avatar actualizada:', age);
+        if (!this.studioConfig.avatar) this.studioConfig.avatar = {};
+        this.studioConfig.avatar.age = parseInt(age);
+        
+        // Actualizar display
+        const ageDisplay = document.getElementById('age-display');
+        if (ageDisplay) ageDisplay.textContent = `${age} años`;
+    }
+
+    updateAvatarCountry(country) {
+        console.log('País del avatar actualizado:', country);
+        if (!this.studioConfig.avatar) this.studioConfig.avatar = {};
+        this.studioConfig.avatar.country = country;
+    }
+
+    toggleAccent(accent, isChecked) {
+        console.log(`Acento ${accent} ${isChecked ? 'activado' : 'desactivado'}`);
+        if (!this.studioConfig.avatar) this.studioConfig.avatar = {};
+        if (!this.studioConfig.avatar.accents) this.studioConfig.avatar.accents = [];
+        
+        if (isChecked) {
+            if (!this.studioConfig.avatar.accents.includes(accent)) {
+                this.studioConfig.avatar.accents.push(accent);
+            }
+        } else {
+            this.studioConfig.avatar.accents = this.studioConfig.avatar.accents.filter(a => a !== accent);
+        }
+    }
+
+    handleAvatarImageUpload(files) {
+        console.log('Imágenes de avatar subidas:', files);
+        if (!this.studioConfig.avatar) this.studioConfig.avatar = {};
+        if (!this.studioConfig.avatar.referenceImages) this.studioConfig.avatar.referenceImages = [];
+        
+        // Procesar archivos de imagen
+        Array.from(files).forEach(file => {
+            if (file.type.startsWith('image/')) {
+                this.studioConfig.avatar.referenceImages.push(file);
+            }
+        });
+    }
+
+    handleAvatarVideoUpload(files) {
+        console.log('Video de avatar subido:', files);
+        if (!this.studioConfig.avatar) this.studioConfig.avatar = {};
+        
+        if (files.length > 0) {
+            this.studioConfig.avatar.referenceVideo = files[0];
+        }
+    }
+
+    createNewAvatar() {
+        console.log('Creando nuevo avatar');
+        // Implementar lógica para crear nuevo avatar
+        this.showNotification('Funcionalidad de crear avatar en desarrollo', 'info');
     }
 
     updateProductImages(product) {
