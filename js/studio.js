@@ -1647,8 +1647,12 @@ class StudioManager {
             console.log('Logo cargado (base64 length):', logoBase64 ? logoBase64.length : 0);
             
             if (logoBase64) {
-                container.innerHTML = `<img src="data:image/jpeg;base64,${logoBase64}" alt="Logo" class="preview-image">`;
-                console.log('Logo mostrado en el contenedor');
+                // Detectar el tipo de imagen basado en el header del base64
+                const imageType = this.detectImageType(logoBase64);
+                const dataUrl = `data:image/${imageType};base64,${logoBase64}`;
+                
+                container.innerHTML = `<img src="${dataUrl}" alt="Logo" class="preview-image">`;
+                console.log('Logo mostrado en el contenedor con tipo:', imageType);
             } else {
                 container.innerHTML = '<div class="no-image">Sin logo</div>';
                 console.log('No se pudo cargar el logo');
@@ -1759,11 +1763,20 @@ class StudioManager {
 
     async loadProductImage(imageFileId, container) {
         try {
+            console.log('Cargando imagen de producto con ID:', imageFileId);
             const imageBase64 = await this.supabaseFileToBase64(imageFileId);
+            console.log('Imagen cargada (base64 length):', imageBase64 ? imageBase64.length : 0);
+            
             if (imageBase64) {
-                container.innerHTML = `<img src="data:image/jpeg;base64,${imageBase64}" alt="Imagen" class="preview-image">`;
+                // Detectar el tipo de imagen basado en el header del base64
+                const imageType = this.detectImageType(imageBase64);
+                const dataUrl = `data:image/${imageType};base64,${imageBase64}`;
+                
+                container.innerHTML = `<img src="${dataUrl}" alt="Imagen" class="preview-image">`;
+                console.log('Imagen mostrada en el contenedor con tipo:', imageType);
             } else {
                 container.innerHTML = '<div class="no-image">➕ Agregar</div>';
+                console.log('No se pudo cargar la imagen');
             }
         } catch (error) {
             console.error('Error loading product image:', error);
@@ -2635,6 +2648,27 @@ class StudioManager {
         } catch (error) {
             console.error('Error getting file from Supabase:', error);
             return null;
+        }
+    }
+
+    // Función para detectar el tipo de imagen basado en el header del base64
+    detectImageType(base64String) {
+        if (!base64String) return 'jpeg';
+        
+        // Los primeros caracteres del base64 indican el tipo de archivo
+        const header = base64String.substring(0, 10);
+        
+        if (header.startsWith('/9j/') || header.startsWith('/9j4')) {
+            return 'jpeg';
+        } else if (header.startsWith('iVBORw0KGgo')) {
+            return 'png';
+        } else if (header.startsWith('R0lGOD')) {
+            return 'gif';
+        } else if (header.startsWith('UklGR')) {
+            return 'webp';
+        } else {
+            // Por defecto, asumir JPEG
+            return 'jpeg';
         }
     }
 
