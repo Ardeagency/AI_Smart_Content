@@ -4076,6 +4076,14 @@ class StudioManager {
             console.log('URL imagen principal:', configData.product.files.main_image);
             console.log('Galería de imágenes:', configData.product.files.gallery.length);
             console.log('URLs galería:', configData.product.files.gallery);
+            
+            // Mostrar array unificado que se enviará al webhook
+            const unifiedImages = [
+                ...(configData.product.files.main_image ? [configData.product.files.main_image] : []),
+                ...(configData.product.files.gallery || [])
+            ];
+            console.log('Array unificado para webhook:', unifiedImages);
+            console.log('Total imágenes unificadas:', unifiedImages.length);
         }
         
         if (configData.brand && configData.brand.files) {
@@ -4295,6 +4303,14 @@ class StudioManager {
                 console.log('Archivos del producto:');
                 console.log('- Imagen principal:', configData.product.files.main_image);
                 console.log('- Galería:', configData.product.files.gallery);
+                
+                // Mostrar array unificado
+                const unifiedImages = [
+                    ...(configData.product.files.main_image ? [configData.product.files.main_image] : []),
+                    ...(configData.product.files.gallery || [])
+                ];
+                console.log('- Array unificado de imágenes:', unifiedImages);
+                console.log('- Total de imágenes:', unifiedImages.length);
             }
             
             // Simplificar datos para evitar errores del webhook
@@ -4310,7 +4326,10 @@ class StudioManager {
                 product: configData.product ? {
                     id: configData.product.id,
                     name: configData.product.name,
-                    files: configData.product.files
+                    images: [
+                        ...(configData.product.files.main_image ? [configData.product.files.main_image] : []),
+                        ...(configData.product.files.gallery || [])
+                    ]
                 } : null,
                 offer: configData.offer,
                 audience: configData.audience,
