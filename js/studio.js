@@ -2549,6 +2549,7 @@ class StudioManager {
         this.handleGenerateScripts();
     }
 
+
     // =======================================
     // Configuración de Avatar UGC
     // =======================================
@@ -3814,10 +3815,15 @@ class StudioManager {
                 .from('files')
                 .select('path, bucket')
                 .eq('id', fileId)
-                .single();
+                .maybeSingle();
             
-            if (fileError || !fileInfo) {
-                console.log('Archivo no encontrado o error:', fileError?.message || 'Sin información');
+            if (fileError) {
+                console.log('Error consultando archivo:', fileError.message);
+                return null;
+            }
+            
+            if (!fileInfo) {
+                console.log('Archivo no encontrado en la base de datos');
                 return null;
             }
             
@@ -4138,13 +4144,21 @@ class StudioManager {
                     if (product.gallery_file_ids && product.gallery_file_ids.length > 0) {
                         console.log('Cargando galería de imágenes:', product.gallery_file_ids);
                         for (const imageId of product.gallery_file_ids) {
-                            console.log('Procesando imagen de galería:', imageId);
-                            const imageUrl = await this.getSupabaseFileUrl(imageId);
-                            if (imageUrl) {
-                                configData.product.files.gallery.push(imageUrl);
-                                console.log('Imagen de galería cargada exitosamente:', imageId, 'URL:', imageUrl);
+                            if (imageId && imageId !== 'null' && imageId !== null) {
+                                console.log('Procesando imagen de galería:', imageId);
+                                try {
+                                    const imageUrl = await this.getSupabaseFileUrl(imageId);
+                                    if (imageUrl) {
+                                        configData.product.files.gallery.push(imageUrl);
+                                        console.log('Imagen de galería cargada exitosamente:', imageId, 'URL:', imageUrl);
+                                    } else {
+                                        console.warn('No se pudo generar URL para imagen de galería:', imageId);
+                                    }
+                                } catch (error) {
+                                    console.error('Error procesando imagen de galería:', imageId, error);
+                                }
                             } else {
-                                console.warn('No se pudo cargar imagen de galería:', imageId);
+                                console.warn('ID de imagen inválido:', imageId);
                             }
                         }
                         console.log('Total imágenes en galería:', configData.product.files.gallery.length);
@@ -4257,14 +4271,58 @@ class StudioManager {
             // URL del webhook real
             const webhookUrl = 'https://ardeagency.app.n8n.cloud/webhook-test/4635dddf-f8f9-4cc2-be0f-54e1c542d702';
             
-            console.log('Enviando datos al webhook:', {
-                url: webhookUrl,
-                dataSize: JSON.stringify(configData).length,
-                userId: this.userId,
-                hasSupabase: !!this.supabase,
-                expectedResponseFormat: configData.webhook_instructions?.expected_response_format
-            });
+            // Webhook de prueba temporal para debuggear
+            // const webhookUrl = 'https://webhook.site/your-unique-url';
             
+            console.log('=== ENVIANDO DATOS AL WEBHOOK ===');
+            console.log('URL:', webhookUrl);
+            console.log('Tamaño de datos:', JSON.stringify(configData).length, 'caracteres');
+            console.log('User ID:', this.userId);
+            console.log('Project ID:', this.currentProjectId);
+            
+            // Validar datos críticos
+            if (!configData.product) {
+                console.warn('No hay datos de producto para enviar');
+                throw new Error('No hay datos de producto configurados');
+            }
+            if (!configData.brand) {
+                console.warn('No hay datos de marca para enviar');
+                throw new Error('No hay datos de marca configurados');
+            }
+            
+            // Mostrar solo URLs de archivos para debug
+            if (configData.product && configData.product.files) {
+                console.log('Archivos del producto:');
+                console.log('- Imagen principal:', configData.product.files.main_image);
+                console.log('- Galería:', configData.product.files.gallery);
+            }
+            
+            // Simplificar datos para evitar errores del webhook
+            const simplifiedData = {
+                timestamp: configData.timestamp,
+                user_id: configData.user_id,
+                project_id: configData.project_id,
+                brand: configData.brand ? {
+                    id: configData.brand.id,
+                    name: configData.brand.name,
+                    files: configData.brand.files
+                } : null,
+                product: configData.product ? {
+                    id: configData.product.id,
+                    name: configData.product.name,
+                    files: configData.product.files
+                } : null,
+                offer: configData.offer,
+                audience: configData.audience,
+                ugc: configData.ugc
+            };
+            
+            console.log('Datos simplificados para webhook:', simplifiedData);
+            
+            // Crear AbortController para timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
+
             const response = await fetch(webhookUrl, {
                 method: 'POST',
                 headers: {
@@ -4273,8 +4331,11 @@ class StudioManager {
                     'X-Project-ID': this.currentProjectId || 'demo-project',
                     'X-Expected-Response': 'guiones'
                 },
-                body: JSON.stringify(configData)
+                body: JSON.stringify(simplifiedData),
+                signal: controller.signal
             });
+
+            clearTimeout(timeoutId);
 
             console.log('Respuesta del webhook:', {
                 status: response.status,
