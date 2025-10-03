@@ -4355,13 +4355,29 @@ class StudioManager {
 
             // Solo incluir marca si está seleccionada
             if (configData.brand && configData.brand.id) {
+                // Buscar los datos completos de la marca en brand_guidelines
+                const brandData = this.brands.find(b => b.id === configData.brand.id);
+                
+                console.log('=== DATOS DE MARCA PARA WEBHOOK ===');
+                console.log('Brand ID:', configData.brand.id);
+                console.log('Brand data encontrada:', brandData);
+                console.log('Tone of voice:', brandData?.tone_of_voice);
+                console.log('Keywords yes:', brandData?.keywords_yes);
+                console.log('Keywords no:', brandData?.keywords_no);
+                console.log('Dos/donts:', brandData?.dos_donts);
+                console.log('Reference links:', brandData?.reference_links);
+                
                 finalData.brand = {
                     id: configData.brand.id,
                     name: configData.brand.name,
-                    country: configData.brand.country,
-                    website: configData.brand.website,
-                    languages: configData.brand.languages,
-                    guidelines: configData.brand.guidelines,
+                    country: brandData?.projects?.country || '',
+                    website: brandData?.projects?.website || '',
+                    languages: brandData?.projects?.languages || [],
+                    tone_of_voice: brandData?.tone_of_voice || '',
+                    keywords_yes: brandData?.keywords_yes || [],
+                    keywords_no: brandData?.keywords_no || [],
+                    dos_donts: brandData?.dos_donts || '',
+                    reference_links: brandData?.reference_links || [],
                     files: configData.brand.files
                 };
             }
@@ -4427,7 +4443,7 @@ class StudioManager {
             // Crear AbortController para timeout
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
-
+            
             const response = await fetch(webhookUrl, {
                 method: 'POST',
                 headers: {
