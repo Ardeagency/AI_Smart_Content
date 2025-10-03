@@ -4325,7 +4325,7 @@ class StudioManager {
     async sendToWebhook(configData) {
         try {
             // URL del webhook real
-            const webhookUrl = 'https://ardeagency.app.n8n.cloud/webhook/4635dddf-f8f9-4cc2-be0f-54e1c542d702';
+            const webhookUrl = 'https://ardeagency.app.n8n.cloud/webhook/4635dddf-f8f9-4cc2-be0f-54e1c542d702?v=' + Date.now();
             
             // Webhook de prueba temporal para debuggear (sin CORS)
             // const webhookUrl = 'https://webhook.site/your-unique-url';
@@ -4512,8 +4512,10 @@ class StudioManager {
             
             const response = await fetch(webhookUrl, {
                 method: 'POST',
+                mode: 'cors',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                     'X-User-ID': this.userId || 'demo-user',
                     'X-Project-ID': this.currentProjectId || 'demo-project',
                     'X-Expected-Response': 'guiones'
