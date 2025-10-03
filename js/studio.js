@@ -4633,19 +4633,39 @@ class StudioManager {
                 guionesData = JSON.parse(result);
             }
 
-            // Verificar que tenga la estructura esperada
-            if (!guionesData.guiones || !Array.isArray(guionesData.guiones)) {
-                throw new Error('Formato de respuesta inválido');
+            console.log('Datos procesados:', guionesData);
+
+            // Manejar diferentes formatos de respuesta
+            let guiones = [];
+            
+            if (Array.isArray(guionesData)) {
+                // Si la respuesta es un array directo
+                guiones = guionesData;
+                console.log('Formato array directo detectado:', guiones.length, 'guiones');
+            } else if (guionesData.guiones && Array.isArray(guionesData.guiones)) {
+                // Si la respuesta tiene estructura {guiones: [...]}
+                guiones = guionesData.guiones;
+                console.log('Formato con guiones detectado:', guiones.length, 'guiones');
+            } else if (guionesData.scripts && Array.isArray(guionesData.scripts)) {
+                // Si la respuesta tiene estructura {scripts: [...]}
+                guiones = guionesData.scripts;
+                console.log('Formato con scripts detectado:', guiones.length, 'guiones');
+            } else {
+                throw new Error('Formato de respuesta inválido - no se encontraron guiones');
+            }
+
+            if (guiones.length === 0) {
+                throw new Error('No se generaron guiones');
             }
 
             // Generar HTML para las cards de guiones
-            const guionesHTML = this.generateGuionesCards(guionesData.guiones);
+            const guionesHTML = this.generateGuionesCards(guiones);
             
             canvasArea.innerHTML = `
                 <div class="guiones-container">
                     <div class="guiones-header">
                         <h2>🎬 Guiones Generados</h2>
-                        <p>Se generaron ${guionesData.guiones.length} guiones para tu UGC</p>
+                        <p>Se generaron ${guiones.length} guiones para tu UGC</p>
                     </div>
                     <div class="guiones-grid">
                         ${guionesHTML}
@@ -4843,28 +4863,33 @@ Generado por UGC Studio
 
     validateWebhookResponse(response) {
         try {
-            // Validar que la respuesta sea un objeto
-            if (!response || typeof response !== 'object') {
-                console.warn('Respuesta no es un objeto:', response);
-                return false;
-            }
-
-            // Validar que tenga al menos un guión
-            if (response.guiones && Array.isArray(response.guiones) && response.guiones.length > 0) {
-                console.log('Respuesta válida con guiones:', response.guiones.length);
+            console.log('Validando respuesta del webhook:', response);
+            
+            // Si la respuesta es un array directo
+            if (Array.isArray(response) && response.length > 0) {
+                console.log('Respuesta es un array directo con', response.length, 'elementos');
                 return true;
             }
 
-            // Validar formato alternativo
-            if (response.scripts && Array.isArray(response.scripts) && response.scripts.length > 0) {
-                console.log('Respuesta válida con scripts:', response.scripts.length);
-                return true;
-            }
+            // Si la respuesta es un objeto
+            if (response && typeof response === 'object') {
+                // Validar que tenga al menos un guión
+                if (response.guiones && Array.isArray(response.guiones) && response.guiones.length > 0) {
+                    console.log('Respuesta válida con guiones:', response.guiones.length);
+                    return true;
+                }
 
-            // Validar formato de error
-            if (response.error) {
-                console.warn('Webhook devolvió error:', response.error);
-                return false;
+                // Validar formato alternativo
+                if (response.scripts && Array.isArray(response.scripts) && response.scripts.length > 0) {
+                    console.log('Respuesta válida con scripts:', response.scripts.length);
+                    return true;
+                }
+
+                // Validar formato de error
+                if (response.error) {
+                    console.warn('Webhook devolvió error:', response.error);
+                    return false;
+                }
             }
 
             console.warn('Respuesta no tiene formato esperado:', response);
