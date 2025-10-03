@@ -4490,7 +4490,7 @@ class StudioManager {
             
             // Crear AbortController para timeout
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 180000); // 3 minutos timeout
+            const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minutos timeout
             
             const response = await fetch(webhookUrl, {
                 method: 'POST',
@@ -4765,13 +4765,13 @@ Generado por UGC Studio
         const canvasArea = document.querySelector('.canvas-area');
         if (!canvasArea) return;
 
-        canvasArea.innerHTML = `
-            <div class="loading-container">
-                <div class="loading-spinner"></div>
+            canvasArea.innerHTML = `
+                <div class="loading-container">
+                    <div class="loading-spinner"></div>
                 <div class="loading-message">${message}</div>
-                <div class="loading-subtitle">Por favor espera mientras la IA procesa tu solicitud...</div>
-            </div>
-        `;
+                <div class="loading-subtitle">Por favor espera mientras la IA procesa tu solicitud...<br><small>Esto puede tomar hasta 5 minutos</small></div>
+                </div>
+            `;
         
         console.log('Loading:', message);
     }
@@ -4781,12 +4781,12 @@ Generado por UGC Studio
         if (!canvasArea) return;
 
         // Limpiar el canvas
-        canvasArea.innerHTML = `
-            <div class="canvas-placeholder">
+            canvasArea.innerHTML = `
+                <div class="canvas-placeholder">
                 <h3>Configuración de UGC</h3>
                 <p>Selecciona las opciones en el sidebar y genera tus guiones</p>
-            </div>
-        `;
+                </div>
+            `;
         
         console.log('Loading completado');
     }
