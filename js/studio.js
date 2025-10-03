@@ -3836,8 +3836,15 @@ class StudioManager {
             }
 
             // Validar que fileId sea válido
-            if (!fileId || fileId === 'null' || fileId === null) {
-                console.log('FileId inválido, saltando URL');
+            if (!fileId || fileId === 'null' || fileId === null || fileId === '') {
+                console.log('FileId inválido, saltando URL:', fileId);
+                return null;
+            }
+            
+            // Validar formato de UUID
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            if (!uuidRegex.test(fileId)) {
+                console.warn('FileId no tiene formato UUID válido:', fileId);
                 return null;
             }
             
@@ -3851,12 +3858,17 @@ class StudioManager {
                 .maybeSingle();
             
             if (fileError) {
-                console.log('Error consultando archivo:', fileError.message);
+                console.warn('Error consultando archivo:', fileError.message);
                 return null;
             }
             
             if (!fileInfo) {
-                console.log('Archivo no encontrado en la base de datos');
+                console.warn('Archivo no encontrado en la base de datos:', fileId);
+                return null;
+            }
+            
+            if (!fileInfo.path) {
+                console.warn('Archivo sin path:', fileInfo);
                 return null;
             }
             
@@ -4312,8 +4324,15 @@ class StudioManager {
             // URL del webhook real
             const webhookUrl = 'https://ardeagency.app.n8n.cloud/webhook-test/4635dddf-f8f9-4cc2-be0f-54e1c542d702';
             
-            // Webhook de prueba temporal para debuggear
+            // Webhook de prueba temporal para debuggear (sin CORS)
             // const webhookUrl = 'https://webhook.site/your-unique-url';
+            
+            // Modo de prueba: simular respuesta exitosa si hay problemas de CORS
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            if (isLocalhost) {
+                console.log('Modo localhost detectado - usando respuesta de prueba');
+                return this.generateMockResponse(configData);
+            }
             
             console.log('=== ENVIANDO DATOS AL WEBHOOK ===');
             console.log('URL:', webhookUrl);
@@ -4533,8 +4552,22 @@ class StudioManager {
 
         } catch (error) {
             console.error('Error sending to webhook:', error);
-            this.showNotification(`Error enviando configuración: ${error.message}`, 'error');
-            throw error;
+            
+            // Manejar diferentes tipos de errores
+            let errorMessage = error.message;
+            
+            if (error.name === 'AbortError') {
+                errorMessage = 'La solicitud tardó demasiado tiempo. Inténtalo de nuevo.';
+            } else if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'No se pudo conectar con el servidor. Verifica tu conexión a internet.';
+            } else if (error.message.includes('CORS')) {
+                errorMessage = 'Error de CORS: El servidor no permite requests desde localhost. Contacta al administrador.';
+            } else if (error.message.includes('524')) {
+                errorMessage = 'El servidor tardó demasiado en responder. Inténtalo de nuevo.';
+            }
+            
+            this.showNotification(`Error enviando configuración: ${errorMessage}`, 'error');
+            throw new Error(errorMessage);
         }
     }
 
@@ -4807,6 +4840,168 @@ Generado por UGC Studio
         `;
         
         console.error('Error mostrado:', message);
+    }
+
+    validateWebhookResponse(response) {
+        try {
+            // Validar que la respuesta sea un objeto
+            if (!response || typeof response !== 'object') {
+                console.warn('Respuesta no es un objeto:', response);
+                return false;
+            }
+
+            // Validar que tenga al menos un guión
+            if (response.guiones && Array.isArray(response.guiones) && response.guiones.length > 0) {
+                console.log('Respuesta válida con guiones:', response.guiones.length);
+                return true;
+            }
+
+            // Validar formato alternativo
+            if (response.scripts && Array.isArray(response.scripts) && response.scripts.length > 0) {
+                console.log('Respuesta válida con scripts:', response.scripts.length);
+                return true;
+            }
+
+            // Validar formato de error
+            if (response.error) {
+                console.warn('Webhook devolvió error:', response.error);
+                return false;
+            }
+
+            console.warn('Respuesta no tiene formato esperado:', response);
+            return false;
+
+        } catch (error) {
+            console.error('Error validando respuesta:', error);
+            return false;
+        }
+    }
+
+    generateMockResponse(configData) {
+        console.log('Generando respuesta de prueba...');
+        
+        // Simular delay del webhook
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                const mockResponse = {
+                    success: true,
+                    timestamp: new Date().toISOString(),
+                    guiones: [
+                        {
+                            id: 'guion-1',
+                            titulo: 'Guión Principal',
+                            duracion: '30 segundos',
+                            tipo: 'Principal',
+                            clips: [
+                                {
+                                    numero: 1,
+                                    duracion: '5s',
+                                    escena: 'Introducción del producto',
+                                    voz: 'Energética y motivacional',
+                                    contenido: `¡Hola! Soy ${configData.ugc?.name || 'tu influencer'} y hoy te traigo algo increíble.`
+                                },
+                                {
+                                    numero: 2,
+                                    duracion: '10s',
+                                    escena: 'Demostración del producto',
+                                    voz: 'Explicativa y clara',
+                                    contenido: `Este ${configData.product?.name || 'producto'} es perfecto para ${configData.audience?.buyer_persona || 'tu estilo de vida'}.`
+                                },
+                                {
+                                    numero: 3,
+                                    duracion: '10s',
+                                    escena: 'Beneficios destacados',
+                                    voz: 'Persuasiva y convincente',
+                                    contenido: `Con ${configData.offer?.discount || '20%'} de descuento, ¡no puedes perdértelo!`
+                                },
+                                {
+                                    numero: 4,
+                                    duracion: '5s',
+                                    escena: 'Call to action',
+                                    voz: 'Urgente y motivacional',
+                                    contenido: `¡Haz clic en el enlace de abajo y consíguelo ahora!`
+                                }
+                            ]
+                        },
+                        {
+                            id: 'guion-2',
+                            titulo: 'Guión Corto',
+                            duracion: '15 segundos',
+                            tipo: 'Corto',
+                            clips: [
+                                {
+                                    numero: 1,
+                                    duracion: '5s',
+                                    escena: 'Hook inicial',
+                                    voz: 'Impactante',
+                                    contenido: `¿Sabías que ${configData.product?.name || 'este producto'} puede cambiar tu vida?`
+                                },
+                                {
+                                    numero: 2,
+                                    duracion: '7s',
+                                    escena: 'Demostración rápida',
+                                    voz: 'Rápida y clara',
+                                    contenido: `Mira cómo funciona y por qué todos lo aman.`
+                                },
+                                {
+                                    numero: 3,
+                                    duracion: '3s',
+                                    escena: 'CTA final',
+                                    voz: 'Directa',
+                                    contenido: `¡Consíguelo ahora!`
+                                }
+                            ]
+                        },
+                        {
+                            id: 'guion-3',
+                            titulo: 'Guión Detallado',
+                            duracion: '60 segundos',
+                            tipo: 'Detallado',
+                            clips: [
+                                {
+                                    numero: 1,
+                                    duracion: '10s',
+                                    escena: 'Introducción personal',
+                                    voz: 'Cálida y cercana',
+                                    contenido: `Hola, soy ${configData.ugc?.name || 'tu influencer'} y quiero compartir contigo mi experiencia con ${configData.product?.name || 'este producto'}.`
+                                },
+                                {
+                                    numero: 2,
+                                    duracion: '15s',
+                                    escena: 'Historia personal',
+                                    voz: 'Narrativa y emotiva',
+                                    contenido: `Cuando lo probé por primera vez, no podía creer los resultados. Realmente funciona.`
+                                },
+                                {
+                                    numero: 3,
+                                    duracion: '20s',
+                                    escena: 'Demostración completa',
+                                    voz: 'Explicativa y detallada',
+                                    contenido: `Te muestro paso a paso cómo usarlo y todos los beneficios que obtienes.`
+                                },
+                                {
+                                    numero: 4,
+                                    duracion: '10s',
+                                    escena: 'Testimonio y recomendación',
+                                    voz: 'Sincera y convincente',
+                                    contenido: `Si estás buscando ${configData.product?.name || 'algo así'}, definitivamente te lo recomiendo.`
+                                },
+                                {
+                                    numero: 5,
+                                    duracion: '5s',
+                                    escena: 'Call to action final',
+                                    voz: 'Motivacional',
+                                    contenido: `¡No esperes más! El enlace está en mi bio.`
+                                }
+                            ]
+                        }
+                    ]
+                };
+                
+                console.log('Respuesta de prueba generada:', mockResponse);
+                resolve(mockResponse);
+            }, 2000); // Simular 2 segundos de procesamiento
+        });
     }
 }
 
