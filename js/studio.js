@@ -4490,7 +4490,7 @@ class StudioManager {
             
             // Crear AbortController para timeout
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
+            const timeoutId = setTimeout(() => controller.abort(), 180000); // 3 minutos timeout
             
             const response = await fetch(webhookUrl, {
                 method: 'POST',
@@ -4562,15 +4562,17 @@ class StudioManager {
 
             console.log('Configuración válida, generando JSON...');
 
-            // Mostrar loading
-            this.showLoading();
+            // Mostrar loading con estado específico
+            this.showLoading('Preparando datos...');
 
             // Generar JSON de configuración con archivos
+            this.showLoading('Generando configuración...');
             const configData = await this.generateConfigJSON();
             console.log('Configuración generada:', configData);
             console.log('Tamaño de la configuración:', JSON.stringify(configData).length, 'caracteres');
 
             // Enviar al webhook
+            this.showLoading('Enviando datos a la IA...');
             console.log('Enviando al webhook...');
             const result = await this.sendToWebhook(configData);
             
@@ -4579,7 +4581,7 @@ class StudioManager {
 
         } catch (error) {
             console.error('Error generating scripts:', error);
-            this.showNotification(`Error generando guiones: ${error.message}`, 'error');
+            this.showError(`Error generando guiones: ${error.message}`);
         } finally {
             this.hideLoading();
         }
@@ -4759,14 +4761,52 @@ Generado por UGC Studio
 `;
     }
 
-    showLoading() {
-        // No mostrar loading en el canvas
-        console.log('Generando guiones...');
+    showLoading(message = 'Procesando...') {
+        const canvasArea = document.querySelector('.canvas-area');
+        if (!canvasArea) return;
+
+        canvasArea.innerHTML = `
+            <div class="loading-container">
+                <div class="loading-spinner"></div>
+                <div class="loading-message">${message}</div>
+                <div class="loading-subtitle">Por favor espera mientras la IA procesa tu solicitud...</div>
+            </div>
+        `;
+        
+        console.log('Loading:', message);
     }
 
     hideLoading() {
-        // No hacer nada - canvas permanece vacío
-        console.log('Generación completada');
+        const canvasArea = document.querySelector('.canvas-area');
+        if (!canvasArea) return;
+
+        // Limpiar el canvas
+        canvasArea.innerHTML = `
+            <div class="canvas-placeholder">
+                <h3>Configuración de UGC</h3>
+                <p>Selecciona las opciones en el sidebar y genera tus guiones</p>
+            </div>
+        `;
+        
+        console.log('Loading completado');
+    }
+
+    showError(message) {
+        const canvasArea = document.querySelector('.canvas-area');
+        if (!canvasArea) return;
+
+        canvasArea.innerHTML = `
+            <div class="error-container">
+                <div class="error-icon">⚠️</div>
+                <div class="error-title">Error</div>
+                <div class="error-message">${message}</div>
+                <button class="btn btn-primary" onclick="window.studioManager.handleGenerateScripts()">
+                    Reintentar
+                </button>
+            </div>
+        `;
+        
+        console.error('Error mostrado:', message);
     }
 }
 
