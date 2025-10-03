@@ -4196,6 +4196,7 @@ class StudioManager {
                     // Galería de imágenes
                     if (product.gallery_file_ids && product.gallery_file_ids.length > 0) {
                         console.log('Cargando galería de imágenes:', product.gallery_file_ids);
+                        let loadedImages = 0;
                         for (const imageId of product.gallery_file_ids) {
                             if (imageId && imageId !== 'null' && imageId !== null) {
                                 console.log('Procesando imagen de galería:', imageId);
@@ -4203,6 +4204,7 @@ class StudioManager {
                                     const imageUrl = await this.getSupabaseFileUrl(imageId);
                                     if (imageUrl) {
                                         configData.product.files.gallery.push(imageUrl);
+                                        loadedImages++;
                                         console.log('Imagen de galería cargada exitosamente:', imageId, 'URL:', imageUrl);
                                     } else {
                                         console.warn('No se pudo generar URL para imagen de galería:', imageId);
@@ -4214,7 +4216,7 @@ class StudioManager {
                                 console.warn('ID de imagen inválido:', imageId);
                             }
                         }
-                        console.log('Total imágenes en galería:', configData.product.files.gallery.length);
+                        console.log(`Galería cargada: ${loadedImages}/${product.gallery_file_ids.length} imágenes`);
                     } else {
                         console.log('No hay galería de imágenes para este producto');
                     }
@@ -4327,10 +4329,13 @@ class StudioManager {
             // Webhook de prueba temporal para debuggear (sin CORS)
             // const webhookUrl = 'https://webhook.site/your-unique-url';
             
-            // Modo de prueba: simular respuesta exitosa si hay problemas de CORS
+            // Modo de prueba: simular respuesta exitosa si hay problemas de CORS o archivos faltantes
             const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-            if (isLocalhost) {
-                console.log('Modo localhost detectado - usando respuesta de prueba');
+            const hasMissingFiles = this.checkForMissingFiles(configData);
+            
+            if (isLocalhost || hasMissingFiles) {
+                console.log('Modo localhost o archivos faltantes detectado - usando respuesta de prueba');
+                this.showNotification('Usando modo de prueba - generando guiones de ejemplo', 'info');
                 return this.generateMockResponse(configData);
             }
             
@@ -4875,6 +4880,29 @@ Generado por UGC Studio
             console.error('Error validando respuesta:', error);
             return false;
         }
+    }
+
+    checkForMissingFiles(configData) {
+        // Verificar si hay archivos faltantes que impidan el envío
+        let hasMissingFiles = false;
+        
+        // Verificar archivos del producto
+        if (configData.product && configData.product.files) {
+            if (!configData.product.files.main_image && configData.product.files.gallery.length === 0) {
+                console.warn('No hay imágenes del producto disponibles');
+                hasMissingFiles = true;
+            }
+        }
+        
+        // Verificar archivos de la marca
+        if (configData.brand && configData.brand.files) {
+            if (!configData.brand.files.logo && configData.brand.files.assets.length === 0) {
+                console.warn('No hay archivos de marca disponibles');
+                hasMissingFiles = true;
+            }
+        }
+        
+        return hasMissingFiles;
     }
 
     generateMockResponse(configData) {
