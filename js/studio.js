@@ -4437,6 +4437,54 @@ class StudioManager {
                     files: configData.ugc.files
                 };
             }
+
+            // Solo incluir estética si está seleccionada
+            if (configData.aesthetics && configData.aesthetics.id) {
+                console.log('=== DATOS DE ESTÉTICA PARA WEBHOOK ===');
+                console.log('Aesthetics ID:', configData.aesthetics.id);
+                console.log('Aesthetics data:', configData.aesthetics);
+                
+                finalData.aesthetics = {
+                    id: configData.aesthetics.id,
+                    name: configData.aesthetics.name,
+                    mood: configData.aesthetics.mood || [],
+                    palette: configData.aesthetics.palette || [],
+                    lighting: configData.aesthetics.lighting || [],
+                    camera: configData.aesthetics.camera || [],
+                    pace: configData.aesthetics.pace || [],
+                    files: configData.aesthetics.files
+                };
+            }
+
+            // Solo incluir escenario si está seleccionado
+            if (configData.scenario && configData.scenario.id) {
+                console.log('=== DATOS DE ESCENARIO PARA WEBHOOK ===');
+                console.log('Scenario ID:', configData.scenario.id);
+                console.log('Scenario data:', configData.scenario);
+                
+                finalData.scenario = {
+                    id: configData.scenario.id,
+                    name: configData.scenario.name,
+                    location: configData.scenario.location || [],
+                    ambience: configData.scenario.ambience || [],
+                    hygiene: configData.scenario.hygiene || [],
+                    background: configData.scenario.background || [],
+                    details: configData.scenario.details || '',
+                    objects: configData.scenario.objects || '',
+                    dynamics: configData.scenario.dynamics || '',
+                    files: configData.scenario.files
+                };
+            }
+
+            // Solo incluir estilo si está seleccionado
+            if (configData.style && configData.style.id) {
+                finalData.style = {
+                    id: configData.style.id,
+                    name: configData.style.name,
+                    prompt: configData.style.prompt || '',
+                    description: configData.style.description || ''
+                };
+            }
             
             console.log('Datos finales para webhook:', finalData);
             
