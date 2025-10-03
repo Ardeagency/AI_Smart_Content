@@ -3793,6 +3793,51 @@ class StudioManager {
         });
     }
 
+    // Función para obtener URL pública de archivo de Supabase Storage
+    async getSupabaseFileUrl(fileId) {
+        try {
+            if (!this.supabase) {
+                console.error('Supabase no está inicializado');
+                return null;
+            }
+
+            // Validar que fileId sea válido
+            if (!fileId || fileId === 'null' || fileId === null) {
+                console.log('FileId inválido, saltando URL');
+                return null;
+            }
+            
+            console.log('Obteniendo URL del archivo:', fileId);
+            
+            // Primero obtener la información del archivo desde la tabla files
+            const { data: fileInfo, error: fileError } = await this.supabase
+                .from('files')
+                .select('path, bucket')
+                .eq('id', fileId)
+                .single();
+            
+            if (fileError || !fileInfo) {
+                console.log('Archivo no encontrado o error:', fileError?.message || 'Sin información');
+                return null;
+            }
+            
+            console.log('Información del archivo:', fileInfo);
+            
+            // Generar URL pública del archivo
+            const bucket = fileInfo.bucket || 'ugc-assets';
+            const { data: urlData } = this.supabase.storage
+                .from(bucket)
+                .getPublicUrl(fileInfo.path);
+            
+            console.log('URL generada:', urlData.publicUrl);
+            return urlData.publicUrl;
+
+        } catch (error) {
+            console.error('Error getting Supabase file URL:', error);
+            return null;
+        }
+    }
+
     // Función para obtener archivos de Supabase Storage
     async getFileFromSupabase(fileId) {
         try {
@@ -4010,9 +4055,9 @@ class StudioManager {
             }
         };
 
-        // Cargar archivos como base64
-        console.log('Cargando archivos como base64...');
-        await this.loadFilesAsBase64(configData);
+        // Cargar archivos como URLs
+        console.log('Cargando archivos como URLs...');
+        await this.loadFilesAsUrls(configData);
         
         console.log('=== CONFIGURACIÓN FINAL GENERADA ===');
         console.log('Configuración completa:', configData);
@@ -4022,29 +4067,31 @@ class StudioManager {
         if (configData.product && configData.product.files) {
             console.log('=== ARCHIVOS DEL PRODUCTO ===');
             console.log('Imagen principal:', !!configData.product.files.main_image);
+            console.log('URL imagen principal:', configData.product.files.main_image);
             console.log('Galería de imágenes:', configData.product.files.gallery.length);
-            console.log('Tamaño imagen principal:', configData.product.files.main_image ? configData.product.files.main_image.length : 0);
-            console.log('Tamaños galería:', configData.product.files.gallery.map(img => img ? img.length : 0));
+            console.log('URLs galería:', configData.product.files.gallery);
         }
         
         if (configData.brand && configData.brand.files) {
             console.log('=== ARCHIVOS DE LA MARCA ===');
             console.log('Logo:', !!configData.brand.files.logo);
+            console.log('URL logo:', configData.brand.files.logo);
             console.log('Assets:', configData.brand.files.assets.length);
+            console.log('URLs assets:', configData.brand.files.assets);
         }
 
         return configData;
     }
 
-    // Función para cargar todos los archivos como base64
-    async loadFilesAsBase64(configData) {
+    // Función para cargar todos los archivos como URLs
+    async loadFilesAsUrls(configData) {
         try {
             // Cargar archivos de la marca
             if (configData.brand) {
                 // Buscar logo de la marca en brand_guidelines
                 const brandGuidelines = this.brands.find(b => b.id === configData.brand.id);
                 if (brandGuidelines && brandGuidelines.logo_file_id) {
-                    configData.brand.files.logo = await this.supabaseFileToBase64(brandGuidelines.logo_file_id);
+                    configData.brand.files.logo = await this.getSupabaseFileUrl(brandGuidelines.logo_file_id);
                 }
                 
                 // Buscar assets de la marca
@@ -4056,9 +4103,9 @@ class StudioManager {
                     
                     for (const assetId of assets) {
                         if (assetId) {
-                            const assetBase64 = await this.supabaseFileToBase64(assetId);
-                        if (assetBase64) {
-                            configData.brand.files.assets.push(assetBase64);
+                            const assetUrl = await this.getSupabaseFileUrl(assetId);
+                            if (assetUrl) {
+                                configData.brand.files.assets.push(assetUrl);
                             }
                         }
                     }
@@ -4080,9 +4127,9 @@ class StudioManager {
                     // Imagen principal
                     if (product.main_image_id) {
                         console.log('Cargando imagen principal:', product.main_image_id);
-                        configData.product.files.main_image = await this.supabaseFileToBase64(product.main_image_id);
+                        configData.product.files.main_image = await this.getSupabaseFileUrl(product.main_image_id);
                         console.log('Imagen principal cargada:', !!configData.product.files.main_image);
-                        console.log('Tamaño imagen principal:', configData.product.files.main_image ? configData.product.files.main_image.length : 0);
+                        console.log('URL imagen principal:', configData.product.files.main_image);
                     } else {
                         console.log('No hay imagen principal para este producto');
                     }
@@ -4092,10 +4139,10 @@ class StudioManager {
                         console.log('Cargando galería de imágenes:', product.gallery_file_ids);
                         for (const imageId of product.gallery_file_ids) {
                             console.log('Procesando imagen de galería:', imageId);
-                            const imageBase64 = await this.supabaseFileToBase64(imageId);
-                            if (imageBase64) {
-                                configData.product.files.gallery.push(imageBase64);
-                                console.log('Imagen de galería cargada exitosamente:', imageId, 'Tamaño:', imageBase64.length);
+                            const imageUrl = await this.getSupabaseFileUrl(imageId);
+                            if (imageUrl) {
+                                configData.product.files.gallery.push(imageUrl);
+                                console.log('Imagen de galería cargada exitosamente:', imageId, 'URL:', imageUrl);
                             } else {
                                 console.warn('No se pudo cargar imagen de galería:', imageId);
                             }
@@ -4120,12 +4167,12 @@ class StudioManager {
                 if (ugc) {
                     // Imagen del avatar
                     if (ugc.avatar_image_id) {
-                        configData.ugc.files.avatar_image = await this.supabaseFileToBase64(ugc.avatar_image_id);
+                        configData.ugc.files.avatar_image = await this.getSupabaseFileUrl(ugc.avatar_image_id);
                     }
                     
                     // Video del avatar
                     if (ugc.avatar_video_id) {
-                        configData.ugc.files.avatar_video = await this.supabaseFileToBase64(ugc.avatar_video_id);
+                        configData.ugc.files.avatar_video = await this.getSupabaseFileUrl(ugc.avatar_video_id);
                     }
                 }
 
@@ -4135,7 +4182,7 @@ class StudioManager {
 
             // Cargar archivos de música de estética
             if (configData.aesthetics && this.aesthetics.music_file_id) {
-                configData.aesthetics.files.music = await this.supabaseFileToBase64(this.aesthetics.music_file_id);
+                configData.aesthetics.files.music = await this.getSupabaseFileUrl(this.aesthetics.music_file_id);
             }
 
             // Cargar archivos locales de estética
@@ -4146,9 +4193,9 @@ class StudioManager {
                 const scenario = this.scenarios.find(s => s.id === configData.scenario.id);
                 if (scenario && scenario.reference_file_ids) {
                     for (const refId of scenario.reference_file_ids) {
-                        const refBase64 = await this.supabaseFileToBase64(refId);
-                        if (refBase64) {
-                            configData.scenario.files.references.push(refBase64);
+                        const refUrl = await this.getSupabaseFileUrl(refId);
+                        if (refUrl) {
+                            configData.scenario.files.references.push(refUrl);
                         }
                     }
                 }
