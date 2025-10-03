@@ -4623,38 +4623,54 @@ class StudioManager {
 
 
     showScriptsResult(result) {
-        console.log('Mostrando resultado de guiones:', result);
+        console.log('=== MOSTRANDO RESULTADO DE GUIONES ===');
+        console.log('Resultado original:', result);
+        console.log('Tipo de resultado:', typeof result);
+        console.log('Es string:', typeof result === 'string');
         
         const canvasArea = document.querySelector('.canvas-area');
-        if (!canvasArea) return;
+        if (!canvasArea) {
+            console.error('Canvas area no encontrado');
+            return;
+        }
 
         try {
             // Parsear el resultado si es string
             let guionesData = result;
             if (typeof result === 'string') {
+                console.log('Parseando string JSON...');
                 guionesData = JSON.parse(result);
             }
 
             console.log('Datos procesados:', guionesData);
+            console.log('Estructura de datos:', JSON.stringify(guionesData, null, 2));
 
             // Manejar diferentes formatos de respuesta
             let guiones = [];
             
+            console.log('=== DETECTANDO FORMATO DE RESPUESTA ===');
+            console.log('guionesData es array:', Array.isArray(guionesData));
+            console.log('guionesData.guiones existe:', !!guionesData.guiones);
+            console.log('guionesData.scripts existe:', !!guionesData.scripts);
+            
             if (Array.isArray(guionesData)) {
                 // Si la respuesta es un array directo
                 guiones = guionesData;
-                console.log('Formato array directo detectado:', guiones.length, 'guiones');
-            } else if (guionesData.guiones && Array.isArray(guionesData.guiones)) {
+                console.log('✅ Formato array directo detectado:', guiones.length, 'guiones');
+            } else if (guionesData && guionesData.guiones && Array.isArray(guionesData.guiones)) {
                 // Si la respuesta tiene estructura {guiones: [...]}
                 guiones = guionesData.guiones;
-                console.log('Formato con guiones detectado:', guiones.length, 'guiones');
-            } else if (guionesData.scripts && Array.isArray(guionesData.scripts)) {
+                console.log('✅ Formato con guiones detectado:', guiones.length, 'guiones');
+            } else if (guionesData && guionesData.scripts && Array.isArray(guionesData.scripts)) {
                 // Si la respuesta tiene estructura {scripts: [...]}
                 guiones = guionesData.scripts;
-                console.log('Formato con scripts detectado:', guiones.length, 'guiones');
+                console.log('✅ Formato con scripts detectado:', guiones.length, 'guiones');
             } else {
+                console.error('❌ Formato no reconocido. Estructura recibida:', Object.keys(guionesData || {}));
                 throw new Error('Formato de respuesta inválido - no se encontraron guiones');
             }
+            
+            console.log('Array final de guiones:', guiones);
 
             if (guiones.length === 0) {
                 throw new Error('No se generaron guiones');
@@ -4696,7 +4712,23 @@ class StudioManager {
     }
 
     generateGuionesCards(guiones) {
-        return guiones.map((guion, index) => `
+        console.log('generateGuionesCards recibido:', guiones);
+        console.log('Tipo de guiones:', typeof guiones);
+        console.log('Es array:', Array.isArray(guiones));
+        
+        if (!guiones || !Array.isArray(guiones)) {
+            console.error('Error: guiones no es un array válido:', guiones);
+            return '<div class="error-message">Error: No se pudieron procesar los guiones</div>';
+        }
+        
+        if (guiones.length === 0) {
+            console.warn('Array de guiones está vacío');
+            return '<div class="no-guiones">No se encontraron guiones para mostrar</div>';
+        }
+        
+        return guiones.map((guion, index) => {
+            console.log(`Procesando guion ${index}:`, guion);
+            return `
             <div class="guion-card" data-guion-index="${index}">
                 <div class="guion-header">
                     <div class="guion-type">${guion.tipo_guion}</div>
