@@ -58,23 +58,24 @@
             </div>
         </div>
 
+
         <!-- Menú Principal -->
         <div class="nav-menu">
             <div class="nav-section">
                 <div class="nav-section-title">Principal</div>
                 <div class="nav-item">
-                    <a href="main-dashboard.html" class="nav-link">
+                    <a href="main-dashboard.html" class="nav-link active">
                         <i class="fas fa-home nav-icon"></i>
                         <span class="nav-text">Panel Principal</span>
                     </a>
                 </div>
                 <div class="nav-item">
-                    <a href="studio.html" class="nav-link active">
+                    <a href="studio.html" class="nav-link">
                         <i class="fas fa-magic nav-icon"></i>
                         <span class="nav-text">Studio</span>
                     </a>
                 </div>
-                </div>
+            </div>
 
             <div class="nav-section">
                 <div class="nav-section-title">Contenido</div>
@@ -89,14 +90,14 @@
                     <a href="brands.html" class="nav-link">
                         <i class="fas fa-trademark nav-icon"></i>
                         <span class="nav-text">Marcas</span>
-                        <span class="nav-badge secondary" id="brandsCount">1</span>
+                        <span class="nav-badge secondary" id="brandsCount">0</span>
                     </a>
                 </div>
                 <div class="nav-item">
                     <a href="library.html" class="nav-link">
                         <i class="fas fa-folder nav-icon"></i>
                         <span class="nav-text">Biblioteca</span>
-                        <span class="nav-badge secondary" id="libraryCount">4</span>
+                        <span class="nav-badge secondary" id="libraryCount">0</span>
                     </a>
                 </div>
             </div>
@@ -117,6 +118,15 @@
                 </div>
             </div>
         </div>
+
+        <!-- Footer del panel -->
+        <div class="nav-footer">
+            <button class="nav-logout" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Cerrar Sesión</span>
+            </button>
+        </div>
+    </nav>
 
         <!-- Footer del panel -->
         <div class="nav-footer">
@@ -482,7 +492,7 @@
                 <!-- Botón Siguiente -->
                 <div class="config-section" style="margin-top: 20px; padding: 16px; background: rgba(253, 98, 79, 0.1); border: 2px solid #FD624F; border-radius: 8px;">
                     <button class="btn btn-primary" onclick="window.studioManager.showSidebarSection(2)" style="width: 100%; padding: 12px; font-size: 14px; font-weight: bold;">
-                        ➡️ Siguiente → Sidebar 2
+                        Siguiente
                 </button>
             </div>
 

@@ -691,12 +691,17 @@ class StudioManager {
     async loadAesthetics() {
         try {
             console.log('Cargando estéticas...');
+            
+            // Verificar que currentProjectId sea válido
+            if (!this.currentProjectId || this.currentProjectId === 'null' || this.currentProjectId === null) {
+                console.log('No hay projectId válido, saltando carga de estéticas');
+                this.aesthetics = [];
+                return;
+            }
+
             const { data: aesthetics, error } = await this.supabase
                 .from('aesthetics')
-                .select(`
-                    *,
-                    reference_files:files!aesthetics_reference_file_ids_fkey(*)
-                `)
+                .select('*')
                 .eq('project_id', this.currentProjectId);
 
             if (error) throw error;
@@ -713,12 +718,17 @@ class StudioManager {
     async loadScenarios() {
         try {
             console.log('Cargando escenarios...');
+            
+            // Verificar que currentProjectId sea válido
+            if (!this.currentProjectId || this.currentProjectId === 'null' || this.currentProjectId === null) {
+                console.log('No hay projectId válido, saltando carga de escenarios');
+                this.scenarios = [];
+                return;
+            }
+
             const { data: scenarios, error } = await this.supabase
                 .from('scenarios')
-                .select(`
-                    *,
-                    scenario_files:files!scenarios_scenario_file_ids_fkey(*)
-                `)
+                .select('*')
                 .eq('project_id', this.currentProjectId);
 
             if (error) throw error;
@@ -735,6 +745,14 @@ class StudioManager {
     async loadStyleCatalog() {
         try {
             console.log('Cargando catálogo de estilos...');
+            
+            // Verificar que currentProjectId sea válido
+            if (!this.currentProjectId || this.currentProjectId === 'null' || this.currentProjectId === null) {
+                console.log('No hay projectId válido, saltando carga de estilos');
+                this.styleCatalog = [];
+                return;
+            }
+
             const { data: styles, error } = await this.supabase
                 .from('style_catalog')
                 .select('*')
@@ -973,7 +991,18 @@ class StudioManager {
             this.avatars.forEach(avatar => {
                 const option = document.createElement('option');
                 option.value = avatar.id;
-                option.textContent = `${avatar.avatar_type || 'Avatar'} - ${avatar.traits?.join(', ') || 'Sin rasgos'}`;
+                // Manejar traits que puede ser array, objeto o string
+                let traitsText = 'Sin rasgos';
+                if (avatar.traits) {
+                    if (Array.isArray(avatar.traits)) {
+                        traitsText = avatar.traits.join(', ');
+                    } else if (typeof avatar.traits === 'object') {
+                        traitsText = Object.values(avatar.traits).join(', ');
+                    } else if (typeof avatar.traits === 'string') {
+                        traitsText = avatar.traits;
+                    }
+                }
+                option.textContent = `${avatar.avatar_type || 'Avatar'} - ${traitsText}`;
                 if (this.studioConfig.avatar && this.studioConfig.avatar.id === avatar.id) {
                     option.selected = true;
                 }
@@ -2512,6 +2541,15 @@ class StudioManager {
     }
 
     // =======================================
+    // Generación de Guiones
+    // =======================================
+
+    generateScripts() {
+        console.log('Generando guiones...');
+        this.handleGenerateScripts();
+    }
+
+    // =======================================
     // Configuración de Avatar UGC
     // =======================================
 
@@ -3762,6 +3800,12 @@ class StudioManager {
                 console.error('Supabase no está inicializado');
                 return null;
             }
+
+            // Validar que fileId sea válido
+            if (!fileId || fileId === 'null' || fileId === null) {
+                console.log('FileId inválido, saltando descarga');
+                return null;
+            }
             
             console.log('Obteniendo información del archivo:', fileId);
             
@@ -3773,7 +3817,7 @@ class StudioManager {
                 .single();
             
             if (fileError || !fileInfo) {
-                console.error('Error getting file info:', fileError);
+                console.log('Archivo no encontrado o error:', fileError?.message || 'Sin información');
                 return null;
             }
             
