@@ -688,6 +688,69 @@ class StudioManager {
         }
     }
 
+    async loadAesthetics() {
+        try {
+            console.log('Cargando estéticas...');
+            const { data: aesthetics, error } = await this.supabase
+                .from('aesthetics')
+                .select(`
+                    *,
+                    reference_files:files!aesthetics_reference_file_ids_fkey(*)
+                `)
+                .eq('project_id', this.currentProjectId);
+
+            if (error) throw error;
+
+            this.aesthetics = aesthetics || [];
+            console.log('Estéticas cargadas:', this.aesthetics.length);
+
+        } catch (error) {
+            console.error('Error loading aesthetics:', error);
+            this.aesthetics = [];
+        }
+    }
+
+    async loadScenarios() {
+        try {
+            console.log('Cargando escenarios...');
+            const { data: scenarios, error } = await this.supabase
+                .from('scenarios')
+                .select(`
+                    *,
+                    scenario_files:files!scenarios_scenario_file_ids_fkey(*)
+                `)
+                .eq('project_id', this.currentProjectId);
+
+            if (error) throw error;
+
+            this.scenarios = scenarios || [];
+            console.log('Escenarios cargados:', this.scenarios.length);
+
+        } catch (error) {
+            console.error('Error loading scenarios:', error);
+            this.scenarios = [];
+        }
+    }
+
+    async loadStyleCatalog() {
+        try {
+            console.log('Cargando catálogo de estilos...');
+            const { data: styles, error } = await this.supabase
+                .from('style_catalog')
+                .select('*')
+                .eq('project_id', this.currentProjectId);
+
+            if (error) throw error;
+
+            this.styleCatalog = styles || [];
+            console.log('Estilos cargados:', this.styleCatalog.length);
+
+        } catch (error) {
+            console.error('Error loading style catalog:', error);
+            this.styleCatalog = [];
+        }
+    }
+
     // =======================================
     // Pre-población de configuraciones
     // =======================================
@@ -736,6 +799,27 @@ class StudioManager {
             this.studioConfig.avatar = this.avatars[0];
             console.log('Avatar seleccionado:', this.studioConfig.avatar);
             this.updateAvatarFields(this.studioConfig.avatar);
+        }
+
+        // Pre-seleccionar el primer estilo si existe
+        if (this.styleCatalog && this.styleCatalog.length > 0) {
+            this.studioConfig.style = this.styleCatalog[0];
+            console.log('Estilo seleccionado:', this.studioConfig.style);
+            this.updateStyleFields(this.studioConfig.style);
+        }
+
+        // Pre-seleccionar la primera estética si existe
+        if (this.aesthetics && this.aesthetics.length > 0) {
+            this.studioConfig.aesthetic = this.aesthetics[0];
+            console.log('Estética seleccionada:', this.studioConfig.aesthetic);
+            this.updateAestheticFields(this.studioConfig.aesthetic);
+        }
+
+        // Pre-seleccionar el primer escenario si existe
+        if (this.scenarios && this.scenarios.length > 0) {
+            this.studioConfig.scenario = this.scenarios[0];
+            console.log('Escenario seleccionado:', this.studioConfig.scenario);
+            this.updateScenarioFields(this.studioConfig.scenario);
         }
 
         // Pre-poblar configuración de ubicación
@@ -2330,6 +2414,101 @@ class StudioManager {
         
         if (!this.studioConfig.ai) this.studioConfig.ai = {};
         this.studioConfig.ai.creativity = parseInt(value);
+    }
+
+    updateStyleFields(style) {
+        try {
+            console.log('Actualizando campos de estilo:', style);
+            
+            if (!style) return;
+
+            // Actualizar prompt de estilo
+            const stylePrompt = document.getElementById('style-prompt');
+            if (stylePrompt) {
+                stylePrompt.value = style.prompt || '';
+            }
+
+        } catch (error) {
+            console.error('Error actualizando campos de estilo:', error);
+        }
+    }
+
+    updateAestheticFields(aesthetic) {
+        try {
+            console.log('Actualizando campos de estética:', aesthetic);
+            
+            if (!aesthetic) return;
+
+            // Actualizar checkboxes de ánimo
+            if (aesthetic.mood) {
+                const moodCheckbox = document.getElementById(`mood-${aesthetic.mood.toLowerCase()}`);
+                if (moodCheckbox) moodCheckbox.checked = true;
+            }
+
+            // Actualizar checkboxes de paleta
+            if (aesthetic.palette && Array.isArray(aesthetic.palette)) {
+                aesthetic.palette.forEach(color => {
+                    const paletteCheckbox = document.getElementById(`palette-${color.toLowerCase()}`);
+                    if (paletteCheckbox) paletteCheckbox.checked = true;
+                });
+            }
+
+            // Actualizar iluminación
+            if (aesthetic.lighting) {
+                const lightingCheckbox = document.getElementById(`lighting-${aesthetic.lighting.toLowerCase()}`);
+                if (lightingCheckbox) lightingCheckbox.checked = true;
+            }
+
+            // Actualizar cámara
+            if (aesthetic.camera) {
+                const cameraCheckbox = document.getElementById(`camera-${aesthetic.camera.toLowerCase()}`);
+                if (cameraCheckbox) cameraCheckbox.checked = true;
+            }
+
+            // Actualizar paso/ritmo
+            if (aesthetic.pace) {
+                const paceCheckbox = document.getElementById(`pace-${aesthetic.pace.toLowerCase()}`);
+                if (paceCheckbox) paceCheckbox.checked = true;
+            }
+
+        } catch (error) {
+            console.error('Error actualizando campos de estética:', error);
+        }
+    }
+
+    updateScenarioFields(scenario) {
+        try {
+            console.log('Actualizando campos de escenario:', scenario);
+            
+            if (!scenario) return;
+
+            // Actualizar checkboxes de ubicación
+            if (scenario.main_location) {
+                const locationCheckbox = document.getElementById(`location-${scenario.main_location.toLowerCase()}`);
+                if (locationCheckbox) locationCheckbox.checked = true;
+            }
+
+            // Actualizar ambiente
+            if (scenario.ambience) {
+                const ambienceCheckbox = document.getElementById(`ambience-${scenario.ambience.toLowerCase()}`);
+                if (ambienceCheckbox) ambienceCheckbox.checked = true;
+            }
+
+            // Actualizar higiene
+            if (scenario.hygiene) {
+                const hygieneCheckbox = document.getElementById(`hygiene-${scenario.hygiene.toLowerCase()}`);
+                if (hygieneCheckbox) hygieneCheckbox.checked = true;
+            }
+
+            // Actualizar fondo
+            if (scenario.backdrop) {
+                const backdropCheckbox = document.getElementById(`backdrop-${scenario.backdrop.toLowerCase()}`);
+                if (backdropCheckbox) backdropCheckbox.checked = true;
+            }
+
+        } catch (error) {
+            console.error('Error actualizando campos de escenario:', error);
+        }
     }
 
     // =======================================
@@ -4086,7 +4265,7 @@ class StudioManager {
             // Re-inicializar iconos de Lucide
             if (window.lucide) {
                 window.lucide.createIcons();
-            }
+    }
 
         } catch (error) {
             console.error('Error procesando resultado:', error);

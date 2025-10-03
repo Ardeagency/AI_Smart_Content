@@ -495,7 +495,7 @@ body {
 
 /* Panel lateral izquierdo unificado */
 .studio-sidebar {
-    width: 260px;
+    width: 320px;
     background: #1a1a1a;
     border-right: 1px solid #333;
     position: fixed;
@@ -585,7 +585,7 @@ body {
 /* Canvas central */
 .canvas-area {
     flex: 1;
-    margin-left: 260px;
+    margin-left: 320px;
     background-color: #000000;
     display: flex;
     align-items: center;
