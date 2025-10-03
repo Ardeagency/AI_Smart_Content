@@ -2568,7 +2568,11 @@ class StudioManager {
     toggleTrait(trait, isChecked) {
         console.log(`Rasgo ${trait} ${isChecked ? 'activado' : 'desactivado'}`);
         if (!this.studioConfig.avatar) this.studioConfig.avatar = {};
-        if (!this.studioConfig.avatar.traits) this.studioConfig.avatar.traits = [];
+        
+        // Asegurar que traits sea un array
+        if (!Array.isArray(this.studioConfig.avatar.traits)) {
+            this.studioConfig.avatar.traits = [];
+        }
         
         if (isChecked) {
             if (!this.studioConfig.avatar.traits.includes(trait)) {
@@ -2582,7 +2586,11 @@ class StudioManager {
     toggleEnergy(energy, isChecked) {
         console.log(`Energía ${energy} ${isChecked ? 'activada' : 'desactivada'}`);
         if (!this.studioConfig.avatar) this.studioConfig.avatar = {};
-        if (!this.studioConfig.avatar.energy) this.studioConfig.avatar.energy = [];
+        
+        // Asegurar que energy sea un array
+        if (!Array.isArray(this.studioConfig.avatar.energy)) {
+            this.studioConfig.avatar.energy = [];
+        }
         
         if (isChecked) {
             if (!this.studioConfig.avatar.energy.includes(energy)) {
@@ -2596,7 +2604,11 @@ class StudioManager {
     toggleGender(gender, isChecked) {
         console.log(`Género ${gender} ${isChecked ? 'activado' : 'desactivado'}`);
         if (!this.studioConfig.avatar) this.studioConfig.avatar = {};
-        if (!this.studioConfig.avatar.gender) this.studioConfig.avatar.gender = [];
+        
+        // Asegurar que gender sea un array
+        if (!Array.isArray(this.studioConfig.avatar.gender)) {
+            this.studioConfig.avatar.gender = [];
+        }
         
         if (isChecked) {
             if (!this.studioConfig.avatar.gender.includes(gender)) {
@@ -2610,7 +2622,11 @@ class StudioManager {
     toggleVoice(voice, isChecked) {
         console.log(`Voz ${voice} ${isChecked ? 'activada' : 'desactivada'}`);
         if (!this.studioConfig.avatar) this.studioConfig.avatar = {};
-        if (!this.studioConfig.avatar.voice) this.studioConfig.avatar.voice = [];
+        
+        // Asegurar que voice sea un array
+        if (!Array.isArray(this.studioConfig.avatar.voice)) {
+            this.studioConfig.avatar.voice = [];
+        }
         
         if (isChecked) {
             if (!this.studioConfig.avatar.voice.includes(voice)) {
@@ -2976,6 +2992,23 @@ class StudioManager {
             if (!avatar) {
                 console.log('No hay datos de avatar para actualizar');
                 return;
+            }
+
+            // Inicializar studioConfig.avatar con arrays vacíos
+            if (!this.studioConfig.avatar) {
+                this.studioConfig.avatar = {};
+            }
+            if (!Array.isArray(this.studioConfig.avatar.traits)) {
+                this.studioConfig.avatar.traits = [];
+            }
+            if (!Array.isArray(this.studioConfig.avatar.energy)) {
+                this.studioConfig.avatar.energy = [];
+            }
+            if (!Array.isArray(this.studioConfig.avatar.gender)) {
+                this.studioConfig.avatar.gender = [];
+            }
+            if (!Array.isArray(this.studioConfig.avatar.voice)) {
+                this.studioConfig.avatar.voice = [];
             }
         
         // Actualizar tipo de personaje
@@ -4313,30 +4346,83 @@ class StudioManager {
                 console.log('- Total de imágenes:', unifiedImages.length);
             }
             
-            // Simplificar datos para evitar errores del webhook
-            const simplifiedData = {
+            // Crear datos finales con solo lo que el usuario ha seleccionado
+            const finalData = {
                 timestamp: configData.timestamp,
                 user_id: configData.user_id,
-                project_id: configData.project_id,
-                brand: configData.brand ? {
+                project_id: configData.project_id
+            };
+
+            // Solo incluir marca si está seleccionada
+            if (configData.brand && configData.brand.id) {
+                finalData.brand = {
                     id: configData.brand.id,
                     name: configData.brand.name,
+                    country: configData.brand.country,
+                    website: configData.brand.website,
+                    languages: configData.brand.languages,
+                    guidelines: configData.brand.guidelines,
                     files: configData.brand.files
-                } : null,
-                product: configData.product ? {
+                };
+            }
+
+            // Solo incluir producto si está seleccionado
+            if (configData.product && configData.product.id) {
+                finalData.product = {
                     id: configData.product.id,
                     name: configData.product.name,
+                    benefits: configData.product.benefits,
+                    differentiators: configData.product.differentiators,
+                    ingredients: configData.product.ingredients,
+                    price: configData.product.price,
+                    usage_steps: configData.product.usage_steps,
                     images: [
                         ...(configData.product.files.main_image ? [configData.product.files.main_image] : []),
                         ...(configData.product.files.gallery || [])
                     ]
-                } : null,
-                offer: configData.offer,
-                audience: configData.audience,
-                ugc: configData.ugc
-            };
+                };
+            }
+
+            // Solo incluir oferta si está seleccionada
+            if (configData.offer && configData.offer.id) {
+                finalData.offer = {
+                    id: configData.offer.id,
+                    objective: configData.offer.objective,
+                    description: configData.offer.description,
+                    cta: configData.offer.cta,
+                    cta_url: configData.offer.cta_url,
+                    valid_until: configData.offer.valid_until
+                };
+            }
+
+            // Solo incluir audiencia si está seleccionada
+            if (configData.audience && configData.audience.id) {
+                finalData.audience = {
+                    id: configData.audience.id,
+                    buyer_persona: configData.audience.buyer_persona,
+                    interests: configData.audience.interests,
+                    pain_points: configData.audience.pain_points,
+                    context: configData.audience.context,
+                    languages: configData.audience.languages
+                };
+            }
+
+            // Solo incluir avatar si está seleccionado
+            if (configData.ugc && configData.ugc.id) {
+                finalData.ugc = {
+                    id: configData.ugc.id,
+                    type: configData.ugc.type,
+                    traits: configData.ugc.traits || [],
+                    energy: configData.ugc.energy || [],
+                    gender: configData.ugc.gender || [],
+                    voice: configData.ugc.voice || [],
+                    languages: configData.ugc.languages || [],
+                    values: configData.ugc.values || [],
+                    files: configData.ugc.files
+                };
+            }
             
-            console.log('Datos simplificados para webhook:', simplifiedData);
+            console.log('Datos finales para webhook:', finalData);
             
             // Crear AbortController para timeout
             const controller = new AbortController();
@@ -4350,7 +4436,7 @@ class StudioManager {
                     'X-Project-ID': this.currentProjectId || 'demo-project',
                     'X-Expected-Response': 'guiones'
                 },
-                body: JSON.stringify(simplifiedData),
+                body: JSON.stringify(finalData),
                 signal: controller.signal
             });
 
