@@ -2743,3 +2743,261 @@ input[type="range"]::-moz-range-thumb {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+/* =======================================
+   ESTILOS PARA GUIONES GENERADOS
+   ======================================= */
+
+/* Contenedor de guiones */
+.guiones-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.guiones-header {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #ffffff;
+}
+
+.guiones-header h2 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #FD624F;
+}
+
+.guiones-header p {
+    font-size: 16px;
+    color: #cccccc;
+    margin: 0;
+}
+
+/* Grid de guiones */
+.guiones-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+/* Card de guión */
+.guion-card {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.guion-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #FD624F, #ff8a65);
+}
+
+.guion-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(253, 98, 79, 0.2);
+    border-color: #FD624F;
+}
+
+/* Header del guión */
+.guion-header {
+    margin-bottom: 20px;
+}
+
+.guion-type {
+    display: inline-block;
+    background: rgba(253, 98, 79, 0.1);
+    color: #FD624F;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+}
+
+.guion-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #ffffff;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Clips del guión */
+.guion-clips {
+    margin-bottom: 24px;
+}
+
+.clip-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: all 0.2s ease;
+}
+
+.clip-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(253, 98, 79, 0.3);
+}
+
+.clip-item:last-child {
+    margin-bottom: 0;
+}
+
+.clip-number {
+    background: #FD624F;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.clip-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.clip-scene,
+.clip-voice {
+    flex: 1;
+}
+
+.clip-scene strong,
+.clip-voice strong {
+    color: #FD624F;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.clip-scene p,
+.clip-voice p {
+    color: #cccccc;
+    font-size: 13px;
+    line-height: 1.5;
+    margin: 0;
+    font-style: italic;
+}
+
+.clip-voice p {
+    font-style: normal;
+    background: rgba(253, 98, 79, 0.05);
+    padding: 8px;
+    border-radius: 4px;
+    border-left: 3px solid #FD624F;
+}
+
+/* Acciones del guión */
+.guion-actions {
+    display: flex;
+    gap: 12px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.guion-actions .btn {
+    flex: 1;
+    padding: 10px 16px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    text-align: center;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+}
+
+.guion-actions .btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: #cccccc;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.guion-actions .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+}
+
+.guion-actions .btn-primary {
+    background: #FD624F;
+    color: #ffffff;
+    border: 1px solid #FD624F;
+}
+
+.guion-actions .btn-primary:hover {
+    background: #e5553d;
+    border-color: #e5553d;
+    transform: translateY(-1px);
+}
+
+/* Contenedor de error */
+.error-container {
+    text-align: center;
+    padding: 60px 20px;
+    color: #ffffff;
+}
+
+.error-container .error-icon {
+    width: 64px;
+    height: 64px;
+    color: #FD624F;
+    margin-bottom: 20px;
+}
+
+.error-container h3 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #FD624F;
+}
+
+.error-container p {
+    font-size: 16px;
+    color: #cccccc;
+    margin-bottom: 24px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .guiones-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .guion-card {
+        padding: 20px;
+    }
+    
+    .guion-actions {
+        flex-direction: column;
+    }
+    
+    .guion-actions .btn {
+        width: 100%;
+    }
+}

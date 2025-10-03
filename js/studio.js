@@ -3951,27 +3951,6 @@ class StudioManager {
             // URL del webhook real
             const webhookUrl = 'https://ardeagency.app.n8n.cloud/webhook-test/4635dddf-f8f9-4cc2-be0f-54e1c542d702';
             
-            // Verificar que los archivos se estén enviando correctamente
-            console.log('=== VERIFICACIÓN DE ARCHIVOS ===');
-            if (configData.brand?.files) {
-                console.log('Brand files:', {
-                    logo: configData.brand.files.logo ? `Base64 length: ${configData.brand.files.logo.length}` : 'No logo',
-                    assets: configData.brand.files.assets?.length || 0
-                });
-            }
-            if (configData.product?.files) {
-                console.log('Product files:', {
-                    main_image: configData.product.files.main_image ? `Base64 length: ${configData.product.files.main_image.length}` : 'No main image',
-                    gallery: configData.product.files.gallery?.length || 0
-                });
-            }
-            if (configData.ugc?.files) {
-                console.log('UGC files:', {
-                    avatar_image: configData.ugc.files.avatar_image ? `Base64 length: ${configData.ugc.files.avatar_image.length}` : 'No avatar image',
-                    avatar_video: configData.ugc.files.avatar_video ? `Base64 length: ${configData.ugc.files.avatar_video.length}` : 'No avatar video'
-                });
-            }
-            
             console.log('Enviando datos al webhook:', {
                 url: webhookUrl,
                 dataSize: JSON.stringify(configData).length,
@@ -4009,7 +3988,7 @@ class StudioManager {
             // Validar que la respuesta tenga el formato esperado
             if (this.validateWebhookResponse(result)) {
                 this.showNotification('Guiones generados exitosamente', 'success');
-                return result;
+            return result;
             } else {
                 console.warn('Respuesta del webhook no tiene el formato esperado:', result);
                 this.showNotification('Respuesta recibida pero formato inesperado', 'warning');
@@ -4023,91 +4002,6 @@ class StudioManager {
         }
     }
 
-    // Función para validar la respuesta del webhook
-    validateWebhookResponse(result) {
-        try {
-            // Verificar que la respuesta tenga la estructura esperada
-            if (!result || typeof result !== 'object') {
-                console.error('Respuesta no es un objeto:', result);
-                return false;
-            }
-
-            // Verificar que tenga la propiedad 'guiones'
-            if (!result.guiones || !Array.isArray(result.guiones)) {
-                console.error('Respuesta no tiene guiones array:', result);
-                return false;
-            }
-
-            // Verificar que cada guión tenga la estructura correcta
-            for (const guion of result.guiones) {
-                if (!guion.tipo_guion || !guion.titulo_sugerido || !guion.clips) {
-                    console.error('Guión no tiene estructura correcta:', guion);
-                    return false;
-                }
-
-                // Verificar que clips sea un array
-                if (!Array.isArray(guion.clips)) {
-                    console.error('Clips no es un array:', guion.clips);
-                    return false;
-                }
-
-                // Verificar que cada clip tenga la estructura correcta
-                for (const clip of guion.clips) {
-                    if (typeof clip.clip_numero !== 'number' || 
-                        !clip.escena || 
-                        !clip.voz) {
-                        console.error('Clip no tiene estructura correcta:', clip);
-                        return false;
-                    }
-                }
-            }
-
-            console.log('Respuesta del webhook validada correctamente');
-            return true;
-        } catch (error) {
-            console.error('Error validando respuesta del webhook:', error);
-            return false;
-        }
-    }
-
-    // Función de prueba para verificar el envío de archivos
-    async testWebhook() {
-        try {
-            console.log('=== INICIANDO PRUEBA DE WEBHOOK ===');
-            this.showLoading();
-            
-            // Generar configuración de prueba
-            const configData = await this.generateConfigJSON();
-            
-            // Mostrar resumen de archivos en consola
-            console.log('=== RESUMEN DE ARCHIVOS ENVIADOS ===');
-            console.log('Brand files:', {
-                logo: configData.brand?.files?.logo ? `✅ Logo: ${configData.brand.files.logo.length} caracteres` : '❌ Sin logo',
-                assets: configData.brand?.files?.assets?.length || 0
-            });
-            console.log('Product files:', {
-                main_image: configData.product?.files?.main_image ? `✅ Imagen principal: ${configData.product.files.main_image.length} caracteres` : '❌ Sin imagen principal',
-                gallery: configData.product?.files?.gallery?.length || 0
-            });
-            console.log('UGC files:', {
-                avatar_image: configData.ugc?.files?.avatar_image ? `✅ Imagen avatar: ${configData.ugc.files.avatar_image.length} caracteres` : '❌ Sin imagen avatar',
-                avatar_video: configData.ugc?.files?.avatar_video ? `✅ Video avatar: ${configData.ugc.files.avatar_video.length} caracteres` : '❌ Sin video avatar'
-            });
-            
-            // Enviar al webhook
-            const result = await this.sendToWebhook(configData);
-            
-            // Mostrar resultado
-            this.showNotification('Prueba de webhook completada. Revisa la consola para detalles.', 'success');
-            console.log('Resultado de la prueba:', result);
-            
-        } catch (error) {
-            console.error('Error en prueba de webhook:', error);
-            this.showNotification(`Error en prueba: ${error.message}`, 'error');
-        } finally {
-            this.hideLoading();
-        }
-    }
 
     async handleGenerateScripts() {
         try {
@@ -4155,22 +4049,178 @@ class StudioManager {
         }
     }
 
+
     showScriptsResult(result) {
-        // Canvas vacío - no mostrar resultado
+        console.log('Mostrando resultado de guiones:', result);
+        
         const canvasArea = document.querySelector('.canvas-area');
-        if (canvasArea) {
+        if (!canvasArea) return;
+
+        try {
+            // Parsear el resultado si es string
+            let guionesData = result;
+            if (typeof result === 'string') {
+                guionesData = JSON.parse(result);
+            }
+
+            // Verificar que tenga la estructura esperada
+            if (!guionesData.guiones || !Array.isArray(guionesData.guiones)) {
+                throw new Error('Formato de respuesta inválido');
+            }
+
+            // Generar HTML para las cards de guiones
+            const guionesHTML = this.generateGuionesCards(guionesData.guiones);
+            
             canvasArea.innerHTML = `
-                <div class="canvas-placeholder">
-                    <i data-lucide="monitor" class="placeholder-icon"></i>
-                    <span class="placeholder-text">Canvas de Preview</span>
+                <div class="guiones-container">
+                    <div class="guiones-header">
+                        <h2>🎬 Guiones Generados</h2>
+                        <p>Se generaron ${guionesData.guiones.length} guiones para tu UGC</p>
+                    </div>
+                    <div class="guiones-grid">
+                        ${guionesHTML}
+                    </div>
+                </div>
+            `;
+
+            // Re-inicializar iconos de Lucide
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+
+        } catch (error) {
+            console.error('Error procesando resultado:', error);
+            canvasArea.innerHTML = `
+                <div class="error-container">
+                    <i data-lucide="alert-circle" class="error-icon"></i>
+                    <h3>Error al procesar guiones</h3>
+                    <p>No se pudieron cargar los guiones generados</p>
+                    <button class="btn btn-primary" onclick="window.studioManager.generateScripts()">
+                        Intentar de nuevo
+                    </button>
                 </div>
             `;
         }
+    }
+
+    generateGuionesCards(guiones) {
+        return guiones.map((guion, index) => `
+            <div class="guion-card" data-guion-index="${index}">
+                <div class="guion-header">
+                    <div class="guion-type">${guion.tipo_guion}</div>
+                    <h3 class="guion-title">${guion.titulo_sugerido}</h3>
+                </div>
+                <div class="guion-clips">
+                    ${guion.clips.map(clip => `
+                        <div class="clip-item">
+                            <div class="clip-number">Clip ${clip.clip_numero}</div>
+                            <div class="clip-content">
+                                <div class="clip-scene">
+                                    <strong>Escena:</strong>
+                                    <p>${clip.escena}</p>
+                                </div>
+                                <div class="clip-voice">
+                                    <strong>Voz:</strong>
+                                    <p>${clip.voz}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="guion-actions">
+                    <button class="btn btn-secondary" onclick="window.studioManager.copyGuion(${index})">
+                        📋 Copiar
+                    </button>
+                    <button class="btn btn-primary" onclick="window.studioManager.downloadGuion(${index})">
+                        💾 Descargar
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    copyGuion(guionIndex) {
+        const guionCard = document.querySelector(`[data-guion-index="${guionIndex}"]`);
+        if (!guionCard) return;
+
+        const guionData = this.extractGuionData(guionCard);
+        const guionText = this.formatGuionForCopy(guionData);
         
-        // Re-inicializar iconos
-        if (typeof lucide !== 'undefined') {
-            lucide.createIcons();
-        }
+        navigator.clipboard.writeText(guionText).then(() => {
+            this.showNotification('Guión copiado al portapapeles', 'success');
+        }).catch(err => {
+            console.error('Error copiando:', err);
+            this.showNotification('Error al copiar guión', 'error');
+        });
+    }
+
+    downloadGuion(guionIndex) {
+        const guionCard = document.querySelector(`[data-guion-index="${guionIndex}"]`);
+        if (!guionCard) return;
+
+        const guionData = this.extractGuionData(guionCard);
+        const guionText = this.formatGuionForDownload(guionData);
+        
+        const blob = new Blob([guionText], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `guion_${guionData.tipo_guion.toLowerCase().replace(/\s+/g, '_')}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        this.showNotification('Guión descargado', 'success');
+    }
+
+    extractGuionData(guionCard) {
+        const tipoGuion = guionCard.querySelector('.guion-type').textContent;
+        const titulo = guionCard.querySelector('.guion-title').textContent;
+        const clips = Array.from(guionCard.querySelectorAll('.clip-item')).map(clip => ({
+            numero: clip.querySelector('.clip-number').textContent,
+            escena: clip.querySelector('.clip-scene p').textContent,
+            voz: clip.querySelector('.clip-voice p').textContent
+        }));
+
+        return { tipoGuion, titulo, clips };
+    }
+
+    formatGuionForCopy(guionData) {
+        return `${guionData.titulo}
+${'='.repeat(guionData.titulo.length)}
+
+Tipo: ${guionData.tipoGuion}
+
+${guionData.clips.map(clip => `
+${clip.numero}
+Escena: ${clip.escena}
+
+Voz: ${clip.voz}
+`).join('\n')}`;
+    }
+
+    formatGuionForDownload(guionData) {
+        return `GUION UGC - ${guionData.titulo}
+${'='.repeat(50)}
+
+Tipo de Guión: ${guionData.tipoGuion}
+Fecha: ${new Date().toLocaleDateString('es-ES')}
+
+${guionData.clips.map((clip, index) => `
+CLIP ${index + 1}
+${'-'.repeat(20)}
+
+ESCENA:
+${clip.escena}
+
+VOZ:
+${clip.voz}
+`).join('\n')}
+
+---
+Generado por UGC Studio
+`;
     }
 
     showLoading() {

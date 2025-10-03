@@ -484,14 +484,7 @@
                     <button class="btn btn-primary" onclick="window.studioManager.showSidebarSection(2)" style="width: 100%; padding: 12px; font-size: 14px; font-weight: bold;">
                         ➡️ Siguiente → Sidebar 2
                 </button>
-    </div>
-
-                <!-- Botón de prueba de webhook -->
-                <div class="config-section" style="margin-top: 10px; padding: 16px; background: rgba(0, 255, 0, 0.1); border: 2px solid #00ff00; border-radius: 8px;">
-                    <button onclick="window.studioManager.testWebhook()" style="width: 100%; padding: 12px; background: #00ff00; color: #000; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">
-                        🧪 Probar Webhook con Archivos
-                    </button>
-                </div>
+            </div>
 
                 <!-- Espaciado para forzar scroll -->
                 <div style="height: 200px; background: linear-gradient(180deg, transparent 0%, rgba(253, 98, 79, 0.05) 50%, transparent 100%); margin: 20px 0;"></div>
@@ -510,8 +503,8 @@
                             <select id="avatar-selector" onchange="window.studioManager.selectAvatarFromDropdown(this.value)">
                                 <option value="">Seleccionar avatar...</option>
                             </select>
-                </div>
-            </div>
+                    </div>
+                    </div>
                     <div class="config-field">
                         <label>Tipo de personaje:</label>
                         <div class="dropdown-container">
@@ -522,8 +515,8 @@
                                 <option value="abstracto">Abstracto</option>
                                 <option value="minimalista">Minimalista</option>
                             </select>
-        </div>
-    </div>
+                    </div>
+                    </div>
                     <div class="config-field">
                         <label>Rasgos:</label>
                         <div class="checkbox-group">
@@ -543,7 +536,7 @@
                                 <input type="checkbox" id="trait-sophisticated" onchange="window.studioManager.toggleTrait('sophisticated', this.checked)">
                                 <span>Sofisticado</span>
                             </label>
-            </div>
+                    </div>
                 </div>
                     <div class="config-field">
                         <label>Energía:</label>
@@ -581,7 +574,7 @@
                                 <input type="checkbox" id="gender-neutral" onchange="window.studioManager.toggleGender('neutral', this.checked)">
                                 <span>Neutral</span>
                             </label>
-                </div>
+    </div>
             </div>
                     <div class="config-field">
                         <label>Voz:</label>
@@ -602,8 +595,8 @@
                                 <input type="checkbox" id="voice-rough" onchange="window.studioManager.toggleVoice('rough', this.checked)">
                                 <span>Rasposa</span>
                             </label>
-        </div>
-    </div>
+                </div>
+            </div>
                     <div class="config-field">
                         <label>Idioma:</label>
                         <div class="dropdown-container">
@@ -615,8 +608,8 @@
                                 <option value="de">Deutsch</option>
                                 <option value="pt">Português</option>
                             </select>
-            </div>
-                </div>
+        </div>
+    </div>
                     <div class="config-field">
                         <label>Valores:</label>
                         <div class="checkbox-group">
@@ -637,13 +630,13 @@
                                 <span>Sostenibilidad</span>
                             </label>
             </div>
-        </div>
+                </div>
                     <div class="config-field">
                         <label>Edad:</label>
                         <input type="range" id="avatar-age" min="18" max="65" value="25" 
                                onchange="window.studioManager.updateAvatarAge(this.value)">
                         <span id="age-display">25 años</span>
-    </div>
+            </div>
                     <div class="config-field">
                         <label>País:</label>
                         <div class="dropdown-container">
@@ -656,8 +649,8 @@
                                 <option value="us">Estados Unidos</option>
                                 <option value="uk">Reino Unido</option>
                             </select>
-            </div>
-                    </div>
+        </div>
+    </div>
                     <div class="config-field">
                         <label>Acento:</label>
                         <div class="checkbox-group">
@@ -677,44 +670,44 @@
                                 <input type="checkbox" id="accent-spanish" onchange="window.studioManager.toggleAccent('spanish', this.checked)">
                                 <span>Español</span>
                             </label>
-                    </div>
-                    </div>
+            </div>
+                </div>
                     <div class="config-field">
                         <label>Imágenes de referencia:</label>
                         <div class="image-selector" id="avatar-reference-images">
                             <div class="image-slot" onclick="document.getElementById('avatar-image-input').click()">
                                 <span>➕ Agregar imagen</span>
-                </div>
+            </div>
                             <input type="file" id="avatar-image-input" multiple accept="image/*" style="display: none;" 
                                    onchange="window.studioManager.handleAvatarImageUpload(this.files)">
-            </div>
         </div>
+    </div>
                     <div class="config-field">
                         <label>Video de referencia:</label>
                         <div class="video-selector" id="avatar-reference-video">
                             <div class="video-slot" onclick="document.getElementById('avatar-video-input').click()">
                                 <span>➕ Agregar video</span>
-    </div>
+            </div>
                             <input type="file" id="avatar-video-input" accept="video/*" style="display: none;" 
                                    onchange="window.studioManager.handleAvatarVideoUpload(this.files)">
-            </div>
                 </div>
+            </div>
                     <div class="config-field">
                         <button class="btn btn-secondary" onclick="window.studioManager.createNewAvatar()">
                             ➕ Crear nuevo avatar
-                        </button>
-                    </div>
-                </div>
+                </button>
+        </div>
+    </div>
 
         <!-- Botones de Navegación -->
         <div class="config-section">
             <button class="btn btn-secondary" onclick="window.studioManager.showSidebarSection(1)">
                 ← Anterior
-            </button>
+                </button>
             <button class="btn btn-primary" onclick="window.studioManager.showSidebarSection(3)" style="margin-left: 10px;">
                 ➡️ Siguiente → Sidebar 3
             </button>
-        </div>
+            </div>
         
         <!-- Espaciado para forzar scroll -->
         <div style="height: 200px; background: linear-gradient(180deg, transparent 0%, rgba(253, 98, 79, 0.05) 50%, transparent 100%); margin: 20px 0;"></div>
@@ -733,7 +726,7 @@
                 <select id="style-selector" onchange="window.studioManager.selectStyleFromDropdown(this.value)">
                     <option value="">Seleccionar estilo...</option>
                 </select>
-                    </div>
+                </div>
             
                 <div class="form-group">
                 <label>PERSONALIZAR PROMPT:</label>
@@ -1056,7 +1049,7 @@
             <button class="btn btn-primary" onclick="window.studioManager.generateScripts()" style="margin-left: 10px;">
                 🚀 Generar Guiones
             </button>
-        </div>
+                    </div>
         
         <!-- Espaciado para forzar scroll -->
         <div style="height: 200px; background: linear-gradient(180deg, transparent 0%, rgba(253, 98, 79, 0.05) 50%, transparent 100%); margin: 20px 0;"></div>
