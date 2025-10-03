@@ -4014,8 +4014,24 @@ class StudioManager {
         console.log('Cargando archivos como base64...');
         await this.loadFilesAsBase64(configData);
         
-        console.log('Configuración final generada:', configData);
+        console.log('=== CONFIGURACIÓN FINAL GENERADA ===');
+        console.log('Configuración completa:', configData);
         console.log('Tamaño final:', JSON.stringify(configData).length, 'caracteres');
+        
+        // Log específico de archivos
+        if (configData.product && configData.product.files) {
+            console.log('=== ARCHIVOS DEL PRODUCTO ===');
+            console.log('Imagen principal:', !!configData.product.files.main_image);
+            console.log('Galería de imágenes:', configData.product.files.gallery.length);
+            console.log('Tamaño imagen principal:', configData.product.files.main_image ? configData.product.files.main_image.length : 0);
+            console.log('Tamaños galería:', configData.product.files.gallery.map(img => img ? img.length : 0));
+        }
+        
+        if (configData.brand && configData.brand.files) {
+            console.log('=== ARCHIVOS DE LA MARCA ===');
+            console.log('Logo:', !!configData.brand.files.logo);
+            console.log('Assets:', configData.brand.files.assets.length);
+        }
 
         return configData;
     }
@@ -4033,10 +4049,17 @@ class StudioManager {
                 
                 // Buscar assets de la marca
                 if (brandGuidelines && brandGuidelines.brand_assets) {
-                    for (const assetId of brandGuidelines.brand_assets) {
-                        const assetBase64 = await this.supabaseFileToBase64(assetId);
+                    // Verificar que brand_assets sea un array
+                    const assets = Array.isArray(brandGuidelines.brand_assets) 
+                        ? brandGuidelines.brand_assets 
+                        : [];
+                    
+                    for (const assetId of assets) {
+                        if (assetId) {
+                            const assetBase64 = await this.supabaseFileToBase64(assetId);
                         if (assetBase64) {
                             configData.brand.files.assets.push(assetBase64);
+                            }
                         }
                     }
                 }
@@ -4049,29 +4072,42 @@ class StudioManager {
             if (configData.product) {
                 const product = this.products.find(p => p.id === configData.product.id);
                 if (product) {
-                    console.log('Procesando imágenes del producto:', product);
+                    console.log('=== PROCESANDO IMÁGENES DEL PRODUCTO ===');
+                    console.log('Producto encontrado:', product);
+                    console.log('main_image_id:', product.main_image_id);
+                    console.log('gallery_file_ids:', product.gallery_file_ids);
                     
                     // Imagen principal
                     if (product.main_image_id) {
                         console.log('Cargando imagen principal:', product.main_image_id);
                         configData.product.files.main_image = await this.supabaseFileToBase64(product.main_image_id);
                         console.log('Imagen principal cargada:', !!configData.product.files.main_image);
+                        console.log('Tamaño imagen principal:', configData.product.files.main_image ? configData.product.files.main_image.length : 0);
+                    } else {
+                        console.log('No hay imagen principal para este producto');
                     }
                     
                     // Galería de imágenes
                     if (product.gallery_file_ids && product.gallery_file_ids.length > 0) {
                         console.log('Cargando galería de imágenes:', product.gallery_file_ids);
                         for (const imageId of product.gallery_file_ids) {
+                            console.log('Procesando imagen de galería:', imageId);
                             const imageBase64 = await this.supabaseFileToBase64(imageId);
                             if (imageBase64) {
                                 configData.product.files.gallery.push(imageBase64);
-                                console.log('Imagen de galería cargada:', imageId);
+                                console.log('Imagen de galería cargada exitosamente:', imageId, 'Tamaño:', imageBase64.length);
                             } else {
                                 console.warn('No se pudo cargar imagen de galería:', imageId);
                             }
                         }
                         console.log('Total imágenes en galería:', configData.product.files.gallery.length);
+                    } else {
+                        console.log('No hay galería de imágenes para este producto');
                     }
+                    
+                    console.log('=== FIN PROCESAMIENTO IMÁGENES DEL PRODUCTO ===');
+                } else {
+                    console.log('No se encontró el producto en la lista de productos');
                 }
 
                 // Cargar archivos locales del producto
