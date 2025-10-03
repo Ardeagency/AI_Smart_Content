@@ -4652,11 +4652,17 @@ class StudioManager {
             console.log('guionesData es array:', Array.isArray(guionesData));
             console.log('guionesData.guiones existe:', !!guionesData.guiones);
             console.log('guionesData.scripts existe:', !!guionesData.scripts);
+            console.log('guionesData.output existe:', !!guionesData.output);
+            console.log('guionesData.items existe:', !!guionesData.items);
             
             if (Array.isArray(guionesData)) {
                 // Si la respuesta es un array directo
                 guiones = guionesData;
                 console.log('✅ Formato array directo detectado:', guiones.length, 'guiones');
+            } else if (guionesData && guionesData.output && guionesData.output.guiones && Array.isArray(guionesData.output.guiones)) {
+                // Si la respuesta tiene estructura {output: {guiones: [...]}}
+                guiones = guionesData.output.guiones;
+                console.log('✅ Formato con output.guiones detectado:', guiones.length, 'guiones');
             } else if (guionesData && guionesData.guiones && Array.isArray(guionesData.guiones)) {
                 // Si la respuesta tiene estructura {guiones: [...]}
                 guiones = guionesData.guiones;
@@ -4665,8 +4671,13 @@ class StudioManager {
                 // Si la respuesta tiene estructura {scripts: [...]}
                 guiones = guionesData.scripts;
                 console.log('✅ Formato con scripts detectado:', guiones.length, 'guiones');
+            } else if (guionesData && guionesData.items && Array.isArray(guionesData.items)) {
+                // Si la respuesta tiene estructura {items: [...]}
+                guiones = guionesData.items;
+                console.log('✅ Formato con items detectado:', guiones.length, 'guiones');
             } else {
                 console.error('❌ Formato no reconocido. Estructura recibida:', Object.keys(guionesData || {}));
+                console.error('Estructura completa:', guionesData);
                 throw new Error('Formato de respuesta inválido - no se encontraron guiones');
             }
             
