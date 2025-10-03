@@ -4760,7 +4760,8 @@ class StudioManager {
                     </button>
                 </div>
             </div>
-        `).join('');
+        `;
+        }).join('');
     }
 
     copyGuion(guionIndex) {
@@ -4963,5 +4964,21 @@ function logout() {
     } else {
         // Fallback si no hay Supabase
         window.location.href = 'login.html';
+    }
+}
+
+// Función global para navegación de sidebar (fallback)
+function showSidebarSection(sectionNumber) {
+    if (window.studioManager && window.studioManager.showSidebarSection) {
+        window.studioManager.showSidebarSection(sectionNumber);
+    } else {
+        console.warn('StudioManager no está inicializado aún, reintentando...');
+        setTimeout(() => {
+            if (window.studioManager && window.studioManager.showSidebarSection) {
+                window.studioManager.showSidebarSection(sectionNumber);
+            } else {
+                console.error('No se pudo acceder a showSidebarSection');
+            }
+        }, 100);
     }
 }
