@@ -49,7 +49,6 @@
     
     /* Layout */
     --topbar-height: 70px;
-    --footer-height: 80px;
     --sidebar-width: 60px;
     --panel-width: 320px;
     
@@ -592,7 +591,7 @@ body {
     justify-content: center;
     position: relative;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    height: calc(100vh - 70px - 80px); /* Altura total menos header y footer */
+    height: calc(100vh - 70px); /* Altura total menos header */
     margin-top: 70px; /* Comenzar después del header */
     overflow-y: auto; /* Permitir scroll vertical */
     overflow-x: hidden; /* Evitar scroll horizontal */
@@ -2244,21 +2243,6 @@ input[type="range"]::-moz-range-thumb {
    Footer
    ======================================= */
 
-.footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 80px;
-    background-color: var(--bg-panel);
-    backdrop-filter: blur(20px);
-    border-top: 1px solid var(--border-subtle);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 var(--space-xxl);
-    z-index: 999;
-}
 
 .btn-primary {
     display: flex;
@@ -2330,12 +2314,6 @@ input[type="range"]::-moz-range-thumb {
         padding: 0 var(--space-lg);
     }
     
-    .footer {
-        padding: var(--space-lg);
-        flex-direction: column;
-        gap: var(--space-lg);
-        height: auto;
-    }
     
     .progress-section {
         flex-direction: column;

@@ -1069,11 +1069,6 @@ class StudioManager {
             });
         }
 
-        // Botón generar guiones
-        const generateBtn = document.getElementById('generate-btn');
-        if (generateBtn) {
-            generateBtn.addEventListener('click', () => this.handleGenerateScripts());
-        }
 
         // Slider de creatividad
         const creativitySlider = document.getElementById('creativity-range');
@@ -4624,11 +4619,13 @@ class StudioManager {
             
             // Mostrar resultado
             this.showScriptsResult(result);
+            
+            // Solo ocultar loading si no hay error
+            this.hideLoading();
 
         } catch (error) {
             console.error('Error generating scripts:', error);
             this.showError(`Error generando guiones: ${error.message}`);
-        } finally {
             this.hideLoading();
         }
     }
@@ -4712,9 +4709,11 @@ class StudioManager {
             }
 
             // Generar HTML para las cards de guiones
+            console.log('=== GENERANDO HTML DE GUIONES ===');
             const guionesHTML = this.generateGuionesCards(guiones);
+            console.log('HTML generado:', guionesHTML);
             
-            canvasArea.innerHTML = `
+            const finalHTML = `
                 <div class="guiones-container">
                     <div class="guiones-header">
                         <h2>🎬 Guiones Generados</h2>
@@ -4725,11 +4724,26 @@ class StudioManager {
                     </div>
                 </div>
             `;
+            
+            console.log('HTML final a insertar:', finalHTML);
+            console.log('Canvas area antes de insertar:', canvasArea);
+            console.log('Canvas area innerHTML antes:', canvasArea.innerHTML);
+            
+            canvasArea.innerHTML = finalHTML;
+            
+            console.log('Canvas area innerHTML después:', canvasArea.innerHTML);
+            console.log('Elementos guiones-container encontrados:', document.querySelectorAll('.guiones-container').length);
+            console.log('Elementos guion-card encontrados:', document.querySelectorAll('.guion-card').length);
 
             // Re-inicializar iconos de Lucide
             if (window.lucide) {
+                console.log('Re-inicializando iconos de Lucide...');
                 window.lucide.createIcons();
-    }
+                console.log('Iconos de Lucide re-inicializados');
+            }
+            
+            console.log('=== SHOWSCRIPTSRESULT COMPLETADO EXITOSAMENTE ===');
+            console.log('Canvas actualizado con guiones generados');
 
         } catch (error) {
             console.error('Error procesando resultado:', error);
