@@ -4739,24 +4739,31 @@ class StudioManager {
         
         return guiones.map((guion, index) => {
             console.log(`Procesando guion ${index}:`, guion);
+            console.log(`Clips del guion ${index}:`, guion.clips);
+            console.log(`Clips es array:`, Array.isArray(guion.clips));
+            
+            // Validar que clips existe y es un array
+            const clips = guion.clips && Array.isArray(guion.clips) ? guion.clips : [];
+            console.log(`Clips procesados:`, clips);
+            
             return `
             <div class="guion-card" data-guion-index="${index}">
                 <div class="guion-header">
-                    <div class="guion-type">${guion.tipo_guion}</div>
-                    <h3 class="guion-title">${guion.titulo_sugerido}</h3>
+                    <div class="guion-type">${guion.tipo_guion || 'Sin tipo'}</div>
+                    <h3 class="guion-title">${guion.titulo_sugerido || 'Sin título'}</h3>
                 </div>
                 <div class="guion-clips">
-                    ${guion.clips.map(clip => `
+                    ${clips.map(clip => `
                         <div class="clip-item">
-                            <div class="clip-number">Clip ${clip.clip_numero}</div>
+                            <div class="clip-number">Clip ${clip.clip_numero || 'N/A'}</div>
                             <div class="clip-content">
                                 <div class="clip-scene">
                                     <strong>Escena:</strong>
-                                    <p>${clip.escena}</p>
+                                    <p>${clip.escena || 'Sin escena'}</p>
                                 </div>
                                 <div class="clip-voice">
                                     <strong>Voz:</strong>
-                                    <p>${clip.voz}</p>
+                                    <p>${clip.voz || 'Sin voz'}</p>
                                 </div>
                             </div>
                         </div>
