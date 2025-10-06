@@ -4837,8 +4837,8 @@ class StudioManager {
                     `).join('')}
                 </div>
                 <div class="guion-actions">
-                    <button class="btn btn-secondary" onclick="window.studioManager.copyGuion(${index})">
-                        📋 Copiar
+                    <button class="btn btn-secondary" onclick="window.studioManager.regenerateGuion(${index})">
+                        🔄 Volver a Generar
                     </button>
                     <button class="btn btn-primary" onclick="window.studioManager.generateScenes(${index})">
                         🎬 Generar Escenas
@@ -4882,6 +4882,55 @@ class StudioManager {
         URL.revokeObjectURL(url);
         
         this.showNotification('Guión descargado', 'success');
+    }
+
+    async regenerateGuion(guionIndex) {
+        try {
+            console.log('=== INICIANDO REGENERACIÓN DE GUION ===');
+            console.log('Guión seleccionado para regenerar:', guionIndex);
+            
+            // Mostrar loading
+            this.showLoading('Regenerando guión...');
+            
+            // Obtener el guión seleccionado del DOM
+            const guionCard = document.querySelector(`[data-guion-index="${guionIndex}"]`);
+            if (!guionCard) {
+                throw new Error('No se encontró el guión seleccionado');
+            }
+            
+            // Extraer datos del guión
+            const guionData = this.extractGuionData(guionCard);
+            console.log('Datos del guión extraídos para regeneración:', guionData);
+            
+            // Generar configuración completa (misma que para guiones)
+            const configData = await this.generateConfigJSON();
+            console.log('Configuración generada para regeneración:', configData);
+            
+            // Agregar el guión seleccionado a la configuración para regeneración
+            const finalData = {
+                ...configData,
+                regenerate_guion: {
+                    index: guionIndex,
+                    tipo_guion: guionData.tipoGuion,
+                    titulo: guionData.titulo,
+                    clips: guionData.clips
+                }
+            };
+            
+            console.log('Datos finales para webhook de regeneración:', finalData);
+            
+            // Enviar al webhook de guiones (mismo webhook original)
+            const result = await this.sendToWebhook(finalData);
+            
+            // Mostrar resultado
+            this.showScriptsResult(result);
+            
+        } catch (error) {
+            console.error('Error regenerating guion:', error);
+            this.showError(`Error regenerando guión: ${error.message}`);
+        } finally {
+            this.hideLoading();
+        }
     }
 
     async generateScenes(guionIndex) {
