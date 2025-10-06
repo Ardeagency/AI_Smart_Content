@@ -3130,3 +3130,17 @@ input[type="range"]::-moz-range-thumb {
 .canvas-area {
     -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
 }
+
+/* DEBUG: Asegurar que el contenido sea visible */
+.guiones-container {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 10 !important;
+}
+
+.guion-card {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}

@@ -4622,6 +4622,12 @@ class StudioManager {
             
             // Solo ocultar loading si no hay error
             this.hideLoading();
+            
+            // Verificar que el canvas mantiene su contenido después de hideLoading
+            console.log('=== VERIFICACIÓN POST-HIDELOADING ===');
+            console.log('Canvas innerHTML después de hideLoading:', canvasArea.innerHTML.substring(0, 200));
+            console.log('Elementos guiones-container después de hideLoading:', document.querySelectorAll('.guiones-container').length);
+            console.log('Elementos guion-card después de hideLoading:', document.querySelectorAll('.guion-card').length);
 
         } catch (error) {
             console.error('Error generating scripts:', error);
@@ -4744,6 +4750,24 @@ class StudioManager {
             
             console.log('=== SHOWSCRIPTSRESULT COMPLETADO EXITOSAMENTE ===');
             console.log('Canvas actualizado con guiones generados');
+            
+            // Verificación final del DOM
+            setTimeout(() => {
+                console.log('=== VERIFICACIÓN FINAL DEL DOM (después de 1 segundo) ===');
+                const finalCanvas = document.querySelector('.canvas-area');
+                const finalGuionesContainer = document.querySelector('.guiones-container');
+                const finalGuionCards = document.querySelectorAll('.guion-card');
+                
+                console.log('Canvas final existe:', !!finalCanvas);
+                console.log('Canvas innerHTML final (primeros 300 caracteres):', finalCanvas ? finalCanvas.innerHTML.substring(0, 300) : 'NO ENCONTRADO');
+                console.log('Guiones container final existe:', !!finalGuionesContainer);
+                console.log('Guion cards finales encontrados:', finalGuionCards.length);
+                
+                if (finalGuionCards.length > 0) {
+                    console.log('Primer guion card:', finalGuionCards[0]);
+                    console.log('Primer guion card visible:', finalGuionCards[0].offsetHeight > 0);
+                }
+            }, 1000);
 
         } catch (error) {
             console.error('Error procesando resultado:', error);
@@ -4920,17 +4944,8 @@ Generado por UGC Studio
     }
 
     hideLoading() {
-        const canvasArea = document.querySelector('.canvas-area');
-        if (!canvasArea) return;
-
-        // Limpiar el canvas
-            canvasArea.innerHTML = `
-                <div class="canvas-placeholder">
-                <h3>Configuración de UGC</h3>
-                <p>Selecciona las opciones en el sidebar y genera tus guiones</p>
-                </div>
-            `;
-        
+        // NO limpiar el canvas aquí - solo ocultar loading si existe
+        // El canvas debe mantener su contenido actual (guiones generados)
         console.log('Loading completado');
     }
 
