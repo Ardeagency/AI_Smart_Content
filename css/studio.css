@@ -1422,22 +1422,8 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* =======================================
-   Canvas Central
+   Canvas Central - DEFINICIÓN ELIMINADA (DUPLICADA)
    ======================================= */
-
-.canvas-area {
-    flex: 1;
-    background-color: #000000;
-    display: flex;
-    align-items: flex-start; /* Cambiado de center a flex-start */
-    justify-content: center;
-    position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    overflow-y: auto; /* Permitir scroll vertical */
-    overflow-x: hidden; /* Evitar scroll horizontal */
-    padding: 20px; /* Padding para espaciado */
-    box-sizing: border-box;
-}
 
 .canvas-placeholder {
     display: flex;
