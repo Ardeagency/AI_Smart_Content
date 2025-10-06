@@ -4625,9 +4625,14 @@ class StudioManager {
             
             // Verificar que el canvas mantiene su contenido después de hideLoading
             console.log('=== VERIFICACIÓN POST-HIDELOADING ===');
-            console.log('Canvas innerHTML después de hideLoading:', canvasArea.innerHTML.substring(0, 200));
-            console.log('Elementos guiones-container después de hideLoading:', document.querySelectorAll('.guiones-container').length);
-            console.log('Elementos guion-card después de hideLoading:', document.querySelectorAll('.guion-card').length);
+            const canvasArea = document.querySelector('.canvas-area');
+            if (canvasArea) {
+                console.log('Canvas innerHTML después de hideLoading:', canvasArea.innerHTML.substring(0, 200));
+                console.log('Elementos guiones-container después de hideLoading:', document.querySelectorAll('.guiones-container').length);
+                console.log('Elementos guion-card después de hideLoading:', document.querySelectorAll('.guion-card').length);
+            } else {
+                console.error('Canvas area no encontrado para verificación post-hideLoading');
+            }
 
         } catch (error) {
             console.error('Error generating scripts:', error);
