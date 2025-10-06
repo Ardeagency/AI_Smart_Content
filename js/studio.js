@@ -4015,10 +4015,9 @@ class StudioManager {
                 ingredients: this.studioConfig.product.ingredients,
                 price: this.studioConfig.product.price,
                 usage_steps: this.studioConfig.product.usage_steps,
-                // Archivos del producto
+                // Archivos del producto - todas las imágenes en un solo array
                 files: {
-                    main_image: null, // Imagen principal en base64
-                    gallery: []       // Galería de imágenes en base64
+                    images: []       // Todas las imágenes del producto (principal + galería)
                 }
             } : null,
             
@@ -4113,18 +4112,9 @@ class StudioManager {
         // Log específico de archivos
         if (configData.product && configData.product.files) {
             console.log('=== ARCHIVOS DEL PRODUCTO ===');
-            console.log('Imagen principal:', !!configData.product.files.main_image);
-            console.log('URL imagen principal:', configData.product.files.main_image);
-            console.log('Galería de imágenes:', configData.product.files.gallery.length);
-            console.log('URLs galería:', configData.product.files.gallery);
+            console.log('Total de imágenes:', configData.product.files.images.length);
+            console.log('URLs de todas las imágenes:', configData.product.files.images);
             
-            // Mostrar array unificado que se enviará al webhook
-            const unifiedImages = [
-                ...(configData.product.files.main_image ? [configData.product.files.main_image] : []),
-                ...(configData.product.files.gallery || [])
-            ];
-            console.log('Array unificado para webhook:', unifiedImages);
-            console.log('Total imágenes unificadas:', unifiedImages.length);
         }
         
         if (configData.brand && configData.brand.files) {
@@ -4170,7 +4160,7 @@ class StudioManager {
                 await this.loadLocalFiles('brand', configData.brand.files);
             }
 
-            // Cargar archivos del producto
+            // Cargar archivos del producto - todas las imágenes en un solo array
             if (configData.product) {
                 const product = this.products.find(p => p.id === configData.product.id);
                 if (product) {
@@ -4179,17 +4169,24 @@ class StudioManager {
                     console.log('main_image_id:', product.main_image_id);
                     console.log('gallery_file_ids:', product.gallery_file_ids);
                     
-                    // Imagen principal
+                    // Inicializar array de imágenes
+                    configData.product.files.images = [];
+                    
+                    // Agregar imagen principal primero
                     if (product.main_image_id) {
                         console.log('Cargando imagen principal:', product.main_image_id);
-                        configData.product.files.main_image = await this.getSupabaseFileUrl(product.main_image_id);
-                        console.log('Imagen principal cargada:', !!configData.product.files.main_image);
-                        console.log('URL imagen principal:', configData.product.files.main_image);
+                        const mainImageUrl = await this.getSupabaseFileUrl(product.main_image_id);
+                        if (mainImageUrl) {
+                            configData.product.files.images.push(mainImageUrl);
+                            console.log('Imagen principal agregada:', mainImageUrl);
+                        } else {
+                            console.warn('No se pudo cargar imagen principal:', product.main_image_id);
+                        }
                     } else {
                         console.log('No hay imagen principal para este producto');
                     }
                     
-                    // Galería de imágenes
+                    // Agregar galería de imágenes
                     if (product.gallery_file_ids && product.gallery_file_ids.length > 0) {
                         console.log('Cargando galería de imágenes:', product.gallery_file_ids);
                         let loadedImages = 0;
@@ -4199,9 +4196,9 @@ class StudioManager {
                                 try {
                                     const imageUrl = await this.getSupabaseFileUrl(imageId);
                                     if (imageUrl) {
-                                        configData.product.files.gallery.push(imageUrl);
+                                        configData.product.files.images.push(imageUrl);
                                         loadedImages++;
-                                        console.log('Imagen de galería cargada exitosamente:', imageId, 'URL:', imageUrl);
+                                        console.log('Imagen de galería agregada:', imageId, 'URL:', imageUrl);
                                     } else {
                                         console.warn('No se pudo generar URL para imagen de galería:', imageId);
                                     }
@@ -4216,6 +4213,9 @@ class StudioManager {
                     } else {
                         console.log('No hay galería de imágenes para este producto');
                     }
+                    
+                    console.log(`Total de imágenes del producto: ${configData.product.files.images.length}`);
+                    console.log('URLs de todas las imágenes:', configData.product.files.images);
                     
                     console.log('=== FIN PROCESAMIENTO IMÁGENES DEL PRODUCTO ===');
                 } else {
