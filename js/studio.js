@@ -4539,7 +4539,19 @@ class StudioManager {
             }
 
             const result = await response.json();
-            console.log('Resultado del webhook:', result);
+            console.log('=== RESULTADO DEL WEBHOOK ===');
+            console.log('Resultado completo:', result);
+            console.log('Tipo de resultado:', typeof result);
+            console.log('Es array:', Array.isArray(result));
+            if (Array.isArray(result)) {
+                console.log('Longitud del array:', result.length);
+                if (result.length > 0) {
+                    console.log('Primer elemento:', result[0]);
+                    console.log('Primer elemento.output:', result[0]?.output);
+                    console.log('Primer elemento.output.guiones:', result[0]?.output?.guiones);
+                }
+            }
+            console.log('=== FIN RESULTADO DEL WEBHOOK ===');
             
             // Validar que la respuesta tenga el formato esperado
             if (this.validateWebhookResponse(result)) {
@@ -4655,10 +4667,22 @@ class StudioManager {
             console.log('guionesData.output existe:', !!guionesData.output);
             console.log('guionesData.items existe:', !!guionesData.items);
             
-            if (Array.isArray(guionesData)) {
-                // Si la respuesta es un array directo
-                guiones = guionesData;
-                console.log('✅ Formato array directo detectado:', guiones.length, 'guiones');
+            // NUEVO: Manejar estructura esperada [{"output": {"guiones": [...]}}]
+            if (Array.isArray(guionesData) && guionesData.length > 0) {
+                console.log('Array detectado, verificando primer elemento...');
+                const firstElement = guionesData[0];
+                console.log('Primer elemento:', firstElement);
+                console.log('Primer elemento.output existe:', !!firstElement.output);
+                console.log('Primer elemento.output.guiones existe:', !!(firstElement.output && firstElement.output.guiones));
+                
+                if (firstElement && firstElement.output && firstElement.output.guiones && Array.isArray(firstElement.output.guiones)) {
+                    guiones = firstElement.output.guiones;
+                    console.log('✅ Formato [{"output": {"guiones": [...]}}] detectado:', guiones.length, 'guiones');
+                } else {
+                    // Si es array directo de guiones
+                    guiones = guionesData;
+                    console.log('✅ Formato array directo de guiones detectado:', guiones.length, 'guiones');
+                }
             } else if (guionesData && guionesData.output && guionesData.output.guiones && Array.isArray(guionesData.output.guiones)) {
                 // Si la respuesta tiene estructura {output: {guiones: [...]}}
                 guiones = guionesData.output.guiones;
@@ -4918,10 +4942,16 @@ Generado por UGC Studio
         try {
             console.log('Validando respuesta del webhook:', response);
             
-            // Si la respuesta es un array directo
+            // NUEVO: Validar estructura esperada [{"output": {"guiones": [...]}}]
             if (Array.isArray(response) && response.length > 0) {
-                console.log('Respuesta es un array directo con', response.length, 'elementos');
-                return true;
+                const firstElement = response[0];
+                if (firstElement && firstElement.output && firstElement.output.guiones && Array.isArray(firstElement.output.guiones) && firstElement.output.guiones.length > 0) {
+                    console.log('Respuesta válida con formato [{"output": {"guiones": [...]}}]:', firstElement.output.guiones.length, 'guiones');
+                    return true;
+                } else {
+                    console.log('Respuesta es un array directo con', response.length, 'elementos');
+                    return true;
+                }
             }
 
             // Si la respuesta es un objeto
