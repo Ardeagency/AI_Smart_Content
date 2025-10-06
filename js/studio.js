@@ -4503,7 +4503,7 @@ class StudioManager {
             
             // Crear AbortController para timeout
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minutos timeout
+            const timeoutId = setTimeout(() => controller.abort(), 600000); // 10 minutos timeout
             
             const response = await fetch(webhookUrl, {
                 method: 'POST',
