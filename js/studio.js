@@ -4840,8 +4840,8 @@ class StudioManager {
                     <button class="btn btn-secondary" onclick="window.studioManager.copyGuion(${index})">
                         📋 Copiar
                     </button>
-                    <button class="btn btn-primary" onclick="window.studioManager.downloadGuion(${index})">
-                        💾 Descargar
+                    <button class="btn btn-primary" onclick="window.studioManager.generateScenes(${index})">
+                        🎬 Generar Escenas
                     </button>
                 </div>
             </div>
@@ -4882,6 +4882,304 @@ class StudioManager {
         URL.revokeObjectURL(url);
         
         this.showNotification('Guión descargado', 'success');
+    }
+
+    async generateScenes(guionIndex) {
+        try {
+            console.log('=== INICIANDO GENERACIÓN DE ESCENAS ===');
+            console.log('Guión seleccionado:', guionIndex);
+            
+            // Mostrar loading
+            this.showLoading('Generando escenas...');
+            
+            // Obtener el guión seleccionado del DOM
+            const guionCard = document.querySelector(`[data-guion-index="${guionIndex}"]`);
+            if (!guionCard) {
+                throw new Error('No se encontró el guión seleccionado');
+            }
+            
+            // Extraer datos del guión
+            const guionData = this.extractGuionData(guionCard);
+            console.log('Datos del guión extraídos:', guionData);
+            
+            // Generar configuración completa (misma que para guiones)
+            const configData = await this.generateConfigJSON();
+            console.log('Configuración generada para escenas:', configData);
+            
+            // Agregar el guión seleccionado a la configuración
+            const finalData = {
+                ...configData,
+                selected_guion: {
+                    index: guionIndex,
+                    tipo_guion: guionData.tipoGuion,
+                    titulo: guionData.titulo,
+                    clips: guionData.clips
+                }
+            };
+            
+            console.log('Datos finales para webhook de escenas:', finalData);
+            
+            // Enviar al webhook de escenas
+            const result = await this.sendToScenesWebhook(finalData);
+            
+            // Mostrar resultado
+            this.showScenesResult(result);
+            
+        } catch (error) {
+            console.error('Error generating scenes:', error);
+            this.showError(`Error generando escenas: ${error.message}`);
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    async sendToScenesWebhook(configData) {
+        try {
+            // URL del webhook de escenas
+            const scenesWebhookUrl = 'https://ardeagency.app.n8n.cloud/webhook-test/6b8560d8-b00c-4cda-85a1-143e4d5e869c?v=' + Date.now();
+            
+            console.log('=== ENVIANDO DATOS AL WEBHOOK DE ESCENAS ===');
+            console.log('URL:', scenesWebhookUrl);
+            console.log('Tamaño de datos:', JSON.stringify(configData).length, 'caracteres');
+            
+            // Crear AbortController para timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 600000); // 10 minutos timeout
+            
+            const response = await fetch(scenesWebhookUrl, {
+                method: 'POST',
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-User-ID': this.userId || 'demo-user',
+                    'X-Project-ID': this.currentProjectId || 'demo-project',
+                    'X-Expected-Response': 'scenes'
+                },
+                body: JSON.stringify(configData),
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+
+            console.log('Respuesta del webhook de escenas:', {
+                status: response.status,
+                statusText: response.statusText,
+                ok: response.ok
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Error del webhook de escenas:', errorText);
+                throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+            }
+
+            const result = await response.json();
+            console.log('Resultado del webhook de escenas:', result);
+            
+            // Validar que la respuesta tenga el formato esperado
+            if (this.validateScenesResponse(result)) {
+                this.showNotification('Escenas generadas exitosamente', 'success');
+                return result;
+            } else {
+                console.warn('Respuesta del webhook de escenas no tiene el formato esperado:', result);
+                this.showNotification('Respuesta recibida pero formato inesperado', 'warning');
+                return result;
+            }
+
+        } catch (error) {
+            console.error('Error sending to scenes webhook:', error);
+            
+            // Manejar diferentes tipos de errores
+            let errorMessage = error.message;
+            
+            if (error.name === 'AbortError') {
+                errorMessage = 'La solicitud tardó demasiado tiempo. Inténtalo de nuevo.';
+            } else if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'No se pudo conectar con el servidor. Verifica tu conexión a internet.';
+            } else if (error.message.includes('CORS')) {
+                errorMessage = 'Error de CORS: El servidor no permite requests desde localhost. Contacta al administrador.';
+            } else if (error.message.includes('524')) {
+                errorMessage = 'El servidor tardó demasiado en responder. Inténtalo de nuevo.';
+            }
+            
+            this.showNotification(`Error enviando configuración: ${errorMessage}`, 'error');
+            throw new Error(errorMessage);
+        }
+    }
+
+    validateScenesResponse(response) {
+        try {
+            console.log('Validando respuesta del webhook de escenas:', response);
+            
+            // Validar estructura esperada para escenas
+            if (Array.isArray(response) && response.length > 0) {
+                console.log('Respuesta es un array con', response.length, 'elementos');
+                return true;
+            }
+
+            // Si la respuesta es un objeto
+            if (response && typeof response === 'object') {
+                // Validar que tenga al menos una escena
+                if (response.scenes && Array.isArray(response.scenes) && response.scenes.length > 0) {
+                    console.log('Respuesta válida con escenas:', response.scenes.length);
+                    return true;
+                }
+
+                // Validar formato alternativo
+                if (response.images && Array.isArray(response.images) && response.images.length > 0) {
+                    console.log('Respuesta válida con imágenes:', response.images.length);
+                    return true;
+                }
+
+                // Validar formato de error
+                if (response.error) {
+                    console.warn('Webhook de escenas devolvió error:', response.error);
+                    return false;
+                }
+            }
+
+            console.warn('Respuesta de escenas no tiene formato esperado:', response);
+            return false;
+
+        } catch (error) {
+            console.error('Error validando respuesta de escenas:', error);
+            return false;
+        }
+    }
+
+    showScenesResult(result) {
+        console.log('=== MOSTRANDO RESULTADO DE ESCENAS ===');
+        console.log('Resultado original:', result);
+        
+        const canvasArea = document.querySelector('.canvas-area');
+        if (!canvasArea) {
+            console.error('Canvas area no encontrado');
+            return;
+        }
+
+        try {
+            // Parsear el resultado si es string
+            let scenesData = result;
+            if (typeof result === 'string') {
+                console.log('Parseando string JSON...');
+                scenesData = JSON.parse(result);
+            }
+
+            console.log('Datos de escenas procesados:', scenesData);
+
+            // Manejar diferentes formatos de respuesta
+            let scenes = [];
+            
+            if (Array.isArray(scenesData)) {
+                scenes = scenesData;
+                console.log('✅ Formato array directo detectado:', scenes.length, 'escenas');
+            } else if (scenesData && scenesData.scenes && Array.isArray(scenesData.scenes)) {
+                scenes = scenesData.scenes;
+                console.log('✅ Formato con scenes detectado:', scenes.length, 'escenas');
+            } else if (scenesData && scenesData.images && Array.isArray(scenesData.images)) {
+                scenes = scenesData.images;
+                console.log('✅ Formato con images detectado:', scenes.length, 'escenas');
+            } else {
+                console.error('❌ Formato no reconocido para escenas:', Object.keys(scenesData || {}));
+                throw new Error('Formato de respuesta inválido - no se encontraron escenas');
+            }
+            
+            console.log('Array final de escenas:', scenes);
+
+            if (scenes.length === 0) {
+                throw new Error('No se generaron escenas');
+            }
+
+            // Generar HTML para las escenas
+            const scenesHTML = this.generateScenesCards(scenes);
+            
+            canvasArea.innerHTML = `
+                <div class="scenes-container">
+                    <div class="scenes-header">
+                        <h2>🎬 Escenas Generadas</h2>
+                        <p>Se generaron ${scenes.length} escenas para tu guión</p>
+                    </div>
+                    <div class="scenes-grid">
+                        ${scenesHTML}
+                    </div>
+                </div>
+            `;
+
+            // Re-inicializar iconos de Lucide
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+            
+            console.log('=== SHOWSCENESRESULT COMPLETADO EXITOSAMENTE ===');
+            console.log('Canvas actualizado con escenas generadas');
+
+        } catch (error) {
+            console.error('Error procesando resultado de escenas:', error);
+            canvasArea.innerHTML = `
+                <div class="error-container">
+                    <i data-lucide="alert-circle" class="error-icon"></i>
+                    <h3>Error al procesar escenas</h3>
+                    <p>No se pudieron cargar las escenas generadas: ${error.message}</p>
+                    <button class="btn btn-primary" onclick="window.studioManager.generateScripts()">
+                        Volver a Guiones
+                    </button>
+                </div>
+            `;
+        }
+    }
+
+    generateScenesCards(scenes) {
+        console.log('generateScenesCards recibido:', scenes);
+        
+        if (!scenes || !Array.isArray(scenes)) {
+            console.error('Error: scenes no es un array válido:', scenes);
+            return '<div class="error-message">Error: No se pudieron procesar las escenas</div>';
+        }
+        
+        if (scenes.length === 0) {
+            console.warn('Array de escenas está vacío');
+            return '<div class="no-scenes">No se encontraron escenas para mostrar</div>';
+        }
+        
+        return scenes.map((scene, index) => {
+            console.log(`Procesando escena ${index}:`, scene);
+            
+            return `
+            <div class="scene-card" data-scene-index="${index}">
+                <div class="scene-image">
+                    <img src="${scene.image_url || scene.url || '#'}" alt="Escena ${index + 1}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlbiBubyBkaXNwb25pYmxlPC90ZXh0Pjwvc3ZnPg=='">
+                </div>
+                <div class="scene-info">
+                    <h3 class="scene-title">Escena ${index + 1}</h3>
+                    <p class="scene-description">${scene.description || scene.prompt || 'Descripción no disponible'}</p>
+                </div>
+                <div class="scene-actions">
+                    <button class="btn btn-secondary" onclick="window.studioManager.downloadScene(${index})">
+                        💾 Descargar
+                    </button>
+                </div>
+            </div>
+        `;
+        }).join('');
+    }
+
+    downloadScene(sceneIndex) {
+        const sceneCard = document.querySelector(`[data-scene-index="${sceneIndex}"]`);
+        if (!sceneCard) return;
+
+        const sceneImage = sceneCard.querySelector('.scene-image img');
+        if (!sceneImage || !sceneImage.src) return;
+
+        // Crear enlace de descarga
+        const a = document.createElement('a');
+        a.href = sceneImage.src;
+        a.download = `escena_${sceneIndex + 1}.jpg`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        this.showNotification('Escena descargada', 'success');
     }
 
     extractGuionData(guionCard) {
