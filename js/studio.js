@@ -4640,6 +4640,7 @@ class StudioManager {
                     if (product.main_image_id) {
                         console.log('Cargando imagen principal:', product.main_image_id);
                         const mainImageUrl = await this.getSupabaseFileUrl(product.main_image_id);
+                        console.log('URL de imagen principal obtenida:', mainImageUrl);
                         if (mainImageUrl) {
                             configData.product.files.images.push(mainImageUrl);
                             console.log('Imagen principal agregada:', mainImageUrl);
@@ -4731,6 +4732,18 @@ class StudioManager {
 
                 // Cargar archivos locales de escenarios
                 await this.loadLocalFiles('escenarios', configData.scenario.files);
+            }
+
+            // Log final de todas las imágenes antes de enviar al webhook
+            console.log('=== ESTADO FINAL DE IMÁGENES PARA WEBHOOK ===');
+            if (configData.product && configData.product.files && configData.product.files.images) {
+                console.log('Imágenes del producto:', configData.product.files.images);
+                console.log('Cantidad de imágenes:', configData.product.files.images.length);
+                configData.product.files.images.forEach((url, index) => {
+                    console.log(`Imagen ${index + 1}:`, url);
+                });
+            } else {
+                console.warn('No hay imágenes en configData.product.files.images');
             }
 
         } catch (error) {
