@@ -2747,15 +2747,33 @@ class StudioManager {
     }
 
     addImageUploadListener(slot, slotIndex, product) {
+        console.log('Agregando listener al slot:', slotIndex, 'Producto:', product.id);
+        
+        // Agregar listener al slot completo
+        slot.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Click en slot de imagen:', slotIndex);
+            this.openImageUploadDialog(slotIndex, product);
+        });
+        
+        // También agregar listener al elemento clickable si existe
         const clickableElement = slot.querySelector('.clickable');
         if (clickableElement) {
-            clickableElement.addEventListener('click', () => {
+            console.log('Elemento clickeable encontrado, agregando listener adicional');
+            clickableElement.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Click en elemento clickeable:', slotIndex);
                 this.openImageUploadDialog(slotIndex, product);
             });
+        } else {
+            console.log('No se encontró elemento clickeable en el slot');
         }
     }
 
     openImageUploadDialog(slotIndex, product) {
+        console.log('Abriendo diálogo de subida para slot:', slotIndex);
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'image/*';
@@ -2764,6 +2782,7 @@ class StudioManager {
         input.addEventListener('change', (event) => {
             const file = event.target.files[0];
             if (file) {
+                console.log('Archivo seleccionado:', file.name);
                 this.handleProductImageUpload(file, slotIndex, product);
             }
         });
