@@ -3906,10 +3906,15 @@ class StudioManager {
                 .from('files')
                 .select('path, bucket')
                 .eq('id', fileId)
-                .single();
+                .maybeSingle();
             
-            if (fileError || !fileInfo) {
-                console.log('Archivo no encontrado o error:', fileError?.message || 'Sin información');
+            if (fileError) {
+                console.warn('Error consultando archivo:', fileError.message);
+                return null;
+            }
+            
+            if (!fileInfo) {
+                console.warn('Archivo no encontrado en la base de datos:', fileId);
                 return null;
             }
             
@@ -3924,7 +3929,13 @@ class StudioManager {
                 .download(fileInfo.path);
             
             if (error) {
-                console.error('Error downloading file:', error);
+                console.warn('Error descargando archivo:', error.message || error);
+                console.warn('Bucket:', bucket, 'Path:', fileInfo.path);
+                return null;
+            }
+            
+            if (!data) {
+                console.warn('No se pudo descargar el archivo:', fileId);
                 return null;
             }
             
