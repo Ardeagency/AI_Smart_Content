@@ -5085,7 +5085,7 @@ class StudioManager {
                 mode: 'cors',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json, application/octet-stream, image/*',
+                    'Accept': 'application/json',
                     'X-User-ID': this.userId || 'demo-user',
                     'X-Project-ID': this.currentProjectId || 'demo-project',
                     'X-Expected-Response': 'scenes'
@@ -5109,12 +5109,12 @@ class StudioManager {
                 throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
             }
 
-            // Verificar si la respuesta es binaria o JSON
+            // Verificar que la respuesta sea JSON con URLs
             const contentType = response.headers.get('content-type');
             console.log('Content-Type recibido:', contentType);
 
             if (contentType && contentType.includes('application/json')) {
-                // Respuesta JSON (URLs de imágenes)
+                // Respuesta JSON (URLs de imágenes) - FORMATO REQUERIDO
                 const result = await response.json();
                 console.log('Resultado JSON del webhook de escenas:', result);
                 
@@ -5127,13 +5127,13 @@ class StudioManager {
                     return result;
                 }
             } else {
-                // Respuesta binaria (archivos de imágenes)
-                console.log('Respuesta binaria detectada, procesando archivos...');
-                const binaryResult = await this.processBinaryResponse(response);
-                console.log('Resultado binario procesado:', binaryResult);
+                // Respuesta binaria - NO SOPORTADA PARA ESCENAS
+                console.error('❌ El webhook de escenas debe responder con JSON conteniendo URLs, no datos binarios');
+                console.error('Content-Type recibido:', contentType);
+                console.error('El webhook debe devolver un JSON con estructura: {scenes: [{image_url: "https://..."}]}');
                 
-                this.showNotification('Escenas generadas exitosamente', 'success');
-                return binaryResult;
+                this.showNotification('Error: El webhook debe responder con URLs de imágenes en formato JSON', 'error');
+                throw new Error('El webhook de escenas debe responder con JSON conteniendo URLs, no datos binarios');
             }
 
         } catch (error) {
@@ -5294,10 +5294,12 @@ class StudioManager {
     validateScenesResponse(response) {
         try {
             console.log('Validando respuesta del webhook de escenas:', response);
+            console.log('📋 FORMATO ESPERADO: JSON con URLs de imágenes');
+            console.log('📋 EJEMPLO: {scenes: [{image_url: "https://..."}]}');
             
             // Validar estructura esperada para escenas
             if (Array.isArray(response) && response.length > 0) {
-                console.log('Respuesta es un array con', response.length, 'elementos');
+                console.log('✅ Respuesta es un array con', response.length, 'elementos');
                 return true;
             }
 
@@ -5305,24 +5307,35 @@ class StudioManager {
             if (response && typeof response === 'object') {
                 // Validar que tenga al menos una escena
                 if (response.scenes && Array.isArray(response.scenes) && response.scenes.length > 0) {
-                    console.log('Respuesta válida con escenas:', response.scenes.length);
+                    console.log('✅ Respuesta válida con escenas:', response.scenes.length);
                     return true;
                 }
 
                 // Validar formato alternativo
                 if (response.images && Array.isArray(response.images) && response.images.length > 0) {
-                    console.log('Respuesta válida con imágenes:', response.images.length);
+                    console.log('✅ Respuesta válida con imágenes:', response.images.length);
+                    return true;
+                }
+
+                // Validar formato content
+                if (response.content && Array.isArray(response.content) && response.content.length > 0) {
+                    console.log('✅ Respuesta válida con content:', response.content.length);
                     return true;
                 }
 
                 // Validar formato de error
                 if (response.error) {
-                    console.warn('Webhook de escenas devolvió error:', response.error);
+                    console.warn('❌ Webhook de escenas devolvió error:', response.error);
                     return false;
                 }
             }
 
-            console.warn('Respuesta de escenas no tiene formato esperado:', response);
+            console.warn('❌ Respuesta de escenas no tiene formato esperado:', response);
+            console.warn('📋 FORMATOS VÁLIDOS:');
+            console.warn('   - Array directo: [{image_url: "https://..."}]');
+            console.warn('   - Con scenes: {scenes: [{image_url: "https://..."}]}');
+            console.warn('   - Con images: {images: [{image_url: "https://..."}]}');
+            console.warn('   - Con content: {content: [{image_url: "https://..."}]}');
             return false;
 
         } catch (error) {
