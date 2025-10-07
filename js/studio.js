@@ -5070,7 +5070,7 @@ class StudioManager {
     async sendToScenesWebhook(configData) {
         try {
             // URL del webhook de escenas
-            const scenesWebhookUrl = 'https://ardeagency.app.n8n.cloud/webhook-test/6b8560d8-b00c-4cda-85a1-143e4d5e869c?v=' + Date.now();
+            const scenesWebhookUrl = 'https://ardeagency.app.n8n.cloud/webhook/6b8560d8-b00c-4cda-85a1-143e4d5e869c?v=' + Date.now();
             
             console.log('=== ENVIANDO DATOS AL WEBHOOK DE ESCENAS ===');
             console.log('URL:', scenesWebhookUrl);
