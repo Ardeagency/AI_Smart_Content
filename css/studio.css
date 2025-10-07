@@ -3326,3 +3326,47 @@ input[type="range"]::-moz-range-thumb {
     max-width: 500px;
     line-height: 1.5;
 }
+
+/* Estilos para mensaje de no escenas */
+.no-scenes-message {
+    text-align: center;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+    border-radius: 12px;
+    border: 1px solid #333;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.no-scenes-icon {
+    width: 64px;
+    height: 64px;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+}
+
+.no-scenes-message h3 {
+    color: var(--primary-color);
+    font-size: 24px;
+    margin-bottom: 15px;
+}
+
+.no-scenes-message p {
+    color: var(--text-secondary);
+    font-size: 16px;
+    margin-bottom: 15px;
+    line-height: 1.6;
+}
+
+.no-scenes-message ul {
+    text-align: left;
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin: 20px 0;
+    padding-left: 20px;
+}
+
+.no-scenes-message li {
+    margin-bottom: 8px;
+    line-height: 1.5;
+}

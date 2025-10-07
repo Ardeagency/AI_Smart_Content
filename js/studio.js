@@ -5363,15 +5363,51 @@ class StudioManager {
             } else if (scenesData && scenesData.images && Array.isArray(scenesData.images)) {
                 scenes = scenesData.images;
                 console.log('✅ Formato con images detectado:', scenes.length, 'escenas');
+            } else if (scenesData && scenesData.content && Array.isArray(scenesData.content)) {
+                scenes = scenesData.content;
+                console.log('✅ Formato con content detectado:', scenes.length, 'escenas');
             } else {
                 console.error('❌ Formato no reconocido para escenas:', Object.keys(scenesData || {}));
+                console.log('Estructura completa recibida:', scenesData);
                 throw new Error('Formato de respuesta inválido - no se encontraron escenas');
             }
             
             console.log('Array final de escenas:', scenes);
 
             if (scenes.length === 0) {
-                throw new Error('No se generaron escenas');
+                // Mostrar mensaje informativo en lugar de error
+                canvasArea.innerHTML = `
+                    <div class="guiones-container">
+                        <div class="guiones-header">
+                            <h2>🎬 Escenas Generadas</h2>
+                            <p>El webhook respondió correctamente pero no generó escenas</p>
+                        </div>
+                        <div class="test-scenes-container">
+                            <div class="no-scenes-message">
+                                <i data-lucide="image" class="no-scenes-icon"></i>
+                                <h3>No se generaron escenas</h3>
+                                <p>El webhook procesó la solicitud pero no devolvió imágenes de escenas.</p>
+                                <p>Esto puede deberse a:</p>
+                                <ul>
+                                    <li>El guión de prueba no es compatible con la generación de escenas</li>
+                                    <li>El webhook necesita más tiempo para procesar</li>
+                                    <li>Hay un problema en la configuración del webhook</li>
+                                </ul>
+                                <button class="btn btn-primary" onclick="window.studioManager.testScenesWebhook()">
+                                    🔄 Intentar de nuevo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Re-inicializar iconos de Lucide
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+                
+                this.showNotification('Webhook respondió pero no generó escenas', 'warning');
+                return;
             }
 
             // Generar HTML para las escenas
