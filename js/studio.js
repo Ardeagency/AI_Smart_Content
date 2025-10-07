@@ -5076,6 +5076,11 @@ class StudioManager {
             console.log('Configuración generada:', configData);
             console.log('Tamaño de la configuración:', JSON.stringify(configData).length, 'caracteres');
 
+            // Cargar archivos como URLs
+            this.showLoading('Cargando archivos...');
+            await this.loadFilesAsUrls(configData);
+            console.log('Archivos cargados como URLs:', configData);
+
             // Enviar al webhook
             this.showLoading('Enviando datos a la IA...');
             console.log('Enviando al webhook...');
@@ -5139,21 +5144,25 @@ class StudioManager {
             console.log('guionesData.output existe:', !!guionesData.output);
             console.log('guionesData.items existe:', !!guionesData.items);
             
-            // NUEVO: Manejar estructura esperada [{"output": {"guiones": [...]}}]
+            // NUEVO FORMATO: Array directo de guiones (prioridad)
             if (Array.isArray(guionesData) && guionesData.length > 0) {
-                console.log('Array detectado, verificando primer elemento...');
+                console.log('Array detectado, verificando formato...');
                 const firstElement = guionesData[0];
                 console.log('Primer elemento:', firstElement);
-                console.log('Primer elemento.output existe:', !!firstElement.output);
-                console.log('Primer elemento.output.guiones existe:', !!(firstElement.output && firstElement.output.guiones));
+                console.log('Primer elemento tiene tipo_guion:', !!firstElement.tipo_guion);
+                console.log('Primer elemento tiene clips:', !!firstElement.clips);
                 
-                if (firstElement && firstElement.output && firstElement.output.guiones && Array.isArray(firstElement.output.guiones)) {
+                // Verificar si es array directo de guiones (nuevo formato)
+                if (firstElement && firstElement.tipo_guion && firstElement.clips && Array.isArray(firstElement.clips)) {
+                    guiones = guionesData;
+                    console.log('✅ NUEVO FORMATO: Array directo de guiones detectado:', guiones.length, 'guiones');
+                } else if (firstElement && firstElement.output && firstElement.output.guiones && Array.isArray(firstElement.output.guiones)) {
                     guiones = firstElement.output.guiones;
                     console.log('✅ Formato [{"output": {"guiones": [...]}}] detectado:', guiones.length, 'guiones');
                 } else {
-                    // Si es array directo de guiones
+                    // Fallback: asumir que es array directo
                     guiones = guionesData;
-                    console.log('✅ Formato array directo de guiones detectado:', guiones.length, 'guiones');
+                    console.log('✅ Formato array directo de guiones (fallback):', guiones.length, 'guiones');
                 }
             } else if (guionesData && guionesData.output && guionesData.output.guiones && Array.isArray(guionesData.output.guiones)) {
                 // Si la respuesta tiene estructura {output: {guiones: [...]}}
@@ -5402,13 +5411,24 @@ class StudioManager {
         try {
             console.log('=== INICIANDO GENERACIÓN DE ESCENAS ===');
             console.log('Guión seleccionado:', guionIndex);
+            console.log('Tipo de guionIndex:', typeof guionIndex);
             
             // Mostrar loading
             this.showLoading('Generando escenas...');
             
+            // Debug: Verificar todos los elementos con data-guion-index
+            const allGuionCards = document.querySelectorAll('[data-guion-index]');
+            console.log('Todos los guion-cards encontrados:', allGuionCards.length);
+            allGuionCards.forEach((card, index) => {
+                console.log(`Card ${index}: data-guion-index="${card.getAttribute('data-guion-index')}"`);
+            });
+            
             // Obtener el guión seleccionado del DOM
             const guionCard = document.querySelector(`[data-guion-index="${guionIndex}"]`);
+            console.log('GuionCard encontrado:', !!guionCard);
             if (!guionCard) {
+                console.error('No se encontró el guión con index:', guionIndex);
+                console.error('Selector usado:', `[data-guion-index="${guionIndex}"]`);
                 throw new Error('No se encontró el guión seleccionado');
             }
             
