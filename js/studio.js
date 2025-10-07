@@ -1079,10 +1079,161 @@ class StudioManager {
             });
         }
 
+        // Inicializar slots de imágenes después de un breve delay
+        setTimeout(() => {
+            this.initializeImageSlots();
+        }, 1000);
+
         // Sin funcionalidad de modales
 
         // Atajos de teclado
         this.setupKeyboardShortcuts();
+    }
+
+    initializeImageSlots() {
+        console.log('=== INICIALIZANDO SLOTS DE IMÁGENES ===');
+        
+        const imageSlots = [
+            document.getElementById('product-image-1'),
+            document.getElementById('product-image-2'),
+            document.getElementById('product-image-3'),
+            document.getElementById('product-image-4')
+        ];
+        
+        console.log('Slots encontrados:', imageSlots.map(slot => !!slot));
+        
+        imageSlots.forEach((slot, index) => {
+            if (slot) {
+                console.log(`Agregando listener global al slot ${index + 1}`);
+                
+                // Remover listeners existentes
+                slot.removeEventListener('click', this.handleSlotClick);
+                
+                // Agregar nuevo listener
+                slot.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log(`Click en slot ${index + 1}`);
+                    this.handleImageSlotClick(index);
+                });
+            }
+        });
+    }
+
+    handleImageSlotClick(slotIndex) {
+        console.log('Manejando click en slot:', slotIndex);
+        
+        // Verificar si hay un producto seleccionado
+        if (!this.studioConfig.product) {
+            this.showNotification('Primero selecciona un producto', 'warning');
+            return;
+        }
+        
+        this.openImageUploadDialog(slotIndex, this.studioConfig.product);
+    }
+
+    async deleteProductImage(slotIndex) {
+        try {
+            console.log('Eliminando imagen del slot:', slotIndex);
+            
+            if (!this.studioConfig.product) {
+                this.showNotification('No hay producto seleccionado', 'error');
+                return;
+            }
+
+            if (confirm('¿Estás seguro de que quieres eliminar esta imagen?')) {
+                this.showNotification('Eliminando imagen...', 'info');
+
+                // Actualizar la base de datos
+                await this.removeImageFromDatabase(this.studioConfig.product, slotIndex);
+                
+                // Actualizar la interfaz inmediatamente
+                this.updateProductImagesAfterDelete(slotIndex);
+                this.showNotification('Imagen eliminada exitosamente', 'success');
+            }
+
+        } catch (error) {
+            console.error('Error eliminando imagen:', error);
+            this.showNotification('Error eliminando imagen: ' + error.message, 'error');
+        }
+    }
+
+    async removeImageFromDatabase(product, slotIndex) {
+        try {
+            let updateData = {};
+            
+            if (slotIndex === 0) {
+                // Eliminar imagen principal
+                updateData.main_image_id = null;
+            } else {
+                // Eliminar de galería
+                const currentGallery = product.gallery_file_ids || [];
+                const galleryIndex = slotIndex - 1;
+                
+                if (galleryIndex < currentGallery.length) {
+                    currentGallery[galleryIndex] = null;
+                    updateData.gallery_file_ids = currentGallery;
+                }
+            }
+
+            const { error } = await this.supabase
+                .from('products')
+                .update(updateData)
+                .eq('id', product.id);
+
+            if (error) {
+                console.error('Error actualizando producto:', error);
+                throw new Error('Error actualizando producto en la base de datos');
+            }
+
+            console.log('Imagen eliminada de la base de datos');
+        } catch (error) {
+            console.error('Error en removeImageFromDatabase:', error);
+            throw error;
+        }
+    }
+
+    async updateProductImagesAfterUpload(slotIndex, fileId) {
+        try {
+            console.log('Actualizando interfaz después de subir imagen:', slotIndex, fileId);
+            
+            const imageSlots = [
+                document.getElementById('product-image-1'),
+                document.getElementById('product-image-2'),
+                document.getElementById('product-image-3'),
+                document.getElementById('product-image-4')
+            ];
+
+            if (imageSlots[slotIndex]) {
+                // Cargar la nueva imagen inmediatamente
+                await this.loadProductImage(fileId, imageSlots[slotIndex], slotIndex);
+                console.log('Imagen actualizada en la interfaz');
+            }
+        } catch (error) {
+            console.error('Error actualizando interfaz:', error);
+        }
+    }
+
+    updateProductImagesAfterDelete(slotIndex) {
+        try {
+            console.log('Actualizando interfaz después de eliminar imagen:', slotIndex);
+            
+            const imageSlots = [
+                document.getElementById('product-image-1'),
+                document.getElementById('product-image-2'),
+                document.getElementById('product-image-3'),
+                document.getElementById('product-image-4')
+            ];
+
+            if (imageSlots[slotIndex]) {
+                // Mostrar slot vacío
+                imageSlots[slotIndex].innerHTML = '<div class="no-image clickable">➕ Agregar</div>';
+                this.addImageUploadListener(imageSlots[slotIndex], slotIndex, this.studioConfig.product);
+                console.log('Slot vaciado en la interfaz');
+            }
+        } catch (error) {
+            console.error('Error actualizando interfaz:', error);
+        }
     }
 
     // =======================================
@@ -2711,37 +2862,46 @@ class StudioManager {
     }
 
     updateProductImages(product) {
+        console.log('=== ACTUALIZANDO IMÁGENES DE PRODUCTO ===');
+        console.log('Producto recibido:', product);
+        
         const imageSlots = [
             document.getElementById('product-image-1'),
             document.getElementById('product-image-2'),
             document.getElementById('product-image-3'),
             document.getElementById('product-image-4')
         ];
+        
+        console.log('Slots de imagen encontrados:', imageSlots.map(slot => !!slot));
 
         // Imagen principal
         if (imageSlots[0]) {
             if (product.main_image_id) {
-                this.loadProductImage(product.main_image_id, imageSlots[0]);
+                this.loadProductImage(product.main_image_id, imageSlots[0], 0);
             } else {
                 imageSlots[0].innerHTML = '<div class="no-image clickable">➕ Agregar</div>';
                 this.addImageUploadListener(imageSlots[0], 0, product);
             }
         }
 
-        // Galería de imágenes
-        if (product.gallery_file_ids) {
+        // Galería de imágenes (slots 1, 2, 3)
+        if (product.gallery_file_ids && product.gallery_file_ids.length > 0) {
             for (let i = 0; i < Math.min(product.gallery_file_ids.length, 3); i++) {
-                if (imageSlots[i + 1]) {
-                    this.loadProductImage(product.gallery_file_ids[i], imageSlots[i + 1]);
+                const slotIndex = i + 1; // Slots 1, 2, 3
+                if (imageSlots[slotIndex] && product.gallery_file_ids[i]) {
+                    console.log(`Cargando imagen de galería ${i} en slot ${slotIndex}:`, product.gallery_file_ids[i]);
+                    this.loadProductImage(product.gallery_file_ids[i], imageSlots[slotIndex], slotIndex);
                 }
             }
         }
 
-        // Llenar slots vacíos
-        for (let i = (product.gallery_file_ids?.length || 0) + 1; i < 4; i++) {
-            if (imageSlots[i]) {
-                imageSlots[i].innerHTML = '<div class="no-image clickable">➕ Agregar</div>';
-                this.addImageUploadListener(imageSlots[i], i, product);
+        // Llenar slots vacíos de galería
+        const galleryLength = product.gallery_file_ids ? product.gallery_file_ids.length : 0;
+        for (let i = galleryLength; i < 3; i++) {
+            const slotIndex = i + 1; // Slots 1, 2, 3
+            if (imageSlots[slotIndex]) {
+                imageSlots[slotIndex].innerHTML = '<div class="no-image clickable">➕ Agregar</div>';
+                this.addImageUploadListener(imageSlots[slotIndex], slotIndex, product);
             }
         }
     }
@@ -2814,8 +2974,8 @@ class StudioManager {
                 // Actualizar el producto en la base de datos
                 await this.updateProductImageInDatabase(product, slotIndex, fileId);
                 
-                // Recargar las imágenes del producto
-                this.loadProducts();
+                // Actualizar la interfaz inmediatamente
+                this.updateProductImagesAfterUpload(slotIndex, fileId);
                 this.showNotification('Imagen subida exitosamente', 'success');
             } else {
                 this.showNotification('Error subiendo imagen', 'error');
@@ -2889,7 +3049,7 @@ class StudioManager {
         }
     }
 
-    async loadProductImage(imageFileId, container) {
+    async loadProductImage(imageFileId, container, slotIndex = null) {
         try {
             console.log('Cargando imagen de producto con ID:', imageFileId);
             const imageBase64 = await this.supabaseFileToBase64(imageFileId);
@@ -2900,7 +3060,18 @@ class StudioManager {
                 const imageType = this.detectImageType(imageBase64);
                 const dataUrl = `data:image/${imageType};base64,${imageBase64}`;
                 
-                container.innerHTML = `<img src="${dataUrl}" alt="Imagen" class="preview-image">`;
+                // Crear HTML con botón de eliminar
+                const deleteButton = slotIndex !== null ? 
+                    `<button class="delete-image-btn" onclick="window.studioManager.deleteProductImage(${slotIndex})" title="Eliminar imagen">
+                        <i class="fas fa-times"></i>
+                    </button>` : '';
+                
+                container.innerHTML = `
+                    <div class="image-container">
+                        <img src="${dataUrl}" alt="Imagen" class="preview-image">
+                        ${deleteButton}
+                    </div>
+                `;
                 console.log('Imagen mostrada en el contenedor con tipo:', imageType);
             } else {
                 container.innerHTML = '<div class="no-image clickable">➕ Agregar</div>';
