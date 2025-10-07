@@ -5294,32 +5294,32 @@ class StudioManager {
     validateScenesResponse(response) {
         try {
             console.log('Validando respuesta del webhook de escenas:', response);
-            console.log('📋 FORMATO ESPERADO: JSON con URLs de imágenes');
-            console.log('📋 EJEMPLO: {scenes: [{image_url: "https://..."}]}');
+            console.log('📋 FORMATO ESPERADO: 3 escenas separadas (una por cada clip)');
+            console.log('📋 EJEMPLO: [{image_url: "https://clip1.jpg"}, {image_url: "https://clip2.jpg"}, {image_url: "https://clip3.jpg"}]');
             
             // Validar estructura esperada para escenas
-            if (Array.isArray(response) && response.length > 0) {
-                console.log('✅ Respuesta es un array con', response.length, 'elementos');
+            if (Array.isArray(response) && response.length === 3) {
+                console.log('✅ Respuesta es un array con exactamente 3 elementos (clips)');
                 return true;
             }
 
             // Si la respuesta es un objeto
             if (response && typeof response === 'object') {
-                // Validar que tenga al menos una escena
-                if (response.scenes && Array.isArray(response.scenes) && response.scenes.length > 0) {
-                    console.log('✅ Respuesta válida con escenas:', response.scenes.length);
+                // Validar que tenga exactamente 3 escenas
+                if (response.scenes && Array.isArray(response.scenes) && response.scenes.length === 3) {
+                    console.log('✅ Respuesta válida con 3 escenas (clips):', response.scenes.length);
                     return true;
                 }
 
                 // Validar formato alternativo
-                if (response.images && Array.isArray(response.images) && response.images.length > 0) {
-                    console.log('✅ Respuesta válida con imágenes:', response.images.length);
+                if (response.images && Array.isArray(response.images) && response.images.length === 3) {
+                    console.log('✅ Respuesta válida con 3 imágenes (clips):', response.images.length);
                     return true;
                 }
 
                 // Validar formato content
-                if (response.content && Array.isArray(response.content) && response.content.length > 0) {
-                    console.log('✅ Respuesta válida con content:', response.content.length);
+                if (response.content && Array.isArray(response.content) && response.content.length === 3) {
+                    console.log('✅ Respuesta válida con 3 content (clips):', response.content.length);
                     return true;
                 }
 
@@ -5331,11 +5331,12 @@ class StudioManager {
             }
 
             console.warn('❌ Respuesta de escenas no tiene formato esperado:', response);
-            console.warn('📋 FORMATOS VÁLIDOS:');
-            console.warn('   - Array directo: [{image_url: "https://..."}]');
-            console.warn('   - Con scenes: {scenes: [{image_url: "https://..."}]}');
-            console.warn('   - Con images: {images: [{image_url: "https://..."}]}');
-            console.warn('   - Con content: {content: [{image_url: "https://..."}]}');
+            console.warn('📋 FORMATO REQUERIDO:');
+            console.warn('   - Array directo con 3 elementos: [{image_url: "https://clip1.jpg"}, {image_url: "https://clip2.jpg"}, {image_url: "https://clip3.jpg"}]');
+            console.warn('   - Con scenes: {scenes: [{image_url: "https://clip1.jpg"}, {image_url: "https://clip2.jpg"}, {image_url: "https://clip3.jpg"}]}');
+            console.warn('   - Con images: {images: [{image_url: "https://clip1.jpg"}, {image_url: "https://clip2.jpg"}, {image_url: "https://clip3.jpg"}]}');
+            console.warn('   - Con content: {content: [{image_url: "https://clip1.jpg"}, {image_url: "https://clip2.jpg"}, {image_url: "https://clip3.jpg"}]}');
+            console.warn('❌ OBLIGATORIO: Debe contener exactamente 3 escenas (una por cada clip)');
             return false;
 
         } catch (error) {
@@ -5423,6 +5424,43 @@ class StudioManager {
                 return;
             }
 
+            // Validar que se reciban exactamente 3 escenas (una por cada clip)
+            if (scenes.length !== 3) {
+                console.error(`❌ ERROR: Se esperaban exactamente 3 escenas (clips), pero se recibieron ${scenes.length}`);
+                canvasArea.innerHTML = `
+                    <div class="guiones-container">
+                        <div class="guiones-header">
+                            <h2>🎬 Escenas Generadas</h2>
+                            <p>Error en el formato de respuesta del webhook</p>
+                        </div>
+                        <div class="test-scenes-container">
+                            <div class="no-scenes-message">
+                                <i data-lucide="alert-triangle" class="no-scenes-icon"></i>
+                                <h3>Formato de respuesta incorrecto</h3>
+                                <p>Se esperaban <strong>exactamente 3 escenas</strong> (una por cada clip), pero se recibieron <strong>${scenes.length}</strong>.</p>
+                                <p>El webhook debe devolver:</p>
+                                <ul>
+                                    <li><strong>Escena 1:</strong> Para el Clip 1 del guión</li>
+                                    <li><strong>Escena 2:</strong> Para el Clip 2 del guión</li>
+                                    <li><strong>Escena 3:</strong> Para el Clip 3 del guión</li>
+                                </ul>
+                                <button class="btn btn-primary" onclick="window.studioManager.testScenesWebhook()">
+                                    🔄 Intentar de nuevo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Re-inicializar iconos de Lucide
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+                
+                this.showNotification(`Error: Se esperaban 3 escenas, se recibieron ${scenes.length}`, 'error');
+                return;
+            }
+
             // Generar HTML para las escenas
             const scenesHTML = this.generateScenesCards(scenes);
             
@@ -5477,32 +5515,33 @@ class StudioManager {
         return scenes.map((scene, index) => {
             console.log(`Procesando escena ${index}:`, scene);
             
-            // Extraer URL de imagen correctamente
+            // Extraer URL de imagen correctamente (debe ser string, no array)
             let imageUrl = '#';
             
             if (scene.image_url) {
                 // Si tiene image_url directo
-                imageUrl = scene.image_url;
-                console.log(`Escena ${index} - image_url encontrado:`, imageUrl);
+                if (typeof scene.image_url === 'string') {
+                    imageUrl = scene.image_url;
+                    console.log(`Escena ${index} (Clip ${index + 1}) - image_url encontrado:`, imageUrl);
+                } else {
+                    console.error(`Escena ${index} (Clip ${index + 1}) - image_url debe ser string, no:`, typeof scene.image_url);
+                }
             } else if (scene.url) {
-                // Si tiene url, verificar si es string o array
+                // Si tiene url, debe ser string
                 if (typeof scene.url === 'string') {
                     imageUrl = scene.url;
-                    console.log(`Escena ${index} - url string encontrado:`, imageUrl);
-                } else if (Array.isArray(scene.url) && scene.url.length > 0) {
-                    // Si url es array, tomar el primer elemento
-                    imageUrl = scene.url[0];
-                    console.log(`Escena ${index} - url array encontrado, tomando primer elemento:`, imageUrl);
+                    console.log(`Escena ${index} (Clip ${index + 1}) - url encontrado:`, imageUrl);
                 } else {
-                    console.warn(`Escena ${index} - url no es string ni array válido:`, scene.url);
+                    console.error(`Escena ${index} (Clip ${index + 1}) - url debe ser string, no:`, typeof scene.url);
+                    console.error('❌ ERROR: El webhook debe enviar URLs individuales, no arrays');
                 }
             } else {
-                console.warn(`Escena ${index} - no se encontró image_url ni url:`, scene);
+                console.warn(`Escena ${index} (Clip ${index + 1}) - no se encontró image_url ni url:`, scene);
             }
             
             // Validar que la URL sea válida
             if (!imageUrl || imageUrl === '#' || !imageUrl.startsWith('http')) {
-                console.warn(`Escena ${index} - URL de imagen inválida:`, imageUrl);
+                console.warn(`Escena ${index} (Clip ${index + 1}) - URL de imagen inválida:`, imageUrl);
                 imageUrl = '#'; // Usar placeholder
             }
             
@@ -5512,7 +5551,7 @@ class StudioManager {
                     <img src="${imageUrl}" alt="Escena ${index + 1}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlbiBubyBkaXNwb25pYmxlPC90ZXh0Pjwvc3ZnPg=='">
                 </div>
                 <div class="scene-info">
-                    <h3 class="scene-title">Escena ${index + 1}</h3>
+                    <h3 class="scene-title">Clip ${index + 1}</h3>
                     <p class="scene-description">${scene.description || scene.prompt || 'Descripción no disponible'}</p>
                 </div>
                 <div class="scene-actions">
