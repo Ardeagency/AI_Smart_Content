@@ -2890,20 +2890,35 @@ class StudioManager {
         // Galería de imágenes (slots 1, 2, 3)
         if (product.gallery_file_ids && product.gallery_file_ids.length > 0) {
             console.log('Procesando galería de imágenes...');
+            console.log('Array completo de gallery_file_ids:', product.gallery_file_ids);
+            
             for (let i = 0; i < Math.min(product.gallery_file_ids.length, 3); i++) {
                 const slotIndex = i + 1; // Slots 1, 2, 3
+                const fileId = product.gallery_file_ids[i];
+                
                 console.log(`Procesando galería ${i}:`, {
                     slotIndex,
-                    fileId: product.gallery_file_ids[i],
+                    fileId,
                     slotExists: !!imageSlots[slotIndex],
-                    fileIdExists: !!product.gallery_file_ids[i]
+                    fileIdExists: !!fileId,
+                    isMainImage: fileId === product.main_image_id
                 });
                 
-                if (imageSlots[slotIndex] && product.gallery_file_ids[i]) {
-                    console.log(`Cargando imagen de galería ${i} en slot ${slotIndex}:`, product.gallery_file_ids[i]);
-                    this.loadProductImage(product.gallery_file_ids[i], imageSlots[slotIndex], slotIndex);
+                // Verificar que no sea la misma imagen principal
+                if (fileId === product.main_image_id) {
+                    console.log(`⚠️ ADVERTENCIA: Galería ${i} tiene el mismo ID que la imagen principal`);
+                }
+                
+                if (imageSlots[slotIndex] && fileId && fileId !== product.main_image_id) {
+                    console.log(`✅ Cargando imagen de galería ${i} en slot ${slotIndex}:`, fileId);
+                    this.loadProductImage(fileId, imageSlots[slotIndex], slotIndex);
+                } else if (fileId === product.main_image_id) {
+                    console.log(`❌ Saltando galería ${i} - es la misma imagen principal`);
+                    // Mostrar slot vacío si es la imagen principal
+                    imageSlots[slotIndex].innerHTML = '<div class="no-image clickable">➕ Agregar</div>';
+                    this.addImageUploadListener(imageSlots[slotIndex], slotIndex, product);
                 } else {
-                    console.log(`Saltando galería ${i} - slot: ${!!imageSlots[slotIndex]}, fileId: ${!!product.gallery_file_ids[i]}`);
+                    console.log(`❌ Saltando galería ${i} - slot: ${!!imageSlots[slotIndex]}, fileId: ${!!fileId}`);
                 }
             }
         } else {
