@@ -3285,56 +3285,6 @@ input[type="range"]::-moz-range-thumb {
     }
 }
 
-/* Estilos para botón de prueba */
-.btn-accent {
-    background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    font-family: 'Inter', sans-serif;
-}
-
-.btn-accent:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(23, 162, 184, 0.4);
-}
-
-.btn-large {
-    padding: 16px 32px;
-    font-size: 16px;
-    font-weight: 700;
-}
-
-/* Estilos para contenedor de prueba */
-.test-scenes-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 40px 20px;
-    text-align: center;
-    background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-    border-radius: 12px;
-    border: 1px solid #333;
-    margin: 20px 0;
-}
-
-.test-description {
-    color: var(--text-secondary);
-    font-size: 14px;
-    margin-top: 20px;
-    max-width: 500px;
-    line-height: 1.5;
-}
 
 /* Estilos para mensaje de no escenas */
 .no-scenes-message {
