@@ -5477,10 +5477,39 @@ class StudioManager {
         return scenes.map((scene, index) => {
             console.log(`Procesando escena ${index}:`, scene);
             
+            // Extraer URL de imagen correctamente
+            let imageUrl = '#';
+            
+            if (scene.image_url) {
+                // Si tiene image_url directo
+                imageUrl = scene.image_url;
+                console.log(`Escena ${index} - image_url encontrado:`, imageUrl);
+            } else if (scene.url) {
+                // Si tiene url, verificar si es string o array
+                if (typeof scene.url === 'string') {
+                    imageUrl = scene.url;
+                    console.log(`Escena ${index} - url string encontrado:`, imageUrl);
+                } else if (Array.isArray(scene.url) && scene.url.length > 0) {
+                    // Si url es array, tomar el primer elemento
+                    imageUrl = scene.url[0];
+                    console.log(`Escena ${index} - url array encontrado, tomando primer elemento:`, imageUrl);
+                } else {
+                    console.warn(`Escena ${index} - url no es string ni array válido:`, scene.url);
+                }
+            } else {
+                console.warn(`Escena ${index} - no se encontró image_url ni url:`, scene);
+            }
+            
+            // Validar que la URL sea válida
+            if (!imageUrl || imageUrl === '#' || !imageUrl.startsWith('http')) {
+                console.warn(`Escena ${index} - URL de imagen inválida:`, imageUrl);
+                imageUrl = '#'; // Usar placeholder
+            }
+            
             return `
             <div class="scene-card" data-scene-index="${index}">
                 <div class="scene-image">
-                    <img src="${scene.image_url || scene.url || '#'}" alt="Escena ${index + 1}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlbiBubyBkaXNwb25pYmxlPC90ZXh0Pjwvc3ZnPg=='">
+                    <img src="${imageUrl}" alt="Escena ${index + 1}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlbiBubyBkaXNwb25pYmxlPC90ZXh0Pjwvc3ZnPg=='">
                 </div>
                 <div class="scene-info">
                     <h3 class="scene-title">Escena ${index + 1}</h3>
@@ -5615,7 +5644,7 @@ Generado por UGC Studio
         const canvasArea = document.querySelector('.canvas-area');
         if (!canvasArea) return;
 
-        canvasArea.innerHTML = `
+            canvasArea.innerHTML = `
             <div class="error-container">
                 <div class="error-icon">⚠️</div>
                 <div class="error-title">Error</div>
@@ -5623,8 +5652,8 @@ Generado por UGC Studio
                 <button class="btn btn-primary" onclick="window.studioManager.handleGenerateScripts()">
                     Reintentar
                 </button>
-            </div>
-        `;
+                </div>
+            `;
         
         console.error('Error mostrado:', message);
     }
