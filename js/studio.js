@@ -5085,7 +5085,7 @@ class StudioManager {
                 mode: 'cors',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json',
+                    'Accept': 'application/json, application/octet-stream, image/*',
                     'X-User-ID': this.userId || 'demo-user',
                     'X-Project-ID': this.currentProjectId || 'demo-project',
                     'X-Expected-Response': 'scenes'
@@ -5099,7 +5099,8 @@ class StudioManager {
             console.log('Respuesta del webhook de escenas:', {
                 status: response.status,
                 statusText: response.statusText,
-                ok: response.ok
+                ok: response.ok,
+                contentType: response.headers.get('content-type')
             });
 
             if (!response.ok) {
@@ -5108,17 +5109,31 @@ class StudioManager {
                 throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
             }
 
-            const result = await response.json();
-            console.log('Resultado del webhook de escenas:', result);
-            
-            // Validar que la respuesta tenga el formato esperado
-            if (this.validateScenesResponse(result)) {
-                this.showNotification('Escenas generadas exitosamente', 'success');
-                return result;
+            // Verificar si la respuesta es binaria o JSON
+            const contentType = response.headers.get('content-type');
+            console.log('Content-Type recibido:', contentType);
+
+            if (contentType && contentType.includes('application/json')) {
+                // Respuesta JSON (URLs de imágenes)
+                const result = await response.json();
+                console.log('Resultado JSON del webhook de escenas:', result);
+                
+                if (this.validateScenesResponse(result)) {
+                    this.showNotification('Escenas generadas exitosamente', 'success');
+                    return result;
+                } else {
+                    console.warn('Respuesta del webhook de escenas no tiene el formato esperado:', result);
+                    this.showNotification('Respuesta recibida pero formato inesperado', 'warning');
+                    return result;
+                }
             } else {
-                console.warn('Respuesta del webhook de escenas no tiene el formato esperado:', result);
-                this.showNotification('Respuesta recibida pero formato inesperado', 'warning');
-                return result;
+                // Respuesta binaria (archivos de imágenes)
+                console.log('Respuesta binaria detectada, procesando archivos...');
+                const binaryResult = await this.processBinaryResponse(response);
+                console.log('Resultado binario procesado:', binaryResult);
+                
+                this.showNotification('Escenas generadas exitosamente', 'success');
+                return binaryResult;
             }
 
         } catch (error) {
@@ -5139,6 +5154,140 @@ class StudioManager {
             
             this.showNotification(`Error enviando configuración: ${errorMessage}`, 'error');
             throw new Error(errorMessage);
+        }
+    }
+
+    async processBinaryResponse(response) {
+        try {
+            console.log('=== PROCESANDO RESPUESTA BINARIA ===');
+            
+            // Obtener el blob de la respuesta
+            const blob = await response.blob();
+            console.log('Blob recibido:', {
+                size: blob.size,
+                type: blob.type
+            });
+            
+            // Si es un archivo ZIP, extraer las imágenes
+            if (blob.type === 'application/zip' || blob.type === 'application/octet-stream') {
+                return await this.extractImagesFromZip(blob);
+            }
+            
+            // Si es una imagen individual, convertirla a base64
+            if (blob.type.startsWith('image/')) {
+                return await this.convertBlobToBase64(blob);
+            }
+            
+            // Si es JSON con archivos binarios embebidos
+            try {
+                const text = await blob.text();
+                const jsonData = JSON.parse(text);
+                console.log('JSON con binarios detectado:', jsonData);
+                return await this.processJsonWithBinaries(jsonData);
+            } catch (jsonError) {
+                console.log('No es JSON, procesando como archivo individual');
+                return await this.convertBlobToBase64(blob);
+            }
+            
+        } catch (error) {
+            console.error('Error procesando respuesta binaria:', error);
+            throw new Error(`Error procesando archivos binarios: ${error.message}`);
+        }
+    }
+
+    async extractImagesFromZip(zipBlob) {
+        try {
+            console.log('=== EXTRAYENDO IMÁGENES DEL ZIP ===');
+            
+            // Usar JSZip para extraer archivos del ZIP
+            const JSZip = window.JSZip;
+            if (!JSZip) {
+                console.error('JSZip no está disponible');
+                throw new Error('JSZip no está disponible para extraer archivos ZIP');
+            }
+            
+            const zip = await JSZip.loadAsync(zipBlob);
+            const scenes = [];
+            let index = 0;
+            
+            // Procesar cada archivo en el ZIP
+            for (const [filename, file] of Object.entries(zip.files)) {
+                if (file.dir) continue; // Saltar directorios
+                
+                // Verificar si es una imagen
+                if (filename.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+                    console.log(`Procesando imagen: ${filename}`);
+                    
+                    const imageBlob = await file.async('blob');
+                    const base64 = await this.convertBlobToBase64(imageBlob);
+                    
+                    scenes.push({
+                        image_url: base64,
+                        description: `Escena ${index + 1} - ${filename}`,
+                        filename: filename,
+                        index: index
+                    });
+                    
+                    index++;
+                }
+            }
+            
+            console.log(`Extraídas ${scenes.length} imágenes del ZIP`);
+            return { scenes: scenes };
+            
+        } catch (error) {
+            console.error('Error extrayendo imágenes del ZIP:', error);
+            throw new Error(`Error extrayendo imágenes: ${error.message}`);
+        }
+    }
+
+    async convertBlobToBase64(blob) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    }
+
+    async processJsonWithBinaries(jsonData) {
+        try {
+            console.log('=== PROCESANDO JSON CON BINARIOS ===');
+            
+            const scenes = [];
+            
+            // Buscar arrays de datos binarios
+            if (jsonData.data && Array.isArray(jsonData.data)) {
+                for (let i = 0; i < jsonData.data.length; i++) {
+                    const item = jsonData.data[i];
+                    
+                    if (item.content && item.content.data) {
+                        // Convertir base64 a blob y luego a data URL
+                        const binaryData = atob(item.content.data);
+                        const bytes = new Uint8Array(binaryData.length);
+                        for (let j = 0; j < binaryData.length; j++) {
+                            bytes[j] = binaryData.charCodeAt(j);
+                        }
+                        
+                        const blob = new Blob([bytes], { type: 'image/jpeg' });
+                        const base64 = await this.convertBlobToBase64(blob);
+                        
+                        scenes.push({
+                            image_url: base64,
+                            description: `Escena ${i + 1}`,
+                            filename: item.filename || `escena_${i + 1}.jpg`,
+                            index: i
+                        });
+                    }
+                }
+            }
+            
+            console.log(`Procesadas ${scenes.length} escenas desde JSON con binarios`);
+            return { scenes: scenes };
+            
+        } catch (error) {
+            console.error('Error procesando JSON con binarios:', error);
+            throw new Error(`Error procesando JSON con binarios: ${error.message}`);
         }
     }
 
@@ -5305,15 +5454,42 @@ class StudioManager {
         const sceneImage = sceneCard.querySelector('.scene-image img');
         if (!sceneImage || !sceneImage.src) return;
 
-        // Crear enlace de descarga
-        const a = document.createElement('a');
-        a.href = sceneImage.src;
-        a.download = `escena_${sceneIndex + 1}.jpg`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        
-        this.showNotification('Escena descargada', 'success');
+        try {
+            // Verificar si es base64 o URL
+            if (sceneImage.src.startsWith('data:')) {
+                // Es base64, descargar directamente
+                this.downloadBase64Image(sceneImage.src, `escena_${sceneIndex + 1}.jpg`);
+            } else {
+                // Es URL, usar método tradicional
+                const a = document.createElement('a');
+                a.href = sceneImage.src;
+                a.download = `escena_${sceneIndex + 1}.jpg`;
+                a.target = '_blank';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+            
+            this.showNotification('Escena descargada', 'success');
+        } catch (error) {
+            console.error('Error descargando escena:', error);
+            this.showNotification('Error al descargar la escena', 'error');
+        }
+    }
+
+    downloadBase64Image(base64Data, filename) {
+        try {
+            // Crear enlace de descarga para base64
+            const a = document.createElement('a');
+            a.href = base64Data;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        } catch (error) {
+            console.error('Error descargando imagen base64:', error);
+            throw error;
+        }
     }
 
     extractGuionData(guionCard) {
