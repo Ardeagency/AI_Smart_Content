@@ -2864,6 +2864,9 @@ class StudioManager {
     updateProductImages(product) {
         console.log('=== ACTUALIZANDO IMÁGENES DE PRODUCTO ===');
         console.log('Producto recibido:', product);
+        console.log('main_image_id:', product.main_image_id);
+        console.log('gallery_file_ids:', product.gallery_file_ids);
+        console.log('gallery_file_ids length:', product.gallery_file_ids ? product.gallery_file_ids.length : 0);
         
         const imageSlots = [
             document.getElementById('product-image-1'),
@@ -2886,13 +2889,25 @@ class StudioManager {
 
         // Galería de imágenes (slots 1, 2, 3)
         if (product.gallery_file_ids && product.gallery_file_ids.length > 0) {
+            console.log('Procesando galería de imágenes...');
             for (let i = 0; i < Math.min(product.gallery_file_ids.length, 3); i++) {
                 const slotIndex = i + 1; // Slots 1, 2, 3
+                console.log(`Procesando galería ${i}:`, {
+                    slotIndex,
+                    fileId: product.gallery_file_ids[i],
+                    slotExists: !!imageSlots[slotIndex],
+                    fileIdExists: !!product.gallery_file_ids[i]
+                });
+                
                 if (imageSlots[slotIndex] && product.gallery_file_ids[i]) {
                     console.log(`Cargando imagen de galería ${i} en slot ${slotIndex}:`, product.gallery_file_ids[i]);
                     this.loadProductImage(product.gallery_file_ids[i], imageSlots[slotIndex], slotIndex);
+                } else {
+                    console.log(`Saltando galería ${i} - slot: ${!!imageSlots[slotIndex]}, fileId: ${!!product.gallery_file_ids[i]}`);
                 }
             }
+        } else {
+            console.log('No hay galería de imágenes o está vacía');
         }
 
         // Llenar slots vacíos de galería
