@@ -1141,11 +1141,28 @@ class StudioManager {
                 return;
             }
 
-            if (confirm('¿Estás seguro de que quieres eliminar esta imagen?')) {
+            if (confirm('¿Estás seguro de que quieres eliminar esta imagen? Esta acción no se puede deshacer.')) {
                 this.showNotification('Eliminando imagen...', 'info');
 
-                // Actualizar la base de datos
+                // Obtener el fileId antes de eliminar de la base de datos
+                let fileIdToDelete = null;
+                if (slotIndex === 0) {
+                    fileIdToDelete = this.studioConfig.product.main_image_id;
+                } else {
+                    const galleryIndex = slotIndex - 1;
+                    if (this.studioConfig.product.gallery_file_ids && 
+                        this.studioConfig.product.gallery_file_ids[galleryIndex]) {
+                        fileIdToDelete = this.studioConfig.product.gallery_file_ids[galleryIndex];
+                    }
+                }
+
+                // Actualizar la base de datos primero
                 await this.removeImageFromDatabase(this.studioConfig.product, slotIndex);
+                
+                // Eliminar archivo de Supabase Storage si existe
+                if (fileIdToDelete) {
+                    await this.deleteFileFromSupabase(fileIdToDelete);
+                }
                 
                 // Actualizar la interfaz inmediatamente
                 this.updateProductImagesAfterDelete(slotIndex);
@@ -1190,6 +1207,80 @@ class StudioManager {
         } catch (error) {
             console.error('Error en removeImageFromDatabase:', error);
             throw error;
+        }
+    }
+
+    async deleteFileFromSupabase(fileId) {
+        try {
+            console.log('Eliminando archivo de Supabase:', fileId);
+            
+            if (!this.supabase) {
+                console.error('Supabase no está inicializado');
+                return false;
+            }
+
+            // Validar que fileId sea válido
+            if (!fileId || fileId === 'null' || fileId === null || fileId === '') {
+                console.log('FileId inválido, saltando eliminación:', fileId);
+                return false;
+            }
+
+            // Validar formato de UUID
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            if (!uuidRegex.test(fileId)) {
+                console.warn('FileId no tiene formato UUID válido:', fileId);
+                return false;
+            }
+
+            // Obtener información del archivo desde la tabla files
+            const { data: fileInfo, error: fileError } = await this.supabase
+                .from('files')
+                .select('path, bucket')
+                .eq('id', fileId)
+                .maybeSingle();
+
+            if (fileError) {
+                console.warn('Error consultando archivo:', fileError.message);
+                return false;
+            }
+
+            if (!fileInfo) {
+                console.warn('Archivo no encontrado en la base de datos:', fileId);
+                return false;
+            }
+
+            console.log('Información del archivo a eliminar:', fileInfo);
+
+            // Eliminar archivo del storage
+            const bucket = fileInfo.bucket || 'ugc-assets';
+            const { error: deleteError } = await this.supabase.storage
+                .from(bucket)
+                .remove([fileInfo.path]);
+
+            if (deleteError) {
+                console.error('Error eliminando archivo del storage:', deleteError);
+                return false;
+            }
+
+            console.log('Archivo eliminado del storage:', fileInfo.path);
+
+            // Eliminar registro de la tabla files
+            const { error: dbDeleteError } = await this.supabase
+                .from('files')
+                .delete()
+                .eq('id', fileId);
+
+            if (dbDeleteError) {
+                console.error('Error eliminando registro de files:', dbDeleteError);
+                return false;
+            }
+
+            console.log('Registro eliminado de la tabla files:', fileId);
+            return true;
+
+        } catch (error) {
+            console.error('Error eliminando archivo de Supabase:', error);
+            return false;
         }
     }
 
