@@ -2983,6 +2983,12 @@ class StudioManager {
             console.log('Procesando galería de imágenes...');
             console.log('Array completo de gallery_file_ids:', product.gallery_file_ids);
             
+            // Array para rastrear fileIds ya usados
+            const usedFileIds = new Set();
+            if (product.main_image_id) {
+                usedFileIds.add(product.main_image_id);
+            }
+            
             for (let i = 0; i < Math.min(product.gallery_file_ids.length, 3); i++) {
                 const slotIndex = i + 1; // Slots 1, 2, 3
                 const fileId = product.gallery_file_ids[i];
@@ -2992,22 +2998,32 @@ class StudioManager {
                     fileId,
                     slotExists: !!imageSlots[slotIndex],
                     fileIdExists: !!fileId,
-                    isMainImage: fileId === product.main_image_id
+                    isMainImage: fileId === product.main_image_id,
+                    isDuplicate: usedFileIds.has(fileId)
                 });
+                
+                // Verificar duplicados
+                if (usedFileIds.has(fileId)) {
+                    console.log(`⚠️ ADVERTENCIA: Galería ${i} tiene un fileId duplicado: ${fileId}`);
+                    // Mostrar slot vacío si es duplicado
+                    imageSlots[slotIndex].innerHTML = '<div class="no-image clickable">➕ Agregar</div>';
+                    this.addImageUploadListener(imageSlots[slotIndex], slotIndex, product);
+                    continue;
+                }
                 
                 // Verificar que no sea la misma imagen principal
                 if (fileId === product.main_image_id) {
                     console.log(`⚠️ ADVERTENCIA: Galería ${i} tiene el mismo ID que la imagen principal`);
+                    // Mostrar slot vacío si es la imagen principal
+                    imageSlots[slotIndex].innerHTML = '<div class="no-image clickable">➕ Agregar</div>';
+                    this.addImageUploadListener(imageSlots[slotIndex], slotIndex, product);
+                    continue;
                 }
                 
                 if (imageSlots[slotIndex] && fileId && fileId !== product.main_image_id) {
                     console.log(`✅ Cargando imagen de galería ${i} en slot ${slotIndex}:`, fileId);
                     this.loadProductImage(fileId, imageSlots[slotIndex], slotIndex);
-                } else if (fileId === product.main_image_id) {
-                    console.log(`❌ Saltando galería ${i} - es la misma imagen principal`);
-                    // Mostrar slot vacío si es la imagen principal
-                    imageSlots[slotIndex].innerHTML = '<div class="no-image clickable">➕ Agregar</div>';
-                    this.addImageUploadListener(imageSlots[slotIndex], slotIndex, product);
+                    usedFileIds.add(fileId); // Marcar como usado
                 } else {
                     console.log(`❌ Saltando galería ${i} - slot: ${!!imageSlots[slotIndex]}, fileId: ${!!fileId}`);
                 }
