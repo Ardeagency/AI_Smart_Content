@@ -265,20 +265,27 @@ class BrandsManager {
         const saveBtn = document.getElementById('brandSaveBtn');
 
         if (mode === 'edit' && brandId) {
-            title.textContent = 'Editar Marca';
-            subtitle.textContent = 'Modifica la información de tu marca';
+            title.textContent = 'Editar Marca y Productos';
+            subtitle.textContent = 'Modifica la información de tu marca y gestiona sus productos';
             saveBtn.innerHTML = '<i class="fas fa-save"></i> Actualizar Marca';
             
             // Load brand data
             const brand = this.brands.find(b => b.id === brandId);
             if (brand) {
                 this.populateForm(brand);
+                
+                // Load associated products
+                if (brand.project_id) {
+                    this.brandProducts = await this.loadBrandProducts(brand.project_id);
+                    this.renderProductsSection();
+                }
             }
         } else {
             title.textContent = 'Nueva Marca';
             subtitle.textContent = 'Configura la información básica de tu marca';
             saveBtn.innerHTML = '<i class="fas fa-save"></i> Guardar Marca';
             this.clearForm();
+            this.hideProductsSection();
         }
 
         modal.classList.add('active');
@@ -475,8 +482,148 @@ class BrandsManager {
     }
 
     manageBrand(brandId) {
-        // For now, just open edit modal
+        // Open edit modal with products management
         this.openBrandModal('edit', brandId);
+    }
+
+    async loadBrandProducts(projectId) {
+        try {
+            console.log('Cargando productos para proyecto:', projectId);
+            
+            const { data: products, error } = await window.supabaseClient.supabase
+                .from('products')
+                .select(`
+                    id,
+                    name,
+                    product_type,
+                    short_desc,
+                    benefits,
+                    differentiators,
+                    usage_steps,
+                    ingredients,
+                    price,
+                    variants,
+                    main_image_id,
+                    gallery_file_ids,
+                    created_at
+                `)
+                .eq('project_id', projectId)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error loading products:', error);
+                return [];
+            }
+
+            console.log('Productos cargados:', products);
+            return products || [];
+        } catch (error) {
+            console.error('Error in loadBrandProducts:', error);
+            return [];
+        }
+    }
+
+    renderProductsSection() {
+        const modalBody = document.querySelector('.brand-modal-body');
+        
+        // Check if products section already exists
+        let productsSection = document.getElementById('productsSection');
+        if (!productsSection) {
+            // Create products section
+            productsSection = document.createElement('div');
+            productsSection.id = 'productsSection';
+            productsSection.className = 'form-section';
+            productsSection.innerHTML = `
+                <h3 class="form-section-title">
+                    <i class="fas fa-box"></i>
+                    Productos Asociados
+                </h3>
+                <div class="products-container" id="productsContainer">
+                    <!-- Products will be rendered here -->
+                </div>
+                <div class="products-actions">
+                    <button type="button" class="btn btn-secondary" onclick="window.brandsManager.addNewProduct()">
+                        <i class="fas fa-plus"></i>
+                        Agregar Producto
+                    </button>
+                </div>
+            `;
+            
+            // Insert after the last form section
+            const lastSection = modalBody.querySelector('.form-section:last-child');
+            if (lastSection) {
+                lastSection.insertAdjacentElement('afterend', productsSection);
+            } else {
+                modalBody.appendChild(productsSection);
+            }
+        }
+
+        // Render products
+        const productsContainer = document.getElementById('productsContainer');
+        if (this.brandProducts && this.brandProducts.length > 0) {
+            productsContainer.innerHTML = this.brandProducts.map(product => `
+                <div class="product-item" data-product-id="${product.id}">
+                    <div class="product-header">
+                        <div class="product-info">
+                            <h4 class="product-name">${product.name || 'Sin nombre'}</h4>
+                            <p class="product-type">${product.product_type || 'Sin tipo'}</p>
+                        </div>
+                        <div class="product-actions">
+                            <button type="button" class="btn btn-sm btn-primary" onclick="window.brandsManager.editProduct('${product.id}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="window.brandsManager.deleteProduct('${product.id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="product-details">
+                        <p class="product-description">${product.short_desc || 'Sin descripción'}</p>
+                        <div class="product-meta">
+                            <span class="product-price">$${product.price || '0'}</span>
+                            <span class="product-variants">${product.variants ? product.variants.length : 0} variantes</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            productsContainer.innerHTML = `
+                <div class="empty-products">
+                    <i class="fas fa-box-open"></i>
+                    <p>No hay productos asociados a esta marca</p>
+                </div>
+            `;
+        }
+    }
+
+    hideProductsSection() {
+        const productsSection = document.getElementById('productsSection');
+        if (productsSection) {
+            productsSection.style.display = 'none';
+        }
+    }
+
+    showProductsSection() {
+        const productsSection = document.getElementById('productsSection');
+        if (productsSection) {
+            productsSection.style.display = 'block';
+        }
+    }
+
+    addNewProduct() {
+        // Open product creation modal or redirect to products page
+        this.showNotification('Funcionalidad de agregar producto en desarrollo', 'info');
+    }
+
+    editProduct(productId) {
+        // Open product edit modal
+        this.showNotification('Funcionalidad de editar producto en desarrollo', 'info');
+    }
+
+    deleteProduct(productId) {
+        if (confirm('¿Estás seguro de que quieres eliminar este producto?')) {
+            this.showNotification('Funcionalidad de eliminar producto en desarrollo', 'info');
+        }
     }
 
     handleLogoUpload(event) {

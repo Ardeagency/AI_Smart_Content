@@ -2723,7 +2723,8 @@ class StudioManager {
             if (product.main_image_id) {
                 this.loadProductImage(product.main_image_id, imageSlots[0]);
             } else {
-                imageSlots[0].innerHTML = '<div class="no-image">➕ Agregar</div>';
+                imageSlots[0].innerHTML = '<div class="no-image clickable">➕ Agregar</div>';
+                this.addImageUploadListener(imageSlots[0], 0, product);
             }
         }
 
@@ -2739,8 +2740,133 @@ class StudioManager {
         // Llenar slots vacíos
         for (let i = (product.gallery_file_ids?.length || 0) + 1; i < 4; i++) {
             if (imageSlots[i]) {
-                imageSlots[i].innerHTML = '<div class="no-image">➕ Agregar</div>';
+                imageSlots[i].innerHTML = '<div class="no-image clickable">➕ Agregar</div>';
+                this.addImageUploadListener(imageSlots[i], i, product);
             }
+        }
+    }
+
+    addImageUploadListener(slot, slotIndex, product) {
+        const clickableElement = slot.querySelector('.clickable');
+        if (clickableElement) {
+            clickableElement.addEventListener('click', () => {
+                this.openImageUploadDialog(slotIndex, product);
+            });
+        }
+    }
+
+    openImageUploadDialog(slotIndex, product) {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.style.display = 'none';
+        
+        input.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                this.handleProductImageUpload(file, slotIndex, product);
+            }
+        });
+        
+        document.body.appendChild(input);
+        input.click();
+        document.body.removeChild(input);
+    }
+
+    async handleProductImageUpload(file, slotIndex, product) {
+        try {
+            // Validar archivo
+            if (!file.type.startsWith('image/')) {
+                this.showNotification('Por favor selecciona un archivo de imagen válido', 'error');
+                return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) { // 5MB
+                this.showNotification('El archivo es muy grande. Máximo 5MB permitido.', 'error');
+                return;
+            }
+
+            this.showNotification('Subiendo imagen...', 'info');
+
+            // Subir archivo a Supabase
+            const fileId = await this.uploadProductImageToSupabase(file, product);
+            
+            if (fileId) {
+                // Actualizar el producto en la base de datos
+                await this.updateProductImageInDatabase(product, slotIndex, fileId);
+                
+                // Recargar las imágenes del producto
+                this.loadProducts();
+                this.showNotification('Imagen subida exitosamente', 'success');
+            } else {
+                this.showNotification('Error subiendo imagen', 'error');
+            }
+
+        } catch (error) {
+            console.error('Error subiendo imagen:', error);
+            this.showNotification('Error subiendo imagen: ' + error.message, 'error');
+        }
+    }
+
+    async uploadProductImageToSupabase(file, product) {
+        try {
+            const { uploadAndRegisterFile } = await import('./supabase-utils.js');
+            
+            const result = await uploadAndRegisterFile(
+                file, 
+                this.userId, 
+                product.project_id, 
+                'product_image'
+            );
+
+            if (result.success) {
+                console.log('Imagen subida exitosamente:', result.fileId);
+                return result.fileId;
+            } else {
+                console.error('Error subiendo imagen:', result.error);
+                return null;
+            }
+        } catch (error) {
+            console.error('Error en uploadProductImageToSupabase:', error);
+            return null;
+        }
+    }
+
+    async updateProductImageInDatabase(product, slotIndex, fileId) {
+        try {
+            let updateData = {};
+            
+            if (slotIndex === 0) {
+                // Imagen principal
+                updateData.main_image_id = fileId;
+            } else {
+                // Galería de imágenes
+                const currentGallery = product.gallery_file_ids || [];
+                const galleryIndex = slotIndex - 1;
+                
+                // Asegurar que el array tenga el tamaño correcto
+                while (currentGallery.length <= galleryIndex) {
+                    currentGallery.push(null);
+                }
+                
+                currentGallery[galleryIndex] = fileId;
+                updateData.gallery_file_ids = currentGallery;
+            }
+
+            const { error } = await this.supabase
+                .from('products')
+                .update(updateData)
+                .eq('id', product.id);
+
+            if (error) {
+                console.error('Error actualizando producto:', error);
+                throw new Error('Error actualizando producto en la base de datos');
+            }
+
+            console.log('Producto actualizado exitosamente');
+        } catch (error) {
+            console.error('Error en updateProductImageInDatabase:', error);
+            throw error;
         }
     }
 
@@ -2758,12 +2884,12 @@ class StudioManager {
                 container.innerHTML = `<img src="${dataUrl}" alt="Imagen" class="preview-image">`;
                 console.log('Imagen mostrada en el contenedor con tipo:', imageType);
             } else {
-                container.innerHTML = '<div class="no-image">➕ Agregar</div>';
+                container.innerHTML = '<div class="no-image clickable">➕ Agregar</div>';
                 console.log('No se pudo cargar la imagen');
             }
         } catch (error) {
             console.error('Error loading product image:', error);
-            container.innerHTML = '<div class="no-image">Error cargando imagen</div>';
+            container.innerHTML = '<div class="no-image clickable">➕ Agregar</div>';
         }
     }
 
@@ -4855,9 +4981,9 @@ class StudioManager {
                     <button class="btn btn-primary" onclick="window.studioManager.generateScenes(${index})">
                         🎬 Generar Escenas
                     </button>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
         }).join('');
     }
 
