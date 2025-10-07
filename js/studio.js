@@ -5204,6 +5204,10 @@ class StudioManager {
             if (guiones.length === 0) {
                 throw new Error('No se generaron guiones');
             }
+            
+            // Almacenar los guiones para uso posterior
+            this.lastGeneratedGuiones = guiones;
+            console.log('Guiones almacenados para uso posterior:', this.lastGeneratedGuiones.length);
 
             // Generar HTML para las cards de guiones
             console.log('=== GENERANDO HTML DE GUIONES ===');
@@ -5437,12 +5441,33 @@ class StudioManager {
             });
             
             // Obtener el guión seleccionado del DOM
-            const guionCard = document.querySelector(`[data-guion-index="${guionIndex}"]`);
+            let guionCard = document.querySelector(`[data-guion-index="${guionIndex}"]`);
             console.log('GuionCard encontrado:', !!guionCard);
+            
+            // Si no se encuentra el guión, intentar recrearlo desde los datos almacenados
             if (!guionCard) {
-                console.error('No se encontró el guión con index:', guionIndex);
-                console.error('Selector usado:', `[data-guion-index="${guionIndex}"]`);
-                throw new Error('No se encontró el guión seleccionado');
+                console.warn('Guión no encontrado en DOM, intentando recrear...');
+                
+                // Verificar si tenemos los datos de guiones almacenados
+                if (this.lastGeneratedGuiones && this.lastGeneratedGuiones.length > guionIndex) {
+                    console.log('Recreando guión desde datos almacenados...');
+                    const guionData = this.lastGeneratedGuiones[guionIndex];
+                    
+                    // Crear un elemento temporal para extraer los datos
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = this.generateGuionesCards([guionData]);
+                    guionCard = tempDiv.querySelector(`[data-guion-index="${guionIndex}"]`);
+                    
+                    if (guionCard) {
+                        console.log('Guión recreado exitosamente');
+                    } else {
+                        console.error('No se pudo recrear el guión');
+                        throw new Error('No se encontró el guión seleccionado');
+                    }
+                } else {
+                    console.error('No hay datos de guiones almacenados');
+                    throw new Error('No se encontró el guión seleccionado');
+                }
             }
             
             // Extraer datos del guión
