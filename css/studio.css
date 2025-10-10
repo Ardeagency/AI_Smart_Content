@@ -2957,6 +2957,35 @@ input[type="range"]::-moz-range-thumb {
     margin-bottom: 20px;
 }
 
+/* Contexto del guión */
+.guion-context {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.context-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.context-item strong {
+    color: var(--primary-color);
+    font-size: var(--font-sm);
+    font-weight: 600;
+}
+
+.context-item span {
+    color: var(--text-secondary);
+    font-size: var(--font-sm);
+}
+
 .guion-type {
     display: inline-block;
     background: rgba(253, 98, 79, 0.1);
@@ -3001,6 +3030,15 @@ input[type="range"]::-moz-range-thumb {
     margin-bottom: 0;
 }
 
+/* Header del clip */
+.clip-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
 .clip-number {
     background: #FD624F;
     color: #ffffff;
@@ -3008,10 +3046,29 @@ input[type="range"]::-moz-range-thumb {
     font-weight: 600;
     padding: 4px 8px;
     border-radius: 4px;
-    display: inline-block;
-    margin-bottom: 12px;
     text-transform: uppercase;
     letter-spacing: 0.3px;
+}
+
+.clip-duration {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.clip-role {
+    background: rgba(253, 98, 79, 0.2);
+    color: var(--primary-color);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid rgba(253, 98, 79, 0.3);
+    text-transform: capitalize;
 }
 
 .clip-content {
@@ -3023,6 +3080,52 @@ input[type="range"]::-moz-range-thumb {
 .clip-scene,
 .clip-voice {
     flex: 1;
+}
+
+/* Notas técnicas del clip */
+.clip-notes {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.clip-notes strong {
+    color: var(--primary-color);
+    font-size: var(--font-sm);
+    font-weight: 600;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.notes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 8px;
+}
+
+.note-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.note-item strong {
+    color: var(--text-secondary);
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0;
+}
+
+.note-item span {
+    color: var(--text-primary);
+    font-size: var(--font-sm);
+    line-height: 1.4;
 }
 
 .clip-scene strong,

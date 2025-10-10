@@ -4811,6 +4811,17 @@ class StudioManager {
             console.log('User ID:', this.userId);
             console.log('Project ID:', this.currentProjectId);
             
+            // Log específico de imágenes antes de enviar
+            if (configData.product && configData.product.files && configData.product.files.images) {
+                console.log('🔍 IMÁGENES QUE SE ENVIARÁN AL WEBHOOK:');
+                console.log('Cantidad:', configData.product.files.images.length);
+                configData.product.files.images.forEach((url, index) => {
+                    console.log(`  ${index + 1}. ${url}`);
+                });
+            } else {
+                console.warn('⚠️ NO HAY IMÁGENES PARA ENVIAR AL WEBHOOK');
+            }
+            
             // Validar datos críticos
             if (!configData.product) {
                 console.warn('No hay datos de producto para enviar');
@@ -4824,16 +4835,16 @@ class StudioManager {
             // Mostrar solo URLs de archivos para debug
             if (configData.product && configData.product.files) {
                 console.log('Archivos del producto:');
-                console.log('- Imagen principal:', configData.product.files.main_image);
-                console.log('- Galería:', configData.product.files.gallery);
+                console.log('- Array de imágenes:', configData.product.files.images);
+                console.log('- Total de imágenes:', configData.product.files.images ? configData.product.files.images.length : 0);
                 
-                // Mostrar array unificado
-                const unifiedImages = [
-                    ...(configData.product.files.main_image ? [configData.product.files.main_image] : []),
-                    ...(configData.product.files.gallery || [])
-                ];
-                console.log('- Array unificado de imágenes:', unifiedImages);
-                console.log('- Total de imágenes:', unifiedImages.length);
+                if (configData.product.files.images && configData.product.files.images.length > 0) {
+                    configData.product.files.images.forEach((url, index) => {
+                        console.log(`  Imagen ${index + 1}:`, url);
+                    });
+                } else {
+                    console.warn('⚠️ No hay imágenes en configData.product.files.images');
+                }
             }
             
             // Crear datos finales con solo lo que el usuario ha seleccionado
@@ -4882,10 +4893,7 @@ class StudioManager {
                     ingredients: configData.product.ingredients,
                     price: configData.product.price,
                     usage_steps: configData.product.usage_steps,
-                    images: [
-                        ...(configData.product.files.main_image ? [configData.product.files.main_image] : []),
-                        ...(configData.product.files.gallery || [])
-                    ]
+                    images: configData.product.files.images || []
                 };
             }
 
@@ -4977,6 +4985,17 @@ class StudioManager {
             }
             
             console.log('Datos finales para webhook:', finalData);
+            
+            // Log específico de imágenes en el JSON final
+            if (finalData.product && finalData.product.images) {
+                console.log('🎯 IMÁGENES EN EL JSON FINAL:');
+                console.log('Cantidad:', finalData.product.images.length);
+                finalData.product.images.forEach((url, index) => {
+                    console.log(`  ${index + 1}. ${url}`);
+                });
+            } else {
+                console.warn('⚠️ NO HAY IMÁGENES EN EL JSON FINAL');
+            }
             
             // Crear AbortController para timeout
             const controller = new AbortController();
@@ -5157,18 +5176,39 @@ class StudioManager {
             console.log('guionesData.output existe:', !!guionesData.output);
             console.log('guionesData.items existe:', !!guionesData.items);
             
-            // NUEVO FORMATO: Array directo de guiones (prioridad)
+            // NUEVO FORMATO: Array con packages (prioridad)
             if (Array.isArray(guionesData) && guionesData.length > 0) {
                 console.log('Array detectado, verificando formato...');
                 const firstElement = guionesData[0];
                 console.log('Primer elemento:', firstElement);
+                console.log('Primer elemento tiene output.package:', !!(firstElement && firstElement.output && firstElement.output.package));
                 console.log('Primer elemento tiene tipo_guion:', !!firstElement.tipo_guion);
                 console.log('Primer elemento tiene clips:', !!firstElement.clips);
                 
-                // Verificar si es array directo de guiones (nuevo formato)
-                if (firstElement && firstElement.tipo_guion && firstElement.clips && Array.isArray(firstElement.clips)) {
+                // Verificar si es array con packages (nuevo formato)
+                if (firstElement && firstElement.output && firstElement.output.package) {
+                    console.log('✅ NUEVO FORMATO PACKAGE: Array con packages detectado');
+                    // Convertir packages a formato de guiones para compatibilidad
+                    guiones = guionesData.map((item, index) => {
+                        const package = item.output.package;
+                        return {
+                            tipo_guion: package.version_name || `Guión ${index + 1}`,
+                            titulo_sugerido: package.version_name || `Guión ${index + 1}`,
+                            context: package.context,
+                            clips: package.clips.map(clip => ({
+                                clip_numero: package.clips.indexOf(clip) + 1,
+                                escena: clip.scene_prompt,
+                                voz: clip.voice_over,
+                                duracion: clip.dur,
+                                rol: clip.role,
+                                notas: clip.notes
+                            }))
+                        };
+                    });
+                    console.log('✅ Packages convertidos a guiones:', guiones.length, 'guiones');
+                } else if (firstElement && firstElement.tipo_guion && firstElement.clips && Array.isArray(firstElement.clips)) {
                     guiones = guionesData;
-                    console.log('✅ NUEVO FORMATO: Array directo de guiones detectado:', guiones.length, 'guiones');
+                    console.log('✅ FORMATO ANTERIOR: Array directo de guiones detectado:', guiones.length, 'guiones');
                 } else if (firstElement && firstElement.output && firstElement.output.guiones && Array.isArray(firstElement.output.guiones)) {
                     guiones = firstElement.output.guiones;
                     console.log('✅ Formato [{"output": {"guiones": [...]}}] detectado:', guiones.length, 'guiones');
@@ -5304,25 +5344,69 @@ class StudioManager {
             const clips = guion.clips && Array.isArray(guion.clips) ? guion.clips : [];
             console.log(`Clips procesados:`, clips);
             
+            // Información del contexto si está disponible
+            const contextInfo = guion.context ? `
+                <div class="guion-context">
+                    <div class="context-item">
+                        <strong>📍 Lugar:</strong> ${guion.context.place || 'No especificado'}
+                    </div>
+                    <div class="context-item">
+                        <strong>⏰ Momento:</strong> ${guion.context.time || 'No especificado'}
+                    </div>
+                    <div class="context-item">
+                        <strong>🎯 Propósito:</strong> ${guion.context.why_now || 'No especificado'}
+                    </div>
+                    <div class="context-item">
+                        <strong>👤 Perfil:</strong> ${guion.context.subject_profile || 'No especificado'}
+                    </div>
+                    <div class="context-item">
+                        <strong>🎭 Tono:</strong> ${guion.context.subject_voice || 'No especificado'}
+                    </div>
+                    ${guion.context.props && guion.context.props.length > 0 ? `
+                        <div class="context-item">
+                            <strong>🎬 Props:</strong> ${guion.context.props.join(', ')}
+                        </div>
+                    ` : ''}
+                </div>
+            ` : '';
+
             return `
             <div class="guion-card" data-guion-index="${index}">
                 <div class="guion-header">
                     <div class="guion-type">${guion.tipo_guion || 'Sin tipo'}</div>
                     <h3 class="guion-title">${guion.titulo_sugerido || 'Sin título'}</h3>
                 </div>
+                ${contextInfo}
                 <div class="guion-clips">
                     ${clips.map(clip => `
                         <div class="clip-item">
-                            <div class="clip-number">Clip ${clip.clip_numero || 'N/A'}</div>
+                            <div class="clip-header">
+                                <div class="clip-number">Clip ${clip.clip_numero || 'N/A'}</div>
+                                ${clip.duracion ? `<div class="clip-duration">${clip.dur || clip.duracion}s</div>` : ''}
+                                ${clip.rol ? `<div class="clip-role">${clip.role || clip.rol}</div>` : ''}
+                            </div>
                             <div class="clip-content">
                                 <div class="clip-scene">
-                                    <strong>Escena:</strong>
+                                    <strong>🎬 Escena:</strong>
                                     <p>${clip.escena || 'Sin escena'}</p>
                                 </div>
                                 <div class="clip-voice">
-                                    <strong>Voz:</strong>
+                                    <strong>🎤 Voz:</strong>
                                     <p>${clip.voz || 'Sin voz'}</p>
                                 </div>
+                                ${clip.notas ? `
+                                    <div class="clip-notes">
+                                        <strong>📝 Notas Técnicas:</strong>
+                                        <div class="notes-grid">
+                                            ${clip.notas.camera ? `<div class="note-item"><strong>Cámara:</strong> ${clip.notas.camera}</div>` : ''}
+                                            ${clip.notas.lighting ? `<div class="note-item"><strong>Iluminación:</strong> ${clip.notas.lighting}</div>` : ''}
+                                            ${clip.notas.sound ? `<div class="note-item"><strong>Sonido:</strong> ${clip.notas.sound}</div>` : ''}
+                                            ${clip.notas.imperfection ? `<div class="note-item"><strong>Imperfección:</strong> ${clip.notas.imperfection}</div>` : ''}
+                                            ${clip.notas.continuity ? `<div class="note-item"><strong>Continuidad:</strong> ${clip.notas.continuity}</div>` : ''}
+                                            ${clip.notas.subtitle_hint ? `<div class="note-item"><strong>Subtítulo:</strong> ${clip.notas.subtitle_hint}</div>` : ''}
+                                        </div>
+                                    </div>
+                                ` : ''}
                             </div>
                         </div>
                     `).join('')}
@@ -5334,8 +5418,8 @@ class StudioManager {
                     <button class="btn btn-primary" onclick="window.studioManager.generateScenes(${index})">
                         🎬 Generar Escenas
                     </button>
-                    </div>
                 </div>
+            </div>
             `;
         }).join('');
     }
@@ -6139,11 +6223,21 @@ Generado por UGC Studio
         try {
             console.log('Validando respuesta del webhook:', response);
             
-            // NUEVO: Validar estructura esperada [{"output": {"guiones": [...]}}]
+            // NUEVO FORMATO: Validar estructura [{"output": {"package": {...}}}]
             if (Array.isArray(response) && response.length > 0) {
                 const firstElement = response[0];
+                if (firstElement && firstElement.output && firstElement.output.package) {
+                    const package = firstElement.output.package;
+                    if (package.version_name && package.context && package.clips && Array.isArray(package.clips)) {
+                        console.log('✅ Respuesta válida con nuevo formato package:', package.version_name);
+                        console.log('Clips encontrados:', package.clips.length);
+                        return true;
+                    }
+                }
+                
+                // Formato anterior: [{"output": {"guiones": [...]}}]
                 if (firstElement && firstElement.output && firstElement.output.guiones && Array.isArray(firstElement.output.guiones) && firstElement.output.guiones.length > 0) {
-                    console.log('Respuesta válida con formato [{"output": {"guiones": [...]}}]:', firstElement.output.guiones.length, 'guiones');
+                    console.log('Respuesta válida con formato anterior [{"output": {"guiones": [...]}}]:', firstElement.output.guiones.length, 'guiones');
                     return true;
                 } else {
                     console.log('Respuesta es un array directo con', response.length, 'elementos');
@@ -6153,7 +6247,13 @@ Generado por UGC Studio
 
             // Si la respuesta es un objeto
             if (response && typeof response === 'object') {
-                // Validar que tenga al menos un guión
+                // Validar formato package directo
+                if (response.package && response.package.version_name && response.package.context && response.package.clips) {
+                    console.log('✅ Respuesta válida con formato package directo:', response.package.version_name);
+                    return true;
+                }
+                
+                // Validar que tenga al menos un guión (formato anterior)
                 if (response.guiones && Array.isArray(response.guiones) && response.guiones.length > 0) {
                     console.log('Respuesta válida con guiones:', response.guiones.length);
                     return true;
