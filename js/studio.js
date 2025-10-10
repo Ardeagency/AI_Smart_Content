@@ -5190,13 +5190,13 @@ class StudioManager {
                     console.log('✅ NUEVO FORMATO PACKAGE: Array con packages detectado');
                     // Convertir packages a formato de guiones para compatibilidad
                     guiones = guionesData.map((item, index) => {
-                        const package = item.output.package;
+                        const packageData = item.output.package;
                         return {
-                            tipo_guion: package.version_name || `Guión ${index + 1}`,
-                            titulo_sugerido: package.version_name || `Guión ${index + 1}`,
-                            context: package.context,
-                            clips: package.clips.map(clip => ({
-                                clip_numero: package.clips.indexOf(clip) + 1,
+                            tipo_guion: packageData.version_name || `Guión ${index + 1}`,
+                            titulo_sugerido: packageData.version_name || `Guión ${index + 1}`,
+                            context: packageData.context,
+                            clips: packageData.clips.map(clip => ({
+                                clip_numero: packageData.clips.indexOf(clip) + 1,
                                 escena: clip.scene_prompt,
                                 voz: clip.voice_over,
                                 duracion: clip.dur,
@@ -6227,10 +6227,10 @@ Generado por UGC Studio
             if (Array.isArray(response) && response.length > 0) {
                 const firstElement = response[0];
                 if (firstElement && firstElement.output && firstElement.output.package) {
-                    const package = firstElement.output.package;
-                    if (package.version_name && package.context && package.clips && Array.isArray(package.clips)) {
-                        console.log('✅ Respuesta válida con nuevo formato package:', package.version_name);
-                        console.log('Clips encontrados:', package.clips.length);
+                    const packageData = firstElement.output.package;
+                    if (packageData.version_name && packageData.context && packageData.clips && Array.isArray(packageData.clips)) {
+                        console.log('✅ Respuesta válida con nuevo formato package:', packageData.version_name);
+                        console.log('Clips encontrados:', packageData.clips.length);
                         return true;
                     }
                 }
