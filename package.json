@@ -4,12 +4,12 @@
   "description": "Plataforma completa para generación de contenido UGC con backend serverless",
   "main": "index.html",
   "scripts": {
-    "dev": "node production-server.js",
+    "dev": "node clean-server.js",
     "build": "echo 'Static site - no build required'",
     "test": "echo 'Tests completados exitosamente'",
     "lint": "echo 'Linting completado'",
     "deploy": "gh-pages -d .",
-    "start": "node production-server.js",
+    "start": "node clean-server.js",
     "preview": "npx serve . -p 8080",
     "netlify": "netlify dev",
     "vercel": "vercel dev"
@@ -35,11 +35,11 @@
   },
   "homepage": "https://ardeagency.github.io/ugc-studio/",
   "devDependencies": {
-    "serve": "^14.2.1",
-    "gh-pages": "^6.0.0",
+    "cors": "^2.8.5",
     "express": "^4.18.2",
+    "gh-pages": "^6.0.0",
     "http-proxy-middleware": "^2.0.6",
-    "cors": "^2.8.5"
+    "serve": "^14.2.1"
   },
   "browserslist": [
     "> 1%",
@@ -48,7 +48,8 @@
   ],
   "engines": {
     "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2"
   }
 }
-
-
