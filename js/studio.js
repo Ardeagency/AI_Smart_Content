@@ -6150,23 +6150,38 @@ class StudioManager {
             const guionCompleto = this.lastGeneratedGuiones[guionIndex];
             console.log('Extrayendo datos completos del guión:', guionCompleto);
             
+            // Manejar el nuevo formato con output.package
+            let packageData = guionCompleto;
+            if (guionCompleto.output && guionCompleto.output.package) {
+                packageData = guionCompleto.output.package;
+            }
+            
             return {
                 // Datos básicos
-                tipoGuion: guionCompleto.tipo_guion || guionCompleto.version_name || 'Guión',
-                titulo: guionCompleto.titulo || guionCompleto.version_name || 'Guión',
+                tipoGuion: packageData.tipo_guion || packageData.version_name || 'Guión',
+                titulo: packageData.titulo || packageData.version_name || 'Guión',
                 
                 // Datos completos del guión generado
                 guionCompleto: guionCompleto,
+                package: packageData,
                 
                 // Clips con toda la información
-                clips: guionCompleto.clips || [],
+                clips: packageData.clips || [],
                 
                 // Contexto completo si existe
-                context: guionCompleto.context || null,
+                context: packageData.context || null,
                 
                 // Información adicional
-                version_name: guionCompleto.version_name,
-                package: guionCompleto.package || guionCompleto
+                version_name: packageData.version_name,
+                
+                // Datos específicos del nuevo formato
+                place: packageData.context?.place || null,
+                time: packageData.context?.time || null,
+                why_now: packageData.context?.why_now || null,
+                subject_profile: packageData.context?.subject_profile || null,
+                subject_voice: packageData.context?.subject_voice || null,
+                props: packageData.context?.props || [],
+                continuity: packageData.context?.continuity || null
             };
         }
         

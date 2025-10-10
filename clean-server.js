@@ -30,6 +30,7 @@ app.post('/api/webhook/scripts', (req, res) => {
     port: 443,
     path: '/webhook/4635dddf-f8f9-4cc2-be0f-54e1c542d702',
     method: 'POST',
+    timeout: 300000, // 5 minutos timeout
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -79,6 +80,7 @@ app.post('/api/webhook/scenes', (req, res) => {
     port: 443,
     path: '/webhook/6b8560d8-b00c-4cda-85a1-143e4d5e869c',
     method: 'POST',
+    timeout: 300000, // 5 minutos timeout
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
