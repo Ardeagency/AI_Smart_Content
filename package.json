@@ -4,12 +4,12 @@
   "description": "Plataforma completa para generación de contenido UGC con backend serverless",
   "main": "index.html",
   "scripts": {
-    "dev": "npx serve . -p 3000",
+    "dev": "node simple-server.js",
     "build": "echo 'Static site - no build required'",
     "test": "echo 'Tests completados exitosamente'",
     "lint": "echo 'Linting completado'",
     "deploy": "gh-pages -d .",
-    "start": "npx serve . -p 3000",
+    "start": "node simple-server.js",
     "preview": "npx serve . -p 8080",
     "netlify": "netlify dev",
     "vercel": "vercel dev"
