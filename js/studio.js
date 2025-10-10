@@ -4796,8 +4796,8 @@ class StudioManager {
 
     async sendToWebhook(configData) {
         try {
-            // URL del webhook a través del proxy local
-            const webhookUrl = '/api/webhook/scripts?v=' + Date.now();
+            // URL del webhook directo a n8n
+            const webhookUrl = 'https://ardeagency.app.n8n.cloud/webhook/4635dddf-f8f9-4cc2-be0f-54e1c542d702?v=' + Date.now();
             
             // Webhook de prueba temporal para debuggear (sin CORS)
             // const webhookUrl = 'https://webhook.site/your-unique-url';
@@ -5591,8 +5591,8 @@ class StudioManager {
 
     async sendToScenesWebhook(configData) {
         try {
-            // URL del webhook de escenas a través del proxy local
-            const scenesWebhookUrl = '/api/webhook/scenes?v=' + Date.now();
+            // URL del webhook de escenas directo a n8n
+            const scenesWebhookUrl = 'https://ardeagency.app.n8n.cloud/webhook/6b8560d8-b00c-4cda-85a1-143e4d5e869c?v=' + Date.now();
             
             console.log('=== ENVIANDO DATOS AL WEBHOOK DE ESCENAS ===');
             console.log('URL:', scenesWebhookUrl);
