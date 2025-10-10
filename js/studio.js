@@ -5481,14 +5481,19 @@ class StudioManager {
             const configData = await this.generateConfigJSON();
             console.log('Configuración generada para regeneración:', configData);
             
-            // Agregar el guión seleccionado a la configuración para regeneración
+            // Agregar el guión seleccionado completo a la configuración para regeneración
             const finalData = {
                 ...configData,
                 regenerate_guion: {
                     index: guionIndex,
                     tipo_guion: guionData.tipoGuion,
                     titulo: guionData.titulo,
-                    clips: guionData.clips
+                    clips: guionData.clips,
+                    // Incluir todos los datos del guión generado
+                    guion_completo: guionData.guionCompleto,
+                    context: guionData.context,
+                    version_name: guionData.version_name,
+                    package: guionData.package
                 }
             };
             
@@ -5562,14 +5567,19 @@ class StudioManager {
             const configData = await this.generateConfigJSON();
             console.log('Configuración generada para escenas:', configData);
             
-            // Agregar el guión seleccionado a la configuración
+            // Agregar el guión seleccionado completo a la configuración
             const finalData = {
                 ...configData,
                 selected_guion: {
                     index: guionIndex,
                     tipo_guion: guionData.tipoGuion,
                     titulo: guionData.titulo,
-                    clips: guionData.clips
+                    clips: guionData.clips,
+                    // Incluir todos los datos del guión generado
+                    guion_completo: guionData.guionCompleto,
+                    context: guionData.context,
+                    version_name: guionData.version_name,
+                    package: guionData.package
                 }
             };
             
@@ -6132,12 +6142,42 @@ class StudioManager {
     }
 
     extractGuionData(guionCard) {
-        const tipoGuion = guionCard.querySelector('.guion-type').textContent;
-        const titulo = guionCard.querySelector('.guion-title').textContent;
+        // Obtener el índice del guión desde el data attribute
+        const guionIndex = parseInt(guionCard.getAttribute('data-guion-index'));
+        
+        // Si tenemos los guiones almacenados, usar los datos completos
+        if (this.lastGeneratedGuiones && this.lastGeneratedGuiones[guionIndex]) {
+            const guionCompleto = this.lastGeneratedGuiones[guionIndex];
+            console.log('Extrayendo datos completos del guión:', guionCompleto);
+            
+            return {
+                // Datos básicos
+                tipoGuion: guionCompleto.tipo_guion || guionCompleto.version_name || 'Guión',
+                titulo: guionCompleto.titulo || guionCompleto.version_name || 'Guión',
+                
+                // Datos completos del guión generado
+                guionCompleto: guionCompleto,
+                
+                // Clips con toda la información
+                clips: guionCompleto.clips || [],
+                
+                // Contexto completo si existe
+                context: guionCompleto.context || null,
+                
+                // Información adicional
+                version_name: guionCompleto.version_name,
+                package: guionCompleto.package || guionCompleto
+            };
+        }
+        
+        // Fallback: extraer datos básicos del HTML (método anterior)
+        console.log('Usando fallback: extrayendo datos básicos del HTML');
+        const tipoGuion = guionCard.querySelector('.guion-type')?.textContent || 'Guión';
+        const titulo = guionCard.querySelector('.guion-title')?.textContent || 'Guión';
         const clips = Array.from(guionCard.querySelectorAll('.clip-item')).map(clip => ({
-            numero: clip.querySelector('.clip-number').textContent,
-            escena: clip.querySelector('.clip-scene p').textContent,
-            voz: clip.querySelector('.clip-voice p').textContent
+            numero: clip.querySelector('.clip-number')?.textContent || '',
+            escena: clip.querySelector('.clip-scene p')?.textContent || '',
+            voz: clip.querySelector('.clip-voice p')?.textContent || ''
         }));
 
         return { tipoGuion, titulo, clips };
