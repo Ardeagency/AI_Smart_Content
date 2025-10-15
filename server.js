@@ -48,3 +48,4 @@ app.listen(PORT, () => {
   console.log(`🚀 Servidor UGC Studio ejecutándose en puerto ${PORT}`);
   console.log(`📱 Accede en: http://localhost:${PORT}`);
 });
+
