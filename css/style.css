@@ -102,6 +102,22 @@ body {
     width: 100%;
 }
 
+.nav-login {
+    color: var(--text-secondary) !important;
+    padding: 0.5rem 1rem !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: var(--border-radius);
+    transition: var(--transition) !important;
+    background: transparent !important;
+}
+
+.nav-login:hover {
+    color: var(--text-primary) !important;
+    border-color: var(--primary-color) !important;
+    background: rgba(253, 98, 79, 0.1) !important;
+    transform: translateY(-1px);
+}
+
 .nav-cta {
     background: var(--primary-color) !important;
     color: white !important;
