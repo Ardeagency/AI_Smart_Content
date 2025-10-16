@@ -5176,8 +5176,36 @@ class StudioManager {
             console.log('guionesData.output existe:', !!guionesData.output);
             console.log('guionesData.items existe:', !!guionesData.items);
             
-            // NUEVO FORMATO: Array con packages (prioridad)
-            if (Array.isArray(guionesData) && guionesData.length > 0) {
+            // NUEVO FORMATO: Array de 3 items estructurados (prioridad)
+            if (Array.isArray(guionesData) && guionesData.length === 3) {
+                console.log('✅ NUEVO FORMATO: Array de 3 items estructurados detectado');
+                
+                // Convertir los 3 items a formato de guiones para compatibilidad
+                guiones = guionesData.map((item, index) => {
+                    const output = item.output;
+                    return {
+                        tipo_guion: `Guión ${index + 1}`,
+                        titulo_sugerido: `Guión ${index + 1}`,
+                        // Datos del nuevo formato
+                        Contexto: output.Contexto,
+                        Escenario: output.Escenario,
+                        Sujeto: output.Sujeto,
+                        Estetica: output.Estetica,
+                        context: output.context,
+                        clips: output.clips.map(clip => ({
+                            clip_numero: output.clips.indexOf(clip) + 1,
+                            escena: clip.scene_prompt,
+                            voz: clip.voice_over,
+                            duracion: clip.dur,
+                            rol: clip.role,
+                            notas: clip.notes
+                        }))
+                    };
+                });
+                console.log('✅ 3 items convertidos a guiones:', guiones.length, 'guiones');
+            }
+            // FORMATO ANTERIOR: Array con packages
+            else if (Array.isArray(guionesData) && guionesData.length > 0) {
                 console.log('Array detectado, verificando formato...');
                 const firstElement = guionesData[0];
                 console.log('Primer elemento:', firstElement);
@@ -5185,9 +5213,9 @@ class StudioManager {
                 console.log('Primer elemento tiene tipo_guion:', !!firstElement.tipo_guion);
                 console.log('Primer elemento tiene clips:', !!firstElement.clips);
                 
-                // Verificar si es array con packages (nuevo formato)
+                // Verificar si es array con packages (formato anterior)
                 if (firstElement && firstElement.output && firstElement.output.package) {
-                    console.log('✅ NUEVO FORMATO PACKAGE: Array con packages detectado');
+                    console.log('✅ FORMATO PACKAGE: Array con packages detectado');
                     // Convertir packages a formato de guiones para compatibilidad
                     guiones = guionesData.map((item, index) => {
                         const packageData = item.output.package;
@@ -5369,7 +5397,7 @@ class StudioManager {
                     ` : ''}
                 </div>
             ` : '';
-
+            
             return `
             <div class="guion-card" data-guion-index="${index}">
                 <div class="guion-header">
@@ -5381,7 +5409,7 @@ class StudioManager {
                     ${clips.map(clip => `
                         <div class="clip-item">
                             <div class="clip-header">
-                                <div class="clip-number">Clip ${clip.clip_numero || 'N/A'}</div>
+                            <div class="clip-number">Clip ${clip.clip_numero || 'N/A'}</div>
                                 ${clip.duracion ? `<div class="clip-duration">${clip.dur || clip.duracion}s</div>` : ''}
                                 ${clip.rol ? `<div class="clip-role">${clip.role || clip.rol}</div>` : ''}
                             </div>
@@ -5418,8 +5446,8 @@ class StudioManager {
                     <button class="btn btn-primary" onclick="window.studioManager.generateScenes(${index})">
                         🎬 Generar Escenas
                     </button>
+                    </div>
                 </div>
-            </div>
             `;
         }).join('');
     }
@@ -6150,7 +6178,42 @@ class StudioManager {
             const guionCompleto = this.lastGeneratedGuiones[guionIndex];
             console.log('Extrayendo datos completos del guión:', guionCompleto);
             
-            // Manejar el nuevo formato con output.package
+            // Manejar el nuevo formato de 3 items estructurados
+            if (guionCompleto.Contexto && guionCompleto.Escenario && guionCompleto.Sujeto && guionCompleto.Estetica) {
+                console.log('✅ Nuevo formato de 3 items detectado en extractGuionData');
+                return {
+                    // Datos básicos
+                    tipoGuion: guionCompleto.tipo_guion || `Guión ${guionIndex + 1}`,
+                    titulo: guionCompleto.titulo_sugerido || `Guión ${guionIndex + 1}`,
+                    
+                    // Datos completos del guión generado
+                    guionCompleto: guionCompleto,
+                    
+                    // Clips con toda la información
+                    clips: guionCompleto.clips || [],
+                    
+                    // Contexto completo si existe
+                    context: guionCompleto.context || null,
+                    
+                    // Información adicional
+                    version_name: guionCompleto.tipo_guion || `Guión ${guionIndex + 1}`,
+                    
+                    // Datos específicos del nuevo formato estructurado
+                    Contexto: guionCompleto.Contexto,
+                    Escenario: guionCompleto.Escenario,
+                    Sujeto: guionCompleto.Sujeto,
+                    Estetica: guionCompleto.Estetica,
+                    place: guionCompleto.context?.place || null,
+                    time: guionCompleto.context?.time || null,
+                    why_now: guionCompleto.context?.why_now || null,
+                    subject_profile: guionCompleto.context?.subject_profile || null,
+                    subject_voice: guionCompleto.context?.subject_voice || null,
+                    props: guionCompleto.context?.props || [],
+                    continuity: guionCompleto.context?.continuity || null
+                };
+            }
+            
+            // Manejar el formato anterior con output.package
             let packageData = guionCompleto;
             if (guionCompleto.output && guionCompleto.output.package) {
                 packageData = guionCompleto.output.package;
@@ -6174,7 +6237,7 @@ class StudioManager {
                 // Información adicional
                 version_name: packageData.version_name,
                 
-                // Datos específicos del nuevo formato
+                // Datos específicos del formato anterior
                 place: packageData.context?.place || null,
                 time: packageData.context?.time || null,
                 why_now: packageData.context?.why_now || null,
@@ -6278,13 +6341,40 @@ Generado por UGC Studio
         try {
             console.log('Validando respuesta del webhook:', response);
             
-            // NUEVO FORMATO: Validar estructura [{"output": {"package": {...}}}]
+            // NUEVO FORMATO: Validar estructura de 3 items [{"output": {...}}, {"output": {...}}, {"output": {...}}]
+            if (Array.isArray(response) && response.length === 3) {
+                console.log('✅ Array de 3 elementos detectado, validando estructura...');
+                
+                // Verificar que todos los elementos tengan la estructura correcta
+                const allValid = response.every((item, index) => {
+                    if (item && item.output) {
+                        const output = item.output;
+                        const hasRequiredFields = output.Contexto && output.Escenario && output.Sujeto && 
+                                               output.Estetica && output.context && output.clips;
+                        const hasValidContext = output.context && 
+                                              output.context.place && output.context.time && 
+                                              output.context.why_now && output.context.subject_profile;
+                        const hasValidClips = Array.isArray(output.clips) && output.clips.length > 0;
+                        
+                        console.log(`Item ${index + 1} válido:`, hasRequiredFields && hasValidContext && hasValidClips);
+                        return hasRequiredFields && hasValidContext && hasValidClips;
+                    }
+                    return false;
+                });
+                
+                if (allValid) {
+                    console.log('✅ Respuesta válida con nuevo formato de 3 items estructurados');
+                    return true;
+                }
+            }
+            
+            // FORMATO ANTERIOR: Validar estructura [{"output": {"package": {...}}}]
             if (Array.isArray(response) && response.length > 0) {
                 const firstElement = response[0];
                 if (firstElement && firstElement.output && firstElement.output.package) {
                     const packageData = firstElement.output.package;
                     if (packageData.version_name && packageData.context && packageData.clips && Array.isArray(packageData.clips)) {
-                        console.log('✅ Respuesta válida con nuevo formato package:', packageData.version_name);
+                        console.log('✅ Respuesta válida con formato package:', packageData.version_name);
                         console.log('Clips encontrados:', packageData.clips.length);
                         return true;
                     }
