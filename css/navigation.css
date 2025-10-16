@@ -129,7 +129,8 @@
     left: 0;
     width: var(--nav-width);
     height: 100vh;
-    background: linear-gradient(180deg, var(--bg-card), #0f0f0f);
+    background: var(--nav-bg);
+    backdrop-filter: blur(20px);
     border-right: 1px solid var(--nav-border);
     z-index: 1002;
     transform: translateX(-100%);

@@ -3681,20 +3681,24 @@ class StudioManager {
     toggleMainNavigation() {
         const sideNavigation = document.getElementById('sideNavigation');
         const navOverlay = document.getElementById('navOverlay');
+        const hamburgerMenu = document.getElementById('hamburgerMenu');
         
-        if (sideNavigation && navOverlay) {
-            sideNavigation.classList.toggle('nav-open');
+        if (sideNavigation && navOverlay && hamburgerMenu) {
+            sideNavigation.classList.toggle('active');
             navOverlay.classList.toggle('active');
+            hamburgerMenu.classList.toggle('active');
         }
     }
 
     closeMainNavigation() {
         const sideNavigation = document.getElementById('sideNavigation');
         const navOverlay = document.getElementById('navOverlay');
+        const hamburgerMenu = document.getElementById('hamburgerMenu');
         
-        if (sideNavigation && navOverlay) {
-            sideNavigation.classList.remove('nav-open');
+        if (sideNavigation && navOverlay && hamburgerMenu) {
+            sideNavigation.classList.remove('active');
             navOverlay.classList.remove('active');
+            hamburgerMenu.classList.remove('active');
         }
     }
 

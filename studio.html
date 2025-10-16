@@ -65,13 +65,13 @@
             <div class="nav-section">
                 <div class="nav-section-title">Principal</div>
                 <div class="nav-item">
-                    <a href="main-dashboard.html" class="nav-link active">
+                    <a href="main-dashboard.html" class="nav-link">
                         <i class="fas fa-home nav-icon"></i>
                         <span class="nav-text">Panel Principal</span>
                     </a>
                 </div>
                 <div class="nav-item">
-                    <a href="studio.html" class="nav-link">
+                    <a href="studio.html" class="nav-link active">
                         <i class="fas fa-magic nav-icon"></i>
                         <span class="nav-text">Studio</span>
                     </a>
@@ -732,20 +732,22 @@
         <div class="config-section">
             <h4>🎨 Estilos</h4>
             
-                <div class="form-group">
-                <label>SELECCIONAR ESTILO:</label>
+            <div class="config-field">
+                <label>Seleccionar estilo:</label>
+                <div class="dropdown-container">
                 <select id="style-selector" onchange="window.studioManager.selectStyleFromDropdown(this.value)">
                     <option value="">Seleccionar estilo...</option>
                 </select>
                 </div>
+                </div>
             
-                <div class="form-group">
-                <label>PERSONALIZAR PROMPT:</label>
+            <div class="config-field">
+                <label>Personalizar prompt:</label>
                 <textarea id="style-prompt" placeholder="Personalizar prompt de estilo..." rows="3"></textarea>
     </div>
 
-            <div class="form-actions">
-                <button class="btn btn-danger" onclick="window.studioManager.removeStyle()">
+            <div class="config-field">
+                <button class="btn btn-secondary" onclick="window.studioManager.removeStyle()">
                     ❌ Quitar estilo
                 </button>
             </div>
@@ -755,15 +757,18 @@
         <div class="config-section">
             <h4>✨ Estética</h4>
             
-                <div class="form-group">
-                <label>SELECCIONAR ESTÉTICA:</label>
+            <div class="config-field">
+                <label>Seleccionar estética:</label>
+                <div class="dropdown-container">
                 <select id="aesthetic-selector" onchange="window.studioManager.selectAestheticFromDropdown(this.value)">
                     <option value="">Seleccionar estética...</option>
                         </select>
+                </div>
                     </div>
             
+            <div class="config-field">
+                <label>Ánimo:</label>
             <div class="checkbox-group">
-                <h5>Ánimo:</h5>
                 <label class="checkbox-item">
                     <input type="checkbox" id="mood-happy" onchange="window.studioManager.toggleMood('happy', this.checked)">
                     <span>Feliz</span>
@@ -780,10 +785,12 @@
                     <input type="checkbox" id="mood-calm" onchange="window.studioManager.toggleMood('calm', this.checked)">
                     <span>Tranquilo</span>
                 </label>
+                </div>
                         </div>
             
+            <div class="config-field">
+                <label>Paleta:</label>
             <div class="checkbox-group">
-                <h5>Paleta:</h5>
                 <label class="checkbox-item">
                     <input type="checkbox" id="palette-warm" onchange="window.studioManager.togglePalette('warm', this.checked)">
                     <span>Cálida</span>
@@ -800,10 +807,12 @@
                     <input type="checkbox" id="palette-vibrant" onchange="window.studioManager.togglePalette('vibrant', this.checked)">
                     <span>Vibrante</span>
                 </label>
+                </div>
                     </div>
             
+            <div class="config-field">
+                <label>Iluminación:</label>
             <div class="checkbox-group">
-                <h5>Iluminación:</h5>
                 <label class="checkbox-item">
                     <input type="checkbox" id="lighting-natural" onchange="window.studioManager.toggleLighting('natural', this.checked)">
                     <span>Natural</span>
@@ -820,10 +829,12 @@
                     <input type="checkbox" id="lighting-dramatic" onchange="window.studioManager.toggleLighting('dramatic', this.checked)">
                     <span>Dramática</span>
                             </label>
+                </div>
                         </div>
             
+            <div class="config-field">
+                <label>Cámara:</label>
             <div class="checkbox-group">
-                <h5>Cámara:</h5>
                 <label class="checkbox-item">
                     <input type="checkbox" id="camera-close" onchange="window.studioManager.toggleCamera('close', this.checked)">
                     <span>Primer plano</span>
@@ -840,10 +851,12 @@
                     <input type="checkbox" id="camera-professional" onchange="window.studioManager.toggleCamera('professional', this.checked)">
                     <span>Profesional</span>
                 </label>
+                </div>
                     </div>
             
+            <div class="config-field">
+                <label>Paso/Ritmo:</label>
             <div class="checkbox-group">
-                <h5>Paso/Ritmo:</h5>
                 <label class="checkbox-item">
                     <input type="checkbox" id="pace-slow" onchange="window.studioManager.togglePace('slow', this.checked)">
                     <span>Lento</span>
@@ -860,16 +873,17 @@
                     <input type="checkbox" id="pace-dynamic" onchange="window.studioManager.togglePace('dynamic', this.checked)">
                     <span>Dinámico</span>
                 </label>
+                </div>
                     </div>
             
-                    <div class="form-actions">
+            <div class="config-field">
                 <button class="btn btn-primary" onclick="window.studioManager.createNewAesthetic()">
                     ➕ Crear nueva estética
                 </button>
-                <button class="btn btn-danger" onclick="window.studioManager.removeAesthetic()">
+                <button class="btn btn-secondary" onclick="window.studioManager.removeAesthetic()" style="margin-left: 8px;">
                     ❌ Quitar estética
                 </button>
-                <button class="btn btn-secondary" onclick="window.studioManager.toggleFreeMode('aesthetic')">
+                <button class="btn btn-secondary" onclick="window.studioManager.toggleFreeMode('aesthetic')" style="margin-left: 8px;">
                     🔓 Modo libre
                 </button>
                     </div>
@@ -879,8 +893,9 @@
         <div class="config-section">
             <h4>📱 Formato</h4>
             
+            <div class="config-field">
+                <label>Plataformas:</label>
             <div class="checkbox-group">
-                <h5>Plataformas:</h5>
                 <label class="checkbox-item">
                     <input type="checkbox" id="platform-instagram" onchange="window.studioManager.togglePlatform('instagram', this.checked)">
                     <span>Instagram</span>
@@ -901,10 +916,12 @@
                     <input type="checkbox" id="platform-twitter" onchange="window.studioManager.togglePlatform('twitter', this.checked)">
                     <span>Twitter</span>
                 </label>
+                </div>
             </div>
             
+            <div class="config-field">
+                <label>Formatos:</label>
             <div class="checkbox-group">
-                <h5>Formatos:</h5>
                 <label class="checkbox-item">
                     <input type="checkbox" id="format-story" onchange="window.studioManager.toggleFormat('story', this.checked)">
                     <span>Story</span>
@@ -921,6 +938,7 @@
                     <input type="checkbox" id="format-video" onchange="window.studioManager.toggleFormat('video', this.checked)">
                     <span>Video</span>
                 </label>
+                </div>
         </div>
     </div>
 
@@ -928,15 +946,18 @@
         <div class="config-section">
             <h4>🎬 Escenario</h4>
             
-                <div class="form-group">
-                <label>SELECCIONAR ESCENARIO:</label>
+            <div class="config-field">
+                <label>Seleccionar escenario:</label>
+                <div class="dropdown-container">
                 <select id="scenario-selector" onchange="window.studioManager.selectScenarioFromDropdown(this.value)">
                     <option value="">Seleccionar escenario...</option>
                     </select>
                 </div>
+                </div>
             
+            <div class="config-field">
+                <label>Ubicación:</label>
             <div class="checkbox-group">
-                <h5>Ubicación:</h5>
                 <label class="checkbox-item">
                     <input type="checkbox" id="location-home" onchange="window.studioManager.toggleLocation('home', this.checked)">
                     <span>Casa</span>
@@ -953,10 +974,12 @@
                     <input type="checkbox" id="location-studio" onchange="window.studioManager.toggleLocation('studio', this.checked)">
                     <span>Estudio</span>
                 </label>
+                </div>
                     </div>
             
+            <div class="config-field">
+                <label>Ambiente:</label>
             <div class="checkbox-group">
-                <h5>Ambiente:</h5>
                 <label class="checkbox-item">
                     <input type="checkbox" id="ambience-casual" onchange="window.studioManager.toggleAmbience('casual', this.checked)">
                     <span>Casual</span>
@@ -974,9 +997,11 @@
                     <span>Minimalista</span>
                 </label>
                 </div>
+                </div>
             
+            <div class="config-field">
+                <label>Higiene:</label>
             <div class="checkbox-group">
-                <h5>Higiene:</h5>
                 <label class="checkbox-item">
                     <input type="checkbox" id="hygiene-clean" onchange="window.studioManager.toggleHygiene('clean', this.checked)">
                     <span>Limpio</span>
@@ -990,9 +1015,11 @@
                     <span>Estéril</span>
                 </label>
                 </div>
+                </div>
             
+            <div class="config-field">
+                <label>Fondo:</label>
             <div class="checkbox-group">
-                <h5>Fondo:</h5>
                 <label class="checkbox-item">
                     <input type="checkbox" id="backdrop-solid" onchange="window.studioManager.toggleBackdrop('solid', this.checked)">
                     <span>Sólido</span>
@@ -1010,27 +1037,28 @@
                     <span>Desenfoque</span>
                 </label>
                 </div>
+                </div>
             
-                <div class="form-group">
-                <label>DETALLES:</label>
+            <div class="config-field">
+                <label>Detalles:</label>
                 <textarea id="scenario-details" placeholder="Detalles específicos del escenario..." rows="2"></textarea>
                 </div>
             
-                <div class="form-group">
-                <label>OBJETOS:</label>
+            <div class="config-field">
+                <label>Objetos:</label>
                 <textarea id="scenario-objects" placeholder="Objetos a incluir..." rows="2"></textarea>
                 </div>
             
-                <div class="form-group">
-                <label>DINÁMICAS:</label>
+            <div class="config-field">
+                <label>Dinámicas:</label>
                 <textarea id="scenario-dynamics" placeholder="Dinámicas del escenario..." rows="2"></textarea>
     </div>
 
-            <div class="form-actions">
+            <div class="config-field">
                 <button class="btn btn-primary" onclick="window.studioManager.createNewScenario()">
                     ➕ Crear nuevo escenario
                 </button>
-                <button class="btn btn-secondary" onclick="window.studioManager.toggleFreeMode('scenario')">
+                <button class="btn btn-secondary" onclick="window.studioManager.toggleFreeMode('scenario')" style="margin-left: 8px;">
                     🔓 Modo libre
                     </button>
                 </div>
@@ -1040,27 +1068,29 @@
         <div class="config-section">
             <h4>🤖 IA</h4>
             
-                    <div class="form-group">
-                <label>CREATIVIDAD: <span id="creativity-display">50</span>%</label>
+            <div class="config-field">
+                <label>Creatividad: <span id="creativity-display">50</span>%</label>
                 <input type="range" id="creativity-slider" min="0" max="100" value="50" 
                        oninput="window.studioManager.updateCreativity(this.value)">
-                    </div>
+            </div>
             
-                    <div class="form-group">
-                <label>PROMPT ESPECÍFICO:</label>
+            <div class="config-field">
+                <label>Prompt específico:</label>
                 <textarea id="ai-prompt" placeholder="Prompt específico para la IA..." rows="4"></textarea>
-                    </div>
-                    </div>
+            </div>
+        </div>
 
         <!-- Botones de Navegación -->
         <div class="config-section">
-            <button class="btn btn-secondary" onclick="showSidebarSection(2)">
-                ← Anterior
-            </button>
-            <button class="btn btn-primary" onclick="window.studioManager.generateScripts()" style="margin-left: 10px;">
-                🚀 Generar Guiones
-            </button>
-                    </div>
+            <div class="config-field">
+                <button class="btn btn-secondary" onclick="showSidebarSection(2)">
+                    ← Anterior
+                </button>
+                <button class="btn btn-primary" onclick="window.studioManager.generateScripts()" style="margin-left: 8px;">
+                    🚀 Generar Guiones
+                </button>
+            </div>
+        </div>
         
         <!-- Espaciado para forzar scroll -->
         <div style="height: 200px; background: linear-gradient(180deg, transparent 0%, rgba(253, 98, 79, 0.05) 50%, transparent 100%); margin: 20px 0;"></div>
