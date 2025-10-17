@@ -4781,16 +4781,13 @@ class StudioManager {
 
     async sendToWebhook(configData) {
         try {
-            // URL del webhook a través del proxy de producción
-            const webhookUrl = '/api/webhook/scripts?v=' + Date.now();
+            // Llamar directamente al webhook externo para evitar timeout intermedio
+            const webhookUrl = 'https://ardeagency.app.n8n.cloud/webhook/4635dddf-f8f9-4cc2-be0f-54e1c542d702';
             
-            // Webhook de prueba temporal para debuggear (sin CORS)
-            // const webhookUrl = 'https://webhook.site/your-unique-url';
+            // Enviar datos directamente al webhook externo
+            console.log('Enviando datos DIRECTAMENTE al webhook externo...');
             
-            // Enviar datos reales al webhook
-            console.log('Enviando datos reales al webhook...');
-            
-            console.log('=== ENVIANDO DATOS AL WEBHOOK ===');
+            console.log('=== ENVIANDO DATOS AL WEBHOOK EXTERNO ===');
             console.log('URL:', webhookUrl);
             const dataSize = JSON.stringify(configData).length;
             console.log('Tamaño de datos:', dataSize, 'caracteres');
@@ -5150,7 +5147,7 @@ class StudioManager {
             console.log('Archivos cargados como URLs:', configData);
 
             // Enviar al webhook - UN SOLO INTENTO de 5 minutos
-            this.showLoading('Enviando datos a la IA... (UN SOLO INTENTO - 5 minutos máximo)');
+            this.showLoading('Enviando datos DIRECTAMENTE a la IA... (UN SOLO INTENTO - 5 minutos máximo)');
             console.log('Enviando al webhook - UN SOLO INTENTO...');
             const result = await this.sendToWebhook(configData);
             
@@ -5696,10 +5693,10 @@ class StudioManager {
 
     async sendToScenesWebhook(configData) {
         try {
-            // URL del webhook de escenas a través del proxy de producción
-            const scenesWebhookUrl = '/api/webhook/scenes?v=' + Date.now();
+            // Llamar directamente al webhook externo de escenas para evitar timeout intermedio
+            const scenesWebhookUrl = 'https://ardeagency.app.n8n.cloud/webhook/6b8560d8-b00c-4cda-85a1-143e4d5e869c';
             
-            console.log('=== ENVIANDO DATOS AL WEBHOOK DE ESCENAS ===');
+            console.log('=== ENVIANDO DATOS AL WEBHOOK EXTERNO DE ESCENAS ===');
             console.log('URL:', scenesWebhookUrl);
             console.log('Tamaño de datos:', JSON.stringify(configData).length, 'caracteres');
             

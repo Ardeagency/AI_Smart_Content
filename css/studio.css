@@ -276,6 +276,7 @@ body {
     min-height: 100vh;
     transition: margin-left 0.3s ease;
     background-color: #000000;
+    margin-top: 0;
 }
 
 .main-content.nav-open {
@@ -460,13 +461,15 @@ body {
     position: relative;
     border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 12px;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
     padding: 24px;
     box-sizing: border-box;
     -webkit-overflow-scrolling: touch;
     box-shadow: var(--shadow-card);
     transition: all var(--transition-normal);
     min-height: 0;
+    max-height: calc(100vh - 70px);
     background-image: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
     background-size: 20px 20px;
     background-color: rgb(26, 29, 30);
@@ -478,12 +481,13 @@ body {
         margin-left: 384px; /* w-96 = 24rem = 384px */
         border-radius: 0;
         border: none;
-        height: calc(100vh - 70px);
-        margin-top: 70px;
+        height: calc(100vh - 60px);
+        margin-top: 60px;
         box-shadow: none;
         background-image: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
         background-size: 20px 20px;
         background-color: rgb(26, 29, 30);
+        max-height: calc(100vh - 60px);
     }
 }
 
@@ -1021,6 +1025,7 @@ body {
     margin-bottom: 40px;
     width: 100%;
     box-sizing: border-box;
+    min-height: auto;
 }
 
 .guion-card {
@@ -1031,7 +1036,7 @@ body {
     box-shadow: var(--shadow-card);
     transition: all var(--transition-normal);
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     display: block !important;
     visibility: visible !important;
     opacity: 1 !important;
