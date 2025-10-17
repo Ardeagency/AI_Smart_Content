@@ -22,6 +22,7 @@ app.use(express.static(path.join(__dirname)));
 // Endpoint para webhook de guiones
 app.post('/api/webhook/scripts', (req, res) => {
   console.log('🔄 Enviando petición a webhook de guiones...');
+  const startTime = Date.now();
   
   const postData = JSON.stringify(req.body);
   
@@ -30,7 +31,7 @@ app.post('/api/webhook/scripts', (req, res) => {
     port: 443,
     path: '/webhook/4635dddf-f8f9-4cc2-be0f-54e1c542d702',
     method: 'POST',
-    timeout: 300000, // 5 minutos timeout
+    timeout: 300000, // 5 minutos timeout - SIMPLE
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -41,12 +42,15 @@ app.post('/api/webhook/scripts', (req, res) => {
   const request = https.request(options, (response) => {
     let data = '';
     
+    
     response.on('data', (chunk) => {
       data += chunk;
     });
     
     response.on('end', () => {
-      console.log(`✅ Respuesta del webhook de guiones: ${response.statusCode}`);
+      const elapsedTime = Date.now() - startTime;
+      const elapsedSeconds = Math.round(elapsedTime / 1000);
+      console.log(`✅ Respuesta del webhook de guiones: ${response.statusCode} (${elapsedSeconds}s)`);
       
       try {
         const jsonData = JSON.parse(data);
@@ -58,12 +62,21 @@ app.post('/api/webhook/scripts', (req, res) => {
   });
 
   request.on('error', (error) => {
-    console.error('❌ Error en webhook de guiones:', error.message);
+    const elapsedTime = Date.now() - startTime;
+    const elapsedSeconds = Math.round(elapsedTime / 1000);
+    console.error(`❌ Error en webhook de guiones: ${error.message} (${elapsedSeconds}s)`);
     res.status(500).json({ 
       error: 'Error del servidor',
       details: error.message 
     });
   });
+  
+  // Agregar timeout manual para logging
+  setTimeout(() => {
+    const elapsedTime = Date.now() - startTime;
+    const elapsedSeconds = Math.round(elapsedTime / 1000);
+    console.log(`⏰ Timeout del servidor alcanzado: ${elapsedSeconds}s`);
+  }, 300000);
 
   request.write(postData);
   request.end();
@@ -80,7 +93,7 @@ app.post('/api/webhook/scenes', (req, res) => {
     port: 443,
     path: '/webhook/6b8560d8-b00c-4cda-85a1-143e4d5e869c',
     method: 'POST',
-    timeout: 300000, // 5 minutos timeout
+    timeout: 300000, // 5 minutos timeout - SIMPLE
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -90,6 +103,7 @@ app.post('/api/webhook/scenes', (req, res) => {
 
   const request = https.request(options, (response) => {
     let data = '';
+    
     
     response.on('data', (chunk) => {
       data += chunk;
@@ -204,6 +218,7 @@ app.get('/auth-callback.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'auth-callback.html'));
 });
 
+// Iniciar servidor
 app.listen(PORT, () => {
   console.log(`🚀 UGC Studio ejecutándose en puerto ${PORT}`);
   console.log(`📱 Accede en: http://localhost:${PORT}`);

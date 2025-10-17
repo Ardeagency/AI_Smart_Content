@@ -8,6 +8,7 @@ class StudioManager {
         this.supabase = null;
         this.userId = null;
         this.currentProjectId = null;
+        this.isGenerating = false; // Bandera para prevenir múltiples generaciones
         
         // Estado global de configuración
         this.studioConfig = {
@@ -4041,26 +4042,6 @@ class StudioManager {
         }
     }
 
-    async handleGenerateScripts() {
-        if (!this.studioConfig.brand || !this.studioConfig.product) {
-            this.showNotification('Selecciona al menos una marca y un producto', 'error');
-            return;
-        }
-
-        try {
-            this.showNotification('Generando guiones...', 'info');
-            
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            
-            console.log('Enviando configuración al backend:', this.studioConfig);
-            
-            this.showNotification('Guiones generados exitosamente', 'success');
-            
-        } catch (error) {
-            console.error('Error generating scripts:', error);
-            this.showNotification('Error generando guiones', 'error');
-        }
-    }
 
     createNewBrand() {
         console.log('Crear nueva marca');
@@ -4811,9 +4792,16 @@ class StudioManager {
             
             console.log('=== ENVIANDO DATOS AL WEBHOOK ===');
             console.log('URL:', webhookUrl);
-            console.log('Tamaño de datos:', JSON.stringify(configData).length, 'caracteres');
+            const dataSize = JSON.stringify(configData).length;
+            console.log('Tamaño de datos:', dataSize, 'caracteres');
             console.log('User ID:', this.userId);
             console.log('Project ID:', this.currentProjectId);
+            
+            // Validar tamaño de datos para evitar timeouts
+            if (dataSize > 1000000) { // 1MB
+                console.warn('⚠️ ADVERTENCIA: Datos muy grandes (' + dataSize + ' caracteres). Esto puede causar timeouts.');
+                this.showNotification('Datos muy grandes, optimizando...', 'warning');
+            }
             
             // Log específico de imágenes antes de enviar
             if (configData.product && configData.product.files && configData.product.files.images) {
@@ -4997,13 +4985,37 @@ class StudioManager {
                 finalData.product.images.forEach((url, index) => {
                     console.log(`  ${index + 1}. ${url}`);
                 });
+                
+                // Optimización agresiva: Reducir imágenes y comprimir datos
+                const finalDataSize = JSON.stringify(finalData).length;
+                console.log('Tamaño final de datos:', finalDataSize, 'caracteres');
+                
+                if (finalDataSize > 500000) { // 500KB - más agresivo
+                    console.warn('⚠️ OPTIMIZACIÓN AGRESIVA: Reduciendo datos para evitar timeout');
+                    
+                    // Reducir imágenes a máximo 2
+                    if (finalData.product.images.length > 2) {
+                        finalData.product.images = finalData.product.images.slice(0, 2);
+                        console.log('Imágenes reducidas a:', finalData.product.images.length);
+                    }
+                    
+                    // Reducir clips a máximo 2 por guión si existe
+                    if (finalData.script && finalData.script.clips && finalData.script.clips.length > 2) {
+                        finalData.script.clips = finalData.script.clips.slice(0, 2);
+                        console.log('Clips reducidos a:', finalData.script.clips.length);
+                    }
+                    
+                    // Verificar tamaño después de optimización
+                    const newSize = JSON.stringify(finalData).length;
+                    console.log('Tamaño después de optimización:', newSize, 'caracteres');
+                }
             } else {
                 console.warn('⚠️ NO HAY IMÁGENES EN EL JSON FINAL');
             }
             
             // Crear AbortController para timeout
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 600000); // 10 minutos timeout
+            const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minutos timeout - SIMPLE
             
             const response = await fetch(webhookUrl, {
                 method: 'POST',
@@ -5030,7 +5042,17 @@ class StudioManager {
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error('Error del webhook:', errorText);
+                
+                // Manejo específico de errores de timeout
+                if (response.status === 524) {
+                    throw new Error(`Timeout del servidor webhook (${response.status}). El procesamiento está tomando más tiempo del esperado. Intenta nuevamente.`);
+                } else if (response.status === 504) {
+                    throw new Error(`Gateway timeout (${response.status}). El servidor no pudo procesar la solicitud a tiempo. Intenta nuevamente.`);
+                } else if (response.status >= 500) {
+                    throw new Error(`Error del servidor (${response.status}). Problema interno del webhook. Intenta nuevamente en unos minutos.`);
+                } else {
                 throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+                }
             }
 
             const result = await response.json();
@@ -5070,8 +5092,10 @@ class StudioManager {
                 errorMessage = 'No se pudo conectar con el servidor. Verifica tu conexión a internet.';
             } else if (error.message.includes('CORS')) {
                 errorMessage = 'Error de CORS: El servidor no permite requests desde localhost. Contacta al administrador.';
-            } else if (error.message.includes('524')) {
+            } else if (error.message.includes('524') || error.message.includes('504')) {
                 errorMessage = 'El servidor tardó demasiado en responder. Inténtalo de nuevo.';
+            } else if (error.message.includes('500')) {
+                errorMessage = 'Error interno del servidor. Inténtalo de nuevo en unos minutos.';
             }
             
             this.showNotification(`Error enviando configuración: ${errorMessage}`, 'error');
@@ -5081,6 +5105,14 @@ class StudioManager {
 
 
     async handleGenerateScripts() {
+        // Prevenir múltiples ejecuciones simultáneas
+        if (this.isGenerating) {
+            console.log('⚠️ Generación ya en progreso, ignorando llamada duplicada');
+            return;
+        }
+        
+        this.isGenerating = true;
+        
         try {
             console.log('=== INICIANDO GENERACIÓN DE GUIONES ===');
             console.log('Configuración actual:', this.studioConfig);
@@ -5117,9 +5149,9 @@ class StudioManager {
             await this.loadFilesAsUrls(configData);
             console.log('Archivos cargados como URLs:', configData);
 
-            // Enviar al webhook
-            this.showLoading('Enviando datos a la IA...');
-            console.log('Enviando al webhook...');
+            // Enviar al webhook - UN SOLO INTENTO de 5 minutos
+            this.showLoading('Enviando datos a la IA... (UN SOLO INTENTO - 5 minutos máximo)');
+            console.log('Enviando al webhook - UN SOLO INTENTO...');
             const result = await this.sendToWebhook(configData);
             
             // Mostrar resultado
@@ -5143,6 +5175,9 @@ class StudioManager {
             console.error('Error generating scripts:', error);
             this.showError(`Error generando guiones: ${error.message}`);
             this.hideLoading();
+        } finally {
+            // Resetear bandera de generación
+            this.isGenerating = false;
         }
     }
 
@@ -5180,9 +5215,37 @@ class StudioManager {
             console.log('guionesData.output existe:', !!guionesData.output);
             console.log('guionesData.items existe:', !!guionesData.items);
             
-            // NUEVO FORMATO: Array de 3 items estructurados (prioridad)
-            if (Array.isArray(guionesData) && guionesData.length === 3) {
-                console.log('✅ NUEVO FORMATO: Array de 3 items estructurados detectado');
+            // NUEVO FORMATO 2024: Array de 3 variantes con roles (prioridad máxima)
+            if (Array.isArray(guionesData) && guionesData.length === 3 && guionesData[0].variante) {
+                console.log('✅ NUEVO FORMATO 2024: Array de 3 variantes con roles detectado');
+                
+                // Convertir las 3 variantes a formato de guiones para compatibilidad
+                guiones = guionesData.map((variante, index) => {
+                    return {
+                        tipo_guion: `Variante ${variante.variante}`,
+                        titulo_sugerido: `Guión ${index + 1}`,
+                        variante: variante.variante,
+                        roles: variante.roles,
+                        // Datos del guion principal
+                        context: variante.guion.context,
+                        clips: variante.guion.clips.map(clip => ({
+                            clip_numero: variante.guion.clips.indexOf(clip) + 1,
+                            escena: clip.scene_prompt,
+                            voz: clip.voice_over,
+                            duracion: clip.dur,
+                            rol: clip.role,
+                            notas: clip.notes
+                        })),
+                        // Datos adicionales del nuevo formato
+                        promptBase: variante.promptBase,
+                        escenasPorRol: variante.escenasPorRol
+                    };
+                });
+                console.log('✅ 3 variantes convertidas a guiones:', guiones.length, 'guiones');
+            }
+            // FORMATO ANTERIOR: Array de 3 items estructurados
+            else if (Array.isArray(guionesData) && guionesData.length === 3) {
+                console.log('✅ FORMATO ANTERIOR: Array de 3 items estructurados detectado');
                 
                 // Convertir los 3 items a formato de guiones para compatibilidad
                 guiones = guionesData.map((item, index) => {
@@ -5190,7 +5253,7 @@ class StudioManager {
                     return {
                         tipo_guion: `Guión ${index + 1}`,
                         titulo_sugerido: `Guión ${index + 1}`,
-                        // Datos del nuevo formato
+                        // Datos del formato anterior
                         Contexto: output.Contexto,
                         Escenario: output.Escenario,
                         Sujeto: output.Sujeto,
@@ -5343,7 +5406,7 @@ class StudioManager {
                     <i data-lucide="alert-circle" class="error-icon"></i>
                     <h3>Error al procesar guiones</h3>
                     <p>No se pudieron cargar los guiones generados</p>
-                    <button class="btn btn-primary" onclick="window.studioManager.generateScripts()">
+                    <button class="btn btn-primary" onclick="window.studioManager.handleGenerateScripts()">
                         Intentar de nuevo
                     </button>
                 </div>
@@ -5642,7 +5705,7 @@ class StudioManager {
             
             // Crear AbortController para timeout
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 600000); // 10 minutos timeout
+            const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minutos timeout - SIMPLE
             
             const response = await fetch(scenesWebhookUrl, {
                 method: 'POST',
@@ -6055,7 +6118,7 @@ class StudioManager {
                     <i data-lucide="alert-circle" class="error-icon"></i>
                     <h3>Error al procesar escenas</h3>
                     <p>No se pudieron cargar las escenas generadas: ${error.message}</p>
-                    <button class="btn btn-primary" onclick="window.studioManager.generateScripts()">
+                    <button class="btn btn-primary" onclick="window.studioManager.handleGenerateScripts()">
                         Volver a Guiones
                     </button>
                 </div>
@@ -6182,9 +6245,44 @@ class StudioManager {
             const guionCompleto = this.lastGeneratedGuiones[guionIndex];
             console.log('Extrayendo datos completos del guión:', guionCompleto);
             
-            // Manejar el nuevo formato de 3 items estructurados
+            // Manejar el nuevo formato 2024 de variantes con roles
+            if (guionCompleto.variante && guionCompleto.roles && guionCompleto.guion) {
+                console.log('✅ Nuevo formato 2024 de variantes detectado en extractGuionData');
+                return {
+                    // Datos básicos
+                    tipoGuion: guionCompleto.tipo_guion || `Variante ${guionCompleto.variante}`,
+                    titulo: guionCompleto.titulo_sugerido || `Guión ${guionIndex + 1}`,
+                    
+                    // Datos completos del guión generado
+                    guionCompleto: guionCompleto,
+                    
+                    // Clips con toda la información
+                    clips: guionCompleto.clips || [],
+                    
+                    // Contexto completo si existe
+                    context: guionCompleto.context || null,
+                    
+                    // Información adicional
+                    version_name: guionCompleto.tipo_guion || `Variante ${guionCompleto.variante}`,
+                    
+                    // Datos específicos del nuevo formato 2024
+                    variante: guionCompleto.variante,
+                    roles: guionCompleto.roles,
+                    promptBase: guionCompleto.promptBase,
+                    escenasPorRol: guionCompleto.escenasPorRol,
+                    place: guionCompleto.context?.place || null,
+                    time: guionCompleto.context?.time || null,
+                    why_now: guionCompleto.context?.why_now || null,
+                    subject_profile: guionCompleto.context?.subject_profile || null,
+                    subject_voice: guionCompleto.context?.subject_voice || null,
+                    props: guionCompleto.context?.props || [],
+                    continuity: guionCompleto.context?.continuity || null
+                };
+            }
+            
+            // Manejar el formato anterior de 3 items estructurados
             if (guionCompleto.Contexto && guionCompleto.Escenario && guionCompleto.Sujeto && guionCompleto.Estetica) {
-                console.log('✅ Nuevo formato de 3 items detectado en extractGuionData');
+                console.log('✅ Formato anterior de 3 items detectado en extractGuionData');
                 return {
                     // Datos básicos
                     tipoGuion: guionCompleto.tipo_guion || `Guión ${guionIndex + 1}`,
@@ -6202,7 +6300,7 @@ class StudioManager {
                     // Información adicional
                     version_name: guionCompleto.tipo_guion || `Guión ${guionIndex + 1}`,
                     
-                    // Datos específicos del nuevo formato estructurado
+                    // Datos específicos del formato anterior estructurado
                     Contexto: guionCompleto.Contexto,
                     Escenario: guionCompleto.Escenario,
                     Sujeto: guionCompleto.Sujeto,
@@ -6345,9 +6443,42 @@ Generado por UGC Studio
         try {
             console.log('Validando respuesta del webhook:', response);
             
-            // NUEVO FORMATO: Validar estructura de 3 items [{"output": {...}}, {"output": {...}}, {"output": {...}}]
+            // NUEVO FORMATO 2024: Validar estructura de 3 variantes con roles
             if (Array.isArray(response) && response.length === 3) {
-                console.log('✅ Array de 3 elementos detectado, validando estructura...');
+                console.log('✅ Array de 3 elementos detectado, validando nuevo formato de variantes...');
+                
+                // Verificar que todos los elementos tengan la nueva estructura
+                const allValid = response.every((item, index) => {
+                    if (item && item.variante && item.roles && item.guion && item.promptBase && item.escenasPorRol) {
+                        const hasValidVariante = typeof item.variante === 'number' && item.variante > 0;
+                        const hasValidRoles = Array.isArray(item.roles) && item.roles.length > 0;
+                        const hasValidGuion = item.guion && item.guion.context && item.guion.clips;
+                        const hasValidContext = item.guion.context && 
+                                              item.guion.context.place && item.guion.context.time && 
+                                              item.guion.context.why_now && item.guion.context.subject_profile;
+                        const hasValidClips = Array.isArray(item.guion.clips) && item.guion.clips.length > 0;
+                        const hasValidPromptBase = item.promptBase && item.promptBase.guion && item.promptBase.componentesImagen;
+                        const hasValidEscenasPorRol = item.escenasPorRol && 
+                                                    item.escenasPorRol.persona && item.escenasPorRol.producto && item.escenasPorRol.demo;
+                        
+                        const isValid = hasValidVariante && hasValidRoles && hasValidGuion && 
+                                      hasValidContext && hasValidClips && hasValidPromptBase && hasValidEscenasPorRol;
+                        
+                        console.log(`Variante ${item.variante} válida:`, isValid);
+                        return isValid;
+                    }
+                    return false;
+                });
+                
+                if (allValid) {
+                    console.log('✅ Respuesta válida con nuevo formato de 3 variantes estructuradas');
+                    return true;
+                }
+            }
+            
+            // FORMATO ANTERIOR: Validar estructura de 3 items [{"output": {...}}, {"output": {...}}, {"output": {...}}]
+            if (Array.isArray(response) && response.length === 3) {
+                console.log('✅ Array de 3 elementos detectado, validando formato anterior...');
                 
                 // Verificar que todos los elementos tengan la estructura correcta
                 const allValid = response.every((item, index) => {
@@ -6367,7 +6498,7 @@ Generado por UGC Studio
                 });
                 
                 if (allValid) {
-                    console.log('✅ Respuesta válida con nuevo formato de 3 items estructurados');
+                    console.log('✅ Respuesta válida con formato anterior de 3 items estructurados');
                     return true;
                 }
             }
