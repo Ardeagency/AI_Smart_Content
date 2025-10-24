@@ -2139,37 +2139,84 @@
                     if (data && (data.gallery_file_ids || data.main_image_id)) {
                         console.log('Datos de imágenes encontrados:', data);
                         
-                        // Por ahora, mostrar imágenes de ejemplo hasta que se configure el storage
-                        console.log('Mostrando imágenes de ejemplo (storage no configurado)');
+                        // Obtener URL base de Supabase
+                        const supabaseUrl = window.studioManager.supabase.supabaseUrl;
+                        console.log('URL de Supabase:', supabaseUrl);
                         
-                        // Generar HTML para las imágenes de ejemplo
+                        // Generar HTML para las imágenes
                         let imagesHTML = '';
+                        let hasRealImages = false;
                         
-                        // Imagen principal de ejemplo
-                        imagesHTML += `
-                            <div class="product-image-item main-image">
-                                <img src="https://via.placeholder.com/200x200/ff6b35/ffffff?text=Imagen+Principal" 
-                                     alt="Imagen principal del producto">
-                                <div class="image-label">Imagen Principal</div>
-                            </div>
-                        `;
-                        
-                        // Galería de imágenes de ejemplo
-                        const exampleImages = [
-                            { color: '4a90e2', text: 'Imagen+1' },
-                            { color: '7ed321', text: 'Imagen+2' },
-                            { color: 'f5a623', text: 'Imagen+3' }
-                        ];
-                        
-                        exampleImages.forEach((img, index) => {
+                        // Imagen principal
+                        if (data.main_image_id) {
+                            // Usar el bucket privado 'ugc' con autenticación
+                            const mainImageUrl = `${supabaseUrl}/storage/v1/object/ugc/${data.main_image_id}`;
+                            console.log('URL de imagen principal:', mainImageUrl);
+                            
                             imagesHTML += `
-                                <div class="product-image-item gallery-image">
-                                    <img src="https://via.placeholder.com/200x200/${img.color}/ffffff?text=${img.text}" 
-                                         alt="Imagen ${index + 1} del producto">
-                                    <div class="image-label">Imagen ${index + 1}</div>
+                                <div class="product-image-item main-image">
+                                    <img src="${mainImageUrl}" 
+                                         alt="Imagen principal del producto" 
+                                         onerror="this.style.display='none'; this.nextElementSibling.textContent='Imagen no disponible';"
+                                         onload="console.log('Imagen principal cargada exitosamente');">
+                                    <div class="image-label">Imagen Principal</div>
                                 </div>
                             `;
-                        });
+                            hasRealImages = true;
+                        }
+                        
+                        // Galería de imágenes
+                        if (data.gallery_file_ids && Array.isArray(data.gallery_file_ids)) {
+                            console.log('Galería de imágenes:', data.gallery_file_ids);
+                            
+                            data.gallery_file_ids.forEach((imageId, index) => {
+                                // Usar el bucket privado 'ugc' con autenticación
+                                const galleryImageUrl = `${supabaseUrl}/storage/v1/object/ugc/${imageId}`;
+                                console.log(`URL de imagen ${index + 1}:`, galleryImageUrl);
+                                
+                                imagesHTML += `
+                                    <div class="product-image-item gallery-image">
+                                        <img src="${galleryImageUrl}" 
+                                             alt="Imagen ${index + 1} del producto" 
+                                             onerror="this.style.display='none'; this.nextElementSibling.textContent='Imagen no disponible';"
+                                             onload="console.log('Imagen ${index + 1} cargada exitosamente');">
+                                        <div class="image-label">Imagen ${index + 1}</div>
+                                    </div>
+                                `;
+                                hasRealImages = true;
+                            });
+                        }
+                        
+                        // Si no hay imágenes reales o fallan, mostrar imágenes de ejemplo
+                        if (!hasRealImages) {
+                            console.log('No hay imágenes reales disponibles, mostrando imágenes de ejemplo');
+                            
+                            // Imagen principal de ejemplo
+                            imagesHTML += `
+                                <div class="product-image-item main-image">
+                                    <img src="https://via.placeholder.com/200x200/ff6b35/ffffff?text=Imagen+Principal" 
+                                         alt="Imagen principal del producto">
+                                    <div class="image-label">Imagen Principal (Ejemplo)</div>
+                                </div>
+                            `;
+                            
+                            // Galería de imágenes de ejemplo
+                            const exampleImages = [
+                                { color: '4a90e2', text: 'Imagen+1' },
+                                { color: '7ed321', text: 'Imagen+2' },
+                                { color: 'f5a623', text: 'Imagen+3' }
+                            ];
+                            
+                            exampleImages.forEach((img, index) => {
+                                imagesHTML += `
+                                    <div class="product-image-item gallery-image">
+                                        <img src="https://via.placeholder.com/200x200/${img.color}/ffffff?text=${img.text}" 
+                                             alt="Imagen ${index + 1} del producto">
+                                        <div class="image-label">Imagen ${index + 1} (Ejemplo)</div>
+                                    </div>
+                                `;
+                            });
+                        }
                         
                         if (imagesHTML) {
                             imagesContainer.innerHTML = `
