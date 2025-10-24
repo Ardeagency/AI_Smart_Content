@@ -2114,15 +2114,96 @@
             `;
             
             try {
-                // Simular carga de imágenes (puedes integrar con tu sistema existente)
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // Aquí puedes integrar con tu sistema de carga de imágenes existente
-                imagesContainer.innerHTML = `
-                    <div class="no-selection">
-                        <span>Imágenes del producto se cargarán aquí</span>
-                    </div>
-                `;
+                // Cargar imágenes desde Supabase
+                if (window.studioManager && window.studioManager.supabase) {
+                    const { data, error } = await window.studioManager.supabase
+                        .from('products')
+                        .select('gallery_file_ids, main_image_id')
+                        .eq('id', productId)
+                        .single();
+
+                    if (error) {
+                        console.error('Error cargando imágenes del producto:', error);
+                        imagesContainer.innerHTML = `
+                            <div class="no-selection">
+                                <span>Error cargando imágenes del producto</span>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    if (data && (data.gallery_file_ids || data.main_image_id)) {
+                        // Generar HTML para las imágenes
+                        let imagesHTML = '';
+                        
+                        // Imagen principal
+                        if (data.main_image_id) {
+                            imagesHTML += `
+                                <div class="product-image-item main-image">
+                                    <img src="${window.studioManager.supabase.supabaseUrl}/storage/v1/object/public/product-images/${data.main_image_id}" 
+                                         alt="Imagen principal del producto" 
+                                         onerror="this.style.display='none'">
+                                    <div class="image-label">Imagen Principal</div>
+                                </div>
+                            `;
+                        }
+                        
+                        // Galería de imágenes
+                        if (data.gallery_file_ids && Array.isArray(data.gallery_file_ids)) {
+                            data.gallery_file_ids.forEach((imageId, index) => {
+                                imagesHTML += `
+                                    <div class="product-image-item gallery-image">
+                                        <img src="${window.studioManager.supabase.supabaseUrl}/storage/v1/object/public/product-images/${imageId}" 
+                                             alt="Imagen ${index + 1} del producto" 
+                                             onerror="this.style.display='none'">
+                                        <div class="image-label">Imagen ${index + 1}</div>
+                                    </div>
+                                `;
+                            });
+                        }
+                        
+                        if (imagesHTML) {
+                            imagesContainer.innerHTML = `
+                                <div class="product-images-grid">
+                                    ${imagesHTML}
+                                </div>
+                            `;
+                        } else {
+                            imagesContainer.innerHTML = `
+                                <div class="no-selection">
+                                    <span>No hay imágenes disponibles para este producto</span>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        imagesContainer.innerHTML = `
+                            <div class="no-selection">
+                                <span>No hay imágenes disponibles para este producto</span>
+                            </div>
+                        `;
+                    }
+                } else {
+                    // Fallback si no hay Supabase - mostrar imágenes de ejemplo
+                    imagesContainer.innerHTML = `
+                        <div class="product-images-grid">
+                            <div class="product-image-item main-image">
+                                <img src="https://via.placeholder.com/200x200/ff6b35/ffffff?text=Imagen+Principal" 
+                                     alt="Imagen principal del producto">
+                                <div class="image-label">Imagen Principal</div>
+                            </div>
+                            <div class="product-image-item gallery-image">
+                                <img src="https://via.placeholder.com/200x200/4a90e2/ffffff?text=Imagen+1" 
+                                     alt="Imagen 1 del producto">
+                                <div class="image-label">Imagen 1</div>
+                            </div>
+                            <div class="product-image-item gallery-image">
+                                <img src="https://via.placeholder.com/200x200/7ed321/ffffff?text=Imagen+2" 
+                                     alt="Imagen 2 del producto">
+                                <div class="image-label">Imagen 2</div>
+                            </div>
+                        </div>
+                    `;
+                }
                 
                 console.log('=== IMÁGENES CARGADAS ===');
             } catch (error) {
