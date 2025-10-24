@@ -2139,46 +2139,37 @@
                     if (data && (data.gallery_file_ids || data.main_image_id)) {
                         console.log('Datos de imágenes encontrados:', data);
                         
-                        // Obtener URL base de Supabase
-                        const supabaseUrl = window.studioManager.supabase.supabaseUrl || 'https://your-project.supabase.co';
-                        console.log('URL de Supabase:', supabaseUrl);
+                        // Por ahora, mostrar imágenes de ejemplo hasta que se configure el storage
+                        console.log('Mostrando imágenes de ejemplo (storage no configurado)');
                         
-                        // Generar HTML para las imágenes
+                        // Generar HTML para las imágenes de ejemplo
                         let imagesHTML = '';
                         
-                        // Imagen principal
-                        if (data.main_image_id) {
-                            const mainImageUrl = `${supabaseUrl}/storage/v1/object/public/product-images/${data.main_image_id}`;
-                            console.log('URL de imagen principal:', mainImageUrl);
-                            
+                        // Imagen principal de ejemplo
+                        imagesHTML += `
+                            <div class="product-image-item main-image">
+                                <img src="https://via.placeholder.com/200x200/ff6b35/ffffff?text=Imagen+Principal" 
+                                     alt="Imagen principal del producto">
+                                <div class="image-label">Imagen Principal</div>
+                            </div>
+                        `;
+                        
+                        // Galería de imágenes de ejemplo
+                        const exampleImages = [
+                            { color: '4a90e2', text: 'Imagen+1' },
+                            { color: '7ed321', text: 'Imagen+2' },
+                            { color: 'f5a623', text: 'Imagen+3' }
+                        ];
+                        
+                        exampleImages.forEach((img, index) => {
                             imagesHTML += `
-                                <div class="product-image-item main-image">
-                                    <img src="${mainImageUrl}" 
-                                         alt="Imagen principal del producto" 
-                                         onerror="console.error('Error cargando imagen principal:', this.src); this.style.display='none'">
-                                    <div class="image-label">Imagen Principal</div>
+                                <div class="product-image-item gallery-image">
+                                    <img src="https://via.placeholder.com/200x200/${img.color}/ffffff?text=${img.text}" 
+                                         alt="Imagen ${index + 1} del producto">
+                                    <div class="image-label">Imagen ${index + 1}</div>
                                 </div>
                             `;
-                        }
-                        
-                        // Galería de imágenes
-                        if (data.gallery_file_ids && Array.isArray(data.gallery_file_ids)) {
-                            console.log('Galería de imágenes:', data.gallery_file_ids);
-                            
-                            data.gallery_file_ids.forEach((imageId, index) => {
-                                const galleryImageUrl = `${supabaseUrl}/storage/v1/object/public/product-images/${imageId}`;
-                                console.log(`URL de imagen ${index + 1}:`, galleryImageUrl);
-                                
-                                imagesHTML += `
-                                    <div class="product-image-item gallery-image">
-                                        <img src="${galleryImageUrl}" 
-                                             alt="Imagen ${index + 1} del producto" 
-                                             onerror="console.error('Error cargando imagen ${index + 1}:', this.src); this.style.display='none'">
-                                        <div class="image-label">Imagen ${index + 1}</div>
-                                    </div>
-                                `;
-                            });
-                        }
+                        });
                         
                         if (imagesHTML) {
                             imagesContainer.innerHTML = `
