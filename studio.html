@@ -641,9 +641,13 @@
 
         // Función para inicializar la visualización de datos
         function initializeDataDisplay() {
+            console.log('=== INICIALIZANDO DATOS ===');
+            
             // Verificar si hay una marca seleccionada
             const brandSelector = document.getElementById('brand-selector');
+            console.log('Selector de marca:', brandSelector?.value);
             if (brandSelector && brandSelector.value) {
+                console.log('Marca pre-seleccionada encontrada:', brandSelector.value);
                 onBrandSelected(brandSelector.value);
             }
             
@@ -653,6 +657,8 @@
             if (productSelector && productSelector.value) {
                 console.log('Producto pre-seleccionado encontrado:', productSelector.value);
                 onProductSelected(productSelector.value);
+            } else {
+                console.log('No hay producto pre-seleccionado');
             }
         }
 
@@ -1422,6 +1428,14 @@
                     visibility: productSection.style.visibility,
                     opacity: productSection.style.opacity
                 });
+                
+                // Verificar si hay contenido en el contenedor de imágenes
+                const imagesContainer = document.getElementById('dynamic-product-images');
+                if (imagesContainer) {
+                    console.log('Contenedor de imágenes encontrado');
+                    console.log('Contenido del contenedor:', imagesContainer.innerHTML);
+                    console.log('¿Tiene hijos?', imagesContainer.children.length);
+                }
             } else {
                 console.error('No se encontró la sección product-images-section');
             }
