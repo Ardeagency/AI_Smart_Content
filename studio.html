@@ -649,7 +649,9 @@
             
             // Verificar si hay un producto seleccionado
             const productSelector = document.getElementById('product-selector');
+            console.log('Inicializando datos - Selector de productos:', productSelector?.value);
             if (productSelector && productSelector.value) {
+                console.log('Producto pre-seleccionado encontrado:', productSelector.value);
                 onProductSelected(productSelector.value);
             }
         }
