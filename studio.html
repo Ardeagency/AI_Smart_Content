@@ -2187,35 +2187,10 @@
                             });
                         }
                         
-                        // Si no hay imágenes reales o fallan, mostrar imágenes de ejemplo
+                        // Solo mostrar imágenes de ejemplo si no hay imágenes reales Y se ha seleccionado un producto
                         if (!hasRealImages) {
-                            console.log('No hay imágenes reales disponibles, mostrando imágenes de ejemplo');
-                            
-                            // Imagen principal de ejemplo
-                            imagesHTML += `
-                                <div class="product-image-item main-image">
-                                    <img src="https://via.placeholder.com/200x200/ff6b35/ffffff?text=Imagen+Principal" 
-                                         alt="Imagen principal del producto">
-                                    <div class="image-label">Imagen Principal (Ejemplo)</div>
-                                </div>
-                            `;
-                            
-                            // Galería de imágenes de ejemplo
-                            const exampleImages = [
-                                { color: '4a90e2', text: 'Imagen+1' },
-                                { color: '7ed321', text: 'Imagen+2' },
-                                { color: 'f5a623', text: 'Imagen+3' }
-                            ];
-                            
-                            exampleImages.forEach((img, index) => {
-                                imagesHTML += `
-                                    <div class="product-image-item gallery-image">
-                                        <img src="https://via.placeholder.com/200x200/${img.color}/ffffff?text=${img.text}" 
-                                             alt="Imagen ${index + 1} del producto">
-                                        <div class="image-label">Imagen ${index + 1} (Ejemplo)</div>
-                                    </div>
-                                `;
-                            });
+                            console.log('No hay imágenes reales disponibles para este producto');
+                            imagesHTML = ''; // No mostrar imágenes de ejemplo automáticamente
                         }
                         
                         if (imagesHTML) {
@@ -2255,24 +2230,10 @@
                         `;
                     }
                 } else {
-                    // Fallback si no hay Supabase - mostrar imágenes de ejemplo
+                    // Fallback si no hay Supabase - no mostrar imágenes automáticamente
                     imagesContainer.innerHTML = `
-                        <div class="product-images-grid">
-                            <div class="product-image-item main-image">
-                                <img src="https://via.placeholder.com/200x200/ff6b35/ffffff?text=Imagen+Principal" 
-                                     alt="Imagen principal del producto">
-                                <div class="image-label">Imagen Principal</div>
-                            </div>
-                            <div class="product-image-item gallery-image">
-                                <img src="https://via.placeholder.com/200x200/4a90e2/ffffff?text=Imagen+1" 
-                                     alt="Imagen 1 del producto">
-                                <div class="image-label">Imagen 1</div>
-                            </div>
-                            <div class="product-image-item gallery-image">
-                                <img src="https://via.placeholder.com/200x200/7ed321/ffffff?text=Imagen+2" 
-                                     alt="Imagen 2 del producto">
-                                <div class="image-label">Imagen 2</div>
-                            </div>
+                        <div class="no-selection">
+                            <span>No se pudo cargar las imágenes del producto</span>
                         </div>
                     `;
                 }
