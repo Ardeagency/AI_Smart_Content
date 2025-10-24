@@ -1416,29 +1416,9 @@
 
             console.log('Selector de productos actualizado con', products.length, 'productos');
             
-            // Asegurar que la sección sea visible
-            const productSection = document.getElementById('product-images-section');
-            if (productSection) {
-                productSection.style.display = 'block';
-                productSection.style.visibility = 'visible';
-                productSection.style.opacity = '1';
-                console.log('Sección de productos mostrada');
-                console.log('Estado de la sección:', {
-                    display: productSection.style.display,
-                    visibility: productSection.style.visibility,
-                    opacity: productSection.style.opacity
-                });
-                
-                // Verificar si hay contenido en el contenedor de imágenes
-                const imagesContainer = document.getElementById('dynamic-product-images');
-                if (imagesContainer) {
-                    console.log('Contenedor de imágenes encontrado');
-                    console.log('Contenido del contenedor:', imagesContainer.innerHTML);
-                    console.log('¿Tiene hijos?', imagesContainer.children.length);
-                }
-            } else {
-                console.error('No se encontró la sección product-images-section');
-            }
+            // NO hacer visible la sección automáticamente
+            // Solo poblar el selector, las imágenes se mostrarán cuando se seleccione un producto
+            console.log('Selector de productos poblado, pero NO mostrando imágenes automáticamente');
         }
 
         // Función para limpiar el selector de productos
@@ -1525,7 +1505,7 @@
                     <div class="info-item">
                         <span class="info-label">Estado:</span>
                         <span class="info-value empty">No hay productos en este proyecto</span>
-                </div>
+            </div>
                 `;
             }
         }
@@ -1556,7 +1536,7 @@
                 <div class="info-item">
                     <span class="info-label">Tono de Voz:</span>
                     <span class="info-value">${data.tone_of_voice || 'No configurado'}</span>
-                        </div>
+                    </div>
                 <div class="info-item">
                     <span class="info-label">Palabras Clave (Sí):</span>
                     <span class="info-value">${formatArray(data.keywords_yes)}</span>
@@ -1564,7 +1544,7 @@
                 <div class="info-item">
                     <span class="info-label">Palabras Clave (No):</span>
                     <span class="info-value">${formatArray(data.keywords_no)}</span>
-                    </div>
+                        </div>
                 <div class="info-item">
                     <span class="info-label">Dos y Don'ts:</span>
                     <span class="info-value">${data.dos_donts || 'No configurado'}</span>
@@ -1575,7 +1555,7 @@
                     <span class="info-value">
                         <a href="${data.website}" target="_blank" class="url-link">${data.website}</a>
                     </span>
-                        </div>
+                    </div>
                 ` : ''}
             `;
             
@@ -1623,7 +1603,7 @@
                 <div class="info-item">
                     <span class="info-label">Tipo de Producto:</span>
                     <span class="info-value">${data.product_type || 'No seleccionado'}</span>
-                    </div>
+                        </div>
                 <div class="info-item">
                     <span class="info-label">Descripción Corta:</span>
                     <span class="info-value long-text">${data.short_desc || 'No seleccionado'}</span>
@@ -1635,19 +1615,19 @@
                 <div class="info-item">
                     <span class="info-label">Diferenciadores:</span>
                     <span class="info-value">${formatArray(data.differentiators)}</span>
-                    </div>
+                </div>
                 <div class="info-item">
                     <span class="info-label">Pasos de Uso:</span>
                     <span class="info-value">${formatArray(data.usage_steps)}</span>
-                </div>
+                    </div>
                 <div class="info-item">
                     <span class="info-label">Ingredientes:</span>
                     <span class="info-value">${formatArray(data.ingredients)}</span>
-                </div>
+                    </div>
                 <div class="info-item">
                     <span class="info-label">Precio:</span>
                     <span class="info-value">${priceDisplay}</span>
-            </div>
+                </div>
                 <div class="info-item">
                     <span class="info-label">Variantes:</span>
                     <span class="info-value">${formatArray(data.variants)}</span>
@@ -1765,7 +1745,7 @@
                 <div class="info-item">
                     <span class="info-label">Descripción:</span>
                     <span class="info-value long-text">${data.offer_desc || 'No especificada'}</span>
-                </div>
+            </div>
                 <div class="info-item">
                     <span class="info-label">Call to Action:</span>
                     <span class="info-value">${data.cta || 'No especificado'}</span>
@@ -1775,11 +1755,11 @@
                     <span class="info-value">
                         ${data.cta_url ? `<a href="${data.cta_url}" target="_blank" class="url-link">${data.cta_url}</a>` : 'No especificada'}
                     </span>
-                </div>
+        </div>
                 <div class="info-item">
                     <span class="info-label">Válida hasta:</span>
                     <span class="info-value">${validUntil}</span>
-                </div>
+    </div>
                 ${data.kpis && data.kpis.length > 0 ? `
                 <div class="info-item">
                     <span class="info-label">KPIs:</span>
@@ -1819,27 +1799,27 @@
                 <div class="info-item">
                     <span class="info-label">Persona:</span>
                     <span class="info-value">${personaName}</span>
-            </div>
+                </div>
                 <div class="info-item">
                     <span class="info-label">Edad:</span>
                     <span class="info-value">${personaAge}</span>
-        </div>
+                </div>
                 <div class="info-item">
                     <span class="info-label">Género:</span>
                     <span class="info-value">${personaGender}</span>
-            </div>
+                </div>
                 <div class="info-item">
                     <span class="info-label">Intereses:</span>
                     <span class="info-value">${formatArray(data.interests)}</span>
-                </div>
+                    </div>
                 <div class="info-item">
                     <span class="info-label">Dolores:</span>
                     <span class="info-value">${formatArray(data.pains)}</span>
-            </div>
+                </div>
                 <div class="info-item">
                     <span class="info-label">Contextos:</span>
                     <span class="info-value">${formatArray(data.contexts)}</span>
-        </div>
+                </div>
                 <div class="info-item">
                     <span class="info-label">Idiomas:</span>
                     <span class="info-value">${formatArray(data.language_codes)}</span>
@@ -1870,7 +1850,7 @@
                     <div class="info-item">
                         <span class="info-label">Estado:</span>
                         <span class="info-value empty">No seleccionado</span>
-            </div>
+                </div>
                 `;
             }
         }
@@ -2077,6 +2057,15 @@
             
             console.log('Iniciando carga de datos de producto...');
             
+            // Hacer visible la sección de productos cuando se selecciona un producto
+            const productSection = document.getElementById('product-images-section');
+            if (productSection) {
+                productSection.style.display = 'block';
+                productSection.style.visibility = 'visible';
+                productSection.style.opacity = '1';
+                console.log('Sección de productos mostrada al seleccionar producto');
+            }
+            
             // Mostrar indicador de carga
             showLoadingIndicator('product-info');
             
@@ -2116,7 +2105,7 @@
                     <div class="loading-placeholder">
                         <div class="spinner-small"></div>
                         <span>Selecciona un producto para ver sus imágenes</span>
-                    </div>
+                </div>
                 `;
                 return;
             }
@@ -2147,7 +2136,7 @@
                         imagesContainer.innerHTML = `
                             <div class="no-selection">
                                 <span>Error cargando imágenes del producto: ${error.message}</span>
-                            </div>
+    </div>
                         `;
                         return;
                     }
@@ -2176,7 +2165,7 @@
                                          onerror="this.style.display='none'; this.nextElementSibling.textContent='Imagen no disponible';"
                                          onload="console.log('Imagen principal cargada exitosamente');">
                                     <div class="image-label">Imagen Principal</div>
-                                </div>
+                </div>
                             `;
                             hasRealImages = true;
                         }
@@ -2197,7 +2186,7 @@
                                              onerror="this.style.display='none'; this.nextElementSibling.textContent='Imagen no disponible';"
                                              onload="console.log('Imagen ${index + 1} cargada exitosamente');">
                                         <div class="image-label">Imagen ${index + 1}</div>
-                                    </div>
+            </div>
                                 `;
                                 hasRealImages = true;
                             });
@@ -2213,13 +2202,13 @@
                             imagesContainer.innerHTML = `
                                 <div class="product-images-grid">
                                     ${imagesHTML}
-                                </div>
+            </div>
                             `;
                         } else {
                             imagesContainer.innerHTML = `
                                 <div class="no-selection">
                                     <span>No hay imágenes disponibles para este producto</span>
-                                </div>
+        </div>
                             `;
                         }
                     } else {
@@ -2231,18 +2220,18 @@
                                     <img src="https://via.placeholder.com/200x200/ff6b35/ffffff?text=Imagen+Principal" 
                                          alt="Imagen principal del producto">
                                     <div class="image-label">Imagen Principal</div>
-                                </div>
+            </div>
                                 <div class="product-image-item gallery-image">
                                     <img src="https://via.placeholder.com/200x200/4a90e2/ffffff?text=Imagen+1" 
                                          alt="Imagen 1 del producto">
                                     <div class="image-label">Imagen 1</div>
-                                </div>
+                </div>
                                 <div class="product-image-item gallery-image">
                                     <img src="https://via.placeholder.com/200x200/7ed321/ffffff?text=Imagen+2" 
                                          alt="Imagen 2 del producto">
                                     <div class="image-label">Imagen 2</div>
-                                </div>
-                            </div>
+            </div>
+        </div>
                         `;
                     }
                 } else {
@@ -2260,7 +2249,7 @@
                 imagesContainer.innerHTML = `
                     <div class="no-selection">
                         <span>Error cargando imágenes del producto</span>
-                    </div>
+                </div>
                 `;
             }
         }
