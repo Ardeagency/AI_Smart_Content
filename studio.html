@@ -6,7 +6,6 @@
     <title>Studio - UGC Studio</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     
     <!-- CSS Files -->
@@ -19,39 +18,36 @@
     <!-- Partículas de fondo -->
     <div class="particles" id="particles"></div>
 
-    <!-- Overlay para navegación móvil -->
-    <div class="nav-overlay" id="navOverlay"></div>
 
-    <!-- Header Principal -->
-    <header class="main-header">
-        <div class="header-left">
-            <button class="hamburger-menu" id="hamburgerMenu">
+    <!-- Header del Canvas -->
+    <div class="canvas-header">
+        <div class="canvas-header-left">
+            <button class="hamburger-menu" id="hamburgerMenu" onclick="toggleNavigation()">
                 <div class="hamburger-line"></div>
                 <div class="hamburger-line"></div>
                 <div class="hamburger-line"></div>
             </button>
-            <a href="main-dashboard.html" class="main-logo">
-                <i class="fas fa-cube"></i>
-                <span>UGC Studio</span>
-            </a>
         </div>
-        <div class="header-right">
+        <div class="canvas-header-right">
             <div class="credits-display">
                 <i class="fas fa-coins"></i>
                 <span id="creditsCount">150</span>
             </div>
         </div>
-    </header>
+    </div>
 
-    <!-- Navegación Lateral -->
+    <!-- Overlay de navegación -->
+    <div class="nav-overlay" id="navOverlay" onclick="closeNavigation()"></div>
+
+    <!-- Navegación lateral -->
     <nav class="side-navigation" id="sideNavigation">
-        <!-- Header del panel -->
+        <!-- Header del panel lateral -->
         <div class="nav-header">
                 <div class="nav-user-info">
-                <div class="nav-user-avatar" id="navUserAvatar">NT</div>
+                <div class="nav-user-avatar">NT</div>
                 <div class="nav-user-details">
-                    <h4 id="navUserName">Nathalie Toro</h4>
-                    <div class="nav-user-plan" id="navUserPlan">
+                    <h4>Nathalie Toro</h4>
+                    <div class="nav-user-plan">
                         <i class="fas fa-rocket"></i>
                         <span>Plan Starter</span>
                     </div>
@@ -59,75 +55,63 @@
             </div>
         </div>
 
-
-        <!-- Menú Principal -->
+        <!-- Menú principal -->
         <div class="nav-menu">
             <div class="nav-section">
                 <div class="nav-section-title">Principal</div>
                 <div class="nav-item">
-                    <a href="main-dashboard.html" class="nav-link">
+                    <a href="#" class="nav-link active">
                         <i class="fas fa-home nav-icon"></i>
-                        <span class="nav-text">Panel Principal</span>
+                        <span class="nav-text">Dashboard</span>
                     </a>
                 </div>
                 <div class="nav-item">
-                    <a href="studio.html" class="nav-link active">
-                        <i class="fas fa-magic nav-icon"></i>
-                        <span class="nav-text">Studio</span>
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-video nav-icon"></i>
+                        <span class="nav-text">UGC Studio</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-palette nav-icon"></i>
+                        <span class="nav-text">Templates</span>
                     </a>
                 </div>
                 </div>
 
             <div class="nav-section">
-                <div class="nav-section-title">Contenido</div>
+                <div class="nav-section-title">Herramientas</div>
                 <div class="nav-item">
-                    <a href="catalog.html" class="nav-link">
-                        <i class="fas fa-images nav-icon"></i>
-                        <span class="nav-text">Catálogo</span>
-                        <span class="nav-badge">1.2K</span>
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-magic nav-icon"></i>
+                        <span class="nav-text">Generador IA</span>
+                        <span class="nav-badge">Beta</span>
                     </a>
                 </div>
                 <div class="nav-item">
-                    <a href="brands.html" class="nav-link">
-                        <i class="fas fa-trademark nav-icon"></i>
-                        <span class="nav-text">Marcas</span>
-                        <span class="nav-badge secondary" id="brandsCount">0</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="library.html" class="nav-link">
-                        <i class="fas fa-folder nav-icon"></i>
-                        <span class="nav-text">Biblioteca</span>
-                        <span class="nav-badge secondary" id="libraryCount">0</span>
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-download nav-icon"></i>
+                        <span class="nav-text">Exportar</span>
                     </a>
                 </div>
             </div>
 
             <div class="nav-section">
-                <div class="nav-section-title">Cuenta</div>
+                <div class="nav-section-title">Configuración</div>
                 <div class="nav-item">
-                    <a href="settings.html" class="nav-link">
+                    <a href="#" class="nav-link">
                         <i class="fas fa-cog nav-icon"></i>
                         <span class="nav-text">Configuración</span>
                     </a>
                 </div>
                 <div class="nav-item">
-                    <a href="billing.html" class="nav-link">
-                        <i class="fas fa-credit-card nav-icon"></i>
-                        <span class="nav-text">Facturación</span>
+                    <a href="#" class="nav-link">
+                        <i class="fas fa-user nav-icon"></i>
+                        <span class="nav-text">Perfil</span>
                     </a>
                 </div>
             </div>
         </div>
-
-        <!-- Footer del panel -->
-        <div class="nav-footer">
-            <button class="nav-logout" onclick="logout()">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>Cerrar Sesión</span>
-                </button>
-        </div>
-    </nav>
 
         <!-- Footer del panel -->
         <div class="nav-footer">
@@ -145,965 +129,467 @@
             
             <!-- Sidebar Unificado Izquierdo -->
             <nav class="studio-sidebar" id="sidebar-section-1">
+                <!-- Tab Bar para móviles -->
+                <div class="tab-bar">
+                    <div class="tab-bar-item active" onclick="setActiveTab(this); showMobileConfig();">
+                        <i class="fas fa-cog"></i>
+                        <span>Config</span>
+                    </div>
+                    <div class="tab-bar-item" onclick="setActiveTab(this); showOnlyAccordion('sujeto');">
+                        <i class="fas fa-user"></i>
+                        <span>Sujeto</span>
+                    </div>
+                    <div class="tab-bar-item" onclick="setActiveTab(this); showOnlyAccordion('oferta');">
+                        <i class="fas fa-gift"></i>
+                        <span>Oferta</span>
+                    </div>
+                    <div class="tab-bar-item" onclick="setActiveTab(this); showOnlyAccordion('configuracion-avanzada');">
+                        <i class="fas fa-sliders-h"></i>
+                        <span>Avanzado</span>
+                    </div>
+                </div>
+                
+                <!-- Contenido del sidebar -->
+                <div class="sidebar-content">
+                    <button class="close-sidebar" onclick="toggleSidebar()">
+                        <i class="fas fa-times"></i>
+                    </button>
                 <!-- Configuraciones integradas directamente -->
                 
                 <!-- Marca -->
-                <div class="config-section">
-                    <h4>🔹 Marca</h4>
-                    <div class="config-field">
-                        <label>Seleccionar marca:</label>
-                        <div class="dropdown-container">
-                            <select id="brand-selector" onchange="window.studioManager.selectBrandFromDropdown(this.value)">
-                                <option value="">Seleccionar marca...</option>
-                            </select>
+                <div class="config-field">
+                    <label>Seleccionar marca:</label>
+                    <select id="brand-selector" onchange="onBrandSelected(this.value)">
+                        <option value="">Seleccionar marca...</option>
+                    </select>
                 </div>
-                </div>
-                    <div class="config-field">
-                        <label>Logo:</label>
-                        <div class="image-preview" id="brand-logo-preview">
-                            <div class="no-image">Sin logo</div>
-        </div>
-            </div>
-                    <div class="config-field">
-                        <label>Nombre:</label>
-                        <span class="readonly-field" id="brand-name">Selecciona una marca</span>
-                        </div>
-                    <div class="config-field">
-                        <label>Tono de voz:</label>
-                        <input type="text" id="brand-tone" placeholder="Ej: Profesional, Casual, Innovador..." 
-                               onchange="window.studioManager.updateBrandTone(this.value)">
-                    </div>
-                    <div class="config-field">
-                        <label>Palabras clave:</label>
-                        <input type="text" id="brand-keywords" placeholder="Separadas por comas..." 
-                               onchange="window.studioManager.updateBrandKeywords(this.value)">
-                        </div>
-                    <div class="config-field">
-                        <label>Palabras prohibidas:</label>
-                        <input type="text" id="brand-prohibited" placeholder="Separadas por comas..." 
-                               onchange="window.studioManager.updateBrandProhibited(this.value)">
-                    </div>
-                    <div class="config-field">
-                        <label>Enlaces de referencia:</label>
-                        <div class="reference-links" id="brand-references">
-                            <span class="no-links">Sin enlaces</span>
-                        </div>
-                    </div>
-                    <div class="config-field">
-                        <button class="btn btn-secondary" onclick="window.studioManager.createNewBrand()">
-                            ➕ Agregar nueva marca
-                </button>
-        </div>
-    </div>
 
-                <!-- Productos -->
-                <div class="config-section">
-                    <h4>🔹 Productos</h4>
+                <!-- Producto e Imágenes -->
+                <div class="config-section" id="product-images-section">
+                    <h4>🔹 Producto e Imágenes</h4>
                     <div class="config-field">
                         <label>Seleccionar producto:</label>
                         <div class="dropdown-container">
-                            <select id="product-selector" onchange="window.studioManager.selectProductFromDropdown(this.value)">
+                            <select id="product-selector" onchange="onProductSelected(this.value)">
                                 <option value="">Seleccionar producto...</option>
                             </select>
+                        </div>
+                    </div>
+                    <div class="config-field">
+                        <label>Imágenes del producto:</label>
+                        <div class="product-images-grid" id="dynamic-product-images">
+                            <div class="loading-placeholder">
+                                <div class="spinner-small"></div>
+                                <span>Selecciona un producto para ver sus imágenes</span>
+                            </div>
+                        </div>
             </div>
-                    </div>
-                    <div class="config-field">
-                        <label>Tipo:</label>
-                        <span class="readonly-field" id="product-type">Selecciona un producto</span>
-                    </div>
-                    <div class="config-field">
-                        <label>Descripción corta:</label>
-                        <input type="text" id="product-description" placeholder="Descripción del producto..." 
-                               onchange="window.studioManager.updateProductDescription(this.value)">
-                    </div>
-                    <div class="config-field">
-                        <label>Elementos a destacar:</label>
-                        <div class="checkbox-group">
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="product-benefits" onchange="window.studioManager.toggleProductElement('benefits', this.checked)">
-                                <span>Beneficios</span>
-                            </label>
-                            <div class="element-details" id="benefits-details" style="display: none;">
-                                <div class="element-list" id="benefits-list"></div>
-                    </div>
-                            
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="product-differentiators" onchange="window.studioManager.toggleProductElement('differentiators', this.checked)">
-                                <span>Diferenciadores</span>
-                            </label>
-                            <div class="element-details" id="differentiators-details" style="display: none;">
-                                <div class="element-list" id="differentiators-list"></div>
-                </div>
-                            
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="product-usage-steps" onchange="window.studioManager.toggleProductElement('usage_steps', this.checked)">
-                                <span>Pasos de uso</span>
-                            </label>
-                            <div class="element-details" id="usage-steps-details" style="display: none;">
-                                <div class="element-list" id="usage-steps-list"></div>
-            </div>
-                            
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="product-ingredients" onchange="window.studioManager.toggleProductElement('ingredients', this.checked)">
-                                <span>Ingredientes</span>
-                            </label>
-                            <div class="element-details" id="ingredients-details" style="display: none;">
-                                <div class="element-list" id="ingredients-list"></div>
         </div>
                             
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="product-price" onchange="window.studioManager.toggleProductElement('price', this.checked)">
-                                <span>Precio</span>
-                            </label>
-                            <div class="element-details" id="price-details" style="display: none;">
-                                <div class="element-list" id="price-list"></div>
-    </div>
-
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="product-variants" onchange="window.studioManager.toggleProductElement('variants', this.checked)">
-                                <span>Variantes</span>
-                            </label>
-                            <div class="element-details" id="variants-details" style="display: none;">
-                                <div class="element-list" id="variants-list"></div>
-            </div>
-
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="product-availability" onchange="window.studioManager.toggleProductElement('availability', this.checked)">
-                                <span>Disponibilidad</span>
-                            </label>
-                            <div class="element-details" id="availability-details" style="display: none;">
-                                <div class="element-list" id="availability-list"></div>
+                <!-- Información Básica UGC -->
+                <div class="accordion-section">
+                    <div class="accordion-header" onclick="toggleAccordion('info-basica')">
+                    <h4>🔹 Información Básica</h4>
+                        <i class="fas fa-chevron-down accordion-icon" id="info-basica-icon"></i>
+                    </div>
+                    <div class="accordion-content" id="info-basica-content">
+                        <!-- Información de la Marca -->
+                    <div class="config-field">
+                            <label>Información de la Marca:</label>
+                            <div class="info-display" id="brand-info">
+                                <div class="info-item">
+                                    <span class="info-label">Tono de Voz:</span>
+                                    <span class="info-value" id="brand-tone">No seleccionado</span>
+                            </div>
+                                <div class="info-item">
+                                    <span class="info-label">Palabras Clave (Sí):</span>
+                                    <span class="info-value" id="brand-keywords-yes">No configurado</span>
+                            </div>
+                                <div class="info-item">
+                                    <span class="info-label">Palabras Clave (No):</span>
+                                    <span class="info-value" id="brand-keywords-no">No configurado</span>
+                            </div>
+                                <div class="info-item">
+                                    <span class="info-label">Dos y Don'ts:</span>
+                                    <span class="info-value" id="brand-dos-donts">No configurado</span>
                         </div>
                     </div>
+                </div>
+
+                        <!-- Información del Producto -->
+                    <div class="config-field">
+                            <label>Información del Producto:</label>
+                            <div class="info-display" id="product-info">
+                                <div class="info-item">
+                                    <span class="info-label">Tipo de Producto:</span>
+                                    <span class="info-value" id="product-type">No seleccionado</span>
+                    </div>
+                                <div class="info-item">
+                                    <span class="info-label">Descripción Corta:</span>
+                                    <span class="info-value" id="product-short-desc">No seleccionado</span>
+                            </div>
+                                <div class="info-item">
+                                    <span class="info-label">Beneficios:</span>
+                                    <span class="info-value" id="product-benefits">No seleccionado</span>
+                            </div>
+                                <div class="info-item">
+                                    <span class="info-label">Diferenciadores:</span>
+                                    <span class="info-value" id="product-differentiators">No seleccionado</span>
                         </div>
-                    <div class="config-field">
-                        <label>Nombre:</label>
-                        <span class="readonly-field" id="product-name">Selecciona un producto</span>
-                    </div>
-                    <div class="config-field">
-                        <label>Imágenes:</label>
-                        <div class="image-slots">
-                            <div class="image-slot" id="product-image-1">
-                                <div class="no-image">➕ Agregar</div>
+                                <div class="info-item">
+                                    <span class="info-label">Pasos de Uso:</span>
+                                    <span class="info-value" id="product-usage-steps">No seleccionado</span>
+        </div>
+                                <div class="info-item">
+                                    <span class="info-label">Ingredientes:</span>
+                                    <span class="info-value" id="product-ingredients">No seleccionado</span>
+    </div>
+                                <div class="info-item">
+                                    <span class="info-label">Precio:</span>
+                                    <span class="info-value" id="product-price">No seleccionado</span>
                         </div>
-                            <div class="image-slot" id="product-image-2">
-                                <div class="no-image">➕ Agregar</div>
+                                <div class="info-item">
+                                    <span class="info-label">Variantes:</span>
+                                    <span class="info-value" id="product-variants">No seleccionado</span>
                     </div>
-                            <div class="image-slot" id="product-image-3">
-                                <div class="no-image">➕ Agregar</div>
                 </div>
-                            <div class="image-slot" id="product-image-4">
-                                <div class="no-image">➕ Agregar</div>
                     </div>
                 </div>
             </div>
-                    <div class="config-field">
-                        <button class="btn btn-secondary" onclick="window.studioManager.createNewProduct()">
-                            ➕ Nuevo producto
-                        </button>
-        </div>
-    </div>
 
-                <!-- Oferta -->
-                <div class="config-section">
-                    <h4>🔹 Oferta</h4>
-                    <div class="config-field">
-                        <label>Seleccionar oferta:</label>
-                        <div class="dropdown-container">
-                            <select id="offer-selector" onchange="window.studioManager.selectOfferFromDropdown(this.value)">
-                                <option value="">Seleccionar oferta...</option>
-                            </select>
-            </div>
-                    </div>
-                    <div class="config-field">
-                        <label>Objetivo principal:</label>
-                        <input type="text" id="offer-objective" placeholder="Objetivo de la oferta..." 
-                               onchange="window.studioManager.updateOfferObjective(this.value)">
-                    </div>
-                    <div class="config-field">
-                        <label>Descuento (%):</label>
-                        <input type="number" id="offer-discount" placeholder="0" min="0" max="100" 
-                               onchange="window.studioManager.updateOfferDiscount(this.value)">
-                    </div>
-                    <div class="config-field">
-                        <label>Validez hasta:</label>
-                        <input type="date" id="offer-validity" onchange="window.studioManager.updateOfferValidity(this.value)">
-                    </div>
-                    <div class="config-field">
-                        <label>Call to Action:</label>
-                        <input type="text" id="offer-cta" placeholder="Ej: ¡Compra ahora!" 
-                               onchange="window.studioManager.updateOfferCTA(this.value)">
-                    </div>
-                    <div class="config-field">
-                        <label>URL de CTA:</label>
-                        <input type="url" id="offer-cta-url" placeholder="https://..." 
-                               onchange="window.studioManager.updateOfferCTAUrl(this.value)">
-                    </div>
-                    <div class="config-field">
-                        <label>Identificadores:</label>
-                        <input type="text" id="offer-tags" placeholder="Separados por comas..." 
-                               onchange="window.studioManager.updateOfferTags(this.value)">
-                </div>
-                    <div class="config-field button-group">
-                        <button class="btn btn-secondary" onclick="window.studioManager.createNewOffer()">
-                            ➕ Crear nueva oferta
-                        </button>
-                        <button class="btn btn-danger" onclick="window.studioManager.removeOffer()">
-                            ❌ Quitar oferta
-                </button>
-        </div>
-    </div>
-
-                <!-- Audiencia -->
-                <div class="config-section">
-                    <h4>🔹 Audiencia</h4>
-                    <div class="config-field">
-                        <label>Seleccionar audiencia:</label>
-                        <div class="dropdown-container">
-                            <select id="audience-selector" onchange="window.studioManager.selectAudienceFromDropdown(this.value)">
-                                <option value="">Seleccionar audiencia...</option>
-                    </select>
-            </div>
-                    </div>
-                    <div class="config-field">
-                        <label>Comprador-persona:</label>
-                        <input type="text" id="audience-persona" placeholder="Descripción del comprador ideal..." 
-                               onchange="window.studioManager.updateAudiencePersona(this.value)">
-                    </div>
-                    <div class="config-field">
-                        <label>Intereses:</label>
-                        <div class="checkbox-group">
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="interest-tecnologia" onchange="window.studioManager.toggleAudienceInterest('tecnologia', this.checked)">
-                                <span>Tecnología</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="interest-moda" onchange="window.studioManager.toggleAudienceInterest('moda', this.checked)">
-                                <span>Moda</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="interest-deportes" onchange="window.studioManager.toggleAudienceInterest('deportes', this.checked)">
-                                <span>Deportes</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="interest-viajes" onchange="window.studioManager.toggleAudienceInterest('viajes', this.checked)">
-                                <span>Viajes</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="interest-cocina" onchange="window.studioManager.toggleAudienceInterest('cocina', this.checked)">
-                                <span>Cocina</span>
-                            </label>
-                    </div>
-                    </div>
-                    <div class="config-field">
-                        <label>Esfuerzos/Dolores:</label>
-                        <div class="checkbox-group">
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="pain-tiempo" onchange="window.studioManager.toggleAudiencePain('tiempo', this.checked)">
-                                <span>Falta de tiempo</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="pain-dinero" onchange="window.studioManager.toggleAudiencePain('dinero', this.checked)">
-                                <span>Presupuesto limitado</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="pain-conocimiento" onchange="window.studioManager.toggleAudiencePain('conocimiento', this.checked)">
-                                <span>Falta de conocimiento</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="pain-confianza" onchange="window.studioManager.toggleAudiencePain('confianza', this.checked)">
-                                <span>Falta de confianza</span>
-                            </label>
-                    </div>
-                    </div>
-                    <div class="config-field">
-                        <label>Contexto:</label>
-                        <div class="checkbox-group">
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="context-trabajo" onchange="window.studioManager.toggleAudienceContext('trabajo', this.checked)">
-                                <span>Trabajo</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="context-casa" onchange="window.studioManager.toggleAudienceContext('casa', this.checked)">
-                                <span>Casa</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="context-movil" onchange="window.studioManager.toggleAudienceContext('movil', this.checked)">
-                                <span>Móvil</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="context-social" onchange="window.studioManager.toggleAudienceContext('social', this.checked)">
-                                <span>Redes sociales</span>
-                            </label>
-                </div>
-            </div>
-                    <div class="config-field">
-                        <label>Idiomas:</label>
-                        <div class="multi-select">
-                            <select multiple id="audience-languages" onchange="window.studioManager.updateAudienceLanguages(this.selectedOptions)">
-                            <option value="es">Español</option>
-                            <option value="en">Inglés</option>
-                                <option value="fr">Francés</option>
-                            <option value="pt">Portugués</option>
-                        </select>
-        </div>
-    </div>
-                    <div class="config-field button-group">
-                        <button class="btn btn-secondary" onclick="window.studioManager.createNewAudience()">
-                            ➕ Nueva audiencia
-                </button>
-                        <button class="btn btn-danger" onclick="window.studioManager.removeAudience()">
-                            ❌ Quitar audiencia
-                </button>
-        </div>
-    </div>
-
-                <!-- Categoría -->
-                <div class="config-section">
-                    <h4>🔹 Categoría</h4>
-                    <div class="config-field">
-                        <label>Categoría seleccionada:</label>
-                        <span class="readonly-field" id="selected-category">Selecciona una categoría</span>
-            </div>
-                    <div class="config-field">
-                        <button class="btn btn-primary" onclick="window.studioManager.openCategoryLibrary()">
-                            📚 Abrir biblioteca de categorías
-                    </button>
-                        </div>
-                    <div class="config-field">
-                        <label>Categorías populares:</label>
-                        <div class="category-tags">
-                            <span class="category-tag" onclick="window.studioManager.selectCategory('Tecnología')">Tecnología</span>
-                            <span class="category-tag" onclick="window.studioManager.selectCategory('Moda')">Moda</span>
-                            <span class="category-tag" onclick="window.studioManager.selectCategory('Belleza')">Belleza</span>
-                            <span class="category-tag" onclick="window.studioManager.selectCategory('Hogar')">Hogar</span>
-                            <span class="category-tag" onclick="window.studioManager.selectCategory('Deportes')">Deportes</span>
-                            <span class="category-tag" onclick="window.studioManager.selectCategory('Alimentación')">Alimentación</span>
-                            <span class="category-tag" onclick="window.studioManager.selectCategory('Salud')">Salud</span>
-                            <span class="category-tag" onclick="window.studioManager.selectCategory('Entretenimiento')">Entretenimiento</span>
-                        </div>
-                </div>
-                    <div class="config-field">
-                        <label>Buscar categoría:</label>
-                        <input type="text" id="category-search" placeholder="Escribir para buscar..." 
-                               onkeyup="window.studioManager.searchCategories(this.value)">
-        </div>
-    </div>
-
-                <!-- Botón Siguiente -->
-                <div class="config-section" style="margin-top: 20px; padding: 16px; background: rgba(253, 98, 79, 0.1); border: 2px solid #FD624F; border-radius: 8px;">
-                    <button class="btn btn-primary" onclick="showSidebarSection(2)" style="width: 100%; padding: 12px; font-size: 14px; font-weight: bold;">
-                        Siguiente
-                </button>
-            </div>
-
-                <!-- Espaciado para forzar scroll -->
-                <div style="height: 200px; background: linear-gradient(180deg, transparent 0%, rgba(253, 98, 79, 0.05) 50%, transparent 100%); margin: 20px 0;"></div>
-            </nav>
-
-            <!-- Sidebar 2: Configuración UGC -->
-            <nav class="studio-sidebar" id="sidebar-section-2" style="display: none;">
-                <h3>Sección 2: Configuración UGC</h3>
-                
-                <!-- Avatar -->
-                <div class="config-section">
-                    <h4>🔹 Avatar</h4>
-                    <div class="config-field">
-                        <label>Seleccionar avatar:</label>
-                        <div class="dropdown-container">
-                            <select id="avatar-selector" onchange="window.studioManager.selectAvatarFromDropdown(this.value)">
-                                <option value="">Seleccionar avatar...</option>
-                            </select>
-                    </div>
-                    </div>
-                    <div class="config-field">
-                        <label>Tipo de personaje:</label>
-                        <div class="dropdown-container">
-                            <select id="character-type" onchange="window.studioManager.updateCharacterType(this.value)">
-                                <option value="">Seleccionar tipo...</option>
-                                <option value="realista">Realista</option>
-                                <option value="animado">Animado</option>
-                                <option value="abstracto">Abstracto</option>
-                                <option value="minimalista">Minimalista</option>
-                            </select>
-                    </div>
-                    </div>
-                    <div class="config-field">
-                        <label>Rasgos:</label>
-                        <div class="checkbox-group">
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="trait-professional" onchange="window.studioManager.toggleTrait('professional', this.checked)">
-                                <span>Profesional</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="trait-friendly" onchange="window.studioManager.toggleTrait('friendly', this.checked)">
-                                <span>Amigable</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="trait-energetic" onchange="window.studioManager.toggleTrait('energetic', this.checked)">
-                                <span>Energético</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="trait-sophisticated" onchange="window.studioManager.toggleTrait('sophisticated', this.checked)">
-                                <span>Sofisticado</span>
-                            </label>
-                    </div>
-                </div>
-                    <div class="config-field">
-                        <label>Energía:</label>
-                        <div class="checkbox-group">
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="energy-calm" onchange="window.studioManager.toggleEnergy('calm', this.checked)">
-                                <span>Tranquila</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="energy-dynamic" onchange="window.studioManager.toggleEnergy('dynamic', this.checked)">
-                                <span>Dinámica</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="energy-intense" onchange="window.studioManager.toggleEnergy('intense', this.checked)">
-                                <span>Intensa</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="energy-playful" onchange="window.studioManager.toggleEnergy('playful', this.checked)">
-                                <span>Juguetona</span>
-                            </label>
-            </div>
-        </div>
+                <!-- Sujeto -->
+                <div class="accordion-section">
+                    <div class="accordion-header" onclick="toggleAccordion('sujeto')">
+                        <h4>🔹 Sujeto</h4>
+                        <i class="fas fa-chevron-down accordion-icon" id="sujeto-icon"></i>
+                            </div>
+                    <div class="accordion-content" id="sujeto-content">
+                <!-- Género -->
                     <div class="config-field">
                         <label>Género:</label>
-                        <div class="checkbox-group">
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="gender-male" onchange="window.studioManager.toggleGender('male', this.checked)">
-                        <span>Masculino</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="gender-female" onchange="window.studioManager.toggleGender('female', this.checked)">
-                        <span>Femenino</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="gender-neutral" onchange="window.studioManager.toggleGender('neutral', this.checked)">
-                                <span>Neutral</span>
-                            </label>
-    </div>
-            </div>
-                    <div class="config-field">
-                        <label>Voz:</label>
-                        <div class="checkbox-group">
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="voice-deep" onchange="window.studioManager.toggleVoice('deep', this.checked)">
-                                <span>Grave</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="voice-high" onchange="window.studioManager.toggleVoice('high', this.checked)">
-                                <span>Aguda</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="voice-smooth" onchange="window.studioManager.toggleVoice('smooth', this.checked)">
-                                <span>Suave</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="voice-rough" onchange="window.studioManager.toggleVoice('rough', this.checked)">
-                                <span>Rasposa</span>
-                            </label>
-                </div>
-            </div>
-                    <div class="config-field">
-                        <label>Idioma:</label>
                         <div class="dropdown-container">
-                            <select id="avatar-language" onchange="window.studioManager.updateAvatarLanguage(this.value)">
-                                <option value="">Seleccionar idioma...</option>
-                                <option value="es">Español</option>
-                                <option value="en">English</option>
-                                <option value="fr">Français</option>
-                                <option value="de">Deutsch</option>
-                                <option value="pt">Português</option>
+                            <select id="gender-selector" onchange="window.studioManager.updateGender(this.value)">
+                                <option value="">Seleccionar género...</option>
+                                <option value="masculino">Masculino</option>
+                                <option value="femenino">Femenino</option>
+                                <option value="no-binario">No binario</option>
                             </select>
-        </div>
-    </div>
-                    <div class="config-field">
-                        <label>Valores:</label>
-                        <div class="checkbox-group">
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="value-authenticity" onchange="window.studioManager.toggleValue('authenticity', this.checked)">
-                                <span>Autenticidad</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="value-innovation" onchange="window.studioManager.toggleValue('innovation', this.checked)">
-                                <span>Innovación</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="value-quality" onchange="window.studioManager.toggleValue('quality', this.checked)">
-                                <span>Calidad</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="value-sustainability" onchange="window.studioManager.toggleValue('sustainability', this.checked)">
-                                <span>Sostenibilidad</span>
-                            </label>
-            </div>
-                </div>
+                            </div>
+                            </div>
+
+                <!-- Edad -->
                     <div class="config-field">
                         <label>Edad:</label>
-                        <input type="range" id="avatar-age" min="18" max="65" value="25" 
-                               onchange="window.studioManager.updateAvatarAge(this.value)">
-                        <span id="age-display">25 años</span>
-            </div>
-                    <div class="config-field">
-                        <label>País:</label>
                         <div class="dropdown-container">
-                            <select id="avatar-country" onchange="window.studioManager.updateAvatarCountry(this.value)">
-                                <option value="">Seleccionar país...</option>
-                                <option value="mx">México</option>
-                                <option value="es">España</option>
-                                <option value="ar">Argentina</option>
-                                <option value="co">Colombia</option>
-                                <option value="us">Estados Unidos</option>
-                                <option value="uk">Reino Unido</option>
+                            <select id="age-selector" onchange="window.studioManager.updateAge(this.value)">
+                                <option value="">Seleccionar edad...</option>
+                                <option value="10-17">10-17 años</option>
+                                <option value="18-25">18-25 años</option>
+                                <option value="26-30">26-30 años</option>
+                                <option value="31-35">31-35 años</option>
+                                <option value="36-40">36-40 años</option>
+                                <option value="41-45">41-45 años</option>
+                                <option value="46-50">46-50 años</option>
+                                <option value="51-55">51-55 años</option>
+                                <option value="56-60">56-60 años</option>
+                                <option value="61-65">61-65 años</option>
+                                <option value="66-70">66-70 años</option>
                             </select>
         </div>
     </div>
+
+                <!-- Etnia -->
                     <div class="config-field">
-                        <label>Acento:</label>
-                        <div class="checkbox-group">
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="accent-neutral" onchange="window.studioManager.toggleAccent('neutral', this.checked)">
-                                <span>Neutral</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="accent-mexican" onchange="window.studioManager.toggleAccent('mexican', this.checked)">
-                                <span>Mexicano</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="accent-argentine" onchange="window.studioManager.toggleAccent('argentine', this.checked)">
-                                <span>Argentino</span>
-                            </label>
-                            <label class="checkbox-item">
-                                <input type="checkbox" id="accent-spanish" onchange="window.studioManager.toggleAccent('spanish', this.checked)">
-                                <span>Español</span>
-                            </label>
-            </div>
+                        <label>Etnia:</label>
+                        <div class="dropdown-container">
+                            <select id="ethnicity-selector" onchange="window.studioManager.updateEthnicity(this.value)">
+                                <option value="">Seleccionar etnia...</option>
+                                <option value="caucasico">Caucásico</option>
+                                <option value="asiatico">Asiático</option>
+                                <option value="arabe">Árabe</option>
+                                <option value="africano">Africano</option>
+                                <option value="latinoamericano">Latinoamericano</option>
+                            </select>
+                    </div>
                 </div>
+
+                <!-- Color de Ojos -->
                     <div class="config-field">
-                        <label>Imágenes de referencia:</label>
-                        <div class="image-selector" id="avatar-reference-images">
-                            <div class="image-slot" onclick="document.getElementById('avatar-image-input').click()">
-                                <span>➕ Agregar imagen</span>
-            </div>
-                            <input type="file" id="avatar-image-input" multiple accept="image/*" style="display: none;" 
-                                   onchange="window.studioManager.handleAvatarImageUpload(this.files)">
-        </div>
-    </div>
-                    <div class="config-field">
-                        <label>Video de referencia:</label>
-                        <div class="video-selector" id="avatar-reference-video">
-                            <div class="video-slot" onclick="document.getElementById('avatar-video-input').click()">
-                                <span>➕ Agregar video</span>
-            </div>
-                            <input type="file" id="avatar-video-input" accept="video/*" style="display: none;" 
-                                   onchange="window.studioManager.handleAvatarVideoUpload(this.files)">
-                </div>
-            </div>
-                    <div class="config-field">
-                        <button class="btn btn-secondary" onclick="window.studioManager.createNewAvatar()">
-                            ➕ Crear nuevo avatar
-                </button>
+                        <label>Color de Ojos:</label>
+                        <div class="dropdown-container">
+                            <select id="eyes-selector" onchange="window.studioManager.updateEyes(this.value)">
+                                <option value="">Seleccionar color de ojos...</option>
+                                <option value="marron">Marrón</option>
+                                <option value="azul">Azul</option>
+                                <option value="verde">Verde</option>
+                                <option value="gris">Gris</option>
+                                <option value="miel">Miel</option>
+                            </select>
         </div>
     </div>
 
-        <!-- Botones de Navegación -->
-        <div class="config-section">
-            <button class="btn btn-secondary" onclick="showSidebarSection(1)">
-                ← Anterior
-                </button>
-            <button class="btn btn-primary" onclick="showSidebarSection(3)" style="margin-left: 10px;">
-                ➡️ Siguiente → Sidebar 3
-            </button>
-            </div>
-        
-        <!-- Espaciado para forzar scroll -->
-        <div style="height: 200px; background: linear-gradient(180deg, transparent 0%, rgba(253, 98, 79, 0.05) 50%, transparent 100%); margin: 20px 0;"></div>
-    </nav>
-
-    <!-- Sidebar 3: Configuración de Formato -->
-    <nav class="studio-sidebar" id="sidebar-section-3" style="display: none;">
-        <h3>Sección 3: Configuración de Formato</h3>
-        
-        <!-- Estilos -->
-        <div class="config-section">
-            <h4>🎨 Estilos</h4>
-            
-            <div class="config-field">
-                <label>Seleccionar estilo:</label>
-                <div class="dropdown-container">
-                <select id="style-selector" onchange="window.studioManager.selectStyleFromDropdown(this.value)">
-                    <option value="">Seleccionar estilo...</option>
-                </select>
-                </div>
-                </div>
-            
-            <div class="config-field">
-                <label>Personalizar prompt:</label>
-                <textarea id="style-prompt" placeholder="Personalizar prompt de estilo..." rows="3"></textarea>
+                <!-- Estilo de Cabello -->
+                    <div class="config-field">
+                        <label>Estilo de Cabello:</label>
+                        <div class="dropdown-container">
+                            <select id="hair-selector" onchange="window.studioManager.updateHair(this.value)">
+                                <option value="">Seleccionar estilo de cabello...</option>
+                                <option value="muy-rizado-largo">Muy rizado largo</option>
+                                <option value="liso-largo">Liso largo</option>
+                                <option value="rizado-corto">Rizado corto</option>
+                                <option value="liso-corto">Liso corto</option>
+                                <option value="largo-moño">Largo en moño</option>
+                                <option value="largo-ondas">Largo con ondas</option>
+                                <option value="corto-ondas">Corto con ondas</option>
+                            </select>
+        </div>
     </div>
 
-            <div class="config-field">
-                <button class="btn btn-secondary" onclick="window.studioManager.removeStyle()">
-                    ❌ Quitar estilo
-                </button>
-            </div>
-                </div>
+                <!-- Expresión -->
+                    <div class="config-field">
+                        <label>Expresión:</label>
+                        <div class="dropdown-container">
+                            <select id="expression-selector" onchange="window.studioManager.updateExpression(this.value)">
+                                <option value="">Seleccionar expresión...</option>
+                                <option value="alegria-emocionada">Alegría emocionada</option>
+                                <option value="confianza-tranquila">Confianza tranquila</option>
+                                <option value="ira-contenida">Ira contenida</option>
+                                <option value="duda-esceptica">Duda escéptica</option>
+                                <option value="anticipacion-ansiosa">Anticipación ansiosa</option>
+                                <option value="fatiga-melancolica">Fatiga melancólica</option>
+                            </select>
+        </div>
+    </div>
 
-        <!-- Estética -->
-        <div class="config-section">
-            <h4>✨ Estética</h4>
-            
-            <div class="config-field">
-                <label>Seleccionar estética:</label>
-                <div class="dropdown-container">
-                <select id="aesthetic-selector" onchange="window.studioManager.selectAestheticFromDropdown(this.value)">
+                <!-- Estilo de Vestimenta -->
+                    <div class="config-field">
+                        <label>Estilo de Vestimenta:</label>
+                        <div class="dropdown-container">
+                            <select id="style-selector" onchange="window.studioManager.updateStyle(this.value)">
+                                <option value="">Seleccionar estilo de vestimenta...</option>
+                                <option value="mediterraneo-casual">Mediterráneo Casual</option>
+                                <option value="preppy-moderno">Preppy Moderno</option>
+                                <option value="ropa-trabajo">Ropa de Trabajo</option>
+                                <option value="chic-parisino">Chic Parisino</option>
+                                <option value="athleisure-lujo">Athleisure de Lujo</option>
+                                <option value="neo-rockabilly">Neo Rockabilly</option>
+                                <option value="mod-60s">Mod de los 60s</option>
+                                <option value="western-contemporaneo">Western Contemporáneo</option>
+                                <option value="normcore-minimalista">Normcore Minimalista</option>
+                                <option value="vanguardia-japonesa">Vanguardia Japonesa</option>
+                                <option value="pijama">Pijama</option>
+                                <option value="bohemio-hippie">Estilo Bohemio Hippie</option>
+                            </select>
+                    </div>
+                    </div>
+
+                        <!-- Tono -->
+                    <div class="config-field">
+                            <label>Tono:</label>
+                        <div class="dropdown-container">
+                                <select id="tone-selector" onchange="window.studioManager.updateTone(this.value)">
+                                    <option value="">Seleccionar tono...</option>
+                                    <option value="profesional">Profesional</option>
+                                    <option value="casual">Casual</option>
+                                    <option value="amigable">Amigable</option>
+                                    <option value="autoritario">Autoritario</option>
+                                    <option value="energetico">Energético</option>
+                                    <option value="tranquilo">Tranquilo</option>
+                            </select>
+                            </div>
+                            </div>
+
+                        <!-- Personalidad -->
+                    <div class="config-field">
+                            <label>Personalidad:</label>
+                        <div class="dropdown-container">
+                                <select id="personality-selector" onchange="window.studioManager.updatePersonality(this.value)">
+                                    <option value="">Seleccionar personalidad...</option>
+                                    <option value="extrovertido">Extrovertido</option>
+                                    <option value="introvertido">Introvertido</option>
+                                    <option value="seguro">Seguro</option>
+                                    <option value="humilde">Humilde</option>
+                                    <option value="creativo">Creativo</option>
+                                    <option value="analitico">Analítico</option>
+                            </select>
+                            </div>
+                            </div>
+
+                <!-- Estética y Color -->
+                    <div class="config-field">
+                        <label>Estética y Color:</label>
+                        <div class="dropdown-container">
+                            <select id="aesthetic-selector" onchange="window.studioManager.updateAesthetic(this.value)">
                     <option value="">Seleccionar estética...</option>
-                        </select>
-                </div>
-                    </div>
-            
-            <div class="config-field">
-                <label>Ánimo:</label>
-            <div class="checkbox-group">
-                <label class="checkbox-item">
-                    <input type="checkbox" id="mood-happy" onchange="window.studioManager.toggleMood('happy', this.checked)">
-                    <span>Feliz</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="mood-serious" onchange="window.studioManager.toggleMood('serious', this.checked)">
-                    <span>Serio</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="mood-energetic" onchange="window.studioManager.toggleMood('energetic', this.checked)">
-                    <span>Energético</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="mood-calm" onchange="window.studioManager.toggleMood('calm', this.checked)">
-                    <span>Tranquilo</span>
-                </label>
-                </div>
+                                <option value="piel-natural-poros">Piel natural con poros</option>
+                                <option value="temperatura-calida">Temperatura ligeramente cálida</option>
+                                <option value="grano-pelicula">Grano sutil tipo película</option>
+                                <option value="contraste-moderado">Contraste moderado, sombras suaves</option>
+                                <option value="reflejos-naturales">Reflejos naturales</option>
+                                <option value="saturacion-natural">Saturación natural</option>
+                                <option value="balance-blancos-realista">Balance de blancos realista</option>
+                                <option value="aberración-cromatica">Aberración cromática sutil</option>
+                                <option value="viñeta-ligera">Viñeta muy ligera</option>
+                                <option value="enfoque-moderado">Enfoque moderado</option>
+                            </select>
+                            </div>
+                            </div>
+
+                <!-- Detalles de Realismo -->
+                    <div class="config-field">
+                        <label>Detalles de Realismo:</label>
+                        <div class="dropdown-container">
+                            <select id="realism-selector" onchange="window.studioManager.updateRealism(this.value)">
+                                <option value="">Seleccionar detalles de realismo...</option>
+                                <option value="pelitos-sueltos">Pelitos sueltos visibles</option>
+                                <option value="huellas-dactilares">Huellas dactilares ligeras</option>
+                                <option value="arrugas-tela">Arrugas naturales de tela</option>
+                                <option value="micro-temblor">Micro temblor de mano</option>
+                                <option value="polvo-fibra">Polvo/fibra diminuta en superficie</option>
+                                <option value="brillo-piel">Brillo natural de piel</option>
+                                <option value="sombras-imperfectas">Sombras imperfectas de fondo</option>
+                                <option value="manchas-mesa">Manchas ligeras en mesa</option>
+                                <option value="reflejo-ventana">Reflejo suave de ventana</option>
+                                <option value="distorsion-lente">Distorsión sutil de lente ultra ancha</option>
+                            </select>
+                            </div>
+                            </div>
+
+                            </div>
+                            </div>
+
+        <!-- Oferta -->
+        <div class="accordion-section">
+            <div class="accordion-header" onclick="toggleAccordion('oferta')">
+                <h4>🔹 Oferta</h4>
+                <i class="fas fa-chevron-down accordion-icon" id="oferta-icon"></i>
                         </div>
-            
-            <div class="config-field">
-                <label>Paleta:</label>
-            <div class="checkbox-group">
-                <label class="checkbox-item">
-                    <input type="checkbox" id="palette-warm" onchange="window.studioManager.togglePalette('warm', this.checked)">
-                    <span>Cálida</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="palette-cool" onchange="window.studioManager.togglePalette('cool', this.checked)">
-                    <span>Fría</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="palette-neutral" onchange="window.studioManager.togglePalette('neutral', this.checked)">
-                    <span>Neutra</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="palette-vibrant" onchange="window.studioManager.togglePalette('vibrant', this.checked)">
-                    <span>Vibrante</span>
-                </label>
-                </div>
-                    </div>
-            
-            <div class="config-field">
-                <label>Iluminación:</label>
-            <div class="checkbox-group">
-                <label class="checkbox-item">
-                    <input type="checkbox" id="lighting-natural" onchange="window.studioManager.toggleLighting('natural', this.checked)">
-                    <span>Natural</span>
-                            </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="lighting-artificial" onchange="window.studioManager.toggleLighting('artificial', this.checked)">
-                    <span>Artificial</span>
-                            </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="lighting-soft" onchange="window.studioManager.toggleLighting('soft', this.checked)">
-                    <span>Suave</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="lighting-dramatic" onchange="window.studioManager.toggleLighting('dramatic', this.checked)">
-                    <span>Dramática</span>
-                            </label>
-                </div>
-                        </div>
-            
-            <div class="config-field">
-                <label>Cámara:</label>
-            <div class="checkbox-group">
-                <label class="checkbox-item">
-                    <input type="checkbox" id="camera-close" onchange="window.studioManager.toggleCamera('close', this.checked)">
-                    <span>Primer plano</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="camera-wide" onchange="window.studioManager.toggleCamera('wide', this.checked)">
-                    <span>Plano amplio</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="camera-mobile" onchange="window.studioManager.toggleCamera('mobile', this.checked)">
-                    <span>Móvil</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="camera-professional" onchange="window.studioManager.toggleCamera('professional', this.checked)">
-                    <span>Profesional</span>
-                </label>
-                </div>
-                    </div>
-            
-            <div class="config-field">
-                <label>Paso/Ritmo:</label>
-            <div class="checkbox-group">
-                <label class="checkbox-item">
-                    <input type="checkbox" id="pace-slow" onchange="window.studioManager.togglePace('slow', this.checked)">
-                    <span>Lento</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="pace-medium" onchange="window.studioManager.togglePace('medium', this.checked)">
-                    <span>Medio</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="pace-fast" onchange="window.studioManager.togglePace('fast', this.checked)">
-                    <span>Rápido</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="pace-dynamic" onchange="window.studioManager.togglePace('dynamic', this.checked)">
-                    <span>Dinámico</span>
-                </label>
-                </div>
-                    </div>
-            
-            <div class="config-field">
-                <button class="btn btn-primary" onclick="window.studioManager.createNewAesthetic()">
-                    ➕ Crear nueva estética
-                </button>
-                <button class="btn btn-secondary" onclick="window.studioManager.removeAesthetic()" style="margin-left: 8px;">
-                    ❌ Quitar estética
-                </button>
-                <button class="btn btn-secondary" onclick="window.studioManager.toggleFreeMode('aesthetic')" style="margin-left: 8px;">
-                    🔓 Modo libre
-                </button>
+            <div class="accordion-content" id="oferta-content">
+                    <div class="config-field">
+                    <label>Seleccionar oferta:</label>
+                        <div class="dropdown-container">
+                        <select id="offer-selector" onchange="onOfferSelected(this.value)">
+                            <option value="">Seleccionar oferta...</option>
+                            </select>
                     </div>
                 </div>
 
-        <!-- Formato -->
-        <div class="config-section">
-            <h4>📱 Formato</h4>
-            
-            <div class="config-field">
-                <label>Plataformas:</label>
-            <div class="checkbox-group">
-                <label class="checkbox-item">
-                    <input type="checkbox" id="platform-instagram" onchange="window.studioManager.togglePlatform('instagram', this.checked)">
-                    <span>Instagram</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="platform-tiktok" onchange="window.studioManager.togglePlatform('tiktok', this.checked)">
-                    <span>TikTok</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="platform-youtube" onchange="window.studioManager.togglePlatform('youtube', this.checked)">
-                    <span>YouTube</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="platform-facebook" onchange="window.studioManager.togglePlatform('facebook', this.checked)">
-                    <span>Facebook</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="platform-twitter" onchange="window.studioManager.togglePlatform('twitter', this.checked)">
-                    <span>Twitter</span>
-                </label>
+                    <div class="config-field">
+                    <label>Seleccionar audiencia:</label>
+                        <div class="dropdown-container">
+                        <select id="audience-selector" onchange="onAudienceSelected(this.value)">
+                            <option value="">Seleccionar audiencia...</option>
+                            </select>
                 </div>
             </div>
-            
-            <div class="config-field">
-                <label>Formatos:</label>
-            <div class="checkbox-group">
-                <label class="checkbox-item">
-                    <input type="checkbox" id="format-story" onchange="window.studioManager.toggleFormat('story', this.checked)">
-                    <span>Story</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="format-reel" onchange="window.studioManager.toggleFormat('reel', this.checked)">
-                    <span>Reel</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="format-post" onchange="window.studioManager.toggleFormat('post', this.checked)">
-                    <span>Post</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="format-video" onchange="window.studioManager.toggleFormat('video', this.checked)">
-                    <span>Video</span>
-                </label>
-                </div>
+                
+                <!-- Información de la Oferta -->
+                    <div class="config-field">
+                    <label>Información de la Oferta:</label>
+                    <div class="info-display" id="offer-info">
+                        <div class="info-item">
+                            <span class="info-label">Estado:</span>
+                            <span class="info-value empty">No seleccionado</span>
+        </div>
+    </div>
+                            </div>
+                
+                <!-- Información de la Audiencia -->
+                    <div class="config-field">
+                    <label>Información de la Audiencia:</label>
+                    <div class="info-display" id="audience-info">
+                        <div class="info-item">
+                            <span class="info-label">Estado:</span>
+                            <span class="info-value empty">No seleccionado</span>
+                            </div>
+                            </div>
+                            </div>
+                            </div>
+                            </div>
+
+                <!-- Configuración Avanzada -->
+                <div class="accordion-section">
+                    <div class="accordion-header" onclick="toggleAccordion('configuracion-avanzada')">
+                        <h4>🔹 Configuración Avanzada</h4>
+                        <i class="fas fa-chevron-down accordion-icon" id="configuracion-avanzada-icon"></i>
+                        </div>
+                    <div class="accordion-content" id="configuracion-avanzada-content">
+                        <!-- Resolución -->
+                    <div class="config-field">
+                            <label>Resolución:</label>
+                        <div class="dropdown-container">
+                                <select id="resolution-selector" onchange="updateResolution(this.value)">
+                                    <option value="720p" selected>720p</option>
+                                    <option value="1080p">1080p</option>
+                            </select>
         </div>
     </div>
 
-        <!-- Escenario -->
-        <div class="config-section">
-            <h4>🎬 Escenario</h4>
-            
-            <div class="config-field">
-                <label>Seleccionar escenario:</label>
-                <div class="dropdown-container">
-                <select id="scenario-selector" onchange="window.studioManager.selectScenarioFromDropdown(this.value)">
-                    <option value="">Seleccionar escenario...</option>
-                    </select>
+                        <!-- Ratio -->
+                    <div class="config-field">
+                            <label>Ratio:</label>
+                        <div class="dropdown-container">
+                                <select id="ratio-selector" onchange="updateRatio(this.value)">
+                                    <option value="vertical" selected>Vertical (9:16)</option>
+                                    <option value="horizontal">Horizontal (16:9)</option>
+                                    <option value="cuadrado">Cuadrado (1:1)</option>
+                            </select>
+            </div>
+                        </div>
+                        
+                        <!-- Creatividad (Temperatura) -->
+                    <div class="config-field">
+                            <label>Creatividad (Temperatura): <span id="creativity-value">0.7</span></label>
+                            <div class="slider-container">
+                                <input type="range" 
+                                       id="creativity-slider" 
+                                       min="0.01" 
+                                       max="2.00" 
+                                       step="0.01" 
+                                       value="0.7" 
+                                       oninput="updateCreativity(this.value)">
+                                <div class="slider-labels">
+                                    <span>0.01</span>
+                                    <span>2.00</span>
+                        </div>
                 </div>
-                </div>
-            
-            <div class="config-field">
-                <label>Ubicación:</label>
-            <div class="checkbox-group">
-                <label class="checkbox-item">
-                    <input type="checkbox" id="location-home" onchange="window.studioManager.toggleLocation('home', this.checked)">
-                    <span>Casa</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="location-office" onchange="window.studioManager.toggleLocation('office', this.checked)">
-                    <span>Oficina</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="location-outdoor" onchange="window.studioManager.toggleLocation('outdoor', this.checked)">
-                    <span>Exterior</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="location-studio" onchange="window.studioManager.toggleLocation('studio', this.checked)">
-                    <span>Estudio</span>
-                </label>
-                </div>
-                    </div>
-            
-            <div class="config-field">
-                <label>Ambiente:</label>
-            <div class="checkbox-group">
-                <label class="checkbox-item">
-                    <input type="checkbox" id="ambience-casual" onchange="window.studioManager.toggleAmbience('casual', this.checked)">
-                    <span>Casual</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="ambience-professional" onchange="window.studioManager.toggleAmbience('professional', this.checked)">
-                    <span>Profesional</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="ambience-luxury" onchange="window.studioManager.toggleAmbience('luxury', this.checked)">
-                    <span>Lujo</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="ambience-minimalist" onchange="window.studioManager.toggleAmbience('minimalist', this.checked)">
-                    <span>Minimalista</span>
-                </label>
-                </div>
-                </div>
-            
-            <div class="config-field">
-                <label>Higiene:</label>
-            <div class="checkbox-group">
-                <label class="checkbox-item">
-                    <input type="checkbox" id="hygiene-clean" onchange="window.studioManager.toggleHygiene('clean', this.checked)">
-                    <span>Limpio</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="hygiene-organized" onchange="window.studioManager.toggleHygiene('organized', this.checked)">
-                    <span>Organizado</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="hygiene-sterile" onchange="window.studioManager.toggleHygiene('sterile', this.checked)">
-                    <span>Estéril</span>
-                </label>
-                </div>
-                </div>
-            
-            <div class="config-field">
-                <label>Fondo:</label>
-            <div class="checkbox-group">
-                <label class="checkbox-item">
-                    <input type="checkbox" id="backdrop-solid" onchange="window.studioManager.toggleBackdrop('solid', this.checked)">
-                    <span>Sólido</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="backdrop-pattern" onchange="window.studioManager.toggleBackdrop('pattern', this.checked)">
-                    <span>Estampado</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="backdrop-texture" onchange="window.studioManager.toggleBackdrop('texture', this.checked)">
-                    <span>Textura</span>
-                </label>
-                <label class="checkbox-item">
-                    <input type="checkbox" id="backdrop-blur" onchange="window.studioManager.toggleBackdrop('blur', this.checked)">
-                    <span>Desenfoque</span>
-                </label>
-                </div>
-                </div>
-            
-            <div class="config-field">
-                <label>Detalles:</label>
-                <textarea id="scenario-details" placeholder="Detalles específicos del escenario..." rows="2"></textarea>
-                </div>
-            
-            <div class="config-field">
-                <label>Objetos:</label>
-                <textarea id="scenario-objects" placeholder="Objetos a incluir..." rows="2"></textarea>
-                </div>
-            
-            <div class="config-field">
-                <label>Dinámicas:</label>
-                <textarea id="scenario-dynamics" placeholder="Dinámicas del escenario..." rows="2"></textarea>
+                            </div>
+                        
+                        <!-- Prompt Opcional -->
+                    <div class="config-field">
+                            <label>Prompt (Opcional):</label>
+                            <textarea id="prompt-input" 
+                                      placeholder="Describe el estilo, ambiente o elementos específicos que quieres en el video..."
+                                      rows="3"></textarea>
+                            </div>
+                        
+                        <!-- Negative Prompt Opcional -->
+                    <div class="config-field">
+                            <label>Negative Prompt (Opcional):</label>
+                            <textarea id="negative-prompt-input" 
+                                      placeholder="Describe lo que NO quieres que aparezca en el video..."
+                                      rows="3"></textarea>
+                            </div>
+        </div>
     </div>
 
-            <div class="config-field">
-                <button class="btn btn-primary" onclick="window.studioManager.createNewScenario()">
-                    ➕ Crear nuevo escenario
-                </button>
-                <button class="btn btn-secondary" onclick="window.studioManager.toggleFreeMode('scenario')" style="margin-left: 8px;">
-                    🔓 Modo libre
-                    </button>
-                </div>
-                    </div>
-
-        <!-- IA -->
-        <div class="config-section">
-            <h4>🤖 IA</h4>
-            
-            <div class="config-field">
-                <label>Creatividad: <span id="creativity-display">50</span>%</label>
-                <input type="range" id="creativity-slider" min="0" max="100" value="50" 
-                       oninput="window.studioManager.updateCreativity(this.value)">
-            </div>
-            
-            <div class="config-field">
-                <label>Prompt específico:</label>
-                <textarea id="ai-prompt" placeholder="Prompt específico para la IA..." rows="4"></textarea>
-            </div>
-        </div>
-
-        <!-- Botones de Navegación -->
-        <div class="config-section">
-            <div class="config-field">
-                <button class="btn btn-secondary" onclick="showSidebarSection(2)">
-                    ← Anterior
-                </button>
-                <button class="btn btn-primary" onclick="window.studioManager.generateScripts()" style="margin-left: 8px;">
-                    🚀 Generar Guiones
-                </button>
-            </div>
-        </div>
-        
         <!-- Espaciado para forzar scroll -->
         <div style="height: 200px; background: linear-gradient(180deg, transparent 0%, rgba(253, 98, 79, 0.05) 50%, transparent 100%); margin: 20px 0;"></div>
+                </div> <!-- Cerrar sidebar-content -->
+                
+                <!-- Footer del Sidebar -->
+                <div class="sidebar-footer">
+                    <button class="btn btn-primary generate-ugc-btn" onclick="generateUGC()">
+                            🎬 Generar UGC
+                </button>
+                        </div>
     </nav>
+
 
             <!-- Canvas Central -->
             <main class="canvas-area">
-                <div class="canvas-placeholder">
-                    <i data-lucide="monitor" class="placeholder-icon"></i>
-                    <span class="placeholder-text">Canvas de Preview</span>
-                </div>
             </main>
-            </div>
+                    </div>
     </main>
 
 
@@ -1111,6 +597,1587 @@
     <script src="js/supabase-config.js"></script>
     <script src="js/supabase-client.js"></script>
     <script src="js/navigation.js"></script>
-    <script src="js/studio.js?v=2024-10-17-15-30"></script>
+    <script src="js/studio.js?v=2024-10-17-17-00"></script>
+    
+    <!-- Acordeón JavaScript -->
+    <script>
+        function toggleAccordion(accordionId) {
+            const content = document.getElementById(accordionId + '-content');
+            const icon = document.getElementById(accordionId + '-icon');
+            
+            if (content.style.display === 'none' || content.style.display === '') {
+                content.style.display = 'block';
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+            } else {
+                content.style.display = 'none';
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+            }
+        }
+
+        // Función para abrir un acordeón específico
+        function openAccordion(accordionId) {
+            const content = document.getElementById(accordionId + '-content');
+            const icon = document.getElementById(accordionId + '-icon');
+            
+            if (content && icon) {
+                content.style.display = 'block';
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+            }
+        }
+
+        // Inicializar acordeones como cerrados
+        document.addEventListener('DOMContentLoaded', function() {
+            const accordionContents = document.querySelectorAll('.accordion-content');
+            accordionContents.forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            // Inicializar datos de marca y producto si ya hay selecciones
+            initializeDataDisplay();
+        });
+
+        // Función para inicializar la visualización de datos
+        function initializeDataDisplay() {
+            // Verificar si hay una marca seleccionada
+            const brandSelector = document.getElementById('brand-selector');
+            if (brandSelector && brandSelector.value) {
+                onBrandSelected(brandSelector.value);
+            }
+            
+            // Verificar si hay un producto seleccionado
+            const productSelector = document.getElementById('product-selector');
+            if (productSelector && productSelector.value) {
+                onProductSelected(productSelector.value);
+            }
+        }
+
+        // Funciones para la navegación lateral
+        function toggleNavigation() {
+            const overlay = document.getElementById('navOverlay');
+            const navigation = document.getElementById('sideNavigation');
+            const hamburger = document.getElementById('hamburgerMenu');
+            
+            overlay.classList.toggle('active');
+            navigation.classList.toggle('active');
+            hamburger.classList.toggle('active');
+        }
+
+        function closeNavigation() {
+            const overlay = document.getElementById('navOverlay');
+            const navigation = document.getElementById('sideNavigation');
+            const hamburger = document.getElementById('hamburgerMenu');
+            
+            overlay.classList.remove('active');
+            navigation.classList.remove('active');
+            hamburger.classList.remove('active');
+        }
+
+        // Funciones para el tab bar en móviles
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar-section-1');
+            sidebar.classList.toggle('expanded');
+        }
+
+        // Función para manejar tabs del móvil
+        function setActiveTab(tabElement) {
+            // Remover clase active de todos los tabs
+            const allTabs = document.querySelectorAll('.tab-bar-item');
+            allTabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Agregar clase active al tab seleccionado
+            tabElement.classList.add('active');
+        }
+
+        // Función para mostrar solo el acordeón seleccionado en móvil
+        function showOnlyAccordion(accordionId) {
+            // Verificar si estamos en móvil
+            if (window.innerWidth <= 768) {
+                openMobileModal(accordionId);
+            } else {
+                // En desktop, comportamiento normal de acordeón
+                toggleAccordion(accordionId);
+            }
+        }
+
+        // Función para mostrar configuración móvil (marca y producto)
+        function showMobileConfig() {
+            // Verificar si estamos en móvil
+            if (window.innerWidth <= 768) {
+                openMobileConfigModal();
+            }
+        }
+
+        // Función para abrir modal de configuración móvil
+        function openMobileConfigModal() {
+            // Crear overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'mobile-modal-overlay';
+            overlay.onclick = closeMobileModal;
+            
+            // Crear modal
+            const modal = document.createElement('div');
+            modal.className = 'mobile-modal';
+            modal.id = 'mobile-modal';
+            
+            // Crear header del modal
+            const modalHeader = document.createElement('div');
+            modalHeader.className = 'mobile-modal-header';
+            modalHeader.innerHTML = `
+                <h3>🔹 Configuración</h3>
+                <button class="close-modal" onclick="closeMobileModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            // Crear contenido del modal con marca y producto
+            const modalContent = document.createElement('div');
+            modalContent.className = 'mobile-modal-content';
+            modalContent.innerHTML = `
+                <!-- Marca -->
+                    <div class="config-field">
+                    <label>Seleccionar marca:</label>
+                    <select id="mobile-brand-selector" onchange="onBrandSelected(this.value)">
+                        <option value="">Seleccionar marca...</option>
+                            </select>
+                    </div>
+
+                <!-- Producto e Imágenes -->
+                <div class="config-section" id="mobile-product-images-section">
+                    <h4>🔹 Producto e Imágenes</h4>
+                    <div class="config-field">
+                        <label>Seleccionar producto:</label>
+                        <div class="dropdown-container">
+                            <select id="mobile-product-selector" onchange="onProductSelected(this.value)">
+                                <option value="">Seleccionar producto...</option>
+                            </select>
+                    </div>
+                    </div>
+                    <div class="config-field">
+                        <label>Imágenes del producto:</label>
+                        <div class="product-images-grid" id="mobile-dynamic-product-images">
+                            <div class="loading-placeholder">
+                                <div class="spinner-small"></div>
+                                <span>Selecciona un producto para ver sus imágenes</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+                <!-- Información Básica -->
+                <div class="config-section" id="mobile-info-basica-section">
+                    <h4>🔹 Información Básica</h4>
+                    
+                    
+                    <!-- Información de la Marca -->
+                    <div class="config-field">
+                        <label>Información de la Marca:</label>
+                        <div class="info-display" id="mobile-brand-info">
+                            <div class="info-item">
+                                <span class="info-label">Tono de Voz:</span>
+                                <span class="info-value" id="mobile-brand-tone">No seleccionado</span>
+    </div>
+                            <div class="info-item">
+                                <span class="info-label">Palabras Clave (Sí):</span>
+                                <span class="info-value" id="mobile-brand-keywords-yes">No configurado</span>
+            </div>
+                            <div class="info-item">
+                                <span class="info-label">Palabras Clave (No):</span>
+                                <span class="info-value" id="mobile-brand-keywords-no">No configurado</span>
+                </div>
+                            <div class="info-item">
+                                <span class="info-label">Dos y Don'ts:</span>
+                                <span class="info-value" id="mobile-brand-dos-donts">No configurado</span>
+            </div>
+        </div>
+    </div>
+
+                    <!-- Información del Producto -->
+                    <div class="config-field">
+                        <label>Información del Producto:</label>
+                        <div class="info-display" id="mobile-product-info">
+                            <div class="info-item">
+                                <span class="info-label">Tipo de Producto:</span>
+                                <span class="info-value" id="mobile-product-type">No seleccionado</span>
+            </div>
+                            <div class="info-item">
+                                <span class="info-label">Descripción Corta:</span>
+                                <span class="info-value" id="mobile-product-short-desc">No seleccionado</span>
+                </div>
+                            <div class="info-item">
+                                <span class="info-label">Beneficios:</span>
+                                <span class="info-value" id="mobile-product-benefits">No seleccionado</span>
+            </div>
+                            <div class="info-item">
+                                <span class="info-label">Diferenciadores:</span>
+                                <span class="info-value" id="mobile-product-differentiators">No seleccionado</span>
+        </div>
+                            <div class="info-item">
+                                <span class="info-label">Pasos de Uso:</span>
+                                <span class="info-value" id="mobile-product-usage-steps">No seleccionado</span>
+    </div>
+                            <div class="info-item">
+                                <span class="info-label">Ingredientes:</span>
+                                <span class="info-value" id="mobile-product-ingredients">No seleccionado</span>
+            </div>
+                            <div class="info-item">
+                                <span class="info-label">Precio:</span>
+                                <span class="info-value" id="mobile-product-price">No seleccionado</span>
+                </div>
+                            <div class="info-item">
+                                <span class="info-label">Variantes:</span>
+                                <span class="info-value" id="mobile-product-variants">No seleccionado</span>
+            </div>
+        </div>
+    </div>
+            </div>
+            `;
+            
+            // Ensamblar modal
+            modal.appendChild(modalHeader);
+            modal.appendChild(modalContent);
+            
+            // Agregar al DOM
+            document.body.appendChild(overlay);
+            document.body.appendChild(modal);
+            
+            // Poblar selectores con datos existentes
+            populateMobileSelectors();
+            
+            // Configurar sincronización
+            syncMobileModal();
+            
+            // Animar entrada
+            setTimeout(() => {
+                overlay.classList.add('active');
+                modal.classList.add('active');
+            }, 10);
+        }
+
+        // Función para poblar selectores móviles
+        function populateMobileSelectors() {
+            console.log('Poblando selectores móviles...');
+            
+            // Poblar selector de marcas
+            const brandSelector = document.getElementById('mobile-brand-selector');
+            const originalBrandSelector = document.getElementById('brand-selector');
+            if (brandSelector && originalBrandSelector) {
+                brandSelector.innerHTML = originalBrandSelector.innerHTML;
+                brandSelector.value = originalBrandSelector.value;
+                console.log('Selector de marca poblado:', brandSelector.value);
+            }
+            
+            // Poblar selector de productos
+            const productSelector = document.getElementById('mobile-product-selector');
+            const originalProductSelector = document.getElementById('product-selector');
+            if (productSelector && originalProductSelector) {
+                productSelector.innerHTML = originalProductSelector.innerHTML;
+                productSelector.value = originalProductSelector.value;
+                console.log('Selector de producto poblado:', productSelector.value);
+            }
+            
+            // Cargar imágenes si hay producto seleccionado
+            if (productSelector && productSelector.value) {
+                loadMobileProductImages(productSelector.value);
+            }
+            
+            // Sincronizar información básica una sola vez
+            setTimeout(() => {
+                console.log('Sincronizando información básica...');
+                syncMobileBasicInfo();
+            }, 200);
+        }
+
+        // Función para cargar imágenes en modal móvil
+        function loadMobileProductImages(productId) {
+            const imagesContainer = document.getElementById('mobile-dynamic-product-images');
+            if (!imagesContainer) return;
+            
+            if (!productId) {
+                imagesContainer.innerHTML = `
+                    <div class="loading-placeholder">
+                        <div class="spinner-small"></div>
+                        <span>Selecciona un producto para ver sus imágenes</span>
+                </div>
+                `;
+                return;
+            }
+            
+            // Mostrar indicador de carga
+            imagesContainer.innerHTML = `
+                <div class="loading-placeholder">
+                    <div class="spinner-small"></div>
+                    <span>Cargando imágenes del producto...</span>
+            </div>
+            `;
+            
+            // Integrar con el sistema existente de carga de imágenes
+            if (window.studioManager && window.studioManager.loadProductImages) {
+                window.studioManager.loadProductImages(productId).then(() => {
+                    // Copiar las imágenes del contenedor original al móvil
+                    const originalImagesContainer = document.getElementById('dynamic-product-images');
+                    if (originalImagesContainer) {
+                        imagesContainer.innerHTML = originalImagesContainer.innerHTML;
+                    } else {
+                        imagesContainer.innerHTML = `
+                            <div class="no-selection">
+                                <span>No hay imágenes disponibles para este producto</span>
+        </div>
+                        `;
+                    }
+                }).catch(() => {
+                    imagesContainer.innerHTML = `
+                        <div class="no-selection">
+                            <span>Error cargando imágenes del producto</span>
+    </div>
+                    `;
+                });
+            } else {
+                // Fallback si no hay studioManager
+                setTimeout(() => {
+                    imagesContainer.innerHTML = `
+                        <div class="no-selection">
+                            <span>Imágenes del producto se cargarán aquí</span>
+                        </div>
+                    `;
+                }, 1000);
+            }
+        }
+
+        // Función para abrir modal móvil
+        function openMobileModal(accordionId) {
+            // Crear overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'mobile-modal-overlay';
+            overlay.onclick = closeMobileModal;
+            
+            // Crear modal
+            const modal = document.createElement('div');
+            modal.className = 'mobile-modal';
+            modal.id = 'mobile-modal';
+            
+            // Obtener el contenido del acordeón
+            const accordionContent = document.getElementById(accordionId + '-content');
+            const accordionHeader = document.querySelector(`[onclick*="${accordionId}"] h4`);
+            
+            if (accordionContent && accordionHeader) {
+                // Crear header del modal
+                const modalHeader = document.createElement('div');
+                modalHeader.className = 'mobile-modal-header';
+                modalHeader.innerHTML = `
+                    <h3>${accordionHeader.textContent}</h3>
+                    <button class="close-modal" onclick="closeMobileModal()">
+                        <i class="fas fa-times"></i>
+                </button>
+                `;
+                
+                // Crear contenido del modal
+                const modalContent = document.createElement('div');
+                modalContent.className = 'mobile-modal-content';
+                modalContent.innerHTML = accordionContent.innerHTML;
+                
+                // Ensamblar modal
+                modal.appendChild(modalHeader);
+                modal.appendChild(modalContent);
+                
+                // Agregar al DOM
+                document.body.appendChild(overlay);
+                document.body.appendChild(modal);
+                
+                // Animar entrada
+                setTimeout(() => {
+                    overlay.classList.add('active');
+                    modal.classList.add('active');
+                }, 10);
+            }
+        }
+
+        // Función para cerrar modal móvil
+        function closeMobileModal() {
+            const overlay = document.querySelector('.mobile-modal-overlay');
+            const modal = document.getElementById('mobile-modal');
+            
+            if (overlay && modal) {
+                overlay.classList.remove('active');
+                modal.classList.remove('active');
+                
+                setTimeout(() => {
+                    overlay.remove();
+                    modal.remove();
+                }, 300);
+            }
+        }
+
+        // Función para actualizar modal móvil cuando cambien los datos
+        function updateMobileModal() {
+            const modal = document.getElementById('mobile-modal');
+            if (!modal) return;
+            
+            // Actualizar selector de productos
+            const mobileProductSelector = document.getElementById('mobile-product-selector');
+            const originalProductSelector = document.getElementById('product-selector');
+            if (mobileProductSelector && originalProductSelector) {
+                mobileProductSelector.innerHTML = originalProductSelector.innerHTML;
+                mobileProductSelector.value = originalProductSelector.value;
+                
+                // Actualizar imágenes si hay producto seleccionado
+                if (originalProductSelector.value) {
+                    loadMobileProductImages(originalProductSelector.value);
+                }
+            }
+            
+            // Actualizar selector de marcas
+            const mobileBrandSelector = document.getElementById('mobile-brand-selector');
+            const originalBrandSelector = document.getElementById('brand-selector');
+            if (mobileBrandSelector && originalBrandSelector) {
+                mobileBrandSelector.innerHTML = originalBrandSelector.innerHTML;
+                mobileBrandSelector.value = originalBrandSelector.value;
+            }
+            
+            // Sincronizar información básica
+            syncMobileBasicInfo();
+        }
+
+        // Función para sincronizar información básica móvil
+        function syncMobileBasicInfo() {
+            console.log('=== SINCRONIZANDO INFORMACIÓN BÁSICA MÓVIL ===');
+            
+            // Sincronizar información de marca
+            const originalBrandInfo = document.getElementById('brand-info');
+            const mobileBrandInfo = document.getElementById('mobile-brand-info');
+            if (originalBrandInfo && mobileBrandInfo) {
+                console.log('Sincronizando información de marca...');
+                console.log('Contenido original de marca:', originalBrandInfo.innerHTML.substring(0, 200) + '...');
+                mobileBrandInfo.innerHTML = originalBrandInfo.innerHTML;
+                console.log('Información de marca sincronizada');
+            } else {
+                console.log('No se encontraron contenedores de marca:', {
+                    original: !!originalBrandInfo,
+                    mobile: !!mobileBrandInfo
+                });
+            }
+            
+            // Sincronizar información de producto
+            const originalProductInfo = document.getElementById('product-info');
+            const mobileProductInfo = document.getElementById('mobile-product-info');
+            if (originalProductInfo && mobileProductInfo) {
+                console.log('Sincronizando información de producto...');
+                console.log('Contenido original de producto:', originalProductInfo.innerHTML.substring(0, 200) + '...');
+                mobileProductInfo.innerHTML = originalProductInfo.innerHTML;
+                console.log('Información de producto sincronizada');
+                console.log('Contenido móvil de producto después de sincronizar:', mobileProductInfo.innerHTML.substring(0, 200) + '...');
+            } else {
+                console.log('No se encontraron contenedores de producto:', {
+                    original: !!originalProductInfo,
+                    mobile: !!mobileProductInfo
+                });
+            }
+            
+            console.log('=== FIN SINCRONIZACIÓN ===');
+        }
+
+        // Función para sincronizar cambios del sidebar original con el modal móvil
+        function syncMobileModal() {
+            console.log('Configurando sincronización móvil...');
+            
+            // Observar cambios en el selector de productos original
+            const originalProductSelector = document.getElementById('product-selector');
+            if (originalProductSelector) {
+                originalProductSelector.addEventListener('change', function() {
+                    console.log('Cambio detectado en selector de productos original');
+                    setTimeout(() => {
+                        updateMobileModal();
+                        syncMobileBasicInfo();
+                    }, 300);
+                });
+            }
+            
+            // Observar cambios en el selector de marcas original
+            const originalBrandSelector = document.getElementById('brand-selector');
+            if (originalBrandSelector) {
+                originalBrandSelector.addEventListener('change', function() {
+                    console.log('Cambio detectado en selector de marcas original');
+                    setTimeout(() => {
+                        updateMobileModal();
+                        syncMobileBasicInfo();
+                    }, 300);
+                });
+            }
+        }
+
+        function logout() {
+            // Función para cerrar sesión
+            console.log('Cerrando sesión...');
+            // Aquí puedes agregar la lógica de logout
+        }
+
+        // Funciones para las nuevas secciones
+        function generateUGC() {
+            // Función para generar UGC
+            console.log('Generando UGC...');
+            // Aquí puedes agregar la lógica de generación de UGC
+        }
+
+        // Variables para evitar bucles infinitos
+        let isLoadingBrand = false;
+        let isLoadingProduct = false;
+
+        // Funciones para cargar datos de marca y producto
+        async function loadBrandInfo(brandId) {
+            console.log('=== CARGANDO INFORMACIÓN DE MARCA ===');
+            console.log('ID de marca:', brandId);
+            console.log('¿Ya está cargando?', isLoadingBrand);
+            
+            if (!brandId || isLoadingBrand) {
+                if (!brandId) {
+                    console.log('No hay ID de marca, limpiando información');
+                    clearBrandInfo();
+                }
+                return;
+            }
+
+            isLoadingBrand = true;
+            console.log('Iniciando carga de datos de marca:', brandId);
+
+            // Consulta a Supabase para obtener los datos de la marca
+            if (window.studioManager && window.studioManager.supabase) {
+                window.studioManager.supabase
+                    .from('brand_guidelines')
+                    .select('tone_of_voice, keywords_yes, keywords_no, dos_donts, name')
+                    .eq('id', brandId)
+                    .single()
+                    .then(({ data, error }) => {
+                        isLoadingBrand = false;
+                        hideLoadingIndicator('brand-info');
+                        if (error) {
+                            console.error('Error cargando datos de marca:', error);
+                            clearBrandInfo();
+                        } else if (data) {
+                            updateBrandDisplay(data);
+                        }
+                    })
+                    .catch((error) => {
+                        isLoadingBrand = false;
+                        hideLoadingIndicator('brand-info');
+                        console.error('Error en consulta de marca:', error);
+                        clearBrandInfo();
+                    });
+            } else {
+                // Datos de ejemplo si no hay conexión a Supabase
+                const brandData = {
+                    tone_of_voice: "Profesional y amigable",
+                    keywords_yes: ["innovación", "calidad", "confianza"],
+                    keywords_no: ["barato", "descuento", "oferta"],
+                    dos_donts: "Usar colores corporativos, evitar lenguaje informal"
+                };
+                hideLoadingIndicator('brand-info');
+                updateBrandDisplay(brandData);
+                isLoadingBrand = false;
+            }
+        }
+
+        function loadProductInfo(productId) {
+            console.log('=== CARGANDO INFORMACIÓN DE PRODUCTO ===');
+            console.log('ID del producto:', productId);
+            console.log('¿Ya está cargando?', isLoadingProduct);
+            
+            if (!productId || isLoadingProduct) {
+                if (!productId) {
+                    console.log('No hay ID de producto, limpiando información');
+                    clearProductInfo();
+                }
+                return;
+            }
+
+            isLoadingProduct = true;
+            console.log('Iniciando carga de datos de producto:', productId);
+
+            // Consulta a Supabase para obtener los datos del producto
+            if (window.studioManager && window.studioManager.supabase) {
+                window.studioManager.supabase
+                    .from('products')
+                    .select('product_type, short_desc, benefits, differentiators, usage_steps, ingredients, price, variants, name, availability')
+                    .eq('id', productId)
+                    .single()
+                    .then(({ data, error }) => {
+                        isLoadingProduct = false;
+                        hideLoadingIndicator('product-info');
+                        if (error) {
+                            console.error('Error cargando datos de producto:', error);
+                            clearProductInfo();
+                        } else if (data) {
+                            updateProductDisplay(data);
+                        }
+                    })
+                    .catch((error) => {
+                        isLoadingProduct = false;
+                        hideLoadingIndicator('product-info');
+                        console.error('Error en consulta de producto:', error);
+                        clearProductInfo();
+                    });
+            } else {
+                // Datos de ejemplo si no hay conexión a Supabase
+                const productData = {
+                    product_type: "Suplemento vitamínico",
+                    short_desc: "Complejo vitamínico para energía y vitalidad",
+                    benefits: ["Aumenta la energía", "Mejora el sistema inmunológico", "Reduce la fatiga"],
+                    differentiators: ["Fórmula patentada", "Ingredientes naturales", "Sin efectos secundarios"],
+                    usage_steps: ["Tomar 1 cápsula al día", "Con el desayuno", "Con agua"],
+                    ingredients: ["Vitamina B12", "Hierro", "Ácido fólico", "Zinc"],
+                    price: 29.99,
+                    variants: ["30 cápsulas", "60 cápsulas", "90 cápsulas"]
+                };
+                hideLoadingIndicator('product-info');
+                updateProductDisplay(productData);
+                isLoadingProduct = false;
+            }
+        }
+
+        // Función para configurar project_id basado en la marca seleccionada
+        async function setProjectIdFromBrand(brandId) {
+            console.log('=== CONFIGURANDO PROJECT_ID ===');
+            console.log('ID de marca:', brandId);
+            
+            if (!window.studioManager || !window.studioManager.supabase) {
+                console.log('StudioManager o Supabase no disponible');
+                return;
+            }
+
+            try {
+                // Obtener el project_id de la marca seleccionada
+                const { data, error } = await window.studioManager.supabase
+                    .from('brand_guidelines')
+                    .select('project_id')
+                    .eq('id', brandId)
+                    .single();
+
+                if (error) {
+                    console.error('Error obteniendo project_id de la marca:', error);
+                    // Usar un project_id por defecto para demo
+                    window.studioManager.currentProjectId = 'demo-project-1';
+                    console.log('Usando project_id por defecto:', window.studioManager.currentProjectId);
+                } else if (data && data.project_id) {
+                    window.studioManager.currentProjectId = data.project_id;
+                    console.log('Project_id configurado:', window.studioManager.currentProjectId);
+                } else {
+                    // Usar un project_id por defecto si no se encuentra
+                    window.studioManager.currentProjectId = 'demo-project-1';
+                    console.log('Usando project_id por defecto:', window.studioManager.currentProjectId);
+                }
+                
+                // Cargar productos, ofertas y audiencias después de configurar el project_id
+                console.log('Cargando productos del proyecto...');
+                await loadAllProductsFromProject();
+                
+                console.log('Cargando ofertas del proyecto...');
+                await loadOffersFromProject();
+                
+                console.log('Cargando audiencias del proyecto...');
+                await loadAudiencesFromProject();
+                
+                console.log('=== PROJECT_ID CONFIGURADO COMPLETAMENTE ===');
+            } catch (error) {
+                console.error('Error en consulta de project_id:', error);
+                // Usar un project_id por defecto
+                window.studioManager.currentProjectId = 'demo-project-1';
+                console.log('Usando project_id por defecto:', window.studioManager.currentProjectId);
+                
+                await loadAllProductsFromProject();
+                await loadOffersFromProject();
+                await loadAudiencesFromProject();
+            }
+        }
+
+        // Nueva función para cargar todos los productos del proyecto
+        async function loadAllProductsFromProject() {
+            console.log('=== CARGANDO PRODUCTOS DEL PROYECTO ===');
+            
+            if (!window.studioManager || !window.studioManager.supabase || !window.studioManager.currentProjectId) {
+                console.log('No hay project_id disponible');
+                return;
+            }
+
+            console.log('Cargando todos los productos del proyecto:', window.studioManager.currentProjectId);
+
+            try {
+                const { data, error } = await window.studioManager.supabase
+                    .from('products')
+                    .select('id, name, product_type, short_desc, price')
+                    .eq('project_id', window.studioManager.currentProjectId);
+
+                if (error) {
+                    console.error('Error cargando productos del proyecto:', error);
+                } else if (data && data.length > 0) {
+                    console.log('Productos cargados del proyecto:', data);
+                    populateProductSelector(data);
+                } else {
+                    console.log('No hay productos en este proyecto');
+                    clearProductSelector();
+                    showNoProductsMessage();
+                }
+                
+                console.log('=== PRODUCTOS CARGADOS ===');
+            } catch (error) {
+                console.error('Error en consulta de productos del proyecto:', error);
+            }
+        }
+
+        // Función para cargar ofertas del proyecto
+        function loadOffersFromProject() {
+            if (!window.studioManager || !window.studioManager.supabase || !window.studioManager.currentProjectId) {
+                console.log('No hay project_id disponible para ofertas');
+                return;
+            }
+
+            console.log('Cargando ofertas del proyecto:', window.studioManager.currentProjectId);
+
+            window.studioManager.supabase
+                .from('offers')
+                .select('id, main_objective, offer_desc, cta, cta_url, offer_valid_until')
+                .eq('project_id', window.studioManager.currentProjectId)
+                .then(({ data, error }) => {
+                    if (error) {
+                        console.error('Error cargando ofertas del proyecto:', error);
+                    } else if (data && data.length > 0) {
+                        console.log('Ofertas cargadas del proyecto:', data);
+                        populateOfferSelector(data);
+                    } else {
+                        console.log('No hay ofertas en este proyecto');
+                        clearOfferSelector();
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error en consulta de ofertas del proyecto:', error);
+                });
+        }
+
+        // Función para cargar audiencias del proyecto
+        function loadAudiencesFromProject() {
+            if (!window.studioManager || !window.studioManager.supabase || !window.studioManager.currentProjectId) {
+                console.log('No hay project_id disponible para audiencias');
+                return;
+            }
+
+            console.log('Cargando audiencias del proyecto:', window.studioManager.currentProjectId);
+
+            window.studioManager.supabase
+                .from('audience')
+                .select('id, buyer_persona, interests, pains, contexts, language_codes')
+                .eq('project_id', window.studioManager.currentProjectId)
+                .then(({ data, error }) => {
+                    if (error) {
+                        console.error('Error cargando audiencias del proyecto:', error);
+                    } else if (data && data.length > 0) {
+                        console.log('Audiencias cargadas del proyecto:', data);
+                        populateAudienceSelector(data);
+                    } else {
+                        console.log('No hay audiencias en este proyecto');
+                        clearAudienceSelector();
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error en consulta de audiencias del proyecto:', error);
+                });
+        }
+
+        // Función para poblar el selector de productos
+        function populateProductSelector(products) {
+            const productSelector = document.getElementById('product-selector');
+            if (!productSelector) {
+                console.error('No se encontró el selector de productos con ID: product-selector');
+                return;
+            }
+
+            console.log('Poblando selector de productos con:', products);
+            console.log('Selector encontrado:', productSelector);
+            console.log('Sección visible:', productSelector.closest('.config-section')?.style.display);
+
+            // Limpiar opciones existentes
+            productSelector.innerHTML = '<option value="">Seleccionar producto...</option>';
+            
+            // Agregar productos
+            products.forEach(product => {
+                const option = document.createElement('option');
+                option.value = product.id;
+                option.textContent = product.name || product.product_type || 'Producto sin nombre';
+                productSelector.appendChild(option);
+                console.log('Producto agregado al selector:', product.name || product.product_type);
+            });
+
+            console.log('Selector de productos actualizado con', products.length, 'productos');
+            
+            // Asegurar que la sección sea visible
+            const productSection = document.getElementById('product-images-section');
+            if (productSection) {
+                productSection.style.display = 'block';
+                productSection.style.visibility = 'visible';
+                productSection.style.opacity = '1';
+                console.log('Sección de productos mostrada');
+                console.log('Estado de la sección:', {
+                    display: productSection.style.display,
+                    visibility: productSection.style.visibility,
+                    opacity: productSection.style.opacity
+                });
+            } else {
+                console.error('No se encontró la sección product-images-section');
+            }
+        }
+
+        // Función para limpiar el selector de productos
+        function clearProductSelector() {
+            const productSelector = document.getElementById('product-selector');
+            if (productSelector) {
+                productSelector.innerHTML = '<option value="">No hay productos disponibles</option>';
+            }
+        }
+
+        // Función para poblar el selector de ofertas
+        function populateOfferSelector(offers) {
+            const offerSelector = document.getElementById('offer-selector');
+            if (!offerSelector) {
+                console.error('No se encontró el selector de ofertas con ID: offer-selector');
+                return;
+            }
+
+            console.log('Poblando selector de ofertas con:', offers);
+
+            // Limpiar opciones existentes
+            offerSelector.innerHTML = '<option value="">Seleccionar oferta...</option>';
+            
+            // Agregar ofertas
+            offers.forEach(offer => {
+                const option = document.createElement('option');
+                option.value = offer.id;
+                option.textContent = offer.main_objective || offer.offer_desc || 'Oferta sin nombre';
+                offerSelector.appendChild(option);
+                console.log('Oferta agregada al selector:', offer.main_objective);
+            });
+
+            console.log('Selector de ofertas actualizado con', offers.length, 'ofertas');
+        }
+
+        // Función para poblar el selector de audiencias
+        function populateAudienceSelector(audiences) {
+            const audienceSelector = document.getElementById('audience-selector');
+            if (!audienceSelector) {
+                console.error('No se encontró el selector de audiencias con ID: audience-selector');
+                return;
+            }
+
+            console.log('Poblando selector de audiencias con:', audiences);
+
+            // Limpiar opciones existentes
+            audienceSelector.innerHTML = '<option value="">Seleccionar audiencia...</option>';
+            
+            // Agregar audiencias
+            audiences.forEach(audience => {
+                const option = document.createElement('option');
+                option.value = audience.id;
+                // Usar buyer_persona como nombre si está disponible
+                const personaName = audience.buyer_persona?.name || audience.buyer_persona?.title || 'Audiencia sin nombre';
+                option.textContent = personaName;
+                audienceSelector.appendChild(option);
+                console.log('Audiencia agregada al selector:', personaName);
+            });
+
+            console.log('Selector de audiencias actualizado con', audiences.length, 'audiencias');
+        }
+
+        // Función para limpiar el selector de ofertas
+        function clearOfferSelector() {
+            const offerSelector = document.getElementById('offer-selector');
+            if (offerSelector) {
+                offerSelector.innerHTML = '<option value="">No hay ofertas disponibles</option>';
+            }
+        }
+
+        // Función para limpiar el selector de audiencias
+        function clearAudienceSelector() {
+            const audienceSelector = document.getElementById('audience-selector');
+            if (audienceSelector) {
+                audienceSelector.innerHTML = '<option value="">No hay audiencias disponibles</option>';
+            }
+        }
+
+        // Función para mostrar mensaje cuando no hay productos
+        function showNoProductsMessage() {
+            const productInfo = document.getElementById('product-info');
+            if (productInfo) {
+                productInfo.innerHTML = `
+                    <div class="info-item">
+                        <span class="info-label">Estado:</span>
+                        <span class="info-value empty">No hay productos en este proyecto</span>
+                </div>
+                `;
+            }
+        }
+
+        function updateBrandDisplay(data) {
+            if (!data) {
+                clearBrandInfo();
+                return;
+            }
+            
+            console.log('Actualizando display de marca con datos:', data);
+            
+            // Buscar el contenedor de información de marca
+            const brandInfoContainer = document.getElementById('brand-info');
+            if (!brandInfoContainer) {
+                console.error('No se encontró el contenedor brand-info');
+                return;
+            }
+            
+            console.log('Contenedor brand-info encontrado:', brandInfoContainer);
+            
+            // Actualizar el contenido del contenedor
+            brandInfoContainer.innerHTML = `
+                <div class="info-item">
+                    <span class="info-label">Nombre:</span>
+                    <span class="info-value">${data.name || 'No configurado'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Tono de Voz:</span>
+                    <span class="info-value">${data.tone_of_voice || 'No configurado'}</span>
+                        </div>
+                <div class="info-item">
+                    <span class="info-label">Palabras Clave (Sí):</span>
+                    <span class="info-value">${formatArray(data.keywords_yes)}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Palabras Clave (No):</span>
+                    <span class="info-value">${formatArray(data.keywords_no)}</span>
+                    </div>
+                <div class="info-item">
+                    <span class="info-label">Dos y Don'ts:</span>
+                    <span class="info-value">${data.dos_donts || 'No configurado'}</span>
+                </div>
+                ${data.website ? `
+                <div class="info-item">
+                    <span class="info-label">Sitio Web:</span>
+                    <span class="info-value">
+                        <a href="${data.website}" target="_blank" class="url-link">${data.website}</a>
+                    </span>
+                        </div>
+                ` : ''}
+            `;
+            
+            console.log('Contenido de marca actualizado en el contenedor');
+            
+            // Abrir automáticamente el acordeón de Información Básica
+            openAccordion('info-basica');
+            
+            // Log para debug
+            console.log('Datos de marca cargados:', data);
+        }
+
+        function updateProductDisplay(data) {
+            console.log('=== ACTUALIZANDO DISPLAY DE PRODUCTO ===');
+            console.log('Datos recibidos:', data);
+            
+            if (!data) {
+                console.log('No hay datos, limpiando información de producto');
+                clearProductInfo();
+                return;
+            }
+            
+            console.log('Actualizando display de producto con datos:', data);
+            
+            // Buscar el contenedor de información de producto
+            const productInfoContainer = document.getElementById('product-info');
+            if (!productInfoContainer) {
+                console.error('No se encontró el contenedor product-info');
+                return;
+            }
+            
+            console.log('Contenedor product-info encontrado:', productInfoContainer);
+            
+            // Formatear precio
+            const priceDisplay = data.price && data.price > 0 ? 
+                `<span class="price">$${parseFloat(data.price).toFixed(2)}</span>` : 
+                'No seleccionado';
+            
+            // Actualizar el contenido del contenedor
+            productInfoContainer.innerHTML = `
+                <div class="info-item">
+                    <span class="info-label">Nombre:</span>
+                    <span class="info-value">${data.name || 'No seleccionado'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Tipo de Producto:</span>
+                    <span class="info-value">${data.product_type || 'No seleccionado'}</span>
+                    </div>
+                <div class="info-item">
+                    <span class="info-label">Descripción Corta:</span>
+                    <span class="info-value long-text">${data.short_desc || 'No seleccionado'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Beneficios:</span>
+                    <span class="info-value">${formatArray(data.benefits)}</span>
+                    </div>
+                <div class="info-item">
+                    <span class="info-label">Diferenciadores:</span>
+                    <span class="info-value">${formatArray(data.differentiators)}</span>
+                    </div>
+                <div class="info-item">
+                    <span class="info-label">Pasos de Uso:</span>
+                    <span class="info-value">${formatArray(data.usage_steps)}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Ingredientes:</span>
+                    <span class="info-value">${formatArray(data.ingredients)}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Precio:</span>
+                    <span class="info-value">${priceDisplay}</span>
+            </div>
+                <div class="info-item">
+                    <span class="info-label">Variantes:</span>
+                    <span class="info-value">${formatArray(data.variants)}</span>
+                </div>
+                ${data.website ? `
+                <div class="info-item">
+                    <span class="info-label">Sitio Web:</span>
+                    <span class="info-value">
+                        <a href="${data.website}" target="_blank" class="url-link">${data.website}</a>
+                    </span>
+        </div>
+                ` : ''}
+                ${data.image_url ? `
+                <div class="info-item">
+                    <span class="info-label">Imagen:</span>
+                    <span class="info-value">
+                        <a href="${data.image_url}" target="_blank" class="url-link">Ver imagen</a>
+                    </span>
+    </div>
+                ` : ''}
+            `;
+            
+            console.log('Contenido de producto actualizado en el contenedor');
+            console.log('HTML generado:', productInfoContainer.innerHTML.substring(0, 200) + '...');
+            
+            // Log para debug
+            console.log('Datos de producto cargados:', data);
+            console.log('=== FIN ACTUALIZACIÓN DE PRODUCTO ===');
+        }
+
+        // Función para cargar información de oferta
+        function loadOfferInfo(offerId) {
+            if (!offerId || !window.studioManager || !window.studioManager.supabase) {
+                clearOfferInfo();
+                return;
+            }
+
+            console.log('Cargando datos de oferta:', offerId);
+
+            window.studioManager.supabase
+                .from('offers')
+                .select('*')
+                .eq('id', offerId)
+                .single()
+                .then(({ data, error }) => {
+                    if (error) {
+                        console.error('Error cargando datos de oferta:', error);
+                        clearOfferInfo();
+                    } else if (data) {
+                        updateOfferDisplay(data);
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error en consulta de oferta:', error);
+                    clearOfferInfo();
+                });
+        }
+
+        // Función para cargar información de audiencia
+        function loadAudienceInfo(audienceId) {
+            if (!audienceId || !window.studioManager || !window.studioManager.supabase) {
+                clearAudienceInfo();
+                return;
+            }
+
+            console.log('Cargando datos de audiencia:', audienceId);
+
+            window.studioManager.supabase
+                .from('audience')
+                .select('*')
+                .eq('id', audienceId)
+                .single()
+                .then(({ data, error }) => {
+                    if (error) {
+                        console.error('Error cargando datos de audiencia:', error);
+                        clearAudienceInfo();
+                    } else if (data) {
+                        updateAudienceDisplay(data);
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error en consulta de audiencia:', error);
+                    clearAudienceInfo();
+                });
+        }
+
+        // Función para actualizar display de oferta
+        function updateOfferDisplay(data) {
+            if (!data) {
+                clearOfferInfo();
+                return;
+            }
+            
+            console.log('Actualizando display de oferta con datos:', data);
+            
+            const offerInfoContainer = document.getElementById('offer-info');
+            if (!offerInfoContainer) {
+                console.error('No se encontró el contenedor offer-info');
+                return;
+            }
+            
+            console.log('Contenedor offer-info encontrado:', offerInfoContainer);
+            
+            // Formatear fecha de validez
+            const validUntil = data.offer_valid_until ? 
+                new Date(data.offer_valid_until).toLocaleDateString('es-ES') : 
+                'No especificada';
+            
+            // Actualizar el contenido del contenedor
+            offerInfoContainer.innerHTML = `
+                <div class="info-item">
+                    <span class="info-label">Objetivo Principal:</span>
+                    <span class="info-value">${data.main_objective || 'No especificado'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Descripción:</span>
+                    <span class="info-value long-text">${data.offer_desc || 'No especificada'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Call to Action:</span>
+                    <span class="info-value">${data.cta || 'No especificado'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">URL CTA:</span>
+                    <span class="info-value">
+                        ${data.cta_url ? `<a href="${data.cta_url}" target="_blank" class="url-link">${data.cta_url}</a>` : 'No especificada'}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Válida hasta:</span>
+                    <span class="info-value">${validUntil}</span>
+                </div>
+                ${data.kpis && data.kpis.length > 0 ? `
+                <div class="info-item">
+                    <span class="info-label">KPIs:</span>
+                    <span class="info-value">${formatArray(data.kpis)}</span>
+                </div>
+                ` : ''}
+            `;
+            
+            console.log('Contenido de oferta actualizado en el contenedor');
+        }
+
+        // Función para actualizar display de audiencia
+        function updateAudienceDisplay(data) {
+            if (!data) {
+                clearAudienceInfo();
+                return;
+            }
+            
+            console.log('Actualizando display de audiencia con datos:', data);
+            
+            const audienceInfoContainer = document.getElementById('audience-info');
+            if (!audienceInfoContainer) {
+                console.error('No se encontró el contenedor audience-info');
+                return;
+            }
+            
+            console.log('Contenedor audience-info encontrado:', audienceInfoContainer);
+            
+            // Extraer información del buyer_persona
+            const persona = data.buyer_persona || {};
+            const personaName = persona.name || persona.title || 'No especificado';
+            const personaAge = persona.age || 'No especificado';
+            const personaGender = persona.gender || 'No especificado';
+            
+            // Actualizar el contenido del contenedor
+            audienceInfoContainer.innerHTML = `
+                <div class="info-item">
+                    <span class="info-label">Persona:</span>
+                    <span class="info-value">${personaName}</span>
+            </div>
+                <div class="info-item">
+                    <span class="info-label">Edad:</span>
+                    <span class="info-value">${personaAge}</span>
+        </div>
+                <div class="info-item">
+                    <span class="info-label">Género:</span>
+                    <span class="info-value">${personaGender}</span>
+            </div>
+                <div class="info-item">
+                    <span class="info-label">Intereses:</span>
+                    <span class="info-value">${formatArray(data.interests)}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Dolores:</span>
+                    <span class="info-value">${formatArray(data.pains)}</span>
+            </div>
+                <div class="info-item">
+                    <span class="info-label">Contextos:</span>
+                    <span class="info-value">${formatArray(data.contexts)}</span>
+        </div>
+                <div class="info-item">
+                    <span class="info-label">Idiomas:</span>
+                    <span class="info-value">${formatArray(data.language_codes)}</span>
+                </div>
+            `;
+            
+            console.log('Contenido de audiencia actualizado en el contenedor');
+        }
+
+        // Función para limpiar información de oferta
+        function clearOfferInfo() {
+            const offerInfo = document.getElementById('offer-info');
+            if (offerInfo) {
+                offerInfo.innerHTML = `
+                    <div class="info-item">
+                        <span class="info-label">Estado:</span>
+                        <span class="info-value empty">No seleccionado</span>
+                </div>
+                `;
+            }
+        }
+
+        // Función para limpiar información de audiencia
+        function clearAudienceInfo() {
+            const audienceInfo = document.getElementById('audience-info');
+            if (audienceInfo) {
+                audienceInfo.innerHTML = `
+                    <div class="info-item">
+                        <span class="info-label">Estado:</span>
+                        <span class="info-value empty">No seleccionado</span>
+            </div>
+                `;
+            }
+        }
+
+        // =======================================
+        // Funciones para Configuración Avanzada
+        // =======================================
+
+        // Función para actualizar resolución
+        function updateResolution(value) {
+            console.log('Resolución seleccionada:', value);
+            if (window.studioManager) {
+                window.studioManager.selectedResolution = value;
+            }
+        }
+
+        // Función para actualizar ratio
+        function updateRatio(value) {
+            console.log('Ratio seleccionado:', value);
+            if (window.studioManager) {
+                window.studioManager.selectedRatio = value;
+            }
+        }
+
+        // Función para actualizar creatividad
+        function updateCreativity(value) {
+            const creativityValue = document.getElementById('creativity-value');
+            if (creativityValue) {
+                creativityValue.textContent = value;
+            }
+            console.log('Creatividad actualizada:', value);
+            if (window.studioManager) {
+                window.studioManager.selectedCreativity = parseFloat(value);
+            }
+        }
+
+        // Función para obtener configuración avanzada
+        function getAdvancedConfig() {
+            const resolution = document.getElementById('resolution-selector')?.value || '720p';
+            const ratio = document.getElementById('ratio-selector')?.value || 'vertical';
+            const creativity = document.getElementById('creativity-slider')?.value || '0.7';
+            const prompt = document.getElementById('prompt-input')?.value || '';
+            const negativePrompt = document.getElementById('negative-prompt-input')?.value || '';
+
+            return {
+                resolution: resolution,
+                ratio: ratio,
+                creativity: parseFloat(creativity),
+                prompt: prompt,
+                negativePrompt: negativePrompt
+            };
+        }
+
+        // Función para establecer configuración avanzada
+        function setAdvancedConfig(config) {
+            if (config.resolution) {
+                const resolutionSelector = document.getElementById('resolution-selector');
+                if (resolutionSelector) {
+                    resolutionSelector.value = config.resolution;
+                }
+            }
+            
+            if (config.ratio) {
+                const ratioSelector = document.getElementById('ratio-selector');
+                if (ratioSelector) {
+                    ratioSelector.value = config.ratio;
+                }
+            }
+            
+            if (config.creativity !== undefined) {
+                const creativitySlider = document.getElementById('creativity-slider');
+                const creativityValue = document.getElementById('creativity-value');
+                if (creativitySlider) {
+                    creativitySlider.value = config.creativity;
+                }
+                if (creativityValue) {
+                    creativityValue.textContent = config.creativity;
+                }
+            }
+            
+            if (config.prompt) {
+                const promptInput = document.getElementById('prompt-input');
+                if (promptInput) {
+                    promptInput.value = config.prompt;
+                }
+            }
+            
+            if (config.negativePrompt) {
+                const negativePromptInput = document.getElementById('negative-prompt-input');
+                if (negativePromptInput) {
+                    negativePromptInput.value = config.negativePrompt;
+                }
+            }
+        }
+
+        function formatArray(array) {
+            if (!array || array.length === 0) {
+                return '<span class="empty">No configurado</span>';
+            }
+            
+            // Si es un string, intentar dividirlo por comas
+            if (typeof array === 'string') {
+                const items = array.split(',').map(item => item.trim()).filter(item => item);
+                if (items.length === 0) {
+                    return '<span class="empty">No configurado</span>';
+                }
+                return items.map(item => `<span class="tag">${item}</span>`).join(' ');
+            }
+            
+            // Si es un array, formatearlo como tags
+            return array.map(item => `<span class="tag">${item}</span>`).join(' ');
+        }
+
+        function clearBrandInfo() {
+            const brandTone = document.getElementById('brand-tone');
+            const brandKeywordsYes = document.getElementById('brand-keywords-yes');
+            const brandKeywordsNo = document.getElementById('brand-keywords-no');
+            const brandDosDonts = document.getElementById('brand-dos-donts');
+            
+            if (brandTone) brandTone.textContent = 'No seleccionado';
+            if (brandKeywordsYes) brandKeywordsYes.innerHTML = '<span class="empty">No configurado</span>';
+            if (brandKeywordsNo) brandKeywordsNo.innerHTML = '<span class="empty">No configurado</span>';
+            if (brandDosDonts) brandDosDonts.textContent = 'No configurado';
+        }
+
+        function clearProductInfo() {
+            const productType = document.getElementById('product-type');
+            const productShortDesc = document.getElementById('product-short-desc');
+            const productBenefits = document.getElementById('product-benefits');
+            const productDifferentiators = document.getElementById('product-differentiators');
+            const productUsageSteps = document.getElementById('product-usage-steps');
+            const productIngredients = document.getElementById('product-ingredients');
+            const productPrice = document.getElementById('product-price');
+            const productVariants = document.getElementById('product-variants');
+            
+            if (productType) productType.textContent = 'No seleccionado';
+            if (productShortDesc) productShortDesc.textContent = 'No seleccionado';
+            if (productBenefits) productBenefits.innerHTML = '<span class="empty">No seleccionado</span>';
+            if (productDifferentiators) productDifferentiators.innerHTML = '<span class="empty">No seleccionado</span>';
+            if (productUsageSteps) productUsageSteps.innerHTML = '<span class="empty">No seleccionado</span>';
+            if (productIngredients) productIngredients.innerHTML = '<span class="empty">No seleccionado</span>';
+            if (productPrice) {
+                productPrice.textContent = 'No seleccionado';
+                productPrice.classList.remove('price');
+            }
+            if (productVariants) productVariants.innerHTML = '<span class="empty">No seleccionado</span>';
+        }
+
+        // Funciones que se ejecutan cuando se selecciona marca o producto
+        async function onBrandSelected(brandId) {
+            console.log('=== MARCA SELECCIONADA ===');
+            console.log('ID de marca:', brandId);
+            
+            // Verificar que el brandId sea válido
+            if (!brandId || brandId === 'null' || brandId === '') {
+                console.log('ID de marca inválido, limpiando información');
+                clearBrandInfo();
+                return;
+            }
+            
+            // Evitar llamadas múltiples
+            if (isLoadingBrand) {
+                console.log('Ya se está cargando una marca, ignorando...');
+                return;
+            }
+            
+            console.log('Iniciando carga de datos de marca...');
+            
+            // Mostrar indicador de carga
+            showLoadingIndicator('brand-info');
+            
+            try {
+                // Cargar datos de marca primero
+                await loadBrandInfo(brandId);
+                
+                // Luego configurar project_id y cargar productos
+                await setProjectIdFromBrand(brandId);
+                
+                console.log('=== MARCA CARGADA COMPLETAMENTE ===');
+            } catch (error) {
+                console.error('Error cargando marca:', error);
+                hideLoadingIndicator('brand-info');
+            }
+        }
+
+        async function onProductSelected(productId) {
+            console.log('=== PRODUCTO SELECCIONADO ===');
+            console.log('ID del producto:', productId);
+            console.log('Tipo de ID:', typeof productId);
+            console.log('¿Es válido?', productId && productId !== 'null' && productId !== '');
+            
+            // Verificar que el productId sea válido
+            if (!productId || productId === 'null' || productId === '') {
+                console.log('ID de producto inválido, limpiando información');
+                clearProductInfo();
+                return;
+            }
+            
+            // Evitar llamadas múltiples
+            if (isLoadingProduct) {
+                console.log('Ya se está cargando un producto, ignorando...');
+                return;
+            }
+            
+            console.log('Iniciando carga de datos de producto...');
+            
+            // Mostrar indicador de carga
+            showLoadingIndicator('product-info');
+            
+            try {
+                // Cargar datos de producto
+                await loadProductInfo(productId);
+                
+                // Cargar imágenes del producto
+                await loadProductImages(productId);
+                
+                // Guardar el producto seleccionado para uso posterior
+                if (window.studioManager) {
+                    window.studioManager.selectedProductId = productId;
+                    console.log('Producto guardado en studioManager:', productId);
+                }
+                
+                console.log('=== PRODUCTO CARGADO COMPLETAMENTE ===');
+            } catch (error) {
+                console.error('Error cargando producto:', error);
+                hideLoadingIndicator('product-info');
+            }
+        }
+
+        // Función para cargar imágenes del producto
+        async function loadProductImages(productId) {
+            console.log('=== CARGANDO IMÁGENES DEL PRODUCTO ===');
+            console.log('ID del producto:', productId);
+            
+            const imagesContainer = document.getElementById('dynamic-product-images');
+            if (!imagesContainer) {
+                console.log('No se encontró el contenedor de imágenes');
+                return;
+            }
+            
+            if (!productId) {
+                imagesContainer.innerHTML = `
+                    <div class="loading-placeholder">
+                        <div class="spinner-small"></div>
+                        <span>Selecciona un producto para ver sus imágenes</span>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Mostrar indicador de carga
+            imagesContainer.innerHTML = `
+                <div class="loading-placeholder">
+                    <div class="spinner-small"></div>
+                    <span>Cargando imágenes del producto...</span>
+                </div>
+            `;
+            
+            try {
+                // Simular carga de imágenes (puedes integrar con tu sistema existente)
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Aquí puedes integrar con tu sistema de carga de imágenes existente
+                imagesContainer.innerHTML = `
+                    <div class="no-selection">
+                        <span>Imágenes del producto se cargarán aquí</span>
+                    </div>
+                `;
+                
+                console.log('=== IMÁGENES CARGADAS ===');
+            } catch (error) {
+                console.error('Error cargando imágenes:', error);
+                imagesContainer.innerHTML = `
+                    <div class="no-selection">
+                        <span>Error cargando imágenes del producto</span>
+                    </div>
+                `;
+            }
+        }
+
+        function onOfferSelected(offerId) {
+            console.log('Oferta seleccionada:', offerId);
+            
+            // Verificar que el offerId sea válido
+            if (!offerId || offerId === 'null' || offerId === '') {
+                console.log('ID de oferta inválido:', offerId);
+                clearOfferInfo();
+                return;
+            }
+            
+            // Cargar datos de oferta
+            loadOfferInfo(offerId);
+        }
+
+        function onAudienceSelected(audienceId) {
+            console.log('Audiencia seleccionada:', audienceId);
+            
+            // Verificar que el audienceId sea válido
+            if (!audienceId || audienceId === 'null' || audienceId === '') {
+                console.log('ID de audiencia inválido:', audienceId);
+                clearAudienceInfo();
+                return;
+            }
+            
+            // Cargar datos de audiencia
+            loadAudienceInfo(audienceId);
+        }
+
+        // Función para mostrar indicador de carga
+        function showLoadingIndicator(containerId) {
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.innerHTML = '<div class="loading-indicator">Cargando datos...</div>';
+            }
+        }
+
+        // Función para ocultar indicador de carga
+        function hideLoadingIndicator(containerId) {
+            const container = document.getElementById(containerId);
+            if (container && container.querySelector('.loading-indicator')) {
+                container.querySelector('.loading-indicator').remove();
+            }
+        }
+    </script>
 </body>
 </html>

@@ -4,12 +4,12 @@
   "description": "Plataforma completa para generación de contenido UGC con backend serverless",
   "main": "index.html",
   "scripts": {
-    "dev": "node clean-server.js",
+    "dev": "node server.js",
     "build": "echo 'Static site - no build required'",
     "test": "echo 'Tests completados exitosamente'",
     "lint": "echo 'Linting completado'",
     "deploy": "gh-pages -d .",
-    "start": "node clean-server.js",
+    "start": "node server.js",
     "preview": "npx serve . -p 8080",
     "netlify": "netlify dev",
     "vercel": "vercel dev"
@@ -50,6 +50,8 @@
     "node": ">=14.0.0"
   },
   "dependencies": {
+    "axios": "^1.12.2",
+    "dotenv": "^17.2.3",
     "node-fetch": "^3.3.2"
   }
 }
