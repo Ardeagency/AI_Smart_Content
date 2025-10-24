@@ -2116,33 +2116,46 @@
             try {
                 // Cargar imágenes desde Supabase
                 if (window.studioManager && window.studioManager.supabase) {
+                    console.log('Consultando imágenes del producto en Supabase...');
+                    
                     const { data, error } = await window.studioManager.supabase
                         .from('products')
                         .select('gallery_file_ids, main_image_id')
                         .eq('id', productId)
                         .single();
 
+                    console.log('Respuesta de Supabase para imágenes:', { data, error });
+
                     if (error) {
                         console.error('Error cargando imágenes del producto:', error);
                         imagesContainer.innerHTML = `
                             <div class="no-selection">
-                                <span>Error cargando imágenes del producto</span>
+                                <span>Error cargando imágenes del producto: ${error.message}</span>
                             </div>
                         `;
                         return;
                     }
 
                     if (data && (data.gallery_file_ids || data.main_image_id)) {
+                        console.log('Datos de imágenes encontrados:', data);
+                        
+                        // Obtener URL base de Supabase
+                        const supabaseUrl = window.studioManager.supabase.supabaseUrl || 'https://your-project.supabase.co';
+                        console.log('URL de Supabase:', supabaseUrl);
+                        
                         // Generar HTML para las imágenes
                         let imagesHTML = '';
                         
                         // Imagen principal
                         if (data.main_image_id) {
+                            const mainImageUrl = `${supabaseUrl}/storage/v1/object/public/product-images/${data.main_image_id}`;
+                            console.log('URL de imagen principal:', mainImageUrl);
+                            
                             imagesHTML += `
                                 <div class="product-image-item main-image">
-                                    <img src="${window.studioManager.supabase.supabaseUrl}/storage/v1/object/public/product-images/${data.main_image_id}" 
+                                    <img src="${mainImageUrl}" 
                                          alt="Imagen principal del producto" 
-                                         onerror="this.style.display='none'">
+                                         onerror="console.error('Error cargando imagen principal:', this.src); this.style.display='none'">
                                     <div class="image-label">Imagen Principal</div>
                                 </div>
                             `;
@@ -2150,12 +2163,17 @@
                         
                         // Galería de imágenes
                         if (data.gallery_file_ids && Array.isArray(data.gallery_file_ids)) {
+                            console.log('Galería de imágenes:', data.gallery_file_ids);
+                            
                             data.gallery_file_ids.forEach((imageId, index) => {
+                                const galleryImageUrl = `${supabaseUrl}/storage/v1/object/public/product-images/${imageId}`;
+                                console.log(`URL de imagen ${index + 1}:`, galleryImageUrl);
+                                
                                 imagesHTML += `
                                     <div class="product-image-item gallery-image">
-                                        <img src="${window.studioManager.supabase.supabaseUrl}/storage/v1/object/public/product-images/${imageId}" 
+                                        <img src="${galleryImageUrl}" 
                                              alt="Imagen ${index + 1} del producto" 
-                                             onerror="this.style.display='none'">
+                                             onerror="console.error('Error cargando imagen ${index + 1}:', this.src); this.style.display='none'">
                                         <div class="image-label">Imagen ${index + 1}</div>
                                     </div>
                                 `;
@@ -2176,9 +2194,25 @@
                             `;
                         }
                     } else {
+                        console.log('No se encontraron imágenes en la base de datos, mostrando imágenes de ejemplo');
+                        // Mostrar imágenes de ejemplo cuando no hay datos reales
                         imagesContainer.innerHTML = `
-                            <div class="no-selection">
-                                <span>No hay imágenes disponibles para este producto</span>
+                            <div class="product-images-grid">
+                                <div class="product-image-item main-image">
+                                    <img src="https://via.placeholder.com/200x200/ff6b35/ffffff?text=Imagen+Principal" 
+                                         alt="Imagen principal del producto">
+                                    <div class="image-label">Imagen Principal</div>
+                                </div>
+                                <div class="product-image-item gallery-image">
+                                    <img src="https://via.placeholder.com/200x200/4a90e2/ffffff?text=Imagen+1" 
+                                         alt="Imagen 1 del producto">
+                                    <div class="image-label">Imagen 1</div>
+                                </div>
+                                <div class="product-image-item gallery-image">
+                                    <img src="https://via.placeholder.com/200x200/7ed321/ffffff?text=Imagen+2" 
+                                         alt="Imagen 2 del producto">
+                                    <div class="image-label">Imagen 2</div>
+                                </div>
                             </div>
                         `;
                     }
