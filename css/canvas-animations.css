@@ -1,0 +1,694 @@
+/* =======================================
+   Canvas Animations - Sistema de Animaciones para Canvas
+   ======================================= */
+
+/* Variables para animaciones */
+:root {
+    --animation-duration: 0.3s;
+    --shimmer-duration: 2s;
+    --card-spacing: 400px;
+    --card-width: 400px;
+    --card-height: 700px;
+    --canvas-min-zoom: 0.2;
+    --canvas-max-zoom: 2.5;
+    --canvas-base-size: 2000px;
+}
+
+/* =======================================
+   Canvas Area - Pizarrón Infinito
+   ======================================= */
+
+.canvas-area {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-color: rgb(26, 29, 30);
+    cursor: grab;
+    user-select: none;
+    min-height: 100vh;
+}
+
+.canvas-area:active {
+    cursor: grabbing;
+}
+
+/* Canvas content wrapper - Área de trabajo infinita */
+#canvas-content-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: var(--canvas-base-size);
+    height: var(--canvas-base-size);
+    transform-origin: 0 0;
+    background: transparent;
+    transition: transform 0.1s ease-out;
+}
+
+/* =======================================
+   Canvas Objects Base
+   ======================================= */
+
+.canvas-object {
+    width: var(--card-width);
+    height: var(--card-height);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(20px);
+    transition: all 0.3s ease;
+    cursor: grab;
+    user-select: none;
+    position: absolute;
+}
+
+.canvas-object:hover {
+    transform: scale(1.02);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.canvas-object:active {
+    cursor: grabbing;
+}
+
+/* =======================================
+   Loading Cards
+   ======================================= */
+
+.loading-card {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    border: 2px solid #404040;
+    border-radius: 16px;
+    position: relative;
+    overflow: hidden;
+}
+
+.loading-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    animation: shimmer var(--shimmer-duration) infinite;
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* Optimización: Reducir repaints con will-change */
+.loading-card,
+.loading-card::before {
+    will-change: transform;
+}
+
+/* Optimización: Aceleración por hardware para hover */
+.canvas-object {
+    will-change: transform;
+}
+
+.canvas-object:hover {
+    transform: scale(1.02);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.loading-card-content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    text-align: center;
+}
+
+.loading-shimmer {
+    width: 60px;
+    height: 60px;
+    border: 3px solid #404040;
+    border-top: 3px solid #FD624F;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    color: #cccccc;
+    font-size: 16px;
+    font-weight: 500;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
+/* =======================================
+   Script Cards
+   ======================================= */
+
+.script-card {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+    border: 1px solid #333;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.script-card:hover {
+    border-color: #FD624F;
+    box-shadow: 0 0 20px rgba(253, 98, 79, 0.3);
+}
+
+.script-card .card-header {
+    background: linear-gradient(135deg, #FD624F 0%, #e5553d 100%);
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.script-card .card-header h3 {
+    margin: 0;
+    color: white;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.script-card .card-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.script-card .btn-icon {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.script-card .btn-icon:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.script-card .card-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.script-preview {
+    color: #cccccc;
+    font-size: 14px;
+    line-height: 1.6;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* =======================================
+   Estilos para Variantes Estructuradas
+   ======================================= */
+
+.script-card .card-content h3,
+.script-card .card-content h4 {
+    color: #ffffff;
+    margin: 16px 0 12px 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.script-card .card-content h3 {
+    font-size: 18px;
+}
+
+.script-card .card-content p {
+    color: #cccccc;
+    margin: 8px 0;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.variant-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid rgba(253, 98, 79, 0.3);
+}
+
+.variant-header h3 {
+    color: #FD624F;
+    font-size: 18px;
+    margin: 0;
+}
+
+.variant-badge {
+    background: rgba(253, 98, 79, 0.2);
+    color: #FD624F;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.context-section,
+.clips-section,
+.prompt-section,
+.scenes-section {
+    margin-bottom: 20px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+    border-left: 3px solid #FD624F;
+}
+
+.context-section h4,
+.clips-section h4,
+.prompt-section h4,
+.scenes-section h4 {
+    color: #FD624F;
+    font-size: 14px;
+    margin: 0 0 12px 0;
+}
+
+.context-item {
+    margin: 8px 0;
+    color: #cccccc;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.context-item strong {
+    color: #ffffff;
+}
+
+.clip-item {
+    margin: 16px 0;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    border: 1px solid rgba(253, 98, 79, 0.2);
+}
+
+.clip-header {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.clip-number,
+.clip-role,
+.clip-duration {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.clip-number {
+    background: rgba(253, 98, 79, 0.2);
+    color: #FD624F;
+}
+
+.clip-role {
+    background: rgba(76, 175, 80, 0.2);
+    color: #4CAF50;
+}
+
+.clip-duration {
+    background: rgba(33, 150, 243, 0.2);
+    color: #2196F3;
+}
+
+.clip-prompt {
+    color: #e0e0e0;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 8px 0;
+    font-style: italic;
+}
+
+.clip-voice {
+    color: #cccccc;
+    font-size: 12px;
+    margin: 8px 0;
+}
+
+.clip-voice strong {
+    color: #FD624F;
+}
+
+.clip-notes {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.notes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.notes-grid div {
+    color: #aaaaaa;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.notes-grid div strong {
+    color: #888888;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.scene-item {
+    margin: 8px 0;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    color: #cccccc;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.scene-item strong {
+    color: #FD624F;
+    display: block;
+    margin-bottom: 4px;
+    text-transform: capitalize;
+}
+
+/* Scrollbar personalizado para las cards */
+.script-card .card-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.script-card .card-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+.script-card .card-content::-webkit-scrollbar-thumb {
+    background: rgba(253, 98, 79, 0.3);
+    border-radius: 3px;
+}
+
+.script-card .card-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(253, 98, 79, 0.5);
+}
+
+/* =======================================
+   Image Cards
+   ======================================= */
+
+.image-card {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+    border: 1px solid #333;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.image-card:hover {
+    border-color: #4CAF50;
+    box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+}
+
+.image-card .card-header {
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.image-card .card-header h3 {
+    margin: 0;
+    color: white;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.image-card .card-content {
+    flex: 1;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0a0a0a;
+}
+
+.generated-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 0 0 16px 16px;
+}
+
+/* =======================================
+   Video Cards
+   ======================================= */
+
+.video-card {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+    border: 1px solid #333;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.video-card:hover {
+    border-color: #2196F3;
+    box-shadow: 0 0 20px rgba(33, 150, 243, 0.3);
+}
+
+.video-card .card-header {
+    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.video-card .card-header h3 {
+    margin: 0;
+    color: white;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.video-card .card-content {
+    flex: 1;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0a0a0a;
+}
+
+.generated-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 0 0 16px 16px;
+}
+
+/* =======================================
+   Animaciones de Aparición
+   ======================================= */
+
+@keyframes slideInFromBottom {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) translateY(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) translateY(0);
+    }
+}
+
+@keyframes slideInFromLeft {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) translateX(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) translateX(0);
+    }
+}
+
+@keyframes slideInFromRight {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) translateX(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) translateX(0);
+    }
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+/* Aplicar animaciones a los objetos */
+.canvas-object.animate-slide-bottom {
+    animation: slideInFromBottom 0.6s ease-out;
+}
+
+.canvas-object.animate-slide-left {
+    animation: slideInFromLeft 0.6s ease-out;
+}
+
+.canvas-object.animate-slide-right {
+    animation: slideInFromRight 0.6s ease-out;
+}
+
+.canvas-object.animate-fade-scale {
+    animation: fadeInScale 0.6s ease-out;
+}
+
+/* =======================================
+   Responsive Design
+   ======================================= */
+
+@media (max-width: 768px) {
+    .canvas-object {
+        width: 280px;
+        height: 350px;
+    }
+    
+    .script-card .card-header,
+    .image-card .card-header,
+    .video-card .card-header {
+        padding: 12px 16px;
+    }
+    
+    .script-card .card-header h3,
+    .image-card .card-header h3,
+    .video-card .card-header h3 {
+        font-size: 16px;
+    }
+    
+    .script-card .card-content,
+    .image-card .card-content,
+    .video-card .card-content {
+        padding: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .canvas-object {
+        width: 240px;
+        height: 300px;
+    }
+    
+    .loading-text {
+        font-size: 14px;
+    }
+    
+    .loading-shimmer {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+/* =======================================
+   Efectos Especiales
+   ======================================= */
+
+/* Efectos simplificados para las cards */
+.canvas-object:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* =======================================
+   Estados de Interacción
+   ======================================= */
+
+.canvas-object.dragging {
+    transform: translate(-50%, -50%) scale(1.05) rotate(2deg);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.canvas-object.selected {
+    border: 2px solid #FD624F;
+    box-shadow: 0 0 30px rgba(253, 98, 79, 0.5);
+}
+
+/* =======================================
+   Scrollbar Personalizado para Cards
+   ======================================= */
+
+.script-preview::-webkit-scrollbar {
+    width: 6px;
+}
+
+.script-preview::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.script-preview::-webkit-scrollbar-thumb {
+    background: rgba(253, 98, 79, 0.5);
+    border-radius: 3px;
+}
+
+.script-preview::-webkit-scrollbar-thumb:hover {
+    background: rgba(253, 98, 79, 0.7);
+}
