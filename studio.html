@@ -1692,8 +1692,12 @@
                 return;
             }
             
-            // Cargar datos de oferta
-            loadOfferInfo(offerId);
+            // Usar la función del StudioManager
+            if (window.studioManager) {
+                window.studioManager.selectOfferFromDropdown(offerId);
+            } else {
+                console.error('StudioManager no está disponible');
+            }
         }
 
         function onAudienceSelected(audienceId) {
@@ -1706,8 +1710,12 @@
                 return;
             }
             
-            // Cargar datos de audiencia
-            loadAudienceInfo(audienceId);
+            // Usar la función del StudioManager
+            if (window.studioManager) {
+                window.studioManager.selectAudienceFromDropdown(audienceId);
+            } else {
+                console.error('StudioManager no está disponible');
+            }
         }
 
         // Función para mostrar indicador de carga

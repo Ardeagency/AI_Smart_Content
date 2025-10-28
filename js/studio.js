@@ -528,20 +528,38 @@ class StudioManager {
                 <span class="info-value">${brandData.projects?.name || 'No disponible'}</span>
             </div>
             <div class="info-item">
+                <span class="info-label">Website:</span>
+                <span class="info-value">
+                    ${brandData.projects?.website ? `<a href="${brandData.projects.website}" target="_blank" class="url-link">${brandData.projects.website}</a>` : 'No disponible'}
+                </span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">País:</span>
+                <span class="info-value">${brandData.projects?.country || 'No disponible'}</span>
+            </div>
+            <div class="info-item">
                 <span class="info-label">Tono de Voz:</span>
                 <span class="info-value">${brandData.tone_of_voice || 'No disponible'}</span>
             </div>
+            ${brandData.keywords_yes && brandData.keywords_yes.length > 0 ? `
             <div class="info-item">
                 <span class="info-label">Keywords Positivos:</span>
-                <span class="info-value">${brandData.keywords_yes ? brandData.keywords_yes.join(', ') : 'No disponible'}</span>
+                <span class="info-value array">
+                    ${brandData.keywords_yes.map(keyword => `<span class="tag">${keyword}</span>`).join('')}
+                </span>
             </div>
+            ` : ''}
+            ${brandData.keywords_no && brandData.keywords_no.length > 0 ? `
             <div class="info-item">
                 <span class="info-label">Keywords Negativos:</span>
-                <span class="info-value">${brandData.keywords_no ? brandData.keywords_no.join(', ') : 'No disponible'}</span>
+                <span class="info-value array">
+                    ${brandData.keywords_no.map(keyword => `<span class="tag">${keyword}</span>`).join('')}
+                </span>
             </div>
+            ` : ''}
             <div class="info-item">
                 <span class="info-label">Do's y Don'ts:</span>
-                <span class="info-value">${brandData.dos_donts || 'No disponible'}</span>
+                <span class="info-value long-text">${brandData.dos_donts || 'No disponible'}</span>
             </div>
         `;
         
@@ -585,19 +603,27 @@ class StudioManager {
             </div>
             <div class="info-item">
                 <span class="info-label">Descripción:</span>
-                <span class="info-value">${productData.short_desc || 'No disponible'}</span>
+                <span class="info-value long-text">${productData.short_desc || 'No disponible'}</span>
             </div>
+            ${productData.benefits && productData.benefits.length > 0 ? `
             <div class="info-item">
                 <span class="info-label">Beneficios:</span>
-                <span class="info-value">${benefitsDisplay}</span>
+                <span class="info-value array">
+                    ${productData.benefits.map(benefit => `<span class="tag">${benefit}</span>`).join('')}
+                </span>
             </div>
+            ` : ''}
+            ${productData.ingredients && productData.ingredients.length > 0 ? `
             <div class="info-item">
                 <span class="info-label">Ingredientes:</span>
-                <span class="info-value">${ingredientsDisplay}</span>
+                <span class="info-value array">
+                    ${productData.ingredients.map(ingredient => `<span class="tag">${ingredient}</span>`).join('')}
+                </span>
             </div>
+            ` : ''}
             <div class="info-item">
                 <span class="info-label">Precio:</span>
-                <span class="info-value">${priceDisplay}</span>
+                <span class="info-value price">${priceDisplay}</span>
             </div>
         `;
         
@@ -622,7 +648,7 @@ class StudioManager {
             </div>
             <div class="info-item">
                 <span class="info-label">Descripción:</span>
-                <span class="info-value">${offerData.offer_desc || 'No disponible'}</span>
+                <span class="info-value long-text">${offerData.offer_desc || 'No disponible'}</span>
             </div>
             <div class="info-item">
                 <span class="info-label">Call to Action:</span>
@@ -630,12 +656,22 @@ class StudioManager {
             </div>
             <div class="info-item">
                 <span class="info-label">URL:</span>
-                <span class="info-value">${offerData.cta_url || 'No disponible'}</span>
+                <span class="info-value">
+                    ${offerData.cta_url ? `<a href="${offerData.cta_url}" target="_blank" class="url-link">${offerData.cta_url}</a>` : 'No disponible'}
+                </span>
             </div>
             <div class="info-item">
                 <span class="info-label">Válido hasta:</span>
-                <span class="info-value">${offerData.offer_valid_until || 'No disponible'}</span>
+                <span class="info-value date">${offerData.offer_valid_until || 'No disponible'}</span>
             </div>
+            ${offerData.kpis && offerData.kpis.length > 0 ? `
+            <div class="info-item">
+                <span class="info-label">KPIs:</span>
+                <span class="info-value array">
+                    ${offerData.kpis.map(kpi => `<span class="tag">${kpi}</span>`).join('')}
+                </span>
+            </div>
+            ` : ''}
         `;
         
         console.log('Información de oferta actualizada correctamente');
@@ -657,22 +693,38 @@ class StudioManager {
                 <span class="info-label">Persona de Compra:</span>
                 <span class="info-value">${audienceData.buyer_persona?.name || 'No disponible'}</span>
             </div>
+            ${audienceData.interests && audienceData.interests.length > 0 ? `
             <div class="info-item">
                 <span class="info-label">Intereses:</span>
-                <span class="info-value">${audienceData.interests ? audienceData.interests.join(', ') : 'No disponible'}</span>
+                <span class="info-value array">
+                    ${audienceData.interests.map(interest => `<span class="tag">${interest}</span>`).join('')}
+                </span>
             </div>
+            ` : ''}
+            ${audienceData.pains && audienceData.pains.length > 0 ? `
             <div class="info-item">
                 <span class="info-label">Dolores:</span>
-                <span class="info-value">${audienceData.pains ? audienceData.pains.join(', ') : 'No disponible'}</span>
+                <span class="info-value array">
+                    ${audienceData.pains.map(pain => `<span class="tag">${pain}</span>`).join('')}
+                </span>
             </div>
+            ` : ''}
+            ${audienceData.contexts && audienceData.contexts.length > 0 ? `
             <div class="info-item">
                 <span class="info-label">Contextos:</span>
-                <span class="info-value">${audienceData.contexts ? audienceData.contexts.join(', ') : 'No disponible'}</span>
+                <span class="info-value array">
+                    ${audienceData.contexts.map(context => `<span class="tag">${context}</span>`).join('')}
+                </span>
             </div>
+            ` : ''}
+            ${audienceData.language_codes && audienceData.language_codes.length > 0 ? `
             <div class="info-item">
                 <span class="info-label">Idiomas:</span>
-                <span class="info-value">${audienceData.language_codes ? audienceData.language_codes.join(', ') : 'No disponible'}</span>
+                <span class="info-value array">
+                    ${audienceData.language_codes.map(lang => `<span class="tag">${lang}</span>`).join('')}
+                </span>
             </div>
+            ` : ''}
         `;
         
         console.log('Información de audiencia actualizada correctamente');
@@ -866,7 +918,7 @@ class StudioManager {
         }
 
         // Si hay producto seleccionado, cargar y mostrar su información
-        const product = this.products.find(p => p.id === productId);
+                const product = this.products.find(p => p.id === productId);
         if (product) {
             this.updateProductInfo(product);
         }
