@@ -816,7 +816,14 @@ class StudioManager {
                 .from('files')
                 .select('*')
                 .eq('user_id', this.userId)
-                .or('category.eq.product_image,category.eq.product_gallery,category.eq.image,file_type.eq.image/jpeg,file_type.eq.image/png,file_type.eq.image/webp');
+                .or('category.eq.product_image,category.eq.product_gallery,category.eq.image,file_type.eq.image/jpeg,file_type.eq.image/png,file_type.eq.image/webp')
+                // Excluir logos de marca
+                .not('category', 'eq', 'brand_logo')
+                .not('category', 'eq', 'logo')
+                .not('image_name', 'ilike', '%logo%')
+                .not('image_name', 'ilike', '%brand%')
+                .not('description', 'ilike', '%logo%')
+                .not('description', 'ilike', '%brand%');
 
             if (productId) {
                 // Buscar el producto seleccionado para obtener su project_id
@@ -837,7 +844,23 @@ class StudioManager {
                 return;
             }
 
-            this.productImages = data || [];
+            // Filtrar imágenes para excluir logos de marca
+            const filteredImages = (data || []).filter(image => {
+                const name = (image.image_name || image.description || image.name || '').toLowerCase();
+                const category = (image.category || '').toLowerCase();
+                
+                // Excluir si contiene palabras relacionadas con logos
+                const isLogo = name.includes('logo') || 
+                               name.includes('brand') || 
+                               name.includes('marca') ||
+                               category.includes('logo') ||
+                               category.includes('brand') ||
+                               category.includes('marca');
+                
+                return !isLogo;
+            });
+            
+            this.productImages = filteredImages;
             this.renderProductImages();
             
             // Mostrar galería de imágenes si hay imágenes disponibles
@@ -857,43 +880,68 @@ class StudioManager {
     // Función para renderizar las imágenes de producto (solo galería)
     renderProductImages() {
         console.log('🎨 Renderizando imágenes de producto...', this.productImages.length);
-        const container = document.getElementById('dynamic-product-images');
-        if (!container) {
-            console.error('❌ No se encontró el contenedor dynamic-product-images');
-            return;
+        
+        try {
+            const container = document.getElementById('dynamic-product-images');
+            if (!container) {
+                console.error('❌ No se encontró el contenedor dynamic-product-images');
+                return;
+            }
+
+            if (!this.productImages || this.productImages.length === 0) {
+                container.innerHTML = `
+                    <div class="loading-placeholder">
+                        <span>No hay imágenes disponibles</span>
+                    </div>
+                `;
+                return;
+            }
+
+            // Limpiar contenedor
+            container.innerHTML = '';
+
+            // Renderizar cada imagen como galería simple
+            this.productImages.forEach((image, index) => {
+                try {
+                    // Manejar estructura de Supabase (files) - corregir construcción de URL
+                    let imageUrl = '';
+                    if (image.image_url) {
+                        imageUrl = image.image_url;
+                    } else if (image.path) {
+                        // Construir URL correcta para Supabase Storage
+                        imageUrl = `https://ksjeikudvqseoosyhsdd.supabase.co/storage/v1/object/public/ugc/${image.path}`;
+                    } else if (image.url) {
+                        imageUrl = image.url;
+                    }
+                    
+                    const imageName = image.image_name || image.description || image.name || `Imagen ${index + 1}`;
+                    
+                    // Verificar que la URL sea válida antes de crear el elemento
+                    if (!imageUrl) {
+                        console.warn('Imagen sin URL válida:', image);
+                        return;
+                    }
+                    
+                    // Crear elemento de imagen simple
+                    const imageItem = document.createElement('div');
+                    imageItem.className = 'product-image-item';
+                    imageItem.innerHTML = `
+                            <img src="${imageUrl}" alt="${imageName}" loading="lazy" 
+                                 onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjMzMzIi8+Cjx0ZXh0IHg9IjUwIiB5PSI1NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5JbWFnZW48L3RleHQ+Cjwvc3ZnPg=='">
+                        <div class="image-label">${imageName}</div>
+                    `;
+                    
+                    container.appendChild(imageItem);
+                } catch (imageError) {
+                    console.error('Error renderizando imagen individual:', imageError, image);
+                }
+            });
+
+            console.log(`✅ ${this.productImages.length} imágenes renderizadas correctamente`);
+        } catch (error) {
+            console.error('Error en renderProductImages:', error);
+            this.showNotification('Error renderizando imágenes', 'error');
         }
-
-        if (this.productImages.length === 0) {
-            container.innerHTML = `
-                <div class="loading-placeholder">
-                    <span>No hay imágenes disponibles</span>
-                </div>
-            `;
-            return;
-        }
-
-        // Limpiar contenedor
-        container.innerHTML = '';
-
-        // Renderizar cada imagen como galería simple
-        this.productImages.forEach((image, index) => {
-            // Manejar estructura de Supabase (files)
-            const imageUrl = image.image_url || (image.path ? `https://ksjeikudvqseoosyhsdd.supabase.co/storage/v1/object/public/ugc/${image.path}` : '');
-            const imageName = image.image_name || image.description || `Imagen ${index + 1}`;
-            
-            // Crear elemento de imagen simple
-            const imageItem = document.createElement('div');
-            imageItem.className = 'product-image-item';
-            imageItem.innerHTML = `
-                    <img src="${imageUrl}" alt="${imageName}" loading="lazy" 
-                         onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjMzMzIi8+Cjx0ZXh0IHg9IjUwIiB5PSI1NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5JbWFnZW48L3RleHQ+Cjwvc3ZnPg=='">
-                <div class="image-label">${imageName}</div>
-            `;
-            
-            container.appendChild(imageItem);
-        });
-
-        console.log(`✅ ${this.productImages.length} imágenes renderizadas correctamente`);
     }
 
 
