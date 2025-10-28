@@ -99,7 +99,6 @@ class StudioManager {
             const loadPromises = [
                 this.loadBrands(),
                 this.loadProducts(),
-                this.loadProductImages(),
                 this.loadOffers(),
                 this.loadAudiences()
             ];
@@ -352,6 +351,9 @@ class StudioManager {
         // Inicializar información de audiencia
         this.clearAudienceInfo();
         
+        // Ocultar galería de imágenes inicialmente
+        this.hideImageGallery();
+        
         console.log('Campos del sidebar inicializados correctamente');
     }
 
@@ -424,7 +426,7 @@ class StudioManager {
         this.offers.forEach(offer => {
             const option = document.createElement('option');
             option.value = offer.id;
-            option.textContent = offer.name || `Oferta ${offer.id}`;
+            option.textContent = offer.main_objective || `Oferta ${offer.id}`;
             offerSelector.appendChild(option);
         });
 
@@ -443,7 +445,7 @@ class StudioManager {
         this.audience.forEach(audience => {
             const option = document.createElement('option');
             option.value = audience.id;
-            option.textContent = audience.name || `Audiencia ${audience.id}`;
+            option.textContent = audience.buyer_persona?.name || `Audiencia ${audience.id}`;
             audienceSelector.appendChild(option);
         });
 
@@ -615,24 +617,24 @@ class StudioManager {
         // Actualizar el contenido del contenedor
         offerInfoContainer.innerHTML = `
             <div class="info-item">
-                <span class="info-label">Nombre:</span>
-                <span class="info-value">${offerData.name || 'No disponible'}</span>
+                <span class="info-label">Objetivo Principal:</span>
+                <span class="info-value">${offerData.main_objective || 'No disponible'}</span>
             </div>
             <div class="info-item">
                 <span class="info-label">Descripción:</span>
-                <span class="info-value">${offerData.description || 'No disponible'}</span>
+                <span class="info-value">${offerData.offer_desc || 'No disponible'}</span>
             </div>
             <div class="info-item">
-                <span class="info-label">Tipo de Oferta:</span>
-                <span class="info-value">${offerData.offer_type || 'No disponible'}</span>
+                <span class="info-label">Call to Action:</span>
+                <span class="info-value">${offerData.cta || 'No disponible'}</span>
             </div>
             <div class="info-item">
-                <span class="info-label">Descuento:</span>
-                <span class="info-value">${offerData.discount || 'No disponible'}</span>
+                <span class="info-label">URL:</span>
+                <span class="info-value">${offerData.cta_url || 'No disponible'}</span>
             </div>
             <div class="info-item">
                 <span class="info-label">Válido hasta:</span>
-                <span class="info-value">${offerData.valid_until || 'No disponible'}</span>
+                <span class="info-value">${offerData.offer_valid_until || 'No disponible'}</span>
             </div>
         `;
         
@@ -652,24 +654,24 @@ class StudioManager {
         // Actualizar el contenido del contenedor
         audienceInfoContainer.innerHTML = `
             <div class="info-item">
-                <span class="info-label">Nombre:</span>
-                <span class="info-value">${audienceData.name || 'No disponible'}</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Descripción:</span>
-                <span class="info-value">${audienceData.description || 'No disponible'}</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Edad:</span>
-                <span class="info-value">${audienceData.age_range || 'No disponible'}</span>
+                <span class="info-label">Persona de Compra:</span>
+                <span class="info-value">${audienceData.buyer_persona?.name || 'No disponible'}</span>
             </div>
             <div class="info-item">
                 <span class="info-label">Intereses:</span>
                 <span class="info-value">${audienceData.interests ? audienceData.interests.join(', ') : 'No disponible'}</span>
             </div>
             <div class="info-item">
-                <span class="info-label">Comportamiento:</span>
-                <span class="info-value">${audienceData.behavior || 'No disponible'}</span>
+                <span class="info-label">Dolores:</span>
+                <span class="info-value">${audienceData.pains ? audienceData.pains.join(', ') : 'No disponible'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Contextos:</span>
+                <span class="info-value">${audienceData.contexts ? audienceData.contexts.join(', ') : 'No disponible'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Idiomas:</span>
+                <span class="info-value">${audienceData.language_codes ? audienceData.language_codes.join(', ') : 'No disponible'}</span>
             </div>
         `;
         
@@ -746,6 +748,14 @@ class StudioManager {
             
             if (!this.supabase || !this.userId) {
                 console.log('Sin autenticación: no se pueden cargar imágenes');
+                this.hideImageGallery();
+                return;
+            }
+
+            // Si no hay productId, no cargar imágenes y ocultar galería
+            if (!productId) {
+                console.log('No hay producto seleccionado, ocultando galería de imágenes');
+                this.hideImageGallery();
                 return;
             }
 
@@ -754,7 +764,7 @@ class StudioManager {
                 .from('files')
                 .select('*')
                 .eq('user_id', this.userId)
-                .in('category', ['product_image', 'product_gallery']);
+                .or('category.eq.product_image,category.eq.product_gallery,category.eq.image,file_type.eq.image/jpeg,file_type.eq.image/png,file_type.eq.image/webp');
 
             if (productId) {
                 // Buscar el producto seleccionado para obtener su project_id
