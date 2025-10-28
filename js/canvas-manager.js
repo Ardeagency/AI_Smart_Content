@@ -436,6 +436,22 @@ class CanvasManager {
                 <div class="card-content">
                     ${data.content || '<p>Contenido no disponible</p>'}
                 </div>
+                <div class="card-footer">
+                    <div class="action-buttons">
+                        <button class="btn-action btn-correction" onclick="window.canvasManager.showCorrectionModal('${data.id}')">
+                            <i class="fas fa-edit"></i>
+                            <span>Corrección</span>
+                        </button>
+                        <button class="btn-action btn-regenerate" onclick="window.canvasManager.regenerateScript('${data.id}')">
+                            <i class="fas fa-redo"></i>
+                            <span>Regenerar</span>
+                        </button>
+                        <button class="btn-action btn-create" onclick="window.canvasManager.createImages('${data.id}')">
+                            <i class="fas fa-image"></i>
+                            <span>Crear</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         `;
     }
@@ -720,6 +736,250 @@ class CanvasManager {
     showNotification(message, type = 'info') {
         // Implementar sistema de notificaciones
         console.log(`[${type.toUpperCase()}] ${message}`);
+    }
+
+    /* =======================================
+       FUNCIONES DE ACCIONES DE CARDS
+       ======================================= */
+
+    /**
+     * Mostrar modal de corrección
+     * @param {string} cardId - ID de la card
+     */
+    showCorrectionModal(cardId) {
+        console.log('Mostrando modal de corrección para:', cardId);
+        
+        // Crear overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'correction-modal-overlay';
+        overlay.id = 'correction-modal-overlay';
+        
+        // Crear modal
+        const modal = document.createElement('div');
+        modal.className = 'correction-modal';
+        modal.innerHTML = `
+            <div class="correction-modal-header">
+                <h3>Corrección de Guion</h3>
+                <button class="correction-modal-close" onclick="window.canvasManager.closeCorrectionModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="correction-modal-body">
+                <label for="correction-text">Especifica qué quieres cambiar de este guion:</label>
+                <textarea 
+                    id="correction-text" 
+                    placeholder="Ejemplo: Cambiar el tono a más formal, agregar más detalles sobre el producto, modificar la duración de los clips..."
+                    rows="5"
+                ></textarea>
+            </div>
+            <div class="correction-modal-footer">
+                <button class="correction-modal-btn correction-modal-btn-cancel" onclick="window.canvasManager.closeCorrectionModal()">
+                    Cancelar
+                </button>
+                <button class="correction-modal-btn correction-modal-btn-submit" onclick="window.canvasManager.submitCorrection('${cardId}')">
+                    Enviar Corrección
+                </button>
+            </div>
+        `;
+        
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+        
+        // Mostrar modal con animación
+        setTimeout(() => {
+            overlay.classList.add('show');
+        }, 10);
+        
+        // Focus en el textarea
+        setTimeout(() => {
+            document.getElementById('correction-text').focus();
+        }, 300);
+    }
+
+    /**
+     * Cerrar modal de corrección
+     */
+    closeCorrectionModal() {
+        const overlay = document.getElementById('correction-modal-overlay');
+        if (overlay) {
+            overlay.classList.remove('show');
+            setTimeout(() => {
+                overlay.remove();
+            }, 300);
+        }
+    }
+
+    /**
+     * Enviar corrección
+     * @param {string} cardId - ID de la card
+     */
+    submitCorrection(cardId) {
+        const correctionText = document.getElementById('correction-text').value.trim();
+        
+        if (!correctionText) {
+            this.showNotification('Por favor especifica qué quieres cambiar', 'error');
+            return;
+        }
+        
+        console.log('Enviando corrección para:', cardId, 'Texto:', correctionText);
+        
+        // Obtener datos de la card
+        const cardObject = this.canvas.objects.find(obj => obj.id === cardId);
+        if (!cardObject) {
+            this.showNotification('No se encontró la card', 'error');
+            return;
+        }
+        
+        // Preparar datos para envío
+        const correctionData = {
+            original_script: cardObject.data.variant,
+            correction_request: correctionText,
+            metadata: {
+                timestamp: new Date().toISOString(),
+                card_id: cardId,
+                action: 'correction'
+            }
+        };
+        
+        // Enviar al webhook de generación (mismo que genera guiones)
+        this.sendCorrectionToWebhook(correctionData);
+        
+        // Cerrar modal
+        this.closeCorrectionModal();
+        
+        this.showNotification('Corrección enviada correctamente', 'success');
+    }
+
+    /**
+     * Regenerar guion
+     * @param {string} cardId - ID de la card
+     */
+    regenerateScript(cardId) {
+        console.log('Regenerando guion para:', cardId);
+        
+        // Obtener datos de la card
+        const cardObject = this.canvas.objects.find(obj => obj.id === cardId);
+        if (!cardObject) {
+            this.showNotification('No se encontró la card', 'error');
+            return;
+        }
+        
+        // Preparar datos para regeneración
+        const regenerateData = {
+            original_script: cardObject.data.variant,
+            action: 'regenerate',
+            metadata: {
+                timestamp: new Date().toISOString(),
+                card_id: cardId
+            }
+        };
+        
+        // Enviar al webhook de generación
+        this.sendRegenerateToWebhook(regenerateData);
+        
+        this.showNotification('Regenerando guion...', 'info');
+    }
+
+    /**
+     * Crear imágenes de escenas
+     * @param {string} cardId - ID de la card
+     */
+    createImages(cardId) {
+        console.log('Creando imágenes para:', cardId);
+        
+        // Obtener datos de la card
+        const cardObject = this.canvas.objects.find(obj => obj.id === cardId);
+        if (!cardObject) {
+            this.showNotification('No se encontró la card', 'error');
+            return;
+        }
+        
+        // Preparar datos para creación de imágenes
+        const imageData = {
+            script: cardObject.data.variant,
+            action: 'create_images',
+            metadata: {
+                timestamp: new Date().toISOString(),
+                card_id: cardId
+            }
+        };
+        
+        // Enviar al webhook de creación de imágenes
+        this.sendCreateImagesToWebhook(imageData);
+        
+        this.showNotification('Creando imágenes de escenas...', 'info');
+    }
+
+    /**
+     * Enviar corrección al webhook
+     * @param {Object} data - Datos de corrección
+     */
+    async sendCorrectionToWebhook(data) {
+        try {
+            const webhookUrl = 'https://ardeagency.app.n8n.cloud/webhook/4635dddf-f8f9-4cc2-be0f-54e1c542d702';
+            
+            const response = await fetch(webhookUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+            
+            console.log('Corrección enviada al webhook');
+        } catch (error) {
+            console.error('Error enviando corrección:', error);
+            this.showNotification('Error enviando corrección', 'error');
+        }
+    }
+
+    /**
+     * Enviar regeneración al webhook
+     * @param {Object} data - Datos de regeneración
+     */
+    async sendRegenerateToWebhook(data) {
+        try {
+            const webhookUrl = 'https://ardeagency.app.n8n.cloud/webhook/4635dddf-f8f9-4cc2-be0f-54e1c542d702';
+            
+            const response = await fetch(webhookUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+            
+            console.log('Regeneración enviada al webhook');
+        } catch (error) {
+            console.error('Error enviando regeneración:', error);
+            this.showNotification('Error enviando regeneración', 'error');
+        }
+    }
+
+    /**
+     * Enviar creación de imágenes al webhook
+     * @param {Object} data - Datos de creación de imágenes
+     */
+    async sendCreateImagesToWebhook(data) {
+        try {
+            const webhookUrl = 'https://ardeagency.app.n8n.cloud/webhook/6b8560d8-b00c-4cda-85a1-143e4d5e869c';
+            
+            const response = await fetch(webhookUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+            
+            console.log('Creación de imágenes enviada al webhook');
+        } catch (error) {
+            console.error('Error enviando creación de imágenes:', error);
+            this.showNotification('Error enviando creación de imágenes', 'error');
+        }
     }
 
     updateCanvasBackground() {
