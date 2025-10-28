@@ -9,7 +9,6 @@ class StudioManager {
         this.brands = [];
         this.products = [];
         this.productImages = [];
-        this.selectedProductImages = [];
         this.offers = [];
         this.audience = [];
         this.ugc = [];
@@ -61,7 +60,7 @@ class StudioManager {
     async checkAuthentication() {
         try {
             if (!this.supabase) {
-                console.log('Supabase no está disponible, continuando en modo demo');
+                console.log('Supabase no está disponible');
                 return;
             }
 
@@ -70,11 +69,10 @@ class StudioManager {
                 this.userId = session.user.id;
                 console.log('Usuario autenticado:', this.userId);
             } else {
-                console.log('No hay sesión activa, continuando en modo demo');
+                console.log('No hay sesión activa');
             }
         } catch (error) {
             console.log('Error verificando autenticación:', error);
-            console.log('Continuando en modo demo');
         }
     }
 
@@ -89,10 +87,7 @@ class StudioManager {
 
     async loadUserData() {
         if (!this.supabase || !this.userId) {
-            console.log('Modo demo: sin datos');
-            this.loadDemoData();
-            // También cargar imágenes de producto en modo demo
-            await this.loadProductImages();
+            console.log('Sin autenticación: no se pueden cargar datos');
             return;
         }
 
@@ -105,19 +100,11 @@ class StudioManager {
                 this.loadBrands(),
                 this.loadProducts(),
                 this.loadProductImages(),
-                // this.loadOffers(),
-                // this.loadAvatars(),
-                // this.loadStyleCatalog(),
-                // this.loadAudience(),
-                // this.loadUGC(),
-                // this.loadAesthetics(),
-                // this.loadScenarios(),
-                // this.loadBrandGuidelines(),
-                // this.loadCompliance(),
-                // this.loadDistribution()
+                this.loadOffers(),
+                this.loadAudiences()
             ];
 
-            // Ejecutar todas las cargas, pero no fallar si alguna falla
+            // Ejecutar todas las cargas
             await Promise.allSettled(loadPromises);
 
             // Pre-poblar configuraciones con datos del usuario
@@ -125,22 +112,19 @@ class StudioManager {
 
         } catch (error) {
             console.error('Error loading user data:', error);
-            this.loadDemoData();
+            this.showNotification('Error cargando datos del usuario', 'error');
         }
     }
 
-    // Función de Lucide removida - ya no es necesaria
-
     // =======================================
-    // Funciones de carga de datos (mantener las existentes)
+    // Funciones de carga de datos
     // =======================================
 
     async loadBrands() {
         try {
             console.log('=== CARGANDO MARCAS ===');
             if (!this.supabase || !this.userId) {
-                console.log('Modo demo: cargando marcas de ejemplo');
-                this.loadDemoBrands();
+                console.log('Sin autenticación: no se pueden cargar marcas');
                 return;
             }
 
@@ -167,8 +151,7 @@ class StudioManager {
 
             if (error) {
                 console.error('Error loading brands:', error);
-                console.log('Fallback a modo demo debido a error de Supabase');
-                this.loadDemoBrands();
+                this.showNotification('Error cargando marcas', 'error');
                 return;
             }
 
@@ -188,8 +171,7 @@ class StudioManager {
         try {
             console.log('=== CARGANDO PRODUCTOS ===');
             if (!this.supabase || !this.userId) {
-                console.log('Modo demo: cargando productos de ejemplo');
-                this.loadDemoProducts();
+                console.log('Sin autenticación: no se pueden cargar productos');
                 return;
             }
 
@@ -220,8 +202,7 @@ class StudioManager {
 
             if (error) {
                 console.error('Error loading products:', error);
-                console.log('Fallback a modo demo debido a error de Supabase');
-                this.loadDemoProducts();
+                this.showNotification('Error cargando productos', 'error');
                 return;
             }
 
@@ -237,8 +218,83 @@ class StudioManager {
         }
     }
 
-    // ... (mantener todas las otras funciones de carga de datos existentes)
-    // Por simplicidad, no las incluyo todas aquí, pero se mantendrían igual
+    async loadOffers() {
+        try {
+            console.log('=== CARGANDO OFERTAS ===');
+            if (!this.supabase || !this.userId) {
+                console.log('Sin autenticación: no se pueden cargar ofertas');
+                return;
+            }
+
+            const { data: offers, error } = await this.supabase
+                .from('offers')
+                .select(`
+                    *,
+                    projects!inner(
+                        id,
+                        name,
+                        user_id
+                    )
+                `)
+                .eq('projects.user_id', this.userId)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error loading offers:', error);
+                this.showNotification('Error cargando ofertas', 'error');
+                return;
+            }
+
+            this.offers = offers || [];
+            console.log('Ofertas cargadas desde Supabase:', this.offers);
+            
+            // Actualizar el dropdown de ofertas
+            this.updateOfferSelector();
+
+        } catch (error) {
+            console.error('Error in loadOffers:', error);
+            this.showNotification('Error cargando ofertas', 'error');
+        }
+    }
+
+    async loadAudiences() {
+        try {
+            console.log('=== CARGANDO AUDIENCIAS ===');
+            if (!this.supabase || !this.userId) {
+                console.log('Sin autenticación: no se pueden cargar audiencias');
+                return;
+            }
+
+            const { data: audiences, error } = await this.supabase
+                .from('audiences')
+                .select(`
+                    *,
+                    projects!inner(
+                        id,
+                        name,
+                        user_id
+                    )
+                `)
+                .eq('projects.user_id', this.userId)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error loading audiences:', error);
+                this.showNotification('Error cargando audiencias', 'error');
+                return;
+            }
+
+            this.audience = audiences || [];
+            console.log('Audiencias cargadas desde Supabase:', this.audience);
+            
+            // Actualizar el dropdown de audiencias
+            this.updateAudienceSelector();
+
+        } catch (error) {
+            console.error('Error in loadAudiences:', error);
+            this.showNotification('Error cargando audiencias', 'error');
+        }
+    }
 
 
     // =======================================
@@ -262,108 +318,41 @@ class StudioManager {
         console.log(`[${type.toUpperCase()}] ${message}`);
     }
 
-    // =======================================
-    // Funciones de demo (mantener las existentes)
-    // =======================================
 
-    loadDemoData() {
-        console.log('Cargando datos de demo...');
-        // Cargar datos de demo
-        this.loadDemoBrands();
-        this.loadDemoProducts();
-        
-        // Inicialmente ocultar secciones de productos e imágenes
-        this.hideProductSection();
-        this.hideImageSection();
-        
-        // No cargar imágenes hasta que se seleccione un producto
-        // this.loadProductImages();
-    }
 
-    // Función para cargar marcas de ejemplo en modo demo
-    loadDemoBrands() {
-        this.brands = [
-            {
-                id: 'demo-brand-1',
-                project_id: 'demo-project-1',
-                projects: { 
-                    id: 'demo-project-1', 
-                    name: 'Marca Demo 1', 
-                    website: 'https://demo1.com/productos' 
-                },
-                tone_of_voice: 'Profesional y confiable',
-                keywords_yes: ['innovación', 'calidad', 'confianza'],
-                keywords_no: ['barato', 'descuento', 'oferta']
-            },
-            {
-                id: 'demo-brand-2',
-                project_id: 'demo-project-2',
-                projects: { 
-                    id: 'demo-project-2', 
-                    name: 'Marca Demo 2', 
-                    website: 'https://demo2.com/catalogo' 
-                },
-                tone_of_voice: 'Joven y dinámico',
-                keywords_yes: ['fresco', 'moderno', 'divertido'],
-                keywords_no: ['aburrido', 'tradicional', 'formal']
-            }
-        ];
-        this.updateBrandSelector();
-        console.log('Marcas de demo cargadas:', this.brands.length);
-    }
-
-    // Función para cargar productos de ejemplo en modo demo
-    loadDemoProducts() {
-        this.products = [
-            {
-                id: 'demo-product-1',
-                project_id: 'demo-project-1',
-                name: 'Producto Demo 1',
-                product_type: 'Electrónico',
-                short_desc: 'Un producto innovador para el hogar',
-                benefits: ['Fácil de usar', 'Eficiente', 'Duradero'],
-                price: 299.99,
-                projects: {
-                    id: 'demo-project-1',
-                    name: 'Marca Demo 1',
-                    website: 'https://demo1.com/productos'
-                }
-            },
-            {
-                id: 'demo-product-2',
-                project_id: 'demo-project-1',
-                name: 'Producto Demo 2',
-                product_type: 'Ropa',
-                short_desc: 'Ropa cómoda y elegante',
-                benefits: ['Confortable', 'Estiloso', 'Versátil'],
-                price: 89.99,
-                projects: {
-                    id: 'demo-project-1',
-                    name: 'Marca Demo 1',
-                    website: 'https://demo1.com/productos'
-                }
-            },
-            {
-                id: 'demo-product-3',
-                project_id: 'demo-project-2',
-                name: 'Producto Demo 3',
-                product_type: 'Accesorio',
-                short_desc: 'Accesorio moderno y funcional',
-                benefits: ['Práctico', 'Elegante', 'Duradero'],
-                price: 149.99,
-                projects: {
-                    id: 'demo-project-2',
-                    name: 'Marca Demo 2',
-                    website: 'https://demo2.com/catalogo'
-                }
-            }
-        ];
-        this.updateProductSelector();
-        console.log('Productos de demo cargados:', this.products.length);
-    }
 
     initializeSidebarFields() {
-        // Implementar inicialización de campos del sidebar
+        console.log('=== INICIALIZANDO CAMPOS DEL SIDEBAR ===');
+        
+        // Inicializar información de marca
+        const brandInfoContainer = document.getElementById('brand-info');
+        if (brandInfoContainer) {
+            brandInfoContainer.innerHTML = `
+                <div class="info-item">
+                    <span class="info-label">Estado:</span>
+                    <span class="info-value">Selecciona una marca</span>
+                </div>
+            `;
+        }
+        
+        // Inicializar información de producto
+        const productInfoContainer = document.getElementById('product-info');
+        if (productInfoContainer) {
+            productInfoContainer.innerHTML = `
+                <div class="info-item">
+                    <span class="info-label">Estado:</span>
+                    <span class="info-value">Selecciona un producto</span>
+                </div>
+            `;
+        }
+        
+        // Inicializar información de oferta
+        this.clearOfferInfo();
+        
+        // Inicializar información de audiencia
+        this.clearAudienceInfo();
+        
+        console.log('Campos del sidebar inicializados correctamente');
     }
 
     // Función para actualizar el selector de marcas
@@ -393,10 +382,10 @@ class StudioManager {
         // Limpiar opciones existentes
         productSelector.innerHTML = '<option value="">Seleccionar producto...</option>';
 
-        // Si no hay marca seleccionada, no mostrar productos
+        // Si no hay marca seleccionada, limpiar productos pero mantener el selector visible
         if (!selectedBrandId) {
-            console.log('No hay marca seleccionada, ocultando productos');
-            this.hideProductSection();
+            console.log('No hay marca seleccionada, limpiando productos');
+            this.hideImageGallery();
             return;
         }
 
@@ -421,64 +410,80 @@ class StudioManager {
         });
 
         console.log('Selector de productos actualizado:', filteredProducts.length, 'productos para marca', selectedBrandId);
-        
-        // Mostrar sección de productos
-        this.showProductSection();
+    }
+
+    // Función para actualizar el selector de ofertas
+    updateOfferSelector() {
+        const offerSelector = document.getElementById('offer-selector');
+        if (!offerSelector) return;
+
+        // Limpiar opciones existentes
+        offerSelector.innerHTML = '<option value="">Seleccionar oferta...</option>';
+
+        // Agregar ofertas disponibles
+        this.offers.forEach(offer => {
+            const option = document.createElement('option');
+            option.value = offer.id;
+            option.textContent = offer.name || `Oferta ${offer.id}`;
+            offerSelector.appendChild(option);
+        });
+
+        console.log('Selector de ofertas actualizado:', this.offers.length, 'ofertas');
+    }
+
+    // Función para actualizar el selector de audiencias
+    updateAudienceSelector() {
+        const audienceSelector = document.getElementById('audience-selector');
+        if (!audienceSelector) return;
+
+        // Limpiar opciones existentes
+        audienceSelector.innerHTML = '<option value="">Seleccionar audiencia...</option>';
+
+        // Agregar audiencias disponibles
+        this.audience.forEach(audience => {
+            const option = document.createElement('option');
+            option.value = audience.id;
+            option.textContent = audience.name || `Audiencia ${audience.id}`;
+            audienceSelector.appendChild(option);
+        });
+
+        console.log('Selector de audiencias actualizado:', this.audience.length, 'audiencias');
     }
 
     // Función para manejar la selección de marca desde el dropdown
     async selectBrandFromDropdown(brandId) {
-        const brandNameElement = document.getElementById('selected-brand-name');
-        if (brandNameElement) {
-            if (brandId) {
-                const brand = this.brands.find(b => b.id === brandId);
-                brandNameElement.textContent = brand ? (brand.projects?.name || 'Marca seleccionada') : 'Marca seleccionada';
-            } else {
-                brandNameElement.textContent = 'Selecciona una marca';
-            }
-        }
-
         console.log('Marca seleccionada:', brandId);
         
         // Actualizar productos basado en la marca seleccionada
         this.updateProductSelector(brandId);
         
-        // Limpiar selección de producto e imágenes cuando cambia la marca
+        // Limpiar selección de producto cuando cambia la marca
         this.clearProductSelection();
-        this.clearSelectedImages(); // Solo limpiar selección, no ocultar sección
-    }
-
-    // Función para mostrar/ocultar sección de productos
-    showProductSection() {
-        const productSection = document.getElementById('product-images-section');
-        if (productSection) {
-            productSection.style.display = 'block';
-            console.log('Sección de productos mostrada');
+        
+        // Si hay marca seleccionada, cargar y mostrar su información
+        if (brandId) {
+            const brand = this.brands.find(b => b.id === brandId);
+            if (brand) {
+                this.updateBrandInfo(brand);
+            }
         }
     }
 
-    hideProductSection() {
-        const productSection = document.getElementById('product-images-section');
-        if (productSection) {
-            productSection.style.display = 'none';
-            console.log('Sección de productos ocultada');
+
+    // Función para mostrar/ocultar galería de imágenes
+    showImageGallery() {
+        const imageGallery = document.getElementById('product-image-gallery');
+        if (imageGallery) {
+            imageGallery.style.display = 'block';
+            console.log('Galería de imágenes mostrada');
         }
     }
 
-    // Función para mostrar/ocultar sección de imágenes
-    showImageSection() {
-        const imageSection = document.getElementById('product-images-section');
-        if (imageSection) {
-            imageSection.style.display = 'block';
-            console.log('Sección de imágenes mostrada');
-        }
-    }
-
-    hideImageSection() {
-        const imageSection = document.getElementById('product-images-section');
-        if (imageSection) {
-            imageSection.style.display = 'none';
-            console.log('Sección de imágenes ocultada');
+    hideImageGallery() {
+        const imageGallery = document.getElementById('product-image-gallery');
+        if (imageGallery) {
+            imageGallery.style.display = 'none';
+            console.log('Galería de imágenes ocultada');
         }
     }
 
@@ -489,17 +494,212 @@ class StudioManager {
             productSelector.value = '';
         }
         
-        const productNameElement = document.getElementById('selected-product-name');
-        if (productNameElement) {
-            productNameElement.textContent = 'Selecciona un producto';
+        // Limpiar información del producto en el acordeón
+        const productInfoContainer = document.getElementById('product-info');
+        if (productInfoContainer) {
+            productInfoContainer.innerHTML = `
+                <div class="info-item">
+                    <span class="info-label">Estado:</span>
+                    <span class="info-value">Selecciona un producto</span>
+                </div>
+            `;
+        }
+        
+        // Ocultar galería de imágenes
+        this.hideImageGallery();
+    }
+
+    // Función para actualizar la información de marca en el acordeón
+    updateBrandInfo(brandData) {
+        console.log('Actualizando información de marca:', brandData);
+        
+        const brandInfoContainer = document.getElementById('brand-info');
+        if (!brandInfoContainer) {
+            console.error('No se encontró el contenedor brand-info');
+            return;
+        }
+        
+        // Actualizar el contenido del contenedor
+        brandInfoContainer.innerHTML = `
+            <div class="info-item">
+                <span class="info-label">Nombre:</span>
+                <span class="info-value">${brandData.projects?.name || 'No disponible'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Tono de Voz:</span>
+                <span class="info-value">${brandData.tone_of_voice || 'No disponible'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Keywords Positivos:</span>
+                <span class="info-value">${brandData.keywords_yes ? brandData.keywords_yes.join(', ') : 'No disponible'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Keywords Negativos:</span>
+                <span class="info-value">${brandData.keywords_no ? brandData.keywords_no.join(', ') : 'No disponible'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Do's y Don'ts:</span>
+                <span class="info-value">${brandData.dos_donts || 'No disponible'}</span>
+            </div>
+        `;
+        
+        console.log('Información de marca actualizada correctamente');
+    }
+
+    // Función para actualizar la información de producto en el acordeón
+    updateProductInfo(productData) {
+        console.log('Actualizando información de producto:', productData);
+        
+        const productInfoContainer = document.getElementById('product-info');
+        if (!productInfoContainer) {
+            console.error('No se encontró el contenedor product-info');
+            return;
+        }
+        
+        // Formatear precio
+        const priceDisplay = productData.price && productData.price > 0 ? 
+            `$${parseFloat(productData.price).toFixed(2)}` : 
+            'No disponible';
+        
+        // Formatear beneficios
+        const benefitsDisplay = productData.benefits && productData.benefits.length > 0 ? 
+            productData.benefits.join(', ') : 
+            'No disponible';
+        
+        // Formatear ingredientes
+        const ingredientsDisplay = productData.ingredients && productData.ingredients.length > 0 ? 
+            productData.ingredients.join(', ') : 
+            'No disponible';
+        
+        // Actualizar el contenido del contenedor
+        productInfoContainer.innerHTML = `
+            <div class="info-item">
+                <span class="info-label">Nombre:</span>
+                <span class="info-value">${productData.name || 'No disponible'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Tipo de Producto:</span>
+                <span class="info-value">${productData.product_type || 'No disponible'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Descripción:</span>
+                <span class="info-value">${productData.short_desc || 'No disponible'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Beneficios:</span>
+                <span class="info-value">${benefitsDisplay}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Ingredientes:</span>
+                <span class="info-value">${ingredientsDisplay}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Precio:</span>
+                <span class="info-value">${priceDisplay}</span>
+            </div>
+        `;
+        
+        console.log('Información de producto actualizada correctamente');
+    }
+
+    // Función para actualizar la información de oferta en el acordeón
+    updateOfferInfo(offerData) {
+        console.log('Actualizando información de oferta:', offerData);
+        
+        const offerInfoContainer = document.getElementById('offer-info');
+        if (!offerInfoContainer) {
+            console.error('No se encontró el contenedor offer-info');
+            return;
+        }
+        
+        // Actualizar el contenido del contenedor
+        offerInfoContainer.innerHTML = `
+            <div class="info-item">
+                <span class="info-label">Nombre:</span>
+                <span class="info-value">${offerData.name || 'No disponible'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Descripción:</span>
+                <span class="info-value">${offerData.description || 'No disponible'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Tipo de Oferta:</span>
+                <span class="info-value">${offerData.offer_type || 'No disponible'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Descuento:</span>
+                <span class="info-value">${offerData.discount || 'No disponible'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Válido hasta:</span>
+                <span class="info-value">${offerData.valid_until || 'No disponible'}</span>
+            </div>
+        `;
+        
+        console.log('Información de oferta actualizada correctamente');
+    }
+
+    // Función para actualizar la información de audiencia en el acordeón
+    updateAudienceInfo(audienceData) {
+        console.log('Actualizando información de audiencia:', audienceData);
+        
+        const audienceInfoContainer = document.getElementById('audience-info');
+        if (!audienceInfoContainer) {
+            console.error('No se encontró el contenedor audience-info');
+            return;
+        }
+        
+        // Actualizar el contenido del contenedor
+        audienceInfoContainer.innerHTML = `
+            <div class="info-item">
+                <span class="info-label">Nombre:</span>
+                <span class="info-value">${audienceData.name || 'No disponible'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Descripción:</span>
+                <span class="info-value">${audienceData.description || 'No disponible'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Edad:</span>
+                <span class="info-value">${audienceData.age_range || 'No disponible'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Intereses:</span>
+                <span class="info-value">${audienceData.interests ? audienceData.interests.join(', ') : 'No disponible'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Comportamiento:</span>
+                <span class="info-value">${audienceData.behavior || 'No disponible'}</span>
+            </div>
+        `;
+        
+        console.log('Información de audiencia actualizada correctamente');
+    }
+
+    // Función para limpiar información de oferta
+    clearOfferInfo() {
+        const offerInfoContainer = document.getElementById('offer-info');
+        if (offerInfoContainer) {
+            offerInfoContainer.innerHTML = `
+                <div class="info-item">
+                    <span class="info-label">Estado:</span>
+                    <span class="info-value">No seleccionado</span>
+                </div>
+            `;
         }
     }
 
-    // Función para limpiar selección de imágenes
-    clearImageSelection() {
-        this.clearSelectedImages();
-        // No ocultar la sección, solo limpiar la selección
-        // this.hideImageSection();
+    // Función para limpiar información de audiencia
+    clearAudienceInfo() {
+        const audienceInfoContainer = document.getElementById('audience-info');
+        if (audienceInfoContainer) {
+            audienceInfoContainer.innerHTML = `
+                <div class="info-item">
+                    <span class="info-label">Estado:</span>
+                    <span class="info-value">No seleccionado</span>
+                </div>
+            `;
+        }
     }
 
     prePopulateConfigurations() {
@@ -545,8 +745,7 @@ class StudioManager {
             });
             
             if (!this.supabase || !this.userId) {
-                console.log('Modo demo: cargando imágenes de ejemplo');
-                this.loadDemoProductImages();
+                console.log('Sin autenticación: no se pueden cargar imágenes');
                 return;
             }
 
@@ -572,20 +771,18 @@ class StudioManager {
 
             if (error) {
                 console.error('Error cargando imágenes de producto:', error);
-                console.log('Fallback a modo demo debido a error de Supabase');
-                this.loadDemoProductImages();
+                this.showNotification('Error cargando imágenes de producto', 'error');
                 return;
             }
 
             this.productImages = data || [];
             this.renderProductImages();
-            this.updateSelectedImagesSummary();
             
-            // Mostrar sección de imágenes si hay imágenes disponibles
+            // Mostrar galería de imágenes si hay imágenes disponibles
             if (this.productImages.length > 0) {
-                this.showImageSection();
+                this.showImageGallery();
             } else {
-                this.hideImageSection();
+                this.hideImageGallery();
             }
 
         } catch (error) {
@@ -594,66 +791,8 @@ class StudioManager {
         }
     }
 
-    // Función para cargar imágenes de ejemplo en modo demo
-    loadDemoProductImages() {
-        console.log('📸 Cargando imágenes de demo...');
-        this.productImages = [
-            {
-                id: 'demo-1',
-                project_id: 'demo-project-1',
-                product_id: 'demo-product-1',
-                image_url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&h=300&fit=crop&crop=center',
-                image_name: 'Zapatos Deportivos',
-                created_at: new Date().toISOString()
-            },
-            {
-                id: 'demo-2',
-                project_id: 'demo-project-1',
-                product_id: 'demo-product-1',
-                image_url: 'https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=300&h=300&fit=crop&crop=center',
-                image_name: 'Auriculares Inalámbricos',
-                created_at: new Date().toISOString()
-            },
-            {
-                id: 'demo-3',
-                project_id: 'demo-project-1',
-                product_id: 'demo-product-2',
-                image_url: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&h=300&fit=crop&crop=center',
-                image_name: 'Reloj Inteligente',
-                created_at: new Date().toISOString()
-            },
-            {
-                id: 'demo-4',
-                project_id: 'demo-project-2',
-                product_id: 'demo-product-3',
-                image_url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop&crop=center',
-                image_name: 'Cámara Profesional',
-                created_at: new Date().toISOString()
-            },
-            {
-                id: 'demo-5',
-                project_id: 'demo-project-2',
-                product_id: 'demo-product-3',
-                image_url: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=300&h=300&fit=crop&crop=center',
-                image_name: 'Gafas de Sol',
-                created_at: new Date().toISOString()
-            },
-            {
-                id: 'demo-6',
-                project_id: 'demo-project-1',
-                product_id: 'demo-product-1',
-                image_url: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=300&h=300&fit=crop&crop=center',
-                image_name: 'Smartphone',
-                created_at: new Date().toISOString()
-            }
-        ];
-        this.renderProductImages();
-        
-        // Mostrar sección de imágenes en modo demo
-        this.showImageSection();
-    }
 
-    // Función para renderizar las imágenes de producto
+    // Función para renderizar las imágenes de producto (solo galería)
     renderProductImages() {
         console.log('🎨 Renderizando imágenes de producto...', this.productImages.length);
         const container = document.getElementById('dynamic-product-images');
@@ -674,104 +813,27 @@ class StudioManager {
         // Limpiar contenedor
         container.innerHTML = '';
 
-        // Renderizar cada imagen
+        // Renderizar cada imagen como galería simple
         this.productImages.forEach((image, index) => {
-            // Manejar tanto estructura de Supabase (files) como estructura de demo
+            // Manejar estructura de Supabase (files)
             const imageUrl = image.image_url || (image.path ? `https://ksjeikudvqseoosyhsdd.supabase.co/storage/v1/object/public/ugc/${image.path}` : '');
             const imageName = image.image_name || image.description || `Imagen ${index + 1}`;
-            const imageId = image.id;
             
-            // Crear elemento de imagen
-            const imageOption = document.createElement('div');
-            imageOption.className = 'dynamic-image-option';
-            imageOption.innerHTML = `
-                    <input type="checkbox" 
-                           id="dynamic-product-img-${imageId}" 
-                           name="product_images" 
-                           value="${imageUrl}"
-                           onchange="window.studioManager.toggleProductImage('${imageId}', this.checked)">
-                    <label for="dynamic-product-img-${imageId}">
+            // Crear elemento de imagen simple
+            const imageItem = document.createElement('div');
+            imageItem.className = 'product-image-item';
+            imageItem.innerHTML = `
                     <img src="${imageUrl}" alt="${imageName}" loading="lazy" 
                          onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjMzMzIi8+Cjx0ZXh0IHg9IjUwIiB5PSI1NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5JbWFnZW48L3RleHQ+Cjwvc3ZnPg=='">
-                        <div class="image-overlay">
-                            <div class="overlay-content">
-                                ${imageName}
-                            </div>
-                        </div>
-                    </label>
+                <div class="image-label">${imageName}</div>
             `;
             
-            container.appendChild(imageOption);
+            container.appendChild(imageItem);
         });
 
         console.log(`✅ ${this.productImages.length} imágenes renderizadas correctamente`);
     }
 
-    // Función para manejar la selección/deselección de imágenes
-    toggleProductImage(imageId, isSelected) {
-        const image = this.productImages.find(img => img.id === imageId);
-        if (!image) return;
-
-        if (isSelected) {
-            if (!this.selectedProductImages.find(img => img.id === imageId)) {
-                this.selectedProductImages.push(image);
-            }
-        } else {
-            this.selectedProductImages = this.selectedProductImages.filter(img => img.id !== imageId);
-        }
-
-        this.updateSelectedImagesSummary();
-        this.updateUGCData();
-    }
-
-    // Función para actualizar el resumen de imágenes seleccionadas
-    updateSelectedImagesSummary() {
-        const summaryContainer = document.getElementById('selected-images-summary');
-        if (!summaryContainer) return;
-
-        if (this.selectedProductImages.length === 0) {
-            summaryContainer.innerHTML = '<span class="no-selection">Ninguna imagen seleccionada</span>';
-            return;
-        }
-
-        summaryContainer.innerHTML = this.selectedProductImages.map(image => `
-            <div class="selected-image-tag">
-                <span>${image.image_name}</span>
-                <button class="remove-btn" onclick="window.studioManager.removeSelectedImage('${image.id}')" title="Quitar imagen">×</button>
-            </div>
-        `).join('');
-    }
-
-    // Función para quitar una imagen seleccionada
-    removeSelectedImage(imageId) {
-        this.selectedProductImages = this.selectedProductImages.filter(img => img.id !== imageId);
-        
-        // Desmarcar el checkbox
-        const checkbox = document.getElementById(`dynamic-product-img-${imageId}`);
-        if (checkbox) checkbox.checked = false;
-        
-        this.updateSelectedImagesSummary();
-        this.updateUGCData();
-    }
-
-    // Función para limpiar todas las imágenes seleccionadas
-    clearSelectedImages() {
-        this.selectedProductImages = [];
-        
-        // Desmarcar todos los checkboxes
-        const checkboxes = document.querySelectorAll('input[name="product_images"]');
-        checkboxes.forEach(cb => cb.checked = false);
-        
-        this.updateSelectedImagesSummary();
-        this.updateUGCData();
-        this.showNotification('Imágenes seleccionadas limpiadas', 'info');
-    }
-
-    // Función para actualizar los datos UGC con las imágenes seleccionadas
-    updateUGCData() {
-        // Esta función se llamará cuando se generen los datos UGC
-        // para incluir las imágenes seleccionadas
-    }
 
     // Función para refrescar las imágenes de producto
     async refreshProductImages() {
@@ -785,50 +847,58 @@ class StudioManager {
 
     // Función para manejar la selección de producto desde el dropdown
     async selectProductFromDropdown(productId) {
-        const productNameElement = document.getElementById('selected-product-name');
-        const productUrlElement = document.getElementById('selected-product-url');
+        console.log('Producto seleccionado:', productId);
         
-        if (productNameElement) {
-            if (productId) {
-                const product = this.products.find(p => p.id === productId);
-                productNameElement.textContent = product ? product.name : 'Producto seleccionado';
-                
-                // Actualizar URL del producto
-                if (productUrlElement && product) {
-                    const productUrl = product.projects?.website || 'URL no disponible';
-                    productUrlElement.textContent = productUrl;
-                    productUrlElement.style.color = productUrl !== 'URL no disponible' ? '#4CAF50' : '#f44336';
-                }
-            } else {
-                productNameElement.textContent = 'Selecciona un producto';
-                if (productUrlElement) {
-                    productUrlElement.textContent = 'Selecciona un producto para ver su URL';
-                    productUrlElement.style.color = '#666';
-                }
-            }
+        // Si no hay producto seleccionado, ocultar galería de imágenes
+        if (!productId) {
+            this.hideImageGallery();
+            return;
         }
 
-        // Si no hay producto seleccionado, ocultar imágenes
-        if (!productId) {
-            this.hideImageSection();
-            this.clearSelectedImages();
-            return;
+        // Si hay producto seleccionado, cargar y mostrar su información
+        const product = this.products.find(p => p.id === productId);
+        if (product) {
+            this.updateProductInfo(product);
         }
 
         // Cargar imágenes del producto seleccionado
         await this.loadProductImages(productId);
-        
-        // No limpiar selección anterior, solo cargar nuevas imágenes
-        // this.clearSelectedImages(); // Comentado para mantener selección
     }
 
-    // Función para obtener las URLs de las imágenes seleccionadas
-    getSelectedProductImageUrls() {
-        return this.selectedProductImages.map(image => {
-            // Manejar tanto estructura de Supabase (files) como estructura de demo
-            return image.image_url || (image.path ? `https://ksjeikudvqseoosyhsdd.supabase.co/storage/v1/object/public/ugc/${image.path}` : '');
-        });
+    // Función para manejar la selección de oferta desde el dropdown
+    async selectOfferFromDropdown(offerId) {
+        console.log('Oferta seleccionada:', offerId);
+        
+        // Si no hay oferta seleccionada, limpiar información
+        if (!offerId) {
+            this.clearOfferInfo();
+            return;
+        }
+
+        // Si hay oferta seleccionada, cargar y mostrar su información
+        const offer = this.offers.find(o => o.id === offerId);
+        if (offer) {
+            this.updateOfferInfo(offer);
+        }
     }
+
+    // Función para manejar la selección de audiencia desde el dropdown
+    async selectAudienceFromDropdown(audienceId) {
+        console.log('Audiencia seleccionada:', audienceId);
+        
+        // Si no hay audiencia seleccionada, limpiar información
+        if (!audienceId) {
+            this.clearAudienceInfo();
+            return;
+        }
+
+        // Si hay audiencia seleccionada, cargar y mostrar su información
+        const audience = this.audience.find(a => a.id === audienceId);
+        if (audience) {
+            this.updateAudienceInfo(audience);
+        }
+    }
+
 
 
     /* =======================================
@@ -1084,8 +1154,3 @@ function refreshProductImages() {
     }
 }
 
-function clearSelectedImages() {
-    if (window.studioManager && window.studioManager.clearSelectedImages) {
-        window.studioManager.clearSelectedImages();
-    }
-}

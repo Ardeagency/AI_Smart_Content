@@ -164,24 +164,21 @@
                     </select>
                 </div>
 
-                <!-- Producto e Imágenes -->
-                <div class="config-section" id="product-images-section">
-                    <h4>🔹 Producto e Imágenes</h4>
+                <!-- Producto -->
                     <div class="config-field">
                         <label>Seleccionar producto:</label>
-                        <div class="dropdown-container">
                             <select id="product-selector" onchange="onProductSelected(this.value)">
                                 <option value="">Seleccionar producto...</option>
                             </select>
                         </div>
-                    </div>
-                    <div class="config-field">
-                        <label>Imágenes del producto:</label>
+
+                <!-- Galería de Imágenes del Producto -->
+                <div class="image-gallery-card" id="product-image-gallery" style="display: none;">
+                    <h4>Imágenes del producto</h4>
                         <div class="product-images-grid" id="dynamic-product-images">
                             <div class="loading-placeholder">
                                 <div class="spinner-small"></div>
-                                <span>Selecciona un producto para ver sus imágenes</span>
-                            </div>
+                            <span>Cargando imágenes...</span>
                         </div>
             </div>
         </div>
@@ -597,6 +594,10 @@
     <script src="js/supabase-config.js"></script>
     <script src="js/supabase-client.js"></script>
     <script src="js/navigation.js"></script>
+    <script src="js/canvas-manager.js"></script>
+    <script src="js/data-collector.js"></script>
+    <script src="js/webhook-manager.js"></script>
+    <script src="js/ugc-generator.js"></script>
     <script src="js/studio.js?v=2024-10-17-17-00"></script>
     
     <!-- Acordeón JavaScript -->
@@ -898,7 +899,7 @@
             }, 200);
         }
 
-        // Función para cargar imágenes en modal móvil
+        // Función para cargar imágenes en modal móvil (delegada a studio.js)
         function loadMobileProductImages(productId) {
             const imagesContainer = document.getElementById('mobile-dynamic-product-images');
             if (!imagesContainer) return;
@@ -921,7 +922,7 @@
             </div>
             `;
             
-            // Integrar con el sistema existente de carga de imágenes
+            // Delegar completamente a studio.js
             if (window.studioManager && window.studioManager.loadProductImages) {
                 window.studioManager.loadProductImages(productId).then(() => {
                     // Copiar las imágenes del contenedor original al móvil
@@ -943,14 +944,11 @@
                     `;
                 });
             } else {
-                // Fallback si no hay studioManager
-                setTimeout(() => {
                     imagesContainer.innerHTML = `
                         <div class="no-selection">
-                            <span>Imágenes del producto se cargarán aquí</span>
+                        <span>StudioManager no disponible</span>
                         </div>
                     `;
-                }, 1000);
             }
         }
 
@@ -1133,262 +1131,11 @@
         let isLoadingProduct = false;
 
         // Funciones para cargar datos de marca y producto
-        async function loadBrandInfo(brandId) {
-            console.log('=== CARGANDO INFORMACIÓN DE MARCA ===');
-            console.log('ID de marca:', brandId);
-            console.log('¿Ya está cargando?', isLoadingBrand);
-            
-            if (!brandId || isLoadingBrand) {
-                if (!brandId) {
-                    console.log('No hay ID de marca, limpiando información');
-                    clearBrandInfo();
-                }
-                return;
-            }
 
-            isLoadingBrand = true;
-            console.log('Iniciando carga de datos de marca:', brandId);
 
-            // Consulta a Supabase para obtener los datos de la marca
-            if (window.studioManager && window.studioManager.supabase) {
-                window.studioManager.supabase
-                    .from('brand_guidelines')
-                    .select('tone_of_voice, keywords_yes, keywords_no, dos_donts, name')
-                    .eq('id', brandId)
-                    .single()
-                    .then(({ data, error }) => {
-                        isLoadingBrand = false;
-                        hideLoadingIndicator('brand-info');
-                        if (error) {
-                            console.error('Error cargando datos de marca:', error);
-                            clearBrandInfo();
-                        } else if (data) {
-                            updateBrandDisplay(data);
-                        }
-                    })
-                    .catch((error) => {
-                        isLoadingBrand = false;
-                        hideLoadingIndicator('brand-info');
-                        console.error('Error en consulta de marca:', error);
-                        clearBrandInfo();
-                    });
-            } else {
-                // Datos de ejemplo si no hay conexión a Supabase
-                const brandData = {
-                    tone_of_voice: "Profesional y amigable",
-                    keywords_yes: ["innovación", "calidad", "confianza"],
-                    keywords_no: ["barato", "descuento", "oferta"],
-                    dos_donts: "Usar colores corporativos, evitar lenguaje informal"
-                };
-                hideLoadingIndicator('brand-info');
-                updateBrandDisplay(brandData);
-                isLoadingBrand = false;
-            }
-        }
 
-        function loadProductInfo(productId) {
-            console.log('=== CARGANDO INFORMACIÓN DE PRODUCTO ===');
-            console.log('ID del producto:', productId);
-            console.log('¿Ya está cargando?', isLoadingProduct);
-            
-            if (!productId || isLoadingProduct) {
-                if (!productId) {
-                    console.log('No hay ID de producto, limpiando información');
-                    clearProductInfo();
-                }
-                return;
-            }
 
-            isLoadingProduct = true;
-            console.log('Iniciando carga de datos de producto:', productId);
 
-            // Consulta a Supabase para obtener los datos del producto
-            if (window.studioManager && window.studioManager.supabase) {
-                window.studioManager.supabase
-                    .from('products')
-                    .select('product_type, short_desc, benefits, differentiators, usage_steps, ingredients, price, variants, name, availability')
-                    .eq('id', productId)
-                    .single()
-                    .then(({ data, error }) => {
-                        isLoadingProduct = false;
-                        hideLoadingIndicator('product-info');
-                        if (error) {
-                            console.error('Error cargando datos de producto:', error);
-                            clearProductInfo();
-                        } else if (data) {
-                            updateProductDisplay(data);
-                        }
-                    })
-                    .catch((error) => {
-                        isLoadingProduct = false;
-                        hideLoadingIndicator('product-info');
-                        console.error('Error en consulta de producto:', error);
-                        clearProductInfo();
-                    });
-            } else {
-                // Datos de ejemplo si no hay conexión a Supabase
-                const productData = {
-                    product_type: "Suplemento vitamínico",
-                    short_desc: "Complejo vitamínico para energía y vitalidad",
-                    benefits: ["Aumenta la energía", "Mejora el sistema inmunológico", "Reduce la fatiga"],
-                    differentiators: ["Fórmula patentada", "Ingredientes naturales", "Sin efectos secundarios"],
-                    usage_steps: ["Tomar 1 cápsula al día", "Con el desayuno", "Con agua"],
-                    ingredients: ["Vitamina B12", "Hierro", "Ácido fólico", "Zinc"],
-                    price: 29.99,
-                    variants: ["30 cápsulas", "60 cápsulas", "90 cápsulas"]
-                };
-                hideLoadingIndicator('product-info');
-                updateProductDisplay(productData);
-                isLoadingProduct = false;
-            }
-        }
-
-        // Función para configurar project_id basado en la marca seleccionada
-        async function setProjectIdFromBrand(brandId) {
-            console.log('=== CONFIGURANDO PROJECT_ID ===');
-            console.log('ID de marca:', brandId);
-            
-            if (!window.studioManager || !window.studioManager.supabase) {
-                console.log('StudioManager o Supabase no disponible');
-                return;
-            }
-
-            try {
-                // Obtener el project_id de la marca seleccionada
-                const { data, error } = await window.studioManager.supabase
-                    .from('brand_guidelines')
-                    .select('project_id')
-                    .eq('id', brandId)
-                    .single();
-
-                if (error) {
-                    console.error('Error obteniendo project_id de la marca:', error);
-                    // Usar un project_id por defecto para demo
-                    window.studioManager.currentProjectId = 'demo-project-1';
-                    console.log('Usando project_id por defecto:', window.studioManager.currentProjectId);
-                } else if (data && data.project_id) {
-                    window.studioManager.currentProjectId = data.project_id;
-                    console.log('Project_id configurado:', window.studioManager.currentProjectId);
-                } else {
-                    // Usar un project_id por defecto si no se encuentra
-                    window.studioManager.currentProjectId = 'demo-project-1';
-                    console.log('Usando project_id por defecto:', window.studioManager.currentProjectId);
-                }
-                
-                // Cargar productos, ofertas y audiencias después de configurar el project_id
-                console.log('Cargando productos del proyecto...');
-                await loadAllProductsFromProject();
-                
-                console.log('Cargando ofertas del proyecto...');
-                await loadOffersFromProject();
-                
-                console.log('Cargando audiencias del proyecto...');
-                await loadAudiencesFromProject();
-                
-                console.log('=== PROJECT_ID CONFIGURADO COMPLETAMENTE ===');
-            } catch (error) {
-                console.error('Error en consulta de project_id:', error);
-                // Usar un project_id por defecto
-                window.studioManager.currentProjectId = 'demo-project-1';
-                console.log('Usando project_id por defecto:', window.studioManager.currentProjectId);
-                
-                await loadAllProductsFromProject();
-                await loadOffersFromProject();
-                await loadAudiencesFromProject();
-            }
-        }
-
-        // Nueva función para cargar todos los productos del proyecto
-        async function loadAllProductsFromProject() {
-            console.log('=== CARGANDO PRODUCTOS DEL PROYECTO ===');
-            
-            if (!window.studioManager || !window.studioManager.supabase || !window.studioManager.currentProjectId) {
-                console.log('No hay project_id disponible');
-                return;
-            }
-
-            console.log('Cargando todos los productos del proyecto:', window.studioManager.currentProjectId);
-
-            try {
-                const { data, error } = await window.studioManager.supabase
-                    .from('products')
-                    .select('id, name, product_type, short_desc, price')
-                    .eq('project_id', window.studioManager.currentProjectId);
-
-                if (error) {
-                    console.error('Error cargando productos del proyecto:', error);
-                } else if (data && data.length > 0) {
-                    console.log('Productos cargados del proyecto:', data);
-                    populateProductSelector(data);
-                } else {
-                    console.log('No hay productos en este proyecto');
-                    clearProductSelector();
-                    showNoProductsMessage();
-                }
-                
-                console.log('=== PRODUCTOS CARGADOS ===');
-            } catch (error) {
-                console.error('Error en consulta de productos del proyecto:', error);
-            }
-        }
-
-        // Función para cargar ofertas del proyecto
-        function loadOffersFromProject() {
-            if (!window.studioManager || !window.studioManager.supabase || !window.studioManager.currentProjectId) {
-                console.log('No hay project_id disponible para ofertas');
-                return;
-            }
-
-            console.log('Cargando ofertas del proyecto:', window.studioManager.currentProjectId);
-
-            window.studioManager.supabase
-                .from('offers')
-                .select('id, main_objective, offer_desc, cta, cta_url, offer_valid_until')
-                .eq('project_id', window.studioManager.currentProjectId)
-                .then(({ data, error }) => {
-                    if (error) {
-                        console.error('Error cargando ofertas del proyecto:', error);
-                    } else if (data && data.length > 0) {
-                        console.log('Ofertas cargadas del proyecto:', data);
-                        populateOfferSelector(data);
-                    } else {
-                        console.log('No hay ofertas en este proyecto');
-                        clearOfferSelector();
-                    }
-                })
-                .catch((error) => {
-                    console.error('Error en consulta de ofertas del proyecto:', error);
-                });
-        }
-
-        // Función para cargar audiencias del proyecto
-        function loadAudiencesFromProject() {
-            if (!window.studioManager || !window.studioManager.supabase || !window.studioManager.currentProjectId) {
-                console.log('No hay project_id disponible para audiencias');
-                return;
-            }
-
-            console.log('Cargando audiencias del proyecto:', window.studioManager.currentProjectId);
-
-            window.studioManager.supabase
-                .from('audience')
-                .select('id, buyer_persona, interests, pains, contexts, language_codes')
-                .eq('project_id', window.studioManager.currentProjectId)
-                .then(({ data, error }) => {
-                    if (error) {
-                        console.error('Error cargando audiencias del proyecto:', error);
-                    } else if (data && data.length > 0) {
-                        console.log('Audiencias cargadas del proyecto:', data);
-                        populateAudienceSelector(data);
-                    } else {
-                        console.log('No hay audiencias en este proyecto');
-                        clearAudienceSelector();
-                    }
-                })
-                .catch((error) => {
-                    console.error('Error en consulta de audiencias del proyecto:', error);
-                });
-        }
 
         // Función para poblar el selector de productos
         function populateProductSelector(products) {
@@ -1510,153 +1257,7 @@
             }
         }
 
-        function updateBrandDisplay(data) {
-            if (!data) {
-                clearBrandInfo();
-                return;
-            }
-            
-            console.log('Actualizando display de marca con datos:', data);
-            
-            // Buscar el contenedor de información de marca
-            const brandInfoContainer = document.getElementById('brand-info');
-            if (!brandInfoContainer) {
-                console.error('No se encontró el contenedor brand-info');
-                return;
-            }
-            
-            console.log('Contenedor brand-info encontrado:', brandInfoContainer);
-            
-            // Actualizar el contenido del contenedor
-            brandInfoContainer.innerHTML = `
-                <div class="info-item">
-                    <span class="info-label">Nombre:</span>
-                    <span class="info-value">${data.name || 'No configurado'}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Tono de Voz:</span>
-                    <span class="info-value">${data.tone_of_voice || 'No configurado'}</span>
-                    </div>
-                <div class="info-item">
-                    <span class="info-label">Palabras Clave (Sí):</span>
-                    <span class="info-value">${formatArray(data.keywords_yes)}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Palabras Clave (No):</span>
-                    <span class="info-value">${formatArray(data.keywords_no)}</span>
-                        </div>
-                <div class="info-item">
-                    <span class="info-label">Dos y Don'ts:</span>
-                    <span class="info-value">${data.dos_donts || 'No configurado'}</span>
-                </div>
-                ${data.website ? `
-                <div class="info-item">
-                    <span class="info-label">Sitio Web:</span>
-                    <span class="info-value">
-                        <a href="${data.website}" target="_blank" class="url-link">${data.website}</a>
-                    </span>
-                    </div>
-                ` : ''}
-            `;
-            
-            console.log('Contenido de marca actualizado en el contenedor');
-            
-            // Abrir automáticamente el acordeón de Información Básica
-            openAccordion('info-basica');
-            
-            // Log para debug
-            console.log('Datos de marca cargados:', data);
-        }
 
-        function updateProductDisplay(data) {
-            console.log('=== ACTUALIZANDO DISPLAY DE PRODUCTO ===');
-            console.log('Datos recibidos:', data);
-            
-            if (!data) {
-                console.log('No hay datos, limpiando información de producto');
-                clearProductInfo();
-                return;
-            }
-            
-            console.log('Actualizando display de producto con datos:', data);
-            
-            // Buscar el contenedor de información de producto
-            const productInfoContainer = document.getElementById('product-info');
-            if (!productInfoContainer) {
-                console.error('No se encontró el contenedor product-info');
-                return;
-            }
-            
-            console.log('Contenedor product-info encontrado:', productInfoContainer);
-            
-            // Formatear precio
-            const priceDisplay = data.price && data.price > 0 ? 
-                `<span class="price">$${parseFloat(data.price).toFixed(2)}</span>` : 
-                'No seleccionado';
-            
-            // Actualizar el contenido del contenedor
-            productInfoContainer.innerHTML = `
-                <div class="info-item">
-                    <span class="info-label">Nombre:</span>
-                    <span class="info-value">${data.name || 'No seleccionado'}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Tipo de Producto:</span>
-                    <span class="info-value">${data.product_type || 'No seleccionado'}</span>
-                        </div>
-                <div class="info-item">
-                    <span class="info-label">Descripción Corta:</span>
-                    <span class="info-value long-text">${data.short_desc || 'No seleccionado'}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Beneficios:</span>
-                    <span class="info-value">${formatArray(data.benefits)}</span>
-                    </div>
-                <div class="info-item">
-                    <span class="info-label">Diferenciadores:</span>
-                    <span class="info-value">${formatArray(data.differentiators)}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Pasos de Uso:</span>
-                    <span class="info-value">${formatArray(data.usage_steps)}</span>
-                    </div>
-                <div class="info-item">
-                    <span class="info-label">Ingredientes:</span>
-                    <span class="info-value">${formatArray(data.ingredients)}</span>
-                    </div>
-                <div class="info-item">
-                    <span class="info-label">Precio:</span>
-                    <span class="info-value">${priceDisplay}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Variantes:</span>
-                    <span class="info-value">${formatArray(data.variants)}</span>
-                </div>
-                ${data.website ? `
-                <div class="info-item">
-                    <span class="info-label">Sitio Web:</span>
-                    <span class="info-value">
-                        <a href="${data.website}" target="_blank" class="url-link">${data.website}</a>
-                    </span>
-        </div>
-                ` : ''}
-                ${data.image_url ? `
-                <div class="info-item">
-                    <span class="info-label">Imagen:</span>
-                    <span class="info-value">
-                        <a href="${data.image_url}" target="_blank" class="url-link">Ver imagen</a>
-                    </span>
-    </div>
-                ` : ''}
-            `;
-            
-            console.log('Contenido de producto actualizado en el contenedor');
-            console.log('HTML generado:', productInfoContainer.innerHTML.substring(0, 200) + '...');
-            
-            // Log para debug
-            console.log('Datos de producto cargados:', data);
-            console.log('=== FIN ACTUALIZACIÓN DE PRODUCTO ===');
-        }
 
         // Función para cargar información de oferta
         function loadOfferInfo(offerId) {
@@ -1974,6 +1575,11 @@
             if (brandKeywordsYes) brandKeywordsYes.innerHTML = '<span class="empty">No configurado</span>';
             if (brandKeywordsNo) brandKeywordsNo.innerHTML = '<span class="empty">No configurado</span>';
             if (brandDosDonts) brandDosDonts.textContent = 'No configurado';
+            
+            // Ocultar galería de imágenes cuando se limpia la marca
+            if (window.studioManager && window.studioManager.hideImageGallery) {
+                window.studioManager.hideImageGallery();
+            }
         }
 
         function clearProductInfo() {
@@ -1997,6 +1603,11 @@
                 productPrice.classList.remove('price');
             }
             if (productVariants) productVariants.innerHTML = '<span class="empty">No seleccionado</span>';
+            
+            // Ocultar galería de imágenes
+            if (window.studioManager && window.studioManager.hideImageGallery) {
+                window.studioManager.hideImageGallery();
+            }
         }
 
         // Funciones que se ejecutan cuando se selecciona marca o producto
@@ -2023,11 +1634,10 @@
             showLoadingIndicator('brand-info');
             
             try {
-                // Cargar datos de marca primero
-                await loadBrandInfo(brandId);
-                
-                // Luego configurar project_id y cargar productos
-                await setProjectIdFromBrand(brandId);
+                // Delegar completamente a studio.js
+                if (window.studioManager && window.studioManager.selectBrandFromDropdown) {
+                    await window.studioManager.selectBrandFromDropdown(brandId);
+                }
                 
                 console.log('=== MARCA CARGADA COMPLETAMENTE ===');
             } catch (error) {
@@ -2039,8 +1649,6 @@
         async function onProductSelected(productId) {
             console.log('=== PRODUCTO SELECCIONADO ===');
             console.log('ID del producto:', productId);
-            console.log('Tipo de ID:', typeof productId);
-            console.log('¿Es válido?', productId && productId !== 'null' && productId !== '');
             
             // Verificar que el productId sea válido
             if (!productId || productId === 'null' || productId === '') {
@@ -2057,29 +1665,13 @@
             
             console.log('Iniciando carga de datos de producto...');
             
-            // Hacer visible la sección de productos cuando se selecciona un producto
-            const productSection = document.getElementById('product-images-section');
-            if (productSection) {
-                productSection.style.display = 'block';
-                productSection.style.visibility = 'visible';
-                productSection.style.opacity = '1';
-                console.log('Sección de productos mostrada al seleccionar producto');
-            }
-            
             // Mostrar indicador de carga
             showLoadingIndicator('product-info');
             
             try {
-                // Cargar datos de producto
-                await loadProductInfo(productId);
-                
-                // Cargar imágenes del producto
-                await loadProductImages(productId);
-                
-                // Guardar el producto seleccionado para uso posterior
-                if (window.studioManager) {
-                    window.studioManager.selectedProductId = productId;
-                    console.log('Producto guardado en studioManager:', productId);
+                // Delegar completamente a studio.js
+                if (window.studioManager && window.studioManager.selectProductFromDropdown) {
+                    await window.studioManager.selectProductFromDropdown(productId);
                 }
                 
                 console.log('=== PRODUCTO CARGADO COMPLETAMENTE ===');
@@ -2089,170 +1681,6 @@
             }
         }
 
-        // Función para cargar imágenes del producto
-        async function loadProductImages(productId) {
-            console.log('=== CARGANDO IMÁGENES DEL PRODUCTO ===');
-            console.log('ID del producto:', productId);
-            
-            const imagesContainer = document.getElementById('dynamic-product-images');
-            if (!imagesContainer) {
-                console.log('No se encontró el contenedor de imágenes');
-                return;
-            }
-            
-            if (!productId) {
-                imagesContainer.innerHTML = `
-                    <div class="loading-placeholder">
-                        <div class="spinner-small"></div>
-                        <span>Selecciona un producto para ver sus imágenes</span>
-                </div>
-                `;
-                return;
-            }
-            
-            // Mostrar indicador de carga
-            imagesContainer.innerHTML = `
-                <div class="loading-placeholder">
-                    <div class="spinner-small"></div>
-                    <span>Cargando imágenes del producto...</span>
-                </div>
-            `;
-            
-            try {
-                // Cargar imágenes desde Supabase
-                if (window.studioManager && window.studioManager.supabase) {
-                    console.log('Consultando imágenes del producto en Supabase...');
-                    
-                    const { data, error } = await window.studioManager.supabase
-                        .from('products')
-                        .select('gallery_file_ids, main_image_id')
-                        .eq('id', productId)
-                        .single();
-
-                    console.log('Respuesta de Supabase para imágenes:', { data, error });
-
-                    if (error) {
-                        console.error('Error cargando imágenes del producto:', error);
-                        imagesContainer.innerHTML = `
-                            <div class="no-selection">
-                                <span>Error cargando imágenes del producto: ${error.message}</span>
-    </div>
-                        `;
-                        return;
-                    }
-
-                    if (data && (data.gallery_file_ids || data.main_image_id)) {
-                        console.log('Datos de imágenes encontrados:', data);
-                        
-                        // Obtener URL base de Supabase
-                        const supabaseUrl = window.studioManager.supabase.supabaseUrl;
-                        console.log('URL de Supabase:', supabaseUrl);
-                        
-                        // Generar HTML para las imágenes
-                        let imagesHTML = '';
-                        let hasRealImages = false;
-                        
-                        // Imagen principal
-                        if (data.main_image_id) {
-                            // Usar el bucket privado 'ugc' con autenticación
-                            const mainImageUrl = `${supabaseUrl}/storage/v1/object/ugc/${data.main_image_id}`;
-                            console.log('URL de imagen principal:', mainImageUrl);
-                            
-                            imagesHTML += `
-                                <div class="product-image-item main-image">
-                                    <img src="${mainImageUrl}" 
-                                         alt="Imagen principal del producto" 
-                                         onerror="this.style.display='none'; this.nextElementSibling.textContent='Imagen no disponible';"
-                                         onload="console.log('Imagen principal cargada exitosamente');">
-                                    <div class="image-label">Imagen Principal</div>
-                </div>
-                            `;
-                            hasRealImages = true;
-                        }
-                        
-                        // Galería de imágenes
-                        if (data.gallery_file_ids && Array.isArray(data.gallery_file_ids)) {
-                            console.log('Galería de imágenes:', data.gallery_file_ids);
-                            
-                            data.gallery_file_ids.forEach((imageId, index) => {
-                                // Usar el bucket privado 'ugc' con autenticación
-                                const galleryImageUrl = `${supabaseUrl}/storage/v1/object/ugc/${imageId}`;
-                                console.log(`URL de imagen ${index + 1}:`, galleryImageUrl);
-                                
-                                imagesHTML += `
-                                    <div class="product-image-item gallery-image">
-                                        <img src="${galleryImageUrl}" 
-                                             alt="Imagen ${index + 1} del producto" 
-                                             onerror="this.style.display='none'; this.nextElementSibling.textContent='Imagen no disponible';"
-                                             onload="console.log('Imagen ${index + 1} cargada exitosamente');">
-                                        <div class="image-label">Imagen ${index + 1}</div>
-            </div>
-                                `;
-                                hasRealImages = true;
-                            });
-                        }
-                        
-                        // Solo mostrar imágenes de ejemplo si no hay imágenes reales Y se ha seleccionado un producto
-                        if (!hasRealImages) {
-                            console.log('No hay imágenes reales disponibles para este producto');
-                            imagesHTML = ''; // No mostrar imágenes de ejemplo automáticamente
-                        }
-                        
-                        if (imagesHTML) {
-                            imagesContainer.innerHTML = `
-                                <div class="product-images-grid">
-                                    ${imagesHTML}
-            </div>
-                            `;
-                        } else {
-                            imagesContainer.innerHTML = `
-                                <div class="no-selection">
-                                    <span>No hay imágenes disponibles para este producto</span>
-        </div>
-                            `;
-                        }
-                    } else {
-                        console.log('No se encontraron imágenes en la base de datos, mostrando imágenes de ejemplo');
-                        // Mostrar imágenes de ejemplo cuando no hay datos reales
-                        imagesContainer.innerHTML = `
-                            <div class="product-images-grid">
-                                <div class="product-image-item main-image">
-                                    <img src="https://via.placeholder.com/200x200/ff6b35/ffffff?text=Imagen+Principal" 
-                                         alt="Imagen principal del producto">
-                                    <div class="image-label">Imagen Principal</div>
-            </div>
-                                <div class="product-image-item gallery-image">
-                                    <img src="https://via.placeholder.com/200x200/4a90e2/ffffff?text=Imagen+1" 
-                                         alt="Imagen 1 del producto">
-                                    <div class="image-label">Imagen 1</div>
-                </div>
-                                <div class="product-image-item gallery-image">
-                                    <img src="https://via.placeholder.com/200x200/7ed321/ffffff?text=Imagen+2" 
-                                         alt="Imagen 2 del producto">
-                                    <div class="image-label">Imagen 2</div>
-            </div>
-        </div>
-                        `;
-                    }
-                } else {
-                    // Fallback si no hay Supabase - no mostrar imágenes automáticamente
-                    imagesContainer.innerHTML = `
-                        <div class="no-selection">
-                            <span>No se pudo cargar las imágenes del producto</span>
-                        </div>
-                    `;
-                }
-                
-                console.log('=== IMÁGENES CARGADAS ===');
-            } catch (error) {
-                console.error('Error cargando imágenes:', error);
-                imagesContainer.innerHTML = `
-                    <div class="no-selection">
-                        <span>Error cargando imágenes del producto</span>
-                </div>
-                `;
-            }
-        }
 
         function onOfferSelected(offerId) {
             console.log('Oferta seleccionada:', offerId);
@@ -2296,6 +1724,71 @@
             if (container && container.querySelector('.loading-indicator')) {
                 container.querySelector('.loading-indicator').remove();
             }
+        }
+
+        // Inicializar componentes globales
+        function initializeGlobalComponents() {
+            console.log('🔧 Inicializando componentes globales...');
+            
+            // Esperar a que todos los managers estén listos
+            const checkManagers = setInterval(() => {
+                if (window.studioManager && window.canvasManager && window.supabaseClient && window.supabaseClient.isReady()) {
+                    clearInterval(checkManagers);
+                    
+                    console.log('✅ Todos los managers están listos');
+                    
+                    // Inicializar instancias que dependen de supabase
+                    if (window.supabaseClient && window.supabaseClient.supabase) {
+                        const supabase = window.supabaseClient.supabase;
+                        
+                        // Inicializar DataCollector
+                        window.dataCollector = new DataCollector(supabase, window.studioManager.userId);
+                        console.log('✅ DataCollector inicializado');
+                        
+                        // Inicializar WebhookManager
+                        window.webhookManager = new WebhookManager();
+                        console.log('✅ WebhookManager inicializado');
+                        
+                        // Inicializar UGCGenerator
+                        window.ugcGenerator = new UGCGenerator(
+                            window.dataCollector,
+                            window.webhookManager,
+                            window.canvasManager
+                        );
+                        console.log('✅ UGCGenerator inicializado');
+                        
+                        console.log('🎉 Todos los componentes están listos');
+                    }
+                }
+            }, 100);
+            
+            // Timeout después de 5 segundos
+            setTimeout(() => {
+                clearInterval(checkManagers);
+                if (!window.dataCollector || !window.webhookManager || !window.ugcGenerator) {
+                    console.warn('⚠️ Algunos componentes no se inicializaron a tiempo');
+                }
+            }, 5000);
+        }
+
+        // Sobreescribir generateUGC para usar el UGCGenerator
+        function generateUGC() {
+            console.log('🎬 Iniciando generación de UGC...');
+            
+            if (!window.ugcGenerator) {
+                console.error('❌ UGCGenerator no está inicializado');
+                alert('Error: UGCGenerator no está listo. Por favor recarga la página.');
+                return;
+            }
+            
+            window.ugcGenerator.generateUGC();
+        }
+
+        // Ejecutar inicialización cuando el DOM esté listo
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeGlobalComponents);
+        } else {
+            initializeGlobalComponents();
         }
     </script>
 </body>

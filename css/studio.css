@@ -621,45 +621,6 @@ body {
     background: hsl(var(--accent));
 }
 
-/* =======================================
-   Checkbox Group
-   ======================================= */
-
-.checkbox-group {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 8px;
-    margin-top: 8px;
-}
-
-.checkbox-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    padding: 8px;
-    border-radius: 6px;
-    transition: all var(--transition-fast);
-    position: relative;
-}
-
-.checkbox-item:hover {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.checkbox-item input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    accent-color: var(--primary-color);
-    cursor: pointer;
-}
-
-.checkbox-item span {
-    color: hsl(var(--foreground));
-    font-size: 13px;
-    font-weight: 500;
-    user-select: none;
-}
 
 /* =======================================
    Range Input
@@ -1777,6 +1738,28 @@ body {
 }
 
 /* =======================================
+   Card de Galería de Imágenes
+   ======================================= */
+
+.image-gallery-card {
+    margin: 16px 0;
+    padding: 16px;
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+.image-gallery-card h4 {
+    color: hsl(var(--foreground));
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid hsl(var(--border));
+}
+
+/* =======================================
    ESTILOS PARA IMÁGENES DINÁMICAS DE PRODUCTO
    ======================================= */
 
@@ -1839,75 +1822,6 @@ body {
     text-align: center;
 }
 
-/* Opción de imagen dinámica */
-.dynamic-image-option {
-    position: relative;
-    border-radius: 8px;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.dynamic-image-option:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(253, 98, 79, 0.2);
-}
-
-.dynamic-image-option input[type="checkbox"] {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    z-index: 2;
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-    accent-color: var(--primary-color);
-}
-
-.dynamic-image-option label {
-    display: block;
-    position: relative;
-    cursor: pointer;
-    border-radius: 8px;
-    overflow: hidden;
-    background: var(--bg-card);
-    border: 2px solid transparent;
-    transition: all 0.3s ease;
-}
-
-.dynamic-image-option input[type="checkbox"]:checked + label {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(253, 98, 79, 0.2);
-}
-
-.dynamic-image-option img {
-    width: 100%;
-    height: 100px;
-    object-fit: cover;
-    display: block;
-    transition: all 0.3s ease;
-}
-
-.dynamic-image-option:hover img {
-    transform: scale(1.05);
-}
-
-/* Overlay de imagen */
-.image-overlay {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
-    color: white;
-    padding: 8px;
-    transform: translateY(100%);
-    transition: transform 0.3s ease;
-}
-
-.dynamic-image-option:hover .image-overlay {
-    transform: translateY(0);
-}
 
 .overlay-content {
     font-size: 12px;
@@ -1918,60 +1832,6 @@ body {
     text-overflow: ellipsis;
 }
 
-/* Resumen de imágenes seleccionadas */
-.selected-images-summary {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 12px;
-    min-height: 40px;
-    padding: 12px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-}
-
-.no-selection {
-    color: var(--text-muted);
-    font-style: italic;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 40px;
-}
-
-.selected-image-tag {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--primary-color);
-    color: white;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.remove-btn {
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    color: white;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    font-weight: bold;
-    transition: background 0.2s ease;
-}
-
-.remove-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
 
 /* Placeholder de carga */
 .loading-placeholder {
@@ -2042,17 +1902,8 @@ body {
         max-height: 250px;
     }
     
-    .dynamic-image-option img {
+    .product-image-item img {
         height: 80px;
-    }
-    
-    .selected-images-summary {
-        padding: 8px;
-    }
-    
-    .selected-image-tag {
-        font-size: 11px;
-        padding: 4px 8px;
     }
     
     .auto-config-info {
@@ -2132,36 +1983,6 @@ body {
     font-weight: 500;
 }
 
-.accordion-content .checkbox-group {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 8px;
-}
-
-.accordion-content .checkbox-item {
-    display: flex;
-    align-items: center;
-    padding: 8px 12px;
-    border-radius: 6px;
-    transition: background-color 0.2s ease;
-}
-
-.accordion-content .checkbox-item:hover {
-    background: var(--bg-hover);
-}
-
-.accordion-content .checkbox-item input[type="checkbox"] {
-    margin-right: 8px;
-    accent-color: var(--primary-color);
-}
-
-.accordion-content .checkbox-item label {
-    margin: 0;
-    cursor: pointer;
-    font-size: 13px;
-    color: var(--text-primary);
-    font-weight: 400;
-}
 
 /* =======================================
    Headers del Sidebar y Canvas

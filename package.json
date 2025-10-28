@@ -2,17 +2,17 @@
   "name": "ugc-studio",
   "version": "1.0.0",
   "description": "Plataforma completa para generación de contenido UGC con backend serverless",
-  "main": "index.html",
+  "main": "server.js",
   "scripts": {
     "dev": "node server.js",
+    "start": "node server.js",
     "build": "echo 'Static site - no build required'",
     "test": "echo 'Tests completados exitosamente'",
     "lint": "echo 'Linting completado'",
-    "deploy": "gh-pages -d .",
-    "start": "node server.js",
-    "preview": "npx serve . -p 8080",
-    "netlify": "netlify dev",
-    "vercel": "vercel dev"
+    "pm2:start": "pm2 start ecosystem.config.js --env production",
+    "pm2:stop": "pm2 stop ugc-studio",
+    "pm2:restart": "pm2 restart ugc-studio",
+    "pm2:logs": "pm2 logs ugc-studio"
   },
   "keywords": [
     "ugc",
@@ -20,9 +20,9 @@
     "serverless",
     "javascript",
     "web-app",
-    "analytics",
-    "indexeddb",
-    "progressive-web-app"
+    "supabase",
+    "express",
+    "canvas"
   ],
   "author": "ARDE Agency",
   "license": "MIT",
@@ -33,25 +33,22 @@
   "bugs": {
     "url": "https://github.com/ardeagency/ugc-studio/issues"
   },
-  "homepage": "https://ardeagency.github.io/ugc-studio/",
-  "devDependencies": {
-    "cors": "^2.8.5",
+  "homepage": "https://github.com/ardeagency/ugc-studio#readme",
+  "dependencies": {
     "express": "^4.18.2",
-    "gh-pages": "^6.0.0",
-    "http-proxy-middleware": "^2.0.6",
-    "serve": "^14.2.1"
+    "cors": "^2.8.5",
+    "axios": "^1.12.2",
+    "dotenv": "^17.2.3"
+  },
+  "devDependencies": {
+    "pm2": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   },
   "browserslist": [
     "> 1%",
     "last 2 versions",
     "not dead"
-  ],
-  "engines": {
-    "node": ">=14.0.0"
-  },
-  "dependencies": {
-    "axios": "^1.12.2",
-    "dotenv": "^17.2.3",
-    "node-fetch": "^3.3.2"
-  }
+  ]
 }
