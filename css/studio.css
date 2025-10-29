@@ -275,13 +275,14 @@ body {
         border-bottom: none;
     position: fixed;
     left: 0;
-    top: 60px;
-    height: calc(100vh - 60px);
+    top: 0;
+    height: 100vh;
     z-index: 100;
         overflow-y: auto;
     overflow-x: hidden;
     padding: 0;
-        min-height: calc(100vh - 60px);
+        min-height: 100vh;
+ consolidated
         box-shadow: var(--shadow-floating);
     }
 }
@@ -2051,6 +2052,14 @@ body {
     margin: 0;
 }
 
+/* En desktop, el header solo está dentro del área del canvas (después del sidebar) */
+@media (min-width: 1024px) {
+    .canvas-header {
+        left: 384px; /* Comienza donde termina el sidebar */
+        right: 0;
+    }
+}
+
 .canvas-header-left {
     display: flex;
     align-items: center;
@@ -2654,6 +2663,10 @@ nav.studio-sidebar {
     .studio-sidebar {
         width: 420px;
     }
+    
+    .canvas-header {
+        left: 420px; /* Ajustar header al nuevo ancho del sidebar */
+    }
 }
 
 /* Pantallas ultra grandes (1920px+) */
@@ -2665,6 +2678,10 @@ nav.studio-sidebar {
     
     .studio-sidebar {
         width: 480px;
+    }
+    
+    .canvas-header {
+        left: 480px; /* Ajustar header al nuevo ancho del sidebar */
     }
 }
 
