@@ -457,7 +457,26 @@ class CanvasManager {
        ======================================= */
 
     createCanvasObject(type, data, position = null) {
-        if (!this.canvas.contentWrapper || !type) {
+        // Verificar que el contentWrapper existe y está en el DOM
+        this.ensureContentWrapper();
+        
+        if (!this.canvas.contentWrapper) {
+            console.error('❌ createCanvasObject: contentWrapper no disponible');
+            return null;
+        }
+        
+        if (!document.contains(this.canvas.contentWrapper)) {
+            console.error('❌ createCanvasObject: contentWrapper no está en el DOM');
+            // Intentar recrearlo
+            this.createContentWrapper();
+            if (!this.canvas.contentWrapper || !document.contains(this.canvas.contentWrapper)) {
+                console.error('❌ No se pudo recrear contentWrapper');
+                return null;
+            }
+        }
+        
+        if (!type) {
+            console.error('❌ createCanvasObject: type no especificado');
             return null;
         }
         
@@ -471,7 +490,23 @@ class CanvasManager {
         };
 
         this.canvas.objects.push(object);
+        
+        console.log(`🎨 Creando objeto canvas:`, {
+            tipo: type,
+            id: object.id,
+            posicion: object.position,
+            totalObjects: this.canvas.objects.length
+        });
+        
         this.renderCanvasObject(object);
+        
+        // Verificar que se renderizó correctamente
+        if (!object.element) {
+            console.error('❌ createCanvasObject: El objeto no tiene element después de renderizar');
+        } else if (!document.contains(object.element)) {
+            console.error('❌ createCanvasObject: El element no está en el DOM después de renderizar');
+        }
+        
         return object;
     }
 
