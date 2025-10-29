@@ -799,6 +799,8 @@ class CanvasManager {
        PROCESAMIENTO DE RESPUESTAS
        ======================================= */
 
+    // NOTA: processWebhookResponse() está comentada - usar processVariantsResponse() directamente desde ugc-generator.js
+    /*
     async processWebhookResponse(response) {
         try {
             // Limpiar canvas PRIMERO para evitar parpadeos
@@ -823,6 +825,7 @@ class CanvasManager {
             this.clearCanvas();
         }
     }
+    */
 
     /**
      * Procesar respuesta con variantes (nuevo formato)
@@ -947,10 +950,11 @@ class CanvasManager {
     }
 
     /**
-     * Procesar respuesta en formato anterior
+     * Procesar respuesta en formato anterior (OBSOLETA - no se usa)
      * @param {Object} response - Respuesta del webhook
      */
-    processLegacyResponse(response) {
+    // NOTA: Esta función está comentada porque no se usa - el sistema usa processVariantsResponse()
+    /*processLegacyResponse(response) {
         // Procesar guiones
         if (response.scripts && Array.isArray(response.scripts)) {
             response.scripts.forEach((script, index) => {
