@@ -562,35 +562,70 @@ class CanvasManager {
         }
 
         try {
+            // Verificar una vez más que el wrapper está en el DOM
+            if (!document.contains(this.canvas.contentWrapper)) {
+                console.error('❌ renderCanvasObject: contentWrapper no está en el DOM, recreando...');
+                this.createContentWrapper();
+            }
+            
             this.canvas.contentWrapper.appendChild(element);
             object.element = element;
             
-            console.log(`✅ Elemento ${object.type} agregado al DOM en posición (${object.position.x}, ${object.position.y})`);
+            console.log(`✅ Elemento ${object.type} agregado al DOM:`, {
+                tipo: object.type,
+                id: object.id,
+                posicion: `(${object.position.x}, ${object.position.y})`,
+                wrapperEnDOM: document.contains(this.canvas.contentWrapper),
+                elementEnDOM: document.contains(element),
+                elementParent: element.parentElement?.id || element.parentElement?.className || 'sin padre'
+            });
             
-            // Forzar visibilidad y verificar que esté en el DOM
+            // Forzar visibilidad inmediatamente
+            element.style.opacity = '1';
+            
+            // Verificar que el elemento esté realmente en el DOM
             setTimeout(() => {
-                element.style.opacity = '1';
+                const isInDOM = document.contains(element);
+                const hasParent = !!element.parentNode;
                 
-                // Verificar que el elemento esté realmente en el DOM
-                if (!element.parentNode) {
-                    console.error('❌ Elemento no está en el DOM después de agregarlo');
+                if (!isInDOM || !hasParent) {
+                    console.error('❌ Elemento no está en el DOM después de agregarlo:', {
+                        isInDOM,
+                        hasParent,
+                        parentId: element.parentNode?.id || 'sin ID',
+                        parentClass: element.parentNode?.className || 'sin clase'
+                    });
+                    
                     // Intentar agregarlo de nuevo
                     this.ensureContentWrapper();
-                    if (this.canvas.contentWrapper) {
-                        this.canvas.contentWrapper.appendChild(element);
+                    if (this.canvas.contentWrapper && document.contains(this.canvas.contentWrapper)) {
+                        try {
+                            this.canvas.contentWrapper.appendChild(element);
+                            element.style.opacity = '1';
+                            console.log('✅ Elemento re-agregado al DOM');
+                        } catch (e) {
+                            console.error('❌ Error al re-agregar elemento:', e);
+                        }
                     }
                 } else {
-                    console.log(`✅ Elemento ${object.type} visible en el DOM`);
+                    console.log(`✅ Elemento ${object.type} confirmado en el DOM`);
                 }
-            }, 100);
+            }, 50);
         } catch (error) {
             console.error('❌ Error agregando elemento al canvas:', error);
+            console.error('   - Error name:', error.name);
+            console.error('   - Error message:', error.message);
+            console.error('   - contentWrapper existe:', !!this.canvas.contentWrapper);
+            console.error('   - contentWrapper en DOM:', this.canvas.contentWrapper ? document.contains(this.canvas.contentWrapper) : false);
+            
             // Recrear contentWrapper si es necesario
             this.ensureContentWrapper();
-            if (this.canvas.contentWrapper) {
+            if (this.canvas.contentWrapper && document.contains(this.canvas.contentWrapper)) {
                 try {
                     this.canvas.contentWrapper.appendChild(element);
                     object.element = element;
+                    element.style.opacity = '1';
+                    console.log('✅ Elemento agregado después del error');
                 } catch (retryError) {
                     console.error('❌ Error al reintentar agregar elemento:', retryError);
                 }
@@ -887,13 +922,29 @@ class CanvasManager {
         
         console.log(`📝 Procesando ${variants.length} variante(s) de guiones...`);
         
-        // Asegurar que el contentWrapper existe
+        // Asegurar que el contentWrapper existe Y está en el DOM
         this.ensureContentWrapper();
         
-        if (!this.canvas.contentWrapper) {
-            console.error('❌ No se puede procesar variantes: contentWrapper no disponible');
-            return;
+        // Verificar que el contentWrapper está realmente en el DOM
+        const wrapperInDOM = document.getElementById('canvas-content-wrapper');
+        if (!wrapperInDOM || !this.canvas.contentWrapper) {
+            console.error('❌ No se puede procesar variantes: contentWrapper no disponible o no está en el DOM');
+            console.error('   - wrapperInDOM:', !!wrapperInDOM);
+            console.error('   - this.canvas.contentWrapper:', !!this.canvas.contentWrapper);
+            
+            // Intentar recrear
+            this.createContentWrapper();
+            if (!this.canvas.contentWrapper) {
+                console.error('❌ No se pudo crear contentWrapper');
+                return;
+            }
         }
+        
+        console.log('✅ ContentWrapper verificado:', {
+            existe: !!this.canvas.contentWrapper,
+            enDOM: document.contains(this.canvas.contentWrapper),
+            padre: this.canvas.contentWrapper?.parentElement?.className
+        });
         
         // NO LIMPIAR NADA - Solo ocultar loading y crear nuevas cards
         // Esto permite que las cards se acumulen si el usuario genera múltiples veces
@@ -933,6 +984,25 @@ class CanvasManager {
         // Ajustar vista después de crear las cards
         setTimeout(() => {
             console.log(`📊 Cards finales en canvas: ${this.canvas.objects.length}`);
+            
+            // Verificar cuántas cards están realmente en el DOM
+            const cardsInDOM = this.canvas.contentWrapper?.querySelectorAll('.canvas-object-script-card') || [];
+            console.log(`🔍 Cards en el DOM: ${cardsInDOM.length}`);
+            
+            if (cardsInDOM.length === 0 && this.canvas.objects.length > 0) {
+                console.error('⚠️ PROBLEMA: Hay cards en el array pero no en el DOM');
+                console.error('   - Objects array:', this.canvas.objects.length);
+                console.error('   - Cards en DOM:', cardsInDOM.length);
+                
+                // Intentar renderizar manualmente las que no están en el DOM
+                this.canvas.objects.forEach(obj => {
+                    if (obj.type === 'script-card' && (!obj.element || !document.contains(obj.element))) {
+                        console.log(`🔄 Re-renderizando card ${obj.id}...`);
+                        this.renderCanvasObject(obj);
+                    }
+                });
+            }
+            
             this.fitToContent();
         }, variants.length * 200 + 300);
     }
