@@ -509,11 +509,34 @@ class CanvasManager {
        ======================================= */
 
     createLoadingCardHTML() {
+        // Estilos inline mínimos para asegurar visibilidad aunque falten CSS externos
+        const containerStyle = [
+            'width: 360px',
+            'height: 220px',
+            'border-radius: 16px',
+            'background: rgba(255,255,255,0.04)',
+            'border: 1px solid rgba(255,255,255,0.08)',
+            'backdrop-filter: blur(2px)',
+            'display: flex',
+            'align-items: center',
+            'justify-content: center',
+            'overflow: hidden'
+        ].join(';');
+
+        const spinnerStyle = [
+            'width: 36px',
+            'height: 36px',
+            'border: 3px solid rgba(255,255,255,0.2)',
+            'border-top-color: #FD624F',
+            'border-radius: 50%',
+            'animation: cm_spin 0.9s linear infinite'
+        ].join(';');
+
+        // Inyectar keyframes locales para el spinner
         return `
-            <div class="loading-card">
-                <div class="loading-card-content">
-                    <div class="loading-shimmer"></div>
-                </div>
+            <style>@keyframes cm_spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}</style>
+            <div class="loading-card" style="${containerStyle}">
+                <div style="${spinnerStyle}"></div>
             </div>
         `;
     }
@@ -653,12 +676,41 @@ class CanvasManager {
        ======================================= */
 
     showLoadingAnimation() {
-        if (!this.canvas.contentWrapper) return;
+        if (!this.canvas.contentWrapper) {
+            console.warn('⚠️ contentWrapper no disponible para mostrar animación');
+            return;
+        }
         
+        console.log('🎬 Iniciando animación de carga...');
         this.canvas.isGenerating = true;
-        this.clearCanvas();
+        
+        // Limpiar canvas pero preservar loading cards si ya existen
+        this.canvas.objects.forEach(obj => {
+            // Solo eliminar objetos que NO sean loading cards
+            if (obj.type !== 'loading-card' && obj.element && obj.element.parentNode) {
+                obj.element.remove();
+            }
+        });
+        // Filtrar objects para mantener solo loading cards
+        this.canvas.objects = this.canvas.objects.filter(obj => obj.type === 'loading-card');
+        
+        // Sincronizar loadingCards con objects que son loading-card
+        this.canvas.loadingCards = this.canvas.objects.filter(obj => obj.type === 'loading-card');
+        
+        // Si ya hay loading cards visibles y en el DOM, no crear nuevas
+        const visibleLoadingCards = this.canvas.loadingCards.filter(card => 
+            card && card.element && card.element.parentNode
+        );
+        
+        if (visibleLoadingCards.length > 0) {
+            console.log(`✅ Ya hay ${visibleLoadingCards.length} cards de carga visibles, preservando...`);
+            this.canvas.loadingCards = visibleLoadingCards;
+            return;
+        }
         
         // Crear 3 cards de carga INMEDIATAMENTE sin delay
+        console.log('📦 Creando 3 cards de carga...');
+        this.canvas.loadingCards = []; // Limpiar array antes de crear nuevas
         for (let i = 0; i < 3; i++) {
             const loadingCard = this.createCanvasObject('loading-card', {}, {
                 x: 300 + (i * 450),
@@ -667,8 +719,13 @@ class CanvasManager {
             
             if (loadingCard) {
                 this.canvas.loadingCards.push(loadingCard);
+                console.log(`✅ Card de carga ${i + 1} creada:`, loadingCard.id);
+            } else {
+                console.error(`❌ Error creando card de carga ${i + 1}`);
             }
         }
+        
+        console.log(`✅ Animación de carga iniciada: ${this.canvas.loadingCards.length} cards visibles`);
     }
 
     hideLoadingAnimation() {
@@ -1153,20 +1210,43 @@ class CanvasManager {
         const loadingCardId = `loading_images_${Date.now()}`;
         this.showLoadingAnimation('Generando imágenes de escenas...');
         
-        // Preparar datos para creación de imágenes
-        const imageData = {
-            script: cardObject.data.variant,
-            script_id: cardId,
-            script_data: cardObject.data,
-            action: 'create_images',
-            metadata: {
-                timestamp: new Date().toISOString(),
-                card_id: cardId
+        try {
+            // Recolectar todos los datos del sidebar (igual que para generación de guiones)
+            let allSidebarData = {};
+            if (window.dataCollector) {
+                allSidebarData = await window.dataCollector.collectAllSidebarData();
+                console.log('📦 Datos del sidebar recolectados:', allSidebarData);
+            } else {
+                console.warn('⚠️ DataCollector no está disponible, usando datos mínimos');
             }
-        };
-        
-        // Enviar al webhook de creación de imágenes
-        await this.sendCreateImagesToWebhook(imageData);
+            
+            // Agregar el guion seleccionado al body completo
+            const imageData = {
+                ...allSidebarData, // Incluir todos los datos del sidebar: marca, producto, sujeto, oferta, audiencia, configuracion_avanzada, metadata
+                selec_guion: cardObject.data.variant || cardObject.data, // El guion completo seleccionado por el usuario
+                webhookUrl: 'https://ardeagency.app.n8n.cloud/webhook/4635dddf-f8f9-4cc2-be0f-54e1c542d702',
+                executionMode: 'production',
+                // Mantener compatibilidad con el código existente que procesa la respuesta
+                script_id: cardId,
+                script_data: cardObject.data.variant || cardObject.data
+            };
+            
+            console.log('📤 Enviando datos completos al webhook de imágenes:', imageData);
+            
+            // Enviar al webhook de creación de imágenes
+            await this.sendCreateImagesToWebhook(imageData);
+        } catch (error) {
+            console.error('❌ Error recolectando datos del sidebar:', error);
+            // En caso de error, enviar solo el guion (fallback)
+            const fallbackData = {
+                selec_guion: cardObject.data.variant || cardObject.data,
+                webhookUrl: 'https://ardeagency.app.n8n.cloud/webhook/4635dddf-f8f9-4cc2-be0f-54e1c542d702',
+                executionMode: 'production',
+                script_id: cardId,
+                script_data: cardObject.data.variant || cardObject.data
+            };
+            await this.sendCreateImagesToWebhook(fallbackData);
+        }
         
         // Si el webhook no responde directamente (modo no-cors), 
         // simular respuesta después de un tiempo
@@ -1320,13 +1400,44 @@ class CanvasManager {
         try {
             const webhookUrl = 'https://ardeagency.app.n8n.cloud/webhook/4635dddf-f8f9-4cc2-be0f-54e1c542d702';
             
+            // Validar que data sea un objeto válido
+            if (!data || typeof data !== 'object') {
+                throw new Error('Los datos deben ser un objeto válido');
+            }
+            
+            // Limpiar y estructurar el objeto antes de serializar
+            const cleanedData = this.cleanJSONObject(data);
+            
+            // Convertir a JSON string y validar
+            const jsonBody = JSON.stringify(cleanedData);
+            if (!jsonBody || jsonBody === '{}' || jsonBody === 'null') {
+                throw new Error('El JSON generado está vacío o es inválido');
+            }
+            
+            console.log('📤 Enviando corrección al webhook:');
+            console.log('Datos originales:', data);
+            console.log('Datos limpios:', cleanedData);
+            console.log('Datos (JSON string):', jsonBody);
+            
             const response = await fetch(webhookUrl, {
                 method: 'POST',
-                mode: 'no-cors',
+                mode: 'cors',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json; charset=utf-8',
+                    'Accept': 'application/json'
                 },
-                body: JSON.stringify(data)
+                body: jsonBody // JSON string bien formado (no objeto, fetch requiere string)
+            }).catch(async (error) => {
+                // Si falla con CORS, intentar con no-cors como fallback
+                console.warn('⚠️ Intento con CORS falló, intentando con no-cors:', error);
+                return await fetch(webhookUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: jsonBody
+                });
             });
             
             console.log('Corrección enviada al webhook');
@@ -1344,13 +1455,44 @@ class CanvasManager {
         try {
             const webhookUrl = 'https://ardeagency.app.n8n.cloud/webhook/4635dddf-f8f9-4cc2-be0f-54e1c542d702';
             
+            // Validar que data sea un objeto válido
+            if (!data || typeof data !== 'object') {
+                throw new Error('Los datos deben ser un objeto válido');
+            }
+            
+            // Limpiar y estructurar el objeto antes de serializar
+            const cleanedData = this.cleanJSONObject(data);
+            
+            // Convertir a JSON string y validar
+            const jsonBody = JSON.stringify(cleanedData);
+            if (!jsonBody || jsonBody === '{}' || jsonBody === 'null') {
+                throw new Error('El JSON generado está vacío o es inválido');
+            }
+            
+            console.log('📤 Enviando regeneración al webhook:');
+            console.log('Datos originales:', data);
+            console.log('Datos limpios:', cleanedData);
+            console.log('Datos (JSON string):', jsonBody);
+            
             const response = await fetch(webhookUrl, {
                 method: 'POST',
-                mode: 'no-cors',
+                mode: 'cors',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json; charset=utf-8',
+                    'Accept': 'application/json'
                 },
-                body: JSON.stringify(data)
+                body: jsonBody // JSON string bien formado (no objeto, fetch requiere string)
+            }).catch(async (error) => {
+                // Si falla con CORS, intentar con no-cors como fallback
+                console.warn('⚠️ Intento con CORS falló, intentando con no-cors:', error);
+                return await fetch(webhookUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: jsonBody
+                });
             });
             
             console.log('Regeneración enviada al webhook');
@@ -1361,17 +1503,78 @@ class CanvasManager {
     }
 
     /**
-     * Enviar creación de imágenes al webhook
-     * @param {Object} data - Datos de creación de imágenes
+     * Limpiar objeto antes de serializar a JSON
+     * Elimina valores undefined, null innecesarios y asegura estructura válida
+     * @param {*} obj - Objeto a limpiar
+     * @returns {Object} - Objeto limpio y estructurado
      */
+    cleanJSONObject(obj) {
+        if (obj === null || obj === undefined) {
+            return null;
+        }
+        
+        if (typeof obj !== 'object') {
+            return obj;
+        }
+        
+        if (Array.isArray(obj)) {
+            return obj.map(item => this.cleanJSONObject(item)).filter(item => item !== undefined);
+        }
+        
+        const cleaned = {};
+        for (const key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                const value = obj[key];
+                if (value !== undefined) {
+                    cleaned[key] = this.cleanJSONObject(value);
+                }
+            }
+        }
+        
+        return cleaned;
+    }
+
     async sendCreateImagesToWebhook(data) {
         try {
             const webhookUrl = 'https://ardeagency.app.n8n.cloud/webhook/6b8560d8-b00c-4cda-85a1-143e4d5e869c';
             
-            console.log('📤 Enviando datos al webhook de imágenes:', {
-                url: webhookUrl,
-                data: data
-            });
+            // Validar que data sea un objeto válido
+            if (!data || typeof data !== 'object') {
+                throw new Error('Los datos deben ser un objeto válido');
+            }
+            
+            // Limpiar y estructurar el objeto antes de serializar
+            const cleanedData = this.cleanJSONObject(data);
+            
+            // Convertir a JSON string y validar
+            const jsonBody = JSON.stringify(cleanedData);
+            if (!jsonBody || jsonBody === '{}' || jsonBody === 'null') {
+                throw new Error('El JSON generado está vacío o es inválido');
+            }
+            
+            console.log('📤 Enviando datos al webhook de imágenes:');
+            console.log('URL:', webhookUrl);
+            console.log('Datos originales:', data);
+            console.log('Datos limpios:', cleanedData);
+            console.log('Datos (JSON string):', jsonBody);
+            console.log('Tamaño JSON:', jsonBody.length, 'bytes');
+            
+            // Verificar estructura del JSON
+            try {
+                const parsedCheck = JSON.parse(jsonBody);
+                console.log('✅ JSON válido y parseable');
+                console.log('Estructura:', {
+                    tiene_marca: !!parsedCheck.marca,
+                    tiene_producto: !!parsedCheck.producto,
+                    tiene_sujeto: !!parsedCheck.sujeto,
+                    tiene_selec_guion: !!parsedCheck.selec_guion,
+                    tiene_webhookUrl: !!parsedCheck.webhookUrl,
+                    tiene_executionMode: !!parsedCheck.executionMode
+                });
+            } catch (e) {
+                console.error('❌ Error al parsear JSON:', e);
+                throw new Error('El JSON generado no es válido: ' + e.message);
+            }
             
             // Intentar primero con cors para obtener respuesta real con archivos binarios
             let response;
@@ -1380,9 +1583,10 @@ class CanvasManager {
                     method: 'POST',
                     mode: 'cors',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json; charset=utf-8',
+                        'Accept': 'application/json'
                     },
-                    body: JSON.stringify(data)
+                    body: jsonBody // JSON string bien formado (fetch requiere string, no objeto)
                 });
                 
                 if (response.ok) {
@@ -1404,7 +1608,8 @@ class CanvasManager {
                             if (imageFiles.length > 0) {
                                 console.log('✅ Archivos binarios recibidos desde formData:', imageFiles.length);
                                 this.hideLoadingAnimation();
-                                this.processBinaryImages(data.script_id, data.script_data || { variant: data.script }, imageFiles);
+                                const scriptData = data.selec_guion || data.script_data || { variant: data.script };
+                                this.processBinaryImages(data.script_id, scriptData, imageFiles);
                                 return;
                             }
                         } catch (e) {
@@ -1417,7 +1622,8 @@ class CanvasManager {
                             if (blob.type.startsWith('image/')) {
                                 console.log('✅ Imagen binaria recibida como blob');
                                 this.hideLoadingAnimation();
-                                this.processBinaryImages(data.script_id, data.script_data || { variant: data.script }, [blob]);
+                                const scriptData = data.selec_guion || data.script_data || { variant: data.script };
+                                this.processBinaryImages(data.script_id, scriptData, [blob]);
                                 return;
                             }
                         } catch (e) {
@@ -1431,7 +1637,8 @@ class CanvasManager {
                             if (blob.size > 0) {
                                 console.log('✅ Archivo binario recibido como array buffer');
                                 this.hideLoadingAnimation();
-                                this.processBinaryImages(data.script_id, data.script_data || { variant: data.script }, [blob]);
+                                const scriptData = data.selec_guion || data.script_data || { variant: data.script };
+                                this.processBinaryImages(data.script_id, scriptData, [blob]);
                                 return;
                             }
                         } catch (e) {
@@ -1447,7 +1654,8 @@ class CanvasManager {
                             
                             // Procesar respuesta JSON si existe
                             if (result.images && Array.isArray(result.images)) {
-                                this.processImageResponse(data.script_id, data.script_data || { variant: data.script }, result.images);
+                                const scriptData = data.selec_guion || data.script_data || { variant: data.script };
+                                this.processImageResponse(data.script_id, scriptData, result.images);
                                 return;
                             } else if (result.files && Array.isArray(result.files)) {
                                 // Convertir base64 o URLs a blobs si es necesario
