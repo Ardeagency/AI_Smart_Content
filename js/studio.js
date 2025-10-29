@@ -264,22 +264,41 @@ class StudioManager {
                 return;
             }
 
+            // La tabla se llama 'audience' (singular) y tiene project_id directamente
+            // Primero obtener los project_ids del usuario
+            const { data: userProjects, error: projectsError } = await this.supabase
+                .from('projects')
+                .select('id')
+                .eq('user_id', this.userId);
+
+            if (projectsError) {
+                console.error('Error obteniendo proyectos para audiencias:', projectsError);
+                this.audience = [];
+                this.updateAudienceSelector();
+                return;
+            }
+
+            if (!userProjects || userProjects.length === 0) {
+                console.log('No hay proyectos para el usuario, no se pueden cargar audiencias');
+                this.audience = [];
+                this.updateAudienceSelector();
+                return;
+            }
+
+            const projectIds = userProjects.map(p => p.id);
+
+            // Obtener audiencias de los proyectos del usuario
             const { data: audiences, error } = await this.supabase
-                .from('audiences')
-                .select(`
-                    *,
-                    projects!inner(
-                        id,
-                        name,
-                        user_id
-                    )
-                `)
-                .eq('projects.user_id', this.userId)
+                .from('audience') // Tabla se llama 'audience' (singular)
+                .select('*')
+                .in('project_id', projectIds)
                 .order('created_at', { ascending: false });
 
             if (error) {
                 console.error('Error loading audiences:', error);
                 this.showNotification('Error cargando audiencias', 'error');
+                this.audience = [];
+                this.updateAudienceSelector();
                 return;
             }
 
@@ -292,6 +311,8 @@ class StudioManager {
         } catch (error) {
             console.error('Error in loadAudiences:', error);
             this.showNotification('Error cargando audiencias', 'error');
+            this.audience = [];
+            this.updateAudienceSelector();
         }
     }
 
@@ -811,32 +832,47 @@ class StudioManager {
                 return;
             }
 
-            // Intentar consultar la tabla files para obtener imágenes de producto
+            // Buscar el producto seleccionado para obtener su project_id
+            const selectedProduct = this.products.find(p => p.id === productId);
+            if (!selectedProduct || !selectedProduct.project_id) {
+                console.log('Producto no encontrado o sin project_id:', productId);
+                this.productImages = [];
+                this.renderProductImages();
+                this.hideImageGallery();
+                return;
+            }
+
+            console.log('Filtrando imágenes por project_id:', selectedProduct.project_id);
+
+            // Consultar la tabla files para obtener imágenes de producto
+            // Query simplificada para evitar errores 400
             let query = this.supabase
                 .from('files')
                 .select('*')
                 .eq('user_id', this.userId)
-                .or('category.eq.product_image,category.eq.product_gallery,category.eq.image,file_type.eq.image/jpeg,file_type.eq.image/png,file_type.eq.image/webp')
-                // Excluir logos de marca
-                .not('category', 'eq', 'brand_logo')
-                .not('category', 'eq', 'logo')
-                .not('image_name', 'ilike', '%logo%')
-                .not('image_name', 'ilike', '%brand%')
-                .not('description', 'ilike', '%logo%')
-                .not('description', 'ilike', '%brand%');
+                .eq('project_id', selectedProduct.project_id);
 
-            if (productId) {
-                // Buscar el producto seleccionado para obtener su project_id
-                const selectedProduct = this.products.find(p => p.id === productId);
-                if (selectedProduct && selectedProduct.project_id) {
-                    query = query.eq('project_id', selectedProduct.project_id);
-                    console.log('Filtrando imágenes por project_id:', selectedProduct.project_id);
-                } else {
-                    console.log('Producto no encontrado o sin project_id:', productId);
-                }
+            // Primero intentar con categorías específicas de producto
+            const { data: categoryData, error: categoryError } = await query
+                .in('category', ['product_image', 'product_gallery', 'image'])
+                .order('created_at', { ascending: false });
+
+            let data = categoryData;
+            let error = categoryError;
+
+            // Si no hay resultados con categorías, intentar solo con project_id y user_id
+            if ((!data || data.length === 0) && !error) {
+                console.log('No hay imágenes con categoría específica, buscando todas las imágenes del proyecto...');
+                const { data: allData, error: allError } = await this.supabase
+                    .from('files')
+                    .select('*')
+                    .eq('user_id', this.userId)
+                    .eq('project_id', selectedProduct.project_id)
+                    .order('created_at', { ascending: false });
+                
+                data = allData;
+                error = allError;
             }
-
-            const { data, error } = await query.order('created_at', { ascending: false });
 
             if (error) {
                 console.error('Error cargando imágenes de producto:', error);
