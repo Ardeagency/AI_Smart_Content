@@ -40,7 +40,12 @@ class CanvasManager {
         this.setupCanvas();
         this.setupEventListeners();
         this.setupStyles();
+        
+        // Ejecutar debug después de un pequeño delay para asegurar que todo está inicializado
+        setTimeout(() => {
         this.debugCanvas();
+        }, 100);
+        
         console.log('✅ Canvas Manager inicializado');
     }
 
@@ -1908,6 +1913,14 @@ class CanvasManager {
         console.log('=== DEBUG CANVAS ===');
         console.log('Canvas element:', this.canvas.element);
         console.log('Content wrapper:', this.canvas.contentWrapper);
+        
+        // Verificar si el elemento existe en el DOM
+        const canvasInDOM = this.canvas.element && document.contains(this.canvas.element);
+        const wrapperInDOM = this.canvas.contentWrapper && document.contains(this.canvas.contentWrapper);
+        
+        console.log('Canvas en DOM:', canvasInDOM);
+        console.log('ContentWrapper en DOM:', wrapperInDOM);
+        
         console.log('Canvas dimensions:', {
             width: this.canvas.element?.offsetWidth,
             height: this.canvas.element?.offsetHeight
@@ -1921,6 +1934,15 @@ class CanvasManager {
             panY: this.canvas.panY,
             zoom: this.canvas.zoom
         });
+        console.log('Objects count:', this.canvas.objects.length);
+        console.log('Loading cards count:', this.canvas.loadingCards.length);
+        console.log('=== FIN DEBUG ===');
+        
+        // Si el contentWrapper no existe, intentar crearlo
+        if (!this.canvas.contentWrapper) {
+            console.warn('⚠️ ContentWrapper no existe, intentando recrear...');
+            this.ensureContentWrapper();
+        }
     }
 }
 
