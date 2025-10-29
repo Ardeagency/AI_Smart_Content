@@ -21,6 +21,9 @@ class StudioManager {
         // Configuración de cards flotantes
         this.activeCard = null;
         
+        // Configuración del sujeto
+        this.subjectConfig = {};
+        
         this.init();
     }
 
@@ -989,6 +992,84 @@ class StudioManager {
         this.showNotification('Actualizando imágenes...', 'info');
         await this.loadProductImages(selectedProductId);
         this.showNotification('Imágenes actualizadas', 'success');
+    }
+
+    /* =======================================
+       FUNCIONES DE CONFIGURACIÓN DE SUJETO
+       ======================================= */
+
+    /**
+     * Actualizar género del sujeto
+     * @param {string} gender - Género seleccionado
+     */
+    updateGender(gender) {
+        console.log('Género actualizado:', gender);
+        // El DataCollector leerá el valor directamente del DOM
+        // Esta función permite validaciones o actualizaciones futuras
+        if (!this.subjectConfig) {
+            this.subjectConfig = {};
+        }
+        this.subjectConfig.gender = gender;
+    }
+
+    /**
+     * Actualizar edad del sujeto
+     * @param {string} age - Edad seleccionada
+     */
+    updateAge(age) {
+        console.log('Edad actualizada:', age);
+        if (!this.subjectConfig) {
+            this.subjectConfig = {};
+        }
+        this.subjectConfig.age = age;
+    }
+
+    /**
+     * Actualizar etnia del sujeto
+     * @param {string} ethnicity - Etnia seleccionada
+     */
+    updateEthnicity(ethnicity) {
+        console.log('Etnia actualizada:', ethnicity);
+        if (!this.subjectConfig) {
+            this.subjectConfig = {};
+        }
+        this.subjectConfig.ethnicity = ethnicity;
+    }
+
+    /**
+     * Actualizar color de ojos del sujeto
+     * @param {string} eyes - Color de ojos seleccionado
+     */
+    updateEyes(eyes) {
+        console.log('Color de ojos actualizado:', eyes);
+        if (!this.subjectConfig) {
+            this.subjectConfig = {};
+        }
+        this.subjectConfig.eyes = eyes;
+    }
+
+    /**
+     * Actualizar estilo de cabello del sujeto
+     * @param {string} hair - Estilo de cabello seleccionado
+     */
+    updateHair(hair) {
+        console.log('Estilo de cabello actualizado:', hair);
+        if (!this.subjectConfig) {
+            this.subjectConfig = {};
+        }
+        this.subjectConfig.hair = hair;
+    }
+
+    /**
+     * Actualizar expresión del sujeto
+     * @param {string} expression - Expresión seleccionada
+     */
+    updateExpression(expression) {
+        console.log('Expresión actualizada:', expression);
+        if (!this.subjectConfig) {
+            this.subjectConfig = {};
+        }
+        this.subjectConfig.expression = expression;
     }
 
     // Función para manejar la selección de producto desde el dropdown
