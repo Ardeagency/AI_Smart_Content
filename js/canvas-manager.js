@@ -60,14 +60,36 @@ class CanvasManager {
         this.canvas.contentWrapper = document.getElementById('canvas-content-wrapper');
         
         if (!this.canvas.contentWrapper) {
+            // Asegurar que tenemos el canvas element
+            if (!this.canvas.element) {
+                this.canvas.element = document.querySelector('.canvas-area');
+            }
+            
+            if (!this.canvas.element) {
+                console.error('❌ Canvas element no encontrado');
+                return;
+            }
+            
             // Crear el wrapper
             this.canvas.contentWrapper = document.createElement('div');
             this.canvas.contentWrapper.id = 'canvas-content-wrapper';
             this.canvas.element.appendChild(this.canvas.contentWrapper);
+            console.log('✅ ContentWrapper creado');
         }
         
         // Crear contenedor SVG para líneas de conexión si no existe
         this.createConnectionLinesContainer();
+    }
+    
+    /**
+     * Asegurar que el contentWrapper existe (recréalo si fue eliminado)
+     */
+    ensureContentWrapper() {
+        this.canvas.contentWrapper = document.getElementById('canvas-content-wrapper');
+        if (!this.canvas.contentWrapper) {
+            console.warn('⚠️ contentWrapper no existe, recreando...');
+            this.createContentWrapper();
+        }
     }
     
     createConnectionLinesContainer() {
@@ -459,8 +481,14 @@ class CanvasManager {
     }
 
     renderCanvasObject(object) {
+        // Asegurar que el contentWrapper existe antes de renderizar
+        this.ensureContentWrapper();
+        
         if (!this.canvas.contentWrapper || !object.type) {
-            console.error('No se puede renderizar: contentWrapper o type no válido');
+            console.error('❌ No se puede renderizar: contentWrapper o type no válido', {
+                hasWrapper: !!this.canvas.contentWrapper,
+                type: object.type
+            });
             return;
         }
         
@@ -496,11 +524,36 @@ class CanvasManager {
             this.canvas.contentWrapper.appendChild(element);
             object.element = element;
             
+            console.log(`✅ Elemento ${object.type} agregado al DOM en posición (${object.position.x}, ${object.position.y})`);
+            
+            // Forzar visibilidad y verificar que esté en el DOM
             setTimeout(() => {
                 element.style.opacity = '1';
+                
+                // Verificar que el elemento esté realmente en el DOM
+                if (!element.parentNode) {
+                    console.error('❌ Elemento no está en el DOM después de agregarlo');
+                    // Intentar agregarlo de nuevo
+                    this.ensureContentWrapper();
+                    if (this.canvas.contentWrapper) {
+                        this.canvas.contentWrapper.appendChild(element);
+                    }
+                } else {
+                    console.log(`✅ Elemento ${object.type} visible en el DOM`);
+                }
             }, 100);
         } catch (error) {
-            console.error('Error agregando elemento al canvas:', error);
+            console.error('❌ Error agregando elemento al canvas:', error);
+            // Recrear contentWrapper si es necesario
+            this.ensureContentWrapper();
+            if (this.canvas.contentWrapper) {
+                try {
+                    this.canvas.contentWrapper.appendChild(element);
+                    object.element = element;
+                } catch (retryError) {
+                    console.error('❌ Error al reintentar agregar elemento:', retryError);
+                }
+            }
         }
     }
 
@@ -676,8 +729,11 @@ class CanvasManager {
        ======================================= */
 
     showLoadingAnimation() {
+        // Asegurar que el contentWrapper existe, recrearlo si fue eliminado
+        this.ensureContentWrapper();
+        
         if (!this.canvas.contentWrapper) {
-            console.warn('⚠️ contentWrapper no disponible para mostrar animación');
+            console.error('❌ No se pudo crear contentWrapper');
             return;
         }
         
@@ -773,12 +829,33 @@ class CanvasManager {
      * @param {Array} variants - Array de variantes de guiones
      */
     processVariantsResponse(variants) {
-        if (!Array.isArray(variants) || variants.length === 0) return;
+        if (!Array.isArray(variants) || variants.length === 0) {
+            console.warn('⚠️ processVariantsResponse: No hay variantes válidas');
+            return;
+        }
         
-        // Limpiar canvas primero
-        this.clearCanvas();
+        console.log(`📝 Procesando ${variants.length} variante(s) de guiones...`);
         
-        // Crear cards inmediatamente sin delays largos
+        // Asegurar que el contentWrapper existe
+        this.ensureContentWrapper();
+        
+        if (!this.canvas.contentWrapper) {
+            console.error('❌ No se puede procesar variantes: contentWrapper no disponible');
+            return;
+        }
+        
+        // Limpiar solo objetos que no sean loading cards (mantener loading durante la transición)
+        this.canvas.objects.forEach(obj => {
+            if (obj.type !== 'loading-card' && obj.element && obj.element.parentNode) {
+                obj.element.remove();
+            }
+        });
+        this.canvas.objects = this.canvas.objects.filter(obj => obj.type === 'loading-card');
+        
+        // Ocultar animación de carga
+        this.hideLoadingAnimation();
+        
+        // Crear cards con delay mínimo para animación visual
         variants.forEach((variant, variantIndex) => {
             if (!variant) return;
             
@@ -792,12 +869,23 @@ class CanvasManager {
 
             // Delay mínimo solo para animación visual
             setTimeout(() => {
-                this.createCanvasObject('script-card', cardData, {
+                const card = this.createCanvasObject('script-card', cardData, {
                     x: 300 + (variantIndex * 450),
                     y: 300 + (variantIndex * 50)
                 });
+                
+                if (card) {
+                    console.log(`✅ Card de variante ${variantIndex + 1} creada:`, card.id);
+                } else {
+                    console.error(`❌ Error creando card de variante ${variantIndex + 1}`);
+                }
             }, variantIndex * 200);
         });
+        
+        // Ajustar vista después de crear las cards
+        setTimeout(() => {
+            this.fitToContent();
+        }, variants.length * 200 + 300);
     }
 
     /**

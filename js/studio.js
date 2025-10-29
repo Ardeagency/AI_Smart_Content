@@ -325,15 +325,11 @@ class StudioManager {
     // =======================================
 
     showLoading(message) {
-        const canvasArea = document.querySelector('.canvas-area');
-        if (!canvasArea) return;
-
-        canvasArea.innerHTML = `
-            <div class="loading-container">
-                <div class="loading-spinner"></div>
-                <p>${message}</p>
-            </div>
-        `;
+        // NO modificar el canvas-area directamente - usar CanvasManager
+        console.log('📢 showLoading llamado (ignorado, usar CanvasManager.showLoadingAnimation)');
+        if (window.canvasManager) {
+            window.canvasManager.showLoadingAnimation();
+        }
     }
 
     showNotification(message, type = 'info') {
@@ -835,10 +831,10 @@ class StudioManager {
                 return;
             }
 
-            // Buscar el producto seleccionado para obtener su project_id
-            const selectedProduct = this.products.find(p => p.id === productId);
+                // Buscar el producto seleccionado para obtener su project_id
+                const selectedProduct = this.products.find(p => p.id === productId);
             if (!selectedProduct || !selectedProduct.project_id) {
-                console.log('Producto no encontrado o sin project_id:', productId);
+                    console.log('Producto no encontrado o sin project_id:', productId);
                 this.productImages = [];
                 this.renderProductImages();
                 this.hideImageGallery();
@@ -965,8 +961,8 @@ class StudioManager {
                     const imageItem = document.createElement('div');
                     imageItem.className = 'product-image-item';
                     imageItem.innerHTML = `
-                            <img src="${imageUrl}" alt="${imageName}" loading="lazy" 
-                                 onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjMzMzIi8+Cjx0ZXh0IHg9IjUwIiB5PSI1NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5JbWFnZW48L3RleHQ+Cjwvc3ZnPg=='">
+                    <img src="${imageUrl}" alt="${imageName}" loading="lazy" 
+                         onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjMzMzIi8+Cjx0ZXh0IHg9IjUwIiB5PSI1NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5JbWFnZW48L3RleHQ+Cjwvc3ZnPg=='">
                         <div class="image-label">${imageName}</div>
                     `;
                     
@@ -974,9 +970,9 @@ class StudioManager {
                 } catch (imageError) {
                     console.error('Error renderizando imagen individual:', imageError, image);
                 }
-            });
+        });
 
-            console.log(`✅ ${this.productImages.length} imágenes renderizadas correctamente`);
+        console.log(`✅ ${this.productImages.length} imágenes renderizadas correctamente`);
         } catch (error) {
             console.error('Error en renderProductImages:', error);
             this.showNotification('Error renderizando imágenes', 'error');
@@ -1070,6 +1066,66 @@ class StudioManager {
             this.subjectConfig = {};
         }
         this.subjectConfig.expression = expression;
+    }
+
+    /**
+     * Actualizar estilo de vestimenta del sujeto
+     * @param {string} style - Estilo de vestimenta seleccionado
+     */
+    updateStyle(style) {
+        console.log('Estilo de vestimenta actualizado:', style);
+        if (!this.subjectConfig) {
+            this.subjectConfig = {};
+        }
+        this.subjectConfig.style = style;
+    }
+
+    /**
+     * Actualizar tono del sujeto
+     * @param {string} tone - Tono seleccionado
+     */
+    updateTone(tone) {
+        console.log('Tono actualizado:', tone);
+        if (!this.subjectConfig) {
+            this.subjectConfig = {};
+        }
+        this.subjectConfig.tone = tone;
+    }
+
+    /**
+     * Actualizar personalidad del sujeto
+     * @param {string} personality - Personalidad seleccionada
+     */
+    updatePersonality(personality) {
+        console.log('Personalidad actualizada:', personality);
+        if (!this.subjectConfig) {
+            this.subjectConfig = {};
+        }
+        this.subjectConfig.personality = personality;
+    }
+
+    /**
+     * Actualizar estética del sujeto
+     * @param {string} aesthetic - Estética seleccionada
+     */
+    updateAesthetic(aesthetic) {
+        console.log('Estética actualizada:', aesthetic);
+        if (!this.subjectConfig) {
+            this.subjectConfig = {};
+        }
+        this.subjectConfig.aesthetic = aesthetic;
+    }
+
+    /**
+     * Actualizar realismo del sujeto
+     * @param {string} realism - Realismo seleccionado
+     */
+    updateRealism(realism) {
+        console.log('Realismo actualizado:', realism);
+        if (!this.subjectConfig) {
+            this.subjectConfig = {};
+        }
+        this.subjectConfig.realism = realism;
     }
 
     // Función para manejar la selección de producto desde el dropdown
@@ -1351,6 +1407,97 @@ class StudioManager {
     }
 
 }
+
+// Funciones wrapper globales para configuración de sujeto
+// Estas funciones evitan errores si studioManager aún no está inicializado
+// Se definen antes del DOMContentLoaded para que estén disponibles inmediatamente
+window.updateGender = function(gender) {
+    if (window.studioManager && window.studioManager.updateGender) {
+        window.studioManager.updateGender(gender);
+    } else {
+        console.warn('studioManager.updateGender no está disponible aún');
+    }
+};
+
+window.updateAge = function(age) {
+    if (window.studioManager && window.studioManager.updateAge) {
+        window.studioManager.updateAge(age);
+    } else {
+        console.warn('studioManager.updateAge no está disponible aún');
+    }
+};
+
+window.updateEthnicity = function(ethnicity) {
+    if (window.studioManager && window.studioManager.updateEthnicity) {
+        window.studioManager.updateEthnicity(ethnicity);
+    } else {
+        console.warn('studioManager.updateEthnicity no está disponible aún');
+    }
+};
+
+window.updateEyes = function(eyes) {
+    if (window.studioManager && window.studioManager.updateEyes) {
+        window.studioManager.updateEyes(eyes);
+    } else {
+        console.warn('studioManager.updateEyes no está disponible aún');
+    }
+};
+
+window.updateHair = function(hair) {
+    if (window.studioManager && window.studioManager.updateHair) {
+        window.studioManager.updateHair(hair);
+    } else {
+        console.warn('studioManager.updateHair no está disponible aún');
+    }
+};
+
+window.updateExpression = function(expression) {
+    if (window.studioManager && window.studioManager.updateExpression) {
+        window.studioManager.updateExpression(expression);
+    } else {
+        console.warn('studioManager.updateExpression no está disponible aún');
+    }
+};
+
+window.updateStyle = function(style) {
+    if (window.studioManager && window.studioManager.updateStyle) {
+        window.studioManager.updateStyle(style);
+    } else {
+        console.warn('studioManager.updateStyle no está disponible aún');
+    }
+};
+
+window.updateTone = function(tone) {
+    if (window.studioManager && window.studioManager.updateTone) {
+        window.studioManager.updateTone(tone);
+    } else {
+        console.warn('studioManager.updateTone no está disponible aún');
+    }
+};
+
+window.updatePersonality = function(personality) {
+    if (window.studioManager && window.studioManager.updatePersonality) {
+        window.studioManager.updatePersonality(personality);
+    } else {
+        console.warn('studioManager.updatePersonality no está disponible aún');
+    }
+};
+
+window.updateAesthetic = function(aesthetic) {
+    if (window.studioManager && window.studioManager.updateAesthetic) {
+        window.studioManager.updateAesthetic(aesthetic);
+    } else {
+        console.warn('studioManager.updateAesthetic no está disponible aún');
+    }
+};
+
+window.updateRealism = function(realism) {
+    if (window.studioManager && window.studioManager.updateRealism) {
+        window.studioManager.updateRealism(realism);
+    } else {
+        console.warn('studioManager.updateRealism no está disponible aún');
+    }
+};
 
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
