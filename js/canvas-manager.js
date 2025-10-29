@@ -865,7 +865,7 @@ class CanvasManager {
         console.log(`📋 Cards actuales antes de procesar: ${this.canvas.objects.length}`);
         
         // Ocultar animación de carga (solo las loading cards, no otras cards)
-        this.hideLoading unaAnimation();
+        this.hideLoadingAnimation();
         
         // Crear cards con delay mínimo para animación visual
         variants.forEach((variant, variantIndex) => {
