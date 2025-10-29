@@ -441,7 +441,8 @@ class CanvasManager {
             } catch(e) {}
         }
         
-        console.log('Canvas limpiado correctamente');
+        // NO loggear - esta función solo se debe usar para limpieza intencional
+        // El log estaba causando confusión porque se mostraba cuando no debería
     }
     
     // Método para limpiar todos los event listeners
@@ -790,14 +791,21 @@ class CanvasManager {
     }
 
     hideLoadingAnimation() {
-        // Remover todas las cards de loading inmediatamente SIN delays
+        // Remover solo las cards de loading, NO tocar otras cards
         this.canvas.loadingCards.forEach(card => {
             if (card && card.element && card.element.parentNode) {
                 card.element.remove();
+                // También remover del array de objects si existe
+                const index = this.canvas.objects.indexOf(card);
+                if (index > -1) {
+                    this.canvas.objects.splice(index, 1);
+                }
             }
         });
         this.canvas.loadingCards = [];
         this.canvas.isGenerating = false;
+        
+        console.log(`✅ Animación de carga ocultada. Cards restantes: ${this.canvas.objects.length}`);
     }
 
     /* =======================================
