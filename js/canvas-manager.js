@@ -860,16 +860,12 @@ class CanvasManager {
             return;
         }
         
-        // Limpiar solo objetos que no sean loading cards (mantener loading durante la transición)
-        this.canvas.objects.forEach(obj => {
-            if (obj.type !== 'loading-card' && obj.element && obj.element.parentNode) {
-                obj.element.remove();
-            }
-        });
-        this.canvas.objects = this.canvas.objects.filter(obj => obj.type === 'loading-card');
+        // NO LIMPIAR NADA - Solo ocultar loading y crear nuevas cards
+        // Esto permite que las cards se acumulen si el usuario genera múltiples veces
+        console.log(`📋 Cards actuales antes de procesar: ${this.canvas.objects.length}`);
         
-        // Ocultar animación de carga
-        this.hideLoadingAnimation();
+        // Ocultar animación de carga (solo las loading cards, no otras cards)
+        this.hideLoading unaAnimation();
         
         // Crear cards con delay mínimo para animación visual
         variants.forEach((variant, variantIndex) => {
@@ -892,6 +888,7 @@ class CanvasManager {
                 
                 if (card) {
                     console.log(`✅ Card de variante ${variantIndex + 1} creada:`, card.id);
+                    console.log(`📊 Total cards en canvas: ${this.canvas.objects.length}`);
                 } else {
                     console.error(`❌ Error creando card de variante ${variantIndex + 1}`);
                 }
@@ -900,6 +897,7 @@ class CanvasManager {
         
         // Ajustar vista después de crear las cards
         setTimeout(() => {
+            console.log(`📊 Cards finales en canvas: ${this.canvas.objects.length}`);
             this.fitToContent();
         }, variants.length * 200 + 300);
     }
