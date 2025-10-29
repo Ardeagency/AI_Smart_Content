@@ -65,6 +65,35 @@ class CanvasManager {
             this.canvas.contentWrapper.id = 'canvas-content-wrapper';
             this.canvas.element.appendChild(this.canvas.contentWrapper);
         }
+        
+        // Crear contenedor SVG para líneas de conexión si no existe
+        this.createConnectionLinesContainer();
+    }
+    
+    createConnectionLinesContainer() {
+        // Verificar si ya existe
+        this.canvas.connectionsContainer = document.getElementById('canvas-connections-svg');
+        
+        if (!this.canvas.connectionsContainer) {
+            // Crear contenedor SVG
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.id = 'canvas-connections-svg';
+            svg.style.position = 'absolute';
+            svg.style.top = '0';
+            svg.style.left = '0';
+            svg.style.width = '100%';
+            svg.style.height = '100%';
+            svg.style.pointerEvents = 'none';
+            svg.style.zIndex = '5'; // Debajo de las cards pero visible
+            
+            this.canvas.contentWrapper.appendChild(svg);
+            this.canvas.connectionsContainer = svg;
+            
+            // Inicializar array de conexiones
+            if (!this.canvas.connections) {
+                this.canvas.connections = [];
+            }
+        }
     }
 
     setupEventListeners() {
@@ -219,8 +248,60 @@ class CanvasManager {
         const transform = `translate(${this.canvas.panX}px, ${this.canvas.panY}px) scale(${this.canvas.zoom})`;
         this.canvas.contentWrapper.style.transform = transform;
         
+        // Actualizar también el SVG de conexiones
+        if (this.canvas.connectionsContainer) {
+            this.canvas.connectionsContainer.style.transform = transform;
+        }
+        
+        // Actualizar todas las líneas de conexión
+        if (this.canvas.connections && this.canvas.connections.length > 0) {
+            this.canvas.connections.forEach(connection => {
+                this.updateConnectionLine(connection.scriptId, connection.scenesId);
+            });
+        }
+        
         // Actualizar el fondo del canvas para que sea infinito
         this.updateCanvasBackground();
+    }
+    
+    /**
+     * Actualizar posición de una línea de conexión específica
+     * @param {string} scriptId - ID de la card del guion
+     * @param {string} scenesId - ID de la card de escenas
+     */
+    updateConnectionLine(scriptId, scenesId) {
+        const connectionId = `connection_${scriptId}_${scenesId}`;
+        const line = document.getElementById(connectionId);
+        
+        if (!line) return;
+        
+        const scriptCard = this.canvas.objects.find(obj => obj.id === scriptId);
+        const scenesCard = this.canvas.objects.find(obj => obj.id === scenesId);
+        
+        if (!scriptCard || !scenesCard || !scriptCard.element || !scenesCard.element) return;
+        
+        const getCardCenter = (card, element) => {
+            const rect = element.getBoundingClientRect();
+            const canvasRect = this.canvas.element.getBoundingClientRect();
+            
+            const x = (rect.left - canvasRect.left + rect.width / 2 - this.canvas.panX) / this.canvas.zoom;
+            const y = (rect.top - canvasRect.top + rect.height / 2 - this.canvas.panY) / this.canvas.zoom;
+            
+            return { x, y };
+        };
+        
+        const scriptCenter = getCardCenter(scriptCard, scriptCard.element);
+        const scenesCenter = getCardCenter(scenesCard, scenesCard.element);
+        
+        const startX = scriptCenter.x;
+        const startY = scriptCenter.y + (scriptCard.element.offsetHeight / 2) / this.canvas.zoom;
+        const endX = scenesCenter.x;
+        const endY = scenesCenter.y - (scenesCard.element.offsetHeight / 2) / this.canvas.zoom;
+        
+        line.setAttribute('x1', startX);
+        line.setAttribute('y1', startY);
+        line.setAttribute('x2', endX);
+        line.setAttribute('y2', endY);
     }
 
     /* =======================================
@@ -301,9 +382,24 @@ class CanvasManager {
             }
         });
         
+        // Limpiar líneas de conexión
+        if (this.canvas.connections && this.canvas.connections.length > 0) {
+            this.canvas.connections.forEach(connection => {
+                if (connection.element && connection.element.parentNode) {
+                    connection.element.remove();
+                }
+            });
+        }
+        
+        // Limpiar SVG de conexiones
+        if (this.canvas.connectionsContainer) {
+            this.canvas.connectionsContainer.innerHTML = '';
+        }
+        
         // Limpiar arrays
         this.canvas.objects = [];
         this.canvas.loadingCards = [];
+        this.canvas.connections = [];
         
         // Resetear transformaciones
         this.canvas.panX = 0;
@@ -388,6 +484,9 @@ class CanvasManager {
             case 'image-card':
                 element.innerHTML = this.createImageCardHTML(object.data);
                 break;
+            case 'scenes-card':
+                element.innerHTML = this.createScenesCardHTML(object.data);
+                break;
             case 'video-card':
                 element.innerHTML = this.createVideoCardHTML(object.data);
                 break;
@@ -457,18 +556,73 @@ class CanvasManager {
     }
 
     createImageCardHTML(data) {
+        const title = data.title || data.scene || data.description || 'Imagen de Escena';
+        const imageUrl = data.url || data.image_url || '';
+        const altText = data.title || data.scene || 'Imagen generada';
+        
         return `
             <div class="image-card">
                 <div class="card-header">
-                    <h3>Imagen</h3>
+                    <h3>${title}</h3>
                     <div class="card-actions">
-                        <button class="btn-icon" title="Descargar" onclick="window.canvasManager.downloadImage('${data.url}')">
+                        <button class="btn-icon" title="Descargar" onclick="window.canvasManager.downloadImage('${imageUrl}')">
                             <i class="fas fa-download"></i>
+                        </button>
+                        <button class="btn-icon" title="Expandir detalles" onclick="window.canvasManager.toggleCardDetails('${data.id}')">
+                            <i class="fas fa-expand"></i>
                         </button>
                     </div>
                 </div>
                 <div class="card-content">
-                    <img src="${data.url}" alt="Imagen generada" class="generated-image">
+                    <img src="${imageUrl}" alt="${altText}" class="generated-image" 
+                         onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgdmlld0JveD0iMCAwIDgwMCA2MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI4MDAiIGhlaWdodD0iNjAwIiBmaWxsPSIjMzMzIi8+Cjx0ZXh0IHg9IjQwMCIgeT0iMzAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkltYWdlbiBubyBkaXNwb25pYmxlPC90ZXh0Pgo8L3N2Zz4='">
+                    ${data.description ? `<p class="image-description">${data.description}</p>` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    createScenesCardHTML(data) {
+        const title = data.title || 'Escenas';
+        const images = data.images || [];
+        
+        // Generar cápsulas para cada imagen (máximo 3)
+        const capsulesHTML = images.slice(0, 3).map((image, index) => {
+            const formatClass = `capsule-${image.format || 'square'}`;
+            const imageUrl = image.url || '';
+            const sceneTitle = image.scene || image.description || `Escena ${index + 1}`;
+            
+            return `
+                <div class="scene-capsule ${formatClass}" data-index="${index}">
+                    <div class="capsule-image-wrapper">
+                        <img src="${imageUrl}" alt="${sceneTitle}" class="capsule-image" 
+                             onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDMwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjMzMzIi8+Cjx0ZXh0IHg9IjE1MCIgeT0iMTAwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkltYWdlbjwvdGV4dD4KPC9zdmc+'">
+                    </div>
+                    <div class="capsule-label">${sceneTitle}</div>
+                    <button class="capsule-download" onclick="window.canvasManager.downloadImage('${imageUrl}')" title="Descargar">
+                        <i class="fas fa-download"></i>
+                    </button>
+                </div>
+            `;
+        }).join('');
+        
+        return `
+            <div class="scenes-card">
+                <div class="scenes-card-header">
+                    <h3>${title}</h3>
+                    <div class="card-actions">
+                        <button class="btn-icon" title="Descargar todas las imágenes" onclick="window.canvasManager.downloadAllScenes('${data.id}')">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button class="btn-icon" title="Expandir detalles" onclick="window.canvasManager.toggleCardDetails('${data.id}')">
+                            <i class="fas fa-expand"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="scenes-card-content">
+                    <div class="scenes-gallery">
+                        ${capsulesHTML}
+                    </div>
                 </div>
             </div>
         `;
@@ -728,6 +882,107 @@ class CanvasManager {
         this.showNotification('Descargando imagen...', 'info');
     }
 
+    /**
+     * Descargar todas las imágenes de una card de escenas
+     * @param {string} cardId - ID de la card de escenas
+     */
+    async downloadAllScenes(cardId) {
+        console.log('📥 Descargando todas las escenas de:', cardId);
+        
+        const cardObject = this.canvas.objects.find(obj => obj.id === cardId);
+        if (!cardObject || !cardObject.data || !cardObject.data.images) {
+            this.showNotification('No se encontraron imágenes para descargar', 'error');
+            return;
+        }
+        
+        const images = cardObject.data.images;
+        this.showNotification(`Descargando ${images.length} imágenes...`, 'info');
+        
+        // Descargar cada imagen con un pequeño delay para evitar bloqueo del navegador
+        for (let i = 0; i < images.length; i++) {
+            const image = images[i];
+            const imageUrl = image.url || image.image_url;
+            
+            if (imageUrl) {
+                setTimeout(() => {
+                    const link = document.createElement('a');
+                    link.href = imageUrl;
+                    link.download = `escena-${i + 1}-${Date.now()}.jpg`;
+                    link.click();
+                }, i * 300); // Delay de 300ms entre descargas
+            }
+        }
+        
+        setTimeout(() => {
+            this.showNotification(`${images.length} imágenes descargadas`, 'success');
+        }, images.length * 300);
+    }
+
+    /**
+     * Crear línea de conexión entre un guion y su card de escenas
+     * @param {string} scriptId - ID de la card del guion
+     * @param {string} scenesId - ID de la card de escenas
+     */
+    createConnectionLine(scriptId, scenesId) {
+        console.log('🔗 Creando línea de conexión:', scriptId, '→', scenesId);
+        
+        if (!this.canvas.connectionsContainer) {
+            console.error('❌ Contenedor de conexiones no existe');
+            return;
+        }
+        
+        // Obtener ambas cards
+        const scriptCard = this.canvas.objects.find(obj => obj.id === scriptId);
+        const scenesCard = this.canvas.objects.find(obj => obj.id === scenesId);
+        
+        if (!scriptCard || !scenesCard || !scriptCard.element || !scenesCard.element) {
+            console.warn('⚠️ Cards no encontradas para crear conexión');
+            return;
+        }
+        
+        // Crear línea si no existe
+        const connectionId = `connection_${scriptId}_${scenesId}`;
+        let line = document.getElementById(connectionId);
+        
+        if (!line) {
+            // Crear nueva línea
+            line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.id = connectionId;
+            line.setAttribute('stroke', '#9C27B0');
+            line.setAttribute('stroke-width', '2');
+            line.setAttribute('stroke-dasharray', '5,5');
+            line.setAttribute('opacity', '0.6');
+            line.style.transition = 'opacity 0.3s ease';
+            
+            // Asegurar que el SVG tenga el tamaño correcto
+            const rect = this.canvas.element.getBoundingClientRect();
+            this.canvas.connectionsContainer.setAttribute('width', rect.width * 2);
+            this.canvas.connectionsContainer.setAttribute('height', rect.height * 2);
+            this.canvas.connectionsContainer.setAttribute('viewBox', `0 0 ${rect.width * 2} ${rect.height * 2}`);
+            
+            this.canvas.connectionsContainer.appendChild(line);
+            
+            // Guardar referencia
+            if (!this.canvas.connections) {
+                this.canvas.connections = [];
+            }
+            this.canvas.connections.push({
+                id: connectionId,
+                scriptId: scriptId,
+                scenesId: scenesId,
+                element: line
+            });
+        }
+        
+        // Actualizar línea inicial
+        this.updateConnectionLine(scriptId, scenesId);
+        
+        // También actualizar cuando se cargue la card completamente
+        setTimeout(() => {
+            this.updateConnectionLine(scriptId, scenesId);
+        }, 200);
+    }
+
     playVideo(videoId) {
         console.log('Reproduciendo video:', videoId);
         this.showNotification('Reproduciendo video...', 'info');
@@ -884,8 +1139,8 @@ class CanvasManager {
      * Crear imágenes de escenas
      * @param {string} cardId - ID de la card
      */
-    createImages(cardId) {
-        console.log('Creando imágenes para:', cardId);
+    async createImages(cardId) {
+        console.log('🖼️ Creando imágenes para:', cardId);
         
         // Obtener datos de la card
         const cardObject = this.canvas.objects.find(obj => obj.id === cardId);
@@ -894,9 +1149,15 @@ class CanvasManager {
             return;
         }
         
+        // Mostrar animación de carga
+        const loadingCardId = `loading_images_${Date.now()}`;
+        this.showLoadingAnimation('Generando imágenes de escenas...');
+        
         // Preparar datos para creación de imágenes
         const imageData = {
             script: cardObject.data.variant,
+            script_id: cardId,
+            script_data: cardObject.data,
             action: 'create_images',
             metadata: {
                 timestamp: new Date().toISOString(),
@@ -905,9 +1166,150 @@ class CanvasManager {
         };
         
         // Enviar al webhook de creación de imágenes
-        this.sendCreateImagesToWebhook(imageData);
+        await this.sendCreateImagesToWebhook(imageData);
         
-        this.showNotification('Creando imágenes de escenas...', 'info');
+        // Si el webhook no responde directamente (modo no-cors), 
+        // simular respuesta después de un tiempo
+        // Si el webhook responde con CORS, processImageResponse se llamará desde sendCreateImagesToWebhook
+        setTimeout(() => {
+            // Solo procesar si no se ha procesado ya
+            const hasProcessed = this.canvas.objects.some(obj => 
+                obj.id && obj.id.startsWith(`image_${cardId}`)
+            );
+            
+            if (!hasProcessed) {
+                this.handleImageGenerationResponse(cardId, cardObject.data);
+            }
+        }, 3000);
+    }
+    
+    /**
+     * Manejar respuesta de generación de imágenes
+     * @param {string} cardId - ID de la card original
+     * @param {Object} scriptData - Datos del guion
+     */
+    handleImageGenerationResponse(cardId, scriptData) {
+        console.log('📸 Procesando respuesta de imágenes para:', cardId);
+        
+        // Ocultar animación de carga
+        this.hideLoadingAnimation();
+        
+        // En producción, esto vendría del webhook real
+        // Por ahora, simulamos imágenes basadas en el guion
+        this.processImageResponse(cardId, scriptData);
+    }
+    
+    /**
+     * Procesar respuesta con imágenes de escenas
+     * @param {string} cardId - ID de la card original
+     * @param {Object} scriptData - Datos del guion
+     * @param {Array} images - Array de URLs de imágenes (opcional, para respuesta real)
+     */
+    async processImageResponse(cardId, scriptData, images = null) {
+        console.log('🎨 Procesando imágenes de escenas...');
+        
+        // Si hay imágenes reales del webhook, usarlas
+        // Si no, simular basado en el script
+        let imageUrls = images;
+        
+        if (!imageUrls || !Array.isArray(imageUrls)) {
+            // Extraer escenas del script para simular imágenes
+            const scenes = this.extractScenesFromScript(scriptData);
+            
+            // Crear URLs simuladas (en producción estas vendrían del webhook)
+            imageUrls = scenes.map((scene, index) => ({
+                url: `https://via.placeholder.com/800x600/333333/ffffff?text=Escena+${index + 1}`,
+                scene: scene,
+                description: `Imagen de escena ${index + 1}`,
+                id: `image_${cardId}_${index}`
+            }));
+        }
+        
+        // Convertir URLs a objetos con formato
+        const imageObjects = await Promise.all(
+            imageUrls.slice(0, 3).map(async (imageData, index) => {
+                const imageUrl = imageData.url || imageData;
+                const format = await this.getImageFormat(imageUrl);
+                
+                return {
+                    id: imageData.id || `image_${cardId}_${index}`,
+                    url: imageUrl,
+                    format: format,
+                    scene: imageData.scene || `Escena ${index + 1}`,
+                    description: imageData.description,
+                    index: index
+                };
+            })
+        );
+        
+        // Crear una sola card de escenas con las 3 cápsulas
+        const scenesCardData = {
+            id: `scenes_card_${cardId}`,
+            title: 'Escenas',
+            images: imageObjects,
+            script_id: cardId, // Guardar ID del guion que generó estas escenas
+            type: 'scenes-card'
+        };
+        
+        // Obtener posición del guion que generó estas escenas
+        const scriptCard = this.canvas.objects.find(obj => obj.id === cardId);
+        const scriptPosition = scriptCard ? { x: scriptCard.x, y: scriptCard.y } : { x: 300, y: 300 };
+        
+        // Posicionar la card de escenas debajo del guion con offset
+        const scenesPosition = {
+            x: scriptPosition.x,
+            y: scriptPosition.y + 350 // Offset vertical para posicionar debajo
+        };
+        
+        // Crear la card de escenas en el canvas con animación similar a guiones
+        setTimeout(() => {
+            this.createCanvasObject('scenes-card', scenesCardData, scenesPosition);
+            
+            // Crear línea de conexión después de que se renderice
+            setTimeout(() => {
+                this.createConnectionLine(cardId, scenesCardData.id);
+                this.fitToContent();
+            }, 400);
+        }, 200);
+        
+        this.showNotification(`${imageObjects.length} imágenes de escenas generadas`, 'success');
+    }
+    
+    /**
+     * Extraer escenas del script
+     * @param {Object} scriptData - Datos del guion
+     * @returns {Array} - Array de escenas
+     */
+    extractScenesFromScript(scriptData) {
+        const scenes = [];
+        
+        if (!scriptData || !scriptData.variant) return scenes;
+        
+        const variant = scriptData.variant;
+        
+        // Intentar extraer escenas de diferentes estructuras posibles
+        if (variant.guion && variant.guion.clips) {
+            variant.guion.clips.forEach((clip, index) => {
+                if (clip.escena || clip.scene) {
+                    scenes.push(clip.escena || clip.scene || `Escena ${index + 1}`);
+                }
+            });
+        }
+        
+        // Si no hay clips, crear escenas basadas en roles o contenido
+        if (scenes.length === 0) {
+            const roles = variant.roles || [];
+            roles.forEach((role, index) => {
+                scenes.push(role.nombre ? `Escena ${role.nombre}` : `Escena ${index + 1}`);
+            });
+        }
+        
+        // Si aún no hay escenas, crear una por defecto
+        if (scenes.length === 0) {
+            scenes.push('Escena principal');
+        }
+        
+        return scenes;
     }
 
     /**
@@ -966,7 +1368,123 @@ class CanvasManager {
         try {
             const webhookUrl = 'https://ardeagency.app.n8n.cloud/webhook/6b8560d8-b00c-4cda-85a1-143e4d5e869c';
             
-            const response = await fetch(webhookUrl, {
+            console.log('📤 Enviando datos al webhook de imágenes:', {
+                url: webhookUrl,
+                data: data
+            });
+            
+            // Intentar primero con cors para obtener respuesta real con archivos binarios
+            let response;
+            try {
+                response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    // Verificar si la respuesta contiene archivos binarios
+                    const contentType = response.headers.get('content-type') || '';
+                    
+                    if (contentType.includes('multipart/form-data') || contentType.includes('image/')) {
+                        // Si la respuesta es multipart o contiene imágenes directamente
+                        try {
+                            const formData = await response.formData();
+                            const imageFiles = [];
+                            
+                            for (const [key, value] of formData.entries()) {
+                                if (value instanceof File || value instanceof Blob) {
+                                    imageFiles.push(value);
+                                }
+                            }
+                            
+                            if (imageFiles.length > 0) {
+                                console.log('✅ Archivos binarios recibidos desde formData:', imageFiles.length);
+                                this.hideLoadingAnimation();
+                                this.processBinaryImages(data.script_id, data.script_data || { variant: data.script }, imageFiles);
+                                return;
+                            }
+                        } catch (e) {
+                            console.log('No es formData, intentando como blob/array buffer');
+                        }
+                        
+                        // Intentar como blob
+                        try {
+                            const blob = await response.blob();
+                            if (blob.type.startsWith('image/')) {
+                                console.log('✅ Imagen binaria recibida como blob');
+                                this.hideLoadingAnimation();
+                                this.processBinaryImages(data.script_id, data.script_data || { variant: data.script }, [blob]);
+                                return;
+                            }
+                        } catch (e) {
+                            console.log('No es blob, intentando como array buffer');
+                        }
+                        
+                        // Intentar como array buffer (para múltiples imágenes)
+                        try {
+                            const arrayBuffer = await response.arrayBuffer();
+                            const blob = new Blob([arrayBuffer]);
+                            if (blob.size > 0) {
+                                console.log('✅ Archivo binario recibido como array buffer');
+                                this.hideLoadingAnimation();
+                                this.processBinaryImages(data.script_id, data.script_data || { variant: data.script }, [blob]);
+                                return;
+                            }
+                        } catch (e) {
+                            console.log('Error procesando array buffer:', e);
+                        }
+                    } else {
+                        // Intentar como JSON
+                        try {
+                            const result = await response.json();
+                            console.log('✅ Respuesta del webhook de imágenes (JSON):', result);
+                            
+                            this.hideLoadingAnimation();
+                            
+                            // Procesar respuesta JSON si existe
+                            if (result.images && Array.isArray(result.images)) {
+                                this.processImageResponse(data.script_id, data.script_data || { variant: data.script }, result.images);
+                                return;
+                            } else if (result.files && Array.isArray(result.files)) {
+                                // Convertir base64 o URLs a blobs si es necesario
+                                const imageFiles = await Promise.all(
+                                    result.files.map(async (file) => {
+                                        if (file instanceof Blob || file instanceof File) {
+                                            return file;
+                                        } else if (typeof file === 'string' && file.startsWith('data:')) {
+                                            // Base64
+                                            const response = await fetch(file);
+                                            return await response.blob();
+                                        } else if (typeof file === 'string') {
+                                            // URL
+                                            const response = await fetch(file);
+                                            return await response.blob();
+                                        }
+                                        return null;
+                                    })
+                                );
+                                
+                                const validFiles = imageFiles.filter(f => f !== null);
+                                if (validFiles.length > 0) {
+                                    this.processBinaryImages(data.script_id, data.script_data || { variant: data.script }, validFiles);
+                                    return;
+                                }
+                            }
+                        } catch (jsonError) {
+                            console.error('Error parseando JSON:', jsonError);
+                        }
+                    }
+                }
+            } catch (corsError) {
+                console.log('⚠️ CORS no permitido, usando modo no-cors');
+            }
+            
+            // Fallback a no-cors si cors falla
+            await fetch(webhookUrl, {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: {
@@ -975,11 +1493,99 @@ class CanvasManager {
                 body: JSON.stringify(data)
             });
             
-            console.log('Creación de imágenes enviada al webhook');
+            console.log('✅ Creación de imágenes enviada al webhook');
         } catch (error) {
-            console.error('Error enviando creación de imágenes:', error);
+            console.error('❌ Error enviando creación de imágenes:', error);
+            this.hideLoadingAnimation();
             this.showNotification('Error enviando creación de imágenes', 'error');
         }
+    }
+    
+    /**
+     * Procesar archivos binarios de imágenes
+     * @param {string} cardId - ID de la card original
+     * @param {Object} scriptData - Datos del guion
+     * @param {Array} imageFiles - Array de archivos binarios (Blob/File)
+     */
+    async processBinaryImages(cardId, scriptData, imageFiles) {
+        console.log('🖼️ Procesando archivos binarios:', imageFiles.length);
+        
+        // Convertir archivos binarios a URLs de objeto
+        const imageObjects = await Promise.all(
+            imageFiles.slice(0, 3).map(async (file, index) => {
+                const blob = file instanceof Blob ? file : new Blob([file]);
+                const imageUrl = URL.createObjectURL(blob);
+                
+                // Obtener dimensiones de la imagen para determinar formato
+                const imageFormat = await this.getImageFormat(imageUrl);
+                
+                return {
+                    id: `image_${cardId}_${index}`,
+                    url: imageUrl,
+                    blob: blob,
+                    format: imageFormat, // 'vertical', 'horizontal', 'square'
+                    index: index
+                };
+            })
+        );
+        
+        // Crear una sola card de escenas con las 3 cápsulas
+        const scenesCardData = {
+            id: `scenes_card_${cardId}`,
+            title: 'Escenas',
+            images: imageObjects,
+            script_id: cardId, // Guardar ID del guion que generó estas escenas
+            type: 'scenes-card'
+        };
+        
+        // Obtener posición del guion que generó estas escenas
+        const scriptCard = this.canvas.objects.find(obj => obj.id === cardId);
+        const scriptPosition = scriptCard ? { x: scriptCard.x, y: scriptCard.y } : { x: 300, y: 300 };
+        
+        // Posicionar la card de escenas debajo del guion con offset
+        const scenesPosition = {
+            x: scriptPosition.x,
+            y: scriptPosition.y + 350 // Offset vertical para posicionar debajo
+        };
+        
+        // Crear la card de escenas en el canvas con animación similar a guiones
+        setTimeout(() => {
+            this.createCanvasObject('scenes-card', scenesCardData, scenesPosition);
+            
+            // Crear línea de conexión después de que se renderice
+            setTimeout(() => {
+                this.createConnectionLine(cardId, scenesCardData.id);
+                this.fitToContent();
+            }, 400);
+        }, 200);
+        
+        this.showNotification(`${imageObjects.length} imágenes de escenas generadas`, 'success');
+    }
+    
+    /**
+     * Obtener formato de imagen (vertical, horizontal, cuadrado)
+     * @param {string} imageUrl - URL de la imagen
+     * @returns {Promise<string>} - 'vertical', 'horizontal', o 'square'
+     */
+    getImageFormat(imageUrl) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+                const aspectRatio = img.width / img.height;
+                
+                if (aspectRatio > 1.1) {
+                    resolve('horizontal'); // Ancho > Alto
+                } else if (aspectRatio < 0.9) {
+                    resolve('vertical'); // Alto > Ancho
+                } else {
+                    resolve('square'); // Cuadrado
+                }
+            };
+            img.onerror = () => {
+                resolve('square'); // Por defecto cuadrado si hay error
+            };
+            img.src = imageUrl;
+        });
     }
 
     updateCanvasBackground() {

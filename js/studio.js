@@ -882,26 +882,26 @@ class StudioManager {
         console.log('🎨 Renderizando imágenes de producto...', this.productImages.length);
         
         try {
-            const container = document.getElementById('dynamic-product-images');
-            if (!container) {
-                console.error('❌ No se encontró el contenedor dynamic-product-images');
-                return;
-            }
+        const container = document.getElementById('dynamic-product-images');
+        if (!container) {
+            console.error('❌ No se encontró el contenedor dynamic-product-images');
+            return;
+        }
 
             if (!this.productImages || this.productImages.length === 0) {
-                container.innerHTML = `
-                    <div class="loading-placeholder">
-                        <span>No hay imágenes disponibles</span>
-                    </div>
-                `;
-                return;
-            }
+            container.innerHTML = `
+                <div class="loading-placeholder">
+                    <span>No hay imágenes disponibles</span>
+                </div>
+            `;
+            return;
+        }
 
-            // Limpiar contenedor
-            container.innerHTML = '';
+        // Limpiar contenedor
+        container.innerHTML = '';
 
             // Renderizar cada imagen como galería simple
-            this.productImages.forEach((image, index) => {
+        this.productImages.forEach((image, index) => {
                 try {
                     // Manejar estructura de Supabase (files) - corregir construcción de URL
                     let imageUrl = '';
@@ -919,9 +919,9 @@ class StudioManager {
                     // Verificar que la URL sea válida antes de crear el elemento
                     if (!imageUrl) {
                         console.warn('Imagen sin URL válida:', image);
-                        return;
-                    }
-                    
+            return;
+        }
+
                     // Crear elemento de imagen simple
                     const imageItem = document.createElement('div');
                     imageItem.className = 'product-image-item';
