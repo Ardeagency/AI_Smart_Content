@@ -265,7 +265,7 @@
                     <div class="config-field">
                         <label>Género:</label>
                         <div class="dropdown-container">
-                            <select id="gender-selector" onchange="window.studioManager.updateGender(this.value)">
+                            <select id="gender-selector" onchange="window.updateGender(this.value)">
                                 <option value="">Seleccionar género...</option>
                                 <option value="masculino">Masculino</option>
                                 <option value="femenino">Femenino</option>
@@ -278,7 +278,7 @@
                     <div class="config-field">
                         <label>Edad:</label>
                         <div class="dropdown-container">
-                            <select id="age-selector" onchange="window.studioManager.updateAge(this.value)">
+                            <select id="age-selector" onchange="window.updateAge(this.value)">
                                 <option value="">Seleccionar edad...</option>
                                 <option value="10-17">10-17 años</option>
                                 <option value="18-25">18-25 años</option>
@@ -299,7 +299,7 @@
                     <div class="config-field">
                         <label>Etnia:</label>
                         <div class="dropdown-container">
-                            <select id="ethnicity-selector" onchange="window.studioManager.updateEthnicity(this.value)">
+                            <select id="ethnicity-selector" onchange="window.updateEthnicity(this.value)">
                                 <option value="">Seleccionar etnia...</option>
                                 <option value="caucasico">Caucásico</option>
                                 <option value="asiatico">Asiático</option>
@@ -314,7 +314,7 @@
                     <div class="config-field">
                         <label>Color de Ojos:</label>
                         <div class="dropdown-container">
-                            <select id="eyes-selector" onchange="window.studioManager.updateEyes(this.value)">
+                            <select id="eyes-selector" onchange="window.updateEyes(this.value)">
                                 <option value="">Seleccionar color de ojos...</option>
                                 <option value="marron">Marrón</option>
                                 <option value="azul">Azul</option>
@@ -329,7 +329,7 @@
                     <div class="config-field">
                         <label>Estilo de Cabello:</label>
                         <div class="dropdown-container">
-                            <select id="hair-selector" onchange="window.studioManager.updateHair(this.value)">
+                            <select id="hair-selector" onchange="window.updateHair(this.value)">
                                 <option value="">Seleccionar estilo de cabello...</option>
                                 <option value="muy-rizado-largo">Muy rizado largo</option>
                                 <option value="liso-largo">Liso largo</option>
@@ -346,7 +346,7 @@
                     <div class="config-field">
                         <label>Expresión:</label>
                         <div class="dropdown-container">
-                            <select id="expression-selector" onchange="window.studioManager.updateExpression(this.value)">
+                            <select id="expression-selector" onchange="window.updateExpression(this.value)">
                                 <option value="">Seleccionar expresión...</option>
                                 <option value="alegria-emocionada">Alegría emocionada</option>
                                 <option value="confianza-tranquila">Confianza tranquila</option>
@@ -362,7 +362,7 @@
                     <div class="config-field">
                         <label>Estilo de Vestimenta:</label>
                         <div class="dropdown-container">
-                            <select id="style-selector" onchange="window.studioManager.updateStyle(this.value)">
+                            <select id="style-selector" onchange="window.updateStyle(this.value)">
                                 <option value="">Seleccionar estilo de vestimenta...</option>
                                 <option value="mediterraneo-casual">Mediterráneo Casual</option>
                                 <option value="preppy-moderno">Preppy Moderno</option>
@@ -384,7 +384,7 @@
                     <div class="config-field">
                             <label>Tono:</label>
                         <div class="dropdown-container">
-                                <select id="tone-selector" onchange="window.studioManager.updateTone(this.value)">
+                                <select id="tone-selector" onchange="window.updateTone(this.value)">
                                     <option value="">Seleccionar tono...</option>
                                     <option value="profesional">Profesional</option>
                                     <option value="casual">Casual</option>
@@ -400,7 +400,7 @@
                     <div class="config-field">
                             <label>Personalidad:</label>
                         <div class="dropdown-container">
-                                <select id="personality-selector" onchange="window.studioManager.updatePersonality(this.value)">
+                                <select id="personality-selector" onchange="window.updatePersonality(this.value)">
                                     <option value="">Seleccionar personalidad...</option>
                                     <option value="extrovertido">Extrovertido</option>
                                     <option value="introvertido">Introvertido</option>
@@ -416,7 +416,7 @@
                     <div class="config-field">
                         <label>Estética y Color:</label>
                         <div class="dropdown-container">
-                            <select id="aesthetic-selector" onchange="window.studioManager.updateAesthetic(this.value)">
+                            <select id="aesthetic-selector" onchange="window.updateAesthetic(this.value)">
                     <option value="">Seleccionar estética...</option>
                                 <option value="piel-natural-poros">Piel natural con poros</option>
                                 <option value="temperatura-calida">Temperatura ligeramente cálida</option>
@@ -436,7 +436,7 @@
                     <div class="config-field">
                         <label>Detalles de Realismo:</label>
                         <div class="dropdown-container">
-                            <select id="realism-selector" onchange="window.studioManager.updateRealism(this.value)">
+                            <select id="realism-selector" onchange="window.updateRealism(this.value)">
                                 <option value="">Seleccionar detalles de realismo...</option>
                                 <option value="pelitos-sueltos">Pelitos sueltos visibles</option>
                                 <option value="huellas-dactilares">Huellas dactilares ligeras</option>
@@ -577,7 +577,7 @@
                 <!-- Footer del Sidebar -->
                 <div class="sidebar-footer">
                     <button class="btn btn-primary generate-ugc-btn" onclick="generateUGC()">
-                            🎬 Generar UGC
+                            Generar Guiones
                 </button>
                         </div>
     </nav>
@@ -598,7 +598,7 @@
     <script src="js/data-collector.js"></script>
     <script src="js/webhook-manager.js"></script>
     <script src="js/ugc-generator.js"></script>
-    <script src="js/studio.js?v=2024-10-17-17-00"></script>
+    <script src="js/studio.js?v=2024-10-29-12-30"></script>
     
     <!-- Acordeón JavaScript -->
     <script>
@@ -1781,7 +1781,7 @@
 
         // Sobreescribir generateUGC para usar el UGCGenerator
         function generateUGC() {
-            console.log('🎬 Iniciando generación de UGC...');
+            console.log('Iniciando generación de UGC...');
             
             if (!window.ugcGenerator) {
                 console.error('❌ UGCGenerator no está inicializado');
