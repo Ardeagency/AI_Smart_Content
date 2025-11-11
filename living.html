@@ -233,15 +233,6 @@
     <script src="js/auth-guard.js"></script>
     <script src="js/navigation.js"></script>
     <script src="js/living.js"></script>
-    <script>
-        // Verificar acceso antes de inicializar
-        document.addEventListener('DOMContentLoaded', async () => {
-            const hasAccess = await verifyUserAccess();
-            if (!hasAccess) {
-                return; // verifyUserAccess ya redirige
-            }
-        });
-    </script>
 </body>
 </html>
 

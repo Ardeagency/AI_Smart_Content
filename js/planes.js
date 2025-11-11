@@ -202,8 +202,8 @@ class PlanesManager {
             }
 
             if (!this.supabase) {
-                // Intentar una vez más antes de fallar
-                await this.initSupabase();
+                // Intentar inicializar una vez más antes de fallar
+                this.supabase = await waitForSupabase();
                 
                 if (!this.supabase) {
                     const config = window.SUPABASE_CONFIG || {};

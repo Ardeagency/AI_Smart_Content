@@ -683,10 +683,9 @@ class FormRecord {
 
         console.log('💾 Iniciando guardado en Supabase...');
         console.log('👤 User ID:', this.userId);
+        console.log('📋 Datos del formulario recopilados:', JSON.stringify(this.formData, null, 2));
 
         // 1. Crear o actualizar proyecto
-        console.log('📋 Datos del formulario recopilados:', JSON.stringify(this.formData, null, 2));
-        
         const projectData = {
             user_id: this.userId,
             nombre_marca: this.formData.nombre_marca || '',
@@ -698,8 +697,6 @@ class FormRecord {
             idiomas_contenido: Array.isArray(this.formData.idiomas_contenido) ? this.formData.idiomas_contenido : []
         };
         
-        console.log('📝 Datos del proyecto a guardar:', JSON.stringify(projectData, null, 2));
-
         console.log('📝 Creando proyecto...', projectData);
         const { data: project, error: projectError } = await this.supabase
             .from('projects')
