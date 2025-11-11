@@ -1,20 +1,42 @@
 /**
  * JavaScript para páginas de autenticación
- * AI Smart Content - Manejo de login/register (Supabase desactivado)
+ * AI Smart Content - Manejo de login/register con Supabase
  */
 
 class AuthManager {
     constructor() {
         this.currentForm = 'login';
+        this.supabase = null;
         this.init();
     }
 
     /**
      * Inicializar la aplicación de autenticación
      */
-    init() {
+    async init() {
+        await this.initSupabase();
         this.setupEventListeners();
-        this.checkExistingSession();
+        await this.checkExistingSession();
+    }
+
+    /**
+     * Inicializar Supabase
+     */
+    async initSupabase() {
+        try {
+            // Esperar a que Supabase esté listo
+            if (typeof waitForSupabase === 'function') {
+                this.supabase = await waitForSupabase();
+            } else if (window.supabaseClient) {
+                this.supabase = window.supabaseClient;
+            }
+
+            if (!this.supabase) {
+                console.warn('Supabase no está disponible');
+            }
+        } catch (error) {
+            console.error('Error initializing Supabase:', error);
+        }
     }
 
     /**
@@ -75,11 +97,35 @@ class AuthManager {
      * Verificar sesión existente
      */
     async checkExistingSession() {
-        // Supabase desactivado - función deshabilitada
+        if (!this.supabase) {
+            await this.initSupabase();
+        }
+
+        if (!this.supabase) return;
+
+        try {
+            const { data: { session } } = await this.supabase.auth.getSession();
+            
+            if (session) {
+                // Usuario ya está autenticado, redirigir
+                const redirectUrl = await this.determineRedirectUrl(session.user.id);
+                window.location.href = redirectUrl;
+            }
+        } catch (error) {
+            console.error('Error checking session:', error);
+        }
     }
 
     async waitForSupabase() {
-        // Supabase desactivado
+        if (this.supabase) return this.supabase;
+        
+        if (typeof waitForSupabase === 'function') {
+            this.supabase = await waitForSupabase();
+        } else if (window.supabaseClient) {
+            this.supabase = window.supabaseClient;
+        }
+        
+        return this.supabase;
     }
 
     /**
@@ -119,10 +165,43 @@ class AuthManager {
         this.setButtonLoading(button, true);
 
         try {
-            this.showNotification('Sistema de autenticación temporalmente deshabilitado', 'warning');
+            if (!this.supabase) {
+                await this.waitForSupabase();
+            }
+
+            if (!this.supabase) {
+                throw new Error('Supabase no está disponible');
+            }
+
+            const { data, error } = await this.supabase.auth.signInWithPassword({
+                email: email.trim(),
+                password: password
+            });
+
+            if (error) {
+                throw error;
+            }
+
+            if (data.user) {
+                this.showNotification('¡Bienvenido de vuelta!', 'success');
+                
+                // Redirigir después de un breve delay
+                setTimeout(async () => {
+                    const redirectUrl = await this.determineRedirectUrl(data.user.id);
+                    window.location.href = redirectUrl;
+                }, 1000);
+            }
         } catch (error) {
             console.error('Error en login:', error);
-            this.showNotification('Error al iniciar sesión. Intenta nuevamente.', 'error');
+            
+            let errorMessage = 'Error al iniciar sesión. Intenta nuevamente.';
+            if (error.message.includes('Invalid login credentials')) {
+                errorMessage = 'Email o contraseña incorrectos';
+            } else if (error.message.includes('Email not confirmed')) {
+                errorMessage = 'Por favor verifica tu email antes de iniciar sesión';
+            }
+            
+            this.showNotification(errorMessage, 'error');
         } finally {
             this.setButtonLoading(button, false);
         }
@@ -161,10 +240,56 @@ class AuthManager {
         this.setButtonLoading(button, true);
 
         try {
-            this.showNotification('Sistema de registro temporalmente deshabilitado', 'warning');
+            if (!this.supabase) {
+                await this.waitForSupabase();
+            }
+
+            if (!this.supabase) {
+                throw new Error('Supabase no está disponible');
+            }
+
+            const fullName = `${firstName.trim()} ${lastName.trim()}`;
+
+            // Registrar usuario en Supabase Auth
+            const { data, error } = await this.supabase.auth.signUp({
+                email: email.trim(),
+                password: password,
+                options: {
+                    data: {
+                        full_name: fullName,
+                        first_name: firstName.trim(),
+                        last_name: lastName.trim(),
+                        country: country
+                    }
+                }
+            });
+
+            if (error) {
+                throw error;
+            }
+
+            if (data.user) {
+                // El trigger handle_new_user() creará automáticamente el registro en public.users
+                this.showNotification('¡Cuenta creada exitosamente! Redirigiendo...', 'success');
+                
+                // Redirigir al formulario de registro de datos
+                setTimeout(() => {
+                    window.location.href = 'form-record.html';
+                }, 1500);
+            }
         } catch (error) {
             console.error('Error en registro:', error);
-            this.showNotification('Error al crear la cuenta. Intenta nuevamente.', 'error');
+            
+            let errorMessage = 'Error al crear la cuenta. Intenta nuevamente.';
+            if (error.message.includes('User already registered')) {
+                errorMessage = 'Este email ya está registrado. Inicia sesión en su lugar.';
+            } else if (error.message.includes('Password')) {
+                errorMessage = 'La contraseña no cumple con los requisitos de seguridad';
+            } else if (error.message.includes('Email')) {
+                errorMessage = 'El email no es válido';
+            }
+            
+            this.showNotification(errorMessage, 'error');
         } finally {
             this.setButtonLoading(button, false);
         }
@@ -236,14 +361,58 @@ class AuthManager {
      * Manejar login social
      */
     async handleSocialLogin(provider) {
-        this.showNotification(`Login social temporalmente deshabilitado`, 'warning');
+        try {
+            if (!this.supabase) {
+                await this.waitForSupabase();
+            }
+
+            if (!this.supabase) {
+                throw new Error('Supabase no está disponible');
+            }
+
+            const { data, error } = await this.supabase.auth.signInWithOAuth({
+                provider: provider,
+                options: {
+                    redirectTo: `${window.location.origin}/auth-callback.html`
+                }
+            });
+
+            if (error) {
+                throw error;
+            }
+        } catch (error) {
+            console.error('Error en login social:', error);
+            this.showNotification(`Error al iniciar sesión con ${provider}. Intenta nuevamente.`, 'error');
+        }
     }
 
     /**
      * Determinar URL de redirección basado en el estado del usuario
      */
     async determineRedirectUrl(userId) {
-        return 'form-record.html';
+        if (!this.supabase || !userId) {
+            return 'form-record.html';
+        }
+
+        try {
+            // Verificar si el usuario tiene proyectos
+            const { data: projects, error } = await this.supabase
+                .from('projects')
+                .select('id')
+                .eq('user_id', userId)
+                .limit(1);
+
+            if (error) {
+                console.error('Error checking projects:', error);
+                return 'form-record.html';
+            }
+
+            // Si tiene proyectos, ir al studio, si no, al formulario
+            return projects && projects.length > 0 ? 'studio.html' : 'form-record.html';
+        } catch (error) {
+            console.error('Error determining redirect:', error);
+            return 'form-record.html';
+        }
     }
 
     async checkOnboardingStatus(userId) {
@@ -296,7 +465,30 @@ class AuthManager {
      * Reenviar email de verificación
      */
     async resendVerificationEmail(email) {
-        this.showNotification('Sistema de verificación temporalmente deshabilitado', 'warning');
+        try {
+            if (!this.supabase) {
+                await this.waitForSupabase();
+            }
+
+            if (!this.supabase) {
+                throw new Error('Supabase no está disponible');
+            }
+
+            const { error } = await this.supabase.auth.resend({
+                type: 'signup',
+                email: email
+            });
+
+            if (error) {
+                throw error;
+            }
+
+            this.showNotification('Email de verificación reenviado. Revisa tu bandeja de entrada.', 'success');
+            this.hideEmailNotConfirmedModal();
+        } catch (error) {
+            console.error('Error resending verification:', error);
+            this.showNotification('Error al reenviar el email. Intenta nuevamente.', 'error');
+        }
     }
 
     /**
@@ -311,7 +503,28 @@ class AuthManager {
             return;
         }
 
-        this.showNotification('Sistema de recuperación de contraseña temporalmente deshabilitado', 'warning');
+        try {
+            if (!this.supabase) {
+                await this.waitForSupabase();
+            }
+
+            if (!this.supabase) {
+                throw new Error('Supabase no está disponible');
+            }
+
+            const { error } = await this.supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: `${window.location.origin}/reset-password.html`
+            });
+
+            if (error) {
+                throw error;
+            }
+
+            this.showNotification('Se ha enviado un email con instrucciones para recuperar tu contraseña', 'success');
+        } catch (error) {
+            console.error('Error in password recovery:', error);
+            this.showNotification('Error al enviar el email de recuperación. Intenta nuevamente.', 'error');
+        }
     }
 
     /**
