@@ -9,11 +9,8 @@ Esquema principal de la base de datos que incluye:
 - **Enums**: Tipos de datos personalizados (tipo_producto, tono_voz, planes, etc.)
 - **Tablas principales**:
   - `users`: Usuarios de la plataforma
-  - `projects`: Proyectos/Marcas
-  - `project_markets`: Mercados objetivo (relación muchos a muchos)
-  - `project_languages`: Idiomas (relación muchos a muchos)
-  - `brand_guidelines`: Lineamientos de marca
-  - `brand_words_to_avoid`: Palabras a evitar
+  - `projects`: Proyectos/Marcas (incluye mercados e idiomas como JSONB)
+  - `brands`: Lineamientos de marca (incluye tono de voz, palabras a usar/evitar y reglas creativas)
   - `brand_files`: Archivos de identidad de marca
   - `products`: Productos principales
   - `product_images`: Imágenes de productos
@@ -42,10 +39,13 @@ Configuración de buckets de almacenamiento:
 ```
 users (auth.users)
   └── projects (marcas/proyectos)
-       ├── project_markets (mercados objetivo)
-       ├── project_languages (idiomas)
-       ├── brand_guidelines (lineamientos)
-       │    └── brand_words_to_avoid (palabras a evitar)
+       │    ├── mercado_objetivo (JSONB array)
+       │    └── idiomas_contenido (JSONB array)
+       ├── brands (lineamientos de marca)
+       │    ├── tono_voz
+       │    ├── palabras_usar
+       │    ├── palabras_evitar (JSONB array)
+       │    └── reglas_creativas
        ├── brand_files (archivos de identidad)
        ├── products (productos)
        │    └── product_images (imágenes)
@@ -55,9 +55,8 @@ users (auth.users)
 ### Relaciones
 
 - Un usuario puede tener múltiples proyectos
-- Un proyecto tiene un conjunto de mercados objetivo
-- Un proyecto tiene un conjunto de idiomas
-- Un proyecto tiene lineamientos de marca
+- Un proyecto tiene mercados objetivo e idiomas almacenados como arrays JSONB
+- Un proyecto tiene una entrada de lineamientos de marca (brands)
 - Un proyecto puede tener múltiples archivos de identidad
 - Un proyecto puede tener múltiples productos
 - Cada producto puede tener hasta 4 imágenes
