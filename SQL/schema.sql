@@ -55,7 +55,8 @@ CREATE TABLE IF NOT EXISTS public.users (
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     plan_type plan_tipo_enum DEFAULT 'basico',
     credits_available INTEGER DEFAULT 0,
-    credits_total INTEGER DEFAULT 0
+    credits_total INTEGER DEFAULT 0,
+    form_verified BOOLEAN DEFAULT FALSE NOT NULL
 );
 
 -- Agregar foreign key a auth.users si no existe

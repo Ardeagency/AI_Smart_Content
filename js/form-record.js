@@ -615,9 +615,23 @@ class FormRecord {
     async completeForm() {
         // Collect final step data
         this.collectStepData(this.currentStep);
+        
+        // Collect ALL steps data before saving
+        console.log('🔄 Recopilando datos de todos los pasos...');
+        for (let i = 1; i <= this.totalSteps; i++) {
+            this.collectStepData(i);
+        }
 
         // Log form data
-        console.log('Form data collected:', this.formData);
+        console.log('📊 Form data collected (completo):', JSON.stringify(this.formData, null, 2));
+        console.log('👤 User ID:', this.userId);
+        console.log('🔌 Supabase disponible:', !!this.supabase);
+
+        // Verificar que tenemos los datos necesarios
+        if (!this.formData.nombre_marca) {
+            alert('Error: Falta el nombre de la marca. Por favor, completa el paso 1.');
+            return;
+        }
 
         // Show loading state
         const btnNext = document.getElementById('btnNext');
@@ -627,14 +641,34 @@ class FormRecord {
         }
 
         try {
+            // Verificar que Supabase esté inicializado
+            if (!this.supabase || !this.userId) {
+                console.error('❌ Supabase no inicializado o sin usuario');
+                console.log('Supabase:', this.supabase);
+                console.log('UserId:', this.userId);
+                
+                // Intentar inicializar nuevamente
+                await this.initSupabase();
+                
+                if (!this.supabase || !this.userId) {
+                    throw new Error('No se pudo inicializar Supabase o no hay usuario autenticado. Por favor, recarga la página e inicia sesión nuevamente.');
+                }
+            }
+
             // Guardar datos en Supabase
             await this.saveToSupabase();
             
             // Show success screen
             this.showStep(this.totalSteps);
         } catch (error) {
-            console.error('Error saving form data:', error);
-            alert('Error al guardar los datos. Por favor, intenta nuevamente.');
+            console.error('❌ Error saving form data:', error);
+            console.error('Error details:', {
+                message: error.message,
+                code: error.code,
+                details: error.details,
+                hint: error.hint
+            });
+            alert('Error al guardar los datos: ' + error.message + '\n\nPor favor, revisa la consola para más detalles.');
             if (btnNext) {
                 btnNext.disabled = false;
                 btnNext.textContent = 'Finalizar';
@@ -654,6 +688,8 @@ class FormRecord {
         console.log('👤 User ID:', this.userId);
 
         // 1. Crear o actualizar proyecto
+        console.log('📋 Datos del formulario recopilados:', JSON.stringify(this.formData, null, 2));
+        
         const projectData = {
             user_id: this.userId,
             nombre_marca: this.formData.nombre_marca || '',
@@ -661,9 +697,11 @@ class FormRecord {
             instagram_url: this.formData.instagram_url || null,
             tiktok_url: this.formData.tiktok_url || null,
             logo_url: this.formData.logo_url || null,
-            mercado_objetivo: this.formData.mercado_objetivo || [],
-            idiomas_contenido: this.formData.idiomas_contenido || []
+            mercado_objetivo: Array.isArray(this.formData.mercado_objetivo) ? this.formData.mercado_objetivo : [],
+            idiomas_contenido: Array.isArray(this.formData.idiomas_contenido) ? this.formData.idiomas_contenido : []
         };
+        
+        console.log('📝 Datos del proyecto a guardar:', JSON.stringify(projectData, null, 2));
 
         console.log('📝 Creando proyecto...', projectData);
         const { data: project, error: projectError } = await this.supabase
@@ -706,15 +744,20 @@ class FormRecord {
             project_id: projectId,
             tono_voz: this.formData.tono_voz || 'amigable',
             palabras_usar: this.formData.palabras_usar || null,
-            palabras_evitar: this.formData.palabras_evitar || [],
+            palabras_evitar: Array.isArray(this.formData.palabras_evitar) ? this.formData.palabras_evitar : [],
             reglas_creativas: this.formData.reglas_creativas || null
         };
 
+        console.log('🎨 Creando brand...', brandData);
         const { error: brandError } = await this.supabase
             .from('brands')
             .insert(brandData);
 
-        if (brandError) throw brandError;
+        if (brandError) {
+            console.error('❌ Error creando brand:', brandError);
+            throw brandError;
+        }
+        console.log('✅ Brand creado exitosamente');
 
         // 4. Subir archivos de identidad si existen
         if (this.formData.archivos_identidad && this.formData.archivos_identidad.length > 0) {
@@ -763,14 +806,19 @@ class FormRecord {
             variantes_producto: this.formData.variantes_producto || null
         };
 
+        console.log('📦 Creando producto...', productData);
         const { data: product, error: productError } = await this.supabase
             .from('products')
             .insert(productData)
             .select()
             .single();
 
-        if (productError) throw productError;
+        if (productError) {
+            console.error('❌ Error creando producto:', productError);
+            throw productError;
+        }
         const productId = product.id;
+        console.log('✅ Producto creado con ID:', productId);
 
         // 6. Subir imágenes del producto
         if (this.formData.product_images && this.formData.product_images.length > 0) {
@@ -814,11 +862,16 @@ class FormRecord {
             cta_url: this.formData.cta_url || '#'
         };
 
+        console.log('📢 Creando campaña...', campaignData);
         const { error: campaignError } = await this.supabase
             .from('campaigns')
             .insert(campaignData);
 
-        if (campaignError) throw campaignError;
+        if (campaignError) {
+            console.error('❌ Error creando campaña:', campaignError);
+            throw campaignError;
+        }
+        console.log('✅ Campaña creada exitosamente');
 
         // 8. Marcar el usuario como form_verified = true
         console.log('✅ Marcando usuario como form_verified...');

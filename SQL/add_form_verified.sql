@@ -3,6 +3,8 @@
  * 
  * Esta columna indica si el usuario ha completado el formulario de registro.
  * Si form_verified = false o NULL, el usuario debe ser redirigido al formulario.
+ * 
+ * Ejecutar este script en el SQL Editor de Supabase si la columna no existe.
  */
 
 -- Agregar columna form_verified si no existe
@@ -19,6 +21,10 @@ BEGIN
         
         -- Comentario para documentación
         COMMENT ON COLUMN public.users.form_verified IS 'Indica si el usuario ha completado el formulario de registro de datos (form-record.html). Si es false, el usuario debe ser redirigido al formulario.';
+        
+        RAISE NOTICE 'Columna form_verified agregada exitosamente';
+    ELSE
+        RAISE NOTICE 'La columna form_verified ya existe';
     END IF;
 END $$;
 
