@@ -23,18 +23,13 @@ class FormRecord {
         document.getElementById('btnNext').addEventListener('click', () => this.nextStep());
         document.getElementById('btnBack').addEventListener('click', () => this.prevStep());
 
-        // Option cards (single select)
-        document.querySelectorAll('.option-card').forEach(card => {
-            card.addEventListener('click', (e) => {
-                const container = e.currentTarget.closest('.form-group');
-                container.querySelectorAll('.option-card').forEach(c => c.classList.remove('selected'));
-                e.currentTarget.classList.add('selected');
-                const hiddenInput = container.querySelector('input[type="hidden"]');
-                if (hiddenInput) {
-                    hiddenInput.value = e.currentTarget.dataset.value;
-                }
+        // Tono de voz select (single select)
+        const tonoVozSelect = document.getElementById('tono_voz');
+        if (tonoVozSelect) {
+            tonoVozSelect.addEventListener('change', () => {
+                this.formData.tono_voz = tonoVozSelect.value;
             });
-        });
+        }
 
         // Market and language selects with auto-selection logic
         const mercadoSelect = document.getElementById('mercado_objetivo');
@@ -293,7 +288,7 @@ class FormRecord {
 
         if (step === 3) {
             const tono = document.getElementById('tono_voz');
-            if (!tono.value) {
+            if (!tono || !tono.value) {
                 alert('Por favor selecciona un tono de voz');
                 isValid = false;
             }
@@ -331,7 +326,13 @@ class FormRecord {
             
             // Handle multiple select
             if (field.multiple && field.tagName === 'SELECT') {
-                this.formData[field.id] = Array.from(field.selectedOptions).map(opt => opt.value);
+                const selected = Array.from(field.selectedOptions)
+                    .filter(opt => opt.value !== '') // Excluir opción vacía
+                    .map(opt => opt.value);
+                this.formData[field.id] = selected;
+            } else if (field.tagName === 'SELECT' && !field.multiple) {
+                // Single select
+                this.formData[field.id] = field.value;
             } else if (field.type === 'hidden') {
                 try {
                     this.formData[field.id] = JSON.parse(field.value);

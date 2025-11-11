@@ -157,6 +157,10 @@
             transition: var(--transition);
         }
 
+        .dropdown-container {
+            position: relative;
+        }
+
         .form-select[multiple] {
             min-height: 200px;
             padding: 0.5rem;
@@ -177,6 +181,29 @@
 
         .form-select[multiple] option:hover {
             background: rgba(210, 254, 63, 0.1);
+        }
+
+        /* Estilos tipo studio.css para selects normales */
+        .form-select:not([multiple]) {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23D2FE3F' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 12px center;
+            background-repeat: no-repeat;
+            background-size: 16px;
+            padding-right: 40px;
+        }
+
+        .form-select optgroup {
+            font-weight: 600;
+            color: var(--primary-color);
+            background: var(--bg-secondary);
+        }
+
+        .form-select option {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            padding: 0.5rem;
         }
 
         .form-input:focus,
@@ -483,52 +510,70 @@
 
                 <div class="form-group">
                     <label>Mercados objetivo <span class="required">*</span></label>
-                    <select class="form-select" id="mercado_objetivo" multiple size="8" required>
-                        <option value="mexico">🇲🇽 México</option>
-                        <option value="colombia">🇨🇴 Colombia</option>
-                        <option value="argentina">🇦🇷 Argentina</option>
-                        <option value="chile">🇨🇱 Chile</option>
-                        <option value="peru">🇵🇪 Perú</option>
-                        <option value="venezuela">🇻🇪 Venezuela</option>
-                        <option value="ecuador">🇪🇨 Ecuador</option>
-                        <option value="guatemala">🇬🇹 Guatemala</option>
-                        <option value="cuba">🇨🇺 Cuba</option>
-                        <option value="bolivia">🇧🇴 Bolivia</option>
-                        <option value="republica_dominicana">🇩🇴 República Dominicana</option>
-                        <option value="honduras">🇭🇳 Honduras</option>
-                        <option value="paraguay">🇵🇾 Paraguay</option>
-                        <option value="nicaragua">🇳🇮 Nicaragua</option>
-                        <option value="el_salvador">🇸🇻 El Salvador</option>
-                        <option value="costa_rica">🇨🇷 Costa Rica</option>
-                        <option value="panama">🇵🇦 Panamá</option>
-                        <option value="uruguay">🇺🇾 Uruguay</option>
-                        <option value="spain">🇪🇸 España</option>
-                        <option value="usa">🇺🇸 Estados Unidos</option>
-                        <option value="canada">🇨🇦 Canadá</option>
-                        <option value="uk">🇬🇧 Reino Unido</option>
-                        <option value="australia">🇦🇺 Australia</option>
-                        <option value="new_zealand">🇳🇿 Nueva Zelanda</option>
-                        <option value="ireland">🇮🇪 Irlanda</option>
-                        <option value="brazil">🇧🇷 Brasil</option>
-                        <option value="portugal">🇵🇹 Portugal</option>
-                        <option value="france">🇫🇷 Francia</option>
-                        <option value="belgium">🇧🇪 Bélgica</option>
-                        <option value="switzerland">🇨🇭 Suiza</option>
-                        <option value="italy">🇮🇹 Italia</option>
-                        <option value="germany">🇩🇪 Alemania</option>
-                        <option value="netherlands">🇳🇱 Países Bajos</option>
-                        <option value="poland">🇵🇱 Polonia</option>
-                        <option value="russia">🇷🇺 Rusia</option>
-                        <option value="china">🇨🇳 China</option>
-                        <option value="japan">🇯🇵 Japón</option>
-                        <option value="south_korea">🇰🇷 Corea del Sur</option>
-                        <option value="india">🇮🇳 India</option>
-                        <option value="south_africa">🇿🇦 Sudáfrica</option>
-                        <option value="latam">🌎 Toda Latinoamérica</option>
-                        <option value="europe">🌍 Toda Europa</option>
-                        <option value="asia">🌏 Toda Asia</option>
-                        <option value="global">🌐 Global</option>
-                    </select>
+                    <div class="dropdown-container">
+                        <select class="form-select" id="mercado_objetivo" multiple required>
+                            <option value="">Seleccionar mercados...</option>
+                            <optgroup label="América Latina">
+                                <option value="mexico">🇲🇽 México</option>
+                                <option value="colombia">🇨🇴 Colombia</option>
+                                <option value="argentina">🇦🇷 Argentina</option>
+                                <option value="chile">🇨🇱 Chile</option>
+                                <option value="peru">🇵🇪 Perú</option>
+                                <option value="venezuela">🇻🇪 Venezuela</option>
+                                <option value="ecuador">🇪🇨 Ecuador</option>
+                                <option value="guatemala">🇬🇹 Guatemala</option>
+                                <option value="cuba">🇨🇺 Cuba</option>
+                                <option value="bolivia">🇧🇴 Bolivia</option>
+                                <option value="republica_dominicana">🇩🇴 República Dominicana</option>
+                                <option value="honduras">🇭🇳 Honduras</option>
+                                <option value="paraguay">🇵🇾 Paraguay</option>
+                                <option value="nicaragua">🇳🇮 Nicaragua</option>
+                                <option value="el_salvador">🇸🇻 El Salvador</option>
+                                <option value="costa_rica">🇨🇷 Costa Rica</option>
+                                <option value="panama">🇵🇦 Panamá</option>
+                                <option value="uruguay">🇺🇾 Uruguay</option>
+                            </optgroup>
+                            <optgroup label="Europa">
+                                <option value="spain">🇪🇸 España</option>
+                                <option value="france">🇫🇷 Francia</option>
+                                <option value="italy">🇮🇹 Italia</option>
+                                <option value="germany">🇩🇪 Alemania</option>
+                                <option value="uk">🇬🇧 Reino Unido</option>
+                                <option value="portugal">🇵🇹 Portugal</option>
+                                <option value="netherlands">🇳🇱 Países Bajos</option>
+                                <option value="belgium">🇧🇪 Bélgica</option>
+                                <option value="switzerland">🇨🇭 Suiza</option>
+                                <option value="poland">🇵🇱 Polonia</option>
+                                <option value="russia">🇷🇺 Rusia</option>
+                            </optgroup>
+                            <optgroup label="América del Norte">
+                                <option value="usa">🇺🇸 Estados Unidos</option>
+                                <option value="canada">🇨🇦 Canadá</option>
+                                <option value="mexico">🇲🇽 México</option>
+                            </optgroup>
+                            <optgroup label="Asia">
+                                <option value="china">🇨🇳 China</option>
+                                <option value="japan">🇯🇵 Japón</option>
+                                <option value="south_korea">🇰🇷 Corea del Sur</option>
+                                <option value="india">🇮🇳 India</option>
+                            </optgroup>
+                            <optgroup label="Oceanía">
+                                <option value="australia">🇦🇺 Australia</option>
+                                <option value="new_zealand">🇳🇿 Nueva Zelanda</option>
+                            </optgroup>
+                            <optgroup label="Otros">
+                                <option value="ireland">🇮🇪 Irlanda</option>
+                                <option value="brazil">🇧🇷 Brasil</option>
+                                <option value="south_africa">🇿🇦 Sudáfrica</option>
+                            </optgroup>
+                            <optgroup label="Regiones">
+                                <option value="latam">🌎 Toda Latinoamérica</option>
+                                <option value="europe">🌍 Toda Europa</option>
+                                <option value="asia">🌏 Toda Asia</option>
+                                <option value="global">🌐 Global</option>
+                            </optgroup>
+                        </select>
+                    </div>
                     <small style="color: var(--text-muted); margin-top: 0.5rem; display: block;">
                         Mantén presionada la tecla Ctrl (Cmd en Mac) para seleccionar múltiples opciones
                     </small>
@@ -536,25 +581,34 @@
 
                 <div class="form-group">
                     <label>Idiomas para contenido <span class="required">*</span></label>
-                    <select class="form-select" id="idiomas_contenido" multiple size="8" required>
-                        <option value="español">Español</option>
-                        <option value="ingles">Inglés</option>
-                        <option value="portugues">Portugués</option>
-                        <option value="frances">Francés</option>
-                        <option value="italiano">Italiano</option>
-                        <option value="aleman">Alemán</option>
-                        <option value="chino">Chino (Mandarín)</option>
-                        <option value="japones">Japonés</option>
-                        <option value="coreano">Coreano</option>
-                        <option value="hindi">Hindi</option>
-                        <option value="ruso">Ruso</option>
-                        <option value="arabe">Árabe</option>
-                        <option value="holandes">Holandés</option>
-                        <option value="polaco">Polaco</option>
-                        <option value="catalan">Catalán</option>
-                        <option value="gallego">Gallego</option>
-                        <option value="euskera">Euskera</option>
-                    </select>
+                    <div class="dropdown-container">
+                        <select class="form-select" id="idiomas_contenido" multiple required>
+                            <option value="">Seleccionar idiomas...</option>
+                            <optgroup label="Idiomas Principales">
+                                <option value="español">Español</option>
+                                <option value="ingles">Inglés</option>
+                                <option value="portugues">Portugués</option>
+                                <option value="frances">Francés</option>
+                            </optgroup>
+                            <optgroup label="Idiomas Europeos">
+                                <option value="italiano">Italiano</option>
+                                <option value="aleman">Alemán</option>
+                                <option value="holandes">Holandés</option>
+                                <option value="polaco">Polaco</option>
+                                <option value="ruso">Ruso</option>
+                                <option value="catalan">Catalán</option>
+                                <option value="gallego">Gallego</option>
+                                <option value="euskera">Euskera</option>
+                            </optgroup>
+                            <optgroup label="Idiomas Asiáticos">
+                                <option value="chino">Chino (Mandarín)</option>
+                                <option value="japones">Japonés</option>
+                                <option value="coreano">Coreano</option>
+                                <option value="hindi">Hindi</option>
+                                <option value="arabe">Árabe</option>
+                            </optgroup>
+                        </select>
+                    </div>
                     <small style="color: var(--text-muted); margin-top: 0.5rem; display: block;">
                         Mantén presionada la tecla Ctrl (Cmd en Mac) para seleccionar múltiples opciones
                     </small>
@@ -574,39 +628,31 @@
 
                 <div class="form-group">
                     <label>Tono de voz <span class="required">*</span></label>
-                    <div class="options-grid">
-                        <div class="option-card" data-value="amigable">
-                            <div class="option-icon"><i class="fas fa-smile"></i></div>
-                            <span>Amigable</span>
-                            <small>Cercano y familiar</small>
-                        </div>
-                        <div class="option-card" data-value="premium">
-                            <div class="option-icon"><i class="fas fa-gem"></i></div>
-                            <span>Premium</span>
-                            <small>Elegante y sofisticado</small>
-                        </div>
-                        <div class="option-card" data-value="tecnico">
-                            <div class="option-icon"><i class="fas fa-cog"></i></div>
-                            <span>Técnico</span>
-                            <small>Preciso y especializado</small>
-                        </div>
-                        <div class="option-card" data-value="irreverente">
-                            <div class="option-icon"><i class="fas fa-fire"></i></div>
-                            <span>Irreverente</span>
-                            <small>Atrevido y diferente</small>
-                        </div>
-                        <div class="option-card" data-value="divertido">
-                            <div class="option-icon"><i class="fas fa-laugh"></i></div>
-                            <span>Divertido</span>
-                            <small>Dinámico y entretenido</small>
-                        </div>
-                        <div class="option-card" data-value="profesional">
-                            <div class="option-icon"><i class="fas fa-briefcase"></i></div>
-                            <span>Profesional</span>
-                            <small>Formal y confiable</small>
-                        </div>
+                    <div class="dropdown-container">
+                        <select class="form-select" id="tono_voz" required>
+                            <option value="">Seleccionar tono de voz...</option>
+                            <option value="amigable">😊 Amigable - Cercano y familiar</option>
+                            <option value="premium">💎 Premium - Elegante y sofisticado</option>
+                            <option value="tecnico">⚙️ Técnico - Preciso y especializado</option>
+                            <option value="irreverente">🔥 Irreverente - Atrevido y diferente</option>
+                            <option value="divertido">😄 Divertido - Dinámico y entretenido</option>
+                            <option value="profesional">💼 Profesional - Formal y confiable</option>
+                            <option value="casual">👕 Casual - Relajado y espontáneo</option>
+                            <option value="inspirador">✨ Inspirador - Motivador y positivo</option>
+                            <option value="autoritario">👑 Autoritario - Líder y decisivo</option>
+                            <option value="empatico">🤝 Empático - Comprensivo y cercano</option>
+                            <option value="humoristico">🎭 Humorístico - Divertido y desenfadado</option>
+                            <option value="serio">🎯 Serio - Formal y directo</option>
+                            <option value="joven">🎮 Joven - Fresco y moderno</option>
+                            <option value="tradicional">📜 Tradicional - Clásico y respetuoso</option>
+                            <option value="innovador">🚀 Innovador - Vanguardista y creativo</option>
+                            <option value="calido">❤️ Cálido - Acogedor y afectuoso</option>
+                            <option value="directo">💬 Directo - Claro y sin rodeos</option>
+                            <option value="poetico">📝 Poético - Expresivo y artístico</option>
+                            <option value="energico">⚡ Energético - Dinámico y activo</option>
+                            <option value="tranquilo">🧘 Tranquilo - Sereno y calmado</option>
+                        </select>
                     </div>
-                    <input type="hidden" id="tono_voz">
                 </div>
 
                 <div class="form-group">
@@ -617,8 +663,74 @@
 
                 <div class="form-group">
                     <label>Palabras a evitar</label>
-                    <textarea class="form-textarea" id="palabras_evitar" placeholder="Ej: barato, común, ordinario, artificial" maxlength="300" rows="3"></textarea>
-                    <div class="char-counter"><span id="palabras_evitar_count">0</span>/300</div>
+                    <div class="dropdown-container">
+                        <select class="form-select" id="palabras_evitar" multiple>
+                            <option value="">Seleccionar palabras a evitar...</option>
+                            <optgroup label="Calidad y Precio">
+                                <option value="barato">Barato</option>
+                                <option value="caro">Caro</option>
+                                <option value="economico">Económico</option>
+                                <option value="comun">Común</option>
+                                <option value="ordinario">Ordinario</option>
+                                <option value="basico">Básico</option>
+                                <option value="simple">Simple</option>
+                                <option value="comun">Común</option>
+                            </optgroup>
+                            <optgroup label="Características Negativas">
+                                <option value="artificial">Artificial</option>
+                                <option value="sintetico">Sintético</option>
+                                <option value="quimico">Químico</option>
+                                <option value="procesado">Procesado</option>
+                                <option value="falso">Falso</option>
+                                <option value="falsificado">Falsificado</option>
+                                <option value="imitacion">Imitación</option>
+                                <option value="copiado">Copiado</option>
+                            </optgroup>
+                            <optgroup label="Términos Despectivos">
+                                <option value="feo">Feo</option>
+                                <option value="horrible">Horrible</option>
+                                <option value="malo">Malo</option>
+                                <option value="terrible">Terrible</option>
+                                <option value="desagradable">Desagradable</option>
+                                <option value="repulsivo">Repulsivo</option>
+                                <option value="asqueroso">Asqueroso</option>
+                            </optgroup>
+                            <optgroup label="Competencia">
+                                <option value="competencia">Competencia</option>
+                                <option value="rival">Rival</option>
+                                <option value="enemigo">Enemigo</option>
+                                <option value="opositor">Opositor</option>
+                            </optgroup>
+                            <optgroup label="Términos Médicos/Claims">
+                                <option value="cura">Cura</option>
+                                <option value="trata">Trata</option>
+                                <option value="previene">Previene</option>
+                                <option value="elimina">Elimina</option>
+                                <option value="garantiza">Garantiza</option>
+                                <option value="milagro">Milagro</option>
+                                <option value="remedio">Remedio</option>
+                            </optgroup>
+                            <optgroup label="Términos Exagerados">
+                                <option value="increible">Increíble</option>
+                                <option value="fantastico">Fantástico</option>
+                                <option value="sorprendente">Sorprendente</option>
+                                <option value="asombroso">Asombroso</option>
+                                <option value="perfecto">Perfecto</option>
+                                <option value="mejor">Mejor</option>
+                                <option value="numero_uno">Número uno</option>
+                            </optgroup>
+                            <optgroup label="Términos Genéricos">
+                                <option value="producto">Producto</option>
+                                <option value="cosa">Cosa</option>
+                                <option value="articulo">Artículo</option>
+                                <option value="item">Item</option>
+                                <option value="objeto">Objeto</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <small style="color: var(--text-muted); margin-top: 0.5rem; display: block;">
+                        Mantén presionada la tecla Ctrl (Cmd en Mac) para seleccionar múltiples opciones
+                    </small>
                 </div>
 
                 <div class="form-group">
