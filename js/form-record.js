@@ -16,6 +16,7 @@ class FormRecord {
         this.updateProgress();
         this.setupCharCounters();
         this.setupFileUploads();
+        this.setupCustomMultiselects();
     }
 
     setupEventListeners() {
@@ -31,15 +32,7 @@ class FormRecord {
             });
         }
 
-        // Market and language selects with auto-selection logic
-        const mercadoSelect = document.getElementById('mercado_objetivo');
-        const idiomasSelect = document.getElementById('idiomas_contenido');
-        
-        if (mercadoSelect) {
-            mercadoSelect.addEventListener('change', () => {
-                this.autoSelectLanguages(mercadoSelect, idiomasSelect);
-            });
-        }
+        // Custom multiselects are handled in setupCustomMultiselects
 
         // Form validation on input
         document.querySelectorAll('.form-input, .form-textarea').forEach(input => {
@@ -160,93 +153,211 @@ class FormRecord {
         this.formData[fieldName] = files;
     }
 
-    autoSelectLanguages(mercadoSelect, idiomasSelect) {
-        if (!mercadoSelect || !idiomasSelect) return;
+    setupCustomMultiselects() {
+        // Setup mercado objetivo
+        this.initCustomMultiselect('mercado_objetivo', 'mercado_objetivo');
+        
+        // Setup idiomas contenido
+        this.initCustomMultiselect('idiomas_contenido', 'idiomas_contenido', () => {
+            // Auto-select languages when markets change
+            const mercadoValues = this.getMultiselectValues('mercado_objetivo');
+            const idiomasWrapper = document.getElementById('idiomas_contenido_wrapper');
+            if (mercadoValues.length > 0 && idiomasWrapper) {
+                this.autoSelectLanguagesFromMarkets(mercadoValues);
+            }
+        });
 
-        const selectedMarkets = Array.from(mercadoSelect.selectedOptions).map(opt => opt.value);
+        // Setup palabras a evitar
+        this.initCustomMultiselect('palabras_evitar', 'palabras_evitar');
+    }
+
+    initCustomMultiselect(wrapperId, hiddenInputId, onChangeCallback = null) {
+        const wrapper = document.getElementById(wrapperId + '_wrapper');
+        const trigger = document.getElementById(wrapperId + '_trigger');
+        const valueDisplay = document.getElementById(wrapperId + '_value');
+        const dropdown = document.getElementById(wrapperId + '_dropdown');
+        const hiddenInput = document.getElementById(hiddenInputId);
+        const options = dropdown.querySelectorAll('.multiselect-option');
+
+        if (!wrapper || !trigger || !valueDisplay || !dropdown || !hiddenInput) return;
+
+        let selectedValues = [];
+        const optionLabels = {};
+
+        // Store option labels
+        options.forEach(option => {
+            const value = option.dataset.value;
+            optionLabels[value] = option.textContent.trim();
+        });
+
+        // Toggle dropdown
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = dropdown.classList.contains('open');
+            this.closeAllMultiselects();
+            if (!isOpen) {
+                dropdown.classList.add('open');
+                trigger.classList.add('open');
+            }
+        });
+
+        // Handle option clicks
+        options.forEach(option => {
+            option.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const value = option.dataset.value;
+                const index = selectedValues.indexOf(value);
+                
+                if (index > -1) {
+                    selectedValues.splice(index, 1);
+                    option.classList.remove('selected');
+                } else {
+                    selectedValues.push(value);
+                    option.classList.add('selected');
+                }
+
+                this.updateMultiselectDisplay(wrapperId, selectedValues, optionLabels);
+                hiddenInput.value = JSON.stringify(selectedValues);
+                
+                if (onChangeCallback) {
+                    onChangeCallback();
+                }
+            });
+        });
+
+        // Close on outside click
+        document.addEventListener('click', (e) => {
+            if (!wrapper.contains(e.target)) {
+                dropdown.classList.remove('open');
+                trigger.classList.remove('open');
+            }
+        });
+
+        // Initialize display
+        this.updateMultiselectDisplay(wrapperId, selectedValues, optionLabels);
+    }
+
+    updateMultiselectDisplay(wrapperId, selectedValues, optionLabels) {
+        const valueDisplay = document.getElementById(wrapperId + '_value');
+        const trigger = document.getElementById(wrapperId + '_trigger');
+        if (!valueDisplay || !trigger) return;
+
+        if (selectedValues.length === 0) {
+            valueDisplay.textContent = 'Seleccionar...';
+            valueDisplay.classList.remove('has-selection');
+            trigger.querySelector('.multiselect-tags')?.remove();
+        } else {
+            valueDisplay.classList.add('has-selection');
+            
+            // Remove existing tags
+            const existingTags = trigger.querySelector('.multiselect-tags');
+            if (existingTags) existingTags.remove();
+
+            // Create tags container
+            const tagsContainer = document.createElement('div');
+            tagsContainer.className = 'multiselect-tags';
+
+            selectedValues.forEach(value => {
+                const tag = document.createElement('div');
+                tag.className = 'multiselect-tag';
+                tag.innerHTML = `
+                    <span>${optionLabels[value] || value}</span>
+                    <span class="multiselect-tag-remove" data-value="${value}">×</span>
+                `;
+                tagsContainer.appendChild(tag);
+
+                // Remove tag on click
+                tag.querySelector('.multiselect-tag-remove').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const index = selectedValues.indexOf(value);
+                    if (index > -1) {
+                        selectedValues.splice(index, 1);
+                        const option = document.querySelector(`[data-value="${value}"]`);
+                        if (option) option.classList.remove('selected');
+                        this.updateMultiselectDisplay(wrapperId, selectedValues, optionLabels);
+                        const hiddenInput = document.getElementById(wrapperId.replace('_wrapper', ''));
+                        if (hiddenInput) hiddenInput.value = JSON.stringify(selectedValues);
+                    }
+                });
+            });
+
+            valueDisplay.textContent = '';
+            valueDisplay.appendChild(tagsContainer);
+        }
+    }
+
+    closeAllMultiselects() {
+        document.querySelectorAll('.multiselect-dropdown').forEach(dropdown => {
+            dropdown.classList.remove('open');
+        });
+        document.querySelectorAll('.multiselect-trigger').forEach(trigger => {
+            trigger.classList.remove('open');
+        });
+    }
+
+    getMultiselectValues(wrapperId) {
+        const hiddenInput = document.getElementById(wrapperId);
+        if (!hiddenInput || !hiddenInput.value) return [];
+        try {
+            return JSON.parse(hiddenInput.value);
+        } catch {
+            return [];
+        }
+    }
+
+    autoSelectLanguagesFromMarkets(mercadoValues) {
         const languageMap = {
-            // Países hispanohablantes
-            'mexico': 'español',
-            'colombia': 'español',
-            'argentina': 'español',
-            'chile': 'español',
-            'peru': 'español',
-            'venezuela': 'español',
-            'ecuador': 'español',
-            'guatemala': 'español',
-            'cuba': 'español',
-            'bolivia': 'español',
-            'republica_dominicana': 'español',
-            'honduras': 'español',
-            'paraguay': 'español',
-            'nicaragua': 'español',
-            'el_salvador': 'español',
-            'costa_rica': 'español',
-            'panama': 'español',
-            'uruguay': 'español',
-            'spain': 'español',
-            'latam': 'español',
-            // Países de habla inglesa
-            'usa': 'ingles',
-            'canada': 'ingles',
-            'uk': 'ingles',
-            'australia': 'ingles',
-            'new_zealand': 'ingles',
-            'ireland': 'ingles',
-            // Países de habla portuguesa
-            'brazil': 'portugues',
-            'portugal': 'portugues',
-            // Países de habla francesa
-            'france': 'frances',
-            'belgium': 'frances',
-            'switzerland': 'frances',
-            // Otros idiomas
-            'italy': 'italiano',
-            'germany': 'aleman',
-            'netherlands': 'holandes',
-            'poland': 'polaco',
-            'russia': 'ruso',
-            'china': 'chino',
-            'japan': 'japones',
-            'south_korea': 'coreano',
-            'india': 'hindi',
-            'south_africa': 'ingles'
+            'mexico': 'español', 'colombia': 'español', 'argentina': 'español', 'chile': 'español',
+            'peru': 'español', 'venezuela': 'español', 'ecuador': 'español', 'guatemala': 'español',
+            'cuba': 'español', 'bolivia': 'español', 'republica_dominicana': 'español', 'honduras': 'español',
+            'paraguay': 'español', 'nicaragua': 'español', 'el_salvador': 'español', 'costa_rica': 'español',
+            'panama': 'español', 'uruguay': 'español', 'spain': 'español', 'latam': 'español',
+            'usa': 'ingles', 'canada': 'ingles', 'uk': 'ingles', 'australia': 'ingles',
+            'new_zealand': 'ingles', 'ireland': 'ingles', 'south_africa': 'ingles',
+            'brazil': 'portugues', 'portugal': 'portugues',
+            'france': 'frances', 'belgium': 'frances', 'switzerland': 'frances',
+            'italy': 'italiano', 'germany': 'aleman', 'netherlands': 'holandes',
+            'poland': 'polaco', 'russia': 'ruso', 'china': 'chino', 'japan': 'japones',
+            'south_korea': 'coreano', 'india': 'hindi'
         };
 
-        // Obtener idiomas sugeridos basados en países seleccionados
         const suggestedLanguages = new Set();
-        
-        selectedMarkets.forEach(market => {
+        mercadoValues.forEach(market => {
             if (languageMap[market]) {
                 suggestedLanguages.add(languageMap[market]);
             }
         });
 
-        // Si hay idiomas sugeridos y ninguno está seleccionado, seleccionarlos automáticamente
         if (suggestedLanguages.size > 0) {
-            const currentSelected = Array.from(idiomasSelect.selectedOptions).map(opt => opt.value);
+            const currentSelected = this.getMultiselectValues('idiomas_contenido');
+            const newSelected = [...new Set([...currentSelected, ...Array.from(suggestedLanguages)])];
             
-            // Solo auto-seleccionar si no hay idiomas ya seleccionados
-            if (currentSelected.length === 0) {
+            // Update hidden input
+            const hiddenInput = document.getElementById('idiomas_contenido');
+            if (hiddenInput) {
+                hiddenInput.value = JSON.stringify(newSelected);
+            }
+
+            // Update UI
+            const dropdown = document.getElementById('idiomas_contenido_dropdown');
+            if (dropdown) {
                 suggestedLanguages.forEach(lang => {
-                    const option = Array.from(idiomasSelect.options).find(opt => opt.value === lang);
-                    if (option) {
-                        option.selected = true;
+                    const option = dropdown.querySelector(`[data-value="${lang}"]`);
+                    if (option && !option.classList.contains('selected')) {
+                        option.classList.add('selected');
                     }
                 });
-            } else {
-                // Si ya hay idiomas seleccionados, agregar los sugeridos si no están ya seleccionados
-                suggestedLanguages.forEach(lang => {
-                    if (!currentSelected.includes(lang)) {
-                        const option = Array.from(idiomasSelect.options).find(opt => opt.value === lang);
-                        if (option) {
-                            option.selected = true;
-                        }
-                    }
+                
+                // Get option labels and update display
+                const optionLabels = {};
+                dropdown.querySelectorAll('.multiselect-option').forEach(opt => {
+                    optionLabels[opt.dataset.value] = opt.textContent.trim();
                 });
+                this.updateMultiselectDisplay('idiomas_contenido', newSelected, optionLabels);
             }
         }
     }
+
 
     validateField(field) {
         const value = field.value.trim();
@@ -273,14 +384,14 @@ class FormRecord {
 
         // Special validations
         if (step === 2) {
-            const mercado = document.getElementById('mercado_objetivo');
-            const idiomas = document.getElementById('idiomas_contenido');
+            const mercadoValues = this.getMultiselectValues('mercado_objetivo');
+            const idiomasValues = this.getMultiselectValues('idiomas_contenido');
             
-            if (!mercado || mercado.selectedOptions.length === 0) {
+            if (!mercadoValues || mercadoValues.length === 0) {
                 alert('Por favor selecciona al menos un mercado objetivo');
                 isValid = false;
             }
-            if (!idiomas || idiomas.selectedOptions.length === 0) {
+            if (!idiomasValues || idiomasValues.length === 0) {
                 alert('Por favor selecciona al menos un idioma');
                 isValid = false;
             }
@@ -324,8 +435,14 @@ class FormRecord {
         stepElement.querySelectorAll('input, textarea, select').forEach(field => {
             if (field.type === 'file') return;
             
-            // Handle multiple select
-            if (field.multiple && field.tagName === 'SELECT') {
+            // Handle custom multiselect hidden inputs
+            if (field.type === 'hidden' && (field.id === 'mercado_objetivo' || field.id === 'idiomas_contenido' || field.id === 'palabras_evitar')) {
+                try {
+                    this.formData[field.id] = JSON.parse(field.value || '[]');
+                } catch {
+                    this.formData[field.id] = [];
+                }
+            } else if (field.multiple && field.tagName === 'SELECT') {
                 const selected = Array.from(field.selectedOptions)
                     .filter(opt => opt.value !== '') // Excluir opción vacía
                     .map(opt => opt.value);
