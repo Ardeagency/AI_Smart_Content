@@ -10,12 +10,12 @@ Plataforma para generación de contenido UGC (User Generated Content).
 
 ## Archivos Principales
 
-- `index.html` - Dashboard principal
-- `studio.html` - Studio de creación
+- `index.html` - Landing page
+- `studio.html` - Studio de creación de contenido
 - `brands.html` - Gestión de marcas
-- `catalog.html` - Catálogo de contenido
-- `library.html` - Biblioteca
 - `login.html` - Autenticación
+- `onboarding-new.html` - Formulario de configuración inicial
+- `planes.html` - Planes y precios
 
 ## Carpetas
 
