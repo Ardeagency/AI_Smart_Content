@@ -34,16 +34,16 @@ async function initSupabase() {
             return null;
         }
 
-            // Crear cliente de Supabase
+        // Crear cliente de Supabase
         supabaseClient = supabase.createClient(
             config.url,
             config.anonKey,
             {
-                    auth: {
+                auth: {
                     persistSession: true,
-                        autoRefreshToken: true,
-                        detectSessionInUrl: true
-                    }
+                    autoRefreshToken: true,
+                    detectSessionInUrl: true
+                }
             }
         );
 

@@ -207,9 +207,9 @@ class PlanesManager {
                         first_name: firstName,
                         last_name: lastName,
                         plan_type: this.selectedPlan.name
-                    }
                 }
-            });
+            }
+        });
 
             if (error) {
                 throw error;
