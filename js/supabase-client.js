@@ -32,18 +32,18 @@ async function initSupabase() {
         if (!config || !config.url || !config.anonKey) {
             console.error('❌ Supabase configuration not available. Make sure Netlify Function is configured.');
             return null;
-            }
+        }
 
-            // Crear cliente de Supabase
+        // Crear cliente de Supabase
         supabaseClient = supabase.createClient(
             config.url,
             config.anonKey,
             {
-                    auth: {
+                auth: {
                     persistSession: true,
-                        autoRefreshToken: true,
-                        detectSessionInUrl: true
-                    }
+                    autoRefreshToken: true,
+                    detectSessionInUrl: true
+                }
             }
         );
 
@@ -82,7 +82,7 @@ function waitForSupabase(timeout = 10000) {
             initSupabase().then(client => {
                 if (client) {
                     resolve(client);
-} else {
+                } else {
                     // Si falla la inicialización, dar más información sobre el error
                     const config = window.SUPABASE_CONFIG || {};
                     const hasUrl = config.url && config.url.length > 0;
