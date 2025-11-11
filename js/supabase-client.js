@@ -32,18 +32,18 @@ async function initSupabase() {
         if (!config || !config.url || !config.anonKey) {
             console.error('❌ Supabase configuration not available. Make sure Netlify Function is configured.');
             return null;
-        }
+            }
 
-        // Crear cliente de Supabase
+            // Crear cliente de Supabase
         supabaseClient = supabase.createClient(
             config.url,
             config.anonKey,
             {
-                auth: {
+                    auth: {
                     persistSession: true,
-                    autoRefreshToken: true,
-                    detectSessionInUrl: true
-                }
+                        autoRefreshToken: true,
+                        detectSessionInUrl: true
+                    }
             }
         );
 
@@ -90,7 +90,7 @@ function waitForSupabase(timeout = 10000) {
                     
                     let errorMsg = 'Failed to initialize Supabase';
                     if (!hasUrl || !hasKey) {
-                        errorMsg = 'Supabase configuration missing. Please configure SUPABASE_URL and SUPABASE_ANON_KEY in the server.';
+                        errorMsg = 'Supabase configuration missing. Please configure SUPABASE_DATABASE_URL and SUPABASE_ANON_KEY in Netlify environment variables.';
                     }
                     
                     reject(new Error(errorMsg));
@@ -99,7 +99,7 @@ function waitForSupabase(timeout = 10000) {
                 // Mejorar el mensaje de error
                 const config = window.SUPABASE_CONFIG || {};
                 if (!config.url || !config.anonKey) {
-                    reject(new Error('Supabase configuration missing. Server must inject SUPABASE_URL and SUPABASE_ANON_KEY.'));
+                    reject(new Error('Supabase configuration missing. Make sure Netlify Function is deployed and environment variables are set.'));
                 } else {
                     reject(err);
                 }
