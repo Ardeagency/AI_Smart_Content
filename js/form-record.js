@@ -644,8 +644,14 @@ class FormRecord {
 
     async saveToSupabase() {
         if (!this.supabase || !this.userId) {
+            console.error('❌ Error: Supabase o userId no disponible');
+            console.log('Supabase:', this.supabase);
+            console.log('UserId:', this.userId);
             throw new Error('Supabase no está inicializado o no hay usuario autenticado');
         }
+
+        console.log('💾 Iniciando guardado en Supabase...');
+        console.log('👤 User ID:', this.userId);
 
         // 1. Crear o actualizar proyecto
         const projectData = {
@@ -659,14 +665,19 @@ class FormRecord {
             idiomas_contenido: this.formData.idiomas_contenido || []
         };
 
+        console.log('📝 Creando proyecto...', projectData);
         const { data: project, error: projectError } = await this.supabase
             .from('projects')
             .insert(projectData)
             .select()
             .single();
 
-        if (projectError) throw projectError;
+        if (projectError) {
+            console.error('❌ Error creando proyecto:', projectError);
+            throw projectError;
+        }
         const projectId = project.id;
+        console.log('✅ Proyecto creado con ID:', projectId);
 
         // 2. Subir logo si existe
         if (this.formData.logo_file && this.formData.logo_file.length > 0) {

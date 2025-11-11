@@ -16,13 +16,24 @@ class LivingManager {
     async init() {
         await this.initSupabase();
         if (this.supabase && this.userId) {
+            console.log('✅ Supabase inicializado, cargando datos...');
+            console.log('👤 User ID:', this.userId);
             await this.loadUserData();
             await this.loadProjectData();
-            await this.loadBrandData();
-            await this.loadBrandFiles();
-            await this.loadProducts();
-            await this.loadCampaigns();
+            if (this.projectData) {
+                console.log('✅ Proyecto encontrado:', this.projectData.id);
+                await this.loadBrandData();
+                await this.loadBrandFiles();
+                await this.loadProducts();
+                await this.loadCampaigns();
+            } else {
+                console.warn('⚠️ No se encontró proyecto para el usuario');
+            }
             this.renderAll();
+        } else {
+            console.error('❌ No se pudo inicializar Supabase o no hay usuario');
+            console.log('Supabase:', this.supabase);
+            console.log('UserId:', this.userId);
         }
         this.setupEventListeners();
     }
@@ -64,9 +75,13 @@ class LivingManager {
     }
 
     async loadProjectData() {
-        if (!this.supabase || !this.userId) return;
+        if (!this.supabase || !this.userId) {
+            console.warn('⚠️ No se puede cargar proyecto: Supabase o userId no disponible');
+            return;
+        }
 
         try {
+            console.log('📋 Cargando proyecto para usuario:', this.userId);
             const { data, error } = await this.supabase
                 .from('projects')
                 .select('*')
@@ -75,10 +90,21 @@ class LivingManager {
                 .limit(1)
                 .single();
 
-            if (error && error.code !== 'PGRST116') throw error;
-            this.projectData = data;
+            if (error) {
+                if (error.code === 'PGRST116') {
+                    console.warn('⚠️ No se encontró proyecto para el usuario');
+                    this.projectData = null;
+                } else {
+                    console.error('❌ Error cargando proyecto:', error);
+                    throw error;
+                }
+            } else {
+                this.projectData = data;
+                console.log('✅ Proyecto cargado:', data);
+            }
         } catch (error) {
-            console.error('Error loading project data:', error);
+            console.error('❌ Error loading project data:', error);
+            this.projectData = null;
         }
     }
 
