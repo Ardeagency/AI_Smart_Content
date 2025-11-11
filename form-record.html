@@ -157,6 +157,28 @@
             transition: var(--transition);
         }
 
+        .form-select[multiple] {
+            min-height: 200px;
+            padding: 0.5rem;
+        }
+
+        .form-select[multiple] option {
+            padding: 0.5rem;
+            margin: 0.25rem 0;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .form-select[multiple] option:checked {
+            background: rgba(210, 254, 63, 0.2);
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .form-select[multiple] option:hover {
+            background: rgba(210, 254, 63, 0.1);
+        }
+
         .form-input:focus,
         .form-textarea:focus,
         .form-select:focus {
@@ -461,26 +483,81 @@
 
                 <div class="form-group">
                     <label>Mercados objetivo <span class="required">*</span></label>
-                    <div class="multi-select-grid" id="mercadoContainer">
-                        <div class="multi-select-card" data-value="mexico">🇲🇽 México</div>
-                        <div class="multi-select-card" data-value="colombia">🇨🇴 Colombia</div>
-                        <div class="multi-select-card" data-value="argentina">🇦🇷 Argentina</div>
-                        <div class="multi-select-card" data-value="spain">🇪🇸 España</div>
-                        <div class="multi-select-card" data-value="usa">🇺🇸 Estados Unidos</div>
-                        <div class="multi-select-card" data-value="latam">🌎 Toda Latinoamérica</div>
-                    </div>
-                    <input type="hidden" id="mercado_objetivo">
+                    <select class="form-select" id="mercado_objetivo" multiple size="8" required>
+                        <option value="mexico">🇲🇽 México</option>
+                        <option value="colombia">🇨🇴 Colombia</option>
+                        <option value="argentina">🇦🇷 Argentina</option>
+                        <option value="chile">🇨🇱 Chile</option>
+                        <option value="peru">🇵🇪 Perú</option>
+                        <option value="venezuela">🇻🇪 Venezuela</option>
+                        <option value="ecuador">🇪🇨 Ecuador</option>
+                        <option value="guatemala">🇬🇹 Guatemala</option>
+                        <option value="cuba">🇨🇺 Cuba</option>
+                        <option value="bolivia">🇧🇴 Bolivia</option>
+                        <option value="republica_dominicana">🇩🇴 República Dominicana</option>
+                        <option value="honduras">🇭🇳 Honduras</option>
+                        <option value="paraguay">🇵🇾 Paraguay</option>
+                        <option value="nicaragua">🇳🇮 Nicaragua</option>
+                        <option value="el_salvador">🇸🇻 El Salvador</option>
+                        <option value="costa_rica">🇨🇷 Costa Rica</option>
+                        <option value="panama">🇵🇦 Panamá</option>
+                        <option value="uruguay">🇺🇾 Uruguay</option>
+                        <option value="spain">🇪🇸 España</option>
+                        <option value="usa">🇺🇸 Estados Unidos</option>
+                        <option value="canada">🇨🇦 Canadá</option>
+                        <option value="uk">🇬🇧 Reino Unido</option>
+                        <option value="australia">🇦🇺 Australia</option>
+                        <option value="new_zealand">🇳🇿 Nueva Zelanda</option>
+                        <option value="ireland">🇮🇪 Irlanda</option>
+                        <option value="brazil">🇧🇷 Brasil</option>
+                        <option value="portugal">🇵🇹 Portugal</option>
+                        <option value="france">🇫🇷 Francia</option>
+                        <option value="belgium">🇧🇪 Bélgica</option>
+                        <option value="switzerland">🇨🇭 Suiza</option>
+                        <option value="italy">🇮🇹 Italia</option>
+                        <option value="germany">🇩🇪 Alemania</option>
+                        <option value="netherlands">🇳🇱 Países Bajos</option>
+                        <option value="poland">🇵🇱 Polonia</option>
+                        <option value="russia">🇷🇺 Rusia</option>
+                        <option value="china">🇨🇳 China</option>
+                        <option value="japan">🇯🇵 Japón</option>
+                        <option value="south_korea">🇰🇷 Corea del Sur</option>
+                        <option value="india">🇮🇳 India</option>
+                        <option value="south_africa">🇿🇦 Sudáfrica</option>
+                        <option value="latam">🌎 Toda Latinoamérica</option>
+                        <option value="europe">🌍 Toda Europa</option>
+                        <option value="asia">🌏 Toda Asia</option>
+                        <option value="global">🌐 Global</option>
+                    </select>
+                    <small style="color: var(--text-muted); margin-top: 0.5rem; display: block;">
+                        Mantén presionada la tecla Ctrl (Cmd en Mac) para seleccionar múltiples opciones
+                    </small>
                 </div>
 
                 <div class="form-group">
                     <label>Idiomas para contenido <span class="required">*</span></label>
-                    <div class="multi-select-grid" id="idiomasContainer">
-                        <div class="multi-select-card" data-value="español">Español</div>
-                        <div class="multi-select-card" data-value="ingles">Inglés</div>
-                        <div class="multi-select-card" data-value="portugues">Portugués</div>
-                        <div class="multi-select-card" data-value="frances">Francés</div>
-                    </div>
-                    <input type="hidden" id="idiomas_contenido">
+                    <select class="form-select" id="idiomas_contenido" multiple size="8" required>
+                        <option value="español">Español</option>
+                        <option value="ingles">Inglés</option>
+                        <option value="portugues">Portugués</option>
+                        <option value="frances">Francés</option>
+                        <option value="italiano">Italiano</option>
+                        <option value="aleman">Alemán</option>
+                        <option value="chino">Chino (Mandarín)</option>
+                        <option value="japones">Japonés</option>
+                        <option value="coreano">Coreano</option>
+                        <option value="hindi">Hindi</option>
+                        <option value="ruso">Ruso</option>
+                        <option value="arabe">Árabe</option>
+                        <option value="holandes">Holandés</option>
+                        <option value="polaco">Polaco</option>
+                        <option value="catalan">Catalán</option>
+                        <option value="gallego">Gallego</option>
+                        <option value="euskera">Euskera</option>
+                    </select>
+                    <small style="color: var(--text-muted); margin-top: 0.5rem; display: block;">
+                        Mantén presionada la tecla Ctrl (Cmd en Mac) para seleccionar múltiples opciones
+                    </small>
                 </div>
             </div>
 

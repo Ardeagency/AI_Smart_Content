@@ -36,13 +36,15 @@ class FormRecord {
             });
         });
 
-        // Multi-select cards
-        document.querySelectorAll('.multi-select-card').forEach(card => {
-            card.addEventListener('click', (e) => {
-                e.currentTarget.classList.toggle('selected');
-                this.updateMultiSelect(e.currentTarget);
+        // Market and language selects with auto-selection logic
+        const mercadoSelect = document.getElementById('mercado_objetivo');
+        const idiomasSelect = document.getElementById('idiomas_contenido');
+        
+        if (mercadoSelect) {
+            mercadoSelect.addEventListener('change', () => {
+                this.autoSelectLanguages(mercadoSelect, idiomasSelect);
             });
-        });
+        }
 
         // Form validation on input
         document.querySelectorAll('.form-input, .form-textarea').forEach(input => {
@@ -163,14 +165,92 @@ class FormRecord {
         this.formData[fieldName] = files;
     }
 
-    updateMultiSelect(card) {
-        const container = card.closest('.form-group');
-        const hiddenInput = container.querySelector('input[type="hidden"]');
-        if (!hiddenInput) return;
+    autoSelectLanguages(mercadoSelect, idiomasSelect) {
+        if (!mercadoSelect || !idiomasSelect) return;
 
-        const selected = Array.from(container.querySelectorAll('.multi-select-card.selected'))
-            .map(c => c.dataset.value);
-        hiddenInput.value = JSON.stringify(selected);
+        const selectedMarkets = Array.from(mercadoSelect.selectedOptions).map(opt => opt.value);
+        const languageMap = {
+            // Países hispanohablantes
+            'mexico': 'español',
+            'colombia': 'español',
+            'argentina': 'español',
+            'chile': 'español',
+            'peru': 'español',
+            'venezuela': 'español',
+            'ecuador': 'español',
+            'guatemala': 'español',
+            'cuba': 'español',
+            'bolivia': 'español',
+            'republica_dominicana': 'español',
+            'honduras': 'español',
+            'paraguay': 'español',
+            'nicaragua': 'español',
+            'el_salvador': 'español',
+            'costa_rica': 'español',
+            'panama': 'español',
+            'uruguay': 'español',
+            'spain': 'español',
+            'latam': 'español',
+            // Países de habla inglesa
+            'usa': 'ingles',
+            'canada': 'ingles',
+            'uk': 'ingles',
+            'australia': 'ingles',
+            'new_zealand': 'ingles',
+            'ireland': 'ingles',
+            // Países de habla portuguesa
+            'brazil': 'portugues',
+            'portugal': 'portugues',
+            // Países de habla francesa
+            'france': 'frances',
+            'belgium': 'frances',
+            'switzerland': 'frances',
+            // Otros idiomas
+            'italy': 'italiano',
+            'germany': 'aleman',
+            'netherlands': 'holandes',
+            'poland': 'polaco',
+            'russia': 'ruso',
+            'china': 'chino',
+            'japan': 'japones',
+            'south_korea': 'coreano',
+            'india': 'hindi',
+            'south_africa': 'ingles'
+        };
+
+        // Obtener idiomas sugeridos basados en países seleccionados
+        const suggestedLanguages = new Set();
+        
+        selectedMarkets.forEach(market => {
+            if (languageMap[market]) {
+                suggestedLanguages.add(languageMap[market]);
+            }
+        });
+
+        // Si hay idiomas sugeridos y ninguno está seleccionado, seleccionarlos automáticamente
+        if (suggestedLanguages.size > 0) {
+            const currentSelected = Array.from(idiomasSelect.selectedOptions).map(opt => opt.value);
+            
+            // Solo auto-seleccionar si no hay idiomas ya seleccionados
+            if (currentSelected.length === 0) {
+                suggestedLanguages.forEach(lang => {
+                    const option = Array.from(idiomasSelect.options).find(opt => opt.value === lang);
+                    if (option) {
+                        option.selected = true;
+                    }
+                });
+            } else {
+                // Si ya hay idiomas seleccionados, agregar los sugeridos si no están ya seleccionados
+                suggestedLanguages.forEach(lang => {
+                    if (!currentSelected.includes(lang)) {
+                        const option = Array.from(idiomasSelect.options).find(opt => opt.value === lang);
+                        if (option) {
+                            option.selected = true;
+                        }
+                    }
+                });
+            }
+        }
     }
 
     validateField(field) {
@@ -200,11 +280,12 @@ class FormRecord {
         if (step === 2) {
             const mercado = document.getElementById('mercado_objetivo');
             const idiomas = document.getElementById('idiomas_contenido');
-            if (!mercado.value || mercado.value === '[]') {
+            
+            if (!mercado || mercado.selectedOptions.length === 0) {
                 alert('Por favor selecciona al menos un mercado objetivo');
                 isValid = false;
             }
-            if (!idiomas.value || idiomas.value === '[]') {
+            if (!idiomas || idiomas.selectedOptions.length === 0) {
                 alert('Por favor selecciona al menos un idioma');
                 isValid = false;
             }
@@ -247,7 +328,11 @@ class FormRecord {
         // Collect all form data from current step
         stepElement.querySelectorAll('input, textarea, select').forEach(field => {
             if (field.type === 'file') return;
-            if (field.type === 'hidden') {
+            
+            // Handle multiple select
+            if (field.multiple && field.tagName === 'SELECT') {
+                this.formData[field.id] = Array.from(field.selectedOptions).map(opt => opt.value);
+            } else if (field.type === 'hidden') {
                 try {
                     this.formData[field.id] = JSON.parse(field.value);
                 } catch {
