@@ -684,37 +684,61 @@ class FormRecord {
                 await this.initSupabase();
                 
                 if (!this.supabase || !this.userId) {
-                    throw new Error('No se pudo inicializar Supabase o no hay usuario autenticado. Por favor, recarga la página e inicia sesión nuevamente.');
+                    const errorMsg = 'No se pudo inicializar Supabase o no hay usuario autenticado. Por favor, recarga la página e inicia sesión nuevamente.';
+                    console.error('❌', errorMsg);
+                    alert(errorMsg);
+                    if (btnNext) {
+                        btnNext.disabled = false;
+                        btnNext.textContent = 'Finalizar';
+                    }
+                    return; // NO avanzar, quedarse en el formulario
                 }
             }
 
-            // Guardar datos en Supabase
+            // Guardar datos en Supabase - NO avanzar hasta que se complete exitosamente
+            console.log('🔄 Iniciando guardado en Supabase...');
             await this.saveToSupabase();
+            console.log('✅ Guardado completado exitosamente');
             
-            // Show success screen
+            // Solo avanzar si el guardado fue exitoso
             this.showStep(this.totalSteps);
         } catch (error) {
-            console.error('❌ Error saving form data:', error);
-            console.error('Error details:', {
-                message: error.message,
-                code: error.code,
-                details: error.details,
-                hint: error.hint
-            });
-            alert('Error al guardar los datos: ' + error.message + '\n\nPor favor, revisa la consola para más detalles.');
+            // Error detallado en consola
+            console.error('❌ ============================================');
+            console.error('❌ ERROR AL GUARDAR DATOS EN SUPABASE');
+            console.error('❌ ============================================');
+            console.error('❌ Mensaje:', error.message);
+            console.error('❌ Código:', error.code);
+            console.error('❌ Detalles:', error.details);
+            console.error('❌ Hint:', error.hint);
+            console.error('❌ Error completo:', JSON.stringify(error, null, 2));
+            console.error('❌ ============================================');
+            
+            // Mostrar mensaje de error al usuario
+            const errorMessage = `Error al guardar los datos en Supabase:\n\n${error.message || 'Error desconocido'}\n\nPor favor:\n1. Revisa la consola para más detalles\n2. Verifica tu conexión a internet\n3. Intenta nuevamente haciendo clic en "Finalizar"\n\nLos datos del formulario NO se han perdido y están listos para guardarse.`;
+            alert(errorMessage);
+            
+            // NO avanzar - mantener el botón activo para reintentar
             if (btnNext) {
                 btnNext.disabled = false;
-                btnNext.textContent = 'Finalizar';
+                btnNext.textContent = 'Reintentar Guardado';
+                btnNext.onclick = () => {
+                    this.completeForm(); // Permitir reintentar
+                };
             }
+            
+            // NO redirigir, NO avanzar, NO reiniciar - quedarse estático
+            return;
         }
     }
 
     async saveToSupabase() {
         if (!this.supabase || !this.userId) {
-            console.error('❌ Error: Supabase o userId no disponible');
-            console.log('Supabase:', this.supabase);
-            console.log('UserId:', this.userId);
-            throw new Error('Supabase no está inicializado o no hay usuario autenticado');
+            const errorMsg = 'Supabase no está inicializado o no hay usuario autenticado';
+            console.error('❌ Error:', errorMsg);
+            console.log('Supabase disponible:', !!this.supabase);
+            console.log('UserId disponible:', !!this.userId);
+            throw new Error(errorMsg);
         }
 
         console.log('💾 Iniciando guardado en Supabase...');
@@ -733,19 +757,56 @@ class FormRecord {
             idiomas_contenido: Array.isArray(this.formData.idiomas_contenido) ? this.formData.idiomas_contenido : []
         };
         
-        console.log('📝 Creando proyecto...', projectData);
-        const { data: project, error: projectError } = await this.supabase
+        // Verificar si ya existe un proyecto para este usuario
+        console.log('🔍 Verificando si existe proyecto para el usuario...');
+        const { data: existingProject, error: checkError } = await this.supabase
             .from('projects')
-            .insert(projectData)
-            .select()
-            .single();
+            .select('id')
+            .eq('user_id', this.userId)
+            .maybeSingle(); // Usar maybeSingle para evitar error si no existe
 
-        if (projectError) {
-            console.error('❌ Error creando proyecto:', projectError);
-            throw projectError;
+        if (checkError && checkError.code !== 'PGRST116') {
+            console.error('❌ Error verificando proyecto existente:', checkError);
+            throw new Error(`Error al verificar proyecto: ${checkError.message}`);
         }
-        const projectId = project.id;
-        console.log('✅ Proyecto creado con ID:', projectId);
+
+        let projectId;
+        
+        if (existingProject) {
+            // Actualizar proyecto existente
+            console.log('📝 Actualizando proyecto existente...', existingProject.id);
+            const { data: project, error: projectError } = await this.supabase
+                .from('projects')
+                .update(projectData)
+                .eq('id', existingProject.id)
+                .select()
+                .single();
+
+            if (projectError) {
+                console.error('❌ Error actualizando proyecto:', projectError);
+                console.error('Detalles:', JSON.stringify(projectError, null, 2));
+                throw new Error(`Error al actualizar proyecto: ${projectError.message || 'Error desconocido'}`);
+            }
+            projectId = project.id;
+            console.log('✅ Proyecto actualizado con ID:', projectId);
+        } else {
+            // Crear nuevo proyecto
+            console.log('📝 Creando nuevo proyecto...', projectData);
+            const { data: project, error: projectError } = await this.supabase
+                .from('projects')
+                .insert(projectData)
+                .select()
+                .single();
+
+            if (projectError) {
+                console.error('❌ Error creando proyecto:', projectError);
+                console.error('Detalles completos:', JSON.stringify(projectError, null, 2));
+                console.error('Datos que se intentaron insertar:', JSON.stringify(projectData, null, 2));
+                throw new Error(`Error al crear proyecto: ${projectError.message || 'Error desconocido'}. Código: ${projectError.code || 'N/A'}`);
+            }
+            projectId = project.id;
+            console.log('✅ Proyecto creado con ID:', projectId);
+        }
 
         // 2. Subir logo si existe
         if (this.formData.logo_file && this.formData.logo_file.length > 0) {
@@ -769,7 +830,7 @@ class FormRecord {
             }
         }
 
-        // 3. Crear brand (lineamientos de marca)
+        // 3. Crear o actualizar brand (lineamientos de marca)
         const brandData = {
             project_id: projectId,
             tono_voz: this.formData.tono_voz || 'amigable',
@@ -778,16 +839,46 @@ class FormRecord {
             reglas_creativas: this.formData.reglas_creativas || null
         };
 
-        console.log('🎨 Creando brand...', brandData);
-        const { error: brandError } = await this.supabase
+        // Verificar si ya existe un brand para este proyecto
+        console.log('🔍 Verificando si existe brand para el proyecto...');
+        const { data: existingBrand, error: checkBrandError } = await this.supabase
             .from('brands')
-            .insert(brandData);
+            .select('id')
+            .eq('project_id', projectId)
+            .maybeSingle();
 
-        if (brandError) {
-            console.error('❌ Error creando brand:', brandError);
-            throw brandError;
+        if (checkBrandError && checkBrandError.code !== 'PGRST116') {
+            console.error('❌ Error verificando brand existente:', checkBrandError);
+            throw new Error(`Error al verificar brand: ${checkBrandError.message}`);
         }
-        console.log('✅ Brand creado exitosamente');
+
+        if (existingBrand) {
+            console.log('🎨 Actualizando brand existente...', existingBrand.id);
+            const { error: brandError } = await this.supabase
+                .from('brands')
+                .update(brandData)
+                .eq('id', existingBrand.id);
+
+            if (brandError) {
+                console.error('❌ Error actualizando brand:', brandError);
+                console.error('Detalles:', JSON.stringify(brandError, null, 2));
+                throw new Error(`Error al actualizar brand: ${brandError.message || 'Error desconocido'}`);
+            }
+            console.log('✅ Brand actualizado exitosamente');
+        } else {
+            console.log('🎨 Creando nuevo brand...', brandData);
+            const { error: brandError } = await this.supabase
+                .from('brands')
+                .insert(brandData);
+
+            if (brandError) {
+                console.error('❌ Error creando brand:', brandError);
+                console.error('Detalles completos:', JSON.stringify(brandError, null, 2));
+                console.error('Datos que se intentaron insertar:', JSON.stringify(brandData, null, 2));
+                throw new Error(`Error al crear brand: ${brandError.message || 'Error desconocido'}. Código: ${brandError.code || 'N/A'}`);
+            }
+            console.log('✅ Brand creado exitosamente');
+        }
 
         // 4. Subir archivos de identidad si existen
         if (this.formData.archivos_identidad && this.formData.archivos_identidad.length > 0) {
@@ -836,19 +927,54 @@ class FormRecord {
             variantes_producto: this.formData.variantes_producto || null
         };
 
-        console.log('📦 Creando producto...', productData);
-        const { data: product, error: productError } = await this.supabase
+        // Verificar si ya existe un producto para este proyecto
+        console.log('🔍 Verificando si existe producto para el proyecto...');
+        const { data: existingProduct, error: checkProductError } = await this.supabase
             .from('products')
-            .insert(productData)
-            .select()
-            .single();
+            .select('id')
+            .eq('project_id', projectId)
+            .maybeSingle();
 
-        if (productError) {
-            console.error('❌ Error creando producto:', productError);
-            throw productError;
+        if (checkProductError && checkProductError.code !== 'PGRST116') {
+            console.error('❌ Error verificando producto existente:', checkProductError);
+            throw new Error(`Error al verificar producto: ${checkProductError.message}`);
         }
-        const productId = product.id;
-        console.log('✅ Producto creado con ID:', productId);
+
+        let productId;
+
+        if (existingProduct) {
+            console.log('📦 Actualizando producto existente...', existingProduct.id);
+            const { data: product, error: productError } = await this.supabase
+                .from('products')
+                .update(productData)
+                .eq('id', existingProduct.id)
+                .select()
+                .single();
+
+            if (productError) {
+                console.error('❌ Error actualizando producto:', productError);
+                console.error('Detalles:', JSON.stringify(productError, null, 2));
+                throw new Error(`Error al actualizar producto: ${productError.message || 'Error desconocido'}`);
+            }
+            productId = product.id;
+            console.log('✅ Producto actualizado con ID:', productId);
+        } else {
+            console.log('📦 Creando nuevo producto...', productData);
+            const { data: product, error: productError } = await this.supabase
+                .from('products')
+                .insert(productData)
+                .select()
+                .single();
+
+            if (productError) {
+                console.error('❌ Error creando producto:', productError);
+                console.error('Detalles completos:', JSON.stringify(productError, null, 2));
+                console.error('Datos que se intentaron insertar:', JSON.stringify(productData, null, 2));
+                throw new Error(`Error al crear producto: ${productError.message || 'Error desconocido'}. Código: ${productError.code || 'N/A'}`);
+            }
+            productId = product.id;
+            console.log('✅ Producto creado con ID:', productId);
+        }
 
         // 6. Subir imágenes del producto
         if (this.formData.product_images && this.formData.product_images.length > 0) {
@@ -892,16 +1018,46 @@ class FormRecord {
             cta_url: this.formData.cta_url || '#'
         };
 
-        console.log('📢 Creando campaña...', campaignData);
-        const { error: campaignError } = await this.supabase
+        // Verificar si ya existe una campaña para este proyecto
+        console.log('🔍 Verificando si existe campaña para el proyecto...');
+        const { data: existingCampaign, error: checkCampaignError } = await this.supabase
             .from('campaigns')
-            .insert(campaignData);
+            .select('id')
+            .eq('project_id', projectId)
+            .maybeSingle();
 
-        if (campaignError) {
-            console.error('❌ Error creando campaña:', campaignError);
-            throw campaignError;
+        if (checkCampaignError && checkCampaignError.code !== 'PGRST116') {
+            console.error('❌ Error verificando campaña existente:', checkCampaignError);
+            throw new Error(`Error al verificar campaña: ${checkCampaignError.message}`);
         }
-        console.log('✅ Campaña creada exitosamente');
+
+        if (existingCampaign) {
+            console.log('📢 Actualizando campaña existente...', existingCampaign.id);
+            const { error: campaignError } = await this.supabase
+                .from('campaigns')
+                .update(campaignData)
+                .eq('id', existingCampaign.id);
+
+            if (campaignError) {
+                console.error('❌ Error actualizando campaña:', campaignError);
+                console.error('Detalles:', JSON.stringify(campaignError, null, 2));
+                throw new Error(`Error al actualizar campaña: ${campaignError.message || 'Error desconocido'}`);
+            }
+            console.log('✅ Campaña actualizada exitosamente');
+        } else {
+            console.log('📢 Creando nueva campaña...', campaignData);
+            const { error: campaignError } = await this.supabase
+                .from('campaigns')
+                .insert(campaignData);
+
+            if (campaignError) {
+                console.error('❌ Error creando campaña:', campaignError);
+                console.error('Detalles completos:', JSON.stringify(campaignError, null, 2));
+                console.error('Datos que se intentaron insertar:', JSON.stringify(campaignData, null, 2));
+                throw new Error(`Error al crear campaña: ${campaignError.message || 'Error desconocido'}. Código: ${campaignError.code || 'N/A'}`);
+            }
+            console.log('✅ Campaña creada exitosamente');
+        }
 
         // 8. Marcar el usuario como form_verified = true
         console.log('✅ Marcando usuario como form_verified...');
