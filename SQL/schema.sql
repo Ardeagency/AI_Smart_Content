@@ -48,7 +48,7 @@ CREATE TYPE subscription_status_enum AS ENUM ('active', 'cancelled', 'expired', 
 
 -- Tabla de usuarios (extiende auth.users)
 CREATE TABLE IF NOT EXISTS public.users (
-    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
     full_name TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -58,10 +58,23 @@ CREATE TABLE IF NOT EXISTS public.users (
     credits_total INTEGER DEFAULT 0
 );
 
+-- Agregar foreign key a auth.users si no existe
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'users_id_fkey'
+    ) THEN
+        ALTER TABLE public.users
+        ADD CONSTRAINT users_id_fkey 
+        FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE;
+    END IF;
+END $$;
+
 -- Tabla de proyectos/marcas (unificada con idiomas)
 CREATE TABLE IF NOT EXISTS public.projects (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL,
     nombre_marca TEXT NOT NULL,
     sitio_web TEXT,
     instagram_url TEXT,
@@ -72,28 +85,60 @@ CREATE TABLE IF NOT EXISTS public.projects (
     -- Mercados objetivo como array JSON
     mercado_objetivo JSONB DEFAULT '[]'::jsonb,
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    CONSTRAINT projects_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Agregar foreign key si no existe
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'projects_user_id_fkey'
+    ) THEN
+        ALTER TABLE public.projects
+        ADD CONSTRAINT projects_user_id_fkey 
+        FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+    END IF;
+END $$;
 
 -- Tabla de brands (unificada con lineamientos y palabras a evitar)
 CREATE TABLE IF NOT EXISTS public.brands (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
+    project_id UUID NOT NULL,
     tono_voz tono_voz_enum NOT NULL,
     palabras_usar TEXT,
     -- Palabras a evitar como array JSON
     palabras_evitar JSONB DEFAULT '[]'::jsonb,
     reglas_creativas TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(project_id)
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Agregar constraints si no existen
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'brands_project_id_fkey'
+    ) THEN
+        ALTER TABLE public.brands
+        ADD CONSTRAINT brands_project_id_fkey 
+        FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE CASCADE;
+    END IF;
+    
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'brands_project_id_unique'
+    ) THEN
+        ALTER TABLE public.brands
+        ADD CONSTRAINT brands_project_id_unique UNIQUE(project_id);
+    END IF;
+END $$;
 
 -- Tabla de archivos de identidad de marca
 CREATE TABLE IF NOT EXISTS public.brand_files (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
+    project_id UUID NOT NULL,
     file_name TEXT NOT NULL,
     file_url TEXT NOT NULL,
     file_type TEXT,
@@ -104,7 +149,7 @@ CREATE TABLE IF NOT EXISTS public.brand_files (
 -- Tabla de productos
 CREATE TABLE IF NOT EXISTS public.products (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
+    project_id UUID NOT NULL,
     tipo_producto tipo_producto_enum NOT NULL,
     nombre_producto TEXT NOT NULL,
     descripcion_producto TEXT NOT NULL,
@@ -124,7 +169,7 @@ CREATE TABLE IF NOT EXISTS public.products (
 -- Tabla de imágenes de producto
 CREATE TABLE IF NOT EXISTS public.product_images (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    product_id UUID NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
+    product_id UUID NOT NULL,
     image_url TEXT NOT NULL,
     image_type TEXT NOT NULL, -- 'principal', 'secundaria', 'detalle', 'contexto'
     image_order INTEGER DEFAULT 0,
@@ -134,7 +179,7 @@ CREATE TABLE IF NOT EXISTS public.product_images (
 -- Tabla de campañas
 CREATE TABLE IF NOT EXISTS public.campaigns (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
+    project_id UUID NOT NULL,
     oferta_desc TEXT,
     audiencia_desc TEXT NOT NULL,
     intenciones TEXT,
@@ -148,7 +193,7 @@ CREATE TABLE IF NOT EXISTS public.campaigns (
 -- Tabla de suscripciones
 CREATE TABLE IF NOT EXISTS public.subscriptions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL,
     plan_type plan_tipo_enum NOT NULL,
     status subscription_status_enum DEFAULT 'pending',
     credits_included INTEGER NOT NULL,
@@ -163,12 +208,79 @@ CREATE TABLE IF NOT EXISTS public.subscriptions (
 -- Tabla de uso de créditos
 CREATE TABLE IF NOT EXISTS public.credit_usage (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL,
     credits_used INTEGER NOT NULL,
     operation_type TEXT NOT NULL, -- 'generation', 'export', 'premium_feature'
     description TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- ============================================
+-- FOREIGN KEYS (Agregar si no existen)
+-- ============================================
+
+DO $$
+BEGIN
+    -- brand_files.project_id
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'brand_files_project_id_fkey'
+    ) THEN
+        ALTER TABLE public.brand_files
+        ADD CONSTRAINT brand_files_project_id_fkey 
+        FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE CASCADE;
+    END IF;
+
+    -- products.project_id
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'products_project_id_fkey'
+    ) THEN
+        ALTER TABLE public.products
+        ADD CONSTRAINT products_project_id_fkey 
+        FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE CASCADE;
+    END IF;
+
+    -- product_images.product_id
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'product_images_product_id_fkey'
+    ) THEN
+        ALTER TABLE public.product_images
+        ADD CONSTRAINT product_images_product_id_fkey 
+        FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE CASCADE;
+    END IF;
+
+    -- campaigns.project_id
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'campaigns_project_id_fkey'
+    ) THEN
+        ALTER TABLE public.campaigns
+        ADD CONSTRAINT campaigns_project_id_fkey 
+        FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE CASCADE;
+    END IF;
+
+    -- subscriptions.user_id
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'subscriptions_user_id_fkey'
+    ) THEN
+        ALTER TABLE public.subscriptions
+        ADD CONSTRAINT subscriptions_user_id_fkey 
+        FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+    END IF;
+
+    -- credit_usage.user_id
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'credit_usage_user_id_fkey'
+    ) THEN
+        ALTER TABLE public.credit_usage
+        ADD CONSTRAINT credit_usage_user_id_fkey 
+        FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+    END IF;
+END $$;
 
 -- ============================================
 -- ÍNDICES
