@@ -8,15 +8,41 @@ class FormRecord {
         this.currentStep = 1;
         this.totalSteps = 10;
         this.formData = {};
+        this.supabase = null;
+        this.userId = null;
         this.init();
     }
 
-    init() {
+    async init() {
         this.setupEventListeners();
         this.updateProgress();
         this.setupCharCounters();
         this.setupFileUploads();
         this.setupCustomMultiselects();
+        
+        // Inicializar Supabase
+        await this.initSupabase();
+    }
+
+    async initSupabase() {
+        try {
+            // Esperar a que Supabase esté listo
+            if (typeof waitForSupabase === 'function') {
+                this.supabase = await waitForSupabase();
+            } else if (window.supabaseClient) {
+                this.supabase = window.supabaseClient;
+            }
+
+            if (this.supabase) {
+                // Obtener usuario actual
+                const { data: { user } } = await this.supabase.auth.getUser();
+                if (user) {
+                    this.userId = user.id;
+                }
+            }
+        } catch (error) {
+            console.error('Error initializing Supabase:', error);
+        }
     }
 
     setupEventListeners() {
@@ -173,6 +199,18 @@ class FormRecord {
                     preview.style.display = 'block';
                 }
             }
+            
+            // Store file in formData for Supabase upload
+            if (fieldName === 'logo') {
+                this.formData.logo_file = [file];
+            } else if (fieldName.startsWith('productImage')) {
+                if (!this.formData.product_images) {
+                    this.formData.product_images = [];
+                }
+                const index = parseInt(fieldName.replace('productImage', '')) - 1;
+                this.formData.product_images[index] = file;
+            }
+            
             this.formData[fieldName] = file;
         };
         reader.readAsDataURL(file);
@@ -481,6 +519,7 @@ class FormRecord {
 
         // Collect all form data from current step
         stepElement.querySelectorAll('input, textarea, select').forEach(field => {
+            // Skip file inputs (they're handled in handleFileUpload)
             if (field.type === 'file') return;
             
             // Handle custom multiselect hidden inputs
@@ -568,22 +607,202 @@ class FormRecord {
         document.getElementById('totalSteps').textContent = this.totalSteps;
     }
 
-    completeForm() {
+    async completeForm() {
         // Collect final step data
         this.collectStepData(this.currentStep);
 
-        // Log form data (in production, send to server)
+        // Log form data
         console.log('Form data collected:', this.formData);
 
-        // Show success screen
-        this.showStep(this.totalSteps);
+        // Show loading state
+        const btnNext = document.getElementById('btnNext');
+        if (btnNext) {
+            btnNext.disabled = true;
+            btnNext.textContent = 'Guardando...';
+        }
 
-        // In production, send data to server here
-        // await fetch('/api/save-form-data', {
-        //     method: 'POST',
-        //     headers: { 'Content-Type': 'application/json' },
-        //     body: JSON.stringify(this.formData)
-        // });
+        try {
+            // Guardar datos en Supabase
+            await this.saveToSupabase();
+            
+            // Show success screen
+            this.showStep(this.totalSteps);
+        } catch (error) {
+            console.error('Error saving form data:', error);
+            alert('Error al guardar los datos. Por favor, intenta nuevamente.');
+            if (btnNext) {
+                btnNext.disabled = false;
+                btnNext.textContent = 'Finalizar';
+            }
+        }
+    }
+
+    async saveToSupabase() {
+        if (!this.supabase || !this.userId) {
+            throw new Error('Supabase no está inicializado o no hay usuario autenticado');
+        }
+
+        // 1. Crear o actualizar proyecto
+        const projectData = {
+            user_id: this.userId,
+            nombre_marca: this.formData.nombre_marca || '',
+            sitio_web: this.formData.sitio_web || null,
+            instagram_url: this.formData.instagram_url || null,
+            tiktok_url: this.formData.tiktok_url || null,
+            logo_url: this.formData.logo_url || null,
+            mercado_objetivo: this.formData.mercado_objetivo || [],
+            idiomas_contenido: this.formData.idiomas_contenido || []
+        };
+
+        const { data: project, error: projectError } = await this.supabase
+            .from('projects')
+            .insert(projectData)
+            .select()
+            .single();
+
+        if (projectError) throw projectError;
+        const projectId = project.id;
+
+        // 2. Subir logo si existe
+        if (this.formData.logo_file && this.formData.logo_file.length > 0) {
+            const logoFile = this.formData.logo_file[0];
+            const fileExt = logoFile.name.split('.').pop();
+            const fileName = `${projectId}/logo.${fileExt}`;
+
+            const { data: uploadData, error: uploadError } = await this.supabase.storage
+                .from('brand-logos')
+                .upload(fileName, logoFile);
+
+            if (!uploadError) {
+                const { data: { publicUrl } } = this.supabase.storage
+                    .from('brand-logos')
+                    .getPublicUrl(fileName);
+
+                await this.supabase
+                    .from('projects')
+                    .update({ logo_url: publicUrl })
+                    .eq('id', projectId);
+            }
+        }
+
+        // 3. Crear brand (lineamientos de marca)
+        const brandData = {
+            project_id: projectId,
+            tono_voz: this.formData.tono_voz || 'amigable',
+            palabras_usar: this.formData.palabras_usar || null,
+            palabras_evitar: this.formData.palabras_evitar || [],
+            reglas_creativas: this.formData.reglas_creativas || null
+        };
+
+        const { error: brandError } = await this.supabase
+            .from('brands')
+            .insert(brandData);
+
+        if (brandError) throw brandError;
+
+        // 4. Subir archivos de identidad si existen
+        if (this.formData.archivos_identidad && this.formData.archivos_identidad.length > 0) {
+            const uploadPromises = this.formData.archivos_identidad.map(async (file) => {
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${projectId}/${Date.now()}_${file.name}`;
+
+                const { data: uploadData, error: uploadError } = await this.supabase.storage
+                    .from('brand-files')
+                    .upload(fileName, file);
+
+                if (!uploadError) {
+                    const { data: { publicUrl } } = this.supabase.storage
+                        .from('brand-files')
+                        .getPublicUrl(fileName);
+
+                    await this.supabase
+                        .from('brand_files')
+                        .insert({
+                            project_id: projectId,
+                            file_name: file.name,
+                            file_url: publicUrl,
+                            file_type: file.type,
+                            file_size: file.size
+                        });
+                }
+            });
+
+            await Promise.all(uploadPromises);
+        }
+
+        // 5. Crear producto
+        const productData = {
+            project_id: projectId,
+            tipo_producto: this.formData.tipo_producto || 'otro',
+            nombre_producto: this.formData.nombre_producto || '',
+            descripcion_producto: this.formData.descripcion_producto || '',
+            beneficio_1: this.formData.beneficio_1 || null,
+            beneficio_2: this.formData.beneficio_2 || null,
+            beneficio_3: this.formData.beneficio_3 || null,
+            diferenciacion: this.formData.diferenciacion || null,
+            modo_uso: this.formData.modo_uso || null,
+            ingredientes: this.formData.ingredientes || null,
+            precio_producto: this.formData.precio_producto ? parseFloat(this.formData.precio_producto) : null,
+            moneda: this.formData.moneda || 'USD',
+            variantes_producto: this.formData.variantes_producto || null
+        };
+
+        const { data: product, error: productError } = await this.supabase
+            .from('products')
+            .insert(productData)
+            .select()
+            .single();
+
+        if (productError) throw productError;
+        const productId = product.id;
+
+        // 6. Subir imágenes del producto
+        if (this.formData.product_images && this.formData.product_images.length > 0) {
+            const imageUploadPromises = this.formData.product_images.map(async (file, index) => {
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${productId}/${index + 1}_${Date.now()}.${fileExt}`;
+
+                const { data: uploadData, error: uploadError } = await this.supabase.storage
+                    .from('product-images')
+                    .upload(fileName, file);
+
+                if (!uploadError) {
+                    const { data: { publicUrl } } = this.supabase.storage
+                        .from('product-images')
+                        .getPublicUrl(fileName);
+
+                    await this.supabase
+                        .from('product_images')
+                        .insert({
+                            product_id: productId,
+                            image_url: publicUrl,
+                            image_type: ['principal', 'secundaria', 'detalle', 'contexto'][index] || 'secundaria',
+                            image_order: index
+                        });
+                }
+            });
+
+            await Promise.all(imageUploadPromises);
+        }
+
+        // 7. Crear campaña
+        const campaignData = {
+            project_id: projectId,
+            oferta_desc: this.formData.oferta_desc || null,
+            audiencia_desc: this.formData.audiencia_desc || '',
+            intenciones: this.formData.intenciones || null,
+            objetivo_principal: this.formData.objetivo_principal || '',
+            cta: this.formData.cta || 'Ver más',
+            cta_url: this.formData.cta_url || '#'
+        };
+
+        const { error: campaignError } = await this.supabase
+            .from('campaigns')
+            .insert(campaignData);
+
+        if (campaignError) throw campaignError;
+
+        console.log('✅ Datos guardados exitosamente en Supabase');
     }
 }
 
