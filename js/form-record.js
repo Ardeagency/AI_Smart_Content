@@ -234,10 +234,15 @@ class FormRecord {
             list.appendChild(fileItem);
         });
 
-        if (!this.formData[fieldName]) {
-            this.formData[fieldName] = [];
+        // Store files for Supabase upload
+        if (fieldName === 'archivos_identidad') {
+            this.formData.archivos_identidad = files;
+        } else {
+            if (!this.formData[fieldName]) {
+                this.formData[fieldName] = [];
+            }
+            this.formData[fieldName] = files;
         }
-        this.formData[fieldName] = files;
     }
 
     setupCustomMultiselects() {
@@ -758,7 +763,9 @@ class FormRecord {
 
         // 6. Subir imágenes del producto
         if (this.formData.product_images && this.formData.product_images.length > 0) {
-            const imageUploadPromises = this.formData.product_images.map(async (file, index) => {
+            // Filtrar archivos nulos
+            const validImages = this.formData.product_images.filter(img => img !== null && img !== undefined);
+            const imageUploadPromises = validImages.map(async (file, index) => {
                 const fileExt = file.name.split('.').pop();
                 const fileName = `${productId}/${index + 1}_${Date.now()}.${fileExt}`;
 
