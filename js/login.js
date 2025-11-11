@@ -243,7 +243,7 @@ class AuthManager {
      * Determinar URL de redirección basado en el estado del usuario
      */
     async determineRedirectUrl(userId) {
-        return 'onboarding-new.html';
+        return 'form-record.html';
     }
 
     async checkOnboardingStatus(userId) {

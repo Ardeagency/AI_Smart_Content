@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Datos - AI Smart Content</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Form Record Styles */
+        body {
+            background: var(--bg-black);
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+
+        .form-record-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-top: 2rem;
+        }
+
+        .form-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-logo i {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .form-logo span {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: 1px;
+        }
+
+        .form-progress {
+            margin-top: 2rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: var(--bg-secondary);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .form-step {
+            display: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: var(--shadow-card);
+        }
+
+        .form-step.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .step-header {
+            margin-bottom: 2rem;
+        }
+
+        .step-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(210, 254, 63, 0.1);
+            border: 1px solid var(--border-primary);
+            border-radius: 8px;
+            color: var(--primary-color);
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .step-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .step-subtitle {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .form-group label .required {
+            color: var(--error-color);
+            margin-left: 0.25rem;
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            transition: var(--transition);
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(210, 254, 63, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .char-counter {
+            text-align: right;
+            margin-top: 0.25rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .option-card {
+            padding: 1.25rem;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+        }
+
+        .option-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .option-card.selected {
+            border-color: var(--primary-color);
+            background: rgba(210, 254, 63, 0.1);
+        }
+
+        .option-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+        }
+
+        .option-card span {
+            display: block;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .option-card small {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+        }
+
+        .multi-select-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .multi-select-card {
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+            position: relative;
+        }
+
+        .multi-select-card:hover {
+            border-color: var(--primary-color);
+        }
+
+        .multi-select-card.selected {
+            border-color: var(--primary-color);
+            background: rgba(210, 254, 63, 0.1);
+        }
+
+        .multi-select-card.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .upload-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--bg-secondary);
+        }
+
+        .upload-zone:hover {
+            border-color: var(--primary-color);
+            background: rgba(210, 254, 63, 0.05);
+        }
+
+        .upload-zone i {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .upload-zone p {
+            color: var(--text-secondary);
+            margin: 0.5rem 0;
+        }
+
+        .upload-preview {
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .upload-preview img {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2.5rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .btn {
+            padding: 0.875rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: var(--bg-black);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .success-screen {
+            text-align: center;
+            padding: 3rem 2rem;
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            color: var(--success-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .success-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .success-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .form-record-container {
+                padding: 1rem;
+            }
+
+            .form-step {
+                padding: 1.5rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .options-grid,
+            .multi-select-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="form-record-container">
+        <!-- Header -->
+        <div class="form-header">
+            <div class="form-logo">
+                <i class="fas fa-cube"></i>
+                <span>AI SMART CONTENT</span>
+            </div>
+            <div class="form-progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text">
+                    <span id="currentStep">1</span> de <span id="totalSteps">10</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Steps -->
+        <form id="recordForm">
+            <!-- Step 1: Información Básica de Marca -->
+            <div class="form-step active" data-step="1">
+                <div class="step-header">
+                    <div class="step-badge">
+                        <i class="fas fa-trademark"></i>
+                        <span>Marca / Proyecto</span>
+                    </div>
+                    <h2 class="step-title">Información Básica de tu Marca</h2>
+                    <p class="step-subtitle">Comencemos con los datos fundamentales de tu marca o proyecto</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Nombre de la marca <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="nombre_marca" placeholder="Ej: NaturalGlow Cosmetics" maxlength="100" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Sitio web</label>
+                    <input type="url" class="form-input" id="sitio_web" placeholder="https://tu-marca.com">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Instagram</label>
+                        <input type="text" class="form-input" id="instagram_url" placeholder="@tu_instagram o URL">
+                    </div>
+                    <div class="form-group">
+                        <label>TikTok</label>
+                        <input type="text" class="form-input" id="tiktok_url" placeholder="@tu_tiktok o URL">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Mercado e Idiomas -->
+            <div class="form-step" data-step="2">
+                <div class="step-header">
+                    <div class="step-badge">
+                        <i class="fas fa-trademark"></i>
+                        <span>Marca / Proyecto</span>
+                    </div>
+                    <h2 class="step-title">Mercado Objetivo e Idiomas</h2>
+                    <p class="step-subtitle">Define dónde y en qué idiomas operará tu marca</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Mercados objetivo <span class="required">*</span></label>
+                    <div class="multi-select-grid" id="mercadoContainer">
+                        <div class="multi-select-card" data-value="mexico">🇲🇽 México</div>
+                        <div class="multi-select-card" data-value="colombia">🇨🇴 Colombia</div>
+                        <div class="multi-select-card" data-value="argentina">🇦🇷 Argentina</div>
+                        <div class="multi-select-card" data-value="spain">🇪🇸 España</div>
+                        <div class="multi-select-card" data-value="usa">🇺🇸 Estados Unidos</div>
+                        <div class="multi-select-card" data-value="latam">🌎 Toda Latinoamérica</div>
+                    </div>
+                    <input type="hidden" id="mercado_objetivo">
+                </div>
+
+                <div class="form-group">
+                    <label>Idiomas para contenido <span class="required">*</span></label>
+                    <div class="multi-select-grid" id="idiomasContainer">
+                        <div class="multi-select-card" data-value="español">Español</div>
+                        <div class="multi-select-card" data-value="ingles">Inglés</div>
+                        <div class="multi-select-card" data-value="portugues">Portugués</div>
+                        <div class="multi-select-card" data-value="frances">Francés</div>
+                    </div>
+                    <input type="hidden" id="idiomas_contenido">
+                </div>
+            </div>
+
+            <!-- Step 3: Lineamientos de Marca -->
+            <div class="form-step" data-step="3">
+                <div class="step-header">
+                    <div class="step-badge">
+                        <i class="fas fa-palette"></i>
+                        <span>Lineamientos de Marca</span>
+                    </div>
+                    <h2 class="step-title">Tono de Voz y Comunicación</h2>
+                    <p class="step-subtitle">Define cómo se comunica tu marca</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Tono de voz <span class="required">*</span></label>
+                    <div class="options-grid">
+                        <div class="option-card" data-value="amigable">
+                            <div class="option-icon"><i class="fas fa-smile"></i></div>
+                            <span>Amigable</span>
+                            <small>Cercano y familiar</small>
+                        </div>
+                        <div class="option-card" data-value="premium">
+                            <div class="option-icon"><i class="fas fa-gem"></i></div>
+                            <span>Premium</span>
+                            <small>Elegante y sofisticado</small>
+                        </div>
+                        <div class="option-card" data-value="tecnico">
+                            <div class="option-icon"><i class="fas fa-cog"></i></div>
+                            <span>Técnico</span>
+                            <small>Preciso y especializado</small>
+                        </div>
+                        <div class="option-card" data-value="irreverente">
+                            <div class="option-icon"><i class="fas fa-fire"></i></div>
+                            <span>Irreverente</span>
+                            <small>Atrevido y diferente</small>
+                        </div>
+                        <div class="option-card" data-value="divertido">
+                            <div class="option-icon"><i class="fas fa-laugh"></i></div>
+                            <span>Divertido</span>
+                            <small>Dinámico y entretenido</small>
+                        </div>
+                        <div class="option-card" data-value="profesional">
+                            <div class="option-icon"><i class="fas fa-briefcase"></i></div>
+                            <span>Profesional</span>
+                            <small>Formal y confiable</small>
+                        </div>
+                    </div>
+                    <input type="hidden" id="tono_voz">
+                </div>
+
+                <div class="form-group">
+                    <label>Palabras a usar siempre</label>
+                    <textarea class="form-textarea" id="palabras_usar" placeholder="Ej: natural, sustentable, premium, innovador, auténtico" maxlength="300" rows="3"></textarea>
+                    <div class="char-counter"><span id="palabras_usar_count">0</span>/300</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Palabras a evitar</label>
+                    <textarea class="form-textarea" id="palabras_evitar" placeholder="Ej: barato, común, ordinario, artificial" maxlength="300" rows="3"></textarea>
+                    <div class="char-counter"><span id="palabras_evitar_count">0</span>/300</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Reglas creativas</label>
+                    <textarea class="form-textarea" id="reglas_creativas" placeholder="Ej: Siempre usar colores verdes y blancos. Nunca usar rojo. No hacer claims médicos." maxlength="500" rows="4"></textarea>
+                    <div class="char-counter"><span id="reglas_creativas_count">0</span>/500</div>
+                </div>
+            </div>
+
+            <!-- Step 4: Archivos de Marca -->
+            <div class="form-step" data-step="4">
+                <div class="step-header">
+                    <div class="step-badge">
+                        <i class="fas fa-palette"></i>
+                        <span>Lineamientos de Marca</span>
+                    </div>
+                    <h2 class="step-title">Archivos de Identidad</h2>
+                    <p class="step-subtitle">Sube tu logo y archivos de identidad de marca</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Logo oficial</label>
+                    <div class="upload-zone" id="logoUpload">
+                        <input type="file" id="logo_file" accept="image/*,.svg" hidden>
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p><strong>Arrastra tu logo aquí</strong></p>
+                        <p>o haz clic para seleccionar</p>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">PNG, JPG, SVG - Máx 5MB</p>
+                        <div class="upload-preview" id="logoPreview">
+                            <img src="" alt="Logo Preview">
+                            <button type="button" class="btn btn-secondary" onclick="removeLogo()" style="margin-top: 0.5rem;">
+                                <i class="fas fa-times"></i> Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Archivos adicionales (opcional)</label>
+                    <div class="upload-zone" id="brandFilesUpload">
+                        <input type="file" id="brand_files" multiple accept="image/*,.pdf,.zip,.doc,.docx" hidden>
+                        <i class="fas fa-folder-plus"></i>
+                        <p><strong>Archivos de identidad de marca</strong></p>
+                        <p>Arrastra múltiples archivos aquí</p>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">PDF, ZIP, DOC, Imágenes - Máx 10MB c/u</p>
+                    </div>
+                    <div id="brandFilesList" style="margin-top: 1rem;"></div>
+                </div>
+            </div>
+
+            <!-- Step 5: Información del Producto -->
+            <div class="form-step" data-step="5">
+                <div class="step-header">
+                    <div class="step-badge">
+                        <i class="fas fa-box"></i>
+                        <span>Producto Principal</span>
+                    </div>
+                    <h2 class="step-title">Información del Producto</h2>
+                    <p class="step-subtitle">Describe tu producto principal</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Tipo de producto <span class="required">*</span></label>
+                    <div class="options-grid">
+                        <div class="option-card" data-value="bebida">
+                            <div class="option-icon"><i class="fas fa-glass-water"></i></div>
+                            <span>Bebida</span>
+                        </div>
+                        <div class="option-card" data-value="cosmetico">
+                            <div class="option-icon"><i class="fas fa-heart"></i></div>
+                            <span>Cosmético</span>
+                        </div>
+                        <div class="option-card" data-value="app">
+                            <div class="option-icon"><i class="fas fa-mobile-alt"></i></div>
+                            <span>App/Software</span>
+                        </div>
+                        <div class="option-card" data-value="suplemento">
+                            <div class="option-icon"><i class="fas fa-pills"></i></div>
+                            <span>Suplemento</span>
+                        </div>
+                        <div class="option-card" data-value="ropa">
+                            <div class="option-icon"><i class="fas fa-tshirt"></i></div>
+                            <span>Ropa/Moda</span>
+                        </div>
+                        <div class="option-card" data-value="electronico">
+                            <div class="option-icon"><i class="fas fa-laptop"></i></div>
+                            <span>Electrónico</span>
+                        </div>
+                        <div class="option-card" data-value="servicio">
+                            <div class="option-icon"><i class="fas fa-handshake"></i></div>
+                            <span>Servicio</span>
+                        </div>
+                        <div class="option-card" data-value="otro">
+                            <div class="option-icon"><i class="fas fa-ellipsis-h"></i></div>
+                            <span>Otro</span>
+                        </div>
+                    </div>
+                    <input type="hidden" id="tipo_producto">
+                </div>
+
+                <div class="form-group">
+                    <label>Nombre del producto <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="nombre_producto" placeholder="Ej: Crema Hidratante Natural" maxlength="100" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Descripción corta <span class="required">*</span></label>
+                    <textarea class="form-textarea" id="descripcion_producto" placeholder="¿Qué es y para qué sirve?" maxlength="300" rows="3" required></textarea>
+                    <div class="char-counter"><span id="descripcion_producto_count">0</span>/300</div>
+                </div>
+            </div>
+
+            <!-- Step 6: Beneficios y Diferenciación -->
+            <div class="form-step" data-step="6">
+                <div class="step-header">
+                    <div class="step-badge">
+                        <i class="fas fa-box"></i>
+                        <span>Producto Principal</span>
+                    </div>
+                    <h2 class="step-title">Beneficios y Diferenciación</h2>
+                    <p class="step-subtitle">Destaca lo que hace único a tu producto</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Beneficios principales <span class="required">*</span></label>
+                    <input type="text" class="form-input" id="beneficio_1" placeholder="Primer beneficio principal" maxlength="100" required>
+                    <input type="text" class="form-input" id="beneficio_2" placeholder="Segundo beneficio (opcional)" maxlength="100" style="margin-top: 0.75rem;">
+                    <input type="text" class="form-input" id="beneficio_3" placeholder="Tercer beneficio (opcional)" maxlength="100" style="margin-top: 0.75rem;">
+                </div>
+
+                <div class="form-group">
+                    <label>Diferenciación</label>
+                    <textarea class="form-textarea" id="diferenciacion" placeholder="Tu ventaja única o propuesta de valor" maxlength="400" rows="3"></textarea>
+                    <div class="char-counter"><span id="diferenciacion_count">0</span>/400</div>
+                </div>
+            </div>
+
+            <!-- Step 7: Detalles del Producto -->
+            <div class="form-step" data-step="7">
+                <div class="step-header">
+                    <div class="step-badge">
+                        <i class="fas fa-box"></i>
+                        <span>Producto Principal</span>
+                    </div>
+                    <h2 class="step-title">Detalles y Especificaciones</h2>
+                    <p class="step-subtitle">Información adicional sobre tu producto</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Modo de uso</label>
+                    <textarea class="form-textarea" id="modo_uso" placeholder="Pasos, dosis, frecuencia, tiempos" maxlength="500" rows="4"></textarea>
+                    <div class="char-counter"><span id="modo_uso_count">0</span>/500</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Ingredientes o especificaciones</label>
+                    <textarea class="form-textarea" id="ingredientes" placeholder="Componentes, materiales o características técnicas" maxlength="400" rows="3"></textarea>
+                    <div class="char-counter"><span id="ingredientes_count">0</span>/400</div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Precio</label>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <select class="form-select" id="moneda" style="width: 100px;">
+                                <option value="USD">USD</option>
+                                <option value="MXN">MXN</option>
+                                <option value="COP">COP</option>
+                                <option value="ARS">ARS</option>
+                                <option value="EUR">EUR</option>
+                            </select>
+                            <input type="number" class="form-input" id="precio_producto" placeholder="0.00" step="0.01" min="0" style="flex: 1;">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Variantes</label>
+                        <textarea class="form-textarea" id="variantes_producto" placeholder="Sabores, tamaños, modelos, colores" maxlength="300" rows="3"></textarea>
+                        <div class="char-counter"><span id="variantes_producto_count">0</span>/300</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 8: Imágenes del Producto -->
+            <div class="form-step" data-step="8">
+                <div class="step-header">
+                    <div class="step-badge">
+                        <i class="fas fa-box"></i>
+                        <span>Producto Principal</span>
+                    </div>
+                    <h2 class="step-title">Imágenes del Producto</h2>
+                    <p class="step-subtitle">Sube 4 imágenes en diferentes perspectivas (mínimo 2 requeridas)</p>
+                </div>
+
+                <div class="options-grid" style="grid-template-columns: repeat(2, 1fr);">
+                    <div class="form-group">
+                        <label>Imagen #1 (Principal)</label>
+                        <div class="upload-zone" style="padding: 1.5rem;">
+                            <input type="file" id="imagen_producto_1" accept="image/*" hidden>
+                            <i class="fas fa-image"></i>
+                            <p style="font-size: 0.9rem;">Click para subir</p>
+                            <div class="upload-preview" id="preview1"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Imagen #2 (Secundaria)</label>
+                        <div class="upload-zone" style="padding: 1.5rem;">
+                            <input type="file" id="imagen_producto_2" accept="image/*" hidden>
+                            <i class="fas fa-image"></i>
+                            <p style="font-size: 0.9rem;">Click para subir</p>
+                            <div class="upload-preview" id="preview2"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Imagen #3 (Detalle)</label>
+                        <div class="upload-zone" style="padding: 1.5rem;">
+                            <input type="file" id="imagen_producto_3" accept="image/*" hidden>
+                            <i class="fas fa-image"></i>
+                            <p style="font-size: 0.9rem;">Click para subir</p>
+                            <div class="upload-preview" id="preview3"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Imagen #4 (Contexto)</label>
+                        <div class="upload-zone" style="padding: 1.5rem;">
+                            <input type="file" id="imagen_producto_4" accept="image/*" hidden>
+                            <i class="fas fa-image"></i>
+                            <p style="font-size: 0.9rem;">Click para subir</p>
+                            <div class="upload-preview" id="preview4"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 9: Campañas -->
+            <div class="form-step" data-step="9">
+                <div class="step-header">
+                    <div class="step-badge">
+                        <i class="fas fa-bullseye"></i>
+                        <span>Campañas</span>
+                    </div>
+                    <h2 class="step-title">Información de Campaña</h2>
+                    <p class="step-subtitle">Define los objetivos y audiencia de tu campaña</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Oferta o promoción</label>
+                    <textarea class="form-textarea" id="oferta_desc" placeholder="Ej: 20% de descuento en la primera compra, envío gratis..." maxlength="300" rows="3"></textarea>
+                    <div class="char-counter"><span id="oferta_desc_count">0</span>/300</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Audiencia objetivo <span class="required">*</span></label>
+                    <textarea class="form-textarea" id="audiencia_desc" placeholder="Ej: Mujer de 25-35 años, interesada en productos naturales..." maxlength="1000" rows="4" required></textarea>
+                    <div class="char-counter"><span id="audiencia_desc_count">0</span>/1000</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Intenciones de la audiencia</label>
+                    <textarea class="form-textarea" id="intenciones" placeholder="¿Qué busca o necesita tu audiencia?" maxlength="500" rows="3"></textarea>
+                    <div class="char-counter"><span id="intenciones_count">0</span>/500</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Objetivo principal <span class="required">*</span></label>
+                    <textarea class="form-textarea" id="objetivo_principal" placeholder="Ej: Aumentar las ventas del producto X en un 30%..." maxlength="500" rows="3" required></textarea>
+                    <div class="char-counter"><span id="objetivo_principal_count">0</span>/500</div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Call to Action <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="cta" placeholder="Ej: Compra ahora" maxlength="100" required>
+                    </div>
+                    <div class="form-group">
+                        <label>URL del CTA <span class="required">*</span></label>
+                        <input type="url" class="form-input" id="cta_url" placeholder="https://tu-sitio.com/landing" maxlength="200" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 10: Success -->
+            <div class="form-step success-screen" data-step="10">
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h2 class="success-title">¡Registro Completado!</h2>
+                <p class="success-subtitle">Todos tus datos han sido guardados correctamente. Ya puedes comenzar a crear contenido.</p>
+                <div style="margin-top: 2rem;">
+                    <button type="button" class="btn btn-primary" onclick="window.location.href='studio.html'">
+                        <i class="fas fa-rocket"></i>
+                        Ir al Studio
+                    </button>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" id="btnBack" disabled>
+                    <i class="fas fa-arrow-left"></i>
+                    Atrás
+                </button>
+                <button type="button" class="btn btn-primary" id="btnNext">
+                    Continuar
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script src="js/form-record.js"></script>
+</body>
+</html>
+
