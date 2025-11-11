@@ -1067,13 +1067,14 @@ class FormRecord {
             .eq('id', this.userId);
 
         if (updateError) {
-            console.error('⚠️ Error actualizando form_verified:', updateError);
-            // No lanzar error, ya que los datos principales se guardaron correctamente
-        } else {
-            console.log('✅ Usuario marcado como form_verified = true');
+            console.error('❌ Error actualizando form_verified:', updateError);
+            console.error('Detalles:', JSON.stringify(updateError, null, 2));
+            throw new Error(`Error al marcar formulario como completado: ${updateError.message || 'Error desconocido'}`);
         }
-
-        console.log('✅ Datos guardados exitosamente en Supabase');
+        console.log('✅ Usuario marcado como form_verified = true');
+        console.log('✅ ============================================');
+        console.log('✅ TODOS LOS DATOS GUARDADOS EXITOSAMENTE');
+        console.log('✅ ============================================');
     }
 }
 
