@@ -160,6 +160,8 @@ CREATE TABLE IF NOT EXISTS public.campaigns (
     audiencia_desc TEXT NOT NULL,
     intenciones TEXT,
     objetivo_principal TEXT NOT NULL,
+    cta TEXT NOT NULL,
+    cta_url TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
