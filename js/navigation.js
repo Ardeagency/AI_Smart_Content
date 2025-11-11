@@ -178,28 +178,14 @@ class NavigationManager {
                 .select('*', { count: 'exact', head: true })
                 .eq('user_id', session.user.id);
 
-            // Update library count (avatars + files)
-            const { count: avatarsCount } = await window.supabaseClient.supabase
-                .from('avatars')
-                .select('*', { count: 'exact', head: true });
-
-            const { count: filesCount } = await window.supabaseClient.supabase
-                .from('files')
-                .select('*', { count: 'exact', head: true })
-                .eq('user_id', session.user.id);
-
             // Update UI
             const brandsCountEl = document.getElementById('brandsCount');
-            const libraryCountEl = document.getElementById('libraryCount');
 
             if (brandsCountEl) {
                 brandsCountEl.textContent = brandsCount || 0;
             }
 
-            if (libraryCountEl) {
-                const totalLibraryItems = (avatarsCount || 0) + (filesCount || 0);
-                libraryCountEl.textContent = totalLibraryItems;
-            }
+            // Library count removed - library page no longer exists
 
         } catch (error) {
             console.error('Error updating navigation counts:', error);

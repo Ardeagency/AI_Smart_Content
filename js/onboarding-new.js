@@ -1191,7 +1191,7 @@ class NewOnboardingForm {
         if (btnGoToDashboard) {
             btnGoToDashboard.addEventListener('click', () => {
                 console.log('🚀 Navegando al dashboard...');
-                window.location.href = 'main-dashboard.html';
+                window.location.href = 'studio.html';
             });
         }
     }

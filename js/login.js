@@ -14,7 +14,6 @@ class AuthManager {
      */
     init() {
         this.setupEventListeners();
-        this.createParticles();
         this.checkExistingSession();
     }
 
@@ -362,9 +361,9 @@ class AuthManager {
             }
 
             if (projects && projects.length > 0) {
-                console.log('📊 Usuario tiene proyectos, redirigiendo al dashboard');
-                // Usuario tiene proyectos, enviar al dashboard principal
-                return 'main-dashboard.html';
+                console.log('📊 Usuario tiene proyectos, redirigiendo al studio');
+                // Usuario tiene proyectos, enviar al studio
+                return 'studio.html';
             } else {
                 console.log('🆕 Usuario completó onboarding pero no tiene proyectos, crear primer proyecto');
                 // Usuario completó onboarding pero no tiene proyectos, crear uno nuevo
@@ -563,29 +562,8 @@ class AuthManager {
     }
 
     /**
-     * Crear partículas de fondo
+     * Partículas removidas - ya no se usan
      */
-    createParticles() {
-        const particlesContainer = document.getElementById('particles');
-        const particleCount = 50;
-
-        for (let i = 0; i < particleCount; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'particle';
-            
-            // Posición inicial aleatoria
-            particle.style.left = Math.random() * 100 + '%';
-            particle.style.animationDelay = Math.random() * 20 + 's';
-            particle.style.animationDuration = (15 + Math.random() * 10) + 's';
-            
-            // Tamaño aleatorio
-            const size = 1 + Math.random() * 2;
-            particle.style.width = size + 'px';
-            particle.style.height = size + 'px';
-
-            particlesContainer.appendChild(particle);
-        }
-    }
 
     /**
      * Obtener mensaje de error traducido

@@ -22,7 +22,6 @@ class DashboardManager {
     async init() {
         await this.loadUserData();
         await this.loadUserStats();
-        this.createParticles();
         this.setupEventListeners();
     }
 
@@ -437,29 +436,7 @@ class DashboardManager {
         return `Hace ${Math.floor(diffInSeconds / 31536000)} años`;
     }
 
-    createParticles() {
-        const particlesContainer = document.getElementById('particles');
-        if (!particlesContainer) return;
-
-        const particleCount = 30;
-
-        for (let i = 0; i < particleCount; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'particle';
-            
-            // Random position and animation
-            particle.style.left = Math.random() * 100 + '%';
-            particle.style.animationDelay = Math.random() * 20 + 's';
-            particle.style.animationDuration = (15 + Math.random() * 10) + 's';
-            
-            // Random size
-            const size = 1 + Math.random() * 2;
-            particle.style.width = size + 'px';
-            particle.style.height = size + 'px';
-
-            particlesContainer.appendChild(particle);
-        }
-    }
+    // Particles removed - no longer used
 }
 
 // Initialize dashboard when DOM is loaded

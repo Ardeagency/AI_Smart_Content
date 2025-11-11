@@ -1,36 +1,9 @@
-/* Reset y Variables */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+/**
+ * UGC Studio - Estilos principales (Landing Page)
+ */
 
-:root {
-    --primary-color: #FD624F;
-    --primary-dark: #e5553d;
-    --primary-light: #ff7a65;
-    --bg-black: #000000;
-    --bg-dark: #0a0a0a;
-    --bg-card: #111111;
-    --text-primary: #ffffff;
-    --text-secondary: #a3a3a3;
-    --text-muted: #666666;
-    --accent-glow: rgba(253, 98, 79, 0.3);
-    --grid-color: rgba(255, 255, 255, 0.03);
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --border-radius: 12px;
-    --shadow-primary: 0 20px 60px rgba(253, 98, 79, 0.2);
-    --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.5);
-}
-
-/* Base Styles */
-body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: var(--bg-black);
-    color: var(--text-primary);
-    line-height: 1.6;
-    overflow-x: hidden;
-}
+/* Importar estilos base */
+@import url('base.css');
 
 .container {
     max-width: 1200px;

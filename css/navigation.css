@@ -2,7 +2,10 @@
    SISTEMA DE NAVEGACIÓN UGC STUDIO
    ========================================= */
 
-/* Variables para navegación */
+/* Importar estilos base */
+@import url('base.css');
+
+/* Variables específicas para navegación */
 :root {
     --nav-width: 280px;
     --nav-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);

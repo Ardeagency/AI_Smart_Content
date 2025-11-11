@@ -51,8 +51,7 @@ function initAnimations() {
     // Typing animation for the terminal
     initTerminalAnimation();
     
-    // Hero particles animation
-    createParticles();
+    // Particles removed
     
     // Feature cards hover effects
     initFeatureCards();
@@ -91,77 +90,7 @@ function initTerminalAnimation() {
     }, 10000);
 }
 
-// Create floating particles
-function createParticles() {
-    const particlesContainer = document.createElement('div');
-    particlesContainer.className = 'particles-container';
-    particlesContainer.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        z-index: 1;
-    `;
-    
-    document.body.appendChild(particlesContainer);
-
-    // Create particles
-    for (let i = 0; i < 50; i++) {
-        createParticle(particlesContainer);
-    }
-}
-
-function createParticle(container) {
-    const particle = document.createElement('div');
-    const size = Math.random() * 4 + 1;
-    
-    particle.style.cssText = `
-        position: absolute;
-        width: ${size}px;
-        height: ${size}px;
-        background: rgba(253, 98, 79, ${Math.random() * 0.5 + 0.1});
-        border-radius: 50%;
-        top: ${Math.random() * 100}vh;
-        left: ${Math.random() * 100}vw;
-        animation: particleFloat ${Math.random() * 20 + 10}s linear infinite;
-        pointer-events: none;
-    `;
-
-    container.appendChild(particle);
-
-    // Add CSS for particle animation if not already added
-    if (!document.getElementById('particle-styles')) {
-        const style = document.createElement('style');
-        style.id = 'particle-styles';
-        style.textContent = `
-            @keyframes particleFloat {
-                0% {
-                    transform: translateY(0px) translateX(0px) rotate(0deg);
-                    opacity: 0;
-                }
-                10% {
-                    opacity: 1;
-                }
-                90% {
-                    opacity: 1;
-                }
-                100% {
-                    transform: translateY(-100vh) translateX(50px) rotate(360deg);
-                    opacity: 0;
-                }
-            }
-        `;
-        document.head.appendChild(style);
-    }
-
-    // Remove particle after animation and create new one
-    setTimeout(() => {
-        particle.remove();
-        createParticle(container);
-    }, 30000);
-}
+// Particles removed - no longer used
 
 // Feature cards interactive effects
 function initFeatureCards() {

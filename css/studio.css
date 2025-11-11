@@ -2,7 +2,10 @@
    UGC Studio - Estilo Cinematográfico Limpio
    ======================================= */
 
-/* Variables CSS - Sistema Unificado */
+/* Importar estilos base */
+@import url('base.css');
+
+/* Variables específicas del Studio */
 :root {
     /* Sistema de Colores HSL */
     --background: 0 0% 3.9%;
@@ -24,10 +27,6 @@
     --border: 0 0% 14.9%;
     --input: 0 0% 14.9%;
     --ring: 0 0% 83.1%;
-    
-    /* Colores Base del Sistema */
-    --primary-color: #FD624F;
-    --primary-dark: #e5553d;
     --primary-light: #ff7a65;
     --bg-black: #000000;
     --bg-dark: #0a0a0a;

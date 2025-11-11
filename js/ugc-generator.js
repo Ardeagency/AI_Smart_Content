@@ -28,12 +28,21 @@ class UGCGenerator {
      */
     async generateUGC() {
         try {
-            // Mostrar animación de carga silenciosamente
+            // Mostrar animación de carga INMEDIATAMENTE
             if (this.canvasManagerRef) {
+                console.log('🎬 Mostrando animación de carga...');
                 this.canvasManagerRef.showLoadingAnimation();
+                // Verificar que la animación se mostró
+                setTimeout(() => {
+                    const loadingCards = this.canvasManagerRef?.canvas?.loadingCards || [];
+                    console.log(`📊 Estado animación: ${loadingCards.length} cards de carga visibles`);
+                }, 100);
+            } else {
+                console.warn('⚠️ CanvasManager no disponible, no se puede mostrar animación');
             }
             
             // Recolectar todos los datos
+            console.log('📦 Recolectando datos del sidebar...');
             const allData = await this.dataCollector.collectAllSidebarData();
             
             // Validar datos requeridos
@@ -45,21 +54,35 @@ class UGCGenerator {
                 return;
             }
             
-            // Enviar datos al webhook y esperar respuesta
+            console.log('📤 Enviando datos al webhook (puede tardar hasta 5 minutos, manteniendo animación visible)...');
+            // Enviar datos al webhook y esperar respuesta (timeout de 5 minutos)
+            // La animación de carga permanecerá visible durante toda la espera
             const result = await this.webhookManager.sendDataToWebhook(allData);
             
-            console.log('✅ Datos enviados al webhook correctamente:', result);
-            this.showNotification('✅ Datos enviados exitosamente al servidor', 'success');
+            console.log('✅ Respuesta del webhook recibida:', result);
             
-            // Para webhooks con no-cors, no hay respuesta real
-            // Procesar respuesta mock para mostrar en canvas
+            // Procesar la respuesta del webhook si existe
             if (this.canvasManagerRef) {
-                // Limpiar animación de carga
+                // Limpiar animación de carga SOLO después de recibir la respuesta
+                console.log('🎬 Ocultando animación de carga...');
                 this.canvasManagerRef.hideLoadingAnimation();
                 
-                // Mostrar mensaje de éxito en canvas
-                this.canvasManagerRef.clearCanvas();
-                console.log('✅ Webhook procesado correctamente');
+                // Si hay datos en la respuesta, procesarlos
+                if (result && result.success && result.data) {
+                    const variants = result.data;
+                    if (Array.isArray(variants) && variants.length > 0) {
+                        console.log(`📝 Procesando ${variants.length} variante(s) de guiones...`);
+                        this.canvasManagerRef.processVariantsResponse(variants);
+                        this.showNotification(`✅ ${variants.length} guión(es) generado(s) exitosamente`, 'success');
+                    } else {
+                        console.warn('⚠️ Respuesta del webhook no contiene variantes válidas');
+                        this.showNotification('⚠️ El webhook respondió pero sin datos válidos', 'error');
+                    }
+                } else {
+                    // Si no hay respuesta de datos (modo no-cors), mostrar mensaje
+                    this.canvasManagerRef.clearCanvas();
+                    this.showNotification('✅ Datos enviados al servidor (procesando...)', 'info');
+                }
             }
             
         } catch (error) {

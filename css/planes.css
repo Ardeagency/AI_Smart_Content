@@ -1,5 +1,8 @@
 /* Planes - Specific Styles */
 
+/* Importar estilos base */
+@import url('base.css');
+
 /* Updated Pricing Elements */
 .original-price {
     margin-top: 0.5rem;

@@ -15,7 +15,6 @@ class BrandsManager {
     async init() {
         await this.loadBrands();
         this.setupEventListeners();
-        this.createParticles();
     }
 
     async loadBrands() {
@@ -727,27 +726,7 @@ class BrandsManager {
         }
     }
 
-    createParticles() {
-        const particlesContainer = document.getElementById('particles');
-        if (!particlesContainer) return;
-
-        const particleCount = 20;
-
-        for (let i = 0; i < particleCount; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'particle';
-            
-            particle.style.left = Math.random() * 100 + '%';
-            particle.style.animationDelay = Math.random() * 20 + 's';
-            particle.style.animationDuration = (15 + Math.random() * 10) + 's';
-            
-            const size = 1 + Math.random() * 2;
-            particle.style.width = size + 'px';
-            particle.style.height = size + 'px';
-
-            particlesContainer.appendChild(particle);
-        }
-    }
+    // Particles removed - no longer used
 }
 
 // Global functions for HTML onclick handlers
