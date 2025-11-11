@@ -19,8 +19,15 @@ async function initSupabase() {
         const config = window.SUPABASE_CONFIG || (typeof SUPABASE_CONFIG !== 'undefined' ? SUPABASE_CONFIG : null);
         
         if (!config || !config.url || !config.anonKey) {
-            console.warn('⚠️ Supabase configuration incomplete. Some features may not work.');
-            console.warn('⚠️ Make sure supabase-config.js is loaded before supabase-client.js');
+            // Solo mostrar advertencia en desarrollo
+            const isDevelopment = window.location.hostname === 'localhost' || 
+                                 window.location.hostname === '127.0.0.1' ||
+                                 window.location.hostname.includes('localhost');
+            
+            if (isDevelopment) {
+                console.warn('⚠️ Supabase configuration incomplete. Some features may not work.');
+                console.warn('⚠️ Make sure supabase-config.js is loaded before supabase-client.js');
+            }
             return null;
         }
 

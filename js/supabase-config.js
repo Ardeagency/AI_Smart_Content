@@ -40,14 +40,21 @@ const SUPABASE_CONFIG = {
 
 // Verificar que las variables estén configuradas
 if (!SUPABASE_CONFIG.url || !SUPABASE_CONFIG.anonKey) {
-    console.warn('⚠️ Supabase configuration missing.');
-    console.warn('⚠️ Server should inject: window.SUPABASE_URL and window.SUPABASE_ANON_KEY');
-    console.warn('⚠️ Or add meta tags: <meta name="supabase-url" content="...">');
-    console.warn('⚠️ Available variables:', {
-        SUPABASE_URL: window.SUPABASE_URL,
-        SUPABASE_DATABASE_URL: window.SUPABASE_DATABASE_URL,
-        SUPABASE_ANON_KEY: window.SUPABASE_ANON_KEY ? '***' : 'missing'
-    });
+    // Solo mostrar advertencia en desarrollo o si está explícitamente habilitado
+    const isDevelopment = window.location.hostname === 'localhost' || 
+                         window.location.hostname === '127.0.0.1' ||
+                         window.location.hostname.includes('localhost');
+    
+    if (isDevelopment) {
+        console.warn('⚠️ Supabase configuration missing.');
+        console.warn('⚠️ Server should inject: window.SUPABASE_URL and window.SUPABASE_ANON_KEY');
+        console.warn('⚠️ Or add meta tags: <meta name="supabase-url" content="...">');
+        console.warn('⚠️ Available variables:', {
+            SUPABASE_URL: window.SUPABASE_URL || 'not set',
+            SUPABASE_DATABASE_URL: window.SUPABASE_DATABASE_URL || 'not set',
+            SUPABASE_ANON_KEY: window.SUPABASE_ANON_KEY ? '***set***' : 'not set'
+        });
+    }
 }
 
 // Hacer disponible globalmente
