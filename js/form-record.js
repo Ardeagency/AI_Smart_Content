@@ -520,18 +520,26 @@ class FormRecord {
 
     collectStepData(step) {
         const stepElement = document.querySelector(`[data-step="${step}"]`);
-        if (!stepElement) return;
+        if (!stepElement) {
+            console.warn(`⚠️ No se encontró el paso ${step}`);
+            return;
+        }
+
+        console.log(`📝 Recopilando datos del paso ${step}...`);
 
         // Collect all form data from current step
         stepElement.querySelectorAll('input, textarea, select').forEach(field => {
             // Skip file inputs (they're handled in handleFileUpload)
             if (field.type === 'file') return;
             
-            // Handle custom multiselect hidden inputs
+            // Handle custom multiselect hidden inputs FIRST
             if (field.type === 'hidden' && (field.id === 'mercado_objetivo' || field.id === 'idiomas_contenido' || field.id === 'palabras_evitar')) {
                 try {
-                    this.formData[field.id] = JSON.parse(field.value || '[]');
-                } catch {
+                    const value = field.value ? JSON.parse(field.value) : [];
+                    this.formData[field.id] = Array.isArray(value) ? value : [];
+                    console.log(`  ✓ ${field.id}:`, this.formData[field.id]);
+                } catch (e) {
+                    console.warn(`  ⚠️ Error parseando ${field.id}:`, e);
                     this.formData[field.id] = [];
                 }
             } else if (field.multiple && field.tagName === 'SELECT') {
@@ -539,9 +547,11 @@ class FormRecord {
                     .filter(opt => opt.value !== '') // Excluir opción vacía
                     .map(opt => opt.value);
                 this.formData[field.id] = selected;
+                console.log(`  ✓ ${field.id}:`, selected);
             } else if (field.tagName === 'SELECT' && !field.multiple) {
                 // Single select
                 this.formData[field.id] = field.value;
+                if (field.value) console.log(`  ✓ ${field.id}:`, field.value);
             } else if (field.type === 'hidden') {
                 try {
                     this.formData[field.id] = JSON.parse(field.value);
@@ -549,9 +559,35 @@ class FormRecord {
                     this.formData[field.id] = field.value;
                 }
             } else {
-                this.formData[field.id] = field.value;
+                const value = field.value.trim();
+                if (value) {
+                    this.formData[field.id] = value;
+                    console.log(`  ✓ ${field.id}:`, value);
+                }
             }
         });
+
+        // También obtener valores directamente de los multiselects usando getMultiselectValues
+        if (step === 2) {
+            const mercadoValues = this.getMultiselectValues('mercado_objetivo');
+            const idiomasValues = this.getMultiselectValues('idiomas_contenido');
+            if (mercadoValues && mercadoValues.length > 0) {
+                this.formData.mercado_objetivo = mercadoValues;
+                console.log('  ✓ mercado_objetivo (directo):', mercadoValues);
+            }
+            if (idiomasValues && idiomasValues.length > 0) {
+                this.formData.idiomas_contenido = idiomasValues;
+                console.log('  ✓ idiomas_contenido (directo):', idiomasValues);
+            }
+        }
+
+        if (step === 3) {
+            const palabrasEvitar = this.getMultiselectValues('palabras_evitar');
+            if (palabrasEvitar && palabrasEvitar.length > 0) {
+                this.formData.palabras_evitar = palabrasEvitar;
+                console.log('  ✓ palabras_evitar (directo):', palabrasEvitar);
+            }
+        }
     }
 
     nextStep() {
