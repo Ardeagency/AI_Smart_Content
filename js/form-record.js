@@ -564,7 +564,18 @@ function removeLogo() {
 }
 
 // Initialize form when DOM is ready
+let formRecordInstance;
 document.addEventListener('DOMContentLoaded', () => {
-    window.formRecord = new FormRecord();
+    formRecordInstance = new FormRecord();
+    window.formRecordInstance = formRecordInstance;
 });
+
+// Remove logo function
+FormRecord.prototype.removeLogo = function() {
+    const logoInput = document.getElementById('logo_file');
+    const logoPreview = document.getElementById('logoPreview');
+    if (logoInput) logoInput.value = '';
+    if (logoPreview) logoPreview.style.display = 'none';
+    delete this.formData.logo;
+};
 
