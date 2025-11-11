@@ -229,18 +229,25 @@ class PaymentModal {
         const closeBtn = document.getElementById('paymentClose');
         const cancelBtn = document.getElementById('cancelPayment');
 
-        closeBtn.addEventListener('click', () => this.close());
-        cancelBtn.addEventListener('click', () => this.close());
-        
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) {
-                this.close();
-            }
-        });
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => this.close());
+        }
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => this.close());
+        }
+        if (overlay) {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    this.close();
+                }
+            });
+        }
 
         // Register button
         const registerButton = document.getElementById('registerButton');
-        registerButton.addEventListener('click', () => this.processRegistration());
+        if (registerButton) {
+            registerButton.addEventListener('click', () => this.processRegistration());
+        }
 
         // Password toggle functionality
         this.setupPasswordToggles();
@@ -780,8 +787,13 @@ class PaymentModal {
         const registerButton = document.getElementById('registerButton');
         const acceptTerms = document.getElementById('acceptTerms');
         
+        if (!registerButton) {
+            console.error('❌ Botón de registro no encontrado');
+            return;
+        }
+        
         // Verificar términos y condiciones
-        if (!acceptTerms.checked) {
+        if (acceptTerms && !acceptTerms.checked) {
             this.showValidationError('Debes aceptar los términos y condiciones');
             return;
         }
@@ -810,14 +822,14 @@ class PaymentModal {
                 throw new Error('Ya existe una cuenta con este email');
             }
 
-            // Crear usuario en Supabase
+            // Crear usuario (simulado - Supabase desactivado)
             const newUser = await this.createUserInSupabase(userData);
             
-            // Procesar pago con Wompi (preparado para futuro)
+            // Procesar pago con Wompi (simulado - período gratuito)
             await this.processWompiPayment(userData, newUser);
             
-            // Redirigir a página de verificación de email
-            this.redirectToVerification(userData.email);
+            // Mostrar página de éxito y redirigir a onboarding
+            this.showSuccessPage();
             
         } catch (error) {
             console.error('❌ Error en registro:', error);
@@ -1258,22 +1270,19 @@ class PaymentModal {
     }
 
     redirectToVerification(email) {
-        console.log('🔄 Redirigiendo a página de verificación de email...');
-        console.log('📧 Email para verificación:', email);
+        // Función deshabilitada - redirigir directamente a onboarding
+        console.log('🔄 Redirigiendo a onboarding...');
+        console.log('📧 Email registrado:', email);
         
-        // Store email for verification page
-        localStorage.setItem('verificationEmail', email);
-        console.log('💾 Email guardado en localStorage:', localStorage.getItem('verificationEmail'));
+        // Store email for reference
+        localStorage.setItem('registeredEmail', email);
         
         // Force close ALL modals and overlays immediately
         this.forceCloseAllModals();
         
-        // Use replace instead of href to avoid history issues
-        console.log('🔗 Redirigiendo a página completa:', `verify-email.html?email=${encodeURIComponent(email)}`);
-        
-        // Force a clean page load with timeout to ensure modal cleanup
+        // Redirigir directamente a onboarding
         setTimeout(() => {
-            window.location.replace(`verify-email.html?email=${encodeURIComponent(email)}`);
+            window.location.href = 'onboarding-new.html';
         }, 100);
     }
 
@@ -1485,19 +1494,26 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 // Function to open payment modal (called from planes.js)
 function openPaymentModal(planData) {
-    console.log('💳 Abriendo PaymentModal con datos:', planData);
-    
-    // Force recreate modal to ensure latest version
-    if (paymentModal) {
-        console.log('🔄 Forzando recreación del modal...');
-        paymentModal.createModal(); // Recreate to ensure no cache issues
-        paymentModal.bindEvents(); // Rebind events
-        paymentModal.open(planData);
-    } else {
-        console.error('❌ PaymentModal no está disponible');
-        console.log('🔄 Intentando crear PaymentModal nuevo...');
-        paymentModal = new PaymentModal();
-        setTimeout(() => openPaymentModal(planData), 100);
+    try {
+        console.log('💳 Abriendo PaymentModal con datos:', planData);
+        
+        // Asegurar que paymentModal esté inicializado
+        if (!paymentModal) {
+            console.log('🔄 Creando PaymentModal nuevo...');
+            paymentModal = new PaymentModal();
+        }
+        
+        // Recrear modal para asegurar versión actualizada
+        if (paymentModal) {
+            paymentModal.createModal(); // Recreate to ensure no cache issues
+            paymentModal.bindEvents(); // Rebind events
+            paymentModal.open(planData);
+        } else {
+            console.error('❌ No se pudo crear PaymentModal');
+        }
+    } catch (error) {
+        console.error('❌ Error al abrir PaymentModal:', error);
+        alert('Error al abrir el formulario de registro. Por favor, recarga la página.');
     }
 }
 
@@ -1893,7 +1909,7 @@ window.testVerificationRedirect = function(testEmail = 'test-redirect@ugcstudio.
         // Try direct redirect anyway
         console.log('⚡ Intentando redirección directa...');
         localStorage.setItem('verificationEmail', testEmail);
-        window.location.replace(`verify-email.html?email=${encodeURIComponent(testEmail)}`);
+        window.location.href = 'onboarding-new.html';
     }
 };
 
