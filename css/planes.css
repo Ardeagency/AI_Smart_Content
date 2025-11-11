@@ -96,8 +96,11 @@
 
 /* Pricing Plans Section */
 .pricing-plans {
-    padding: 6rem 0;
-    background: var(--bg-dark);
+    padding: 4rem 0;
+    background: var(--bg-black);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
 }
 
 .plans-grid {

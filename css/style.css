@@ -35,17 +35,9 @@ body {
 .landing-logo {
     display: flex;
     align-items: center;
-    gap: 12px;
+    justify-content: center;
     margin-bottom: 3rem;
     z-index: 10;
-}
-
-.logo-icon {
-    font-size: 3.5rem;
-    font-weight: 800;
-    color: var(--primary-color);
-    font-family: 'Inter', sans-serif;
-    line-height: 1;
 }
 
 .logo-text {
