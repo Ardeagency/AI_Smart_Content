@@ -154,24 +154,17 @@ class FormRecord {
     }
 
     setupCustomMultiselects() {
-        // Setup mercado objetivo
-        this.initCustomMultiselect('mercado_objetivo', 'mercado_objetivo');
+        // Setup mercado objetivo with auto-select callback
+        this.initCustomMultiselect('mercado_objetivo', 'mercado_objetivo', () => {
+            // Auto-select languages when markets change
+            const mercadoValues = this.getMultiselectValues('mercado_objetivo');
+            if (mercadoValues.length > 0) {
+                this.autoSelectLanguagesFromMarkets(mercadoValues);
+            }
+        });
         
         // Setup idiomas contenido
         this.initCustomMultiselect('idiomas_contenido', 'idiomas_contenido');
-        
-        // Setup mercado objetivo with auto-select callback
-        const mercadoWrapper = document.getElementById('mercado_objetivo_wrapper');
-        if (mercadoWrapper) {
-            // Re-initialize mercado with callback
-            this.initCustomMultiselect('mercado_objetivo', 'mercado_objetivo', () => {
-                // Auto-select languages when markets change
-                const mercadoValues = this.getMultiselectValues('mercado_objetivo');
-                if (mercadoValues.length > 0) {
-                    this.autoSelectLanguagesFromMarkets(mercadoValues);
-                }
-            });
-        }
 
         // Setup palabras a evitar
         this.initCustomMultiselect('palabras_evitar', 'palabras_evitar');
