@@ -803,73 +803,67 @@
 
                 <div class="form-group">
                     <label>Palabras a evitar</label>
-                    <div class="dropdown-container">
-                        <select class="form-select" id="palabras_evitar" multiple>
-                            <option value="">Seleccionar palabras a evitar...</option>
-                            <optgroup label="Calidad y Precio">
-                                <option value="barato">Barato</option>
-                                <option value="caro">Caro</option>
-                                <option value="economico">Económico</option>
-                                <option value="comun">Común</option>
-                                <option value="ordinario">Ordinario</option>
-                                <option value="basico">Básico</option>
-                                <option value="simple">Simple</option>
-                            </optgroup>
-                            <optgroup label="Características Negativas">
-                                <option value="artificial">Artificial</option>
-                                <option value="sintetico">Sintético</option>
-                                <option value="quimico">Químico</option>
-                                <option value="procesado">Procesado</option>
-                                <option value="falso">Falso</option>
-                                <option value="falsificado">Falsificado</option>
-                                <option value="imitacion">Imitación</option>
-                                <option value="copiado">Copiado</option>
-                            </optgroup>
-                            <optgroup label="Términos Despectivos">
-                                <option value="feo">Feo</option>
-                                <option value="horrible">Horrible</option>
-                                <option value="malo">Malo</option>
-                                <option value="terrible">Terrible</option>
-                                <option value="desagradable">Desagradable</option>
-                                <option value="repulsivo">Repulsivo</option>
-                                <option value="asqueroso">Asqueroso</option>
-                            </optgroup>
-                            <optgroup label="Competencia">
-                                <option value="competencia">Competencia</option>
-                                <option value="rival">Rival</option>
-                                <option value="enemigo">Enemigo</option>
-                                <option value="opositor">Opositor</option>
-                            </optgroup>
-                            <optgroup label="Términos Médicos/Claims">
-                                <option value="cura">Cura</option>
-                                <option value="trata">Trata</option>
-                                <option value="previene">Previene</option>
-                                <option value="elimina">Elimina</option>
-                                <option value="garantiza">Garantiza</option>
-                                <option value="milagro">Milagro</option>
-                                <option value="remedio">Remedio</option>
-                            </optgroup>
-                            <optgroup label="Términos Exagerados">
-                                <option value="increible">Increíble</option>
-                                <option value="fantastico">Fantástico</option>
-                                <option value="sorprendente">Sorprendente</option>
-                                <option value="asombroso">Asombroso</option>
-                                <option value="perfecto">Perfecto</option>
-                                <option value="mejor">Mejor</option>
-                                <option value="numero_uno">Número uno</option>
-                            </optgroup>
-                            <optgroup label="Términos Genéricos">
-                                <option value="producto">Producto</option>
-                                <option value="cosa">Cosa</option>
-                                <option value="articulo">Artículo</option>
-                                <option value="item">Item</option>
-                                <option value="objeto">Objeto</option>
-                            </optgroup>
-                        </select>
+                    <div class="custom-multiselect" id="palabras_evitar_wrapper">
+                        <div class="multiselect-trigger" id="palabras_evitar_trigger">
+                            <div class="multiselect-value" id="palabras_evitar_value">Seleccionar palabras a evitar...</div>
+                            <div class="multiselect-arrow">▼</div>
+                        </div>
+                        <div class="multiselect-dropdown" id="palabras_evitar_dropdown">
+                            <div class="multiselect-optgroup">Calidad y Precio</div>
+                            <div class="multiselect-option" data-value="barato">Barato</div>
+                            <div class="multiselect-option" data-value="caro">Caro</div>
+                            <div class="multiselect-option" data-value="economico">Económico</div>
+                            <div class="multiselect-option" data-value="comun">Común</div>
+                            <div class="multiselect-option" data-value="ordinario">Ordinario</div>
+                            <div class="multiselect-option" data-value="basico">Básico</div>
+                            <div class="multiselect-option" data-value="simple">Simple</div>
+                            <div class="multiselect-optgroup">Características Negativas</div>
+                            <div class="multiselect-option" data-value="artificial">Artificial</div>
+                            <div class="multiselect-option" data-value="sintetico">Sintético</div>
+                            <div class="multiselect-option" data-value="quimico">Químico</div>
+                            <div class="multiselect-option" data-value="procesado">Procesado</div>
+                            <div class="multiselect-option" data-value="falso">Falso</div>
+                            <div class="multiselect-option" data-value="falsificado">Falsificado</div>
+                            <div class="multiselect-option" data-value="imitacion">Imitación</div>
+                            <div class="multiselect-option" data-value="copiado">Copiado</div>
+                            <div class="multiselect-optgroup">Términos Despectivos</div>
+                            <div class="multiselect-option" data-value="feo">Feo</div>
+                            <div class="multiselect-option" data-value="horrible">Horrible</div>
+                            <div class="multiselect-option" data-value="malo">Malo</div>
+                            <div class="multiselect-option" data-value="terrible">Terrible</div>
+                            <div class="multiselect-option" data-value="desagradable">Desagradable</div>
+                            <div class="multiselect-option" data-value="repulsivo">Repulsivo</div>
+                            <div class="multiselect-option" data-value="asqueroso">Asqueroso</div>
+                            <div class="multiselect-optgroup">Competencia</div>
+                            <div class="multiselect-option" data-value="competencia">Competencia</div>
+                            <div class="multiselect-option" data-value="rival">Rival</div>
+                            <div class="multiselect-option" data-value="enemigo">Enemigo</div>
+                            <div class="multiselect-option" data-value="opositor">Opositor</div>
+                            <div class="multiselect-optgroup">Términos Médicos/Claims</div>
+                            <div class="multiselect-option" data-value="cura">Cura</div>
+                            <div class="multiselect-option" data-value="trata">Trata</div>
+                            <div class="multiselect-option" data-value="previene">Previene</div>
+                            <div class="multiselect-option" data-value="elimina">Elimina</div>
+                            <div class="multiselect-option" data-value="garantiza">Garantiza</div>
+                            <div class="multiselect-option" data-value="milagro">Milagro</div>
+                            <div class="multiselect-option" data-value="remedio">Remedio</div>
+                            <div class="multiselect-optgroup">Términos Exagerados</div>
+                            <div class="multiselect-option" data-value="increible">Increíble</div>
+                            <div class="multiselect-option" data-value="fantastico">Fantástico</div>
+                            <div class="multiselect-option" data-value="sorprendente">Sorprendente</div>
+                            <div class="multiselect-option" data-value="asombroso">Asombroso</div>
+                            <div class="multiselect-option" data-value="perfecto">Perfecto</div>
+                            <div class="multiselect-option" data-value="mejor">Mejor</div>
+                            <div class="multiselect-option" data-value="numero_uno">Número uno</div>
+                            <div class="multiselect-optgroup">Términos Genéricos</div>
+                            <div class="multiselect-option" data-value="producto">Producto</div>
+                            <div class="multiselect-option" data-value="cosa">Cosa</div>
+                            <div class="multiselect-option" data-value="articulo">Artículo</div>
+                            <div class="multiselect-option" data-value="item">Item</div>
+                            <div class="multiselect-option" data-value="objeto">Objeto</div>
+                        </div>
+                        <input type="hidden" id="palabras_evitar">
                     </div>
-                    <small style="color: var(--text-muted); margin-top: 0.5rem; display: block;">
-                        Mantén presionada la tecla Ctrl (Cmd en Mac) para seleccionar múltiples opciones
-                    </small>
                 </div>
 
                 <div class="form-group">
