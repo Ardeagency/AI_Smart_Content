@@ -124,19 +124,51 @@ class FormRecord {
         reader.onload = (e) => {
             const preview = document.getElementById(previewId);
             if (preview) {
-                const img = preview.querySelector('img');
-                if (img) {
-                    img.src = e.target.result;
+                // Check if this is logo preview (has inner div) or product image preview (direct)
+                const innerDiv = preview.querySelector('div');
+                const isLogoPreview = innerDiv !== null;
+                
+                if (isLogoPreview) {
+                    // Logo preview structure
+                    const img = preview.querySelector('img');
+                    if (img) {
+                        img.src = e.target.result;
+                    } else {
+                        const newImg = document.createElement('img');
+                        newImg.src = e.target.result;
+                        newImg.alt = 'Preview';
+                        newImg.style.maxWidth = '100px';
+                        newImg.style.maxHeight = '100px';
+                        newImg.style.borderRadius = '8px';
+                        innerDiv.prepend(newImg);
+                    }
+                    preview.style.display = 'block';
                 } else {
-                    const newImg = document.createElement('img');
-                    newImg.src = e.target.result;
-                    newImg.alt = 'Preview';
-                    newImg.style.maxWidth = '100px';
-                    newImg.style.maxHeight = '100px';
-                    newImg.style.borderRadius = '8px';
-                    preview.querySelector('div')?.prepend(newImg);
+                    // Product image preview structure (direct in preview div)
+                    preview.innerHTML = ''; // Clear any existing content
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.alt = 'Preview';
+                    img.style.cssText = 'max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 0.5rem; display: block;';
+                    
+                    // Add remove button
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'btn btn-secondary';
+                    removeBtn.style.cssText = 'margin-top: 0.5rem; padding: 0.5rem 1rem; font-size: 0.85rem;';
+                    removeBtn.innerHTML = '<i class="fas fa-times"></i> Eliminar';
+                    removeBtn.onclick = () => {
+                        const input = event.target;
+                        input.value = '';
+                        preview.innerHTML = '';
+                        preview.style.display = 'none';
+                        delete this.formData[fieldName];
+                    };
+                    
+                    preview.appendChild(img);
+                    preview.appendChild(removeBtn);
+                    preview.style.display = 'block';
                 }
-                preview.style.display = 'block';
             }
             this.formData[fieldName] = file;
         };
