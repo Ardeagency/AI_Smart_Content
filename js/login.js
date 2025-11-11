@@ -164,7 +164,7 @@ class AuthManager {
 
         try {
             if (!this.supabase) {
-            await this.waitForSupabase();
+                await this.waitForSupabase();
             }
 
             if (!this.supabase) {
@@ -239,7 +239,7 @@ class AuthManager {
 
         try {
             if (!this.supabase) {
-            await this.waitForSupabase();
+                await this.waitForSupabase();
             }
 
             if (!this.supabase) {
@@ -361,7 +361,7 @@ class AuthManager {
     async handleSocialLogin(provider) {
         try {
             if (!this.supabase) {
-            await this.waitForSupabase();
+                await this.waitForSupabase();
             }
             
             if (!this.supabase) {
@@ -477,7 +477,7 @@ class AuthManager {
     async resendVerificationEmail(email) {
         try {
             if (!this.supabase) {
-            await this.waitForSupabase();
+                await this.waitForSupabase();
             }
 
             if (!this.supabase) {
@@ -515,7 +515,7 @@ class AuthManager {
 
         try {
             if (!this.supabase) {
-            await this.waitForSupabase();
+                await this.waitForSupabase();
             }
 
             if (!this.supabase) {
