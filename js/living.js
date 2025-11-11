@@ -14,6 +14,14 @@ class LivingManager {
     }
 
     async init() {
+        // Verificar acceso antes de continuar
+        if (typeof verifyUserAccess === 'function') {
+            const hasAccess = await verifyUserAccess();
+            if (!hasAccess) {
+                return; // La función verifyUserAccess ya redirige
+            }
+        }
+
         await this.initSupabase();
         if (this.supabase && this.userId) {
             console.log('✅ Supabase inicializado, cargando datos...');

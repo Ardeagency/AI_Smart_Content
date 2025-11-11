@@ -820,6 +820,20 @@ class FormRecord {
 
         if (campaignError) throw campaignError;
 
+        // 8. Marcar el usuario como form_verified = true
+        console.log('✅ Marcando usuario como form_verified...');
+        const { error: updateError } = await this.supabase
+            .from('users')
+            .update({ form_verified: true })
+            .eq('id', this.userId);
+
+        if (updateError) {
+            console.error('⚠️ Error actualizando form_verified:', updateError);
+            // No lanzar error, ya que los datos principales se guardaron correctamente
+        } else {
+            console.log('✅ Usuario marcado como form_verified = true');
+        }
+
         console.log('✅ Datos guardados exitosamente en Supabase');
     }
 }

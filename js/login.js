@@ -407,8 +407,20 @@ class AuthManager {
                 return 'form-record.html';
             }
 
-            // Si tiene proyectos, ir al living, si no, al formulario
-            return projects && projects.length > 0 ? 'living.html' : 'form-record.html';
+            // Verificar si el usuario completó el formulario
+            const { data: userData } = await this.supabase
+                .from('users')
+                .select('form_verified')
+                .eq('id', userId)
+                .single();
+
+            // Si no completó el formulario, siempre redirigir al formulario
+            if (!userData || userData.form_verified !== true) {
+                return 'form-record.html';
+            }
+
+            // Si completó el formulario, ir al living
+            return 'living.html';
         } catch (error) {
             console.error('Error determining redirect:', error);
             return 'form-record.html';

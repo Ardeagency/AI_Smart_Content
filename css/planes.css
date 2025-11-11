@@ -382,9 +382,9 @@
 .btn-primary:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    transform: none;
-}
-
+        transform: none;
+    }
+    
 /* ============================================
    RESPONSIVE
    ============================================ */
@@ -393,7 +393,7 @@
         flex-direction: column;
         gap: 1rem;
     }
-
+    
     .planes-main {
         padding: 2rem 1rem;
     }
@@ -401,12 +401,12 @@
     .planes-title {
         font-size: 2rem;
     }
-
+    
     .plans-grid {
         grid-template-columns: 1fr;
         gap: 1.5rem;
     }
-
+    
     .registration-modal {
         width: 95%;
         margin: 1rem;

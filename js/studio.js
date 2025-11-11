@@ -29,6 +29,14 @@ class StudioManager {
 
     async init() {
         try {
+            // Verificar acceso antes de continuar
+            if (typeof verifyUserAccess === 'function') {
+                const hasAccess = await verifyUserAccess();
+                if (!hasAccess) {
+                    return; // La función verifyUserAccess ya redirige
+                }
+            }
+
             // Supabase desactivado
             // await this.waitForSupabase();
             // this.setupSupabase();

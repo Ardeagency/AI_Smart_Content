@@ -59,11 +59,11 @@ async function initSupabase() {
                     config.url,
                     config.anonKey,
                     {
-                        auth: {
+                    auth: {
                             persistSession: true,
-                            autoRefreshToken: true,
-                            detectSessionInUrl: true
-                        }
+                        autoRefreshToken: true,
+                        detectSessionInUrl: true
+                    }
                     }
                 );
             }
@@ -109,7 +109,7 @@ function waitForSupabase(timeout = 10000) {
             initSupabase().then(client => {
                 if (client) {
                     resolve(client);
-                } else {
+} else {
                     // Si falla la inicialización, dar más información sobre el error
                     const config = window.SUPABASE_CONFIG || {};
                     const hasUrl = config.url && config.url.length > 0;
