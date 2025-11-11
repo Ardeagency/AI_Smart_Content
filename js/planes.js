@@ -24,8 +24,15 @@ class PlanesManager {
             } else if (window.supabaseClient) {
                 this.supabase = window.supabaseClient;
             }
+            
+            // Si aún no tenemos Supabase, intentar inicializar directamente
+            if (!this.supabase && typeof initSupabase === 'function') {
+                this.supabase = await initSupabase();
+            }
         } catch (error) {
             console.error('Error initializing Supabase:', error);
+            // No lanzar el error, solo loguearlo
+            // El código verificará si this.supabase está disponible antes de usarlo
         }
     }
 
@@ -167,7 +174,21 @@ class PlanesManager {
             }
 
             if (!this.supabase) {
-                throw new Error('Supabase no está disponible');
+                // Intentar una vez más antes de fallar
+                await this.initSupabase();
+                
+                if (!this.supabase) {
+                    const config = window.SUPABASE_CONFIG || {};
+                    let errorMsg = 'Supabase no está disponible. ';
+                    
+                    if (!config.url || !config.anonKey) {
+                        errorMsg += 'Las variables de configuración no están disponibles. Por favor, contacta al administrador.';
+                    } else {
+                        errorMsg += 'No se pudo conectar con el servidor. Verifica tu conexión a internet.';
+                    }
+                    
+                    throw new Error(errorMsg);
+                }
             }
 
             // Split name into first and last name

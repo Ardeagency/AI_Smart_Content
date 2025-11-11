@@ -80,9 +80,27 @@ function waitForSupabase(timeout = 10000) {
                 if (client) {
                     resolve(client);
                 } else {
-                    reject(new Error('Failed to initialize Supabase'));
+                    // Si falla la inicialización, dar más información sobre el error
+                    const config = window.SUPABASE_CONFIG || {};
+                    const hasUrl = config.url && config.url.length > 0;
+                    const hasKey = config.anonKey && config.anonKey.length > 0;
+                    
+                    let errorMsg = 'Failed to initialize Supabase';
+                    if (!hasUrl || !hasKey) {
+                        errorMsg = 'Supabase configuration missing. Please configure SUPABASE_URL and SUPABASE_ANON_KEY in the server.';
+                    }
+                    
+                    reject(new Error(errorMsg));
                 }
-            }).catch(reject);
+            }).catch(err => {
+                // Mejorar el mensaje de error
+                const config = window.SUPABASE_CONFIG || {};
+                if (!config.url || !config.anonKey) {
+                    reject(new Error('Supabase configuration missing. Server must inject SUPABASE_URL and SUPABASE_ANON_KEY.'));
+                } else {
+                    reject(err);
+                }
+            });
             return;
         }
 
