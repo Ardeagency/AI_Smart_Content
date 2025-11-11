@@ -1,0 +1,24 @@
+# Netlify Configuration for AI Smart Content
+
+[build]
+  # No build command needed for static site
+  publish = "."
+
+[functions]
+  # Directorio donde están las Netlify Functions
+  directory = "netlify/functions"
+
+# Headers para las funciones
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Headers = "Content-Type"
+    Access-Control-Allow-Methods = "GET, OPTIONS"
+
+# Variables de entorno deben configurarse en Netlify Dashboard:
+# - SUPABASE_DATABASE_URL
+# - SUPABASE_ANON_KEY
+# - SUPABASE_SERVICE_ROLE_KEY (solo para backend, no se expone)
+# - SUPABASE_JWT_SECRET (solo para backend, no se expone)
+

@@ -15,32 +15,35 @@ async function initSupabase() {
             return null;
         }
 
-        // Obtener configuración (puede estar en window.SUPABASE_CONFIG o como constante global)
-        const config = window.SUPABASE_CONFIG || (typeof SUPABASE_CONFIG !== 'undefined' ? SUPABASE_CONFIG : null);
+        // Esperar a que la configuración se cargue desde Netlify Function
+        let config = window.SUPABASE_CONFIG;
         
+        // Si no está disponible, intentar cargarla
         if (!config || !config.url || !config.anonKey) {
-            // Solo mostrar advertencia en desarrollo
-            const isDevelopment = window.location.hostname === 'localhost' || 
-                                 window.location.hostname === '127.0.0.1' ||
-                                 window.location.hostname.includes('localhost');
-            
-            if (isDevelopment) {
-                console.warn('⚠️ Supabase configuration incomplete. Some features may not work.');
-                console.warn('⚠️ Make sure supabase-config.js is loaded before supabase-client.js');
+            if (typeof loadSupabaseConfig === 'function') {
+                const loaded = await loadSupabaseConfig();
+                if (loaded) {
+                    config = window.SUPABASE_CONFIG;
+                }
             }
+        }
+        
+        // Verificar configuración después de intentar cargarla
+        if (!config || !config.url || !config.anonKey) {
+            console.error('❌ Supabase configuration not available. Make sure Netlify Function is configured.');
             return null;
         }
 
-        // Crear cliente de Supabase
+            // Crear cliente de Supabase
         supabaseClient = supabase.createClient(
             config.url,
             config.anonKey,
             {
-                auth: {
+                    auth: {
                     persistSession: true,
-                    autoRefreshToken: true,
-                    detectSessionInUrl: true
-                }
+                        autoRefreshToken: true,
+                        detectSessionInUrl: true
+                    }
             }
         );
 
@@ -79,7 +82,7 @@ function waitForSupabase(timeout = 10000) {
             initSupabase().then(client => {
                 if (client) {
                     resolve(client);
-                } else {
+} else {
                     // Si falla la inicialización, dar más información sobre el error
                     const config = window.SUPABASE_CONFIG || {};
                     const hasUrl = config.url && config.url.length > 0;

@@ -1,62 +1,66 @@
 /**
  * AI Smart Content - Supabase Configuration
- * Configuración de Supabase usando variables de entorno del servidor
+ * Configuración de Supabase usando variables de entorno de Netlify
  * 
- * El servidor debe inyectar las variables de entorno antes de servir la página.
- * Variables disponibles:
- * - SUPABASE_DATABASE_URL (URL completa de Supabase, ej: https://xxx.supabase.co)
- * - SUPABASE_ANON_KEY (Clave anónima pública)
- * - SUPABASE_SERVICE_ROLE_KEY (Clave de servicio, solo backend)
+ * Este script carga la configuración desde Netlify Functions
+ * que expone las variables de entorno del servidor de forma segura.
  */
 
-// Intentar leer desde múltiples fuentes (en orden de prioridad):
-// 1. Variables inyectadas por el servidor en window
-// 2. Meta tags en el HTML
-// 3. Variables globales del navegador
-
-let supabaseUrl = window.SUPABASE_URL || '';
-let supabaseAnonKey = window.SUPABASE_ANON_KEY || '';
-
-// Si no están en window, intentar leer desde meta tags
-if (!supabaseUrl || !supabaseAnonKey) {
-    const metaUrl = document.querySelector('meta[name="supabase-url"]');
-    const metaKey = document.querySelector('meta[name="supabase-anon-key"]');
-    
-    if (metaUrl) supabaseUrl = metaUrl.getAttribute('content') || supabaseUrl;
-    if (metaKey) supabaseAnonKey = metaKey.getAttribute('content') || supabaseAnonKey;
-}
-
-// Si aún no están, intentar desde SUPABASE_DATABASE_URL (nombre completo de la variable del servidor)
-if (!supabaseUrl && window.SUPABASE_DATABASE_URL) {
-    supabaseUrl = window.SUPABASE_DATABASE_URL;
-}
-
-// Crear objeto de configuración
-const SUPABASE_CONFIG = {
-    url: supabaseUrl,
-    anonKey: supabaseAnonKey,
-    serviceRoleKey: window.SUPABASE_SERVICE_ROLE_KEY || ''
+let SUPABASE_CONFIG = {
+    url: '',
+    anonKey: '',
+    serviceRoleKey: ''
 };
 
-// Verificar que las variables estén configuradas
-if (!SUPABASE_CONFIG.url || !SUPABASE_CONFIG.anonKey) {
-    // Solo mostrar advertencia en desarrollo o si está explícitamente habilitado
-    const isDevelopment = window.location.hostname === 'localhost' || 
-                         window.location.hostname === '127.0.0.1' ||
-                         window.location.hostname.includes('localhost');
-    
-    if (isDevelopment) {
-        console.warn('⚠️ Supabase configuration missing.');
-        console.warn('⚠️ Server should inject: window.SUPABASE_URL and window.SUPABASE_ANON_KEY');
-        console.warn('⚠️ Or add meta tags: <meta name="supabase-url" content="...">');
-        console.warn('⚠️ Available variables:', {
-            SUPABASE_URL: window.SUPABASE_URL || 'not set',
-            SUPABASE_DATABASE_URL: window.SUPABASE_DATABASE_URL || 'not set',
-            SUPABASE_ANON_KEY: window.SUPABASE_ANON_KEY ? '***set***' : 'not set'
-        });
+// Función para cargar configuración desde Netlify Function
+async function loadSupabaseConfig() {
+    try {
+        // Intentar cargar desde Netlify Function
+        const response = await fetch('/.netlify/functions/supabase-config');
+        
+        if (response.ok) {
+            const config = await response.json();
+            SUPABASE_CONFIG = {
+                url: config.url || '',
+                anonKey: config.anonKey || '',
+                serviceRoleKey: '' // No se expone en el cliente
+            };
+            
+            // Hacer disponible globalmente
+            window.SUPABASE_CONFIG = SUPABASE_CONFIG;
+            window.SUPABASE_URL = config.url;
+            window.SUPABASE_ANON_KEY = config.anonKey;
+            
+            console.log('✅ Supabase configuration loaded from Netlify');
+            return true;
+        } else {
+            throw new Error(`Failed to load config: ${response.status}`);
+        }
+    } catch (error) {
+        console.error('❌ Error loading Supabase config from Netlify:', error);
+        
+        // Fallback: intentar leer desde window (si fue inyectado manualmente)
+        const fallbackUrl = window.SUPABASE_URL || window.SUPABASE_DATABASE_URL || '';
+        const fallbackKey = window.SUPABASE_ANON_KEY || '';
+        
+        if (fallbackUrl && fallbackKey) {
+            SUPABASE_CONFIG = {
+                url: fallbackUrl,
+                anonKey: fallbackKey,
+                serviceRoleKey: ''
+            };
+            window.SUPABASE_CONFIG = SUPABASE_CONFIG;
+            console.warn('⚠️ Using fallback configuration from window variables');
+            return true;
+        }
+        
+        return false;
     }
 }
 
-// Hacer disponible globalmente
-window.SUPABASE_CONFIG = SUPABASE_CONFIG;
+// Cargar configuración inmediatamente
+loadSupabaseConfig();
+
+// Exportar función para uso en otros módulos
+window.loadSupabaseConfig = loadSupabaseConfig;
 
