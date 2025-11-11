@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS public.users (
     credits_total INTEGER DEFAULT 0
 );
 
--- Tabla de proyectos/marcas
+-- Tabla de proyectos/marcas (unificada con idiomas)
 CREATE TABLE IF NOT EXISTS public.projects (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
@@ -67,48 +67,27 @@ CREATE TABLE IF NOT EXISTS public.projects (
     instagram_url TEXT,
     tiktok_url TEXT,
     logo_url TEXT,
+    -- Idiomas como array JSON
+    idiomas_contenido JSONB DEFAULT '[]'::jsonb,
+    -- Mercados objetivo como array JSON
+    mercado_objetivo JSONB DEFAULT '[]'::jsonb,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     CONSTRAINT projects_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE
 );
 
--- Tabla de mercados objetivo (relación muchos a muchos)
-CREATE TABLE IF NOT EXISTS public.project_markets (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
-    market_code TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(project_id, market_code)
-);
-
--- Tabla de idiomas (relación muchos a muchos)
-CREATE TABLE IF NOT EXISTS public.project_languages (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
-    language_code TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(project_id, language_code)
-);
-
--- Tabla de lineamientos de marca
-CREATE TABLE IF NOT EXISTS public.brand_guidelines (
+-- Tabla de brands (unificada con lineamientos y palabras a evitar)
+CREATE TABLE IF NOT EXISTS public.brands (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     project_id UUID NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
     tono_voz tono_voz_enum NOT NULL,
     palabras_usar TEXT,
+    -- Palabras a evitar como array JSON
+    palabras_evitar JSONB DEFAULT '[]'::jsonb,
     reglas_creativas TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE(project_id)
-);
-
--- Tabla de palabras a evitar (relación muchos a muchos)
-CREATE TABLE IF NOT EXISTS public.brand_words_to_avoid (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    brand_guideline_id UUID NOT NULL REFERENCES public.brand_guidelines(id) ON DELETE CASCADE,
-    word TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(brand_guideline_id, word)
 );
 
 -- Tabla de archivos de identidad de marca
@@ -196,9 +175,7 @@ CREATE TABLE IF NOT EXISTS public.credit_usage (
 -- ============================================
 
 CREATE INDEX IF NOT EXISTS idx_projects_user_id ON public.projects(user_id);
-CREATE INDEX IF NOT EXISTS idx_project_markets_project_id ON public.project_markets(project_id);
-CREATE INDEX IF NOT EXISTS idx_project_languages_project_id ON public.project_languages(project_id);
-CREATE INDEX IF NOT EXISTS idx_brand_guidelines_project_id ON public.brand_guidelines(project_id);
+CREATE INDEX IF NOT EXISTS idx_brands_project_id ON public.brands(project_id);
 CREATE INDEX IF NOT EXISTS idx_brand_files_project_id ON public.brand_files(project_id);
 CREATE INDEX IF NOT EXISTS idx_products_project_id ON public.products(project_id);
 CREATE INDEX IF NOT EXISTS idx_product_images_product_id ON public.product_images(product_id);
@@ -223,7 +200,7 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER update_projects_updated_at BEFORE UPDATE ON public.projects
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_brand_guidelines_updated_at BEFORE UPDATE ON public.brand_guidelines
+CREATE TRIGGER update_brands_updated_at BEFORE UPDATE ON public.brands
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_products_updated_at BEFORE UPDATE ON public.products
@@ -291,10 +268,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- Habilitar RLS en todas las tablas
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.project_markets ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.project_languages ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.brand_guidelines ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.brand_words_to_avoid ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.brands ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.brand_files ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.product_images ENABLE ROW LEVEL SECURITY;
@@ -328,47 +302,13 @@ CREATE POLICY "Users can delete own projects"
     ON public.projects FOR DELETE
     USING (auth.uid() = user_id);
 
--- Políticas para project_markets
-CREATE POLICY "Users can manage own project markets"
-    ON public.project_markets FOR ALL
+-- Políticas para brands
+CREATE POLICY "Users can manage own brands"
+    ON public.brands FOR ALL
     USING (
         EXISTS (
             SELECT 1 FROM public.projects
-            WHERE projects.id = project_markets.project_id
-            AND projects.user_id = auth.uid()
-        )
-    );
-
--- Políticas para project_languages
-CREATE POLICY "Users can manage own project languages"
-    ON public.project_languages FOR ALL
-    USING (
-        EXISTS (
-            SELECT 1 FROM public.projects
-            WHERE projects.id = project_languages.project_id
-            AND projects.user_id = auth.uid()
-        )
-    );
-
--- Políticas para brand_guidelines
-CREATE POLICY "Users can manage own brand guidelines"
-    ON public.brand_guidelines FOR ALL
-    USING (
-        EXISTS (
-            SELECT 1 FROM public.projects
-            WHERE projects.id = brand_guidelines.project_id
-            AND projects.user_id = auth.uid()
-        )
-    );
-
--- Políticas para brand_words_to_avoid
-CREATE POLICY "Users can manage own brand words to avoid"
-    ON public.brand_words_to_avoid FOR ALL
-    USING (
-        EXISTS (
-            SELECT 1 FROM public.brand_guidelines
-            JOIN public.projects ON projects.id = brand_guidelines.project_id
-            WHERE brand_guidelines.id = brand_words_to_avoid.brand_guideline_id
+            WHERE projects.id = brands.project_id
             AND projects.user_id = auth.uid()
         )
     );
@@ -437,11 +377,8 @@ CREATE POLICY "Users can view own credit usage"
 -- ============================================
 
 COMMENT ON TABLE public.users IS 'Usuarios de la plataforma (extiende auth.users)';
-COMMENT ON TABLE public.projects IS 'Proyectos/Marcas de los usuarios';
-COMMENT ON TABLE public.project_markets IS 'Mercados objetivo de cada proyecto';
-COMMENT ON TABLE public.project_languages IS 'Idiomas para contenido de cada proyecto';
-COMMENT ON TABLE public.brand_guidelines IS 'Lineamientos de marca';
-COMMENT ON TABLE public.brand_words_to_avoid IS 'Palabras a evitar en la comunicación';
+COMMENT ON TABLE public.projects IS 'Proyectos/Marcas de los usuarios (incluye mercados e idiomas)';
+COMMENT ON TABLE public.brands IS 'Lineamientos de marca (incluye tono de voz, palabras a usar/evitar y reglas creativas)';
 COMMENT ON TABLE public.brand_files IS 'Archivos de identidad de marca';
 COMMENT ON TABLE public.products IS 'Productos principales de cada proyecto';
 COMMENT ON TABLE public.product_images IS 'Imágenes de productos';
