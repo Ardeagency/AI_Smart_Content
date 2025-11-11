@@ -126,7 +126,7 @@ class OnboardingVerification {
         sessionStorage.setItem('redirectCount', (redirectCount + 1).toString());
         sessionStorage.removeItem('onboardingCompleted');
         sessionStorage.removeItem('onboardingCompletedAt');
-        window.location.href = '/onboarding-new.html';
+        window.location.href = '/form-record.html';
     }
 
     // Método para mostrar estado de verificación
