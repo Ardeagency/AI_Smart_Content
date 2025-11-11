@@ -57,110 +57,15 @@ class OnboardingVerification {
     }
 
     async getCurrentUser() {
-        try {
-            if (!window.supabaseClient || !window.supabaseClient.auth) {
-                throw new Error('Supabase client no disponible');
-            }
-            
-            const { data: { user }, error } = await window.supabaseClient.auth.getUser();
-            if (error) {
-                throw error;
-            }
-            
-            return user;
-        } catch (error) {
-            console.error('Error obteniendo usuario actual:', error);
-            return null;
-        }
+        return null;
     }
 
     async checkOnboardingStatus(userId) {
-        try {
-            console.log('🔍 Verificando estado de onboarding para usuario:', userId);
-            
-            const { data, error } = await window.supabaseClient
-                .from('user_profiles')
-                .select('onboarding_completed, onboarding_completed_at')
-                .eq('user_id', userId)
-                .single();
-
-            if (error) {
-                console.error('❌ Error verificando estado de onboarding:', error);
-                return false;
-            }
-
-            console.log('📊 Datos de perfil encontrados:', data);
-            const isCompleted = data && data.onboarding_completed === true;
-            console.log('✅ Estado de onboarding:', isCompleted ? 'COMPLETADO' : 'NO COMPLETADO');
-            
-            return isCompleted;
-        } catch (error) {
-            console.error('❌ Error en checkOnboardingStatus:', error);
-            return false;
-        }
+        return false;
     }
 
     async verifyEssentialData(userId) {
-        try {
-            console.log('🔍 Verificando datos esenciales para usuario:', userId);
-            
-            // Verificar proyectos (REQUERIDO)
-            const { data: projects, error: projectsError } = await window.supabaseClient
-                .from('projects')
-                .select('id')
-                .eq('user_id', userId)
-                .limit(1);
-
-            if (projectsError) {
-                console.error('❌ Error verificando proyectos:', projectsError);
-                return false;
-            }
-
-            if (!projects || projects.length === 0) {
-                console.warn('⚠️ No se encontraron proyectos para el usuario:', userId);
-                return false;
-            }
-
-            console.log('✅ Proyectos encontrados:', projects.length);
-
-            // Verificar productos (OPCIONAL - solo log si no existen)
-            const { data: products, error: productsError } = await window.supabaseClient
-                .from('products')
-                .select('id')
-                .eq('project_id', projects[0].id)
-                .limit(1);
-
-            if (productsError) {
-                console.warn('⚠️ Error verificando productos (no crítico):', productsError);
-            } else if (!products || products.length === 0) {
-                console.warn('⚠️ No se encontraron productos para el proyecto (no crítico):', projects[0].id);
-            } else {
-                console.log('✅ Productos encontrados:', products.length);
-            }
-
-            // Verificar avatares (OPCIONAL - solo log si no existen)
-            const { data: avatars, error: avatarsError } = await window.supabaseClient
-                .from('avatars')
-                .select('id')
-                .eq('project_id', projects[0].id)
-                .limit(1);
-
-            if (avatarsError) {
-                console.warn('⚠️ Error verificando avatares (no crítico):', avatarsError);
-            } else if (!avatars || avatars.length === 0) {
-                console.warn('⚠️ No se encontraron avatares para el proyecto (no crítico):', projects[0].id);
-            } else {
-                console.log('✅ Avatares encontrados:', avatars.length);
-            }
-
-            // Solo requerimos que exista al menos un proyecto
-            console.log('✅ Verificación de datos esenciales completada (solo proyecto requerido)');
-            return true;
-
-        } catch (error) {
-            console.error('❌ Error en verifyEssentialData:', error);
-            return false;
-        }
+        return false;
     }
 
     async validateSession() {

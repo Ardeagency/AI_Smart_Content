@@ -5,7 +5,8 @@
 
 class DataCollector {
     constructor(supabase, userId) {
-        this.supabase = supabase;
+        // Supabase desactivado
+        this.supabase = null;
         this.userId = userId;
     }
 
@@ -98,53 +99,7 @@ class DataCollector {
      * @returns {Promise<Array>} - Array de URLs de imágenes
      */
     async collectSelectedImages() {
-        const productSelector = document.getElementById('product-selector');
-        if (!productSelector || !productSelector.value || !this.supabase) {
-            console.log('No hay producto seleccionado o Supabase no disponible');
-            return [];
-        }
-        
-        try {
-            const productData = await this.getProductInfo();
-            if (!productData) return [];
-            
-            const fileIds = [];
-            if (productData.main_image_id) {
-                fileIds.push(productData.main_image_id);
-            }
-            
-            if (productData.gallery_file_ids && Array.isArray(productData.gallery_file_ids)) {
-                productData.gallery_file_ids.forEach(id => {
-                    if (id) fileIds.push(id);
-                });
-            }
-            
-            if (fileIds.length === 0) return [];
-            
-            const maxFiles = 10;
-            const limitedFileIds = fileIds.slice(0, maxFiles);
-            
-            const { data: files, error } = await this.supabase
-                .from('files')
-                .select('*')
-                .in('id', limitedFileIds);
-            
-            if (error || !files || files.length === 0) {
-                return [];
-            }
-            
-            const imageUrls = files
-                .map(file => {
-                    if (!file.path) return null;
-                    return `https://ksjeikudvqseoosyhsdd.supabase.co/storage/v1/object/public/ugc/${file.path}`;
-                })
-                .filter(url => url !== null);
-            
-            return imageUrls;
-            
-        } catch (error) {
-            return [];
-        }
+        return [];
     }
 
     /**
@@ -152,46 +107,7 @@ class DataCollector {
      * @returns {Promise<Object|null>} - Datos de la marca
      */
     async getMarcaInfo() {
-        const brandSelector = document.getElementById('brand-selector');
-        if (!brandSelector || !brandSelector.value || !this.supabase) {
-            console.log('No hay marca seleccionada o Supabase no disponible');
-            return null;
-        }
-        
-        try {
-            console.log('Obteniendo datos de marca para ID:', brandSelector.value);
-            const { data, error } = await this.supabase
-                .from('brand_guidelines')
-                .select(`
-                    id,
-                    project_id,
-                    tone_of_voice,
-                    keywords_yes,
-                    keywords_no,
-                    dos_donts,
-                    reference_links,
-                    projects!inner(
-                        id,
-                        name,
-                        website,
-                        country,
-                        languages
-                    )
-                `)
-                .eq('id', brandSelector.value)
-                .single();
-            
-            if (error) {
-                console.error('Error obteniendo datos de marca:', error);
                 return null;
-            }
-            
-            console.log('Datos de marca obtenidos:', data);
-            return data;
-        } catch (error) {
-            console.error('Error en getMarcaInfo:', error);
-            return null;
-        }
     }
 
     /**
@@ -199,26 +115,7 @@ class DataCollector {
      * @returns {Promise<Object|null>} - Datos del producto
      */
     async getProductInfo() {
-        const productSelector = document.getElementById('product-selector');
-        if (!productSelector || !productSelector.value || !this.supabase) return null;
-        
-        try {
-            const { data, error } = await this.supabase
-                .from('products')
-                .select('*')
-                .eq('id', productSelector.value)
-                .single();
-            
-            if (error) {
-                console.error('Error obteniendo datos de producto:', error);
                 return null;
-            }
-            
-            return data;
-        } catch (error) {
-            console.error('Error en getProductInfo:', error);
-            return null;
-        }
     }
 
     /**
@@ -226,26 +123,7 @@ class DataCollector {
      * @returns {Promise<Object|null>} - Datos de la oferta
      */
     async getOfferInfo() {
-        const offerSelector = document.getElementById('offer-selector');
-        if (!offerSelector || !offerSelector.value || !this.supabase) return null;
-        
-        try {
-            const { data, error } = await this.supabase
-                .from('offers')
-                .select('*')
-                .eq('id', offerSelector.value)
-                .single();
-            
-            if (error) {
-                console.error('Error obteniendo datos de oferta:', error);
-                return null;
-            }
-            
-            return data;
-        } catch (error) {
-            console.error('Error en getOfferInfo:', error);
-            return null;
-        }
+        return null;
     }
 
     /**
@@ -253,26 +131,7 @@ class DataCollector {
      * @returns {Promise<Object|null>} - Datos de la audiencia
      */
     async getAudienceInfo() {
-        const audienceSelector = document.getElementById('audience-selector');
-        if (!audienceSelector || !audienceSelector.value || !this.supabase) return null;
-        
-        try {
-            const { data, error } = await this.supabase
-                .from('audience')
-                .select('*')
-                .eq('id', audienceSelector.value)
-                .single();
-            
-            if (error) {
-                console.error('Error obteniendo datos de audiencia:', error);
-                return null;
-            }
-            
-            return data;
-        } catch (error) {
-            console.error('Error en getAudienceInfo:', error);
-            return null;
-        }
+        return null;
     }
 
     /**

@@ -29,10 +29,11 @@ class StudioManager {
 
     async init() {
         try {
-            await this.waitForSupabase();
-            this.setupSupabase();
-            await this.checkAuthentication();
-            await this.loadUserData();
+            // Supabase desactivado
+            // await this.waitForSupabase();
+            // this.setupSupabase();
+            // await this.checkAuthentication();
+            // await this.loadUserData();
             this.setupEventListeners();
             // Lucide removido - ya no es necesario
         } catch (error) {
@@ -46,75 +47,30 @@ class StudioManager {
        ======================================= */
 
     async waitForSupabase() {
-        let attempts = 0;
-        const maxAttempts = 50;
-        
-        while (attempts < maxAttempts) {
-            if (window.supabaseClient && window.supabaseClient.supabase) {
-                return;
-            }
-            await new Promise(resolve => setTimeout(resolve, 100));
-            attempts++;
-        }
-        
-        throw new Error('Supabase no está disponible después de esperar');
+        // Supabase desactivado
     }
 
     async checkAuthentication() {
-        try {
-            if (!this.supabase) {
-                console.log('Supabase no está disponible');
-                return;
-            }
-
-            const { data: { session } } = await this.supabase.auth.getSession();
-            if (session && session.user) {
-                this.userId = session.user.id;
-                console.log('Usuario autenticado:', this.userId);
-            } else {
-                console.log('No hay sesión activa');
-            }
-        } catch (error) {
-            console.log('Error verificando autenticación:', error);
-        }
+        // Supabase desactivado
     }
 
     setupSupabase() {
-        if (window.supabaseClient && window.supabaseClient.supabase) {
-            this.supabase = window.supabaseClient.supabase;
-            console.log('Supabase configurado correctamente');
-        } else {
-            console.log('Supabase no está disponible en window.supabaseClient');
-        }
+        // Supabase desactivado
     }
 
     async loadUserData() {
-        if (!this.supabase || !this.userId) {
-            console.log('Sin autenticación: no se pueden cargar datos');
-            return;
-        }
-
+        // Supabase desactivado - inicializar sin datos
         try {
-            // Inicializar campos del sidebar primero
             this.initializeSidebarFields();
-            
-            // Cargar datos del usuario
-            const loadPromises = [
+            await Promise.allSettled([
                 this.loadBrands(),
                 this.loadProducts(),
                 this.loadOffers(),
                 this.loadAudiences()
-            ];
-
-            // Ejecutar todas las cargas
-            await Promise.allSettled(loadPromises);
-
-            // Pre-poblar configuraciones con datos del usuario
+            ]);
             this.prePopulateConfigurations();
-
         } catch (error) {
             console.error('Error loading user data:', error);
-            this.showNotification('Error cargando datos del usuario', 'error');
         }
     }
 
@@ -123,200 +79,27 @@ class StudioManager {
     // =======================================
 
     async loadBrands() {
-        try {
-            console.log('=== CARGANDO MARCAS ===');
-            if (!this.supabase || !this.userId) {
-                console.log('Sin autenticación: no se pueden cargar marcas');
-                return;
-            }
-
-            const { data: brands, error } = await this.supabase
-                .from('brand_guidelines')
-                .select(`
-                    id,
-                    project_id,
-                    tone_of_voice,
-                    keywords_yes,
-                    keywords_no,
-                    dos_donts,
-                    reference_links,
-                    projects!inner(
-                        id,
-                        name,
-                        website,
-                        country,
-                        languages
-                    )
-                `)
-                .eq('projects.user_id', this.userId)
-                .order('created_at', { ascending: false });
-
-            if (error) {
-                console.error('Error loading brands:', error);
-                this.showNotification('Error cargando marcas', 'error');
-                return;
-            }
-
-            this.brands = brands || [];
-            console.log('Marcas cargadas desde Supabase:', this.brands);
-            
-            // Actualizar el dropdown de marcas
-            this.updateBrandSelector();
-
-        } catch (error) {
-            console.error('Error in loadBrands:', error);
-            this.showNotification('Error cargando marcas', 'error');
-        }
+        // Supabase desactivado - datos vacíos
+        this.brands = [];
+        this.updateBrandSelector();
     }
 
     async loadProducts() {
-        try {
-            console.log('=== CARGANDO PRODUCTOS ===');
-            if (!this.supabase || !this.userId) {
-                console.log('Sin autenticación: no se pueden cargar productos');
-                return;
-            }
-
-            const { data: products, error } = await this.supabase
-                .from('products')
-                .select(`
-                    id,
-                    project_id,
-                    name,
-                    product_type,
-                    short_desc,
-                    benefits,
-                    differentiators,
-                    usage_steps,
-                    ingredients,
-                    price,
-                    variants,
-                    projects!inner(
-                        id,
-                        name,
-                        website,
-                        country,
-                        languages
-                    )
-                `)
-                .eq('projects.user_id', this.userId)
-                .order('created_at', { ascending: false });
-
-            if (error) {
-                console.error('Error loading products:', error);
-                this.showNotification('Error cargando productos', 'error');
-                return;
-            }
-
-            this.products = products || [];
-            console.log('Productos cargados desde Supabase:', this.products);
-            
-            // Actualizar el dropdown de productos
-            this.updateProductSelector();
-
-        } catch (error) {
-            console.error('Error in loadProducts:', error);
-            this.showNotification('Error cargando productos', 'error');
-        }
+        // Supabase desactivado - datos vacíos
+        this.products = [];
+        this.updateProductSelector();
     }
 
     async loadOffers() {
-        try {
-            console.log('=== CARGANDO OFERTAS ===');
-            if (!this.supabase || !this.userId) {
-                console.log('Sin autenticación: no se pueden cargar ofertas');
-                return;
-            }
-
-            const { data: offers, error } = await this.supabase
-                .from('offers')
-                .select(`
-                    *,
-                    projects!inner(
-                        id,
-                        name,
-                        user_id
-                    )
-                `)
-                .eq('projects.user_id', this.userId)
-                .order('created_at', { ascending: false });
-
-            if (error) {
-                console.error('Error loading offers:', error);
-                this.showNotification('Error cargando ofertas', 'error');
-                return;
-            }
-
-            this.offers = offers || [];
-            console.log('Ofertas cargadas desde Supabase:', this.offers);
-            
-            // Actualizar el dropdown de ofertas
-            this.updateOfferSelector();
-
-        } catch (error) {
-            console.error('Error in loadOffers:', error);
-            this.showNotification('Error cargando ofertas', 'error');
-        }
+        // Supabase desactivado - datos vacíos
+        this.offers = [];
+        this.updateOfferSelector();
     }
 
     async loadAudiences() {
-        try {
-            console.log('=== CARGANDO AUDIENCIAS ===');
-            if (!this.supabase || !this.userId) {
-                console.log('Sin autenticación: no se pueden cargar audiencias');
-                return;
-            }
-
-            // La tabla se llama 'audience' (singular) y tiene project_id directamente
-            // Primero obtener los project_ids del usuario
-            const { data: userProjects, error: projectsError } = await this.supabase
-                .from('projects')
-                .select('id')
-                .eq('user_id', this.userId);
-
-            if (projectsError) {
-                console.error('Error obteniendo proyectos para audiencias:', projectsError);
-                this.audience = [];
-                this.updateAudienceSelector();
-                return;
-            }
-
-            if (!userProjects || userProjects.length === 0) {
-                console.log('No hay proyectos para el usuario, no se pueden cargar audiencias');
-                this.audience = [];
-                this.updateAudienceSelector();
-                return;
-            }
-
-            const projectIds = userProjects.map(p => p.id);
-
-            // Obtener audiencias de los proyectos del usuario
-            const { data: audiences, error } = await this.supabase
-                .from('audience') // Tabla se llama 'audience' (singular)
-                .select('*')
-                .in('project_id', projectIds)
-                .order('created_at', { ascending: false });
-
-            if (error) {
-                console.error('Error loading audiences:', error);
-                this.showNotification('Error cargando audiencias', 'error');
-                this.audience = [];
-                this.updateAudienceSelector();
-                return;
-            }
-
-            this.audience = audiences || [];
-            console.log('Audiencias cargadas desde Supabase:', this.audience);
-            
-            // Actualizar el dropdown de audiencias
-            this.updateAudienceSelector();
-
-        } catch (error) {
-            console.error('Error in loadAudiences:', error);
-            this.showNotification('Error cargando audiencias', 'error');
-            this.audience = [];
-            this.updateAudienceSelector();
-        }
+        // Supabase desactivado - datos vacíos
+        this.audience = [];
+        this.updateAudienceSelector();
     }
 
 
@@ -797,11 +580,7 @@ class StudioManager {
     // =======================================
 
     logout() {
-        if (window.studioManager && window.studioManager.supabase) {
-            window.studioManager.supabase.auth.signOut().then(() => {
-                window.location.href = '/login.html';
-            });
-        }
+        window.location.href = '/login.html';
     }
 
     /* =======================================
@@ -943,8 +722,8 @@ class StudioManager {
                     if (image.image_url) {
                         imageUrl = image.image_url;
                     } else if (image.path) {
-                        // Construir URL correcta para Supabase Storage
-                        imageUrl = `https://ksjeikudvqseoosyhsdd.supabase.co/storage/v1/object/public/ugc/${image.path}`;
+                        // URL de imagen local o externa
+                        imageUrl = image.path.startsWith('http') ? image.path : `/${image.path}`;
                     } else if (image.url) {
                         imageUrl = image.url;
                     }
@@ -1504,13 +1283,8 @@ document.addEventListener('DOMContentLoaded', () => {
     window.studioManager = new StudioManager();
 });
 
-// Función global para logout
 function logout() {
-    if (window.studioManager && window.studioManager.supabase) {
-        window.studioManager.supabase.auth.signOut().then(() => {
-            window.location.href = '/login.html';
-        });
-    }
+    window.location.href = '/login.html';
 }
 
 // Función global para navegación de sidebar (fallback)

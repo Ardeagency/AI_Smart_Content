@@ -876,23 +876,8 @@ class PaymentModal {
     // ========================
 
     async checkUserExists(email) {
-        try {
-            console.log('🔍 Verificando si existe usuario con email:', email);
-            
-            if (!window.supabaseClient?.isReady()) {
-                console.warn('Supabase no disponible para verificar usuario');
-                return false;
-            }
-
-            // Método simple y directo: solo usar signUp y manejar el error
-            // No intentamos verificar antes, dejamos que Supabase nos diga si existe
-            console.log('✅ Asumiendo que usuario no existe, continuando con registro');
-            return false;
-            
-        } catch (error) {
-            console.warn('Error verificando usuario existente:', error);
-            return false; // En caso de error, permite continuar
-        }
+        // Supabase desactivado - siempre retornar false para permitir registro
+        return false;
     }
 
     validateUserData(userData) {
@@ -937,333 +922,16 @@ class PaymentModal {
     }
 
     async createUserInSupabase(userData) {
-        // Esperar a que Supabase esté listo
-        let attempts = 0;
-        const maxAttempts = 30; // 3 segundos máximo
-        
-        while (attempts < maxAttempts) {
-            if (window.supabaseClient?.isReady()) {
-                break;
-            }
-            
-            console.log(`⏳ Esperando Supabase... intento ${attempts + 1}/${maxAttempts}`);
-            await new Promise(resolve => setTimeout(resolve, 100));
-            attempts++;
-        }
-        
-        if (!window.supabaseClient?.isReady()) {
-            console.error('❌ Diagnóstico de Supabase:');
-            console.error('- window.supabaseClient exists:', !!window.supabaseClient);
-            console.error('- isReady():', window.supabaseClient?.isReady?.());
-            console.error('- supabase client:', window.supabaseClient?.supabase);
-            throw new Error('Sistema de base de datos no disponible después de esperar');
-        }
-
-        try {
-            console.log('🔄 Iniciando registro de usuario en Supabase...');
-            
-            // Limpiar sesiones corruptas antes de intentar registro
-            try {
-                const { data: session, error: sessionError } = await window.supabaseClient.supabase.auth.getSession();
-                if (sessionError && sessionError.message.includes('Invalid Refresh Token')) {
-                    console.log('🧹 Limpiando sesión corrupta antes del registro...');
-                    await window.supabaseClient.cleanCorruptSessions();
-                }
-            } catch (cleanError) {
-                console.log('⚠️ Error limpiando sesión (continuando):', cleanError.message);
-            }
-            
-            // 1. Crear usuario con autenticación de Supabase
-            const authResult = await window.supabaseClient.supabase.auth.signUp({
-                email: userData.email,
-                password: userData.password,
-                options: {
-                    data: {
-                        full_name: userData.fullName,
-                        plan_type: userData.plan,
-                        registration_source: userData.registrationSource
-                    }
-                }
-            });
-
-            if (authResult.error) {
-                console.error('❌ Error en autenticación Supabase:', authResult.error);
-                
-                // Si es error de refresh token, limpiar y reintentar
-                if (authResult.error.message.includes('Invalid Refresh Token')) {
-                    console.log('🔄 Detectado error de refresh token, limpiando y reintentando...');
-                    await window.supabaseClient.cleanCorruptSessions();
-                    throw new Error('Sesión expirada. Por favor, recarga la página e intenta de nuevo.');
-                }
-                
-                throw new Error(authResult.error.message);
-            }
-
-            const user = authResult.data.user;
-            console.log('✅ Usuario creado en auth.users:', user.id);
-            
-            // 2. Intentar crear perfil en user_profiles - manejo mejorado de RLS
-            console.log('📤 Creando perfil de usuario...');
-            
-            // Wait for potential trigger execution
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            
-            // Check if profile was created by trigger first
-            let profileData = null;
-            try {
-                // Use admin client to check for existing profile
-                const adminClient = window.supabaseClient.getAdminClient();
-                const clientToUse = adminClient || window.supabaseClient.supabase;
-                
-                const { data: existingProfile, error: checkError } = await clientToUse
-                    .from('user_profiles')
-                    .select('*')
-                    .eq('user_id', user.id)
-                    .single();
-                
-                if (existingProfile && !checkError) {
-                    console.log('✅ Perfil ya existe (creado por trigger):', existingProfile);
-                    profileData = existingProfile;
-                } else if (checkError && checkError.code !== 'PGRST116') {
-                    console.log('⚠️ Error verificando perfil existente:', checkError);
-                }
-            } catch (e) {
-                console.log('🔍 Perfil no existe, intentando crear...');
-            }
-            
-            // If no profile exists, try to create one
-            if (!profileData) {
-                const userProfileData = {
-                    user_id: user.id,
-                full_name: userData.fullName,
-                    country: 'CO',
-                    language: 'es', 
-                    plan_type: userData.plan,
-                    plan_status: 'pending_payment',
-                created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                };
-
-                console.log('📋 Intentando insertar perfil con cliente normal...');
-
-                // First try with normal client
-                const { data: newProfile, error: profileError } = await window.supabaseClient.supabase
-                    .from('user_profiles')
-                    .insert([userProfileData])
-                    .select()
-                    .single();
-
-            if (profileError) {
-                    console.error('❌ Error creando perfil con cliente normal:', profileError);
-                    console.error('📋 Código de error:', profileError.code);
-                    console.error('📋 Mensaje:', profileError.message);
-                    
-                    // Handle duplicate key error (23505)
-                    if (profileError.code === '23505' || profileError.message.includes('already exists')) {
-                        console.log('⚠️ Perfil ya existe (duplicate key), intentando obtenerlo...');
-                        try {
-                            const { data: existingProfile } = await window.supabaseClient.supabase
-                                .from('user_profiles')
-                                .select('*')
-                                .eq('user_id', user.id)
-                                .single();
-                            profileData = existingProfile;
-                            console.log('✅ Perfil existente obtenido:', profileData);
-                        } catch (getError) {
-                            console.warn('⚠️ No se pudo obtener el perfil existente');
-                        }
-                    }
-                    // If it's an RLS error, try with admin client
-                    else if (profileError.code === '42501' || profileError.message.includes('row-level security')) {
-                        console.log('🔄 Intentando con cliente administrativo...');
-                        
-                        const adminClient = window.supabaseClient.getAdminClient();
-                        if (adminClient) {
-                            const { data: adminProfile, error: adminError } = await adminClient
-                                .from('user_profiles')
-                                .insert([userProfileData])
-                                .select()
-                                .single();
-                            
-                            if (adminError) {
-                                // Check if admin error is also duplicate key
-                                if (adminError.code === '23505') {
-                                    console.log('✅ Perfil ya existía, continuando...');
-                                } else {
-                                    console.error('❌ Error con cliente admin:', adminError);
-                                    console.warn('⚠️ Error de RLS persistente - continuando sin perfil por ahora');
-                                }
-                            } else {
-                                profileData = adminProfile;
-                                console.log('✅ Perfil creado exitosamente con admin client:', profileData);
-                            }
-                        } else {
-                            console.warn('⚠️ Cliente admin no disponible - continuando sin perfil');
-                        }
-                    } else {
-                        // For other errors, continue without throwing
-                        console.warn('⚠️ Error inesperado creando perfil, continuando sin perfil por ahora');
-                    }
-                } else {
-                    profileData = newProfile;
-                    console.log('✅ Perfil creado exitosamente:', profileData);
-                }
-            }
-
-            // 3. Crear suscripción inicial en estado pendiente
-            const now = new Date();
-            const trialEndDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 días de prueba
-            
-            const subscriptionData = {
-                user_id: user.id,
-                plan_type: userData.plan,
-                status: 'pending_payment', // Estados: pending_payment, active, past_due, cancelled, expired
-                current_period_start: now.toISOString(),
-                current_period_end: trialEndDate.toISOString(),
-                renewal_period: '1 month', // Período de renovación por defecto
-                created_at: now.toISOString()
-            };
-
-            console.log('📋 Creando suscripción con datos:', subscriptionData);
-
-            const { data: subscriptionResult, error: subscriptionError } = await window.supabaseClient.supabase
-                .from('subscriptions')
-                .insert([subscriptionData])
-                .select()
-                .single();
-
-            if (subscriptionError) {
-                console.error('❌ Error creando suscripción inicial:', subscriptionError);
-                console.error('📋 Código de error:', subscriptionError.code);
-                console.error('📋 Datos de suscripción enviados:', subscriptionData);
-                
-                // If it's an RLS error, continue without throwing
-                if (subscriptionError.code === '42501' || subscriptionError.message.includes('row-level security')) {
-                    console.warn('⚠️ Error de RLS en suscripción - continuando sin suscripción por ahora');
-                    console.warn('⚠️ La suscripción se puede crear después del login exitoso');
-                } else {
-                    console.warn('⚠️ Error creando suscripción, se puede crear manualmente');
-                }
-            } else {
-                console.log('✅ Suscripción inicial creada exitosamente:', subscriptionResult);
-            }
-
-            // 4. Guardar en estado local de la aplicación
-            if (window.AppState) {
-                window.AppState.setUser({
-                    id: user.id,
-                    email: userData.email,
-                    name: userData.fullName,
-                    plan: userData.plan,
-                    created: userProfileData.created_at
-                });
-            }
-
-            // 5. Guardar en sessionStorage para el onboarding
-            sessionStorage.setItem('currentUser', JSON.stringify({
-                id: user.id,
-                email: userData.email,
-                name: userData.fullName,
-                plan: userData.plan,
-                supabaseId: user.id,
-                needsPayment: true,
-                subscriptionId: subscriptionResult?.id || null
-            }));
-
-            // 6. Registrar evento analítico (si está disponible)
-            try {
-                if (window.analyticsEngine && typeof window.analyticsEngine.track === 'function') {
-                    window.analyticsEngine.track('user_registered', {
-                        user_id: user.id,
-                    plan: userData.plan,
-                    method: userData.paymentMethod,
-                    source: userData.registrationSource,
-                    amount: userData.planPrice
-                });
-                } else {
-                    console.log('📊 Analytics engine not available, skipping tracking');
-                }
-            } catch (analyticsError) {
-                console.warn('⚠️ Error tracking analytics:', analyticsError.message);
-            }
-
-            console.log('✅ Usuario registrado completamente:', {
-                user_id: user.id,
-                email: userData.email,
-                plan: userData.plan,
-                profile_created: !!profileData,
-                subscription_created: !!subscriptionResult
-            });
-
-            return {
-                ...user,
-                full_name: userData.fullName,
-                plan: userData.plan,
-                plan_price: userData.planPrice,
-                subscription_id: subscriptionResult?.id
-            };
-
-        } catch (error) {
-            console.error('❌ Error en createUserInSupabase:', error);
-            console.error('📋 Error completo:', {
-                message: error.message,
-                code: error.code,
-                status: error.status
-            });
-            
-            // Manejo específico de errores de Supabase Auth
-            if (error.message.includes('User already registered') || 
-                error.message.includes('already') ||
-                error.message.includes('user_already_exists') ||
-                error.code === 'email_address_already_exists' ||
-                error.code === 'user_already_exists') {
-                throw new Error('Ya existe una cuenta con este email');
-            }
-            
-            if (error.message.includes('weak_password') || 
-                error.message.includes('Password should be at least 6 characters')) {
-                throw new Error('La contraseña es muy débil. Debe tener al menos 8 caracteres con mayúsculas, minúsculas, números y símbolos');
-            }
-            
-            if (error.message.includes('invalid_email') || 
-                error.message.includes('Unable to validate email')) {
-                throw new Error('El formato del email no es válido. Verifica que esté bien escrito');
-            }
-            
-            if (error.message.includes('signup_disabled')) {
-                throw new Error('El registro está temporalmente deshabilitado. Inténtalo más tarde');
-            }
-            
-            if (error.message.includes('rate_limit') || error.message.includes('too_many_requests')) {
-                throw new Error('Has realizado demasiados intentos. Espera unos minutos antes de intentar nuevamente');
-            }
-            
-            // Errores de base de datos
-            if (error.message.includes('foreign key') || error.message.includes('violates')) {
-                throw new Error('Error de integridad de datos. Contacta con soporte técnico');
-            }
-            
-            if (error.message.includes('permission') || error.message.includes('RLS')) {
-                throw new Error('Error de permisos. Contacta con soporte técnico');
-            }
-            
-            // Errores de conexión
-            if (error.message.includes('network') || 
-                error.message.includes('fetch') ||
-                error.message.includes('timeout')) {
-                throw new Error('Error de conexión. Verifica tu internet e inténtalo nuevamente');
-            }
-            
-            // Error genérico con más información para debugging
-            let userFriendlyMessage = 'Ocurrió un error durante el registro';
-            
-            // Si el error es corto, mostrarlo tal como está
-            if (error.message && error.message.length < 100) {
-                userFriendlyMessage = error.message;
-            }
-            
-            throw new Error(userFriendlyMessage);
-        }
+        // Supabase desactivado - función simplificada
+        // Retornar datos simulados para permitir flujo sin backend
+        return {
+            id: 'demo-user-' + Date.now(),
+            email: userData.email,
+            full_name: userData.fullName,
+            plan: userData.plan,
+            plan_price: userData.planPrice,
+            subscription_id: null
+        };
     }
 
     // ========================
@@ -1348,10 +1016,8 @@ class PaymentModal {
                 created_at: new Date().toISOString()
             };
             
-            // Guardar en tabla payments
-            await window.supabaseClient.supabase
-                .from('payments')
-                .insert([paymentRecord]);
+            // Supabase desactivado - registro de pago deshabilitado
+            console.log('Registro de pago (simulado):', paymentRecord);
             
             // 5. Guardar ID de transacción para verificación posterior
             sessionStorage.setItem('wompi_transaction_id', transactionResult.data.id);
@@ -1435,98 +1101,17 @@ class PaymentModal {
     // ========================
     
     async createPaymentRecord(subscriptionId, transactionData, userData) {
-        try {
-            if (!window.supabaseClient?.isReady() || !subscriptionId) return;
-            
-            const paymentRecord = {
-                subscription_id: subscriptionId,
-                amount: transactionData.amount,
-                currency: transactionData.currency || 'COP',
-                status: transactionData.status === 'APPROVED' ? 'paid' : 'pending',
-                provider: 'wompi',
-                provider_payment_id: transactionData.id,
-                period_start: new Date().toISOString(),
-                period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-                created_at: new Date().toISOString()
-            };
-            
-            const { error } = await window.supabaseClient.supabase
-                .from('payments')
-                .insert([paymentRecord]);
-                
-            if (error) {
-                console.warn('⚠️ Error guardando registro de pago:', error);
-            } else {
-                console.log('✅ Registro de pago creado exitosamente');
-            }
-        } catch (error) {
-            console.warn('Error en createPaymentRecord:', error);
-        }
+        // Supabase desactivado
+        console.log('Registro de pago (simulado):', { subscriptionId, transactionData, userData });
     }
     
     async logPaymentError(userId, errorMessage, userData) {
-        try {
-            if (!window.supabaseClient?.isReady()) return;
-            
-            // Log en tabla de eventos o crear tabla específica para errores
-            console.log('📝 Registrando error de pago:', {
-                user_id: userId,
-                error: errorMessage,
-                plan: userData.plan,
-                amount: userData.planPrice
-            });
-            
-            // TODO: Implementar tabla de logs de errores si es necesario
-            
-        } catch (error) {
-            console.warn('Error registrando error de pago:', error);
-        }
+        console.log('📝 Error de pago:', { userId, error: errorMessage, plan: userData?.plan });
     }
 
     async updateSubscriptionStatus(userId, status, transactionId = null) {
-        try {
-            if (!window.supabaseClient?.isReady()) return;
-
-            // Actualizar estado en user_profiles
-            const profileUpdateData = {
-                plan_status: status,
-                updated_at: new Date().toISOString()
-            };
-
-            const { error: profileError } = await window.supabaseClient.supabase
-                .from('user_profiles')
-                .update(profileUpdateData)
-                .eq('user_id', userId);
-
-            if (profileError) {
-                console.warn('⚠️ Error actualizando perfil de usuario:', profileError);
-            }
-
-            // Actualizar estado en subscriptions
-            const subscriptionUpdateData = {
-                status: status,
-                updated_at: new Date().toISOString()
-            };
-
-            if (transactionId) {
-                subscriptionUpdateData.current_period_start = new Date().toISOString();
-                subscriptionUpdateData.current_period_end = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-            }
-
-            const { error: subscriptionError } = await window.supabaseClient.supabase
-                .from('subscriptions')
-                .update(subscriptionUpdateData)
-                .eq('user_id', userId);
-
-            if (subscriptionError) {
-                console.warn('⚠️ Error actualizando suscripción:', subscriptionError);
-            } else {
-                console.log('✅ Estado de suscripción actualizado:', status);
-            }
-
-        } catch (error) {
-            console.warn('Error en updateSubscriptionStatus:', error);
-        }
+        // Supabase desactivado
+        console.log('Estado de suscripción (simulado):', { userId, status, transactionId });
     }
 
     showValidationError(message) {
@@ -1892,24 +1477,7 @@ let paymentModal;
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('🔄 Inicializando PaymentModal...');
     
-    // Esperar a que Supabase esté listo antes de inicializar PaymentModal
-    let attempts = 0;
-    const maxAttempts = 50; // 5 segundos máximo
-    
-    while (attempts < maxAttempts) {
-        if (window.supabaseClient?.isReady()) {
-            console.log('✅ Supabase listo, inicializando PaymentModal...');
-            break;
-        }
-        
-        console.log(`⏳ Esperando Supabase antes de inicializar PaymentModal... ${attempts + 1}/${maxAttempts}`);
-        await new Promise(resolve => setTimeout(resolve, 100));
-        attempts++;
-    }
-    
-    if (!window.supabaseClient?.isReady()) {
-        console.warn('⚠️ PaymentModal inicializado sin Supabase (puede causar errores en registro)');
-    }
+    // Supabase desactivado - inicializar PaymentModal directamente
     
     paymentModal = new PaymentModal();
     console.log('✅ PaymentModal inicializado correctamente');
@@ -1979,72 +1547,10 @@ window.debugModals = function() {
     });
 };
 
-// Test Supabase connection and user creation
+// Supabase desactivado - función de test deshabilitada
 window.testSupabaseConnection = async function() {
-    console.log('🧪 Iniciando test de conexión Supabase...');
-    
-    try {
-        // 1. Verificar que el cliente esté disponible
-        if (!window.supabaseClient) {
-            console.error('❌ supabaseClient no está disponible');
-            return false;
-        }
-        
-        if (!window.supabaseClient.isReady()) {
-            console.error('❌ supabaseClient no está inicializado');
-            return false;
-        }
-        
-        console.log('✅ Cliente Supabase disponible');
-        
-        // 2. Test de conexión básica
-        const { data: session, error: sessionError } = await window.supabaseClient.supabase.auth.getSession();
-        if (sessionError) {
-            console.error('❌ Error obteniendo sesión:', sessionError);
-            return false;
-        }
-        
-        console.log('✅ Conexión básica funcionando');
-        
-        // 3. Test de lectura de tabla (user_profiles)
-        try {
-            const { data: profiles, error: profilesError } = await window.supabaseClient.supabase
-                .from('user_profiles')
-                .select('user_id')
-                .limit(1);
-                
-            if (profilesError) {
-                console.warn('⚠️ Error accediendo a user_profiles:', profilesError);
-            } else {
-                console.log('✅ Acceso a user_profiles funciona');
-            }
-        } catch (e) {
-            console.warn('⚠️ Tabla user_profiles puede no existir:', e.message);
-        }
-        
-        // 4. Test de lectura de tabla (subscriptions)
-        try {
-            const { data: subs, error: subsError } = await window.supabaseClient.supabase
-                .from('subscriptions')
-                .select('id')
-                .limit(1);
-                
-            if (subsError) {
-                console.warn('⚠️ Error accediendo a subscriptions:', subsError);
-            } else {
-                console.log('✅ Acceso a subscriptions funciona');
-            }
-        } catch (e) {
-            console.warn('⚠️ Tabla subscriptions puede no existir:', e.message);
-        }
-        
-        console.log('✅ Test de conexión Supabase completado');
-        return true;
-        
-    } catch (error) {
-        console.error('❌ Error en test de Supabase:', error);
-        return false;
-    }
+    console.log('⚠️ Supabase desactivado - test no disponible');
+    return false;
 };
 
 // Test user creation flow
@@ -2364,27 +1870,8 @@ window.testRegistrationFlow = async function(testEmail = null) {
 // Quick diagnostic function
 window.quickDiagnostic = function() {
     console.log('🔍 DIAGNÓSTICO RÁPIDO:');
-    console.log('1. window.supabaseClient exists:', !!window.supabaseClient);
-    console.log('2. supabaseClient.isReady():', window.supabaseClient?.isReady?.());
-    console.log('3. paymentModal exists:', !!window.paymentModal);
-    console.log('4. window.supabase library:', !!window.supabase);
-    
-    if (window.supabaseClient?.isReady()) {
-        console.log('✅ Todo está listo para usar');
-        
-        // Test básico
-        window.supabaseClient.supabase.auth.getSession()
-            .then(({ data, error }) => {
-                if (error) {
-                    console.log('⚠️ Error en auth test:', error.message);
-                } else {
-                    console.log('✅ Auth test exitoso');
-                }
-            });
-    } else {
-        console.log('❌ Supabase no está listo');
-        console.log('💡 Ejecuta debugSupabase() para más detalles');
-    }
+    console.log('⚠️ Supabase desactivado - diagnóstico no disponible');
+    console.log('paymentModal exists:', !!window.paymentModal);
 };
 
 window.testDuplicateHandling = function() {
@@ -2428,70 +1915,7 @@ window.checkVerificationEmail = function() {
     };
 };
 
-// Debug RLS issues
+// Supabase desactivado - función de debug deshabilitada
 window.debugRLSIssues = async function() {
-    console.log('🔍 Diagnosticando problemas de RLS...');
-    
-    try {
-        // Test basic connection
-        if (!window.supabaseClient?.isReady()) {
-            console.error('❌ Supabase client no está listo');
-            return;
-        }
-        
-        console.log('✅ Cliente Supabase disponible');
-        
-        // Test auth status
-        const { data: session } = await window.supabaseClient.supabase.auth.getSession();
-        console.log('🔐 Estado de autenticación:', {
-            isLoggedIn: !!session?.session,
-            user: session?.session?.user?.email || 'No autenticado'
-        });
-        
-        // Test table access
-        console.log('🧪 Probando acceso a tablas...');
-        
-        // Test user_profiles read
-        try {
-            const { data, error } = await window.supabaseClient.supabase
-                .from('user_profiles')
-                .select('count(*)')
-                .limit(1);
-            
-            if (error) {
-                console.error('❌ Error accediendo user_profiles:', error);
-            } else {
-                console.log('✅ Acceso a user_profiles funciona');
-            }
-        } catch (e) {
-            console.error('❌ Excepción en user_profiles:', e.message);
-        }
-        
-        // Test admin client
-        console.log('🔧 Probando cliente administrativo...');
-        const adminClient = window.supabaseClient.getAdminClient();
-        if (adminClient) {
-            try {
-                const { data, error } = await adminClient
-                    .from('user_profiles')
-                    .select('count(*)')
-                    .limit(1);
-                
-                if (error) {
-                    console.error('❌ Error con cliente admin:', error);
-                } else {
-                    console.log('✅ Cliente administrativo funciona');
-                }
-            } catch (e) {
-                console.error('❌ Excepción con cliente admin:', e.message);
-            }
-        } else {
-            console.error('❌ Cliente administrativo no disponible');
-        }
-        
-        console.log('🏁 Diagnóstico completado');
-        
-    } catch (error) {
-        console.error('❌ Error en diagnóstico:', error);
-    }
+    console.log('⚠️ Supabase desactivado - debug no disponible');
 };

@@ -20,47 +20,10 @@ class BrandsManager {
     async loadBrands() {
         try {
             this.showLoading(true);
-            
-            // Wait for Supabase to be ready
-            await this.waitForSupabase();
-            
-            const { data: { session } } = await window.supabaseClient.supabase.auth.getSession();
-            
-            if (!session) {
-                window.location.href = 'login.html';
-                return;
-            }
-
-            // Load user's projects (brands)
-            const { data: projects, error } = await window.supabaseClient.supabase
-                .from('projects')
-                .select(`
-                    id,
-                    name,
-                    website,
-                    country,
-                    languages,
-                    created_at,
-                    updated_at
-                `)
-                .eq('user_id', session.user.id)
-                .order('created_at', { ascending: false });
-
-            if (error) {
-                console.error('Error loading brands:', error);
-                this.showNotification('Error cargando marcas', 'error');
-                return;
-            }
-
-            this.brands = projects || [];
-            this.filteredBrands = [...this.brands];
-            
-            // Load additional data for each brand
-            await this.loadBrandsDetails();
-            
+            this.brands = [];
+            this.filteredBrands = [];
             this.renderBrands();
             this.updateBrandsCount();
-
         } catch (error) {
             console.error('Error in loadBrands:', error);
             this.showNotification('Error cargando marcas', 'error');
@@ -70,39 +33,7 @@ class BrandsManager {
     }
 
     async loadBrandsDetails() {
-        // Load additional details for each brand
-        for (let brand of this.brands) {
-            try {
-                // Load products count
-                const { count: productsCount } = await window.supabaseClient.supabase
-                    .from('products')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('project_id', brand.id);
-
-                // Load files count
-                const { count: filesCount } = await window.supabaseClient.supabase
-                    .from('files')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('project_id', brand.id);
-
-                // Load brand guidelines
-                const { data: guidelines } = await window.supabaseClient.supabase
-                    .from('brand_guidelines')
-                    .select('*')
-                    .eq('project_id', brand.id)
-                    .single();
-
-                brand.productsCount = productsCount || 0;
-                brand.filesCount = filesCount || 0;
-                brand.guidelines = guidelines;
-
-            } catch (error) {
-                console.warn(`Error loading details for brand ${brand.id}:`, error);
-                brand.productsCount = 0;
-                brand.filesCount = 0;
-                brand.guidelines = null;
-            }
-        }
+        // Supabase desactivado
     }
 
     renderBrands() {
@@ -341,57 +272,7 @@ class BrandsManager {
                 return;
             }
 
-            await this.waitForSupabase();
-            const { data: { session } } = await window.supabaseClient.supabase.auth.getSession();
-
-            if (!session) {
-                window.location.href = 'login.html';
-                return;
-            }
-
-            if (this.currentBrandId) {
-                // Update existing brand
-                const { error } = await window.supabaseClient.supabase
-                    .from('projects')
-                    .update({
-                        name: formData.name,
-                        website: formData.website,
-                        country: formData.country,
-                        languages: formData.languages,
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq('id', this.currentBrandId);
-
-                if (error) {
-                    console.error('Error updating brand:', error);
-                    this.showNotification('Error actualizando marca', 'error');
-                    return;
-                }
-
-                this.showNotification('Marca actualizada exitosamente', 'success');
-            } else {
-                // Create new brand
-                const { data, error } = await window.supabaseClient.supabase
-                    .from('projects')
-                    .insert([{
-                        user_id: session.user.id,
-                        name: formData.name,
-                        website: formData.website,
-                        country: formData.country,
-                        languages: formData.languages
-                    }])
-                    .select()
-                    .single();
-
-                if (error) {
-                    console.error('Error creating brand:', error);
-                    this.showNotification('Error creando marca', 'error');
-                    return;
-                }
-
-                this.showNotification('Marca creada exitosamente', 'success');
-            }
-
+            this.showNotification('Sistema de guardado temporalmente deshabilitado', 'warning');
             this.closeBrandModal();
             await this.loadBrands();
 
@@ -422,27 +303,7 @@ class BrandsManager {
             return;
         }
 
-        try {
-            await this.waitForSupabase();
-
-            const { error } = await window.supabaseClient.supabase
-                .from('projects')
-                .delete()
-                .eq('id', brandId);
-
-            if (error) {
-                console.error('Error deleting brand:', error);
-                this.showNotification('Error eliminando marca', 'error');
-                return;
-            }
-
-            this.showNotification('Marca eliminada exitosamente', 'success');
-            await this.loadBrands();
-
-        } catch (error) {
-            console.error('Error deleting brand:', error);
-            this.showNotification('Error eliminando marca', 'error');
-        }
+        this.showNotification('Sistema de eliminación temporalmente deshabilitado', 'warning');
     }
 
     async duplicateBrand(brandId) {
@@ -450,29 +311,7 @@ class BrandsManager {
             const brand = this.brands.find(b => b.id === brandId);
             if (!brand) return;
 
-            await this.waitForSupabase();
-            const { data: { session } } = await window.supabaseClient.supabase.auth.getSession();
-
-            const { data, error } = await window.supabaseClient.supabase
-                .from('projects')
-                .insert([{
-                    user_id: session.user.id,
-                    name: `${brand.name} (Copia)`,
-                    website: brand.website,
-                    country: brand.country,
-                    languages: brand.languages
-                }])
-                .select()
-                .single();
-
-            if (error) {
-                console.error('Error duplicating brand:', error);
-                this.showNotification('Error duplicando marca', 'error');
-                return;
-            }
-
-            this.showNotification('Marca duplicada exitosamente', 'success');
-            await this.loadBrands();
+            this.showNotification('Sistema de duplicación temporalmente deshabilitado', 'warning');
 
         } catch (error) {
             console.error('Error duplicating brand:', error);
@@ -486,40 +325,7 @@ class BrandsManager {
     }
 
     async loadBrandProducts(projectId) {
-        try {
-            console.log('Cargando productos para proyecto:', projectId);
-            
-            const { data: products, error } = await window.supabaseClient.supabase
-                .from('products')
-                .select(`
-                    id,
-                    name,
-                    product_type,
-                    short_desc,
-                    benefits,
-                    differentiators,
-                    usage_steps,
-                    ingredients,
-                    price,
-                    variants,
-                    main_image_id,
-                    gallery_file_ids,
-                    created_at
-                `)
-                .eq('project_id', projectId)
-                .order('created_at', { ascending: false });
-
-            if (error) {
-                console.error('Error loading products:', error);
-                return [];
-            }
-
-            console.log('Productos cargados:', products);
-            return products || [];
-        } catch (error) {
-            console.error('Error in loadBrandProducts:', error);
-            return [];
-        }
+        return [];
     }
 
     renderProductsSection() {
@@ -676,15 +482,7 @@ class BrandsManager {
 
     // Utility functions
     async waitForSupabase() {
-        let attempts = 0;
-        while ((!window.supabaseClient || !window.supabaseClient.isReady()) && attempts < 30) {
-            await new Promise(resolve => setTimeout(resolve, 500));
-            attempts++;
-        }
-        
-        if (!window.supabaseClient || !window.supabaseClient.isReady()) {
-            throw new Error('Supabase not available');
-        }
+        // Supabase desactivado
     }
 
     setButtonLoading(button, loading) {

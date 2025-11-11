@@ -100,95 +100,33 @@ class NavigationManager {
     }
 
     async checkAuthState() {
-        try {
-            // Wait for Supabase to be ready
-            await this.waitForSupabase();
-            
-            const { data: { session } } = await window.supabaseClient.supabase.auth.getSession();
-            
-            if (!session) {
-                window.location.href = 'login.html';
-                return;
-            }
-
-            this.loadUserInfo(session.user);
-        } catch (error) {
-            console.error('Error checking auth state:', error);
-            window.location.href = 'login.html';
-        }
+        // Supabase desactivado
     }
 
     async waitForSupabase() {
-        let attempts = 0;
-        while ((!window.supabaseClient || !window.supabaseClient.isReady()) && attempts < 30) {
-            await new Promise(resolve => setTimeout(resolve, 500));
-            attempts++;
-        }
-        
-        if (!window.supabaseClient || !window.supabaseClient.isReady()) {
-            throw new Error('Supabase not available');
-        }
+        // Supabase desactivado
     }
 
     async loadUserInfo(user) {
-        try {
-            // Load user profile
-            const { data: profile } = await window.supabaseClient.supabase
-                .from('user_profiles')
-                .select('*')
-                .eq('user_id', user.id)
-                .single();
+        const navUserName = document.getElementById('navUserName');
+        const navUserAvatar = document.getElementById('navUserAvatar');
+        const navUserPlan = document.getElementById('navUserPlan');
 
-            // Update navigation user info
-            const navUserName = document.getElementById('navUserName');
-            const navUserAvatar = document.getElementById('navUserAvatar');
-            const navUserPlan = document.getElementById('navUserPlan');
-
-            if (navUserName) {
-                const displayName = profile?.full_name || user.user_metadata?.full_name || user.email;
-                navUserName.textContent = displayName;
-            }
-
-            if (navUserAvatar) {
-                const initials = this.getInitials(profile?.full_name || user.user_metadata?.full_name || user.email);
-                navUserAvatar.textContent = initials;
-            }
-
-            if (navUserPlan && profile) {
-                const planIcon = this.getPlanIcon(profile.plan_type);
-                const planName = this.getPlanName(profile.plan_type);
-                navUserPlan.innerHTML = `<i class="${planIcon}"></i><span>${planName}</span>`;
-            }
-
-        } catch (error) {
-            console.error('Error loading user info:', error);
+        if (navUserName) {
+            navUserName.textContent = 'Usuario';
+        }
+        if (navUserAvatar) {
+            navUserAvatar.textContent = 'U';
+        }
+        if (navUserPlan) {
+            navUserPlan.innerHTML = '<i class="fas fa-user"></i><span>Plan Básico</span>';
         }
     }
 
     async updateNavigationCounts() {
-        try {
-            await this.waitForSupabase();
-            
-            const { data: { session } } = await window.supabaseClient.supabase.auth.getSession();
-            if (!session) return;
-
-            // Update brands count
-            const { count: brandsCount } = await window.supabaseClient.supabase
-                .from('projects')
-                .select('*', { count: 'exact', head: true })
-                .eq('user_id', session.user.id);
-
-            // Update UI
-            const brandsCountEl = document.getElementById('brandsCount');
-
-            if (brandsCountEl) {
-                brandsCountEl.textContent = brandsCount || 0;
-            }
-
-            // Library count removed - library page no longer exists
-
-        } catch (error) {
-            console.error('Error updating navigation counts:', error);
+        const brandsCountEl = document.getElementById('brandsCount');
+        if (brandsCountEl) {
+            brandsCountEl.textContent = '0';
         }
     }
 
@@ -284,17 +222,8 @@ class NavigationManager {
     }
 }
 
-// Global logout function
 async function logout() {
-    try {
-        if (window.supabaseClient && window.supabaseClient.supabase) {
-            await window.supabaseClient.supabase.auth.signOut();
-        }
-        window.location.href = 'login.html';
-    } catch (error) {
-        console.error('Error during logout:', error);
-        window.location.href = 'login.html';
-    }
+    window.location.href = 'login.html';
 }
 
 // Initialize navigation when DOM is loaded

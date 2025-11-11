@@ -1,6 +1,6 @@
 /**
  * JavaScript para páginas de autenticación
- * AI Smart Content - Manejo de login/register con Supabase
+ * AI Smart Content - Manejo de login/register (Supabase desactivado)
  */
 
 class AuthManager {
@@ -75,41 +75,11 @@ class AuthManager {
      * Verificar sesión existente
      */
     async checkExistingSession() {
-        // Esperar a que el cliente de Supabase esté listo
-        await this.waitForSupabase();
-        
-        if (window.supabaseClient && window.supabaseClient.isReady()) {
-            try {
-                const { data: { session } } = await window.supabaseClient.supabase.auth.getSession();
-                if (session) {
-                    this.showNotification('Ya tienes una sesión activa. Verificando tu cuenta...', 'success');
-                    
-                    // Verificar si el usuario tiene proyectos para decidir redirección
-                    const redirectUrl = await this.determineRedirectUrl(session.user.id);
-                    
-                    setTimeout(() => {
-                        window.location.href = redirectUrl;
-                    }, 1500);
-                }
-            } catch (error) {
-                console.log('No hay sesión activa');
-            }
-        }
+        // Supabase desactivado - función deshabilitada
     }
 
-    /**
-     * Esperar a que Supabase esté disponible
-     */
     async waitForSupabase() {
-        let attempts = 0;
-        while ((!window.supabaseClient || !window.supabaseClient.isReady()) && attempts < 30) {
-            await new Promise(resolve => setTimeout(resolve, 500));
-            attempts++;
-        }
-        
-        if (!window.supabaseClient || !window.supabaseClient.isReady()) {
-            throw new Error('Supabase no está disponible');
-        }
+        // Supabase desactivado
     }
 
     /**
@@ -149,29 +119,7 @@ class AuthManager {
         this.setButtonLoading(button, true);
 
         try {
-            await this.waitForSupabase();
-            
-            const { data, error } = await window.supabaseClient.supabase.auth.signInWithPassword({
-                email: email,
-                password: password
-            });
-
-            if (error) {
-                if (error.message === 'Email not confirmed') {
-                    this.showEmailNotConfirmedModal(email);
-                } else {
-                    this.showNotification(this.getErrorMessage(error.message), 'error');
-                }
-            } else {
-                this.showNotification('¡Bienvenido de vuelta! Verificando tu cuenta...', 'success');
-                
-                // Verificar si el usuario tiene proyectos para decidir redirección
-                const redirectUrl = await this.determineRedirectUrl(data.user.id);
-                
-                setTimeout(() => {
-                    window.location.href = redirectUrl;
-                }, 1500);
-            }
+            this.showNotification('Sistema de autenticación temporalmente deshabilitado', 'warning');
         } catch (error) {
             console.error('Error en login:', error);
             this.showNotification('Error al iniciar sesión. Intenta nuevamente.', 'error');
@@ -213,30 +161,7 @@ class AuthManager {
         this.setButtonLoading(button, true);
 
         try {
-            await this.waitForSupabase();
-            
-            const { data, error } = await window.supabaseClient.supabase.auth.signUp({
-                email: email,
-                password: password,
-                options: {
-                    data: {
-                        full_name: `${firstName} ${lastName}`,
-                        country: country,
-                        language: 'es'
-                    }
-                }
-            });
-
-            if (error) {
-                this.showNotification(this.getErrorMessage(error.message), 'error');
-            } else {
-                this.showNotification('¡Cuenta creada exitosamente! Revisa tu email para confirmarla.', 'success');
-                // Guardar email para verificación
-                localStorage.setItem('verificationEmail', email);
-                setTimeout(() => {
-                    window.location.href = `verify-email.html?email=${encodeURIComponent(email)}`;
-                }, 2000);
-            }
+            this.showNotification('Sistema de registro temporalmente deshabilitado', 'warning');
         } catch (error) {
             console.error('Error en registro:', error);
             this.showNotification('Error al crear la cuenta. Intenta nuevamente.', 'error');
@@ -311,94 +236,18 @@ class AuthManager {
      * Manejar login social
      */
     async handleSocialLogin(provider) {
-        try {
-            await this.waitForSupabase();
-            
-            this.showNotification(`Redirigiendo a ${provider.charAt(0).toUpperCase() + provider.slice(1)}...`, 'success');
-            
-            const { data, error } = await window.supabaseClient.supabase.auth.signInWithOAuth({
-                provider: provider,
-                options: {
-                    redirectTo: `${window.location.origin}/auth-callback.html`
-                }
-            });
-
-            if (error) {
-                throw error;
-            }
-        } catch (error) {
-            console.error(`Error en login social ${provider}:`, error);
-            this.showNotification(`Error al conectar con ${provider}`, 'error');
-        }
+        this.showNotification(`Login social temporalmente deshabilitado`, 'warning');
     }
 
     /**
      * Determinar URL de redirección basado en el estado del usuario
      */
     async determineRedirectUrl(userId) {
-        try {
-            console.log('🔍 Verificando estado del usuario:', userId);
-            
-            // 1. Verificar si el usuario completó el onboarding
-            const onboardingCompleted = await this.checkOnboardingStatus(userId);
-            
-            if (!onboardingCompleted) {
-                console.log('📝 Usuario no ha completado onboarding, redirigiendo...');
-                return 'onboarding-new.html';
-            }
-            
-            // 2. Verificar si el usuario tiene proyectos existentes
-            const { data: projects, error } = await window.supabaseClient.supabase
-                .from('projects')
-                .select('id')
-                .eq('user_id', userId)
-                .limit(1);
-
-            if (error) {
-                console.warn('⚠️ Error verificando proyectos:', error);
-                // En caso de error, enviar al onboarding por seguridad
-                return 'onboarding-new.html';
-            }
-
-            if (projects && projects.length > 0) {
-                console.log('📊 Usuario tiene proyectos, redirigiendo al studio');
-                // Usuario tiene proyectos, enviar al studio
-                return 'studio.html';
-            } else {
-                console.log('🆕 Usuario completó onboarding pero no tiene proyectos, crear primer proyecto');
-                // Usuario completó onboarding pero no tiene proyectos, crear uno nuevo
-                return 'onboarding-new.html';
-            }
-        } catch (error) {
-            console.error('❌ Error determinando redirección:', error);
-            // En caso de error, enviar al onboarding por seguridad
-            return 'onboarding-new.html';
-        }
+        return 'onboarding-new.html';
     }
 
-    /**
-     * Verificar si el usuario completó el onboarding
-     */
     async checkOnboardingStatus(userId) {
-        try {
-            // Verificar si el usuario tiene un perfil completo
-            const { data: profile, error } = await window.supabaseClient.supabase
-                .from('user_profiles')
-                .select('full_name, country, language, plan_type')
-                .eq('user_id', userId)
-                .single();
-
-            if (error) {
-                console.warn('⚠️ Error verificando perfil:', error);
-                return false;
-            }
-
-            // Considerar completado si tiene los campos básicos
-            return profile && profile.full_name && profile.country && profile.language;
-        } catch (error) {
-            console.error('❌ Error verificando onboarding:', error);
-            return false;
-        }
+        return false;
     }
 
     /**
@@ -447,24 +296,7 @@ class AuthManager {
      * Reenviar email de verificación
      */
     async resendVerificationEmail(email) {
-        try {
-            await this.waitForSupabase();
-            
-            const { error } = await window.supabaseClient.supabase.auth.resend({
-                type: 'signup',
-                email: email
-            });
-
-            if (error) {
-                throw error;
-            }
-
-            this.showNotification('Email de verificación reenviado exitosamente', 'success');
-            this.hideEmailNotConfirmedModal();
-        } catch (error) {
-            console.error('Error reenviando email:', error);
-            this.showNotification('Error al reenviar el email de verificación', 'error');
-        }
+        this.showNotification('Sistema de verificación temporalmente deshabilitado', 'warning');
     }
 
     /**
@@ -479,22 +311,7 @@ class AuthManager {
             return;
         }
 
-        try {
-            await this.waitForSupabase();
-            
-            const { error } = await window.supabaseClient.supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: `${window.location.origin}/reset-password.html`
-            });
-
-            if (error) {
-                throw error;
-            }
-
-            this.showNotification('Te hemos enviado un email para restablecer tu contraseña', 'success');
-        } catch (error) {
-            console.error('Error al enviar email de recuperación:', error);
-            this.showNotification('Error al enviar el email de recuperación', 'error');
-        }
+        this.showNotification('Sistema de recuperación de contraseña temporalmente deshabilitado', 'warning');
     }
 
     /**
@@ -588,21 +405,4 @@ document.addEventListener('DOMContentLoaded', () => {
     window.authManager = new AuthManager();
 });
 
-// Manejar el evento de carga de la página para verificar autenticación
-window.addEventListener('load', () => {
-    // Dar tiempo para que se cargue la configuración de Supabase
-    setTimeout(async () => {
-        try {
-            if (window.supabaseClient && window.supabaseClient.isReady()) {
-                const { data: { session } } = await window.supabaseClient.supabase.auth.getSession();
-                if (session && window.authManager) {
-                    // Usar la misma lógica de redirección inteligente
-                    const redirectUrl = await window.authManager.determineRedirectUrl(session.user.id);
-                    window.location.href = redirectUrl;
-                }
-            }
-        } catch (error) {
-            console.log('No hay sesión activa');
-        }
-    }, 1000);
-});
+// Supabase desactivado - verificación de sesión deshabilitada
