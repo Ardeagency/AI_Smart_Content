@@ -1,0 +1,419 @@
+/**
+ * AI Smart Content - Planes Page
+ * Estilos para la página de planes y modal de registro
+ */
+
+@import url('base.css');
+
+/* ============================================
+   CONTAINER
+   ============================================ */
+.planes-container {
+    min-height: 100vh;
+    background: var(--bg-black);
+    color: var(--text-primary);
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+.planes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.logo-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.header-nav {
+    display: flex;
+    gap: 2rem;
+}
+
+.nav-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.nav-link:hover {
+    color: var(--primary-color);
+}
+
+/* ============================================
+   MAIN CONTENT
+   ============================================ */
+.planes-main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+}
+
+.planes-intro {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.planes-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.planes-subtitle {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+}
+
+/* ============================================
+   PLANS GRID
+   ============================================ */
+.plans-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+/* ============================================
+   PLAN CARD
+   ============================================ */
+.plan-card {
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    position: relative;
+    transition: var(--transition);
+}
+
+.plan-card:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+}
+
+.plan-card.featured {
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-primary);
+}
+
+.plan-badge {
+    position: absolute;
+    top: -12px;
+    right: 2rem;
+    background: var(--primary-color);
+    color: var(--bg-black);
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius-full);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.plan-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+}
+
+.plan-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.plan-credits {
+    text-align: right;
+}
+
+.credits-number {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    line-height: 1;
+}
+
+.credits-label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+.plan-price {
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.price-amount {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.price-period {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-left: 0.5rem;
+}
+
+.plan-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 2rem 0;
+}
+
+.plan-features li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    color: var(--text-secondary);
+}
+
+.plan-features li i {
+    color: var(--primary-color);
+    font-size: 0.9rem;
+}
+
+.plan-btn {
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    border: none;
+    border-radius: var(--border-radius);
+    color: var(--bg-black);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.plan-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+/* ============================================
+   REGISTRATION MODAL
+   ============================================ */
+.registration-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-overlay);
+    backdrop-filter: blur(10px);
+    z-index: var(--z-modal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--transition);
+}
+
+.registration-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.registration-modal {
+    background: var(--bg-card);
+    border: 2px solid var(--border-primary);
+    border-radius: var(--border-radius-lg);
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    transform: scale(0.9) translateY(20px);
+    transition: var(--transition);
+    box-shadow: var(--shadow-floating);
+}
+
+.registration-overlay.active .registration-modal {
+    transform: scale(1) translateY(0);
+}
+
+.modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 40px;
+    height: 40px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.25rem;
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    z-index: 1;
+}
+
+.modal-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+.modal-header {
+    padding: 2rem 2rem 1.5rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 0.5rem 0;
+}
+
+.selected-plan-info {
+    color: var(--primary-color);
+    font-size: 0.95rem;
+    font-weight: 500;
+    margin: 0;
+}
+
+/* ============================================
+   REGISTRATION FORM
+   ============================================ */
+.registration-form {
+    padding: 2rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.form-group label .required {
+    color: var(--error-color);
+    margin-left: 0.25rem;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-family: 'Inter', sans-serif;
+    transition: var(--transition);
+    box-sizing: border-box;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(210, 254, 63, 0.1);
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn-secondary {
+    flex: 1;
+    padding: 0.875rem 1.5rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-secondary:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.btn-primary {
+    flex: 1;
+    padding: 0.875rem 1.5rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    border: none;
+    border-radius: var(--border-radius-sm);
+    color: var(--bg-black);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+    .planes-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .planes-main {
+        padding: 2rem 1rem;
+    }
+
+    .planes-title {
+        font-size: 2rem;
+    }
+
+    .plans-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .registration-modal {
+        width: 95%;
+        margin: 1rem;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+}
+
