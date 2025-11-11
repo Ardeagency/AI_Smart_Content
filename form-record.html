@@ -466,12 +466,13 @@
 
         .upload-zone {
             border: 2px dashed var(--border-color);
-            border-radius: 12px;
-            padding: 2rem;
+            border-radius: 8px;
+            padding: 1rem;
             text-align: center;
             cursor: pointer;
             transition: var(--transition);
             background: var(--bg-secondary);
+            min-height: auto;
         }
 
         .upload-zone:hover {
@@ -480,14 +481,33 @@
         }
 
         .upload-zone i {
-            font-size: 2.5rem;
+            font-size: 1.5rem;
             color: var(--primary-color);
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
         }
 
         .upload-zone p {
             color: var(--text-secondary);
-            margin: 0.5rem 0;
+            margin: 0.25rem 0;
+            font-size: 0.9rem;
+        }
+
+        .upload-zone.small {
+            padding: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .upload-zone.small i {
+            font-size: 1.25rem;
+            margin-bottom: 0;
+        }
+
+        .upload-zone.small p {
+            margin: 0;
+            font-size: 0.85rem;
         }
 
         .upload-preview {
@@ -886,17 +906,20 @@
 
                 <div class="form-group">
                     <label>Logo oficial</label>
-                    <div class="upload-zone" id="logoUpload">
+                    <div class="upload-zone small" id="logoUpload">
                         <input type="file" id="logo_file" accept="image/*,.svg" hidden>
                         <i class="fas fa-cloud-upload-alt"></i>
-                        <p><strong>Arrastra tu logo aquí</strong></p>
-                        <p>o haz clic para seleccionar</p>
-                        <p style="font-size: 0.85rem; color: var(--text-muted);">PNG, JPG, SVG - Máx 5MB</p>
-                        <div class="upload-preview" id="logoPreview">
-                            <img src="" alt="Logo Preview">
-                            <button type="button" class="btn btn-secondary" onclick="removeLogo()" style="margin-top: 0.5rem;">
-                                <i class="fas fa-times"></i> Eliminar
-                            </button>
+                        <p><strong>Haz clic para subir logo</strong> <span style="color: var(--text-muted);">(PNG, JPG, SVG - Máx 5MB)</span></p>
+                    </div>
+                    <div class="upload-preview" id="logoPreview" style="margin-top: 1rem; display: none;">
+                        <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--bg-secondary); border-radius: 8px;">
+                            <img src="" alt="Logo Preview" style="max-width: 100px; max-height: 100px; border-radius: 8px;">
+                            <div style="flex: 1;">
+                                <p style="color: var(--text-primary); margin: 0 0 0.5rem 0; font-weight: 500;">Logo cargado</p>
+                                <button type="button" class="btn btn-secondary" onclick="window.formRecordInstance?.removeLogo()" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+                                    <i class="fas fa-times"></i> Eliminar
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -927,41 +950,72 @@
 
                 <div class="form-group">
                     <label>Tipo de producto <span class="required">*</span></label>
-                    <div class="options-grid">
-                        <div class="option-card" data-value="bebida">
-                            <div class="option-icon"><i class="fas fa-glass-water"></i></div>
-                            <span>Bebida</span>
-                        </div>
-                        <div class="option-card" data-value="cosmetico">
-                            <div class="option-icon"><i class="fas fa-heart"></i></div>
-                            <span>Cosmético</span>
-                        </div>
-                        <div class="option-card" data-value="app">
-                            <div class="option-icon"><i class="fas fa-mobile-alt"></i></div>
-                            <span>App/Software</span>
-                        </div>
-                        <div class="option-card" data-value="suplemento">
-                            <div class="option-icon"><i class="fas fa-pills"></i></div>
-                            <span>Suplemento</span>
-                        </div>
-                        <div class="option-card" data-value="ropa">
-                            <div class="option-icon"><i class="fas fa-tshirt"></i></div>
-                            <span>Ropa/Moda</span>
-                        </div>
-                        <div class="option-card" data-value="electronico">
-                            <div class="option-icon"><i class="fas fa-laptop"></i></div>
-                            <span>Electrónico</span>
-                        </div>
-                        <div class="option-card" data-value="servicio">
-                            <div class="option-icon"><i class="fas fa-handshake"></i></div>
-                            <span>Servicio</span>
-                        </div>
-                        <div class="option-card" data-value="otro">
-                            <div class="option-icon"><i class="fas fa-ellipsis-h"></i></div>
-                            <span>Otro</span>
-                        </div>
+                    <div class="dropdown-container">
+                        <select class="form-select" id="tipo_producto" required>
+                            <option value="">Seleccionar tipo de producto...</option>
+                            <optgroup label="Bebidas y Alimentos">
+                                <option value="bebida">🥤 Bebida</option>
+                                <option value="bebida_alcoholica">🍷 Bebida Alcohólica</option>
+                                <option value="agua">💧 Agua</option>
+                                <option value="energetica">⚡ Bebida Energética</option>
+                                <option value="alimento">🍽️ Alimento</option>
+                                <option value="snack">🍿 Snack</option>
+                                <option value="suplemento_alimenticio">💊 Suplemento Alimenticio</option>
+                            </optgroup>
+                            <optgroup label="Belleza y Cuidado Personal">
+                                <option value="cosmetico">💄 Cosmético</option>
+                                <option value="skincare">✨ Skincare</option>
+                                <option value="maquillaje">🎨 Maquillaje</option>
+                                <option value="perfume">🌸 Perfume</option>
+                                <option value="cuidado_cabello">💇 Cuidado del Cabello</option>
+                                <option value="cuidado_personal">🧴 Cuidado Personal</option>
+                                <option value="higiene">🧼 Productos de Higiene</option>
+                            </optgroup>
+                            <optgroup label="Tecnología">
+                                <option value="app">📱 App/Software</option>
+                                <option value="electronico">💻 Electrónico</option>
+                                <option value="smartphone">📲 Smartphone</option>
+                                <option value="tablet">📱 Tablet</option>
+                                <option value="accesorio_tech">⌚ Accesorio Tecnológico</option>
+                                <option value="gadget">🔌 Gadget</option>
+                            </optgroup>
+                            <optgroup label="Moda y Accesorios">
+                                <option value="ropa">👕 Ropa/Moda</option>
+                                <option value="calzado">👟 Calzado</option>
+                                <option value="accesorio_moda">👜 Accesorio de Moda</option>
+                                <option value="reloj">⌚ Reloj</option>
+                                <option value="joyeria">💍 Joyería</option>
+                            </optgroup>
+                            <optgroup label="Salud y Bienestar">
+                                <option value="suplemento">💊 Suplemento</option>
+                                <option value="vitamina">🧪 Vitamina</option>
+                                <option value="fitness">🏋️ Producto Fitness</option>
+                                <option value="bienestar">🧘 Bienestar</option>
+                                <option value="salud">🏥 Producto de Salud</option>
+                            </optgroup>
+                            <optgroup label="Hogar y Decoración">
+                                <option value="hogar">🏠 Producto para el Hogar</option>
+                                <option value="decoracion">🖼️ Decoración</option>
+                                <option value="mueble">🪑 Mueble</option>
+                                <option value="electrodomestico">🔌 Electrodoméstico</option>
+                            </optgroup>
+                            <optgroup label="Servicios">
+                                <option value="servicio">🤝 Servicio</option>
+                                <option value="educacion">📚 Educación</option>
+                                <option value="financiero">💰 Servicio Financiero</option>
+                                <option value="salud_servicio">🏥 Servicio de Salud</option>
+                                <option value="entretenimiento">🎬 Entretenimiento</option>
+                            </optgroup>
+                            <optgroup label="Otros">
+                                <option value="libro">📖 Libro</option>
+                                <option value="juego">🎮 Juego</option>
+                                <option value="juguete">🧸 Juguete</option>
+                                <option value="automotriz">🚗 Producto Automotriz</option>
+                                <option value="deportivo">⚽ Producto Deportivo</option>
+                                <option value="otro">📦 Otro</option>
+                            </optgroup>
+                        </select>
                     </div>
-                    <input type="hidden" id="tipo_producto">
                 </div>
 
                 <div class="form-group">

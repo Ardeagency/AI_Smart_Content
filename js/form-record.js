@@ -72,12 +72,20 @@ class FormRecord {
     }
 
     setupFileUploads() {
-        // Logo upload
+        // Logo upload (single file only)
         const logoUpload = document.getElementById('logoUpload');
         const logoInput = document.getElementById('logo_file');
         if (logoUpload && logoInput) {
             logoUpload.addEventListener('click', () => logoInput.click());
-            logoInput.addEventListener('change', (e) => this.handleFileUpload(e, 'logo', 'logoPreview'));
+            logoInput.addEventListener('change', (e) => {
+                // Ensure only one file
+                if (e.target.files.length > 1) {
+                    alert('Solo se puede subir un logo a la vez');
+                    e.target.value = '';
+                    return;
+                }
+                this.handleFileUpload(e, 'logo', 'logoPreview');
+            });
         }
 
         // Brand files upload
@@ -108,6 +116,7 @@ class FormRecord {
 
         if (file.size > 5 * 1024 * 1024) {
             alert('El archivo es demasiado grande. Máximo 5MB.');
+            event.target.value = '';
             return;
         }
 
@@ -115,12 +124,17 @@ class FormRecord {
         reader.onload = (e) => {
             const preview = document.getElementById(previewId);
             if (preview) {
-                const img = preview.querySelector('img') || document.createElement('img');
-                img.src = e.target.result;
-                img.style.maxWidth = '100%';
-                img.style.borderRadius = '8px';
-                if (!preview.querySelector('img')) {
-                    preview.appendChild(img);
+                const img = preview.querySelector('img');
+                if (img) {
+                    img.src = e.target.result;
+                } else {
+                    const newImg = document.createElement('img');
+                    newImg.src = e.target.result;
+                    newImg.alt = 'Preview';
+                    newImg.style.maxWidth = '100px';
+                    newImg.style.maxHeight = '100px';
+                    newImg.style.borderRadius = '8px';
+                    preview.querySelector('div')?.prepend(newImg);
                 }
                 preview.style.display = 'block';
             }
@@ -406,7 +420,7 @@ class FormRecord {
 
         if (step === 5) {
             const tipo = document.getElementById('tipo_producto');
-            if (!tipo.value) {
+            if (!tipo || !tipo.value) {
                 alert('Por favor selecciona un tipo de producto');
                 isValid = false;
             }
