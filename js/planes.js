@@ -135,6 +135,34 @@ class PlanesManager {
                 }
             });
         }
+
+        // Prevenir que el navegador autocomplete el nombre con el email
+        const nameInput = document.getElementById('regName');
+        const emailInput = document.getElementById('regEmail');
+        
+        if (nameInput && emailInput) {
+            // Limpiar el campo de nombre si el navegador lo llena con el email
+            nameInput.addEventListener('focus', () => {
+                if (nameInput.value === emailInput.value) {
+                    nameInput.value = '';
+                }
+            });
+
+            // Prevenir que el email se copie al nombre cuando el navegador autocompleta
+            emailInput.addEventListener('input', () => {
+                if (nameInput.value === emailInput.value && nameInput !== document.activeElement) {
+                    nameInput.value = '';
+                }
+            });
+
+            // Limpiar el nombre si detectamos que contiene un email
+            nameInput.addEventListener('blur', () => {
+                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (emailPattern.test(nameInput.value) && nameInput.value === emailInput.value) {
+                    nameInput.value = '';
+                }
+            });
+        }
     }
 
     async handleSubmit() {

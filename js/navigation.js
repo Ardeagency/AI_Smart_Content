@@ -124,10 +124,7 @@ class NavigationManager {
     }
 
     async updateNavigationCounts() {
-        const brandsCountEl = document.getElementById('brandsCount');
-        if (brandsCountEl) {
-            brandsCountEl.textContent = '0';
-        }
+        // Navigation counts removed - no longer needed
     }
 
     getInitials(name) {

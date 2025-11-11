@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Living - AI Smart Content</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/navigation.css">
+    <link rel="stylesheet" href="css/living.css">
+</head>
+<body>
+    <!-- Overlay para navegación móvil -->
+    <div class="nav-overlay" id="navOverlay"></div>
+
+    <!-- Header Principal -->
+    <header class="main-header">
+        <div class="header-left">
+            <button class="hamburger-menu" id="hamburgerMenu">
+                <div class="hamburger-line"></div>
+                <div class="hamburger-line"></div>
+                <div class="hamburger-line"></div>
+            </button>
+            <a href="index.html" class="main-logo">
+                <i class="fas fa-cube"></i>
+                <span>AI Smart Content</span>
+            </a>
+        </div>
+        <div class="header-right">
+            <div class="credits-display">
+                <i class="fas fa-coins"></i>
+                <span id="creditsCount">0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navegación Lateral -->
+    <nav class="side-navigation" id="sideNavigation">
+        <!-- Header del panel -->
+        <div class="nav-header">
+            <div class="nav-user-info">
+                <div class="nav-user-avatar" id="navUserAvatar">U</div>
+                <div class="nav-user-details">
+                    <h4 id="navUserName">Cargando...</h4>
+                    <div class="nav-user-plan" id="navUserPlan">
+                        <i class="fas fa-crown"></i>
+                        <span>Plan Starter</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menú Principal -->
+        <div class="nav-menu">
+            <div class="nav-section">
+                <div class="nav-section-title">Principal</div>
+                <div class="nav-item">
+                    <a href="living.html" class="nav-link active">
+                        <i class="fas fa-home nav-icon"></i>
+                        <span class="nav-text">Living</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="studio.html" class="nav-link">
+                        <i class="fas fa-magic nav-icon"></i>
+                        <span class="nav-text">Studio</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer del panel -->
+        <div class="nav-footer">
+            <button class="nav-logout" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Cerrar Sesión</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <main class="main-content">
+        <div class="living-container">
+            <!-- Header de la Marca -->
+            <div class="living-header">
+                <div class="brand-logo-section">
+                    <div class="brand-logo-container" id="brandLogoContainer">
+                        <img id="brandLogo" src="" alt="Logo de marca" style="display: none;">
+                        <div class="logo-placeholder" id="logoPlaceholder">
+                            <i class="fas fa-image"></i>
+                        </div>
+                    </div>
+                    <div class="brand-info">
+                        <h1 class="brand-name" id="brandName">Cargando marca...</h1>
+                        <p class="brand-email" id="brandEmail">-</p>
+                        <div class="brand-links" id="brandLinks"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid Principal -->
+            <div class="living-grid">
+                <!-- Columna Izquierda -->
+                <div class="living-column">
+                    <!-- Información del Usuario -->
+                    <div class="living-card">
+                        <div class="card-header">
+                            <i class="fas fa-user"></i>
+                            <h2>Información del Usuario</h2>
+                        </div>
+                        <div class="card-content">
+                            <div class="info-item">
+                                <span class="info-label">Nombre:</span>
+                                <span class="info-value" id="userName">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Email:</span>
+                                <span class="info-value" id="userEmail">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Plan:</span>
+                                <span class="info-value" id="userPlan">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lineamientos de Marca -->
+                    <div class="living-card">
+                        <div class="card-header">
+                            <i class="fas fa-palette"></i>
+                            <h2>Lineamientos de Marca</h2>
+                        </div>
+                        <div class="card-content">
+                            <div class="info-item">
+                                <span class="info-label">Tono de Voz:</span>
+                                <span class="info-value" id="tonoVoz">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Palabras a Usar:</span>
+                                <span class="info-value" id="palabrasUsar">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Palabras a Evitar:</span>
+                                <div class="tags-container" id="palabrasEvitar"></div>
+                            </div>
+                            <div class="info-item full-width">
+                                <span class="info-label">Reglas Creativas:</span>
+                                <p class="info-value" id="reglasCreativas">-</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mercado e Idiomas -->
+                    <div class="living-card">
+                        <div class="card-header">
+                            <i class="fas fa-globe"></i>
+                            <h2>Mercado e Idiomas</h2>
+                        </div>
+                        <div class="card-content">
+                            <div class="info-item">
+                                <span class="info-label">Mercados Objetivo:</span>
+                                <div class="tags-container" id="mercadosObjetivo"></div>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Idiomas:</span>
+                                <div class="tags-container" id="idiomasContenido"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Columna Derecha -->
+                <div class="living-column">
+                    <!-- Archivos de Identidad -->
+                    <div class="living-card">
+                        <div class="card-header">
+                            <i class="fas fa-folder-open"></i>
+                            <h2>Archivos de Identidad</h2>
+                        </div>
+                        <div class="card-content">
+                            <div class="files-list" id="brandFilesList">
+                                <div class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>No hay archivos adjuntados</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Productos -->
+                    <div class="living-card">
+                        <div class="card-header">
+                            <i class="fas fa-box"></i>
+                            <h2>Productos</h2>
+                        </div>
+                        <div class="card-content">
+                            <div class="products-list" id="productsList">
+                                <div class="empty-state">
+                                    <i class="fas fa-box-open"></i>
+                                    <p>No hay productos registrados</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campañas -->
+                    <div class="living-card">
+                        <div class="card-header">
+                            <i class="fas fa-bullhorn"></i>
+                            <h2>Campañas y Ofertas</h2>
+                        </div>
+                        <div class="card-content">
+                            <div class="campaigns-list" id="campaignsList">
+                                <div class="empty-state">
+                                    <i class="fas fa-megaphone"></i>
+                                    <p>No hay campañas creadas</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/living.js"></script>
+</body>
+</html>
+

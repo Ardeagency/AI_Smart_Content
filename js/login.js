@@ -106,10 +106,10 @@ class AuthManager {
         try {
             const { data: { session } } = await this.supabase.auth.getSession();
             
-            if (session) {
+                if (session) {
                 // Usuario ya está autenticado, redirigir
-                const redirectUrl = await this.determineRedirectUrl(session.user.id);
-                window.location.href = redirectUrl;
+                    const redirectUrl = await this.determineRedirectUrl(session.user.id);
+                        window.location.href = redirectUrl;
             }
         } catch (error) {
             console.error('Error checking session:', error);
@@ -166,13 +166,13 @@ class AuthManager {
 
         try {
             if (!this.supabase) {
-                await this.waitForSupabase();
+            await this.waitForSupabase();
             }
 
             if (!this.supabase) {
                 throw new Error('Supabase no está disponible');
             }
-
+            
             const { data, error } = await this.supabase.auth.signInWithPassword({
                 email: email.trim(),
                 password: password
@@ -180,14 +180,14 @@ class AuthManager {
 
             if (error) {
                 throw error;
-            }
+                }
 
             if (data.user) {
                 this.showNotification('¡Bienvenido de vuelta!', 'success');
                 
                 // Redirigir después de un breve delay
                 setTimeout(async () => {
-                    const redirectUrl = await this.determineRedirectUrl(data.user.id);
+                const redirectUrl = await this.determineRedirectUrl(data.user.id);
                     window.location.href = redirectUrl;
                 }, 1000);
             }
@@ -241,7 +241,7 @@ class AuthManager {
 
         try {
             if (!this.supabase) {
-                await this.waitForSupabase();
+            await this.waitForSupabase();
             }
 
             if (!this.supabase) {
@@ -363,13 +363,13 @@ class AuthManager {
     async handleSocialLogin(provider) {
         try {
             if (!this.supabase) {
-                await this.waitForSupabase();
+            await this.waitForSupabase();
             }
-
+            
             if (!this.supabase) {
                 throw new Error('Supabase no está disponible');
             }
-
+            
             const { data, error } = await this.supabase.auth.signInWithOAuth({
                 provider: provider,
                 options: {
@@ -407,8 +407,8 @@ class AuthManager {
                 return 'form-record.html';
             }
 
-            // Si tiene proyectos, ir al studio, si no, al formulario
-            return projects && projects.length > 0 ? 'studio.html' : 'form-record.html';
+            // Si tiene proyectos, ir al living, si no, al formulario
+            return projects && projects.length > 0 ? 'living.html' : 'form-record.html';
         } catch (error) {
             console.error('Error determining redirect:', error);
             return 'form-record.html';
@@ -416,7 +416,7 @@ class AuthManager {
     }
 
     async checkOnboardingStatus(userId) {
-        return false;
+                return false;
     }
 
     /**
@@ -467,13 +467,13 @@ class AuthManager {
     async resendVerificationEmail(email) {
         try {
             if (!this.supabase) {
-                await this.waitForSupabase();
+            await this.waitForSupabase();
             }
 
             if (!this.supabase) {
                 throw new Error('Supabase no está disponible');
             }
-
+            
             const { error } = await this.supabase.auth.resend({
                 type: 'signup',
                 email: email
@@ -505,13 +505,13 @@ class AuthManager {
 
         try {
             if (!this.supabase) {
-                await this.waitForSupabase();
+            await this.waitForSupabase();
             }
 
             if (!this.supabase) {
                 throw new Error('Supabase no está disponible');
             }
-
+            
             const { error } = await this.supabase.auth.resetPasswordForEmail(email, {
                 redirectTo: `${window.location.origin}/reset-password.html`
             });
