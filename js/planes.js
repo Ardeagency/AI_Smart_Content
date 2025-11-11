@@ -85,7 +85,7 @@ function initPlanAnimations() {
             if (card.classList.contains('starter')) {
                 card.style.boxShadow = '0 30px 80px rgba(52, 211, 153, 0.3)';
             } else if (card.classList.contains('pro')) {
-                card.style.boxShadow = '0 30px 80px rgba(253, 98, 79, 0.4)';
+                card.style.boxShadow = '0 30px 80px rgba(210, 254, 63, 0.4)';
             } else if (card.classList.contains('enterprise')) {
                 card.style.boxShadow = '0 30px 80px rgba(147, 51, 234, 0.3)';
             }
@@ -420,7 +420,7 @@ function initPlanSelection() {
     
     tableRows.forEach(row => {
         row.addEventListener('mouseenter', () => {
-            row.style.backgroundColor = 'rgba(253, 98, 79, 0.05)';
+            row.style.backgroundColor = 'rgba(210, 254, 63, 0.05)';
         });
 
         row.addEventListener('mouseleave', () => {
@@ -460,7 +460,7 @@ function initPlanSelection() {
 const highlightStyles = `
     .plan-card.highlighted {
         border-color: var(--primary-color) !important;
-        box-shadow: 0 0 0 2px rgba(253, 98, 79, 0.3) !important;
+        box-shadow: 0 0 0 2px rgba(210, 254, 63, 0.3) !important;
         transform: translateY(-5px) !important;
     }
     

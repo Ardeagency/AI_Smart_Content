@@ -1,5 +1,5 @@
 /**
- * UGC Studio - Estilos principales (Landing Page)
+ * AI Smart Content - Estilos principales (Landing Page)
  */
 
 /* Importar estilos base */
@@ -87,7 +87,7 @@
 .nav-login:hover {
     color: var(--text-primary) !important;
     border-color: var(--primary-color) !important;
-    background: rgba(253, 98, 79, 0.1) !important;
+    background: rgba(210, 254, 63, 0.1) !important;
     transform: translateY(-1px);
 }
 
@@ -287,7 +287,7 @@
 
 .btn-primary:hover {
     transform: translateY(-3px);
-    box-shadow: 0 25px 80px rgba(253, 98, 79, 0.4);
+    box-shadow: 0 25px 80px rgba(210, 254, 63, 0.4);
 }
 
 .btn-secondary {
@@ -508,7 +508,7 @@
 .feature-card:hover {
     transform: translateY(-10px);
     box-shadow: var(--shadow-card);
-    border-color: rgba(253, 98, 79, 0.3);
+    border-color: rgba(210, 254, 63, 0.3);
 }
 
 .feature-icon {

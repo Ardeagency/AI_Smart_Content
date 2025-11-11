@@ -1,5 +1,5 @@
 /**
- * Catalog Manager - UGC Studio
+ * Catalog Manager - AI Smart Content
  * Maneja el catálogo de estilos de la plataforma
  */
 
@@ -353,7 +353,7 @@ class CatalogManager {
             this.showNotification('Compra', `Redirigiendo a checkout para: ${style.name}`, 'info');
             // Here you would implement purchase flow
         } else {
-            this.showNotification('UGC Studio', `Usando estilo: ${style.name}`, 'success');
+            this.showNotification('AI Smart Content', `Usando estilo: ${style.name}`, 'success');
             // Here you would redirect to studio with the style
         }
     }

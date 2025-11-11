@@ -1,5 +1,5 @@
 /**
- * Brands Manager - UGC Studio
+ * Brands Manager - AI Smart Content
  * Maneja la gestión de marcas del usuario
  */
 

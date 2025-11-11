@@ -1,5 +1,5 @@
 /**
- * UGC Studio - CSS Base Unificado
+ * AI Smart Content - CSS Base Unificado
  * Variables globales y estilos base compartidos
  */
 
@@ -8,10 +8,10 @@
    ============================================ */
 :root {
     /* Colores Primarios */
-    --primary-color: #FD624F;
-    --primary-dark: #e5553d;
-    --primary-light: #ff7a65;
-    --primary-hover: #e55548;
+    --primary-color: #D2FE3F;
+    --primary-dark: #b8e035;
+    --primary-light: #e6ff5f;
+    --primary-hover: #c8f02f;
     
     /* Fondos */
     --bg-black: #000000;
@@ -30,7 +30,7 @@
     /* Bordes */
     --border-color: #333333;
     --border-light: rgba(255, 255, 255, 0.1);
-    --border-primary: rgba(253, 98, 79, 0.3);
+    --border-primary: rgba(210, 254, 63, 0.3);
     
     /* Estados */
     --success-color: #10b981;
@@ -39,12 +39,12 @@
     --info-color: #3b82f6;
     
     /* Efectos */
-    --accent-glow: rgba(253, 98, 79, 0.3);
+    --accent-glow: rgba(210, 254, 63, 0.3);
     --grid-color: rgba(255, 255, 255, 0.03);
-    --shadow-primary: 0 20px 60px rgba(253, 98, 79, 0.2);
+    --shadow-primary: 0 20px 60px rgba(210, 254, 63, 0.2);
     --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.5);
     --shadow-floating: 0 8px 32px rgba(0, 0, 0, 0.4);
-    --shadow-hover: 0 12px 40px rgba(253, 98, 79, 0.3);
+    --shadow-hover: 0 12px 40px rgba(210, 254, 63, 0.3);
     
     /* Transiciones */
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);

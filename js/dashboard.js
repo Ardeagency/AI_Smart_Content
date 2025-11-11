@@ -1,5 +1,5 @@
 /**
- * Dashboard Manager - UGC Studio
+ * Dashboard Manager - AI Smart Content
  * Maneja los datos del panel principal y la carga de información del usuario
  */
 
@@ -155,7 +155,7 @@ class DashboardManager {
             if (activities.length === 0) {
                 activities.push({
                     type: 'welcome',
-                    title: '¡Bienvenido a UGC Studio!',
+                    title: '¡Bienvenido a AI Smart Content!',
                     description: 'Tu cuenta ha sido creada exitosamente',
                     icon: 'fas fa-user-plus',
                     timestamp: this.userData.created_at

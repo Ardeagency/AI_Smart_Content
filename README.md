@@ -1,4 +1,4 @@
-# UGC Studio
+# AI Smart Content
 
 Plataforma para generación de contenido UGC (User Generated Content).
 

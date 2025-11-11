@@ -81,8 +81,8 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    background: rgba(253, 98, 79, 0.1);
-    border: 1px solid rgba(253, 98, 79, 0.3);
+    background: rgba(210, 254, 63, 0.1);
+    border: 1px solid rgba(210, 254, 63, 0.3);
     padding: 0.75rem 1.5rem;
     border-radius: 50px;
     font-size: 0.95rem;
@@ -136,7 +136,7 @@
 
 .plan-card:hover {
     transform: translateY(-10px);
-    border-color: rgba(253, 98, 79, 0.4);
+    border-color: rgba(210, 254, 63, 0.4);
     box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
 }
 
@@ -161,7 +161,7 @@
     border-radius: 20px;
     font-size: 0.85rem;
     font-weight: 600;
-    box-shadow: 0 4px 15px rgba(253, 98, 79, 0.4);
+    box-shadow: 0 4px 15px rgba(210, 254, 63, 0.4);
 }
 
 .plan-header {
@@ -190,7 +190,7 @@
 }
 
 .plan-card.pro .plan-badge {
-    background: rgba(253, 98, 79, 0.2);
+    background: rgba(210, 254, 63, 0.2);
     color: var(--primary-color);
 }
 
@@ -334,7 +334,7 @@
 .table-header {
     display: grid;
     grid-template-columns: 2fr 1fr 1fr 1fr;
-    background: rgba(253, 98, 79, 0.1);
+    background: rgba(210, 254, 63, 0.1);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -438,7 +438,7 @@
 }
 
 .faq-item:hover {
-    border-color: rgba(253, 98, 79, 0.3);
+    border-color: rgba(210, 254, 63, 0.3);
 }
 
 .faq-question {

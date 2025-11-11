@@ -1,6 +1,6 @@
 /**
  * JavaScript para páginas de autenticación
- * UGC Studio - Manejo de login/register con Supabase
+ * AI Smart Content - Manejo de login/register con Supabase
  */
 
 class AuthManager {

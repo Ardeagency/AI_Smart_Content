@@ -1,5 +1,5 @@
 /**
- * Sistema de Navegación UGC Studio
+ * Sistema de Navegación AI Smart Content
  * Maneja el menú lateral, navegación y estado de la aplicación
  */
 

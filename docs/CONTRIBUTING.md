@@ -1,6 +1,6 @@
-# 🤝 Contribuir a UGC Studio
+# 🤝 Contribuir a AI Smart Content
 
-¡Gracias por tu interés en contribuir a UGC Studio! Este documento te guiará para hacer contribuciones efectivas al proyecto.
+¡Gracias por tu interés en contribuir a AI Smart Content! Este documento te guiará para hacer contribuciones efectivas al proyecto.
 
 ## 📋 Tabla de Contenidos
 
@@ -292,7 +292,7 @@ describe('DataCollector', () => {
 
 ¿Tienes preguntas sobre contribuciones?
 
-- 💬 **Discord**: [UGC Studio Community](https://discord.gg/ugcstudio)
+- 💬 **Discord**: [AI Smart Content Community](https://discord.gg/ugcstudio)
 - 📧 **Email**: contribute@ugcstudio.com
 - 🐛 **Issues**: [GitHub Issues](https://github.com/ardeagency/ugc-studio/issues)
 
@@ -303,6 +303,6 @@ Todos los contribuidores serán reconocidos en:
 - Contributors page
 - Release notes (para contribuciones significativas)
 
-¡Gracias por contribuir a UGC Studio! 🚀
+¡Gracias por contribuir a AI Smart Content! 🚀
 
 

@@ -1,5 +1,5 @@
 /* =========================================
-   SECCIÓN MARCAS - UGC STUDIO
+   SECCIÓN MARCAS - AI SMART CONTENT
    ========================================= */
 
 /* Importar estilos base */
@@ -86,7 +86,7 @@
     outline: none;
     border-color: var(--primary-color);
     background: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 0 0 3px rgba(253, 98, 79, 0.1);
+    box-shadow: 0 0 0 3px rgba(210, 254, 63, 0.1);
 }
 
 .search-input::placeholder {
@@ -147,14 +147,14 @@
 
 .brand-card:hover {
     transform: translateY(-4px);
-    border-color: rgba(253, 98, 79, 0.4);
+    border-color: rgba(210, 254, 63, 0.4);
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
 }
 
 .brand-header {
     position: relative;
     padding: 2rem;
-    background: linear-gradient(135deg, rgba(253, 98, 79, 0.1), rgba(253, 98, 79, 0.05));
+    background: linear-gradient(135deg, rgba(210, 254, 63, 0.1), rgba(210, 254, 63, 0.05));
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -291,7 +291,7 @@
 }
 
 .brand-tag {
-    background: rgba(253, 98, 79, 0.1);
+    background: rgba(210, 254, 63, 0.1);
     color: var(--primary-color);
     padding: 4px 8px;
     border-radius: 12px;
@@ -338,7 +338,7 @@
 
 .brand-manage-btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 15px rgba(253, 98, 79, 0.4);
+    box-shadow: 0 4px 15px rgba(210, 254, 63, 0.4);
 }
 
 /* =========================================
@@ -487,7 +487,7 @@
     outline: none;
     border-color: var(--primary-color);
     background: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 0 0 3px rgba(253, 98, 79, 0.1);
+    box-shadow: 0 0 0 3px rgba(210, 254, 63, 0.1);
 }
 
 .form-input::placeholder,
@@ -530,7 +530,7 @@
 
 .logo-preview:hover {
     border-color: var(--primary-color);
-    background: rgba(253, 98, 79, 0.05);
+    background: rgba(210, 254, 63, 0.05);
 }
 
 .logo-preview img {
@@ -552,8 +552,8 @@
 
 .logo-upload-btn {
     padding: 8px 16px;
-    background: rgba(253, 98, 79, 0.1);
-    border: 1px solid rgba(253, 98, 79, 0.3);
+    background: rgba(210, 254, 63, 0.1);
+    border: 1px solid rgba(210, 254, 63, 0.3);
     border-radius: 8px;
     color: var(--primary-color);
     font-size: 0.85rem;
@@ -563,7 +563,7 @@
 }
 
 .logo-upload-btn:hover {
-    background: rgba(253, 98, 79, 0.2);
+    background: rgba(210, 254, 63, 0.2);
 }
 
 .brand-modal-footer {
@@ -590,7 +590,7 @@
 
 .modal-btn-primary:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 15px rgba(253, 98, 79, 0.4);
+    box-shadow: 0 4px 15px rgba(210, 254, 63, 0.4);
 }
 
 .modal-btn-secondary {
@@ -647,7 +647,7 @@
 
 .empty-state-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(253, 98, 79, 0.4);
+    box-shadow: 0 8px 25px rgba(210, 254, 63, 0.4);
 }
 
 /* =========================================

@@ -1,4 +1,4 @@
-// UGC Studio - Main JavaScript File
+// AI Smart Content - Main JavaScript File
 
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize all components
@@ -99,7 +99,7 @@ function initFeatureCards() {
     featureCards.forEach(card => {
         card.addEventListener('mouseenter', () => {
             // Add glow effect
-            card.style.boxShadow = '0 20px 60px rgba(253, 98, 79, 0.3)';
+            card.style.boxShadow = '0 20px 60px rgba(210, 254, 63, 0.3)';
             
             // Animate icon
             const icon = card.querySelector('.feature-icon');
@@ -221,7 +221,7 @@ function initDashboardPreview() {
     // Animate generation items
     genItems.forEach((item, index) => {
         setTimeout(() => {
-            item.style.background = 'linear-gradient(135deg, rgba(253, 98, 79, 0.2), rgba(255, 122, 101, 0.2))';
+            item.style.background = 'linear-gradient(135deg, rgba(210, 254, 63, 0.2), rgba(230, 255, 95, 0.2))';
             item.innerHTML = '<div class="gen-preview"></div>';
         }, 2000 + (index * 500));
     });
@@ -234,7 +234,7 @@ function initDashboardPreview() {
             .gen-preview {
                 width: 100%;
                 height: 100%;
-                background: linear-gradient(45deg, #FD624F, #ff7a65);
+                background: linear-gradient(45deg, #D2FE3F, var(--primary-light));
                 border-radius: 6px;
                 position: relative;
                 overflow: hidden;
@@ -301,7 +301,7 @@ const scrollAnimationStyles = `
     .navbar.scrolled {
         background: rgba(0, 0, 0, 0.98);
         backdrop-filter: blur(20px);
-        border-bottom: 1px solid rgba(253, 98, 79, 0.3);
+        border-bottom: 1px solid rgba(210, 254, 63, 0.3);
     }
 
     @media (max-width: 768px) {

@@ -1,6 +1,6 @@
 -- ============================================
 -- Script de Limpieza: Dashboard, Catalog y Library
--- UGC Studio - Eliminación de funciones y políticas obsoletas
+-- AI Smart Content - Eliminación de funciones y políticas obsoletas
 -- ============================================
 -- 
 -- Este script elimina todas las funciones, triggers, políticas RLS

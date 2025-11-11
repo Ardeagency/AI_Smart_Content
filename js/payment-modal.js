@@ -46,7 +46,7 @@ class PaymentModal {
                             <span id="selectedPlanName">Plan Seleccionado</span>
                         </div>
                         <h2 class="payment-title">Crear tu Cuenta</h2>
-                        <p class="payment-subtitle">Únete a UGC Studio y comienza a crear contenido profesional</p>
+                        <p class="payment-subtitle">Únete a AI Smart Content y comienza a crear contenido profesional</p>
                         <div class="price-display">
                             <div class="price-amount" id="priceAmount">$79.000</div>
                             <div class="price-period">COP / mes</div>
@@ -1400,9 +1400,9 @@ class PaymentModal {
                 // Simular respuesta típica de Wompi
                 payment_link_url: null, // Ya no necesario en simulación
                 merchant: {
-                    name: 'UGC Studio',
-                    legal_name: 'UGC Studio SAS',
-                    contact_name: 'UGC Studio'
+                    name: 'AI Smart Content',
+                    legal_name: 'AI Smart Content SAS',
+                    contact_name: 'AI Smart Content'
                 }
             };
             
@@ -1804,8 +1804,8 @@ class PaymentModal {
                         </div>
                         
                         <div style="
-                            background: rgba(253, 98, 79, 0.1);
-                            border: 1px solid rgba(253, 98, 79, 0.3);
+                            background: rgba(210, 254, 63, 0.1);
+                            border: 1px solid rgba(210, 254, 63, 0.3);
                             border-radius: 8px;
                             padding: 0.75rem;
                             font-size: 0.85rem;
@@ -1868,7 +1868,7 @@ class PaymentModal {
             height: ${size}px;
             left: 50%;
             top: 50%;
-            background: rgba(253, 98, 79, 0.3);
+            background: rgba(210, 254, 63, 0.3);
             border-radius: 50%;
             transform: translate(-50%, -50%) scale(0);
             animation: ripple 0.6s linear;

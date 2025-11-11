@@ -1,5 +1,5 @@
 /**
- * Canvas Manager - Sistema de Canvas Interactivo para UGC Studio
+ * Canvas Manager - Sistema de Canvas Interactivo para AI Smart Content
  * Maneja zoom, pan, objetos y animaciones del canvas
  */
 
@@ -656,7 +656,7 @@ class CanvasManager {
             'width: 36px',
             'height: 36px',
             'border: 3px solid rgba(255,255,255,0.2)',
-            'border-top-color: #FD624F',
+            'border-top-color: #D2FE3F',
             'border-radius: 50%',
             'animation: cm_spin 0.9s linear infinite'
         ].join(';');

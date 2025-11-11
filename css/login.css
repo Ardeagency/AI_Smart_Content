@@ -1,6 +1,6 @@
 /**
  * Estilos para páginas de autenticación (Login/Register)
- * UGC Studio - Diseño futurista consistente
+ * AI Smart Content - Diseño futurista consistente
  */
 
 /* Importar estilos base */
@@ -50,7 +50,7 @@ body {
 .logo i {
     color: var(--primary-color);
     font-size: 3rem;
-    filter: drop-shadow(0 0 10px rgba(253, 98, 79, 0.5));
+    filter: drop-shadow(0 0 10px rgba(210, 254, 63, 0.5));
 }
 
 .tagline {
@@ -70,7 +70,7 @@ body {
     max-width: 500px;
     box-shadow: 
         0 20px 60px rgba(0, 0, 0, 0.5),
-        0 0 0 1px rgba(253, 98, 79, 0.1);
+        0 0 0 1px rgba(210, 254, 63, 0.1);
     position: relative;
     overflow: hidden;
     animation: fadeInScale 1s ease-out 0.2s both;
@@ -123,7 +123,7 @@ body {
 .tab-button.active {
     background: var(--primary-color);
     color: white;
-    box-shadow: 0 4px 15px rgba(253, 98, 79, 0.3);
+    box-shadow: 0 4px 15px rgba(210, 254, 63, 0.3);
 }
 
 /* Formularios */
@@ -192,7 +192,7 @@ body {
 .input-container input:focus,
 .input-container select:focus {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(253, 98, 79, 0.1);
+    box-shadow: 0 0 0 3px rgba(210, 254, 63, 0.1);
     background: rgba(42, 42, 42, 0.9);
 }
 
@@ -366,7 +366,7 @@ body {
 .auth-button:hover {
     background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(253, 98, 79, 0.4);
+    box-shadow: 0 8px 25px rgba(210, 254, 63, 0.4);
 }
 
 .auth-button:active {

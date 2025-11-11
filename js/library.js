@@ -1,5 +1,5 @@
 /**
- * Library Manager - UGC Studio
+ * Library Manager - AI Smart Content
  * Maneja la biblioteca de archivos del usuario
  */
 

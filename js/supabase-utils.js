@@ -1,5 +1,5 @@
 /**
- * Utilidades para Supabase - UGC Studio
+ * Utilidades para Supabase - AI Smart Content
  * Funciones para manejo de datos, archivos y persistencia
  * VERSIÓN 2 - Campos corregidos para public.files
  */
