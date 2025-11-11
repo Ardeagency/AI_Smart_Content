@@ -157,12 +157,15 @@ class FormRecord {
                     removeBtn.className = 'btn btn-secondary';
                     removeBtn.style.cssText = 'margin-top: 0.5rem; padding: 0.5rem 1rem; font-size: 0.85rem;';
                     removeBtn.innerHTML = '<i class="fas fa-times"></i> Eliminar';
+                    
+                    // Store reference to input and fieldName for removal
+                    const input = event.target;
+                    const fieldNameRef = fieldName;
                     removeBtn.onclick = () => {
-                        const input = event.target;
                         input.value = '';
                         preview.innerHTML = '';
                         preview.style.display = 'none';
-                        delete this.formData[fieldName];
+                        delete this.formData[fieldNameRef];
                     };
                     
                     preview.appendChild(img);
