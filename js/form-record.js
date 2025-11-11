@@ -613,9 +613,6 @@ class FormRecord {
     }
 
     async completeForm() {
-        // Collect final step data
-        this.collectStepData(this.currentStep);
-        
         // Collect ALL steps data before saving
         console.log('🔄 Recopilando datos de todos los pasos...');
         for (let i = 1; i <= this.totalSteps; i++) {

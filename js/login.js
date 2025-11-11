@@ -117,14 +117,12 @@ class AuthManager {
     }
 
     async waitForSupabase() {
-        if (this.supabase) return this.supabase;
-        
+        // Usar la función global waitForSupabase
         if (typeof waitForSupabase === 'function') {
             this.supabase = await waitForSupabase();
         } else if (window.supabaseClient) {
             this.supabase = window.supabaseClient;
         }
-        
         return this.supabase;
     }
 
