@@ -237,9 +237,9 @@ class FormRecord {
                     } else {
                         preview.innerHTML = ''; // Solo limpiar si no hay contenido previo
                         img = document.createElement('img');
-                        img.src = e.target.result;
-                        img.alt = 'Preview';
-                        img.style.cssText = 'max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 0.5rem; display: block;';
+                    img.src = e.target.result;
+                    img.alt = 'Preview';
+                    img.style.cssText = 'max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 0.5rem; display: block;';
                         preview.appendChild(img);
                     }
                     
@@ -247,10 +247,10 @@ class FormRecord {
                     let removeBtn = existingBtn;
                     if (!removeBtn) {
                         removeBtn = document.createElement('button');
-                        removeBtn.type = 'button';
-                        removeBtn.className = 'btn btn-secondary';
-                        removeBtn.style.cssText = 'margin-top: 0.5rem; padding: 0.5rem 1rem; font-size: 0.85rem;';
-                        removeBtn.innerHTML = '<i class="fas fa-times"></i> Eliminar';
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'btn btn-secondary';
+                    removeBtn.style.cssText = 'margin-top: 0.5rem; padding: 0.5rem 1rem; font-size: 0.85rem;';
+                    removeBtn.innerHTML = '<i class="fas fa-times"></i> Eliminar';
                         preview.appendChild(removeBtn);
                     }
                     
@@ -305,27 +305,88 @@ class FormRecord {
         const list = document.getElementById('brandFilesList');
         if (!list) return;
 
+        // Guardar referencia al input original
+        const originalInput = event.target;
+
+        // Limpiar lista visual pero mantener el input
         list.innerHTML = '';
+        
         files.forEach((file, index) => {
             const fileItem = document.createElement('div');
+            fileItem.className = 'brand-file-item';
+            fileItem.dataset.fileIndex = index;
             fileItem.style.cssText = 'padding: 0.75rem; background: var(--bg-secondary); border-radius: 8px; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;';
-            fileItem.innerHTML = `
-                <span style="color: var(--text-primary);">${file.name}</span>
-                <button type="button" class="btn btn-secondary" onclick="this.parentElement.remove()" style="padding: 0.25rem 0.75rem; font-size: 0.85rem;">
-                    <i class="fas fa-times"></i>
-                </button>
-            `;
+            
+            const fileNameSpan = document.createElement('span');
+            fileNameSpan.style.color = 'var(--text-primary)';
+            fileNameSpan.textContent = file.name;
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'btn btn-secondary';
+            removeBtn.style.cssText = 'padding: 0.25rem 0.75rem; font-size: 0.85rem;';
+            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            
+            // Función para eliminar archivo específico
+            removeBtn.onclick = () => {
+                // Remover del DOM
+                fileItem.remove();
+                
+                // Remover del array de archivos
+                if (fieldName === 'archivos_identidad' || fieldName === 'brandFiles') {
+                    const currentFiles = this.formData.archivos_identidad || [];
+                    const fileIndex = parseInt(fileItem.dataset.fileIndex);
+                    const newFiles = currentFiles.filter((_, i) => i !== fileIndex);
+                    this.formData.archivos_identidad = newFiles;
+                    
+                    // Actualizar el input file usando DataTransfer
+                    const dataTransfer = new DataTransfer();
+                    newFiles.forEach(f => dataTransfer.items.add(f));
+                    originalInput.files = dataTransfer.files;
+                    
+                    console.log(`🗑️ Archivo ${file.name} eliminado. Archivos restantes: ${newFiles.length}`);
+                } else {
+                    if (this.formData[fieldName]) {
+                        const currentFiles = this.formData[fieldName];
+                        const fileIndex = parseInt(fileItem.dataset.fileIndex);
+                        const newFiles = currentFiles.filter((_, i) => i !== fileIndex);
+                        this.formData[fieldName] = newFiles;
+                        
+                        // Actualizar el input file usando DataTransfer
+                        const dataTransfer = new DataTransfer();
+                        newFiles.forEach(f => dataTransfer.items.add(f));
+                        originalInput.files = dataTransfer.files;
+                    }
+                }
+                
+                // Si no quedan archivos, limpiar la lista
+                if (list.children.length === 0) {
+                    list.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>No hay archivos adjuntados</p>
+                        </div>
+                    `;
+                }
+            };
+            
+            fileItem.appendChild(fileNameSpan);
+            fileItem.appendChild(removeBtn);
             list.appendChild(fileItem);
         });
 
         // Store files for Supabase upload
-        if (fieldName === 'archivos_identidad') {
+        console.log(`📁 Guardando ${files.length} archivo(s) en formData: ${fieldName}`);
+        
+        if (fieldName === 'archivos_identidad' || fieldName === 'brandFiles') {
             this.formData.archivos_identidad = files;
+            console.log('✅ Archivos de identidad guardados en formData.archivos_identidad');
         } else {
             if (!this.formData[fieldName]) {
                 this.formData[fieldName] = [];
             }
             this.formData[fieldName] = files;
+            console.log(`✅ Archivos guardados en formData[${fieldName}]`);
         }
     }
 
@@ -953,8 +1014,8 @@ class FormRecord {
         // 2. Subir logo si existe
         if (this.formData.logo_file && this.formData.logo_file.length > 0) {
             try {
-                const logoFile = this.formData.logo_file[0];
-                const fileExt = logoFile.name.split('.').pop();
+            const logoFile = this.formData.logo_file[0];
+            const fileExt = logoFile.name.split('.').pop();
                 // La ruta debe incluir user_id como primera carpeta para que las políticas RLS funcionen
                 const fileName = `${this.userId}/${projectId}/logo.${fileExt}`;
 
@@ -970,8 +1031,8 @@ class FormRecord {
                     console.log('Logo anterior no encontrado, continuando...');
                 }
 
-                const { data: uploadData, error: uploadError } = await this.supabase.storage
-                    .from('brand-logos')
+            const { data: uploadData, error: uploadError } = await this.supabase.storage
+                .from('brand-logos')
                     .upload(fileName, logoFile, {
                         upsert: true,
                         contentType: logoFile.type,
@@ -1056,14 +1117,14 @@ class FormRecord {
             
             const uploadPromises = this.formData.archivos_identidad.map(async (file) => {
                 try {
-                    const fileExt = file.name.split('.').pop();
+                const fileExt = file.name.split('.').pop();
                     // La ruta debe incluir user_id como primera carpeta para que las políticas RLS funcionen
                     const fileName = `${this.userId}/${projectId}/${Date.now()}_${file.name}`;
 
                     console.log('📤 Subiendo archivo:', file.name, 'a', fileName);
 
-                    const { data: uploadData, error: uploadError } = await this.supabase.storage
-                        .from('brand-files')
+                const { data: uploadData, error: uploadError } = await this.supabase.storage
+                    .from('brand-files')
                         .upload(fileName, file, {
                             contentType: file.type,
                             cacheControl: '3600'
@@ -1170,16 +1231,16 @@ class FormRecord {
             if (validImages.length > 0) {
                 console.log(`📤 Subiendo ${validImages.length} imagen(es) de producto...`);
                 
-                const imageUploadPromises = validImages.map(async (file, index) => {
+            const imageUploadPromises = validImages.map(async (file, index) => {
                     try {
-                        const fileExt = file.name.split('.').pop();
+                const fileExt = file.name.split('.').pop();
                         // La ruta debe incluir user_id como primera carpeta para que las políticas RLS funcionen
                         const fileName = `${this.userId}/${productId}/${index + 1}_${Date.now()}.${fileExt}`;
 
                         console.log('📤 Subiendo imagen:', file.name, 'a', fileName);
 
-                        const { data: uploadData, error: uploadError } = await this.supabase.storage
-                            .from('product-images')
+                const { data: uploadData, error: uploadError } = await this.supabase.storage
+                    .from('product-images')
                             .upload(fileName, file, {
                                 contentType: file.type,
                                 cacheControl: '3600'
@@ -1192,20 +1253,20 @@ class FormRecord {
 
                         console.log('✅ Imagen subida:', file.name);
 
-                        const { data: { publicUrl } } = this.supabase.storage
-                            .from('product-images')
-                            .getPublicUrl(fileName);
+                    const { data: { publicUrl } } = this.supabase.storage
+                        .from('product-images')
+                        .getPublicUrl(fileName);
 
                         console.log('🔗 URL pública:', publicUrl);
 
                         const { error: insertError } = await this.supabase
-                            .from('product_images')
-                            .insert({
-                                product_id: productId,
-                                image_url: publicUrl,
-                                image_type: ['principal', 'secundaria', 'detalle', 'contexto'][index] || 'secundaria',
-                                image_order: index
-                            });
+                        .from('product_images')
+                        .insert({
+                            product_id: productId,
+                            image_url: publicUrl,
+                            image_type: ['principal', 'secundaria', 'detalle', 'contexto'][index] || 'secundaria',
+                            image_order: index
+                        });
 
                         if (insertError) {
                             console.error('❌ Error al insertar registro de imagen:', insertError);
@@ -1216,10 +1277,10 @@ class FormRecord {
                     } catch (imageError) {
                         console.error('❌ Error al procesar imagen del producto:', imageError);
                         throw imageError; // Lanzar error para que se muestre al usuario
-                    }
-                });
+                }
+            });
 
-                await Promise.all(imageUploadPromises);
+            await Promise.all(imageUploadPromises);
                 console.log('✅ Todas las imágenes de producto subidas exitosamente');
             }
         }
