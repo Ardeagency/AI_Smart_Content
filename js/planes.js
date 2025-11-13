@@ -116,12 +116,16 @@ class PlanesManager {
             return;
         }
 
-        const firstName = document.getElementById('regFirstName').value.trim();
-        const lastName = document.getElementById('regLastName').value.trim();
+        const fullName = document.getElementById('regFullName').value.trim();
         const email = document.getElementById('regEmail').value.trim().toLowerCase();
         const password = document.getElementById('regPassword').value;
 
         // Validaciones
+        if (!fullName) {
+            alert('Por favor, ingresa tu nombre completo');
+            return;
+        }
+
         if (password.length < 8) {
             alert('La contraseña debe tener al menos 8 caracteres');
             return;
@@ -144,7 +148,10 @@ class PlanesManager {
         }
 
         try {
-            const fullName = `${firstName} ${lastName}`.trim() || email;
+            // Separar nombre completo en first_name y last_name para metadata
+            const nameParts = fullName.split(' ');
+            const firstName = nameParts[0] || '';
+            const lastName = nameParts.slice(1).join(' ') || '';
 
             // 1. Registrar usuario en Supabase Auth
             const { data: authData, error: authError } = await this.supabase.auth.signUp({
@@ -152,7 +159,7 @@ class PlanesManager {
                 password: password,
                 options: {
                     data: {
-                        full_name: fullName,
+                        full_name: fullName || email,
                         first_name: firstName,
                         last_name: lastName,
                         plan_type: this.selectedPlan.name
