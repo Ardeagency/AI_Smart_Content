@@ -341,6 +341,7 @@ BEGIN
     -- Obtener full_name de los metadatos
     v_full_name := NEW.raw_user_meta_data->>'full_name';
     
+    -- Insertar solo si no existe ya (evitar duplicados)
     INSERT INTO public.users (id, email, full_name, plan_type, credits_available, credits_total)
     VALUES (
         NEW.id, 
@@ -349,7 +350,9 @@ BEGIN
         v_plan_type,
         0, -- Los créditos se asignarán cuando se cree la suscripción
         0
-    );
+    )
+    ON CONFLICT (id) DO NOTHING;
+    
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -412,6 +415,10 @@ ALTER TABLE public.credit_usage ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view own profile"
     ON public.users FOR SELECT
     USING (auth.uid() = id);
+
+CREATE POLICY "Users can insert own profile"
+    ON public.users FOR INSERT
+    WITH CHECK (auth.uid() = id);
 
 CREATE POLICY "Users can update own profile"
     ON public.users FOR UPDATE

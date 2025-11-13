@@ -251,9 +251,10 @@ class PlanesManager {
                 await new Promise(resolve => setTimeout(resolve, 1000));
 
                 // Verificar que el usuario existe en public.users
+                // El trigger handle_new_user() debería crearlo automáticamente
                 let userExists = false;
                 let retries = 0;
-                const maxRetries = 5;
+                const maxRetries = 10; // Aumentar intentos
 
                 while (!userExists && retries < maxRetries) {
                     const { data: existingUser, error: checkError } = await this.supabase
@@ -270,37 +271,61 @@ class PlanesManager {
                         userExists = true;
                         console.log('✅ Usuario encontrado en public.users');
                     } else {
-                        console.log(`⏳ Usuario no encontrado, intentando crear... (intento ${retries + 1}/${maxRetries})`);
+                        console.log(`⏳ Esperando que el trigger cree el usuario... (intento ${retries + 1}/${maxRetries})`);
                         
-                        // Intentar crear el usuario manualmente
-                        const { error: createError } = await this.supabase
-                            .from('users')
-                            .insert({
-                                id: data.user.id,
-                                email: data.user.email,
-                                full_name: data.user.user_metadata?.full_name || data.user.email,
-                                plan_type: data.user.user_metadata?.plan_type || 'basico',
-                                credits_available: 0,
-                                credits_total: 0,
-                                form_verified: false
-                            });
+                        // Esperar un poco más para que el trigger se ejecute
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        
+                        // Solo intentar crear manualmente como último recurso
+                        if (retries >= 5) {
+                            console.log('⚠️ Intentando crear usuario manualmente como último recurso...');
+                            try {
+                                const { error: createError } = await this.supabase
+                                    .from('users')
+                                    .insert({
+                                        id: data.user.id,
+                                        email: data.user.email,
+                                        full_name: data.user.user_metadata?.full_name || data.user.email,
+                                        plan_type: data.user.user_metadata?.plan_type || 'basico',
+                                        credits_available: 0,
+                                        credits_total: 0,
+                                        form_verified: false
+                                    });
 
-                        if (createError) {
-                            console.warn('Error creando usuario (puede que ya exista):', createError);
-                        } else {
-                            console.log('✅ Usuario creado manualmente en public.users');
-                            userExists = true;
+                                if (!createError) {
+                                    console.log('✅ Usuario creado manualmente en public.users');
+                                    userExists = true;
+                                } else {
+                                    console.warn('Error creando usuario:', createError);
+                                    // Si el error es de RLS, el trigger debería crearlo
+                                    if (createError.code === '42501') {
+                                        console.log('⚠️ Error de RLS - el trigger debería crear el usuario');
+                                    }
+                                }
+                            } catch (createErr) {
+                                console.warn('Excepción al crear usuario:', createErr);
+                            }
                         }
                     }
 
                     if (!userExists) {
                         retries++;
-                        await new Promise(resolve => setTimeout(resolve, 500));
                     }
                 }
 
                 if (!userExists) {
-                    throw new Error('No se pudo crear el usuario en public.users después de varios intentos');
+                    // Verificar una última vez
+                    const { data: finalCheck } = await this.supabase
+                        .from('users')
+                        .select('id')
+                        .eq('id', data.user.id)
+                        .maybeSingle();
+                    
+                    if (!finalCheck) {
+                        throw new Error('No se pudo crear el usuario en public.users. El trigger puede no estar funcionando correctamente. Por favor, contacta al administrador.');
+                    } else {
+                        userExists = true;
+                    }
                 }
 
                 const credits = parseInt(this.selectedPlan.credits);
