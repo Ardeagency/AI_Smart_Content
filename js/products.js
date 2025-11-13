@@ -81,9 +81,9 @@ class ProductsManager {
             this.logout();
         });
 
-        // Add product button
+        // Add product button - crear producto directamente sin abrir sidebar
         document.getElementById('addProductBtn').addEventListener('click', () => {
-            this.openSidebar(null);
+            this.showNewProductModal();
         });
 
         // Sidebar close
@@ -245,7 +245,12 @@ class ProductsManager {
         return card;
     }
 
-    openSidebar(productId = null) {
+    openSidebar(productId) {
+        if (!productId) {
+            console.warn('No se puede abrir sidebar sin un productId');
+            return;
+        }
+
         const sidebar = document.getElementById('productsSidebar');
         const overlay = document.getElementById('sidebarOverlay');
         const main = document.querySelector('.products-main');
@@ -254,11 +259,7 @@ class ProductsManager {
         overlay.classList.add('active');
         main.classList.add('sidebar-open');
 
-        if (productId) {
-            this.loadProductDetails(productId);
-        } else {
-            this.showNewProductForm();
-        }
+        this.loadProductDetails(productId);
     }
 
     closeSidebar() {
@@ -295,18 +296,113 @@ class ProductsManager {
         }
     }
 
-    showNewProductForm() {
-        const sidebarTitle = document.getElementById('sidebarTitle');
-        const sidebarContent = document.getElementById('sidebarContent');
+    showNewProductModal() {
+        // Crear modal para nuevo producto
+        const modal = document.createElement('div');
+        modal.className = 'new-product-modal';
+        modal.id = 'newProductModal';
+        modal.innerHTML = `
+            <div class="modal-overlay" id="newProductOverlay"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Nuevo Producto</h2>
+                    <button class="modal-close" id="closeNewProductModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body" id="newProductFormContainer">
+                    <!-- Form will be inserted here -->
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
 
-        sidebarTitle.textContent = 'Nuevo Producto';
+        // Mostrar formulario
         this.currentProduct = null;
-        this.showProductForm(null);
+        const formContainer = document.getElementById('newProductFormContainer');
+        formContainer.innerHTML = this.getProductFormHTML(null);
+
+        // Event listeners
+        document.getElementById('newProductOverlay').addEventListener('click', () => {
+            this.closeNewProductModal();
+        });
+        document.getElementById('closeNewProductModal').addEventListener('click', () => {
+            this.closeNewProductModal();
+        });
+        document.getElementById('newProductForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.saveProductFromModal();
+        });
+        document.getElementById('cancelNewProductBtn').addEventListener('click', () => {
+            this.closeNewProductModal();
+        });
+
+        // Mostrar modal
+        setTimeout(() => {
+            modal.classList.add('active');
+        }, 10);
     }
 
-    showProductForm(product = null) {
-        const sidebarContent = document.getElementById('sidebarContent');
+    closeNewProductModal() {
+        const modal = document.getElementById('newProductModal');
+        if (modal) {
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.remove();
+            }, 300);
+        }
+    }
 
+    async saveProductFromModal() {
+        const form = document.getElementById('newProductForm');
+        const saveBtn = document.getElementById('saveNewProductBtn');
+
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        const formData = {
+            project_id: this.projectId,
+            tipo_producto: document.getElementById('new_tipo_producto').value,
+            nombre_producto: document.getElementById('new_nombre_producto').value.trim(),
+            descripcion_producto: document.getElementById('new_descripcion_producto').value.trim(),
+            beneficio_1: document.getElementById('new_beneficio_1').value.trim() || null,
+            beneficio_2: document.getElementById('new_beneficio_2').value.trim() || null,
+            beneficio_3: document.getElementById('new_beneficio_3').value.trim() || null,
+            diferenciacion: document.getElementById('new_diferenciacion').value.trim() || null,
+            modo_uso: document.getElementById('new_modo_uso').value.trim() || null,
+            ingredientes: document.getElementById('new_ingredientes').value.trim() || null,
+            precio_producto: document.getElementById('new_precio_producto').value ? parseFloat(document.getElementById('new_precio_producto').value) : null,
+            moneda: document.getElementById('new_moneda').value,
+            variantes_producto: document.getElementById('new_variantes_producto').value.trim() || null
+        };
+
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Creando...';
+
+        try {
+            const { error } = await this.supabase
+                .from('products')
+                .insert(formData);
+
+            if (error) throw error;
+
+            this.closeNewProductModal();
+            await this.loadProducts();
+            alert('Producto creado exitosamente');
+
+        } catch (error) {
+            console.error('Error creando producto:', error);
+            alert(`Error al crear el producto: ${error.message}`);
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Crear Producto';
+        }
+    }
+
+    getProductFormHTML(product = null) {
+        const prefix = product ? '' : 'new_';
         const tipoProductoOptions = `
             <option value="">Seleccionar tipo...</option>
             <optgroup label="Bebidas y Alimentos">
@@ -339,90 +435,95 @@ class ProductsManager {
             </optgroup>
         `;
 
-        sidebarContent.innerHTML = `
-            <form class="sidebar-form" id="productForm">
+        return `
+            <form class="sidebar-form" id="${prefix}productForm">
                 <div class="form-group">
                     <label>Tipo de producto <span class="required">*</span></label>
-                    <select class="form-select" id="tipo_producto" name="tipo_producto" required>
+                    <select class="form-select" id="${prefix}tipo_producto" name="tipo_producto" required>
                         ${tipoProductoOptions}
                     </select>
                 </div>
 
                 <div class="form-group">
                     <label>Nombre del producto <span class="required">*</span></label>
-                    <input type="text" class="form-input" id="nombre_producto" name="nombre_producto" 
+                    <input type="text" class="form-input" id="${prefix}nombre_producto" name="nombre_producto" 
                            value="${product?.nombre_producto || ''}" required>
                 </div>
 
                 <div class="form-group">
                     <label>Descripción <span class="required">*</span></label>
-                    <textarea class="form-textarea" id="descripcion_producto" name="descripcion_producto" 
+                    <textarea class="form-textarea" id="${prefix}descripcion_producto" name="descripcion_producto" 
                               required>${product?.descripcion_producto || ''}</textarea>
                 </div>
 
                 <div class="form-group">
                     <label>Beneficio 1</label>
-                    <input type="text" class="form-input" id="beneficio_1" name="beneficio_1" 
+                    <input type="text" class="form-input" id="${prefix}beneficio_1" name="beneficio_1" 
                            value="${product?.beneficio_1 || ''}">
                 </div>
 
                 <div class="form-group">
                     <label>Beneficio 2</label>
-                    <input type="text" class="form-input" id="beneficio_2" name="beneficio_2" 
+                    <input type="text" class="form-input" id="${prefix}beneficio_2" name="beneficio_2" 
                            value="${product?.beneficio_2 || ''}">
                 </div>
 
                 <div class="form-group">
                     <label>Beneficio 3</label>
-                    <input type="text" class="form-input" id="beneficio_3" name="beneficio_3" 
+                    <input type="text" class="form-input" id="${prefix}beneficio_3" name="beneficio_3" 
                            value="${product?.beneficio_3 || ''}">
                 </div>
 
                 <div class="form-group">
                     <label>Diferenciación</label>
-                    <textarea class="form-textarea" id="diferenciacion" name="diferenciacion">${product?.diferenciacion || ''}</textarea>
+                    <textarea class="form-textarea" id="${prefix}diferenciacion" name="diferenciacion">${product?.diferenciacion || ''}</textarea>
                 </div>
 
                 <div class="form-group">
                     <label>Modo de uso</label>
-                    <textarea class="form-textarea" id="modo_uso" name="modo_uso">${product?.modo_uso || ''}</textarea>
+                    <textarea class="form-textarea" id="${prefix}modo_uso" name="modo_uso">${product?.modo_uso || ''}</textarea>
                 </div>
 
                 <div class="form-group">
                     <label>Ingredientes</label>
-                    <textarea class="form-textarea" id="ingredientes" name="ingredientes">${product?.ingredientes || ''}</textarea>
+                    <textarea class="form-textarea" id="${prefix}ingredientes" name="ingredientes">${product?.ingredientes || ''}</textarea>
                 </div>
 
                 <div class="form-group">
                     <label>Precio</label>
                     <div style="display: flex; gap: 0.5rem;">
-                        <select class="form-select" id="moneda" name="moneda" style="width: 100px;">
+                        <select class="form-select" id="${prefix}moneda" name="moneda" style="width: 100px;">
                             <option value="USD" ${product?.moneda === 'USD' ? 'selected' : ''}>USD</option>
                             <option value="MXN" ${product?.moneda === 'MXN' ? 'selected' : ''}>MXN</option>
                             <option value="COP" ${product?.moneda === 'COP' ? 'selected' : ''}>COP</option>
                             <option value="ARS" ${product?.moneda === 'ARS' ? 'selected' : ''}>ARS</option>
                             <option value="EUR" ${product?.moneda === 'EUR' ? 'selected' : ''}>EUR</option>
                         </select>
-                        <input type="number" class="form-input" id="precio_producto" name="precio_producto" 
+                        <input type="number" class="form-input" id="${prefix}precio_producto" name="precio_producto" 
                                value="${product?.precio_producto || ''}" step="0.01" min="0" style="flex: 1;">
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label>Variantes</label>
-                    <textarea class="form-textarea" id="variantes_producto" name="variantes_producto">${product?.variantes_producto || ''}</textarea>
+                    <textarea class="form-textarea" id="${prefix}variantes_producto" name="variantes_producto">${product?.variantes_producto || ''}</textarea>
                 </div>
 
                 ${product ? this.renderProductImages(product.images || []) : ''}
 
                 <div class="form-actions">
-                    <button type="button" class="btn-secondary" id="cancelBtn">Cancelar</button>
-                    <button type="submit" class="btn-primary" id="saveBtn">
+                    <button type="button" class="btn-secondary" id="${prefix}cancelBtn">Cancelar</button>
+                    <button type="submit" class="btn-primary" id="${prefix}saveBtn">
                         ${product ? 'Guardar Cambios' : 'Crear Producto'}
                     </button>
                 </div>
             </form>
         `;
+    }
+
+    showProductForm(product) {
+        const sidebarContent = document.getElementById('sidebarContent');
+        sidebarContent.innerHTML = this.getProductFormHTML(product);
 
         // Event listeners
         document.getElementById('productForm').addEventListener('submit', (e) => {
