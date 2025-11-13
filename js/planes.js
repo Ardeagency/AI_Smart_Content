@@ -23,16 +23,11 @@ class PlanesManager {
                 this.supabase = await waitForSupabase();
             } else if (window.supabaseClient) {
                 this.supabase = window.supabaseClient;
-            }
-            
-            // Si aún no tenemos Supabase, intentar inicializar directamente
-            if (!this.supabase && typeof initSupabase === 'function') {
+            } else if (typeof initSupabase === 'function') {
                 this.supabase = await initSupabase();
             }
         } catch (error) {
             console.error('Error initializing Supabase:', error);
-            // No lanzar el error, solo loguearlo
-            // El código verificará si this.supabase está disponible antes de usarlo
         }
     }
 
@@ -51,8 +46,8 @@ class PlanesManager {
     selectPlan(plan, credits, price) {
         this.selectedPlan = {
             name: plan,
-            credits: credits,
-            price: price
+            credits: parseInt(credits),
+            price: parseFloat(price)
         };
         this.openModal();
     }
@@ -62,14 +57,14 @@ class PlanesManager {
         const closeBtn = document.getElementById('closeModal');
         const cancelBtn = document.getElementById('cancelBtn');
 
-        // Close on overlay click
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) {
-                this.closeModal();
-            }
-        });
+        if (overlay) {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    this.closeModal();
+                }
+            });
+        }
 
-        // Close buttons
         if (closeBtn) {
             closeBtn.addEventListener('click', () => this.closeModal());
         }
@@ -77,9 +72,8 @@ class PlanesManager {
             cancelBtn.addEventListener('click', () => this.closeModal());
         }
 
-        // Close on ESC key
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && overlay.classList.contains('active')) {
+            if (e.key === 'Escape' && overlay?.classList.contains('active')) {
                 this.closeModal();
             }
         });
@@ -91,7 +85,6 @@ class PlanesManager {
         
         if (!overlay || !planInfo) return;
 
-        // Update plan info
         const planNames = {
             'basico': 'Plan Básico',
             'pro': 'Plan Pro',
@@ -99,8 +92,6 @@ class PlanesManager {
         };
         
         planInfo.textContent = `${planNames[this.selectedPlan.name]} - ${this.selectedPlan.credits} créditos - $${this.selectedPlan.price}/mes`;
-        
-        // Show modal
         overlay.classList.add('active');
         document.body.style.overflow = 'hidden';
     }
@@ -122,7 +113,7 @@ class PlanesManager {
             this.handleSubmit();
         });
 
-        // Password confirmation validation
+        // Validación de contraseñas
         const password = document.getElementById('regPassword');
         const confirmPassword = document.getElementById('regConfirmPassword');
         
@@ -135,34 +126,6 @@ class PlanesManager {
                 }
             });
         }
-
-        // Prevenir que el navegador autocomplete el nombre con el email
-        const nameInput = document.getElementById('regName');
-        const emailInput = document.getElementById('regEmail');
-        
-        if (nameInput && emailInput) {
-            // Limpiar el campo de nombre si el navegador lo llena con el email
-            nameInput.addEventListener('focus', () => {
-                if (nameInput.value === emailInput.value) {
-                    nameInput.value = '';
-                }
-            });
-
-            // Prevenir que el email se copie al nombre cuando el navegador autocompleta
-            emailInput.addEventListener('input', () => {
-                if (nameInput.value === emailInput.value && nameInput !== document.activeElement) {
-                    nameInput.value = '';
-                }
-            });
-
-            // Limpiar el nombre si detectamos que contiene un email
-            nameInput.addEventListener('blur', () => {
-                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (emailPattern.test(nameInput.value) && nameInput.value === emailInput.value) {
-                    nameInput.value = '';
-                }
-            });
-        }
     }
 
     async handleSubmit() {
@@ -172,12 +135,17 @@ class PlanesManager {
             return;
         }
 
+        if (!this.selectedPlan) {
+            alert('Por favor, selecciona un plan primero');
+            return;
+        }
+
         const name = document.getElementById('regName').value.trim();
-        const email = document.getElementById('regEmail').value.trim();
+        const email = document.getElementById('regEmail').value.trim().toLowerCase();
         const password = document.getElementById('regPassword').value;
         const confirmPassword = document.getElementById('regConfirmPassword').value;
 
-        // Validate password match
+        // Validaciones
         if (password !== confirmPassword) {
             alert('Las contraseñas no coinciden');
             return;
@@ -188,7 +156,16 @@ class PlanesManager {
             return;
         }
 
-        // Disable submit button
+        // Inicializar Supabase
+        if (!this.supabase) {
+            await this.initSupabase();
+        }
+
+        if (!this.supabase) {
+            alert('Error: No se pudo conectar con el servidor. Por favor, recarga la página.');
+            return;
+        }
+
         const submitBtn = form.querySelector('button[type="submit"]');
         if (submitBtn) {
             submitBtn.disabled = true;
@@ -196,235 +173,123 @@ class PlanesManager {
         }
 
         try {
-            // Initialize Supabase if not already done
-            if (!this.supabase) {
-                await this.initSupabase();
-            }
-
-            if (!this.supabase) {
-                // Intentar inicializar una vez más antes de fallar
-                this.supabase = await waitForSupabase();
-                
-                if (!this.supabase) {
-                    const config = window.SUPABASE_CONFIG || {};
-                    let errorMsg = 'Supabase no está disponible. ';
-                    
-                    if (!config.url || !config.anonKey) {
-                        errorMsg += 'Las variables de configuración no están disponibles. Por favor, contacta al administrador.';
-                    } else {
-                        errorMsg += 'No se pudo conectar con el servidor. Verifica tu conexión a internet.';
-                    }
-                    
-                    throw new Error(errorMsg);
-                }
-            }
-
-            // Split name into first and last name
-            const nameParts = name.split(' ');
-            const firstName = nameParts[0] || '';
-            const lastName = nameParts.slice(1).join(' ') || '';
-            const fullName = name;
-
-            // Validar que el plan_type sea válido
-            const validPlanTypes = ['basico', 'pro', 'enterprise'];
-            const planType = validPlanTypes.includes(this.selectedPlan.name) 
-                ? this.selectedPlan.name 
-                : 'basico';
-
-            console.log('📝 Registrando usuario con:', {
+            // 1. Registrar usuario en Supabase Auth
+            const { data: authData, error: authError } = await this.supabase.auth.signUp({
                 email: email,
-                plan_type: planType,
-                full_name: fullName
-            });
-
-            // Register user in Supabase Auth
-            const { data, error } = await this.supabase.auth.signUp({
-                email: email.trim().toLowerCase(),
                 password: password,
                 options: {
                     data: {
-                        full_name: fullName || email,
-                        first_name: firstName || '',
-                        last_name: lastName || '',
-                        plan_type: planType
+                        full_name: name || email,
+                        plan_type: this.selectedPlan.name
                     }
                 }
             });
 
-            if (error) {
-                throw error;
+            if (authError) {
+                throw authError;
             }
 
-            if (data.user) {
-                console.log('✅ Usuario creado en auth.users:', data.user.id);
-                
-                // El trigger handle_new_user() creará automáticamente el registro en public.users
-                // Esperar un momento para que el trigger se ejecute
-                await new Promise(resolve => setTimeout(resolve, 1000));
+            if (!authData.user) {
+                throw new Error('No se pudo crear el usuario');
+            }
 
-                // Verificar que el usuario existe en public.users
-                // El trigger handle_new_user() debería crearlo automáticamente
-                let userExists = false;
-                let retries = 0;
-                const maxRetries = 10; // Aumentar intentos
+            console.log('✅ Usuario creado en auth.users:', authData.user.id);
 
-                while (!userExists && retries < maxRetries) {
-                    const { data: existingUser, error: checkError } = await this.supabase
-                        .from('users')
-                        .select('id')
-                        .eq('id', data.user.id)
-                        .maybeSingle();
+            // 2. Esperar un momento para que el trigger cree el usuario en public.users
+            await new Promise(resolve => setTimeout(resolve, 1500));
 
-                    if (checkError && checkError.code !== 'PGRST116') {
-                        console.error('Error verificando usuario:', checkError);
-                    }
+            // 3. Verificar si el usuario existe en public.users, si no, crearlo
+            const { data: existingUser } = await this.supabase
+                .from('users')
+                .select('id')
+                .eq('id', authData.user.id)
+                .maybeSingle();
 
-                    if (existingUser) {
-                        userExists = true;
-                        console.log('✅ Usuario encontrado en public.users');
-                    } else {
-                        console.log(`⏳ Esperando que el trigger cree el usuario... (intento ${retries + 1}/${maxRetries})`);
-                        
-                        // Esperar un poco más para que el trigger se ejecute
-                        await new Promise(resolve => setTimeout(resolve, 1000));
-                        
-                        // Solo intentar crear manualmente como último recurso
-                        if (retries >= 5) {
-                            console.log('⚠️ Intentando crear usuario manualmente como último recurso...');
-                            try {
-                                const { error: createError } = await this.supabase
-                                    .from('users')
-                                    .insert({
-                                        id: data.user.id,
-                                        email: data.user.email,
-                                        full_name: data.user.user_metadata?.full_name || data.user.email,
-                                        plan_type: data.user.user_metadata?.plan_type || 'basico',
-                                        credits_available: 0,
-                                        credits_total: 0,
-                                        form_verified: false
-                                    });
-
-                                if (!createError) {
-                                    console.log('✅ Usuario creado manualmente en public.users');
-                                    userExists = true;
-                                } else {
-                                    console.warn('Error creando usuario:', createError);
-                                    // Si el error es de RLS, el trigger debería crearlo
-                                    if (createError.code === '42501') {
-                                        console.log('⚠️ Error de RLS - el trigger debería crear el usuario');
-                                    }
-                                }
-                            } catch (createErr) {
-                                console.warn('Excepción al crear usuario:', createErr);
-                            }
-                        }
-                    }
-
-                    if (!userExists) {
-                        retries++;
-                    }
-                }
-
-                if (!userExists) {
-                    // Verificar una última vez
-                    const { data: finalCheck } = await this.supabase
-                        .from('users')
-                        .select('id')
-                        .eq('id', data.user.id)
-                        .maybeSingle();
-                    
-                    if (!finalCheck) {
-                        throw new Error('No se pudo crear el usuario en public.users. El trigger puede no estar funcionando correctamente. Por favor, contacta al administrador.');
-                    } else {
-                        userExists = true;
-                    }
-                }
-
-                const credits = parseInt(this.selectedPlan.credits);
-                const planType = this.selectedPlan.name;
-
-                // Actualizar el usuario con el plan_type y créditos
-                try {
-                    const { error: updateUserError } = await this.supabase
-                        .from('users')
-                        .update({
-                            plan_type: planType,
-                            credits_available: credits,
-                            credits_total: credits
-                        })
-                        .eq('id', data.user.id);
-
-                    if (updateUserError) {
-                        console.error('Error actualizando usuario:', updateUserError);
-                        throw new Error(`Error al asignar plan: ${updateUserError.message}`);
-                    }
-                    console.log('✅ Usuario actualizado con plan y créditos');
-                } catch (updateError) {
-                    console.error('Error actualizando usuario:', updateError);
-                    throw updateError;
-                }
-
-                // Crear suscripción con el plan seleccionado
-                try {
-                    const now = new Date();
-                    const expiresAt = new Date(now);
-                    expiresAt.setMonth(expiresAt.getMonth() + 1); // 1 mes desde ahora
-
-                    console.log('📝 Creando suscripción...', {
-                        user_id: data.user.id,
-                        plan_type: planType,
-                        credits: credits,
-                        price: parseFloat(this.selectedPlan.price)
+            if (!existingUser) {
+                // Crear usuario en public.users
+                const { error: createError } = await this.supabase
+                    .from('users')
+                    .insert({
+                        id: authData.user.id,
+                        email: email,
+                        full_name: name || email,
+                        plan_type: this.selectedPlan.name,
+                        credits_available: this.selectedPlan.credits,
+                        credits_total: this.selectedPlan.credits,
+                        form_verified: false
                     });
 
-                    const { data: subscription, error: subscriptionError } = await this.supabase
-                        .from('subscriptions')
-                        .insert({
-                            user_id: data.user.id,
-                            plan_type: planType,
-                            status: 'active',
-                            credits_included: credits,
-                            price: parseFloat(this.selectedPlan.price),
-                            currency: 'USD',
-                            started_at: now.toISOString(),
-                            expires_at: expiresAt.toISOString()
-                        })
-                        .select()
-                        .single();
-
-                    if (subscriptionError) {
-                        console.error('❌ Error creando suscripción:', subscriptionError);
-                        console.error('Código:', subscriptionError.code);
-                        console.error('Mensaje:', subscriptionError.message);
-                        console.error('Detalles:', subscriptionError.details);
-                        console.error('Hint:', subscriptionError.hint);
-                        throw new Error(`Error al crear suscripción: ${subscriptionError.message} (Código: ${subscriptionError.code || 'N/A'})`);
-                    } else {
-                        console.log('✅ Suscripción creada exitosamente:', subscription);
-                    }
-                } catch (subError) {
-                    console.error('❌ Error creando suscripción:', subError);
-                    // Mostrar error pero no bloquear el flujo completamente
-                    alert(`Advertencia: La suscripción no se pudo crear: ${subError.message}\n\nEl usuario tiene el plan asignado, pero la suscripción no se registró. Por favor, contacta al administrador.`);
+                if (createError) {
+                    console.error('Error creando usuario en public.users:', createError);
+                    throw new Error(`Error al crear el perfil de usuario: ${createError.message}`);
                 }
+                console.log('✅ Usuario creado en public.users');
+            } else {
+                // Actualizar usuario existente con plan y créditos
+                const { error: updateError } = await this.supabase
+                    .from('users')
+                    .update({
+                        plan_type: this.selectedPlan.name,
+                        credits_available: this.selectedPlan.credits,
+                        credits_total: this.selectedPlan.credits
+                    })
+                    .eq('id', authData.user.id);
 
-                // Cerrar modal
-                this.closeModal();
-                form.reset();
-
-                // Redirigir al formulario de registro de datos
-                window.location.href = 'form-record.html';
+                if (updateError) {
+                    console.error('Error actualizando usuario:', updateError);
+                    throw new Error(`Error al actualizar el perfil: ${updateError.message}`);
+                }
+                console.log('✅ Usuario actualizado en public.users');
             }
+
+            // 4. Crear suscripción
+            const now = new Date();
+            const expiresAt = new Date(now);
+            expiresAt.setMonth(expiresAt.getMonth() + 1);
+
+            const { data: subscription, error: subscriptionError } = await this.supabase
+                .from('subscriptions')
+                .insert({
+                    user_id: authData.user.id,
+                    plan_type: this.selectedPlan.name,
+                    status: 'active',
+                    credits_included: this.selectedPlan.credits,
+                    price: this.selectedPlan.price,
+                    currency: 'USD',
+                    started_at: now.toISOString(),
+                    expires_at: expiresAt.toISOString()
+                })
+                .select()
+                .single();
+
+            if (subscriptionError) {
+                console.error('❌ Error creando suscripción:', subscriptionError);
+                throw new Error(`Error al crear la suscripción: ${subscriptionError.message}`);
+            }
+
+            console.log('✅ Suscripción creada:', subscription);
+
+            // 5. Éxito - cerrar modal y redirigir
+            this.closeModal();
+            form.reset();
+            alert('¡Cuenta creada exitosamente!');
+            window.location.href = 'form-record.html';
+
         } catch (error) {
-            console.error('Error en registro:', error);
+            console.error('❌ Error en registro:', error);
             
             let errorMessage = 'Error al crear la cuenta. Intenta nuevamente.';
-            if (error.message.includes('User already registered')) {
-                errorMessage = 'Este email ya está registrado. Inicia sesión en su lugar.';
-            } else if (error.message.includes('Password')) {
-                errorMessage = 'La contraseña no cumple con los requisitos de seguridad';
-            } else if (error.message.includes('Email')) {
-                errorMessage = 'El email no es válido';
+            
+            if (error.message) {
+                if (error.message.includes('already registered') || error.message.includes('already exists')) {
+                    errorMessage = 'Este email ya está registrado. Por favor, inicia sesión.';
+                } else if (error.message.includes('Password')) {
+                    errorMessage = 'La contraseña no cumple con los requisitos de seguridad';
+                } else if (error.message.includes('Email')) {
+                    errorMessage = 'El email no es válido';
+                } else {
+                    errorMessage = error.message;
+                }
             }
             
             alert(errorMessage);
@@ -441,4 +306,3 @@ class PlanesManager {
 document.addEventListener('DOMContentLoaded', () => {
     new PlanesManager();
 });
-
