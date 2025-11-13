@@ -225,19 +225,31 @@ class PlanesManager {
             const lastName = nameParts.slice(1).join(' ') || '';
             const fullName = name;
 
+            // Validar que el plan_type sea válido
+            const validPlanTypes = ['basico', 'pro', 'enterprise'];
+            const planType = validPlanTypes.includes(this.selectedPlan.name) 
+                ? this.selectedPlan.name 
+                : 'basico';
+
+            console.log('📝 Registrando usuario con:', {
+                email: email,
+                plan_type: planType,
+                full_name: fullName
+            });
+
             // Register user in Supabase Auth
             const { data, error } = await this.supabase.auth.signUp({
-                email: email,
+                email: email.trim().toLowerCase(),
                 password: password,
                 options: {
                     data: {
-                        full_name: fullName,
-                        first_name: firstName,
-                        last_name: lastName,
-                        plan_type: this.selectedPlan.name
+                        full_name: fullName || email,
+                        first_name: firstName || '',
+                        last_name: lastName || '',
+                        plan_type: planType
+                    }
                 }
-            }
-        });
+            });
 
             if (error) {
                 throw error;

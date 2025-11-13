@@ -331,27 +331,44 @@ RETURNS TRIGGER AS $$
 DECLARE
     v_plan_type plan_tipo_enum;
     v_full_name TEXT;
+    v_plan_type_str TEXT;
 BEGIN
-    -- Obtener plan_type de los metadatos si existe, sino usar 'basico' por defecto
-    v_plan_type := COALESCE(
-        (NEW.raw_user_meta_data->>'plan_type')::plan_tipo_enum,
-        'basico'::plan_tipo_enum
+    -- Obtener plan_type de los metadatos con validación
+    v_plan_type_str := NEW.raw_user_meta_data->>'plan_type';
+    
+    -- Validar y asignar plan_type
+    IF v_plan_type_str IS NOT NULL AND v_plan_type_str IN ('basico', 'pro', 'enterprise') THEN
+        v_plan_type := v_plan_type_str::plan_tipo_enum;
+    ELSE
+        v_plan_type := 'basico'::plan_tipo_enum;
+    END IF;
+    
+    -- Obtener full_name de los metadatos, usar email si no existe
+    v_full_name := COALESCE(
+        NEW.raw_user_meta_data->>'full_name',
+        NEW.email,
+        'Usuario'
     );
     
-    -- Obtener full_name de los metadatos
-    v_full_name := NEW.raw_user_meta_data->>'full_name';
-    
     -- Insertar solo si no existe ya (evitar duplicados)
-    INSERT INTO public.users (id, email, full_name, plan_type, credits_available, credits_total)
-    VALUES (
-        NEW.id, 
-        NEW.email, 
-        v_full_name,
-        v_plan_type,
-        0, -- Los créditos se asignarán cuando se cree la suscripción
-        0
-    )
-    ON CONFLICT (id) DO NOTHING;
+    -- Usar manejo de errores para capturar cualquier problema
+    BEGIN
+        INSERT INTO public.users (id, email, full_name, plan_type, credits_available, credits_total)
+        VALUES (
+            NEW.id, 
+            COALESCE(NEW.email, ''),
+            v_full_name,
+            v_plan_type,
+            0, -- Los créditos se asignarán cuando se cree la suscripción
+            0
+        )
+        ON CONFLICT (id) DO NOTHING;
+    EXCEPTION
+        WHEN OTHERS THEN
+            -- Log del error pero no fallar el trigger
+            RAISE WARNING 'Error en handle_new_user para usuario %: %', NEW.id, SQLERRM;
+            -- Retornar NEW de todas formas para no bloquear la creación en auth.users
+    END;
     
     RETURN NEW;
 END;
