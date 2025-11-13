@@ -244,9 +244,64 @@ class PlanesManager {
             }
 
             if (data.user) {
+                console.log('✅ Usuario creado en auth.users:', data.user.id);
+                
                 // El trigger handle_new_user() creará automáticamente el registro en public.users
                 // Esperar un momento para que el trigger se ejecute
-                await new Promise(resolve => setTimeout(resolve, 500));
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                // Verificar que el usuario existe en public.users
+                let userExists = false;
+                let retries = 0;
+                const maxRetries = 5;
+
+                while (!userExists && retries < maxRetries) {
+                    const { data: existingUser, error: checkError } = await this.supabase
+                        .from('users')
+                        .select('id')
+                        .eq('id', data.user.id)
+                        .maybeSingle();
+
+                    if (checkError && checkError.code !== 'PGRST116') {
+                        console.error('Error verificando usuario:', checkError);
+                    }
+
+                    if (existingUser) {
+                        userExists = true;
+                        console.log('✅ Usuario encontrado en public.users');
+                    } else {
+                        console.log(`⏳ Usuario no encontrado, intentando crear... (intento ${retries + 1}/${maxRetries})`);
+                        
+                        // Intentar crear el usuario manualmente
+                        const { error: createError } = await this.supabase
+                            .from('users')
+                            .insert({
+                                id: data.user.id,
+                                email: data.user.email,
+                                full_name: data.user.user_metadata?.full_name || data.user.email,
+                                plan_type: data.user.user_metadata?.plan_type || 'basico',
+                                credits_available: 0,
+                                credits_total: 0,
+                                form_verified: false
+                            });
+
+                        if (createError) {
+                            console.warn('Error creando usuario (puede que ya exista):', createError);
+                        } else {
+                            console.log('✅ Usuario creado manualmente en public.users');
+                            userExists = true;
+                        }
+                    }
+
+                    if (!userExists) {
+                        retries++;
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                    }
+                }
+
+                if (!userExists) {
+                    throw new Error('No se pudo crear el usuario en public.users después de varios intentos');
+                }
 
                 const credits = parseInt(this.selectedPlan.credits);
                 const planType = this.selectedPlan.name;
@@ -266,6 +321,7 @@ class PlanesManager {
                         console.error('Error actualizando usuario:', updateUserError);
                         throw new Error(`Error al asignar plan: ${updateUserError.message}`);
                     }
+                    console.log('✅ Usuario actualizado con plan y créditos');
                 } catch (updateError) {
                     console.error('Error actualizando usuario:', updateError);
                     throw updateError;
@@ -276,6 +332,13 @@ class PlanesManager {
                     const now = new Date();
                     const expiresAt = new Date(now);
                     expiresAt.setMonth(expiresAt.getMonth() + 1); // 1 mes desde ahora
+
+                    console.log('📝 Creando suscripción...', {
+                        user_id: data.user.id,
+                        plan_type: planType,
+                        credits: credits,
+                        price: parseFloat(this.selectedPlan.price)
+                    });
 
                     const { data: subscription, error: subscriptionError } = await this.supabase
                         .from('subscriptions')
@@ -293,16 +356,19 @@ class PlanesManager {
                         .single();
 
                     if (subscriptionError) {
-                        console.error('Error creando suscripción:', subscriptionError);
-                        // No bloqueamos el flujo, pero logueamos el error
-                        console.warn('La suscripción no se pudo crear, pero el usuario tiene el plan asignado');
+                        console.error('❌ Error creando suscripción:', subscriptionError);
+                        console.error('Código:', subscriptionError.code);
+                        console.error('Mensaje:', subscriptionError.message);
+                        console.error('Detalles:', subscriptionError.details);
+                        console.error('Hint:', subscriptionError.hint);
+                        throw new Error(`Error al crear suscripción: ${subscriptionError.message} (Código: ${subscriptionError.code || 'N/A'})`);
                     } else {
                         console.log('✅ Suscripción creada exitosamente:', subscription);
                     }
                 } catch (subError) {
-                    console.error('Error creando suscripción:', subError);
-                    // No bloqueamos el flujo si falla la suscripción
-                    // El usuario ya tiene el plan asignado
+                    console.error('❌ Error creando suscripción:', subError);
+                    // Mostrar error pero no bloquear el flujo completamente
+                    alert(`Advertencia: La suscripción no se pudo crear: ${subError.message}\n\nEl usuario tiene el plan asignado, pero la suscripción no se registró. Por favor, contacta al administrador.`);
                 }
 
                 // Cerrar modal

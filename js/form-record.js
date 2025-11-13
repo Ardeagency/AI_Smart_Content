@@ -37,20 +37,35 @@ class FormRecord {
             throw new Error('No se pudo inicializar Supabase. Por favor, recarga la página.');
         }
 
-        const { data: { user }, error: userError } = await this.supabase.auth.getUser();
+        // Obtener sesión actual
+        const { data: { session }, error: sessionError } = await this.supabase.auth.getSession();
         
-        if (userError) {
-            throw new Error(`Error de autenticación: ${userError.message}`);
+        if (sessionError) {
+            console.error('Error obteniendo sesión:', sessionError);
+            throw new Error(`Error de autenticación: ${sessionError.message}`);
         }
 
-        if (!user) {
-            throw new Error('No hay usuario autenticado. Por favor, inicia sesión nuevamente.');
+        if (!session || !session.user) {
+            // Si no hay sesión, intentar obtener usuario directamente
+            const { data: { user }, error: userError } = await this.supabase.auth.getUser();
+            
+            if (userError) {
+                console.error('Error obteniendo usuario:', userError);
+                throw new Error(`Error de autenticación: ${userError.message}`);
+            }
+
+            if (!user) {
+                throw new Error('No hay usuario autenticado. Por favor, inicia sesión nuevamente.');
+            }
+
+            this.userId = user.id;
+            // Verificar y crear usuario en public.users si no existe
+            await this.ensureUserExists(user);
+        } else {
+            this.userId = session.user.id;
+            // Verificar y crear usuario en public.users si no existe
+            await this.ensureUserExists(session.user);
         }
-
-        this.userId = user.id;
-
-        // Verificar y crear usuario en public.users si no existe
-        await this.ensureUserExists(user);
     }
 
     setupEventListeners() {
