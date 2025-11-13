@@ -162,25 +162,29 @@ class ProductsManager {
     }
 
     setupEventListeners() {
-        // Logout
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            this.logout();
-        });
-
         // Add product button - crear producto directamente sin abrir sidebar
-        document.getElementById('addProductBtn').addEventListener('click', () => {
-            this.showNewProductModal();
-        });
+        const addProductBtn = document.getElementById('addProductBtn');
+        if (addProductBtn) {
+            addProductBtn.addEventListener('click', () => {
+                this.showNewProductModal();
+            });
+        }
 
         // Sidebar close
-        document.getElementById('sidebarClose').addEventListener('click', () => {
-            this.closeSidebar();
-        });
+        const sidebarClose = document.getElementById('sidebarClose');
+        if (sidebarClose) {
+            sidebarClose.addEventListener('click', () => {
+                this.closeSidebar();
+            });
+        }
 
         // Sidebar overlay
-        document.getElementById('sidebarOverlay').addEventListener('click', () => {
-            this.closeSidebar();
-        });
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', () => {
+                this.closeSidebar();
+            });
+        }
 
         // ESC key to close sidebar
         document.addEventListener('keydown', (e) => {
