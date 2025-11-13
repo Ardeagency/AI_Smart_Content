@@ -920,9 +920,12 @@ class FormRecord {
         // 2. Subir logo si existe
         if (this.formData.logo_file && this.formData.logo_file.length > 0) {
             try {
-            const logoFile = this.formData.logo_file[0];
-            const fileExt = logoFile.name.split('.').pop();
-            const fileName = `${projectId}/logo.${fileExt}`;
+                const logoFile = this.formData.logo_file[0];
+                const fileExt = logoFile.name.split('.').pop();
+                // La ruta debe incluir user_id como primera carpeta para que las políticas RLS funcionen
+                const fileName = `${this.userId}/${projectId}/logo.${fileExt}`;
+
+                console.log('📤 Subiendo logo:', fileName);
 
                 // Intentar eliminar el logo anterior si existe
                 try {
@@ -931,31 +934,44 @@ class FormRecord {
                         .remove([fileName]);
                 } catch (removeError) {
                     // Ignorar error si el archivo no existe
+                    console.log('Logo anterior no encontrado, continuando...');
                 }
 
-            const { data: uploadData, error: uploadError } = await this.supabase.storage
-                .from('brand-logos')
+                const { data: uploadData, error: uploadError } = await this.supabase.storage
+                    .from('brand-logos')
                     .upload(fileName, logoFile, {
                         upsert: true,
-                        contentType: logoFile.type
+                        contentType: logoFile.type,
+                        cacheControl: '3600'
                     });
 
                 if (uploadError) {
-                    console.warn('Error al subir logo:', uploadError);
-                    // No lanzar error, continuar sin logo
-                } else {
+                    console.error('❌ Error al subir logo:', uploadError);
+                    throw new Error(`Error al subir logo: ${uploadError.message}`);
+                }
+
+                console.log('✅ Logo subido exitosamente');
+
                 const { data: { publicUrl } } = this.supabase.storage
                     .from('brand-logos')
                     .getPublicUrl(fileName);
 
-                await this.supabase
+                console.log('🔗 URL pública del logo:', publicUrl);
+
+                const { error: updateError } = await this.supabase
                     .from('projects')
                     .update({ logo_url: publicUrl })
                     .eq('id', projectId);
+
+                if (updateError) {
+                    console.error('❌ Error al actualizar logo_url en projects:', updateError);
+                    throw new Error(`Error al actualizar logo: ${updateError.message}`);
                 }
+
+                console.log('✅ Logo URL guardado en projects');
             } catch (logoError) {
-                console.warn('Error al procesar logo:', logoError);
-                // Continuar sin logo
+                console.error('❌ Error al procesar logo:', logoError);
+                throw logoError; // Lanzar error para que se muestre al usuario
             }
         }
 
@@ -1003,25 +1019,35 @@ class FormRecord {
 
         // 4. Subir archivos de identidad si existen
         if (this.formData.archivos_identidad && this.formData.archivos_identidad.length > 0) {
+            console.log(`📤 Subiendo ${this.formData.archivos_identidad.length} archivo(s) de identidad...`);
+            
             const uploadPromises = this.formData.archivos_identidad.map(async (file) => {
                 try {
-                const fileExt = file.name.split('.').pop();
-                const fileName = `${projectId}/${Date.now()}_${file.name}`;
+                    const fileExt = file.name.split('.').pop();
+                    // La ruta debe incluir user_id como primera carpeta para que las políticas RLS funcionen
+                    const fileName = `${this.userId}/${projectId}/${Date.now()}_${file.name}`;
 
-                const { data: uploadData, error: uploadError } = await this.supabase.storage
-                    .from('brand-files')
+                    console.log('📤 Subiendo archivo:', file.name, 'a', fileName);
+
+                    const { data: uploadData, error: uploadError } = await this.supabase.storage
+                        .from('brand-files')
                         .upload(fileName, file, {
-                            contentType: file.type
+                            contentType: file.type,
+                            cacheControl: '3600'
                         });
 
                     if (uploadError) {
-                        console.warn('Error al subir archivo:', file.name, uploadError);
-                        return; // Continuar con el siguiente archivo
+                        console.error('❌ Error al subir archivo:', file.name, uploadError);
+                        throw new Error(`Error al subir ${file.name}: ${uploadError.message}`);
                     }
+
+                    console.log('✅ Archivo subido:', file.name);
 
                     const { data: { publicUrl } } = this.supabase.storage
                         .from('brand-files')
                         .getPublicUrl(fileName);
+
+                    console.log('🔗 URL pública:', publicUrl);
 
                     const { error: insertError } = await this.supabase
                         .from('brand_files')
@@ -1034,15 +1060,19 @@ class FormRecord {
                         });
 
                     if (insertError) {
-                        console.warn('Error al insertar registro de archivo:', insertError);
+                        console.error('❌ Error al insertar registro de archivo:', insertError);
+                        throw new Error(`Error al guardar registro de ${file.name}: ${insertError.message}`);
                     }
+
+                    console.log('✅ Registro de archivo guardado en brand_files');
                 } catch (fileError) {
-                    console.warn('Error al procesar archivo:', file.name, fileError);
-                    // Continuar con el siguiente archivo
+                    console.error('❌ Error al procesar archivo:', file.name, fileError);
+                    throw fileError; // Lanzar error para que se muestre al usuario
                 }
             });
 
             await Promise.all(uploadPromises);
+            console.log('✅ Todos los archivos de identidad subidos exitosamente');
         }
 
         // 5. Crear producto
@@ -1103,45 +1133,62 @@ class FormRecord {
         if (this.formData.product_images && this.formData.product_images.length > 0) {
             // Filtrar archivos nulos
             const validImages = this.formData.product_images.filter(img => img !== null && img !== undefined);
-            const imageUploadPromises = validImages.map(async (file, index) => {
-                try {
-                const fileExt = file.name.split('.').pop();
-                const fileName = `${productId}/${index + 1}_${Date.now()}.${fileExt}`;
+            
+            if (validImages.length > 0) {
+                console.log(`📤 Subiendo ${validImages.length} imagen(es) de producto...`);
+                
+                const imageUploadPromises = validImages.map(async (file, index) => {
+                    try {
+                        const fileExt = file.name.split('.').pop();
+                        // La ruta debe incluir user_id como primera carpeta para que las políticas RLS funcionen
+                        const fileName = `${this.userId}/${productId}/${index + 1}_${Date.now()}.${fileExt}`;
 
-                const { data: uploadData, error: uploadError } = await this.supabase.storage
-                    .from('product-images')
-                        .upload(fileName, file, {
-                            contentType: file.type
-                        });
+                        console.log('📤 Subiendo imagen:', file.name, 'a', fileName);
 
-                    if (uploadError) {
-                        console.warn('Error al subir imagen del producto:', file.name, uploadError);
-                        return; // Continuar con la siguiente imagen
+                        const { data: uploadData, error: uploadError } = await this.supabase.storage
+                            .from('product-images')
+                            .upload(fileName, file, {
+                                contentType: file.type,
+                                cacheControl: '3600'
+                            });
+
+                        if (uploadError) {
+                            console.error('❌ Error al subir imagen del producto:', file.name, uploadError);
+                            throw new Error(`Error al subir imagen ${file.name}: ${uploadError.message}`);
+                        }
+
+                        console.log('✅ Imagen subida:', file.name);
+
+                        const { data: { publicUrl } } = this.supabase.storage
+                            .from('product-images')
+                            .getPublicUrl(fileName);
+
+                        console.log('🔗 URL pública:', publicUrl);
+
+                        const { error: insertError } = await this.supabase
+                            .from('product_images')
+                            .insert({
+                                product_id: productId,
+                                image_url: publicUrl,
+                                image_type: ['principal', 'secundaria', 'detalle', 'contexto'][index] || 'secundaria',
+                                image_order: index
+                            });
+
+                        if (insertError) {
+                            console.error('❌ Error al insertar registro de imagen:', insertError);
+                            throw new Error(`Error al guardar registro de imagen ${file.name}: ${insertError.message}`);
+                        }
+
+                        console.log('✅ Registro de imagen guardado en product_images');
+                    } catch (imageError) {
+                        console.error('❌ Error al procesar imagen del producto:', imageError);
+                        throw imageError; // Lanzar error para que se muestre al usuario
                     }
+                });
 
-                    const { data: { publicUrl } } = this.supabase.storage
-                        .from('product-images')
-                        .getPublicUrl(fileName);
-
-                    const { error: insertError } = await this.supabase
-                        .from('product_images')
-                        .insert({
-                            product_id: productId,
-                            image_url: publicUrl,
-                            image_type: ['principal', 'secundaria', 'detalle', 'contexto'][index] || 'secundaria',
-                            image_order: index
-                        });
-
-                    if (insertError) {
-                        console.warn('Error al insertar registro de imagen:', insertError);
-                    }
-                } catch (imageError) {
-                    console.warn('Error al procesar imagen del producto:', imageError);
-                    // Continuar con la siguiente imagen
-                }
-            });
-
-            await Promise.all(imageUploadPromises);
+                await Promise.all(imageUploadPromises);
+                console.log('✅ Todas las imágenes de producto subidas exitosamente');
+            }
         }
 
         // 7. Crear campaña
