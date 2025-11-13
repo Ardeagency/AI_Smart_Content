@@ -212,9 +212,9 @@ class PlanesManager {
                 p_plan_type: this.selectedPlan.name,
                 p_credits_included: this.selectedPlan.credits,
                 p_price: this.selectedPlan.price
-            });
+                        });
 
-            if (subscriptionError) {
+                    if (subscriptionError) {
                 console.error('❌ Error creando suscripción:', subscriptionError);
                 throw new Error(`Error al crear la suscripción: ${subscriptionError.message}`);
             }

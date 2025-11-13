@@ -11,38 +11,59 @@
 .form-record-container {
     min-height: 100vh;
     background: #0a0a0a;
+    background-image: 
+        linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.6) 100%),
+        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><path d="M0,400 Q300,200 600,400 T1200,400 L1200,800 L0,800 Z" fill="%23333" opacity="0.3"/></svg>');
+    background-size: cover;
+    background-position: center;
     color: var(--text-primary);
     padding: 0;
     margin: 0;
     display: flex;
     flex-direction: column;
+    position: relative;
+}
+
+.form-record-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        linear-gradient(135deg, rgba(210, 254, 63, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(210, 254, 63, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
 }
 
 /* ============================================
    HEADER
    ============================================ */
 .form-header {
-    padding: 1rem 2rem;
-    background: #1a1a1a;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 0.75rem 2rem;
+    background: transparent;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    position: relative;
+    z-index: 10;
 }
 
 .form-logo {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
 }
 
 .form-logo i {
-    font-size: 1.5rem;
+    font-size: 1rem;
     color: var(--primary-color);
 }
 
 .form-logo span {
-    font-size: 1.5rem;
+    font-size: 1rem;
     font-weight: 700;
     color: var(--text-primary);
     letter-spacing: 1px;
@@ -59,6 +80,8 @@
     padding: 1.5rem 2rem;
     overflow: hidden;
     min-height: 0;
+    position: relative;
+    z-index: 1;
 }
 
 .form-step {
@@ -81,6 +104,10 @@
 .step-header {
     text-align: center;
     margin-bottom: 1.5rem;
+}
+
+.step-subtitle {
+    display: none;
 }
 
 .step-badge {
@@ -421,9 +448,8 @@
     bottom: 0;
     left: 0;
     right: 0;
-    background: #1a1a1a;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-    padding: 1rem 2rem;
+    background: transparent;
+    padding: 0.75rem 2rem;
     display: flex;
     justify-content: space-between;
     gap: 1rem;
@@ -431,35 +457,42 @@
 }
 
 .btn {
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
+    padding: 0.875rem 2.5rem;
+    border-radius: 4px;
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 1rem;
     cursor: pointer;
     transition: all 0.3s ease;
     border: none;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
+    font-family: 'Inter', sans-serif;
+    text-decoration: none;
 }
 
 .btn-primary {
-    background: var(--primary-color);
-    color: #0a0a0a;
+    background: var(--text-primary);
+    border: 1px solid var(--text-primary);
+    color: var(--bg-black);
 }
 
 .btn-primary:hover:not(:disabled) {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--bg-black);
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(210, 254, 63, 0.3);
+    box-shadow: 0 4px 15px rgba(210, 254, 63, 0.3);
 }
 
 .btn-secondary {
     background: transparent;
     color: var(--text-primary);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--text-primary);
 }
 
 .btn-secondary:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.05);
     border-color: var(--primary-color);
     color: var(--primary-color);
 }
@@ -467,6 +500,7 @@
 .btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    transform: none;
 }
 
 /* ============================================
