@@ -25,10 +25,10 @@ class FormRecord {
     }
 
     async initSupabase() {
-        if (typeof waitForSupabase === 'function') {
+            if (typeof waitForSupabase === 'function') {
             this.supabase = await waitForSupabase(15000);
-        } else if (window.supabaseClient) {
-            this.supabase = window.supabaseClient;
+            } else if (window.supabaseClient) {
+                this.supabase = window.supabaseClient;
         } else if (typeof initSupabase === 'function') {
             this.supabase = await initSupabase();
         }
@@ -48,6 +48,9 @@ class FormRecord {
         }
 
         this.userId = user.id;
+
+        // Verificar y crear usuario en public.users si no existe
+        await this.ensureUserExists(user);
     }
 
     setupEventListeners() {
@@ -731,6 +734,42 @@ class FormRecord {
         }
     }
 
+    async ensureUserExists(authUser) {
+        // Verificar si el usuario existe en public.users
+        const { data: existingUser, error: checkError } = await this.supabase
+            .from('users')
+            .select('id')
+            .eq('id', authUser.id)
+            .maybeSingle();
+
+        if (checkError && checkError.code !== 'PGRST116') {
+            console.warn('Error verificando usuario:', checkError);
+        }
+
+        // Si no existe, crearlo
+        if (!existingUser) {
+            console.log('⚠️ Usuario no existe en public.users, creándolo...');
+            const { error: createError } = await this.supabase
+                .from('users')
+                .insert({
+                    id: authUser.id,
+                    email: authUser.email,
+                    full_name: authUser.user_metadata?.full_name || authUser.email,
+                    plan_type: authUser.user_metadata?.plan_type || 'basico',
+                    credits_available: 0,
+                    credits_total: 0,
+                    form_verified: false
+                });
+
+            if (createError) {
+                console.error('Error creando usuario en public.users:', createError);
+                // No lanzar error, solo loguearlo - puede que el trigger lo haya creado
+            } else {
+                console.log('✅ Usuario creado en public.users');
+            }
+        }
+    }
+
     async saveToSupabase() {
         if (!this.supabase || !this.userId) {
             const errorMsg = 'Supabase no está inicializado o no hay usuario autenticado';
@@ -738,6 +777,37 @@ class FormRecord {
             console.log('Supabase disponible:', !!this.supabase);
             console.log('UserId disponible:', !!this.userId);
             throw new Error(errorMsg);
+        }
+
+        // Verificar que el usuario existe en public.users antes de continuar
+        const { data: userCheck, error: userCheckError } = await this.supabase
+            .from('users')
+            .select('id')
+            .eq('id', this.userId)
+            .maybeSingle();
+
+        if (userCheckError && userCheckError.code !== 'PGRST116') {
+            throw new Error(`Error verificando usuario: ${userCheckError.message}`);
+        }
+
+        if (!userCheck) {
+            // Intentar obtener el usuario de auth y crearlo
+            const { data: { user: authUser } } = await this.supabase.auth.getUser();
+            if (authUser) {
+                await this.ensureUserExists(authUser);
+                // Verificar nuevamente
+                const { data: userCheck2 } = await this.supabase
+                    .from('users')
+                    .select('id')
+                    .eq('id', this.userId)
+                    .maybeSingle();
+                
+                if (!userCheck2) {
+                    throw new Error('No se pudo crear el usuario en public.users. Por favor, contacta al administrador.');
+                }
+            } else {
+                throw new Error('Usuario no encontrado en public.users. Por favor, inicia sesión nuevamente.');
+            }
         }
 
         // Log de datos antes de guardar para debugging
@@ -770,7 +840,7 @@ class FormRecord {
             mercado_objetivo: mercadoObjetivo,
             idiomas_contenido: idiomasContenido
         };
-
+        
         // Verificar si ya existe un proyecto para este usuario
         const { data: existingProject, error: checkError } = await this.supabase
             .from('projects')
@@ -816,9 +886,9 @@ class FormRecord {
         // 2. Subir logo si existe
         if (this.formData.logo_file && this.formData.logo_file.length > 0) {
             try {
-                const logoFile = this.formData.logo_file[0];
-                const fileExt = logoFile.name.split('.').pop();
-                const fileName = `${projectId}/logo.${fileExt}`;
+            const logoFile = this.formData.logo_file[0];
+            const fileExt = logoFile.name.split('.').pop();
+            const fileName = `${projectId}/logo.${fileExt}`;
 
                 // Intentar eliminar el logo anterior si existe
                 try {
@@ -829,8 +899,8 @@ class FormRecord {
                     // Ignorar error si el archivo no existe
                 }
 
-                const { data: uploadData, error: uploadError } = await this.supabase.storage
-                    .from('brand-logos')
+            const { data: uploadData, error: uploadError } = await this.supabase.storage
+                .from('brand-logos')
                     .upload(fileName, logoFile, {
                         upsert: true,
                         contentType: logoFile.type
@@ -840,14 +910,14 @@ class FormRecord {
                     console.warn('Error al subir logo:', uploadError);
                     // No lanzar error, continuar sin logo
                 } else {
-                    const { data: { publicUrl } } = this.supabase.storage
-                        .from('brand-logos')
-                        .getPublicUrl(fileName);
+                const { data: { publicUrl } } = this.supabase.storage
+                    .from('brand-logos')
+                    .getPublicUrl(fileName);
 
-                    await this.supabase
-                        .from('projects')
-                        .update({ logo_url: publicUrl })
-                        .eq('id', projectId);
+                await this.supabase
+                    .from('projects')
+                    .update({ logo_url: publicUrl })
+                    .eq('id', projectId);
                 }
             } catch (logoError) {
                 console.warn('Error al procesar logo:', logoError);
@@ -901,11 +971,11 @@ class FormRecord {
         if (this.formData.archivos_identidad && this.formData.archivos_identidad.length > 0) {
             const uploadPromises = this.formData.archivos_identidad.map(async (file) => {
                 try {
-                    const fileExt = file.name.split('.').pop();
-                    const fileName = `${projectId}/${Date.now()}_${file.name}`;
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${projectId}/${Date.now()}_${file.name}`;
 
-                    const { data: uploadData, error: uploadError } = await this.supabase.storage
-                        .from('brand-files')
+                const { data: uploadData, error: uploadError } = await this.supabase.storage
+                    .from('brand-files')
                         .upload(fileName, file, {
                             contentType: file.type
                         });
@@ -1001,11 +1071,11 @@ class FormRecord {
             const validImages = this.formData.product_images.filter(img => img !== null && img !== undefined);
             const imageUploadPromises = validImages.map(async (file, index) => {
                 try {
-                    const fileExt = file.name.split('.').pop();
-                    const fileName = `${productId}/${index + 1}_${Date.now()}.${fileExt}`;
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${productId}/${index + 1}_${Date.now()}.${fileExt}`;
 
-                    const { data: uploadData, error: uploadError } = await this.supabase.storage
-                        .from('product-images')
+                const { data: uploadData, error: uploadError } = await this.supabase.storage
+                    .from('product-images')
                         .upload(fileName, file, {
                             contentType: file.type
                         });
