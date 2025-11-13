@@ -24,10 +24,10 @@ class FormRecord {
     }
 
     async initSupabase() {
-            if (typeof waitForSupabase === 'function') {
+        if (typeof waitForSupabase === 'function') {
             this.supabase = await waitForSupabase(15000);
-            } else if (window.supabaseClient) {
-                this.supabase = window.supabaseClient;
+        } else if (window.supabaseClient) {
+            this.supabase = window.supabaseClient;
         } else if (typeof initSupabase === 'function') {
             this.supabase = await initSupabase();
         }
@@ -36,11 +36,32 @@ class FormRecord {
             throw new Error('No se pudo inicializar Supabase. Por favor, recarga la página.');
         }
 
+        // Esperar un momento para que la sesión se sincronice después de la redirección
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         // Obtener sesión actual
         const { data: { session }, error: sessionError } = await this.supabase.auth.getSession();
         
         if (sessionError) {
             console.error('Error obteniendo sesión:', sessionError);
+            // Si el error es de sesión faltante, intentar obtener usuario directamente
+            if (sessionError.message && sessionError.message.includes('session')) {
+                const { data: { user }, error: userError } = await this.supabase.auth.getUser();
+                
+                if (userError) {
+                    console.error('Error obteniendo usuario:', userError);
+                    throw new Error(`Error de autenticación: ${userError.message}`);
+                }
+
+                if (!user) {
+                    throw new Error('No hay usuario autenticado. Por favor, inicia sesión nuevamente.');
+                }
+
+                this.userId = user.id;
+                // Verificar y crear usuario en public.users si no existe
+                await this.ensureUserExists(user);
+                return;
+            }
             throw new Error(`Error de autenticación: ${sessionError.message}`);
         }
 
@@ -50,11 +71,19 @@ class FormRecord {
             
             if (userError) {
                 console.error('Error obteniendo usuario:', userError);
+                // Si no hay usuario, redirigir al login
+                if (userError.message && userError.message.includes('session')) {
+                    console.warn('⚠️ No hay sesión activa. Redirigiendo al login...');
+                    window.location.href = 'login.html';
+                    return;
+                }
                 throw new Error(`Error de autenticación: ${userError.message}`);
             }
 
             if (!user) {
-                throw new Error('No hay usuario autenticado. Por favor, inicia sesión nuevamente.');
+                console.warn('⚠️ No hay usuario autenticado. Redirigiendo al login...');
+                window.location.href = 'login.html';
+                return;
             }
 
             this.userId = user.id;

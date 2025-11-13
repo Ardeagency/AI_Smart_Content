@@ -176,18 +176,41 @@ class PlanesManager {
 
             console.log('✅ Usuario creado en auth.users:', authData.user.id);
 
-            // 2. Esperar un momento para que la sesión se establezca
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            // Verificar si hay sesión activa
-            const { data: { session: currentSession } } = await this.supabase.auth.getSession();
+            // 2. Establecer sesión activa haciendo signIn después del signUp
+            // Esto asegura que la sesión esté disponible cuando se redirija a form-record.html
+            let session = authData.session;
             
-            if (currentSession) {
-                console.log('✅ Sesión activa encontrada');
+            if (!session) {
+                console.log('⚠️ No hay sesión automática, iniciando sesión...');
+                // Si no hay sesión (email requiere confirmación), hacer signIn para establecerla
+                const { data: signInData, error: signInError } = await this.supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (signInError) {
+                    console.warn('⚠️ No se pudo iniciar sesión automáticamente:', signInError.message);
+                    // Si el email requiere confirmación, continuar de todas formas
+                    // El usuario tendrá que confirmar su email después
+                    if (signInError.message.includes('Email not confirmed') || signInError.message.includes('email')) {
+                        console.log('⚠️ Email requiere confirmación, pero continuando...');
+                    } else {
+                        throw new Error(`Error al iniciar sesión: ${signInError.message}`);
+                    }
+                } else {
+                    session = signInData.session;
+                    console.log('✅ Sesión establecida después de signIn');
+                }
             } else {
-                console.log('⚠️ No hay sesión activa, intentando continuar...');
-                // Si no hay sesión, puede ser que el email requiera confirmación
-                // Intentar crear el usuario de todas formas
+                console.log('✅ Sesión activa encontrada automáticamente');
+            }
+
+            // Verificar sesión final
+            const { data: { session: finalSession } } = await this.supabase.auth.getSession();
+            if (finalSession) {
+                console.log('✅ Sesión confirmada antes de redirigir');
+            } else {
+                console.warn('⚠️ Advertencia: No hay sesión activa antes de redirigir');
             }
 
             // 3. Crear usuario en public.users usando función SECURITY DEFINER
