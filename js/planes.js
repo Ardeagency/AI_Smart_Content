@@ -148,20 +148,19 @@ class PlanesManager {
         }
 
         try {
-            // Separar nombre completo en first_name y last_name para metadata
-            const nameParts = fullName.split(' ');
-            const firstName = nameParts[0] || '';
-            const lastName = nameParts.slice(1).join(' ') || '';
+            // Validar que fullName no esté vacío
+            if (!fullName || fullName.trim() === '') {
+                fullName = email; // Usar email como fallback
+            }
 
             // 1. Registrar usuario en Supabase Auth
+            // Los metadatos se guardan en raw_user_meta_data (JSONB) en auth.users
             const { data: authData, error: authError } = await this.supabase.auth.signUp({
                 email: email,
                 password: password,
                 options: {
                     data: {
-                        full_name: fullName || email,
-                        first_name: firstName,
-                        last_name: lastName,
+                        full_name: fullName.trim(),
                         plan_type: this.selectedPlan.name
                 }
             }
@@ -192,12 +191,13 @@ class PlanesManager {
             }
 
             // 3. Crear usuario en public.users
+            // La tabla public.users tiene: id, email, full_name, plan_type, credits_available, credits_total, form_verified
             const { error: createUserError } = await this.supabase
                 .from('users')
                 .insert({
                     id: authData.user.id,
                     email: email,
-                    full_name: fullName,
+                    full_name: fullName.trim() || email,
                     plan_type: this.selectedPlan.name,
                     credits_available: this.selectedPlan.credits,
                     credits_total: this.selectedPlan.credits,
@@ -216,10 +216,10 @@ class PlanesManager {
             expiresAt.setMonth(expiresAt.getMonth() + 1);
 
             const { data: subscription, error: subscriptionError } = await this.supabase
-                .from('subscriptions')
-                .insert({
+                        .from('subscriptions')
+                        .insert({
                     user_id: authData.user.id,
-                    plan_type: this.selectedPlan.name,
+                            plan_type: this.selectedPlan.name,
                     status: 'active',
                     credits_included: this.selectedPlan.credits,
                     price: this.selectedPlan.price,
@@ -230,7 +230,7 @@ class PlanesManager {
                 .select()
                 .single();
 
-            if (subscriptionError) {
+                    if (subscriptionError) {
                 console.error('❌ Error creando suscripción:', subscriptionError);
                 throw new Error(`Error al crear la suscripción: ${subscriptionError.message}`);
             }
