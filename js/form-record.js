@@ -197,6 +197,9 @@ class FormRecord {
             return;
         }
 
+        // Guardar referencia al input original
+        const originalInput = event.target;
+
         const reader = new FileReader();
         reader.onload = (e) => {
             const preview = document.getElementById(previewId);
@@ -222,47 +225,77 @@ class FormRecord {
                     preview.style.display = 'block';
                 } else {
                     // Product image preview structure (direct in preview div)
-                    preview.innerHTML = ''; // Clear any existing content
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.alt = 'Preview';
-                    img.style.cssText = 'max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 0.5rem; display: block;';
+                    // NO limpiar el preview completamente, solo actualizar contenido visual
+                    const existingImg = preview.querySelector('img');
+                    const existingBtn = preview.querySelector('button');
                     
-                    // Add remove button
-                    const removeBtn = document.createElement('button');
-                    removeBtn.type = 'button';
-                    removeBtn.className = 'btn btn-secondary';
-                    removeBtn.style.cssText = 'margin-top: 0.5rem; padding: 0.5rem 1rem; font-size: 0.85rem;';
-                    removeBtn.innerHTML = '<i class="fas fa-times"></i> Eliminar';
+                    // Crear o actualizar imagen
+                    let img;
+                    if (existingImg) {
+                        img = existingImg;
+                        img.src = e.target.result;
+                    } else {
+                        preview.innerHTML = ''; // Solo limpiar si no hay contenido previo
+                        img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.alt = 'Preview';
+                        img.style.cssText = 'max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 0.5rem; display: block;';
+                        preview.appendChild(img);
+                    }
+                    
+                    // Crear o actualizar botón de eliminar
+                    let removeBtn = existingBtn;
+                    if (!removeBtn) {
+                        removeBtn = document.createElement('button');
+                        removeBtn.type = 'button';
+                        removeBtn.className = 'btn btn-secondary';
+                        removeBtn.style.cssText = 'margin-top: 0.5rem; padding: 0.5rem 1rem; font-size: 0.85rem;';
+                        removeBtn.innerHTML = '<i class="fas fa-times"></i> Eliminar';
+                        preview.appendChild(removeBtn);
+                    }
                     
                     // Store reference to input and fieldName for removal
-                    const input = event.target;
+                    const input = originalInput;
                     const fieldNameRef = fieldName;
                     removeBtn.onclick = () => {
-                        input.value = '';
+                        // Limpiar input usando DataTransfer
+                        const dataTransfer = new DataTransfer();
+                        input.files = dataTransfer.files;
                         preview.innerHTML = '';
                         preview.style.display = 'none';
                         delete this.formData[fieldNameRef];
+                        if (fieldName === 'logo') {
+                            delete this.formData.logo_file;
+                        } else if (fieldName.startsWith('productImage')) {
+                            const index = parseInt(fieldName.replace('productImage', '')) - 1;
+                            if (this.formData.product_images) {
+                                this.formData.product_images[index] = null;
+                            }
+                        }
                     };
                     
-                    preview.appendChild(img);
-                    preview.appendChild(removeBtn);
                     preview.style.display = 'block';
                 }
             }
             
             // Store file in formData for Supabase upload
+            // Esto es lo más importante - asegurar que el archivo se guarde
+            console.log(`📁 Guardando archivo en formData: ${fieldName}`, file.name, file.size);
+            
             if (fieldName === 'logo') {
                 this.formData.logo_file = [file];
+                console.log('✅ Logo guardado en formData.logo_file');
             } else if (fieldName.startsWith('productImage')) {
                 if (!this.formData.product_images) {
                     this.formData.product_images = [];
                 }
                 const index = parseInt(fieldName.replace('productImage', '')) - 1;
                 this.formData.product_images[index] = file;
+                console.log(`✅ Imagen de producto guardada en formData.product_images[${index}]`);
             }
             
             this.formData[fieldName] = file;
+            console.log(`✅ Archivo guardado en formData[${fieldName}]`);
         };
         reader.readAsDataURL(file);
     }
