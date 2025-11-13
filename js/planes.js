@@ -146,34 +146,94 @@ class PlanesManager {
         try {
             const fullName = `${firstName} ${lastName}`.trim() || email;
 
-            // Registrar usuario en Supabase Auth
-            const { data, error } = await this.supabase.auth.signUp({
+            // 1. Registrar usuario en Supabase Auth
+            const { data: authData, error: authError } = await this.supabase.auth.signUp({
                 email: email,
                 password: password,
                 options: {
                     data: {
                         full_name: fullName,
                         first_name: firstName,
-                        last_name: lastName
+                        last_name: lastName,
+                        plan_type: this.selectedPlan.name
                     }
                 }
             });
 
-            if (error) {
-                throw error;
+            if (authError) {
+                throw authError;
             }
 
-            if (data.user) {
-                // Mostrar mensaje de éxito
-                alert('¡Cuenta creada exitosamente! Redirigiendo...');
-                
-                // Redirigir al formulario de registro de datos
-                setTimeout(() => {
-                    window.location.href = 'form-record.html';
-                }, 1500);
+            if (!authData.user) {
+                throw new Error('No se pudo crear el usuario');
             }
+
+            console.log('✅ Usuario creado en auth.users:', authData.user.id);
+
+            // 2. Asegurar sesión activa para RLS
+            let session = authData.session;
+            if (!session) {
+                const { data: signInData } = await this.supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                session = signInData?.session;
+            }
+
+            if (!session) {
+                throw new Error('No se pudo establecer una sesión activa');
+            }
+
+            // 3. Crear usuario en public.users
+            const { error: createUserError } = await this.supabase
+                .from('users')
+                .insert({
+                    id: authData.user.id,
+                    email: email,
+                    full_name: fullName,
+                    plan_type: this.selectedPlan.name,
+                    credits_available: this.selectedPlan.credits,
+                    credits_total: this.selectedPlan.credits,
+                    form_verified: false
+                });
+
+            if (createUserError) {
+                console.error('❌ Error creando usuario en public.users:', createUserError);
+                throw new Error(`Error al crear el perfil: ${createUserError.message}`);
+            }
+            console.log('✅ Usuario creado en public.users');
+
+            // 4. Crear suscripción en public.subscriptions
+            const now = new Date();
+            const expiresAt = new Date(now);
+            expiresAt.setMonth(expiresAt.getMonth() + 1);
+
+            const { data: subscription, error: subscriptionError } = await this.supabase
+                .from('subscriptions')
+                .insert({
+                    user_id: authData.user.id,
+                    plan_type: this.selectedPlan.name,
+                    status: 'active',
+                    credits_included: this.selectedPlan.credits,
+                    price: this.selectedPlan.price,
+                    currency: 'USD',
+                    started_at: now.toISOString(),
+                    expires_at: expiresAt.toISOString()
+                })
+                .select()
+                .single();
+
+            if (subscriptionError) {
+                console.error('❌ Error creando suscripción:', subscriptionError);
+                throw new Error(`Error al crear la suscripción: ${subscriptionError.message}`);
+            }
+            console.log('✅ Suscripción creada:', subscription);
+
+            // 5. Redirigir directamente a form-record.html (sin alert)
+            window.location.href = 'form-record.html';
+
         } catch (error) {
-            console.error('Error en registro:', error);
+            console.error('❌ Error en registro:', error);
             
             let errorMessage = 'Error al crear la cuenta. Intenta nuevamente.';
             
