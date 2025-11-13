@@ -328,9 +328,28 @@ CREATE TRIGGER update_subscriptions_updated_at BEFORE UPDATE ON public.subscript
 -- Función para crear usuario en public.users cuando se crea en auth.users
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+    v_plan_type plan_tipo_enum;
+    v_full_name TEXT;
 BEGIN
-    INSERT INTO public.users (id, email, full_name)
-    VALUES (NEW.id, NEW.email, NEW.raw_user_meta_data->>'full_name');
+    -- Obtener plan_type de los metadatos si existe, sino usar 'basico' por defecto
+    v_plan_type := COALESCE(
+        (NEW.raw_user_meta_data->>'plan_type')::plan_tipo_enum,
+        'basico'::plan_tipo_enum
+    );
+    
+    -- Obtener full_name de los metadatos
+    v_full_name := NEW.raw_user_meta_data->>'full_name';
+    
+    INSERT INTO public.users (id, email, full_name, plan_type, credits_available, credits_total)
+    VALUES (
+        NEW.id, 
+        NEW.email, 
+        v_full_name,
+        v_plan_type,
+        0, -- Los créditos se asignarán cuando se cree la suscripción
+        0
+    );
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

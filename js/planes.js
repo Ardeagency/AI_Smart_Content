@@ -245,26 +245,64 @@ class PlanesManager {
 
             if (data.user) {
                 // El trigger handle_new_user() creará automáticamente el registro en public.users
+                // Esperar un momento para que el trigger se ejecute
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                const credits = parseInt(this.selectedPlan.credits);
+                const planType = this.selectedPlan.name;
+
+                // Actualizar el usuario con el plan_type y créditos
+                try {
+                    const { error: updateUserError } = await this.supabase
+                        .from('users')
+                        .update({
+                            plan_type: planType,
+                            credits_available: credits,
+                            credits_total: credits
+                        })
+                        .eq('id', data.user.id);
+
+                    if (updateUserError) {
+                        console.error('Error actualizando usuario:', updateUserError);
+                        throw new Error(`Error al asignar plan: ${updateUserError.message}`);
+                    }
+                } catch (updateError) {
+                    console.error('Error actualizando usuario:', updateError);
+                    throw updateError;
+                }
+
                 // Crear suscripción con el plan seleccionado
                 try {
-                    const { error: subscriptionError } = await this.supabase
+                    const now = new Date();
+                    const expiresAt = new Date(now);
+                    expiresAt.setMonth(expiresAt.getMonth() + 1); // 1 mes desde ahora
+
+                    const { data: subscription, error: subscriptionError } = await this.supabase
                         .from('subscriptions')
                         .insert({
                             user_id: data.user.id,
-                            plan_type: this.selectedPlan.name,
-                            status: 'pending',
-                            credits_included: parseInt(this.selectedPlan.credits),
+                            plan_type: planType,
+                            status: 'active',
+                            credits_included: credits,
                             price: parseFloat(this.selectedPlan.price),
-                            currency: 'USD'
-                        });
+                            currency: 'USD',
+                            started_at: now.toISOString(),
+                            expires_at: expiresAt.toISOString()
+                        })
+                        .select()
+                        .single();
 
                     if (subscriptionError) {
-                        console.error('Error creating subscription:', subscriptionError);
-                        // No bloqueamos el flujo si falla la suscripción
+                        console.error('Error creando suscripción:', subscriptionError);
+                        // No bloqueamos el flujo, pero logueamos el error
+                        console.warn('La suscripción no se pudo crear, pero el usuario tiene el plan asignado');
+                    } else {
+                        console.log('✅ Suscripción creada exitosamente:', subscription);
                     }
                 } catch (subError) {
-                    console.error('Error creating subscription:', subError);
+                    console.error('Error creando suscripción:', subError);
                     // No bloqueamos el flujo si falla la suscripción
+                    // El usuario ya tiene el plan asignado
                 }
 
                 // Cerrar modal
