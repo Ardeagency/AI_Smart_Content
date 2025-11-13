@@ -32,43 +32,29 @@ class PlanesManager {
     }
 
     setupPlanSelection() {
-        const planOptions = document.querySelectorAll('.plan-option');
+        const planCards = document.querySelectorAll('.plan-card-small');
         
-        planOptions.forEach(option => {
-            const radio = option.querySelector('.plan-radio');
-            const label = option.querySelector('.plan-label');
-            
-            // Click en el label o card
-            label.addEventListener('click', (e) => {
-                e.preventDefault();
-                radio.checked = true;
-                this.selectPlan(option);
-            });
-            
-            // Cambio en el radio
-            radio.addEventListener('change', () => {
-                if (radio.checked) {
-                    this.selectPlan(option);
-                }
+        planCards.forEach(card => {
+            card.addEventListener('click', () => {
+                this.selectPlan(card);
             });
         });
     }
 
-    selectPlan(optionElement) {
-        // Deseleccionar todos
-        document.querySelectorAll('.plan-radio').forEach(radio => {
-            radio.checked = false;
+    selectPlan(cardElement) {
+        // Deseleccionar todas las cards
+        document.querySelectorAll('.plan-card-small').forEach(card => {
+            card.classList.remove('selected');
         });
         
-        // Seleccionar el actual
-        const radio = optionElement.querySelector('.plan-radio');
-        radio.checked = true;
+        // Seleccionar la card actual
+        cardElement.classList.add('selected');
         
         // Guardar plan seleccionado
         this.selectedPlan = {
-            name: optionElement.dataset.plan,
-            credits: parseInt(optionElement.dataset.credits),
-            price: parseFloat(optionElement.dataset.price)
+            name: cardElement.dataset.plan,
+            credits: parseInt(cardElement.dataset.credits),
+            price: parseFloat(cardElement.dataset.price)
         };
         
         console.log('Plan seleccionado:', this.selectedPlan);
