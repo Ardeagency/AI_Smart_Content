@@ -15,7 +15,6 @@ class FormRecord {
 
     async init() {
         this.setupEventListeners();
-        this.updateProgress();
         this.setupCharCounters();
         this.setupFileUploads();
         this.setupCustomMultiselects();
@@ -609,7 +608,6 @@ class FormRecord {
         if (this.currentStep < this.totalSteps - 1) {
             this.currentStep++;
             this.showStep(this.currentStep);
-            this.updateProgress();
         } else if (this.currentStep === this.totalSteps - 1) {
             // Último paso antes de finalizar - guardar inmediatamente
             await this.completeForm();
@@ -620,7 +618,6 @@ class FormRecord {
         if (this.currentStep > 1) {
             this.currentStep--;
             this.showStep(this.currentStep);
-            this.updateProgress();
         }
     }
 
@@ -651,9 +648,6 @@ class FormRecord {
         }
     }
 
-    updateProgress() {
-        // Barra de progreso eliminada - no se actualiza
-    }
 
     async completeForm() {
         const btnNext = document.getElementById('btnNext');
@@ -713,7 +707,6 @@ class FormRecord {
             // Solo avanzar si el guardado fue exitoso
             this.currentStep = this.totalSteps;
             this.showStep(this.totalSteps);
-            this.updateProgress();
             
             return true;
         } catch (error) {
