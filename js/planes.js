@@ -190,19 +190,15 @@ class PlanesManager {
                 // Intentar crear el usuario de todas formas
             }
 
-            // 3. Crear usuario en public.users
-            // La tabla public.users tiene: id, email, full_name, plan_type, credits_available, credits_total, form_verified
-            const { error: createUserError } = await this.supabase
-                .from('users')
-                .insert({
-                    id: authData.user.id,
-                    email: email,
-                    full_name: fullName.trim() || email,
-                    plan_type: this.selectedPlan.name,
-                    credits_available: this.selectedPlan.credits,
-                    credits_total: this.selectedPlan.credits,
-                    form_verified: false
-                });
+            // 3. Crear usuario en public.users usando función SECURITY DEFINER
+            // Esto evita problemas de RLS cuando no hay sesión activa
+            const { error: createUserError } = await this.supabase.rpc('create_user_profile', {
+                p_user_id: authData.user.id,
+                p_email: email,
+                p_full_name: fullName.trim() || email,
+                p_plan_type: this.selectedPlan.name,
+                p_credits: this.selectedPlan.credits
+            });
 
             if (createUserError) {
                 console.error('❌ Error creando usuario en public.users:', createUserError);
@@ -210,31 +206,19 @@ class PlanesManager {
             }
             console.log('✅ Usuario creado en public.users');
 
-            // 4. Crear suscripción en public.subscriptions
-            const now = new Date();
-            const expiresAt = new Date(now);
-            expiresAt.setMonth(expiresAt.getMonth() + 1);
+            // 4. Crear suscripción en public.subscriptions usando función SECURITY DEFINER
+            const { data: subscriptionId, error: subscriptionError } = await this.supabase.rpc('create_user_subscription', {
+                p_user_id: authData.user.id,
+                p_plan_type: this.selectedPlan.name,
+                p_credits_included: this.selectedPlan.credits,
+                p_price: this.selectedPlan.price
+            });
 
-            const { data: subscription, error: subscriptionError } = await this.supabase
-                        .from('subscriptions')
-                        .insert({
-                    user_id: authData.user.id,
-                            plan_type: this.selectedPlan.name,
-                    status: 'active',
-                    credits_included: this.selectedPlan.credits,
-                    price: this.selectedPlan.price,
-                    currency: 'USD',
-                    started_at: now.toISOString(),
-                    expires_at: expiresAt.toISOString()
-                })
-                .select()
-                .single();
-
-                    if (subscriptionError) {
+            if (subscriptionError) {
                 console.error('❌ Error creando suscripción:', subscriptionError);
                 throw new Error(`Error al crear la suscripción: ${subscriptionError.message}`);
             }
-            console.log('✅ Suscripción creada:', subscription);
+            console.log('✅ Suscripción creada con ID:', subscriptionId);
 
             // 5. Redirigir directamente a form-record.html (sin alert)
             window.location.href = 'form-record.html';

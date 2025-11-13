@@ -325,7 +325,79 @@ CREATE TRIGGER update_campaigns_updated_at BEFORE UPDATE ON public.campaigns
 CREATE TRIGGER update_subscriptions_updated_at BEFORE UPDATE ON public.subscriptions
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Trigger eliminado - Los usuarios se crean directamente desde el cliente
+-- Función para crear usuario en public.users (SECURITY DEFINER para evitar problemas de RLS)
+CREATE OR REPLACE FUNCTION public.create_user_profile(
+    p_user_id UUID,
+    p_email TEXT,
+    p_full_name TEXT,
+    p_plan_type plan_tipo_enum,
+    p_credits INTEGER
+)
+RETURNS void AS $$
+BEGIN
+    INSERT INTO public.users (
+        id,
+        email,
+        full_name,
+        plan_type,
+        credits_available,
+        credits_total,
+        form_verified
+    )
+    VALUES (
+        p_user_id,
+        p_email,
+        p_full_name,
+        p_plan_type,
+        p_credits,
+        p_credits,
+        FALSE
+    )
+    ON CONFLICT (id) DO UPDATE SET
+        email = EXCLUDED.email,
+        full_name = COALESCE(EXCLUDED.full_name, public.users.full_name),
+        plan_type = COALESCE(EXCLUDED.plan_type, public.users.plan_type),
+        credits_available = COALESCE(EXCLUDED.credits_available, public.users.credits_available),
+        credits_total = COALESCE(EXCLUDED.credits_total, public.users.credits_total);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Función para crear suscripción (SECURITY DEFINER para evitar problemas de RLS)
+CREATE OR REPLACE FUNCTION public.create_user_subscription(
+    p_user_id UUID,
+    p_plan_type plan_tipo_enum,
+    p_credits_included INTEGER,
+    p_price DECIMAL(10, 2)
+)
+RETURNS UUID AS $$
+DECLARE
+    v_subscription_id UUID;
+BEGIN
+    INSERT INTO public.subscriptions (
+        user_id,
+        plan_type,
+        status,
+        credits_included,
+        price,
+        currency,
+        started_at,
+        expires_at
+    )
+    VALUES (
+        p_user_id,
+        p_plan_type,
+        'active',
+        p_credits_included,
+        p_price,
+        'USD',
+        NOW(),
+        NOW() + INTERVAL '1 month'
+    )
+    RETURNING id INTO v_subscription_id;
+    
+    RETURN v_subscription_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Función para verificar y descontar créditos
 CREATE OR REPLACE FUNCTION use_credits(
