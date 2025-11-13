@@ -327,7 +327,11 @@ CREATE TRIGGER update_subscriptions_updated_at BEFORE UPDATE ON public.subscript
 
 -- Función para crear usuario en public.users cuando se crea en auth.users
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER 
+SECURITY DEFINER
+SET search_path = public
+LANGUAGE plpgsql
+AS $$
 DECLARE
     v_plan_type plan_tipo_enum;
     v_full_name TEXT;
@@ -409,12 +413,16 @@ BEGIN
     
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
+
+-- Eliminar trigger anterior si existe
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 
 -- Trigger para crear usuario automáticamente
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
-    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+    FOR EACH ROW 
+    EXECUTE FUNCTION public.handle_new_user();
 
 -- Función para verificar y descontar créditos
 CREATE OR REPLACE FUNCTION use_credits(
