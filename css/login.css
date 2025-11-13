@@ -371,7 +371,7 @@ body::before {
 }
 
 .divider span {
-    background: rgba(26, 26, 26, 0.9);
+    background: rgba(42, 42, 42, 0.95);
     padding: 0 15px;
 }
 
