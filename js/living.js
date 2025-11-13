@@ -267,14 +267,26 @@ class LivingManager {
 
         // Logo
         if (this.projectData.logo_url) {
+            console.log('🖼️ Cargando logo desde:', this.projectData.logo_url);
             if (brandLogoEl) {
-                brandLogoEl.src = this.projectData.logo_url;
+                // Agregar timestamp para evitar cache
+                const logoUrl = this.projectData.logo_url + (this.projectData.logo_url.includes('?') ? '&' : '?') + 't=' + Date.now();
+                brandLogoEl.src = logoUrl;
                 brandLogoEl.style.display = 'block';
+                brandLogoEl.onerror = () => {
+                    console.error('❌ Error cargando imagen del logo');
+                    if (brandLogoEl) brandLogoEl.style.display = 'none';
+                    if (logoPlaceholderEl) logoPlaceholderEl.style.display = 'flex';
+                };
+                brandLogoEl.onload = () => {
+                    console.log('✅ Logo cargado exitosamente');
+                };
             }
             if (logoPlaceholderEl) {
                 logoPlaceholderEl.style.display = 'none';
             }
         } else {
+            console.log('ℹ️ No hay logo disponible');
             if (brandLogoEl) brandLogoEl.style.display = 'none';
             if (logoPlaceholderEl) logoPlaceholderEl.style.display = 'flex';
         }
@@ -1017,51 +1029,141 @@ class LivingManager {
     async saveLogo(modal) {
         const logoInput = modal.querySelector('#editLogoFile');
         if (!logoInput || !logoInput.files[0]) {
-            modal.remove();
+            console.warn('⚠️ No se seleccionó ningún archivo de logo');
+            this.showNotification('⚠️ Por favor selecciona un archivo de logo', 'error');
             return;
         }
 
         const logoFile = logoInput.files[0];
         
+        // Validar tamaño del archivo (5MB máximo)
+        if (logoFile.size > 5 * 1024 * 1024) {
+            alert('El archivo es demasiado grande. Máximo 5MB.');
+            return;
+        }
+
+        // Deshabilitar botón de submit mientras se sube
+        const submitBtn = modal.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Subiendo...';
+        }
+        
         try {
+            console.log('📤 Iniciando subida de logo...');
+            console.log('📋 Archivo:', logoFile.name, 'Tamaño:', logoFile.size, 'Tipo:', logoFile.type);
+            
             const fileExt = logoFile.name.split('.').pop();
             const fileName = `${this.userId}/${this.projectData.id}/logo.${fileExt}`;
 
-            // Eliminar logo anterior
+            console.log('📁 Ruta del archivo:', fileName);
+
+            // Verificar que tenemos Supabase y userId
+            if (!this.supabase) {
+                throw new Error('Supabase no está inicializado');
+            }
+            if (!this.userId) {
+                throw new Error('No hay usuario autenticado');
+            }
+            if (!this.projectData || !this.projectData.id) {
+                throw new Error('No hay proyecto disponible');
+            }
+
+            // Intentar eliminar logo anterior si existe
             try {
-                await this.supabase.storage
+                console.log('🗑️ Intentando eliminar logo anterior...');
+                const { data: listData } = await this.supabase.storage
                     .from('brand-logos')
-                    .remove([fileName]);
-            } catch (e) {}
+                    .list(`${this.userId}/${this.projectData.id}`, {
+                        search: 'logo'
+                    });
+                
+                if (listData && listData.length > 0) {
+                    const filesToRemove = listData.map(f => `${this.userId}/${this.projectData.id}/${f.name}`);
+                    await this.supabase.storage
+                        .from('brand-logos')
+                        .remove(filesToRemove);
+                    console.log('✅ Logo anterior eliminado');
+                }
+            } catch (removeError) {
+                console.log('ℹ️ No se encontró logo anterior o error al eliminar:', removeError.message);
+            }
 
             // Subir nuevo logo
-            const { error: uploadError } = await this.supabase.storage
+            console.log('📤 Subiendo nuevo logo...');
+            const { data: uploadData, error: uploadError } = await this.supabase.storage
                 .from('brand-logos')
                 .upload(fileName, logoFile, {
                     upsert: true,
-                    contentType: logoFile.type
+                    contentType: logoFile.type,
+                    cacheControl: '3600'
                 });
 
-            if (uploadError) throw uploadError;
+            if (uploadError) {
+                console.error('❌ Error al subir logo:', uploadError);
+                throw new Error(`Error al subir logo: ${uploadError.message}`);
+            }
 
+            console.log('✅ Logo subido exitosamente:', uploadData);
+
+            // Obtener URL pública
             const { data: { publicUrl } } = this.supabase.storage
                 .from('brand-logos')
                 .getPublicUrl(fileName);
 
+            console.log('🔗 URL pública del logo:', publicUrl);
+
+            // Actualizar proyecto con la nueva URL
+            console.log('💾 Actualizando proyecto con nueva URL de logo...');
             const { error: updateError } = await this.supabase
                 .from('projects')
                 .update({ logo_url: publicUrl })
                 .eq('id', this.projectData.id);
 
-            if (updateError) throw updateError;
+            if (updateError) {
+                console.error('❌ Error al actualizar proyecto:', updateError);
+                throw new Error(`Error al actualizar proyecto: ${updateError.message}`);
+            }
 
+            console.log('✅ Proyecto actualizado exitosamente');
+
+            // Recargar datos del proyecto
             await this.loadProjectData();
+            
+            // Renderizar nuevamente la información de la marca
             this.renderBrandInfo();
+            
+            // Cerrar modal
             modal.remove();
-            this.showNotification('✅ Logo actualizado', 'success');
+            
+            // Mostrar notificación de éxito
+            this.showNotification('✅ Logo actualizado exitosamente', 'success');
+            
         } catch (error) {
-            console.error('Error guardando logo:', error);
-            alert(`Error al guardar logo: ${error.message}`);
+            console.error('❌ Error completo guardando logo:', error);
+            console.error('Detalles:', {
+                message: error.message,
+                code: error.code,
+                details: error.details,
+                hint: error.hint
+            });
+            
+            // Reactivar botón
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Guardar';
+            }
+            
+            let errorMessage = `Error al guardar logo: ${error.message}`;
+            if (error.details) {
+                errorMessage += `\n\nDetalles: ${error.details}`;
+            }
+            if (error.hint) {
+                errorMessage += `\n\nSugerencia: ${error.hint}`;
+            }
+            
+            alert(errorMessage);
+            this.showNotification(`❌ Error: ${error.message}`, 'error');
         }
     }
 
