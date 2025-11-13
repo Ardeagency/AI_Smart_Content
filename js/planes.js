@@ -195,6 +195,19 @@ class PlanesManager {
 
             console.log('✅ Usuario creado en auth.users:', authData.user.id);
 
+            // Asegurar que tenemos una sesión activa
+            if (authData.session) {
+                // La sesión ya está activa, podemos continuar
+                console.log('✅ Sesión activa');
+            } else {
+                // Esperar un momento y verificar la sesión
+                await new Promise(resolve => setTimeout(resolve, 500));
+                const { data: { session } } = await this.supabase.auth.getSession();
+                if (!session) {
+                    console.warn('⚠️ No hay sesión activa, intentando continuar de todas formas');
+                }
+            }
+
             // 2. Crear usuario en public.users directamente
             const { error: createUserError } = await this.supabase
                 .from('users')
