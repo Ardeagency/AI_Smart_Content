@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productos - AI Smart Content</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/products.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="products-header">
+        <div class="header-content">
+            <div class="header-left">
+                <a href="living.html" class="logo-link">
+                    <i class="fas fa-cube"></i>
+                    <span class="logo-text">AI SMART CONTENT</span>
+                </a>
+            </div>
+            <nav class="header-nav">
+                <a href="living.html" class="nav-link">
+                    <i class="fas fa-home"></i>
+                    <span>Living</span>
+                </a>
+                <a href="studio.html" class="nav-link">
+                    <i class="fas fa-palette"></i>
+                    <span>Studio</span>
+                </a>
+                <a href="products.html" class="nav-link active">
+                    <i class="fas fa-box"></i>
+                    <span>Productos</span>
+                </a>
+                <button class="btn-logout" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Salir</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="products-container">
+        <!-- Main Content -->
+        <main class="products-main">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="page-title-section">
+                    <h1 class="page-title">
+                        <i class="fas fa-box"></i>
+                        Mis Productos
+                    </h1>
+                    <p class="page-subtitle">Gestiona y edita tus productos</p>
+                </div>
+                <button class="btn-primary btn-add-product" id="addProductBtn">
+                    <i class="fas fa-plus"></i>
+                    <span>Nuevo Producto</span>
+                </button>
+            </div>
+
+            <!-- Products Gallery -->
+            <div class="products-gallery" id="productsGallery">
+                <!-- Loading State -->
+                <div class="loading-state" id="loadingState">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Cargando productos...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <i class="fas fa-box-open"></i>
+                    <h3>No hay productos</h3>
+                    <p>Aún no has creado ningún producto</p>
+                    <button class="btn-primary" onclick="document.getElementById('addProductBtn').click()">
+                        <i class="fas fa-plus"></i>
+                        Crear Primer Producto
+                    </button>
+                </div>
+
+                <!-- Products Grid -->
+                <div class="products-grid" id="productsGrid" style="display: none;">
+                    <!-- Products will be inserted here -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Sidebar -->
+        <aside class="products-sidebar" id="productsSidebar">
+            <div class="sidebar-header">
+                <h2 class="sidebar-title" id="sidebarTitle">Detalles del Producto</h2>
+                <button class="sidebar-close" id="sidebarClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="sidebar-content" id="sidebarContent">
+                <!-- Content will be loaded dynamically -->
+            </div>
+        </aside>
+
+        <!-- Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    </div>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/products.js"></script>
+</body>
+</html>
+
