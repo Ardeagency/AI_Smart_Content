@@ -3,146 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planes - AI Smart Content</title>
+    <title>Suscribirse - AI Smart Content</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/planes.css">
 </head>
 <body>
-    <div class="planes-container">
+    <div class="subscribe-container">
         <!-- Header -->
-        <header class="planes-header">
+        <header class="subscribe-header">
             <div class="logo">
                 <a href="index.html">
+                    <i class="fas fa-brain"></i>
                     <span class="logo-text">AI SMART CONTENT</span>
                 </a>
             </div>
             <nav class="header-nav">
                 <a href="index.html" class="nav-link">Inicio</a>
-                <a href="login.html" class="nav-link">Login</a>
-    </nav>
+                <a href="login.html" class="nav-link">Iniciar Sesión</a>
+            </nav>
         </header>
 
-        <!-- Main Content -->
-        <main class="planes-main">
-            <div class="planes-intro">
-                <h1 class="planes-title">Elige tu Plan</h1>
-                <p class="planes-subtitle">Selecciona el plan que mejor se adapte a tus necesidades</p>
-            </div>
+        <!-- Main Card -->
+        <div class="subscribe-card">
+            <!-- Left Side - Form -->
+            <div class="subscribe-form-section">
+                <div class="form-header">
+                    <span class="form-badge">COMENZAR GRATIS</span>
+                    <h1 class="form-title">Crear nueva cuenta<span class="title-dot">.</span></h1>
+                    <p class="form-subtitle">¿Ya eres miembro? <a href="login.html" class="login-link">Iniciar Sesión</a></p>
+                </div>
 
-            <!-- Plans Grid -->
-            <div class="plans-grid">
-                <!-- Plan Básico -->
-                <div class="plan-card">
-                    <div class="plan-header">
-                        <h3 class="plan-name">Básico</h3>
-                        <div class="plan-credits">
-                            <span class="credits-number">50</span>
-                            <span class="credits-label">Créditos</span>
+                <!-- Plan Selection Cards -->
+                <div class="plans-selection">
+                    <div class="plan-option" data-plan="basico" data-credits="50" data-price="29">
+                        <input type="radio" name="plan" id="plan-basico" class="plan-radio" value="basico">
+                        <label for="plan-basico" class="plan-label">
+                            <div class="plan-card-small">
+                                <div class="plan-card-header">
+                                    <h3 class="plan-card-name">Básico</h3>
+                                    <div class="plan-card-price">$29<span>/mes</span></div>
+                                </div>
+                                <div class="plan-card-credits">50 créditos</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="plan-option" data-plan="pro" data-credits="150" data-price="79">
+                        <input type="radio" name="plan" id="plan-pro" class="plan-radio" value="pro">
+                        <label for="plan-pro" class="plan-label">
+                            <div class="plan-card-small">
+                                <div class="plan-card-header">
+                                    <h3 class="plan-card-name">Pro</h3>
+                                    <div class="plan-card-price">$79<span>/mes</span></div>
+                                </div>
+                                <div class="plan-card-credits">150 créditos</div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="plan-option" data-plan="enterprise" data-credits="500" data-price="199">
+                        <input type="radio" name="plan" id="plan-enterprise" class="plan-radio" value="enterprise">
+                        <label for="plan-enterprise" class="plan-label">
+                            <div class="plan-card-small">
+                                <div class="plan-card-header">
+                                    <h3 class="plan-card-name">Enterprise</h3>
+                                    <div class="plan-card-price">$199<span>/mes</span></div>
+                                </div>
+                                <div class="plan-card-credits">500 créditos</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Registration Form -->
+                <form class="registration-form" id="registrationForm">
+                    <div class="form-group">
+                        <label for="regFirstName">Nombre</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="regFirstName" name="firstName" class="form-input" autocomplete="given-name" required>
+                            <i class="fas fa-user input-icon"></i>
                         </div>
                     </div>
-                    <div class="plan-price">
-                        <span class="price-amount">$29</span>
-                        <span class="price-period">/mes</span>
-                    </div>
-                    <ul class="plan-features">
-                        <li><i class="fas fa-check"></i> 50 créditos mensuales</li>
-                        <li><i class="fas fa-check"></i> Generación de contenido básico</li>
-                        <li><i class="fas fa-check"></i> Soporte por email</li>
-                    </ul>
-                    <button class="plan-btn" data-plan="basico" data-credits="50" data-price="29">
-                        Seleccionar Plan
-                    </button>
-                </div>
 
-                <!-- Plan Pro -->
-                <div class="plan-card featured">
-                    <div class="plan-badge">Popular</div>
-                    <div class="plan-header">
-                        <h3 class="plan-name">Pro</h3>
-                        <div class="plan-credits">
-                            <span class="credits-number">150</span>
-                            <span class="credits-label">Créditos</span>
+                    <div class="form-group">
+                        <label for="regLastName">Apellido</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="regLastName" name="lastName" class="form-input" autocomplete="family-name" required>
+                            <i class="fas fa-user input-icon"></i>
                         </div>
                     </div>
-                    <div class="plan-price">
-                        <span class="price-amount">$79</span>
-                        <span class="price-period">/mes</span>
-                    </div>
-                    <ul class="plan-features">
-                        <li><i class="fas fa-check"></i> 150 créditos mensuales</li>
-                        <li><i class="fas fa-check"></i> Generación avanzada</li>
-                        <li><i class="fas fa-check"></i> Prioridad en soporte</li>
-                        <li><i class="fas fa-check"></i> Análisis de resultados</li>
-                    </ul>
-                    <button class="plan-btn" data-plan="pro" data-credits="150" data-price="79">
-                        Seleccionar Plan
-                    </button>
-                </div>
 
-                <!-- Plan Enterprise -->
-                <div class="plan-card">
-                    <div class="plan-header">
-                        <h3 class="plan-name">Enterprise</h3>
-                        <div class="plan-credits">
-                            <span class="credits-number">500</span>
-                            <span class="credits-label">Créditos</span>
+                    <div class="form-group">
+                        <label for="regEmail">Correo electrónico</label>
+                        <div class="input-wrapper">
+                            <input type="email" id="regEmail" name="email" class="form-input" autocomplete="email" required>
+                            <i class="fas fa-envelope input-icon"></i>
                         </div>
                     </div>
-                    <div class="plan-price">
-                        <span class="price-amount">$199</span>
-                        <span class="price-period">/mes</span>
+
+                    <div class="form-group">
+                        <label for="regPassword">Contraseña</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="regPassword" name="password" class="form-input" autocomplete="new-password" required>
+                            <i class="fas fa-eye input-icon password-toggle" id="passwordToggle"></i>
+                        </div>
                     </div>
-                    <ul class="plan-features">
-                        <li><i class="fas fa-check"></i> 500 créditos mensuales</li>
-                        <li><i class="fas fa-check"></i> Todas las funciones</li>
-                        <li><i class="fas fa-check"></i> Soporte 24/7</li>
-                        <li><i class="fas fa-check"></i> Gestor de cuenta dedicado</li>
-                        <li><i class="fas fa-check"></i> Personalización avanzada</li>
-                    </ul>
-                    <button class="plan-btn" data-plan="enterprise" data-credits="500" data-price="199">
-                        Seleccionar Plan
-                    </button>
-                </div>
-            </div>
-        </main>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-change-method">Cambiar método</button>
+                        <button type="submit" class="btn-create-account">Crear cuenta</button>
+                    </div>
+                </form>
             </div>
 
-    <!-- Registration Modal -->
-    <div class="registration-overlay" id="registrationOverlay">
-        <div class="registration-modal">
-            <button class="modal-close" id="closeModal">
-                <i class="fas fa-times"></i>
-            </button>
-            <div class="modal-header">
-                <h2>Registro y Pago</h2>
-                <p class="selected-plan-info" id="selectedPlanInfo"></p>
-            </div>
-            <form class="registration-form" id="registrationForm">
-                <div class="form-group">
-                    <label for="regName">Nombre completo <span class="required">*</span></label>
-                    <input type="text" id="regName" name="name" class="form-input" autocomplete="name" required>
+            <!-- Right Side - Background Image -->
+            <div class="subscribe-image-section">
+                <div class="image-overlay"></div>
+                <div class="image-logo">
+                    <i class="fas fa-brain"></i>
                 </div>
-                <div class="form-group">
-                    <label for="regEmail">Correo electrónico <span class="required">*</span></label>
-                    <input type="email" id="regEmail" name="email" class="form-input" autocomplete="email" required>
-                </div>
-                <div class="form-group">
-                    <label for="regPassword">Contraseña <span class="required">*</span></label>
-                    <input type="password" id="regPassword" name="password" class="form-input" autocomplete="new-password" required>
-                </div>
-                <div class="form-group">
-                    <label for="regConfirmPassword">Confirmar contraseña <span class="required">*</span></label>
-                    <input type="password" id="regConfirmPassword" name="confirmPassword" class="form-input" autocomplete="new-password" required>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn-secondary" id="cancelBtn">Cancelar</button>
-                    <button type="submit" class="btn-primary">Proceder al Pago</button>
-                </div>
-            </form>
             </div>
         </div>
+    </div>
 
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -151,4 +135,3 @@
     <script src="js/planes.js"></script>
 </body>
 </html>
-

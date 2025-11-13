@@ -1,6 +1,6 @@
 /**
- * AI Smart Content - Planes Page
- * Manejo de selección de planes y modal de registro
+ * AI Smart Content - Suscribirse Page
+ * Manejo de selección de planes con checkboxes y registro
  */
 
 class PlanesManager {
@@ -12,9 +12,9 @@ class PlanesManager {
 
     async init() {
         await this.initSupabase();
-        this.setupPlanButtons();
-        this.setupModal();
+        this.setupPlanSelection();
         this.setupForm();
+        this.setupPasswordToggle();
     }
 
     async initSupabase() {
@@ -31,76 +31,62 @@ class PlanesManager {
         }
     }
 
-    setupPlanButtons() {
-        const planButtons = document.querySelectorAll('.plan-btn');
-        planButtons.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const plan = e.currentTarget.dataset.plan;
-                const credits = e.currentTarget.dataset.credits;
-                const price = e.currentTarget.dataset.price;
-                this.selectPlan(plan, credits, price);
+    setupPlanSelection() {
+        const planOptions = document.querySelectorAll('.plan-option');
+        
+        planOptions.forEach(option => {
+            const radio = option.querySelector('.plan-radio');
+            const label = option.querySelector('.plan-label');
+            
+            // Click en el label o card
+            label.addEventListener('click', (e) => {
+                e.preventDefault();
+                radio.checked = true;
+                this.selectPlan(option);
             });
-        });
-    }
-
-    selectPlan(plan, credits, price) {
-        this.selectedPlan = {
-            name: plan,
-            credits: parseInt(credits),
-            price: parseFloat(price)
-        };
-        this.openModal();
-    }
-
-    setupModal() {
-        const overlay = document.getElementById('registrationOverlay');
-        const closeBtn = document.getElementById('closeModal');
-        const cancelBtn = document.getElementById('cancelBtn');
-
-        if (overlay) {
-            overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) {
-                    this.closeModal();
+            
+            // Cambio en el radio
+            radio.addEventListener('change', () => {
+                if (radio.checked) {
+                    this.selectPlan(option);
                 }
             });
-        }
-
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => this.closeModal());
-        }
-        if (cancelBtn) {
-            cancelBtn.addEventListener('click', () => this.closeModal());
-        }
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && overlay?.classList.contains('active')) {
-                this.closeModal();
-            }
         });
     }
 
-    openModal() {
-        const overlay = document.getElementById('registrationOverlay');
-        const planInfo = document.getElementById('selectedPlanInfo');
+    selectPlan(optionElement) {
+        // Deseleccionar todos
+        document.querySelectorAll('.plan-radio').forEach(radio => {
+            radio.checked = false;
+        });
         
-        if (!overlay || !planInfo) return;
-
-        const planNames = {
-            'basico': 'Plan Básico',
-            'pro': 'Plan Pro',
-            'enterprise': 'Plan Enterprise'
+        // Seleccionar el actual
+        const radio = optionElement.querySelector('.plan-radio');
+        radio.checked = true;
+        
+        // Guardar plan seleccionado
+        this.selectedPlan = {
+            name: optionElement.dataset.plan,
+            credits: parseInt(optionElement.dataset.credits),
+            price: parseFloat(optionElement.dataset.price)
         };
         
-        planInfo.textContent = `${planNames[this.selectedPlan.name]} - ${this.selectedPlan.credits} créditos - $${this.selectedPlan.price}/mes`;
-        overlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
+        console.log('Plan seleccionado:', this.selectedPlan);
     }
 
-    closeModal() {
-        const overlay = document.getElementById('registrationOverlay');
-        if (overlay) {
-            overlay.classList.remove('active');
-            document.body.style.overflow = '';
+    setupPasswordToggle() {
+        const passwordToggle = document.getElementById('passwordToggle');
+        const passwordInput = document.getElementById('regPassword');
+        
+        if (passwordToggle && passwordInput) {
+            passwordToggle.addEventListener('click', () => {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                
+                // Cambiar icono
+                passwordToggle.classList.toggle('fa-eye');
+                passwordToggle.classList.toggle('fa-eye-slash');
+            });
         }
     }
 
@@ -113,18 +99,21 @@ class PlanesManager {
             this.handleSubmit();
         });
 
-        // Validación de contraseñas
+        // Validación de contraseñas en tiempo real
         const password = document.getElementById('regPassword');
-        const confirmPassword = document.getElementById('regConfirmPassword');
-        
-        if (confirmPassword) {
-            confirmPassword.addEventListener('input', () => {
-                if (password.value !== confirmPassword.value) {
-                    confirmPassword.setCustomValidity('Las contraseñas no coinciden');
-                } else {
-                    confirmPassword.setCustomValidity('');
-                }
+        if (password) {
+            password.addEventListener('input', () => {
+                this.validatePassword(password);
             });
+        }
+    }
+
+    validatePassword(passwordInput) {
+        const password = passwordInput.value;
+        if (password.length > 0 && password.length < 8) {
+            passwordInput.setCustomValidity('La contraseña debe tener al menos 8 caracteres');
+        } else {
+            passwordInput.setCustomValidity('');
         }
     }
 
@@ -135,17 +124,18 @@ class PlanesManager {
             return;
         }
 
-        const name = document.getElementById('regName').value.trim();
-        const email = document.getElementById('regEmail').value.trim().toLowerCase();
-        const password = document.getElementById('regPassword').value;
-        const confirmPassword = document.getElementById('regConfirmPassword').value;
-
-        // Validaciones
-        if (password !== confirmPassword) {
-            alert('Las contraseñas no coinciden');
+        // Validar que se haya seleccionado un plan
+        if (!this.selectedPlan) {
+            alert('Por favor, selecciona un plan de suscripción');
             return;
         }
 
+        const firstName = document.getElementById('regFirstName').value.trim();
+        const lastName = document.getElementById('regLastName').value.trim();
+        const email = document.getElementById('regEmail').value.trim().toLowerCase();
+        const password = document.getElementById('regPassword').value;
+
+        // Validaciones
         if (password.length < 8) {
             alert('La contraseña debe tener al menos 8 caracteres');
             return;
@@ -168,13 +158,17 @@ class PlanesManager {
         }
 
         try {
+            const fullName = `${firstName} ${lastName}`.trim() || email;
+
             // Registrar usuario en Supabase Auth
             const { data, error } = await this.supabase.auth.signUp({
                 email: email,
                 password: password,
                 options: {
                     data: {
-                        full_name: name || email
+                        full_name: fullName,
+                        first_name: firstName,
+                        last_name: lastName
                     }
                 }
             });
@@ -184,10 +178,6 @@ class PlanesManager {
             }
 
             if (data.user) {
-                // Cerrar modal
-                this.closeModal();
-                form.reset();
-                
                 // Mostrar mensaje de éxito
                 alert('¡Cuenta creada exitosamente! Redirigiendo...');
                 
@@ -217,7 +207,7 @@ class PlanesManager {
             
             if (submitBtn) {
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Proceder al Pago';
+                submitBtn.textContent = 'Crear cuenta';
             }
         }
     }
