@@ -195,20 +195,36 @@ class PlanesManager {
 
             console.log('✅ Usuario creado en auth.users:', authData.user.id);
 
-            // Asegurar que tenemos una sesión activa
-            if (authData.session) {
-                // La sesión ya está activa, podemos continuar
-                console.log('✅ Sesión activa');
-            } else {
-                // Esperar un momento y verificar la sesión
-                await new Promise(resolve => setTimeout(resolve, 500));
-                const { data: { session } } = await this.supabase.auth.getSession();
-                if (!session) {
-                    console.warn('⚠️ No hay sesión activa, intentando continuar de todas formas');
+            // Asegurar que tenemos una sesión activa para que auth.uid() funcione con RLS
+            let session = authData.session;
+            
+            if (!session) {
+                // Si no hay sesión, hacer signIn automático para activar la sesión
+                console.log('⚠️ No hay sesión automática, haciendo signIn...');
+                const { data: signInData, error: signInError } = await this.supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (signInError) {
+                    console.warn('⚠️ Error en signIn automático:', signInError);
+                    // Intentar obtener la sesión de otra manera
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    const { data: { session: currentSession } } = await this.supabase.auth.getSession();
+                    session = currentSession;
+                } else {
+                    session = signInData.session;
+                    console.log('✅ Sesión activada mediante signIn');
                 }
+            } else {
+                console.log('✅ Sesión activa desde signUp');
             }
 
-            // 2. Crear usuario en public.users directamente
+            if (!session) {
+                throw new Error('No se pudo establecer una sesión activa. Por favor, intenta iniciar sesión manualmente.');
+            }
+
+            // 2. Crear usuario en public.users directamente (ahora con sesión activa)
             const { error: createUserError } = await this.supabase
                 .from('users')
                 .insert({
