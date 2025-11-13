@@ -135,11 +135,6 @@ class PlanesManager {
             return;
         }
 
-        if (!this.selectedPlan) {
-            alert('Por favor, selecciona un plan primero');
-            return;
-        }
-
         const name = document.getElementById('regName').value.trim();
         const email = document.getElementById('regEmail').value.trim().toLowerCase();
         const password = document.getElementById('regPassword').value;
@@ -173,111 +168,36 @@ class PlanesManager {
         }
 
         try {
-            // 1. Registrar usuario en Supabase Auth
-            const { data: authData, error: authError } = await this.supabase.auth.signUp({
+            // Registrar usuario en Supabase Auth
+            const { data, error } = await this.supabase.auth.signUp({
                 email: email,
                 password: password,
                 options: {
                     data: {
-                        full_name: name || email,
-                        plan_type: this.selectedPlan.name
+                        full_name: name || email
                     }
                 }
             });
 
-            if (authError) {
-                throw authError;
+            if (error) {
+                throw error;
             }
 
-            if (!authData.user) {
-                throw new Error('No se pudo crear el usuario');
-            }
-
-            console.log('✅ Usuario creado en auth.users:', authData.user.id);
-
-            // Asegurar que tenemos una sesión activa para que auth.uid() funcione con RLS
-            let session = authData.session;
-            
-            if (!session) {
-                // Si no hay sesión, hacer signIn automático para activar la sesión
-                console.log('⚠️ No hay sesión automática, haciendo signIn...');
-                const { data: signInData, error: signInError } = await this.supabase.auth.signInWithPassword({
-                    email: email,
-                    password: password
-                });
+            if (data.user) {
+                // Cerrar modal
+                this.closeModal();
+                form.reset();
                 
-                if (signInError) {
-                    console.warn('⚠️ Error en signIn automático:', signInError);
-                    // Intentar obtener la sesión de otra manera
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    const { data: { session: currentSession } } = await this.supabase.auth.getSession();
-                    session = currentSession;
-                } else {
-                    session = signInData.session;
-                    console.log('✅ Sesión activada mediante signIn');
-                }
-            } else {
-                console.log('✅ Sesión activa desde signUp');
+                // Mostrar mensaje de éxito
+                alert('¡Cuenta creada exitosamente! Redirigiendo...');
+                
+                // Redirigir al formulario de registro de datos
+                setTimeout(() => {
+                    window.location.href = 'form-record.html';
+                }, 1500);
             }
-
-            if (!session) {
-                throw new Error('No se pudo establecer una sesión activa. Por favor, intenta iniciar sesión manualmente.');
-            }
-
-            // 2. Crear usuario en public.users directamente (ahora con sesión activa)
-            const { error: createUserError } = await this.supabase
-                .from('users')
-                .insert({
-                    id: authData.user.id,
-                    email: email,
-                    full_name: name || email,
-                    plan_type: this.selectedPlan.name,
-                    credits_available: this.selectedPlan.credits,
-                    credits_total: this.selectedPlan.credits,
-                    form_verified: false
-                });
-
-            if (createUserError) {
-                console.error('❌ Error creando usuario en public.users:', createUserError);
-                throw new Error(`Error al crear el perfil de usuario: ${createUserError.message}`);
-            }
-            console.log('✅ Usuario creado en public.users');
-
-            // 3. Crear suscripción
-            const now = new Date();
-            const expiresAt = new Date(now);
-            expiresAt.setMonth(expiresAt.getMonth() + 1);
-
-            const { data: subscription, error: subscriptionError } = await this.supabase
-                .from('subscriptions')
-                .insert({
-                    user_id: authData.user.id,
-                    plan_type: this.selectedPlan.name,
-                    status: 'active',
-                    credits_included: this.selectedPlan.credits,
-                    price: this.selectedPlan.price,
-                    currency: 'USD',
-                    started_at: now.toISOString(),
-                    expires_at: expiresAt.toISOString()
-                })
-                .select()
-                .single();
-
-            if (subscriptionError) {
-                console.error('❌ Error creando suscripción:', subscriptionError);
-                throw new Error(`Error al crear la suscripción: ${subscriptionError.message}`);
-            }
-
-            console.log('✅ Suscripción creada:', subscription);
-
-            // 5. Éxito - cerrar modal y redirigir
-            this.closeModal();
-            form.reset();
-            alert('¡Cuenta creada exitosamente!');
-            window.location.href = 'form-record.html';
-
         } catch (error) {
-            console.error('❌ Error en registro:', error);
+            console.error('Error en registro:', error);
             
             let errorMessage = 'Error al crear la cuenta. Intenta nuevamente.';
             
