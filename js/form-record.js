@@ -652,10 +652,7 @@ class FormRecord {
     }
 
     updateProgress() {
-        const progress = (this.currentStep / this.totalSteps) * 100;
-        document.getElementById('progressFill').style.width = `${progress}%`;
-        document.getElementById('currentStep').textContent = this.currentStep;
-        document.getElementById('totalSteps').textContent = this.totalSteps;
+        // Barra de progreso eliminada - no se actualiza
     }
 
     async completeForm() {

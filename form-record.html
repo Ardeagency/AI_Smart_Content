@@ -11,83 +11,66 @@
     <style>
         /* Form Record Styles */
         body {
-            background: var(--bg-black);
+            background: #0a0a0a;
             min-height: 100vh;
             padding: 0;
             margin: 0;
+            overflow-x: hidden;
         }
 
-        .form-record-container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 2rem;
-            min-height: 100vh;
-        }
-
-        .form-header {
-            text-align: center;
-            margin-bottom: 3rem;
-            padding-top: 2rem;
+        /* Header pequeño */
+        .form-record-header {
+            padding: 1rem 2rem;
+            background: #1a1a1a;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
         .form-logo {
             display: flex;
             align-items: center;
-            justify-content: center;
             gap: 0.75rem;
-            margin-bottom: 1rem;
         }
 
         .form-logo i {
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             color: var(--primary-color);
         }
 
         .form-logo span {
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             font-weight: 700;
             color: var(--text-primary);
             letter-spacing: 1px;
         }
 
-        .form-progress {
-            margin-top: 2rem;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 4px;
-            background: var(--bg-secondary);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
-            transition: width 0.3s ease;
-            width: 0%;
-        }
-
-        .progress-text {
-            text-align: center;
-            margin-top: 0.5rem;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
+        .form-record-container {
+            min-height: calc(100vh - 60px);
+            padding: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .form-step {
             display: none;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 2.5rem;
-            box-shadow: var(--shadow-card);
+            width: 100%;
+            max-width: 1200px;
         }
 
         .form-step.active {
-            display: block;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: start;
             animation: fadeIn 0.3s ease;
+        }
+
+        .form-step.active .step-header {
+            position: sticky;
+            top: 2rem;
         }
 
         @keyframes fadeIn {
@@ -96,46 +79,54 @@
         }
 
         .step-header {
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
         }
 
         .step-badge {
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.5rem 1rem;
+            padding: 0.4rem 0.8rem;
             background: rgba(210, 254, 63, 0.1);
             border: 1px solid var(--border-primary);
             border-radius: 8px;
             color: var(--primary-color);
-            font-size: 0.85rem;
+            font-size: 0.7rem;
             font-weight: 600;
-            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.75rem;
         }
 
         .step-title {
-            font-size: 1.75rem;
+            font-size: 2rem;
             font-weight: 700;
             color: var(--text-primary);
-            margin-bottom: 0.5rem;
+            margin: 0 0 0.5rem 0;
+            line-height: 1.2;
+        }
+
+        .step-title .title-dot {
+            color: var(--primary-color);
         }
 
         .step-subtitle {
-            font-size: 1rem;
+            font-size: 0.875rem;
             color: var(--text-secondary);
-            line-height: 1.6;
+            line-height: 1.5;
+            margin: 0;
         }
 
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 0.5rem;
-            color: var(--text-primary);
+            margin-bottom: 0.4rem;
+            color: var(--text-secondary);
             font-weight: 500;
-            font-size: 0.95rem;
+            font-size: 0.8rem;
         }
 
         .form-group label .required {
@@ -147,14 +138,28 @@
         .form-textarea,
         .form-select {
             width: 100%;
-            padding: 0.875rem 1rem;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
+            padding: 0.75rem 1rem;
+            background: #2a2a2a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 8px;
             color: var(--text-primary);
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-family: 'Inter', sans-serif;
-            transition: var(--transition);
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: #2f2f2f;
+            box-shadow: 0 0 0 3px rgba(210, 254, 63, 0.1);
+        }
+
+        .form-input::placeholder,
+        .form-textarea::placeholder {
+            color: var(--text-muted);
         }
 
         .dropdown-container {
@@ -355,13 +360,6 @@
             padding: 0.5rem;
         }
 
-        .form-input:focus,
-        .form-textarea:focus,
-        .form-select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(210, 254, 63, 0.1);
-        }
 
         .form-textarea {
             resize: vertical;
@@ -525,9 +523,11 @@
         .form-actions {
             display: flex;
             justify-content: space-between;
-            margin-top: 2.5rem;
+            gap: 0.75rem;
+            margin-top: 2rem;
             padding-top: 2rem;
-            border-top: 1px solid var(--border-color);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            grid-column: 1 / -1;
         }
 
         .btn {
@@ -544,24 +544,24 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-            color: var(--bg-black);
+            background: var(--primary-color);
+            color: #0a0a0a;
         }
 
         .btn-primary:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: var(--shadow-hover);
+            box-shadow: 0 8px 20px rgba(210, 254, 63, 0.3);
         }
 
         .btn-secondary {
-            background: var(--bg-secondary);
+            background: transparent;
             color: var(--text-primary);
-            border: 1px solid var(--border-color);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .btn-secondary:hover:not(:disabled) {
-            border-color: var(--primary-color);
-            color: var(--primary-color);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: var(--text-primary);
         }
 
         .btn:disabled {
@@ -572,6 +572,7 @@
         .success-screen {
             text-align: center;
             padding: 3rem 2rem;
+            grid-column: 1 / -1;
         }
 
         .success-icon {
@@ -593,13 +594,16 @@
             margin-bottom: 2rem;
         }
 
-        @media (max-width: 768px) {
-            .form-record-container {
-                padding: 1rem;
+        @media (max-width: 968px) {
+            .form-step.active {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
             }
 
-            .form-step {
+            .form-record-container {
                 padding: 1.5rem;
+                min-height: auto;
+                overflow-y: auto;
             }
 
             .form-row {
@@ -611,25 +615,41 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        @media (max-width: 768px) {
+            .form-record-header {
+                padding: 1rem 1.5rem;
+            }
+
+            .form-logo span {
+                font-size: 1rem;
+            }
+
+            .step-title {
+                font-size: 1.75rem;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="form-record-container">
-        <!-- Header -->
-        <div class="form-header">
-            <div class="form-logo">
-                <i class="fas fa-cube"></i>
-                <span>AI SMART CONTENT</span>
-            </div>
-            <div class="form-progress">
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
-                <div class="progress-text">
-                    <span id="currentStep">1</span> de <span id="totalSteps">10</span>
-                </div>
-            </div>
+    <!-- Header pequeño -->
+    <div class="form-record-header">
+        <div class="form-logo">
+            <i class="fas fa-cube"></i>
+            <span>AI SMART CONTENT</span>
         </div>
+    </div>
+
+    <!-- Form Container -->
+    <div class="form-record-container">
 
         <!-- Form Steps -->
         <form id="recordForm">
@@ -640,28 +660,30 @@
                         <i class="fas fa-trademark"></i>
                         <span>Marca / Proyecto</span>
                     </div>
-                    <h2 class="step-title">Información Básica de tu Marca</h2>
+                    <h2 class="step-title">Información Básica<span class="title-dot">.</span></h2>
                     <p class="step-subtitle">Comencemos con los datos fundamentales de tu marca o proyecto</p>
                 </div>
 
-                <div class="form-group">
-                    <label>Nombre de la marca <span class="required">*</span></label>
-                    <input type="text" class="form-input" id="nombre_marca" placeholder="Ej: NaturalGlow Cosmetics" maxlength="100" required>
-                </div>
-
-                <div class="form-group">
-                    <label>Sitio web</label>
-                    <input type="url" class="form-input" id="sitio_web" placeholder="https://tu-marca.com">
-                </div>
-
-                <div class="form-row">
+                <div>
                     <div class="form-group">
-                        <label>Instagram</label>
-                        <input type="text" class="form-input" id="instagram_url" placeholder="@tu_instagram o URL">
+                        <label>Nombre de la marca <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="nombre_marca" placeholder="Ej: NaturalGlow Cosmetics" maxlength="100" required>
                     </div>
+
                     <div class="form-group">
-                        <label>TikTok</label>
-                        <input type="text" class="form-input" id="tiktok_url" placeholder="@tu_tiktok o URL">
+                        <label>Sitio web</label>
+                        <input type="url" class="form-input" id="sitio_web" placeholder="https://tu-marca.com">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Instagram</label>
+                            <input type="text" class="form-input" id="instagram_url" placeholder="@tu_instagram o URL">
+                        </div>
+                        <div class="form-group">
+                            <label>TikTok</label>
+                            <input type="text" class="form-input" id="tiktok_url" placeholder="@tu_tiktok o URL">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -673,12 +695,13 @@
                         <i class="fas fa-trademark"></i>
                         <span>Marca / Proyecto</span>
                     </div>
-                    <h2 class="step-title">Mercado Objetivo e Idiomas</h2>
+                    <h2 class="step-title">Mercado Objetivo<span class="title-dot">.</span></h2>
                     <p class="step-subtitle">Define dónde y en qué idiomas operará tu marca</p>
                 </div>
 
-                <div class="form-group">
-                    <label>Mercados objetivo <span class="required">*</span></label>
+                <div>
+                    <div class="form-group">
+                        <label>Mercados objetivo <span class="required">*</span></label>
                     <div class="custom-multiselect" id="mercado_objetivo_wrapper">
                         <div class="multiselect-trigger" id="mercado_objetivo_trigger">
                             <div class="multiselect-value" id="mercado_objetivo_value">Seleccionar mercados...</div>
@@ -773,6 +796,7 @@
                         <input type="hidden" id="idiomas_contenido" required>
                     </div>
                 </div>
+                </div>
             </div>
 
             <!-- Step 3: Lineamientos de Marca -->
@@ -782,11 +806,12 @@
                         <i class="fas fa-palette"></i>
                         <span>Lineamientos de Marca</span>
                     </div>
-                    <h2 class="step-title">Tono de Voz y Comunicación</h2>
+                    <h2 class="step-title">Tono de Voz<span class="title-dot">.</span></h2>
                     <p class="step-subtitle">Define cómo se comunica tu marca</p>
                 </div>
 
-                <div class="form-group">
+                <div>
+                    <div class="form-group">
                     <label>Tono de voz <span class="required">*</span></label>
                     <div class="dropdown-container">
                         <select class="form-select" id="tono_voz" required>
@@ -891,6 +916,7 @@
                     <textarea class="form-textarea" id="reglas_creativas" placeholder="Ej: Siempre usar colores verdes y blancos. Nunca usar rojo. No hacer claims médicos." maxlength="500" rows="4"></textarea>
                     <div class="char-counter"><span id="reglas_creativas_count">0</span>/500</div>
                 </div>
+                </div>
             </div>
 
             <!-- Step 4: Archivos de Marca -->
@@ -900,11 +926,12 @@
                         <i class="fas fa-palette"></i>
                         <span>Lineamientos de Marca</span>
                     </div>
-                    <h2 class="step-title">Archivos de Identidad</h2>
+                    <h2 class="step-title">Archivos de Identidad<span class="title-dot">.</span></h2>
                     <p class="step-subtitle">Sube tu logo y archivos de identidad de marca</p>
                 </div>
 
-                <div class="form-group">
+                <div>
+                    <div class="form-group">
                     <label>Logo oficial</label>
                     <div class="upload-zone small" id="logoUpload">
                         <input type="file" id="logo_file" accept="image/*,.svg" hidden>
@@ -935,6 +962,7 @@
                     </div>
                     <div id="brandFilesList" style="margin-top: 1rem;"></div>
                 </div>
+                </div>
             </div>
 
             <!-- Step 5: Información del Producto -->
@@ -944,11 +972,12 @@
                         <i class="fas fa-box"></i>
                         <span>Producto Principal</span>
                     </div>
-                    <h2 class="step-title">Información del Producto</h2>
+                    <h2 class="step-title">Información del Producto<span class="title-dot">.</span></h2>
                     <p class="step-subtitle">Describe tu producto principal</p>
                 </div>
 
-                <div class="form-group">
+                <div>
+                    <div class="form-group">
                     <label>Tipo de producto <span class="required">*</span></label>
                     <div class="dropdown-container">
                         <select class="form-select" id="tipo_producto" required>
@@ -1028,6 +1057,7 @@
                     <textarea class="form-textarea" id="descripcion_producto" placeholder="¿Qué es y para qué sirve?" maxlength="300" rows="3" required></textarea>
                     <div class="char-counter"><span id="descripcion_producto_count">0</span>/300</div>
                 </div>
+                </div>
             </div>
 
             <!-- Step 6: Beneficios y Diferenciación -->
@@ -1037,11 +1067,12 @@
                         <i class="fas fa-box"></i>
                         <span>Producto Principal</span>
                     </div>
-                    <h2 class="step-title">Beneficios y Diferenciación</h2>
+                    <h2 class="step-title">Beneficios y Diferenciación<span class="title-dot">.</span></h2>
                     <p class="step-subtitle">Destaca lo que hace único a tu producto</p>
                 </div>
 
-                <div class="form-group">
+                <div>
+                    <div class="form-group">
                     <label>Beneficios principales <span class="required">*</span></label>
                     <input type="text" class="form-input" id="beneficio_1" placeholder="Primer beneficio principal" maxlength="100" required>
                     <input type="text" class="form-input" id="beneficio_2" placeholder="Segundo beneficio (opcional)" maxlength="100" style="margin-top: 0.75rem;">
@@ -1053,6 +1084,7 @@
                     <textarea class="form-textarea" id="diferenciacion" placeholder="Tu ventaja única o propuesta de valor" maxlength="400" rows="3"></textarea>
                     <div class="char-counter"><span id="diferenciacion_count">0</span>/400</div>
                 </div>
+                </div>
             </div>
 
             <!-- Step 7: Detalles del Producto -->
@@ -1062,11 +1094,12 @@
                         <i class="fas fa-box"></i>
                         <span>Producto Principal</span>
                     </div>
-                    <h2 class="step-title">Detalles y Especificaciones</h2>
+                    <h2 class="step-title">Detalles y Especificaciones<span class="title-dot">.</span></h2>
                     <p class="step-subtitle">Información adicional sobre tu producto</p>
                 </div>
 
-                <div class="form-group">
+                <div>
+                    <div class="form-group">
                     <label>Modo de uso</label>
                     <textarea class="form-textarea" id="modo_uso" placeholder="Pasos, dosis, frecuencia, tiempos" maxlength="500" rows="4"></textarea>
                     <div class="char-counter"><span id="modo_uso_count">0</span>/500</div>
@@ -1098,6 +1131,7 @@
                         <div class="char-counter"><span id="variantes_producto_count">0</span>/300</div>
                     </div>
                 </div>
+                </div>
             </div>
 
             <!-- Step 8: Imágenes del Producto -->
@@ -1107,11 +1141,12 @@
                         <i class="fas fa-box"></i>
                         <span>Producto Principal</span>
                     </div>
-                    <h2 class="step-title">Imágenes del Producto</h2>
+                    <h2 class="step-title">Imágenes del Producto<span class="title-dot">.</span></h2>
                     <p class="step-subtitle">Sube 4 imágenes en diferentes perspectivas (mínimo 2 requeridas)</p>
                 </div>
 
-                <div class="options-grid" style="grid-template-columns: repeat(2, 1fr);">
+                <div>
+                    <div class="options-grid" style="grid-template-columns: repeat(2, 1fr);">
                     <div class="form-group">
                         <label>Imagen #1 (Principal)</label>
                         <div class="upload-zone" style="padding: 1.5rem;">
@@ -1149,6 +1184,7 @@
                         </div>
                     </div>
                 </div>
+                </div>
             </div>
 
             <!-- Step 9: Campañas -->
@@ -1158,11 +1194,12 @@
                         <i class="fas fa-bullseye"></i>
                         <span>Campañas</span>
                     </div>
-                    <h2 class="step-title">Información de Campaña</h2>
+                    <h2 class="step-title">Información de Campaña<span class="title-dot">.</span></h2>
                     <p class="step-subtitle">Define los objetivos y audiencia de tu campaña</p>
                 </div>
 
-                <div class="form-group">
+                <div>
+                    <div class="form-group">
                     <label>Oferta o promoción</label>
                     <textarea class="form-textarea" id="oferta_desc" placeholder="Ej: 20% de descuento en la primera compra, envío gratis..." maxlength="300" rows="3"></textarea>
                     <div class="char-counter"><span id="oferta_desc_count">0</span>/300</div>
@@ -1195,6 +1232,7 @@
                         <label>URL del CTA <span class="required">*</span></label>
                         <input type="url" class="form-input" id="cta_url" placeholder="https://tu-sitio.com/landing" maxlength="200" required>
                     </div>
+                </div>
                 </div>
             </div>
 
