@@ -332,41 +332,78 @@ DECLARE
     v_plan_type plan_tipo_enum;
     v_full_name TEXT;
     v_plan_type_str TEXT;
+    v_email TEXT;
 BEGIN
+    -- Asegurar que tenemos un email válido (requerido por la tabla)
+    v_email := COALESCE(NEW.email, '');
+    
+    -- Si no hay email, usar un placeholder temporal
+    IF v_email = '' OR v_email IS NULL THEN
+        v_email := 'user_' || NEW.id::TEXT || '@temp.local';
+    END IF;
+    
     -- Obtener plan_type de los metadatos con validación
     v_plan_type_str := NEW.raw_user_meta_data->>'plan_type';
     
     -- Validar y asignar plan_type
-    IF v_plan_type_str IS NOT NULL AND v_plan_type_str IN ('basico', 'pro', 'enterprise') THEN
-        v_plan_type := v_plan_type_str::plan_tipo_enum;
-    ELSE
-        v_plan_type := 'basico'::plan_tipo_enum;
-    END IF;
+    BEGIN
+        IF v_plan_type_str IS NOT NULL AND v_plan_type_str IN ('basico', 'pro', 'enterprise') THEN
+            v_plan_type := v_plan_type_str::plan_tipo_enum;
+        ELSE
+            v_plan_type := 'basico'::plan_tipo_enum;
+        END IF;
+    EXCEPTION
+        WHEN OTHERS THEN
+            v_plan_type := 'basico'::plan_tipo_enum;
+    END;
     
     -- Obtener full_name de los metadatos, usar email si no existe
     v_full_name := COALESCE(
-        NEW.raw_user_meta_data->>'full_name',
-        NEW.email,
+        NULLIF(TRIM(NEW.raw_user_meta_data->>'full_name'), ''),
+        NULLIF(TRIM(NEW.email), ''),
         'Usuario'
     );
     
     -- Insertar solo si no existe ya (evitar duplicados)
-    -- Usar manejo de errores para capturar cualquier problema
+    -- Usar manejo de errores robusto para capturar cualquier problema
     BEGIN
-        INSERT INTO public.users (id, email, full_name, plan_type, credits_available, credits_total)
+        INSERT INTO public.users (id, email, full_name, plan_type, credits_available, credits_total, form_verified)
         VALUES (
             NEW.id, 
-            COALESCE(NEW.email, ''),
+            v_email,
             v_full_name,
             v_plan_type,
             0, -- Los créditos se asignarán cuando se cree la suscripción
-            0
+            0,
+            FALSE
         )
-        ON CONFLICT (id) DO NOTHING;
+        ON CONFLICT (id) DO UPDATE SET
+            email = EXCLUDED.email,
+            full_name = COALESCE(EXCLUDED.full_name, public.users.full_name),
+            plan_type = COALESCE(EXCLUDED.plan_type, public.users.plan_type);
     EXCEPTION
+        WHEN unique_violation THEN
+            -- Si hay conflicto de email único, intentar con un email único
+            BEGIN
+                INSERT INTO public.users (id, email, full_name, plan_type, credits_available, credits_total, form_verified)
+                VALUES (
+                    NEW.id, 
+                    'user_' || NEW.id::TEXT || '@temp.local',
+                    v_full_name,
+                    v_plan_type,
+                    0,
+                    0,
+                    FALSE
+                )
+                ON CONFLICT (id) DO NOTHING;
+            EXCEPTION
+                WHEN OTHERS THEN
+                    -- Si aún falla, solo loguear el error
+                    RAISE WARNING 'Error en handle_new_user (unique_violation) para usuario %: %', NEW.id, SQLERRM;
+            END;
         WHEN OTHERS THEN
             -- Log del error pero no fallar el trigger
-            RAISE WARNING 'Error en handle_new_user para usuario %: %', NEW.id, SQLERRM;
+            RAISE WARNING 'Error en handle_new_user para usuario %: % (Código: %)', NEW.id, SQLERRM, SQLSTATE;
             -- Retornar NEW de todas formas para no bloquear la creación en auth.users
     END;
     
