@@ -219,6 +219,9 @@ class LivingManager {
         const userNameEl = document.getElementById('userName');
         const userEmailEl = document.getElementById('userEmail');
         const userPlanEl = document.getElementById('userPlan');
+        const userCreditsEl = document.getElementById('userCredits');
+        const userCreditsTotalEl = document.getElementById('userCreditsTotal');
+        const creditsCountEl = document.getElementById('creditsCount');
 
         if (userNameEl) {
             userNameEl.textContent = this.userData.full_name || 'No especificado';
@@ -233,6 +236,15 @@ class LivingManager {
                 'enterprise': 'Enterprise'
             };
             userPlanEl.textContent = planNames[this.userData.plan_type] || this.userData.plan_type || '-';
+        }
+        if (userCreditsEl) {
+            userCreditsEl.textContent = this.userData.credits_available || 0;
+        }
+        if (userCreditsTotalEl) {
+            userCreditsTotalEl.textContent = this.userData.credits_total || 0;
+        }
+        if (creditsCountEl) {
+            creditsCountEl.textContent = this.userData.credits_available || 0;
         }
     }
 
@@ -598,6 +610,637 @@ class LivingManager {
 
     setupEventListeners() {
         // Navigation ya se maneja en navigation.js
+    }
+
+    // ============================================
+    // MODALES DE EDICIÓN
+    // ============================================
+
+    openEditUserModal() {
+        if (!this.userData) return;
+        
+        const modal = this.createModal('Editar Información de Usuario', this.getUserEditForm());
+        this.showModal(modal);
+    }
+
+    openEditBrandModal() {
+        if (!this.projectData) return;
+        
+        const modal = this.createModal('Editar Datos de Marca', this.getBrandEditForm());
+        this.showModal(modal);
+    }
+
+    openEditLogoModal() {
+        if (!this.projectData) return;
+        
+        const modal = this.createModal('Editar Logo', this.getLogoEditForm());
+        this.showModal(modal);
+    }
+
+    openEditGuidelinesModal() {
+        if (!this.brandData) return;
+        
+        const modal = this.createModal('Editar Lineamientos de Marca', this.getGuidelinesEditForm());
+        this.showModal(modal);
+    }
+
+    openEditMarketsModal() {
+        if (!this.projectData) return;
+        
+        const modal = this.createModal('Editar Mercado e Idiomas', this.getMarketsEditForm());
+        this.showModal(modal);
+    }
+
+    openEditFilesModal() {
+        if (!this.projectData) return;
+        
+        const modal = this.createModal('Gestionar Archivos de Identidad', this.getFilesEditForm());
+        this.showModal(modal);
+    }
+
+    // ============================================
+    // FORMULARIOS DE EDICIÓN
+    // ============================================
+
+    getUserEditForm() {
+        return `
+            <form id="editUserForm" class="edit-form">
+                <div class="form-group">
+                    <label>Nombre completo</label>
+                    <input type="text" id="editUserName" value="${this.userData.full_name || ''}" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="editUserEmail" value="${this.userData.email || ''}" class="form-input" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        `;
+    }
+
+    getBrandEditForm() {
+        return `
+            <form id="editBrandForm" class="edit-form">
+                <div class="form-group">
+                    <label>Nombre de la marca</label>
+                    <input type="text" id="editBrandName" value="${this.projectData.nombre_marca || ''}" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label>Sitio web</label>
+                    <input type="url" id="editBrandWebsite" value="${this.projectData.sitio_web || ''}" class="form-input">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Instagram</label>
+                        <input type="text" id="editBrandInstagram" value="${this.projectData.instagram_url || ''}" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label>TikTok</label>
+                        <input type="text" id="editBrandTikTok" value="${this.projectData.tiktok_url || ''}" class="form-input">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        `;
+    }
+
+    getLogoEditForm() {
+        return `
+            <form id="editLogoForm" class="edit-form">
+                <div class="form-group">
+                    <label>Logo actual</label>
+                    <div class="logo-preview-container">
+                        ${this.projectData.logo_url ? `<img src="${this.projectData.logo_url}" alt="Logo" style="max-width: 200px; max-height: 200px; border-radius: 8px;">` : '<p>No hay logo</p>'}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Nuevo logo</label>
+                    <div class="upload-zone" id="logoUploadZone">
+                        <input type="file" id="editLogoFile" accept="image/*,.svg" hidden>
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Haz clic para subir nuevo logo</p>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">PNG, JPG, SVG - Máx 5MB</p>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        `;
+    }
+
+    getGuidelinesEditForm() {
+        const tonoVozOptions = [
+            'amigable', 'premium', 'tecnico', 'irreverente', 'divertido', 'profesional',
+            'casual', 'inspirador', 'autoritario', 'empatico', 'humoristico', 'serio',
+            'joven', 'tradicional', 'innovador', 'calido', 'directo', 'poetico',
+            'energico', 'tranquilo'
+        ].map(tono => {
+            const selected = this.brandData?.tono_voz === tono ? 'selected' : '';
+            const tonoNames = {
+                'amigable': 'Amigable', 'premium': 'Premium', 'tecnico': 'Técnico',
+                'irreverente': 'Irreverente', 'divertido': 'Divertido', 'profesional': 'Profesional',
+                'casual': 'Casual', 'inspirador': 'Inspirador', 'autoritario': 'Autoritario',
+                'empatico': 'Empático', 'humoristico': 'Humorístico', 'serio': 'Serio',
+                'joven': 'Joven', 'tradicional': 'Tradicional', 'innovador': 'Innovador',
+                'calido': 'Cálido', 'directo': 'Directo', 'poetico': 'Poético',
+                'energico': 'Enérgico', 'tranquilo': 'Tranquilo'
+            };
+            return `<option value="${tono}" ${selected}>${tonoNames[tono] || tono}</option>`;
+        }).join('');
+
+        const palabrasEvitar = Array.isArray(this.brandData?.palabras_evitar) 
+            ? this.brandData.palabras_evitar.join(', ') 
+            : '';
+
+        return `
+            <form id="editGuidelinesForm" class="edit-form">
+                <div class="form-group">
+                    <label>Tono de voz</label>
+                    <select id="editTonoVoz" class="form-select" required>
+                        <option value="">Seleccionar...</option>
+                        ${tonoVozOptions}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Palabras a usar siempre</label>
+                    <textarea id="editPalabrasUsar" class="form-textarea" rows="3">${this.brandData?.palabras_usar || ''}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Palabras a evitar (separadas por comas)</label>
+                    <textarea id="editPalabrasEvitar" class="form-textarea" rows="3" placeholder="barato, caro, artificial...">${palabrasEvitar}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Reglas creativas</label>
+                    <textarea id="editReglasCreativas" class="form-textarea" rows="4">${this.brandData?.reglas_creativas || ''}</textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        `;
+    }
+
+    getMarketsEditForm() {
+        const mercados = Array.isArray(this.projectData?.mercado_objetivo) 
+            ? this.projectData.mercado_objetivo.join(', ') 
+            : '';
+        const idiomas = Array.isArray(this.projectData?.idiomas_contenido) 
+            ? this.projectData.idiomas_contenido.join(', ') 
+            : '';
+
+        return `
+            <form id="editMarketsForm" class="edit-form">
+                <div class="form-group">
+                    <label>Mercados objetivo (separados por comas)</label>
+                    <textarea id="editMercados" class="form-textarea" rows="4" placeholder="mexico, colombia, spain...">${mercados}</textarea>
+                    <small style="color: var(--text-muted);">Ejemplo: mexico, colombia, spain, usa</small>
+                </div>
+                <div class="form-group">
+                    <label>Idiomas para contenido (separados por comas)</label>
+                    <textarea id="editIdiomas" class="form-textarea" rows="4" placeholder="español, ingles, portugues...">${idiomas}</textarea>
+                    <small style="color: var(--text-muted);">Ejemplo: español, ingles, portugues</small>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        `;
+    }
+
+    getFilesEditForm() {
+        const filesList = this.brandFiles && this.brandFiles.length > 0
+            ? this.brandFiles.map(file => `
+                <div class="file-item-edit">
+                    <div class="file-info">
+                        <i class="fas fa-file"></i>
+                        <span>${file.file_name}</span>
+                    </div>
+                    <button type="button" class="btn-delete-file" onclick="livingManager.deleteBrandFile('${file.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('')
+            : '<p style="color: var(--text-muted);">No hay archivos</p>';
+
+        return `
+            <form id="editFilesForm" class="edit-form">
+                <div class="form-group">
+                    <label>Archivos actuales</label>
+                    <div class="files-list-edit">
+                        ${filesList}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Agregar nuevos archivos</label>
+                    <div class="upload-zone" id="brandFilesUploadZone">
+                        <input type="file" id="editBrandFiles" multiple accept="image/*,.pdf,.zip,.doc,.docx" hidden>
+                        <i class="fas fa-folder-plus"></i>
+                        <p>Haz clic para agregar archivos</p>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">PDF, ZIP, DOC, Imágenes - Máx 10MB c/u</p>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cerrar</button>
+                    <button type="button" class="btn btn-primary" onclick="livingManager.saveBrandFiles()">Guardar Archivos</button>
+                </div>
+            </form>
+        `;
+    }
+
+    // ============================================
+    // UTILIDADES DE MODAL
+    // ============================================
+
+    createModal(title, content) {
+        const modal = document.createElement('div');
+        modal.className = 'edit-modal';
+        modal.innerHTML = `
+            <div class="modal-overlay" onclick="this.closest('.edit-modal').remove()"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>${title}</h2>
+                    <button class="modal-close" onclick="this.closest('.edit-modal').remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    ${content}
+                </div>
+            </div>
+        `;
+        return modal;
+    }
+
+    showModal(modal) {
+        document.body.appendChild(modal);
+        setTimeout(() => modal.classList.add('show'), 10);
+        this.setupModalListeners(modal);
+    }
+
+    setupModalListeners(modal) {
+        // Logo upload
+        const logoUploadZone = modal.querySelector('#logoUploadZone');
+        const logoInput = modal.querySelector('#editLogoFile');
+        if (logoUploadZone && logoInput) {
+            logoUploadZone.addEventListener('click', () => logoInput.click());
+            logoInput.addEventListener('change', (e) => {
+                if (e.target.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        logoUploadZone.innerHTML = `
+                            <img src="${event.target.result}" style="max-width: 200px; max-height: 200px; border-radius: 8px;">
+                            <p>Logo seleccionado</p>
+                        `;
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
+        }
+
+        // Brand files upload
+        const filesUploadZone = modal.querySelector('#brandFilesUploadZone');
+        const filesInput = modal.querySelector('#editBrandFiles');
+        if (filesUploadZone && filesInput) {
+            filesUploadZone.addEventListener('click', () => filesInput.click());
+        }
+
+        // Form submissions
+        const userForm = modal.querySelector('#editUserForm');
+        if (userForm) {
+            userForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.saveUserData(modal);
+            });
+        }
+
+        const brandForm = modal.querySelector('#editBrandForm');
+        if (brandForm) {
+            brandForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.saveBrandData(modal);
+            });
+        }
+
+        const logoForm = modal.querySelector('#editLogoForm');
+        if (logoForm) {
+            logoForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.saveLogo(modal);
+            });
+        }
+
+        const guidelinesForm = modal.querySelector('#editGuidelinesForm');
+        if (guidelinesForm) {
+            guidelinesForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.saveGuidelines(modal);
+            });
+        }
+
+        const marketsForm = modal.querySelector('#editMarketsForm');
+        if (marketsForm) {
+            marketsForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.saveMarkets(modal);
+            });
+        }
+    }
+
+    // ============================================
+    // GUARDAR DATOS
+    // ============================================
+
+    async saveUserData(modal) {
+        const fullName = modal.querySelector('#editUserName').value.trim();
+        const email = modal.querySelector('#editUserEmail').value.trim();
+
+        try {
+            const { error } = await this.supabase
+                .from('users')
+                .update({
+                    full_name: fullName,
+                    email: email
+                })
+                .eq('id', this.userId);
+
+            if (error) throw error;
+
+            await this.loadUserData();
+            this.renderUserInfo();
+            modal.remove();
+            this.showNotification('✅ Información de usuario actualizada', 'success');
+        } catch (error) {
+            console.error('Error guardando usuario:', error);
+            alert(`Error al guardar: ${error.message}`);
+        }
+    }
+
+    async saveBrandData(modal) {
+        const nombreMarca = modal.querySelector('#editBrandName').value.trim();
+        const sitioWeb = modal.querySelector('#editBrandWebsite').value.trim() || null;
+        const instagram = modal.querySelector('#editBrandInstagram').value.trim() || null;
+        const tiktok = modal.querySelector('#editBrandTikTok').value.trim() || null;
+
+        try {
+            const { error } = await this.supabase
+                .from('projects')
+                .update({
+                    nombre_marca: nombreMarca,
+                    sitio_web: sitioWeb,
+                    instagram_url: instagram,
+                    tiktok_url: tiktok
+                })
+                .eq('id', this.projectData.id);
+
+            if (error) throw error;
+
+            await this.loadProjectData();
+            this.renderBrandInfo();
+            modal.remove();
+            this.showNotification('✅ Datos de marca actualizados', 'success');
+        } catch (error) {
+            console.error('Error guardando marca:', error);
+            alert(`Error al guardar: ${error.message}`);
+        }
+    }
+
+    async saveLogo(modal) {
+        const logoInput = modal.querySelector('#editLogoFile');
+        if (!logoInput || !logoInput.files[0]) {
+            modal.remove();
+            return;
+        }
+
+        const logoFile = logoInput.files[0];
+        
+        try {
+            const fileExt = logoFile.name.split('.').pop();
+            const fileName = `${this.userId}/${this.projectData.id}/logo.${fileExt}`;
+
+            // Eliminar logo anterior
+            try {
+                await this.supabase.storage
+                    .from('brand-logos')
+                    .remove([fileName]);
+            } catch (e) {}
+
+            // Subir nuevo logo
+            const { error: uploadError } = await this.supabase.storage
+                .from('brand-logos')
+                .upload(fileName, logoFile, {
+                    upsert: true,
+                    contentType: logoFile.type
+                });
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = this.supabase.storage
+                .from('brand-logos')
+                .getPublicUrl(fileName);
+
+            const { error: updateError } = await this.supabase
+                .from('projects')
+                .update({ logo_url: publicUrl })
+                .eq('id', this.projectData.id);
+
+            if (updateError) throw updateError;
+
+            await this.loadProjectData();
+            this.renderBrandInfo();
+            modal.remove();
+            this.showNotification('✅ Logo actualizado', 'success');
+        } catch (error) {
+            console.error('Error guardando logo:', error);
+            alert(`Error al guardar logo: ${error.message}`);
+        }
+    }
+
+    async saveGuidelines(modal) {
+        const tonoVoz = modal.querySelector('#editTonoVoz').value;
+        const palabrasUsar = modal.querySelector('#editPalabrasUsar').value.trim() || null;
+        const palabrasEvitarText = modal.querySelector('#editPalabrasEvitar').value.trim();
+        const reglasCreativas = modal.querySelector('#editReglasCreativas').value.trim() || null;
+
+        const palabrasEvitar = palabrasEvitarText
+            ? palabrasEvitarText.split(',').map(p => p.trim()).filter(p => p)
+            : [];
+
+        try {
+            if (this.brandData) {
+                // Actualizar
+                const { error } = await this.supabase
+                    .from('brands')
+                    .update({
+                        tono_voz: tonoVoz,
+                        palabras_usar: palabrasUsar,
+                        palabras_evitar: palabrasEvitar,
+                        reglas_creativas: reglasCreativas
+                    })
+                    .eq('id', this.brandData.id);
+
+                if (error) throw error;
+            } else {
+                // Crear
+                const { error } = await this.supabase
+                    .from('brands')
+                    .insert({
+                        project_id: this.projectData.id,
+                        tono_voz: tonoVoz,
+                        palabras_usar: palabrasUsar,
+                        palabras_evitar: palabrasEvitar,
+                        reglas_creativas: reglasCreativas
+                    });
+
+                if (error) throw error;
+            }
+
+            await this.loadBrandData();
+            this.renderBrandGuidelines();
+            modal.remove();
+            this.showNotification('✅ Lineamientos actualizados', 'success');
+        } catch (error) {
+            console.error('Error guardando lineamientos:', error);
+            alert(`Error al guardar: ${error.message}`);
+        }
+    }
+
+    async saveMarkets(modal) {
+        const mercadosText = modal.querySelector('#editMercados').value.trim();
+        const idiomasText = modal.querySelector('#editIdiomas').value.trim();
+
+        const mercadoObjetivo = mercadosText
+            ? mercadosText.split(',').map(m => m.trim()).filter(m => m)
+            : [];
+        const idiomasContenido = idiomasText
+            ? idiomasText.split(',').map(i => i.trim()).filter(i => i)
+            : [];
+
+        try {
+            const { error } = await this.supabase
+                .from('projects')
+                .update({
+                    mercado_objetivo: mercadoObjetivo,
+                    idiomas_contenido: idiomasContenido
+                })
+                .eq('id', this.projectData.id);
+
+            if (error) throw error;
+
+            await this.loadProjectData();
+            this.renderMarketsAndLanguages();
+            modal.remove();
+            this.showNotification('✅ Mercado e idiomas actualizados', 'success');
+        } catch (error) {
+            console.error('Error guardando mercados:', error);
+            alert(`Error al guardar: ${error.message}`);
+        }
+    }
+
+    async saveBrandFiles() {
+        const filesInput = document.querySelector('#editBrandFiles');
+        if (!filesInput || !filesInput.files.length) return;
+
+        const files = Array.from(filesInput.files);
+        
+        try {
+            for (const file of files) {
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${this.userId}/${this.projectData.id}/${Date.now()}_${file.name}`;
+
+                const { error: uploadError } = await this.supabase.storage
+                    .from('brand-files')
+                    .upload(fileName, file, {
+                        contentType: file.type
+                    });
+
+                if (uploadError) {
+                    console.error('Error subiendo archivo:', file.name, uploadError);
+                    continue;
+                }
+
+                const { data: { publicUrl } } = this.supabase.storage
+                    .from('brand-files')
+                    .getPublicUrl(fileName);
+
+                await this.supabase
+                    .from('brand_files')
+                    .insert({
+                        project_id: this.projectData.id,
+                        file_name: file.name,
+                        file_url: publicUrl,
+                        file_type: file.type,
+                        file_size: file.size
+                    });
+            }
+
+            await this.loadBrandFiles();
+            this.renderBrandFiles();
+            this.showNotification('✅ Archivos agregados', 'success');
+        } catch (error) {
+            console.error('Error guardando archivos:', error);
+            alert(`Error al guardar archivos: ${error.message}`);
+        }
+    }
+
+    async deleteBrandFile(fileId) {
+        if (!confirm('¿Estás seguro de eliminar este archivo?')) return;
+
+        try {
+            const { data: file, error: fetchError } = await this.supabase
+                .from('brand_files')
+                .select('file_url')
+                .eq('id', fileId)
+                .single();
+
+            if (fetchError) throw fetchError;
+
+            // Extraer path del URL para eliminar de storage
+            const url = new URL(file.file_url);
+            const pathParts = url.pathname.split('/');
+            const fileName = pathParts.slice(pathParts.indexOf('brand-files') + 1).join('/');
+
+            // Eliminar de storage
+            await this.supabase.storage
+                .from('brand-files')
+                .remove([fileName]);
+
+            // Eliminar de base de datos
+            const { error: deleteError } = await this.supabase
+                .from('brand_files')
+                .delete()
+                .eq('id', fileId);
+
+            if (deleteError) throw deleteError;
+
+            await this.loadBrandFiles();
+            this.renderBrandFiles();
+            this.showNotification('✅ Archivo eliminado', 'success');
+        } catch (error) {
+            console.error('Error eliminando archivo:', error);
+            alert(`Error al eliminar: ${error.message}`);
+        }
+    }
+
+    showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        setTimeout(() => notification.classList.add('show'), 10);
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
     }
 }
 
