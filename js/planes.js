@@ -195,54 +195,26 @@ class PlanesManager {
 
             console.log('✅ Usuario creado en auth.users:', authData.user.id);
 
-            // 2. Esperar un momento para que el trigger cree el usuario en public.users
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
-            // 3. Verificar si el usuario existe en public.users, si no, crearlo
-            const { data: existingUser } = await this.supabase
+            // 2. Crear usuario en public.users directamente
+            const { error: createUserError } = await this.supabase
                 .from('users')
-                .select('id')
-                .eq('id', authData.user.id)
-                .maybeSingle();
+                .insert({
+                    id: authData.user.id,
+                    email: email,
+                    full_name: name || email,
+                    plan_type: this.selectedPlan.name,
+                    credits_available: this.selectedPlan.credits,
+                    credits_total: this.selectedPlan.credits,
+                    form_verified: false
+                });
 
-            if (!existingUser) {
-                // Crear usuario en public.users
-                const { error: createError } = await this.supabase
-                    .from('users')
-                    .insert({
-                        id: authData.user.id,
-                        email: email,
-                        full_name: name || email,
-                        plan_type: this.selectedPlan.name,
-                        credits_available: this.selectedPlan.credits,
-                        credits_total: this.selectedPlan.credits,
-                        form_verified: false
-                    });
-
-                if (createError) {
-                    console.error('Error creando usuario en public.users:', createError);
-                    throw new Error(`Error al crear el perfil de usuario: ${createError.message}`);
-                }
-                console.log('✅ Usuario creado en public.users');
-            } else {
-                // Actualizar usuario existente con plan y créditos
-                const { error: updateError } = await this.supabase
-                    .from('users')
-                    .update({
-                        plan_type: this.selectedPlan.name,
-                        credits_available: this.selectedPlan.credits,
-                        credits_total: this.selectedPlan.credits
-                    })
-                    .eq('id', authData.user.id);
-
-                if (updateError) {
-                    console.error('Error actualizando usuario:', updateError);
-                    throw new Error(`Error al actualizar el perfil: ${updateError.message}`);
-                }
-                console.log('✅ Usuario actualizado en public.users');
+            if (createUserError) {
+                console.error('❌ Error creando usuario en public.users:', createUserError);
+                throw new Error(`Error al crear el perfil de usuario: ${createUserError.message}`);
             }
+            console.log('✅ Usuario creado en public.users');
 
-            // 4. Crear suscripción
+            // 3. Crear suscripción
             const now = new Date();
             const expiresAt = new Date(now);
             expiresAt.setMonth(expiresAt.getMonth() + 1);
