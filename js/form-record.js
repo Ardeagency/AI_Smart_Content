@@ -24,10 +24,10 @@ class FormRecord {
     }
 
     async initSupabase() {
-        if (typeof waitForSupabase === 'function') {
+            if (typeof waitForSupabase === 'function') {
             this.supabase = await waitForSupabase(15000);
-        } else if (window.supabaseClient) {
-            this.supabase = window.supabaseClient;
+            } else if (window.supabaseClient) {
+                this.supabase = window.supabaseClient;
         } else if (typeof initSupabase === 'function') {
             this.supabase = await initSupabase();
         }
@@ -57,7 +57,7 @@ class FormRecord {
                     throw new Error('No hay usuario autenticado. Por favor, inicia sesión nuevamente.');
                 }
 
-                this.userId = user.id;
+                    this.userId = user.id;
                 // Verificar y crear usuario en public.users si no existe
                 await this.ensureUserExists(user);
                 return;

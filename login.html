@@ -12,183 +12,65 @@
 <body>
     <!-- Contenedor principal -->
     <div class="auth-container">
-        <!-- Logo y título -->
-        <div class="auth-header">
-            <div class="logo">
-                <i class="fas fa-magic"></i>
-                <span>AI Smart Content</span>
-            </div>
-            <p class="tagline">Genera contenido UGC profesional con IA</p>
-                        </div>
-
         <!-- Formulario de autenticación -->
         <div class="auth-card">
-            <div class="tab-container">
-                <button class="tab-button active" data-tab="login">
-                    <i class="fas fa-sign-in-alt"></i>
-                    Iniciar Sesión
-                </button>
-                <button class="tab-button" data-tab="register">
-                    <i class="fas fa-user-plus"></i>
-                    Registrarse
-                </button>
+            <!-- Logo -->
+            <div class="auth-logo">
+                <span>Your logo</span>
             </div>
 
             <!-- Formulario de Login -->
             <form class="auth-form active" id="loginForm" data-form="login">
-                <h2>Bienvenido de vuelta</h2>
-                <p class="form-subtitle">Accede a tu cuenta para continuar creando</p>
+                <h2>Login</h2>
 
                 <div class="form-group">
+                    <label for="loginEmail">Email</label>
                     <div class="input-container">
-                        <i class="fas fa-envelope"></i>
-                        <input type="email" id="loginEmail" placeholder="Tu email" required>
-                        </div>
+                        <input type="email" id="loginEmail" placeholder="username@gmail.com" required>
                     </div>
+                </div>
                     
                 <div class="form-group">
+                    <label for="loginPassword">Password</label>
                     <div class="input-container">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="loginPassword" placeholder="Tu contraseña" required>
+                        <input type="password" id="loginPassword" placeholder="Password" required>
                         <button type="button" class="toggle-password" data-target="loginPassword">
-                            <i class="fas fa-eye"></i>
+                            <i class="fas fa-eye-slash"></i>
                         </button>
                     </div>
-                        </div>
+                </div>
 
                 <div class="form-options">
-                    <label class="checkbox-container">
-                        <input type="checkbox" id="rememberMe">
-                        <span class="checkmark"></span>
-                        Recordarme
-                    </label>
-                    <a href="#" class="forgot-password">¿Olvidaste tu contraseña?</a>
-                        </div>
+                    <a href="#" class="forgot-password">Forgot Password?</a>
+                </div>
 
                 <button type="submit" class="auth-button">
-                    <span class="button-text">Iniciar Sesión</span>
+                    <span class="button-text">Sign in</span>
                     <div class="loading-spinner" style="display: none;">
                         <i class="fas fa-spinner fa-spin"></i>
                     </div>
                 </button>
             </form>
 
-            <!-- Formulario de Registro -->
-            <form class="auth-form" id="registerForm" data-form="register">
-                <h2>Crear cuenta</h2>
-                <p class="form-subtitle">Únete a AI Smart Content y comienza a crear</p>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <div class="input-container">
-                            <i class="fas fa-user"></i>
-                            <input type="text" id="firstName" placeholder="Nombre" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <div class="input-container">
-                            <i class="fas fa-user"></i>
-                            <input type="text" id="lastName" placeholder="Apellido" required>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <div class="input-container">
-                        <i class="fas fa-envelope"></i>
-                        <input type="email" id="registerEmail" placeholder="Tu email" required>
-        </div>
-                </div>
-
-                    <div class="form-group">
-                    <div class="input-container">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="registerPassword" placeholder="Contraseña (min. 8 caracteres)" required minlength="8">
-                        <button type="button" class="toggle-password" data-target="registerPassword">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                    <div class="password-strength" id="passwordStrength">
-                        <div class="strength-bar">
-                            <div class="strength-fill"></div>
-                        </div>
-                        <span class="strength-text">Débil</span>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <div class="input-container">
-                        <i class="fas fa-globe"></i>
-                        <select id="country" required>
-                            <option value="">Selecciona tu país</option>
-                            <option value="ES">España</option>
-                            <option value="MX">México</option>
-                            <option value="AR">Argentina</option>
-                            <option value="CO">Colombia</option>
-                            <option value="CL">Chile</option>
-                            <option value="PE">Perú</option>
-                            <option value="UY">Uruguay</option>
-                            <option value="VE">Venezuela</option>
-                            <option value="EC">Ecuador</option>
-                            <option value="BO">Bolivia</option>
-                            <option value="PY">Paraguay</option>
-                            <option value="US">Estados Unidos</option>
-                            <option value="OTHER">Otro</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="checkbox-container">
-                        <input type="checkbox" id="acceptTerms" required>
-                        <span class="checkmark"></span>
-                        Acepto los <a href="#" class="link">Términos y Condiciones</a> y la <a href="#" class="link">Política de Privacidad</a>
-                    </label>
-                    </div>
-
-                <div class="form-group">
-                    <label class="checkbox-container">
-                        <input type="checkbox" id="acceptMarketing">
-                        <span class="checkmark"></span>
-                        Quiero recibir novedades y ofertas por email
-                        </label>
-                </div>
-
-                <button type="submit" class="auth-button">
-                    <span class="button-text">Crear Cuenta</span>
-                    <div class="loading-spinner" style="display: none;">
-                        <i class="fas fa-spinner fa-spin"></i>
-                    </div>
-                    </button>
-                </form>
-
             <!-- Divider -->
             <div class="divider">
-                <span>O continúa con</span>
+                <span>or continue with</span>
             </div>
 
             <!-- Social Login -->
-                <div class="social-login">
+            <div class="social-login">
                 <button class="social-button google">
-                            <i class="fab fa-google"></i>
+                    <i class="fab fa-google"></i>
                     <span>Google</span>
                 </button>
-                <button class="social-button github">
-                            <i class="fab fa-github"></i>
-                    <span>GitHub</span>
-                </button>
-                    </div>
-                </div>
+            </div>
 
-        <!-- Footer -->
-        <div class="auth-footer">
-            <p>&copy; 2024 AI Smart Content. Todos los derechos reservados.</p>
-            <div class="footer-links">
-                <a href="#">Términos</a>
-                <a href="#">Privacidad</a>
-                <a href="#">Soporte</a>
+            <!-- Register Link -->
+            <div class="register-link">
+                <p>Don't have an account yet? <a href="planes.html">Register for free</a></p>
             </div>
         </div>
+
     </div>
 
     <!-- Notificaciones -->

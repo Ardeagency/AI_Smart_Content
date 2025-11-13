@@ -77,10 +77,6 @@ class AuthManager {
             this.handleSocialLogin('google');
         });
 
-        document.querySelector('.social-button.github').addEventListener('click', () => {
-            this.handleSocialLogin('github');
-        });
-
         // Notification close
         document.querySelector('.notification-close').addEventListener('click', () => {
             this.hideNotification();
