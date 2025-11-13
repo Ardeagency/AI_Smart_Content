@@ -25,24 +25,29 @@ class FormRecord {
     }
 
     async initSupabase() {
-        try {
-            // Esperar a que Supabase esté listo
-            if (typeof waitForSupabase === 'function') {
-                this.supabase = await waitForSupabase();
-            } else if (window.supabaseClient) {
-                this.supabase = window.supabaseClient;
-            }
-
-            if (this.supabase) {
-                // Obtener usuario actual
-                const { data: { user } } = await this.supabase.auth.getUser();
-                if (user) {
-                    this.userId = user.id;
-                }
-            }
-        } catch (error) {
-            console.error('Error initializing Supabase:', error);
+        if (typeof waitForSupabase === 'function') {
+            this.supabase = await waitForSupabase(15000);
+        } else if (window.supabaseClient) {
+            this.supabase = window.supabaseClient;
+        } else if (typeof initSupabase === 'function') {
+            this.supabase = await initSupabase();
         }
+
+        if (!this.supabase) {
+            throw new Error('No se pudo inicializar Supabase. Por favor, recarga la página.');
+        }
+
+        const { data: { user }, error: userError } = await this.supabase.auth.getUser();
+        
+        if (userError) {
+            throw new Error(`Error de autenticación: ${userError.message}`);
+        }
+
+        if (!user) {
+            throw new Error('No hay usuario autenticado. Por favor, inicia sesión nuevamente.');
+        }
+
+        this.userId = user.id;
     }
 
     setupEventListeners() {
@@ -520,38 +525,24 @@ class FormRecord {
 
     collectStepData(step) {
         const stepElement = document.querySelector(`[data-step="${step}"]`);
-        if (!stepElement) {
-            console.warn(`⚠️ No se encontró el paso ${step}`);
-            return;
-        }
+        if (!stepElement) return;
 
-        console.log(`📝 Recopilando datos del paso ${step}...`);
-
-        // Collect all form data from current step
         stepElement.querySelectorAll('input, textarea, select').forEach(field => {
-            // Skip file inputs (they're handled in handleFileUpload)
             if (field.type === 'file') return;
             
-            // Handle custom multiselect hidden inputs FIRST
             if (field.type === 'hidden' && (field.id === 'mercado_objetivo' || field.id === 'idiomas_contenido' || field.id === 'palabras_evitar')) {
                 try {
                     const value = field.value ? JSON.parse(field.value) : [];
                     this.formData[field.id] = Array.isArray(value) ? value : [];
-                    console.log(`  ✓ ${field.id}:`, this.formData[field.id]);
                 } catch (e) {
-                    console.warn(`  ⚠️ Error parseando ${field.id}:`, e);
                     this.formData[field.id] = [];
                 }
             } else if (field.multiple && field.tagName === 'SELECT') {
-                const selected = Array.from(field.selectedOptions)
-                    .filter(opt => opt.value !== '') // Excluir opción vacía
+                this.formData[field.id] = Array.from(field.selectedOptions)
+                    .filter(opt => opt.value !== '')
                     .map(opt => opt.value);
-                this.formData[field.id] = selected;
-                console.log(`  ✓ ${field.id}:`, selected);
             } else if (field.tagName === 'SELECT' && !field.multiple) {
-                // Single select
                 this.formData[field.id] = field.value;
-                if (field.value) console.log(`  ✓ ${field.id}:`, field.value);
             } else if (field.type === 'hidden') {
                 try {
                     this.formData[field.id] = JSON.parse(field.value);
@@ -562,22 +553,19 @@ class FormRecord {
                 const value = field.value.trim();
                 if (value) {
                     this.formData[field.id] = value;
-                    console.log(`  ✓ ${field.id}:`, value);
                 }
             }
         });
 
-        // También obtener valores directamente de los multiselects usando getMultiselectValues
+        // Obtener valores de multiselects directamente
         if (step === 2) {
             const mercadoValues = this.getMultiselectValues('mercado_objetivo');
             const idiomasValues = this.getMultiselectValues('idiomas_contenido');
             if (mercadoValues && mercadoValues.length > 0) {
                 this.formData.mercado_objetivo = mercadoValues;
-                console.log('  ✓ mercado_objetivo (directo):', mercadoValues);
             }
             if (idiomasValues && idiomasValues.length > 0) {
                 this.formData.idiomas_contenido = idiomasValues;
-                console.log('  ✓ idiomas_contenido (directo):', idiomasValues);
             }
         }
 
@@ -585,24 +573,28 @@ class FormRecord {
             const palabrasEvitar = this.getMultiselectValues('palabras_evitar');
             if (palabrasEvitar && palabrasEvitar.length > 0) {
                 this.formData.palabras_evitar = palabrasEvitar;
-                console.log('  ✓ palabras_evitar (directo):', palabrasEvitar);
+            }
+            const tonoVoz = document.getElementById('tono_voz');
+            if (tonoVoz && tonoVoz.value) {
+                this.formData.tono_voz = tonoVoz.value;
             }
         }
     }
 
-    nextStep() {
+    async nextStep() {
         if (!this.validateStep(this.currentStep)) {
             return;
         }
 
         this.collectStepData(this.currentStep);
 
-        if (this.currentStep < this.totalSteps) {
+        if (this.currentStep < this.totalSteps - 1) {
             this.currentStep++;
             this.showStep(this.currentStep);
             this.updateProgress();
-        } else {
-            this.completeForm();
+        } else if (this.currentStep === this.totalSteps - 1) {
+            // Último paso antes de finalizar - guardar inmediatamente
+            await this.completeForm();
         }
     }
 
@@ -637,7 +629,7 @@ class FormRecord {
             btnBack.style.display = 'none';
         } else {
             btnNext.style.display = 'inline-flex';
-            btnNext.textContent = step === this.totalSteps - 1 ? 'Finalizar' : 'Continuar';
+            btnNext.textContent = step === this.totalSteps - 1 ? 'Finalizar y Guardar' : 'Continuar';
         }
     }
 
@@ -649,86 +641,77 @@ class FormRecord {
     }
 
     async completeForm() {
-        // Collect ALL steps data before saving
-        console.log('🔄 Recopilando datos de todos los pasos...');
+        const btnNext = document.getElementById('btnNext');
+        
+        // Recopilar todos los datos
         for (let i = 1; i <= this.totalSteps; i++) {
             this.collectStepData(i);
         }
 
-        // Log form data
-        console.log('📊 Form data collected (completo):', JSON.stringify(this.formData, null, 2));
-        console.log('👤 User ID:', this.userId);
-        console.log('🔌 Supabase disponible:', !!this.supabase);
+        // Validar campos requeridos
+        const requiredFields = {
+            'nombre_marca': 'Nombre de la marca',
+            'mercado_objetivo': 'Mercados objetivo',
+            'idiomas_contenido': 'Idiomas de contenido',
+            'tono_voz': 'Tono de voz',
+            'tipo_producto': 'Tipo de producto',
+            'nombre_producto': 'Nombre del producto',
+            'descripcion_producto': 'Descripción del producto',
+            'beneficio_1': 'Primer beneficio',
+            'audiencia_desc': 'Descripción de audiencia',
+            'objetivo_principal': 'Objetivo principal',
+            'cta': 'Call to Action',
+            'cta_url': 'URL del CTA'
+        };
 
-        // Verificar que tenemos los datos necesarios
-        if (!this.formData.nombre_marca) {
-            alert('Error: Falta el nombre de la marca. Por favor, completa el paso 1.');
-            return;
+        const missingFields = [];
+        for (const [field, label] of Object.entries(requiredFields)) {
+            const value = this.formData[field];
+            if (!value || (Array.isArray(value) && value.length === 0) || (typeof value === 'string' && value.trim() === '')) {
+                missingFields.push(label);
+            }
         }
 
-        // Show loading state
-        const btnNext = document.getElementById('btnNext');
+        if (missingFields.length > 0) {
+            alert(`Por favor completa los siguientes campos requeridos:\n\n${missingFields.join('\n')}`);
+            return false;
+        }
+
+        // Estado de carga
         if (btnNext) {
             btnNext.disabled = true;
             btnNext.textContent = 'Guardando...';
         }
 
         try {
-            // Verificar que Supabase esté inicializado
+            // Verificar Supabase
             if (!this.supabase || !this.userId) {
-                console.error('❌ Supabase no inicializado o sin usuario');
-                console.log('Supabase:', this.supabase);
-                console.log('UserId:', this.userId);
-                
-                // Intentar inicializar nuevamente
                 await this.initSupabase();
-                
                 if (!this.supabase || !this.userId) {
-                    const errorMsg = 'No se pudo inicializar Supabase o no hay usuario autenticado. Por favor, recarga la página e inicia sesión nuevamente.';
-                    console.error('❌', errorMsg);
-                    alert(errorMsg);
-                    if (btnNext) {
-                        btnNext.disabled = false;
-                        btnNext.textContent = 'Finalizar';
-                    }
-                    return; // NO avanzar, quedarse en el formulario
+                    throw new Error('No se pudo inicializar Supabase o no hay usuario autenticado');
                 }
             }
 
-            // Guardar datos en Supabase - NO avanzar hasta que se complete exitosamente
-            console.log('🔄 Iniciando guardado en Supabase...');
+            // Guardar en Supabase
             await this.saveToSupabase();
-            console.log('✅ Guardado completado exitosamente');
             
             // Solo avanzar si el guardado fue exitoso
+            this.currentStep = this.totalSteps;
             this.showStep(this.totalSteps);
+            this.updateProgress();
+            
+            return true;
         } catch (error) {
-            // Error detallado en consola
-            console.error('❌ ============================================');
-            console.error('❌ ERROR AL GUARDAR DATOS EN SUPABASE');
-            console.error('❌ ============================================');
-            console.error('❌ Mensaje:', error.message);
-            console.error('❌ Código:', error.code);
-            console.error('❌ Detalles:', error.details);
-            console.error('❌ Hint:', error.hint);
-            console.error('❌ Error completo:', JSON.stringify(error, null, 2));
-            console.error('❌ ============================================');
+            console.error('Error al guardar:', error);
+            alert(`Error al guardar los datos:\n\n${error.message || 'Error desconocido'}\n\nPor favor, intenta nuevamente.`);
             
-            // Mostrar mensaje de error al usuario
-            const errorMessage = `Error al guardar los datos en Supabase:\n\n${error.message || 'Error desconocido'}\n\nPor favor:\n1. Revisa la consola para más detalles\n2. Verifica tu conexión a internet\n3. Intenta nuevamente haciendo clic en "Finalizar"\n\nLos datos del formulario NO se han perdido y están listos para guardarse.`;
-            alert(errorMessage);
-            
-            // NO avanzar - mantener el botón activo para reintentar
+            // NO avanzar - reactivar botón
             if (btnNext) {
                 btnNext.disabled = false;
-                btnNext.textContent = 'Reintentar Guardado';
-                btnNext.onclick = () => {
-                    this.completeForm(); // Permitir reintentar
-                };
+                btnNext.textContent = 'Finalizar';
             }
             
-            // NO redirigir, NO avanzar, NO reiniciar - quedarse estático
-            return;
+            return false;
         }
     }
 
@@ -741,9 +724,6 @@ class FormRecord {
             throw new Error(errorMsg);
         }
 
-        console.log('💾 Iniciando guardado en Supabase...');
-        console.log('👤 User ID:', this.userId);
-        console.log('📋 Datos del formulario recopilados:', JSON.stringify(this.formData, null, 2));
 
         // 1. Crear o actualizar proyecto
         const projectData = {
@@ -756,9 +736,8 @@ class FormRecord {
             mercado_objetivo: Array.isArray(this.formData.mercado_objetivo) ? this.formData.mercado_objetivo : [],
             idiomas_contenido: Array.isArray(this.formData.idiomas_contenido) ? this.formData.idiomas_contenido : []
         };
-        
+
         // Verificar si ya existe un proyecto para este usuario
-        console.log('🔍 Verificando si existe proyecto para el usuario...');
         const { data: existingProject, error: checkError } = await this.supabase
             .from('projects')
             .select('id')
@@ -766,15 +745,12 @@ class FormRecord {
             .maybeSingle(); // Usar maybeSingle para evitar error si no existe
 
         if (checkError && checkError.code !== 'PGRST116') {
-            console.error('❌ Error verificando proyecto existente:', checkError);
             throw new Error(`Error al verificar proyecto: ${checkError.message}`);
         }
 
         let projectId;
         
         if (existingProject) {
-            // Actualizar proyecto existente
-            console.log('📝 Actualizando proyecto existente...', existingProject.id);
             const { data: project, error: projectError } = await this.supabase
                 .from('projects')
                 .update(projectData)
@@ -783,15 +759,10 @@ class FormRecord {
                 .single();
 
             if (projectError) {
-                console.error('❌ Error actualizando proyecto:', projectError);
-                console.error('Detalles:', JSON.stringify(projectError, null, 2));
-                throw new Error(`Error al actualizar proyecto: ${projectError.message || 'Error desconocido'}`);
+                throw new Error(`Error al actualizar proyecto: ${projectError.message}`);
             }
             projectId = project.id;
-            console.log('✅ Proyecto actualizado con ID:', projectId);
         } else {
-            // Crear nuevo proyecto
-            console.log('📝 Creando nuevo proyecto...', projectData);
             const { data: project, error: projectError } = await this.supabase
                 .from('projects')
                 .insert(projectData)
@@ -799,13 +770,9 @@ class FormRecord {
                 .single();
 
             if (projectError) {
-                console.error('❌ Error creando proyecto:', projectError);
-                console.error('Detalles completos:', JSON.stringify(projectError, null, 2));
-                console.error('Datos que se intentaron insertar:', JSON.stringify(projectData, null, 2));
-                throw new Error(`Error al crear proyecto: ${projectError.message || 'Error desconocido'}. Código: ${projectError.code || 'N/A'}`);
+                throw new Error(`Error al crear proyecto: ${projectError.message}`);
             }
             projectId = project.id;
-            console.log('✅ Proyecto creado con ID:', projectId);
         }
 
         // 2. Subir logo si existe
@@ -839,8 +806,6 @@ class FormRecord {
             reglas_creativas: this.formData.reglas_creativas || null
         };
 
-        // Verificar si ya existe un brand para este proyecto
-        console.log('🔍 Verificando si existe brand para el proyecto...');
         const { data: existingBrand, error: checkBrandError } = await this.supabase
             .from('brands')
             .select('id')
@@ -848,36 +813,26 @@ class FormRecord {
             .maybeSingle();
 
         if (checkBrandError && checkBrandError.code !== 'PGRST116') {
-            console.error('❌ Error verificando brand existente:', checkBrandError);
             throw new Error(`Error al verificar brand: ${checkBrandError.message}`);
         }
 
         if (existingBrand) {
-            console.log('🎨 Actualizando brand existente...', existingBrand.id);
             const { error: brandError } = await this.supabase
                 .from('brands')
                 .update(brandData)
                 .eq('id', existingBrand.id);
 
             if (brandError) {
-                console.error('❌ Error actualizando brand:', brandError);
-                console.error('Detalles:', JSON.stringify(brandError, null, 2));
-                throw new Error(`Error al actualizar brand: ${brandError.message || 'Error desconocido'}`);
+                throw new Error(`Error al actualizar brand: ${brandError.message}`);
             }
-            console.log('✅ Brand actualizado exitosamente');
         } else {
-            console.log('🎨 Creando nuevo brand...', brandData);
             const { error: brandError } = await this.supabase
                 .from('brands')
                 .insert(brandData);
 
             if (brandError) {
-                console.error('❌ Error creando brand:', brandError);
-                console.error('Detalles completos:', JSON.stringify(brandError, null, 2));
-                console.error('Datos que se intentaron insertar:', JSON.stringify(brandData, null, 2));
-                throw new Error(`Error al crear brand: ${brandError.message || 'Error desconocido'}. Código: ${brandError.code || 'N/A'}`);
+                throw new Error(`Error al crear brand: ${brandError.message}`);
             }
-            console.log('✅ Brand creado exitosamente');
         }
 
         // 4. Subir archivos de identidad si existen
@@ -927,8 +882,6 @@ class FormRecord {
             variantes_producto: this.formData.variantes_producto || null
         };
 
-        // Verificar si ya existe un producto para este proyecto
-        console.log('🔍 Verificando si existe producto para el proyecto...');
         const { data: existingProduct, error: checkProductError } = await this.supabase
             .from('products')
             .select('id')
@@ -936,14 +889,12 @@ class FormRecord {
             .maybeSingle();
 
         if (checkProductError && checkProductError.code !== 'PGRST116') {
-            console.error('❌ Error verificando producto existente:', checkProductError);
             throw new Error(`Error al verificar producto: ${checkProductError.message}`);
         }
 
         let productId;
 
         if (existingProduct) {
-            console.log('📦 Actualizando producto existente...', existingProduct.id);
             const { data: product, error: productError } = await this.supabase
                 .from('products')
                 .update(productData)
@@ -952,14 +903,10 @@ class FormRecord {
                 .single();
 
             if (productError) {
-                console.error('❌ Error actualizando producto:', productError);
-                console.error('Detalles:', JSON.stringify(productError, null, 2));
-                throw new Error(`Error al actualizar producto: ${productError.message || 'Error desconocido'}`);
+                throw new Error(`Error al actualizar producto: ${productError.message}`);
             }
             productId = product.id;
-            console.log('✅ Producto actualizado con ID:', productId);
         } else {
-            console.log('📦 Creando nuevo producto...', productData);
             const { data: product, error: productError } = await this.supabase
                 .from('products')
                 .insert(productData)
@@ -967,13 +914,9 @@ class FormRecord {
                 .single();
 
             if (productError) {
-                console.error('❌ Error creando producto:', productError);
-                console.error('Detalles completos:', JSON.stringify(productError, null, 2));
-                console.error('Datos que se intentaron insertar:', JSON.stringify(productData, null, 2));
-                throw new Error(`Error al crear producto: ${productError.message || 'Error desconocido'}. Código: ${productError.code || 'N/A'}`);
+                throw new Error(`Error al crear producto: ${productError.message}`);
             }
             productId = product.id;
-            console.log('✅ Producto creado con ID:', productId);
         }
 
         // 6. Subir imágenes del producto
@@ -1018,8 +961,6 @@ class FormRecord {
             cta_url: this.formData.cta_url || '#'
         };
 
-        // Verificar si ya existe una campaña para este proyecto
-        console.log('🔍 Verificando si existe campaña para el proyecto...');
         const { data: existingCampaign, error: checkCampaignError } = await this.supabase
             .from('campaigns')
             .select('id')
@@ -1027,54 +968,37 @@ class FormRecord {
             .maybeSingle();
 
         if (checkCampaignError && checkCampaignError.code !== 'PGRST116') {
-            console.error('❌ Error verificando campaña existente:', checkCampaignError);
             throw new Error(`Error al verificar campaña: ${checkCampaignError.message}`);
         }
 
         if (existingCampaign) {
-            console.log('📢 Actualizando campaña existente...', existingCampaign.id);
             const { error: campaignError } = await this.supabase
                 .from('campaigns')
                 .update(campaignData)
                 .eq('id', existingCampaign.id);
 
             if (campaignError) {
-                console.error('❌ Error actualizando campaña:', campaignError);
-                console.error('Detalles:', JSON.stringify(campaignError, null, 2));
-                throw new Error(`Error al actualizar campaña: ${campaignError.message || 'Error desconocido'}`);
+                throw new Error(`Error al actualizar campaña: ${campaignError.message}`);
             }
-            console.log('✅ Campaña actualizada exitosamente');
         } else {
-            console.log('📢 Creando nueva campaña...', campaignData);
             const { error: campaignError } = await this.supabase
                 .from('campaigns')
                 .insert(campaignData);
 
             if (campaignError) {
-                console.error('❌ Error creando campaña:', campaignError);
-                console.error('Detalles completos:', JSON.stringify(campaignError, null, 2));
-                console.error('Datos que se intentaron insertar:', JSON.stringify(campaignData, null, 2));
-                throw new Error(`Error al crear campaña: ${campaignError.message || 'Error desconocido'}. Código: ${campaignError.code || 'N/A'}`);
+                throw new Error(`Error al crear campaña: ${campaignError.message}`);
             }
-            console.log('✅ Campaña creada exitosamente');
         }
 
-        // 8. Marcar el usuario como form_verified = true
-        console.log('✅ Marcando usuario como form_verified...');
+        // Marcar el usuario como form_verified = true
         const { error: updateError } = await this.supabase
             .from('users')
             .update({ form_verified: true })
             .eq('id', this.userId);
 
         if (updateError) {
-            console.error('❌ Error actualizando form_verified:', updateError);
-            console.error('Detalles:', JSON.stringify(updateError, null, 2));
-            throw new Error(`Error al marcar formulario como completado: ${updateError.message || 'Error desconocido'}`);
+            throw new Error(`Error al marcar formulario como completado: ${updateError.message}`);
         }
-        console.log('✅ Usuario marcado como form_verified = true');
-        console.log('✅ ============================================');
-        console.log('✅ TODOS LOS DATOS GUARDADOS EXITOSAMENTE');
-        console.log('✅ ============================================');
     }
 }
 
