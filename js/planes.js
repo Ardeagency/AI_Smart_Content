@@ -163,9 +163,9 @@ class PlanesManager {
                         first_name: firstName,
                         last_name: lastName,
                         plan_type: this.selectedPlan.name
-                    }
                 }
-            });
+            }
+        });
 
             if (authError) {
                 throw authError;
@@ -179,19 +179,39 @@ class PlanesManager {
 
             // 2. Asegurar sesión activa para RLS
             let session = authData.session;
+            
+            // Si no hay sesión del signUp, intentar signIn
             if (!session) {
-                const { data: signInData } = await this.supabase.auth.signInWithPassword({
-                    email: email,
-                    password: password
-                });
-                session = signInData?.session;
+                console.log('⚠️ No hay sesión del signUp, intentando signIn...');
+                try {
+                    const { data: signInData, error: signInError } = await this.supabase.auth.signInWithPassword({
+                        email: email,
+                        password: password
+                    });
+                    
+                    if (signInError) {
+                        console.warn('⚠️ Error en signIn:', signInError);
+                        // Si el error es de email no confirmado, continuar de todas formas
+                        if (signInError.message.includes('email') || signInError.message.includes('confirm')) {
+                            console.log('⚠️ Email requiere confirmación, continuando...');
+                        } else {
+                            // Para otros errores, intentar continuar de todas formas
+                            console.log('⚠️ Continuando sin sesión activa...');
+                        }
+                    } else {
+                        session = signInData?.session;
+                        if (session) {
+                            console.log('✅ Sesión establecida mediante signIn');
+                        }
+                    }
+                } catch (signInErr) {
+                    console.warn('⚠️ Excepción en signIn:', signInErr);
+                }
+            } else {
+                console.log('✅ Sesión activa desde signUp');
             }
 
-            if (!session) {
-                throw new Error('No se pudo establecer una sesión activa');
-            }
-
-            // 3. Crear usuario en public.users
+            // 3. Crear usuario en public.users (intentar incluso si no hay sesión)
             const { error: createUserError } = await this.supabase
                 .from('users')
                 .insert({
@@ -247,10 +267,10 @@ class PlanesManager {
             if (error.message) {
                 if (error.message.includes('already registered') || error.message.includes('already exists')) {
                     errorMessage = 'Este email ya está registrado. Por favor, inicia sesión.';
-                } else if (error.message.includes('Password')) {
-                    errorMessage = 'La contraseña no cumple con los requisitos de seguridad';
-                } else if (error.message.includes('Email')) {
-                    errorMessage = 'El email no es válido';
+            } else if (error.message.includes('Password')) {
+                errorMessage = 'La contraseña no cumple con los requisitos de seguridad';
+            } else if (error.message.includes('Email')) {
+                errorMessage = 'El email no es válido';
                 } else {
                     errorMessage = error.message;
                 }
