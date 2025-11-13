@@ -195,13 +195,28 @@ class ProductsManager {
     }
 
     async loadProducts() {
-        if (!this.projectId) return;
+        if (!this.projectId) {
+            console.warn('⚠️ No hay projectId, no se pueden cargar productos');
+            const loadingState = document.getElementById('loadingState');
+            const emptyState = document.getElementById('emptyState');
+            const productsGrid = document.getElementById('productsGrid');
+            if (loadingState) loadingState.style.display = 'none';
+            if (emptyState) emptyState.style.display = 'block';
+            if (productsGrid) productsGrid.style.display = 'none';
+            return;
+        }
 
         const loadingState = document.getElementById('loadingState');
         const emptyState = document.getElementById('emptyState');
         const productsGrid = document.getElementById('productsGrid');
 
+        if (!loadingState || !emptyState || !productsGrid) {
+            console.error('❌ Elementos del DOM no encontrados');
+            return;
+        }
+
         try {
+            console.log('📦 Cargando productos para proyecto:', this.projectId);
             loadingState.style.display = 'block';
             emptyState.style.display = 'none';
             productsGrid.style.display = 'none';
@@ -212,7 +227,12 @@ class ProductsManager {
                 .eq('project_id', this.projectId)
                 .order('created_at', { ascending: false });
 
-            if (error) throw error;
+            if (error) {
+                console.error('❌ Error cargando productos:', error);
+                throw error;
+            }
+
+            console.log(`✅ ${products?.length || 0} producto(s) encontrado(s)`);
 
             // Cargar imágenes para cada producto
             if (products && products.length > 0) {
@@ -225,17 +245,23 @@ class ProductsManager {
 
                     if (!imagesError) {
                         product.images = images || [];
+                        console.log(`📸 Producto ${product.nombre_producto}: ${images?.length || 0} imagen(es)`);
+                    } else {
+                        console.warn(`⚠️ Error cargando imágenes para producto ${product.id}:`, imagesError);
+                        product.images = [];
                     }
                 }
             }
 
             this.products = products || [];
+            console.log('✅ Productos cargados:', this.products.length);
             this.renderProducts();
 
         } catch (error) {
-            console.error('Error cargando productos:', error);
-            loadingState.style.display = 'none';
-            emptyState.style.display = 'block';
+            console.error('❌ Error completo cargando productos:', error);
+            if (loadingState) loadingState.style.display = 'none';
+            if (emptyState) emptyState.style.display = 'block';
+            if (productsGrid) productsGrid.style.display = 'none';
         }
     }
 
@@ -243,24 +269,37 @@ class ProductsManager {
         const loadingState = document.getElementById('loadingState');
         const emptyState = document.getElementById('emptyState');
         const productsGrid = document.getElementById('productsGrid');
-        const grid = productsGrid;
+
+        if (!loadingState || !emptyState || !productsGrid) {
+            console.error('❌ Elementos del DOM no encontrados para renderizar productos');
+            return;
+        }
 
         loadingState.style.display = 'none';
 
-        if (this.products.length === 0) {
+        if (!this.products || this.products.length === 0) {
+            console.log('ℹ️ No hay productos para mostrar');
             emptyState.style.display = 'block';
             productsGrid.style.display = 'none';
             return;
         }
 
+        console.log(`🎨 Renderizando ${this.products.length} producto(s)`);
         emptyState.style.display = 'none';
         productsGrid.style.display = 'grid';
-        grid.innerHTML = '';
+        productsGrid.innerHTML = '';
 
-        this.products.forEach(product => {
-            const card = this.createProductCard(product);
-            grid.appendChild(card);
+        this.products.forEach((product, index) => {
+            try {
+                const card = this.createProductCard(product);
+                productsGrid.appendChild(card);
+                console.log(`✅ Producto ${index + 1} renderizado: ${product.nombre_producto}`);
+            } catch (error) {
+                console.error(`❌ Error renderizando producto ${product.id}:`, error);
+            }
         });
+
+        console.log('✅ Todos los productos renderizados');
     }
 
     createProductCard(product) {
