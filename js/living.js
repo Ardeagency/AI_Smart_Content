@@ -909,10 +909,44 @@ class LivingManager {
                 if (e.target.files[0]) {
                     const reader = new FileReader();
                     reader.onload = (event) => {
+                        // Guardar el input file antes de reemplazar el contenido
+                        const fileInput = logoUploadZone.querySelector('input[type="file"]');
                         logoUploadZone.innerHTML = `
-                            <img src="${event.target.result}" style="max-width: 200px; max-height: 200px; border-radius: 8px;">
+                            <input type="file" id="editLogoFile" accept="image/*,.svg" hidden>
+                            <img src="${event.target.result}" style="max-width: 200px; max-height: 200px; border-radius: 8px; margin-bottom: 0.5rem;">
                             <p>Logo seleccionado</p>
+                            <p style="font-size: 0.85rem; color: var(--text-muted);">${e.target.files[0].name}</p>
                         `;
+                        // Restaurar el input file y asignar el archivo seleccionado
+                        const newInput = logoUploadZone.querySelector('#editLogoFile');
+                        if (newInput) {
+                            // Crear un nuevo FileList con el archivo seleccionado
+                            const dataTransfer = new DataTransfer();
+                            dataTransfer.items.add(e.target.files[0]);
+                            newInput.files = dataTransfer.files;
+                            // Agregar listener nuevamente
+                            newInput.addEventListener('change', (ev) => {
+                                if (ev.target.files[0]) {
+                                    const newReader = new FileReader();
+                                    newReader.onload = (newEvent) => {
+                                        const currentInput = logoUploadZone.querySelector('input[type="file"]');
+                                        logoUploadZone.innerHTML = `
+                                            <input type="file" id="editLogoFile" accept="image/*,.svg" hidden>
+                                            <img src="${newEvent.target.result}" style="max-width: 200px; max-height: 200px; border-radius: 8px; margin-bottom: 0.5rem;">
+                                            <p>Logo seleccionado</p>
+                                            <p style="font-size: 0.85rem; color: var(--text-muted);">${ev.target.files[0].name}</p>
+                                        `;
+                                        const restoredInput = logoUploadZone.querySelector('#editLogoFile');
+                                        if (restoredInput) {
+                                            const newDataTransfer = new DataTransfer();
+                                            newDataTransfer.items.add(ev.target.files[0]);
+                                            restoredInput.files = newDataTransfer.files;
+                                        }
+                                    };
+                                    newReader.readAsDataURL(ev.target.files[0]);
+                                }
+                            });
+                        }
                     };
                     reader.readAsDataURL(e.target.files[0]);
                 }
@@ -1027,9 +1061,32 @@ class LivingManager {
     }
 
     async saveLogo(modal) {
-        const logoInput = modal.querySelector('#editLogoFile');
-        if (!logoInput || !logoInput.files[0]) {
+        // Buscar el input file en el modal (puede estar en diferentes lugares)
+        let logoInput = modal.querySelector('#editLogoFile');
+        
+        // Si no se encuentra, buscar en todo el modal
+        if (!logoInput) {
+            logoInput = modal.querySelector('input[type="file"]');
+        }
+        
+        // Verificar que existe y tiene un archivo
+        if (!logoInput) {
+            console.error('❌ No se encontró el input file en el modal');
+            this.showNotification('⚠️ Error: No se encontró el campo de archivo', 'error');
+            return;
+        }
+        
+        console.log('📋 Input file encontrado:', logoInput);
+        console.log('📋 Archivos en input:', logoInput.files);
+        console.log('📋 Número de archivos:', logoInput.files.length);
+        
+        if (!logoInput.files || logoInput.files.length === 0) {
             console.warn('⚠️ No se seleccionó ningún archivo de logo');
+            console.warn('📋 Estado del input:', {
+                value: logoInput.value,
+                files: logoInput.files,
+                filesLength: logoInput.files ? logoInput.files.length : 0
+            });
             this.showNotification('⚠️ Por favor selecciona un archivo de logo', 'error');
             return;
         }
