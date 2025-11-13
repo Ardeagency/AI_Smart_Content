@@ -176,43 +176,9 @@ class PlanesManager {
 
             console.log('✅ Usuario creado en auth.users:', authData.user.id);
 
-            // 2. Establecer sesión activa haciendo signIn después del signUp
-            // Esto asegura que la sesión esté disponible cuando se redirija a form-record.html
+            // 2. Verificar si hay sesión activa
             let session = authData.session;
             
-            if (!session) {
-                console.log('⚠️ No hay sesión automática, iniciando sesión...');
-                // Si no hay sesión (email requiere confirmación), hacer signIn para establecerla
-                const { data: signInData, error: signInError } = await this.supabase.auth.signInWithPassword({
-                    email: email,
-                    password: password
-                });
-                
-                if (signInError) {
-                    console.warn('⚠️ No se pudo iniciar sesión automáticamente:', signInError.message);
-                    // Si el email requiere confirmación, continuar de todas formas
-                    // El usuario tendrá que confirmar su email después
-                    if (signInError.message.includes('Email not confirmed') || signInError.message.includes('email')) {
-                        console.log('⚠️ Email requiere confirmación, pero continuando...');
-                    } else {
-                        throw new Error(`Error al iniciar sesión: ${signInError.message}`);
-                    }
-                } else {
-                    session = signInData.session;
-                    console.log('✅ Sesión establecida después de signIn');
-                }
-            } else {
-                console.log('✅ Sesión activa encontrada automáticamente');
-            }
-
-            // Verificar sesión final
-            const { data: { session: finalSession } } = await this.supabase.auth.getSession();
-            if (finalSession) {
-                console.log('✅ Sesión confirmada antes de redirigir');
-            } else {
-                console.warn('⚠️ Advertencia: No hay sesión activa antes de redirigir');
-            }
-
             // 3. Crear usuario en public.users usando función SECURITY DEFINER
             // Esto evita problemas de RLS cuando no hay sesión activa
             const { error: createUserError } = await this.supabase.rpc('create_user_profile', {
@@ -235,16 +201,23 @@ class PlanesManager {
                 p_plan_type: this.selectedPlan.name,
                 p_credits_included: this.selectedPlan.credits,
                 p_price: this.selectedPlan.price
-                        });
+            });
 
-                    if (subscriptionError) {
+            if (subscriptionError) {
                 console.error('❌ Error creando suscripción:', subscriptionError);
                 throw new Error(`Error al crear la suscripción: ${subscriptionError.message}`);
             }
             console.log('✅ Suscripción creada con ID:', subscriptionId);
 
-            // 5. Redirigir directamente a form-record.html (sin alert)
-            window.location.href = 'form-record.html';
+            // 5. Si no hay sesión activa, significa que se requiere confirmación de email
+            if (!session) {
+                console.log('📧 Email requiere confirmación, mostrando pantalla de confirmación...');
+                this.showEmailConfirmationScreen(email);
+            } else {
+                // Si hay sesión activa, redirigir al formulario
+                console.log('✅ Sesión activa, redirigiendo a form-record.html');
+                window.location.href = 'form-record.html';
+            }
 
         } catch (error) {
             console.error('❌ Error en registro:', error);
@@ -268,6 +241,76 @@ class PlanesManager {
             if (submitBtn) {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Crear cuenta';
+            }
+        }
+    }
+
+    /**
+     * Mostrar pantalla de confirmación de email
+     */
+    showEmailConfirmationScreen(email) {
+        // Ocultar el formulario
+        const subscribeCard = document.querySelector('.subscribe-card');
+        if (subscribeCard) {
+            subscribeCard.style.display = 'none';
+        }
+
+        // Mostrar pantalla de confirmación
+        const confirmationScreen = document.getElementById('emailConfirmationScreen');
+        const confirmationEmail = document.getElementById('confirmationEmail');
+        
+        if (confirmationScreen && confirmationEmail) {
+            confirmationEmail.textContent = email;
+            confirmationScreen.style.display = 'flex';
+        }
+
+        // Configurar botón de reenvío
+        const btnResend = document.getElementById('btnResendEmail');
+        if (btnResend) {
+            btnResend.addEventListener('click', () => {
+                this.resendConfirmationEmail(email);
+            });
+        }
+    }
+
+    /**
+     * Reenviar correo de confirmación
+     */
+    async resendConfirmationEmail(email) {
+        if (!this.supabase) {
+            await this.initSupabase();
+        }
+
+        try {
+            const btnResend = document.getElementById('btnResendEmail');
+            if (btnResend) {
+                btnResend.disabled = true;
+                btnResend.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+            }
+
+            const { error } = await this.supabase.auth.resend({
+                type: 'signup',
+                email: email
+            });
+
+            if (error) {
+                throw error;
+            }
+
+            alert('Correo de confirmación reenviado. Por favor, revisa tu bandeja de entrada.');
+
+            if (btnResend) {
+                btnResend.disabled = false;
+                btnResend.innerHTML = '<i class="fas fa-paper-plane"></i> Reenviar correo';
+            }
+        } catch (error) {
+            console.error('❌ Error reenviando correo:', error);
+            alert(`Error al reenviar el correo: ${error.message}`);
+            
+            const btnResend = document.getElementById('btnResendEmail');
+            if (btnResend) {
+                btnResend.disabled = false;
+                btnResend.innerHTML = '<i class="fas fa-paper-plane"></i> Reenviar correo';
             }
         }
     }
