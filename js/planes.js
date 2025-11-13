@@ -177,41 +177,21 @@ class PlanesManager {
 
             console.log('✅ Usuario creado en auth.users:', authData.user.id);
 
-            // 2. Asegurar sesión activa para RLS
-            let session = authData.session;
+            // 2. Esperar un momento para que la sesión se establezca
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            // Verificar si hay sesión activa
+            const { data: { session: currentSession } } = await this.supabase.auth.getSession();
             
-            // Si no hay sesión del signUp, intentar signIn
-            if (!session) {
-                console.log('⚠️ No hay sesión del signUp, intentando signIn...');
-                try {
-                    const { data: signInData, error: signInError } = await this.supabase.auth.signInWithPassword({
-                        email: email,
-                        password: password
-                    });
-                    
-                    if (signInError) {
-                        console.warn('⚠️ Error en signIn:', signInError);
-                        // Si el error es de email no confirmado, continuar de todas formas
-                        if (signInError.message.includes('email') || signInError.message.includes('confirm')) {
-                            console.log('⚠️ Email requiere confirmación, continuando...');
-                        } else {
-                            // Para otros errores, intentar continuar de todas formas
-                            console.log('⚠️ Continuando sin sesión activa...');
-                        }
-                    } else {
-                        session = signInData?.session;
-                        if (session) {
-                            console.log('✅ Sesión establecida mediante signIn');
-                        }
-                    }
-                } catch (signInErr) {
-                    console.warn('⚠️ Excepción en signIn:', signInErr);
-                }
+            if (currentSession) {
+                console.log('✅ Sesión activa encontrada');
             } else {
-                console.log('✅ Sesión activa desde signUp');
+                console.log('⚠️ No hay sesión activa, intentando continuar...');
+                // Si no hay sesión, puede ser que el email requiera confirmación
+                // Intentar crear el usuario de todas formas
             }
 
-            // 3. Crear usuario en public.users (intentar incluso si no hay sesión)
+            // 3. Crear usuario en public.users
             const { error: createUserError } = await this.supabase
                 .from('users')
                 .insert({
