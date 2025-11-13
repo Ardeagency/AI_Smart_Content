@@ -37,16 +37,128 @@ class StudioManager {
                 }
             }
 
-            // Supabase desactivado
-            // await this.waitForSupabase();
-            // this.setupSupabase();
-            // await this.checkAuthentication();
-            // await this.loadUserData();
+            // Inicializar Supabase
+            await this.initSupabase();
+            
+            // Cargar datos de usuario y proyecto
+            if (this.supabase && this.userId) {
+                await this.loadUserAndProjectData();
+                this.updateNavHeader();
+            }
+
             this.setupEventListeners();
             // Lucide removido - ya no es necesario
         } catch (error) {
             console.error('Error initializing Studio:', error);
             this.showNotification('Error inicializando Studio', 'error');
+        }
+    }
+
+    async initSupabase() {
+        try {
+            if (typeof waitForSupabase === 'function') {
+                this.supabase = await waitForSupabase(15000);
+            } else if (window.supabaseClient) {
+                this.supabase = window.supabaseClient;
+            } else if (typeof initSupabase === 'function') {
+                this.supabase = await initSupabase();
+            }
+
+            if (this.supabase) {
+                const { data: { user }, error: userError } = await this.supabase.auth.getUser();
+                if (user && !userError) {
+                    this.userId = user.id;
+                }
+            }
+        } catch (error) {
+            console.error('Error inicializando Supabase:', error);
+        }
+    }
+
+    async loadUserAndProjectData() {
+        try {
+            // Cargar datos del usuario
+            if (this.userId) {
+                const { data: userData, error: userError } = await this.supabase
+                    .from('users')
+                    .select('*')
+                    .eq('id', this.userId)
+                    .single();
+
+                if (!userError && userData) {
+                    this.userData = userData;
+                }
+
+                // Cargar proyecto
+                const { data: projectData, error: projectError } = await this.supabase
+                    .from('projects')
+                    .select('*')
+                    .eq('user_id', this.userId)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+
+                if (!projectError && projectData) {
+                    this.projectData = projectData;
+                    this.currentProjectId = projectData.id;
+                }
+            }
+        } catch (error) {
+            console.error('Error cargando datos de usuario y proyecto:', error);
+        }
+    }
+
+    updateNavHeader() {
+        const navBrandLogo = document.getElementById('navBrandLogo');
+        const navBrandInitials = document.getElementById('navBrandInitials');
+        const navBrandName = document.getElementById('navBrandName');
+        const navPlanName = document.getElementById('navPlanName');
+        const creditsCount = document.getElementById('creditsCount');
+
+        // Actualizar logo de marca
+        if (this.projectData && this.projectData.logo_url) {
+            if (navBrandLogo) {
+                navBrandLogo.src = this.projectData.logo_url + '?t=' + Date.now();
+                navBrandLogo.style.display = 'block';
+            }
+            if (navBrandInitials) {
+                navBrandInitials.style.display = 'none';
+            }
+        } else if (this.projectData && this.projectData.nombre_marca) {
+            // Usar iniciales del nombre de marca
+            const initials = this.projectData.nombre_marca
+                .split(' ')
+                .map(word => word.charAt(0))
+                .join('')
+                .toUpperCase()
+                .substring(0, 2);
+            if (navBrandInitials) {
+                navBrandInitials.textContent = initials;
+                navBrandInitials.style.display = 'block';
+            }
+            if (navBrandLogo) {
+                navBrandLogo.style.display = 'none';
+            }
+        }
+
+        // Actualizar nombre de marca
+        if (navBrandName && this.projectData) {
+            navBrandName.textContent = this.projectData.nombre_marca || 'Sin marca';
+        }
+
+        // Actualizar plan
+        if (navPlanName && this.userData) {
+            const planNames = {
+                'basico': 'Plan Básico',
+                'pro': 'Plan Pro',
+                'enterprise': 'Plan Enterprise'
+            };
+            navPlanName.textContent = planNames[this.userData.plan_type] || 'Plan Básico';
+        }
+
+        // Actualizar créditos
+        if (creditsCount && this.userData) {
+            creditsCount.textContent = this.userData.credits_available || 0;
         }
     }
 

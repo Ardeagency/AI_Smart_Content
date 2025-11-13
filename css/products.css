@@ -588,6 +588,45 @@
     font-size: 1.5rem;
 }
 
+.btn-remove-image {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(239, 68, 68, 0.9);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+    z-index: 10;
+}
+
+.btn-remove-image:hover {
+    background: var(--error-color);
+    transform: scale(1.1);
+}
+
+.upload-zone-small {
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: var(--bg-secondary);
+}
+
+.upload-zone-small:hover {
+    border-color: var(--primary-color);
+    background: rgba(210, 254, 63, 0.05);
+}
+
 /* ============================================
    NEW PRODUCT MODAL
    ============================================ */

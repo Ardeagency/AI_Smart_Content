@@ -21,8 +21,94 @@ class ProductsManager {
         }
 
         await this.loadProject();
+        await this.loadUserAndProjectData();
         this.setupEventListeners();
         await this.loadProducts();
+        this.updateNavHeader();
+    }
+
+    async loadUserAndProjectData() {
+        try {
+            // Cargar datos del usuario
+            const { data: userData, error: userError } = await this.supabase
+                .from('users')
+                .select('*')
+                .eq('id', this.userId)
+                .single();
+
+            if (!userError && userData) {
+                this.userData = userData;
+            }
+
+            // Cargar datos del proyecto
+            if (this.projectId) {
+                const { data: projectData, error: projectError } = await this.supabase
+                    .from('projects')
+                    .select('*')
+                    .eq('id', this.projectId)
+                    .single();
+
+                if (!projectError && projectData) {
+                    this.projectData = projectData;
+                }
+            }
+        } catch (error) {
+            console.error('Error cargando datos de usuario y proyecto:', error);
+        }
+    }
+
+    updateNavHeader() {
+        const navBrandLogo = document.getElementById('navBrandLogo');
+        const navBrandInitials = document.getElementById('navBrandInitials');
+        const navBrandName = document.getElementById('navBrandName');
+        const navPlanName = document.getElementById('navPlanName');
+        const creditsCount = document.getElementById('creditsCount');
+
+        // Actualizar logo de marca
+        if (this.projectData && this.projectData.logo_url) {
+            if (navBrandLogo) {
+                navBrandLogo.src = this.projectData.logo_url + '?t=' + Date.now();
+                navBrandLogo.style.display = 'block';
+            }
+            if (navBrandInitials) {
+                navBrandInitials.style.display = 'none';
+            }
+        } else if (this.projectData && this.projectData.nombre_marca) {
+            // Usar iniciales del nombre de marca
+            const initials = this.projectData.nombre_marca
+                .split(' ')
+                .map(word => word.charAt(0))
+                .join('')
+                .toUpperCase()
+                .substring(0, 2);
+            if (navBrandInitials) {
+                navBrandInitials.textContent = initials;
+                navBrandInitials.style.display = 'block';
+            }
+            if (navBrandLogo) {
+                navBrandLogo.style.display = 'none';
+            }
+        }
+
+        // Actualizar nombre de marca
+        if (navBrandName && this.projectData) {
+            navBrandName.textContent = this.projectData.nombre_marca || 'Sin marca';
+        }
+
+        // Actualizar plan
+        if (navPlanName && this.userData) {
+            const planNames = {
+                'basico': 'Plan Básico',
+                'pro': 'Plan Pro',
+                'enterprise': 'Plan Enterprise'
+            };
+            navPlanName.textContent = planNames[this.userData.plan_type] || 'Plan Básico';
+        }
+
+        // Actualizar créditos
+        if (creditsCount && this.userData) {
+            creditsCount.textContent = this.userData.credits_available || 0;
+        }
     }
 
     async initSupabase() {
@@ -537,37 +623,172 @@ class ProductsManager {
     }
 
     renderProductImages(images) {
-        if (!images || images.length === 0) {
-            return `
-                <div class="product-images-section">
-                    <label>Imágenes del producto</label>
-                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">
-                        Las imágenes se pueden agregar desde el formulario de registro inicial.
-                    </p>
-                </div>
-            `;
-        }
-
         let html = `
             <div class="product-images-section">
                 <label>Imágenes del producto</label>
-                <div class="images-grid">
+                <div class="images-grid" id="productImagesGrid">
         `;
 
-        images.forEach(image => {
-            html += `
-                <div class="image-item">
-                    <img src="${image.image_url}" alt="Imagen del producto" loading="lazy">
-                </div>
-            `;
-        });
+        if (images && images.length > 0) {
+            images.forEach((image, index) => {
+                html += `
+                    <div class="image-item" data-image-id="${image.id}">
+                        <img src="${image.image_url}" alt="Imagen del producto" loading="lazy">
+                        <button type="button" class="btn-remove-image" onclick="productsManager.removeProductImage('${image.id}', '${this.currentProduct.id}')" title="Eliminar imagen">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+            });
+        }
 
         html += `
+                </div>
+                <div class="add-image-section" style="margin-top: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">
+                        Agregar nueva imagen
+                    </label>
+                    <div class="upload-zone-small" onclick="document.getElementById('newProductImageInput').click()" style="border: 2px dashed var(--border-color); border-radius: 8px; padding: 1rem; text-align: center; cursor: pointer; transition: all 0.3s ease;">
+                        <input type="file" id="newProductImageInput" accept="image/*" style="display: none;" onchange="productsManager.handleNewImageUpload(event)">
+                        <i class="fas fa-plus" style="font-size: 1.5rem; color: var(--text-secondary); margin-bottom: 0.5rem;"></i>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">Haz clic para agregar imagen</p>
+                    </div>
                 </div>
             </div>
         `;
 
         return html;
+    }
+
+    async removeProductImage(imageId, productId) {
+        if (!confirm('¿Estás seguro de que deseas eliminar esta imagen?')) {
+            return;
+        }
+
+        try {
+            // Obtener información de la imagen para eliminar de storage
+            const { data: image, error: fetchError } = await this.supabase
+                .from('product_images')
+                .select('image_url')
+                .eq('id', imageId)
+                .single();
+
+            if (fetchError) throw fetchError;
+
+            // Extraer path del URL para eliminar de storage
+            if (image.image_url) {
+                const url = new URL(image.image_url);
+                const pathParts = url.pathname.split('/');
+                const fileName = pathParts.slice(pathParts.indexOf('product-images') + 1).join('/');
+
+                // Eliminar de storage
+                await this.supabase.storage
+                    .from('product-images')
+                    .remove([fileName]);
+            }
+
+            // Eliminar de base de datos
+            const { error: deleteError } = await this.supabase
+                .from('product_images')
+                .delete()
+                .eq('id', imageId);
+
+            if (deleteError) throw deleteError;
+
+            // Recargar detalles del producto
+            await this.loadProductDetails(productId);
+            await this.loadProducts();
+
+            this.showNotification('✅ Imagen eliminada exitosamente', 'success');
+        } catch (error) {
+            console.error('Error eliminando imagen:', error);
+            this.showNotification(`❌ Error al eliminar imagen: ${error.message}`, 'error');
+        }
+    }
+
+    async handleNewImageUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (!this.currentProduct || !this.currentProduct.id) {
+            this.showNotification('❌ No hay producto seleccionado', 'error');
+            return;
+        }
+
+        // Validar tamaño (5MB máximo)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('El archivo es demasiado grande. Máximo 5MB.');
+            return;
+        }
+
+        try {
+            const productId = this.currentProduct.id;
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${this.userId}/${productId}/${Date.now()}_${file.name}`;
+
+            // Subir imagen
+            const { error: uploadError } = await this.supabase.storage
+                .from('product-images')
+                .upload(fileName, file, {
+                    contentType: file.type,
+                    cacheControl: '3600'
+                });
+
+            if (uploadError) throw uploadError;
+
+            // Obtener URL pública
+            const { data: { publicUrl } } = this.supabase.storage
+                .from('product-images')
+                .getPublicUrl(fileName);
+
+            // Obtener número de imágenes existentes para el orden
+            const { data: existingImages } = await this.supabase
+                .from('product_images')
+                .select('image_order')
+                .eq('product_id', productId)
+                .order('image_order', { ascending: false })
+                .limit(1);
+
+            const nextOrder = existingImages && existingImages.length > 0 
+                ? existingImages[0].image_order + 1 
+                : 0;
+
+            // Insertar registro en base de datos
+            const { error: insertError } = await this.supabase
+                .from('product_images')
+                .insert({
+                    product_id: productId,
+                    image_url: publicUrl,
+                    image_type: 'secundaria',
+                    image_order: nextOrder
+                });
+
+            if (insertError) throw insertError;
+
+            // Limpiar input
+            event.target.value = '';
+
+            // Recargar detalles del producto
+            await this.loadProductDetails(productId);
+            await this.loadProducts();
+
+            this.showNotification('✅ Imagen agregada exitosamente', 'success');
+        } catch (error) {
+            console.error('Error subiendo imagen:', error);
+            this.showNotification(`❌ Error al subir imagen: ${error.message}`, 'error');
+        }
+    }
+
+    showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        setTimeout(() => notification.classList.add('show'), 10);
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
     }
 
     async saveProduct() {

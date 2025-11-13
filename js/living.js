@@ -38,12 +38,67 @@ class LivingManager {
                 console.warn('⚠️ No se encontró proyecto para el usuario');
             }
             this.renderAll();
+            this.updateNavHeader();
         } else {
             console.error('❌ No se pudo inicializar Supabase o no hay usuario');
             console.log('Supabase:', this.supabase);
             console.log('UserId:', this.userId);
         }
         this.setupEventListeners();
+    }
+
+    updateNavHeader() {
+        const navBrandLogo = document.getElementById('navBrandLogo');
+        const navBrandInitials = document.getElementById('navBrandInitials');
+        const navBrandName = document.getElementById('navBrandName');
+        const navPlanName = document.getElementById('navPlanName');
+        const creditsCount = document.getElementById('creditsCount');
+
+        // Actualizar logo de marca
+        if (this.projectData && this.projectData.logo_url) {
+            if (navBrandLogo) {
+                navBrandLogo.src = this.projectData.logo_url + '?t=' + Date.now();
+                navBrandLogo.style.display = 'block';
+            }
+            if (navBrandInitials) {
+                navBrandInitials.style.display = 'none';
+            }
+        } else if (this.projectData && this.projectData.nombre_marca) {
+            // Usar iniciales del nombre de marca
+            const initials = this.projectData.nombre_marca
+                .split(' ')
+                .map(word => word.charAt(0))
+                .join('')
+                .toUpperCase()
+                .substring(0, 2);
+            if (navBrandInitials) {
+                navBrandInitials.textContent = initials;
+                navBrandInitials.style.display = 'block';
+            }
+            if (navBrandLogo) {
+                navBrandLogo.style.display = 'none';
+            }
+        }
+
+        // Actualizar nombre de marca
+        if (navBrandName && this.projectData) {
+            navBrandName.textContent = this.projectData.nombre_marca || 'Sin marca';
+        }
+
+        // Actualizar plan
+        if (navPlanName && this.userData) {
+            const planNames = {
+                'basico': 'Plan Básico',
+                'pro': 'Plan Pro',
+                'enterprise': 'Plan Enterprise'
+            };
+            navPlanName.textContent = planNames[this.userData.plan_type] || 'Plan Básico';
+        }
+
+        // Actualizar créditos
+        if (creditsCount && this.userData) {
+            creditsCount.textContent = this.userData.credits_available || 0;
+        }
     }
 
     async initSupabase() {
