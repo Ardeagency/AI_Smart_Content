@@ -702,13 +702,29 @@ class FormRecord {
             
             return true;
         } catch (error) {
-            console.error('Error al guardar:', error);
-            alert(`Error al guardar los datos:\n\n${error.message || 'Error desconocido'}\n\nPor favor, intenta nuevamente.`);
+            console.error('❌ Error al guardar:', error);
+            console.error('Detalles del error:', {
+                message: error.message,
+                code: error.code,
+                details: error.details,
+                hint: error.hint
+            });
+            
+            let errorMessage = `Error al guardar los datos:\n\n${error.message || 'Error desconocido'}`;
+            if (error.details) {
+                errorMessage += `\n\nDetalles: ${error.details}`;
+            }
+            if (error.hint) {
+                errorMessage += `\n\nSugerencia: ${error.hint}`;
+            }
+            errorMessage += `\n\nPor favor, revisa la consola para más detalles e intenta nuevamente.`;
+            
+            alert(errorMessage);
             
             // NO avanzar - reactivar botón
             if (btnNext) {
                 btnNext.disabled = false;
-                btnNext.textContent = 'Finalizar';
+                btnNext.textContent = 'Finalizar y Guardar';
             }
             
             return false;
@@ -724,8 +740,26 @@ class FormRecord {
             throw new Error(errorMsg);
         }
 
+        // Log de datos antes de guardar para debugging
+        console.log('📋 Datos a guardar:', {
+            nombre_marca: this.formData.nombre_marca,
+            mercado_objetivo: this.formData.mercado_objetivo,
+            idiomas_contenido: this.formData.idiomas_contenido,
+            tono_voz: this.formData.tono_voz,
+            tipo_producto: this.formData.tipo_producto
+        });
+
 
         // 1. Crear o actualizar proyecto
+        // Asegurar que los arrays JSONB se envíen correctamente
+        const mercadoObjetivo = Array.isArray(this.formData.mercado_objetivo) 
+            ? this.formData.mercado_objetivo 
+            : (this.formData.mercado_objetivo ? [this.formData.mercado_objetivo] : []);
+        
+        const idiomasContenido = Array.isArray(this.formData.idiomas_contenido) 
+            ? this.formData.idiomas_contenido 
+            : (this.formData.idiomas_contenido ? [this.formData.idiomas_contenido] : []);
+
         const projectData = {
             user_id: this.userId,
             nombre_marca: this.formData.nombre_marca || '',
@@ -733,8 +767,8 @@ class FormRecord {
             instagram_url: this.formData.instagram_url || null,
             tiktok_url: this.formData.tiktok_url || null,
             logo_url: this.formData.logo_url || null,
-            mercado_objetivo: Array.isArray(this.formData.mercado_objetivo) ? this.formData.mercado_objetivo : [],
-            idiomas_contenido: Array.isArray(this.formData.idiomas_contenido) ? this.formData.idiomas_contenido : []
+            mercado_objetivo: mercadoObjetivo,
+            idiomas_contenido: idiomasContenido
         };
 
         // Verificar si ya existe un proyecto para este usuario
@@ -759,7 +793,9 @@ class FormRecord {
                 .single();
 
             if (projectError) {
-                throw new Error(`Error al actualizar proyecto: ${projectError.message}`);
+                console.error('Error al actualizar proyecto:', projectError);
+                console.error('Datos enviados:', JSON.stringify(projectData, null, 2));
+                throw new Error(`Error al actualizar proyecto: ${projectError.message} (Código: ${projectError.code || 'N/A'})`);
             }
             projectId = project.id;
         } else {
@@ -770,39 +806,65 @@ class FormRecord {
                 .single();
 
             if (projectError) {
-                throw new Error(`Error al crear proyecto: ${projectError.message}`);
+                console.error('Error al crear proyecto:', projectError);
+                console.error('Datos enviados:', JSON.stringify(projectData, null, 2));
+                throw new Error(`Error al crear proyecto: ${projectError.message} (Código: ${projectError.code || 'N/A'})`);
             }
             projectId = project.id;
         }
 
         // 2. Subir logo si existe
         if (this.formData.logo_file && this.formData.logo_file.length > 0) {
-            const logoFile = this.formData.logo_file[0];
-            const fileExt = logoFile.name.split('.').pop();
-            const fileName = `${projectId}/logo.${fileExt}`;
+            try {
+                const logoFile = this.formData.logo_file[0];
+                const fileExt = logoFile.name.split('.').pop();
+                const fileName = `${projectId}/logo.${fileExt}`;
 
-            const { data: uploadData, error: uploadError } = await this.supabase.storage
-                .from('brand-logos')
-                .upload(fileName, logoFile);
+                // Intentar eliminar el logo anterior si existe
+                try {
+                    await this.supabase.storage
+                        .from('brand-logos')
+                        .remove([fileName]);
+                } catch (removeError) {
+                    // Ignorar error si el archivo no existe
+                }
 
-            if (!uploadError) {
-                const { data: { publicUrl } } = this.supabase.storage
+                const { data: uploadData, error: uploadError } = await this.supabase.storage
                     .from('brand-logos')
-                    .getPublicUrl(fileName);
+                    .upload(fileName, logoFile, {
+                        upsert: true,
+                        contentType: logoFile.type
+                    });
 
-                await this.supabase
-                    .from('projects')
-                    .update({ logo_url: publicUrl })
-                    .eq('id', projectId);
+                if (uploadError) {
+                    console.warn('Error al subir logo:', uploadError);
+                    // No lanzar error, continuar sin logo
+                } else {
+                    const { data: { publicUrl } } = this.supabase.storage
+                        .from('brand-logos')
+                        .getPublicUrl(fileName);
+
+                    await this.supabase
+                        .from('projects')
+                        .update({ logo_url: publicUrl })
+                        .eq('id', projectId);
+                }
+            } catch (logoError) {
+                console.warn('Error al procesar logo:', logoError);
+                // Continuar sin logo
             }
         }
 
         // 3. Crear o actualizar brand (lineamientos de marca)
+        const palabrasEvitar = Array.isArray(this.formData.palabras_evitar) 
+            ? this.formData.palabras_evitar 
+            : (this.formData.palabras_evitar ? [this.formData.palabras_evitar] : []);
+
         const brandData = {
             project_id: projectId,
             tono_voz: this.formData.tono_voz || 'amigable',
             palabras_usar: this.formData.palabras_usar || null,
-            palabras_evitar: Array.isArray(this.formData.palabras_evitar) ? this.formData.palabras_evitar : [],
+            palabras_evitar: palabrasEvitar,
             reglas_creativas: this.formData.reglas_creativas || null
         };
 
@@ -838,19 +900,26 @@ class FormRecord {
         // 4. Subir archivos de identidad si existen
         if (this.formData.archivos_identidad && this.formData.archivos_identidad.length > 0) {
             const uploadPromises = this.formData.archivos_identidad.map(async (file) => {
-                const fileExt = file.name.split('.').pop();
-                const fileName = `${projectId}/${Date.now()}_${file.name}`;
+                try {
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = `${projectId}/${Date.now()}_${file.name}`;
 
-                const { data: uploadData, error: uploadError } = await this.supabase.storage
-                    .from('brand-files')
-                    .upload(fileName, file);
+                    const { data: uploadData, error: uploadError } = await this.supabase.storage
+                        .from('brand-files')
+                        .upload(fileName, file, {
+                            contentType: file.type
+                        });
 
-                if (!uploadError) {
+                    if (uploadError) {
+                        console.warn('Error al subir archivo:', file.name, uploadError);
+                        return; // Continuar con el siguiente archivo
+                    }
+
                     const { data: { publicUrl } } = this.supabase.storage
                         .from('brand-files')
                         .getPublicUrl(fileName);
 
-                    await this.supabase
+                    const { error: insertError } = await this.supabase
                         .from('brand_files')
                         .insert({
                             project_id: projectId,
@@ -859,6 +928,13 @@ class FormRecord {
                             file_type: file.type,
                             file_size: file.size
                         });
+
+                    if (insertError) {
+                        console.warn('Error al insertar registro de archivo:', insertError);
+                    }
+                } catch (fileError) {
+                    console.warn('Error al procesar archivo:', file.name, fileError);
+                    // Continuar con el siguiente archivo
                 }
             });
 
@@ -924,19 +1000,26 @@ class FormRecord {
             // Filtrar archivos nulos
             const validImages = this.formData.product_images.filter(img => img !== null && img !== undefined);
             const imageUploadPromises = validImages.map(async (file, index) => {
-                const fileExt = file.name.split('.').pop();
-                const fileName = `${productId}/${index + 1}_${Date.now()}.${fileExt}`;
+                try {
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = `${productId}/${index + 1}_${Date.now()}.${fileExt}`;
 
-                const { data: uploadData, error: uploadError } = await this.supabase.storage
-                    .from('product-images')
-                    .upload(fileName, file);
+                    const { data: uploadData, error: uploadError } = await this.supabase.storage
+                        .from('product-images')
+                        .upload(fileName, file, {
+                            contentType: file.type
+                        });
 
-                if (!uploadError) {
+                    if (uploadError) {
+                        console.warn('Error al subir imagen del producto:', file.name, uploadError);
+                        return; // Continuar con la siguiente imagen
+                    }
+
                     const { data: { publicUrl } } = this.supabase.storage
                         .from('product-images')
                         .getPublicUrl(fileName);
 
-                    await this.supabase
+                    const { error: insertError } = await this.supabase
                         .from('product_images')
                         .insert({
                             product_id: productId,
@@ -944,6 +1027,13 @@ class FormRecord {
                             image_type: ['principal', 'secundaria', 'detalle', 'contexto'][index] || 'secundaria',
                             image_order: index
                         });
+
+                    if (insertError) {
+                        console.warn('Error al insertar registro de imagen:', insertError);
+                    }
+                } catch (imageError) {
+                    console.warn('Error al procesar imagen del producto:', imageError);
+                    // Continuar con la siguiente imagen
                 }
             });
 
