@@ -63,10 +63,10 @@
         }
 
         .loading-logo {
-            font-size: 1.1rem;
-            font-weight: 600;
+            font-size: 4rem;
+            font-weight: 700;
             color: var(--primary-color);
-            letter-spacing: 3px;
+            letter-spacing: 8px;
             animation: pulse 2s ease-in-out infinite;
         }
 
@@ -175,7 +175,7 @@
             width: 100%;
             z-index: 999;
             background: transparent;
-            padding: 32px 32px 16px 32px;
+            padding: 60px 32px 24px 32px;
             margin: 0;
             display: flex;
             justify-content: center;
@@ -183,20 +183,21 @@
         }
 
         .landing-header-logo {
-            font-size: 0.95rem;
-            font-weight: 600;
+            font-size: 4rem;
+            font-weight: 700;
             color: var(--primary-color);
-            letter-spacing: 3px;
+            letter-spacing: 8px;
             text-decoration: none;
             transition: var(--transition);
             max-width: 1200px;
             width: 100%;
             text-align: center;
+            line-height: 1.2;
         }
 
         .landing-header-logo:hover {
             color: var(--accent-warm);
-            text-shadow: 0 0 15px rgba(224, 145, 69, 0.4);
+            text-shadow: 0 0 20px rgba(224, 145, 69, 0.5);
         }
 
         /* Footer Transparente */
@@ -351,16 +352,17 @@
         /* Responsive */
         @media (max-width: 768px) {
             .loading-logo {
-                font-size: 0.95rem;
+                font-size: 2.5rem;
+                letter-spacing: 4px;
             }
             
             .landing-header {
-                padding: 24px 20px 12px 20px;
+                padding: 40px 20px 16px 20px;
             }
 
             .landing-header-logo {
-                font-size: 0.85rem;
-                letter-spacing: 2px;
+                font-size: 2.5rem;
+                letter-spacing: 4px;
             }
             
             .header-actions {
@@ -387,6 +389,18 @@
                 gap: 0.75rem;
                 flex-direction: row;
                 width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .loading-logo {
+                font-size: 2rem;
+                letter-spacing: 3px;
+            }
+
+            .landing-header-logo {
+                font-size: 2rem;
+                letter-spacing: 3px;
             }
         }
     </style>
