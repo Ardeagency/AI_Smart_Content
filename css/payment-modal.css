@@ -100,12 +100,12 @@
 
 /* Plan-specific styling */
 .plan-selected.starter {
-    background: rgba(52, 211, 153, 0.1);
-    border-color: rgba(52, 211, 153, 0.3);
+    background: rgba(167, 141, 120, 0.1);
+    border-color: rgba(167, 141, 120, 0.3);
 }
 
 .plan-selected.starter i {
-    color: #34d399;
+    color: #A78D78;
 }
 
 .plan-selected.pro {
@@ -288,12 +288,12 @@
 }
 
 .strength-strong {
-    color: #34d399;
+    color: #A78D78;
     font-weight: 500;
 }
 
 .strength-very-strong {
-    color: #10b981;
+    color: #A78D78;
     font-weight: 600;
 }
 
@@ -315,8 +315,8 @@
 }
 
 .form-input.success {
-    border-color: #34d399;
-    background: rgba(52, 211, 153, 0.05);
+    border-color: #A78D78;
+    background: rgba(167, 141, 120, 0.05);
 }
 
 /* ========================
@@ -401,12 +401,12 @@
 
 .feature::before {
     content: '✓';
-    color: #34d399;
+    color: #A78D78;
     font-weight: bold;
 }
 
 .wompi-note {
-    background: rgba(59, 130, 246, 0.1);
+    background: rgba(224, 145, 69, 0.1);
     border: 1px solid rgba(59, 130, 246, 0.3);
     border-radius: 8px;
     padding: 0.875rem 1rem;
@@ -433,8 +433,8 @@
     gap: 1rem;
     margin-bottom: 1.5rem;
     padding: 1rem;
-    background: rgba(52, 211, 153, 0.05);
-    border: 1px solid rgba(52, 211, 153, 0.2);
+    background: rgba(167, 141, 120, 0.05);
+    border: 1px solid rgba(167, 141, 120, 0.2);
     border-radius: 8px;
 }
 
@@ -442,7 +442,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: #34d399;
+    color: #A78D78;
     font-size: 0.8rem;
     font-weight: 500;
 }
@@ -491,7 +491,7 @@
 }
 
 .feature-item i {
-    color: #34d399;
+    color: #A78D78;
     width: 16px;
     font-size: 0.9rem;
 }

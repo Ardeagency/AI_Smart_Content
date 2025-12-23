@@ -47,10 +47,10 @@
     --border-accent: rgba(224, 145, 69, 0.3);
     
     /* Estados */
-    --success-color: #10b981;
+    --success-color: #A78D78;
     --warning-color: #E09145;
     --error-color: #ef4444;
-    --info-color: #3b82f6;
+    --info-color: #E09145;
     
     /* Colores Secundarios y Acentos */
     --accent-warm: #E09145;
