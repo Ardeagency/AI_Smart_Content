@@ -153,8 +153,7 @@
         const closeLoginModal = document.getElementById('closeLoginModal');
         const loginForm = document.getElementById('loginForm');
 
-        // Elementos del registro
-        const registerBtn = document.getElementById('registerBtn');
+        // Elementos del registro (ya no se usan, el botón redirige a planes.html)
         const registerModal = document.getElementById('registerModal');
         const closeRegisterModal = document.getElementById('closeRegisterModal');
         const registerForm = document.getElementById('registerForm');
@@ -230,10 +229,6 @@
             console.error('Elementos del login no encontrados');
         }
 
-        if (!registerBtn || !registerModal || !closeRegisterModal || !registerForm) {
-            console.error('Elementos del registro no encontrados');
-        }
-
         // ========== LOGIN ==========
         // Mostrar modal de login
         if (loginBtn) {
@@ -267,7 +262,7 @@
                 
                 const email = document.getElementById('username').value;
                 const password = document.getElementById('password').value;
-                const rememberMe = document.getElementById('rememberMe').checked;
+                const rememberMe = false; // Siempre usar sessionStorage
                 
                 // Validación básica
                 if (!email || !password) {
@@ -401,184 +396,13 @@
         }
 
         // ========== REGISTRO ==========
-        // Mostrar modal de registro
-        if (registerBtn) {
-            registerBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                if (registerModal) registerModal.classList.add('active');
-            });
-        }
-
-        // Cerrar modal de registro
-        if (closeRegisterModal) {
-            closeRegisterModal.addEventListener('click', function() {
-                if (registerModal) registerModal.classList.remove('active');
-            });
-        }
-
-        // Cerrar modal de registro al hacer clic fuera
-        if (registerModal) {
-            registerModal.addEventListener('click', function(e) {
-                if (e.target === registerModal) {
-                    registerModal.classList.remove('active');
-                }
-            });
-        }
-
-        // Manejar envío del formulario de registro
-        if (registerForm) {
-            registerForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                const full_name = document.getElementById('full_name').value;
-                const email = document.getElementById('register_email').value;
-                const phone_number = document.getElementById('phone_number').value;
-                const password = document.getElementById('register_password').value;
-                
-                // Validación básica
-                if (!full_name || !email || !password) {
-                    alert('Por favor completa los campos requeridos');
-                    return;
-                }
-
-                if (password.length < 6) {
-                    alert('La contraseña debe tener al menos 6 caracteres');
-                    return;
-                }
-                
-                const supabase = getSupabaseClient();
-                if (!supabase) {
-                    alert('Error: No se puede conectar con el servidor');
-                    return;
-                }
-                
-                try {
-                    // Crear usuario (enviará email de verificación)
-                    const { data: authData, error: authError } = await supabase.auth.signUp({
-                        email: email.toLowerCase().trim(),
-                        password: password,
-                        options: {
-                            data: {
-                                full_name: full_name.trim()
-                            }
-                        }
-                    });
-
-                    if (authError) {
-                        if (authError.message.includes('already registered') || authError.code === '23505') {
-                            alert('Este email ya está registrado');
-                        } else {
-                            alert(authError.message || 'Error al registrarse');
-                        }
-                        return;
-                    }
-
-                    if (!authData.user) {
-                        alert('Error al crear la cuenta');
-                        return;
-                    }
-
-                    // Intentar obtener el perfil (puede que ya exista por el trigger)
-                    let profileData = null;
-                    let attempts = 0;
-                    const maxAttempts = 3;
-                    
-                    while (attempts < maxAttempts && !profileData) {
-                        const { data: existingProfile, error: fetchError } = await supabase
-                            .from('user_profiles')
-                            .select('*')
-                            .eq('id', authData.user.id)
-                            .single();
-                        
-                        if (!fetchError && existingProfile) {
-                            profileData = existingProfile;
-                            break;
-                        }
-                        
-                        // Si no existe, intentar crear (solo en el primer intento)
-                        if (attempts === 0) {
-                            const email_verification_token = Math.random().toString(36).substring(2, 15) + 
-                                                              Math.random().toString(36).substring(2, 15);
-                            
-                            const { data: newProfile, error: insertError } = await supabase
-                                .from('user_profiles')
-                                .insert({
-                                    id: authData.user.id,
-                                    full_name: full_name.trim(),
-                                    email: email.toLowerCase().trim(),
-                                    phone_number: phone_number ? phone_number.trim() : null,
-                                    role: 'user',
-                                    email_verification_token: email_verification_token,
-                                    email_verified: false,
-                                    is_active: true
-                                })
-                                .select()
-                                .single();
-                            
-                            if (!insertError && newProfile) {
-                                profileData = newProfile;
-                                break;
-                            } else if (insertError && insertError.code === '23505') {
-                                // Si hay conflicto de clave única, esperar un momento y reintentar
-                                await new Promise(resolve => setTimeout(resolve, 500));
-                            } else {
-                                console.error('Error creando perfil:', insertError);
-                            }
-                        }
-                        
-                        attempts++;
-                        if (attempts < maxAttempts) {
-                            await new Promise(resolve => setTimeout(resolve, 500));
-                        }
-                    }
-                    
-                    // Si después de los intentos no hay perfil, usar datos básicos
-                    if (!profileData) {
-                        console.warn('⚠️ No se pudo crear/obtener perfil, usando datos básicos del usuario');
-                        profileData = {
-                            id: authData.user.id,
-                            full_name: full_name.trim(),
-                            email: email.toLowerCase().trim(),
-                            role: 'user',
-                            email_verified: false,
-                            is_active: true
-                        };
-                    }
-
-                    // Guardar datos del usuario recién registrado
-                    const userData = {
-                        id: profileData.id,
-                        userId: profileData.id,
-                        email: profileData.email,
-                        full_name: profileData.full_name,
-                        role: profileData.role,
-                        email_verified: profileData.email_verified
-                    };
-                    saveUserSession(userData, false);
-                    
-                    // Cerrar modal
-                    if (registerModal) registerModal.classList.remove('active');
-                    
-                    // Mostrar mensaje de aprobación pendiente (siempre para usuarios nuevos con role 'user')
-                    showPendingApproval();
-                    
-                    alert('Tu cuenta ha sido creada y está pendiente de aprobación por un administrador. Recibirás una notificación por correo (o serás contactado) cuando tu acceso sea concedido.');
-                } catch (error) {
-                    console.error('Error en registro:', error);
-                    alert('Error al registrarse: ' + (error.message || 'Error desconocido'));
-                }
-            });
-        }
+        // El registro ahora se maneja en planes.html, no aquí
 
         // Cerrar modales con ESC
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 if (loginModal && loginModal.classList.contains('active')) {
                     loginModal.classList.remove('active');
-                }
-                if (registerModal && registerModal.classList.contains('active')) {
-                    registerModal.classList.remove('active');
                 }
             }
         });

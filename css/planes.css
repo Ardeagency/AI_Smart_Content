@@ -10,18 +10,19 @@
    ============================================ */
 .subscribe-container {
     min-height: 100vh;
-    background: #0a0a0a;
+    background: var(--bg-dark);
     color: var(--text-primary);
     padding: 0;
     margin: 0;
     display: flex;
+    position: relative;
 }
 
 /* ============================================
    MAIN CARD
    ============================================ */
 .subscribe-card {
-    background: #1a1a1a;
+    background: var(--bg-card);
     border-radius: 0;
     overflow: hidden;
     display: grid;
@@ -30,6 +31,7 @@
     min-height: 100vh;
     box-shadow: none;
     border: none;
+    position: relative;
 }
 
 /* ============================================
@@ -66,7 +68,7 @@
 }
 
 .title-dot {
-    color: var(--primary-color);
+    color: var(--accent-warm);
 }
 
 .form-subtitle {
@@ -76,13 +78,14 @@
 }
 
 .login-link {
-    color: var(--primary-color);
+    color: var(--accent-warm);
     text-decoration: none;
     font-weight: 500;
     transition: var(--transition);
 }
 
 .login-link:hover {
+    color: var(--primary-color);
     text-decoration: underline;
 }
 
@@ -97,8 +100,8 @@
 }
 
 .plan-card-small {
-    background: #252525;
-    border: 2px solid transparent;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
     border-radius: 12px;
     padding: 1rem;
     transition: all 0.3s ease;
@@ -111,12 +114,15 @@
 }
 
 .plan-card-small:hover {
-    border-color: rgba(210, 254, 63, 0.3);
+    border-color: var(--accent-warm);
+    background: rgba(224, 145, 69, 0.05);
+    transform: translateY(-2px);
 }
 
 .plan-card-small.selected {
-    border-color: var(--primary-color);
-    background: rgba(210, 254, 63, 0.05);
+    border-color: var(--accent-warm);
+    background: rgba(224, 145, 69, 0.1);
+    box-shadow: 0 4px 12px rgba(224, 145, 69, 0.2);
 }
 
 .plan-card-header {
@@ -136,7 +142,7 @@
 .plan-card-price {
     font-size: 1rem;
     font-weight: 700;
-    color: var(--primary-color);
+    color: var(--accent-warm);
     white-space: nowrap;
 }
 
@@ -181,8 +187,8 @@
 .form-input {
     width: 100%;
     padding: 0.75rem 2.5rem 0.75rem 1rem;
-    background: #2a2a2a;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     color: var(--text-primary);
     font-size: 0.95rem;
@@ -193,9 +199,9 @@
 
 .form-input:focus {
     outline: none;
-    border-color: var(--primary-color);
-    background: #2f2f2f;
-    box-shadow: 0 0 0 3px rgba(210, 254, 63, 0.1);
+    border-color: var(--accent-warm);
+    background: var(--bg-tertiary);
+    box-shadow: 0 0 0 3px rgba(224, 145, 69, 0.1);
 }
 
 .form-input::placeholder {
@@ -219,7 +225,7 @@
 }
 
 .password-toggle:hover {
-    color: var(--primary-color);
+    color: var(--accent-warm);
 }
 
 /* ============================================
@@ -252,10 +258,10 @@
 .btn-create-account {
     flex: 2;
     padding: 0.75rem 1.25rem;
-    background: var(--primary-color);
+    background: var(--accent-warm);
     border: none;
     border-radius: 8px;
-    color: #0a0a0a;
+    color: var(--text-primary);
     font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
@@ -263,8 +269,9 @@
 }
 
 .btn-create-account:hover {
+    background: #c87d3a;
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(210, 254, 63, 0.3);
+    box-shadow: 0 8px 20px rgba(224, 145, 69, 0.3);
 }
 
 .btn-create-account:active {
@@ -282,12 +289,13 @@
    ============================================ */
 .subscribe-image-section {
     position: relative;
-    background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+    background: var(--bg-dark);
     background-image: 
-        linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.6) 100%),
-        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><path d="M0,400 Q300,200 600,400 T1200,400 L1200,800 L0,800 Z" fill="%23333" opacity="0.3"/></svg>');
+        linear-gradient(rgba(23, 24, 29, 0.7), rgba(23, 24, 29, 0.8)),
+        url('../recursos/pexels-arlindphotography-30304008.jpg');
     background-size: cover;
-    background-position: center;
+    background-position: center center;
+    background-repeat: no-repeat;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -301,8 +309,8 @@
     right: 0;
     bottom: 0;
     background: 
-        linear-gradient(135deg, rgba(210, 254, 63, 0.05) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(210, 254, 63, 0.1) 0%, transparent 50%);
+        linear-gradient(135deg, rgba(224, 145, 69, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(224, 145, 69, 0.1) 0%, transparent 50%);
 }
 
 .image-logo {
@@ -311,17 +319,18 @@
     width: 120px;
     height: 120px;
     border-radius: 50%;
-    background: rgba(210, 254, 63, 0.1);
+    background: rgba(224, 145, 69, 0.1);
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px dashed rgba(210, 254, 63, 0.3);
+    border: 2px dashed rgba(224, 145, 69, 0.3);
+    backdrop-filter: blur(10px);
 }
 
 .image-logo i {
     font-size: 3rem;
-    color: var(--primary-color);
-    opacity: 0.5;
+    color: var(--accent-warm);
+    opacity: 0.7;
 }
 
 /* Decorative line */
@@ -333,8 +342,8 @@
     transform: translateY(-50%);
     width: 2px;
     height: 80%;
-    background: linear-gradient(to bottom, transparent, rgba(210, 254, 63, 0.3), transparent);
-    border-left: 1px dashed rgba(210, 254, 63, 0.2);
+    background: linear-gradient(to bottom, transparent, rgba(224, 145, 69, 0.3), transparent);
+    border-left: 1px dashed rgba(224, 145, 69, 0.2);
     }
     
 /* ============================================
@@ -346,12 +355,13 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: #0a0a0a;
+    background: var(--bg-dark);
     background-image: 
-        linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.6) 100%),
-        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><path d="M0,400 Q300,200 600,400 T1200,400 L1200,800 L0,800 Z" fill="%23333" opacity="0.3"/></svg>');
+        linear-gradient(rgba(23, 24, 29, 0.7), rgba(23, 24, 29, 0.8)),
+        url('../recursos/pexels-arlindphotography-30304008.jpg');
     background-size: cover;
-    background-position: center;
+    background-position: center center;
+    background-repeat: no-repeat;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -367,8 +377,8 @@
     right: 0;
     bottom: 0;
     background: 
-        linear-gradient(135deg, rgba(210, 254, 63, 0.05) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(210, 254, 63, 0.1) 0%, transparent 50%);
+        linear-gradient(135deg, rgba(224, 145, 69, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(224, 145, 69, 0.1) 0%, transparent 50%);
     pointer-events: none;
     z-index: 0;
 }
@@ -376,20 +386,20 @@
 .confirmation-content {
     position: relative;
     z-index: 1;
-    background: rgba(42, 42, 42, 0.95);
+    background: var(--bg-card);
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid var(--border-color);
     border-radius: 16px;
     padding: 3rem;
     max-width: 500px;
     width: 100%;
     text-align: center;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
 .confirmation-icon {
     font-size: 4rem;
-    color: var(--primary-color);
+    color: var(--accent-warm);
     margin-bottom: 1.5rem;
     animation: pulse 2s infinite;
 }
@@ -440,10 +450,10 @@
 .btn-resend-email {
     width: 100%;
     padding: 0.875rem 1.5rem;
-    background: var(--primary-color);
+    background: var(--accent-warm);
     border: none;
     border-radius: 8px;
-    color: #0a0a0a;
+    color: var(--text-primary);
     font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
@@ -455,8 +465,9 @@
 }
 
 .btn-resend-email:hover:not(:disabled) {
+    background: #c87d3a;
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(210, 254, 63, 0.3);
+    box-shadow: 0 8px 20px rgba(224, 145, 69, 0.3);
 }
 
 .btn-resend-email:disabled {
@@ -482,9 +493,9 @@
 }
 
 .btn-back-login:hover {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
-    background: rgba(210, 254, 63, 0.05);
+    border-color: var(--accent-warm);
+    color: var(--accent-warm);
+    background: rgba(224, 145, 69, 0.05);
 }
 
 /* ============================================
