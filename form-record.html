@@ -11,12 +11,9 @@
 </head>
 <body>
     <div class="form-record-container">
-        <!-- Header -->
-        <div class="form-header">
-            <div class="form-logo">
-                <i class="fas fa-cube"></i>
-                <span>AI SMART CONTENT</span>
-            </div>
+        <!-- Animated Background -->
+        <div class="animated-background">
+            <div class="background-grid"></div>
         </div>
 
         <!-- Main Content -->
@@ -616,6 +613,21 @@
     <script src="js/supabase-config.js"></script>
     <script src="js/supabase-client.js"></script>
     <script src="js/form-record.js"></script>
+    <script>
+        // Crear contenedores cuadrados en el fondo
+        document.addEventListener('DOMContentLoaded', function() {
+            const grid = document.querySelector('.background-grid');
+            if (grid) {
+                const totalItems = 600; // 30 columnas x 20 filas
+                for (let i = 0; i < totalItems; i++) {
+                    const item = document.createElement('div');
+                    item.className = 'grid-item';
+                    // Por ahora están vacíos, pero listos para recibir imágenes/videos
+                    grid.appendChild(item);
+                }
+            }
+        });
+    </script>
 </body>
 </html>
 

@@ -10,64 +10,120 @@
    ============================================ */
 .form-record-container {
     min-height: 100vh;
-    background: #0a0a0a;
-    background-image: 
-        linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.6) 100%),
-        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><path d="M0,400 Q300,200 600,400 T1200,400 L1200,800 L0,800 Z" fill="%23333" opacity="0.3"/></svg>');
-    background-size: cover;
-    background-position: center;
+    background: var(--bg-dark);
     color: var(--text-primary);
     padding: 0;
     margin: 0;
     display: flex;
     flex-direction: column;
     position: relative;
-}
-
-.form-record-container::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: 
-        linear-gradient(135deg, rgba(210, 254, 63, 0.05) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(210, 254, 63, 0.1) 0%, transparent 50%);
-    pointer-events: none;
-    z-index: 0;
+    overflow: hidden;
 }
 
 /* ============================================
-   HEADER
+   ANIMATED BACKGROUND
    ============================================ */
-.form-header {
-    padding: 0.75rem 2rem;
-    background: transparent;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+.animated-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    overflow: hidden;
+    background: var(--bg-dark);
+}
+
+.background-grid {
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    display: grid;
+    grid-template-columns: repeat(20, 1fr);
+    grid-template-rows: repeat(15, 1fr);
+    gap: 2px;
+    animation: backgroundMove 60s linear infinite;
+    transform-origin: center center;
+}
+
+.background-grid::before,
+.background-grid::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: inherit;
+}
+
+.background-grid::before {
+    animation: backgroundMove 60s linear infinite reverse;
+}
+
+@keyframes backgroundMove {
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+    25% {
+        transform: translate(-10%, -10%) rotate(1deg);
+    }
+    50% {
+        transform: translate(-20%, -20%) rotate(0deg);
+    }
+    75% {
+        transform: translate(-10%, -10%) rotate(-1deg);
+    }
+    100% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+}
+
+.background-grid::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 98px,
+            rgba(236, 235, 218, 0.03) 98px,
+            rgba(236, 235, 218, 0.03) 100px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 98px,
+            rgba(236, 235, 218, 0.03) 98px,
+            rgba(236, 235, 218, 0.03) 100px
+        );
+}
+
+/* Contenedores cuadrados para imágenes/videos */
+.background-grid .grid-item {
+    background: var(--bg-secondary);
+    border: 1px solid rgba(236, 235, 218, 0.05);
+    border-radius: 4px;
+    aspect-ratio: 1;
     position: relative;
-    z-index: 10;
+    overflow: hidden;
+    opacity: 0.3;
+    transition: opacity 0.3s ease;
 }
 
-.form-logo {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+.background-grid .grid-item:hover {
+    opacity: 0.5;
 }
 
-.form-logo i {
-    font-size: 1rem;
-    color: var(--primary-color);
+.background-grid .grid-item img,
+.background-grid .grid-item video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 
-.form-logo span {
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    letter-spacing: 1px;
-}
+/* Header removido */
 
 /* ============================================
    MAIN CONTENT
@@ -81,7 +137,7 @@
     overflow: hidden;
     min-height: 0;
     position: relative;
-    z-index: 1;
+    z-index: 10;
 }
 
 .form-step {
@@ -454,6 +510,10 @@
     justify-content: space-between;
     gap: 1rem;
     z-index: 100;
+}
+
+.form-actions .btn-secondary.hidden {
+    display: none;
 }
 
 .btn {
