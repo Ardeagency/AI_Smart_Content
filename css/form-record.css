@@ -39,37 +39,36 @@
     width: 400%;
     height: 400%;
     display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    grid-template-rows: repeat(8, 1fr);
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(12, 1fr);
     gap: 20px;
     transform-origin: center center;
     top: -50%;
     left: -50%;
-    transform: rotate(-5deg);
 }
 
-/* Animaciones alternadas para hileras */
-@keyframes rowMoveUp {
+/* Animaciones alternadas para hileras verticales (columnas) */
+@keyframes columnMoveUp {
     0% {
-        transform: translateY(0) translateX(0);
+        transform: translateY(0) rotate(-5deg);
     }
     50% {
-        transform: translateY(-100vh) translateX(50px);
+        transform: translateY(-100vh) rotate(-5deg);
     }
     100% {
-        transform: translateY(0) translateX(0);
+        transform: translateY(0) rotate(-5deg);
     }
 }
 
-@keyframes rowMoveDown {
+@keyframes columnMoveDown {
     0% {
-        transform: translateY(0) translateX(0);
+        transform: translateY(0) rotate(-5deg);
     }
     50% {
-        transform: translateY(100vh) translateX(-50px);
+        transform: translateY(100vh) rotate(-5deg);
     }
     100% {
-        transform: translateY(0) translateX(0);
+        transform: translateY(0) rotate(-5deg);
     }
 }
 
@@ -89,60 +88,60 @@
     min-height: 150px;
 }
 
-/* Aplicar animaciones alternadas por hilera */
-/* Hilera 1 (elementos 1-12): Sube */
-.background-grid .grid-item:nth-child(n+1):nth-child(-n+12) {
-    animation: rowMoveUp 30s linear infinite;
+/* Aplicar animaciones alternadas por hilera vertical (columna) */
+/* Columna 1 (elementos 1, 9, 17, 25, 33, 41, 49, 57, 65, 73, 81, 89): Sube */
+.background-grid .grid-item:nth-child(8n+1) {
+    animation: columnMoveUp 30s linear infinite;
 }
 
-/* Hilera 2 (elementos 13-24): Baja */
-.background-grid .grid-item:nth-child(n+13):nth-child(-n+24) {
-    animation: rowMoveDown 30s linear infinite;
+/* Columna 2 (elementos 2, 10, 18, 26, 34, 42, 50, 58, 66, 74, 82, 90): Baja */
+.background-grid .grid-item:nth-child(8n+2) {
+    animation: columnMoveDown 30s linear infinite;
 }
 
-/* Hilera 3 (elementos 25-36): Sube */
-.background-grid .grid-item:nth-child(n+25):nth-child(-n+36) {
-    animation: rowMoveUp 30s linear infinite;
+/* Columna 3 (elementos 3, 11, 19, 27, 35, 43, 51, 59, 67, 75, 83, 91): Sube */
+.background-grid .grid-item:nth-child(8n+3) {
+    animation: columnMoveUp 30s linear infinite;
 }
 
-/* Hilera 4 (elementos 37-48): Baja */
-.background-grid .grid-item:nth-child(n+37):nth-child(-n+48) {
-    animation: rowMoveDown 30s linear infinite;
+/* Columna 4 (elementos 4, 12, 20, 28, 36, 44, 52, 60, 68, 76, 84, 92): Baja */
+.background-grid .grid-item:nth-child(8n+4) {
+    animation: columnMoveDown 30s linear infinite;
 }
 
-/* Hilera 5 (elementos 49-60): Sube */
-.background-grid .grid-item:nth-child(n+49):nth-child(-n+60) {
-    animation: rowMoveUp 30s linear infinite;
+/* Columna 5 (elementos 5, 13, 21, 29, 37, 45, 53, 61, 69, 77, 85, 93): Sube */
+.background-grid .grid-item:nth-child(8n+5) {
+    animation: columnMoveUp 30s linear infinite;
 }
 
-/* Hilera 6 (elementos 61-72): Baja */
-.background-grid .grid-item:nth-child(n+61):nth-child(-n+72) {
-    animation: rowMoveDown 30s linear infinite;
+/* Columna 6 (elementos 6, 14, 22, 30, 38, 46, 54, 62, 70, 78, 86, 94): Baja */
+.background-grid .grid-item:nth-child(8n+6) {
+    animation: columnMoveDown 30s linear infinite;
 }
 
-/* Hilera 7 (elementos 73-84): Sube */
-.background-grid .grid-item:nth-child(n+73):nth-child(-n+84) {
-    animation: rowMoveUp 30s linear infinite;
+/* Columna 7 (elementos 7, 15, 23, 31, 39, 47, 55, 63, 71, 79, 87, 95): Sube */
+.background-grid .grid-item:nth-child(8n+7) {
+    animation: columnMoveUp 30s linear infinite;
 }
 
-/* Hilera 8 (elementos 85-96): Baja */
-.background-grid .grid-item:nth-child(n+85):nth-child(-n+96) {
-    animation: rowMoveDown 30s linear infinite;
+/* Columna 8 (elementos 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96): Baja */
+.background-grid .grid-item:nth-child(8n+8) {
+    animation: columnMoveDown 30s linear infinite;
 }
 
-/* Delays escalonados por columna para efecto más orgánico */
-.background-grid .grid-item:nth-child(12n+1) { animation-delay: 0s; }
-.background-grid .grid-item:nth-child(12n+2) { animation-delay: 1s; }
-.background-grid .grid-item:nth-child(12n+3) { animation-delay: 2s; }
-.background-grid .grid-item:nth-child(12n+4) { animation-delay: 3s; }
-.background-grid .grid-item:nth-child(12n+5) { animation-delay: 4s; }
-.background-grid .grid-item:nth-child(12n+6) { animation-delay: 5s; }
-.background-grid .grid-item:nth-child(12n+7) { animation-delay: 6s; }
-.background-grid .grid-item:nth-child(12n+8) { animation-delay: 7s; }
-.background-grid .grid-item:nth-child(12n+9) { animation-delay: 8s; }
-.background-grid .grid-item:nth-child(12n+10) { animation-delay: 9s; }
-.background-grid .grid-item:nth-child(12n+11) { animation-delay: 10s; }
-.background-grid .grid-item:nth-child(12n+12) { animation-delay: 11s; }
+/* Delays escalonados por fila para efecto más orgánico */
+.background-grid .grid-item:nth-child(n+1):nth-child(-n+8) { animation-delay: 0s; }
+.background-grid .grid-item:nth-child(n+9):nth-child(-n+16) { animation-delay: 1s; }
+.background-grid .grid-item:nth-child(n+17):nth-child(-n+24) { animation-delay: 2s; }
+.background-grid .grid-item:nth-child(n+25):nth-child(-n+32) { animation-delay: 3s; }
+.background-grid .grid-item:nth-child(n+33):nth-child(-n+40) { animation-delay: 4s; }
+.background-grid .grid-item:nth-child(n+41):nth-child(-n+48) { animation-delay: 5s; }
+.background-grid .grid-item:nth-child(n+49):nth-child(-n+56) { animation-delay: 6s; }
+.background-grid .grid-item:nth-child(n+57):nth-child(-n+64) { animation-delay: 7s; }
+.background-grid .grid-item:nth-child(n+65):nth-child(-n+72) { animation-delay: 8s; }
+.background-grid .grid-item:nth-child(n+73):nth-child(-n+80) { animation-delay: 9s; }
+.background-grid .grid-item:nth-child(n+81):nth-child(-n+88) { animation-delay: 10s; }
+.background-grid .grid-item:nth-child(n+89):nth-child(-n+96) { animation-delay: 11s; }
 
 .background-grid .grid-item:hover {
     opacity: 0.5;
