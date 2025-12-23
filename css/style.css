@@ -94,7 +94,7 @@ body {
     border-color: var(--primary-color);
     color: var(--bg-black);
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(210, 254, 63, 0.3);
+    box-shadow: 0 4px 15px rgba(236, 235, 218, 0.3);
 }
 
 /* ============================================

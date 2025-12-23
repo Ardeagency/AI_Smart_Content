@@ -27,35 +27,35 @@
     --border: 0 0% 14.9%;
     --input: 0 0% 14.9%;
     --ring: 0 0% 83.1%;
-    --primary-light: #e6ff5f;
+    --primary-light: #f5f4e8;
     --bg-black: #000000;
-    --bg-dark: #0a0a0a;
-    --bg-card: #111111;
-    --text-primary: #ffffff;
-    --text-secondary: #a3a3a3;
-    --text-muted: #666666;
-    --border-color: rgba(255, 255, 255, 0.1);
-    --accent-glow: rgba(210, 254, 63, 0.3);
+    --bg-dark: #17181D;
+    --bg-card: #1a1a1a;
+    --text-primary: #ecebda;
+    --text-secondary: #BEB5A9;
+    --text-muted: #A78D78;
+    --border-color: rgba(236, 235, 218, 0.1);
+    --accent-glow: rgba(236, 235, 218, 0.2);
     
     /* Colores con transparencias */
-    --bg-panel: rgba(26, 26, 26, 0.95);
-    --bg-sidebar: rgba(26, 26, 26, 0.8);
+    --bg-panel: rgba(23, 24, 29, 0.95);
+    --bg-sidebar: rgba(23, 24, 29, 0.8);
     --bg-overlay: rgba(0, 0, 0, 0.7);
-    --bg-hover: rgba(255, 255, 255, 0.06);
-    --bg-selected: rgba(210, 254, 63, 0.1);
-    --bg-card-hover: rgba(255, 255, 255, 0.05);
+    --bg-hover: rgba(236, 235, 218, 0.06);
+    --bg-selected: rgba(236, 235, 218, 0.1);
+    --bg-card-hover: rgba(236, 235, 218, 0.05);
     
     /* Bordes */
-    --border-subtle: rgba(255, 255, 255, 0.1);
-    --border-focus: rgba(210, 254, 63, 0.5);
-    --border-card: rgba(255, 255, 255, 0.06);
+    --border-subtle: rgba(236, 235, 218, 0.1);
+    --border-focus: rgba(236, 235, 218, 0.5);
+    --border-card: rgba(236, 235, 218, 0.06);
     
     /* Sombras */
     --shadow-subtle: 0 2px 8px rgba(0, 0, 0, 0.2);
     --shadow-floating: 0 8px 32px rgba(0, 0, 0, 0.4);
     --shadow-glow: 0 0 20px var(--accent-glow);
     --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.15);
-    --shadow-hover: 0 12px 40px rgba(210, 254, 63, 0.2);
+    --shadow-hover: 0 12px 40px rgba(236, 235, 218, 0.2);
     
     /* Tipografía */
     --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -608,7 +608,7 @@ body {
     outline: none;
     border-color: var(--primary-color);
     background: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 0 0 2px rgba(210, 254, 63, 0.15);
+    box-shadow: 0 0 0 2px rgba(236, 235, 218, 0.15);
 }
 
 .config-field input[type="text"]:hover,
@@ -652,7 +652,7 @@ body {
 
 .config-field input[type="range"]::-webkit-slider-thumb:hover {
     transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(210, 254, 63, 0.4);
+    box-shadow: 0 4px 12px rgba(236, 235, 218, 0.4);
 }
 
 .config-field input[type="range"]::-moz-range-thumb {
@@ -668,7 +668,7 @@ body {
 
 .config-field input[type="range"]::-moz-range-thumb:hover {
     transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(210, 254, 63, 0.4);
+    box-shadow: 0 4px 12px rgba(236, 235, 218, 0.4);
 }
 
 /* =======================================
@@ -812,8 +812,8 @@ body {
 .loading-spinner {
     width: 50px;
     height: 50px;
-    border: 4px solid rgba(210, 254, 63, 0.2);
-    border-top: 4px solid #D2FE3F;
+    border: 4px solid rgba(236, 235, 218, 0.2);
+    border-top: 4px solid #ecebda;
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 20px;
@@ -827,7 +827,7 @@ body {
 .loading-message {
     font-size: 18px;
     font-weight: 600;
-    color: #D2FE3F;
+    color: #ecebda;
     margin-bottom: 10px;
 }
 
@@ -860,7 +860,7 @@ body {
     margin-bottom: 20px;
     width: 64px;
     height: 64px;
-    color: #D2FE3F;
+    color: #ecebda;
 }
 
 .error-title {
@@ -979,7 +979,7 @@ body {
 
 .image-slot:hover {
     border-color: var(--primary-color);
-    background: rgba(210, 254, 63, 0.05);
+    background: rgba(236, 235, 218, 0.05);
     transform: translateY(-2px);
 }
 
@@ -1031,7 +1031,7 @@ body {
 
 .video-slot:hover {
     border-color: var(--primary-color);
-    background: rgba(210, 254, 63, 0.05);
+    background: rgba(236, 235, 218, 0.05);
     transform: translateY(-2px);
 }
 
@@ -1076,7 +1076,7 @@ body {
     font-size: 28px;
     font-weight: 700;
     margin-bottom: 8px;
-    color: #D2FE3F;
+    color: #ecebda;
 }
 
 .guiones-header p {
@@ -1166,8 +1166,8 @@ body {
 
 .guion-type {
     display: inline-block;
-    background: rgba(210, 254, 63, 0.1);
-    color: #D2FE3F;
+    background: rgba(236, 235, 218, 0.1);
+    color: #ecebda;
     padding: 4px 12px;
     border-radius: 20px;
     font-size: 11px;
@@ -1200,7 +1200,7 @@ body {
 
 .clip-item:hover {
     background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(210, 254, 63, 0.3);
+    border-color: rgba(236, 235, 218, 0.3);
 }
 
 .clip-item:last-child {
@@ -1216,7 +1216,7 @@ body {
 }
 
 .clip-number {
-    background: #D2FE3F;
+    background: #ecebda;
     color: #ffffff;
     font-size: 11px;
     font-weight: 600;
@@ -1237,13 +1237,13 @@ body {
 }
 
 .clip-role {
-    background: rgba(210, 254, 63, 0.2);
+    background: rgba(236, 235, 218, 0.2);
     color: var(--primary-color);
     font-size: 11px;
     font-weight: 500;
     padding: 4px 8px;
     border-radius: 4px;
-    border: 1px solid rgba(210, 254, 63, 0.3);
+    border: 1px solid rgba(236, 235, 218, 0.3);
     text-transform: capitalize;
 }
 
@@ -1305,7 +1305,7 @@ body {
 
 .clip-scene strong,
 .clip-voice strong {
-    color: #D2FE3F;
+    color: #ecebda;
     font-size: 12px;
     font-weight: 600;
     text-transform: uppercase;
@@ -1325,10 +1325,10 @@ body {
 
 .clip-voice p {
     font-style: normal;
-    background: rgba(210, 254, 63, 0.05);
+    background: rgba(236, 235, 218, 0.05);
     padding: 8px;
     border-radius: 4px;
-    border-left: 3px solid #D2FE3F;
+    border-left: 3px solid #ecebda;
 }
 
 .guion-actions {
@@ -1363,9 +1363,9 @@ body {
 }
 
 .guion-actions .btn-primary {
-    background: #D2FE3F;
+    background: #ecebda;
     color: #ffffff;
-    border: 1px solid #D2FE3F;
+    border: 1px solid #ecebda;
 }
 
 .guion-actions .btn-primary:hover {
@@ -1790,7 +1790,7 @@ body {
 
 .product-image-item:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(210, 254, 63, 0.2);
+    box-shadow: 0 4px 12px rgba(236, 235, 218, 0.2);
 }
 
 .product-image-item img {
@@ -1802,7 +1802,7 @@ body {
 
 .product-image-item.main-image {
     border: 2px solid var(--primary-color);
-    box-shadow: 0 0 8px rgba(210, 254, 63, 0.3);
+    box-shadow: 0 0 8px rgba(236, 235, 218, 0.3);
 }
 
 .product-image-item.gallery-image {
@@ -1876,7 +1876,7 @@ body {
     align-items: center;
     gap: 12px;
     padding: 8px 12px;
-    background: rgba(210, 254, 63, 0.1);
+    background: rgba(236, 235, 218, 0.1);
     border-radius: 6px;
     border-left: 3px solid var(--primary-color);
 }
@@ -2265,18 +2265,18 @@ nav.studio-sidebar {
     color: white;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(210, 254, 63, 0.3);
+    box-shadow: 0 4px 12px rgba(236, 235, 218, 0.3);
 }
 
 .generate-ugc-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(210, 254, 63, 0.4);
+    box-shadow: 0 6px 20px rgba(236, 235, 218, 0.4);
     background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
 }
 
 .generate-ugc-btn:active {
     transform: translateY(0);
-    box-shadow: 0 2px 8px rgba(210, 254, 63, 0.3);
+    box-shadow: 0 2px 8px rgba(236, 235, 218, 0.3);
 }
 
 /* =======================================
@@ -2295,7 +2295,7 @@ nav.studio-sidebar {
 }
 
 .info-display:hover {
-    border-color: rgba(210, 254, 63, 0.2);
+    border-color: rgba(236, 235, 218, 0.2);
     box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
 }
 
@@ -2362,13 +2362,13 @@ nav.studio-sidebar {
     border-radius: 16px;
     font-size: 11px;
     font-weight: 600;
-    box-shadow: 0 2px 8px rgba(210, 254, 63, 0.3);
+    box-shadow: 0 2px 8px rgba(236, 235, 218, 0.3);
     transition: all 0.2s ease;
 }
 
 .info-value.array .tag:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(210, 254, 63, 0.4);
+    box-shadow: 0 4px 12px rgba(236, 235, 218, 0.4);
 }
 
 /* Estilos para precios mejorados */
@@ -2601,7 +2601,7 @@ nav.studio-sidebar {
         color: white;
         cursor: pointer;
         transition: all 0.3s ease;
-        box-shadow: 0 2px 8px rgba(210, 254, 63, 0.3);
+        box-shadow: 0 2px 8px rgba(236, 235, 218, 0.3);
         height: 36px;
         display: flex;
         align-items: center;
@@ -2947,7 +2947,7 @@ nav.studio-sidebar {
 .config-field textarea:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(210, 254, 63, 0.1);
+    box-shadow: 0 0 0 2px rgba(236, 235, 218, 0.1);
 }
 
 .config-field textarea::placeholder {

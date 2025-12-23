@@ -73,7 +73,7 @@
 }
 
 .nav-link.active {
-    background: rgba(210, 254, 63, 0.1);
+    background: rgba(236, 235, 218, 0.1);
     color: var(--primary-color);
 }
 
@@ -294,7 +294,7 @@
 
 .product-card-type {
     display: inline-block;
-    background: rgba(210, 254, 63, 0.1);
+    background: rgba(236, 235, 218, 0.1);
     color: var(--primary-color);
     padding: 0.25rem 0.75rem;
     border-radius: 4px;
@@ -484,7 +484,7 @@
 .form-select:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(210, 254, 63, 0.1);
+    box-shadow: 0 0 0 3px rgba(236, 235, 218, 0.1);
 }
 
 .form-textarea {
@@ -495,7 +495,7 @@
 .form-select {
     cursor: pointer;
     appearance: none;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23D2FE3F' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ecebda' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
     background-position: right 12px center;
     background-repeat: no-repeat;
     background-size: 16px;
@@ -624,7 +624,7 @@
 
 .upload-zone-small:hover {
     border-color: var(--primary-color);
-    background: rgba(210, 254, 63, 0.05);
+    background: rgba(236, 235, 218, 0.05);
 }
 
 /* ============================================

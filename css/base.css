@@ -8,43 +8,65 @@
    ============================================ */
 :root {
     /* Colores Primarios */
-    --primary-color: #D2FE3F;
-    --primary-dark: #b8e035;
-    --primary-light: #e6ff5f;
-    --primary-hover: #c8f02f;
+    --primary-color: #ecebda;
+    --primary-dark: #d4d3c0;
+    --primary-light: #f5f4e8;
+    --primary-hover: #e0dfce;
+    
+    /* Paleta 1 - Tonos Oscuros y Acentos */
+    --palette1-dark: #17181D;
+    --palette1-gray: #292C35;
+    --palette1-accent: #E09145;
+    --palette1-light: #FCD9B8;
+    
+    /* Paleta 2 - Tonos Tierra y Neutros */
+    --palette2-darkest: #291C0E;
+    --palette2-dark: #6E473B;
+    --palette2-medium: #A78D78;
+    --palette2-light: #BEB5A9;
+    --palette2-lightest: #E1D4C2;
     
     /* Fondos */
     --bg-black: #000000;
-    --bg-dark: #0a0a0a;
-    --bg-secondary: #1a1a1a;
-    --bg-tertiary: #2a2a2a;
-    --bg-card: #111111;
-    --bg-overlay: rgba(0, 0, 0, 0.8);
+    --bg-dark: #17181D;
+    --bg-secondary: #292C35;
+    --bg-tertiary: #291C0E;
+    --bg-card: #1a1a1a;
+    --bg-overlay: rgba(23, 24, 29, 0.9);
     
     /* Textos */
-    --text-primary: #ffffff;
-    --text-secondary: #b0b0b0;
-    --text-muted: #808080;
-    --text-disabled: #666666;
+    --text-primary: #ecebda;
+    --text-secondary: #BEB5A9;
+    --text-muted: #A78D78;
+    --text-disabled: #6E473B;
     
     /* Bordes */
-    --border-color: #333333;
-    --border-light: rgba(255, 255, 255, 0.1);
-    --border-primary: rgba(210, 254, 63, 0.3);
+    --border-color: #292C35;
+    --border-light: rgba(236, 235, 218, 0.1);
+    --border-primary: rgba(236, 235, 218, 0.3);
+    --border-accent: rgba(224, 145, 69, 0.3);
     
     /* Estados */
     --success-color: #10b981;
-    --warning-color: #f59e0b;
+    --warning-color: #E09145;
     --error-color: #ef4444;
     --info-color: #3b82f6;
     
+    /* Colores Secundarios y Acentos */
+    --accent-warm: #E09145;
+    --accent-warm-light: #FCD9B8;
+    --accent-earth: #A78D78;
+    --accent-earth-light: #E1D4C2;
+    
     /* Efectos */
-    --accent-glow: rgba(210, 254, 63, 0.3);
-    --grid-color: rgba(255, 255, 255, 0.03);
-    --shadow-primary: 0 20px 60px rgba(210, 254, 63, 0.2);
+    --accent-glow: rgba(236, 235, 218, 0.2);
+    --accent-warm-glow: rgba(224, 145, 69, 0.3);
+    --grid-color: rgba(236, 235, 218, 0.03);
+    --shadow-primary: 0 20px 60px rgba(236, 235, 218, 0.15);
     --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.5);
     --shadow-floating: 0 8px 32px rgba(0, 0, 0, 0.4);
-    --shadow-hover: 0 12px 40px rgba(210, 254, 63, 0.3);
+    --shadow-hover: 0 12px 40px rgba(236, 235, 218, 0.2);
+    --shadow-warm: 0 12px 40px rgba(224, 145, 69, 0.25);
     
     /* Transiciones */
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -130,6 +152,7 @@ a {
 
 a:hover {
     color: var(--primary-light);
+    text-shadow: 0 0 8px rgba(236, 235, 218, 0.3);
 }
 
 /* ============================================
@@ -174,7 +197,7 @@ a:hover {
 
 .btn-primary {
     background: var(--primary-color);
-    color: var(--text-primary);
+    color: var(--palette1-dark);
 }
 
 .btn-primary:hover {

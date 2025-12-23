@@ -11,7 +11,7 @@
     --nav-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --nav-overlay: rgba(0, 0, 0, 0.7);
     --nav-bg: rgba(10, 10, 10, 0.95);
-    --nav-border: rgba(210, 254, 63, 0.2);
+    --nav-border: rgba(236, 235, 218, 0.2);
 }
 
 /* =========================================
@@ -57,7 +57,7 @@
 }
 
 .hamburger-menu:hover {
-    background: rgba(210, 254, 63, 0.1);
+    background: rgba(236, 235, 218, 0.1);
 }
 
 .hamburger-line {
@@ -94,7 +94,7 @@
 .main-logo i {
     color: var(--primary-color);
     font-size: 1.5rem;
-    filter: drop-shadow(0 0 8px rgba(210, 254, 63, 0.4));
+    filter: drop-shadow(0 0 8px rgba(236, 235, 218, 0.4));
 }
 
 .header-right {
@@ -150,7 +150,7 @@
 .nav-header {
     padding: 2rem 1.5rem 1rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(210, 254, 63, 0.05);
+    background: rgba(236, 235, 218, 0.05);
 }
 
 .nav-user-info {
@@ -184,7 +184,7 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: rgba(210, 254, 63, 0.2);
+    background: rgba(236, 235, 218, 0.2);
     color: var(--primary-color);
     padding: 4px 8px;
     border-radius: 12px;
@@ -237,7 +237,7 @@
 
 .nav-link.active {
     color: var(--primary-color);
-    background: rgba(210, 254, 63, 0.1);
+    background: rgba(236, 235, 218, 0.1);
     border-right: 3px solid var(--primary-color);
 }
 
