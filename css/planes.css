@@ -207,22 +207,49 @@
 /* Usar estilos base de botones */
 .btn-change-method {
     flex: 1;
-    padding: 0.75rem 1.25rem;
-    font-size: 0.9rem;
+    padding: clamp(0.625rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.25rem);
+    font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--border-radius-sm);
+    color: var(--text-secondary);
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
 }
 
-.btn-change-method {
-    @extend .btn-outline;
+.btn-change-method:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+    color: var(--text-primary);
 }
 
 .btn-create-account {
     flex: 2;
-    padding: 0.75rem 1.25rem;
-    font-size: 0.9rem;
+    padding: clamp(0.625rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.25rem);
+    font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+    background: var(--accent-warm);
+    border: none;
+    border-radius: var(--border-radius-sm);
+    color: var(--text-primary);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
 }
 
-.btn-create-account {
-    @extend .btn-accent;
+.btn-create-account:hover {
+    background: #c87d3a;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-warm);
+}
+
+.btn-create-account:active {
+    transform: translateY(0);
+}
+
+.btn-create-account:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
 }
     
 /* ============================================
