@@ -38,7 +38,8 @@
    FORM SECTION (LEFT)
    ============================================ */
 .subscribe-form-section {
-    width: 300px;
+    width: 400px;
+    max-width: 100%;
     padding: 2rem;
     display: flex;
     flex-direction: column;
@@ -47,6 +48,7 @@
     background: transparent;
     position: relative;
     z-index: 10;
+    box-sizing: border-box;
 }
 
 .form-header {
@@ -99,20 +101,20 @@
 .plans-selection {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 0.75rem;
+    gap: clamp(0.5rem, 2vw, 0.75rem);
     margin: 0.5rem 0;
 }
 
 .plan-card-small {
     background: var(--bg-secondary);
     border: 2px solid var(--border-color);
-    border-radius: 12px;
-    padding: 1rem;
+    border-radius: clamp(8px, 1.5vw, 12px);
+    padding: clamp(0.75rem, 2vw, 1rem);
     transition: all 0.3s ease;
     height: 100%;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: clamp(0.25rem, 1vw, 0.5rem);
     cursor: pointer;
     position: relative;
 }
@@ -137,28 +139,28 @@
 }
 
 .plan-card-name {
-    font-size: 0.95rem;
+    font-size: clamp(0.85rem, 2vw, 0.95rem);
     font-weight: 600;
     color: var(--text-primary);
     margin: 0;
 }
 
 .plan-card-price {
-    font-size: 1rem;
+    font-size: clamp(0.9rem, 2.5vw, 1rem);
     font-weight: 700;
     color: var(--accent-warm);
     white-space: nowrap;
 }
 
 .plan-card-price span {
-    font-size: 0.7rem;
+    font-size: clamp(0.6rem, 1.5vw, 0.7rem);
     font-weight: 400;
     color: var(--text-muted);
     margin-left: 0.25rem;
 }
 
 .plan-card-credits {
-    font-size: 0.8rem;
+    font-size: clamp(0.7rem, 2vw, 0.8rem);
     color: var(--text-secondary);
     margin-top: auto;
 }
@@ -179,7 +181,7 @@
 }
 
 .form-group label {
-    font-size: 0.8rem;
+    font-size: clamp(0.75rem, 2vw, 0.8rem);
     font-weight: 500;
     color: var(--text-secondary);
 }
