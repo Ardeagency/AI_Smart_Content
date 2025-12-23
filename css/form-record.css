@@ -77,7 +77,7 @@
     background: var(--bg-secondary);
     border: 1px solid rgba(236, 235, 218, 0.08);
     border-radius: 8px;
-    aspect-ratio: 9 / 16; /* Relación de aspecto 9:16 */
+    aspect-ratio: 16 / 9; /* Relación de aspecto 9:16 */
     position: relative;
     overflow: hidden;
     opacity: 0.25;
