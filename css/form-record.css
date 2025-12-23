@@ -36,70 +36,93 @@
 
 .background-grid {
     position: absolute;
-    width: 300%;
-    height: 300%;
+    width: 400%;
+    height: 400%;
     display: grid;
-    grid-template-columns: repeat(30, 1fr);
-    grid-template-rows: repeat(20, 1fr);
-    gap: 3px;
-    animation: backgroundMove 120s linear infinite;
+    grid-template-columns: repeat(12, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    gap: 20px;
     transform-origin: center center;
     top: -50%;
     left: -50%;
+    transform: rotate(-5deg);
 }
 
-@keyframes backgroundMove {
+/* Animaciones alternadas para hileras */
+@keyframes rowMoveUp {
     0% {
-        transform: translate(0, 0);
-    }
-    25% {
-        transform: translate(-5%, -5%);
+        transform: translateY(0) translateX(0);
     }
     50% {
-        transform: translate(-10%, -10%);
-    }
-    75% {
-        transform: translate(-5%, -5%);
+        transform: translateY(-100vh) translateX(50px);
     }
     100% {
-        transform: translate(0, 0);
+        transform: translateY(0) translateX(0);
     }
 }
 
-.background-grid::before {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background-image: 
-        repeating-linear-gradient(
-            0deg,
-            transparent,
-            transparent calc(100% / 30 - 3px),
-            rgba(236, 235, 218, 0.02) calc(100% / 30 - 3px),
-            rgba(236, 235, 218, 0.02) calc(100% / 30)
-        ),
-        repeating-linear-gradient(
-            90deg,
-            transparent,
-            transparent calc(100% / 20 - 3px),
-            rgba(236, 235, 218, 0.02) calc(100% / 20 - 3px),
-            rgba(236, 235, 218, 0.02) calc(100% / 20)
-        );
-    pointer-events: none;
+@keyframes rowMoveDown {
+    0% {
+        transform: translateY(0) translateX(0);
+    }
+    50% {
+        transform: translateY(100vh) translateX(-50px);
+    }
+    100% {
+        transform: translateY(0) translateX(0);
+    }
 }
 
-/* Contenedores cuadrados para imágenes/videos */
+/* Contenedores cuadrados para imágenes/videos - Más grandes y en diagonal */
 .background-grid .grid-item {
     background: var(--bg-secondary);
-    border: 1px solid rgba(236, 235, 218, 0.05);
-    border-radius: 4px;
+    border: 1px solid rgba(236, 235, 218, 0.08);
+    border-radius: 8px;
     aspect-ratio: 1;
     position: relative;
     overflow: hidden;
-    opacity: 0.3;
+    opacity: 0.25;
     transition: opacity 0.3s ease;
+    width: 100%;
+    height: 100%;
+    min-width: 150px;
+    min-height: 150px;
 }
+
+/* Aplicar animaciones alternadas por hilera */
+/* Hileras impares (1, 3, 5, 7) - Suben */
+.background-grid .grid-item:nth-child(12n+1),
+.background-grid .grid-item:nth-child(12n+2),
+.background-grid .grid-item:nth-child(12n+3),
+.background-grid .grid-item:nth-child(12n+4),
+.background-grid .grid-item:nth-child(12n+5),
+.background-grid .grid-item:nth-child(12n+6) {
+    animation: rowMoveUp 30s linear infinite;
+}
+
+/* Hileras pares (2, 4, 6, 8) - Bajan */
+.background-grid .grid-item:nth-child(12n+7),
+.background-grid .grid-item:nth-child(12n+8),
+.background-grid .grid-item:nth-child(12n+9),
+.background-grid .grid-item:nth-child(12n+10),
+.background-grid .grid-item:nth-child(12n+11),
+.background-grid .grid-item:nth-child(12n+12) {
+    animation: rowMoveDown 30s linear infinite;
+}
+
+/* Delays escalonados para efecto más orgánico */
+.background-grid .grid-item:nth-child(12n+1) { animation-delay: 0s; }
+.background-grid .grid-item:nth-child(12n+2) { animation-delay: 2s; }
+.background-grid .grid-item:nth-child(12n+3) { animation-delay: 4s; }
+.background-grid .grid-item:nth-child(12n+4) { animation-delay: 6s; }
+.background-grid .grid-item:nth-child(12n+5) { animation-delay: 8s; }
+.background-grid .grid-item:nth-child(12n+6) { animation-delay: 10s; }
+.background-grid .grid-item:nth-child(12n+7) { animation-delay: 0s; }
+.background-grid .grid-item:nth-child(12n+8) { animation-delay: 2s; }
+.background-grid .grid-item:nth-child(12n+9) { animation-delay: 4s; }
+.background-grid .grid-item:nth-child(12n+10) { animation-delay: 6s; }
+.background-grid .grid-item:nth-child(12n+11) { animation-delay: 8s; }
+.background-grid .grid-item:nth-child(12n+12) { animation-delay: 10s; }
 
 .background-grid .grid-item:hover {
     opacity: 0.5;
