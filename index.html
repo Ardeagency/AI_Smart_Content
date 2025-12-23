@@ -2,29 +2,448 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Smart Content</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>AI Smart Content - Arde Agency</title>
+    <meta name="description" content="Plataforma de generación de contenido con IA desarrollada por Arde Agency">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+            color: var(--text-primary);
+            position: relative;
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-dark);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .loading-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .loading-logo {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            letter-spacing: 4px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.7;
+                transform: scale(0.95);
+            }
+        }
+
+        .loading-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: 0.05em;
+            margin: 0;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(236, 235, 218, 0.2);
+            border-top-color: var(--accent-warm);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Background Image */
+        .landing-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background-image: 
+                linear-gradient(rgba(23, 24, 29, 0.7), rgba(23, 24, 29, 0.8)),
+                url('recursos/pexels-arlindphotography-30304008.jpg');
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            min-height: 100vh;
+            min-width: 100vw;
+            content-visibility: auto;
+        }
+        
+        @media (max-width: 768px) {
+            .landing-background {
+                background-attachment: scroll;
+                background-size: cover;
+                background-position: center top;
+                background-repeat: no-repeat;
+            }
+        }
+        
+        @media (orientation: portrait) and (max-width: 768px) {
+            .landing-background {
+                background-size: cover;
+                background-position: center 30%;
+                min-height: 100vh;
+            }
+        }
+        
+        @media (orientation: landscape) and (max-width: 768px) {
+            .landing-background {
+                background-size: cover;
+                background-position: center center;
+                min-height: 100vh;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .landing-background {
+                background-size: cover;
+                background-position: center 25%;
+            }
+        }
+
+        /* Glassmorphism Overlay */
+        .glass-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: rgba(23, 24, 29, 0.4);
+        }
+
+        /* Header Transparente */
+        .landing-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 999;
+            background: transparent;
+            padding: 60px 32px 24px 32px;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .landing-header-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            letter-spacing: 4px;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .landing-header-logo:hover {
+            color: var(--accent-warm);
+            text-shadow: 0 0 20px rgba(224, 145, 69, 0.5);
+        }
+
+        /* Footer Transparente */
+        .landing-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            z-index: 999;
+            background: transparent;
+            padding: 16px 32px 60px 32px;
+            margin: 0;
+            height: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .landing-footer-content {
+            max-width: 1200px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .landing-footer-contact {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            line-height: 1.4;
+        }
+
+        .landing-footer-contact a {
+            color: var(--text-primary);
+            text-decoration: none;
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+        }
+
+        .landing-footer-contact a:hover {
+            opacity: 1;
+            color: var(--accent-warm);
+        }
+
+        .landing-footer-signature-link {
+            display: inline-flex;
+            align-items: center;
+            height: auto;
+            width: auto;
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+        }
+
+        .landing-footer-signature-link:hover {
+            opacity: 1;
+        }
+
+        .landing-footer-signature-link img {
+            height: 2rem;
+            width: auto;
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .landing-footer {
+                padding: 12px 20px 40px 20px;
+            }
+
+            .landing-footer-content {
+                max-width: 100%;
+            }
+
+            .landing-footer-contact {
+                font-size: 0.75rem;
+            }
+
+            .landing-footer-signature-link img {
+                height: 1.6rem;
+            }
+        }
+
+        /* Centered Content */
+        .landing-content {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            width: 100%;
+            max-width: 500px;
+            padding: 2rem;
+        }
+
+        .logo-section {
+            display: none;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            visibility: visible !important;
+            opacity: 1 !important;
+            width: fit-content;
+        }
+
+        .auth-btn {
+            padding: 0.625rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            font-family: inherit;
+        }
+
+        .auth-btn.login {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--text-primary);
+        }
+
+        .auth-btn.login:hover {
+            background: rgba(236, 235, 218, 0.1);
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+            transform: translateY(-1px);
+        }
+
+        .auth-btn.register {
+            background: var(--primary-color);
+            color: var(--palette1-dark);
+            border: none;
+        }
+
+        .auth-btn.register:hover {
+            background: var(--accent-warm);
+            color: var(--text-primary);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(224, 145, 69, 0.3);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .loading-logo {
+                font-size: 1.5rem;
+            }
+            
+            .landing-header {
+                padding: 40px 20px 16px 20px;
+            }
+
+            .landing-header-logo {
+                font-size: 1.25rem;
+                letter-spacing: 2px;
+            }
+            
+            .header-actions {
+                max-width: none;
+            }
+
+            .loading-spinner {
+                width: 32px;
+                height: 32px;
+                border-width: 2px;
+            }
+
+            .landing-content {
+                gap: 2rem;
+                padding: 1.5rem;
+            }
+
+            .auth-btn {
+                padding: 0.625rem 1.25rem;
+                font-size: 0.9rem;
+            }
+
+            .header-actions {
+                gap: 0.75rem;
+                flex-direction: row;
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
-    <!-- Main Container -->
-    <div class="landing-container">
-        <!-- Logo -->
-        <div class="landing-logo">
-            <span class="logo-text">AI SMART CONTENT</span>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-content">
+            <div class="loading-logo">AI SMART CONTENT</div>
+            <div class="loading-spinner"></div>
         </div>
+    </div>
 
-        <!-- Action Buttons -->
-        <div class="landing-actions">
-            <a href="login.html" class="btn-login">Login</a>
-            <a href="planes.html" class="btn-register">Planes</a>
+    <!-- Background Image -->
+    <div class="landing-background" loading="lazy"></div>
+    
+    <!-- Glass Overlay -->
+    <div class="glass-overlay"></div>
+
+    <!-- Header Transparente con Logo -->
+    <header class="landing-header">
+        <a href="#" class="landing-header-logo">AI SMART CONTENT</a>
+    </header>
+
+    <!-- Footer Transparente -->
+    <footer class="landing-footer">
+        <div class="landing-footer-content">
+            <div class="landing-footer-contact">
+                <a href="mailto:contact@ardeagency.com">contact@ardeagency.com</a>
+                <a href="https://api.whatsapp.com/message/RLPG652D2LS4D1?autoload=1&app_absent=0" target="_blank" rel="noopener noreferrer">+57 321 8300088</a>
             </div>
+            <a href="https://www.ardeagency.com/" target="_blank" rel="noopener noreferrer" class="landing-footer-signature-link">
+                <img src="recursos/by arde.png" alt="By Arde">
+            </a>
         </div>
+    </footer>
+
+    <!-- Centered Content -->
+    <div class="landing-content">
+        <div class="header-actions">
+            <a href="login.html" class="auth-btn login">Login</a>
+            <a href="planes.html" class="auth-btn register">Planes</a>
+        </div>
+    </div>
 
     <!-- Application Scripts -->
     <script src="js/main.js"></script>
+    <script>
+        // Loading screen
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                const loadingScreen = document.getElementById('loadingScreen');
+                if (loadingScreen) {
+                    loadingScreen.classList.add('hidden');
+                    setTimeout(function() {
+                        loadingScreen.style.display = 'none';
+                    }, 500);
+                }
+            }, 800);
+        });
+    </script>
 </body>
 </html>
