@@ -760,11 +760,18 @@ class FormRecord {
         const btnBack = document.getElementById('btnBack');
         const btnNext = document.getElementById('btnNext');
 
-        btnBack.disabled = step === 1;
+        // Ocultar botón "Atrás" en el paso 1
+        if (step === 1) {
+            btnBack.classList.add('hidden');
+            btnBack.disabled = true;
+        } else {
+            btnBack.classList.remove('hidden');
+            btnBack.disabled = false;
+        }
         
         if (step === this.totalSteps) {
             btnNext.style.display = 'none';
-            btnBack.style.display = 'none';
+            btnBack.classList.add('hidden');
         } else {
             btnNext.style.display = 'inline-flex';
             btnNext.textContent = step === this.totalSteps - 1 ? 'Finalizar y Guardar' : 'Continuar';
