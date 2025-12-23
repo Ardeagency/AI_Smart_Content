@@ -90,39 +90,59 @@
 }
 
 /* Aplicar animaciones alternadas por hilera */
-/* Hileras impares (1, 3, 5, 7) - Suben */
-.background-grid .grid-item:nth-child(12n+1),
-.background-grid .grid-item:nth-child(12n+2),
-.background-grid .grid-item:nth-child(12n+3),
-.background-grid .grid-item:nth-child(12n+4),
-.background-grid .grid-item:nth-child(12n+5),
-.background-grid .grid-item:nth-child(12n+6) {
+/* Hilera 1 (elementos 1-12): Sube */
+.background-grid .grid-item:nth-child(n+1):nth-child(-n+12) {
     animation: rowMoveUp 30s linear infinite;
 }
 
-/* Hileras pares (2, 4, 6, 8) - Bajan */
-.background-grid .grid-item:nth-child(12n+7),
-.background-grid .grid-item:nth-child(12n+8),
-.background-grid .grid-item:nth-child(12n+9),
-.background-grid .grid-item:nth-child(12n+10),
-.background-grid .grid-item:nth-child(12n+11),
-.background-grid .grid-item:nth-child(12n+12) {
+/* Hilera 2 (elementos 13-24): Baja */
+.background-grid .grid-item:nth-child(n+13):nth-child(-n+24) {
     animation: rowMoveDown 30s linear infinite;
 }
 
-/* Delays escalonados para efecto más orgánico */
+/* Hilera 3 (elementos 25-36): Sube */
+.background-grid .grid-item:nth-child(n+25):nth-child(-n+36) {
+    animation: rowMoveUp 30s linear infinite;
+}
+
+/* Hilera 4 (elementos 37-48): Baja */
+.background-grid .grid-item:nth-child(n+37):nth-child(-n+48) {
+    animation: rowMoveDown 30s linear infinite;
+}
+
+/* Hilera 5 (elementos 49-60): Sube */
+.background-grid .grid-item:nth-child(n+49):nth-child(-n+60) {
+    animation: rowMoveUp 30s linear infinite;
+}
+
+/* Hilera 6 (elementos 61-72): Baja */
+.background-grid .grid-item:nth-child(n+61):nth-child(-n+72) {
+    animation: rowMoveDown 30s linear infinite;
+}
+
+/* Hilera 7 (elementos 73-84): Sube */
+.background-grid .grid-item:nth-child(n+73):nth-child(-n+84) {
+    animation: rowMoveUp 30s linear infinite;
+}
+
+/* Hilera 8 (elementos 85-96): Baja */
+.background-grid .grid-item:nth-child(n+85):nth-child(-n+96) {
+    animation: rowMoveDown 30s linear infinite;
+}
+
+/* Delays escalonados por columna para efecto más orgánico */
 .background-grid .grid-item:nth-child(12n+1) { animation-delay: 0s; }
-.background-grid .grid-item:nth-child(12n+2) { animation-delay: 2s; }
-.background-grid .grid-item:nth-child(12n+3) { animation-delay: 4s; }
-.background-grid .grid-item:nth-child(12n+4) { animation-delay: 6s; }
-.background-grid .grid-item:nth-child(12n+5) { animation-delay: 8s; }
-.background-grid .grid-item:nth-child(12n+6) { animation-delay: 10s; }
-.background-grid .grid-item:nth-child(12n+7) { animation-delay: 0s; }
-.background-grid .grid-item:nth-child(12n+8) { animation-delay: 2s; }
-.background-grid .grid-item:nth-child(12n+9) { animation-delay: 4s; }
-.background-grid .grid-item:nth-child(12n+10) { animation-delay: 6s; }
-.background-grid .grid-item:nth-child(12n+11) { animation-delay: 8s; }
-.background-grid .grid-item:nth-child(12n+12) { animation-delay: 10s; }
+.background-grid .grid-item:nth-child(12n+2) { animation-delay: 1s; }
+.background-grid .grid-item:nth-child(12n+3) { animation-delay: 2s; }
+.background-grid .grid-item:nth-child(12n+4) { animation-delay: 3s; }
+.background-grid .grid-item:nth-child(12n+5) { animation-delay: 4s; }
+.background-grid .grid-item:nth-child(12n+6) { animation-delay: 5s; }
+.background-grid .grid-item:nth-child(12n+7) { animation-delay: 6s; }
+.background-grid .grid-item:nth-child(12n+8) { animation-delay: 7s; }
+.background-grid .grid-item:nth-child(12n+9) { animation-delay: 8s; }
+.background-grid .grid-item:nth-child(12n+10) { animation-delay: 9s; }
+.background-grid .grid-item:nth-child(12n+11) { animation-delay: 10s; }
+.background-grid .grid-item:nth-child(12n+12) { animation-delay: 11s; }
 
 .background-grid .grid-item:hover {
     opacity: 0.5;
