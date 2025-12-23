@@ -449,19 +449,19 @@
    RESPONSIVE
    ============================================ */
 @media (max-width: 968px) {
-    .subscribe-card {
-        grid-template-columns: 1fr;
-        min-height: auto;
-    }
-
-    .subscribe-image-section {
-        display: none;
-    }
-
     .subscribe-form-section {
+        width: 100%;
+        max-width: 500px;
         padding: 1.5rem;
         min-height: 100vh;
         overflow-y: auto;
+        margin: 0 auto;
+    }
+
+    .subscribe-image-section {
+        position: fixed;
+        width: 100%;
+        height: 100%;
     }
 }
 
