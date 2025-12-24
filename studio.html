@@ -1751,8 +1751,56 @@
         
         // Función para abrir selector de marca (si se necesita cambiar)
         function openBrandSelector() {
-            // Por ahora, solo mostrar un mensaje. Se puede implementar un modal más adelante
-            console.log('Abrir selector de marca');
+            // Cargar todas las marcas del usuario y mostrar un selector
+            if (!window.studioManager || !window.studioManager.supabase || !window.studioManager.userId) {
+                console.error('StudioManager no está disponible');
+                alert('Error: No se puede cargar las marcas. Por favor, recarga la página.');
+                return;
+            }
+            
+            const supabase = window.studioManager.supabase;
+            const userId = window.studioManager.userId;
+            
+            // Cargar todas las marcas del usuario
+            supabase
+                .from('projects')
+                .select('id, nombre_marca, logo_url')
+                .eq('user_id', userId)
+                .then(({ data: projects, error }) => {
+                    if (error) {
+                        console.error('Error cargando marcas:', error);
+                        alert('Error al cargar las marcas: ' + error.message);
+                        return;
+                    }
+                    
+                    if (!projects || projects.length === 0) {
+                        alert('No tienes marcas disponibles. Por favor, crea una marca primero.');
+                        return;
+                    }
+                    
+                    // Crear lista de marcas para mostrar
+                    const brandsList = projects.map((p, i) => `${i + 1}. ${p.nombre_marca || 'Sin nombre'}`).join('\n');
+                    const selectedIndex = prompt(`Marcas disponibles:\n\n${brandsList}\n\nIngresa el número de la marca que deseas seleccionar:`);
+                    
+                    if (selectedIndex && !isNaN(selectedIndex)) {
+                        const index = parseInt(selectedIndex) - 1;
+                        if (index >= 0 && index < projects.length) {
+                            const selectedProject = projects[index];
+                            updateBrandCard(selectedProject);
+                            const brandSelector = document.getElementById('brand-selector');
+                            if (brandSelector) {
+                                brandSelector.value = selectedProject.id;
+                            }
+                            onBrandSelected(selectedProject.id);
+                        } else {
+                            alert('Número inválido. Por favor, selecciona un número de la lista.');
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error en openBrandSelector:', error);
+                    alert('Error al cargar las marcas: ' + error.message);
+                });
         }
 
         async function onProductSelected(productId) {
