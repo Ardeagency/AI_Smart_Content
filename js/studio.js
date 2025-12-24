@@ -160,6 +160,14 @@ class StudioManager {
         if (creditsCount && this.userData) {
             creditsCount.textContent = this.userData.credits_available || 0;
         }
+
+        // Actualizar nombre de marca en el header principal
+        const brandNameHeader = document.getElementById('brandNameHeader');
+        if (brandNameHeader && this.projectData && this.projectData.nombre_marca) {
+            brandNameHeader.textContent = this.projectData.nombre_marca;
+        } else if (brandNameHeader) {
+            brandNameHeader.textContent = 'Sin marca';
+        }
     }
 
     /* =======================================
