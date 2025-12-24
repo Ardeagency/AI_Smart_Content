@@ -305,37 +305,66 @@ class LivingManager {
             profileName.textContent = this.userData.full_name || this.userData.email || 'Usuario';
         }
 
-        // Botones de web, instagram y facebook
+        // Enlaces de web, instagram y facebook
         const socialLinksContainer = document.getElementById('profileSocialLinks');
         if (socialLinksContainer && this.projectData) {
             socialLinksContainer.innerHTML = '';
             
             // Web
+            const webLink = document.createElement('a');
             if (this.projectData.sitio_web) {
-                const webLink = document.createElement('a');
                 webLink.href = this.projectData.sitio_web;
                 webLink.target = '_blank';
                 webLink.rel = 'noopener noreferrer';
                 webLink.className = 'profile-social-link';
-                webLink.innerHTML = '<i class="fas fa-globe"></i> Web';
-                socialLinksContainer.appendChild(webLink);
+                webLink.innerHTML = `
+                    <i class="fas fa-globe"></i>
+                    <span class="social-url">${this.projectData.sitio_web}</span>
+                `;
+            } else {
+                webLink.className = 'profile-social-link empty';
+                webLink.onclick = (e) => {
+                    e.preventDefault();
+                    livingManager.openEditBrandModal();
+                };
+                webLink.innerHTML = `
+                    <i class="fas fa-globe"></i>
+                    <span class="social-url">Agregar sitio web</span>
+                    <i class="fas fa-plus edit-icon"></i>
+                `;
             }
+            socialLinksContainer.appendChild(webLink);
 
             // Instagram
+            const instagramLink = document.createElement('a');
             if (this.projectData.instagram_url) {
-                const instagramLink = document.createElement('a');
-                instagramLink.href = this.projectData.instagram_url.startsWith('http') 
+                const instagramUrl = this.projectData.instagram_url.startsWith('http') 
                     ? this.projectData.instagram_url 
                     : `https://instagram.com/${this.projectData.instagram_url.replace('@', '')}`;
+                instagramLink.href = instagramUrl;
                 instagramLink.target = '_blank';
                 instagramLink.rel = 'noopener noreferrer';
                 instagramLink.className = 'profile-social-link';
-                instagramLink.innerHTML = '<i class="fab fa-instagram"></i> Instagram';
-                socialLinksContainer.appendChild(instagramLink);
+                instagramLink.innerHTML = `
+                    <i class="fab fa-instagram"></i>
+                    <span class="social-url">${this.projectData.instagram_url}</span>
+                `;
+            } else {
+                instagramLink.className = 'profile-social-link empty';
+                instagramLink.onclick = (e) => {
+                    e.preventDefault();
+                    livingManager.openEditBrandModal();
+                };
+                instagramLink.innerHTML = `
+                    <i class="fab fa-instagram"></i>
+                    <span class="social-url">Agregar Instagram</span>
+                    <i class="fas fa-plus edit-icon"></i>
+                `;
             }
+            socialLinksContainer.appendChild(instagramLink);
 
-            // Facebook (si existe en el futuro, por ahora no está en el schema)
-            // Se puede agregar después si se añade al schema
+            // Facebook (si existe en el futuro)
+            // Por ahora no está en el schema, pero se puede agregar después
         }
 
         // Detalles: correo, plan, créditos
