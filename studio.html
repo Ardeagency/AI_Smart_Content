@@ -1923,6 +1923,11 @@
         function showLoadingIndicator(containerId) {
             const container = document.getElementById(containerId);
             if (container) {
+                // Guardar el contenido original si no está guardado
+                if (!container.dataset.originalContent) {
+                    container.dataset.originalContent = container.innerHTML;
+                }
+                // Mostrar solo el indicador de carga
                 container.innerHTML = '<div class="loading-indicator">Cargando datos...</div>';
             }
         }
@@ -1930,8 +1935,16 @@
         // Función para ocultar indicador de carga
         function hideLoadingIndicator(containerId) {
             const container = document.getElementById(containerId);
-            if (container && container.querySelector('.loading-indicator')) {
-                container.querySelector('.loading-indicator').remove();
+            if (container) {
+                const loadingIndicator = container.querySelector('.loading-indicator');
+                if (loadingIndicator) {
+                    loadingIndicator.remove();
+                }
+                // Restaurar contenido original si existe y no hay datos cargados
+                if (container.dataset.originalContent && container.children.length === 0) {
+                    container.innerHTML = container.dataset.originalContent;
+                    delete container.dataset.originalContent;
+                }
             }
         }
 
