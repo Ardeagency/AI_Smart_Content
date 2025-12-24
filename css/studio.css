@@ -1837,15 +1837,41 @@ body {
 /* Grid de imágenes de producto */
 .product-images-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 8px;
     margin: 16px 0;
-    max-height: 300px;
+    max-height: 250px;
     overflow-y: auto;
     padding: 8px;
     border: 1px solid var(--border-color);
     border-radius: 8px;
     background: var(--bg-card);
+}
+
+/* Contenedores de imagen dentro del grid */
+.product-images-grid .image-item {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.product-images-grid .image-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(236, 235, 218, 0.2);
+    border-color: var(--primary-color);
+}
+
+.product-images-grid .image-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 
 /* Elementos individuales de imagen */
