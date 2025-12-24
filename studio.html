@@ -1682,6 +1682,9 @@
                 }
                 
                 console.log('=== MARCA CARGADA COMPLETAMENTE ===');
+                
+                // Ocultar indicador de carga
+                hideLoadingIndicator('brand-info');
             } catch (error) {
                 console.error('Error cargando marca:', error);
                 hideLoadingIndicator('brand-info');

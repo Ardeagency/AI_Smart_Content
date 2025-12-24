@@ -591,57 +591,71 @@ class StudioManager {
 
     // Función para actualizar la información de producto en el acordeón
     updateProductInfo(productData) {
-        console.log('Actualizando información de producto:', productData);
+        console.log('📝 Actualizando información de producto:', productData);
         
         const productInfoContainer = document.getElementById('product-info');
         if (!productInfoContainer) {
-            console.error('No se encontró el contenedor product-info');
+            console.error('❌ No se encontró el contenedor product-info');
             return;
         }
         
-        // Formatear precio
-        const priceDisplay = productData.price && productData.price > 0 ? 
-            `$${parseFloat(productData.price).toFixed(2)}` : 
+        // Formatear precio según schema.sql
+        const precio = productData.precio_producto;
+        const moneda = productData.moneda || 'USD';
+        const priceDisplay = precio && precio > 0 ? 
+            `${moneda} $${parseFloat(precio).toFixed(2)}` : 
             'No disponible';
         
-        // Formatear beneficios
-        const benefitsDisplay = productData.benefits && productData.benefits.length > 0 ? 
-            productData.benefits.join(', ') : 
-            'No disponible';
+        // Formatear beneficios (beneficio_1, beneficio_2, beneficio_3)
+        const beneficios = [];
+        if (productData.beneficio_1) beneficios.push(productData.beneficio_1);
+        if (productData.beneficio_2) beneficios.push(productData.beneficio_2);
+        if (productData.beneficio_3) beneficios.push(productData.beneficio_3);
+        const benefitsDisplay = beneficios.length > 0 ? beneficios.join(', ') : 'No disponible';
         
         // Formatear ingredientes
-        const ingredientsDisplay = productData.ingredients && productData.ingredients.length > 0 ? 
-            productData.ingredients.join(', ') : 
-            'No disponible';
+        const ingredientsDisplay = productData.ingredientes || 'No disponible';
         
-        // Actualizar el contenido del contenedor
+        // Actualizar el contenido del contenedor según schema.sql
         productInfoContainer.innerHTML = `
             <div class="info-item">
-                <span class="info-label">Nombre:</span>
-                <span class="info-value">${productData.name || 'No disponible'}</span>
+                <span class="info-label">NOMBRE:</span>
+                <span class="info-value">${productData.nombre_producto || 'No disponible'}</span>
             </div>
             <div class="info-item">
-                <span class="info-label">Tipo de Producto:</span>
-                <span class="info-value">${productData.product_type || 'No disponible'}</span>
+                <span class="info-label">TIPO DE PRODUCTO:</span>
+                <span class="info-value">${productData.tipo_producto || 'No disponible'}</span>
             </div>
             <div class="info-item">
-                <span class="info-label">Descripción:</span>
-                <span class="info-value long-text">${productData.short_desc || 'No disponible'}</span>
+                <span class="info-label">DESCRIPCIÓN:</span>
+                <span class="info-value long-text">${productData.descripcion_producto || 'No disponible'}</span>
             </div>
-            ${productData.benefits && productData.benefits.length > 0 ? `
             <div class="info-item">
-                <span class="info-label">Beneficios:</span>
-                <span class="info-value array">
-                    ${productData.benefits.map(benefit => `<span class="tag">${benefit}</span>`).join('')}
-                </span>
+                <span class="info-label">PRECIO:</span>
+                <span class="info-value">${priceDisplay}</span>
+            </div>
+            ${beneficios.length > 0 ? `
+            <div class="info-item">
+                <span class="info-label">BENEFICIOS:</span>
+                <span class="info-value">${benefitsDisplay}</span>
             </div>
             ` : ''}
-            ${productData.ingredients && productData.ingredients.length > 0 ? `
+            ${productData.ingredientes ? `
             <div class="info-item">
-                <span class="info-label">Ingredientes:</span>
-                <span class="info-value array">
-                    ${productData.ingredients.map(ingredient => `<span class="tag">${ingredient}</span>`).join('')}
-                </span>
+                <span class="info-label">INGREDIENTES:</span>
+                <span class="info-value long-text">${ingredientsDisplay}</span>
+            </div>
+            ` : ''}
+            ${productData.diferenciacion ? `
+            <div class="info-item">
+                <span class="info-label">DIFERENCIACIÓN:</span>
+                <span class="info-value long-text">${productData.diferenciacion}</span>
+            </div>
+            ` : ''}
+            ${productData.modo_uso ? `
+            <div class="info-item">
+                <span class="info-label">MODO DE USO:</span>
+                <span class="info-value long-text">${productData.modo_uso}</span>
             </div>
             ` : ''}
             <div class="info-item">
@@ -840,61 +854,26 @@ class StudioManager {
                 return;
             }
 
-            console.log('Filtrando imágenes por project_id:', selectedProduct.project_id);
+            console.log('📸 Cargando imágenes del producto desde product_images...');
 
-            // Consultar la tabla files para obtener imágenes de producto
-            // Query simplificada para evitar errores 400
-            let query = this.supabase
-                .from('files')
+            // Usar tabla product_images según schema.sql
+            const { data: images, error: imagesError } = await this.supabase
+                .from('product_images')
                 .select('*')
-                .eq('user_id', this.userId)
-                .eq('project_id', selectedProduct.project_id);
+                .eq('product_id', productId)
+                .order('image_order', { ascending: true });
 
-            // Primero intentar con categorías específicas de producto
-            const { data: categoryData, error: categoryError } = await query
-                .in('category', ['product_image', 'product_gallery', 'image'])
-                .order('created_at', { ascending: false });
-
-            let data = categoryData;
-            let error = categoryError;
-
-            // Si no hay resultados con categorías, intentar solo con project_id y user_id
-            if ((!data || data.length === 0) && !error) {
-                console.log('No hay imágenes con categoría específica, buscando todas las imágenes del proyecto...');
-                const { data: allData, error: allError } = await this.supabase
-                    .from('files')
-                    .select('*')
-                    .eq('user_id', this.userId)
-                    .eq('project_id', selectedProduct.project_id)
-                    .order('created_at', { ascending: false });
-                
-                data = allData;
-                error = allError;
-            }
-
-            if (error) {
-                console.error('Error cargando imágenes de producto:', error);
-                this.showNotification('Error cargando imágenes de producto', 'error');
+            if (imagesError) {
+                console.error('❌ Error cargando imágenes de producto:', imagesError);
+                this.productImages = [];
+                this.renderProductImages();
+                this.hideImageGallery();
                 return;
             }
 
-            // Filtrar imágenes para excluir logos de marca
-            const filteredImages = (data || []).filter(image => {
-                const name = (image.image_name || image.description || image.name || '').toLowerCase();
-                const category = (image.category || '').toLowerCase();
-                
-                // Excluir si contiene palabras relacionadas con logos
-                const isLogo = name.includes('logo') || 
-                               name.includes('brand') || 
-                               name.includes('marca') ||
-                               category.includes('logo') ||
-                               category.includes('brand') ||
-                               category.includes('marca');
-                
-                return !isLogo;
-            });
+            console.log(`✅ ${images?.length || 0} imagen(es) encontrada(s) para el producto`);
             
-            this.productImages = filteredImages;
+            this.productImages = images || [];
             this.renderProductImages();
             
             // Mostrar galería de imágenes si hay imágenes disponibles
