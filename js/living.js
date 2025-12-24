@@ -305,91 +305,81 @@ class LivingManager {
             profileName.textContent = this.userData.full_name || this.userData.email || 'Usuario';
         }
 
-        // Enlaces de instagram, facebook y tiktok
+        // Inputs editables para web, instagram, facebook y tiktok
         const socialLinksContainer = document.getElementById('profileSocialLinks');
         if (socialLinksContainer && this.projectData) {
             socialLinksContainer.innerHTML = '';
             
+            // Web
+            const webInput = this.createSocialInput('sitio_web', 'fas fa-globe', 'Sitio web', this.projectData.sitio_web || '');
+            socialLinksContainer.appendChild(webInput);
+
             // Instagram
-            const instagramLink = document.createElement('a');
-            if (this.projectData.instagram_url) {
-                const instagramUrl = this.projectData.instagram_url.startsWith('http') 
-                    ? this.projectData.instagram_url 
-                    : `https://instagram.com/${this.projectData.instagram_url.replace('@', '')}`;
-                instagramLink.href = instagramUrl;
-                instagramLink.target = '_blank';
-                instagramLink.rel = 'noopener noreferrer';
-                instagramLink.className = 'profile-social-link';
-                instagramLink.innerHTML = `
-                    <i class="fab fa-instagram"></i>
-                    <span class="social-url">${this.projectData.instagram_url}</span>
-                `;
-            } else {
-                instagramLink.className = 'profile-social-link empty';
-                instagramLink.onclick = (e) => {
-                    e.preventDefault();
-                    livingManager.openEditBrandModal();
-                };
-                instagramLink.innerHTML = `
-                    <i class="fab fa-instagram"></i>
-                    <span class="social-url">Agregar Instagram</span>
-                    <i class="fas fa-plus edit-icon"></i>
-                `;
-            }
-            socialLinksContainer.appendChild(instagramLink);
+            const instagramInput = this.createSocialInput('instagram_url', 'fab fa-instagram', 'Instagram', this.projectData.instagram_url || '');
+            socialLinksContainer.appendChild(instagramInput);
 
             // Facebook
-            const facebookLink = document.createElement('a');
-            if (this.projectData.facebook_url) {
-                facebookLink.href = this.projectData.facebook_url;
-                facebookLink.target = '_blank';
-                facebookLink.rel = 'noopener noreferrer';
-                facebookLink.className = 'profile-social-link';
-                facebookLink.innerHTML = `
-                    <i class="fab fa-facebook"></i>
-                    <span class="social-url">${this.projectData.facebook_url}</span>
-                `;
-            } else {
-                facebookLink.className = 'profile-social-link empty';
-                facebookLink.onclick = (e) => {
-                    e.preventDefault();
-                    livingManager.openEditBrandModal();
-                };
-                facebookLink.innerHTML = `
-                    <i class="fab fa-facebook"></i>
-                    <span class="social-url">Agregar Facebook</span>
-                    <i class="fas fa-plus edit-icon"></i>
-                `;
-            }
-            socialLinksContainer.appendChild(facebookLink);
+            const facebookInput = this.createSocialInput('facebook_url', 'fab fa-facebook', 'Facebook', this.projectData.facebook_url || '');
+            socialLinksContainer.appendChild(facebookInput);
 
             // TikTok
-            const tiktokLink = document.createElement('a');
-            if (this.projectData.tiktok_url) {
-                const tiktokUrl = this.projectData.tiktok_url.startsWith('http') 
-                    ? this.projectData.tiktok_url 
-                    : `https://tiktok.com/@${this.projectData.tiktok_url.replace('@', '')}`;
-                tiktokLink.href = tiktokUrl;
-                tiktokLink.target = '_blank';
-                tiktokLink.rel = 'noopener noreferrer';
-                tiktokLink.className = 'profile-social-link';
-                tiktokLink.innerHTML = `
-                    <i class="fab fa-tiktok"></i>
-                    <span class="social-url">${this.projectData.tiktok_url}</span>
-                `;
-            } else {
-                tiktokLink.className = 'profile-social-link empty';
-                tiktokLink.onclick = (e) => {
-                    e.preventDefault();
-                    livingManager.openEditBrandModal();
-                };
-                tiktokLink.innerHTML = `
-                    <i class="fab fa-tiktok"></i>
-                    <span class="social-url">Agregar TikTok</span>
-                    <i class="fas fa-plus edit-icon"></i>
-                `;
-            }
-            socialLinksContainer.appendChild(tiktokLink);
+            const tiktokInput = this.createSocialInput('tiktok_url', 'fab fa-tiktok', 'TikTok', this.projectData.tiktok_url || '');
+            socialLinksContainer.appendChild(tiktokInput);
+        }
+    }
+
+    createSocialInput(fieldName, iconClass, label, value) {
+        const container = document.createElement('div');
+        container.className = 'profile-social-input-container';
+        
+        const icon = document.createElement('i');
+        icon.className = iconClass;
+        
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'profile-social-input';
+        input.placeholder = `Agregar ${label}`;
+        input.value = value;
+        input.dataset.field = fieldName;
+        
+        // Guardar cambios cuando el usuario termine de editar
+        let saveTimeout;
+        input.addEventListener('input', () => {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                this.saveSocialField(fieldName, input.value);
+            }, 1000); // Guardar después de 1 segundo sin escribir
+        });
+        
+        input.addEventListener('blur', () => {
+            clearTimeout(saveTimeout);
+            this.saveSocialField(fieldName, input.value);
+        });
+        
+        container.appendChild(icon);
+        container.appendChild(input);
+        
+        return container;
+    }
+
+    async saveSocialField(fieldName, value) {
+        if (!this.supabase || !this.projectData) return;
+        
+        try {
+            const { error } = await this.supabase
+                .from('projects')
+                .update({ [fieldName]: value || null })
+                .eq('id', this.projectData.id);
+            
+            if (error) throw error;
+            
+            // Actualizar datos locales
+            this.projectData[fieldName] = value || null;
+            
+            console.log(`${fieldName} actualizado correctamente`);
+        } catch (error) {
+            console.error(`Error al guardar ${fieldName}:`, error);
+            alert(`Error al guardar ${fieldName}. Por favor, intenta de nuevo.`);
         }
 
         // Detalles: correo, plan, créditos

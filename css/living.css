@@ -176,7 +176,7 @@
     width: 100%;
 }
 
-.profile-social-link {
+.profile-social-input-container {
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -184,44 +184,36 @@
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    text-decoration: none;
-    color: var(--text-primary);
-    font-size: 0.9rem;
     transition: all 0.3s ease;
-    position: relative;
 }
 
-.profile-social-link:hover {
-    background: rgba(236, 235, 218, 0.1);
+.profile-social-input-container:focus-within {
     border-color: var(--primary-color);
+    background: rgba(236, 235, 218, 0.05);
 }
 
-.profile-social-link i {
+.profile-social-input-container i {
     font-size: 1.1rem;
     color: var(--primary-color);
     width: 20px;
     text-align: center;
+    flex-shrink: 0;
 }
 
-.profile-social-link .social-url {
+.profile-social-input {
     flex: 1;
-    color: var(--text-secondary);
-    word-break: break-all;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    outline: none;
+    padding: 0;
+    width: 100%;
 }
 
-.profile-social-link.empty {
-    cursor: pointer;
-    opacity: 0.6;
-}
-
-.profile-social-link.empty:hover {
-    opacity: 1;
-}
-
-.profile-social-link .edit-icon {
-    margin-left: auto;
+.profile-social-input::placeholder {
     color: var(--text-muted);
-    font-size: 0.85rem;
+    opacity: 0.6;
 }
 
 .profile-details {
