@@ -118,7 +118,7 @@
                         <h2 class="profile-name" id="profileUserName">Cargando...</h2>
                         <div class="profile-social-links" id="profileSocialLinks">
                             <!-- Web, Instagram, Facebook se insertarán aquí -->
-                        </div>
+                            </div>
                         <div class="profile-details">
                             <div class="profile-detail-item">
                                 <i class="fas fa-envelope"></i>
@@ -132,69 +132,176 @@
                                 <i class="fas fa-coins"></i>
                                 <span id="profileCredits">0</span>
                             </div>
+                            </div>
                         </div>
                     </div>
-                </div>
 
                 <!-- Columna Derecha: Cards de Información -->
                 <div class="living-column-right">
-                    <!-- Mercado e Idiomas -->
-                    <div class="living-card">
-                        <div class="card-header">
-                            <h2>Mercado e Idiomas</h2>
-                            <button class="btn-edit" onclick="livingManager.openEditMarketsModal()">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                        </div>
-                        <div class="card-content">
-                            <div class="info-item">
-                                <span class="info-label">Mercados Objetivo:</span>
-                                <div class="tags-container" id="mercadosObjetivo"></div>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">Idiomas:</span>
-                                <div class="tags-container" id="idiomasContenido"></div>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Lineamientos de Marca -->
                     <div class="living-card">
                         <div class="card-header">
                             <h2>Lineamientos de Marca</h2>
-                            <button class="btn-edit" onclick="livingManager.openEditGuidelinesModal()">
-                                <i class="fas fa-edit"></i>
-                            </button>
                         </div>
                         <div class="card-content">
                             <div class="info-item">
                                 <span class="info-label">Tono de Voz:</span>
-                                <span class="info-value" id="tonoVoz">-</span>
+                                <select class="editable-select" id="tonoVozInput">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="amigable">Amigable</option>
+                                    <option value="premium">Premium</option>
+                                    <option value="tecnico">Técnico</option>
+                                    <option value="irreverente">Irreverente</option>
+                                    <option value="divertido">Divertido</option>
+                                    <option value="profesional">Profesional</option>
+                                    <option value="casual">Casual</option>
+                                    <option value="inspirador">Inspirador</option>
+                                    <option value="autoritario">Autoritario</option>
+                                    <option value="empatico">Empático</option>
+                                    <option value="humoristico">Humorístico</option>
+                                    <option value="serio">Serio</option>
+                                    <option value="joven">Joven</option>
+                                    <option value="tradicional">Tradicional</option>
+                                    <option value="innovador">Innovador</option>
+                                    <option value="calido">Cálido</option>
+                                    <option value="directo">Directo</option>
+                                    <option value="poetico">Poético</option>
+                                    <option value="energico">Enérgico</option>
+                                    <option value="tranquilo">Tranquilo</option>
+                                </select>
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Palabras a Usar:</span>
-                                <span class="info-value" id="palabrasUsar">-</span>
+                                <input type="text" class="editable-input" id="palabrasUsarInput" placeholder="Ej: innovador, calidad, premium">
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Palabras a Evitar:</span>
-                                <div class="tags-container" id="palabrasEvitar"></div>
+                                <div class="multiselect-wrapper" id="palabrasEvitarWrapper">
+                                    <div class="multiselect-trigger" id="palabrasEvitarTrigger">
+                                        <div class="multiselect-value" id="palabrasEvitarValue">Seleccionar palabras...</div>
+                                        <div class="multiselect-arrow">▼</div>
+                                    </div>
+                                    <div class="multiselect-dropdown" id="palabrasEvitarDropdown">
+                                        <!-- Opciones se cargarán dinámicamente -->
+                                    </div>
+                                    <input type="hidden" id="palabrasEvitarInput">
+                                </div>
                             </div>
                             <div class="info-item full-width">
                                 <span class="info-label">Reglas Creativas:</span>
-                                <p class="info-value" id="reglasCreativas">-</p>
+                                <textarea class="editable-textarea" id="reglasCreativasInput" rows="4" placeholder="Escribe las reglas creativas de tu marca..."></textarea>
                             </div>
+                            <div class="info-item">
+                                <span class="info-label">Mercados Objetivo:</span>
+                                <div class="multiselect-wrapper" id="mercadosObjetivoWrapper">
+                                    <div class="multiselect-trigger" id="mercadosObjetivoTrigger">
+                                        <div class="multiselect-value" id="mercadosObjetivoValue">Seleccionar mercados...</div>
+                                        <div class="multiselect-arrow">▼</div>
+                                    </div>
+                                    <div class="multiselect-dropdown" id="mercadosObjetivoDropdown">
+                                        <div class="multiselect-optgroup">América Latina</div>
+                                        <div class="multiselect-option" data-value="mexico">🇲🇽 México</div>
+                                        <div class="multiselect-option" data-value="colombia">🇨🇴 Colombia</div>
+                                        <div class="multiselect-option" data-value="argentina">🇦🇷 Argentina</div>
+                                        <div class="multiselect-option" data-value="chile">🇨🇱 Chile</div>
+                                        <div class="multiselect-option" data-value="peru">🇵🇪 Perú</div>
+                                        <div class="multiselect-option" data-value="venezuela">🇻🇪 Venezuela</div>
+                                        <div class="multiselect-option" data-value="ecuador">🇪🇨 Ecuador</div>
+                                        <div class="multiselect-option" data-value="guatemala">🇬🇹 Guatemala</div>
+                                        <div class="multiselect-option" data-value="cuba">🇨🇺 Cuba</div>
+                                        <div class="multiselect-option" data-value="bolivia">🇧🇴 Bolivia</div>
+                                        <div class="multiselect-option" data-value="republica_dominicana">🇩🇴 República Dominicana</div>
+                                        <div class="multiselect-option" data-value="honduras">🇭🇳 Honduras</div>
+                                        <div class="multiselect-option" data-value="paraguay">🇵🇾 Paraguay</div>
+                                        <div class="multiselect-option" data-value="nicaragua">🇳🇮 Nicaragua</div>
+                                        <div class="multiselect-option" data-value="el_salvador">🇸🇻 El Salvador</div>
+                                        <div class="multiselect-option" data-value="costa_rica">🇨🇷 Costa Rica</div>
+                                        <div class="multiselect-option" data-value="panama">🇵🇦 Panamá</div>
+                                        <div class="multiselect-option" data-value="uruguay">🇺🇾 Uruguay</div>
+                                        <div class="multiselect-optgroup">Europa</div>
+                                        <div class="multiselect-option" data-value="spain">🇪🇸 España</div>
+                                        <div class="multiselect-option" data-value="france">🇫🇷 Francia</div>
+                                        <div class="multiselect-option" data-value="italy">🇮🇹 Italia</div>
+                                        <div class="multiselect-option" data-value="germany">🇩🇪 Alemania</div>
+                                        <div class="multiselect-option" data-value="uk">🇬🇧 Reino Unido</div>
+                                        <div class="multiselect-option" data-value="portugal">🇵🇹 Portugal</div>
+                                        <div class="multiselect-option" data-value="netherlands">🇳🇱 Países Bajos</div>
+                                        <div class="multiselect-option" data-value="belgium">🇧🇪 Bélgica</div>
+                                        <div class="multiselect-option" data-value="switzerland">🇨🇭 Suiza</div>
+                                        <div class="multiselect-option" data-value="poland">🇵🇱 Polonia</div>
+                                        <div class="multiselect-option" data-value="russia">🇷🇺 Rusia</div>
+                                        <div class="multiselect-optgroup">América del Norte</div>
+                                        <div class="multiselect-option" data-value="usa">🇺🇸 Estados Unidos</div>
+                                        <div class="multiselect-option" data-value="canada">🇨🇦 Canadá</div>
+                                        <div class="multiselect-optgroup">Asia</div>
+                                        <div class="multiselect-option" data-value="china">🇨🇳 China</div>
+                                        <div class="multiselect-option" data-value="japan">🇯🇵 Japón</div>
+                                        <div class="multiselect-option" data-value="south_korea">🇰🇷 Corea del Sur</div>
+                                        <div class="multiselect-option" data-value="india">🇮🇳 India</div>
+                                        <div class="multiselect-optgroup">Oceanía</div>
+                                        <div class="multiselect-option" data-value="australia">🇦🇺 Australia</div>
+                                        <div class="multiselect-option" data-value="new_zealand">🇳🇿 Nueva Zelanda</div>
+                                        <div class="multiselect-optgroup">Otros</div>
+                                        <div class="multiselect-option" data-value="ireland">🇮🇪 Irlanda</div>
+                                        <div class="multiselect-option" data-value="brazil">🇧🇷 Brasil</div>
+                                        <div class="multiselect-option" data-value="south_africa">🇿🇦 Sudáfrica</div>
+                                        <div class="multiselect-optgroup">Regiones</div>
+                                        <div class="multiselect-option" data-value="latam">🌎 Toda Latinoamérica</div>
+                                        <div class="multiselect-option" data-value="europe">🌍 Toda Europa</div>
+                                        <div class="multiselect-option" data-value="asia">🌏 Toda Asia</div>
+                                        <div class="multiselect-option" data-value="global">🌐 Global</div>
+                                    </div>
+                                    <input type="hidden" id="mercadosObjetivoInput">
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Idiomas:</span>
+                                <div class="multiselect-wrapper" id="idiomasContenidoWrapper">
+                                    <div class="multiselect-trigger" id="idiomasContenidoTrigger">
+                                        <div class="multiselect-value" id="idiomasContenidoValue">Seleccionar idiomas...</div>
+                                        <div class="multiselect-arrow">▼</div>
+                                    </div>
+                                    <div class="multiselect-dropdown" id="idiomasContenidoDropdown">
+                                        <div class="multiselect-optgroup">Idiomas Principales</div>
+                                        <div class="multiselect-option" data-value="español">Español</div>
+                                        <div class="multiselect-option" data-value="ingles">Inglés</div>
+                                        <div class="multiselect-option" data-value="portugues">Portugués</div>
+                                        <div class="multiselect-option" data-value="frances">Francés</div>
+                                        <div class="multiselect-optgroup">Idiomas Europeos</div>
+                                        <div class="multiselect-option" data-value="italiano">Italiano</div>
+                                        <div class="multiselect-option" data-value="aleman">Alemán</div>
+                                        <div class="multiselect-option" data-value="holandes">Holandés</div>
+                                        <div class="multiselect-option" data-value="polaco">Polaco</div>
+                                        <div class="multiselect-option" data-value="ruso">Ruso</div>
+                                        <div class="multiselect-option" data-value="catalan">Catalán</div>
+                                        <div class="multiselect-option" data-value="gallego">Gallego</div>
+                                        <div class="multiselect-option" data-value="euskera">Euskera</div>
+                                        <div class="multiselect-optgroup">Idiomas Asiáticos</div>
+                                        <div class="multiselect-option" data-value="chino">Chino (Mandarín)</div>
+                                        <div class="multiselect-option" data-value="japones">Japonés</div>
+                                        <div class="multiselect-option" data-value="coreano">Coreano</div>
+                                        <div class="multiselect-option" data-value="hindi">Hindi</div>
+                                        <div class="multiselect-option" data-value="arabe">Árabe</div>
+                                    </div>
+                                    <input type="hidden" id="idiomasContenidoInput">
+                                </div>
                         </div>
                     </div>
+                </div>
 
                     <!-- Archivos de Marca -->
                     <div class="living-card brand-files-card">
                         <div class="card-header">
                             <h2>Archivos de Marca</h2>
-                            <button class="btn-edit" onclick="livingManager.openEditFilesModal()">
-                                <i class="fas fa-edit"></i>
-                            </button>
                         </div>
                         <div class="card-content">
+                            <div class="file-upload-area">
+                                <input type="file" id="brandFileUpload" multiple accept="image/*,.pdf,.doc,.docx" style="display: none;">
+                                <label for="brandFileUpload" class="file-upload-label">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Subir archivos</span>
+                                </label>
+                            </div>
                             <div class="files-list" id="brandFilesList">
                                 <div class="empty-state">
                                     <i class="fas fa-inbox"></i>
@@ -204,31 +311,36 @@
                         </div>
                     </div>
 
-                <!-- Productos -->
-                <div class="living-card">
-                    <div class="card-header">
-                        <h2>Productos</h2>
-                    </div>
-                    <div class="card-content">
-                        <div class="products-list" id="productsList">
-                            <div class="empty-state">
-                                <i class="fas fa-box-open"></i>
-                                <p>No hay productos registrados</p>
+                    <!-- Productos -->
+                    <div class="living-card clickable-card">
+                        <div class="card-header">
+                            <h2>Productos</h2>
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                        <div class="card-content">
+                            <div class="products-list" id="productsList">
+                                <div class="empty-state">
+                                    <i class="fas fa-box-open"></i>
+                                    <p>No hay productos registrados</p>
+                                    <a href="products.html" class="btn btn-primary" style="margin-top: 1rem;">Gestionar Productos</a>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Campañas -->
-                <div class="living-card">
-                    <div class="card-header">
-                        <h2>Campañas y Ofertas</h2>
-                    </div>
-                    <div class="card-content">
-                        <div class="campaigns-list" id="campaignsList">
-                            <div class="empty-state">
-                                <i class="fas fa-megaphone"></i>
-                                <p>No hay campañas creadas</p>
+                    <!-- Campañas -->
+                    <div class="living-card clickable-card">
+                        <div class="card-header">
+                            <h2>Campañas y Ofertas</h2>
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                        <div class="card-content">
+                            <div class="campaigns-list" id="campaignsList">
+                                <div class="empty-state">
+                                    <i class="fas fa-megaphone"></i>
+                                    <p>No hay campañas creadas</p>
+                                    <a href="studio.html" class="btn btn-primary" style="margin-top: 1rem;">Crear Campaña</a>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -265,7 +265,7 @@
 .card-header {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    justify-content: space-between;
     margin-bottom: 1.5rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid var(--border-color);
@@ -281,6 +281,17 @@
     font-weight: 600;
     color: var(--text-primary);
     margin: 0;
+}
+
+.clickable-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.clickable-card:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(236, 235, 218, 0.1);
 }
 
 .card-content {
@@ -317,6 +328,85 @@
 .info-value p {
     margin: 0;
     white-space: pre-wrap;
+}
+
+/* Inputs Editables */
+.editable-input,
+.editable-select,
+.editable-textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-family: inherit;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.editable-input:focus,
+.editable-select:focus,
+.editable-textarea:focus {
+    border-color: var(--primary-color);
+    background: rgba(236, 235, 218, 0.05);
+    box-shadow: 0 0 0 3px rgba(236, 235, 218, 0.1);
+}
+
+.editable-input::placeholder,
+.editable-textarea::placeholder {
+    color: var(--text-muted);
+    opacity: 0.6;
+}
+
+.editable-textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.editable-select {
+    cursor: pointer;
+}
+
+/* Multiselect Wrapper */
+.multiselect-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+/* File Upload */
+.file-upload-area {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.file-upload-area:hover {
+    border-color: var(--primary-color);
+    background: rgba(236, 235, 218, 0.05);
+}
+
+.file-upload-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--primary-color);
+    color: var(--bg-black);
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.file-upload-label:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(236, 235, 218, 0.3);
 }
 
 /* Tags Container */

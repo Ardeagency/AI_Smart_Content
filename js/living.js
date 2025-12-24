@@ -45,6 +45,10 @@ class LivingManager {
             console.log('UserId:', this.userId);
         }
         this.setupEventListeners();
+        this.setupEditableInputs();
+        this.setupMultiselects();
+        this.setupFileUpload();
+        this.setupClickableCards();
     }
 
     updateNavHeader() {
@@ -271,10 +275,339 @@ class LivingManager {
         this.renderUserInfo();
         this.renderBrandInfo();
         this.renderBrandGuidelines();
-        this.renderMarketsAndLanguages();
         this.renderBrandFiles();
         this.renderProducts();
         this.renderCampaigns();
+    }
+
+    setupEditableInputs() {
+        // Tono de voz
+        const tonoVozInput = document.getElementById('tonoVozInput');
+        if (tonoVozInput) {
+            tonoVozInput.addEventListener('change', () => {
+                this.saveBrandField('tono_voz', tonoVozInput.value);
+            });
+        }
+
+        // Palabras a usar
+        const palabrasUsarInput = document.getElementById('palabrasUsarInput');
+        if (palabrasUsarInput) {
+            let saveTimeout;
+            palabrasUsarInput.addEventListener('input', () => {
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(() => {
+                    this.saveBrandField('palabras_usar', palabrasUsarInput.value);
+                }, 1000);
+            });
+            palabrasUsarInput.addEventListener('blur', () => {
+                clearTimeout(saveTimeout);
+                this.saveBrandField('palabras_usar', palabrasUsarInput.value);
+            });
+        }
+
+        // Reglas creativas
+        const reglasCreativasInput = document.getElementById('reglasCreativasInput');
+        if (reglasCreativasInput) {
+            let saveTimeout;
+            reglasCreativasInput.addEventListener('input', () => {
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(() => {
+                    this.saveBrandField('reglas_creativas', reglasCreativasInput.value);
+                }, 1000);
+            });
+            reglasCreativasInput.addEventListener('blur', () => {
+                clearTimeout(saveTimeout);
+                this.saveBrandField('reglas_creativas', reglasCreativasInput.value);
+            });
+        }
+    }
+
+    setupMultiselects() {
+        // Mercados objetivo
+        this.initMultiselect('mercadosObjetivo', 'mercadosObjetivoInput', () => {
+            this.saveProjectField('mercado_objetivo', this.getMultiselectValues('mercadosObjetivoInput'));
+        });
+
+        // Idiomas contenido
+        this.initMultiselect('idiomasContenido', 'idiomasContenidoInput', () => {
+            this.saveProjectField('idiomas_contenido', this.getMultiselectValues('idiomasContenidoInput'));
+        });
+
+        // Palabras a evitar
+        this.initMultiselect('palabrasEvitar', 'palabrasEvitarInput', () => {
+            this.saveBrandField('palabras_evitar', this.getMultiselectValues('palabrasEvitarInput'));
+        });
+    }
+
+    initMultiselect(wrapperId, hiddenInputId, onChangeCallback) {
+        const wrapper = document.getElementById(wrapperId + 'Wrapper');
+        const trigger = document.getElementById(wrapperId + 'Trigger');
+        const valueDisplay = document.getElementById(wrapperId + 'Value');
+        const dropdown = document.getElementById(wrapperId + 'Dropdown');
+        const hiddenInput = document.getElementById(hiddenInputId);
+        
+        if (!wrapper || !trigger || !valueDisplay || !dropdown || !hiddenInput) return;
+
+        let selectedValues = [];
+        const optionLabels = {};
+
+        // Store option labels
+        dropdown.querySelectorAll('.multiselect-option').forEach(option => {
+            const value = option.dataset.value;
+            optionLabels[value] = option.textContent.trim();
+        });
+
+        // Load existing values
+        if (hiddenInputId === 'mercadosObjetivoInput' && this.projectData?.mercado_objetivo) {
+            selectedValues = Array.isArray(this.projectData.mercado_objetivo) 
+                ? this.projectData.mercado_objetivo 
+                : [];
+        } else if (hiddenInputId === 'idiomasContenidoInput' && this.projectData?.idiomas_contenido) {
+            selectedValues = Array.isArray(this.projectData.idiomas_contenido) 
+                ? this.projectData.idiomas_contenido 
+                : [];
+        } else if (hiddenInputId === 'palabrasEvitarInput' && this.brandData?.palabras_evitar) {
+            selectedValues = Array.isArray(this.brandData.palabras_evitar) 
+                ? this.brandData.palabras_evitar 
+                : [];
+        }
+
+        // Update UI with existing values
+        selectedValues.forEach(value => {
+            const option = dropdown.querySelector(`[data-value="${value}"]`);
+            if (option) option.classList.add('selected');
+        });
+        this.updateMultiselectDisplay(wrapperId, selectedValues, optionLabels);
+        hiddenInput.value = JSON.stringify(selectedValues);
+
+        // Toggle dropdown
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = dropdown.classList.contains('open');
+            this.closeAllMultiselects();
+            if (!isOpen) {
+                dropdown.classList.add('open');
+                trigger.classList.add('open');
+            }
+        });
+
+        // Handle option clicks
+        dropdown.querySelectorAll('.multiselect-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const value = option.dataset.value;
+                const index = selectedValues.indexOf(value);
+                
+                if (index > -1) {
+                    selectedValues.splice(index, 1);
+                    option.classList.remove('selected');
+                } else {
+                    selectedValues.push(value);
+                    option.classList.add('selected');
+                }
+
+                this.updateMultiselectDisplay(wrapperId, selectedValues, optionLabels);
+                hiddenInput.value = JSON.stringify(selectedValues);
+                
+                if (onChangeCallback) {
+                    onChangeCallback();
+                }
+            });
+        });
+
+        // Close on outside click
+        document.addEventListener('click', (e) => {
+            if (!wrapper.contains(e.target)) {
+                dropdown.classList.remove('open');
+                trigger.classList.remove('open');
+            }
+        });
+    }
+
+    updateMultiselectDisplay(wrapperId, selectedValues, optionLabels) {
+        const valueDisplay = document.getElementById(wrapperId + 'Value');
+        const trigger = document.getElementById(wrapperId + 'Trigger');
+        if (!valueDisplay || !trigger) return;
+
+        if (selectedValues.length === 0) {
+            valueDisplay.textContent = 'Seleccionar...';
+            valueDisplay.classList.remove('has-selection');
+            trigger.querySelector('.multiselect-tags')?.remove();
+        } else {
+            valueDisplay.classList.add('has-selection');
+            
+            const existingTags = trigger.querySelector('.multiselect-tags');
+            if (existingTags) existingTags.remove();
+
+            const tagsContainer = document.createElement('div');
+            tagsContainer.className = 'multiselect-tags';
+
+            selectedValues.forEach(value => {
+                const tag = document.createElement('div');
+                tag.className = 'multiselect-tag';
+                tag.innerHTML = `
+                    <span>${optionLabels[value] || value}</span>
+                    <span class="multiselect-tag-remove" data-value="${value}">×</span>
+                `;
+                tagsContainer.appendChild(tag);
+
+                tag.querySelector('.multiselect-tag-remove').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const index = selectedValues.indexOf(value);
+                    if (index > -1) {
+                        selectedValues.splice(index, 1);
+                        const option = document.querySelector(`#${wrapperId}Dropdown [data-value="${value}"]`);
+                        if (option) option.classList.remove('selected');
+                        this.updateMultiselectDisplay(wrapperId, selectedValues, optionLabels);
+                        const hiddenInput = document.getElementById(wrapperId + 'Input');
+                        if (hiddenInput) hiddenInput.value = JSON.stringify(selectedValues);
+                    }
+                });
+            });
+
+            valueDisplay.textContent = '';
+            valueDisplay.appendChild(tagsContainer);
+        }
+    }
+
+    closeAllMultiselects() {
+        document.querySelectorAll('.multiselect-dropdown').forEach(dropdown => {
+            dropdown.classList.remove('open');
+        });
+        document.querySelectorAll('.multiselect-trigger').forEach(trigger => {
+            trigger.classList.remove('open');
+        });
+    }
+
+    getMultiselectValues(hiddenInputId) {
+        const hiddenInput = document.getElementById(hiddenInputId);
+        if (!hiddenInput || !hiddenInput.value) return [];
+        try {
+            return JSON.parse(hiddenInput.value);
+        } catch {
+            return [];
+        }
+    }
+
+    setupFileUpload() {
+        const fileUpload = document.getElementById('brandFileUpload');
+        if (fileUpload) {
+            fileUpload.addEventListener('change', async (e) => {
+                const files = Array.from(e.target.files);
+                if (files.length === 0) return;
+
+                for (const file of files) {
+                    await this.uploadBrandFile(file);
+                }
+                
+                // Reset input
+                fileUpload.value = '';
+                
+                // Reload files
+                await this.loadBrandFiles();
+                this.renderBrandFiles();
+            });
+        }
+    }
+
+    async uploadBrandFile(file) {
+        if (!this.supabase || !this.projectData) return;
+
+        try {
+            // Upload to Supabase Storage
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${this.projectData.id}/${Date.now()}_${file.name}`;
+            const filePath = `brand-files/${fileName}`;
+
+            const { data: uploadData, error: uploadError } = await this.supabase.storage
+                .from('brand-files')
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            // Get public URL
+            const { data: { publicUrl } } = this.supabase.storage
+                .from('brand-files')
+                .getPublicUrl(filePath);
+
+            // Save to database
+            const { error: dbError } = await this.supabase
+                .from('brand_files')
+                .insert({
+                    project_id: this.projectData.id,
+                    file_name: file.name,
+                    file_url: publicUrl,
+                    file_type: fileExt,
+                    file_size: file.size
+                });
+
+            if (dbError) throw dbError;
+
+            console.log('✅ Archivo subido correctamente:', file.name);
+        } catch (error) {
+            console.error('Error al subir archivo:', error);
+            alert(`Error al subir ${file.name}. Por favor, intenta de nuevo.`);
+        }
+    }
+
+    setupClickableCards() {
+        // Productos card
+        const productsCard = document.querySelector('.clickable-card:has(#productsList)');
+        if (productsCard) {
+            productsCard.addEventListener('click', (e) => {
+                if (!e.target.closest('a')) {
+                    window.location.href = 'products.html';
+                }
+            });
+        }
+
+        // Campañas card
+        const campaignsCard = document.querySelector('.clickable-card:has(#campaignsList)');
+        if (campaignsCard) {
+            campaignsCard.addEventListener('click', (e) => {
+                if (!e.target.closest('a')) {
+                    window.location.href = 'studio.html';
+                }
+            });
+        }
+    }
+
+    async saveBrandField(fieldName, value) {
+        if (!this.supabase || !this.brandData) return;
+
+        try {
+            const { error } = await this.supabase
+                .from('brands')
+                .update({ [fieldName]: value || null })
+                .eq('project_id', this.projectData.id);
+
+            if (error) throw error;
+
+            this.brandData[fieldName] = value || null;
+            console.log(`${fieldName} actualizado correctamente`);
+        } catch (error) {
+            console.error(`Error al guardar ${fieldName}:`, error);
+            alert(`Error al guardar ${fieldName}. Por favor, intenta de nuevo.`);
+        }
+    }
+
+    async saveProjectField(fieldName, value) {
+        if (!this.supabase || !this.projectData) return;
+
+        try {
+            const { error } = await this.supabase
+                .from('projects')
+                .update({ [fieldName]: value || null })
+                .eq('id', this.projectData.id);
+
+            if (error) throw error;
+
+            this.projectData[fieldName] = value || null;
+            console.log(`${fieldName} actualizado correctamente`);
+        } catch (error) {
+            console.error(`Error al guardar ${fieldName}:`, error);
+            alert(`Error al guardar ${fieldName}. Por favor, intenta de nuevo.`);
+        }
     }
 
     renderProfileCard() {
@@ -514,95 +847,26 @@ class LivingManager {
     }
 
     renderBrandGuidelines() {
-        if (!this.brandData) return;
+        // Poblar inputs editables
+        const tonoVozInput = document.getElementById('tonoVozInput');
+        const palabrasUsarInput = document.getElementById('palabrasUsarInput');
+        const reglasCreativasInput = document.getElementById('reglasCreativasInput');
 
-        const tonoVozEl = document.getElementById('tonoVoz');
-        const palabrasUsarEl = document.getElementById('palabrasUsar');
-        const palabrasEvitarEl = document.getElementById('palabrasEvitar');
-        const reglasCreativasEl = document.getElementById('reglasCreativas');
-
-        if (tonoVozEl) {
-            const tonoVozNames = {
-                'amigable': 'Amigable',
-                'premium': 'Premium',
-                'tecnico': 'Técnico',
-                'irreverente': 'Irreverente',
-                'divertido': 'Divertido',
-                'profesional': 'Profesional',
-                'casual': 'Casual',
-                'inspirador': 'Inspirador',
-                'autoritario': 'Autoritario',
-                'empatico': 'Empático',
-                'humoristico': 'Humorístico',
-                'serio': 'Serio',
-                'joven': 'Joven',
-                'tradicional': 'Tradicional',
-                'innovador': 'Innovador',
-                'calido': 'Cálido',
-                'directo': 'Directo',
-                'poetico': 'Poético',
-                'energico': 'Enérgico',
-                'tranquilo': 'Tranquilo'
-            };
-            tonoVozEl.textContent = tonoVozNames[this.brandData.tono_voz] || this.brandData.tono_voz || '-';
+        if (tonoVozInput && this.brandData) {
+            tonoVozInput.value = this.brandData.tono_voz || '';
         }
 
-        if (palabrasUsarEl) {
-            palabrasUsarEl.textContent = this.brandData.palabras_usar || '-';
+        if (palabrasUsarInput && this.brandData) {
+            palabrasUsarInput.value = this.brandData.palabras_usar || '';
         }
 
-        if (palabrasEvitarEl) {
-            palabrasEvitarEl.innerHTML = '';
-            if (this.brandData.palabras_evitar && Array.isArray(this.brandData.palabras_evitar) && this.brandData.palabras_evitar.length > 0) {
-                this.brandData.palabras_evitar.forEach(palabra => {
-                    const tag = document.createElement('span');
-                    tag.className = 'tag';
-                    tag.textContent = palabra;
-                    palabrasEvitarEl.appendChild(tag);
-                });
-            } else {
-                palabrasEvitarEl.innerHTML = '<span class="info-value">-</span>';
-            }
-        }
-
-        if (reglasCreativasEl) {
-            reglasCreativasEl.textContent = this.brandData.reglas_creativas || '-';
+        if (reglasCreativasInput && this.brandData) {
+            reglasCreativasInput.value = this.brandData.reglas_creativas || '';
         }
     }
 
     renderMarketsAndLanguages() {
-        if (!this.projectData) return;
-
-        const mercadosEl = document.getElementById('mercadosObjetivo');
-        const idiomasEl = document.getElementById('idiomasContenido');
-
-        if (mercadosEl) {
-            mercadosEl.innerHTML = '';
-            if (this.projectData.mercado_objetivo && Array.isArray(this.projectData.mercado_objetivo) && this.projectData.mercado_objetivo.length > 0) {
-                this.projectData.mercado_objetivo.forEach(mercado => {
-                    const tag = document.createElement('span');
-                    tag.className = 'tag';
-                    tag.textContent = mercado;
-                    mercadosEl.appendChild(tag);
-                });
-            } else {
-                mercadosEl.innerHTML = '<span class="info-value">-</span>';
-            }
-        }
-
-        if (idiomasEl) {
-            idiomasEl.innerHTML = '';
-            if (this.projectData.idiomas_contenido && Array.isArray(this.projectData.idiomas_contenido) && this.projectData.idiomas_contenido.length > 0) {
-                this.projectData.idiomas_contenido.forEach(idioma => {
-                    const tag = document.createElement('span');
-                    tag.className = 'tag';
-                    tag.textContent = idioma;
-                    idiomasEl.appendChild(tag);
-                });
-            } else {
-                idiomasEl.innerHTML = '<span class="info-value">-</span>';
-            }
-        }
+        // Esta función ahora se maneja en setupMultiselects
     }
 
     renderBrandFiles() {
