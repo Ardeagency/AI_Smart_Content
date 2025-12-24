@@ -758,17 +758,20 @@ class LivingManager {
             profilePlan.textContent = planNames[this.userData.plan_type] || this.userData.plan_type || 'Plan Básico';
         }
 
-        if (profileCredits && this.userData) {
-            const credits = this.userData.credits_available !== null && this.userData.credits_available !== undefined 
-                ? this.userData.credits_available 
-                : 0;
-            profileCredits.textContent = credits;
-            console.log('💰 Créditos mostrados:', credits, 'de userData.credits_available:', this.userData.credits_available);
+        if (profileCredits) {
+            if (this.userData) {
+                // Manejar correctamente valores null, undefined y 0
+                const credits = this.userData.credits_available !== null && this.userData.credits_available !== undefined 
+                    ? this.userData.credits_available 
+                    : 0;
+                profileCredits.textContent = credits.toString();
+                console.log('💰 Créditos mostrados:', credits, 'de userData.credits_available:', this.userData.credits_available, 'tipo:', typeof this.userData.credits_available);
+            } else {
+                profileCredits.textContent = '0';
+                console.warn('⚠️ userData no disponible para mostrar créditos');
+            }
         } else {
-            console.warn('⚠️ No se encontró profileCredits o userData:', {
-                profileCredits: !!profileCredits,
-                userData: !!this.userData
-            });
+            console.warn('⚠️ No se encontró elemento profileCredits en el DOM');
         }
     }
 
