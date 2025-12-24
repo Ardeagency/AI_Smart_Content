@@ -1694,39 +1694,80 @@
         
         // Función para actualizar la card de marca
         function updateBrandCard(projectData) {
+            console.log('🎨 updateBrandCard llamado con:', projectData);
+            
             const brandCardLogoImg = document.getElementById('brand-card-logo-img');
             const brandCardLogoPlaceholder = document.getElementById('brand-card-logo-placeholder');
             const brandCardName = document.getElementById('brand-card-name');
             const brandSelector = document.getElementById('brand-selector');
             
+            console.log('Elementos encontrados:', {
+                brandCardLogoImg: !!brandCardLogoImg,
+                brandCardLogoPlaceholder: !!brandCardLogoPlaceholder,
+                brandCardName: !!brandCardName,
+                brandSelector: !!brandSelector
+            });
+            
             if (!projectData) {
-                if (brandCardName) brandCardName.textContent = 'Seleccionar marca...';
+                console.log('⚠️ No hay projectData, mostrando placeholder');
+                if (brandCardName) {
+                    brandCardName.textContent = 'Seleccionar marca...';
+                    console.log('✅ brandCardName actualizado a placeholder');
+                }
                 if (brandCardLogoImg) brandCardLogoImg.style.display = 'none';
-                if (brandCardLogoPlaceholder) brandCardLogoPlaceholder.style.display = 'flex';
+                if (brandCardLogoPlaceholder) {
+                    brandCardLogoPlaceholder.style.display = 'flex';
+                    brandCardLogoPlaceholder.textContent = '';
+                }
                 if (brandSelector) brandSelector.value = '';
                 return;
             }
             
+            console.log('📝 Actualizando card con datos:', {
+                id: projectData.id,
+                nombre_marca: projectData.nombre_marca,
+                logo_url: projectData.logo_url
+            });
+            
             // Actualizar nombre
             if (brandCardName) {
-                brandCardName.textContent = projectData.nombre_marca || 'Sin nombre';
+                const nombreMarca = projectData.nombre_marca || 'Sin nombre';
+                brandCardName.textContent = nombreMarca;
+                console.log('✅ brandCardName actualizado a:', nombreMarca);
+            } else {
+                console.error('❌ brandCardName no encontrado');
             }
             
             // Actualizar logo
             if (projectData.logo_url) {
+                console.log('🖼️ Cargando logo desde:', projectData.logo_url);
                 if (brandCardLogoImg) {
                     brandCardLogoImg.src = projectData.logo_url + '?t=' + Date.now();
                     brandCardLogoImg.alt = projectData.nombre_marca || 'Logo';
                     brandCardLogoImg.style.display = 'block';
                     brandCardLogoImg.onerror = () => {
+                        console.error('❌ Error cargando logo');
                         if (brandCardLogoImg) brandCardLogoImg.style.display = 'none';
-                        if (brandCardLogoPlaceholder) brandCardLogoPlaceholder.style.display = 'flex';
+                        if (brandCardLogoPlaceholder) {
+                            brandCardLogoPlaceholder.style.display = 'flex';
+                            const initials = (projectData.nombre_marca || 'SN')
+                                .split(' ')
+                                .map(word => word.charAt(0))
+                                .join('')
+                                .toUpperCase()
+                                .substring(0, 2);
+                            brandCardLogoPlaceholder.textContent = initials;
+                        }
+                    };
+                    brandCardLogoImg.onload = () => {
+                        console.log('✅ Logo cargado exitosamente');
                     };
                 }
                 if (brandCardLogoPlaceholder) {
                     brandCardLogoPlaceholder.style.display = 'none';
                 }
             } else {
+                console.log('ℹ️ No hay logo_url, mostrando iniciales');
                 // Mostrar iniciales si no hay logo
                 if (brandCardLogoPlaceholder) {
                     const initials = (projectData.nombre_marca || 'SN')
@@ -1737,6 +1778,7 @@
                         .substring(0, 2);
                     brandCardLogoPlaceholder.textContent = initials;
                     brandCardLogoPlaceholder.style.display = 'flex';
+                    console.log('✅ Iniciales mostradas:', initials);
                 }
                 if (brandCardLogoImg) {
                     brandCardLogoImg.style.display = 'none';
@@ -1746,7 +1788,10 @@
             // Actualizar selector oculto
             if (brandSelector && projectData.id) {
                 brandSelector.value = projectData.id;
+                console.log('✅ brand-selector actualizado con ID:', projectData.id);
             }
+            
+            console.log('✅ updateBrandCard completado');
         }
         
         // Función para abrir selector de marca (si se necesita cambiar)

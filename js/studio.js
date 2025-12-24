@@ -92,15 +92,28 @@ class StudioManager {
                 // Cargar proyecto
                 const { data: projectData, error: projectError } = await this.supabase
                     .from('projects')
-                    .select('*')
+                    .select('id, user_id, nombre_marca, logo_url, sitio_web, instagram_url, tiktok_url, facebook_url, idiomas_contenido, mercado_objetivo, created_at, updated_at')
                     .eq('user_id', this.userId)
                     .order('created_at', { ascending: false })
                     .limit(1)
                     .maybeSingle();
 
-                if (!projectError && projectData) {
+                console.log('📦 Cargando proyecto para user_id:', this.userId);
+                console.log('📦 Resultado de query:', { projectData, projectError });
+                
+                if (projectError) {
+                    console.error('❌ Error cargando proyecto:', projectError);
+                } else if (projectData) {
+                    console.log('✅ Proyecto cargado:', {
+                        id: projectData.id,
+                        nombre_marca: projectData.nombre_marca,
+                        logo_url: projectData.logo_url,
+                        hasLogo: !!projectData.logo_url
+                    });
                     this.projectData = projectData;
                     this.currentProjectId = projectData.id;
+                } else {
+                    console.warn('⚠️ No se encontró proyecto para el usuario');
                 }
             }
         } catch (error) {
