@@ -105,99 +105,104 @@
 
             <!-- Grid Principal -->
             <div class="living-grid">
-                <!-- Card de Perfil de Usuario -->
-                <div class="living-card profile-card">
-                    <div class="profile-image-container">
-                        <img id="profileBrandLogo" src="" alt="Logo de marca" style="display: none;">
-                        <div class="profile-placeholder" id="profilePlaceholder">
-                            <i class="fas fa-image"></i>
+                <!-- Columna Izquierda: Card de Perfil -->
+                <div class="living-column-left">
+                    <!-- Card de Perfil de Usuario -->
+                    <div class="living-card profile-card">
+                        <div class="profile-image-container">
+                            <img id="profileBrandLogo" src="" alt="Logo de marca" style="display: none;">
+                            <div class="profile-placeholder" id="profilePlaceholder">
+                                <i class="fas fa-image"></i>
+                            </div>
                         </div>
-                    </div>
-                    <h2 class="profile-name" id="profileUserName">Cargando...</h2>
-                    <div class="profile-social-links" id="profileSocialLinks">
-                        <!-- Web, Instagram, Facebook se insertarán aquí -->
-                    </div>
-                    <div class="profile-details">
-                        <div class="profile-detail-item">
-                            <i class="fas fa-envelope"></i>
-                            <span id="profileEmail">-</span>
+                        <h2 class="profile-name" id="profileUserName">Cargando...</h2>
+                        <div class="profile-social-links" id="profileSocialLinks">
+                            <!-- Web, Instagram, Facebook se insertarán aquí -->
                         </div>
-                        <div class="profile-detail-item">
-                            <i class="fas fa-crown"></i>
-                            <span id="profilePlan">-</span>
-                        </div>
-                        <div class="profile-detail-item">
-                            <i class="fas fa-coins"></i>
-                            <span id="profileCredits">0</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Lineamientos de Marca -->
-                <div class="living-card">
-                    <div class="card-header">
-                        <h2>Lineamientos de Marca</h2>
-                        <button class="btn-edit" onclick="livingManager.openEditGuidelinesModal()">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                    </div>
-                    <div class="card-content">
-                        <div class="info-item">
-                            <span class="info-label">Tono de Voz:</span>
-                            <span class="info-value" id="tonoVoz">-</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Palabras a Usar:</span>
-                            <span class="info-value" id="palabrasUsar">-</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Palabras a Evitar:</span>
-                            <div class="tags-container" id="palabrasEvitar"></div>
-                        </div>
-                        <div class="info-item full-width">
-                            <span class="info-label">Reglas Creativas:</span>
-                            <p class="info-value" id="reglasCreativas">-</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Mercado e Idiomas -->
-                <div class="living-card">
-                    <div class="card-header">
-                        <h2>Mercado e Idiomas</h2>
-                        <button class="btn-edit" onclick="livingManager.openEditMarketsModal()">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                    </div>
-                    <div class="card-content">
-                        <div class="info-item">
-                            <span class="info-label">Mercados Objetivo:</span>
-                            <div class="tags-container" id="mercadosObjetivo"></div>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Idiomas:</span>
-                            <div class="tags-container" id="idiomasContenido"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Archivos de Identidad -->
-                <div class="living-card">
-                    <div class="card-header">
-                        <h2>Archivos de Identidad</h2>
-                        <button class="btn-edit" onclick="livingManager.openEditFilesModal()">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                    </div>
-                    <div class="card-content">
-                        <div class="files-list" id="brandFilesList">
-                            <div class="empty-state">
-                                <i class="fas fa-inbox"></i>
-                                <p>No hay archivos adjuntados</p>
+                        <div class="profile-details">
+                            <div class="profile-detail-item">
+                                <i class="fas fa-envelope"></i>
+                                <span id="profileEmail">-</span>
+                            </div>
+                            <div class="profile-detail-item">
+                                <i class="fas fa-crown"></i>
+                                <span id="profilePlan">-</span>
+                            </div>
+                            <div class="profile-detail-item">
+                                <i class="fas fa-coins"></i>
+                                <span id="profileCredits">0</span>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Columna Derecha: Cards de Información -->
+                <div class="living-column-right">
+                    <!-- Mercado e Idiomas -->
+                    <div class="living-card">
+                        <div class="card-header">
+                            <h2>Mercado e Idiomas</h2>
+                            <button class="btn-edit" onclick="livingManager.openEditMarketsModal()">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
+                        <div class="card-content">
+                            <div class="info-item">
+                                <span class="info-label">Mercados Objetivo:</span>
+                                <div class="tags-container" id="mercadosObjetivo"></div>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Idiomas:</span>
+                                <div class="tags-container" id="idiomasContenido"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lineamientos de Marca -->
+                    <div class="living-card">
+                        <div class="card-header">
+                            <h2>Lineamientos de Marca</h2>
+                            <button class="btn-edit" onclick="livingManager.openEditGuidelinesModal()">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
+                        <div class="card-content">
+                            <div class="info-item">
+                                <span class="info-label">Tono de Voz:</span>
+                                <span class="info-value" id="tonoVoz">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Palabras a Usar:</span>
+                                <span class="info-value" id="palabrasUsar">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Palabras a Evitar:</span>
+                                <div class="tags-container" id="palabrasEvitar"></div>
+                            </div>
+                            <div class="info-item full-width">
+                                <span class="info-label">Reglas Creativas:</span>
+                                <p class="info-value" id="reglasCreativas">-</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Archivos de Marca -->
+                    <div class="living-card brand-files-card">
+                        <div class="card-header">
+                            <h2>Archivos de Marca</h2>
+                            <button class="btn-edit" onclick="livingManager.openEditFilesModal()">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
+                        <div class="card-content">
+                            <div class="files-list" id="brandFilesList">
+                                <div class="empty-state">
+                                    <i class="fas fa-inbox"></i>
+                                    <p>No hay archivos adjuntados</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                 <!-- Productos -->
                 <div class="living-card">

@@ -99,19 +99,28 @@
 /* Grid Principal */
 .living-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 1fr 1fr;
     gap: 2rem;
 }
 
-@media (max-width: 1200px) {
-    .living-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+.living-column-left {
+    display: flex;
+    flex-direction: column;
 }
 
-@media (max-width: 768px) {
+.living-column-right {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+@media (max-width: 1024px) {
     .living-grid {
         grid-template-columns: 1fr;
+    }
+    
+    .living-column-right {
+        gap: 2rem;
     }
 }
 
@@ -121,6 +130,20 @@
     border: 1px solid var(--border-color);
     border-radius: 16px;
     padding: 1.5rem;
+}
+
+/* Card de Archivos de Marca - Altura reducida */
+.brand-files-card {
+    min-height: auto;
+    max-height: 400px;
+    display: flex;
+    flex-direction: column;
+}
+
+.brand-files-card .card-content {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
 }
 
 /* Card de Perfil */
