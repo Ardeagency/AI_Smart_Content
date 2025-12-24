@@ -1716,7 +1716,11 @@
             
             // Esperar a que todos los managers estén listos
             const checkManagers = setInterval(() => {
-                if (window.studioManager && window.canvasManager && window.supabaseClient && window.supabaseClient.isReady()) {
+                const supabaseReady = (window.appLoader && window.appLoader.isReady()) || 
+                                     (window.supabaseClient && typeof window.supabaseClient.from === 'function') ||
+                                     (window.getSupabaseClient && window.getSupabaseClient());
+                
+                if (window.studioManager && window.canvasManager && supabaseReady) {
                     clearInterval(checkManagers);
                     
                     console.log('✅ Todos los managers están listos');
