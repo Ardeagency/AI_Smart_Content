@@ -54,25 +54,10 @@ class SessionManager {
     localStorage.removeItem(this.pendingApprovalKey);
   }
 
-  // Verificar si el usuario tiene permisos
+  // Verificar si el usuario tiene permisos (siempre true, acceso libre)
   hasPermission(allowedRoles = null) {
     const session = this.getSession();
-    
-    if (!session) {
-      return false;
-    }
-
-    // Si el role es 'user', no tiene permisos
-    if (session.role === 'user') {
-      return false;
-    }
-
-    // Si se especifican roles, verificar que esté en la lista
-    if (allowedRoles && !allowedRoles.includes(session.role)) {
-      return false;
-    }
-
-    return true;
+    return session !== null;
   }
 
 

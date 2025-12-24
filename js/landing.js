@@ -178,19 +178,11 @@
 
         // Cerrar notificaciones
         const closeEmailNotification = document.getElementById('closeEmailNotification');
-        const closeUserNotification = document.getElementById('closeUserNotification');
         const emailNotVerifiedNotification = document.getElementById('emailNotVerifiedNotification');
-        const userNotApprovedNotification = document.getElementById('userNotApprovedNotification');
 
         if (closeEmailNotification && emailNotVerifiedNotification) {
             closeEmailNotification.addEventListener('click', function() {
                 emailNotVerifiedNotification.classList.remove('active');
-            });
-        }
-
-        if (closeUserNotification && userNotApprovedNotification) {
-            closeUserNotification.addEventListener('click', function() {
-                userNotApprovedNotification.classList.remove('active');
             });
         }
 
