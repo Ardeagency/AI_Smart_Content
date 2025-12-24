@@ -957,7 +957,15 @@ class LivingManager {
                 ? `${product.moneda || 'USD'} $${parseFloat(product.precio_producto).toFixed(2)}`
                 : 'Precio no definido';
 
-            const beneficios = product.beneficios || product.beneficios_producto || 'Sin beneficios especificados';
+            // Combinar beneficios (beneficio_1, beneficio_2, beneficio_3)
+            const beneficiosArray = [];
+            if (product.beneficio_1) beneficiosArray.push(product.beneficio_1);
+            if (product.beneficio_2) beneficiosArray.push(product.beneficio_2);
+            if (product.beneficio_3) beneficiosArray.push(product.beneficio_3);
+            const beneficios = beneficiosArray.length > 0 
+                ? beneficiosArray.join(' • ') 
+                : 'Sin beneficios especificados';
+
             const descripcion = product.descripcion_producto || 'Sin descripción';
             const productId = product.id || product.product_id;
 
