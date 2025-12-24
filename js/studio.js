@@ -588,43 +588,6 @@ class StudioManager {
         if (brandKeywordsNo) brandKeywordsNo.innerHTML = '<span class="empty">No configurado</span>';
         if (brandDosDonts) brandDosDonts.innerHTML = '<span class="empty">No configurado</span>';
     }
-                <span class="info-label">Website:</span>
-                <span class="info-value">
-                    ${brandData.projects?.website ? `<a href="${brandData.projects.website}" target="_blank" class="url-link">${brandData.projects.website}</a>` : 'No disponible'}
-                </span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">País:</span>
-                <span class="info-value">${brandData.projects?.country || 'No disponible'}</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Tono de Voz:</span>
-                <span class="info-value">${brandData.tone_of_voice || 'No disponible'}</span>
-            </div>
-            ${brandData.keywords_yes && brandData.keywords_yes.length > 0 ? `
-            <div class="info-item">
-                <span class="info-label">Keywords Positivos:</span>
-                <span class="info-value array">
-                    ${brandData.keywords_yes.map(keyword => `<span class="tag">${keyword}</span>`).join('')}
-                </span>
-            </div>
-            ` : ''}
-            ${brandData.keywords_no && brandData.keywords_no.length > 0 ? `
-            <div class="info-item">
-                <span class="info-label">Keywords Negativos:</span>
-                <span class="info-value array">
-                    ${brandData.keywords_no.map(keyword => `<span class="tag">${keyword}</span>`).join('')}
-                </span>
-            </div>
-            ` : ''}
-            <div class="info-item">
-                <span class="info-label">Do's y Don'ts:</span>
-                <span class="info-value long-text">${brandData.dos_donts || 'No disponible'}</span>
-            </div>
-        `;
-        
-        console.log('Información de marca actualizada correctamente');
-    }
 
     // Función para actualizar la información de producto en el acordeón
     updateProductInfo(productData) {
