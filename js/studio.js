@@ -575,6 +575,15 @@ class StudioManager {
         }
         
         console.log('✅ Información de marca actualizada');
+        
+        // Ocultar indicador de carga si existe
+        const brandInfoContainer = document.getElementById('brand-info');
+        if (brandInfoContainer) {
+            const loadingIndicator = brandInfoContainer.querySelector('.loading-indicator');
+            if (loadingIndicator) {
+                loadingIndicator.remove();
+            }
+        }
     }
     
     clearBrandInfo() {
@@ -913,42 +922,27 @@ class StudioManager {
         // Limpiar contenedor
         container.innerHTML = '';
 
-            // Renderizar cada imagen como galería simple
-        this.productImages.forEach((image, index) => {
-                try {
-                    // Manejar estructura de Supabase (files) - corregir construcción de URL
-                    let imageUrl = '';
-                    if (image.image_url) {
-                        imageUrl = image.image_url;
-                    } else if (image.path) {
-                        // URL de imagen local o externa
-                        imageUrl = image.path.startsWith('http') ? image.path : `/${image.path}`;
-                    } else if (image.url) {
-                        imageUrl = image.url;
-                    }
-                    
-                    const imageName = image.image_name || image.description || image.name || `Imagen ${index + 1}`;
-                    
-                    // Verificar que la URL sea válida antes de crear el elemento
-                    if (!imageUrl) {
-                        console.warn('Imagen sin URL válida:', image);
-            return;
-        }
-
-                    // Crear elemento de imagen simple
-                    const imageItem = document.createElement('div');
-                    imageItem.className = 'product-image-item';
-                    imageItem.innerHTML = `
-                    <img src="${imageUrl}" alt="${imageName}" loading="lazy" 
-                         onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjMzMzIi8+Cjx0ZXh0IHg9IjUwIiB5PSI1NSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5JbWFnZW48L3RleHQ+Cjwvc3ZnPg=='">
-                        <div class="image-label">${imageName}</div>
-                    `;
-                    
-                    container.appendChild(imageItem);
-                } catch (imageError) {
-                    console.error('Error renderizando imagen individual:', imageError, image);
+            // Renderizar imágenes desde product_images (usar image_url según schema.sql)
+            const imagesHTML = this.productImages.map((image, index) => {
+                const imageUrl = image.image_url || '';
+                if (!imageUrl) {
+                    console.warn('⚠️ Imagen sin image_url:', image);
+                    return '';
                 }
-        });
+                
+                return `
+                    <div class="image-item" data-image-id="${image.id}">
+                        <img src="${imageUrl}?t=${Date.now()}" alt="Imagen ${index + 1}" loading="lazy" 
+                             onerror="this.parentElement.style.display='none'; console.error('Error cargando imagen:', '${imageUrl}')">
+                    </div>
+                `;
+            }).filter(html => html).join('');
+
+            container.innerHTML = imagesHTML || `
+                <div class="loading-placeholder">
+                    <span>No hay imágenes disponibles</span>
+                </div>
+            `;
 
         console.log(`✅ ${this.productImages.length} imágenes renderizadas correctamente`);
         } catch (error) {
