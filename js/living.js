@@ -305,36 +305,11 @@ class LivingManager {
             profileName.textContent = this.userData.full_name || this.userData.email || 'Usuario';
         }
 
-        // Enlaces de web, instagram y facebook
+        // Enlaces de instagram, facebook y tiktok
         const socialLinksContainer = document.getElementById('profileSocialLinks');
         if (socialLinksContainer && this.projectData) {
             socialLinksContainer.innerHTML = '';
             
-            // Web
-            const webLink = document.createElement('a');
-            if (this.projectData.sitio_web) {
-                webLink.href = this.projectData.sitio_web;
-                webLink.target = '_blank';
-                webLink.rel = 'noopener noreferrer';
-                webLink.className = 'profile-social-link';
-                webLink.innerHTML = `
-                    <i class="fas fa-globe"></i>
-                    <span class="social-url">${this.projectData.sitio_web}</span>
-                `;
-            } else {
-                webLink.className = 'profile-social-link empty';
-                webLink.onclick = (e) => {
-                    e.preventDefault();
-                    livingManager.openEditBrandModal();
-                };
-                webLink.innerHTML = `
-                    <i class="fas fa-globe"></i>
-                    <span class="social-url">Agregar sitio web</span>
-                    <i class="fas fa-plus edit-icon"></i>
-                `;
-            }
-            socialLinksContainer.appendChild(webLink);
-
             // Instagram
             const instagramLink = document.createElement('a');
             if (this.projectData.instagram_url) {
@@ -363,8 +338,58 @@ class LivingManager {
             }
             socialLinksContainer.appendChild(instagramLink);
 
-            // Facebook (si existe en el futuro)
-            // Por ahora no está en el schema, pero se puede agregar después
+            // Facebook
+            const facebookLink = document.createElement('a');
+            if (this.projectData.facebook_url) {
+                facebookLink.href = this.projectData.facebook_url;
+                facebookLink.target = '_blank';
+                facebookLink.rel = 'noopener noreferrer';
+                facebookLink.className = 'profile-social-link';
+                facebookLink.innerHTML = `
+                    <i class="fab fa-facebook"></i>
+                    <span class="social-url">${this.projectData.facebook_url}</span>
+                `;
+            } else {
+                facebookLink.className = 'profile-social-link empty';
+                facebookLink.onclick = (e) => {
+                    e.preventDefault();
+                    livingManager.openEditBrandModal();
+                };
+                facebookLink.innerHTML = `
+                    <i class="fab fa-facebook"></i>
+                    <span class="social-url">Agregar Facebook</span>
+                    <i class="fas fa-plus edit-icon"></i>
+                `;
+            }
+            socialLinksContainer.appendChild(facebookLink);
+
+            // TikTok
+            const tiktokLink = document.createElement('a');
+            if (this.projectData.tiktok_url) {
+                const tiktokUrl = this.projectData.tiktok_url.startsWith('http') 
+                    ? this.projectData.tiktok_url 
+                    : `https://tiktok.com/@${this.projectData.tiktok_url.replace('@', '')}`;
+                tiktokLink.href = tiktokUrl;
+                tiktokLink.target = '_blank';
+                tiktokLink.rel = 'noopener noreferrer';
+                tiktokLink.className = 'profile-social-link';
+                tiktokLink.innerHTML = `
+                    <i class="fab fa-tiktok"></i>
+                    <span class="social-url">${this.projectData.tiktok_url}</span>
+                `;
+            } else {
+                tiktokLink.className = 'profile-social-link empty';
+                tiktokLink.onclick = (e) => {
+                    e.preventDefault();
+                    livingManager.openEditBrandModal();
+                };
+                tiktokLink.innerHTML = `
+                    <i class="fab fa-tiktok"></i>
+                    <span class="social-url">Agregar TikTok</span>
+                    <i class="fas fa-plus edit-icon"></i>
+                `;
+            }
+            socialLinksContainer.appendChild(tiktokLink);
         }
 
         // Detalles: correo, plan, créditos
