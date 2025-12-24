@@ -750,6 +750,12 @@
 /* Products Section - Horizontal Carousel Layout */
 .products-section-card {
     width: 100%;
+    overflow: visible;
+}
+
+.products-section-card .card-content {
+    overflow: visible;
+    padding-top: 0.5rem;
 }
 
 .products-list-horizontal {
@@ -757,7 +763,9 @@
     flex-direction: row;
     gap: 1.5rem;
     overflow-x: auto;
+    overflow-y: visible;
     padding-bottom: 0.5rem;
+    padding-top: 0.5rem;
     scrollbar-width: thin;
     scrollbar-color: var(--primary-color) var(--bg-secondary);
 }
@@ -791,12 +799,15 @@
     padding: 1.25rem;
     transition: all 0.3s ease;
     gap: 1.25rem;
+    position: relative;
+    z-index: 1;
 }
 
 .product-card-horizontal:hover {
     border-color: var(--primary-color);
     transform: translateY(-4px);
     box-shadow: 0 8px 24px rgba(236, 235, 218, 0.15);
+    z-index: 10;
 }
 
 .product-card-image-horizontal {
