@@ -627,12 +627,24 @@
         function initializeDataDisplay() {
             console.log('=== INICIALIZANDO DATOS ===');
             
-            // Verificar si hay una marca seleccionada
-            const brandSelector = document.getElementById('brand-selector');
-            console.log('Selector de marca:', brandSelector?.value);
-            if (brandSelector && brandSelector.value) {
-                console.log('Marca pre-seleccionada encontrada:', brandSelector.value);
-                onBrandSelected(brandSelector.value);
+            // Inicializar marca por defecto desde projectData del usuario
+            if (window.studioManager && window.studioManager.projectData && window.studioManager.projectData.id) {
+                const projectId = window.studioManager.projectData.id;
+                const brandSelector = document.getElementById('brand-selector');
+                if (brandSelector) {
+                    brandSelector.value = projectId;
+                }
+                updateBrandCard(window.studioManager.projectData);
+                console.log('Marca del usuario seleccionada automáticamente:', projectId);
+                onBrandSelected(projectId);
+            } else {
+                // Verificar si hay una marca seleccionada manualmente
+                const brandSelector = document.getElementById('brand-selector');
+                console.log('Selector de marca:', brandSelector?.value);
+                if (brandSelector && brandSelector.value) {
+                    console.log('Marca pre-seleccionada encontrada:', brandSelector.value);
+                    onBrandSelected(brandSelector.value);
+                }
             }
             
             // Verificar si hay un producto seleccionado
