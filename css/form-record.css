@@ -153,7 +153,7 @@
 .form-select {
     width: 100%;
     padding: 0.75rem 1rem;
-    background: #2a2a2a;
+    background: #181a1b;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
     color: var(--text-primary);
@@ -168,7 +168,7 @@
 .form-select:focus {
     outline: none;
     border-color: var(--primary-color);
-    background: #2f2f2f;
+    background: #181a1b;
     box-shadow: 0 0 0 3px rgba(210, 254, 63, 0.1);
 }
 
@@ -199,7 +199,7 @@
     width: 100%;
     padding: 0.75rem 1rem;
     padding-right: 40px;
-    background: #2a2a2a;
+    background: #181a1b;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
     color: var(--text-primary);
@@ -215,14 +215,14 @@
 
 .multiselect-trigger:hover {
     border-color: rgba(255, 255, 255, 0.15);
-    background: #2f2f2f;
+    background: #181a1b;
 }
 
 .multiselect-trigger:focus,
 .multiselect-trigger.open {
     outline: none;
     border-color: var(--primary-color);
-    background: #2f2f2f;
+    background: #181a1b;
     box-shadow: 0 0 0 3px rgba(210, 254, 63, 0.1);
 }
 
@@ -368,7 +368,7 @@
     text-align: center;
     cursor: pointer;
     transition: all 0.3s ease;
-    background: #2a2a2a;
+    background: #181a1b;
     min-height: auto;
 }
 

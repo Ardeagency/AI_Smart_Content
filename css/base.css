@@ -15,7 +15,7 @@
     
     /* Paleta 1 - Tonos Oscuros y Acentos */
     --palette1-dark: #17181D;
-    --palette1-gray: #292C35;
+    --palette1-gray: #181a1b;
     --palette1-accent: #E09145;
     --palette1-light: #FCD9B8;
     
@@ -29,7 +29,7 @@
     /* Fondos */
     --bg-black: #000000;
     --bg-dark: #17181D;
-    --bg-secondary: #292C35;
+    --bg-secondary: #181a1b;
     --bg-tertiary: #291C0E;
     --bg-card: #1a1a1a;
     --bg-overlay: rgba(23, 24, 29, 0.9);
@@ -41,7 +41,7 @@
     --text-disabled: #6E473B;
     
     /* Bordes */
-    --border-color: #292C35;
+    --border-color: #181a1b;
     --border-light: rgba(236, 235, 218, 0.1);
     --border-primary: rgba(236, 235, 218, 0.3);
     --border-accent: rgba(224, 145, 69, 0.3);
