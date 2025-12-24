@@ -398,20 +398,85 @@ class StudioManager {
 
     // Función para manejar la selección de marca desde el dropdown
     async selectBrandFromDropdown(brandId) {
-        console.log('Marca seleccionada:', brandId);
+        console.log('=== MARCA SELECCIONADA ===');
+        console.log('ID de marca:', brandId);
         
-        // Actualizar productos basado en la marca seleccionada
-        this.updateProductSelector(brandId);
+        if (!brandId || !this.supabase) {
+            console.error('❌ No hay brandId o supabase disponible');
+            return;
+        }
         
-        // Limpiar selección de producto cuando cambia la marca
-        this.clearProductSelection();
-        
-        // Si hay marca seleccionada, cargar y mostrar su información
-        if (brandId) {
-            const brand = this.brands.find(b => b.id === brandId);
-            if (brand) {
-                this.updateBrandInfo(brand);
+        try {
+            // 1. Cargar información básica de la marca (brands table)
+            console.log('📋 Cargando información básica de la marca...');
+            const { data: brandData, error: brandError } = await this.supabase
+                .from('brands')
+                .select('*')
+                .eq('project_id', brandId)
+                .maybeSingle();
+            
+            if (brandError) {
+                console.error('❌ Error cargando información de marca:', brandError);
+            } else if (brandData) {
+                console.log('✅ Información de marca cargada:', brandData);
+                this.updateBrandInfo(brandData);
+            } else {
+                console.log('ℹ️ No hay información de marca configurada');
+                this.clearBrandInfo();
             }
+            
+            // 2. Cargar productos de la marca
+            console.log('📦 Cargando productos de la marca...');
+            const { data: products, error: productsError } = await this.supabase
+                .from('products')
+                .select('*')
+                .eq('project_id', brandId)
+                .order('created_at', { ascending: false });
+            
+            if (productsError) {
+                console.error('❌ Error cargando productos:', productsError);
+                this.products = [];
+            } else {
+                console.log(`✅ ${products?.length || 0} producto(s) encontrado(s)`);
+                this.products = products || [];
+                
+                // Poblar selector de productos
+                if (typeof populateProductSelector === 'function') {
+                    populateProductSelector(this.products);
+                } else {
+                    this.updateProductSelector(brandId);
+                }
+            }
+            
+            // 3. Cargar ofertas/campañas de la marca
+            console.log('🎁 Cargando ofertas de la marca...');
+            const { data: campaigns, error: campaignsError } = await this.supabase
+                .from('campaigns')
+                .select('*')
+                .eq('project_id', brandId)
+                .order('created_at', { ascending: false });
+            
+            if (campaignsError) {
+                console.error('❌ Error cargando ofertas:', campaignsError);
+                this.offers = [];
+            } else {
+                console.log(`✅ ${campaigns?.length || 0} oferta(s) encontrada(s)`);
+                this.offers = campaigns || [];
+                
+                // Poblar selector de ofertas
+                if (typeof populateOfferSelector === 'function') {
+                    populateOfferSelector(this.offers);
+                } else {
+                    this.updateOfferSelector(brandId);
+                }
+            }
+            
+            // Limpiar selección de producto cuando cambia la marca
+            this.clearProductSelection();
+            
+            console.log('✅ Datos de marca cargados completamente');
+        } catch (error) {
+            console.error('❌ Error en selectBrandFromDropdown:', error);
         }
     }
 
@@ -457,21 +522,65 @@ class StudioManager {
 
     // Función para actualizar la información de marca en el acordeón
     updateBrandInfo(brandData) {
-        console.log('Actualizando información de marca:', brandData);
+        console.log('📝 Actualizando información de marca:', brandData);
         
-        const brandInfoContainer = document.getElementById('brand-info');
-        if (!brandInfoContainer) {
-            console.error('No se encontró el contenedor brand-info');
-            return;
+        const brandTone = document.getElementById('brand-tone');
+        const brandKeywordsYes = document.getElementById('brand-keywords-yes');
+        const brandKeywordsNo = document.getElementById('brand-keywords-no');
+        const brandDosDonts = document.getElementById('brand-dos-donts');
+        
+        // Actualizar Tono de Voz
+        if (brandTone) {
+            const tonoVoz = brandData.tono_voz || 'No configurado';
+            brandTone.textContent = typeof tonoVoz === 'string' ? tonoVoz : (tonoVoz?.value || 'No configurado');
         }
         
-        // Actualizar el contenido del contenedor
-        brandInfoContainer.innerHTML = `
-            <div class="info-item">
-                <span class="info-label">Nombre:</span>
-                <span class="info-value">${brandData.projects?.name || 'No disponible'}</span>
-            </div>
-            <div class="info-item">
+        // Actualizar Palabras Clave (Sí)
+        if (brandKeywordsYes) {
+            const palabrasUsar = brandData.palabras_usar || '';
+            if (palabrasUsar) {
+                brandKeywordsYes.textContent = palabrasUsar;
+            } else {
+                brandKeywordsYes.innerHTML = '<span class="empty">No configurado</span>';
+            }
+        }
+        
+        // Actualizar Palabras Clave (No)
+        if (brandKeywordsNo) {
+            const palabrasEvitar = brandData.palabras_evitar || [];
+            if (Array.isArray(palabrasEvitar) && palabrasEvitar.length > 0) {
+                brandKeywordsNo.textContent = palabrasEvitar.join(', ');
+            } else if (typeof palabrasEvitar === 'string' && palabrasEvitar) {
+                brandKeywordsNo.textContent = palabrasEvitar;
+            } else {
+                brandKeywordsNo.innerHTML = '<span class="empty">No configurado</span>';
+            }
+        }
+        
+        // Actualizar Dos y Don'ts
+        if (brandDosDonts) {
+            const reglasCreativas = brandData.reglas_creativas || '';
+            if (reglasCreativas) {
+                brandDosDonts.textContent = reglasCreativas;
+            } else {
+                brandDosDonts.innerHTML = '<span class="empty">No configurado</span>';
+            }
+        }
+        
+        console.log('✅ Información de marca actualizada');
+    }
+    
+    clearBrandInfo() {
+        const brandTone = document.getElementById('brand-tone');
+        const brandKeywordsYes = document.getElementById('brand-keywords-yes');
+        const brandKeywordsNo = document.getElementById('brand-keywords-no');
+        const brandDosDonts = document.getElementById('brand-dos-donts');
+        
+        if (brandTone) brandTone.textContent = 'No seleccionado';
+        if (brandKeywordsYes) brandKeywordsYes.innerHTML = '<span class="empty">No configurado</span>';
+        if (brandKeywordsNo) brandKeywordsNo.innerHTML = '<span class="empty">No configurado</span>';
+        if (brandDosDonts) brandDosDonts.innerHTML = '<span class="empty">No configurado</span>';
+    }
                 <span class="info-label">Website:</span>
                 <span class="info-value">
                     ${brandData.projects?.website ? `<a href="${brandData.projects.website}" target="_blank" class="url-link">${brandData.projects.website}</a>` : 'No disponible'}
