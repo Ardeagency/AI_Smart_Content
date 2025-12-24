@@ -136,6 +136,25 @@ class LivingManager {
         if (!this.supabase || !this.userId) return;
 
         try {
+            // Primero intentar cargar desde user_profiles
+            const { data: profileData, error: profileError } = await this.supabase
+                .from('user_profiles')
+                .select('*')
+                .eq('id', this.userId)
+                .single();
+
+            if (!profileError && profileData) {
+                // Obtener email del usuario autenticado
+                const { data: { user } } = await this.supabase.auth.getUser();
+                if (user) {
+                    profileData.email = user.email;
+                }
+                this.userData = profileData;
+                console.log('✅ Datos de usuario cargados desde user_profiles:', profileData);
+                return;
+            }
+
+            // Si no hay user_profiles, intentar desde users
             const { data, error } = await this.supabase
                 .from('users')
                 .select('*')
@@ -143,9 +162,34 @@ class LivingManager {
                 .single();
 
             if (error) throw error;
+            
+            // Obtener email del usuario autenticado si no está en la tabla
+            if (!data.email) {
+                const { data: { user } } = await this.supabase.auth.getUser();
+                if (user) {
+                    data.email = user.email;
+                }
+            }
+            
             this.userData = data;
+            console.log('✅ Datos de usuario cargados desde users:', data);
         } catch (error) {
-            console.error('Error loading user data:', error);
+            console.error('❌ Error loading user data:', error);
+            // Si falla, al menos obtener el email del usuario autenticado
+            try {
+                const { data: { user } } = await this.supabase.auth.getUser();
+                if (user) {
+                    this.userData = {
+                        id: user.id,
+                        email: user.email,
+                        plan_type: 'basico',
+                        credits_available: 0
+                    };
+                    console.log('✅ Usando datos básicos del usuario autenticado');
+                }
+            } catch (authError) {
+                console.error('❌ Error obteniendo usuario autenticado:', authError);
+            }
         }
     }
 
