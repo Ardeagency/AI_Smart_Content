@@ -267,6 +267,7 @@ class LivingManager {
     }
 
     renderAll() {
+        this.renderProfileCard();
         this.renderUserInfo();
         this.renderBrandInfo();
         this.renderBrandGuidelines();
@@ -274,6 +275,90 @@ class LivingManager {
         this.renderBrandFiles();
         this.renderProducts();
         this.renderCampaigns();
+    }
+
+    renderProfileCard() {
+        // Logo de marca como foto de perfil
+        const profileLogo = document.getElementById('profileBrandLogo');
+        const profilePlaceholder = document.getElementById('profilePlaceholder');
+        
+        if (this.projectData && this.projectData.logo_url) {
+            if (profileLogo) {
+                profileLogo.src = this.projectData.logo_url + '?t=' + Date.now();
+                profileLogo.style.display = 'block';
+            }
+            if (profilePlaceholder) {
+                profilePlaceholder.style.display = 'none';
+            }
+        } else {
+            if (profileLogo) {
+                profileLogo.style.display = 'none';
+            }
+            if (profilePlaceholder) {
+                profilePlaceholder.style.display = 'flex';
+            }
+        }
+
+        // Nombre del usuario (no nombre de marca)
+        const profileName = document.getElementById('profileUserName');
+        if (profileName && this.userData) {
+            profileName.textContent = this.userData.full_name || this.userData.email || 'Usuario';
+        }
+
+        // Botones de web, instagram y facebook
+        const socialLinksContainer = document.getElementById('profileSocialLinks');
+        if (socialLinksContainer && this.projectData) {
+            socialLinksContainer.innerHTML = '';
+            
+            // Web
+            if (this.projectData.sitio_web) {
+                const webLink = document.createElement('a');
+                webLink.href = this.projectData.sitio_web;
+                webLink.target = '_blank';
+                webLink.rel = 'noopener noreferrer';
+                webLink.className = 'profile-social-link';
+                webLink.innerHTML = '<i class="fas fa-globe"></i> Web';
+                socialLinksContainer.appendChild(webLink);
+            }
+
+            // Instagram
+            if (this.projectData.instagram_url) {
+                const instagramLink = document.createElement('a');
+                instagramLink.href = this.projectData.instagram_url.startsWith('http') 
+                    ? this.projectData.instagram_url 
+                    : `https://instagram.com/${this.projectData.instagram_url.replace('@', '')}`;
+                instagramLink.target = '_blank';
+                instagramLink.rel = 'noopener noreferrer';
+                instagramLink.className = 'profile-social-link';
+                instagramLink.innerHTML = '<i class="fab fa-instagram"></i> Instagram';
+                socialLinksContainer.appendChild(instagramLink);
+            }
+
+            // Facebook (si existe en el futuro, por ahora no está en el schema)
+            // Se puede agregar después si se añade al schema
+        }
+
+        // Detalles: correo, plan, créditos
+        const profileEmail = document.getElementById('profileEmail');
+        const profilePlan = document.getElementById('profilePlan');
+        const profileCredits = document.getElementById('profileCredits');
+
+        if (profileEmail && this.userData) {
+            profileEmail.textContent = this.userData.email || '-';
+        }
+
+        if (profilePlan && this.userData) {
+            const planNames = {
+                'basico': 'Plan Básico',
+                'pro': 'Plan Pro',
+                'enterprise': 'Plan Enterprise'
+            };
+            profilePlan.textContent = planNames[this.userData.plan_type] || 'Plan Básico';
+        }
+
+        if (profileCredits && this.userData) {
+            profileCredits.textContent = this.userData.credits_available || 0;
+        }
     }
 
     renderUserInfo() {
