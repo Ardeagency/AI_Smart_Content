@@ -359,18 +359,25 @@ class StudioManager {
     }
 
     // Función para actualizar el selector de ofertas
-    updateOfferSelector() {
+    updateOfferSelector(selectedBrandId = null) {
         const offerSelector = document.getElementById('offer-selector');
         if (!offerSelector) return;
 
         // Limpiar opciones existentes
         offerSelector.innerHTML = '<option value="">Seleccionar oferta...</option>';
 
-        // Agregar ofertas disponibles
+        // Si no hay marca seleccionada, limpiar ofertas
+        if (!selectedBrandId) {
+            console.log('No hay marca seleccionada, limpiando ofertas');
+            return;
+        }
+
+        // Agregar ofertas disponibles (campaigns)
         this.offers.forEach(offer => {
             const option = document.createElement('option');
+            // Usar objetivo_principal como nombre principal, luego oferta_desc
             option.value = offer.id;
-            option.textContent = offer.main_objective || `Oferta ${offer.id}`;
+            option.textContent = offer.objetivo_principal || offer.oferta_desc || `Oferta ${offer.id}`;
             offerSelector.appendChild(option);
         });
 
