@@ -531,15 +531,35 @@ class StudioManager {
     updateBrandInfo(brandData) {
         console.log('📝 Actualizando información de marca:', brandData);
         
+        const brandInfoContainer = document.getElementById('brand-info');
+        if (!brandInfoContainer) {
+            console.error('❌ No se encontró el contenedor brand-info');
+            return;
+        }
+        
+        // Ocultar indicador de carga si existe
+        const loadingIndicator = brandInfoContainer.querySelector('.loading-indicator');
+        if (loadingIndicator) {
+            loadingIndicator.remove();
+        }
+        
         const brandTone = document.getElementById('brand-tone');
         const brandKeywordsYes = document.getElementById('brand-keywords-yes');
         const brandKeywordsNo = document.getElementById('brand-keywords-no');
         const brandDosDonts = document.getElementById('brand-dos-donts');
         
+        // Asegurar que los elementos estén visibles
+        if (brandInfoContainer.style.display === 'none') {
+            brandInfoContainer.style.display = 'block';
+        }
+        
         // Actualizar Tono de Voz
         if (brandTone) {
             const tonoVoz = brandData.tono_voz || 'No configurado';
             brandTone.textContent = typeof tonoVoz === 'string' ? tonoVoz : (tonoVoz?.value || 'No configurado');
+            console.log('✅ Tono de voz actualizado:', brandTone.textContent);
+        } else {
+            console.warn('⚠️ No se encontró brand-tone');
         }
         
         // Actualizar Palabras Clave (Sí)
@@ -550,6 +570,9 @@ class StudioManager {
             } else {
                 brandKeywordsYes.innerHTML = '<span class="empty">No configurado</span>';
             }
+            console.log('✅ Palabras clave (Sí) actualizadas:', brandKeywordsYes.textContent);
+        } else {
+            console.warn('⚠️ No se encontró brand-keywords-yes');
         }
         
         // Actualizar Palabras Clave (No)
@@ -562,6 +585,9 @@ class StudioManager {
             } else {
                 brandKeywordsNo.innerHTML = '<span class="empty">No configurado</span>';
             }
+            console.log('✅ Palabras clave (No) actualizadas:', brandKeywordsNo.textContent);
+        } else {
+            console.warn('⚠️ No se encontró brand-keywords-no');
         }
         
         // Actualizar Dos y Don'ts
@@ -572,18 +598,12 @@ class StudioManager {
             } else {
                 brandDosDonts.innerHTML = '<span class="empty">No configurado</span>';
             }
+            console.log('✅ Dos y Don\'ts actualizados:', brandDosDonts.textContent);
+        } else {
+            console.warn('⚠️ No se encontró brand-dos-donts');
         }
         
-        console.log('✅ Información de marca actualizada');
-        
-        // Ocultar indicador de carga si existe
-        const brandInfoContainer = document.getElementById('brand-info');
-        if (brandInfoContainer) {
-            const loadingIndicator = brandInfoContainer.querySelector('.loading-indicator');
-            if (loadingIndicator) {
-                loadingIndicator.remove();
-            }
-        }
+        console.log('✅ Información de marca actualizada completamente');
     }
     
     clearBrandInfo() {
@@ -667,10 +687,6 @@ class StudioManager {
                 <span class="info-value long-text">${productData.modo_uso}</span>
             </div>
             ` : ''}
-            <div class="info-item">
-                <span class="info-label">Precio:</span>
-                <span class="info-value price">${priceDisplay}</span>
-            </div>
         `;
         
         console.log('Información de producto actualizada correctamente');
