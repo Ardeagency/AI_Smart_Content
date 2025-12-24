@@ -199,6 +199,7 @@ class LivingManager {
             
             this.userData = data;
             console.log('✅ Datos de usuario cargados desde users:', data);
+            console.log('💰 Créditos disponibles:', data.credits_available, '| Créditos totales:', data.credits_total);
         } catch (error) {
             console.error('❌ Error loading user data:', error);
             // Si falla, al menos obtener el email del usuario autenticado
@@ -737,6 +738,13 @@ class LivingManager {
         const profilePlan = document.getElementById('profilePlan');
         const profileCredits = document.getElementById('profileCredits');
 
+        console.log('🔍 Renderizando detalles de perfil:', {
+            userData: this.userData,
+            email: this.userData?.email,
+            plan_type: this.userData?.plan_type,
+            credits_available: this.userData?.credits_available
+        });
+
         if (profileEmail && this.userData) {
             profileEmail.textContent = this.userData.email || '-';
         }
@@ -751,7 +759,16 @@ class LivingManager {
         }
 
         if (profileCredits && this.userData) {
-            profileCredits.textContent = this.userData.credits_available || 0;
+            const credits = this.userData.credits_available !== null && this.userData.credits_available !== undefined 
+                ? this.userData.credits_available 
+                : 0;
+            profileCredits.textContent = credits;
+            console.log('💰 Créditos mostrados:', credits, 'de userData.credits_available:', this.userData.credits_available);
+        } else {
+            console.warn('⚠️ No se encontró profileCredits o userData:', {
+                profileCredits: !!profileCredits,
+                userData: !!this.userData
+            });
         }
     }
 
