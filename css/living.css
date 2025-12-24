@@ -99,13 +99,20 @@
 /* Grid Principal */
 .living-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 2rem;
+    align-items: start;
 }
 
 .living-column-left {
     display: flex;
     flex-direction: column;
+}
+
+.living-column-middle {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
 }
 
 .living-column-right {
@@ -114,11 +121,22 @@
     gap: 2rem;
 }
 
+@media (max-width: 1400px) {
+    .living-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .living-column-right {
+        grid-column: 1 / -1;
+    }
+}
+
 @media (max-width: 1024px) {
     .living-grid {
         grid-template-columns: 1fr;
     }
     
+    .living-column-middle,
     .living-column-right {
         gap: 2rem;
     }
@@ -144,6 +162,45 @@
     flex: 1;
     overflow-y: auto;
     min-height: 0;
+}
+
+/* Método de Pago */
+.payment-method-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.payment-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+}
+
+.payment-placeholder {
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.payment-placeholder i {
+    font-size: 3rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.payment-placeholder p {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin: 0.5rem 0;
+}
+
+.payment-note {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-style: italic;
+    display: block;
+    margin-top: 0.5rem;
 }
 
 /* Card de Perfil */
