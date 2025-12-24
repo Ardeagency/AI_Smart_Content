@@ -659,6 +659,28 @@ class LivingManager {
             const tiktokInput = this.createSocialInput('tiktok_url', 'fab fa-tiktok', 'TikTok', this.projectData.tiktok_url || '');
             socialLinksContainer.appendChild(tiktokInput);
         }
+
+        // Detalles: correo, plan, créditos
+        const profileEmail = document.getElementById('profileEmail');
+        const profilePlan = document.getElementById('profilePlan');
+        const profileCredits = document.getElementById('profileCredits');
+
+        if (profileEmail && this.userData) {
+            profileEmail.textContent = this.userData.email || '-';
+        }
+
+        if (profilePlan && this.userData) {
+            const planNames = {
+                'basico': 'Plan Básico',
+                'pro': 'Plan Pro',
+                'enterprise': 'Plan Enterprise'
+            };
+            profilePlan.textContent = planNames[this.userData.plan_type] || this.userData.plan_type || 'Plan Básico';
+        }
+
+        if (profileCredits && this.userData) {
+            profileCredits.textContent = this.userData.credits_available || 0;
+        }
     }
 
     createSocialInput(fieldName, iconClass, label, value) {
@@ -713,28 +735,6 @@ class LivingManager {
         } catch (error) {
             console.error(`Error al guardar ${fieldName}:`, error);
             alert(`Error al guardar ${fieldName}. Por favor, intenta de nuevo.`);
-        }
-
-        // Detalles: correo, plan, créditos
-        const profileEmail = document.getElementById('profileEmail');
-        const profilePlan = document.getElementById('profilePlan');
-        const profileCredits = document.getElementById('profileCredits');
-
-        if (profileEmail && this.userData) {
-            profileEmail.textContent = this.userData.email || '-';
-        }
-
-        if (profilePlan && this.userData) {
-            const planNames = {
-                'basico': 'Plan Básico',
-                'pro': 'Plan Pro',
-                'enterprise': 'Plan Enterprise'
-            };
-            profilePlan.textContent = planNames[this.userData.plan_type] || 'Plan Básico';
-        }
-
-        if (profileCredits && this.userData) {
-            profileCredits.textContent = this.userData.credits_available || 0;
         }
     }
 
