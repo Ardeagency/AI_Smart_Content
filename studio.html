@@ -619,9 +619,41 @@
                 content.style.display = 'none';
             });
             
-            // Inicializar datos de marca y producto si ya hay selecciones
-            initializeDataDisplay();
+            // Esperar a que StudioManager esté listo antes de inicializar
+            waitForStudioManager();
         });
+        
+        // Función para esperar a que StudioManager esté listo
+        function waitForStudioManager() {
+            const checkInterval = setInterval(() => {
+                if (window.studioManager && window.studioManager.projectData) {
+                    clearInterval(checkInterval);
+                    console.log('✅ StudioManager listo, inicializando marca...');
+                    initializeDataDisplay();
+                } else if (window.studioManager && window.studioManager.supabase) {
+                    // Si StudioManager existe pero projectData no está cargado, esperar un poco más
+                    setTimeout(() => {
+                        if (window.studioManager.projectData) {
+                            clearInterval(checkInterval);
+                            console.log('✅ ProjectData cargado, inicializando marca...');
+                            initializeDataDisplay();
+                        }
+                    }, 500);
+                }
+            }, 100);
+            
+            // Timeout después de 5 segundos
+            setTimeout(() => {
+                clearInterval(checkInterval);
+                if (window.studioManager && window.studioManager.projectData) {
+                    initializeDataDisplay();
+                } else {
+                    console.warn('⚠️ StudioManager no está listo después de 5 segundos');
+                    // Intentar inicializar de todas formas
+                    initializeDataDisplay();
+                }
+            }, 5000);
+        }
 
         // Función para inicializar la visualización de datos
         function initializeDataDisplay() {
