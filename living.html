@@ -103,11 +103,10 @@
                 <span class="breadcrumb-item active">Living</span>
             </div>
 
-            <!-- Grid Principal -->
-            <div class="living-grid">
-                <!-- Columna Izquierda: Card de Perfil -->
-                <div class="living-column-left">
-                    <!-- Card de Perfil de Usuario -->
+            <!-- Grid Principal - Primera Fila: 3 Columnas -->
+            <div class="living-grid-top">
+                <!-- Columna 1: Información del Perfil -->
+                <div class="living-column-profile">
                     <div class="living-card profile-card">
                         <div class="profile-image-container">
                             <img id="profileBrandLogo" src="" alt="Logo de marca" style="display: none;">
@@ -136,9 +135,8 @@
                     </div>
                 </div>
 
-                <!-- Columna Media: Cards de Información -->
-                <div class="living-column-middle">
-                    <!-- Lineamientos de Marca -->
+                <!-- Columna 2: Lineamientos de Marca -->
+                <div class="living-column-guidelines">
                     <div class="living-card">
                         <div class="card-header">
                             <h2>Lineamientos de Marca</h2>
@@ -288,6 +286,25 @@
                             </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Columna 3: Método de Pago y Archivos de Marca -->
+                <div class="living-column-files-payment">
+                    <!-- Método de Pago -->
+                    <div class="living-card payment-method-card">
+                        <div class="card-header">
+                            <h2>Método de Pago</h2>
+                        </div>
+                        <div class="card-content">
+                            <div class="payment-info">
+                                <div class="payment-placeholder">
+                                    <i class="fas fa-credit-card"></i>
+                                    <p>Método de pago no configurado</p>
+                                    <span class="payment-note">Esta funcionalidad estará disponible próximamente</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <!-- Archivos de Marca -->
                     <div class="living-card brand-files-card">
@@ -310,56 +327,41 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <!-- Método de Pago -->
-                    <div class="living-card payment-method-card">
-                        <div class="card-header">
-                            <h2>Método de Pago</h2>
-                        </div>
-                        <div class="card-content">
-                            <div class="payment-info">
-                                <div class="payment-placeholder">
-                                    <i class="fas fa-credit-card"></i>
-                                    <p>Método de pago no configurado</p>
-                                    <span class="payment-note">Esta funcionalidad estará disponible próximamente</span>
-                                </div>
+            <!-- Segunda Fila: Productos (100% ancho) -->
+            <div class="living-full-width-section">
+                <div class="living-card clickable-card">
+                    <div class="card-header">
+                        <h2>Productos</h2>
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                    <div class="card-content">
+                        <div class="products-list" id="productsList">
+                            <div class="empty-state">
+                                <i class="fas fa-box-open"></i>
+                                <p>No hay productos registrados</p>
+                                <a href="products.html" class="btn btn-primary" style="margin-top: 1rem;">Gestionar Productos</a>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Columna Derecha: Productos y Campañas -->
-                <div class="living-column-right">
-                    <!-- Productos -->
-                    <div class="living-card clickable-card">
-                        <div class="card-header">
-                            <h2>Productos</h2>
-                            <i class="fas fa-arrow-right"></i>
-                        </div>
-                        <div class="card-content">
-                            <div class="products-list" id="productsList">
-                                <div class="empty-state">
-                                    <i class="fas fa-box-open"></i>
-                                    <p>No hay productos registrados</p>
-                                    <a href="products.html" class="btn btn-primary" style="margin-top: 1rem;">Gestionar Productos</a>
-                                </div>
-                            </div>
-                        </div>
+            <!-- Tercera Fila: Campañas (100% ancho) -->
+            <div class="living-full-width-section">
+                <div class="living-card clickable-card">
+                    <div class="card-header">
+                        <h2>Campañas y Ofertas</h2>
+                        <i class="fas fa-arrow-right"></i>
                     </div>
-
-                    <!-- Campañas -->
-                    <div class="living-card clickable-card">
-                        <div class="card-header">
-                            <h2>Campañas y Ofertas</h2>
-                            <i class="fas fa-arrow-right"></i>
-                        </div>
-                        <div class="card-content">
-                            <div class="campaigns-list" id="campaignsList">
-                                <div class="empty-state">
-                                    <i class="fas fa-megaphone"></i>
-                                    <p>No hay campañas creadas</p>
-                                    <a href="studio.html" class="btn btn-primary" style="margin-top: 1rem;">Crear Campaña</a>
-                                </div>
+                    <div class="card-content">
+                        <div class="campaigns-list" id="campaignsList">
+                            <div class="empty-state">
+                                <i class="fas fa-megaphone"></i>
+                                <p>No hay campañas creadas</p>
+                                <a href="studio.html" class="btn btn-primary" style="margin-top: 1rem;">Crear Campaña</a>
                             </div>
                         </div>
                     </div>
