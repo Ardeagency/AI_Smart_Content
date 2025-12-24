@@ -932,32 +932,55 @@ class LivingManager {
                 <div class="empty-state">
                     <i class="fas fa-box-open"></i>
                     <p>No hay productos registrados</p>
+                    <a href="products.html" class="btn btn-primary" style="margin-top: 1rem;">Gestionar Productos</a>
                 </div>
             `;
             return;
         }
 
-        this.products.forEach(product => {
-            const productCard = document.createElement('div');
-            productCard.className = 'product-card';
+        // Mostrar máximo 3 productos
+        const productsToShow = this.products.slice(0, 3);
 
-            let imagesHTML = '';
-            if (product.images && product.images.length > 0) {
-                const imagesToShow = product.images.slice(0, 4);
-                imagesHTML = `
-                    <div class="product-images">
-                        ${imagesToShow.map(img => `
-                            <img src="${img.image_url}" alt="${product.nombre_producto}" class="product-image" onerror="this.style.display='none'">
-                        `).join('')}
-                    </div>
-                `;
-            }
+        productsToShow.forEach(product => {
+            const productCard = document.createElement('div');
+            productCard.className = 'product-card-horizontal';
+            productCard.onclick = () => {
+                window.location.href = 'products.html';
+            };
+
+            const mainImage = product.images && product.images.length > 0 
+                ? product.images[0].image_url 
+                : null;
+
+            const productId = product.id || product.product_id || 'N/A';
+            const precio = product.precio_producto 
+                ? `${product.moneda || 'USD'} $${parseFloat(product.precio_producto).toFixed(2)}`
+                : 'Precio no definido';
 
             productCard.innerHTML = `
-                ${imagesHTML}
-                <h3 class="product-name">${product.nombre_producto}</h3>
-                <span class="product-type">${this.formatProductType(product.tipo_producto)}</span>
-                <p class="product-description">${product.descripcion_producto || 'Sin descripción'}</p>
+                <div class="product-card-image-horizontal">
+                    ${mainImage 
+                        ? `<img src="${mainImage}" alt="${product.nombre_producto}" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'><i class=\\'fas fa-image\\'></i></div>'">`
+                        : `<div class="no-image"><i class="fas fa-image"></i></div>`
+                    }
+                </div>
+                <div class="product-card-content-horizontal">
+                    <h3 class="product-card-title-horizontal">${product.nombre_producto || 'Sin nombre'}</h3>
+                    <div class="product-card-details-horizontal">
+                        <div class="product-card-detail-item">
+                            <span class="product-card-detail-label">Product ID:</span>
+                            <span>${productId}</span>
+                        </div>
+                        <div class="product-card-detail-item">
+                            <span class="product-card-detail-label">Precio:</span>
+                            <span>${precio}</span>
+                        </div>
+                    </div>
+                    <span class="product-card-type-badge">${this.formatProductType(product.tipo_producto)}</span>
+                </div>
+                <div class="product-card-status">
+                    <button class="product-card-status-btn">En Stock</button>
+                </div>
             `;
 
             productsListEl.appendChild(productCard);

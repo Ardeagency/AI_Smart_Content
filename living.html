@@ -310,15 +310,13 @@
                     <div class="living-card brand-files-card">
                         <div class="card-header">
                             <h2>Archivos de Marca</h2>
+                            <input type="file" id="brandFileUpload" multiple accept="image/*,.pdf,.doc,.docx" style="display: none;">
+                            <label for="brandFileUpload" class="file-upload-header-btn">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>Subir archivos</span>
+                            </label>
                         </div>
                         <div class="card-content">
-                            <div class="file-upload-area">
-                                <input type="file" id="brandFileUpload" multiple accept="image/*,.pdf,.doc,.docx" style="display: none;">
-                                <label for="brandFileUpload" class="file-upload-label">
-                                    <i class="fas fa-cloud-upload-alt"></i>
-                                    <span>Subir archivos</span>
-                                </label>
-                            </div>
                             <div class="files-list" id="brandFilesList">
                                 <div class="empty-state">
                                     <i class="fas fa-inbox"></i>
@@ -332,13 +330,13 @@
 
             <!-- Segunda Fila: Productos (100% ancho) -->
             <div class="living-full-width-section">
-                <div class="living-card clickable-card">
+                <div class="living-card products-section-card">
                     <div class="card-header">
                         <h2>Productos</h2>
-                        <i class="fas fa-arrow-right"></i>
+                        <a href="products.html" class="view-all-link">Ver todos</a>
                     </div>
                     <div class="card-content">
-                        <div class="products-list" id="productsList">
+                        <div class="products-list-horizontal" id="productsList">
                             <div class="empty-state">
                                 <i class="fas fa-box-open"></i>
                                 <p>No hay productos registrados</p>
