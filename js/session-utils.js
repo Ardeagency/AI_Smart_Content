@@ -36,7 +36,6 @@ class SessionManager {
       userId: userData.id || userData.userId,
       email: userData.email,
       full_name: userData.full_name,
-      role: userData.role,
       email_verified: userData.email_verified,
       timestamp: Date.now()
     };
@@ -76,11 +75,6 @@ class SessionManager {
     return true;
   }
 
-  // Verificar si el usuario está pendiente de aprobación
-  isPendingApproval() {
-    const session = this.getSession();
-    return session && session.role === 'user';
-  }
 
   // Verificar estado del usuario usando Supabase
   async checkUserStatus() {
@@ -128,7 +122,7 @@ class SessionManager {
       // Consultar user_profiles directamente
       const { data, error } = await supabaseClient
         .from('user_profiles')
-        .select('id, email, phone_number, role, is_active, email_verified')
+        .select('id, email, phone_number, email_verified')
         .eq('id', session.userId)
         .single();
 

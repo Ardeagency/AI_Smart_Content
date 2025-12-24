@@ -410,45 +410,6 @@
             margin-top: 0.5rem;
         }
 
-        /* Mensaje de aprobación pendiente */
-        .pending-approval {
-            display: none;
-            text-align: center;
-            padding: 2rem;
-            max-width: 600px;
-            margin: 0 auto;
-            color: var(--text-primary);
-        }
-
-        .pending-approval.active {
-            display: block;
-        }
-
-        .pending-approval-icon {
-            font-size: 3rem;
-            color: var(--accent-warm);
-            margin-bottom: 1rem;
-        }
-
-        .pending-approval-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 1rem;
-        }
-
-        .pending-approval-message {
-            font-size: 1rem;
-            color: var(--text-secondary);
-            line-height: 1.6;
-        }
-
-        /* Usa clases base de notification */
-
-        /* Ocultar botones cuando está pendiente */
-        .landing-content.hide-buttons .header-actions {
-            display: none;
-        }
 
         /* Responsive */
         @media (max-width: 768px) {
@@ -556,18 +517,6 @@
         </div>
     </div>
 
-    <!-- Mensaje de aprobación pendiente -->
-    <div class="pending-approval" id="pendingApproval">
-        <div class="pending-approval-icon">
-            <i class="fas fa-clock"></i>
-        </div>
-        <h2 class="pending-approval-title">Cuenta Creada Exitosamente</h2>
-        <p class="pending-approval-message">
-            Tu cuenta ha sido creada y está pendiente de aprobación por un administrador. 
-            Recibirás una notificación por correo (o serás contactado) cuando tu acceso sea concedido.
-        </p>
-    </div>
-
     <!-- Notificación para email no verificado -->
     <div class="notification" id="emailNotVerifiedNotification">
         <div class="notification-icon warning">
@@ -579,19 +528,6 @@
             Si no recibiste el email, verifica tu carpeta de spam o solicita un nuevo enlace de verificación.
         </p>
         <button type="button" class="btn btn-accent" id="closeEmailNotification">Entendido</button>
-    </div>
-
-    <!-- Notificación para usuario sin permisos -->
-    <div class="notification" id="userNotApprovedNotification">
-        <div class="notification-icon info">
-            <i class="fas fa-user-clock"></i>
-        </div>
-        <h2 class="notification-title">Acceso Pendiente de Aprobación</h2>
-        <p class="notification-text">
-            Tu cuenta está activa, pero aún no tienes permisos para acceder a la plataforma.<br><br>
-            Un administrador debe aprobar tu solicitud para que puedas utilizar todos los servicios. Te notificaremos por correo electrónico una vez que tu acceso sea concedido.
-        </p>
-        <button type="button" class="btn btn-accent" id="closeUserNotification">Entendido</button>
     </div>
 
     <!-- Login Modal -->

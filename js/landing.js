@@ -73,7 +73,7 @@
         try {
             const { data, error } = await supabase
                 .from('user_profiles')
-                .select('id, email, phone_number, role, is_active, email_verified')
+                .select('id, email, phone_number, email_verified')
                 .eq('id', userId)
                 .single();
             
@@ -96,29 +96,7 @@
         }
     }
 
-    // Función para mostrar notificación de usuario no aprobado
-    function showUserNotApprovedNotification() {
-        const notification = document.getElementById('userNotApprovedNotification');
-        if (notification) {
-            notification.classList.add('active');
-        }
-    }
-
-    // Función para mostrar mensaje de aprobación pendiente
-    function showPendingApproval() {
-        const landingContent = document.querySelector('.landing-content');
-        const pendingApproval = document.getElementById('pendingApproval');
-        
-        if (landingContent) {
-            landingContent.classList.add('hide-buttons');
-        }
-        
-        if (pendingApproval) {
-            pendingApproval.classList.add('active');
-        }
-    }
-
-    // Función para verificar si el usuario está pendiente o si debe redirigir a la app
+    // Función para verificar si el usuario debe redirigir a la app
     async function checkPendingUser() {
         const session = getUserSession();
         if (!session) return;
@@ -130,16 +108,8 @@
             return;
         }
 
-        // Si el usuario tiene permisos (role diferente de 'user'), redirigir al dashboard
-        if (userStatus.role !== 'user' && userStatus.is_active) {
-            window.location.href = '/products.html';
-            return;
-        }
-
-        // Si el usuario está pendiente (role 'user'), mostrar mensaje
-        if (userStatus.role === 'user') {
-            showPendingApproval();
-        }
+        // Si el usuario está autenticado, redirigir al dashboard
+        window.location.href = '/products.html';
     }
 
     // Esperar a que el DOM esté listo
@@ -297,7 +267,7 @@
                     let profileData = null;
                     const { data: fetchedProfile, error: profileError } = await supabase
                         .from('user_profiles')
-                        .select('id, full_name, email, phone_number, role, email_verified, is_active')
+                        .select('id, full_name, email, phone_number, email_verified')
                         .eq('id', authData.user.id)
                         .single();
 
@@ -321,9 +291,7 @@
                                     full_name: authData.user.user_metadata?.full_name || authData.user.email?.split('@')[0],
                                     email: authData.user.email || email.toLowerCase().trim(),
                                     phone_number: authData.user.phone || null,
-                                    role: 'user',
-                                    email_verified: authData.user.email_confirmed_at ? true : false,
-                                    is_active: true
+                                    email_verified: authData.user.email_confirmed_at ? true : false
                                 })
                                 .select()
                                 .single();
@@ -351,20 +319,12 @@
                         return;
                     }
 
-                    // Verificar si el usuario está activo
-                    if (!profileData.is_active) {
-                        alert('Tu cuenta ha sido desactivada. Contacta al administrador.');
-                        await supabase.auth.signOut();
-                        return;
-                    }
-
                     // Guardar sesión
                     const userData = {
                         id: profileData.id,
                         userId: profileData.id,
                         email: profileData.email,
                         full_name: profileData.full_name,
-                        role: profileData.role,
                         email_verified: profileData.email_verified
                     };
                     saveUserSession(userData, rememberMe);

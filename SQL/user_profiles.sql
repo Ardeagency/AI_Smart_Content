@@ -11,9 +11,7 @@ CREATE TABLE IF NOT EXISTS public.user_profiles (
     email TEXT UNIQUE NOT NULL,
     full_name TEXT,
     phone_number TEXT,
-    role TEXT DEFAULT 'user' NOT NULL,
     email_verified BOOLEAN DEFAULT FALSE NOT NULL,
-    is_active BOOLEAN DEFAULT TRUE NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
