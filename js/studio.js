@@ -335,23 +335,23 @@ class StudioManager {
             return;
         }
 
-        // Filtrar productos por marca seleccionada
+        // Filtrar productos por project_id (selectedBrandId es el project_id)
         const filteredProducts = this.products.filter(product => {
-            // Buscar la marca asociada al producto
-            const brand = this.brands.find(b => b.id === selectedBrandId);
-            console.log('Filtrando productos:', {
-                selectedBrandId,
-                brand: brand ? { id: brand.id, project_id: brand.project_id } : null,
-                product: { id: product.id, project_id: product.project_id, name: product.name }
-            });
-            return brand && product.project_id === brand.project_id;
+            return product.project_id === selectedBrandId;
+        });
+
+        console.log('Filtrando productos:', {
+            selectedBrandId,
+            totalProducts: this.products.length,
+            filteredProducts: filteredProducts.length
         });
 
         // Agregar productos filtrados
         filteredProducts.forEach(product => {
             const option = document.createElement('option');
             option.value = product.id;
-            option.textContent = product.name || `Producto ${product.id}`;
+            // Usar nombre_producto según el schema
+            option.textContent = product.nombre_producto || `Producto ${product.id}`;
             productSelector.appendChild(option);
         });
 
