@@ -21,9 +21,9 @@
 }
 
 /* ============================================
-   ANIMATED BACKGROUND
+   VIDEO BACKGROUND
    ============================================ */
-.animated-background {
+.video-background {
     position: fixed;
     top: 0;
     left: 0;
@@ -34,110 +34,26 @@
     background: var(--bg-dark);
 }
 
-.background-grid {
+.video-background video {
     position: absolute;
-    width: 200%;
-    height: 400%; /* Aumentar altura para acomodar contenedores verticales */
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    grid-template-rows: repeat(40, auto); /* Filas automáticas para apilar contenedores */
-    gap: 15px;
-    transform-origin: center center;
-    top: -50%;
-    left: -50%;
-    align-items: start; /* Alinear al inicio para apilar correctamente */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: cover;
 }
 
-/* Animaciones alternadas para hileras verticales (columnas) */
-@keyframes columnMoveUp {
-    0% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(-100vh);
-    }
-    100% {
-        transform: translateY(0);
-    }
-}
-
-@keyframes columnMoveDown {
-    0% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(100vh);
-    }
-    100% {
-        transform: translateY(0);
-    }
-}
-
-/* Contenedores verticales para imágenes/videos (formato reels: 9:16) */
-.background-grid .grid-item {
-    background: var(--bg-secondary);
-    border: 1px solid rgba(236, 235, 218, 0.08);
-    border-radius: 8px;
-    aspect-ratio: 9 / 16; /* Relación de aspecto 9:16 (vertical: más alto que ancho) */
-    position: relative;
-    overflow: hidden;
-    opacity: 0.25;
-    transition: opacity 0.3s ease;
-    width: 100%; /* Ocupa todo el ancho de la celda del grid */
-    height: auto; /* Altura automática basada en aspect-ratio */
-    min-width: 80px; /* Tamaño mínimo para mantener proporción */
-    max-width: 150px; /* Tamaño máximo para mantenerlos pequeños */
-}
-
-/* Aplicar animaciones alternadas por hilera vertical (columna) */
-/* Columna 1, 3, 5, 7: Suben */
-.background-grid .grid-item:nth-child(8n+1),
-.background-grid .grid-item:nth-child(8n+3),
-.background-grid .grid-item:nth-child(8n+5),
-.background-grid .grid-item:nth-child(8n+7) {
-    animation: columnMoveUp 30s linear infinite;
-}
-
-/* Columna 2, 4, 6, 8: Bajan */
-.background-grid .grid-item:nth-child(8n+2),
-.background-grid .grid-item:nth-child(8n+4),
-.background-grid .grid-item:nth-child(8n+6),
-.background-grid .grid-item:nth-child(8n+8) {
-    animation: columnMoveDown 30s linear infinite;
-}
-
-/* Delays escalonados por fila para efecto más orgánico */
-.background-grid .grid-item:nth-child(n+1):nth-child(-n+8) { animation-delay: 0s; }
-.background-grid .grid-item:nth-child(n+9):nth-child(-n+16) { animation-delay: 0.5s; }
-.background-grid .grid-item:nth-child(n+17):nth-child(-n+24) { animation-delay: 1s; }
-.background-grid .grid-item:nth-child(n+25):nth-child(-n+32) { animation-delay: 1.5s; }
-.background-grid .grid-item:nth-child(n+33):nth-child(-n+40) { animation-delay: 2s; }
-.background-grid .grid-item:nth-child(n+41):nth-child(-n+48) { animation-delay: 2.5s; }
-.background-grid .grid-item:nth-child(n+49):nth-child(-n+56) { animation-delay: 3s; }
-.background-grid .grid-item:nth-child(n+57):nth-child(-n+64) { animation-delay: 3.5s; }
-.background-grid .grid-item:nth-child(n+65):nth-child(-n+72) { animation-delay: 4s; }
-.background-grid .grid-item:nth-child(n+73):nth-child(-n+80) { animation-delay: 4.5s; }
-.background-grid .grid-item:nth-child(n+81):nth-child(-n+88) { animation-delay: 5s; }
-.background-grid .grid-item:nth-child(n+89):nth-child(-n+96) { animation-delay: 5.5s; }
-.background-grid .grid-item:nth-child(n+97):nth-child(-n+104) { animation-delay: 6s; }
-.background-grid .grid-item:nth-child(n+105):nth-child(-n+112) { animation-delay: 6.5s; }
-.background-grid .grid-item:nth-child(n+113):nth-child(-n+120) { animation-delay: 7s; }
-.background-grid .grid-item:nth-child(n+121):nth-child(-n+128) { animation-delay: 7.5s; }
-.background-grid .grid-item:nth-child(n+129):nth-child(-n+136) { animation-delay: 8s; }
-.background-grid .grid-item:nth-child(n+137):nth-child(-n+144) { animation-delay: 8.5s; }
-.background-grid .grid-item:nth-child(n+145):nth-child(-n+152) { animation-delay: 9s; }
-.background-grid .grid-item:nth-child(n+153):nth-child(-n+160) { animation-delay: 9.5s; }
-
-.background-grid .grid-item:hover {
-    opacity: 0.5;
-}
-
-.background-grid .grid-item img,
-.background-grid .grid-item video {
+.video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    display: block;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1;
 }
 
 /* Header removido */
