@@ -621,6 +621,77 @@ body {
     background: rgba(255, 255, 255, 0.06);
 }
 
+/* =======================================
+   Brand Card
+   ======================================= */
+.brand-card {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(236, 235, 218, 0.3);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    margin-bottom: 0;
+    box-sizing: border-box;
+}
+
+.brand-card:hover {
+    border-color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 2px rgba(236, 235, 218, 0.15);
+}
+
+.brand-card-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.brand-card-logo {
+    width: 48px;
+    height: 48px;
+    border-radius: 6px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.brand-card-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.brand-card-logo-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(236, 235, 218, 0.1);
+    color: var(--primary-color);
+    font-size: 16px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.brand-card-name {
+    flex: 1;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.brand-card input[type="hidden"] {
+    display: none;
+}
 
 /* =======================================
    Range Input

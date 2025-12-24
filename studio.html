@@ -129,10 +129,17 @@
                 
                 <!-- Marca -->
                 <div class="config-field">
-                    <label>Seleccionar marca:</label>
-                    <select id="brand-selector" onchange="onBrandSelected(this.value)">
-                        <option value="">Seleccionar marca...</option>
-                    </select>
+                    <label>Marca</label>
+                    <div id="brand-card" class="brand-card" onclick="openBrandSelector()">
+                        <div class="brand-card-content">
+                            <div class="brand-card-logo" id="brand-card-logo">
+                                <img id="brand-card-logo-img" src="" alt="" style="display: none;">
+                                <div id="brand-card-logo-placeholder" class="brand-card-logo-placeholder"></div>
+                            </div>
+                            <div class="brand-card-name" id="brand-card-name">Seleccionar marca...</div>
+                        </div>
+                        <input type="hidden" id="brand-selector" value="">
+                    </div>
                 </div>
 
                 <!-- Producto -->
@@ -1613,6 +1620,25 @@
                 // Delegar completamente a studio.js
                 if (window.studioManager && window.studioManager.selectBrandFromDropdown) {
                     await window.studioManager.selectBrandFromDropdown(brandId);
+                    
+                    // Actualizar la card con los datos de la marca
+                    if (window.studioManager.projectData && window.studioManager.projectData.id === brandId) {
+                        updateBrandCard(window.studioManager.projectData);
+                    } else {
+                        // Si no está en projectData, cargar desde Supabase
+                        const supabase = window.getSupabaseClient ? window.getSupabaseClient() : 
+                                       (window.supabaseClient && typeof window.supabaseClient.from === 'function' ? window.supabaseClient : null);
+                        if (supabase) {
+                            const { data: projectData } = await supabase
+                                .from('projects')
+                                .select('*')
+                                .eq('id', brandId)
+                                .single();
+                            if (projectData) {
+                                updateBrandCard(projectData);
+                            }
+                        }
+                    }
                 }
                 
                 console.log('=== MARCA CARGADA COMPLETAMENTE ===');
@@ -1620,6 +1646,69 @@
                 console.error('Error cargando marca:', error);
                 hideLoadingIndicator('brand-info');
             }
+        }
+        
+        // Función para actualizar la card de marca
+        function updateBrandCard(projectData) {
+            const brandCardLogoImg = document.getElementById('brand-card-logo-img');
+            const brandCardLogoPlaceholder = document.getElementById('brand-card-logo-placeholder');
+            const brandCardName = document.getElementById('brand-card-name');
+            const brandSelector = document.getElementById('brand-selector');
+            
+            if (!projectData) {
+                if (brandCardName) brandCardName.textContent = 'Seleccionar marca...';
+                if (brandCardLogoImg) brandCardLogoImg.style.display = 'none';
+                if (brandCardLogoPlaceholder) brandCardLogoPlaceholder.style.display = 'flex';
+                if (brandSelector) brandSelector.value = '';
+                return;
+            }
+            
+            // Actualizar nombre
+            if (brandCardName) {
+                brandCardName.textContent = projectData.nombre_marca || 'Sin nombre';
+            }
+            
+            // Actualizar logo
+            if (projectData.logo_url) {
+                if (brandCardLogoImg) {
+                    brandCardLogoImg.src = projectData.logo_url + '?t=' + Date.now();
+                    brandCardLogoImg.alt = projectData.nombre_marca || 'Logo';
+                    brandCardLogoImg.style.display = 'block';
+                    brandCardLogoImg.onerror = () => {
+                        if (brandCardLogoImg) brandCardLogoImg.style.display = 'none';
+                        if (brandCardLogoPlaceholder) brandCardLogoPlaceholder.style.display = 'flex';
+                    };
+                }
+                if (brandCardLogoPlaceholder) {
+                    brandCardLogoPlaceholder.style.display = 'none';
+                }
+            } else {
+                // Mostrar iniciales si no hay logo
+                if (brandCardLogoPlaceholder) {
+                    const initials = (projectData.nombre_marca || 'SN')
+                        .split(' ')
+                        .map(word => word.charAt(0))
+                        .join('')
+                        .toUpperCase()
+                        .substring(0, 2);
+                    brandCardLogoPlaceholder.textContent = initials;
+                    brandCardLogoPlaceholder.style.display = 'flex';
+                }
+                if (brandCardLogoImg) {
+                    brandCardLogoImg.style.display = 'none';
+                }
+            }
+            
+            // Actualizar selector oculto
+            if (brandSelector && projectData.id) {
+                brandSelector.value = projectData.id;
+            }
+        }
+        
+        // Función para abrir selector de marca (si se necesita cambiar)
+        function openBrandSelector() {
+            // Por ahora, solo mostrar un mensaje. Se puede implementar un modal más adelante
+            console.log('Abrir selector de marca');
         }
 
         async function onProductSelected(productId) {
