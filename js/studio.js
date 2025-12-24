@@ -919,9 +919,6 @@ class StudioManager {
             return;
         }
 
-        // Limpiar contenedor
-        container.innerHTML = '';
-
             // Renderizar imágenes desde product_images (usar image_url según schema.sql)
             const imagesHTML = this.productImages.map((image, index) => {
                 const imageUrl = image.image_url || '';
