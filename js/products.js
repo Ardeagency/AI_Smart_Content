@@ -466,13 +466,19 @@ class ProductsManager {
         document.getElementById('closeNewProductModal').addEventListener('click', () => {
             this.closeNewProductModal();
         });
-        document.getElementById('newProductForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.saveProductFromModal();
-        });
-        document.getElementById('cancelNewProductBtn').addEventListener('click', () => {
-            this.closeNewProductModal();
-        });
+        const form = document.getElementById('new_productForm');
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.saveProductFromModal();
+            });
+        }
+        const cancelBtn = document.getElementById('new_cancelBtn');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                this.closeNewProductModal();
+            });
+        }
 
         // Mostrar modal
         setTimeout(() => {
@@ -491,8 +497,8 @@ class ProductsManager {
     }
 
     async saveProductFromModal() {
-        const form = document.getElementById('newProductForm');
-        const saveBtn = document.getElementById('saveNewProductBtn');
+        const form = document.getElementById('new_productForm');
+        const saveBtn = document.getElementById('new_saveBtn');
 
         if (!form.checkValidity()) {
             form.reportValidity();

@@ -154,18 +154,20 @@
 }
 
 .btn-add-product {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    padding: 0.625rem 1.25rem;
+    background: var(--primary-color);
     color: var(--bg-black);
     border: none;
     border-radius: 8px;
     font-weight: 600;
+    font-size: 0.9rem;
     cursor: pointer;
     transition: var(--transition);
     white-space: nowrap;
+    height: fit-content;
 }
 
 .btn-add-product:hover {
