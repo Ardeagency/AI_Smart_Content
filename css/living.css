@@ -100,9 +100,9 @@
 .living-grid-top {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 2rem;
-    align-items: start;
-    margin-bottom: 2rem;
+    gap: 10px;
+    align-items: stretch;
+    margin-bottom: 10px;
 }
 
 .living-column-profile {
@@ -118,36 +118,40 @@
 .living-column-files-payment {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 10px;
 }
 
 /* Secciones de ancho completo */
 .living-full-width-section {
     width: 100%;
-    margin-bottom: 2rem;
+    margin-bottom: 10px;
 }
 
 @media (max-width: 1400px) {
     .living-grid-top {
         grid-template-columns: 1fr 1fr;
+        gap: 10px;
     }
     
     .living-column-files-payment {
         grid-column: 1 / -1;
         grid-template-columns: 1fr 1fr;
         display: grid;
+        gap: 10px;
     }
 }
 
 @media (max-width: 1024px) {
     .living-grid-top {
         grid-template-columns: 1fr;
+        gap: 10px;
     }
     
     .living-column-files-payment {
         grid-column: 1;
         display: flex;
         flex-direction: column;
+        gap: 10px;
     }
 }
 
@@ -157,6 +161,9 @@
     border: 1px solid var(--border-color);
     border-radius: 16px;
     padding: 1.5rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Card de Archivos de Marca - Altura reducida */
