@@ -1295,8 +1295,9 @@
 
             console.log('Cargando datos de oferta:', offerId);
 
+            // Usar tabla 'campaigns' según schema.sql
             window.studioManager.supabase
-                .from('offers')
+                .from('campaigns')
                 .select('*')
                 .eq('id', offerId)
                 .single()
@@ -1305,6 +1306,7 @@
                         console.error('Error cargando datos de oferta:', error);
                         clearOfferInfo();
                     } else if (data) {
+                        console.log('✅ Datos de oferta (campaign) cargados:', data);
                         updateOfferDisplay(data);
                     }
                 })
@@ -1359,21 +1361,24 @@
             
             console.log('Contenedor offer-info encontrado:', offerInfoContainer);
             
-            // Formatear fecha de validez
-            const validUntil = data.offer_valid_until ? 
-                new Date(data.offer_valid_until).toLocaleDateString('es-ES') : 
-                'No especificada';
-            
-            // Actualizar el contenido del contenedor
+            // Actualizar el contenido del contenedor según schema.sql (tabla campaigns)
             offerInfoContainer.innerHTML = `
                 <div class="info-item">
                     <span class="info-label">Objetivo Principal:</span>
-                    <span class="info-value">${data.main_objective || 'No especificado'}</span>
+                    <span class="info-value">${data.objetivo_principal || 'No especificado'}</span>
                 </div>
                 <div class="info-item">
-                    <span class="info-label">Descripción:</span>
-                    <span class="info-value long-text">${data.offer_desc || 'No especificada'}</span>
-            </div>
+                    <span class="info-label">Oferta:</span>
+                    <span class="info-value long-text">${data.oferta_desc || 'No especificada'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Audiencia:</span>
+                    <span class="info-value">${data.audiencia_desc || 'No especificada'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Intenciones:</span>
+                    <span class="info-value">${data.intenciones || 'No especificadas'}</span>
+                </div>
                 <div class="info-item">
                     <span class="info-label">Call to Action:</span>
                     <span class="info-value">${data.cta || 'No especificado'}</span>
@@ -1383,17 +1388,7 @@
                     <span class="info-value">
                         ${data.cta_url ? `<a href="${data.cta_url}" target="_blank" class="url-link">${data.cta_url}</a>` : 'No especificada'}
                     </span>
-        </div>
-                <div class="info-item">
-                    <span class="info-label">Válida hasta:</span>
-                    <span class="info-value">${validUntil}</span>
-    </div>
-                ${data.kpis && data.kpis.length > 0 ? `
-                <div class="info-item">
-                    <span class="info-label">KPIs:</span>
-                    <span class="info-value">${formatArray(data.kpis)}</span>
                 </div>
-                ` : ''}
             `;
             
             console.log('Contenido de oferta actualizado en el contenedor');
