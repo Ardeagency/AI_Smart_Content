@@ -136,32 +136,58 @@ class LivingManager {
         if (!this.supabase || !this.userId) return;
 
         try {
-            // Primero intentar cargar desde user_profiles
-            const { data: profileData, error: profileError } = await this.supabase
-                .from('user_profiles')
-                .select('*')
-                .eq('id', this.userId)
-                .single();
-
-            if (!profileError && profileData) {
-                // Obtener email del usuario autenticado
-                const { data: { user } } = await this.supabase.auth.getUser();
-                if (user) {
-                    profileData.email = user.email;
-                }
-                this.userData = profileData;
-                console.log('✅ Datos de usuario cargados desde user_profiles:', profileData);
-                return;
-            }
-
-            // Si no hay user_profiles, intentar desde users
+            // Cargar desde users (tiene plan_type y credits_available)
             const { data, error } = await this.supabase
                 .from('users')
                 .select('*')
                 .eq('id', this.userId)
                 .single();
 
-            if (error) throw error;
+            if (error) {
+                // Si no existe en users, intentar desde user_profiles y crear en users
+                if (error.code === 'PGRST116') {
+                    console.log('⚠️ Usuario no encontrado en users, intentando desde user_profiles...');
+                    
+                    const { data: profileData, error: profileError } = await this.supabase
+                        .from('user_profiles')
+                        .select('*')
+                        .eq('id', this.userId)
+                        .single();
+
+                    if (!profileError && profileData) {
+                        // Obtener email del usuario autenticado
+                        const { data: { user } } = await this.supabase.auth.getUser();
+                        
+                        // Crear usuario en users con datos básicos
+                        const { error: createError } = await this.supabase
+                            .from('users')
+                            .insert({
+                                id: this.userId,
+                                email: user?.email || profileData.email,
+                                full_name: profileData.full_name || user?.email,
+                                plan_type: 'basico',
+                                credits_available: 0,
+                                credits_total: 0
+                            });
+
+                        if (!createError) {
+                            // Recargar desde users
+                            const { data: newUserData, error: reloadError } = await this.supabase
+                                .from('users')
+                                .select('*')
+                                .eq('id', this.userId)
+                                .single();
+                            
+                            if (!reloadError) {
+                                this.userData = newUserData;
+                                console.log('✅ Usuario creado y cargado desde users:', newUserData);
+                                return;
+                            }
+                        }
+                    }
+                }
+                throw error;
+            }
             
             // Obtener email del usuario autenticado si no está en la tabla
             if (!data.email) {
@@ -182,8 +208,10 @@ class LivingManager {
                     this.userData = {
                         id: user.id,
                         email: user.email,
+                        full_name: user.user_metadata?.full_name || user.email,
                         plan_type: 'basico',
-                        credits_available: 0
+                        credits_available: 0,
+                        credits_total: 0
                     };
                     console.log('✅ Usando datos básicos del usuario autenticado');
                 }
