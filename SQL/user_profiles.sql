@@ -52,6 +52,7 @@ CREATE POLICY "Users can update own profile"
 CREATE INDEX IF NOT EXISTS idx_user_profiles_email ON public.user_profiles(email);
 
 -- Función para actualizar updated_at automáticamente
+DROP TRIGGER IF EXISTS update_user_profiles_updated_at ON public.user_profiles;
 CREATE TRIGGER update_user_profiles_updated_at 
     BEFORE UPDATE ON public.user_profiles
     FOR EACH ROW 
