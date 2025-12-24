@@ -37,14 +37,15 @@
 .background-grid {
     position: absolute;
     width: 200%;
-    height: 200%;
+    height: 400%; /* Aumentar altura para acomodar contenedores verticales */
     display: grid;
     grid-template-columns: repeat(8, 1fr);
-    grid-template-rows: repeat(20, 1fr);
+    grid-template-rows: repeat(40, auto); /* Filas automáticas para apilar contenedores */
     gap: 15px;
     transform-origin: center center;
     top: -50%;
     left: -50%;
+    align-items: start; /* Alinear al inicio para apilar correctamente */
 }
 
 /* Animaciones alternadas para hileras verticales (columnas) */
@@ -82,8 +83,10 @@
     overflow: hidden;
     opacity: 0.25;
     transition: opacity 0.3s ease;
-    width: 120px; /* Ancho fijo pequeño */
+    width: 100%; /* Ocupa todo el ancho de la celda del grid */
     height: auto; /* Altura automática basada en aspect-ratio */
+    min-width: 80px; /* Tamaño mínimo para mantener proporción */
+    max-width: 150px; /* Tamaño máximo para mantenerlos pequeños */
 }
 
 /* Aplicar animaciones alternadas por hilera vertical (columna) */
