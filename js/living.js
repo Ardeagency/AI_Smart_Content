@@ -1006,42 +1006,49 @@ class LivingManager {
                 <div class="empty-state">
                     <i class="fas fa-megaphone"></i>
                     <p>No hay campañas creadas</p>
+                    <a href="studio.html" class="btn btn-primary" style="margin-top: 1rem;">Crear Campaña</a>
                 </div>
             `;
             return;
         }
 
-        this.campaigns.forEach(campaign => {
+        // Ordenar por fecha de creación (más recientes primero)
+        const sortedCampaigns = [...this.campaigns].sort((a, b) => {
+            const dateA = new Date(a.created_at || 0);
+            const dateB = new Date(b.created_at || 0);
+            return dateB - dateA;
+        });
+
+        sortedCampaigns.forEach(campaign => {
             const campaignCard = document.createElement('div');
-            campaignCard.className = 'campaign-card';
+            campaignCard.className = 'campaign-card-horizontal';
+
+            const objetivoPrincipal = campaign.objetivo_principal || 'Sin objetivo definido';
+            const oferta = campaign.oferta_desc || 'Sin oferta';
+            const audiencia = campaign.audiencia_desc || 'Sin audiencia definida';
+            const intenciones = campaign.intenciones || 'Sin intenciones especificadas';
+            const cta = campaign.cta || 'Ver más';
+            const ctaUrl = campaign.cta_url || '#';
 
             campaignCard.innerHTML = `
-                ${campaign.oferta_desc ? `
-                    <div class="campaign-item">
-                        <div class="campaign-label">Oferta</div>
-                        <div class="campaign-value">${campaign.oferta_desc}</div>
+                <div class="campaign-card-content-horizontal">
+                    <h3 class="campaign-card-title-horizontal">${objetivoPrincipal}</h3>
+                    <div class="campaign-card-field">
+                        <div class="campaign-card-field-label">Oferta</div>
+                        <div class="campaign-card-field-value">${oferta}</div>
                     </div>
-                ` : ''}
-                <div class="campaign-item">
-                    <div class="campaign-label">Audiencia</div>
-                    <div class="campaign-value">${campaign.audiencia_desc || '-'}</div>
-                </div>
-                ${campaign.intenciones ? `
-                    <div class="campaign-item">
-                        <div class="campaign-label">Intenciones</div>
-                        <div class="campaign-value">${campaign.intenciones}</div>
+                    <div class="campaign-card-field">
+                        <div class="campaign-card-field-label">Audiencia</div>
+                        <div class="campaign-card-field-value">${audiencia}</div>
                     </div>
-                ` : ''}
-                <div class="campaign-item">
-                    <div class="campaign-label">Objetivo Principal</div>
-                    <div class="campaign-value">${campaign.objetivo_principal || '-'}</div>
-                </div>
-                ${campaign.cta && campaign.cta_url ? `
-                    <a href="${campaign.cta_url}" target="_blank" class="campaign-cta">
-                        ${campaign.cta}
-                        <i class="fas fa-arrow-right"></i>
+                    <div class="campaign-card-field">
+                        <div class="campaign-card-field-label">Intenciones</div>
+                        <div class="campaign-card-field-value">${intenciones}</div>
+                    </div>
+                    <a href="${ctaUrl}" target="_blank" class="campaign-card-cta-btn">
+                        ${cta} <i class="fas fa-arrow-right"></i>
                     </a>
-                ` : ''}
+                </div>
             `;
 
             campaignsListEl.appendChild(campaignCard);
