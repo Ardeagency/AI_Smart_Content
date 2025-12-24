@@ -938,24 +938,28 @@ class LivingManager {
             return;
         }
 
-        // Mostrar máximo 3 productos
-        const productsToShow = this.products.slice(0, 3);
+        // Ordenar por fecha de creación (más recientes primero) y mostrar los últimos
+        const sortedProducts = [...this.products].sort((a, b) => {
+            const dateA = new Date(a.created_at || 0);
+            const dateB = new Date(b.created_at || 0);
+            return dateB - dateA;
+        });
 
-        productsToShow.forEach(product => {
+        sortedProducts.forEach(product => {
             const productCard = document.createElement('div');
             productCard.className = 'product-card-horizontal';
-            productCard.onclick = () => {
-                window.location.href = 'products.html';
-            };
 
             const mainImage = product.images && product.images.length > 0 
                 ? product.images[0].image_url 
                 : null;
 
-            const productId = product.id || product.product_id || 'N/A';
             const precio = product.precio_producto 
                 ? `${product.moneda || 'USD'} $${parseFloat(product.precio_producto).toFixed(2)}`
                 : 'Precio no definido';
+
+            const beneficios = product.beneficios || product.beneficios_producto || 'Sin beneficios especificados';
+            const descripcion = product.descripcion_producto || 'Sin descripción';
+            const productId = product.id || product.product_id;
 
             productCard.innerHTML = `
                 <div class="product-card-image-horizontal">
@@ -966,20 +970,16 @@ class LivingManager {
                 </div>
                 <div class="product-card-content-horizontal">
                     <h3 class="product-card-title-horizontal">${product.nombre_producto || 'Sin nombre'}</h3>
-                    <div class="product-card-details-horizontal">
-                        <div class="product-card-detail-item">
-                            <span class="product-card-detail-label">Product ID:</span>
-                            <span>${productId}</span>
-                        </div>
-                        <div class="product-card-detail-item">
-                            <span class="product-card-detail-label">Precio:</span>
-                            <span>${precio}</span>
-                        </div>
-                    </div>
+                    <div class="product-card-price">${precio}</div>
                     <span class="product-card-type-badge">${this.formatProductType(product.tipo_producto)}</span>
-                </div>
-                <div class="product-card-status">
-                    <button class="product-card-status-btn">En Stock</button>
+                    <div class="product-card-benefits">
+                        <div class="product-card-benefits-label">Beneficios:</div>
+                        <div>${beneficios}</div>
+                    </div>
+                    <p class="product-card-description">${descripcion}</p>
+                    <a href="products.html?edit=${productId}" class="product-card-edit-btn">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
                 </div>
             `;
 
