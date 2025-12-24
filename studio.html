@@ -1726,9 +1726,10 @@
                     console.log('✅ Todos los managers están listos');
                     
                     // Inicializar instancias que dependen de supabase
-                    if (window.supabaseClient && window.supabaseClient.supabase) {
-                        const supabase = window.supabaseClient.supabase;
-                        
+                    const supabase = window.getSupabaseClient ? window.getSupabaseClient() : 
+                                   (window.supabaseClient && typeof window.supabaseClient.from === 'function' ? window.supabaseClient : null);
+                    
+                    if (supabase) {
                         // Inicializar DataCollector
                         window.dataCollector = new DataCollector(supabase, window.studioManager.userId);
                         console.log('✅ DataCollector inicializado');
