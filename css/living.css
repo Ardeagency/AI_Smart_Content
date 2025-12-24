@@ -129,7 +129,7 @@
 
 @media (max-width: 1400px) {
     .living-grid-top {
-        grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
         gap: 10px;
     }
     
@@ -157,7 +157,7 @@
 
 /* Cards */
 .living-card {
-    background: var(--bg-secondary);
+    background: #181a1b;
     border: 1px solid var(--border-color);
     border-radius: 16px;
     padding: 1.5rem;
@@ -932,7 +932,7 @@
     .product-card-horizontal {
         min-width: 320px;
         max-width: 320px;
-        flex-direction: column;
+    flex-direction: column;
     }
     
     .product-card-image-horizontal {
