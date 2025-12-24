@@ -939,7 +939,9 @@ class ProductsManager {
 }
 
 // Initialize when DOM is ready
+let productsManager;
 document.addEventListener('DOMContentLoaded', () => {
-    new ProductsManager();
+    productsManager = new ProductsManager();
+    window.productsManager = productsManager; // Exponer globalmente para usar en onclick/onchange
 });
 
