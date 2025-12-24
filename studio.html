@@ -1183,9 +1183,10 @@
             products.forEach(product => {
                 const option = document.createElement('option');
                 option.value = product.id;
-                option.textContent = product.name || product.product_type || 'Producto sin nombre';
+                // Usar nombre_producto según el schema.sql
+                option.textContent = product.nombre_producto || product.tipo_producto || 'Producto sin nombre';
                 productSelector.appendChild(option);
-                console.log('Producto agregado al selector:', product.name || product.product_type);
+                console.log('Producto agregado al selector:', product.nombre_producto || product.tipo_producto);
             });
 
             console.log('Selector de productos actualizado con', products.length, 'productos');
