@@ -221,6 +221,8 @@ body {
     flex: 1;
     height: 100vh;
     overflow: hidden;
+    min-width: 0; /* Permite que el flex item se encoja */
+    width: 100%;
 }
 
 /* =======================================
@@ -233,11 +235,14 @@ body {
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     padding: 8px 16px;
     height: 48px;
+    min-height: 48px;
     display: flex;
     align-items: center;
     z-index: 10;
     backdrop-filter: blur(20px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    position: relative;
 }
 
 .workspace-header .header-content {
@@ -245,9 +250,10 @@ body {
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    max-width: 1600px;
-    margin: 0 auto;
+    max-width: none;
+    margin: 0;
     gap: 1rem;
+    flex: 1;
 }
 
 .workspace-header .header-left {
@@ -275,12 +281,65 @@ body {
     line-height: 1.2;
 }
 
+.workspace-header .header-credits {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    width: auto;
+    height: auto;
+    justify-content: flex-end;
+    flex: 0 0 auto;
+}
+
 .workspace-header .header-credits-value {
     font-size: 0.813rem;
     font-weight: 600;
     color: rgba(255, 255, 255, 0.9);
     line-height: 1;
     white-space: nowrap;
+}
+
+.workspace-header .brand-separator {
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0 4px;
+}
+
+.workspace-header .hamburger-menu {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .workspace-header .hamburger-menu {
+        display: flex;
+        width: 40px;
+        height: 40px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .workspace-header .hamburger-menu:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .workspace-header .hamburger-line {
+        width: 20px;
+        height: 2px;
+        background: #ffffff;
+        border-radius: 2px;
+        transition: all 0.3s ease;
+    }
 }
 
 /* =======================================
@@ -316,18 +375,11 @@ body {
 
 .studio-layout {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     height: 100vh;
     position: relative;
     width: 100%;
-    gap: 8px;
-}
-
-@media (min-width: 1024px) {
-    .studio-layout {
-        flex-direction: row;
-        gap: 0;
-    }
+    gap: 0;
 }
 
 /* =======================================
@@ -3324,12 +3376,7 @@ nav.studio-sidebar {
    Ajustar contenido para header fijo
    ======================================= */
 
-.main-content {
-    margin: 0;
-    padding: 0;
-    height: 100vh;
-    overflow: hidden;
-}
+/* Regla duplicada eliminada - usar la definición principal arriba */
 
 /* Regla duplicada eliminada - usar la definición principal arriba */
 
