@@ -2483,7 +2483,7 @@ nav.studio-sidebar {
     border-radius: 8px;
     background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
     border: none;
-    color: var(--text-primary);
+    color: #000000;
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 4px 12px rgba(236, 235, 218, 0.3);
@@ -2512,12 +2512,6 @@ nav.studio-sidebar {
     margin-top: 12px;
     backdrop-filter: blur(10px);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-}
-
-.info-display:hover {
-    border-color: rgba(236, 235, 218, 0.2);
-    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
 }
 
 .info-item {
@@ -2526,18 +2520,10 @@ nav.studio-sidebar {
     align-items: flex-start;
     padding: 12px 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    transition: all 0.2s ease;
 }
 
 .info-item:last-child {
     border-bottom: none;
-}
-
-.info-item:hover {
-    background: rgba(255, 255, 255, 0.02);
-    border-radius: 6px;
-    padding-left: 8px;
-    padding-right: 8px;
 }
 
 .info-label {
@@ -2819,7 +2805,7 @@ nav.studio-sidebar {
         border-radius: 6px;
         background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
         border: none;
-        color: var(--text-primary);
+        color: #000000;
         cursor: pointer;
         transition: all 0.3s ease;
         box-shadow: 0 2px 8px rgba(236, 235, 218, 0.3);
