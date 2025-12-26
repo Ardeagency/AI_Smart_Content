@@ -43,7 +43,7 @@ class StudioManager {
             // Cargar datos de usuario y proyecto
             if (this.supabase && this.userId) {
                 await this.loadUserAndProjectData();
-                this.updateNavHeader();
+                // Sidebar se actualiza automáticamente por SidebarManager (persistente)
             }
 
             this.setupEventListeners();
@@ -121,75 +121,7 @@ class StudioManager {
         }
     }
 
-    updateNavHeader() {
-        const navBrandLogo = document.getElementById('navBrandLogo');
-        const navBrandInitials = document.getElementById('navBrandInitials');
-        const navBrandName = document.getElementById('navBrandName');
-        const navPlanName = document.getElementById('navPlanName');
-        const creditsCount = document.getElementById('creditsCount');
-
-        // Actualizar logo de marca
-        if (this.projectData && this.projectData.logo_url) {
-            if (navBrandLogo) {
-                navBrandLogo.src = this.projectData.logo_url + '?t=' + Date.now();
-                navBrandLogo.style.display = 'block';
-            }
-            if (navBrandInitials) {
-                navBrandInitials.style.display = 'none';
-            }
-        } else if (this.projectData && this.projectData.nombre_marca) {
-            // Usar iniciales del nombre de marca
-            const initials = this.projectData.nombre_marca
-                .split(' ')
-                .map(word => word.charAt(0))
-                .join('')
-                .toUpperCase()
-                .substring(0, 2);
-            if (navBrandInitials) {
-                navBrandInitials.textContent = initials;
-                navBrandInitials.style.display = 'block';
-            }
-            if (navBrandLogo) {
-                navBrandLogo.style.display = 'none';
-            }
-        }
-
-        // Actualizar nombre de marca
-        if (navBrandName && this.projectData) {
-            navBrandName.textContent = this.projectData.nombre_marca || 'Sin marca';
-        }
-
-        // Actualizar plan
-        if (navPlanName && this.userData) {
-            const planNames = {
-                'basico': 'Plan Básico',
-                'pro': 'Plan Pro',
-                'enterprise': 'Plan Enterprise'
-            };
-            navPlanName.textContent = planNames[this.userData.plan_type] || 'Plan Básico';
-        }
-
-        // Actualizar créditos
-        if (creditsCount && this.userData) {
-            creditsCount.textContent = this.userData.credits_available || 0;
-        }
-
-        // Actualizar créditos en el header (formato: total/restantes)
-        const headerCreditsValue = document.getElementById('headerCreditsValue');
-        if (headerCreditsValue && this.userData) {
-            const total = this.userData.credits_total || 0;
-            const restantes = this.userData.credits_available || 0;
-            headerCreditsValue.textContent = `${total}/${restantes}`;
-        }
-
-        // Actualizar nombre de marca en el header principal
-        const brandNameHeader = document.getElementById('brandNameHeader');
-        if (brandNameHeader && this.projectData && this.projectData.nombre_marca) {
-            brandNameHeader.textContent = this.projectData.nombre_marca;
-        } else if (brandNameHeader) {
-            brandNameHeader.textContent = 'Sin marca';
-        }
-    }
+    // updateNavHeader() removido - El sidebar es persistente y se maneja por SidebarManager
 
     /* =======================================
        Inicialización
