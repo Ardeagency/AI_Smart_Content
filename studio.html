@@ -353,8 +353,16 @@
                             <div class="semantic-slider-display">
                                 <span id="tone-display-value">Equilibrado</span>
                             </div>
+                            <div class="tone-presets">
+                                <button type="button" class="tone-preset-btn" data-value="profesional" onclick="setTonePreset('profesional')">Profesional</button>
+                                <button type="button" class="tone-preset-btn" data-value="casual" onclick="setTonePreset('casual')">Casual</button>
+                                <button type="button" class="tone-preset-btn" data-value="amigable" onclick="setTonePreset('amigable')">Amigable</button>
+                                <button type="button" class="tone-preset-btn" data-value="autoritario" onclick="setTonePreset('autoritario')">Autoritario</button>
+                                <button type="button" class="tone-preset-btn" data-value="energetico" onclick="setTonePreset('energetico')">Energético</button>
+                                <button type="button" class="tone-preset-btn" data-value="tranquilo" onclick="setTonePreset('tranquilo')">Tranquilo</button>
                             </div>
-                            </div>
+                        </div>
+                    </div>
 
                         <!-- Personalidad -->
                     <div class="config-field">
@@ -400,8 +408,23 @@
                             <div class="semantic-slider-display">
                                 <span id="realism-display-value">Moderado</span>
                             </div>
+                            <div class="realism-presets">
+                                <div class="realism-presets-label">Opciones predefinidas:</div>
+                                <div class="realism-presets-grid">
+                                    <button type="button" class="realism-preset-btn" data-value="pelitos-sueltos" onclick="toggleRealismPreset(this, 'pelitos-sueltos')">Pelitos sueltos visibles</button>
+                                    <button type="button" class="realism-preset-btn" data-value="huellas-dactilares" onclick="toggleRealismPreset(this, 'huellas-dactilares')">Huellas dactilares ligeras</button>
+                                    <button type="button" class="realism-preset-btn" data-value="arrugas-tela" onclick="toggleRealismPreset(this, 'arrugas-tela')">Arrugas naturales de tela</button>
+                                    <button type="button" class="realism-preset-btn" data-value="micro-temblor" onclick="toggleRealismPreset(this, 'micro-temblor')">Micro temblor de mano</button>
+                                    <button type="button" class="realism-preset-btn" data-value="polvo-fibra" onclick="toggleRealismPreset(this, 'polvo-fibra')">Polvo/fibra diminuta</button>
+                                    <button type="button" class="realism-preset-btn" data-value="brillo-piel" onclick="toggleRealismPreset(this, 'brillo-piel')">Brillo natural de piel</button>
+                                    <button type="button" class="realism-preset-btn" data-value="sombras-imperfectas" onclick="toggleRealismPreset(this, 'sombras-imperfectas')">Sombras imperfectas</button>
+                                    <button type="button" class="realism-preset-btn" data-value="manchas-mesa" onclick="toggleRealismPreset(this, 'manchas-mesa')">Manchas ligeras en mesa</button>
+                                    <button type="button" class="realism-preset-btn" data-value="reflejo-ventana" onclick="toggleRealismPreset(this, 'reflejo-ventana')">Reflejo suave de ventana</button>
+                                    <button type="button" class="realism-preset-btn" data-value="distorsion-lente" onclick="toggleRealismPreset(this, 'distorsion-lente')">Distorsión sutil de lente</button>
+                                </div>
                             </div>
-                            </div>
+                        </div>
+                    </div>
 
                             </div>
                             </div>
@@ -1603,12 +1626,27 @@
             const display = document.getElementById('tone-display-value');
             if (display) {
                 const numValue = parseInt(value);
-                if (numValue < 30) {
+                // Mapeo más detallado de valores
+                if (numValue < 10) {
+                    display.textContent = 'Muy Serio';
+                } else if (numValue < 20) {
                     display.textContent = 'Serio';
-                } else if (numValue < 70) {
+                } else if (numValue < 30) {
+                    display.textContent = 'Autoritario';
+                } else if (numValue < 40) {
+                    display.textContent = 'Profesional';
+                } else if (numValue < 50) {
                     display.textContent = 'Equilibrado';
-                } else {
+                } else if (numValue < 60) {
+                    display.textContent = 'Casual';
+                } else if (numValue < 70) {
+                    display.textContent = 'Amigable';
+                } else if (numValue < 80) {
+                    display.textContent = 'Tranquilo';
+                } else if (numValue < 90) {
                     display.textContent = 'Relajado';
+                } else {
+                    display.textContent = 'Muy Relajado';
                 }
             }
         }
@@ -1616,10 +1654,21 @@
         function updateToneFromSlider(value) {
             const numValue = parseInt(value);
             let toneValue = '';
-            if (numValue < 30) {
+            // Mapeo a valores originales
+            if (numValue < 20) {
                 toneValue = 'serio';
-            } else if (numValue < 70) {
+            } else if (numValue < 30) {
+                toneValue = 'autoritario';
+            } else if (numValue < 40) {
+                toneValue = 'profesional';
+            } else if (numValue < 50) {
                 toneValue = 'equilibrado';
+            } else if (numValue < 60) {
+                toneValue = 'casual';
+            } else if (numValue < 70) {
+                toneValue = 'amigable';
+            } else if (numValue < 80) {
+                toneValue = 'tranquilo';
             } else {
                 toneValue = 'relajado';
             }
@@ -1629,15 +1678,44 @@
             }
         }
         
+        // Tono - Presets
+        function setTonePreset(value) {
+            const slider = document.getElementById('tone-slider');
+            const presetMap = {
+                'profesional': 35,
+                'casual': 55,
+                'amigable': 65,
+                'autoritario': 25,
+                'energetico': 45,
+                'tranquilo': 75
+            };
+            
+            if (slider && presetMap[value] !== undefined) {
+                slider.value = presetMap[value];
+                updateToneSlider(presetMap[value]);
+                updateToneFromSlider(presetMap[value]);
+                
+                // Actualizar botones activos
+                document.querySelectorAll('.tone-preset-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector(`.tone-preset-btn[data-value="${value}"]`).classList.add('active');
+            }
+        }
+        
         // Realismo - Slider
         function updateRealismSlider(value) {
             const display = document.getElementById('realism-display-value');
             if (display) {
                 const numValue = parseInt(value);
-                if (numValue < 30) {
+                if (numValue < 20) {
+                    display.textContent = 'Muy Estilizado';
+                } else if (numValue < 40) {
                     display.textContent = 'Estilizado';
-                } else if (numValue < 70) {
+                } else if (numValue < 60) {
                     display.textContent = 'Moderado';
+                } else if (numValue < 80) {
+                    display.textContent = 'Realista';
                 } else {
                     display.textContent = 'Ultra realista';
                 }
@@ -1657,6 +1735,43 @@
             
             if (window.updateRealism) {
                 window.updateRealism(realismValue);
+            }
+        }
+        
+        // Realismo - Presets (multi-select)
+        function toggleRealismPreset(button, value) {
+            if (button.classList.contains('active')) {
+                button.classList.remove('active');
+            } else {
+                button.classList.add('active');
+            }
+            
+            // Recopilar todos los presets activos
+            const activePresets = Array.from(document.querySelectorAll('.realism-preset-btn.active'))
+                .map(btn => btn.dataset.value);
+            
+            // Actualizar slider basado en cantidad de presets activos
+            const slider = document.getElementById('realism-slider');
+            if (slider) {
+                if (activePresets.length === 0) {
+                    slider.value = 50; // Moderado por defecto
+                } else if (activePresets.length <= 3) {
+                    slider.value = 60; // Más realista
+                } else if (activePresets.length <= 6) {
+                    slider.value = 75; // Muy realista
+                } else {
+                    slider.value = 90; // Ultra realista
+                }
+                updateRealismSlider(slider.value);
+                updateRealismFromSlider(slider.value);
+            }
+            
+            // Llamar función original con valores combinados
+            if (window.updateRealism) {
+                const combinedValue = activePresets.length > 0 
+                    ? activePresets.join(',') 
+                    : slider.value;
+                window.updateRealism(combinedValue);
             }
         }
         
