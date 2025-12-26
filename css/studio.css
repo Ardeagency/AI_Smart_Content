@@ -4,6 +4,7 @@
 
 /* Importar estilos base */
 @import url('base.css');
+@import url('navigation.css');
 
 /* Variables específicas del Studio */
 :root {
@@ -211,6 +212,16 @@ body {
 }
 
 /* =======================================
+   Ajuste del Header para Studio
+   ======================================= */
+
+@media (min-width: 1024px) {
+    .main-header {
+        right: 384px; /* Ancho del sidebar de studio */
+    }
+}
+
+/* =======================================
    Layout Principal
    ======================================= */
 
@@ -267,20 +278,20 @@ body {
 @media (min-width: 1024px) {
     .studio-sidebar {
         width: 384px;
-        order: 1;
+        order: 3;
         border-radius: 0;
-        border-right: 1px solid rgba(255, 255, 255, 0.08);
-        border-left: none;
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+        border-right: none;
         border-top: none;
         border-bottom: none;
-    position: fixed;
-    left: 0;
-    top: 0;
-    height: 100vh;
-    z-index: 100;
+        position: fixed;
+        right: 0;
+        top: 0;
+        height: 100vh;
+        z-index: 100;
         overflow-y: auto;
-    overflow-x: hidden;
-    padding: 16px 0;
+        overflow-x: hidden;
+        padding: 16px 0;
         min-height: 100vh;
         box-shadow: none;
         background: #181a1b;
@@ -389,49 +400,42 @@ body {
 
 
 /* =======================================
-   Canvas Area
+   Canvas Area - Estático
    ======================================= */
 
 .canvas-area {
     flex: 1;
     order: 1;
-    background: hsl(var(--background));
-    backdrop-filter: blur(20px);
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
+    background-color: rgb(26, 29, 30);
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
     position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 12px;
     overflow-y: auto;
     overflow-x: hidden;
     padding: 24px;
     box-sizing: border-box;
-    -webkit-overflow-scrolling: touch;
-    box-shadow: var(--shadow-card);
-    transition: all var(--transition-normal);
     min-height: 0;
-    max-height: calc(100vh - 70px);
-    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
-    background-size: 20px 20px;
-    background-color: rgb(26, 29, 30);
 }
 
 @media (min-width: 1024px) {
     .canvas-area {
-        order: 2;
-        margin-left: 384px;
-        margin-top: 0;
+        order: 1;
+        margin-left: 250px; /* Ancho del sidebar de navegación */
+        margin-right: 384px; /* Ancho del sidebar de studio */
+        margin-top: 48px; /* Altura del header */
         border-radius: 0;
         border: none;
-        height: 100vh;
-        width: calc(100% - 384px);
+        height: calc(100vh - 48px);
+        width: calc(100% - 250px - 384px);
         box-shadow: none;
         background-image: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
         background-size: 20px 20px;
         background-color: rgb(26, 29, 30);
-        max-height: 100vh;
-        padding-top: 52px; /* 16px padding + 20px padding + 16px extra */
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 24px;
+        box-sizing: border-box;
+        position: relative;
     }
 }
 
@@ -3157,13 +3161,25 @@ body {
    Arreglar Scroll del Sidebar
    ======================================= */
 
-.studio-sidebar {
-    height: 100vh;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 0 6px 0 6px;
-    display: flex;
-    flex-direction: column;
+@media (max-width: 1023px) {
+    .studio-sidebar {
+        height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 0 6px 0 6px;
+        display: flex;
+        flex-direction: column;
+    }
+}
+
+@media (min-width: 1024px) {
+    .studio-sidebar {
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 0 6px 0 6px;
+        display: flex;
+        flex-direction: column;
+    }
 }
 
 .sidebar-content {
@@ -3237,14 +3253,7 @@ nav.studio-sidebar {
     overflow: hidden;
 }
 
-.studio-layout {
-    height: 100vh;
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-}
+/* Regla duplicada eliminada - usar la definición principal arriba */
 
 /* =======================================
    Tab Bar - Solo en Móviles
