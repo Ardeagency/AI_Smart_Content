@@ -110,6 +110,12 @@ class ProductsManager {
             creditsCount.textContent = this.userData.credits_available || 0;
         }
 
+        // Actualizar créditos en el header
+        const headerCreditsValue = document.getElementById('headerCreditsValue');
+        if (headerCreditsValue && this.userData) {
+            headerCreditsValue.textContent = this.userData.credits_available || 0;
+        }
+
         // Actualizar nombre de marca en el header principal
         const brandNameHeader = document.getElementById('brandNameHeader');
         if (brandNameHeader && this.projectData && this.projectData.nombre_marca) {
