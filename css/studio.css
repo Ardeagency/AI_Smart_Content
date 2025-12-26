@@ -1812,29 +1812,11 @@ body {
    Card de Galería de Imágenes
    ======================================= */
 
-.image-gallery-card {
-    margin: 16px 0;
-    padding: 20px;
-    background: #000000;
-    border: 1px solid rgba(236, 235, 218, 0.3);
-    border-radius: 12px;
-    box-sizing: border-box;
-}
-
-.image-gallery-card h4 {
-    color: hsl(var(--foreground));
-    font-size: 14px;
-    font-weight: 600;
-    margin: 0 0 16px 0;
-    padding-bottom: 8px;
-    border-bottom: 1px solid rgba(236, 235, 218, 0.3);
-}
-
 /* =======================================
    ESTILOS PARA IMÁGENES DINÁMICAS DE PRODUCTO
    ======================================= */
 
-/* Grid de imágenes de producto - Card gris interna */
+/* Grid de imágenes de producto - Card gris con contenedores */
 .product-images-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
