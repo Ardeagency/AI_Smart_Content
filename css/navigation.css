@@ -378,6 +378,7 @@
     font-weight: 500;
     color: var(--text-primary);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.2;
 }
 
 /* Enlaces del footer (no son botones encerrados) */
@@ -395,7 +396,7 @@
     text-decoration: none;
     cursor: pointer;
     transition: var(--nav-transition);
-    line-height: 1.5;
+    line-height: 1.2;
 }
 
 .nav-footer-link:hover {
