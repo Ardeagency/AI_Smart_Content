@@ -743,6 +743,234 @@ body {
 }
 
 /* =======================================
+   Protagonista - Nuevos Formatos
+   ======================================= */
+
+/* 1. Género - Segmented Control */
+.segmented-control {
+    display: flex;
+    gap: 0;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 2px;
+    overflow: hidden;
+}
+
+.segment-btn {
+    flex: 1;
+    padding: 10px 16px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.segment-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+}
+
+.segment-btn.active {
+    background: var(--primary-color);
+    color: #000000;
+    font-weight: 600;
+}
+
+/* 2. Edad - Slider */
+.age-slider-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#age-slider {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.1);
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+#age-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    cursor: pointer;
+    border: 2px solid #000000;
+    transition: all 0.2s ease;
+}
+
+#age-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 4px rgba(236, 235, 218, 0.2);
+}
+
+#age-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    cursor: pointer;
+    border: 2px solid #000000;
+    transition: all 0.2s ease;
+}
+
+#age-slider::-moz-range-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 4px rgba(236, 235, 218, 0.2);
+}
+
+.age-slider-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+    padding: 0 2px;
+}
+
+.age-display {
+    text-align: center;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#age-display-value {
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* 3. Etnia - Dropdown con búsqueda */
+.searchable-dropdown-container {
+    position: relative;
+    width: 100%;
+}
+
+#ethnicity-search {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 14px;
+    height: 44px;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+}
+
+#ethnicity-search:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 2px rgba(236, 235, 218, 0.15);
+}
+
+.searchable-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 4px;
+    background: #181a1b;
+    border: 1px solid rgba(236, 235, 218, 0.3);
+    border-radius: 6px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.dropdown-option {
+    padding: 12px 16px;
+    color: var(--text-primary);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dropdown-option:last-child {
+    border-bottom: none;
+}
+
+.dropdown-option:hover {
+    background: rgba(236, 235, 218, 0.1);
+    color: var(--primary-color);
+}
+
+/* 4. Color de Ojos - Swatches */
+.eye-color-swatches {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.eye-swatch {
+    width: 48px;
+    height: 48px;
+    border-radius: 6px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    background: var(--bg-secondary);
+    padding: 0;
+    position: relative;
+}
+
+.eye-swatch:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(236, 235, 218, 0.2);
+}
+
+.eye-swatch.active {
+    border-color: var(--primary-color);
+    border-width: 3px;
+    box-shadow: 0 0 0 2px rgba(236, 235, 218, 0.3);
+}
+
+/* Colores específicos para cada swatch */
+.eye-swatch[data-value="marron"] {
+    background: #8B4513;
+}
+
+.eye-swatch[data-value="azul"] {
+    background: #4169E1;
+}
+
+.eye-swatch[data-value="verde"] {
+    background: #228B22;
+}
+
+.eye-swatch[data-value="avellana"] {
+    background: #D2691E;
+}
+
+.eye-swatch[data-value="negro"] {
+    background: #1C1C1C;
+}
+
+.eye-swatch[data-value="otro"] {
+    background: linear-gradient(135deg, #8B4513 0%, #4169E1 50%, #228B22 100%);
+}
+
+/* =======================================
    Botones Unificados
    ======================================= */
 

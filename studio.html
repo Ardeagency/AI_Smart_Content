@@ -147,13 +147,13 @@
                 <!-- Galería de Imágenes del Producto -->
                 <div class="config-field" id="product-image-gallery" style="display: none;">
                     <label>Imágenes del producto</label>
-                    <div class="product-images-grid" id="dynamic-product-images">
-                        <div class="loading-placeholder">
-                            <div class="spinner-small"></div>
+                        <div class="product-images-grid" id="dynamic-product-images">
+                            <div class="loading-placeholder">
+                                <div class="spinner-small"></div>
                             <span>Cargando imágenes...</span>
                         </div>
-                    </div>
-                </div>
+            </div>
+        </div>
                             
                 <!-- Guía creativa -->
                 <div class="accordion-section">
@@ -236,64 +236,56 @@
                 <!-- Género -->
                     <div class="config-field">
                         <label>Género:</label>
-                        <div class="dropdown-container">
-                            <select id="gender-selector" onchange="window.updateGender(this.value)">
-                                <option value="">Seleccionar género...</option>
-                                <option value="masculino">Masculino</option>
-                                <option value="femenino">Femenino</option>
-                                <option value="no-binario">No binario</option>
-                            </select>
+                        <div class="segmented-control" id="gender-selector">
+                            <button type="button" class="segment-btn" data-value="masculino" onclick="selectGender(this, 'masculino')">Masculino</button>
+                            <button type="button" class="segment-btn" data-value="femenino" onclick="selectGender(this, 'femenino')">Femenino</button>
+                            <button type="button" class="segment-btn" data-value="sin-definicion" onclick="selectGender(this, 'sin-definicion')">Sin definición</button>
                             </div>
                             </div>
 
                 <!-- Edad -->
                     <div class="config-field">
                         <label>Edad:</label>
-                        <div class="dropdown-container">
-                            <select id="age-selector" onchange="window.updateAge(this.value)">
-                                <option value="">Seleccionar edad...</option>
-                                <option value="10-17">10-17 años</option>
-                                <option value="18-25">18-25 años</option>
-                                <option value="26-30">26-30 años</option>
-                                <option value="31-35">31-35 años</option>
-                                <option value="36-40">36-40 años</option>
-                                <option value="41-45">41-45 años</option>
-                                <option value="46-50">46-50 años</option>
-                                <option value="51-55">51-55 años</option>
-                                <option value="56-60">56-60 años</option>
-                                <option value="61-65">61-65 años</option>
-                                <option value="66-70">66-70 años</option>
-                            </select>
+                        <div class="age-slider-container">
+                            <input type="range" id="age-slider" min="10" max="70" value="25" step="5" oninput="updateAgeSlider(this.value)" onchange="updateAgeFromSlider(this.value)">
+                            <div class="age-slider-labels">
+                                <span class="age-label">10</span>
+                                <span class="age-label">25</span>
+                                <span class="age-label">40</span>
+                                <span class="age-label">55</span>
+                                <span class="age-label">70</span>
+                            </div>
+                            <div class="age-display">
+                                <span id="age-display-value">25 años</span>
+                            </div>
         </div>
     </div>
 
                 <!-- Etnia -->
                     <div class="config-field">
                         <label>Etnia:</label>
-                        <div class="dropdown-container">
-                            <select id="ethnicity-selector" onchange="window.updateEthnicity(this.value)">
-                                <option value="">Seleccionar etnia...</option>
-                                <option value="caucasico">Caucásico</option>
-                                <option value="asiatico">Asiático</option>
-                                <option value="arabe">Árabe</option>
-                                <option value="africano">Africano</option>
-                                <option value="latinoamericano">Latinoamericano</option>
-                            </select>
+                        <div class="searchable-dropdown-container">
+                            <input type="text" id="ethnicity-search" placeholder="Buscar o seleccionar etnia..." autocomplete="off" oninput="filterEthnicityOptions(this.value)" onfocus="showEthnicityDropdown()">
+                            <div class="searchable-dropdown" id="ethnicity-dropdown">
+                                <div class="dropdown-option" data-value="caucasico" onclick="selectEthnicity('caucasico')">Caucásico</div>
+                                <div class="dropdown-option" data-value="asiatico" onclick="selectEthnicity('asiatico')">Asiático</div>
+                                <div class="dropdown-option" data-value="arabe" onclick="selectEthnicity('arabe')">Árabe</div>
+                                <div class="dropdown-option" data-value="africano" onclick="selectEthnicity('africano')">Africano</div>
+                                <div class="dropdown-option" data-value="latinoamericano" onclick="selectEthnicity('latinoamericano')">Latinoamericano</div>
+                            </div>
                     </div>
                 </div>
 
                 <!-- Color de Ojos -->
                     <div class="config-field">
                         <label>Color de Ojos:</label>
-                        <div class="dropdown-container">
-                            <select id="eyes-selector" onchange="window.updateEyes(this.value)">
-                                <option value="">Seleccionar color de ojos...</option>
-                                <option value="marron">Marrón</option>
-                                <option value="azul">Azul</option>
-                                <option value="verde">Verde</option>
-                                <option value="gris">Gris</option>
-                                <option value="miel">Miel</option>
-                            </select>
+                        <div class="eye-color-swatches" id="eyes-selector">
+                            <button type="button" class="eye-swatch" data-value="marron" data-label="Marrón" onclick="selectEyeColor(this, 'marron')" title="Marrón"></button>
+                            <button type="button" class="eye-swatch" data-value="azul" data-label="Azul" onclick="selectEyeColor(this, 'azul')" title="Azul"></button>
+                            <button type="button" class="eye-swatch" data-value="verde" data-label="Verde" onclick="selectEyeColor(this, 'verde')" title="Verde"></button>
+                            <button type="button" class="eye-swatch" data-value="avellana" data-label="Avellana" onclick="selectEyeColor(this, 'avellana')" title="Avellana"></button>
+                            <button type="button" class="eye-swatch" data-value="negro" data-label="Negro" onclick="selectEyeColor(this, 'negro')" title="Negro"></button>
+                            <button type="button" class="eye-swatch" data-value="otro" data-label="Otro" onclick="selectEyeColor(this, 'otro')" title="Otro"></button>
         </div>
     </div>
 
@@ -663,11 +655,11 @@
                 onBrandSelected(projectId);
             } else {
                 // Verificar si hay una marca seleccionada manualmente
-                const brandSelector = document.getElementById('brand-selector');
-                console.log('Selector de marca:', brandSelector?.value);
-                if (brandSelector && brandSelector.value) {
-                    console.log('Marca pre-seleccionada encontrada:', brandSelector.value);
-                    onBrandSelected(brandSelector.value);
+            const brandSelector = document.getElementById('brand-selector');
+            console.log('Selector de marca:', brandSelector?.value);
+            if (brandSelector && brandSelector.value) {
+                console.log('Marca pre-seleccionada encontrada:', brandSelector.value);
+                onBrandSelected(brandSelector.value);
                 }
             }
             
@@ -1356,7 +1348,7 @@
                 <div class="info-item">
                     <span class="info-label">Qué se comunica:</span>
                     <span class="info-value long-text">${data.oferta_desc || 'No especificada'}</span>
-                </div>
+            </div>
                 <div class="info-item">
                     <span class="info-label">Audiencia:</span>
                     <span class="info-value">${data.audiencia_desc || 'No especificada'}</span>
@@ -1374,7 +1366,7 @@
                     <span class="info-value">
                         ${data.cta_url ? `<a href="${data.cta_url}" target="_blank" class="url-link">${data.cta_url}</a>` : 'No especificada'}
                     </span>
-                </div>
+        </div>
                 ${data.valido_hasta ? `
                 <div class="info-item">
                     <span class="info-label">Vigencia:</span>
@@ -1471,6 +1463,124 @@
         }
 
         // =======================================
+        // Funciones para Protagonista - Nuevos formatos
+        // =======================================
+        
+        // Género - Segmented Control
+        function selectGender(button, value) {
+            // Remover selección anterior
+            const allButtons = document.querySelectorAll('#gender-selector .segment-btn');
+            allButtons.forEach(btn => btn.classList.remove('active'));
+            
+            // Activar botón seleccionado
+            button.classList.add('active');
+            
+            // Llamar función original
+            if (window.updateGender) {
+                window.updateGender(value);
+            }
+        }
+        
+        // Edad - Slider
+        function updateAgeSlider(value) {
+            const display = document.getElementById('age-display-value');
+            if (display) {
+                display.textContent = value + ' años';
+            }
+        }
+        
+        function updateAgeFromSlider(value) {
+            // Convertir valor a rango
+            let ageRange = '';
+            if (value <= 17) ageRange = '10-17';
+            else if (value <= 25) ageRange = '18-25';
+            else if (value <= 30) ageRange = '26-30';
+            else if (value <= 35) ageRange = '31-35';
+            else if (value <= 40) ageRange = '36-40';
+            else if (value <= 45) ageRange = '41-45';
+            else if (value <= 50) ageRange = '46-50';
+            else if (value <= 55) ageRange = '51-55';
+            else if (value <= 60) ageRange = '56-60';
+            else if (value <= 65) ageRange = '61-65';
+            else ageRange = '66-70';
+            
+            if (window.updateAge) {
+                window.updateAge(ageRange);
+            }
+        }
+        
+        // Etnia - Dropdown con búsqueda
+        function showEthnicityDropdown() {
+            const dropdown = document.getElementById('ethnicity-dropdown');
+            if (dropdown) {
+                dropdown.style.display = 'block';
+            }
+        }
+        
+        function filterEthnicityOptions(searchTerm) {
+            const options = document.querySelectorAll('#ethnicity-dropdown .dropdown-option');
+            const term = searchTerm.toLowerCase();
+            
+            options.forEach(option => {
+                const text = option.textContent.toLowerCase();
+                if (text.includes(term)) {
+                    option.style.display = 'block';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+            
+            // Mostrar dropdown si hay búsqueda
+            const dropdown = document.getElementById('ethnicity-dropdown');
+            if (dropdown && searchTerm) {
+                dropdown.style.display = 'block';
+            }
+        }
+        
+        function selectEthnicity(value) {
+            const input = document.getElementById('ethnicity-search');
+            const dropdown = document.getElementById('ethnicity-dropdown');
+            const selectedOption = document.querySelector(`#ethnicity-dropdown .dropdown-option[data-value="${value}"]`);
+            
+            if (input && selectedOption) {
+                input.value = selectedOption.textContent;
+            }
+            
+            if (dropdown) {
+                dropdown.style.display = 'none';
+            }
+            
+            if (window.updateEthnicity) {
+                window.updateEthnicity(value);
+            }
+        }
+        
+        // Cerrar dropdown al hacer click fuera
+        document.addEventListener('click', function(event) {
+            const container = document.querySelector('.searchable-dropdown-container');
+            if (container && !container.contains(event.target)) {
+                const dropdown = document.getElementById('ethnicity-dropdown');
+                if (dropdown) {
+                    dropdown.style.display = 'none';
+                }
+            }
+        });
+        
+        // Color de Ojos - Swatches
+        function selectEyeColor(button, value) {
+            // Remover selección anterior
+            const allSwatches = document.querySelectorAll('#eyes-selector .eye-swatch');
+            allSwatches.forEach(swatch => swatch.classList.remove('active'));
+            
+            // Activar swatch seleccionado
+            button.classList.add('active');
+            
+            // Llamar función original
+            if (window.updateEyes) {
+                window.updateEyes(value);
+            }
+        }
+
         // Funciones para Configuración Avanzada
         // =======================================
 
@@ -2015,7 +2125,7 @@
                     // Inicializar instancias que dependen de supabase
                     const supabase = window.getSupabaseClient ? window.getSupabaseClient() : 
                                    (window.supabaseClient && typeof window.supabaseClient.from === 'function' ? window.supabaseClient : null);
-                    
+                        
                     if (supabase) {
                         // Inicializar DataCollector
                         window.dataCollector = new DataCollector(supabase, window.studioManager.userId);
