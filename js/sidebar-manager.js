@@ -27,6 +27,7 @@ class SidebarManager {
     /**
      * Crear snapshot por defecto del usuario (inmutable)
      * El sidebar JAMÁS ve un estado "sin usuario"
+     * UserShellState: siempre presente, nunca null, nunca loading
      */
     getDefaultUserSnapshot() {
         return {
@@ -34,8 +35,10 @@ class SidebarManager {
             email: '',
             full_name: '',
             plan_type: 'basico',
+            plan_name: 'Plan Básico', // Siempre visible, nunca "—"
             credits_available: 0,
-            credits_total: 0
+            credits_total: 0,
+            avatar_initial: 'M' // Avatar placeholder persistente
         };
     }
 
@@ -47,6 +50,7 @@ class SidebarManager {
             id: null,
             nombre_marca: 'Cargando marca...',
             logo_url: null,
+            logo_initial: 'M', // Inicial placeholder persistente
             sitio_web: null,
             instagram_url: null,
             tiktok_url: null,
@@ -57,10 +61,14 @@ class SidebarManager {
     /**
      * Inicializar el sidebar una sola vez
      * Se llama cuando la app inicia, no en cada navegación
+     * 
+     * REGLA DE ORO: Renderizar PRIMERO, luego sincronizar en background
      */
     async init() {
         if (this.isInitialized) {
             console.log('✅ Sidebar ya está inicializado, usando estado persistente');
+            // Aún así, asegurar que el UI esté actualizado
+            this.updateUI();
             return;
         }
 
@@ -69,17 +77,21 @@ class SidebarManager {
         // 1. Hidratar con snapshot local (instantáneo, sin esperar API)
         this.hydrateFromSnapshot();
         
-        // 2. Cargar datos frescos en background (sin bloquear UI)
-        this.syncInBackground();
+        // 2. Renderizar UI INMEDIATAMENTE con snapshot (antes de cualquier async)
+        // Usar requestAnimationFrame para asegurar que el DOM esté listo
+        requestAnimationFrame(() => {
+            this.updateUI();
+        });
         
-        // 3. Configurar sincronización periódica
-        this.startPeriodicSync();
-        
-        // 4. Marcar como inicializado
+        // 3. Marcar como inicializado (antes de async)
         this.isInitialized = true;
         
-        // 5. Actualizar UI con datos disponibles
-        this.updateUI();
+        // 4. Cargar datos frescos en background (sin bloquear UI)
+        // Esto actualizará el UI suavemente cuando lleguen los datos
+        this.syncInBackground();
+        
+        // 5. Configurar sincronización periódica
+        this.startPeriodicSync();
     }
 
     /**
@@ -99,9 +111,12 @@ class SidebarManager {
             } else {
                 console.log('📝 No hay snapshot local, usando valores por defecto');
                 // Ya están inicializados con defaults en constructor
+                // Asegurar que tengan valores calculados
+                this.userData.avatar_initial = this.getInitials(this.userData.full_name || this.userData.email || 'M');
+                this.userData.plan_name = 'Plan Básico';
+                this.projectData.logo_initial = this.getInitials(this.projectData.nombre_marca || 'M');
             }
-            // SIEMPRE actualizar UI inmediatamente (nunca esperar)
-            this.updateUI();
+            // NO actualizar UI aquí - se hace en init() con requestAnimationFrame
         } catch (error) {
             console.error('❌ Error hidratando sidebar:', error);
             // En caso de error, mantener defaults y actualizar UI
@@ -136,18 +151,49 @@ class SidebarManager {
             ]);
 
             // Actualizar estado (fusionar con defaults, nunca reemplazar completamente)
+            let hasChanges = false;
+            
             if (userDataResult.status === 'fulfilled' && userDataResult.value) {
-                this.userData = { ...this.getDefaultUserSnapshot(), ...userDataResult.value };
+                const newUserData = { ...this.getDefaultUserSnapshot(), ...userDataResult.value };
+                // Calcular plan_name si no viene
+                if (!newUserData.plan_name) {
+                    const planNames = {
+                        'basico': 'Plan Básico',
+                        'starter': 'Plan Starter',
+                        'pro': 'Plan Pro',
+                        'enterprise': 'Plan Enterprise'
+                    };
+                    newUserData.plan_name = planNames[newUserData.plan_type] || 'Plan Básico';
+                }
+                // Calcular avatar_initial si no viene
+                if (!newUserData.avatar_initial) {
+                    newUserData.avatar_initial = this.getInitials(newUserData.full_name || newUserData.email || 'M');
+                }
+                this.userData = newUserData;
+                hasChanges = true;
             }
+            
             if (projectDataResult.status === 'fulfilled' && projectDataResult.value) {
-                this.projectData = { ...this.getDefaultProjectSnapshot(), ...projectDataResult.value };
+                const newProjectData = { ...this.getDefaultProjectSnapshot(), ...projectDataResult.value };
+                // Calcular logo_initial si no hay logo_url
+                if (!newProjectData.logo_url && !newProjectData.logo_initial) {
+                    newProjectData.logo_initial = this.getInitials(newProjectData.nombre_marca || 'M');
+                }
+                this.projectData = newProjectData;
+                hasChanges = true;
             }
 
-            // Guardar snapshot para próxima vez (siempre hay datos, nunca null)
-            this.saveSnapshot();
+            // Solo actualizar si hay cambios reales (evitar re-renders innecesarios)
+            if (hasChanges) {
+                // Guardar snapshot para próxima vez (siempre hay datos, nunca null)
+                this.saveSnapshot();
 
-            // Actualizar UI (nunca hay estado "loading", siempre hay datos)
-            this.updateUI();
+                // Actualizar UI suavemente (nunca hay estado "loading", siempre hay datos)
+                // Usar requestAnimationFrame para actualización suave
+                requestAnimationFrame(() => {
+                    this.updateUI();
+                });
+            }
 
             console.log('✅ Sidebar sincronizado en background');
         } catch (error) {
@@ -219,9 +265,14 @@ class SidebarManager {
      * Actualizar UI del sidebar
      * REGLA DE ORO: Esta función SIEMPRE renderiza, nunca espera datos
      * userData y projectData NUNCA son null, siempre tienen valores (aunque sean defaults)
+     * 
+     * TRUCO VISUAL CLAVE:
+     * - Avatar placeholder persistente (nunca se quita)
+     * - Plan siempre visible (aunque sea placeholder)
+     * - Cambios suaves, sin desmontar componentes
      */
     updateUI() {
-        // Elementos del DOM
+        // Elementos del DOM - verificar que existan antes de actualizar
         const navBrandLogo = document.getElementById('navBrandLogo');
         const navBrandInitials = document.getElementById('navBrandInitials');
         const navBrandName = document.getElementById('navBrandName');
@@ -229,42 +280,58 @@ class SidebarManager {
         const navUserAvatar = document.getElementById('navUserAvatar');
         const creditsCount = document.getElementById('creditsCount');
 
-        // SIEMPRE hay projectData (nunca null)
-        // Logo de marca
-        if (navBrandLogo && this.projectData.logo_url) {
+        // Si los elementos no existen aún, esperar un frame
+        if (!navBrandName || !navPlanName) {
+            requestAnimationFrame(() => this.updateUI());
+            return;
+        }
+
+        // ============================================
+        // AVATAR/LOGO: Placeholder persistente
+        // ============================================
+        // REGLA: El placeholder NUNCA se quita, solo se reemplaza suavemente
+        
+        const hasLogo = navBrandLogo && this.projectData.logo_url;
+        const logoInitial = this.projectData.logo_initial || this.getInitials(this.projectData.nombre_marca || 'M');
+        
+        if (hasLogo) {
+            // Si hay logo, mostrarlo (pero mantener iniciales como fallback)
             navBrandLogo.src = this.projectData.logo_url + '?t=' + Date.now();
             navBrandLogo.style.display = 'block';
+            // Ocultar iniciales pero NO eliminarlas (por si el logo falla)
             if (navBrandInitials) {
                 navBrandInitials.style.display = 'none';
+                navBrandInitials.textContent = logoInitial; // Mantener valor por si acaso
             }
-        } else if (navBrandInitials) {
-            // Siempre mostrar iniciales (aunque sea "C" de "Cargando marca...")
-            const initials = this.getInitials(this.projectData.nombre_marca || 'M');
-            navBrandInitials.textContent = initials;
-            navBrandInitials.style.display = 'block';
+        } else {
+            // SIEMPRE mostrar iniciales (placeholder persistente)
+            if (navBrandInitials) {
+                navBrandInitials.textContent = logoInitial;
+                navBrandInitials.style.display = 'block';
+            }
             if (navBrandLogo) {
                 navBrandLogo.style.display = 'none';
             }
         }
 
-        // Nombre de marca (siempre hay valor, nunca undefined)
-        if (navBrandName) {
-            navBrandName.textContent = this.projectData.nombre_marca || 'Cargando marca...';
-        }
+        // ============================================
+        // NOMBRE DE MARCA: Siempre visible
+        // ============================================
+        navBrandName.textContent = this.projectData.nombre_marca || 'Cargando marca...';
 
-        // SIEMPRE hay userData (nunca null)
-        // Plan del usuario
-        if (navPlanName) {
-            const planNames = {
-                'basico': 'Plan Básico',
-                'starter': 'Plan Starter',
-                'pro': 'Plan Pro',
-                'enterprise': 'Plan Enterprise'
-            };
-            navPlanName.textContent = planNames[this.userData.plan_type] || 'Plan Básico';
-        }
+        // ============================================
+        // PLAN: Siempre visible, nunca "—"
+        // ============================================
+        // El plan siempre tiene un valor, aunque sea placeholder
+        const planName = this.userData.plan_name || 
+                        (this.userData.plan_type ? 
+                            ({ 'basico': 'Plan Básico', 'starter': 'Plan Starter', 'pro': 'Plan Pro', 'enterprise': 'Plan Enterprise' }[this.userData.plan_type] || 'Plan Básico') 
+                            : 'Plan Básico');
+        navPlanName.textContent = planName;
 
-        // Créditos en el sidebar (siempre hay valor numérico)
+        // ============================================
+        // CRÉDITOS: Siempre visible
+        // ============================================
         if (creditsCount) {
             creditsCount.textContent = this.userData.credits_available || 0;
         }
@@ -277,12 +344,19 @@ class SidebarManager {
             headerCreditsValue.textContent = `${total}/${restantes}`;
         }
 
-        // Avatar del usuario (si no hay logo de marca)
+        // ============================================
+        // AVATAR DEL USUARIO: Placeholder persistente
+        // ============================================
+        // Solo actualizar si no hay logo de marca
         if (navUserAvatar && !this.projectData.logo_url) {
-            const initials = this.getInitials(this.userData.full_name || this.userData.email || 'M');
+            const avatarInitial = this.userData.avatar_initial || 
+                                 this.getInitials(this.userData.full_name || this.userData.email || 'M');
             const initialsSpan = navUserAvatar.querySelector('span');
             if (initialsSpan) {
-                initialsSpan.textContent = initials;
+                // Solo actualizar si cambió (evitar re-render innecesario)
+                if (initialsSpan.textContent !== avatarInitial) {
+                    initialsSpan.textContent = avatarInitial;
+                }
             }
         }
     }
@@ -367,17 +441,29 @@ function getSidebarManager() {
     return sidebarManagerInstance;
 }
 
-// Inicializar cuando el DOM esté listo
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        const manager = getSidebarManager();
-        manager.init();
-    });
-} else {
-    // DOM ya está listo
+// Inicializar INMEDIATAMENTE (no esperar DOMContentLoaded)
+// Esto asegura que el snapshot se renderice antes de cualquier otra cosa
+(function() {
     const manager = getSidebarManager();
-    manager.init();
-}
+    
+    // Renderizar UI inmediatamente con valores por defecto
+    // Esto evita cualquier parpadeo inicial
+    if (document.readyState === 'loading') {
+        // Si el DOM aún no está listo, esperar pero renderizar tan pronto como sea posible
+        document.addEventListener('DOMContentLoaded', () => {
+            requestAnimationFrame(() => {
+                manager.updateUI();
+                manager.init();
+            });
+        });
+    } else {
+        // DOM ya está listo, renderizar inmediatamente
+        requestAnimationFrame(() => {
+            manager.updateUI();
+            manager.init();
+        });
+    }
+})();
 
 // Exportar para uso global
 window.SidebarManager = SidebarManager;
