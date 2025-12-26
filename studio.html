@@ -715,17 +715,28 @@
             
             if (!content || !icon) return;
             
-            // Toggle usando style.display directamente (método original)
-            if (content.style.display === 'none' || content.style.display === '') {
-                content.style.display = 'block';
-                icon.classList.remove('fa-chevron-down');
-                icon.classList.add('fa-chevron-up');
-                if (header) header.classList.add('active');
-            } else {
-                content.style.display = 'none';
+            // Verificar si está abierto o cerrado
+            const isOpen = content.style.display === 'block' || content.classList.contains('active');
+            
+            if (isOpen) {
+                // Cerrar con animación
+                content.classList.remove('active');
+                // Esperar a que termine la animación antes de ocultar
+                setTimeout(() => {
+                    content.style.display = 'none';
+                }, 400); // Duración de la animación
                 icon.classList.remove('fa-chevron-up');
                 icon.classList.add('fa-chevron-down');
                 if (header) header.classList.remove('active');
+            } else {
+                // Abrir con animación
+                content.style.display = 'block';
+                // Forzar reflow para que la animación funcione
+                content.offsetHeight;
+                content.classList.add('active');
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+                if (header) header.classList.add('active');
             }
         }
 
