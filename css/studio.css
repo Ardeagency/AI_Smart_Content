@@ -1481,6 +1481,53 @@ body {
 }
 
 /* =======================================
+   Escenario y ambiente
+   ======================================= */
+
+.section-microcopy {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    padding: 8px 0;
+    line-height: 1.5;
+    font-style: italic;
+}
+
+.field-microcopy {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 6px;
+    font-style: italic;
+    line-height: 1.4;
+}
+
+/* Ajustar segmented control para más opciones (Tiempo) */
+#time-selector {
+    display: flex;
+    gap: 0;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 2px;
+    overflow: hidden;
+    flex-wrap: wrap;
+}
+
+#time-selector .segment-btn {
+    flex: 1;
+    min-width: calc(33.333% - 2px);
+    padding: 8px 10px;
+    font-size: 13px;
+}
+
+@media (min-width: 768px) {
+    #time-selector .segment-btn {
+        min-width: auto;
+        flex: 1;
+    }
+}
+
+/* =======================================
    Botones Unificados
    ======================================= */
 

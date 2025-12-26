@@ -375,8 +375,8 @@
                                 <button type="button" class="tone-preset-btn" data-value="energetico" onclick="setTonePreset('energetico')">Energético</button>
                                 <button type="button" class="tone-preset-btn" data-value="tranquilo" onclick="setTonePreset('tranquilo')">Tranquilo</button>
                             </div>
-                        </div>
-                    </div>
+                            </div>
+                            </div>
 
                         <!-- Personalidad -->
                     <div class="config-field">
@@ -442,6 +442,114 @@
 
                             </div>
                             </div>
+
+        <!-- Escenario y ambiente -->
+        <div class="accordion-section">
+            <div class="accordion-header" onclick="toggleAccordion('escenario')">
+                <h4>Escenario y ambiente</h4>
+                <i class="fas fa-chevron-down accordion-icon" id="escenario-icon"></i>
+            </div>
+            <div class="accordion-content" id="escenario-content">
+                <div class="section-microcopy">
+                    Define dónde ocurre la escena y cómo se siente visualmente.
+                </div>
+                
+                <!-- Tono visual -->
+                <div class="config-field">
+                    <label>Tono visual:</label>
+                    <div class="chip-selector" id="visual-tone-selector">
+                        <button type="button" class="chip" data-value="calido" onclick="toggleVisualToneChip(this, 'calido')">Cálido</button>
+                        <button type="button" class="chip" data-value="frio" onclick="toggleVisualToneChip(this, 'frio')">Frío</button>
+                        <button type="button" class="chip" data-value="neutro" onclick="toggleVisualToneChip(this, 'neutro')">Neutro</button>
+                        <button type="button" class="chip" data-value="verano" onclick="toggleVisualToneChip(this, 'verano')">Verano</button>
+                        <button type="button" class="chip" data-value="invierno" onclick="toggleVisualToneChip(this, 'invierno')">Invierno</button>
+                        <button type="button" class="chip" data-value="cinematico" onclick="toggleVisualToneChip(this, 'cinematico')">Cinemático</button>
+                    </div>
+                </div>
+                
+                <!-- Ambiente -->
+                <div class="config-field">
+                    <label>Ambiente:</label>
+                    <div class="chip-selector" id="ambience-selector">
+                        <button type="button" class="chip" data-value="acogedor" onclick="toggleAmbienceChip(this, 'acogedor')">Acogedor</button>
+                        <button type="button" class="chip" data-value="fresco" onclick="toggleAmbienceChip(this, 'fresco')">Fresco</button>
+                        <button type="button" class="chip" data-value="frio" onclick="toggleAmbienceChip(this, 'frio')">Frío</button>
+                        <button type="button" class="chip" data-value="relajado" onclick="toggleAmbienceChip(this, 'relajado')">Relajado</button>
+                        <button type="button" class="chip" data-value="energetico" onclick="toggleAmbienceChip(this, 'energetico')">Energético</button>
+                        <button type="button" class="chip" data-value="intimo" onclick="toggleAmbienceChip(this, 'intimo')">Íntimo</button>
+                        <button type="button" class="chip" data-value="natural" onclick="toggleAmbienceChip(this, 'natural')">Natural</button>
+                    </div>
+                    <div class="field-microcopy">Describe cómo se percibe el ambiente, no la iluminación.</div>
+                </div>
+                
+                <!-- Lugar -->
+                <div class="config-field">
+                    <label>Lugar:</label>
+                    <div class="aspirational-dropdown-container">
+                        <select id="location-selector" class="aspirational-dropdown" onchange="window.updateLocation(this.value)">
+                            <option value="">Seleccionar lugar…</option>
+                            <optgroup label="Interiores">
+                                <option value="en-casa">En casa</option>
+                                <option value="oficina">Oficina</option>
+                                <option value="oficina-en-casa">Oficina en casa</option>
+                                <option value="habitacion">Habitación</option>
+                                <option value="bano">Baño</option>
+                                <option value="cocina">Cocina</option>
+                                <option value="sala">Sala</option>
+                                <option value="gimnasio">Gimnasio</option>
+                            </optgroup>
+                            <optgroup label="Exteriores">
+                                <option value="en-el-carro">En el carro</option>
+                                <option value="en-el-campo">En el campo</option>
+                                <option value="en-la-calle">En la calle</option>
+                                <option value="afuera-local-comercial">Afuera del local comercial</option>
+                                <option value="en-una-boutique">En una boutique</option>
+                                <option value="en-un-parque">En un parque</option>
+                                <option value="en-la-playa">En la playa</option>
+                                <option value="en-la-montana">En la montaña</option>
+                                <option value="en-una-terraza">En una terraza</option>
+                            </optgroup>
+                            <optgroup label="Comerciales">
+                                <option value="dentro-local">Dentro de un local</option>
+                                <option value="punto-de-venta">Punto de venta</option>
+                                <option value="restaurante">Restaurante</option>
+                                <option value="cafeteria">Cafetería</option>
+                                <option value="tienda">Tienda</option>
+                            </optgroup>
+                            </select>
+                            </div>
+                            </div>
+
+                <!-- Tiempo -->
+                <div class="config-field">
+                    <label>Tiempo:</label>
+                    <div class="segmented-control" id="time-selector">
+                        <button type="button" class="segment-btn" data-value="manana" onclick="selectTime(this, 'manana')">Mañana</button>
+                        <button type="button" class="segment-btn" data-value="medio-dia" onclick="selectTime(this, 'medio-dia')">Medio día</button>
+                        <button type="button" class="segment-btn" data-value="tarde" onclick="selectTime(this, 'tarde')">Tarde</button>
+                        <button type="button" class="segment-btn" data-value="atardecer" onclick="selectTime(this, 'atardecer')">Atardecer</button>
+                        <button type="button" class="segment-btn" data-value="noche" onclick="selectTime(this, 'noche')">Noche</button>
+                        <button type="button" class="segment-btn" data-value="madrugada" onclick="selectTime(this, 'madrugada')">Madrugada</button>
+                            </div>
+                            </div>
+
+                <!-- Realismo visual -->
+                <div class="config-field">
+                    <label>Realismo visual:</label>
+                    <div class="semantic-slider-container">
+                        <div class="semantic-slider-labels">
+                            <span class="slider-label-left">Pulido</span>
+                            <span class="slider-label-right">Natural</span>
+                        </div>
+                        <input type="range" id="visual-realism-slider" min="0" max="100" value="50" step="1" oninput="updateVisualRealismSlider(this.value)" onchange="updateVisualRealismFromSlider(this.value)">
+                        <div class="semantic-slider-display">
+                            <span id="visual-realism-display-value">Moderado</span>
+                        </div>
+                    </div>
+                    <div class="field-microcopy">Controla el nivel de imperfecciones y naturalidad de la escena.</div>
+                </div>
+            </div>
+        </div>
 
         <!-- Contexto de conversión (opcional) -->
         <div class="accordion-section">
@@ -1810,6 +1918,92 @@
                 if (suggestionMessage) {
                     suggestionMessage.style.display = 'none';
                 }
+            }
+        }
+        
+        // Escenario y ambiente - Funciones
+        // =======================================
+        
+        // Tono visual - Chips (multi-select)
+        function toggleVisualToneChip(button, value) {
+            if (button.classList.contains('active')) {
+                button.classList.remove('active');
+            } else {
+                button.classList.add('active');
+            }
+            
+            // Recopilar valores seleccionados
+            const selected = Array.from(document.querySelectorAll('#visual-tone-selector .chip.active'))
+                .map(chip => chip.dataset.value);
+            
+            if (window.updateVisualTone) {
+                window.updateVisualTone(selected.join(','));
+            }
+        }
+        
+        // Ambiente - Chips (multi-select)
+        function toggleAmbienceChip(button, value) {
+            if (button.classList.contains('active')) {
+                button.classList.remove('active');
+            } else {
+                button.classList.add('active');
+            }
+            
+            // Recopilar valores seleccionados
+            const selected = Array.from(document.querySelectorAll('#ambience-selector .chip.active'))
+                .map(chip => chip.dataset.value);
+            
+            if (window.updateAmbience) {
+                window.updateAmbience(selected.join(','));
+            }
+        }
+        
+        // Tiempo - Segmented control (single)
+        function selectTime(button, value) {
+            // Remover selección anterior
+            const allButtons = document.querySelectorAll('#time-selector .segment-btn');
+            allButtons.forEach(btn => btn.classList.remove('active'));
+            
+            // Activar botón seleccionado
+            button.classList.add('active');
+            
+            if (window.updateTime) {
+                window.updateTime(value);
+            }
+        }
+        
+        // Realismo visual - Slider
+        function updateVisualRealismSlider(value) {
+            const display = document.getElementById('visual-realism-display-value');
+            if (display) {
+                const numValue = parseInt(value);
+                if (numValue < 20) {
+                    display.textContent = 'Muy Pulido';
+                } else if (numValue < 40) {
+                    display.textContent = 'Pulido';
+                } else if (numValue < 60) {
+                    display.textContent = 'Moderado';
+                } else if (numValue < 80) {
+                    display.textContent = 'Natural';
+                } else {
+                    display.textContent = 'Muy Natural';
+                }
+            }
+        }
+        
+        function updateVisualRealismFromSlider(value) {
+            const numValue = parseInt(value);
+            let realismValue = '';
+            if (numValue < 30) {
+                realismValue = 'pulido';
+            } else if (numValue < 70) {
+                realismValue = 'moderado';
+            } else {
+                realismValue = 'natural';
+            }
+            
+            if (window.updateVisualRealism) {
+                window.updateVisualRealism(realismValue);
             }
         }
         
