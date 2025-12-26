@@ -970,6 +970,290 @@ body {
     background: linear-gradient(135deg, #8B4513 0%, #4169E1 50%, #228B22 100%);
 }
 
+/* 5. Estilo de Cabello - Dropdown visual */
+.visual-dropdown-container {
+    width: 100%;
+}
+
+.visual-dropdown {
+    width: 100%;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 14px;
+    height: 52px;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 12px center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+    padding-right: 40px;
+}
+
+.visual-dropdown:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+.visual-dropdown:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 2px rgba(236, 235, 218, 0.15);
+}
+
+/* 6. Expresión - Chips seleccionables */
+.chip-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.chip {
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.chip:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+}
+
+.chip.active {
+    background: var(--primary-color);
+    color: #000000;
+    border-color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* 7. Estilo de Vestimenta - Dropdown aspiracional */
+.aspirational-dropdown-container {
+    width: 100%;
+}
+
+.aspirational-dropdown {
+    width: 100%;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 14px;
+    height: 52px;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 12px center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+    padding-right: 40px;
+}
+
+.aspirational-dropdown:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+.aspirational-dropdown:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 2px rgba(236, 235, 218, 0.15);
+}
+
+.aspirational-dropdown optgroup {
+    font-weight: 600;
+    color: var(--text-secondary);
+    padding: 8px 0;
+}
+
+.aspirational-dropdown option {
+    padding: 8px 12px;
+    color: var(--text-primary);
+}
+
+/* 8. Tono - Slider semántico */
+.semantic-slider-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.semantic-slider-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.slider-label-left,
+.slider-label-right {
+    font-weight: 500;
+}
+
+#tone-slider,
+#realism-slider {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.1);
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+#tone-slider::-webkit-slider-thumb,
+#realism-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    cursor: pointer;
+    border: 2px solid #000000;
+    transition: all 0.2s ease;
+}
+
+#tone-slider::-webkit-slider-thumb:hover,
+#realism-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 4px rgba(236, 235, 218, 0.2);
+}
+
+#tone-slider::-moz-range-thumb,
+#realism-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    cursor: pointer;
+    border: 2px solid #000000;
+    transition: all 0.2s ease;
+}
+
+#tone-slider::-moz-range-thumb:hover,
+#realism-slider::-moz-range-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 4px rgba(236, 235, 218, 0.2);
+}
+
+.semantic-slider-display {
+    text-align: center;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#tone-display-value,
+#realism-display-value {
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* 9. Personalidad - Multi-select chips */
+.multi-chip-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.multi-chip {
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.multi-chip:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+}
+
+.multi-chip.active {
+    background: var(--primary-color);
+    color: #000000;
+    border-color: var(--primary-color);
+    font-weight: 600;
+}
+
+.max-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 400;
+    font-style: italic;
+}
+
+/* 10. Estética y Color - Dropdown visual */
+.aesthetic-dropdown-container {
+    width: 100%;
+}
+
+.aesthetic-dropdown {
+    width: 100%;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 14px;
+    height: 52px;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 12px center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+    padding-right: 40px;
+}
+
+.aesthetic-dropdown:hover {
+    border-color: rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+.aesthetic-dropdown:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 2px rgba(236, 235, 218, 0.15);
+}
+
+/* 11. Realismo - Slider */
+.realism-slider-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
 /* =======================================
    Botones Unificados
    ======================================= */

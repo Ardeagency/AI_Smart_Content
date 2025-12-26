@@ -292,15 +292,15 @@
                 <!-- Estilo de Cabello -->
                     <div class="config-field">
                         <label>Estilo de Cabello:</label>
-                        <div class="dropdown-container">
-                            <select id="hair-selector" onchange="window.updateHair(this.value)">
+                        <div class="visual-dropdown-container">
+                            <select id="hair-selector" class="visual-dropdown" onchange="window.updateHair(this.value)">
                                 <option value="">Seleccionar estilo de cabello...</option>
-                                <option value="muy-rizado-largo">Muy rizado largo</option>
-                                <option value="liso-largo">Liso largo</option>
-                                <option value="rizado-corto">Rizado corto</option>
-                                <option value="liso-corto">Liso corto</option>
+                                <option value="liso">Liso</option>
+                                <option value="rizado">Rizado</option>
+                                <option value="afro">Afro</option>
+                                <option value="rapado">Rapado</option>
+                                <option value="ondulado">Ondulado</option>
                                 <option value="largo-moño">Largo en moño</option>
-                                <option value="largo-ondas">Largo con ondas</option>
                                 <option value="corto-ondas">Corto con ondas</option>
                             </select>
         </div>
@@ -309,37 +309,34 @@
                 <!-- Expresión -->
                     <div class="config-field">
                         <label>Expresión:</label>
-                        <div class="dropdown-container">
-                            <select id="expression-selector" onchange="window.updateExpression(this.value)">
-                                <option value="">Seleccionar expresión...</option>
-                                <option value="alegria-emocionada">Alegría emocionada</option>
-                                <option value="confianza-tranquila">Confianza tranquila</option>
-                                <option value="ira-contenida">Ira contenida</option>
-                                <option value="duda-esceptica">Duda escéptica</option>
-                                <option value="anticipacion-ansiosa">Anticipación ansiosa</option>
-                                <option value="fatiga-melancolica">Fatiga melancólica</option>
-                            </select>
+                        <div class="chip-selector" id="expression-selector">
+                            <button type="button" class="chip" data-value="sonriente" onclick="toggleExpressionChip(this, 'sonriente')">Sonriente</button>
+                            <button type="button" class="chip" data-value="serio" onclick="toggleExpressionChip(this, 'serio')">Serio</button>
+                            <button type="button" class="chip" data-value="energetico" onclick="toggleExpressionChip(this, 'energetico')">Energético</button>
+                            <button type="button" class="chip" data-value="natural" onclick="toggleExpressionChip(this, 'natural')">Natural</button>
+                            <button type="button" class="chip" data-value="desafiante" onclick="toggleExpressionChip(this, 'desafiante')">Desafiante</button>
         </div>
     </div>
 
                 <!-- Estilo de Vestimenta -->
                     <div class="config-field">
                         <label>Estilo de Vestimenta:</label>
-                        <div class="dropdown-container">
-                            <select id="style-selector" onchange="window.updateStyle(this.value)">
-                                <option value="">Seleccionar estilo de vestimenta...</option>
-                                <option value="mediterraneo-casual">Mediterráneo Casual</option>
-                                <option value="preppy-moderno">Preppy Moderno</option>
-                                <option value="ropa-trabajo">Ropa de Trabajo</option>
-                                <option value="chic-parisino">Chic Parisino</option>
-                                <option value="athleisure-lujo">Athleisure de Lujo</option>
-                                <option value="neo-rockabilly">Neo Rockabilly</option>
-                                <option value="mod-60s">Mod de los 60s</option>
-                                <option value="western-contemporaneo">Western Contemporáneo</option>
-                                <option value="normcore-minimalista">Normcore Minimalista</option>
-                                <option value="vanguardia-japonesa">Vanguardia Japonesa</option>
-                                <option value="pijama">Pijama</option>
-                                <option value="bohemio-hippie">Estilo Bohemio Hippie</option>
+                        <div class="aspirational-dropdown-container">
+                            <select id="style-selector" class="aspirational-dropdown" onchange="window.updateStyle(this.value)">
+                                <option value="">Selecciona tu estilo...</option>
+                                <optgroup label="Estilos Cotidianos">
+                                    <option value="casual">Casual</option>
+                                    <option value="deportivo">Deportivo</option>
+                                    <option value="urbano">Urbano</option>
+                                </optgroup>
+                                <optgroup label="Estilos Refinados">
+                                    <option value="elegante">Elegante</option>
+                                    <option value="profesional">Profesional</option>
+                                </optgroup>
+                                <optgroup label="Estilos Contemporáneos">
+                                    <option value="streetwear">Streetwear</option>
+                                    <option value="minimalista">Minimalista</option>
+                                </optgroup>
                             </select>
                     </div>
                     </div>
@@ -347,32 +344,27 @@
                         <!-- Tono -->
                     <div class="config-field">
                             <label>Tono:</label>
-                        <div class="dropdown-container">
-                                <select id="tone-selector" onchange="window.updateTone(this.value)">
-                                    <option value="">Seleccionar tono...</option>
-                                    <option value="profesional">Profesional</option>
-                                    <option value="casual">Casual</option>
-                                    <option value="amigable">Amigable</option>
-                                    <option value="autoritario">Autoritario</option>
-                                    <option value="energetico">Energético</option>
-                                    <option value="tranquilo">Tranquilo</option>
-                            </select>
+                        <div class="semantic-slider-container">
+                            <div class="semantic-slider-labels">
+                                <span class="slider-label-left">Serio</span>
+                                <span class="slider-label-right">Relajado</span>
+                            </div>
+                            <input type="range" id="tone-slider" min="0" max="100" value="50" step="1" oninput="updateToneSlider(this.value)" onchange="updateToneFromSlider(this.value)">
+                            <div class="semantic-slider-display">
+                                <span id="tone-display-value">Equilibrado</span>
+                            </div>
                             </div>
                             </div>
 
                         <!-- Personalidad -->
                     <div class="config-field">
-                            <label>Personalidad:</label>
-                        <div class="dropdown-container">
-                                <select id="personality-selector" onchange="window.updatePersonality(this.value)">
-                                    <option value="">Seleccionar personalidad...</option>
-                                    <option value="extrovertido">Extrovertido</option>
-                                    <option value="introvertido">Introvertido</option>
-                                    <option value="seguro">Seguro</option>
-                                    <option value="humilde">Humilde</option>
-                                    <option value="creativo">Creativo</option>
-                                    <option value="analitico">Analítico</option>
-                            </select>
+                            <label>Personalidad: <span class="max-hint">(máx. 2-3)</span></label>
+                        <div class="multi-chip-selector" id="personality-selector">
+                            <button type="button" class="multi-chip" data-value="extrovertido" onclick="togglePersonalityChip(this, 'extrovertido')">Extrovertido</button>
+                            <button type="button" class="multi-chip" data-value="seguro" onclick="togglePersonalityChip(this, 'seguro')">Seguro</button>
+                            <button type="button" class="multi-chip" data-value="creativo" onclick="togglePersonalityChip(this, 'creativo')">Creativo</button>
+                            <button type="button" class="multi-chip" data-value="cercano" onclick="togglePersonalityChip(this, 'cercano')">Cercano</button>
+                            <button type="button" class="multi-chip" data-value="rebelde" onclick="togglePersonalityChip(this, 'rebelde')">Rebelde</button>
                             </div>
                             </div>
 
@@ -399,20 +391,15 @@
                 <!-- Detalles de Realismo -->
                     <div class="config-field">
                         <label>Detalles de Realismo:</label>
-                        <div class="dropdown-container">
-                            <select id="realism-selector" onchange="window.updateRealism(this.value)">
-                                <option value="">Seleccionar detalles de realismo...</option>
-                                <option value="pelitos-sueltos">Pelitos sueltos visibles</option>
-                                <option value="huellas-dactilares">Huellas dactilares ligeras</option>
-                                <option value="arrugas-tela">Arrugas naturales de tela</option>
-                                <option value="micro-temblor">Micro temblor de mano</option>
-                                <option value="polvo-fibra">Polvo/fibra diminuta en superficie</option>
-                                <option value="brillo-piel">Brillo natural de piel</option>
-                                <option value="sombras-imperfectas">Sombras imperfectas de fondo</option>
-                                <option value="manchas-mesa">Manchas ligeras en mesa</option>
-                                <option value="reflejo-ventana">Reflejo suave de ventana</option>
-                                <option value="distorsion-lente">Distorsión sutil de lente ultra ancha</option>
-                            </select>
+                        <div class="realism-slider-container">
+                            <div class="semantic-slider-labels">
+                                <span class="slider-label-left">Estilizado</span>
+                                <span class="slider-label-right">Ultra realista</span>
+                            </div>
+                            <input type="range" id="realism-slider" min="0" max="100" value="50" step="1" oninput="updateRealismSlider(this.value)" onchange="updateRealismFromSlider(this.value)">
+                            <div class="semantic-slider-display">
+                                <span id="realism-display-value">Moderado</span>
+                            </div>
                             </div>
                             </div>
 
@@ -1565,6 +1552,113 @@
                 }
             }
         });
+        
+        // Expresión - Chips seleccionables (single)
+        function toggleExpressionChip(button, value) {
+            // Remover selección anterior (single select)
+            const allChips = document.querySelectorAll('#expression-selector .chip');
+            allChips.forEach(chip => chip.classList.remove('active'));
+            
+            // Activar chip seleccionado
+            button.classList.add('active');
+            
+            // Llamar función original
+            if (window.updateExpression) {
+                window.updateExpression(value);
+            }
+        }
+        
+        // Personalidad - Multi-select chips (máx. 2-3)
+        function togglePersonalityChip(button, value) {
+            const maxSelections = 3;
+            const selectedChips = document.querySelectorAll('#personality-selector .multi-chip.active');
+            
+            if (button.classList.contains('active')) {
+                // Deseleccionar
+                button.classList.remove('active');
+                if (window.updatePersonality) {
+                    // Enviar array de valores seleccionados
+                    const selected = Array.from(document.querySelectorAll('#personality-selector .multi-chip.active'))
+                        .map(chip => chip.dataset.value);
+                    window.updatePersonality(selected.join(','));
+                }
+            } else {
+                // Verificar límite
+                if (selectedChips.length >= maxSelections) {
+                    // Remover el primero y agregar el nuevo
+                    selectedChips[0].classList.remove('active');
+                }
+                // Seleccionar
+                button.classList.add('active');
+                if (window.updatePersonality) {
+                    const selected = Array.from(document.querySelectorAll('#personality-selector .multi-chip.active'))
+                        .map(chip => chip.dataset.value);
+                    window.updatePersonality(selected.join(','));
+                }
+            }
+        }
+        
+        // Tono - Slider semántico
+        function updateToneSlider(value) {
+            const display = document.getElementById('tone-display-value');
+            if (display) {
+                const numValue = parseInt(value);
+                if (numValue < 30) {
+                    display.textContent = 'Serio';
+                } else if (numValue < 70) {
+                    display.textContent = 'Equilibrado';
+                } else {
+                    display.textContent = 'Relajado';
+                }
+            }
+        }
+        
+        function updateToneFromSlider(value) {
+            const numValue = parseInt(value);
+            let toneValue = '';
+            if (numValue < 30) {
+                toneValue = 'serio';
+            } else if (numValue < 70) {
+                toneValue = 'equilibrado';
+            } else {
+                toneValue = 'relajado';
+            }
+            
+            if (window.updateTone) {
+                window.updateTone(toneValue);
+            }
+        }
+        
+        // Realismo - Slider
+        function updateRealismSlider(value) {
+            const display = document.getElementById('realism-display-value');
+            if (display) {
+                const numValue = parseInt(value);
+                if (numValue < 30) {
+                    display.textContent = 'Estilizado';
+                } else if (numValue < 70) {
+                    display.textContent = 'Moderado';
+                } else {
+                    display.textContent = 'Ultra realista';
+                }
+            }
+        }
+        
+        function updateRealismFromSlider(value) {
+            const numValue = parseInt(value);
+            let realismValue = '';
+            if (numValue < 30) {
+                realismValue = 'estilizado';
+            } else if (numValue < 70) {
+                realismValue = 'moderado';
+            } else {
+                realismValue = 'ultra-realista';
+            }
+            
+            if (window.updateRealism) {
+                window.updateRealism(realismValue);
+            }
+        }
         
         // Color de Ojos - Swatches
         function selectEyeColor(button, value) {
