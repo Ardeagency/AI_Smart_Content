@@ -3174,27 +3174,34 @@ body {
 
 @media (min-width: 1024px) {
     .studio-sidebar {
-        overflow-y: auto;
+        overflow-y: hidden;
         overflow-x: hidden;
-        padding: 0 6px 0 6px;
+        padding: 0;
         display: flex;
         flex-direction: column;
+        padding-top: 48px; /* Altura del header principal */
     }
 }
 
 .sidebar-content {
-    flex: 1;
-    overflow-y: auto;
-    padding-bottom: 16px;
+    flex: 0 0 auto;
+    overflow-y: visible;
+    padding: 16px;
+    padding-bottom: 0;
+    order: 1;
 }
 
 .accordions-container {
     margin-top: auto;
-    padding-top: 12px;
-    padding-bottom: 12px;
+    padding: 16px;
+    padding-top: 16px;
+    padding-bottom: 16px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     flex-shrink: 0;
     min-height: fit-content;
+    overflow-y: auto;
+    max-height: calc(100vh - 48px - 300px); /* Altura total menos header y contenido superior */
+    order: 2;
 }
 
 /* Cuando todos los accordions están cerrados, reducir padding */
