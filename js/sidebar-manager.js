@@ -266,98 +266,19 @@ class SidebarManager {
      * REGLA DE ORO: Esta función SIEMPRE renderiza, nunca espera datos
      * userData y projectData NUNCA son null, siempre tienen valores (aunque sean defaults)
      * 
-     * TRUCO VISUAL CLAVE:
-     * - Avatar placeholder persistente (nunca se quita)
-     * - Plan siempre visible (aunque sea placeholder)
-     * - Cambios suaves, sin desmontar componentes
+     * NOTA: El header del sidebar ahora solo muestra "AI SMART CONTENT" (estático)
+     * Solo actualizamos los créditos del header principal
      */
     updateUI() {
-        // Elementos del DOM - verificar que existan antes de actualizar
-        const navBrandLogo = document.getElementById('navBrandLogo');
-        const navBrandInitials = document.getElementById('navBrandInitials');
-        const navBrandName = document.getElementById('navBrandName');
-        const navPlanName = document.getElementById('navPlanName');
-        const navUserAvatar = document.getElementById('navUserAvatar');
-        const creditsCount = document.getElementById('creditsCount');
-
-        // Si los elementos no existen aún, esperar un frame
-        if (!navBrandName || !navPlanName) {
-            requestAnimationFrame(() => this.updateUI());
-            return;
-        }
-
         // ============================================
-        // AVATAR/LOGO: Placeholder persistente
+        // CRÉDITOS EN EL HEADER: Siempre visible
         // ============================================
-        // REGLA: El placeholder NUNCA se quita, solo se reemplaza suavemente
-        
-        const hasLogo = navBrandLogo && this.projectData.logo_url;
-        const logoInitial = this.projectData.logo_initial || this.getInitials(this.projectData.nombre_marca || 'M');
-        
-        if (hasLogo) {
-            // Si hay logo, mostrarlo (pero mantener iniciales como fallback)
-            navBrandLogo.src = this.projectData.logo_url + '?t=' + Date.now();
-            navBrandLogo.style.display = 'block';
-            // Ocultar iniciales pero NO eliminarlas (por si el logo falla)
-            if (navBrandInitials) {
-                navBrandInitials.style.display = 'none';
-                navBrandInitials.textContent = logoInitial; // Mantener valor por si acaso
-            }
-        } else {
-            // SIEMPRE mostrar iniciales (placeholder persistente)
-            if (navBrandInitials) {
-                navBrandInitials.textContent = logoInitial;
-                navBrandInitials.style.display = 'block';
-            }
-            if (navBrandLogo) {
-                navBrandLogo.style.display = 'none';
-            }
-        }
-
-        // ============================================
-        // NOMBRE DE MARCA: Siempre visible
-        // ============================================
-        navBrandName.textContent = this.projectData.nombre_marca || 'Cargando marca...';
-
-        // ============================================
-        // PLAN: Siempre visible, nunca "—"
-        // ============================================
-        // El plan siempre tiene un valor, aunque sea placeholder
-        const planName = this.userData.plan_name || 
-                        (this.userData.plan_type ? 
-                            ({ 'basico': 'Plan Básico', 'starter': 'Plan Starter', 'pro': 'Plan Pro', 'enterprise': 'Plan Enterprise' }[this.userData.plan_type] || 'Plan Básico') 
-                            : 'Plan Básico');
-        navPlanName.textContent = planName;
-
-        // ============================================
-        // CRÉDITOS: Siempre visible
-        // ============================================
-        if (creditsCount) {
-            creditsCount.textContent = this.userData.credits_available || 0;
-        }
-
-        // Créditos en el header (formato: total/restantes) - siempre hay valores
+        // Créditos en el header principal (formato: total/restantes) - siempre hay valores
         const headerCreditsValue = document.getElementById('headerCreditsValue');
         if (headerCreditsValue) {
             const total = this.userData.credits_total || 0;
             const restantes = this.userData.credits_available || 0;
             headerCreditsValue.textContent = `${total}/${restantes}`;
-        }
-
-        // ============================================
-        // AVATAR DEL USUARIO: Placeholder persistente
-        // ============================================
-        // Solo actualizar si no hay logo de marca
-        if (navUserAvatar && !this.projectData.logo_url) {
-            const avatarInitial = this.userData.avatar_initial || 
-                                 this.getInitials(this.userData.full_name || this.userData.email || 'M');
-            const initialsSpan = navUserAvatar.querySelector('span');
-            if (initialsSpan) {
-                // Solo actualizar si cambió (evitar re-render innecesario)
-                if (initialsSpan.textContent !== avatarInitial) {
-                    initialsSpan.textContent = avatarInitial;
-                }
-            }
         }
     }
 

@@ -20,18 +20,8 @@
     <nav class="side-navigation" id="sideNavigation">
         <!-- Header del panel -->
         <div class="nav-header">
-            <div class="nav-user-info">
-                <div class="nav-user-avatar" id="navUserAvatar">
-                    <img id="navBrandLogo" src="" alt="Logo" style="display: none; width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-                    <span id="navBrandInitials" style="display: block;">M</span>
-                </div>
-                <div class="nav-user-details">
-                    <h4 id="navBrandName">Cargando marca...</h4>
-                    <div class="nav-user-plan" id="navUserPlan">
-                        <i class="fas fa-crown"></i>
-                        <span id="navPlanName">Plan Básico</span>
-                    </div>
-                </div>
+            <div class="nav-brand-title">
+                <h4>AI SMART CONTENT</h4>
             </div>
         </div>
 
@@ -62,10 +52,18 @@
 
         <!-- Footer del panel -->
         <div class="nav-footer">
-            <button class="nav-logout" onclick="logout()">
-                    <i class="fas fa-sign-out-alt"></i>
-                <span>Cerrar Sesión</span>
-                </button>
+            <button class="nav-footer-btn" id="navProfileBtn">
+                <i class="fas fa-user"></i>
+                <span>Perfil</span>
+            </button>
+            <button class="nav-footer-btn" id="navAdminBtn">
+                <i class="fas fa-cog"></i>
+                <span>Administrar</span>
+            </button>
+            <button class="nav-footer-btn nav-logout" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Salir</span>
+            </button>
         </div>
     </nav>
 
