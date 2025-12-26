@@ -716,16 +716,21 @@
             const icon = document.getElementById(accordionId + '-icon');
             const header = icon?.closest('.accordion-header');
             
-            if (content.style.display === 'none' || content.style.display === '') {
-                content.style.display = 'block';
-                icon.classList.remove('fa-chevron-down');
-                icon.classList.add('fa-chevron-up');
-                if (header) header.classList.add('active');
-            } else {
-                content.style.display = 'none';
+            if (!content || !icon) return;
+            
+            // Toggle usando clase active para animación
+            if (content.classList.contains('active')) {
+                // Cerrar
+                content.classList.remove('active');
                 icon.classList.remove('fa-chevron-up');
                 icon.classList.add('fa-chevron-down');
                 if (header) header.classList.remove('active');
+            } else {
+                // Abrir
+                content.classList.add('active');
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+                if (header) header.classList.add('active');
             }
         }
 
