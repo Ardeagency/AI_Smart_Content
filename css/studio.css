@@ -3164,12 +3164,19 @@ body {
 
 .accordions-container {
     margin-top: 16px;
-    padding-top: 16px;
-    padding-bottom: 20px;
+    padding-top: 12px;
+    padding-bottom: 16px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     flex-shrink: 0;
-    max-height: 50vh; /* Limitar altura máxima cuando están cerrados */
+    max-height: 40vh; /* Limitar altura máxima cuando están cerrados */
     overflow-y: auto;
+}
+
+/* Cuando todos los accordions están cerrados, reducir aún más el espacio */
+.accordions-container:has(.accordion-content:not([style*="display: block"])) {
+    max-height: 30vh;
+    padding-top: 8px;
+    padding-bottom: 12px;
 }
 
 .sidebar-content {
