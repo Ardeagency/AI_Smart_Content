@@ -104,10 +104,12 @@ class LivingManager {
             creditsCount.textContent = this.userData.credits_available || 0;
         }
 
-        // Actualizar créditos en el header
+        // Actualizar créditos en el header (formato: total/restantes)
         const headerCreditsValue = document.getElementById('headerCreditsValue');
         if (headerCreditsValue && this.userData) {
-            headerCreditsValue.textContent = this.userData.credits_available || 0;
+            const total = this.userData.credits_total || 0;
+            const restantes = this.userData.credits_available || 0;
+            headerCreditsValue.textContent = `${total}/${restantes}`;
         }
 
         // Actualizar nombre de marca en el header principal
