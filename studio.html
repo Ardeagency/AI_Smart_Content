@@ -102,11 +102,11 @@
                     </div>
                     <div class="tab-bar-item" onclick="setActiveTab(this); showOnlyAccordion('sujeto');">
                         <i class="fas fa-user"></i>
-                        <span>Sujeto</span>
+                        <span>Protagonista</span>
                     </div>
                     <div class="tab-bar-item" onclick="setActiveTab(this); showOnlyAccordion('oferta');">
                         <i class="fas fa-gift"></i>
-                        <span>Oferta</span>
+                        <span>Contexto (opcional)</span>
                     </div>
                     <div class="tab-bar-item" onclick="setActiveTab(this); showOnlyAccordion('configuracion-avanzada');">
                         <i class="fas fa-sliders-h"></i>
@@ -226,10 +226,10 @@
                 </div>
             </div>
 
-                <!-- Sujeto -->
+                <!-- Protagonista -->
                 <div class="accordion-section">
                     <div class="accordion-header" onclick="toggleAccordion('sujeto')">
-                        <h4>Sujeto</h4>
+                        <h4>Protagonista</h4>
                         <i class="fas fa-chevron-down accordion-icon" id="sujeto-icon"></i>
                             </div>
                     <div class="accordion-content" id="sujeto-content">
@@ -427,15 +427,15 @@
                             </div>
                             </div>
 
-        <!-- Oferta -->
+        <!-- Contexto de conversión (opcional) -->
         <div class="accordion-section">
             <div class="accordion-header" onclick="toggleAccordion('oferta')">
-                <h4>Oferta</h4>
+                <h4>Contexto de conversión <span style="font-weight: 400; font-size: 0.9em; opacity: 0.7;">(opcional)</span></h4>
                 <i class="fas fa-chevron-down accordion-icon" id="oferta-icon"></i>
                         </div>
             <div class="accordion-content" id="oferta-content">
                     <div class="config-field">
-                    <label>Seleccionar oferta:</label>
+                    <label>Qué se ofrece:</label>
                         <div class="dropdown-container">
                         <select id="offer-selector" onchange="onOfferSelected(this.value)">
                             <option value="">Seleccionar oferta...</option>
@@ -444,7 +444,7 @@
                 </div>
 
                     <div class="config-field">
-                    <label>Seleccionar audiencia:</label>
+                    <label>Para quién es:</label>
                         <div class="dropdown-container">
                         <select id="audience-selector" onchange="onAudienceSelected(this.value)">
                             <option value="">Seleccionar audiencia...</option>
@@ -452,9 +452,9 @@
                 </div>
             </div>
                 
-                <!-- Información de la Oferta -->
+                <!-- Contenido de la oferta -->
                     <div class="config-field">
-                    <label>Información de la Oferta:</label>
+                    <label>Contenido de la oferta:</label>
                     <div class="info-display" id="offer-info">
                         <div class="info-item">
                             <span class="info-label">Estado:</span>
@@ -463,9 +463,9 @@
     </div>
                             </div>
                 
-                <!-- Información de la Audiencia -->
+                <!-- Público objetivo -->
                     <div class="config-field">
-                    <label>Información de la Audiencia:</label>
+                    <label>Público objetivo:</label>
                     <div class="info-display" id="audience-info">
                         <div class="info-item">
                             <span class="info-label">Estado:</span>
@@ -1350,11 +1350,11 @@
             // Actualizar el contenido del contenedor según schema.sql (tabla campaigns)
             offerInfoContainer.innerHTML = `
                 <div class="info-item">
-                    <span class="info-label">Objetivo Principal:</span>
+                    <span class="info-label">Objetivo del mensaje:</span>
                     <span class="info-value">${data.objetivo_principal || 'No especificado'}</span>
                 </div>
                 <div class="info-item">
-                    <span class="info-label">Oferta:</span>
+                    <span class="info-label">Qué se comunica:</span>
                     <span class="info-value long-text">${data.oferta_desc || 'No especificada'}</span>
                 </div>
                 <div class="info-item">
@@ -1366,15 +1366,21 @@
                     <span class="info-value">${data.intenciones || 'No especificadas'}</span>
                 </div>
                 <div class="info-item">
-                    <span class="info-label">Call to Action:</span>
+                    <span class="info-label">Llamado a la acción:</span>
                     <span class="info-value">${data.cta || 'No especificado'}</span>
                 </div>
                 <div class="info-item">
-                    <span class="info-label">URL CTA:</span>
+                    <span class="info-label">Enlace:</span>
                     <span class="info-value">
                         ${data.cta_url ? `<a href="${data.cta_url}" target="_blank" class="url-link">${data.cta_url}</a>` : 'No especificada'}
                     </span>
                 </div>
+                ${data.valido_hasta ? `
+                <div class="info-item">
+                    <span class="info-label">Vigencia:</span>
+                    <span class="info-value">${data.valido_hasta}</span>
+                </div>
+                ` : ''}
             `;
             
             console.log('Contenido de oferta actualizado en el contenedor');
