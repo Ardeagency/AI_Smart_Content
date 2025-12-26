@@ -3001,10 +3001,6 @@ body {
     margin: 0 12px 0 28px;
 }
 
-.accordion-content.active {
-    display: block;
-}
-
 .accordion-content .config-field {
     margin-bottom: 16px;
 }
