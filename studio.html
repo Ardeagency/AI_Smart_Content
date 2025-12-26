@@ -69,40 +69,48 @@
         </div>
     </nav>
 
-    <!-- Header Principal -->
-    <header class="main-header">
-        <div class="header-content">
-            <div class="header-left">
-                <div class="logo-section">
-                    <div class="title-section">
-                        <h1>
-                            <span>Estudio</span>
-                            <span class="brand-separator"> > </span>
-                            <span>Crear contenido</span>
-                        </h1>
-                    </div>
-                </div>
-            </div>
-            <div class="header-right">
-                <div class="header-credits" id="headerCredits">
-                    <span class="header-credits-value" id="headerCreditsValue">0/0</span>
-                </div>
-                <button class="hamburger-menu" id="hamburgerMenu">
-                    <div class="hamburger-line"></div>
-                    <div class="hamburger-line"></div>
-                    <div class="hamburger-line"></div>
-                </button>
-            </div>
-        </div>
-    </header>
-
     <!-- Contenido Principal -->
     <main class="main-content">
         <!-- Layout Principal del Studio -->
         <div class="studio-layout">
-            
-            <!-- Sidebar Unificado Izquierdo -->
-            <nav class="studio-sidebar" id="sidebar-section-1">
+            <!-- Workspace Container -->
+            <div class="workspace-container">
+                <!-- Header Contextual (parte del workspace) -->
+                <header class="workspace-header">
+                    <div class="header-content">
+                        <div class="header-left">
+                            <div class="logo-section">
+                                <div class="title-section">
+                                    <h1>
+                                        <span>Estudio</span>
+                                        <span class="brand-separator"> > </span>
+                                        <span>Crear contenido</span>
+                                    </h1>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="header-right">
+                            <div class="header-credits" id="headerCredits">
+                                <span class="header-credits-value" id="headerCreditsValue">0/0</span>
+                            </div>
+                            <button class="hamburger-menu" id="hamburgerMenu">
+                                <div class="hamburger-line"></div>
+                                <div class="hamburger-line"></div>
+                                <div class="hamburger-line"></div>
+                            </button>
+                        </div>
+                    </div>
+                </header>
+                
+                <!-- Canvas Container (flex row) -->
+                <div class="canvas-container">
+                    <!-- Canvas Central -->
+                    <main class="canvas-area">
+                    </main>
+                </div> <!-- Cerrar canvas-container -->
+                
+                <!-- Sidebar de Studio (derecha, full height) -->
+                <nav class="studio-sidebar" id="sidebar-section-1">
                 <!-- Tab Bar para móviles -->
                 <div class="tab-bar">
                     <div class="tab-bar-item active" onclick="setActiveTab(this); showMobileConfig();">
@@ -693,13 +701,9 @@
     </div>
 
                 </div> <!-- Cerrar accordions-container -->
-    </nav>
-
-
-            <!-- Canvas Central -->
-            <main class="canvas-area">
-            </main>
-                    </div>
+                </nav>
+            </div> <!-- Cerrar workspace-container -->
+        </div> <!-- Cerrar studio-layout -->
     </main>
 
 
