@@ -233,6 +233,20 @@
                         <i class="fas fa-chevron-down accordion-icon" id="sujeto-icon"></i>
                             </div>
                     <div class="accordion-content" id="sujeto-content">
+                <!-- Toggle IA -->
+                    <div class="config-field ai-toggle-field">
+                        <div class="ai-toggle-container">
+                            <label class="ai-toggle-label">Dejar que la IA defina el protagonista</label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="ai-protagonist-toggle" onchange="toggleAIProtagonist(this.checked)">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="ai-suggestion-message" id="ai-suggestion-message" style="display: none;">
+                            <i class="fas fa-lightbulb"></i>
+                            <span>La IA creará el protagonista basándose en la información de marca, producto, audiencia y oferta.</span>
+                        </div>
+                    </div>
                 <!-- Género -->
                     <div class="config-field">
                         <label>Género:</label>
@@ -1772,6 +1786,30 @@
                     ? activePresets.join(',') 
                     : slider.value;
                 window.updateRealism(combinedValue);
+            }
+        }
+        
+        // Toggle IA Protagonista
+        function toggleAIProtagonist(enabled) {
+            const sujetoContent = document.getElementById('sujeto-content');
+            const suggestionMessage = document.getElementById('ai-suggestion-message');
+            
+            if (enabled) {
+                // Activar modo IA
+                if (sujetoContent) {
+                    sujetoContent.classList.add('ai-protagonist-active');
+                }
+                if (suggestionMessage) {
+                    suggestionMessage.style.display = 'flex';
+                }
+            } else {
+                // Desactivar modo IA
+                if (sujetoContent) {
+                    sujetoContent.classList.remove('ai-protagonist-active');
+                }
+                if (suggestionMessage) {
+                    suggestionMessage.style.display = 'none';
+                }
             }
         }
         

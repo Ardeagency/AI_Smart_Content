@@ -1335,6 +1335,151 @@ body {
     gap: 8px;
 }
 
+/* 12. Toggle IA Protagonista */
+.ai-toggle-field {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ai-toggle-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.ai-toggle-label {
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    margin: 0;
+    flex: 1;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: 0.3s;
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 2px;
+    bottom: 2px;
+    background-color: var(--text-secondary);
+    transition: 0.3s;
+    border-radius: 50%;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(24px);
+    background-color: #000000;
+}
+
+.toggle-switch:hover .toggle-slider {
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.toggle-switch input:checked:hover + .toggle-slider {
+    background-color: var(--primary-hover);
+}
+
+.ai-suggestion-message {
+    margin-top: 12px;
+    padding: 12px;
+    background: rgba(236, 235, 218, 0.1);
+    border: 1px solid rgba(236, 235, 218, 0.2);
+    border-radius: 6px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.ai-suggestion-message i {
+    color: var(--primary-color);
+    font-size: 16px;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.ai-suggestion-message span {
+    flex: 1;
+}
+
+/* Inputs deshabilitados cuando IA está activa */
+#sujeto-content.ai-protagonist-active .config-field:not(.ai-toggle-field) {
+    opacity: 0.5;
+    pointer-events: none;
+    position: relative;
+}
+
+#sujeto-content.ai-protagonist-active .config-field:not(.ai-toggle-field)::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+#sujeto-content.ai-protagonist-active .config-field:not(.ai-toggle-field) label {
+    color: var(--text-muted);
+}
+
+#sujeto-content.ai-protagonist-active .segment-btn,
+#sujeto-content.ai-protagonist-active .chip,
+#sujeto-content.ai-protagonist-active .multi-chip,
+#sujeto-content.ai-protagonist-active .eye-swatch,
+#sujeto-content.ai-protagonist-active .tone-preset-btn,
+#sujeto-content.ai-protagonist-active .realism-preset-btn {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+#sujeto-content.ai-protagonist-active input[type="range"],
+#sujeto-content.ai-protagonist-active select,
+#sujeto-content.ai-protagonist-active input[type="text"] {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
 /* =======================================
    Botones Unificados
    ======================================= */
