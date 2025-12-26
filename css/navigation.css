@@ -213,9 +213,14 @@
 
 /* Header del panel lateral */
 .nav-header {
-    padding: 2rem 1.5rem 1rem;
+    padding: 16px 20px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     background: rgba(236, 235, 218, 0.05);
+    height: 40px;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .nav-brand-title {
@@ -226,8 +231,8 @@
 
 .nav-brand-title h4 {
     color: var(--text-primary);
-    font-size: 1rem;
-    font-weight: 700;
+    font-size: 0.875rem;
+    font-weight: 600;
     margin: 0;
     line-height: 1.2;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -240,21 +245,21 @@
    ========================================= */
 
 .nav-menu {
-    padding: 1rem 0;
+    padding: 8px 16px 80px 16px;
 }
 
 .nav-section {
-    margin-bottom: 2rem;
+    margin-bottom: 0;
 }
 
 .nav-section-title {
     font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 0 1.5rem;
-    margin-bottom: 1rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: none;
+    letter-spacing: 0;
+    padding: 16px 0 8px 0;
+    margin-bottom: 0;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     line-height: 1.2;
 }
@@ -266,16 +271,19 @@
 .nav-link {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 12px 1.5rem;
+    gap: 8px;
+    padding: 0;
+    height: 32px;
+    min-height: 32px;
     color: var(--text-secondary);
     text-decoration: none;
-    transition: var(--nav-transition);
+    transition: all 0.15s ease;
     position: relative;
-    font-weight: 500;
-    font-size: 1rem;
+    font-weight: 400;
+    font-size: 14px;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    line-height: 1.5;
+    line-height: 1;
+    margin-bottom: 0;
 }
 
 .nav-link:hover {
@@ -301,19 +309,33 @@
 }
 
 .nav-icon {
-    font-size: 1rem;
-    width: 20px;
-    text-align: center;
-    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
+    font-weight: 900;
+    font-style: normal;
+    font-family: "Font Awesome 6 Free";
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
+    color: var(--text-secondary);
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+}
+
+.nav-link:hover .nav-icon,
+.nav-link.active .nav-icon {
+    color: var(--primary-color);
 }
 
 .nav-text {
     flex: 1;
-    font-size: 1rem;
+    font-size: 14px;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    transition: opacity 0.15s ease, width 0.15s ease;
+    opacity: 1;
+    overflow: hidden;
 }
 
 .nav-badge {
@@ -344,75 +366,90 @@
     bottom: 0;
     left: 0;
     right: 0;
-    padding: 1.5rem;
+    padding: 16px 20px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     background: rgba(0, 0, 0, 0.3);
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
 }
 
 /* Perfil del usuario (no es botón, solo información) */
 .nav-footer-profile {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     padding: 0;
     color: var(--text-secondary);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    height: 32px;
+    min-height: 32px;
 }
 
 .nav-footer-profile i {
     width: 28px;
     height: 28px;
-    font-size: 21px;
+    font-size: 16px;
+    font-weight: 900;
+    font-style: normal;
+    font-family: "Font Awesome 6 Free";
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
     color: var(--text-secondary);
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
 }
 
 .nav-footer-profile span {
-    font-size: 21px;
-    font-weight: 500;
+    font-size: 14px;
+    font-weight: 400;
     color: var(--text-primary);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    line-height: 1.2;
+    line-height: 1;
 }
 
 /* Enlaces del footer (no son botones encerrados) */
 .nav-footer-link {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     padding: 0;
+    height: 32px;
+    min-height: 32px;
     background: transparent;
     border: none;
     color: var(--text-secondary);
-    font-size: 21px;
-    font-weight: 500;
+    font-size: 14px;
+    font-weight: 400;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     text-decoration: none;
     cursor: pointer;
-    transition: var(--nav-transition);
-    line-height: 1.2;
+    transition: all 0.15s ease;
+    line-height: 1;
 }
 
 .nav-footer-link:hover {
     color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
 }
 
 .nav-footer-link i {
     width: 28px;
     height: 28px;
-    font-size: 21px;
+    font-size: 16px;
+    font-weight: 900;
+    font-style: normal;
+    font-family: "Font Awesome 6 Free";
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
     color: var(--text-secondary);
-    transition: var(--nav-transition);
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    transition: all 0.15s ease;
 }
 
 .nav-footer-link:hover i {
@@ -420,7 +457,7 @@
 }
 
 .nav-footer-link span {
-    font-size: 21px;
+    font-size: 14px;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
