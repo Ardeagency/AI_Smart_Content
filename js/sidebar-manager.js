@@ -267,7 +267,7 @@ class SidebarManager {
      * userData y projectData NUNCA son null, siempre tienen valores (aunque sean defaults)
      * 
      * NOTA: El header del sidebar ahora solo muestra "AI SMART CONTENT" (estático)
-     * Solo actualizamos los créditos del header principal
+     * Solo actualizamos los créditos del header principal y el nombre del perfil
      */
     updateUI() {
         // ============================================
@@ -279,6 +279,18 @@ class SidebarManager {
             const total = this.userData.credits_total || 0;
             const restantes = this.userData.credits_available || 0;
             headerCreditsValue.textContent = `${total}/${restantes}`;
+        }
+
+        // ============================================
+        // NOMBRE DEL PERFIL EN EL FOOTER: Siempre visible
+        // ============================================
+        const navProfileName = document.getElementById('navProfileName');
+        if (navProfileName) {
+            // Mostrar nombre completo o email, siempre hay un valor
+            const displayName = this.userData.full_name || 
+                              this.userData.email || 
+                              'Usuario';
+            navProfileName.textContent = displayName;
         }
     }
 

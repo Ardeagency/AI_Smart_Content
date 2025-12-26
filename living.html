@@ -52,18 +52,18 @@
 
         <!-- Footer del panel -->
         <div class="nav-footer">
-            <button class="nav-footer-btn" id="navProfileBtn">
+            <div class="nav-footer-profile" id="navFooterProfile">
                 <i class="fas fa-user"></i>
-                <span>Perfil</span>
-            </button>
-            <button class="nav-footer-btn" id="navAdminBtn">
+                <span id="navProfileName">Usuario</span>
+            </div>
+            <a href="#" class="nav-footer-link" id="navAdminBtn">
                 <i class="fas fa-cog"></i>
                 <span>Administrar</span>
-            </button>
-            <button class="nav-footer-btn nav-logout" onclick="logout()">
+            </a>
+            <a href="#" class="nav-footer-link nav-logout" onclick="logout(); return false;">
                 <i class="fas fa-sign-out-alt"></i>
                 <span>Salir</span>
-            </button>
+            </a>
         </div>
     </nav>
 
