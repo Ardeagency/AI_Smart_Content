@@ -14,28 +14,6 @@
     <link rel="stylesheet" href="css/studio.css">
 </head>
 <body>
-    <!-- Header del Canvas -->
-    <div class="canvas-header">
-        <div class="canvas-header-left">
-            <button class="hamburger-menu" id="hamburgerMenu" onclick="toggleNavigation()">
-                <div class="hamburger-line"></div>
-                <div class="hamburger-line"></div>
-                <div class="hamburger-line"></div>
-            </button>
-            <a href="index.html" class="main-logo">
-                <span>AI Smart Content</span>
-                <span class="brand-separator"> - </span>
-                <span class="brand-name-header" id="brandNameHeader">Cargando...</span>
-            </a>
-        </div>
-        <div class="canvas-header-right">
-            <div class="credits-display">
-                <i class="fas fa-coins"></i>
-                <span id="creditsCount">150</span>
-            </div>
-        </div>
-    </div>
-
     <!-- Overlay de navegación -->
     <div class="nav-overlay" id="navOverlay" onclick="closeNavigation()"></div>
 
@@ -100,6 +78,22 @@
             
             <!-- Sidebar Unificado Izquierdo -->
             <nav class="studio-sidebar" id="sidebar-section-1">
+                <!-- Header del Sidebar -->
+                <div class="sidebar-header">
+                    <div class="sidebar-header-left">
+                        <button class="hamburger-menu" id="hamburgerMenu" onclick="toggleNavigation()">
+                            <div class="hamburger-line"></div>
+                            <div class="hamburger-line"></div>
+                            <div class="hamburger-line"></div>
+                        </button>
+                        <a href="index.html" class="main-logo">
+                            <span>AI Smart Content</span>
+                            <span class="brand-separator"> - </span>
+                            <span class="brand-name-header" id="brandNameHeader">Cargando...</span>
+                        </a>
+                    </div>
+                </div>
+                
                 <!-- Tab Bar para móviles -->
                 <div class="tab-bar">
                     <div class="tab-bar-item active" onclick="setActiveTab(this); showMobileConfig();">

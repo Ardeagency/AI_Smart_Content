@@ -2238,9 +2238,73 @@ body {
 
 /* Header del Sidebar */
 .sidebar-header {
-    padding: 20px;
-    border-bottom: 1px solid var(--border-color);
-    background: var(--bg-card);
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(236, 235, 218, 0.2);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+.sidebar-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.sidebar-header .hamburger-menu {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    transition: all 0.3s ease;
+    width: 40px;
+    height: 40px;
+    justify-content: center;
+    align-items: center;
+}
+
+.sidebar-header .hamburger-menu:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.sidebar-header .hamburger-line {
+    width: 20px;
+    height: 2px;
+    background: var(--text-primary);
+    transition: all 0.3s ease;
+    border-radius: 2px;
+}
+
+.sidebar-header .main-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: color 0.2s ease;
+}
+
+.sidebar-header .main-logo:hover {
+    color: var(--primary-color);
+}
+
+.sidebar-header .brand-separator {
+    color: var(--text-secondary);
+    opacity: 0.6;
+}
+
+.sidebar-header .brand-name-header {
+    color: var(--text-secondary);
+    font-weight: 400;
 }
 
 .sidebar-user-info {
@@ -2281,87 +2345,6 @@ body {
     color: var(--primary-color);
 }
 
-/* Header del Canvas - Invisible */
-.canvas-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 20px;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1000;
-    height: auto;
-    margin: 0;
-}
-
-/* En desktop, el header solo está dentro del área del canvas (después del sidebar) */
-@media (min-width: 1024px) {
-    .canvas-header {
-        left: 384px; /* Comienza donde termina el sidebar */
-        right: 0;
-    }
-}
-
-.canvas-header-left {
-    display: flex;
-    align-items: center;
-}
-
-.canvas-header-right {
-    display: flex;
-    align-items: center;
-}
-
-/* Botón hamburguesa en canvas */
-.canvas-header .hamburger-menu {
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    transition: all 0.3s ease;
-}
-
-.canvas-header .hamburger-menu:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-}
-
-.canvas-header .hamburger-line {
-    width: 20px;
-    height: 2px;
-    background: var(--text-primary);
-    transition: all 0.3s ease;
-}
-
-/* Créditos en canvas */
-.canvas-header .credits-display {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--text-primary);
-    font-size: 14px;
-    font-weight: 500;
-    padding: 8px 12px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 6px;
-    transition: all 0.3s ease;
-}
-
-.canvas-header .credits-display:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.canvas-header .credits-display i {
-    color: var(--primary-color);
-}
 
 /* =======================================
    Arreglar Scroll del Sidebar
@@ -2897,9 +2880,6 @@ nav.studio-sidebar {
         width: 420px;
     }
     
-    .canvas-header {
-        left: 420px; /* Ajustar header al nuevo ancho del sidebar */
-    }
 }
 
 /* Pantallas ultra grandes (1920px+) */
@@ -2913,9 +2893,6 @@ nav.studio-sidebar {
         width: 480px;
     }
     
-    .canvas-header {
-        left: 480px; /* Ajustar header al nuevo ancho del sidebar */
-    }
 }
 
 /* =======================================
