@@ -16,11 +16,42 @@
 class SidebarManager {
     constructor() {
         this.isInitialized = false;
-        this.userData = null;
-        this.projectData = null;
+        // Snapshot inmutable - NUNCA es null, siempre tiene valores por defecto
+        this.userData = this.getDefaultUserSnapshot();
+        this.projectData = this.getDefaultProjectSnapshot();
         this.syncInterval = null;
         this.STORAGE_KEY = 'sidebar_snapshot';
         this.SYNC_INTERVAL = 30000; // 30 segundos
+    }
+
+    /**
+     * Crear snapshot por defecto del usuario (inmutable)
+     * El sidebar JAMÁS ve un estado "sin usuario"
+     */
+    getDefaultUserSnapshot() {
+        return {
+            id: null,
+            email: '',
+            full_name: '',
+            plan_type: 'basico',
+            credits_available: 0,
+            credits_total: 0
+        };
+    }
+
+    /**
+     * Crear snapshot por defecto del proyecto (inmutable)
+     */
+    getDefaultProjectSnapshot() {
+        return {
+            id: null,
+            nombre_marca: 'Cargando marca...',
+            logo_url: null,
+            sitio_web: null,
+            instagram_url: null,
+            tiktok_url: null,
+            facebook_url: null
+        };
     }
 
     /**
@@ -54,21 +85,27 @@ class SidebarManager {
     /**
      * Hidratar sidebar con snapshot local (instantáneo)
      * Esto evita el "flash" o parpadeo al cargar
+     * REGLA DE ORO: Siempre hay un snapshot, nunca null
      */
     hydrateFromSnapshot() {
         try {
             const snapshot = localStorage.getItem(this.STORAGE_KEY);
             if (snapshot) {
                 const data = JSON.parse(snapshot);
-                this.userData = data.userData || null;
-                this.projectData = data.projectData || null;
+                // Fusionar snapshot guardado con defaults (nunca perder estructura)
+                this.userData = { ...this.getDefaultUserSnapshot(), ...(data.userData || {}) };
+                this.projectData = { ...this.getDefaultProjectSnapshot(), ...(data.projectData || {}) };
                 console.log('💾 Sidebar hidratado desde snapshot local');
-                this.updateUI();
             } else {
-                console.log('📝 No hay snapshot local, sidebar se inicializará vacío');
+                console.log('📝 No hay snapshot local, usando valores por defecto');
+                // Ya están inicializados con defaults en constructor
             }
+            // SIEMPRE actualizar UI inmediatamente (nunca esperar)
+            this.updateUI();
         } catch (error) {
             console.error('❌ Error hidratando sidebar:', error);
+            // En caso de error, mantener defaults y actualizar UI
+            this.updateUI();
         }
     }
 
@@ -98,18 +135,18 @@ class SidebarManager {
                 this.loadProjectData(supabase, user.id)
             ]);
 
-            // Actualizar estado
+            // Actualizar estado (fusionar con defaults, nunca reemplazar completamente)
             if (userDataResult.status === 'fulfilled' && userDataResult.value) {
-                this.userData = userDataResult.value;
+                this.userData = { ...this.getDefaultUserSnapshot(), ...userDataResult.value };
             }
             if (projectDataResult.status === 'fulfilled' && projectDataResult.value) {
-                this.projectData = projectDataResult.value;
+                this.projectData = { ...this.getDefaultProjectSnapshot(), ...projectDataResult.value };
             }
 
-            // Guardar snapshot para próxima vez
+            // Guardar snapshot para próxima vez (siempre hay datos, nunca null)
             this.saveSnapshot();
 
-            // Actualizar UI
+            // Actualizar UI (nunca hay estado "loading", siempre hay datos)
             this.updateUI();
 
             console.log('✅ Sidebar sincronizado en background');
@@ -160,15 +197,19 @@ class SidebarManager {
 
     /**
      * Guardar snapshot local para hidratación rápida
+     * REGLA DE ORO: Siempre guardamos datos válidos, nunca null
      */
     saveSnapshot() {
         try {
-            const snapshot = {
-                userData: this.userData,
-                projectData: this.projectData,
-                timestamp: Date.now()
-            };
-            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(snapshot));
+            // Solo guardar si tenemos datos reales (no solo defaults)
+            if (this.userData.id || this.projectData.id) {
+                const snapshot = {
+                    userData: this.userData,
+                    projectData: this.projectData,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem(this.STORAGE_KEY, JSON.stringify(snapshot));
+            }
         } catch (error) {
             console.error('Error guardando snapshot:', error);
         }
@@ -176,10 +217,11 @@ class SidebarManager {
 
     /**
      * Actualizar UI del sidebar
-     * Esta función solo actualiza el DOM, no recarga datos
+     * REGLA DE ORO: Esta función SIEMPRE renderiza, nunca espera datos
+     * userData y projectData NUNCA son null, siempre tienen valores (aunque sean defaults)
      */
     updateUI() {
-        // Actualizar logo de marca
+        // Elementos del DOM
         const navBrandLogo = document.getElementById('navBrandLogo');
         const navBrandInitials = document.getElementById('navBrandInitials');
         const navBrandName = document.getElementById('navBrandName');
@@ -187,61 +229,60 @@ class SidebarManager {
         const navUserAvatar = document.getElementById('navUserAvatar');
         const creditsCount = document.getElementById('creditsCount');
 
-        if (this.projectData) {
-            // Logo de marca
-            if (navBrandLogo && this.projectData.logo_url) {
-                navBrandLogo.src = this.projectData.logo_url + '?t=' + Date.now();
-                navBrandLogo.style.display = 'block';
-                if (navBrandInitials) {
-                    navBrandInitials.style.display = 'none';
-                }
-            } else if (navBrandInitials && this.projectData.nombre_marca) {
-                const initials = this.getInitials(this.projectData.nombre_marca);
-                navBrandInitials.textContent = initials;
-                navBrandInitials.style.display = 'block';
-                if (navBrandLogo) {
-                    navBrandLogo.style.display = 'none';
-                }
+        // SIEMPRE hay projectData (nunca null)
+        // Logo de marca
+        if (navBrandLogo && this.projectData.logo_url) {
+            navBrandLogo.src = this.projectData.logo_url + '?t=' + Date.now();
+            navBrandLogo.style.display = 'block';
+            if (navBrandInitials) {
+                navBrandInitials.style.display = 'none';
             }
-
-            // Nombre de marca
-            if (navBrandName) {
-                navBrandName.textContent = this.projectData.nombre_marca || 'Sin marca';
+        } else if (navBrandInitials) {
+            // Siempre mostrar iniciales (aunque sea "C" de "Cargando marca...")
+            const initials = this.getInitials(this.projectData.nombre_marca || 'M');
+            navBrandInitials.textContent = initials;
+            navBrandInitials.style.display = 'block';
+            if (navBrandLogo) {
+                navBrandLogo.style.display = 'none';
             }
         }
 
-        if (this.userData) {
-            // Plan del usuario
-            if (navPlanName) {
-                const planNames = {
-                    'basico': 'Plan Básico',
-                    'starter': 'Plan Starter',
-                    'pro': 'Plan Pro',
-                    'enterprise': 'Plan Enterprise'
-                };
-                navPlanName.textContent = planNames[this.userData.plan_type] || 'Plan Básico';
-            }
+        // Nombre de marca (siempre hay valor, nunca undefined)
+        if (navBrandName) {
+            navBrandName.textContent = this.projectData.nombre_marca || 'Cargando marca...';
+        }
 
-            // Créditos en el sidebar
-            if (creditsCount) {
-                creditsCount.textContent = this.userData.credits_available || 0;
-            }
+        // SIEMPRE hay userData (nunca null)
+        // Plan del usuario
+        if (navPlanName) {
+            const planNames = {
+                'basico': 'Plan Básico',
+                'starter': 'Plan Starter',
+                'pro': 'Plan Pro',
+                'enterprise': 'Plan Enterprise'
+            };
+            navPlanName.textContent = planNames[this.userData.plan_type] || 'Plan Básico';
+        }
 
-            // Créditos en el header (formato: total/restantes)
-            const headerCreditsValue = document.getElementById('headerCreditsValue');
-            if (headerCreditsValue) {
-                const total = this.userData.credits_total || 0;
-                const restantes = this.userData.credits_available || 0;
-                headerCreditsValue.textContent = `${total}/${restantes}`;
-            }
+        // Créditos en el sidebar (siempre hay valor numérico)
+        if (creditsCount) {
+            creditsCount.textContent = this.userData.credits_available || 0;
+        }
 
-            // Avatar del usuario (si no hay logo de marca)
-            if (navUserAvatar && !this.projectData?.logo_url) {
-                const initials = this.getInitials(this.userData.full_name || this.userData.email);
-                const initialsSpan = navUserAvatar.querySelector('span');
-                if (initialsSpan) {
-                    initialsSpan.textContent = initials;
-                }
+        // Créditos en el header (formato: total/restantes) - siempre hay valores
+        const headerCreditsValue = document.getElementById('headerCreditsValue');
+        if (headerCreditsValue) {
+            const total = this.userData.credits_total || 0;
+            const restantes = this.userData.credits_available || 0;
+            headerCreditsValue.textContent = `${total}/${restantes}`;
+        }
+
+        // Avatar del usuario (si no hay logo de marca)
+        if (navUserAvatar && !this.projectData.logo_url) {
+            const initials = this.getInitials(this.userData.full_name || this.userData.email || 'M');
+            const initialsSpan = navUserAvatar.querySelector('span');
+            if (initialsSpan) {
+                initialsSpan.textContent = initials;
             }
         }
     }
