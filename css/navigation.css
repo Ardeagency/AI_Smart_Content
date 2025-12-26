@@ -21,7 +21,7 @@
 .main-header {
     position: fixed;
     top: 0;
-    left: 0;
+    left: var(--nav-width);
     right: 0;
     height: 70px;
     background: var(--nav-bg);
@@ -118,22 +118,11 @@
    ========================================= */
 
 .nav-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: var(--nav-overlay);
-    backdrop-filter: blur(5px);
-    z-index: 1001;
-    opacity: 0;
-    visibility: hidden;
-    transition: var(--nav-transition);
+    display: none;
 }
 
 .nav-overlay.active {
-    opacity: 1;
-    visibility: visible;
+    display: none;
 }
 
 .side-navigation {
@@ -146,8 +135,8 @@
     backdrop-filter: blur(20px);
     border-right: 1px solid var(--nav-border);
     z-index: 1002;
-    transform: translateX(-100%);
-    transition: var(--nav-transition);
+    transform: translateX(0);
+    transition: none;
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -333,6 +322,7 @@
 
 .main-content {
     margin-top: 70px;
+    margin-left: var(--nav-width);
     min-height: calc(100vh - 70px);
     background: var(--bg-black);
     transition: var(--nav-transition);
@@ -384,11 +374,41 @@
 @media (max-width: 768px) {
     .main-header {
         padding: 0 1rem;
+        left: 0;
     }
     
     .side-navigation {
+        width: var(--nav-width);
+        transform: translateX(-100%);
+        transition: var(--nav-transition);
+    }
+    
+    .side-navigation.active {
+        transform: translateX(0);
+    }
+    
+    .main-content {
+        margin-left: 0;
+    }
+    
+    .nav-overlay {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
         width: 100%;
-        max-width: 320px;
+        height: 100%;
+        background: var(--nav-overlay);
+        backdrop-filter: blur(5px);
+        z-index: 1001;
+        opacity: 0;
+        visibility: hidden;
+        transition: var(--nav-transition);
+    }
+    
+    .nav-overlay.active {
+        opacity: 1;
+        visibility: visible;
     }
     
     .content-container {

@@ -831,25 +831,42 @@
         }
 
         // Funciones para la navegación lateral
+        // En desktop, el sidebar está siempre abierto
         function toggleNavigation() {
-            const overlay = document.getElementById('navOverlay');
-            const navigation = document.getElementById('sideNavigation');
-            const hamburger = document.getElementById('hamburgerMenu');
-            
-            overlay.classList.toggle('active');
-            navigation.classList.toggle('active');
-            hamburger.classList.toggle('active');
+            // Solo funciona en móvil
+            if (window.innerWidth <= 768) {
+                const overlay = document.getElementById('navOverlay');
+                const navigation = document.getElementById('sideNavigation');
+                const hamburger = document.getElementById('hamburgerMenu');
+                
+                overlay.classList.toggle('active');
+                navigation.classList.toggle('active');
+                if (hamburger) hamburger.classList.toggle('active');
+            }
         }
 
         function closeNavigation() {
-            const overlay = document.getElementById('navOverlay');
-            const navigation = document.getElementById('sideNavigation');
-            const hamburger = document.getElementById('hamburgerMenu');
-            
-            overlay.classList.remove('active');
-            navigation.classList.remove('active');
-            hamburger.classList.remove('active');
+            // Solo funciona en móvil
+            if (window.innerWidth <= 768) {
+                const overlay = document.getElementById('navOverlay');
+                const navigation = document.getElementById('sideNavigation');
+                const hamburger = document.getElementById('hamburgerMenu');
+                
+                overlay.classList.remove('active');
+                navigation.classList.remove('active');
+                if (hamburger) hamburger.classList.remove('active');
+            }
         }
+        
+        // Inicializar sidebar como abierto en desktop
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.innerWidth > 768) {
+                const navigation = document.getElementById('sideNavigation');
+                if (navigation) {
+                    navigation.classList.add('active');
+                }
+            }
+        });
 
         // Funciones para el tab bar en móviles
         function toggleSidebar() {

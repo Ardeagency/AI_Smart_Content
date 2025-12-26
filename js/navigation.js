@@ -13,32 +13,67 @@ class NavigationManager {
         this.setupEventListeners();
         this.checkAuthState();
         this.updateNavigationCounts();
+        this.initializeSidebar();
+    }
+
+    initializeSidebar() {
+        // En desktop, el sidebar está siempre abierto
+        if (window.innerWidth > 768) {
+            const sideNavigation = document.getElementById('sideNavigation');
+            if (sideNavigation) {
+                sideNavigation.classList.add('active');
+                this.isNavOpen = true;
+            }
+        }
     }
 
     setupEventListeners() {
-        // Hamburger menu toggle
+        // Hamburger menu toggle - solo funciona en móvil
         const hamburgerMenu = document.getElementById('hamburgerMenu');
         const navOverlay = document.getElementById('navOverlay');
         const sideNavigation = document.getElementById('sideNavigation');
 
         if (hamburgerMenu) {
-            hamburgerMenu.addEventListener('click', () => this.toggleNavigation());
+            hamburgerMenu.addEventListener('click', () => {
+                // Solo toggle en móvil
+                if (window.innerWidth <= 768) {
+                    this.toggleNavigation();
+                }
+            });
         }
 
         if (navOverlay) {
-            navOverlay.addEventListener('click', () => this.closeNavigation());
+            navOverlay.addEventListener('click', () => {
+                // Solo cerrar en móvil
+                if (window.innerWidth <= 768) {
+                    this.closeNavigation();
+                }
+            });
         }
 
-        // Close nav on escape key
+        // Close nav on escape key - solo en móvil
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.isNavOpen) {
+            if (e.key === 'Escape' && this.isNavOpen && window.innerWidth <= 768) {
                 this.closeNavigation();
             }
         });
 
         // Handle window resize
         window.addEventListener('resize', () => {
-            if (window.innerWidth > 768 && this.isNavOpen) {
+            if (window.innerWidth > 768) {
+                // En desktop, siempre abierto
+                const sideNavigation = document.getElementById('sideNavigation');
+                if (sideNavigation) {
+                    sideNavigation.classList.add('active');
+                    this.isNavOpen = true;
+                }
+                // Ocultar overlay en desktop
+                const navOverlay = document.getElementById('navOverlay');
+                if (navOverlay) {
+                    navOverlay.classList.remove('active');
+                }
+            } else {
+                // En móvil, cerrar por defecto
                 this.closeNavigation();
             }
         });
@@ -54,6 +89,7 @@ class NavigationManager {
                 }
                 
                 // Close navigation on mobile after link click
+                // En desktop, el sidebar permanece abierto
                 if (window.innerWidth <= 768) {
                     this.closeNavigation();
                 }
