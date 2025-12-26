@@ -340,8 +340,8 @@ class StudioManager {
             return product.project_id === selectedBrandId;
         });
 
-        console.log('Filtrando productos:', {
-            selectedBrandId,
+            console.log('Filtrando productos:', {
+                selectedBrandId,
             totalProducts: this.products.length,
             filteredProducts: filteredProducts.length
         });
@@ -451,7 +451,7 @@ class StudioManager {
                 if (typeof populateProductSelector === 'function') {
                     populateProductSelector(this.products);
                 } else {
-                    this.updateProductSelector(brandId);
+        this.updateProductSelector(brandId);
                 }
             }
             
@@ -477,10 +477,10 @@ class StudioManager {
                     this.updateOfferSelector(brandId);
                 }
             }
-            
-            // Limpiar selección de producto cuando cambia la marca
-            this.clearProductSelection();
-            
+        
+        // Limpiar selección de producto cuando cambia la marca
+        this.clearProductSelection();
+        
             console.log('✅ Datos de marca cargados completamente');
         } catch (error) {
             console.error('❌ Error en selectBrandFromDropdown:', error);
@@ -938,7 +938,7 @@ class StudioManager {
             // Renderizar imágenes desde product_images (usar image_url según schema.sql)
             const imagesHTML = this.productImages.map((image, index) => {
                 const imageUrl = image.image_url || '';
-                if (!imageUrl) {
+                    if (!imageUrl) {
                     console.warn('⚠️ Imagen sin image_url:', image);
                     return '';
                 }

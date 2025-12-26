@@ -249,8 +249,8 @@
 .btn-create-account:disabled {
     opacity: 0.5;
     cursor: not-allowed;
-    transform: none;
-}
+        transform: none;
+    }
     
 /* ============================================
    IMAGE SECTION (RIGHT) - Ahora abarca toda la pantalla
@@ -498,7 +498,7 @@
     .subscribe-container {
         padding: 0;
     }
-
+    
     .plans-selection {
         grid-template-columns: repeat(2, 1fr);
         gap: clamp(0.5rem, 2vw, 0.75rem);
