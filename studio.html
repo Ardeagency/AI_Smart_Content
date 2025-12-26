@@ -116,9 +116,6 @@
                 
                 <!-- Contenido del sidebar -->
                 <div class="sidebar-content">
-                    <button class="close-sidebar" onclick="toggleSidebar()">
-                        <i class="fas fa-times"></i>
-                    </button>
                 <!-- Configuraciones integradas directamente -->
                 
                 <!-- Marca -->
@@ -154,7 +151,7 @@
                         </div>
             </div>
         </div>
-                
+                            
                 </div> <!-- Cerrar sidebar-content -->
                 
                 <!-- Secciones desplegables -->
@@ -683,9 +680,9 @@
                                       placeholder="Describe lo que NO quieres que aparezca en el video..."
                                       rows="3"></textarea>
                             </div>
-            </div>
         </div>
-                
+    </div>
+
                 </div> <!-- Cerrar accordions-container -->
     </nav>
 
@@ -718,7 +715,7 @@
             
             if (!content || !icon) return;
             
-            // Toggle usando clase active para animación
+            // Toggle simple sin animación
             if (content.classList.contains('active')) {
                 // Cerrar
                 content.classList.remove('active');
