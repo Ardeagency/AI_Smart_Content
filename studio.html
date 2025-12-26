@@ -1822,29 +1822,87 @@
                         return;
                     }
                     
-                    // Crear lista de marcas para mostrar
-                    const brandsList = projects.map((p, i) => `${i + 1}. ${p.nombre_marca || 'Sin nombre'}`).join('\n');
-                    const selectedIndex = prompt(`Marcas disponibles:\n\n${brandsList}\n\nIngresa el número de la marca que deseas seleccionar:`);
-                    
-                    if (selectedIndex && !isNaN(selectedIndex)) {
-                        const index = parseInt(selectedIndex) - 1;
-                        if (index >= 0 && index < projects.length) {
-                            const selectedProject = projects[index];
-                            updateBrandCard(selectedProject);
-                            const brandSelector = document.getElementById('brand-selector');
-                            if (brandSelector) {
-                                brandSelector.value = selectedProject.id;
-                            }
-                            onBrandSelected(selectedProject.id);
-                        } else {
-                            alert('Número inválido. Por favor, selecciona un número de la lista.');
-                        }
-                    }
+                    // Crear modal con opciones seleccionables
+                    showBrandSelectorModal(projects);
                 })
                 .catch(error => {
                     console.error('Error en openBrandSelector:', error);
                     alert('Error al cargar las marcas: ' + error.message);
                 });
+        }
+        
+        // Función para mostrar modal de selección de marca
+        function showBrandSelectorModal(projects) {
+            // Crear overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'brand-selector-overlay';
+            overlay.onclick = (e) => {
+                if (e.target === overlay) {
+                    closeBrandSelectorModal();
+                }
+            };
+            
+            // Crear modal
+            const modal = document.createElement('div');
+            modal.className = 'brand-selector-modal';
+            
+            // Crear header
+            const header = document.createElement('div');
+            header.className = 'brand-selector-header';
+            header.innerHTML = `
+                <h3>Seleccionar Marca</h3>
+                <button class="brand-selector-close" onclick="closeBrandSelectorModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            // Crear lista de marcas
+            const brandsList = document.createElement('div');
+            brandsList.className = 'brand-selector-list';
+            
+            projects.forEach((project) => {
+                const brandItem = document.createElement('div');
+                brandItem.className = 'brand-selector-item';
+                brandItem.onclick = () => {
+                    selectBrandFromModal(project);
+                };
+                
+                brandItem.innerHTML = `
+                    <div class="brand-selector-item-logo">
+                        ${project.logo_url 
+                            ? `<img src="${project.logo_url}" alt="${project.nombre_marca || 'Sin nombre'}">`
+                            : `<div class="brand-selector-logo-placeholder"></div>`
+                        }
+                    </div>
+                    <div class="brand-selector-item-name">${project.nombre_marca || 'Sin nombre'}</div>
+                `;
+                
+                brandsList.appendChild(brandItem);
+            });
+            
+            modal.appendChild(header);
+            modal.appendChild(brandsList);
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+        }
+        
+        // Función para seleccionar marca desde el modal
+        function selectBrandFromModal(project) {
+            updateBrandCard(project);
+            const brandSelector = document.getElementById('brand-selector');
+            if (brandSelector) {
+                brandSelector.value = project.id;
+            }
+            onBrandSelected(project.id);
+            closeBrandSelectorModal();
+        }
+        
+        // Función para cerrar modal de selección de marca
+        function closeBrandSelectorModal() {
+            const overlay = document.querySelector('.brand-selector-overlay');
+            if (overlay) {
+                overlay.remove();
+            }
         }
 
         async function onProductSelected(productId) {

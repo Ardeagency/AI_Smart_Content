@@ -1814,10 +1814,10 @@ body {
 
 .image-gallery-card {
     margin: 16px 0;
-    padding: 16px;
-    background: hsl(var(--card));
-    border: 1px solid hsl(var(--border));
-    border-radius: 8px;
+    padding: 20px;
+    background: #000000;
+    border: 1px solid rgba(236, 235, 218, 0.3);
+    border-radius: 12px;
     box-sizing: border-box;
 }
 
@@ -1825,27 +1825,27 @@ body {
     color: hsl(var(--foreground));
     font-size: 14px;
     font-weight: 600;
-    margin: 0 0 12px 0;
+    margin: 0 0 16px 0;
     padding-bottom: 8px;
-    border-bottom: 1px solid hsl(var(--border));
+    border-bottom: 1px solid rgba(236, 235, 218, 0.3);
 }
 
 /* =======================================
    ESTILOS PARA IMÁGENES DINÁMICAS DE PRODUCTO
    ======================================= */
 
-/* Grid de imágenes de producto */
+/* Grid de imágenes de producto - Card gris interna */
 .product-images-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
     gap: 8px;
-    margin: 16px 0;
+    margin: 0;
     max-height: 250px;
     overflow-y: auto;
-    padding: 8px;
-    border: 1px solid var(--border-color);
+    padding: 12px;
+    border: 1px solid rgba(236, 235, 218, 0.2);
     border-radius: 8px;
-    background: var(--bg-card);
+    background: #181a1b;
 }
 
 /* Contenedores de imagen dentro del grid */
@@ -1900,6 +1900,148 @@ body {
 .product-image-item.main-image {
     border: 2px solid var(--primary-color);
     box-shadow: 0 0 8px rgba(236, 235, 218, 0.3);
+}
+
+/* =======================================
+   MODAL DE SELECCIÓN DE MARCA
+   ======================================= */
+
+.brand-selector-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.brand-selector-modal {
+    background: #181a1b;
+    border: 1px solid rgba(236, 235, 218, 0.3);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.brand-selector-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid rgba(236, 235, 218, 0.3);
+}
+
+.brand-selector-header h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.brand-selector-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 5px;
+    transition: color 0.2s ease;
+}
+
+.brand-selector-close:hover {
+    color: var(--text-primary);
+}
+
+.brand-selector-list {
+    padding: 16px;
+    overflow-y: auto;
+    max-height: calc(80vh - 80px);
+}
+
+.brand-selector-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid rgba(236, 235, 218, 0.2);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #000000;
+}
+
+.brand-selector-item:hover {
+    background: rgba(236, 235, 218, 0.05);
+    border-color: rgba(236, 235, 218, 0.4);
+    transform: translateX(4px);
+}
+
+.brand-selector-item-logo {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(236, 235, 218, 0.2);
+}
+
+.brand-selector-item-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.brand-selector-logo-placeholder {
+    width: 100%;
+    height: 100%;
+    background: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 20px;
+}
+
+.brand-selector-item-name {
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    flex: 1;
 }
 
 .product-image-item.gallery-image {
