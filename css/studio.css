@@ -2483,7 +2483,7 @@ nav.studio-sidebar {
     border-radius: 8px;
     background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
     border: none;
-    color: white;
+    color: var(--text-primary);
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 4px 12px rgba(236, 235, 218, 0.3);
@@ -2819,7 +2819,7 @@ nav.studio-sidebar {
         border-radius: 6px;
         background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
         border: none;
-        color: white;
+        color: var(--text-primary);
         cursor: pointer;
         transition: all 0.3s ease;
         box-shadow: 0 2px 8px rgba(236, 235, 218, 0.3);
