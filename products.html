@@ -13,32 +13,10 @@
     <link rel="stylesheet" href="css/products.css">
 </head>
 <body>
-    <!-- Overlay para navegación móvil -->
-    <div class="nav-overlay" id="navOverlay"></div>
+    <!-- Overlay de navegación -->
+    <div class="nav-overlay" id="navOverlay" onclick="closeNavigation()"></div>
 
-    <!-- Header Principal -->
-    <header class="main-header">
-        <div class="header-left">
-            <button class="hamburger-menu" id="hamburgerMenu">
-                <div class="hamburger-line"></div>
-                <div class="hamburger-line"></div>
-                <div class="hamburger-line"></div>
-            </button>
-            <a href="index.html" class="main-logo">
-                <span>AI Smart Content</span>
-                <span class="brand-separator"> - </span>
-                <span class="brand-name-header" id="brandNameHeader">Cargando...</span>
-            </a>
-        </div>
-        <div class="header-right">
-            <div class="credits-display">
-                <i class="fas fa-coins"></i>
-                <span id="creditsCount">0</span>
-            </div>
-        </div>
-    </header>
-
-    <!-- Navegación Lateral -->
+    <!-- Navegación lateral -->
     <nav class="side-navigation" id="sideNavigation">
         <!-- Header del panel -->
         <div class="nav-header">
@@ -85,9 +63,9 @@
         <!-- Footer del panel -->
         <div class="nav-footer">
             <button class="nav-logout" onclick="logout()">
-                <i class="fas fa-sign-out-alt"></i>
+                    <i class="fas fa-sign-out-alt"></i>
                 <span>Cerrar Sesión</span>
-            </button>
+                </button>
         </div>
     </nav>
 
@@ -161,6 +139,47 @@
     <script src="js/auth-guard.js"></script>
     <script src="js/navigation.js"></script>
     <script src="js/products.js"></script>
+    
+    <!-- Funciones de navegación -->
+    <script>
+        // Funciones para la navegación lateral
+        // En desktop, el sidebar está siempre abierto
+        function toggleNavigation() {
+            // Solo funciona en móvil
+            if (window.innerWidth <= 768) {
+                const overlay = document.getElementById('navOverlay');
+                const navigation = document.getElementById('sideNavigation');
+                const hamburger = document.getElementById('hamburgerMenu');
+                
+                overlay.classList.toggle('active');
+                navigation.classList.toggle('active');
+                if (hamburger) hamburger.classList.toggle('active');
+            }
+        }
+
+        function closeNavigation() {
+            // Solo funciona en móvil
+            if (window.innerWidth <= 768) {
+                const overlay = document.getElementById('navOverlay');
+                const navigation = document.getElementById('sideNavigation');
+                const hamburger = document.getElementById('hamburgerMenu');
+                
+                overlay.classList.remove('active');
+                navigation.classList.remove('active');
+                if (hamburger) hamburger.classList.remove('active');
+            }
+        }
+        
+        // Inicializar sidebar como abierto en desktop
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.innerWidth > 768) {
+                const navigation = document.getElementById('sideNavigation');
+                if (navigation) {
+                    navigation.classList.add('active');
+                }
+            }
+        });
+    </script>
 </body>
 </html>
 
