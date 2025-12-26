@@ -1440,13 +1440,15 @@ body {
 }
 
 /* Inputs deshabilitados cuando IA está activa */
-#sujeto-content.ai-protagonist-active .config-field:not(.ai-toggle-field) {
+#sujeto-content.ai-protagonist-active .config-field:not(.ai-toggle-field),
+#escenario-content.ai-scenario-active .config-field:not(.ai-toggle-field) {
     opacity: 0.5;
     pointer-events: none;
     position: relative;
 }
 
-#sujeto-content.ai-protagonist-active .config-field:not(.ai-toggle-field)::after {
+#sujeto-content.ai-protagonist-active .config-field:not(.ai-toggle-field)::after,
+#escenario-content.ai-scenario-active .config-field:not(.ai-toggle-field)::after {
     content: '';
     position: absolute;
     top: 0;
@@ -1459,7 +1461,8 @@ body {
     z-index: 1;
 }
 
-#sujeto-content.ai-protagonist-active .config-field:not(.ai-toggle-field) label {
+#sujeto-content.ai-protagonist-active .config-field:not(.ai-toggle-field) label,
+#escenario-content.ai-scenario-active .config-field:not(.ai-toggle-field) label {
     color: var(--text-muted);
 }
 
@@ -1468,14 +1471,20 @@ body {
 #sujeto-content.ai-protagonist-active .multi-chip,
 #sujeto-content.ai-protagonist-active .eye-swatch,
 #sujeto-content.ai-protagonist-active .tone-preset-btn,
-#sujeto-content.ai-protagonist-active .realism-preset-btn {
+#sujeto-content.ai-protagonist-active .realism-preset-btn,
+#escenario-content.ai-scenario-active .segment-btn,
+#escenario-content.ai-scenario-active .chip,
+#escenario-content.ai-scenario-active .multi-chip {
     opacity: 0.4;
     cursor: not-allowed;
 }
 
 #sujeto-content.ai-protagonist-active input[type="range"],
 #sujeto-content.ai-protagonist-active select,
-#sujeto-content.ai-protagonist-active input[type="text"] {
+#sujeto-content.ai-protagonist-active input[type="text"],
+#escenario-content.ai-scenario-active input[type="range"],
+#escenario-content.ai-scenario-active select,
+#escenario-content.ai-scenario-active input[type="text"] {
     opacity: 0.4;
     cursor: not-allowed;
 }

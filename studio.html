@@ -454,6 +454,21 @@
                     Define dónde ocurre la escena y cómo se siente visualmente.
                 </div>
                 
+                <!-- Toggle IA -->
+                <div class="config-field ai-toggle-field">
+                    <div class="ai-toggle-container">
+                        <label class="ai-toggle-label">Dejar que la IA defina el escenario y ambiente</label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="ai-scenario-toggle" onchange="toggleAIScenario(this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="ai-suggestion-message" id="ai-scenario-suggestion-message" style="display: none;">
+                        <i class="fas fa-lightbulb"></i>
+                        <span>La IA creará el escenario y ambiente basándose en la información de marca, producto, audiencia y oferta.</span>
+                    </div>
+                </div>
+                
                 <!-- Tono visual -->
                 <div class="config-field">
                     <label>Tono visual:</label>
@@ -1914,6 +1929,30 @@
                 // Desactivar modo IA
                 if (sujetoContent) {
                     sujetoContent.classList.remove('ai-protagonist-active');
+                }
+                if (suggestionMessage) {
+                    suggestionMessage.style.display = 'none';
+                }
+            }
+        }
+        
+        // Toggle IA Escenario y ambiente
+        function toggleAIScenario(enabled) {
+            const escenarioContent = document.getElementById('escenario-content');
+            const suggestionMessage = document.getElementById('ai-scenario-suggestion-message');
+            
+            if (enabled) {
+                // Activar modo IA
+                if (escenarioContent) {
+                    escenarioContent.classList.add('ai-scenario-active');
+                }
+                if (suggestionMessage) {
+                    suggestionMessage.style.display = 'flex';
+                }
+            } else {
+                // Desactivar modo IA
+                if (escenarioContent) {
+                    escenarioContent.classList.remove('ai-scenario-active');
                 }
                 if (suggestionMessage) {
                     suggestionMessage.style.display = 'none';
