@@ -102,8 +102,11 @@
                     </div>
                 </header>
                 
-                <!-- Canvas Central -->
+                <!-- Canvas Central - Área para outputs de webhooks -->
                 <main class="canvas-area">
+                    <div class="output-container">
+                        <!-- Los outputs de los webhooks se mostrarán aquí -->
+                    </div>
                 </main>
             </div> <!-- Cerrar central-area -->
             
@@ -712,7 +715,8 @@
     <script src="js/auth-guard.js"></script>
     <script src="js/sidebar-manager.js"></script>
     <script src="js/navigation.js"></script>
-    <script src="js/canvas-manager.js"></script>
+    <!-- Canvas Manager eliminado - ya no se necesita canvas dinámico -->
+    <!-- <script src="js/canvas-manager.js"></script> -->
     <script src="js/data-collector.js"></script>
     <script src="js/webhook-manager.js"></script>
     <script src="js/ugc-generator.js"></script>
@@ -2635,7 +2639,7 @@
                                      (window.supabaseClient && typeof window.supabaseClient.from === 'function') ||
                                      (window.getSupabaseClient && window.getSupabaseClient());
                 
-                if (window.studioManager && window.canvasManager && supabaseReady) {
+                if (window.studioManager && supabaseReady) {
                     clearInterval(checkManagers);
                     
                     console.log('✅ Todos los managers están listos');
@@ -2653,11 +2657,11 @@
                         window.webhookManager = new WebhookManager();
                         console.log('✅ WebhookManager inicializado');
                         
-                        // Inicializar UGCGenerator
+                        // Inicializar UGCGenerator (sin canvasManager)
                         window.ugcGenerator = new UGCGenerator(
                             window.dataCollector,
                             window.webhookManager,
-                            window.canvasManager
+                            null // Ya no necesitamos canvasManager
                         );
                         console.log('✅ UGCGenerator inicializado');
                         
