@@ -495,10 +495,12 @@ class LivingManager {
 
         if (selectedValues.length === 0) {
             valueDisplay.textContent = 'Seleccionar...';
-            valueDisplay.classList.remove('has-selection');
+            valueDisplay.classList.remove('has-selection', 'has-tags');
+            trigger.classList.remove('has-tags');
             trigger.querySelector('.multiselect-tags')?.remove();
         } else {
             valueDisplay.classList.add('has-selection');
+            trigger.classList.add('has-tags');
             
             const existingTags = trigger.querySelector('.multiselect-tags');
             if (existingTags) existingTags.remove();
@@ -530,6 +532,7 @@ class LivingManager {
             });
 
             valueDisplay.textContent = '';
+            valueDisplay.classList.add('has-tags');
             valueDisplay.appendChild(tagsContainer);
         }
     }
