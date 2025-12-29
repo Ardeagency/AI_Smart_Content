@@ -191,7 +191,10 @@ class DataCollector {
                 tono_voz: brand?.tono_voz || null,
                 palabras_usar: brand?.palabras_usar || null,
                 palabras_evitar: brand?.palabras_evitar || [],
-                reglas_creativas: brand?.reglas_creativas || null
+                reglas_creativas: brand?.reglas_creativas || null,
+                personalidad_marca: brand?.personalidad_marca || null,
+                quienes_somos: brand?.quienes_somos || null,
+                objetivos_marca: brand?.objetivos_marca || []
             };
         } catch (error) {
             console.error('❌ Error en getMarcaInfo:', error);

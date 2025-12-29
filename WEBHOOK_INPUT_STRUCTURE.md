@@ -35,7 +35,10 @@ Información de la marca seleccionada. Combina datos de las tablas `projects` y 
   "tono_voz": "string | null",         // Tono de voz (de tabla brands)
   "palabras_usar": "string | null",    // Palabras permitidas (de tabla brands)
   "palabras_evitar": "Array",          // Palabras prohibidas (JSONB de tabla brands)
-  "reglas_creativas": "string | null"  // Reglas creativas (de tabla brands)
+  "reglas_creativas": "string | null", // Reglas creativas (de tabla brands)
+  "personalidad_marca": "string | null", // Personalidad de la marca (de tabla brands)
+  "quienes_somos": "string | null",    // Descripción de quiénes son (de tabla brands)
+  "objetivos_marca": "Array"           // Objetivos de la marca (JSONB de tabla brands)
 }
 ```
 

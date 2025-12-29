@@ -343,6 +343,38 @@ class LivingManager {
                 this.saveBrandField('reglas_creativas', reglasCreativasInput.value);
             });
         }
+
+        // Personalidad de marca
+        const personalidadMarcaInput = document.getElementById('personalidadMarcaInput');
+        if (personalidadMarcaInput) {
+            let saveTimeout;
+            personalidadMarcaInput.addEventListener('input', () => {
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(() => {
+                    this.saveBrandField('personalidad_marca', personalidadMarcaInput.value);
+                }, 1000);
+            });
+            personalidadMarcaInput.addEventListener('blur', () => {
+                clearTimeout(saveTimeout);
+                this.saveBrandField('personalidad_marca', personalidadMarcaInput.value);
+            });
+        }
+
+        // Quiénes somos
+        const quienesSomosInput = document.getElementById('quienesSomosInput');
+        if (quienesSomosInput) {
+            let saveTimeout;
+            quienesSomosInput.addEventListener('input', () => {
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(() => {
+                    this.saveBrandField('quienes_somos', quienesSomosInput.value);
+                }, 1000);
+            });
+            quienesSomosInput.addEventListener('blur', () => {
+                clearTimeout(saveTimeout);
+                this.saveBrandField('quienes_somos', quienesSomosInput.value);
+            });
+        }
     }
 
     setupMultiselects() {
@@ -359,6 +391,11 @@ class LivingManager {
         // Palabras a evitar
         this.initMultiselect('palabrasEvitar', 'palabrasEvitarInput', () => {
             this.saveBrandField('palabras_evitar', this.getMultiselectValues('palabrasEvitarInput'));
+        });
+
+        // Objetivos de marca
+        this.initMultiselect('objetivosMarca', 'objetivosMarcaInput', () => {
+            this.saveBrandField('objetivos_marca', this.getMultiselectValues('objetivosMarcaInput'));
         });
     }
 
@@ -392,6 +429,10 @@ class LivingManager {
         } else if (hiddenInputId === 'palabrasEvitarInput' && this.brandData?.palabras_evitar) {
             selectedValues = Array.isArray(this.brandData.palabras_evitar) 
                 ? this.brandData.palabras_evitar 
+                : [];
+        } else if (hiddenInputId === 'objetivosMarcaInput' && this.brandData?.objetivos_marca) {
+            selectedValues = Array.isArray(this.brandData.objetivos_marca) 
+                ? this.brandData.objetivos_marca 
                 : [];
         }
 
@@ -893,6 +934,8 @@ class LivingManager {
         const tonoVozInput = document.getElementById('tonoVozInput');
         const palabrasUsarInput = document.getElementById('palabrasUsarInput');
         const reglasCreativasInput = document.getElementById('reglasCreativasInput');
+        const personalidadMarcaInput = document.getElementById('personalidadMarcaInput');
+        const quienesSomosInput = document.getElementById('quienesSomosInput');
 
         if (tonoVozInput && this.brandData) {
             tonoVozInput.value = this.brandData.tono_voz || '';
@@ -904,6 +947,36 @@ class LivingManager {
 
         if (reglasCreativasInput && this.brandData) {
             reglasCreativasInput.value = this.brandData.reglas_creativas || '';
+        }
+
+        if (personalidadMarcaInput && this.brandData) {
+            personalidadMarcaInput.value = this.brandData.personalidad_marca || '';
+        }
+
+        if (quienesSomosInput && this.brandData) {
+            quienesSomosInput.value = this.brandData.quienes_somos || '';
+        }
+
+        // Renderizar objetivos de marca (multiselect)
+        if (this.brandData && this.brandData.objetivos_marca) {
+            this.renderObjetivosMarca();
+        }
+    }
+
+    renderObjetivosMarca() {
+        const objetivosMarcaValue = document.getElementById('objetivosMarcaValue');
+        const objetivosMarcaInput = document.getElementById('objetivosMarcaInput');
+        
+        if (!objetivosMarcaValue || !objetivosMarcaInput || !this.brandData) return;
+
+        const objetivos = this.brandData.objetivos_marca || [];
+        
+        if (Array.isArray(objetivos) && objetivos.length > 0) {
+            objetivosMarcaValue.textContent = objetivos.join(', ');
+            objetivosMarcaInput.value = JSON.stringify(objetivos);
+        } else {
+            objetivosMarcaValue.textContent = 'Seleccionar objetivos...';
+            objetivosMarcaInput.value = '';
         }
     }
 
@@ -1344,6 +1417,18 @@ class LivingManager {
                     <label>Reglas creativas</label>
                     <textarea id="editReglasCreativas" class="form-textarea" rows="4">${this.brandData?.reglas_creativas || ''}</textarea>
                 </div>
+                <div class="form-group">
+                    <label>Personalidad de Marca</label>
+                    <textarea id="editPersonalidadMarca" class="form-textarea" rows="3" placeholder="Describe la personalidad de tu marca...">${this.brandData?.personalidad_marca || ''}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Quiénes Somos</label>
+                    <textarea id="editQuienesSomos" class="form-textarea" rows="3" placeholder="Describe quiénes son como marca...">${this.brandData?.quienes_somos || ''}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Objetivos de Marca (separados por comas)</label>
+                    <textarea id="editObjetivosMarca" class="form-textarea" rows="3" placeholder="Ej: Aumentar ventas, Mejorar engagement, Expandir mercado...">${Array.isArray(this.brandData?.objetivos_marca) ? this.brandData.objetivos_marca.join(', ') : ''}</textarea>
+                </div>
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Guardar</button>
@@ -1780,9 +1865,16 @@ class LivingManager {
         const palabrasUsar = modal.querySelector('#editPalabrasUsar').value.trim() || null;
         const palabrasEvitarText = modal.querySelector('#editPalabrasEvitar').value.trim();
         const reglasCreativas = modal.querySelector('#editReglasCreativas').value.trim() || null;
+        const personalidadMarca = modal.querySelector('#editPersonalidadMarca').value.trim() || null;
+        const quienesSomos = modal.querySelector('#editQuienesSomos').value.trim() || null;
+        const objetivosMarcaText = modal.querySelector('#editObjetivosMarca').value.trim();
 
         const palabrasEvitar = palabrasEvitarText
             ? palabrasEvitarText.split(',').map(p => p.trim()).filter(p => p)
+            : [];
+
+        const objetivosMarca = objetivosMarcaText
+            ? objetivosMarcaText.split(',').map(o => o.trim()).filter(o => o)
             : [];
 
         try {
@@ -1794,7 +1886,10 @@ class LivingManager {
                         tono_voz: tonoVoz,
                         palabras_usar: palabrasUsar,
                         palabras_evitar: palabrasEvitar,
-                        reglas_creativas: reglasCreativas
+                        reglas_creativas: reglasCreativas,
+                        personalidad_marca: personalidadMarca,
+                        quienes_somos: quienesSomos,
+                        objetivos_marca: objetivosMarca
                     })
                     .eq('id', this.brandData.id);
 

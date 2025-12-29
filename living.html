@@ -179,99 +179,44 @@
                                 <span class="info-label">Reglas Creativas:</span>
                                 <textarea class="editable-textarea" id="reglasCreativasInput" rows="4" placeholder="Escribe las reglas creativas de tu marca..."></textarea>
                             </div>
-                            <div class="info-item">
-                                <span class="info-label">Mercados Objetivo:</span>
-                                <div class="multiselect-wrapper" id="mercadosObjetivoWrapper">
-                                    <div class="multiselect-trigger" id="mercadosObjetivoTrigger">
-                                        <div class="multiselect-value" id="mercadosObjetivoValue">Seleccionar mercados...</div>
-                                        <div class="multiselect-arrow">▼</div>
+                            <div class="info-item full-width">
+                                <span class="info-label">Personalidad de Marca:</span>
+                                <textarea class="editable-textarea" id="personalidadMarcaInput" rows="3" placeholder="Describe la personalidad de tu marca..."></textarea>
                                     </div>
-                                    <div class="multiselect-dropdown" id="mercadosObjetivoDropdown">
-                                        <div class="multiselect-optgroup">América Latina</div>
-                                        <div class="multiselect-option" data-value="mexico">🇲🇽 México</div>
-                                        <div class="multiselect-option" data-value="colombia">🇨🇴 Colombia</div>
-                                        <div class="multiselect-option" data-value="argentina">🇦🇷 Argentina</div>
-                                        <div class="multiselect-option" data-value="chile">🇨🇱 Chile</div>
-                                        <div class="multiselect-option" data-value="peru">🇵🇪 Perú</div>
-                                        <div class="multiselect-option" data-value="venezuela">🇻🇪 Venezuela</div>
-                                        <div class="multiselect-option" data-value="ecuador">🇪🇨 Ecuador</div>
-                                        <div class="multiselect-option" data-value="guatemala">🇬🇹 Guatemala</div>
-                                        <div class="multiselect-option" data-value="cuba">🇨🇺 Cuba</div>
-                                        <div class="multiselect-option" data-value="bolivia">🇧🇴 Bolivia</div>
-                                        <div class="multiselect-option" data-value="republica_dominicana">🇩🇴 República Dominicana</div>
-                                        <div class="multiselect-option" data-value="honduras">🇭🇳 Honduras</div>
-                                        <div class="multiselect-option" data-value="paraguay">🇵🇾 Paraguay</div>
-                                        <div class="multiselect-option" data-value="nicaragua">🇳🇮 Nicaragua</div>
-                                        <div class="multiselect-option" data-value="el_salvador">🇸🇻 El Salvador</div>
-                                        <div class="multiselect-option" data-value="costa_rica">🇨🇷 Costa Rica</div>
-                                        <div class="multiselect-option" data-value="panama">🇵🇦 Panamá</div>
-                                        <div class="multiselect-option" data-value="uruguay">🇺🇾 Uruguay</div>
-                                        <div class="multiselect-optgroup">Europa</div>
-                                        <div class="multiselect-option" data-value="spain">🇪🇸 España</div>
-                                        <div class="multiselect-option" data-value="france">🇫🇷 Francia</div>
-                                        <div class="multiselect-option" data-value="italy">🇮🇹 Italia</div>
-                                        <div class="multiselect-option" data-value="germany">🇩🇪 Alemania</div>
-                                        <div class="multiselect-option" data-value="uk">🇬🇧 Reino Unido</div>
-                                        <div class="multiselect-option" data-value="portugal">🇵🇹 Portugal</div>
-                                        <div class="multiselect-option" data-value="netherlands">🇳🇱 Países Bajos</div>
-                                        <div class="multiselect-option" data-value="belgium">🇧🇪 Bélgica</div>
-                                        <div class="multiselect-option" data-value="switzerland">🇨🇭 Suiza</div>
-                                        <div class="multiselect-option" data-value="poland">🇵🇱 Polonia</div>
-                                        <div class="multiselect-option" data-value="russia">🇷🇺 Rusia</div>
-                                        <div class="multiselect-optgroup">América del Norte</div>
-                                        <div class="multiselect-option" data-value="usa">🇺🇸 Estados Unidos</div>
-                                        <div class="multiselect-option" data-value="canada">🇨🇦 Canadá</div>
-                                        <div class="multiselect-optgroup">Asia</div>
-                                        <div class="multiselect-option" data-value="china">🇨🇳 China</div>
-                                        <div class="multiselect-option" data-value="japan">🇯🇵 Japón</div>
-                                        <div class="multiselect-option" data-value="south_korea">🇰🇷 Corea del Sur</div>
-                                        <div class="multiselect-option" data-value="india">🇮🇳 India</div>
-                                        <div class="multiselect-optgroup">Oceanía</div>
-                                        <div class="multiselect-option" data-value="australia">🇦🇺 Australia</div>
-                                        <div class="multiselect-option" data-value="new_zealand">🇳🇿 Nueva Zelanda</div>
-                                        <div class="multiselect-optgroup">Otros</div>
-                                        <div class="multiselect-option" data-value="ireland">🇮🇪 Irlanda</div>
-                                        <div class="multiselect-option" data-value="brazil">🇧🇷 Brasil</div>
-                                        <div class="multiselect-option" data-value="south_africa">🇿🇦 Sudáfrica</div>
-                                        <div class="multiselect-optgroup">Regiones</div>
-                                        <div class="multiselect-option" data-value="latam">🌎 Toda Latinoamérica</div>
-                                        <div class="multiselect-option" data-value="europe">🌍 Toda Europa</div>
-                                        <div class="multiselect-option" data-value="asia">🌏 Toda Asia</div>
-                                        <div class="multiselect-option" data-value="global">🌐 Global</div>
-                                    </div>
-                                    <input type="hidden" id="mercadosObjetivoInput">
-                                </div>
+                            <div class="info-item full-width">
+                                <span class="info-label">Quiénes Somos:</span>
+                                <textarea class="editable-textarea" id="quienesSomosInput" rows="3" placeholder="Describe quiénes son como marca..."></textarea>
                             </div>
-                            <div class="info-item">
-                                <span class="info-label">Idiomas:</span>
-                                <div class="multiselect-wrapper" id="idiomasContenidoWrapper">
-                                    <div class="multiselect-trigger" id="idiomasContenidoTrigger">
-                                        <div class="multiselect-value" id="idiomasContenidoValue">Seleccionar idiomas...</div>
+                            <div class="info-item full-width">
+                                <span class="info-label">Objetivos de Marca:</span>
+                                <div class="multiselect-wrapper" id="objetivosMarcaWrapper">
+                                    <div class="multiselect-trigger" id="objetivosMarcaTrigger">
+                                        <div class="multiselect-value" id="objetivosMarcaValue">Seleccionar objetivos...</div>
                                         <div class="multiselect-arrow">▼</div>
                                     </div>
-                                    <div class="multiselect-dropdown" id="idiomasContenidoDropdown">
-                                        <div class="multiselect-optgroup">Idiomas Principales</div>
-                                        <div class="multiselect-option" data-value="español">Español</div>
-                                        <div class="multiselect-option" data-value="ingles">Inglés</div>
-                                        <div class="multiselect-option" data-value="portugues">Portugués</div>
-                                        <div class="multiselect-option" data-value="frances">Francés</div>
-                                        <div class="multiselect-optgroup">Idiomas Europeos</div>
-                                        <div class="multiselect-option" data-value="italiano">Italiano</div>
-                                        <div class="multiselect-option" data-value="aleman">Alemán</div>
-                                        <div class="multiselect-option" data-value="holandes">Holandés</div>
-                                        <div class="multiselect-option" data-value="polaco">Polaco</div>
-                                        <div class="multiselect-option" data-value="ruso">Ruso</div>
-                                        <div class="multiselect-option" data-value="catalan">Catalán</div>
-                                        <div class="multiselect-option" data-value="gallego">Gallego</div>
-                                        <div class="multiselect-option" data-value="euskera">Euskera</div>
-                                        <div class="multiselect-optgroup">Idiomas Asiáticos</div>
-                                        <div class="multiselect-option" data-value="chino">Chino (Mandarín)</div>
-                                        <div class="multiselect-option" data-value="japones">Japonés</div>
-                                        <div class="multiselect-option" data-value="coreano">Coreano</div>
-                                        <div class="multiselect-option" data-value="hindi">Hindi</div>
-                                        <div class="multiselect-option" data-value="arabe">Árabe</div>
+                                    <div class="multiselect-dropdown" id="objetivosMarcaDropdown">
+                                        <div class="multiselect-optgroup">Crecimiento</div>
+                                        <div class="multiselect-option" data-value="aumentar_ventas">Aumentar ventas</div>
+                                        <div class="multiselect-option" data-value="expandir_mercado">Expandir mercado</div>
+                                        <div class="multiselect-option" data-value="aumentar_cuota_mercado">Aumentar cuota de mercado</div>
+                                        <div class="multiselect-option" data-value="crecer_audiencia">Crecer audiencia</div>
+                                        <div class="multiselect-optgroup">Engagement</div>
+                                        <div class="multiselect-option" data-value="mejorar_engagement">Mejorar engagement</div>
+                                        <div class="multiselect-option" data-value="aumentar_interacciones">Aumentar interacciones</div>
+                                        <div class="multiselect-option" data-value="fidelizar_clientes">Fidelizar clientes</div>
+                                        <div class="multiselect-option" data-value="construir_comunidad">Construir comunidad</div>
+                                        <div class="multiselect-optgroup">Branding</div>
+                                        <div class="multiselect-option" data-value="aumentar_reconocimiento">Aumentar reconocimiento de marca</div>
+                                        <div class="multiselect-option" data-value="mejorar_imagen">Mejorar imagen de marca</div>
+                                        <div class="multiselect-option" data-value="posicionar_marca">Posicionar marca</div>
+                                        <div class="multiselect-option" data-value="diferenciarse_competencia">Diferenciarse de la competencia</div>
+                                        <div class="multiselect-optgroup">Conversión</div>
+                                        <div class="multiselect-option" data-value="aumentar_conversiones">Aumentar conversiones</div>
+                                        <div class="multiselect-option" data-value="mejorar_ctr">Mejorar CTR</div>
+                                        <div class="multiselect-option" data-value="reducir_costo_adquisicion">Reducir costo de adquisición</div>
+                                        <div class="multiselect-option" data-value="aumentar_retorno_inversion">Aumentar retorno de inversión</div>
                                     </div>
-                                    <input type="hidden" id="idiomasContenidoInput">
+                                    <input type="hidden" id="objetivosMarcaInput">
                                 </div>
                             </div>
                         </div>
