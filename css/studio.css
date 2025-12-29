@@ -3541,9 +3541,9 @@ nav.studio-sidebar {
 
 .info-item {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 12px 0;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
@@ -3554,22 +3554,24 @@ nav.studio-sidebar {
 .info-label {
     font-weight: 600;
     color: var(--text-secondary);
-    font-size: 13px;
-    min-width: 140px;
-    flex-shrink: 0;
+    font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    opacity: 0.8;
+    opacity: 0.9;
+    margin-bottom: 4px;
 }
 
 .info-value {
     color: var(--text-primary);
     font-size: 14px;
-    text-align: right;
-    max-width: 220px;
+    text-align: left;
     word-wrap: break-word;
-    line-height: 1.5;
-    font-weight: 500;
+    word-break: break-word;
+    line-height: 1.6;
+    font-weight: 400;
+    width: 100%;
+    max-width: 100%;
+    white-space: pre-wrap;
 }
 
 .info-value:empty::before {
