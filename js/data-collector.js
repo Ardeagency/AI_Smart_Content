@@ -5,8 +5,7 @@
 
 class DataCollector {
     constructor(supabase, userId) {
-        // Supabase desactivado
-        this.supabase = null;
+        this.supabase = supabase;
         this.userId = userId;
     }
 
@@ -24,22 +23,23 @@ class DataCollector {
             this.collectSelectedImages()
         ]);
 
-        // Limpiar producto - solo enviar campos necesarios
+        // Limpiar producto - mapear campos del schema a formato esperado
         let productoEnviado = null;
         if (producto) {
             productoEnviado = {
                 id: producto.id,
                 project_id: producto.project_id,
-                name: producto.name,
-                product_type: producto.product_type,
-                short_desc: producto.short_desc,
-                benefits: producto.benefits,
-                differentiators: producto.differentiators,
-                usage_steps: producto.usage_steps,
-                ingredients: producto.ingredients,
-                price: producto.price,
-                variants: producto.variants,
-                imagenes: Array.isArray(imagenes) ? imagenes : []
+                name: producto.nombre_producto,
+                product_type: producto.tipo_producto,
+                short_desc: producto.descripcion_producto,
+                benefits: Array.isArray(producto.beneficios) ? producto.beneficios : [],
+                differentiators: producto.diferenciacion,
+                usage_steps: producto.modo_uso,
+                ingredients: producto.ingredientes,
+                price: producto.precio_producto,
+                currency: producto.moneda || 'USD',
+                variants: producto.variantes_producto,
+                imagenes: Array.isArray(producto.imagenes) ? producto.imagenes.map(img => img.image_url) : []
             };
         }
         
@@ -135,7 +135,68 @@ class DataCollector {
      * @returns {Promise<Object|null>} - Datos de la marca
      */
     async getMarcaInfo() {
+        if (!this.supabase) {
+            console.warn('⚠️ Supabase no disponible para obtener datos de marca');
+            return null;
+        }
+
+        // Obtener el project_id del selector
+        const projectId = this.getSelectValue('brand-selector');
+        if (!projectId) {
+            console.log('ℹ️ No hay marca seleccionada');
+            return null;
+        }
+
+        try {
+            // Obtener datos del proyecto (marca)
+            const { data: project, error: projectError } = await this.supabase
+                .from('projects')
+                .select('*')
+                .eq('id', projectId)
+                .maybeSingle();
+
+            if (projectError) {
+                console.error('❌ Error obteniendo proyecto:', projectError);
                 return null;
+            }
+
+            if (!project) {
+                console.log('ℹ️ Proyecto no encontrado');
+                return null;
+            }
+
+            // Obtener datos de la tabla brands
+            const { data: brand, error: brandError } = await this.supabase
+                .from('brands')
+                .select('*')
+                .eq('project_id', projectId)
+                .maybeSingle();
+
+            if (brandError) {
+                console.error('❌ Error obteniendo brand:', brandError);
+            }
+
+            // Combinar datos del proyecto y brand
+            return {
+                id: project.id,
+                nombre_marca: project.nombre_marca,
+                logo_url: project.logo_url,
+                sitio_web: project.sitio_web,
+                instagram_url: project.instagram_url,
+                tiktok_url: project.tiktok_url,
+                facebook_url: project.facebook_url,
+                idiomas_contenido: project.idiomas_contenido,
+                mercado_objetivo: project.mercado_objetivo,
+                // Datos de la tabla brands
+                tono_voz: brand?.tono_voz || null,
+                palabras_usar: brand?.palabras_usar || null,
+                palabras_evitar: brand?.palabras_evitar || [],
+                reglas_creativas: brand?.reglas_creativas || null
+            };
+        } catch (error) {
+            console.error('❌ Error en getMarcaInfo:', error);
+            return null;
+        }
     }
 
     /**
@@ -143,7 +204,77 @@ class DataCollector {
      * @returns {Promise<Object|null>} - Datos del producto
      */
     async getProductInfo() {
+        if (!this.supabase) {
+            console.warn('⚠️ Supabase no disponible para obtener datos de producto');
+            return null;
+        }
+
+        // Obtener el product_id del selector
+        const productId = this.getSelectValue('product-selector');
+        if (!productId) {
+            console.log('ℹ️ No hay producto seleccionado');
+            return null;
+        }
+
+        try {
+            // Obtener datos del producto
+            const { data: product, error: productError } = await this.supabase
+                .from('products')
+                .select('*')
+                .eq('id', productId)
+                .maybeSingle();
+
+            if (productError) {
+                console.error('❌ Error obteniendo producto:', productError);
                 return null;
+            }
+
+            if (!product) {
+                console.log('ℹ️ Producto no encontrado');
+                return null;
+            }
+
+            // Obtener imágenes del producto
+            const { data: images, error: imagesError } = await this.supabase
+                .from('product_images')
+                .select('*')
+                .eq('product_id', productId)
+                .order('image_order', { ascending: true });
+
+            if (imagesError) {
+                console.error('❌ Error obteniendo imágenes del producto:', imagesError);
+            }
+
+            // Combinar beneficios en un array
+            const benefits = [];
+            if (product.beneficio_1) benefits.push(product.beneficio_1);
+            if (product.beneficio_2) benefits.push(product.beneficio_2);
+            if (product.beneficio_3) benefits.push(product.beneficio_3);
+
+            return {
+                id: product.id,
+                project_id: product.project_id,
+                tipo_producto: product.tipo_producto,
+                nombre_producto: product.nombre_producto,
+                descripcion_producto: product.descripcion_producto,
+                beneficios: benefits,
+                diferenciacion: product.diferenciacion,
+                modo_uso: product.modo_uso,
+                ingredientes: product.ingredientes,
+                precio_producto: product.precio_producto,
+                moneda: product.moneda || 'USD',
+                variantes_producto: product.variantes_producto,
+                imagenes: (images || []).map(img => ({
+                    id: img.id,
+                    image_url: img.image_url,
+                    image_type: img.image_type,
+                    image_order: img.image_order
+                }))
+            };
+        } catch (error) {
+            console.error('❌ Error en getProductInfo:', error);
+            return null;
+        }
     }
 
     /**
