@@ -699,10 +699,10 @@ class LivingManager {
             }
         }
 
-        // Nombre del usuario (no nombre de marca)
+        // Nombre de la marca
         const profileName = document.getElementById('profileUserName');
-        if (profileName && this.userData) {
-            profileName.textContent = this.userData.full_name || this.userData.email || 'Usuario';
+        if (profileName && this.projectData) {
+            profileName.textContent = this.projectData.nombre_marca || 'Sin nombre de marca';
         }
 
         // Inputs editables para web, instagram, facebook y tiktok
