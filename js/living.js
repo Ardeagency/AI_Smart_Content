@@ -1043,7 +1043,12 @@ class LivingManager {
 
         campaignsListEl.innerHTML = '';
 
-        if (!this.campaigns || this.campaigns.length === 0) {
+        // Usar campañas del CampaignsManager si está disponible
+        const campaigns = (this.campaignsManager && this.campaignsManager.campaigns) 
+            ? this.campaignsManager.campaigns 
+            : (this.campaigns || []);
+
+        if (!campaigns || campaigns.length === 0) {
             campaignsListEl.innerHTML = `
                 <div class="empty-state">
                     <i class="fas fa-megaphone"></i>
@@ -1055,7 +1060,7 @@ class LivingManager {
         }
 
         // Ordenar por fecha de creación (más recientes primero)
-        const sortedCampaigns = [...this.campaigns].sort((a, b) => {
+        const sortedCampaigns = [...campaigns].sort((a, b) => {
             const dateA = new Date(a.created_at || 0);
             const dateB = new Date(b.created_at || 0);
             return dateB - dateA;
