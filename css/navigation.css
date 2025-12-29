@@ -246,6 +246,9 @@
 
 .nav-menu {
     padding: 8px 16px 80px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px; /* Separación de 5px entre items de navegación */
 }
 
 .nav-section {
@@ -295,6 +298,7 @@
     color: var(--primary-color);
     background: rgba(236, 235, 218, 0.1);
     border-right: 3px solid var(--primary-color);
+    margin-right: 0; /* Asegurar que el borde llegue al borde del sidebar */
 }
 
 .nav-link.active::before {
@@ -335,7 +339,9 @@
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     transition: opacity 0.15s ease, width 0.15s ease;
     opacity: 1;
-    overflow: hidden;
+    overflow: visible; /* Cambiar de hidden a visible para que no se corte la "g" */
+    line-height: 1.5; /* Aumentar line-height para que la "g" no se corte */
+    padding-top: 1px; /* Pequeño padding superior para dar espacio a descenders */
 }
 
 .nav-badge {
