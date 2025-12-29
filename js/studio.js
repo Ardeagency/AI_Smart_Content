@@ -189,10 +189,10 @@ class StudioManager {
     // =======================================
 
     showLoading(message) {
-        // NO modificar el canvas-area directamente - usar CanvasManager
-        console.log('📢 showLoading llamado (ignorado, usar CanvasManager.showLoadingAnimation)');
-        if (window.canvasManager) {
-            window.canvasManager.showLoadingAnimation();
+        // El canvas ahora es estático, el OutputGenerator maneja el estado de carga
+        console.log('📢 showLoading llamado (el OutputGenerator maneja el estado de carga)');
+        if (window.outputGenerator) {
+            window.outputGenerator.showLoadingState();
         }
     }
 
@@ -1326,9 +1326,9 @@ class StudioManager {
         // Implementar lógica de prueba de escenas
     }
 
-    testGenerateFinalUGC() {
-        console.log('Probando generación final de UGC...');
-        // Implementar lógica de prueba de UGC final
+    testGenerateFinalContent() {
+        console.log('Probando generación final de contenido...');
+        // Implementar lógica de prueba de contenido final
     }
 
 }

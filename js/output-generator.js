@@ -1,32 +1,19 @@
 /**
- * UGC Generator
- * Maneja la generación de UGC y la comunicación entre componentes
+ * Output Generator
+ * Maneja la generación de múltiples formatos de contenido y la comunicación entre componentes
  */
 
-class UGCGenerator {
-    constructor(dataCollector, webhookManager, canvasManager) {
+class OutputGenerator {
+    constructor(dataCollector, webhookManager) {
         this.dataCollector = dataCollector;
         this.webhookManager = webhookManager;
-        this.canvasManager = canvasManager || null;
     }
 
     /**
-     * Obtener canvasManager de forma dinámica
-     * @returns {CanvasManager|null} - Referencia al canvasManager
-     */
-    get canvasManagerRef() {
-        // Intentar obtener de window si no está disponible localmente
-        if (!this.canvasManager && window.canvasManager) {
-            this.canvasManager = window.canvasManager;
-        }
-        return this.canvasManager;
-    }
-
-    /**
-     * Generar UGC completo
+     * Generar contenido completo
      * @returns {Promise<void>}
      */
-    async generateUGC() {
+    async generateContent() {
         try {
             // Mostrar estado de carga en el output container
             this.showLoadingState();
@@ -53,13 +40,13 @@ class UGCGenerator {
             
             // Procesar la respuesta del webhook si existe
             if (result && result.success && result.data) {
-                const variants = result.data;
-                if (Array.isArray(variants) && variants.length > 0) {
-                    console.log(`📝 Procesando ${variants.length} variante(s) de guiones...`);
-                    this.displayOutputs(variants);
-                    this.showNotification(`✅ ${variants.length} guión(es) generado(s) exitosamente`, 'success');
+                const outputs = result.data;
+                if (Array.isArray(outputs) && outputs.length > 0) {
+                    console.log(`📝 Procesando ${outputs.length} output(s) de contenido...`);
+                    this.displayOutputs(outputs);
+                    this.showNotification(`✅ ${outputs.length} formato(s) de contenido generado(s) exitosamente`, 'success');
                 } else {
-                    console.warn('⚠️ Respuesta del webhook no contiene variantes válidas');
+                    console.warn('⚠️ Respuesta del webhook no contiene outputs válidos');
                     this.showNotification('⚠️ El webhook respondió pero sin datos válidos', 'error');
                 }
             } else {
@@ -70,7 +57,7 @@ class UGCGenerator {
         } catch (error) {
             // Ocultar estado de carga en caso de error
             this.hideLoadingState();
-            console.error('Error generando UGC:', error);
+            console.error('Error generando contenido:', error);
             this.showNotification('Error al procesar: ' + error.message, 'error');
         }
     }
@@ -102,25 +89,31 @@ class UGCGenerator {
 
     /**
      * Mostrar outputs en el contenedor
-     * @param {Array} variants - Array de variantes de guiones
+     * @param {Array} outputs - Array de outputs de contenido
      */
-    displayOutputs(variants) {
+    displayOutputs(outputs) {
         const outputContainer = document.querySelector('.output-container');
         if (!outputContainer) return;
 
         // Limpiar contenedor
         outputContainer.innerHTML = '';
 
-        // Crear cards para cada variante
-        variants.forEach((variant, index) => {
+        // Crear cards para cada output
+        outputs.forEach((output, index) => {
             const outputCard = document.createElement('div');
             outputCard.className = 'output-card';
+            
+            // Determinar el tipo de contenido y mostrar apropiadamente
+            const contentType = output.type || 'unknown';
+            const contentTitle = output.title || `Output ${index + 1}`;
+            
             outputCard.innerHTML = `
                 <div class="output-card-header">
-                    <h3>Variante ${index + 1}</h3>
+                    <h3>${contentTitle}</h3>
+                    <span class="output-type-badge">${contentType}</span>
                 </div>
                 <div class="output-card-content">
-                    <pre>${JSON.stringify(variant, null, 2)}</pre>
+                    <pre>${JSON.stringify(output, null, 2)}</pre>
                 </div>
             `;
             outputContainer.appendChild(outputCard);
@@ -139,4 +132,5 @@ class UGCGenerator {
 }
 
 // Exportar para uso global
-window.UGCGenerator = UGCGenerator;
+window.OutputGenerator = OutputGenerator;
+

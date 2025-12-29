@@ -719,7 +719,7 @@
     <!-- <script src="js/canvas-manager.js"></script> -->
     <script src="js/data-collector.js"></script>
     <script src="js/webhook-manager.js"></script>
-    <script src="js/ugc-generator.js"></script>
+    <script src="js/output-generator.js"></script>
     <script src="js/studio.js?v=2024-10-29-12-30"></script>
     
     <!-- Acordeón JavaScript -->
@@ -1313,12 +1313,21 @@
             }
         }
 
-        function generateUGC() {
-            if (window.studioManager && window.studioManager.generateScripts) {
+        function generateContent() {
+            if (window.outputGenerator) {
+                window.outputGenerator.generateContent();
+            } else if (window.studioManager && window.studioManager.generateScripts) {
+                // Fallback a studioManager si outputGenerator no está disponible
                 window.studioManager.generateScripts();
             } else {
-                console.error('StudioManager no está disponible');
+                console.error('OutputGenerator o StudioManager no están disponibles');
             }
+        }
+        
+        // Mantener compatibilidad con generateUGC
+        function generateUGC() {
+            console.warn('⚠️ generateUGC() está deprecado, usar generateContent()');
+            generateContent();
         }
 
         // Variables para evitar bucles infinitos
@@ -2657,13 +2666,12 @@
                         window.webhookManager = new WebhookManager();
                         console.log('✅ WebhookManager inicializado');
                         
-                        // Inicializar UGCGenerator (sin canvasManager)
-                        window.ugcGenerator = new UGCGenerator(
+                        // Inicializar OutputGenerator
+                        window.outputGenerator = new OutputGenerator(
                             window.dataCollector,
-                            window.webhookManager,
-                            null // Ya no necesitamos canvasManager
+                            window.webhookManager
                         );
-                        console.log('✅ UGCGenerator inicializado');
+                        console.log('✅ OutputGenerator inicializado');
                         
                         console.log('🎉 Todos los componentes están listos');
                     }
@@ -2673,23 +2681,29 @@
             // Timeout después de 5 segundos
             setTimeout(() => {
                 clearInterval(checkManagers);
-                if (!window.dataCollector || !window.webhookManager || !window.ugcGenerator) {
+                if (!window.dataCollector || !window.webhookManager || !window.outputGenerator) {
                     console.warn('⚠️ Algunos componentes no se inicializaron a tiempo');
                 }
             }, 5000);
         }
 
-        // Sobreescribir generateUGC para usar el UGCGenerator
-        function generateUGC() {
-            console.log('Iniciando generación de UGC...');
+        // Función para generar contenido usando el OutputGenerator
+        function generateContent() {
+            console.log('Iniciando generación de contenido...');
             
-            if (!window.ugcGenerator) {
-                console.error('❌ UGCGenerator no está inicializado');
-                alert('Error: UGCGenerator no está listo. Por favor recarga la página.');
+            if (!window.outputGenerator) {
+                console.error('❌ OutputGenerator no está inicializado');
+                alert('Error: OutputGenerator no está listo. Por favor recarga la página.');
                 return;
             }
             
-            window.ugcGenerator.generateUGC();
+            window.outputGenerator.generateContent();
+        }
+        
+        // Mantener compatibilidad con generateUGC por si hay referencias antiguas
+        function generateUGC() {
+            console.warn('⚠️ generateUGC() está deprecado, usar generateContent()');
+            generateContent();
         }
 
         // Ejecutar inicialización cuando el DOM esté listo
