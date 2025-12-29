@@ -83,26 +83,22 @@ class WebhookManager {
                 throw new Error('El JSON generado no es válido: ' + e.message);
             }
             
-            // Configurar timeout muy largo (10 minutos) para dar tiempo suficiente al webhook
-            // Si el servidor tiene timeout antes (como Cloudflare 524), simplemente continuaremos esperando
-            const TIMEOUT_MS = 600000; // 10 minutos
-            const startTime = Date.now();
+            // Configurar timeout y límite de intentos
+            const TIMEOUT_MS = 600000; // 10 minutos por intento
+            const MAX_ATTEMPTS = 3; // Máximo 3 intentos
+            const RETRY_DELAY_MS = 3000; // 3 segundos entre intentos
             
-            console.log(`⏱️ Esperando respuesta del webhook (continuará esperando si hay errores del servidor, hasta ${TIMEOUT_MS / 1000}s)...`);
+            console.log(`⏱️ Enviando datos al webhook (máximo ${MAX_ATTEMPTS} intentos, ${TIMEOUT_MS / 1000}s por intento)...`);
             
-            // Loop continuo hasta que tengamos respuesta exitosa o timeout real del cliente
-            while (true) {
-                const elapsedTime = Date.now() - startTime;
-                const remainingTime = TIMEOUT_MS - elapsedTime;
-
-                if (remainingTime <= 0) {
-                    console.error('⏱️ Timeout del cliente: Se agotó el tiempo límite de espera');
-                    throw new Error('Timeout: El webhook no respondió después del tiempo límite de espera.');
-                }
-
-                // Crear nuevo controller para esta iteración
+            let lastError = null;
+            
+            // Intentar hasta MAX_ATTEMPTS veces
+            for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+                console.log(`🔄 Intento ${attempt} de ${MAX_ATTEMPTS}...`);
+                
+                const startTime = Date.now();
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), remainingTime);
+                const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
                 try {
                     // Intentar obtener respuesta del webhook
@@ -121,7 +117,7 @@ class WebhookManager {
                     
                     // Si tenemos respuesta exitosa, procesarla y retornar
                     if (response && response.ok) {
-                        console.log('✅ Respuesta recibida del webhook');
+                        console.log(`✅ Respuesta recibida del webhook en intento ${attempt}`);
                         try {
                             const responseData = await response.json();
                             console.log('📥 Respuesta del webhook (formato):', {
@@ -139,53 +135,65 @@ class WebhookManager {
                             return {
                                 success: true,
                                 data: responseData,
-                                message: "Datos recibidos del webhook exitosamente"
+                                message: "Datos recibidos del webhook exitosamente",
+                                attempt: attempt
                             };
                         } catch (e) {
                             console.error('❌ Error al parsear respuesta JSON:', e);
-                            throw new Error('Error al parsear respuesta del webhook: ' + e.message);
+                            lastError = new Error('Error al parsear respuesta del webhook: ' + e.message);
+                            // Continuar al siguiente intento
+                            continue;
                         }
                     } else if (response) {
                         // Respuesta recibida pero no ok - error real del servidor
                         clearTimeout(timeoutId);
                         const errorText = await response.text().catch(() => 'Error desconocido');
-                        throw new Error(`Webhook respondió con error: ${response.status} - ${errorText}`);
+                        lastError = new Error(`Webhook respondió con error: ${response.status} - ${errorText}`);
+                        console.warn(`⚠️ Intento ${attempt} falló: ${lastError.message}`);
+                        
+                        // Si es un error 4xx (cliente), no reintentar
+                        if (response.status >= 400 && response.status < 500) {
+                            throw lastError;
+                        }
+                        
+                        // Para errores 5xx, continuar al siguiente intento
+                        if (attempt < MAX_ATTEMPTS) {
+                            console.log(`⏳ Esperando ${RETRY_DELAY_MS / 1000}s antes del siguiente intento...`);
+                            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+                        }
+                        continue;
                     }
                     
                 } catch (error) {
                     clearTimeout(timeoutId);
+                    lastError = error;
                     
-                    // Si es timeout del cliente (real), lanzar error
+                    // Si es timeout del cliente (real), registrar y continuar
                     if (error.name === 'AbortError') {
-                        // Verificar si realmente se agotó el tiempo o fue un error del servidor
                         const elapsed = Date.now() - startTime;
-                        if (elapsed >= TIMEOUT_MS) {
-                            console.error('⏱️ Timeout del cliente: Se agotó el tiempo límite de espera');
-                            throw new Error('Timeout: El webhook no respondió después del tiempo límite de espera.');
+                        console.warn(`⏱️ Intento ${attempt} agotó el tiempo (${(elapsed / 1000).toFixed(0)}s)`);
+                        
+                        if (attempt < MAX_ATTEMPTS) {
+                            console.log(`⏳ Esperando ${RETRY_DELAY_MS / 1000}s antes del siguiente intento...`);
+                            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
                         }
-                        // Si no, fue un error del servidor que abortó la conexión, continuar esperando
+                        continue;
                     }
 
-                    // Si es error de red/servidor (524, ERR_FAILED, CORS, etc.), es un timeout del servidor
-                    // NO lanzar error, simplemente continuar esperando
-                    const elapsed = Date.now() - startTime;
-                    const remaining = TIMEOUT_MS - elapsed;
-
-                    if (remaining <= 0) {
-                        // Timeout real alcanzado
-                        console.error('⏱️ Timeout del cliente: Se agotó el tiempo límite de espera');
-                        throw new Error('Timeout: El webhook no respondió después del tiempo límite de espera.');
+                    // Si es error de red/servidor, registrar y continuar
+                    console.warn(`⚠️ Intento ${attempt} falló: ${error.message}`);
+                    
+                    if (attempt < MAX_ATTEMPTS) {
+                        console.log(`⏳ Esperando ${RETRY_DELAY_MS / 1000}s antes del siguiente intento...`);
+                        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
                     }
-
-                    console.warn(`⚠️ Error de servidor/red (${error.message}). Tiempo transcurrido: ${(elapsed / 1000).toFixed(0)}s. Tiempo restante: ${(remaining / 1000).toFixed(0)}s. Continuando espera...`);
-
-                    // Esperar un momento antes de continuar el loop
-                    await new Promise(resolve => setTimeout(resolve, 3000));
-
-                    // Continuar el loop para seguir esperando
                     continue;
                 }
             }
+            
+            // Si llegamos aquí, todos los intentos fallaron
+            console.error(`❌ Todos los ${MAX_ATTEMPTS} intentos fallaron`);
+            throw new Error(`El webhook no respondió después de ${MAX_ATTEMPTS} intentos. Último error: ${lastError?.message || 'Desconocido'}`);
             
         } catch (error) {
             console.error('Error en webhook:', error);
