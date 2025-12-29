@@ -139,28 +139,9 @@ class NavigationManager {
         // Supabase desactivado
     }
 
-    async waitForSupabase() {
-        // Supabase desactivado
-    }
-
-    async loadUserInfo(user) {
-        const navUserName = document.getElementById('navUserName');
-        const navUserAvatar = document.getElementById('navUserAvatar');
-        const navUserPlan = document.getElementById('navUserPlan');
-
-        if (navUserName) {
-            navUserName.textContent = 'Usuario';
-        }
-        if (navUserAvatar) {
-            navUserAvatar.textContent = 'U';
-        }
-        if (navUserPlan) {
-            navUserPlan.innerHTML = '<i class="fas fa-user"></i><span>Plan Básico</span>';
-        }
-    }
-
     async updateNavigationCounts() {
-        // Navigation counts removed - no longer needed
+        // Función mantenida para compatibilidad
+        // El sidebar es persistente y se maneja por SidebarManager
     }
 
     getInitials(name) {

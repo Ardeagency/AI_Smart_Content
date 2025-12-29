@@ -47,7 +47,6 @@ class StudioManager {
             }
 
             this.setupEventListeners();
-            // Lucide removido - ya no es necesario
         } catch (error) {
             console.error('Error initializing Studio:', error);
             this.showNotification('Error inicializando Studio', 'error');
@@ -121,26 +120,11 @@ class StudioManager {
         }
     }
 
-    // updateNavHeader() removido - El sidebar es persistente y se maneja por SidebarManager
-
     /* =======================================
        Inicialización
        ======================================= */
 
-    async waitForSupabase() {
-        // Supabase desactivado
-    }
-
-    async checkAuthentication() {
-        // Supabase desactivado
-    }
-
-    setupSupabase() {
-        // Supabase desactivado
-    }
-
     async loadUserData() {
-        // Supabase desactivado - inicializar sin datos
         try {
             this.initializeSidebarFields();
             await Promise.allSettled([
@@ -160,25 +144,21 @@ class StudioManager {
     // =======================================
 
     async loadBrands() {
-        // Supabase desactivado - datos vacíos
         this.brands = [];
         this.updateBrandSelector();
     }
 
     async loadProducts() {
-        // Supabase desactivado - datos vacíos
         this.products = [];
         this.updateProductSelector();
     }
 
     async loadOffers() {
-        // Supabase desactivado - datos vacíos
         this.offers = [];
         this.updateOfferSelector();
     }
 
     async loadAudiences() {
-        // Supabase desactivado - datos vacíos
         this.audience = [];
         this.updateAudienceSelector();
     }
@@ -189,15 +169,12 @@ class StudioManager {
     // =======================================
 
     showLoading(message) {
-        // El canvas ahora es estático, el OutputGenerator maneja el estado de carga
-        console.log('📢 showLoading llamado (el OutputGenerator maneja el estado de carga)');
         if (window.outputGenerator) {
             window.outputGenerator.showLoadingState();
         }
     }
 
     showNotification(message, type = 'info') {
-        // Implementar notificaciones
         console.log(`[${type.toUpperCase()}] ${message}`);
     }
 
@@ -205,8 +182,6 @@ class StudioManager {
 
 
     initializeSidebarFields() {
-        console.log('=== INICIALIZANDO CAMPOS DEL SIDEBAR ===');
-        
         // Inicializar información de marca
         const brandInfoContainer = document.getElementById('brand-info');
         if (brandInfoContainer) {
@@ -345,7 +320,6 @@ class StudioManager {
 
     // Función para manejar la selección de marca desde el dropdown
     async selectBrandFromDropdown(brandId) {
-        console.log('=== MARCA SELECCIONADA ===');
         console.log('ID de marca:', brandId);
         
         if (!brandId || !this.supabase) {
