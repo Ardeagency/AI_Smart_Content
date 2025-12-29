@@ -19,42 +19,52 @@ Este documento describe la estructura completa de los datos que se envían al we
 ## Detalles por Sección
 
 ### 1. `marca` (Object | null)
-Información de la marca seleccionada.
+Información de la marca seleccionada. Combina datos de las tablas `projects` y `brands`.
 
 ```json
 {
-  "id": "string",
-  "nombre_marca": "string",
-  "logo_url": "string",
-  // ... otros campos de la tabla projects
+  "id": "uuid",                        // ID del proyecto (projects.id)
+  "nombre_marca": "string",            // Nombre de la marca
+  "logo_url": "string",                // URL del logo
+  "sitio_web": "string | null",        // Sitio web de la marca
+  "instagram_url": "string | null",    // URL de Instagram
+  "tiktok_url": "string | null",       // URL de TikTok
+  "facebook_url": "string | null",     // URL de Facebook
+  "idiomas_contenido": "Array",        // Array de idiomas (JSONB)
+  "mercado_objetivo": "Array",         // Array de mercados objetivo (JSONB)
+  "tono_voz": "string | null",         // Tono de voz (de tabla brands)
+  "palabras_usar": "string | null",    // Palabras permitidas (de tabla brands)
+  "palabras_evitar": "Array",          // Palabras prohibidas (JSONB de tabla brands)
+  "reglas_creativas": "string | null"  // Reglas creativas (de tabla brands)
 }
 ```
 
-**Nota:** Actualmente retorna `null` (pendiente de implementación desde Supabase).
+**Nota:** Retorna `null` si no hay marca seleccionada o si hay un error al obtener los datos.
 
 ---
 
 ### 2. `producto` (Object | null)
-Información del producto seleccionado. Solo se incluyen campos necesarios.
+Información del producto seleccionado. Combina datos de las tablas `products` y `product_images`.
 
 ```json
 {
-  "id": "string",
-  "project_id": "string",
-  "name": "string",
-  "product_type": "string",
-  "short_desc": "string",
-  "benefits": "string",
-  "differentiators": "string",
-  "usage_steps": "string",
-  "ingredients": "string",
-  "price": "number",
-  "variants": "string",
-  "imagenes": []
+  "id": "uuid",                        // ID del producto
+  "project_id": "uuid",                // ID del proyecto (marca)
+  "name": "string",                    // Nombre del producto (nombre_producto)
+  "product_type": "string",            // Tipo de producto (tipo_producto)
+  "short_desc": "string",              // Descripción corta (descripcion_producto)
+  "benefits": "Array<string>",         // Array de beneficios (beneficio_1, beneficio_2, beneficio_3)
+  "differentiators": "string | null",  // Diferenciadores (diferenciacion)
+  "usage_steps": "string | null",     // Pasos de uso (modo_uso)
+  "ingredients": "string | null",      // Ingredientes
+  "price": "number | null",            // Precio (precio_producto)
+  "currency": "string",                // Moneda (default: "USD")
+  "variants": "string | null",         // Variantes del producto (variantes_producto)
+  "imagenes": "Array<string>"           // Array de URLs de imágenes (de product_images)
 }
 ```
 
-**Nota:** Actualmente retorna `null` (pendiente de implementación desde Supabase).
+**Nota:** Retorna `null` si no hay producto seleccionado o si hay un error al obtener los datos.
 
 ---
 
