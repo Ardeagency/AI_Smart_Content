@@ -63,62 +63,69 @@ Configuración del protagonista/sujeto del contenido.
 
 ```json
 {
-  "gender": "string | null",           // Valor del selector 'gender-selector'
-  "age": "string | null",              // Valor del selector 'age-selector'
-  "ethnicity": "string | null",        // Valor del selector 'ethnicity-selector'
-  "eyes": "string | null",             // Valor del selector 'eyes-selector'
-  "hair": "string | null",             // Valor del selector 'hair-selector'
-  "expression": "string | null",       // Valor del selector 'expression-selector'
-  "style": "string | null",            // Valor del selector 'style-selector'
-  "tone": "string | null",             // Valor del selector 'tone-selector'
-  "personality": "string | null",      // Valor del selector 'personality-selector'
-  "aesthetic": "string | null",        // Valor del selector 'aesthetic-selector'
-  "realism": "string | null",          // Valor del selector 'realism-selector'
-  "language": "string | null",         // Valor del selector 'language-selector'
-  "accent": "string | null"            // Valor del selector 'accent-selector'
+  "ai_defined": "boolean",             // Si la IA define el protagonista automáticamente
+  "gender": "string | null",           // Valor del segmented control 'gender-selector'
+  "age": "number | null",              // Valor del slider 'age-slider' (10-70)
+  "ethnicity": "string | null",        // Valor del input de búsqueda 'ethnicity-search'
+  "eyes": "string | null",             // Valor del chip selector 'eyes-selector'
+  "hair": "string | null",             // Valor del select 'hair-selector'
+  "expression": "string | null",       // Valor del chip selector 'expression-selector'
+  "style": "string | null",            // Valor del select 'style-selector'
+  "tone": "number | null",             // Valor del slider 'tone-slider' (0-100)
+  "personality": "Array<string>",      // Valores del multi-chip selector 'personality-selector'
+  "aesthetic": "string | null",        // Valor del select 'aesthetic-selector'
+  "realism": "number | null",          // Valor del slider 'realism-slider' (0-100)
+  "language": "string | null",         // Valor del select 'language-selector'
+  "accent": "string | null"            // Valor del select 'accent-selector'
 }
 ```
 
 **Campos requeridos para validación:**
-- `gender` (requerido)
-- `age` (requerido)
+- Si `ai_defined` es `false`:
+  - `gender` (requerido)
+  - `age` (requerido)
+- Si `ai_defined` es `true`, no se requieren campos específicos
 
 ---
 
-### 4. `oferta` (Object | null)
-Información de la oferta/promoción.
+### 4. `escenario` (Object)
+Configuración del escenario y ambiente donde ocurre la escena.
 
 ```json
 {
-  // Campos de la tabla offers (pendiente de implementación)
+  "ai_defined": "boolean",             // Si la IA define el escenario automáticamente
+  "visual_tone": "string | null",      // Valor del chip selector 'visual-tone-selector'
+  "ambience": "string | null",         // Valor del chip selector 'ambience-selector'
+  "location": "string | null",         // Valor del select 'location-selector'
+  "time": "string | null",             // Valor del segmented control 'time-selector'
+  "visual_realism": "number | null"    // Valor del slider 'visual-realism-slider' (0-100)
 }
 ```
 
-**Nota:** Actualmente retorna `null` (pendiente de implementación desde Supabase).
+---
+
+### 5. `oferta` (string | null)
+ID o valor de la oferta seleccionada desde el selector 'offer-selector'.
+
+**Nota:** Puede ser `null` si no se selecciona una oferta (es opcional).
 
 ---
 
-### 5. `audiencia` (Object | null)
-Información de la audiencia objetivo.
+### 6. `audiencia` (string | null)
+ID o valor de la audiencia seleccionada desde el selector 'audience-selector'.
 
-```json
-{
-  // Campos de la tabla audiences (pendiente de implementación)
-}
-```
-
-**Nota:** Actualmente retorna `null` (pendiente de implementación desde Supabase).
+**Nota:** Puede ser `null` si no se selecciona una audiencia (es opcional).
 
 ---
 
-### 6. `configuracion_avanzada` (Object)
+### 7. `configuracion_avanzada` (Object)
 Configuraciones avanzadas del contenido.
 
 ```json
 {
-  "resolution": "string | null",           // Valor del selector 'resolution-selector'
-  "ratio": "string | null",                 // Valor del selector 'ratio-selector'
-  "creativity": "number | null",            // Valor del slider 'creativity-slider' (0-100)
+  "resolution": "string | null",           // Valor del selector 'resolution-selector' (720p, 1080p)
+  "ratio": "string | null",                 // Valor del selector 'ratio-selector' (vertical, horizontal, cuadrado)
+  "creativity": "number | null",            // Valor del slider 'creativity-slider' (0.01-2.00)
   "prompt": "string | null",                // Valor del textarea 'prompt-input'
   "negative_prompt": "string | null"        // Valor del textarea 'negative-prompt-input'
 }
@@ -126,7 +133,7 @@ Configuraciones avanzadas del contenido.
 
 ---
 
-### 7. `metadata` (Object)
+### 8. `metadata` (Object)
 Metadatos de la solicitud.
 
 ```json
@@ -146,26 +153,35 @@ Metadatos de la solicitud.
   "marca": null,
   "producto": null,
   "sujeto": {
-    "gender": "female",
-    "age": "25-35",
-    "ethnicity": "latina",
-    "eyes": "brown",
-    "hair": "long",
-    "expression": "happy",
+    "ai_defined": false,
+    "gender": "femenino",
+    "age": 25,
+    "ethnicity": "latinoamericano",
+    "eyes": "marron",
+    "hair": "largo-moño",
+    "expression": "sonriente",
     "style": "casual",
-    "tone": "friendly",
-    "personality": "extroverted",
-    "aesthetic": "modern",
-    "realism": "high",
+    "tone": 50,
+    "personality": ["extrovertido", "amigable"],
+    "aesthetic": "moderno",
+    "realism": 75,
     "language": "es",
     "accent": "neutral"
+  },
+  "escenario": {
+    "ai_defined": false,
+    "visual_tone": "calido",
+    "ambience": "acogedor",
+    "location": "en-casa",
+    "time": "tarde",
+    "visual_realism": 60
   },
   "oferta": null,
   "audiencia": null,
   "configuracion_avanzada": {
     "resolution": "1080p",
-    "ratio": "16:9",
-    "creativity": 75,
+    "ratio": "vertical",
+    "creativity": 0.7,
     "prompt": "Una escena vibrante y moderna",
     "negative_prompt": "Evitar elementos oscuros"
   },
@@ -181,14 +197,16 @@ Metadatos de la solicitud.
 
 ## Validación
 
-El sistema valida que los siguientes campos estén presentes antes de enviar:
+El sistema valida los siguientes campos antes de enviar:
 
-1. `marca.id` - ID de la marca (requerido)
-2. `producto.id` - ID del producto (requerido)
-3. `sujeto.gender` - Género del sujeto (requerido)
-4. `sujeto.age` - Edad del sujeto (requerido)
+**Si `sujeto.ai_defined` es `false`:**
+1. `sujeto.gender` - Género del sujeto (requerido)
+2. `sujeto.age` - Edad del sujeto (requerido)
 
-Si alguno de estos campos falta, se muestra un error y no se envía la solicitud.
+**Si `sujeto.ai_defined` es `true`:**
+- No se requieren campos específicos del sujeto (la IA los define automáticamente)
+
+**Nota:** `marca.id` y `producto.id` ya NO son requeridos para la generación de contenido.
 
 ---
 
