@@ -487,6 +487,18 @@ class StudioManager {
         const brandKeywordsYes = document.getElementById('brand-keywords-yes');
         const brandKeywordsNo = document.getElementById('brand-keywords-no');
         const brandDosDonts = document.getElementById('brand-dos-donts');
+        const brandPersonalidad = document.getElementById('brand-personalidad');
+        const brandQuienesSomos = document.getElementById('brand-quienes-somos');
+        const brandObjetivos = document.getElementById('brand-objetivos');
+        
+        // Elementos móviles
+        const mobileBrandTone = document.getElementById('mobile-brand-tone');
+        const mobileBrandKeywordsYes = document.getElementById('mobile-brand-keywords-yes');
+        const mobileBrandKeywordsNo = document.getElementById('mobile-brand-keywords-no');
+        const mobileBrandDosDonts = document.getElementById('mobile-brand-dos-donts');
+        const mobileBrandPersonalidad = document.getElementById('mobile-brand-personalidad');
+        const mobileBrandQuienesSomos = document.getElementById('mobile-brand-quienes-somos');
+        const mobileBrandObjetivos = document.getElementById('mobile-brand-objetivos');
         
         // Asegurar que los elementos estén visibles
         if (brandInfoContainer.style.display === 'none') {
@@ -494,53 +506,135 @@ class StudioManager {
         }
         
         // Actualizar Tono de Voz
+        const tonoVoz = brandData.tono_voz || 'No configurado';
+        const tonoVozText = typeof tonoVoz === 'string' ? tonoVoz : (tonoVoz?.value || 'No configurado');
         if (brandTone) {
-            const tonoVoz = brandData.tono_voz || 'No configurado';
-            brandTone.textContent = typeof tonoVoz === 'string' ? tonoVoz : (tonoVoz?.value || 'No configurado');
+            brandTone.textContent = tonoVozText;
             console.log('✅ Tono de voz actualizado:', brandTone.textContent);
-        } else {
-            console.warn('⚠️ No se encontró brand-tone');
+        }
+        if (mobileBrandTone) {
+            mobileBrandTone.textContent = tonoVozText;
         }
         
         // Actualizar Palabras Clave (Sí)
+        const palabrasUsar = brandData.palabras_usar || '';
+        const palabrasUsarText = palabrasUsar || '<span class="empty">No configurado</span>';
         if (brandKeywordsYes) {
-            const palabrasUsar = brandData.palabras_usar || '';
             if (palabrasUsar) {
                 brandKeywordsYes.textContent = palabrasUsar;
             } else {
                 brandKeywordsYes.innerHTML = '<span class="empty">No configurado</span>';
             }
             console.log('✅ Palabras clave (Sí) actualizadas:', brandKeywordsYes.textContent);
-        } else {
-            console.warn('⚠️ No se encontró brand-keywords-yes');
+        }
+        if (mobileBrandKeywordsYes) {
+            if (palabrasUsar) {
+                mobileBrandKeywordsYes.textContent = palabrasUsar;
+            } else {
+                mobileBrandKeywordsYes.innerHTML = '<span class="empty">No configurado</span>';
+            }
         }
         
         // Actualizar Palabras Clave (No)
+        const palabrasEvitar = brandData.palabras_evitar || [];
+        let palabrasEvitarText = '';
+        if (Array.isArray(palabrasEvitar) && palabrasEvitar.length > 0) {
+            palabrasEvitarText = palabrasEvitar.join(', ');
+        } else if (typeof palabrasEvitar === 'string' && palabrasEvitar) {
+            palabrasEvitarText = palabrasEvitar;
+        }
         if (brandKeywordsNo) {
-            const palabrasEvitar = brandData.palabras_evitar || [];
-            if (Array.isArray(palabrasEvitar) && palabrasEvitar.length > 0) {
-                brandKeywordsNo.textContent = palabrasEvitar.join(', ');
-            } else if (typeof palabrasEvitar === 'string' && palabrasEvitar) {
-                brandKeywordsNo.textContent = palabrasEvitar;
+            if (palabrasEvitarText) {
+                brandKeywordsNo.textContent = palabrasEvitarText;
             } else {
                 brandKeywordsNo.innerHTML = '<span class="empty">No configurado</span>';
             }
             console.log('✅ Palabras clave (No) actualizadas:', brandKeywordsNo.textContent);
-        } else {
-            console.warn('⚠️ No se encontró brand-keywords-no');
+        }
+        if (mobileBrandKeywordsNo) {
+            if (palabrasEvitarText) {
+                mobileBrandKeywordsNo.textContent = palabrasEvitarText;
+            } else {
+                mobileBrandKeywordsNo.innerHTML = '<span class="empty">No configurado</span>';
+            }
         }
         
         // Actualizar Dos y Don'ts
+        const reglasCreativas = brandData.reglas_creativas || '';
         if (brandDosDonts) {
-            const reglasCreativas = brandData.reglas_creativas || '';
             if (reglasCreativas) {
                 brandDosDonts.textContent = reglasCreativas;
             } else {
                 brandDosDonts.innerHTML = '<span class="empty">No configurado</span>';
             }
             console.log('✅ Dos y Don\'ts actualizados:', brandDosDonts.textContent);
-        } else {
-            console.warn('⚠️ No se encontró brand-dos-donts');
+        }
+        if (mobileBrandDosDonts) {
+            if (reglasCreativas) {
+                mobileBrandDosDonts.textContent = reglasCreativas;
+            } else {
+                mobileBrandDosDonts.innerHTML = '<span class="empty">No configurado</span>';
+            }
+        }
+        
+        // Actualizar Personalidad de Marca
+        const personalidadMarca = brandData.personalidad_marca || '';
+        if (brandPersonalidad) {
+            if (personalidadMarca) {
+                brandPersonalidad.textContent = personalidadMarca;
+            } else {
+                brandPersonalidad.innerHTML = '<span class="empty">No configurado</span>';
+            }
+            console.log('✅ Personalidad de marca actualizada:', brandPersonalidad.textContent);
+        }
+        if (mobileBrandPersonalidad) {
+            if (personalidadMarca) {
+                mobileBrandPersonalidad.textContent = personalidadMarca;
+            } else {
+                mobileBrandPersonalidad.innerHTML = '<span class="empty">No configurado</span>';
+            }
+        }
+        
+        // Actualizar Quiénes Somos
+        const quienesSomos = brandData.quienes_somos || '';
+        if (brandQuienesSomos) {
+            if (quienesSomos) {
+                brandQuienesSomos.textContent = quienesSomos;
+            } else {
+                brandQuienesSomos.innerHTML = '<span class="empty">No configurado</span>';
+            }
+            console.log('✅ Quiénes somos actualizado:', brandQuienesSomos.textContent);
+        }
+        if (mobileBrandQuienesSomos) {
+            if (quienesSomos) {
+                mobileBrandQuienesSomos.textContent = quienesSomos;
+            } else {
+                mobileBrandQuienesSomos.innerHTML = '<span class="empty">No configurado</span>';
+            }
+        }
+        
+        // Actualizar Objetivos de Marca
+        const objetivosMarca = brandData.objetivos_marca || [];
+        let objetivosMarcaText = '';
+        if (Array.isArray(objetivosMarca) && objetivosMarca.length > 0) {
+            objetivosMarcaText = objetivosMarca.join(', ');
+        } else if (typeof objetivosMarca === 'string' && objetivosMarca) {
+            objetivosMarcaText = objetivosMarca;
+        }
+        if (brandObjetivos) {
+            if (objetivosMarcaText) {
+                brandObjetivos.textContent = objetivosMarcaText;
+            } else {
+                brandObjetivos.innerHTML = '<span class="empty">No configurado</span>';
+            }
+            console.log('✅ Objetivos de marca actualizados:', brandObjetivos.textContent);
+        }
+        if (mobileBrandObjetivos) {
+            if (objetivosMarcaText) {
+                mobileBrandObjetivos.textContent = objetivosMarcaText;
+            } else {
+                mobileBrandObjetivos.innerHTML = '<span class="empty">No configurado</span>';
+            }
         }
         
         console.log('✅ Información de marca actualizada completamente');
@@ -551,11 +645,35 @@ class StudioManager {
         const brandKeywordsYes = document.getElementById('brand-keywords-yes');
         const brandKeywordsNo = document.getElementById('brand-keywords-no');
         const brandDosDonts = document.getElementById('brand-dos-donts');
+        const brandPersonalidad = document.getElementById('brand-personalidad');
+        const brandQuienesSomos = document.getElementById('brand-quienes-somos');
+        const brandObjetivos = document.getElementById('brand-objetivos');
+        
+        // Elementos móviles
+        const mobileBrandTone = document.getElementById('mobile-brand-tone');
+        const mobileBrandKeywordsYes = document.getElementById('mobile-brand-keywords-yes');
+        const mobileBrandKeywordsNo = document.getElementById('mobile-brand-keywords-no');
+        const mobileBrandDosDonts = document.getElementById('mobile-brand-dos-donts');
+        const mobileBrandPersonalidad = document.getElementById('mobile-brand-personalidad');
+        const mobileBrandQuienesSomos = document.getElementById('mobile-brand-quienes-somos');
+        const mobileBrandObjetivos = document.getElementById('mobile-brand-objetivos');
         
         if (brandTone) brandTone.textContent = 'No seleccionado';
         if (brandKeywordsYes) brandKeywordsYes.innerHTML = '<span class="empty">No configurado</span>';
         if (brandKeywordsNo) brandKeywordsNo.innerHTML = '<span class="empty">No configurado</span>';
         if (brandDosDonts) brandDosDonts.innerHTML = '<span class="empty">No configurado</span>';
+        if (brandPersonalidad) brandPersonalidad.innerHTML = '<span class="empty">No configurado</span>';
+        if (brandQuienesSomos) brandQuienesSomos.innerHTML = '<span class="empty">No configurado</span>';
+        if (brandObjetivos) brandObjetivos.innerHTML = '<span class="empty">No configurado</span>';
+        
+        // Limpiar campos móviles
+        if (mobileBrandTone) mobileBrandTone.textContent = 'No seleccionado';
+        if (mobileBrandKeywordsYes) mobileBrandKeywordsYes.innerHTML = '<span class="empty">No configurado</span>';
+        if (mobileBrandKeywordsNo) mobileBrandKeywordsNo.innerHTML = '<span class="empty">No configurado</span>';
+        if (mobileBrandDosDonts) mobileBrandDosDonts.innerHTML = '<span class="empty">No configurado</span>';
+        if (mobileBrandPersonalidad) mobileBrandPersonalidad.innerHTML = '<span class="empty">No configurado</span>';
+        if (mobileBrandQuienesSomos) mobileBrandQuienesSomos.innerHTML = '<span class="empty">No configurado</span>';
+        if (mobileBrandObjetivos) mobileBrandObjetivos.innerHTML = '<span class="empty">No configurado</span>';
     }
 
     // Función para actualizar la información de producto en el acordeón
