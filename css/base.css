@@ -280,7 +280,7 @@ a:hover {
 /* Variantes de card */
 .card-glass {
     background: rgba(42, 42, 42, 0.95);
-    backdrop-filter: blur(20px);
+    /* backdrop-filter removido para mejor rendimiento */
     border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
@@ -494,11 +494,11 @@ a:hover {
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 2000;
+    z-index: 1000; /* Reducido de 2000 - z-index altos causan problemas de compositor */
     align-items: center;
     justify-content: center;
-    backdrop-filter: blur(4px);
-    background: rgba(0, 0, 0, 0.5);
+    /* backdrop-filter removido - blur en overlay con scroll causa GPU compositor crash */
+    background: rgba(0, 0, 0, 0.6); /* Opacidad aumentada para compensar falta de blur */
 }
 
 .modal.active {
@@ -580,7 +580,7 @@ a:hover {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 3000;
+    z-index: 1001; /* Reducido de 3000 - z-index altos causan problemas de compositor */
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-lg);

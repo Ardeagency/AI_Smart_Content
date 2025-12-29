@@ -571,7 +571,7 @@
         width: 100%;
         height: 100%;
         background: var(--nav-overlay);
-        backdrop-filter: blur(5px);
+        /* backdrop-filter removido para mejor rendimiento - overlay pequeño pero no crítico */
         z-index: 1001;
         opacity: 0;
         visibility: hidden;

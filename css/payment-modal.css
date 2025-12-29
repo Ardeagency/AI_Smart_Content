@@ -40,7 +40,7 @@
     position: relative !important;
     transform: scale(0.8) translateY(50px);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    box-shadow: 0 40px 120px rgba(0, 0, 0, 0.7) !important;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5) !important;
 }
 
 .payment-overlay.active .payment-modal {
