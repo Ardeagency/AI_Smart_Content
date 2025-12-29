@@ -22,6 +22,7 @@ class SidebarManager {
         this.syncInterval = null;
         this.STORAGE_KEY = 'sidebar_snapshot';
         this.SYNC_INTERVAL = 30000; // 30 segundos
+        this.isSyncing = false; // Protección contra llamadas simultáneas
     }
 
     /**
@@ -127,13 +128,23 @@ class SidebarManager {
     /**
      * Sincronizar datos en background (sin bloquear UI)
      * Esto se ejecuta después de la hidratación
+     * PROTECCIÓN: Evita llamadas simultáneas múltiples
      */
     async syncInBackground() {
+        // Si ya hay una sincronización en curso, ignorar esta llamada
+        if (this.isSyncing) {
+            console.log('⏳ Sincronización ya en curso, ignorando llamada duplicada');
+            return;
+        }
+
+        this.isSyncing = true;
+        
         try {
             // Esperar a que Supabase esté disponible
             const supabase = await this.waitForSupabase();
             if (!supabase) {
                 console.warn('⚠️ Supabase no disponible, usando snapshot local');
+                this.isSyncing = false;
                 return;
             }
 
@@ -198,6 +209,9 @@ class SidebarManager {
             console.log('✅ Sidebar sincronizado en background');
         } catch (error) {
             console.error('❌ Error sincronizando sidebar:', error);
+        } finally {
+            // Siempre liberar el flag, incluso si hay error
+            this.isSyncing = false;
         }
     }
 
@@ -313,11 +327,16 @@ class SidebarManager {
         // Limpiar intervalo anterior si existe
         if (this.syncInterval) {
             clearInterval(this.syncInterval);
+            this.syncInterval = null;
         }
 
-        // Sincronizar cada X segundos
+        // Sincronizar cada X segundos (solo si no hay una sincronización en curso)
         this.syncInterval = setInterval(() => {
-            this.syncInBackground();
+            if (!this.isSyncing) {
+                this.syncInBackground();
+            } else {
+                console.log('⏭️ Saltando sincronización periódica (ya hay una en curso)');
+            }
         }, this.SYNC_INTERVAL);
     }
 
@@ -376,7 +395,14 @@ function getSidebarManager() {
 
 // Inicializar INMEDIATAMENTE (no esperar DOMContentLoaded)
 // Esto asegura que el snapshot se renderice antes de cualquier otra cosa
+// PROTECCIÓN: Solo inicializar una vez
 (function() {
+    // Verificar si ya se inicializó
+    if (window.__sidebarManagerInitialized) {
+        return;
+    }
+    window.__sidebarManagerInitialized = true;
+    
     const manager = getSidebarManager();
     
     // Renderizar UI inmediatamente con valores por defecto

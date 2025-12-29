@@ -10,6 +10,9 @@ class LivingManager {
         this.userData = null;
         this.projectData = null;
         this.brandData = null;
+        this.eventListenersSetup = false; // Protección contra múltiples setups
+        this.savingFields = new Set(); // Protección contra guardados simultáneos del mismo campo
+
         this.init();
     }
 
@@ -54,11 +57,15 @@ class LivingManager {
             console.log('Supabase:', this.supabase);
             console.log('UserId:', this.userId);
         }
-        this.setupEventListeners();
-        this.setupEditableInputs();
-        this.setupMultiselects();
-        this.setupFileUpload();
-        this.setupClickableCards();
+        // Solo configurar event listeners una vez
+        if (!this.eventListenersSetup) {
+            this.setupEventListeners();
+            this.setupEditableInputs();
+            this.setupMultiselects();
+            this.setupFileUpload();
+            this.setupClickableCards();
+            this.eventListenersSetup = true;
+        }
     }
 
     // updateNavHeader() removido - El sidebar es persistente y se maneja por SidebarManager
@@ -642,6 +649,15 @@ class LivingManager {
     async saveBrandField(fieldName, value) {
         if (!this.supabase || !this.brandData) return;
 
+        // Protección: evitar guardados simultáneos del mismo campo
+        const saveKey = `brand_${fieldName}`;
+        if (this.savingFields.has(saveKey)) {
+            console.log(`⏳ Guardado de ${fieldName} ya en curso, ignorando llamada duplicada`);
+            return;
+        }
+
+        this.savingFields.add(saveKey);
+
         try {
             const { error } = await this.supabase
                 .from('brands')
@@ -651,15 +667,27 @@ class LivingManager {
             if (error) throw error;
 
             this.brandData[fieldName] = value || null;
-            console.log(`${fieldName} actualizado correctamente`);
+            console.log(`✅ ${fieldName} actualizado correctamente`);
         } catch (error) {
-            console.error(`Error al guardar ${fieldName}:`, error);
+            console.error(`❌ Error al guardar ${fieldName}:`, error);
             alert(`Error al guardar ${fieldName}. Por favor, intenta de nuevo.`);
+        } finally {
+            // Siempre liberar el flag
+            this.savingFields.delete(saveKey);
         }
     }
 
     async saveProjectField(fieldName, value) {
         if (!this.supabase || !this.projectData) return;
+
+        // Protección: evitar guardados simultáneos del mismo campo
+        const saveKey = `project_${fieldName}`;
+        if (this.savingFields.has(saveKey)) {
+            console.log(`⏳ Guardado de ${fieldName} ya en curso, ignorando llamada duplicada`);
+            return;
+        }
+
+        this.savingFields.add(saveKey);
 
         try {
             const { error } = await this.supabase
@@ -670,10 +698,13 @@ class LivingManager {
             if (error) throw error;
 
             this.projectData[fieldName] = value || null;
-            console.log(`${fieldName} actualizado correctamente`);
+            console.log(`✅ ${fieldName} actualizado correctamente`);
         } catch (error) {
-            console.error(`Error al guardar ${fieldName}:`, error);
+            console.error(`❌ Error al guardar ${fieldName}:`, error);
             alert(`Error al guardar ${fieldName}. Por favor, intenta de nuevo.`);
+        } finally {
+            // Siempre liberar el flag
+            this.savingFields.delete(saveKey);
         }
     }
 
@@ -806,6 +837,15 @@ class LivingManager {
     async saveSocialField(fieldName, value) {
         if (!this.supabase || !this.projectData) return;
         
+        // Protección: evitar guardados simultáneos del mismo campo
+        const saveKey = `social_${fieldName}`;
+        if (this.savingFields.has(saveKey)) {
+            console.log(`⏳ Guardado de ${fieldName} ya en curso, ignorando llamada duplicada`);
+            return;
+        }
+
+        this.savingFields.add(saveKey);
+        
         try {
             const { error } = await this.supabase
                 .from('projects')
@@ -817,10 +857,13 @@ class LivingManager {
             // Actualizar datos locales
             this.projectData[fieldName] = value || null;
             
-            console.log(`${fieldName} actualizado correctamente`);
+            console.log(`✅ ${fieldName} actualizado correctamente`);
         } catch (error) {
-            console.error(`Error al guardar ${fieldName}:`, error);
+            console.error(`❌ Error al guardar ${fieldName}:`, error);
             alert(`Error al guardar ${fieldName}. Por favor, intenta de nuevo.`);
+        } finally {
+            // Siempre liberar el flag
+            this.savingFields.delete(saveKey);
         }
     }
 
