@@ -47,8 +47,9 @@ class DataCollector {
             marca: marca,
             producto: productoEnviado,
             sujeto: this.collectSubjectInfo(),
-            oferta: oferta,
-            audiencia: audiencia,
+            escenario: this.collectScenarioInfo(),
+            oferta: this.collectOfferAndAudienceInfo().offer || oferta,
+            audiencia: this.collectOfferAndAudienceInfo().audience || audiencia,
             configuracion_avanzada: this.collectAdvancedConfig(),
             metadata: {
                 timestamp: new Date().toISOString(),
@@ -59,24 +60,40 @@ class DataCollector {
     }
 
     /**
-     * Recolectar información del sujeto
+     * Recolectar información del sujeto/protagonista
      * @returns {Object} - Datos del sujeto
      */
     collectSubjectInfo() {
         return {
-            gender: this.getSelectValue('gender-selector'),
-            age: this.getSelectValue('age-selector'),
-            ethnicity: this.getSelectValue('ethnicity-selector'),
-            eyes: this.getSelectValue('eyes-selector'),
+            ai_defined: this.getCheckboxValue('ai-protagonist-toggle'),
+            gender: this.getSegmentedControlValue('gender-selector'),
+            age: this.getSliderValue('age-slider'),
+            ethnicity: this.getTextInputValue('ethnicity-search'),
+            eyes: this.getChipSelectorValue('eyes-selector'),
             hair: this.getSelectValue('hair-selector'),
-            expression: this.getSelectValue('expression-selector'),
+            expression: this.getChipSelectorValue('expression-selector'),
             style: this.getSelectValue('style-selector'),
-            tone: this.getSelectValue('tone-selector'),
-            personality: this.getSelectValue('personality-selector'),
+            tone: this.getSliderValue('tone-slider'),
+            personality: this.getMultiChipSelectorValue('personality-selector'),
             aesthetic: this.getSelectValue('aesthetic-selector'),
-            realism: this.getSelectValue('realism-selector'),
+            realism: this.getSliderValue('realism-slider'),
             language: this.getSelectValue('language-selector'),
             accent: this.getSelectValue('accent-selector')
+        };
+    }
+
+    /**
+     * Recolectar información del escenario y ambiente
+     * @returns {Object} - Datos del escenario
+     */
+    collectScenarioInfo() {
+        return {
+            ai_defined: this.getCheckboxValue('ai-scenario-toggle'),
+            visual_tone: this.getChipSelectorValue('visual-tone-selector'),
+            ambience: this.getChipSelectorValue('ambience-selector'),
+            location: this.getSelectValue('location-selector'),
+            time: this.getSegmentedControlValue('time-selector'),
+            visual_realism: this.getSliderValue('visual-realism-slider')
         };
     }
 
@@ -91,6 +108,17 @@ class DataCollector {
             creativity: this.getSliderValue('creativity-slider'),
             prompt: this.getTextareaValue('prompt-input'),
             negative_prompt: this.getTextareaValue('negative-prompt-input')
+        };
+    }
+
+    /**
+     * Recolectar información de oferta y audiencia
+     * @returns {Object} - Datos de oferta y audiencia
+     */
+    collectOfferAndAudienceInfo() {
+        return {
+            offer: this.getSelectValue('offer-selector'),
+            audience: this.getSelectValue('audience-selector')
         };
     }
 
@@ -161,7 +189,66 @@ class DataCollector {
      */
     getTextareaValue(textareaId) {
         const element = document.getElementById(textareaId);
-        return element ? element.value : null;
+        return element ? element.value.trim() || null : null;
+    }
+
+    /**
+     * Obtener valor de un checkbox
+     * @param {string} checkboxId - ID del checkbox
+     * @returns {boolean} - Estado del checkbox
+     */
+    getCheckboxValue(checkboxId) {
+        const element = document.getElementById(checkboxId);
+        return element ? element.checked : false;
+    }
+
+    /**
+     * Obtener valor de un segmented control (botones)
+     * @param {string} selectorId - ID del contenedor
+     * @returns {string|null} - Valor seleccionado
+     */
+    getSegmentedControlValue(selectorId) {
+        const container = document.getElementById(selectorId);
+        if (!container) return null;
+        
+        const activeButton = container.querySelector('.segment-btn.active');
+        return activeButton ? activeButton.getAttribute('data-value') || activeButton.textContent.trim() : null;
+    }
+
+    /**
+     * Obtener valor de un chip selector (un solo chip seleccionado)
+     * @param {string} selectorId - ID del contenedor
+     * @returns {string|null} - Valor seleccionado
+     */
+    getChipSelectorValue(selectorId) {
+        const container = document.getElementById(selectorId);
+        if (!container) return null;
+        
+        const activeChip = container.querySelector('.chip.active');
+        return activeChip ? activeChip.getAttribute('data-value') || activeChip.textContent.trim() : null;
+    }
+
+    /**
+     * Obtener valores de un multi-chip selector (múltiples chips seleccionados)
+     * @param {string} selectorId - ID del contenedor
+     * @returns {Array<string>} - Array de valores seleccionados
+     */
+    getMultiChipSelectorValue(selectorId) {
+        const container = document.getElementById(selectorId);
+        if (!container) return [];
+        
+        const activeChips = container.querySelectorAll('.chip.active');
+        return Array.from(activeChips).map(chip => chip.getAttribute('data-value') || chip.textContent.trim()).filter(Boolean);
+    }
+
+    /**
+     * Obtener valor de un input de texto
+     * @param {string} inputId - ID del input
+     * @returns {string|null} - Valor del input
+     */
+    getTextInputValue(inputId) {
+        const element = document.getElementById(inputId);
+        return element ? element.value.trim() || null : null;
     }
 
     /**
@@ -170,9 +257,15 @@ class DataCollector {
      * @returns {boolean} - True si los datos son válidos
      */
     validateRequiredData(data) {
+        // Ya no se requieren marca.id ni producto.id
+        // Solo validamos que existan los datos básicos del sujeto (si no está definido por IA)
+        if (data.sujeto && data.sujeto.ai_defined) {
+            // Si la IA define el protagonista, no se requieren campos específicos
+            return true;
+        }
+        
+        // Si no está definido por IA, validar campos básicos
         const required = [
-            data.marca && data.marca.id,
-            data.producto && data.producto.id,
             data.sujeto && data.sujeto.gender,
             data.sujeto && data.sujeto.age
         ];
