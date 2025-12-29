@@ -299,7 +299,7 @@
                     <div class="config-field">
                         <label>Edad:</label>
                         <div class="age-slider-container">
-                            <input type="range" id="age-slider" min="10" max="70" value="25" step="5" oninput="updateAgeSlider(this.value)" onchange="updateAgeFromSlider(this.value)">
+                            <input type="range" id="age-slider" min="10" max="70" value="25" step="5" oninput="updateAgeSlider(this.value)" onchange="updateAgeFromSlider(this.value)" onmouseup="updateAgeFromSlider(this.value)" ontouchend="updateAgeFromSlider(this.value)">
                             <div class="age-slider-labels">
                                 <span class="age-label">10</span>
                                 <span class="age-label">25</span>
@@ -401,7 +401,7 @@
                                 <span class="slider-label-left">Serio</span>
                                 <span class="slider-label-right">Relajado</span>
                             </div>
-                            <input type="range" id="tone-slider" min="0" max="100" value="50" step="1" oninput="updateToneSlider(this.value)" onchange="updateToneFromSlider(this.value)">
+                            <input type="range" id="tone-slider" min="0" max="100" value="50" step="1" oninput="updateToneSlider(this.value)" onchange="updateToneFromSlider(this.value)" onmouseup="updateToneFromSlider(this.value)" ontouchend="updateToneFromSlider(this.value)">
                             <div class="semantic-slider-display">
                                 <span id="tone-display-value">Equilibrado</span>
                             </div>
@@ -456,7 +456,7 @@
                                 <span class="slider-label-left">Estilizado</span>
                                 <span class="slider-label-right">Ultra realista</span>
                             </div>
-                            <input type="range" id="realism-slider" min="0" max="100" value="50" step="1" oninput="updateRealismSlider(this.value)" onchange="updateRealismFromSlider(this.value)">
+                            <input type="range" id="realism-slider" min="0" max="100" value="50" step="1" oninput="updateRealismSlider(this.value)" onchange="updateRealismFromSlider(this.value)" onmouseup="updateRealismFromSlider(this.value)" ontouchend="updateRealismFromSlider(this.value)">
                             <div class="semantic-slider-display">
                                 <span id="realism-display-value">Moderado</span>
                             </div>
@@ -594,7 +594,7 @@
                             <span class="slider-label-left">Pulido</span>
                             <span class="slider-label-right">Natural</span>
                         </div>
-                        <input type="range" id="visual-realism-slider" min="0" max="100" value="50" step="1" oninput="updateVisualRealismSlider(this.value)" onchange="updateVisualRealismFromSlider(this.value)">
+                        <input type="range" id="visual-realism-slider" min="0" max="100" value="50" step="1" oninput="updateVisualRealismSlider(this.value)" onchange="updateVisualRealismFromSlider(this.value)" onmouseup="updateVisualRealismFromSlider(this.value)" ontouchend="updateVisualRealismFromSlider(this.value)">
                         <div class="semantic-slider-display">
                             <span id="visual-realism-display-value">Moderado</span>
                         </div>
@@ -1716,7 +1716,14 @@
             }
         }
         
+        // Debounce para evitar múltiples llamadas
+        let ageUpdateTimeout = null;
         function updateAgeFromSlider(value) {
+            // Limpiar timeout anterior
+            if (ageUpdateTimeout) {
+                clearTimeout(ageUpdateTimeout);
+            }
+            
             // Convertir valor a rango
             let ageRange = '';
             if (value <= 17) ageRange = '10-17';
@@ -1731,9 +1738,12 @@
             else if (value <= 65) ageRange = '61-65';
             else ageRange = '66-70';
             
-            if (window.updateAge) {
-                window.updateAge(ageRange);
-            }
+            // Usar debounce para evitar llamadas múltiples
+            ageUpdateTimeout = setTimeout(() => {
+                if (window.updateAge) {
+                    window.updateAge(ageRange);
+                }
+            }, 300); // Esperar 300ms después del último cambio
         }
         
         // Etnia - Dropdown con búsqueda
@@ -1868,7 +1878,14 @@
             }
         }
         
+        // Debounce para evitar múltiples llamadas
+        let toneUpdateTimeout = null;
         function updateToneFromSlider(value) {
+            // Limpiar timeout anterior
+            if (toneUpdateTimeout) {
+                clearTimeout(toneUpdateTimeout);
+            }
+            
             const numValue = parseInt(value);
             let toneValue = '';
             // Mapeo a valores originales
@@ -1890,9 +1907,12 @@
                 toneValue = 'relajado';
             }
             
-            if (window.updateTone) {
-                window.updateTone(toneValue);
-            }
+            // Usar debounce para evitar llamadas múltiples
+            toneUpdateTimeout = setTimeout(() => {
+                if (window.updateTone) {
+                    window.updateTone(toneValue);
+                }
+            }, 300); // Esperar 300ms después del último cambio
         }
         
         // Tono - Presets
@@ -1939,7 +1959,14 @@
             }
         }
         
+        // Debounce para evitar múltiples llamadas
+        let realismUpdateTimeout = null;
         function updateRealismFromSlider(value) {
+            // Limpiar timeout anterior
+            if (realismUpdateTimeout) {
+                clearTimeout(realismUpdateTimeout);
+            }
+            
             const numValue = parseInt(value);
             let realismValue = '';
             if (numValue < 30) {
@@ -1950,9 +1977,12 @@
                 realismValue = 'ultra-realista';
             }
             
-            if (window.updateRealism) {
-                window.updateRealism(realismValue);
-            }
+            // Usar debounce para evitar llamadas múltiples
+            realismUpdateTimeout = setTimeout(() => {
+                if (window.updateRealism) {
+                    window.updateRealism(realismValue);
+                }
+            }, 300); // Esperar 300ms después del último cambio
         }
         
         // Realismo - Presets (multi-select)
@@ -2110,7 +2140,14 @@
             }
         }
         
+        // Debounce para evitar múltiples llamadas
+        let visualRealismUpdateTimeout = null;
         function updateVisualRealismFromSlider(value) {
+            // Limpiar timeout anterior
+            if (visualRealismUpdateTimeout) {
+                clearTimeout(visualRealismUpdateTimeout);
+            }
+            
             const numValue = parseInt(value);
             let realismValue = '';
             if (numValue < 30) {
@@ -2121,9 +2158,12 @@
                 realismValue = 'natural';
             }
             
-            if (window.updateVisualRealism) {
-                window.updateVisualRealism(realismValue);
-            }
+            // Usar debounce para evitar llamadas múltiples
+            visualRealismUpdateTimeout = setTimeout(() => {
+                if (window.updateVisualRealism) {
+                    window.updateVisualRealism(realismValue);
+                }
+            }, 300); // Esperar 300ms después del último cambio
         }
         
         // Color de Ojos - Swatches

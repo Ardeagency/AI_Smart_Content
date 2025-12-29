@@ -27,9 +27,9 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     padding: 8px 16px;
     z-index: 999;
-    backdrop-filter: blur(20px);
+    /* backdrop-filter removido para mejor rendimiento */
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    transition: left 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     height: 48px;
     display: flex;
     align-items: center;
@@ -198,7 +198,7 @@
     width: var(--nav-width);
     height: 100vh;
     background: var(--nav-bg);
-    backdrop-filter: blur(20px);
+    /* backdrop-filter removido para mejor rendimiento */
     border-right: 1px solid var(--nav-border);
     z-index: 1002;
     transform: translateX(0);
@@ -338,7 +338,7 @@
     flex: 1;
     font-size: 14px;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    transition: opacity 0.15s ease, width 0.15s ease;
+    transition: opacity 0.15s ease;
     opacity: 1;
     overflow: visible; /* Cambiar de hidden a visible para que no se corte la "g" */
     line-height: 1.5; /* Aumentar line-height para que la "g" no se corte */

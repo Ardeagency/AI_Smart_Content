@@ -131,7 +131,7 @@ body {
     right: 0;
     height: var(--topbar-height);
     background-color: var(--bg-panel);
-    backdrop-filter: blur(20px);
+    /* backdrop-filter removido para mejor rendimiento */
     border-bottom: 1px solid var(--border-subtle);
     display: flex;
     align-items: center;
@@ -240,7 +240,7 @@ body {
     display: flex;
     align-items: center;
     z-index: 10;
-    backdrop-filter: blur(20px);
+    /* backdrop-filter removido para mejor rendimiento */
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     width: 100%;
     max-width: 100%;
@@ -594,7 +594,7 @@ body {
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     padding-bottom: 8px;
     background: rgba(255, 255, 255, 0.02);
-    backdrop-filter: blur(10px);
+    /* backdrop-filter removido para mejor rendimiento */
 }
 
 @media (min-width: 1024px) {
@@ -821,7 +821,7 @@ body {
     box-sizing: border-box;
     font-family: inherit;
     transition: all 0.2s ease;
-    backdrop-filter: blur(10px);
+    /* backdrop-filter removido para mejor rendimiento */
 }
 
 .config-field textarea {
@@ -1797,7 +1797,7 @@ body {
     height: 44px;
     box-sizing: border-box;
     font-family: inherit;
-    backdrop-filter: blur(10px);
+    /* backdrop-filter removido para mejor rendimiento */
     box-shadow: var(--shadow-card);
     position: relative;
     overflow: hidden;
@@ -2212,7 +2212,7 @@ body {
     display: block !important;
     visibility: visible !important;
     opacity: 1 !important;
-    backdrop-filter: blur(10px);
+    /* backdrop-filter removido para mejor rendimiento */
 }
 
 .guion-card::before {
@@ -2527,7 +2527,7 @@ body {
     transition: all var(--transition-normal);
     position: relative;
     overflow: hidden;
-    backdrop-filter: blur(10px);
+    /* backdrop-filter removido para mejor rendimiento */
 }
 
 .scene-card::before {
@@ -2619,9 +2619,9 @@ body {
     background: hsl(var(--card));
     border: 2px dashed hsl(var(--border));
     border-radius: 16px;
-    backdrop-filter: blur(10px);
+    /* backdrop-filter removido para mejor rendimiento */
     box-shadow: var(--shadow-card);
-    transition: all var(--transition-normal);
+    transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .canvas-placeholder:hover {
@@ -2658,9 +2658,9 @@ body {
     border: 1px solid hsl(var(--border));
     max-width: 600px;
     margin: 0 auto;
-    backdrop-filter: blur(10px);
+    /* backdrop-filter removido para mejor rendimiento */
     box-shadow: var(--shadow-card);
-    transition: all var(--transition-normal);
+    transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .no-scenes-message:hover {
@@ -3251,21 +3251,26 @@ body {
     margin: 0 12px 0 28px;
     overflow: hidden;
     opacity: 0;
-    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                padding-top 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                padding-bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                opacity 0.3s ease 0.1s;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease 0.1s,
+                transform 0.3s ease 0.1s,
+                padding-top 0.3s ease,
+                padding-bottom 0.3s ease;
 }
 
 .accordion-content.active {
-    max-height: 5000px;
+    max-height: none;
     padding-top: 4px;
     padding-bottom: 16px;
     opacity: 1;
-    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                padding-top 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                padding-bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                opacity 0.3s ease;
+    transform: translateY(0);
+    transition: opacity 0.3s ease,
+                transform 0.3s ease,
+                padding-top 0.3s ease,
+                padding-bottom 0.3s ease;
 }
 
 .accordion-content .config-field {
@@ -3535,7 +3540,7 @@ nav.studio-sidebar {
     border-radius: 12px;
     padding: 20px;
     margin-top: 12px;
-    backdrop-filter: blur(10px);
+    /* backdrop-filter removido para mejor rendimiento */
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 

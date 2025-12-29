@@ -23,6 +23,8 @@ class StudioManager {
         
         // Configuración del sujeto
         this.subjectConfig = {};
+        // Configuración del escenario
+        this.scenarioConfig = {};
         
         this.init();
     }
@@ -480,7 +482,7 @@ class StudioManager {
         }
         
         // Actualizar Tono de Voz
-        const tonoVoz = brandData.tono_voz || 'No configurado';
+            const tonoVoz = brandData.tono_voz || 'No configurado';
         const tonoVozText = typeof tonoVoz === 'string' ? tonoVoz : (tonoVoz?.value || 'No configurado');
         if (brandTone) {
             brandTone.textContent = tonoVozText;
@@ -491,7 +493,7 @@ class StudioManager {
         }
         
         // Actualizar Palabras Clave (Sí)
-        const palabrasUsar = brandData.palabras_usar || '';
+            const palabrasUsar = brandData.palabras_usar || '';
         const palabrasUsarText = palabrasUsar || '<span class="empty">No configurado</span>';
         if (brandKeywordsYes) {
             if (palabrasUsar) {
@@ -504,17 +506,17 @@ class StudioManager {
         if (mobileBrandKeywordsYes) {
             if (palabrasUsar) {
                 mobileBrandKeywordsYes.textContent = palabrasUsar;
-            } else {
+        } else {
                 mobileBrandKeywordsYes.innerHTML = '<span class="empty">No configurado</span>';
             }
         }
         
         // Actualizar Palabras Clave (No)
-        const palabrasEvitar = brandData.palabras_evitar || [];
+            const palabrasEvitar = brandData.palabras_evitar || [];
         let palabrasEvitarText = '';
-        if (Array.isArray(palabrasEvitar) && palabrasEvitar.length > 0) {
+            if (Array.isArray(palabrasEvitar) && palabrasEvitar.length > 0) {
             palabrasEvitarText = palabrasEvitar.join(', ');
-        } else if (typeof palabrasEvitar === 'string' && palabrasEvitar) {
+            } else if (typeof palabrasEvitar === 'string' && palabrasEvitar) {
             palabrasEvitarText = palabrasEvitar;
         }
         if (brandKeywordsNo) {
@@ -528,13 +530,13 @@ class StudioManager {
         if (mobileBrandKeywordsNo) {
             if (palabrasEvitarText) {
                 mobileBrandKeywordsNo.textContent = palabrasEvitarText;
-            } else {
+        } else {
                 mobileBrandKeywordsNo.innerHTML = '<span class="empty">No configurado</span>';
             }
         }
         
         // Actualizar Dos y Don'ts
-        const reglasCreativas = brandData.reglas_creativas || '';
+            const reglasCreativas = brandData.reglas_creativas || '';
         if (brandDosDonts) {
             if (reglasCreativas) {
                 brandDosDonts.textContent = reglasCreativas;
@@ -546,7 +548,7 @@ class StudioManager {
         if (mobileBrandDosDonts) {
             if (reglasCreativas) {
                 mobileBrandDosDonts.textContent = reglasCreativas;
-            } else {
+        } else {
                 mobileBrandDosDonts.innerHTML = '<span class="empty">No configurado</span>';
             }
         }
@@ -1141,6 +1143,65 @@ class StudioManager {
         this.subjectConfig.realism = realism;
     }
 
+    /* =======================================
+       FUNCIONES DE CONFIGURACIÓN DE ESCENARIO
+       ======================================= */
+
+    /**
+     * Actualizar tono visual del escenario
+     * @param {string} visualTone - Tono visual seleccionado
+     */
+    updateVisualTone(visualTone) {
+        if (!this.scenarioConfig) {
+            this.scenarioConfig = {};
+        }
+        this.scenarioConfig.visual_tone = visualTone;
+    }
+
+    /**
+     * Actualizar ambiente del escenario
+     * @param {string} ambience - Ambiente seleccionado
+     */
+    updateAmbience(ambience) {
+        if (!this.scenarioConfig) {
+            this.scenarioConfig = {};
+        }
+        this.scenarioConfig.ambience = ambience;
+    }
+
+    /**
+     * Actualizar lugar del escenario
+     * @param {string} location - Lugar seleccionado
+     */
+    updateLocation(location) {
+        if (!this.scenarioConfig) {
+            this.scenarioConfig = {};
+        }
+        this.scenarioConfig.location = location;
+    }
+
+    /**
+     * Actualizar tiempo del escenario
+     * @param {string} time - Tiempo seleccionado
+     */
+    updateTime(time) {
+        if (!this.scenarioConfig) {
+            this.scenarioConfig = {};
+        }
+        this.scenarioConfig.time = time;
+    }
+
+    /**
+     * Actualizar realismo visual del escenario
+     * @param {string} visualRealism - Realismo visual seleccionado
+     */
+    updateVisualRealism(visualRealism) {
+        if (!this.scenarioConfig) {
+            this.scenarioConfig = {};
+        }
+        this.scenarioConfig.visual_realism = visualRealism;
+    }
+
     // Función para manejar la selección de producto desde el dropdown
     async selectProductFromDropdown(productId) {
         console.log('Producto seleccionado:', productId);
@@ -1509,6 +1570,47 @@ window.updateRealism = function(realism) {
         window.studioManager.updateRealism(realism);
     } else {
         console.warn('studioManager.updateRealism no está disponible aún');
+    }
+};
+
+// Funciones wrapper globales para configuración de escenario
+window.updateVisualTone = function(visualTone) {
+    if (window.studioManager && window.studioManager.updateVisualTone) {
+        window.studioManager.updateVisualTone(visualTone);
+    } else {
+        console.warn('studioManager.updateVisualTone no está disponible aún');
+    }
+};
+
+window.updateAmbience = function(ambience) {
+    if (window.studioManager && window.studioManager.updateAmbience) {
+        window.studioManager.updateAmbience(ambience);
+    } else {
+        console.warn('studioManager.updateAmbience no está disponible aún');
+    }
+};
+
+window.updateLocation = function(location) {
+    if (window.studioManager && window.studioManager.updateLocation) {
+        window.studioManager.updateLocation(location);
+    } else {
+        console.warn('studioManager.updateLocation no está disponible aún');
+    }
+};
+
+window.updateTime = function(time) {
+    if (window.studioManager && window.studioManager.updateTime) {
+        window.studioManager.updateTime(time);
+    } else {
+        console.warn('studioManager.updateTime no está disponible aún');
+    }
+};
+
+window.updateVisualRealism = function(visualRealism) {
+    if (window.studioManager && window.studioManager.updateVisualRealism) {
+        window.studioManager.updateVisualRealism(visualRealism);
+    } else {
+        console.warn('studioManager.updateVisualRealism no está disponible aún');
     }
 };
 
