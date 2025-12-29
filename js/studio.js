@@ -760,15 +760,23 @@ class StudioManager {
             return;
         }
         
-        // Actualizar el contenido del contenedor
+        // Actualizar el contenido del contenedor según schema.sql (tabla campaigns)
         offerInfoContainer.innerHTML = `
             <div class="info-item">
                 <span class="info-label">Objetivo Principal:</span>
-                <span class="info-value">${offerData.main_objective || 'No disponible'}</span>
+                <span class="info-value">${offerData.objetivo_principal || 'No disponible'}</span>
             </div>
             <div class="info-item">
-                <span class="info-label">Descripción:</span>
-                <span class="info-value long-text">${offerData.offer_desc || 'No disponible'}</span>
+                <span class="info-label">Qué se comunica:</span>
+                <span class="info-value long-text">${offerData.oferta_desc || 'No disponible'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Audiencia:</span>
+                <span class="info-value">${offerData.audiencia_desc || 'No disponible'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Intenciones:</span>
+                <span class="info-value">${offerData.intenciones || 'No disponible'}</span>
             </div>
             <div class="info-item">
                 <span class="info-label">Call to Action:</span>
@@ -780,21 +788,9 @@ class StudioManager {
                     ${offerData.cta_url ? `<a href="${offerData.cta_url}" target="_blank" class="url-link">${offerData.cta_url}</a>` : 'No disponible'}
                 </span>
             </div>
-            <div class="info-item">
-                <span class="info-label">Válido hasta:</span>
-                <span class="info-value date">${offerData.offer_valid_until || 'No disponible'}</span>
-            </div>
-            ${offerData.kpis && offerData.kpis.length > 0 ? `
-            <div class="info-item">
-                <span class="info-label">KPIs:</span>
-                <span class="info-value array">
-                    ${offerData.kpis.map(kpi => `<span class="tag">${kpi}</span>`).join('')}
-                </span>
-            </div>
-            ` : ''}
         `;
         
-        console.log('Información de oferta actualizada correctamente');
+        console.log('✅ Información de oferta actualizada correctamente');
     }
 
     // Función para actualizar la información de audiencia en el acordeón

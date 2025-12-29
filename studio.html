@@ -1426,9 +1426,10 @@
             offers.forEach(offer => {
                 const option = document.createElement('option');
                 option.value = offer.id;
-                option.textContent = offer.main_objective || offer.offer_desc || 'Oferta sin nombre';
+                // Usar objetivo_principal como nombre principal, luego oferta_desc según schema.sql
+                option.textContent = offer.objetivo_principal || offer.oferta_desc || 'Oferta sin nombre';
                 offerSelector.appendChild(option);
-                console.log('Oferta agregada al selector:', offer.main_objective);
+                console.log('Oferta agregada al selector:', offer.objetivo_principal || offer.oferta_desc);
             });
 
             console.log('Selector de ofertas actualizado con', offers.length, 'ofertas');
