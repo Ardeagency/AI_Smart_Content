@@ -212,17 +212,18 @@ body {
 }
 
 /* =======================================
-   Workspace Container (nueva arquitectura)
+   Área Central (entre los dos sidebars)
    ======================================= */
 
-.workspace-container {
+.central-area {
     display: flex;
     flex-direction: column;
     flex: 1;
     height: 100vh;
     overflow: hidden;
-    min-width: 0; /* Permite que el flex item se encoja */
+    min-width: 0;
     width: 100%;
+    margin-right: 384px; /* Espacio para el sidebar de studio */
 }
 
 /* =======================================
@@ -343,15 +344,20 @@ body {
 }
 
 /* =======================================
-   Canvas Container (flex row)
+   Canvas Area (dentro del área central)
    ======================================= */
 
-.canvas-container {
-    display: flex;
-    flex-direction: row;
+.canvas-area {
     flex: 1;
-    overflow: hidden;
+    overflow: auto;
     position: relative;
+    background-color: #000000;
+    width: 100%;
+    height: calc(100vh - 48px); /* Altura total menos el header */
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+    padding: 24px;
+    box-sizing: border-box;
 }
 
 /* =======================================
@@ -379,7 +385,7 @@ body {
     height: 100vh;
     position: relative;
     width: 100%;
-    gap: 0;
+        gap: 0;
 }
 
 /* =======================================
@@ -387,42 +393,29 @@ body {
    ======================================= */
 
 .studio-sidebar {
-    width: 100%;
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 384px;
+    height: 100vh;
     background: #181a1b;
-    border: none;
-    border-radius: 0;
-    order: 3;
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
+    z-index: 100;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0;
+    box-shadow: none;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
     font-family: var(--font-family);
-    overflow: hidden;
-    box-shadow: none;
     transition: all var(--transition-normal);
-    min-height: 0;
-    padding: 16px 0;
 }
 
-@media (min-width: 1024px) {
-    .studio-sidebar {
-        width: 384px;
-        border-radius: 0;
-        border-left: 1px solid rgba(255, 255, 255, 0.08);
-        border-right: none;
-        border-top: none;
-        border-bottom: none;
-        position: fixed;
-        right: 0;
-        top: 0;
-        height: 100vh;
-        z-index: 100;
-        overflow-y: auto;
-        overflow-x: hidden;
-        padding: 0;
-        box-shadow: none;
-        background: #181a1b;
-    }
-}
+/* El sidebar de studio ahora siempre es fixed, no necesita media query */
 
 .studio-sidebar h3 {
     color: var(--primary-color);
@@ -3286,13 +3279,13 @@ body {
    ======================================= */
 
 @media (max-width: 1023px) {
-    .studio-sidebar {
-        height: 100vh;
-        overflow-y: auto;
-        overflow-x: hidden;
-        padding: 0 6px 0 6px;
-        display: flex;
-        flex-direction: column;
+.studio-sidebar {
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0 6px 0 6px;
+    display: flex;
+    flex-direction: column;
     }
 }
 

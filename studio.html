@@ -73,8 +73,8 @@
     <main class="main-content">
         <!-- Layout Principal del Studio -->
         <div class="studio-layout">
-            <!-- Workspace Container -->
-            <div class="workspace-container">
+            <!-- Área Central (entre los dos sidebars) -->
+            <div class="central-area">
                 <!-- Header Contextual (parte del workspace) -->
                 <header class="workspace-header">
                     <div class="header-content">
@@ -102,15 +102,13 @@
                     </div>
                 </header>
                 
-                <!-- Canvas Container (flex row) -->
-                <div class="canvas-container">
-                    <!-- Canvas Central -->
-                    <main class="canvas-area">
-                    </main>
-                </div> <!-- Cerrar canvas-container -->
-                
-                <!-- Sidebar de Studio (derecha, full height) -->
-                <nav class="studio-sidebar" id="sidebar-section-1">
+                <!-- Canvas Central -->
+                <main class="canvas-area">
+                </main>
+            </div> <!-- Cerrar central-area -->
+            
+            <!-- Sidebar de Studio (derecha, full height) -->
+            <nav class="studio-sidebar" id="sidebar-section-1">
                 <!-- Tab Bar para móviles -->
                 <div class="tab-bar">
                     <div class="tab-bar-item active" onclick="setActiveTab(this); showMobileConfig();">
