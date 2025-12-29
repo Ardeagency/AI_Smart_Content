@@ -398,6 +398,38 @@
             }
         }
         
+        // Funciones globales para campañas
+        function openCampaignModal(campaignId = null) {
+            if (window.livingManager && window.livingManager.campaignsManager) {
+                const campaign = campaignId ? window.livingManager.campaignsManager.getCampaignById(campaignId) : null;
+                window.livingManager.campaignsManager.showCampaignModal(campaign);
+            } else {
+                console.error('CampaignsManager no está inicializado');
+            }
+        }
+
+        async function editCampaign(campaignId) {
+            openCampaignModal(campaignId);
+        }
+
+        async function deleteCampaign(campaignId) {
+            if (!confirm('¿Estás seguro de que quieres eliminar esta campaña?')) {
+                return;
+            }
+
+            if (window.livingManager && window.livingManager.campaignsManager) {
+                try {
+                    await window.livingManager.campaignsManager.deleteCampaign(campaignId);
+                    window.livingManager.campaignsManager.showNotification('✅ Campaña eliminada exitosamente', 'success');
+                    await window.livingManager.campaignsManager.loadCampaigns();
+                    window.livingManager.renderCampaigns();
+                } catch (error) {
+                    console.error('Error eliminando campaña:', error);
+                    window.livingManager.campaignsManager.showNotification('❌ Error: ' + error.message, 'error');
+                }
+            }
+        }
+
         // Inicializar sidebar como abierto en desktop
         document.addEventListener('DOMContentLoaded', function() {
             if (window.innerWidth > 768) {
