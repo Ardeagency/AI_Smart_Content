@@ -21,6 +21,9 @@ CREATE TABLE public.brands (
   reglas_creativas text,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  personalidad_marca text,
+  quienes_somos text,
+  objetivos_marca jsonb DEFAULT '[]'::jsonb,
   CONSTRAINT brands_pkey PRIMARY KEY (id),
   CONSTRAINT brands_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id)
 );
