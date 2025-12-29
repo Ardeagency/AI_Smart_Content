@@ -34,6 +34,16 @@ class LivingManager {
                 await this.loadBrandFiles();
                 await this.loadProducts();
                 await this.loadCampaigns();
+                
+                // Inicializar CampaignsManager
+                if (window.CampaignsManager) {
+                    this.campaignsManager = new CampaignsManager(
+                        this.supabase,
+                        this.userId,
+                        this.projectData.id
+                    );
+                    await this.campaignsManager.loadCampaigns();
+                }
             } else {
                 console.warn('⚠️ No se encontró proyecto para el usuario');
             }
@@ -1038,7 +1048,7 @@ class LivingManager {
                 <div class="empty-state">
                     <i class="fas fa-megaphone"></i>
                     <p>No hay campañas creadas</p>
-                    <a href="studio.html" class="btn btn-primary" style="margin-top: 1rem;">Crear Campaña</a>
+                    <button class="btn btn-primary" style="margin-top: 1rem;" onclick="openCampaignModal()">Crear Campaña</button>
                 </div>
             `;
             return;
@@ -1064,7 +1074,17 @@ class LivingManager {
 
             campaignCard.innerHTML = `
                 <div class="campaign-card-content-horizontal">
-                    <h3 class="campaign-card-title-horizontal">${objetivoPrincipal}</h3>
+                    <div class="campaign-card-header-actions">
+                        <h3 class="campaign-card-title-horizontal">${objetivoPrincipal}</h3>
+                        <div class="campaign-card-actions">
+                            <button class="campaign-action-btn" onclick="editCampaign('${campaign.id}')" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="campaign-action-btn campaign-delete-btn" onclick="deleteCampaign('${campaign.id}')" title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
                     <div class="campaign-card-field">
                         <div class="campaign-card-field-label">Oferta</div>
                         <div class="campaign-card-field-value">${oferta}</div>
