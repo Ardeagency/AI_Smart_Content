@@ -6,6 +6,8 @@
 class WebhookManager {
     constructor() {
         this.webhookUrl = 'https://ardeagency.app.n8n.cloud/webhook/4635dddf-f8f9-4cc2-be0f-54e1c542d702';
+        // TODO: Actualizar con la URL real del webhook de escenas
+        this.webhookEscenasUrl = 'https://ardeagency.app.n8n.cloud/webhook/ESCENAS_WEBHOOK_URL';
     }
 
     /**
@@ -197,6 +199,117 @@ class WebhookManager {
             
         } catch (error) {
             console.error('Error en webhook:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Enviar datos al webhook de escenas
+     * @param {Object} data - Datos a enviar
+     * @returns {Promise<Object>} - Respuesta del webhook
+     */
+    async sendDataToWebhookEscenas(data) {
+        try {
+            // Validar que data sea un objeto válido
+            if (!data || typeof data !== 'object') {
+                throw new Error('Los datos deben ser un objeto válido');
+            }
+            
+            // Limpiar y estructurar el objeto antes de serializar
+            const cleanedData = this.cleanJSONObject(data);
+            
+            // Convertir a JSON string y validar
+            const jsonBody = JSON.stringify(cleanedData);
+            if (!jsonBody || jsonBody === '{}' || jsonBody === 'null') {
+                throw new Error('El JSON generado está vacío o es inválido');
+            }
+            
+            console.log('📤 Enviando datos al webhook de escenas...');
+            console.log('URL:', this.webhookEscenasUrl);
+            console.log('Datos:', cleanedData);
+            
+            // Configurar timeout y límite de intentos
+            const TIMEOUT_MS = 600000; // 10 minutos por intento
+            const MAX_ATTEMPTS = 3;
+            const RETRY_DELAY_MS = 3000;
+            
+            let lastError = null;
+            
+            for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+                console.log(`🔄 Intento ${attempt} de ${MAX_ATTEMPTS}...`);
+                
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+                try {
+                    const response = await fetch(this.webhookEscenasUrl, {
+                        method: 'POST',
+                        mode: 'cors',
+                        headers: {
+                            'Content-Type': 'application/json; charset=utf-8',
+                            'Accept': 'application/json'
+                        },
+                        body: jsonBody,
+                        signal: controller.signal
+                    });
+                
+                    clearTimeout(timeoutId);
+                    
+                    if (response && response.ok) {
+                        console.log(`✅ Respuesta recibida del webhook de escenas en intento ${attempt}`);
+                        try {
+                            const responseData = await response.json();
+                            console.log('📥 Respuesta del webhook de escenas:', responseData);
+                            
+                            return {
+                                success: true,
+                                data: responseData,
+                                message: "Escenas recibidas del webhook exitosamente",
+                                attempt: attempt
+                            };
+                        } catch (e) {
+                            console.error('❌ Error al parsear respuesta JSON:', e);
+                            lastError = new Error('Error al parsear respuesta del webhook: ' + e.message);
+                            continue;
+                        }
+                    } else if (response) {
+                        const errorText = await response.text().catch(() => 'Error desconocido');
+                        lastError = new Error(`Webhook respondió con error: ${response.status} - ${errorText}`);
+                        
+                        if (response.status >= 400 && response.status < 500) {
+                            throw lastError;
+                        }
+                        
+                        if (attempt < MAX_ATTEMPTS) {
+                            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+                        }
+                        continue;
+                    }
+                    
+                } catch (error) {
+                    clearTimeout(timeoutId);
+                    lastError = error;
+                    
+                    if (error.name === 'AbortError') {
+                        console.warn(`⏱️ Intento ${attempt} agotó el tiempo`);
+                        if (attempt < MAX_ATTEMPTS) {
+                            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+                        }
+                        continue;
+                    }
+
+                    console.warn(`⚠️ Intento ${attempt} falló: ${error.message}`);
+                    if (attempt < MAX_ATTEMPTS) {
+                        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+                    }
+                    continue;
+                }
+            }
+            
+            throw new Error(`El webhook de escenas no respondió después de ${MAX_ATTEMPTS} intentos. Último error: ${lastError?.message || 'Desconocido'}`);
+            
+        } catch (error) {
+            console.error('Error en webhook de escenas:', error);
             throw error;
         }
     }

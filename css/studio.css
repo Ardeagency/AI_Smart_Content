@@ -658,6 +658,137 @@ body {
     line-height: 1.6;
 }
 
+/* Acciones del guion */
+.guion-actions {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.guion-feedback {
+    margin-bottom: 16px;
+}
+
+.guion-feedback label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.guion-feedback-input {
+    width: 100%;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.9);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    resize: vertical;
+    min-height: 80px;
+    transition: border-color 0.2s ease;
+    box-sizing: border-box;
+}
+
+.guion-feedback-input:focus {
+    outline: none;
+    border-color: rgba(236, 235, 218, 0.4);
+    box-shadow: 0 0 0 2px rgba(236, 235, 218, 0.1);
+}
+
+.guion-feedback-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.guion-buttons {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.btn-reajustar,
+.btn-generar-escenas {
+    flex: 1;
+    min-width: 180px;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-reajustar {
+    background: rgba(236, 235, 218, 0.1);
+    border: 1px solid rgba(236, 235, 218, 0.3);
+    color: rgba(236, 235, 218, 0.9);
+}
+
+.btn-reajustar:hover {
+    background: rgba(236, 235, 218, 0.15);
+    border-color: rgba(236, 235, 218, 0.4);
+    transform: translateY(-1px);
+}
+
+.btn-reajustar:active {
+    transform: translateY(0);
+}
+
+.btn-reajustar:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-generar-escenas {
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    color: rgba(147, 197, 253, 0.9);
+}
+
+.btn-generar-escenas:hover {
+    background: rgba(59, 130, 246, 0.3);
+    border-color: rgba(59, 130, 246, 0.5);
+    transform: translateY(-1px);
+}
+
+.btn-generar-escenas:active {
+    transform: translateY(0);
+}
+
+.btn-generar-escenas:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-reajustar i,
+.btn-generar-escenas i {
+    font-size: 0.875rem;
+}
+
+/* Responsive para botones */
+@media (max-width: 768px) {
+    .guion-buttons {
+        flex-direction: column;
+    }
+    
+    .btn-reajustar,
+    .btn-generar-escenas {
+        width: 100%;
+        min-width: auto;
+    }
+}
+
 /* =======================================
    Canvas Footer (invisible, con botón)
    ======================================= */

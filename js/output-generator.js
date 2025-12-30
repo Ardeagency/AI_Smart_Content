@@ -7,6 +7,7 @@ class OutputGenerator {
     constructor(dataCollector, webhookManager) {
         this.dataCollector = dataCollector;
         this.webhookManager = webhookManager;
+        this.currentVariantes = []; // Guardar las variantes actuales
     }
 
     /**
@@ -107,6 +108,9 @@ class OutputGenerator {
         // Limpiar contenedor
         outputContainer.innerHTML = '';
 
+        // Guardar las variantes actuales
+        this.currentVariantes = outputs;
+        
         // Crear cards para cada variante de guión
         outputs.forEach((variante, index) => {
             const outputCard = document.createElement('div');
@@ -189,8 +193,36 @@ class OutputGenerator {
                         </div>
                     </div>
                     ` : ''}
+                    <div class="guion-actions">
+                        <div class="guion-feedback">
+                            <label for="feedback-${varianteNum}">Indicaciones para reajustar este guion:</label>
+                            <textarea 
+                                id="feedback-${varianteNum}" 
+                                class="guion-feedback-input" 
+                                placeholder="Ej: Cambiar el tono a más profesional, agregar más énfasis en los beneficios, etc."
+                                rows="3"></textarea>
+                        </div>
+                        <div class="guion-buttons">
+                            <button 
+                                class="btn-reajustar" 
+                                onclick="window.outputGenerator.reajustarGuion(${varianteNum}, ${index})"
+                                data-variante-index="${index}">
+                                <i class="fas fa-edit"></i>
+                                Reajustar este guion
+                            </button>
+                            <button 
+                                class="btn-generar-escenas" 
+                                onclick="window.outputGenerator.generarEscenas(${varianteNum}, ${index})"
+                                data-variante-index="${index}">
+                                <i class="fas fa-video"></i>
+                                Generar escenas
+                            </button>
+                        </div>
+                    </div>
                 </div>
             `;
+            // Guardar la variante completa en el elemento para acceso posterior
+            outputCard.dataset.varianteData = JSON.stringify(variante);
             outputContainer.appendChild(outputCard);
         });
     }
@@ -260,6 +292,120 @@ class OutputGenerator {
                     </div>
                 `;
             }
+        }
+    }
+
+    /**
+     * Reajustar un guion específico con indicaciones del usuario
+     * @param {number} varianteNum - Número de la variante
+     * @param {number} varianteIndex - Índice de la variante en el array
+     */
+    async reajustarGuion(varianteNum, varianteIndex) {
+        try {
+            // Obtener las indicaciones del usuario
+            const feedbackInput = document.getElementById(`feedback-${varianteNum}`);
+            const indicaciones = feedbackInput ? feedbackInput.value.trim() : '';
+            
+            if (!indicaciones) {
+                this.showNotification('Por favor, ingresa indicaciones para reajustar el guion.', 'warning');
+                return;
+            }
+
+            // Obtener la variante original
+            const varianteOriginal = this.currentVariantes[varianteIndex];
+            if (!varianteOriginal) {
+                this.showNotification('Error: No se encontró la variante seleccionada.', 'error');
+                return;
+            }
+
+            // Mostrar estado de carga
+            this.showLoadingState();
+            this.showNotification('Reajustando guion...', 'info');
+
+            // Recolectar todos los datos originales
+            const allData = await this.dataCollector.collectAllSidebarData();
+            
+            // Agregar las indicaciones y la variante a reajustar
+            const dataConIndicaciones = {
+                ...allData,
+                reajustar_guion: {
+                    variante: varianteOriginal,
+                    indicaciones: indicaciones
+                }
+            };
+
+            // Enviar al mismo webhook
+            const result = await this.webhookManager.sendDataToWebhook(dataConIndicaciones);
+            
+            this.hideLoadingState();
+
+            // Procesar la respuesta
+            if (result && result.success) {
+                const outputs = result.data || result;
+                if (Array.isArray(outputs) && outputs.length > 0) {
+                    this.displayOutputs(outputs);
+                    this.showNotification('✅ Guion reajustado exitosamente', 'success');
+                } else {
+                    this.showNotification('⚠️ El webhook respondió pero sin datos válidos', 'error');
+                }
+            } else {
+                this.showNotification('Error al reajustar el guion', 'error');
+            }
+
+        } catch (error) {
+            this.hideLoadingState();
+            console.error('Error reajustando guion:', error);
+            this.showNotification('Error al procesar: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * Generar escenas para un guion específico
+     * @param {number} varianteNum - Número de la variante
+     * @param {number} varianteIndex - Índice de la variante en el array
+     */
+    async generarEscenas(varianteNum, varianteIndex) {
+        try {
+            // Obtener la variante original
+            const varianteOriginal = this.currentVariantes[varianteIndex];
+            if (!varianteOriginal) {
+                this.showNotification('Error: No se encontró la variante seleccionada.', 'error');
+                return;
+            }
+
+            // Mostrar estado de carga
+            this.showLoadingState();
+            this.showNotification('Generando escenas...', 'info');
+
+            // Recolectar todos los datos originales
+            const allData = await this.dataCollector.collectAllSidebarData();
+            
+            // Agregar el guion para generar escenas
+            const dataParaEscenas = {
+                ...allData,
+                guion_para_escenas: varianteOriginal
+            };
+
+            // Enviar al webhook de escenas
+            const result = await this.webhookManager.sendDataToWebhookEscenas(dataParaEscenas);
+            
+            this.hideLoadingState();
+
+            // Procesar la respuesta (puede ser diferente formato)
+            if (result && result.success) {
+                const escenas = result.data || result;
+                // Aquí puedes mostrar las escenas generadas de la forma que necesites
+                console.log('Escenas generadas:', escenas);
+                this.showNotification('✅ Escenas generadas exitosamente', 'success');
+                // TODO: Implementar visualización de escenas
+            } else {
+                this.showNotification('⚠️ Error al generar escenas', 'error');
+            }
+
+        } catch (error) {
+            this.hideLoadingState();
+            console.error('Error generando escenas:', error);
+            this.showNotification('Error al procesar: ' + error.message, 'error');
         }
     }
 }
