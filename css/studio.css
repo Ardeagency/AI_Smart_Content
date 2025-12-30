@@ -426,12 +426,15 @@ body {
 .output-card {
     width: 100%;
     max-width: 100%;
+    min-width: 0; /* Permite que se ajuste al contenedor */
     background: rgba(255, 255, 255, 0.02);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
     padding: 20px;
     box-sizing: border-box;
     margin-bottom: 16px;
+    display: block; /* Asegurar que se muestre */
+    position: relative; /* Para z-index si es necesario */
 }
 
 .output-card-header {

@@ -45,18 +45,25 @@ class OutputGenerator {
                 // La respuesta puede venir en result.data o directamente en result
                 const outputs = result.data || result;
                 
+                console.log('📥 Respuesta del webhook recibida:', result);
+                console.log('📥 outputs extraído:', outputs);
+                console.log('📥 Es array?:', Array.isArray(outputs));
+                console.log('📥 Longitud:', Array.isArray(outputs) ? outputs.length : 'N/A');
+                
                 // Validar que sea un array válido con contenido
                 if (Array.isArray(outputs) && outputs.length > 0) {
                     console.log(`📝 Procesando ${outputs.length} variante(s) de guión...`);
                     this.displayOutputs(outputs);
                     this.showNotification(`✅ ${outputs.length} variante(s) de guión generada(s) exitosamente`, 'success');
-                } else if (outputs && typeof outputs === 'object') {
+                } else if (outputs && typeof outputs === 'object' && !Array.isArray(outputs)) {
                     // Si es un objeto único, convertirlo a array
-                    console.log('📝 Procesando guión único...');
+                    console.log('📝 Procesando guión único (convertido a array)...');
                     this.displayOutputs([outputs]);
                     this.showNotification('✅ Guión generado exitosamente', 'success');
                 } else {
                     console.warn('⚠️ Respuesta del webhook no contiene outputs válidos:', outputs);
+                    console.warn('⚠️ Tipo:', typeof outputs);
+                    console.warn('⚠️ Es array?:', Array.isArray(outputs));
                     this.showNotification('⚠️ El webhook respondió pero sin datos válidos', 'error');
                 }
             } else {
@@ -103,7 +110,13 @@ class OutputGenerator {
      */
     displayOutputs(outputs) {
         const outputContainer = document.querySelector('.output-container');
-        if (!outputContainer) return;
+        if (!outputContainer) {
+            console.error('❌ No se encontró el contenedor .output-container');
+            return;
+        }
+
+        console.log('📦 displayOutputs llamado con:', outputs);
+        console.log('📦 Cantidad de variantes:', Array.isArray(outputs) ? outputs.length : 'No es array');
 
         // Limpiar contenedor
         outputContainer.innerHTML = '';
@@ -111,8 +124,17 @@ class OutputGenerator {
         // Guardar las variantes actuales
         this.currentVariantes = outputs;
         
+        // Validar que outputs sea un array
+        if (!Array.isArray(outputs)) {
+            console.error('❌ outputs no es un array:', outputs);
+            return;
+        }
+        
+        console.log(`✅ Creando ${outputs.length} card(s) de guión...`);
+        
         // Crear cards para cada variante de guión
         outputs.forEach((variante, index) => {
+            console.log(`📝 Procesando variante ${index + 1}:`, variante);
             const outputCard = document.createElement('div');
             outputCard.className = 'output-card';
             
@@ -223,8 +245,13 @@ class OutputGenerator {
             `;
             // Guardar la variante completa en el elemento para acceso posterior
             outputCard.dataset.varianteData = JSON.stringify(variante);
+            outputCard.dataset.varianteIndex = index;
             outputContainer.appendChild(outputCard);
+            console.log(`✅ Card ${index + 1} (Variante ${varianteNum}) agregada al contenedor`);
         });
+        
+        console.log(`✅ Total de cards en el contenedor: ${outputContainer.children.length}`);
+        console.log('📦 Contenedor final:', outputContainer);
     }
 
     /**
