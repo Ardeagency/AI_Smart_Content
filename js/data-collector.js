@@ -96,10 +96,10 @@ class DataCollector {
             hair: this.getSelectValue('hair-selector'),
             expression: this.getChipSelectorValue('expression-selector'),
             style: this.getSelectValue('style-selector'),
-            tone: this.getSliderValue('tone-slider'),
+            tone: this.getToneValue(), // String con preset o valor numérico
             personality: this.getMultiChipSelectorValue('personality-selector'),
             aesthetic: this.getSelectValue('aesthetic-selector'),
-            realism: this.getSliderValue('realism-slider'),
+            realism: this.getRealismValue(), // String con presets o valor numérico
             language: this.getSelectValue('language-selector'),
             accent: this.getSelectValue('accent-selector')
         };
@@ -396,8 +396,19 @@ class DataCollector {
         const container = document.getElementById(selectorId);
         if (!container) return null;
         
+        // Buscar chip activo (clase .chip.active)
         const activeChip = container.querySelector('.chip.active');
-        return activeChip ? activeChip.getAttribute('data-value') || activeChip.textContent.trim() : null;
+        if (activeChip) {
+            return activeChip.getAttribute('data-value') || activeChip.textContent.trim();
+        }
+        
+        // Si no hay chip, buscar eye-swatch activo (para color de ojos)
+        const activeSwatch = container.querySelector('.eye-swatch.active');
+        if (activeSwatch) {
+            return activeSwatch.getAttribute('data-value') || activeSwatch.getAttribute('data-label') || null;
+        }
+        
+        return null;
     }
 
     /**
@@ -421,6 +432,46 @@ class DataCollector {
     getTextInputValue(inputId) {
         const element = document.getElementById(inputId);
         return element ? element.value.trim() || null : null;
+    }
+
+    /**
+     * Obtener valor de tono como string (preset seleccionado o valor numérico)
+     * @returns {string|null} - Valor del tono (preset o número)
+     */
+    getToneValue() {
+        // Primero verificar si hay un preset activo
+        const activePreset = document.querySelector('.tone-preset-btn.active');
+        if (activePreset) {
+            const presetValue = activePreset.getAttribute('data-value');
+            const sliderValue = this.getSliderValue('tone-slider');
+            // Retornar preset con valor numérico: "preset-numero"
+            return `${presetValue}-${sliderValue}`;
+        }
+        
+        // Si no hay preset, retornar solo el valor numérico como string
+        const sliderValue = this.getSliderValue('tone-slider');
+        return sliderValue !== null ? String(sliderValue) : null;
+    }
+
+    /**
+     * Obtener valor de realismo como string (presets seleccionados o valor numérico)
+     * @returns {string|null} - Valor del realismo (presets separados por comas o número)
+     */
+    getRealismValue() {
+        // Primero verificar si hay presets activos
+        const activePresets = document.querySelectorAll('.realism-preset-btn.active');
+        if (activePresets.length > 0) {
+            const presetValues = Array.from(activePresets)
+                .map(btn => btn.getAttribute('data-value'))
+                .filter(Boolean);
+            const sliderValue = this.getSliderValue('realism-slider');
+            // Retornar presets con valor numérico: "preset1,preset2-numero"
+            return `${presetValues.join(',')}-${sliderValue}`;
+        }
+        
+        // Si no hay presets, retornar solo el valor numérico como string
+        const sliderValue = this.getSliderValue('realism-slider');
+        return sliderValue !== null ? String(sliderValue) : null;
     }
 
     /**

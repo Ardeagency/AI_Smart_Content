@@ -1143,6 +1143,30 @@ class StudioManager {
         this.subjectConfig.realism = realism;
     }
 
+    /**
+     * Actualizar idioma del sujeto
+     * @param {string} language - Idioma seleccionado
+     */
+    updateLanguage(language) {
+        console.log('Idioma actualizado:', language);
+        if (!this.subjectConfig) {
+            this.subjectConfig = {};
+        }
+        this.subjectConfig.language = language;
+    }
+
+    /**
+     * Actualizar acento del sujeto
+     * @param {string} accent - Acento seleccionado
+     */
+    updateAccent(accent) {
+        console.log('Acento actualizado:', accent);
+        if (!this.subjectConfig) {
+            this.subjectConfig = {};
+        }
+        this.subjectConfig.accent = accent;
+    }
+
     /* =======================================
        FUNCIONES DE CONFIGURACIÓN DE ESCENARIO
        ======================================= */
@@ -1611,6 +1635,23 @@ window.updateVisualRealism = function(visualRealism) {
         window.studioManager.updateVisualRealism(visualRealism);
     } else {
         console.warn('studioManager.updateVisualRealism no está disponible aún');
+    }
+};
+
+// Funciones wrapper globales para idioma y acento
+window.updateLanguage = function(language) {
+    if (window.studioManager && window.studioManager.updateLanguage) {
+        window.studioManager.updateLanguage(language);
+    } else {
+        console.warn('studioManager.updateLanguage no está disponible aún');
+    }
+};
+
+window.updateAccent = function(accent) {
+    if (window.studioManager && window.studioManager.updateAccent) {
+        window.studioManager.updateAccent(accent);
+    } else {
+        console.warn('studioManager.updateAccent no está disponible aún');
     }
 };
 

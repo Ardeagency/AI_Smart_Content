@@ -478,6 +478,43 @@
                         </div>
                     </div>
 
+                <!-- Idioma -->
+                    <div class="config-field">
+                        <label>Idioma:</label>
+                        <div class="dropdown-container">
+                            <select id="language-selector" onchange="window.updateLanguage && window.updateLanguage(this.value)">
+                                <option value="">Seleccionar idioma...</option>
+                                <option value="es">Español</option>
+                                <option value="en">Inglés</option>
+                                <option value="pt">Portugués</option>
+                                <option value="fr">Francés</option>
+                                <option value="de">Alemán</option>
+                                <option value="it">Italiano</option>
+                            </select>
+                        </div>
+                    </div>
+
+                <!-- Acento -->
+                    <div class="config-field">
+                        <label>Acento:</label>
+                        <div class="dropdown-container">
+                            <select id="accent-selector" onchange="window.updateAccent && window.updateAccent(this.value)">
+                                <option value="">Seleccionar acento...</option>
+                                <option value="neutro">Neutro</option>
+                                <option value="espanol-espana">Español (España)</option>
+                                <option value="espanol-mexico">Español (México)</option>
+                                <option value="espanol-argentina">Español (Argentina)</option>
+                                <option value="espanol-colombia">Español (Colombia)</option>
+                                <option value="espanol-chile">Español (Chile)</option>
+                                <option value="ingles-americano">Inglés (Americano)</option>
+                                <option value="ingles-britanico">Inglés (Británico)</option>
+                                <option value="ingles-australiano">Inglés (Australiano)</option>
+                                <option value="portugues-brasil">Portugués (Brasil)</option>
+                                <option value="portugues-portugal">Portugués (Portugal)</option>
+                            </select>
+                        </div>
+                    </div>
+
                             </div>
                             </div>
 
