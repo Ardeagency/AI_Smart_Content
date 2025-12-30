@@ -437,6 +437,12 @@ class OutputGenerator {
                 guion_para_escenas: varianteOriginal
             };
 
+            // Log detallado del JSON que se enviará
+            console.log('📤 ===== JSON ENVIADO AL WEBHOOK DE ESCENAS =====');
+            console.log('📤 Estructura completa:', JSON.stringify(dataParaEscenas, null, 2));
+            console.log('📤 URL del webhook:', this.webhookManager.webhookEscenasUrl);
+            console.log('📤 ===============================================');
+
             // Enviar al webhook de escenas
             const result = await this.webhookManager.sendDataToWebhookEscenas(dataParaEscenas);
             
