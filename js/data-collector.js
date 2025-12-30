@@ -388,14 +388,21 @@ class DataCollector {
     /**
      * Validar datos requeridos
      * @param {Object} data - Datos a validar
-     * @returns {boolean} - True si los datos son válidos
+     * @returns {Object} - { valid: boolean, message: string } - Resultado de la validación
      */
     validateRequiredData(data) {
-        // Ya no se requieren marca.id ni producto.id
-        // Solo validamos que existan los datos básicos del sujeto (si no está definido por IA)
+        // Validar que haya un producto seleccionado (OBLIGATORIO)
+        if (!data.producto || !data.producto.id) {
+            return {
+                valid: false,
+                message: 'Por favor, selecciona un producto antes de generar contenido.'
+            };
+        }
+        
+        // Validar datos básicos del sujeto (si no está definido por IA)
         if (data.sujeto && data.sujeto.ai_defined) {
             // Si la IA define el protagonista, no se requieren campos específicos
-            return true;
+            return { valid: true, message: '' };
         }
         
         // Si no está definido por IA, validar campos básicos
@@ -404,7 +411,16 @@ class DataCollector {
             data.sujeto && data.sujeto.age
         ];
         
-        return required.every(value => value && value !== '');
+        const isValid = required.every(value => value && value !== '');
+        
+        if (!isValid) {
+            return {
+                valid: false,
+                message: 'Por favor, completa los campos requeridos del protagonista (género y edad).'
+            };
+        }
+        
+        return { valid: true, message: '' };
     }
 }
 

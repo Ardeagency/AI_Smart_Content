@@ -23,8 +23,9 @@ class OutputGenerator {
             const allData = await this.dataCollector.collectAllSidebarData();
             
             // Validar datos requeridos
-            if (!this.dataCollector.validateRequiredData(allData)) {
-                this.showNotification('Faltan datos requeridos. Por favor completa marca, producto, género y edad.', 'error');
+            const validation = this.dataCollector.validateRequiredData(allData);
+            if (!validation.valid) {
+                this.showNotification(validation.message || 'Faltan datos requeridos. Por favor completa la información necesaria.', 'error');
                 this.hideLoadingState();
                 return;
             }
