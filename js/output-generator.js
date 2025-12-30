@@ -127,8 +127,66 @@ class OutputGenerator {
      * @param {string} type - Tipo de notificación (success, error, info)
      */
     showNotification(message, type = 'info') {
-        // Implementar sistema de notificaciones
         console.log(`[${type.toUpperCase()}] ${message}`);
+        
+        // Crear notificación visual
+        const notification = document.createElement('div');
+        notification.className = `studio-notification studio-notification-${type}`;
+        
+        // Icono según tipo
+        let icon = 'fa-info-circle';
+        if (type === 'success') icon = 'fa-check-circle';
+        else if (type === 'error') icon = 'fa-exclamation-triangle';
+        else if (type === 'warning') icon = 'fa-exclamation-circle';
+        
+        notification.innerHTML = `
+            <div class="studio-notification-content">
+                <i class="fas ${icon} studio-notification-icon"></i>
+                <span class="studio-notification-message">${message}</span>
+            </div>
+            <button class="studio-notification-close" onclick="this.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        
+        // Agregar al body
+        document.body.appendChild(notification);
+        
+        // Mostrar con animación
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 10);
+        
+        // Auto-ocultar después de 5 segundos (o 8 segundos para errores)
+        const duration = type === 'error' ? 8000 : 5000;
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 300);
+        }, duration);
+        
+        // Si es error, también mostrar en el contenedor de output
+        if (type === 'error') {
+            const outputContainer = document.querySelector('.output-container');
+            if (outputContainer) {
+                outputContainer.innerHTML = `
+                    <div class="error-state">
+                        <div class="error-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <h3>Error de validación</h3>
+                        <p>${message}</p>
+                        <div class="error-hint">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Por favor, completa la información requerida antes de generar contenido.</span>
+                        </div>
+                    </div>
+                `;
+            }
+        }
     }
 }
 
