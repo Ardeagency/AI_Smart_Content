@@ -43,27 +43,51 @@ class OutputGenerator {
             // Procesar la respuesta del webhook si existe
             if (result && result.success) {
                 // La respuesta puede venir en result.data o directamente en result
-                const outputs = result.data || result;
+                let rawOutputs = result.data || result;
                 
                 console.log('📥 Respuesta del webhook recibida:', result);
-                console.log('📥 outputs extraído:', outputs);
-                console.log('📥 Es array?:', Array.isArray(outputs));
-                console.log('📥 Longitud:', Array.isArray(outputs) ? outputs.length : 'N/A');
+                console.log('📥 rawOutputs extraído:', rawOutputs);
+                console.log('📥 Es array?:', Array.isArray(rawOutputs));
                 
-                // Validar que sea un array válido con contenido
-                if (Array.isArray(outputs) && outputs.length > 0) {
-                    console.log(`📝 Procesando ${outputs.length} variante(s) de guión...`);
-                    this.displayOutputs(outputs);
-                    this.showNotification(`✅ ${outputs.length} variante(s) de guión generada(s) exitosamente`, 'success');
-                } else if (outputs && typeof outputs === 'object' && !Array.isArray(outputs)) {
-                    // Si es un objeto único, convertirlo a array
-                    console.log('📝 Procesando guión único (convertido a array)...');
-                    this.displayOutputs([outputs]);
-                    this.showNotification('✅ Guión generado exitosamente', 'success');
+                // Extraer las variantes del formato del webhook
+                let variantes = [];
+                
+                if (Array.isArray(rawOutputs)) {
+                    // Si es un array, puede tener dos formatos:
+                    // 1. Array directo de variantes: [{variante: 1, ...}, {variante: 2, ...}]
+                    // 2. Array con objeto que contiene output: [{output: [{variante: 1, ...}, ...]}]
+                    
+                    if (rawOutputs.length > 0 && rawOutputs[0].output && Array.isArray(rawOutputs[0].output)) {
+                        // Formato: [{output: [variantes...]}]
+                        console.log('📥 Formato detectado: Array con objeto.output');
+                        variantes = rawOutputs[0].output;
+                    } else {
+                        // Formato: [variantes...] directamente
+                        console.log('📥 Formato detectado: Array directo de variantes');
+                        variantes = rawOutputs;
+                    }
+                } else if (rawOutputs && typeof rawOutputs === 'object') {
+                    // Si es un objeto, puede tener output o ser una variante única
+                    if (rawOutputs.output && Array.isArray(rawOutputs.output)) {
+                        console.log('📥 Formato detectado: Objeto con propiedad output');
+                        variantes = rawOutputs.output;
+                    } else {
+                        // Objeto único como variante
+                        console.log('📥 Formato detectado: Objeto único (convertido a array)');
+                        variantes = [rawOutputs];
+                    }
+                }
+                
+                console.log('📥 Variantes extraídas:', variantes);
+                console.log('📥 Cantidad de variantes:', variantes.length);
+                
+                // Validar que tengamos variantes
+                if (Array.isArray(variantes) && variantes.length > 0) {
+                    console.log(`📝 Procesando ${variantes.length} variante(s) de guión...`);
+                    this.displayOutputs(variantes);
+                    this.showNotification(`✅ ${variantes.length} variante(s) de guión generada(s) exitosamente`, 'success');
                 } else {
-                    console.warn('⚠️ Respuesta del webhook no contiene outputs válidos:', outputs);
-                    console.warn('⚠️ Tipo:', typeof outputs);
-                    console.warn('⚠️ Es array?:', Array.isArray(outputs));
+                    console.warn('⚠️ No se pudieron extraer variantes válidas:', rawOutputs);
                     this.showNotification('⚠️ El webhook respondió pero sin datos válidos', 'error');
                 }
             } else {
