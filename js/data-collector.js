@@ -64,8 +64,31 @@ class DataCollector {
      * @returns {Object} - Datos del sujeto
      */
     collectSubjectInfo() {
+        const aiDefined = this.getCheckboxValue('ai-protagonist-toggle');
+        
+        // Si la IA define el protagonista, solo enviar ai_defined: true y el resto en null
+        if (aiDefined) {
+            return {
+                ai_defined: true,
+                gender: null,
+                age: null,
+                ethnicity: null,
+                eyes: null,
+                hair: null,
+                expression: null,
+                style: null,
+                tone: null,
+                personality: null,
+                aesthetic: null,
+                realism: null,
+                language: null,
+                accent: null
+            };
+        }
+        
+        // Si no está definido por IA, enviar todos los datos
         return {
-            ai_defined: this.getCheckboxValue('ai-protagonist-toggle'),
+            ai_defined: false,
             gender: this.getSegmentedControlValue('gender-selector'),
             age: this.getSliderValue('age-slider'),
             ethnicity: this.getTextInputValue('ethnicity-search'),
@@ -87,8 +110,23 @@ class DataCollector {
      * @returns {Object} - Datos del escenario
      */
     collectScenarioInfo() {
+        const aiDefined = this.getCheckboxValue('ai-scenario-toggle');
+        
+        // Si la IA define el escenario, solo enviar ai_defined: true y el resto en null
+        if (aiDefined) {
+            return {
+                ai_defined: true,
+                visual_tone: null,
+                ambience: null,
+                location: null,
+                time: null,
+                visual_realism: null
+            };
+        }
+        
+        // Si no está definido por IA, enviar todos los datos
         return {
-            ai_defined: this.getCheckboxValue('ai-scenario-toggle'),
+            ai_defined: false,
             visual_tone: this.getChipSelectorValue('visual-tone-selector'),
             ambience: this.getChipSelectorValue('ambience-selector'),
             location: this.getSelectValue('location-selector'),
