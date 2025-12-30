@@ -40,14 +40,22 @@ class OutputGenerator {
             this.hideLoadingState();
             
             // Procesar la respuesta del webhook si existe
-            if (result && result.success && result.data) {
-                const outputs = result.data;
+            if (result && result.success) {
+                // La respuesta puede venir en result.data o directamente en result
+                const outputs = result.data || result;
+                
+                // Validar que sea un array válido con contenido
                 if (Array.isArray(outputs) && outputs.length > 0) {
-                    console.log(`📝 Procesando ${outputs.length} output(s) de contenido...`);
+                    console.log(`📝 Procesando ${outputs.length} variante(s) de guión...`);
                     this.displayOutputs(outputs);
-                    this.showNotification(`✅ ${outputs.length} formato(s) de contenido generado(s) exitosamente`, 'success');
+                    this.showNotification(`✅ ${outputs.length} variante(s) de guión generada(s) exitosamente`, 'success');
+                } else if (outputs && typeof outputs === 'object') {
+                    // Si es un objeto único, convertirlo a array
+                    console.log('📝 Procesando guión único...');
+                    this.displayOutputs([outputs]);
+                    this.showNotification('✅ Guión generado exitosamente', 'success');
                 } else {
-                    console.warn('⚠️ Respuesta del webhook no contiene outputs válidos');
+                    console.warn('⚠️ Respuesta del webhook no contiene outputs válidos:', outputs);
                     this.showNotification('⚠️ El webhook respondió pero sin datos válidos', 'error');
                 }
             } else {
@@ -90,7 +98,7 @@ class OutputGenerator {
 
     /**
      * Mostrar outputs en el contenedor
-     * @param {Array} outputs - Array de outputs de contenido
+     * @param {Array} outputs - Array de outputs de contenido (variantes de guión)
      */
     displayOutputs(outputs) {
         const outputContainer = document.querySelector('.output-container');
@@ -99,22 +107,88 @@ class OutputGenerator {
         // Limpiar contenedor
         outputContainer.innerHTML = '';
 
-        // Crear cards para cada output
-        outputs.forEach((output, index) => {
+        // Crear cards para cada variante de guión
+        outputs.forEach((variante, index) => {
             const outputCard = document.createElement('div');
             outputCard.className = 'output-card';
             
-            // Determinar el tipo de contenido y mostrar apropiadamente
-            const contentType = output.type || 'unknown';
-            const contentTitle = output.title || `Output ${index + 1}`;
+            // Extraer información de la variante
+            const varianteNum = variante.variante || (index + 1);
+            const roles = variante.roles || [];
+            const guion = variante.guion || {};
+            const promptBase = variante.promptBase || {};
+            
+            // Construir HTML para mostrar el guión
+            let clipsHTML = '';
+            if (guion.clips && Array.isArray(guion.clips)) {
+                clipsHTML = guion.clips.map((clip, clipIndex) => `
+                    <div class="clip-item">
+                        <div class="clip-header">
+                            <span class="clip-role">${clip.role || 'Sin rol'}</span>
+                            <span class="clip-duration">${clip.dur || 0}s</span>
+                        </div>
+                        <div class="clip-content">
+                            <div class="clip-scene">
+                                <strong>Escena:</strong> ${clip.scene_prompt || 'Sin descripción'}
+                            </div>
+                            <div class="clip-voice">
+                                <strong>Voice Over:</strong> "${clip.voice_over || 'Sin texto'}"
+                            </div>
+                            ${clip.notes ? `
+                            <div class="clip-notes">
+                                <strong>Notas técnicas:</strong>
+                                <ul>
+                                    ${clip.notes.camera ? `<li><strong>Cámara:</strong> ${clip.notes.camera}</li>` : ''}
+                                    ${clip.notes.lighting ? `<li><strong>Iluminación:</strong> ${clip.notes.lighting}</li>` : ''}
+                                    ${clip.notes.sound ? `<li><strong>Sonido:</strong> ${clip.notes.sound}</li>` : ''}
+                                    ${clip.notes.imperfection ? `<li><strong>Imperfección:</strong> ${clip.notes.imperfection}</li>` : ''}
+                                    ${clip.notes.continuity ? `<li><strong>Continuidad:</strong> ${clip.notes.continuity}</li>` : ''}
+                                </ul>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            }
             
             outputCard.innerHTML = `
                 <div class="output-card-header">
-                    <h3>${contentTitle}</h3>
-                    <span class="output-type-badge">${contentType}</span>
+                    <h3>Variante ${varianteNum}</h3>
+                    <div class="output-roles">
+                        ${roles.map(role => `<span class="role-badge">${role}</span>`).join('')}
+                    </div>
                 </div>
                 <div class="output-card-content">
-                    <pre>${JSON.stringify(output, null, 2)}</pre>
+                    ${guion.context ? `
+                    <div class="guion-context">
+                        <h4>Contexto</h4>
+                        <div class="context-details">
+                            ${guion.context.place ? `<p><strong>Lugar:</strong> ${guion.context.place}</p>` : ''}
+                            ${guion.context.time ? `<p><strong>Tiempo:</strong> ${guion.context.time}</p>` : ''}
+                            ${guion.context.why_now ? `<p><strong>Por qué ahora:</strong> ${guion.context.why_now}</p>` : ''}
+                            ${guion.context.subject_profile ? `<p><strong>Perfil del sujeto:</strong> ${guion.context.subject_profile}</p>` : ''}
+                            ${guion.context.subject_voice ? `<p><strong>Voz del sujeto:</strong> ${guion.context.subject_voice}</p>` : ''}
+                            ${guion.context.props && Array.isArray(guion.context.props) ? `
+                                <p><strong>Props:</strong> ${guion.context.props.join(', ')}</p>
+                            ` : ''}
+                            ${guion.context.continuity ? `<p><strong>Continuidad:</strong> ${guion.context.continuity}</p>` : ''}
+                        </div>
+                    </div>
+                    ` : ''}
+                    ${clipsHTML ? `
+                    <div class="guion-clips">
+                        <h4>Clips del Guión</h4>
+                        ${clipsHTML}
+                    </div>
+                    ` : ''}
+                    ${promptBase.guion ? `
+                    <div class="guion-prompt">
+                        <h4>Prompt Base</h4>
+                        <div class="prompt-content">
+                            <pre>${promptBase.guion}</pre>
+                        </div>
+                    </div>
+                    ` : ''}
                 </div>
             `;
             outputContainer.appendChild(outputCard);
