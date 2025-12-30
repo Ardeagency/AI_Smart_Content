@@ -6,8 +6,7 @@
 class WebhookManager {
     constructor() {
         this.webhookUrl = 'https://ardeagency.app.n8n.cloud/webhook/4635dddf-f8f9-4cc2-be0f-54e1c542d702';
-        // TODO: Actualizar con la URL real del webhook de escenas
-        this.webhookEscenasUrl = 'https://ardeagency.app.n8n.cloud/webhook/ESCENAS_WEBHOOK_URL';
+        this.webhookEscenasUrl = 'https://ardeagency.app.n8n.cloud/webhook/6b8560d8-b00c-4cda-85a1-143e4d5e869c';
     }
 
     /**
