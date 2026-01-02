@@ -1,4 +1,4 @@
-# Netlify Configuration for AI Smart Content
+# Netlify Configuration for AI Smart Content (SPA)
 
 [build]
   # No build command needed for static site
@@ -8,6 +8,12 @@
   # Directorio donde están las Netlify Functions
   directory = "netlify/functions"
 
+# Redirects para SPA - Todas las rutas van a index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
 # Headers para las funciones
 [[headers]]
   for = "/.netlify/functions/*"
@@ -15,6 +21,12 @@
     Access-Control-Allow-Origin = "*"
     Access-Control-Allow-Headers = "Content-Type"
     Access-Control-Allow-Methods = "GET, OPTIONS"
+
+# Headers para templates (cache)
+[[headers]]
+  for = "/templates/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
 
 # Variables de entorno deben configurarse en Netlify Dashboard:
 # - SUPABASE_DATABASE_URL

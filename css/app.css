@@ -1,0 +1,390 @@
+/**
+ * App CSS - Estilos específicos para la SPA
+ * Complementa base.css con funcionalidad de Single Page Application
+ */
+
+/* ============================================
+   CONTAINERS Y LAYOUT
+   ============================================ */
+
+/* Container principal de la aplicación */
+#app-container {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    transition: opacity 0.3s ease;
+    will-change: opacity, transform;
+}
+
+/* Container de navegación (persistente) */
+#navigation-container {
+    position: relative;
+    z-index: 1000;
+}
+
+/* ============================================
+   ESTADOS DE VISTAS
+   ============================================ */
+
+/* Loading state para vistas */
+.view-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    padding: 2rem;
+    color: var(--text-secondary);
+}
+
+.view-loading .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(236, 235, 218, 0.2);
+    border-top-color: var(--accent-warm);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Error state para vistas */
+.error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    padding: 2rem;
+    text-align: center;
+}
+
+.error-icon {
+    font-size: 3rem;
+    color: var(--accent-warm);
+    margin-bottom: 1rem;
+}
+
+.error-container h2 {
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.error-container p {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+}
+
+/* ============================================
+   TRANSICIONES ENTRE VISTAS
+   ============================================ */
+
+/* Clase para animación de entrada */
+.view-enter {
+    animation: fadeIn 0.3s ease;
+}
+
+/* Clase para animación de salida */
+.view-leave {
+    animation: fadeOut 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+}
+
+/* Slide transitions (opcional) */
+.view-slide-enter {
+    animation: slideIn 0.3s ease;
+}
+
+.view-slide-leave {
+    animation: slideOut 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+}
+
+/* ============================================
+   UTILIDADES
+   ============================================ */
+
+/* Clase para ocultar elementos */
+.hidden {
+    display: none !important;
+}
+
+/* Clase para elementos invisibles pero que ocupan espacio */
+.invisible {
+    visibility: hidden;
+}
+
+/* Clase para elementos que no deben tener pointer events */
+.no-pointer {
+    pointer-events: none;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+    #app-container {
+        padding: 0;
+    }
+
+    .view-loading {
+        min-height: 300px;
+        padding: 1.5rem;
+    }
+
+    .error-container {
+        min-height: 300px;
+        padding: 1.5rem;
+    }
+
+    .error-icon {
+        font-size: 2.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .view-loading {
+        min-height: 250px;
+        padding: 1rem;
+    }
+
+    .error-container {
+        min-height: 250px;
+        padding: 1rem;
+    }
+
+    .error-icon {
+        font-size: 2rem;
+    }
+}
+
+/* ============================================
+   LOADING STATES ESPECÍFICOS
+   ============================================ */
+
+/* Loading inline en contenedores */
+.inline-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.inline-loading i {
+    animation: spin 1s linear infinite;
+}
+
+/* Loading para sidebar */
+.sidebar-loading {
+    padding: 20px;
+    text-align: center;
+    color: rgba(236, 235, 218, 0.6);
+    font-size: 0.813rem;
+}
+
+.sidebar-loading i {
+    animation: spin 1s linear infinite;
+}
+
+/* ============================================
+   NOTIFICACIONES Y MENSAJES
+   ============================================ */
+
+/* Notificaciones globales (si se necesitan) */
+.app-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    padding: 1rem 1.5rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-width: 300px;
+    max-width: 500px;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.app-notification.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.app-notification .notification-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.app-notification .notification-content i {
+    font-size: 1.25rem;
+}
+
+.app-notification .notification-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.25rem;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.app-notification .notification-close:hover {
+    opacity: 1;
+}
+
+.app-notification.success {
+    border-left: 4px solid var(--success-color, #4caf50);
+}
+
+.app-notification.success .notification-content i {
+    color: var(--success-color, #4caf50);
+}
+
+.app-notification.error {
+    border-left: 4px solid var(--error-color, #f44336);
+}
+
+.app-notification.error .notification-content i {
+    color: var(--error-color, #f44336);
+}
+
+.app-notification.warning {
+    border-left: 4px solid var(--accent-warm);
+}
+
+.app-notification.warning .notification-content i {
+    color: var(--accent-warm);
+}
+
+.app-notification.info {
+    border-left: 4px solid var(--primary-color);
+}
+
+.app-notification.info .notification-content i {
+    color: var(--primary-color);
+}
+
+@media (max-width: 768px) {
+    .app-notification {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        min-width: auto;
+        max-width: none;
+    }
+}
+
+/* ============================================
+   SCROLL BEHAVIOR
+   ============================================ */
+
+/* Smooth scroll para navegación interna */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Scroll personalizado para contenedores */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-warm);
+}
+
+/* ============================================
+   FOCUS STATES
+   ============================================ */
+
+/* Mejorar accesibilidad con focus visible */
+*:focus-visible {
+    outline: 2px solid var(--accent-warm);
+    outline-offset: 2px;
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+    #navigation-container {
+        display: none;
+    }
+
+    .view-loading,
+    .error-container {
+        page-break-inside: avoid;
+    }
+}
+

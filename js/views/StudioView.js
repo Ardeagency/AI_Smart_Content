@@ -1,0 +1,169 @@
+/**
+ * StudioView - Vista del editor de contenido (Studio)
+ * Maneja la creación y edición de contenido con IA
+ */
+class StudioView extends BaseView {
+  constructor() {
+    super();
+    this.templatePath = 'studio.html';
+    this.studioManager = null;
+  }
+
+  /**
+   * Hook llamado al entrar a la vista
+   */
+  async onEnter() {
+    // Verificar autenticación usando AuthService
+    if (window.authService) {
+      const isAuth = await window.authService.checkAccess(true);
+      if (!isAuth) {
+        if (window.router) {
+          window.router.navigate('/login', true);
+        }
+        return;
+      }
+    } else {
+      // Fallback
+      const isAuth = await this.checkAuthentication();
+      if (!isAuth) {
+        if (window.router) {
+          window.router.navigate('/login', true);
+        }
+        return;
+      }
+    }
+
+    // Renderizar Navigation si no está visible
+    if (window.navigation && !window.navigation.initialized) {
+      await window.navigation.render();
+    }
+  }
+
+  /**
+   * Inicializar la vista
+   */
+  async init() {
+    // Inicializar StudioManager (usar la clase existente si está disponible)
+    // Por ahora, cargar el script de studio.js que maneja toda la lógica
+    await this.loadStudioScripts();
+
+    // Setup links para usar router si es necesario
+    this.setupRouterLinks();
+  }
+
+  /**
+   * Cargar scripts de Studio
+   */
+  async loadStudioScripts() {
+    const scripts = [
+      'js/sidebar-manager.js',
+      'js/campaigns-manager.js',
+      'js/studio.js'
+    ];
+
+    for (const src of scripts) {
+      await this.loadScript(src);
+    }
+
+    // Si hay funciones globales que necesitan inicializarse, hacerlo aquí
+    // Por ejemplo, si studio.js tiene una función init(), llamarla
+  }
+
+  /**
+   * Cargar un script dinámicamente
+   */
+  loadScript(src) {
+    return new Promise((resolve, reject) => {
+      // Verificar si el script ya está cargado
+      const existingScript = document.querySelector(`script[src="${src}"]`);
+      if (existingScript) {
+        resolve();
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = src;
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error(`Error cargando ${src}`));
+      document.head.appendChild(script);
+    });
+  }
+
+  /**
+   * Configurar links para usar router
+   */
+  setupRouterLinks() {
+    // Buscar links que apunten a otras páginas y actualizarlos
+    const allLinks = this.querySelectorAll('a[href*=".html"]');
+    allLinks.forEach(link => {
+      const href = link.getAttribute('href');
+      if (href) {
+        const route = href.replace('.html', '');
+        if (route !== href) {
+          link.setAttribute('href', `#${route}`);
+          this.addEventListener(link, 'click', (e) => {
+            e.preventDefault();
+            if (window.router) {
+              window.router.navigate(route);
+            }
+          });
+        }
+      }
+    });
+  }
+
+  /**
+   * Verificar autenticación
+   */
+  async checkAuthentication() {
+    const supabase = await this.getSupabaseClient();
+    if (!supabase) return false;
+
+    try {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      return !error && user !== null;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * Obtener cliente de Supabase
+   */
+  async getSupabaseClient() {
+    // Usar SupabaseService si está disponible
+    if (window.supabaseService) {
+      return await window.supabaseService.getClient();
+    }
+    
+    // Fallback a app-loader
+    if (typeof window.appLoader !== 'undefined' && window.appLoader.waitFor) {
+      try {
+        return await window.appLoader.waitFor();
+      } catch (error) {
+        return null;
+      }
+    }
+    return window.supabase || null;
+  }
+
+  /**
+   * Cleanup al salir de la vista
+   */
+  async onLeave() {
+    // Limpiar recursos de Studio si es necesario
+    // Por ejemplo, detener timers, cancelar requests, etc.
+    if (this.studioManager && typeof this.studioManager.destroy === 'function') {
+      await this.studioManager.destroy();
+    }
+  }
+}
+
+// Hacer disponible globalmente
+window.StudioView = StudioView;
+
+// Exportar para uso en otros módulos
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = StudioView;
+}
+

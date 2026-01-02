@@ -71,36 +71,19 @@ class SessionManager {
     }
 
     try {
-      // Esperar a que Supabase esté disponible
+      // Usar SupabaseService si está disponible
       let supabaseClient = null;
-      let attempts = 0;
-      const maxAttempts = 50;
       
-      while (attempts < maxAttempts) {
-        // Verificar si window.supabase existe y tiene los métodos necesarios
-        if (typeof window.supabase !== 'undefined' && window.supabase && window.supabase.from && window.supabase.rpc) {
-          supabaseClient = window.supabase;
-          break;
-        } else if (window.SUPABASE_URL && window.SUPABASE_ANON_KEY && typeof supabase !== 'undefined') {
-          // Crear cliente y guardarlo en window.supabase para reutilización
-          try {
-            window.supabase = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
-            if (window.supabase && window.supabase.from && window.supabase.rpc) {
-              supabaseClient = window.supabase;
-              break;
-            }
-          } catch (error) {
-            console.error('checkUserStatus: Error al crear cliente de Supabase:', error);
-          }
-        }
-        
-        // Esperar un poco antes de reintentar
-        await new Promise(resolve => setTimeout(resolve, 100));
-        attempts++;
+      if (window.supabaseService) {
+        supabaseClient = await window.supabaseService.getClient();
+      } else if (window.appLoader && window.appLoader.waitFor) {
+        supabaseClient = await window.appLoader.waitFor();
+      } else if (window.supabase && typeof window.supabase.from === 'function') {
+        supabaseClient = window.supabase;
       }
 
       if (!supabaseClient || !supabaseClient.from) {
-        console.error('checkUserStatus: Cliente de Supabase no disponible después de', maxAttempts, 'intentos');
+        console.error('checkUserStatus: Cliente de Supabase no disponible');
         return null;
       }
 
@@ -137,7 +120,12 @@ class SessionManager {
   // Redirigir si no tiene permisos
   redirectIfUnauthorized(allowedRoles = null, redirectTo = '/') {
     if (!this.hasPermission(allowedRoles)) {
-      window.location.href = redirectTo;
+      // Usar router si está disponible
+      if (window.router) {
+        window.router.navigate(redirectTo, true);
+      } else {
+        window.location.href = redirectTo;
+      }
       return true;
     }
     return false;
