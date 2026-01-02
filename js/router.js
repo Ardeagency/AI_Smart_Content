@@ -213,6 +213,9 @@ class Router {
       // Actualizar navegación activa
       this.updateNavigation();
       
+      // Disparar evento personalizado para que Navigation se actualice
+      window.dispatchEvent(new CustomEvent('routechange', { detail: { path } }));
+      
       console.log(`✅ Vista cargada: ${path}`);
     } catch (error) {
       console.error('❌ Error manejando ruta:', error);
