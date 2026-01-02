@@ -61,6 +61,15 @@ class LandingView extends BaseView {
         }
       });
     }
+    
+    // Cerrar modal al hacer clic fuera
+    if (this.loginModal) {
+      this.addEventListener(this.loginModal, 'click', (e) => {
+        if (e.target === this.loginModal) {
+          this.loginModal.classList.remove('active');
+        }
+      });
+    }
 
     // Cerrar modal al hacer clic fuera
     if (this.loginModal) {
@@ -341,10 +350,43 @@ class LandingView extends BaseView {
   /**
    * Mostrar notificación de email no verificado
    */
+  /**
+   * Mostrar notificación de email no verificado
+   */
   showEmailNotVerifiedNotification() {
+    const emailNotification = this.querySelector('#emailNotVerifiedNotification');
+    if (emailNotification) {
+      emailNotification.classList.add('active');
+    }
+  }
+
+  /**
+   * Mostrar notificación de usuario no aprobado
+   */
+  showUserNotApprovedNotification() {
+    const userNotification = this.querySelector('#userNotApprovedNotification');
+    if (userNotification) {
+      userNotification.classList.add('active');
+    }
+  }
+
+  /**
+   * Ocultar notificación de email no verificado
+   */
+  hideEmailNotVerifiedNotification() {
     const notification = this.querySelector('#emailNotVerifiedNotification');
     if (notification) {
-      notification.classList.add('active');
+      notification.classList.remove('active');
+    }
+  }
+  
+  /**
+   * Ocultar notificación de usuario no aprobado
+   */
+  hideUserNotApprovedNotification() {
+    const notification = this.querySelector('#userNotApprovedNotification');
+    if (notification) {
+      notification.classList.remove('active');
     }
   }
 

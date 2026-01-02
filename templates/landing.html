@@ -6,7 +6,7 @@
 
 <!-- Header Transparente con Logo -->
 <header class="landing-header">
-    <a href="#" class="landing-header-logo">AI SMART CONTENT</a>
+    <div class="landing-header-logo">AI SMART CONTENT</div>
 </header>
 
 <!-- Footer Transparente -->
@@ -26,12 +26,12 @@
 <div class="landing-content">
     <div class="header-actions">
         <button class="auth-btn login" id="loginBtn">Login</button>
-        <a href="#/planes" class="auth-btn register">Planes</a>
+        <a href="/planes" class="auth-btn register">Planes</a>
     </div>
 </div>
 
 <!-- Notificación para email no verificado -->
-<div class="notification" id="emailNotVerifiedNotification">
+<div class="notification-message" id="emailNotVerifiedNotification">
     <div class="notification-icon warning">
         <i class="fas fa-envelope-circle-check"></i>
     </div>
@@ -40,15 +40,28 @@
         Tu cuenta de correo electrónico aún no ha sido verificada. Por favor, revisa tu bandeja de entrada y haz clic en el enlace de verificación que enviamos a tu correo.<br><br>
         Si no recibiste el email, verifica tu carpeta de spam o solicita un nuevo enlace de verificación.
     </p>
-    <button type="button" class="btn btn-accent" id="closeEmailNotification">Entendido</button>
+    <button type="button" class="notification-btn" id="closeEmailNotification">Entendido</button>
+</div>
+
+<!-- Notificación para usuario sin permisos -->
+<div class="notification-message" id="userNotApprovedNotification">
+    <div class="notification-icon info">
+        <i class="fas fa-user-clock"></i>
+    </div>
+    <h2 class="notification-title">Acceso Pendiente de Aprobación</h2>
+    <p class="notification-text">
+        Tu cuenta está activa, pero aún no tienes permisos para acceder a la plataforma.<br><br>
+        Un administrador debe aprobar tu solicitud para que puedas utilizar todos los servicios. Te notificaremos por correo electrónico una vez que tu acceso sea concedido.
+    </p>
+    <button type="button" class="notification-btn" id="closeUserNotification">Entendido</button>
 </div>
 
 <!-- Login Modal -->
-<div class="modal login-modal" id="loginModal">
-    <div class="modal-content login-card card-glass">
-        <div class="modal-header login-header">
+<div class="login-modal" id="loginModal">
+    <div class="login-card">
+        <div class="login-header">
             <h2>Iniciar Sesión</h2>
-            <button class="modal-close" id="closeLoginModal">
+            <button class="close-btn" id="closeLoginModal">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -77,13 +90,12 @@
                         required
                         autocomplete="current-password"
                     >
-                    <button type="button" class="password-toggle" id="toggleLoginPassword" aria-label="Mostrar contraseña">
+                    <button type="button" class="password-toggle-btn" id="toggleLoginPassword" aria-label="Mostrar contraseña">
                         <i class="fas fa-eye"></i>
                     </button>
                 </div>
             </div>
-            <button type="submit" class="btn btn-accent submit-btn">Iniciar Sesión</button>
+            <button type="submit" class="submit-btn">Iniciar Sesión</button>
         </form>
     </div>
 </div>
-
