@@ -498,16 +498,21 @@ function shouldShowNavigation() {
 
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', async () => {
-  if (shouldShowNavigation()) {
-    await window.navigation.render();
-  }
+  // Esperar un poco para que el router maneje la ruta inicial
+  setTimeout(async () => {
+    if (shouldShowNavigation()) {
+      await window.navigation.render();
+    }
+  }, 200);
 });
 
 // También renderizar si el DOM ya está listo
 if (document.readyState !== 'loading') {
-  if (shouldShowNavigation()) {
-    window.navigation.render();
-  }
+  setTimeout(async () => {
+    if (shouldShowNavigation()) {
+      await window.navigation.render();
+    }
+  }, 200);
 }
 
 // Escuchar cambios de ruta para mostrar/ocultar navegación (History API)
