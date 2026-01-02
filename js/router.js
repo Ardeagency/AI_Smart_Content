@@ -90,7 +90,17 @@ class Router {
   async handleRoute() {
     try {
       // Obtener path actual usando History API
-      const path = window.location.pathname || '/';
+      let path = window.location.pathname || '/';
+      
+      // Normalizar path (asegurar que empiece con /)
+      if (!path.startsWith('/')) {
+        path = '/' + path;
+      }
+      
+      // Si el path es solo '/' o está vacío, usar '/'
+      if (path === '' || path === '/index.html') {
+        path = '/';
+      }
       
       // Buscar ruta
       let route = this.routes[path];

@@ -33,9 +33,12 @@ class App {
     // 4. Inicializar Navigation component (se hará en Fase 3)
     // this.initNavigation();
 
-      // 5. Manejar ruta inicial
+      // 5. Manejar ruta inicial (con un pequeño delay para asegurar que todo esté listo)
       if (window.router) {
-        window.router.handleRoute();
+        // Pequeño delay para asegurar que el DOM esté completamente listo
+        setTimeout(() => {
+          window.router.handleRoute();
+        }, 50);
       }
 
       this.initialized = true;

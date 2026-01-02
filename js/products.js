@@ -3,7 +3,9 @@
  * Gestión de productos con galería y sidebar
  */
 
-class ProductsManager {
+// Evitar redeclaración si ya existe
+if (typeof window.ProductsManager === 'undefined') {
+  class ProductsManager {
     constructor() {
         this.supabase = null;
         this.userId = null;

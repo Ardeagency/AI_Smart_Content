@@ -43,16 +43,21 @@ class ProductsView extends BaseView {
    * Inicializar la vista
    */
   async init() {
-    // Inicializar ProductsManager (usar la clase existente)
-    if (window.ProductsManager) {
-      this.productsManager = new window.ProductsManager();
-      await this.productsManager.init();
-    } else {
-      // Si ProductsManager no está disponible, cargar el script
+    // Cargar script de Products si no está disponible
+    if (!window.ProductsManager) {
       await this.loadProductsScript();
-      if (window.ProductsManager) {
+    }
+
+    // Inicializar ProductsManager
+    if (window.ProductsManager) {
+      // Crear instancia solo si no existe
+      if (!this.productsManager) {
         this.productsManager = new window.ProductsManager();
-        await this.productsManager.init();
+        // NO llamar init() automáticamente - ProductsManager.init() se llama desde el template
+        // porque necesita que el DOM esté renderizado
+        if (this.container && this.container.innerHTML) {
+          await this.productsManager.init();
+        }
       }
     }
 
@@ -70,9 +75,37 @@ class ProductsView extends BaseView {
         return;
       }
 
+      // Verificar si el script ya está cargado
+      const existingScript = document.querySelector('script[src="js/products.js"]');
+      if (existingScript) {
+        // Esperar a que se cargue
+        const checkInterval = setInterval(() => {
+          if (window.ProductsManager) {
+            clearInterval(checkInterval);
+            resolve();
+          }
+        }, 100);
+        setTimeout(() => {
+          clearInterval(checkInterval);
+          if (!window.ProductsManager) {
+            reject(new Error('ProductsManager no se cargó'));
+          }
+        }, 5000);
+        return;
+      }
+
       const script = document.createElement('script');
       script.src = 'js/products.js';
-      script.onload = () => resolve();
+      script.onload = () => {
+        // Esperar un poco para que la clase se registre
+        setTimeout(() => {
+          if (window.ProductsManager) {
+            resolve();
+          } else {
+            reject(new Error('ProductsManager no se registró después de cargar'));
+          }
+        }, 100);
+      };
       script.onerror = () => reject(new Error('Error cargando products.js'));
       document.head.appendChild(script);
     });
