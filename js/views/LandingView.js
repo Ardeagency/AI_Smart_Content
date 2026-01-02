@@ -106,12 +106,36 @@ class LandingView extends BaseView {
 
     // Cerrar notificación de email no verificado
     if (this.closeEmailNotification) {
-      const emailNotification = this.querySelector('#emailNotVerifiedNotification');
-      if (emailNotification) {
-        this.addEventListener(this.closeEmailNotification, 'click', () => {
-          emailNotification.classList.remove('active');
-        });
-      }
+      this.addEventListener(this.closeEmailNotification, 'click', () => {
+        this.hideEmailNotVerifiedNotification();
+      });
+    }
+    
+    // Cerrar notificación de usuario no aprobado
+    const closeUserNotification = this.querySelector('#closeUserNotification');
+    if (closeUserNotification) {
+      this.addEventListener(closeUserNotification, 'click', () => {
+        this.hideUserNotApprovedNotification();
+      });
+    }
+    
+    // Cerrar notificaciones al hacer clic fuera
+    const emailNotification = this.querySelector('#emailNotVerifiedNotification');
+    if (emailNotification) {
+      this.addEventListener(emailNotification, 'click', (e) => {
+        if (e.target === emailNotification) {
+          this.hideEmailNotVerifiedNotification();
+        }
+      });
+    }
+    
+    const userNotification = this.querySelector('#userNotApprovedNotification');
+    if (userNotification) {
+      this.addEventListener(userNotification, 'click', (e) => {
+        if (e.target === userNotification) {
+          this.hideUserNotApprovedNotification();
+        }
+      });
     }
 
     // Manejar envío del formulario de login
