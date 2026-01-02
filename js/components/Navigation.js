@@ -238,7 +238,10 @@ class Navigation {
       ? window.Performance.debounce(() => this.updateActiveLink(), 100)
       : () => this.updateActiveLink();
     
-    window.addEventListener('hashchange', updateLinkDebounced);
+    // Usar popstate para History API
+    window.addEventListener('popstate', updateLinkDebounced);
+    // También escuchar cuando el router navega programáticamente
+    window.addEventListener('routechange', updateLinkDebounced);
   }
 
   /**
@@ -330,15 +333,28 @@ class Navigation {
    * Actualizar link activo según la ruta actual
    */
   updateActiveLink() {
-    const currentHash = window.location.hash || '#/';
-    const currentPath = currentHash.replace('#', '');
+    // Usar pathname para History API
+    const currentPath = window.location.pathname || '/';
     const navLinks = document.querySelectorAll('.nav-link');
     
     navLinks.forEach(link => {
       link.classList.remove('active');
-      const route = link.dataset.route;
-      if (route && currentPath === route) {
-        link.classList.add('active');
+      const route = link.dataset.route || link.getAttribute('href');
+      if (route) {
+        // Normalizar route
+        let normalizedRoute = route;
+        if (normalizedRoute.startsWith('#')) {
+          normalizedRoute = normalizedRoute.replace('#', '');
+        }
+        if (!normalizedRoute.startsWith('/')) {
+          normalizedRoute = '/' + normalizedRoute;
+        }
+        
+        // Comparar con pathname actual
+        if (normalizedRoute === currentPath || 
+            (normalizedRoute === '/' && currentPath === '/')) {
+          link.classList.add('active');
+        }
       }
     });
   }
