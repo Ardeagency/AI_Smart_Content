@@ -109,11 +109,28 @@ class BaseView {
     this.showLoading();
 
     try {
-      // Cargar template
-      const html = await this.loadTemplate();
+      // Generar HTML (puede ser desde template o desde renderHTML)
+      let html;
+      if (typeof this.renderHTML === 'function' && this.renderHTML !== BaseView.prototype.renderHTML) {
+        // Si renderHTML está sobrescrito, usarlo
+        html = await this.renderHTML();
+      } else if (this.templatePath) {
+        // Si tiene templatePath, usar loadTemplate (compatibilidad)
+        html = await this.loadTemplate();
+      } else {
+        throw new Error('No se puede renderizar: falta renderHTML() o templatePath');
+      }
+      
+      // Si html es una Promise, esperarla
+      if (html instanceof Promise) {
+        html = await html;
+      }
       
       // Inyectar HTML en el container
       this.container.innerHTML = html;
+      
+      // Actualizar links para usar router
+      this.updateLinksForRouter();
 
       // Llamar a onEnter antes de inicializar (para preparar datos, etc.)
       await this.onEnter();
@@ -291,6 +308,34 @@ class BaseView {
   querySelectorAll(selector) {
     if (!this.container) return [];
     return this.container.querySelectorAll(selector);
+  }
+
+  /**
+   * Actualizar links para usar router (History API)
+   */
+  updateLinksForRouter() {
+    const links = this.container.querySelectorAll('a[href^="#"], a[href^="/"]');
+    links.forEach(link => {
+      const href = link.getAttribute('href');
+      if (href && (href.startsWith('#') || href.startsWith('/'))) {
+        // Normalizar href
+        let path = href.replace('#', '');
+        if (!path.startsWith('/')) {
+          path = '/' + path;
+        }
+        
+        // Agregar event listener para usar router
+        this.addEventListener(link, 'click', (e) => {
+          e.preventDefault();
+          if (window.router) {
+            window.router.navigate(path);
+          }
+        });
+        
+        // Actualizar href para que sea clickeable sin JS
+        link.setAttribute('href', path);
+      }
+    });
   }
 }
 
