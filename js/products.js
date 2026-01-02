@@ -47,16 +47,24 @@ if (typeof window.ProductsManager === 'undefined') {
                 this.userData = userData;
             }
 
-            // Cargar datos del proyecto
+            // Cargar datos del proyecto (opcional, solo si existe projectId y la tabla existe)
             if (this.projectId) {
-                const { data: projectData, error: projectError } = await this.supabase
-                    .from('projects')
-                    .select('*')
-                    .eq('id', this.projectId)
-                    .single();
+                try {
+                    const { data: projectData, error: projectError } = await this.supabase
+                        .from('projects')
+                        .select('*')
+                        .eq('id', this.projectId)
+                        .single();
 
-                if (!projectError && projectData) {
-                    this.projectData = projectData;
+                    if (!projectError && projectData) {
+                        this.projectData = projectData;
+                    } else if (projectError && projectError.code === 'PGRST205') {
+                        // Tabla no existe, continuar sin projectData
+                        console.log('ℹ️ Tabla projects no existe, continuando sin projectData');
+                    }
+                } catch (error) {
+                    // Ignorar errores de tabla projects
+                    console.warn('⚠️ No se pudo cargar projectData:', error.message);
                 }
             }
         } catch (error) {
@@ -108,24 +116,37 @@ if (typeof window.ProductsManager === 'undefined') {
 
     async loadProject() {
         try {
+            // Intentar cargar proyecto, pero no fallar si la tabla no existe
             const { data: project, error } = await this.supabase
                 .from('projects')
                 .select('id')
                 .eq('user_id', this.userId)
                 .maybeSingle();
 
-            if (error && error.code !== 'PGRST116') {
-                throw error;
+            // Si la tabla no existe (PGRST205) o no hay registros (PGRST116), continuar sin projectId
+            if (error) {
+                if (error.code === 'PGRST205' || error.code === 'PGRST116') {
+                    console.log('ℹ️ Tabla projects no existe o no hay proyectos, continuando sin projectId');
+                    this.projectId = null;
+                    return;
+                }
+                // Para otros errores, solo loguear pero no fallar
+                console.warn('⚠️ Error cargando proyecto:', error.message);
+                this.projectId = null;
+                return;
             }
 
             if (project) {
                 this.projectId = project.id;
             } else {
-                // Si no hay proyecto, redirigir al formulario
-                window.location.href = 'form-record.html';
+                // Si no hay proyecto, continuar sin projectId
+                this.projectId = null;
+                console.log('ℹ️ No hay proyecto asociado, continuando sin projectId');
             }
         } catch (error) {
-            console.error('Error cargando proyecto:', error);
+            console.warn('⚠️ Error cargando proyecto:', error);
+            // Continuar sin projectId en lugar de fallar
+            this.projectId = null;
         }
     }
 
@@ -163,10 +184,14 @@ if (typeof window.ProductsManager === 'undefined') {
     }
 
     async loadProducts() {
+        // Cargar productos - si no hay projectId, cargar todos los productos del usuario
+        const loadingState = document.getElementById('loadingState');
+        const emptyState = document.getElementById('emptyState');
+        
         if (!this.projectId) {
-            console.warn('⚠️ No hay projectId, no se pueden cargar productos');
-            const loadingState = document.getElementById('loadingState');
-            const emptyState = document.getElementById('emptyState');
+            console.log('ℹ️ No hay projectId, cargando todos los productos del usuario');
+            // Continuar y cargar productos sin filtrar por project_id
+        }
             const productsGrid = document.getElementById('productsGrid');
             if (loadingState) loadingState.style.display = 'none';
             if (emptyState) emptyState.style.display = 'block';
