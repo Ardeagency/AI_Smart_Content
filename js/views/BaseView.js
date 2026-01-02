@@ -27,12 +27,13 @@ class BaseView {
   }
 
   /**
-   * Cargar template HTML desde la carpeta templates/
+   * Cargar template HTML desde la carpeta templates/ (DEPRECATED - usar renderHTML)
    * @returns {Promise<string>} HTML del template
+   * @deprecated Usar renderHTML() en su lugar para SPA real
    */
   async loadTemplate() {
     if (!this.templatePath) {
-      throw new Error('templatePath no definido. Debes definir templatePath en la subclase.');
+      throw new Error('templatePath no definido. Debes definir templatePath o implementar renderHTML() en la subclase.');
     }
 
     // Verificar cache del router
@@ -80,6 +81,18 @@ class BaseView {
         </div>
       `;
     }
+  }
+
+  /**
+   * Generar HTML de la vista (método a sobrescribir en subclases)
+   * @returns {string} HTML generado
+   */
+  renderHTML() {
+    // Si tiene templatePath, usar loadTemplate (compatibilidad hacia atrás)
+    if (this.templatePath) {
+      return this.loadTemplate();
+    }
+    throw new Error('renderHTML() no implementado. Debes implementar este método o definir templatePath.');
   }
 
   /**

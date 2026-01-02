@@ -29,14 +29,15 @@ class Router {
    * Inicializar el router
    */
   init() {
-    // Escuchar cambios en el hash
-    window.addEventListener('hashchange', () => this.handleRoute());
+    // Usar History API en lugar de hash-based routing
+    // Escuchar cambios en el historial (botones atrás/adelante)
+    window.addEventListener('popstate', () => this.handleRoute());
     
     // Manejar ruta inicial cuando se carga la página
     window.addEventListener('load', () => this.handleRoute());
     
-    // También manejar si ya hay un hash al cargar
-    if (window.location.hash) {
+    // Manejar ruta inicial si no hay evento load
+    if (document.readyState === 'complete') {
       this.handleRoute();
     }
   }
@@ -58,7 +59,7 @@ class Router {
   }
 
   /**
-   * Navegar a una ruta
+   * Navegar a una ruta usando History API
    * @param {string} path - Ruta destino
    * @param {boolean} replace - Si true, reemplaza en historial (no agrega entrada)
    */
@@ -67,20 +68,19 @@ class Router {
     const normalizedPath = path.startsWith('/') ? path : `/${path}`;
     
     // Evitar navegación si ya estamos en esa ruta
-    const currentHash = window.location.hash.slice(1) || '/';
-    if (currentHash === normalizedPath) {
+    const currentPath = window.location.pathname;
+    if (currentPath === normalizedPath) {
       return;
     }
     
+    // Usar History API
     if (replace) {
-      // Reemplazar en historial
-      window.location.replace(`#${normalizedPath}`);
+      window.history.replaceState({ path: normalizedPath }, '', normalizedPath);
     } else {
-      // Agregar al historial
-      window.location.hash = normalizedPath;
+      window.history.pushState({ path: normalizedPath }, '', normalizedPath);
     }
     
-    // Manejar ruta inmediatamente (hashchange puede no dispararse si es la misma ruta)
+    // Manejar ruta inmediatamente
     this.handleRoute();
   }
 
@@ -89,21 +89,21 @@ class Router {
    */
   async handleRoute() {
     try {
-      // Obtener hash actual o usar '/'
-      const hash = window.location.hash.slice(1) || '/';
+      // Obtener path actual usando History API
+      const path = window.location.pathname || '/';
       
       // Buscar ruta
-      let route = this.routes[hash];
+      let route = this.routes[path];
 
       if (!route) {
-        console.warn(`⚠️ Ruta no encontrada: ${hash}, usando 404`);
+        console.warn(`⚠️ Ruta no encontrada: ${path}, usando 404`);
         // Usar ruta 404 si existe
         const route404 = this.routes['/404'];
         if (route404) {
           // Usar la ruta 404
           route = route404;
         } else {
-          console.error(`❌ Ruta no encontrada y 404 no disponible: ${hash}`);
+          console.error(`❌ Ruta no encontrada y 404 no disponible: ${path}`);
           return;
         }
       }
@@ -178,7 +178,7 @@ class Router {
       }
 
       if (!ViewClass) {
-        console.error('❌ Vista no encontrada para ruta:', hash);
+        console.error('❌ Vista no encontrada para ruta:', path);
         return;
       }
 
@@ -190,7 +190,7 @@ class Router {
 
       // Crear nueva instancia de vista
       this.currentView = new ViewClass();
-      this.currentRoute = hash;
+      this.currentRoute = path;
 
       // Aplicar animación de entrada antes de renderizar
       if (container) {
@@ -203,7 +203,7 @@ class Router {
       // Actualizar navegación activa
       this.updateNavigation();
       
-      console.log(`✅ Vista cargada: ${hash}`);
+      console.log(`✅ Vista cargada: ${path}`);
     } catch (error) {
       console.error('❌ Error manejando ruta:', error);
       
@@ -258,21 +258,23 @@ class Router {
    */
   updateNavigation() {
     const navLinks = document.querySelectorAll('.nav-link');
-    const currentHash = window.location.hash || '#/';
+    const currentPath = window.location.pathname || '/';
     
     navLinks.forEach(link => {
       link.classList.remove('active');
       const href = link.getAttribute('href');
       
-      // Comparar href con hash actual
+      // Comparar href con pathname actual
       if (href) {
-        // Si href es '#/ruta' o '/ruta' o 'ruta.html'
-        const linkPath = href.replace('#', '').replace('.html', '');
-        const currentPath = currentHash.replace('#', '');
+        // Normalizar href (puede ser '#/ruta', '/ruta', o 'ruta.html')
+        let linkPath = href.replace('#', '').replace('.html', '');
+        if (!linkPath.startsWith('/')) {
+          linkPath = '/' + linkPath;
+        }
         
+        // Comparar paths
         if (linkPath === currentPath || 
-            (linkPath === '/' && currentPath === '') ||
-            (linkPath === currentPath)) {
+            (linkPath === '/' && currentPath === '/')) {
           link.classList.add('active');
         }
       }
