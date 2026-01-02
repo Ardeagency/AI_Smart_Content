@@ -195,15 +195,28 @@ if (typeof window.ProductsManager === 'undefined') {
         }
 
         try {
-            console.log('📦 Cargando productos para proyecto:', this.projectId);
+            if (this.projectId) {
+                console.log('📦 Cargando productos para proyecto:', this.projectId);
+            } else {
+                console.log('📦 Cargando todos los productos del usuario');
+            }
+            
             loadingState.style.display = 'block';
             emptyState.style.display = 'none';
             productsGrid.style.display = 'none';
 
-            const { data: products, error } = await this.supabase
+            // Construir query - filtrar por user_id siempre, y por project_id solo si existe
+            let query = this.supabase
                 .from('products')
                 .select('*')
-                .eq('project_id', this.projectId)
+                .eq('user_id', this.userId);
+            
+            // Si hay projectId, filtrar también por project_id
+            if (this.projectId) {
+                query = query.eq('project_id', this.projectId);
+            }
+            
+            const { data: products, error } = await query
                 .order('created_at', { ascending: false });
 
             if (error) {
