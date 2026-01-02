@@ -18,8 +18,9 @@ class LandingView extends BaseView {
    * Hook llamado al entrar a la vista
    */
   async onEnter() {
-    // Verificar si hay un usuario pendiente y redirigir si es necesario
-    await this.checkPendingUser();
+    // La landing page siempre se muestra, no redirige automáticamente
+    // Solo redirige después de un login exitoso
+    console.log('✅ Landing page cargada');
   }
 
   /**
@@ -247,25 +248,22 @@ class LandingView extends BaseView {
   }
 
   /**
-   * Verificar si hay un usuario pendiente y redirigir
+   * Verificar si hay un usuario pendiente (sin redirigir automáticamente)
+   * Este método ya no redirige, solo verifica el estado del usuario
    */
   async checkPendingUser() {
     const session = this.getUserSession();
-    if (!session) return;
+    if (!session) return null;
 
     const userStatus = await this.checkUserStatus(session.userId);
     if (!userStatus) {
       // Si no se puede verificar, limpiar sesión
       this.clearUserSession();
-      return;
+      return null;
     }
 
-    // Si el usuario está autenticado, redirigir al dashboard
-    if (window.router) {
-      window.router.navigate('/products');
-    } else {
-      window.location.href = '/products.html';
-    }
+    // Retornar el estado sin redirigir
+    return userStatus;
   }
 
   /**
