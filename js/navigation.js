@@ -6,6 +6,7 @@
 class NavigationManager {
     constructor() {
         this.isNavOpen = false;
+        this.isCollapsed = false;
         this.init();
     }
 
@@ -23,6 +24,26 @@ class NavigationManager {
             if (sideNavigation) {
                 sideNavigation.classList.add('active');
                 this.isNavOpen = true;
+            }
+        }
+        
+        // Cargar estado colapsado desde localStorage
+        const savedState = localStorage.getItem('sidebarCollapsed');
+        if (savedState === 'true') {
+            this.isCollapsed = true;
+            const sideNavigation = document.getElementById('sideNavigation');
+            const navToggleBtn = document.getElementById('navToggleBtn');
+            if (sideNavigation) {
+                sideNavigation.classList.add('collapsed');
+                document.body.classList.add('sidebar-collapsed');
+                // Actualizar icono si está colapsado
+                if (navToggleBtn) {
+                    const icon = navToggleBtn.querySelector('i');
+                    if (icon) {
+                        icon.classList.remove('fa-bars');
+                        icon.classList.add('fa-chevron-right');
+                    }
+                }
             }
         }
     }
@@ -95,6 +116,17 @@ class NavigationManager {
                 }
             });
         });
+        
+        // Toggle button para colapsar/expandir sidebar (solo desktop)
+        const navToggleBtn = document.getElementById('navToggleBtn');
+        if (navToggleBtn) {
+            navToggleBtn.addEventListener('click', () => {
+                // Solo funciona en desktop
+                if (window.innerWidth > 768) {
+                    this.toggleSidebarCollapse();
+                }
+            });
+        }
     }
 
     toggleNavigation() {
@@ -233,6 +265,59 @@ class NavigationManager {
                 link.classList.add('active');
             }
         });
+    }
+    
+    // Toggle sidebar collapse/expand (solo desktop)
+    toggleSidebarCollapse() {
+        const sideNavigation = document.getElementById('sideNavigation');
+        const navToggleBtn = document.getElementById('navToggleBtn');
+        if (!sideNavigation) return;
+        
+        this.isCollapsed = !this.isCollapsed;
+        
+        if (this.isCollapsed) {
+            sideNavigation.classList.add('collapsed');
+            document.body.classList.add('sidebar-collapsed');
+            // Cambiar icono a chevron-right cuando está colapsado
+            if (navToggleBtn) {
+                const icon = navToggleBtn.querySelector('i');
+                if (icon) {
+                    icon.classList.remove('fa-bars');
+                    icon.classList.add('fa-chevron-right');
+                }
+            }
+        } else {
+            sideNavigation.classList.remove('collapsed');
+            document.body.classList.remove('sidebar-collapsed');
+            // Cambiar icono a bars cuando está expandido
+            if (navToggleBtn) {
+                const icon = navToggleBtn.querySelector('i');
+                if (icon) {
+                    icon.classList.remove('fa-chevron-right');
+                    icon.classList.add('fa-bars');
+                }
+            }
+        }
+        
+        // Guardar estado en localStorage
+        localStorage.setItem('sidebarCollapsed', this.isCollapsed.toString());
+        
+        // Actualizar header y main-content
+        this.updateLayoutForCollapse();
+    }
+    
+    updateLayoutForCollapse() {
+        const mainHeader = document.querySelector('.main-header');
+        const mainContent = document.querySelector('.main-content');
+        
+        // Los estilos CSS se encargan del ajuste automático
+        // pero podemos forzar un reflow si es necesario
+        if (mainHeader) {
+            mainHeader.style.transition = 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+        }
+        if (mainContent) {
+            mainContent.style.transition = 'margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+        }
     }
 }
 
