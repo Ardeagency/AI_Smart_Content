@@ -92,16 +92,20 @@ class Router {
       // Obtener hash actual o usar '/'
       const hash = window.location.hash.slice(1) || '/';
       
-      // Buscar ruta o usar 404
-      const route = this.routes[hash] || this.routes['/404'];
+      // Buscar ruta
+      let route = this.routes[hash];
 
       if (!route) {
-        console.error(`❌ Ruta no encontrada: ${hash}`);
-        // Redirigir a landing si no existe la ruta
-        if (hash !== '/') {
-          this.navigate('/', true);
+        console.warn(`⚠️ Ruta no encontrada: ${hash}, usando 404`);
+        // Usar ruta 404 si existe
+        const route404 = this.routes['/404'];
+        if (route404) {
+          // Usar la ruta 404
+          route = route404;
+        } else {
+          console.error(`❌ Ruta no encontrada y 404 no disponible: ${hash}`);
+          return;
         }
-        return;
       }
 
       // Verificar autenticación si es necesario
@@ -154,16 +158,33 @@ class Router {
 
       // Cargar clase de vista (puede ser lazy loading)
       let ViewClass;
+      
+      // Verificar si es una función async o una función que retorna una promesa (lazy loading)
       if (typeof route.viewLoader === 'function') {
-        // Si es una función, ejecutarla (puede ser async para lazy loading)
-        const result = await route.viewLoader();
-        ViewClass = result.default || result;
+        // Verificar si es una clase (constructor) o una función de lazy loading
+        // Las clases tienen prototype.constructor === themselves
+        const isClass = route.viewLoader.prototype && route.viewLoader.prototype.constructor === route.viewLoader;
+        
+        if (isClass) {
+          // Es una clase directa, usar directamente
+          ViewClass = route.viewLoader;
+        } else {
+          // Es una función de lazy loading, ejecutarla
+          const result = await route.viewLoader();
+          ViewClass = result.default || result;
+        }
       } else {
         ViewClass = route.viewLoader;
       }
 
       if (!ViewClass) {
         console.error('❌ Vista no encontrada para ruta:', hash);
+        return;
+      }
+
+      // Verificar que ViewClass sea una clase antes de instanciar
+      if (typeof ViewClass !== 'function') {
+        console.error('❌ ViewClass no es una función/clase:', ViewClass);
         return;
       }
 
