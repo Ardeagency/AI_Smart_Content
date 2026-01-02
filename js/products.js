@@ -882,14 +882,18 @@ if (typeof window.ProductsManager === 'undefined') {
         if (this.supabase) {
             await this.supabase.auth.signOut();
         }
-        window.location.href = 'login.html';
+        if (window.router) {
+            window.router.navigate('/login', true);
+        } else {
+            window.location.href = '/login';
+        }
     }
+  }
+
+  // Hacer disponible globalmente
+  window.ProductsManager = ProductsManager;
 }
 
-// Initialize when DOM is ready
-let productsManager;
-document.addEventListener('DOMContentLoaded', () => {
-    productsManager = new ProductsManager();
-    window.productsManager = productsManager; // Exponer globalmente para usar en onclick/onchange
-});
+// NO inicializar automáticamente - se inicializará desde ProductsView
+// La inicialización automática causaba conflictos en SPA
 
