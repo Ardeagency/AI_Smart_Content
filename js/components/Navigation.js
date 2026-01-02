@@ -489,9 +489,10 @@ window.navigation = new Navigation();
 
 // Función para verificar si la ruta actual requiere navegación
 function shouldShowNavigation() {
-  const currentHash = window.location.hash || '#/';
+  // Usar History API (pathname) en lugar de hash
+  const currentPath = window.location.pathname || '/';
   const publicRoutes = ['/', '/login', '/planes'];
-  const isPublicRoute = publicRoutes.some(route => currentHash === `#${route}` || currentHash === route);
+  const isPublicRoute = publicRoutes.some(route => currentPath === route || currentPath === route + '/');
   return !isPublicRoute;
 }
 
@@ -509,8 +510,22 @@ if (document.readyState !== 'loading') {
   }
 }
 
-// Escuchar cambios de hash para mostrar/ocultar navegación
-window.addEventListener('hashchange', async () => {
+// Escuchar cambios de ruta para mostrar/ocultar navegación (History API)
+window.addEventListener('popstate', async () => {
+  if (shouldShowNavigation() && !window.navigation.initialized) {
+    await window.navigation.render();
+  } else if (!shouldShowNavigation() && window.navigation.initialized) {
+    // Ocultar navegación si estamos en ruta pública
+    const container = document.getElementById('navigation-container');
+    if (container) {
+      container.innerHTML = '';
+      window.navigation.initialized = false;
+    }
+  }
+});
+
+// También escuchar el evento personalizado routechange del router
+window.addEventListener('routechange', async () => {
   if (shouldShowNavigation() && !window.navigation.initialized) {
     await window.navigation.render();
   } else if (!shouldShowNavigation() && window.navigation.initialized) {
