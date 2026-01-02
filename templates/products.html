@@ -1,28 +1,5 @@
-    <!-- Header Principal -->
-    <header class="main-header">
-        <div class="header-content">
-            <div class="header-left">
-                <div class="logo-section">
-                    <div class="title-section">
-                        <h1>Productos</h1>
-                    </div>
-                </div>
-            </div>
-            <div class="header-right">
-                <div class="header-credits" id="headerCredits">
-                    <span class="header-credits-value" id="headerCreditsValue">0/0</span>
-                </div>
-                <button class="hamburger-menu" id="hamburgerMenu">
-                    <div class="hamburger-line"></div>
-                    <div class="hamburger-line"></div>
-                    <div class="hamburger-line"></div>
-                </button>
-            </div>
-        </div>
-    </header>
-
     <!-- Contenido Principal -->
-    <main class="main-content">
+    <div class="main-content">
         <div class="products-container">
             <!-- Main Content -->
             <div class="products-main">
@@ -82,57 +59,5 @@
             <!-- Sidebar Overlay -->
             <div class="sidebar-overlay" id="sidebarOverlay"></div>
         </div>
-    </main>
-
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-config.js"></script>
-    <script src="js/supabase-client.js"></script>
-    <script src="js/auth-guard.js"></script>
-    <script src="js/sidebar-manager.js"></script>
-    <script src="js/navigation.js"></script>
-    <script src="js/products.js"></script>
-    
-    <!-- Funciones de navegación -->
-    <script>
-        // Funciones para la navegación lateral
-        // En desktop, el sidebar está siempre abierto
-        function toggleNavigation() {
-            // Solo funciona en móvil
-            if (window.innerWidth <= 768) {
-                const overlay = document.getElementById('navOverlay');
-                const navigation = document.getElementById('sideNavigation');
-                const hamburger = document.getElementById('hamburgerMenu');
-                
-                overlay.classList.toggle('active');
-                navigation.classList.toggle('active');
-                if (hamburger) hamburger.classList.toggle('active');
-            }
-        }
-
-        function closeNavigation() {
-            // Solo funciona en móvil
-            if (window.innerWidth <= 768) {
-                const overlay = document.getElementById('navOverlay');
-                const navigation = document.getElementById('sideNavigation');
-                const hamburger = document.getElementById('hamburgerMenu');
-                
-                overlay.classList.remove('active');
-                navigation.classList.remove('active');
-                if (hamburger) hamburger.classList.remove('active');
-            }
-        }
-        
-        // Inicializar sidebar como abierto en desktop
-        document.addEventListener('DOMContentLoaded', function() {
-            if (window.innerWidth > 768) {
-                const navigation = document.getElementById('sideNavigation');
-                if (navigation) {
-                    navigation.classList.add('active');
-                }
-            }
-        });
-    </script>
-</body>
-</html>
+    </div>
 

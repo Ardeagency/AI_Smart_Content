@@ -63,19 +63,19 @@ class Navigation {
           <div class="nav-section">
             <div class="nav-section-title">Principal</div>
             <div class="nav-item">
-              <a href="#/living" class="nav-link" data-route="/living">
+              <a href="/living" class="nav-link" data-route="/living">
                 <i class="fas fa-home nav-icon"></i>
                 <span class="nav-text">Living</span>
               </a>
             </div>
             <div class="nav-item">
-              <a href="#/studio" class="nav-link" data-route="/studio">
+              <a href="/studio" class="nav-link" data-route="/studio">
                 <i class="fas fa-magic nav-icon"></i>
                 <span class="nav-text">Studio</span>
               </a>
             </div>
             <div class="nav-item">
-              <a href="#/products" class="nav-link" data-route="/products">
+              <a href="/products" class="nav-link" data-route="/products">
                 <i class="fas fa-box nav-icon"></i>
                 <span class="nav-text">Productos</span>
               </a>
