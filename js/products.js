@@ -187,20 +187,6 @@ if (typeof window.ProductsManager === 'undefined') {
         // Cargar productos - si no hay projectId, cargar todos los productos del usuario
         const loadingState = document.getElementById('loadingState');
         const emptyState = document.getElementById('emptyState');
-        
-        if (!this.projectId) {
-            console.log('ℹ️ No hay projectId, cargando todos los productos del usuario');
-            // Continuar y cargar productos sin filtrar por project_id
-        }
-            const productsGrid = document.getElementById('productsGrid');
-            if (loadingState) loadingState.style.display = 'none';
-            if (emptyState) emptyState.style.display = 'block';
-            if (productsGrid) productsGrid.style.display = 'none';
-            return;
-        }
-
-        const loadingState = document.getElementById('loadingState');
-        const emptyState = document.getElementById('emptyState');
         const productsGrid = document.getElementById('productsGrid');
 
         if (!loadingState || !emptyState || !productsGrid) {
