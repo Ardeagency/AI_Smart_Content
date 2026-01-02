@@ -35,10 +35,16 @@ class App {
 
       // 5. Manejar ruta inicial (con un pequeño delay para asegurar que todo esté listo)
       if (window.router) {
-        // Pequeño delay para asegurar que el DOM esté completamente listo
+        // Pequeño delay para asegurar que el DOM esté completamente listo y las rutas estén registradas
         setTimeout(() => {
-          window.router.handleRoute();
-        }, 50);
+          // Verificar que las rutas estén registradas
+          if (Object.keys(window.router.routes).length > 0) {
+            window.router.handleRoute();
+          } else {
+            console.warn('⚠️ No hay rutas registradas, reintentando...');
+            setTimeout(() => window.router.handleRoute(), 100);
+          }
+        }, 100);
       }
 
       this.initialized = true;

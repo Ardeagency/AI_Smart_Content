@@ -18,7 +18,12 @@ if (typeof window.ProductsManager === 'undefined') {
     async init() {
         await this.initSupabase();
         if (!this.supabase || !this.userId) {
-            window.location.href = 'login.html';
+            // Usar router si está disponible
+            if (window.router) {
+                window.router.navigate('/login', true);
+            } else {
+                window.location.href = '/login';
+            }
             return;
         }
 
@@ -63,7 +68,20 @@ if (typeof window.ProductsManager === 'undefined') {
 
     async initSupabase() {
         try {
-            if (typeof waitForSupabase === 'function') {
+            // Prioridad 1: Usar SupabaseService
+            if (window.supabaseService) {
+                this.supabase = await window.supabaseService.getClient();
+            }
+            // Prioridad 2: Usar appLoader
+            else if (typeof window.appLoader !== 'undefined' && window.appLoader.waitFor) {
+                this.supabase = await window.appLoader.waitFor();
+            }
+            // Prioridad 3: Usar supabase global
+            else if (window.supabase) {
+                this.supabase = window.supabase;
+            }
+            // Prioridad 4: Funciones legacy
+            else if (typeof waitForSupabase === 'function') {
                 this.supabase = await waitForSupabase(15000);
             } else if (window.supabaseClient) {
                 this.supabase = window.supabaseClient;
