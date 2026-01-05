@@ -9,7 +9,7 @@ if (typeof window.ProductsManager === 'undefined') {
     constructor() {
         this.supabase = null;
         this.userId = null;
-        this.projectId = null;
+        this.brandContainerId = null;
         this.products = [];
         this.currentProduct = null;
         this.init();
@@ -27,14 +27,14 @@ if (typeof window.ProductsManager === 'undefined') {
             return;
         }
 
-        await this.loadProject();
-        await this.loadUserAndProjectData();
+        await this.loadBrandContainer();
+        await this.loadUserData();
         this.setupEventListeners();
         await this.loadProducts();
         // Sidebar se actualiza automáticamente por SidebarManager (persistente)
     }
 
-    async loadUserAndProjectData() {
+    async loadUserData() {
         try {
             // Cargar datos del usuario
             const { data: userData, error: userError } = await this.supabase
@@ -47,28 +47,20 @@ if (typeof window.ProductsManager === 'undefined') {
                 this.userData = userData;
             }
 
-            // Cargar datos del proyecto (opcional, solo si existe projectId y la tabla existe)
-            if (this.projectId) {
-                try {
-                    const { data: projectData, error: projectError } = await this.supabase
-                        .from('projects')
-                        .select('*')
-                        .eq('id', this.projectId)
-                        .single();
+            // Si hay brandContainerId, cargar datos del brand container
+            if (this.brandContainerId) {
+                const { data: brandData, error: brandError } = await this.supabase
+                    .from('brand_containers')
+                    .select('*')
+                    .eq('id', this.brandContainerId)
+                    .single();
 
-                    if (!projectError && projectData) {
-                        this.projectData = projectData;
-                    } else if (projectError && projectError.code === 'PGRST205') {
-                        // Tabla no existe, continuar sin projectData
-                        console.log('ℹ️ Tabla projects no existe, continuando sin projectData');
-                    }
-                } catch (error) {
-                    // Ignorar errores de tabla projects
-                    console.warn('⚠️ No se pudo cargar projectData:', error.message);
+                if (!brandError && brandData) {
+                    this.brandData = brandData;
                 }
             }
         } catch (error) {
-            console.error('Error cargando datos de usuario y proyecto:', error);
+            console.error('Error cargando datos de usuario:', error);
         }
     }
 
@@ -114,39 +106,37 @@ if (typeof window.ProductsManager === 'undefined') {
         }
     }
 
-    async loadProject() {
+    async loadBrandContainer() {
         try {
-            // Intentar cargar proyecto, pero no fallar si la tabla no existe
-            const { data: project, error } = await this.supabase
-                .from('projects')
+            // Cargar brand_container asociado al usuario
+            const { data: brandContainer, error } = await this.supabase
+                .from('brand_containers')
                 .select('id')
                 .eq('user_id', this.userId)
                 .maybeSingle();
 
-            // Si la tabla no existe (PGRST205) o no hay registros (PGRST116), continuar sin projectId
+            // Si no hay registros o hay error, continuar sin brandContainerId
             if (error) {
-                if (error.code === 'PGRST205' || error.code === 'PGRST116') {
-                    console.log('ℹ️ Tabla projects no existe o no hay proyectos, continuando sin projectId');
-                    this.projectId = null;
+                if (error.code === 'PGRST116') {
+                    console.log('ℹ️ No hay brand_container, continuando sin él');
+                    this.brandContainerId = null;
                     return;
                 }
-                // Para otros errores, solo loguear pero no fallar
-                console.warn('⚠️ Error cargando proyecto:', error.message);
-                this.projectId = null;
+                console.warn('⚠️ Error cargando brand_container:', error.message);
+                this.brandContainerId = null;
                 return;
             }
 
-            if (project) {
-                this.projectId = project.id;
+            if (brandContainer) {
+                this.brandContainerId = brandContainer.id;
+                console.log('✅ Brand container cargado:', this.brandContainerId);
             } else {
-                // Si no hay proyecto, continuar sin projectId
-                this.projectId = null;
-                console.log('ℹ️ No hay proyecto asociado, continuando sin projectId');
+                this.brandContainerId = null;
+                console.log('ℹ️ No hay brand_container asociado');
             }
         } catch (error) {
-            console.warn('⚠️ Error cargando proyecto:', error);
-            // Continuar sin projectId en lugar de fallar
-            this.projectId = null;
+            console.warn('⚠️ Error cargando brand_container:', error);
+            this.brandContainerId = null;
         }
     }
 
@@ -184,7 +174,7 @@ if (typeof window.ProductsManager === 'undefined') {
     }
 
     async loadProducts() {
-        // Cargar productos - si no hay projectId, cargar todos los productos del usuario
+        // Cargar productos - filtrar por brand_container_id
         const loadingState = document.getElementById('loadingState');
         const emptyState = document.getElementById('emptyState');
         const productsGrid = document.getElementById('productsGrid');
@@ -195,28 +185,26 @@ if (typeof window.ProductsManager === 'undefined') {
         }
 
         try {
-            if (this.projectId) {
-                console.log('📦 Cargando productos para proyecto:', this.projectId);
-            } else {
-                console.log('📦 Cargando todos los productos del usuario');
-            }
-            
             loadingState.style.display = 'block';
             emptyState.style.display = 'none';
             productsGrid.style.display = 'none';
 
-            // Construir query - filtrar por user_id siempre, y por project_id solo si existe
-            let query = this.supabase
+            // Si no hay brand_container, no hay productos
+            if (!this.brandContainerId) {
+                console.log('ℹ️ No hay brand_container, mostrando estado vacío');
+                loadingState.style.display = 'none';
+                emptyState.style.display = 'block';
+                this.products = [];
+                return;
+            }
+
+            console.log('📦 Cargando productos para brand_container:', this.brandContainerId);
+
+            // Consultar productos por brand_container_id
+            const { data: products, error } = await this.supabase
                 .from('products')
                 .select('*')
-                .eq('user_id', this.userId);
-            
-            // Si hay projectId, filtrar también por project_id
-            if (this.projectId) {
-                query = query.eq('project_id', this.projectId);
-            }
-            
-            const { data: products, error } = await query
+                .eq('brand_container_id', this.brandContainerId)
                 .order('created_at', { ascending: false });
 
             if (error) {
@@ -490,7 +478,7 @@ if (typeof window.ProductsManager === 'undefined') {
         }
 
         const formData = {
-            project_id: this.projectId,
+            brand_container_id: this.brandContainerId,
             tipo_producto: document.getElementById('new_tipo_producto').value,
             nombre_producto: document.getElementById('new_nombre_producto').value.trim(),
             descripcion_producto: document.getElementById('new_descripcion_producto').value.trim(),
@@ -842,7 +830,7 @@ if (typeof window.ProductsManager === 'undefined') {
         }
 
         const formData = {
-            project_id: this.projectId,
+            brand_container_id: this.brandContainerId,
             tipo_producto: document.getElementById('tipo_producto').value,
             nombre_producto: document.getElementById('nombre_producto').value.trim(),
             descripcion_producto: document.getElementById('descripcion_producto').value.trim(),
