@@ -102,7 +102,8 @@ class App {
       redirectIfAuth: false
     });
 
-    this.router.register('/login', window.LoginView, {
+    // Redirigir /login a la landing (el modal de login está en la landing)
+    this.router.register('/login', window.LandingView, {
       requiresAuth: false,
       redirectIfAuth: true // Si ya está autenticado, redirigir
     });
