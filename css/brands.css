@@ -1,0 +1,50 @@
+/* Brands View Styles */
+.brands-container,
+.brand-detail-container {
+    min-height: 100vh;
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.brands-header,
+.brand-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.brands-title,
+.brand-detail-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary, #ecebda);
+}
+
+.brands-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.brand-detail-tabs {
+    display: flex;
+    gap: 1rem;
+    border-bottom: 1px solid rgba(236, 235, 218, 0.1);
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.brand-detail-content {
+    min-height: 400px;
+}
+
+@media (max-width: 768px) {
+    .brands-container,
+    .brand-detail-container {
+        padding: 1rem;
+    }
+}

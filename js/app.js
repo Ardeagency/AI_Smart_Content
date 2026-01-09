@@ -113,7 +113,103 @@ class App {
       redirectIfAuth: false
     });
 
-    // Rutas protegidas
+    // Rutas protegidas - Nueva estructura
+    this.router.register('/dashboard', window.DashboardView, {
+      requiresAuth: true,
+      redirectIfAuth: false
+    });
+
+    this.router.register('/organization', window.OrganizationView, {
+      requiresAuth: true,
+      redirectIfAuth: false
+    });
+
+    this.router.register('/brands', window.BrandsView, {
+      requiresAuth: true,
+      redirectIfAuth: false
+    });
+
+    // Rutas dinámicas de brands (detalle)
+    this.router.register('/brands/:brandId', window.BrandsView, {
+      requiresAuth: true,
+      redirectIfAuth: false
+    });
+
+    this.router.register('/products', window.ProductsView, {
+      requiresAuth: true,
+      redirectIfAuth: false
+    });
+
+    // Rutas dinámicas de products (detalle)
+    this.router.register('/products/:productId', window.ProductsView, {
+      requiresAuth: true,
+      redirectIfAuth: false
+    });
+
+    this.router.register('/campaigns', window.CampaignsView, {
+      requiresAuth: true,
+      redirectIfAuth: false
+    });
+
+    // Rutas dinámicas de campaigns (detalle)
+    this.router.register('/campaigns/:campaignId', window.CampaignsView, {
+      requiresAuth: true,
+      redirectIfAuth: false
+    });
+
+    this.router.register('/audiences', window.AudiencesView, {
+      requiresAuth: true,
+      redirectIfAuth: false
+    });
+
+    // Rutas dinámicas de audiences (detalle)
+    this.router.register('/audiences/:audienceId', window.AudiencesView, {
+      requiresAuth: true,
+      redirectIfAuth: false
+    });
+
+    this.router.register('/create', window.CreateView, {
+      requiresAuth: true,
+      redirectIfAuth: false
+    });
+
+    this.router.register('/create/guided', window.CreateView, {
+      requiresAuth: true,
+      redirectIfAuth: false
+    });
+
+    this.router.register('/create/pro', window.CreateView, {
+      requiresAuth: true,
+      redirectIfAuth: false
+    });
+
+    this.router.register('/create/templates', window.CreateView, {
+      requiresAuth: true,
+      redirectIfAuth: false
+    });
+
+    this.router.register('/content', window.ContentView, {
+      requiresAuth: true,
+      redirectIfAuth: false
+    });
+
+    // Rutas dinámicas de content (detalle)
+    this.router.register('/content/:contentId', window.ContentView, {
+      requiresAuth: true,
+      redirectIfAuth: false
+    });
+
+    this.router.register('/insights', window.InsightsView, {
+      requiresAuth: true,
+      redirectIfAuth: false
+    });
+
+    this.router.register('/settings', window.SettingsView, {
+      requiresAuth: true,
+      redirectIfAuth: false
+    });
+
+    // Rutas legacy (mantener compatibilidad temporal)
     this.router.register('/form-record', window.FormRecordView, {
       requiresAuth: true,
       redirectIfAuth: false
@@ -130,11 +226,6 @@ class App {
     });
 
     this.router.register('/studio', window.StudioView, {
-      requiresAuth: true,
-      redirectIfAuth: false
-    });
-
-    this.router.register('/products', window.ProductsView, {
       requiresAuth: true,
       redirectIfAuth: false
     });
@@ -177,12 +268,27 @@ class App {
     console.log('    - / (Landing)');
     console.log('    - /login (Login)');
     console.log('    - /planes (Planes)');
-    console.log('  Protegidas:');
-    console.log('    - /hogar (Hogar/Organizaciones)');
-    console.log('    - /form-record (Form Record)');
-    console.log('    - /living (Living/Dashboard)');
-    console.log('    - /studio (Studio)');
-    console.log('    - /products (Products)');
+    console.log('  Protegidas - Nueva Estructura:');
+    console.log('    - /dashboard (Dashboard)');
+    console.log('    - /organization (Organización)');
+    console.log('    - /brands (Marcas)');
+    console.log('    - /brands/:brandId (Detalle Marca)');
+    console.log('    - /products (Productos)');
+    console.log('    - /products/:productId (Detalle Producto)');
+    console.log('    - /campaigns (Campañas)');
+    console.log('    - /campaigns/:campaignId (Detalle Campaña)');
+    console.log('    - /audiences (Audiencias)');
+    console.log('    - /audiences/:audienceId (Detalle Audiencia)');
+    console.log('    - /create (Crear Contenido)');
+    console.log('    - /create/guided (Modo Guiado)');
+    console.log('    - /create/pro (Modo Experto)');
+    console.log('    - /create/templates (Plantillas)');
+    console.log('    - /content (Biblioteca)');
+    console.log('    - /content/:contentId (Detalle Contenido)');
+    console.log('    - /insights (Insights)');
+    console.log('    - /settings (Configuración)');
+    console.log('  Legacy (compatibilidad):');
+    console.log('    - /hogar, /living, /studio, /form-record');
     console.log('  - /404 (Not Found)');
   }
 

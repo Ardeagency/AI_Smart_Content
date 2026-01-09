@@ -1,0 +1,92 @@
+/* Settings View Styles */
+.settings-container {
+    min-height: 100vh;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.settings-header {
+    margin-bottom: 2rem;
+}
+
+.settings-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary, #ecebda);
+}
+
+.settings-content {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 2rem;
+}
+
+.settings-tabs {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.settings-tab-content {
+    min-height: 400px;
+}
+
+.settings-section {
+    background: var(--bg-secondary, #2a2a2a);
+    padding: 2rem;
+    border-radius: 12px;
+    border: 1px solid rgba(236, 235, 218, 0.1);
+}
+
+.settings-section h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary, #ecebda);
+    margin-bottom: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary, #ecebda);
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+.form-input,
+.form-select {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--bg-dark, #1a1a1a);
+    border: 1px solid rgba(236, 235, 218, 0.2);
+    border-radius: 8px;
+    color: var(--text-primary, #ecebda);
+    font-size: 1rem;
+    transition: border-color 0.2s ease;
+}
+
+.form-input:focus,
+.form-select:focus {
+    outline: none;
+    border-color: var(--accent-warm, #e09145);
+}
+
+@media (max-width: 768px) {
+    .settings-container {
+        padding: 1rem;
+    }
+
+    .settings-content {
+        grid-template-columns: 1fr;
+    }
+
+    .settings-tabs {
+        flex-direction: row;
+        overflow-x: auto;
+    }
+}

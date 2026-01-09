@@ -1,0 +1,67 @@
+/* Organization View Styles */
+.organization-container {
+    min-height: 100vh;
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.organization-header {
+    margin-bottom: 2rem;
+}
+
+.organization-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary, #ecebda);
+}
+
+.organization-tabs {
+    display: flex;
+    gap: 1rem;
+    border-bottom: 1px solid rgba(236, 235, 218, 0.1);
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    padding: 0.75rem 1.5rem;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-secondary, #a0a0a0);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+    color: var(--text-primary, #ecebda);
+}
+
+.tab-btn.active {
+    color: var(--accent-warm, #e09145);
+    border-bottom-color: var(--accent-warm, #e09145);
+}
+
+.organization-content {
+    min-height: 400px;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .organization-container {
+        padding: 1rem;
+    }
+
+    .organization-tabs {
+        overflow-x: auto;
+    }
+}

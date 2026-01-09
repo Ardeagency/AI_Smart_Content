@@ -1,0 +1,50 @@
+/* Campaigns View Styles */
+.campaigns-container,
+.campaign-detail-container {
+    min-height: 100vh;
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.campaigns-header,
+.campaign-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.campaigns-title,
+.campaign-detail-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary, #ecebda);
+}
+
+.campaigns-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.campaign-detail-tabs {
+    display: flex;
+    gap: 1rem;
+    border-bottom: 1px solid rgba(236, 235, 218, 0.1);
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.campaign-detail-content {
+    min-height: 400px;
+}
+
+@media (max-width: 768px) {
+    .campaigns-container,
+    .campaign-detail-container {
+        padding: 1rem;
+    }
+}

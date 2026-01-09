@@ -1,0 +1,71 @@
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1 class="dashboard-title">Dashboard</h1>
+        <div class="dashboard-actions">
+            <button class="btn btn-primary" id="createContentBtn">
+                <i class="fas fa-plus"></i>
+                Crear Contenido
+            </button>
+            <button class="btn btn-secondary" id="createCampaignBtn">
+                <i class="fas fa-bullhorn"></i>
+                Nueva Campaña
+            </button>
+        </div>
+    </div>
+
+    <!-- Widgets Grid -->
+    <div class="dashboard-widgets">
+        <!-- Estado General -->
+        <div class="widget widget-large">
+            <div class="widget-header">
+                <h3>Estado General</h3>
+            </div>
+            <div class="widget-content" id="generalStatusWidget">
+                <div class="loading-state">Cargando...</div>
+            </div>
+        </div>
+
+        <!-- Últimas Marcas Activas -->
+        <div class="widget">
+            <div class="widget-header">
+                <h3>Marcas Activas</h3>
+                <a href="/brands" class="widget-link">Ver todas</a>
+            </div>
+            <div class="widget-content" id="activeBrandsWidget">
+                <div class="loading-state">Cargando...</div>
+            </div>
+        </div>
+
+        <!-- Campañas en Curso -->
+        <div class="widget">
+            <div class="widget-header">
+                <h3>Campañas en Curso</h3>
+                <a href="/campaigns" class="widget-link">Ver todas</a>
+            </div>
+            <div class="widget-content" id="activeCampaignsWidget">
+                <div class="loading-state">Cargando...</div>
+            </div>
+        </div>
+
+        <!-- Contenido Reciente -->
+        <div class="widget">
+            <div class="widget-header">
+                <h3>Contenido Reciente</h3>
+                <a href="/content" class="widget-link">Ver biblioteca</a>
+            </div>
+            <div class="widget-content" id="recentContentWidget">
+                <div class="loading-state">Cargando...</div>
+            </div>
+        </div>
+
+        <!-- Alertas -->
+        <div class="widget widget-alerts">
+            <div class="widget-header">
+                <h3>Alertas</h3>
+            </div>
+            <div class="widget-content" id="alertsWidget">
+                <div class="loading-state">Cargando...</div>
+            </div>
+        </div>
+    </div>
+</div>

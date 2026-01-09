@@ -1,0 +1,68 @@
+<!-- Vista de Lista de Marcas (por defecto) -->
+<div class="brands-container" id="brandsListContainer">
+    <div class="brands-header">
+        <h1 class="brands-title">Marcas</h1>
+        <button class="btn btn-primary" id="createBrandBtn">
+            <i class="fas fa-plus"></i>
+            Nueva Marca
+        </button>
+    </div>
+
+    <div class="brands-grid" id="brandsGrid">
+        <div class="loading-state">Cargando marcas...</div>
+    </div>
+</div>
+
+<!-- Vista de Detalle de Marca (se muestra cuando hay brandId) -->
+<div class="brand-detail-container" id="brandDetailContainer" style="display: none;">
+    <div class="brand-detail-header">
+        <button class="btn btn-secondary" id="backToBrandsBtn">
+            <i class="fas fa-arrow-left"></i>
+            Volver
+        </button>
+        <h1 class="brand-detail-title" id="brandDetailTitle">Marca</h1>
+    </div>
+
+    <!-- Tabs de Detalle -->
+    <div class="brand-detail-tabs">
+        <button class="tab-btn active" data-tab="identity">Identidad</button>
+        <button class="tab-btn" data-tab="visual">Visual</button>
+        <button class="tab-btn" data-tab="assets">Assets</button>
+        <button class="tab-btn" data-tab="ai-rules">Reglas IA</button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="brand-detail-content">
+        <!-- Identity Tab -->
+        <div class="tab-content active" id="identityTab">
+            <div class="brand-identity">
+                <h2>Identidad de Marca</h2>
+                <p>Tono de voz, storytelling, palabras permitidas/prohibidas, claims clave</p>
+            </div>
+        </div>
+
+        <!-- Visual Tab -->
+        <div class="tab-content" id="visualTab">
+            <div class="brand-visual">
+                <h2>Identidad Visual</h2>
+                <p>Paleta, estilo visual, reglas de composición, referencias</p>
+            </div>
+        </div>
+
+        <!-- Assets Tab -->
+        <div class="tab-content" id="assetsTab">
+            <div class="brand-assets">
+                <h2>Assets</h2>
+                <p>Logos, packaging, key visuals, guías</p>
+            </div>
+        </div>
+
+        <!-- AI Rules Tab -->
+        <div class="tab-content" id="aiRulesTab">
+            <div class="brand-ai-rules">
+                <h2>Reglas IA</h2>
+                <p>Reglas creativas, restricciones, ejemplos buenos/malos, prioridades</p>
+            </div>
+        </div>
+    </div>
+</div>

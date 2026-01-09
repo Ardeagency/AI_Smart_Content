@@ -1,0 +1,72 @@
+<div class="settings-container">
+    <div class="settings-header">
+        <h1 class="settings-title">Configuración</h1>
+    </div>
+
+    <div class="settings-content">
+        <!-- Tabs de Configuración -->
+        <div class="settings-tabs">
+            <button class="tab-btn active" data-tab="profile">Perfil</button>
+            <button class="tab-btn" data-tab="preferences">Preferencias</button>
+            <button class="tab-btn" data-tab="language">Idioma</button>
+            <button class="tab-btn" data-tab="exports">Exportaciones</button>
+            <button class="tab-btn" data-tab="security">Seguridad</button>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="settings-tab-content">
+            <!-- Profile Tab -->
+            <div class="tab-content active" id="profileTab">
+                <div class="settings-section">
+                    <h2>Perfil</h2>
+                    <form id="profileForm">
+                        <div class="form-group">
+                            <label>Nombre Completo</label>
+                            <input type="text" id="profileFullName" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="profileEmail" class="form-input" readonly>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Preferences Tab -->
+            <div class="tab-content" id="preferencesTab">
+                <div class="settings-section">
+                    <h2>Preferencias</h2>
+                    <p>Configuración de preferencias</p>
+                </div>
+            </div>
+
+            <!-- Language Tab -->
+            <div class="tab-content" id="languageTab">
+                <div class="settings-section">
+                    <h2>Idioma</h2>
+                    <select id="languageSelect" class="form-select">
+                        <option value="es">Español</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Exports Tab -->
+            <div class="tab-content" id="exportsTab">
+                <div class="settings-section">
+                    <h2>Exportaciones</h2>
+                    <p>Configuración de exportaciones</p>
+                </div>
+            </div>
+
+            <!-- Security Tab -->
+            <div class="tab-content" id="securityTab">
+                <div class="settings-section">
+                    <h2>Seguridad</h2>
+                    <p>Configuración de seguridad</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -63,21 +63,79 @@ class Navigation {
           <div class="nav-section">
             <div class="nav-section-title">Principal</div>
             <div class="nav-item">
-              <a href="/living" class="nav-link" data-route="/living">
+              <a href="/dashboard" class="nav-link" data-route="/dashboard">
                 <i class="fas fa-home nav-icon"></i>
-                <span class="nav-text">Living</span>
+                <span class="nav-text">Dashboard</span>
               </a>
             </div>
             <div class="nav-item">
-              <a href="/studio" class="nav-link" data-route="/studio">
-                <i class="fas fa-magic nav-icon"></i>
-                <span class="nav-text">Studio</span>
+              <a href="/organization" class="nav-link" data-route="/organization">
+                <i class="fas fa-building nav-icon"></i>
+                <span class="nav-text">Organización</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="nav-section">
+            <div class="nav-section-title">Contenido</div>
+            <div class="nav-item">
+              <a href="/brands" class="nav-link" data-route="/brands">
+                <i class="fas fa-tags nav-icon"></i>
+                <span class="nav-text">Marcas</span>
               </a>
             </div>
             <div class="nav-item">
               <a href="/products" class="nav-link" data-route="/products">
                 <i class="fas fa-box nav-icon"></i>
                 <span class="nav-text">Productos</span>
+              </a>
+            </div>
+            <div class="nav-item">
+              <a href="/campaigns" class="nav-link" data-route="/campaigns">
+                <i class="fas fa-bullhorn nav-icon"></i>
+                <span class="nav-text">Campañas</span>
+              </a>
+            </div>
+            <div class="nav-item">
+              <a href="/audiences" class="nav-link" data-route="/audiences">
+                <i class="fas fa-users nav-icon"></i>
+                <span class="nav-text">Audiencias</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="nav-section">
+            <div class="nav-section-title">Generación</div>
+            <div class="nav-item">
+              <a href="/create" class="nav-link" data-route="/create">
+                <i class="fas fa-magic nav-icon"></i>
+                <span class="nav-text">Crear Contenido</span>
+              </a>
+            </div>
+            <div class="nav-item">
+              <a href="/content" class="nav-link" data-route="/content">
+                <i class="fas fa-folder nav-icon"></i>
+                <span class="nav-text">Biblioteca</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="nav-section">
+            <div class="nav-section-title">Análisis</div>
+            <div class="nav-item">
+              <a href="/insights" class="nav-link" data-route="/insights">
+                <i class="fas fa-chart-line nav-icon"></i>
+                <span class="nav-text">Insights</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="nav-section">
+            <div class="nav-section-title">Configuración</div>
+            <div class="nav-item">
+              <a href="/settings" class="nav-link" data-route="/settings">
+                <i class="fas fa-cog nav-icon"></i>
+                <span class="nav-text">Ajustes</span>
               </a>
             </div>
           </div>

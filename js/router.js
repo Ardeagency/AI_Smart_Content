@@ -102,15 +102,42 @@ class Router {
         path = '/';
       }
       
-      // Buscar ruta
+      // Buscar ruta exacta primero
       let route = this.routes[path];
+      let routeParams = {};
 
+      // Si no hay ruta exacta, buscar rutas dinámicas
+      if (!route) {
+        // Buscar rutas con parámetros (ej: /brands/:brandId)
+        for (const [routePattern, routeConfig] of Object.entries(this.routes)) {
+          if (routePattern.includes(':')) {
+            // Convertir patrón a regex
+            const patternRegex = new RegExp('^' + routePattern.replace(/:[^/]+/g, '([^/]+)') + '$');
+            const match = path.match(patternRegex);
+            
+            if (match) {
+              // Extraer nombres de parámetros del patrón
+              const paramNames = routePattern.match(/:[^/]+/g) || [];
+              const paramValues = match.slice(1);
+              
+              // Crear objeto de parámetros
+              paramNames.forEach((paramName, index) => {
+                const key = paramName.replace(':', '');
+                routeParams[key] = paramValues[index];
+              });
+              
+              route = routeConfig;
+              break;
+            }
+          }
+        }
+      }
+
+      // Si aún no hay ruta, usar 404
       if (!route) {
         console.warn(`⚠️ Ruta no encontrada: ${path}, usando 404`);
-        // Usar ruta 404 si existe
         const route404 = this.routes['/404'];
         if (route404) {
-          // Usar la ruta 404
           route = route404;
         } else {
           console.error(`❌ Ruta no encontrada y 404 no disponible: ${path}`);
@@ -133,7 +160,7 @@ class Router {
         const isAuth = await this.checkAuthentication();
         if (isAuth) {
           console.log('✅ Usuario autenticado, redirigiendo...');
-          this.navigate('/hogar', true);
+          this.navigate('/dashboard', true);
           return;
         }
       }
@@ -201,6 +228,11 @@ class Router {
       // Crear nueva instancia de vista
       this.currentView = new ViewClass();
       this.currentRoute = path;
+      
+      // Pasar parámetros de ruta a la vista si los hay
+      if (Object.keys(routeParams).length > 0) {
+        this.currentView.routeParams = routeParams;
+      }
 
       // Aplicar animación de entrada antes de renderizar
       if (container) {
