@@ -4,6 +4,7 @@
     padding: 2rem;
     max-width: 1400px;
     margin: 0 auto;
+    background: #0E1012;
 }
 
 .create-header {
@@ -24,9 +25,10 @@
 .create-mode-selector {
     display: flex;
     gap: 0.5rem;
-    background: var(--bg-secondary, #2a2a2a);
+    background: #121416;
     padding: 0.25rem;
     border-radius: 8px;
+    border: 1px solid #1B1D1F;
 }
 
 .mode-btn {
@@ -125,10 +127,10 @@
 }
 
 .template-card {
-    background: var(--bg-secondary, #2a2a2a);
+    background: #121416;
     padding: 2rem;
     border-radius: 12px;
-    border: 1px solid rgba(236, 235, 218, 0.1);
+    border: 1px solid #1B1D1F;
     cursor: pointer;
     transition: all 0.3s ease;
     text-align: center;

@@ -12,6 +12,7 @@
     position: relative;
     width: 100%;
     min-height: 100vh;
+    background: #0E1012;
     transition: opacity 0.3s ease;
     will-change: opacity, transform;
 }

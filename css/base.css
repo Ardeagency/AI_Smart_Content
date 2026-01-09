@@ -28,11 +28,11 @@
     
     /* Fondos */
     --bg-black: #000000;
-    --bg-dark: #17181D;
-    --bg-secondary: #181a1b;
+    --bg-dark: #0E1012;
+    --bg-secondary: #121416;
     --bg-tertiary: #291C0E;
-    --bg-card: #1a1a1a;
-    --bg-overlay: rgba(23, 24, 29, 0.9);
+    --bg-card: #121416;
+    --bg-overlay: rgba(14, 16, 18, 0.9);
     
     /* Textos */
     --text-primary: #ecebda;
@@ -41,8 +41,8 @@
     --text-disabled: #6E473B;
     
     /* Bordes */
-    --border-color: #181a1b;
-    --border-light: rgba(236, 235, 218, 0.1);
+    --border-color: #1B1D1F;
+    --border-light: #1B1D1F;
     --border-primary: rgba(236, 235, 218, 0.3);
     --border-accent: rgba(224, 145, 69, 0.3);
     
@@ -113,7 +113,7 @@ html {
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: var(--bg-black);
+    background: #0E1012;
     color: var(--text-primary);
     line-height: 1.6;
     overflow-x: hidden;

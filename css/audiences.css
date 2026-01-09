@@ -5,6 +5,7 @@
     padding: 2rem;
     max-width: 1400px;
     margin: 0 auto;
+    background: #0E1012;
 }
 
 .audiences-header,
@@ -36,10 +37,10 @@
 }
 
 .audience-section {
-    background: var(--bg-secondary, #2a2a2a);
+    background: #121416;
     padding: 1.5rem;
     border-radius: 12px;
-    border: 1px solid rgba(236, 235, 218, 0.1);
+    border: 1px solid #1B1D1F;
 }
 
 .audience-section h2 {
