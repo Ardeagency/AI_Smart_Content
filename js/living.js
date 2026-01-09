@@ -188,7 +188,7 @@ class LivingManager {
         try {
             console.log('📋 Cargando proyecto para usuario:', this.userId);
             const { data, error } = await this.supabase
-                .from('projects')
+                .from('brand_containers')
                 .select('*')
                 .eq('user_id', this.userId)
                 .order('created_at', { ascending: false })
@@ -235,9 +235,9 @@ class LivingManager {
 
         try {
             const { data, error } = await this.supabase
-                .from('brand_files')
+                .from('brand_assets')
                 .select('*')
-                .eq('project_id', this.projectData.id)
+                .eq('brand_container_id', this.projectData.id)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
@@ -255,7 +255,7 @@ class LivingManager {
             const { data: products, error: productsError } = await this.supabase
                 .from('products')
                 .select('*')
-                .eq('project_id', this.projectData.id)
+                .eq('brand_container_id', this.projectData.id)
                 .order('created_at', { ascending: false });
 
             if (productsError) throw productsError;
@@ -289,7 +289,7 @@ class LivingManager {
             const { data, error } = await this.supabase
                 .from('campaigns')
                 .select('*')
-                .eq('project_id', this.projectData.id)
+                .eq('brand_container_id', this.projectData.id)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
@@ -606,9 +606,9 @@ class LivingManager {
 
             // Save to database
             const { error: dbError } = await this.supabase
-                .from('brand_files')
+                .from('brand_assets')
                 .insert({
-                    project_id: this.projectData.id,
+                    brand_container_id: this.projectData.id,
                     file_name: file.name,
                     file_url: publicUrl,
                     file_type: fileExt,
@@ -691,7 +691,7 @@ class LivingManager {
 
         try {
             const { error } = await this.supabase
-                .from('projects')
+                .from('brand_containers')
                 .update({ [fieldName]: value || null })
                 .eq('id', this.projectData.id);
 
@@ -848,7 +848,7 @@ class LivingManager {
         
         try {
             const { error } = await this.supabase
-                .from('projects')
+                .from('brand_containers')
                 .update({ [fieldName]: value || null })
                 .eq('id', this.projectData.id);
             
@@ -1721,7 +1721,7 @@ class LivingManager {
 
         try {
             const { error } = await this.supabase
-                .from('projects')
+                .from('brand_containers')
                 .update({
                     nombre_marca: nombreMarca,
                     sitio_web: sitioWeb,
@@ -1855,7 +1855,7 @@ class LivingManager {
             // Actualizar proyecto con la nueva URL
             console.log('💾 Actualizando proyecto con nueva URL de logo...');
             const { error: updateError } = await this.supabase
-                .from('projects')
+                .from('brand_containers')
                 .update({ logo_url: publicUrl })
                 .eq('id', this.projectData.id);
 
@@ -1978,7 +1978,7 @@ class LivingManager {
 
         try {
             const { error } = await this.supabase
-                .from('projects')
+                .from('brand_containers')
                 .update({
                     mercado_objetivo: mercadoObjetivo,
                     idiomas_contenido: idiomasContenido
@@ -2024,9 +2024,9 @@ class LivingManager {
                     .getPublicUrl(fileName);
 
                 await this.supabase
-                    .from('brand_files')
+                    .from('brand_assets')
                     .insert({
-                        project_id: this.projectData.id,
+                        brand_container_id: this.projectData.id,
                         file_name: file.name,
                         file_url: publicUrl,
                         file_type: file.type,
@@ -2048,7 +2048,7 @@ class LivingManager {
 
         try {
             const { data: file, error: fetchError } = await this.supabase
-                .from('brand_files')
+                .from('brand_assets')
                 .select('file_url')
                 .eq('id', fileId)
                 .single();
@@ -2067,7 +2067,7 @@ class LivingManager {
 
             // Eliminar de base de datos
             const { error: deleteError } = await this.supabase
-                .from('brand_files')
+                .from('brand_assets')
                 .delete()
                 .eq('id', fileId);
 

@@ -23,12 +23,12 @@ class DataCollector {
             this.collectSelectedImages()
         ]);
 
-        // Limpiar producto - mapear campos del schema a formato esperado
+            // Limpiar producto - mapear campos del schema a formato esperado
         let productoEnviado = null;
         if (producto) {
             productoEnviado = {
                 id: producto.id,
-                project_id: producto.project_id,
+                brand_container_id: producto.brand_container_id,
                 name: producto.nombre_producto,
                 product_type: producto.tipo_producto,
                 short_desc: producto.descripcion_producto,
@@ -188,7 +188,7 @@ class DataCollector {
         try {
             // Obtener datos del proyecto (marca)
             const { data: project, error: projectError } = await this.supabase
-                .from('projects')
+                .from('brand_containers')
                 .select('*')
                 .eq('id', projectId)
                 .maybeSingle();
@@ -294,7 +294,7 @@ class DataCollector {
 
             return {
                 id: product.id,
-                project_id: product.project_id,
+                brand_container_id: product.brand_container_id,
                 tipo_producto: product.tipo_producto,
                 nombre_producto: product.nombre_producto,
                 descripcion_producto: product.descripcion_producto,

@@ -92,7 +92,7 @@ class StudioManager {
 
                 // Cargar proyecto
                 const { data: projectData, error: projectError } = await this.supabase
-                    .from('projects')
+                    .from('brand_containers')
                     .select('id, user_id, nombre_marca, logo_url, sitio_web, instagram_url, tiktok_url, facebook_url, idiomas_contenido, mercado_objetivo, created_at, updated_at')
                     .eq('user_id', this.userId)
                     .order('created_at', { ascending: false })
@@ -252,9 +252,9 @@ class StudioManager {
             return;
         }
 
-        // Filtrar productos por project_id (selectedBrandId es el project_id)
+        // Filtrar productos por brand_container_id (selectedBrandId es el brand_container_id)
         const filteredProducts = this.products.filter(product => {
-            return product.project_id === selectedBrandId;
+            return product.brand_container_id === selectedBrandId;
         });
 
             console.log('Filtrando productos:', {
@@ -353,7 +353,7 @@ class StudioManager {
             const { data: products, error: productsError } = await this.supabase
                 .from('products')
                 .select('*')
-                .eq('project_id', brandId)
+                .eq('brand_container_id', brandId)
                 .order('created_at', { ascending: false });
             
             if (productsError) {
@@ -376,7 +376,7 @@ class StudioManager {
             const { data: campaigns, error: campaignsError } = await this.supabase
                 .from('campaigns')
                 .select('*')
-                .eq('project_id', brandId)
+                .eq('brand_container_id', brandId)
                 .order('created_at', { ascending: false });
             
             if (campaignsError) {
@@ -899,10 +899,10 @@ class StudioManager {
                 return;
             }
 
-                // Buscar el producto seleccionado para obtener su project_id
+                // Buscar el producto seleccionado para obtener su brand_container_id
                 const selectedProduct = this.products.find(p => p.id === productId);
-            if (!selectedProduct || !selectedProduct.project_id) {
-                    console.log('Producto no encontrado o sin project_id:', productId);
+            if (!selectedProduct || !selectedProduct.brand_container_id) {
+                    console.log('Producto no encontrado o sin brand_container_id:', productId);
                 this.productImages = [];
                 this.renderProductImages();
                 this.hideImageGallery();

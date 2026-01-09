@@ -240,7 +240,7 @@ class SidebarManager {
     async loadProjectData(supabase, userId) {
         try {
             const { data, error } = await supabase
-                .from('projects')
+                .from('brand_containers')
                 .select('*')
                 .eq('user_id', userId)
                 .order('created_at', { ascending: false })

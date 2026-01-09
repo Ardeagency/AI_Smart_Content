@@ -978,7 +978,7 @@ class FormRecord {
         
         // Verificar si ya existe un proyecto para este usuario
         const { data: existingProject, error: checkError } = await this.supabase
-            .from('projects')
+            .from('brand_containers')
             .select('id')
             .eq('user_id', this.userId)
             .maybeSingle(); // Usar maybeSingle para evitar error si no existe
@@ -991,7 +991,7 @@ class FormRecord {
         
         if (existingProject) {
             const { data: project, error: projectError } = await this.supabase
-                .from('projects')
+                .from('brand_containers')
                 .update(projectData)
                 .eq('id', existingProject.id)
                 .select()
@@ -1005,7 +1005,7 @@ class FormRecord {
             projectId = project.id;
         } else {
             const { data: project, error: projectError } = await this.supabase
-                .from('projects')
+                .from('brand_containers')
                 .insert(projectData)
                 .select()
                 .single();
@@ -1060,7 +1060,7 @@ class FormRecord {
                 console.log('🔗 URL pública del logo:', publicUrl);
 
                 const { error: updateError } = await this.supabase
-                    .from('projects')
+                    .from('brand_containers')
                     .update({ logo_url: publicUrl })
                     .eq('id', projectId);
 
@@ -1151,9 +1151,9 @@ class FormRecord {
                     console.log('🔗 URL pública:', publicUrl);
 
                     const { error: insertError } = await this.supabase
-                        .from('brand_files')
+                        .from('brand_assets')
                         .insert({
-                            project_id: projectId,
+                            brand_container_id: projectId,
                             file_name: file.name,
                             file_url: publicUrl,
                             file_type: file.type,
@@ -1178,7 +1178,7 @@ class FormRecord {
 
         // 5. Crear producto
         const productData = {
-            project_id: projectId,
+            brand_container_id: projectId,
             tipo_producto: this.formData.tipo_producto || 'otro',
             nombre_producto: this.formData.nombre_producto || '',
             descripcion_producto: this.formData.descripcion_producto || '',
@@ -1196,7 +1196,7 @@ class FormRecord {
         const { data: existingProduct, error: checkProductError } = await this.supabase
             .from('products')
             .select('id')
-            .eq('project_id', projectId)
+            .eq('brand_container_id', projectId)
             .maybeSingle();
 
         if (checkProductError && checkProductError.code !== 'PGRST116') {
@@ -1294,7 +1294,7 @@ class FormRecord {
 
         // 7. Crear campaña
         const campaignData = {
-            project_id: projectId,
+            brand_container_id: projectId,
             oferta_desc: this.formData.oferta_desc || null,
             audiencia_desc: this.formData.audiencia_desc || '',
             intenciones: this.formData.intenciones || null,
@@ -1306,7 +1306,7 @@ class FormRecord {
         const { data: existingCampaign, error: checkCampaignError } = await this.supabase
             .from('campaigns')
             .select('id')
-            .eq('project_id', projectId)
+            .eq('brand_container_id', projectId)
             .maybeSingle();
 
         if (checkCampaignError && checkCampaignError.code !== 'PGRST116') {

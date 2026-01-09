@@ -391,7 +391,7 @@ class AuthManager {
         try {
             // Verificar si el usuario tiene proyectos
             const { data: projects, error } = await this.supabase
-                .from('projects')
+                .from('brand_containers')
                 .select('id')
                 .eq('user_id', userId)
                 .limit(1);

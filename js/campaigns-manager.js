@@ -25,7 +25,7 @@ class CampaignsManager {
             const { data, error } = await this.supabase
                 .from('campaigns')
                 .select('*')
-                .eq('project_id', this.projectId)
+                .eq('brand_container_id', this.projectId)
                 .order('created_at', { ascending: false });
 
             if (error) {
@@ -61,7 +61,7 @@ class CampaignsManager {
             const { data, error } = await this.supabase
                 .from('campaigns')
                 .insert({
-                    project_id: this.projectId,
+                    brand_container_id: this.projectId,
                     oferta_desc: campaignData.oferta_desc || null,
                     audiencia_desc: campaignData.audiencia_desc,
                     intenciones: campaignData.intenciones || null,
