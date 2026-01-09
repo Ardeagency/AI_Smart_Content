@@ -624,7 +624,18 @@ if (typeof window.ProductsManager === 'undefined') {
                     <textarea class="form-textarea" id="${prefix}variantes_producto" name="variantes_producto">${product?.variantes_producto || ''}</textarea>
                 </div>
 
-                ${product ? this.renderProductImages(product.images || []) : ''}
+                ${product ? this.renderProductImages(product.images || []) : `
+                <div class="product-images-section">
+                    <label style="display: block; margin-bottom: 0.75rem; font-weight: 600; color: var(--text-primary);">
+                        Imágenes del producto
+                    </label>
+                    <div class="add-image-section">
+                        <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 0.75rem;">
+                            Guarda el producto primero para poder agregar imágenes
+                        </p>
+                    </div>
+                </div>
+                `}
 
                 <div class="form-actions">
                     <button type="button" class="btn-secondary" id="${prefix}cancelBtn">Cancelar</button>
@@ -652,20 +663,54 @@ if (typeof window.ProductsManager === 'undefined') {
     }
 
     renderProductImages(images) {
+        const productId = this.currentProduct?.id || 'new';
+        const inputId = `productImageInput_${productId}`;
+        
         let html = `
             <div class="product-images-section">
-                <label>Imágenes del producto</label>
-                <div class="images-grid" id="productImagesGrid">
+                <label style="display: block; margin-bottom: 0.75rem; font-weight: 600; color: var(--text-primary);">
+                    Imágenes del producto
+                </label>
+                <div class="images-grid" id="productImagesGrid_${productId}">
         `;
 
         if (images && images.length > 0) {
-            images.forEach((image, index) => {
+            // Ordenar imágenes por image_order
+            const sortedImages = [...images].sort((a, b) => (a.image_order || 0) - (b.image_order || 0));
+            
+            sortedImages.forEach((image, index) => {
+                const isPrincipal = image.image_type === 'principal';
                 html += `
-                    <div class="image-item" data-image-id="${image.id}">
-                        <img src="${image.image_url}" alt="Imagen del producto" loading="lazy">
-                        <button type="button" class="btn-remove-image" onclick="productsManager.removeProductImage('${image.id}', '${this.currentProduct.id}')" title="Eliminar imagen">
-                            <i class="fas fa-times"></i>
-                        </button>
+                    <div class="image-item" data-image-id="${image.id}" draggable="true">
+                        <div class="image-wrapper">
+                            <img src="${image.image_url}" alt="Imagen del producto" loading="lazy">
+                            <div class="image-overlay">
+                                <div class="image-actions">
+                                    <button type="button" class="btn-image-action ${isPrincipal ? 'active' : ''}" 
+                                            onclick="productsManager.setImageAsPrincipal('${image.id}', '${productId}')" 
+                                            title="${isPrincipal ? 'Imagen principal' : 'Marcar como principal'}">
+                                        <i class="fas fa-star"></i>
+                                    </button>
+                                    <button type="button" class="btn-image-action" 
+                                            onclick="productsManager.removeProductImage('${image.id}', '${productId}')" 
+                                            title="Eliminar imagen">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                                ${isPrincipal ? '<span class="image-badge">Principal</span>' : ''}
+                            </div>
+                        </div>
+                        <div class="image-order-controls">
+                            <button type="button" class="btn-order" onclick="productsManager.moveImageOrder('${image.id}', '${productId}', -1)" 
+                                    ${index === 0 ? 'disabled' : ''} title="Mover arriba">
+                                <i class="fas fa-arrow-up"></i>
+                            </button>
+                            <span class="order-number">${index + 1}</span>
+                            <button type="button" class="btn-order" onclick="productsManager.moveImageOrder('${image.id}', '${productId}', 1)" 
+                                    ${index === sortedImages.length - 1 ? 'disabled' : ''} title="Mover abajo">
+                                <i class="fas fa-arrow-down"></i>
+                            </button>
+                        </div>
                     </div>
                 `;
             });
@@ -677,10 +722,13 @@ if (typeof window.ProductsManager === 'undefined') {
                     <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">
                         Agregar nueva imagen
                     </label>
-                    <div class="upload-zone-small" onclick="document.getElementById('newProductImageInput').click()" style="border: 2px dashed var(--border-color); border-radius: 8px; padding: 1rem; text-align: center; cursor: pointer; transition: all 0.3s ease;">
-                        <input type="file" id="newProductImageInput" accept="image/*" style="display: none;" onchange="productsManager.handleNewImageUpload(event)">
+                    <div class="upload-zone-small" onclick="document.getElementById('${inputId}').click()" 
+                         style="border: 2px dashed #1B1D1F; border-radius: 8px; padding: 1.5rem; text-align: center; cursor: pointer; transition: all 0.3s ease; background: #121416;">
+                        <input type="file" id="${inputId}" accept="image/*" style="display: none;" 
+                               onchange="productsManager.handleNewImageUpload(event, '${productId}')" multiple>
                         <i class="fas fa-plus" style="font-size: 1.5rem; color: var(--text-secondary); margin-bottom: 0.5rem;"></i>
                         <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">Haz clic para agregar imagen</p>
+                        <p style="color: var(--text-muted); font-size: 0.75rem; margin: 0.25rem 0 0 0;">Máximo 5MB por imagen</p>
                     </div>
                 </div>
             </div>
@@ -698,11 +746,13 @@ if (typeof window.ProductsManager === 'undefined') {
             // Obtener información de la imagen para eliminar de storage
             const { data: image, error: fetchError } = await this.supabase
                 .from('product_images')
-                .select('image_url')
+                .select('image_url, image_type')
                 .eq('id', imageId)
                 .single();
 
             if (fetchError) throw fetchError;
+
+            const wasPrincipal = image.image_type === 'principal';
 
             // Extraer path del URL para eliminar de storage
             if (image.image_url) {
@@ -711,9 +761,14 @@ if (typeof window.ProductsManager === 'undefined') {
                 const fileName = pathParts.slice(pathParts.indexOf('product-images') + 1).join('/');
 
                 // Eliminar de storage
-                await this.supabase.storage
+                const { error: storageError } = await this.supabase.storage
                     .from('product-images')
                     .remove([fileName]);
+
+                if (storageError) {
+                    console.warn('Error eliminando de storage:', storageError);
+                    // Continuar aunque falle el storage
+                }
             }
 
             // Eliminar de base de datos
@@ -724,8 +779,27 @@ if (typeof window.ProductsManager === 'undefined') {
 
             if (deleteError) throw deleteError;
 
+            // Si era la imagen principal, asignar la primera restante como principal
+            if (wasPrincipal) {
+                const { data: remainingImages } = await this.supabase
+                    .from('product_images')
+                    .select('id')
+                    .eq('product_id', productId)
+                    .order('image_order', { ascending: true })
+                    .limit(1);
+
+                if (remainingImages && remainingImages.length > 0) {
+                    await this.supabase
+                        .from('product_images')
+                        .update({ image_type: 'principal' })
+                        .eq('id', remainingImages[0].id);
+                }
+            }
+
             // Recargar detalles del producto
-            await this.loadProductDetails(productId);
+            if (this.currentProduct && this.currentProduct.id === productId) {
+                await this.loadProductDetails(productId);
+            }
             await this.loadProducts();
 
             this.showNotification('✅ Imagen eliminada exitosamente', 'success');
@@ -735,41 +809,133 @@ if (typeof window.ProductsManager === 'undefined') {
         }
     }
 
-    async handleNewImageUpload(event) {
-        const file = event.target.files[0];
-        if (!file) return;
+    async setImageAsPrincipal(imageId, productId) {
+        try {
+            // Primero, quitar principal de todas las imágenes del producto
+            await this.supabase
+                .from('product_images')
+                .update({ image_type: 'secundaria' })
+                .eq('product_id', productId);
 
-        if (!this.currentProduct || !this.currentProduct.id) {
-            this.showNotification('❌ No hay producto seleccionado', 'error');
+            // Luego, marcar esta imagen como principal
+            const { error } = await this.supabase
+                .from('product_images')
+                .update({ image_type: 'principal' })
+                .eq('id', imageId);
+
+            if (error) throw error;
+
+            // Recargar detalles del producto
+            if (this.currentProduct && this.currentProduct.id === productId) {
+                await this.loadProductDetails(productId);
+            }
+            await this.loadProducts();
+
+            this.showNotification('✅ Imagen marcada como principal', 'success');
+        } catch (error) {
+            console.error('Error marcando imagen como principal:', error);
+            this.showNotification(`❌ Error: ${error.message}`, 'error');
+        }
+    }
+
+    async moveImageOrder(imageId, productId, direction) {
+        try {
+            // Obtener imagen actual
+            const { data: currentImage, error: fetchError } = await this.supabase
+                .from('product_images')
+                .select('image_order')
+                .eq('id', imageId)
+                .single();
+
+            if (fetchError) throw fetchError;
+
+            const currentOrder = currentImage.image_order || 0;
+            const newOrder = currentOrder + direction;
+
+            // Obtener todas las imágenes del producto ordenadas
+            const { data: allImages, error: listError } = await this.supabase
+                .from('product_images')
+                .select('id, image_order')
+                .eq('product_id', productId)
+                .order('image_order', { ascending: true });
+
+            if (listError) throw listError;
+
+            // Validar que el nuevo orden esté dentro del rango
+            if (newOrder < 0 || newOrder >= allImages.length) {
+                return; // No hacer nada si está fuera de rango
+            }
+
+            // Encontrar la imagen que está en la posición objetivo
+            const targetImage = allImages.find(img => (img.image_order || 0) === newOrder);
+            if (!targetImage) return;
+
+            // Intercambiar órdenes
+            await this.supabase
+                .from('product_images')
+                .update({ image_order: newOrder })
+                .eq('id', imageId);
+
+            await this.supabase
+                .from('product_images')
+                .update({ image_order: currentOrder })
+                .eq('id', targetImage.id);
+
+            // Recargar detalles del producto
+            if (this.currentProduct && this.currentProduct.id === productId) {
+                await this.loadProductDetails(productId);
+            }
+            await this.loadProducts();
+
+        } catch (error) {
+            console.error('Error moviendo orden de imagen:', error);
+            this.showNotification(`❌ Error al reordenar imagen: ${error.message}`, 'error');
+        }
+    }
+
+    async handleNewImageUpload(event, productId = null) {
+        const files = Array.from(event.target.files || []);
+        if (files.length === 0) return;
+
+        // Si no hay productId, usar el producto actual
+        if (!productId) {
+            if (!this.currentProduct || !this.currentProduct.id) {
+                this.showNotification('❌ No hay producto seleccionado. Crea o selecciona un producto primero.', 'error');
+                event.target.value = '';
+                return;
+            }
+            productId = this.currentProduct.id;
+        }
+
+        // Validar archivos
+        const validFiles = [];
+        for (const file of files) {
+            // Validar tamaño (5MB máximo)
+            if (file.size > 5 * 1024 * 1024) {
+                this.showNotification(`❌ ${file.name} es demasiado grande. Máximo 5MB.`, 'error');
+                continue;
+            }
+            // Validar tipo
+            if (!file.type.startsWith('image/')) {
+                this.showNotification(`❌ ${file.name} no es una imagen válida.`, 'error');
+                continue;
+            }
+            validFiles.push(file);
+        }
+
+        if (validFiles.length === 0) {
+            event.target.value = '';
             return;
         }
 
-        // Validar tamaño (5MB máximo)
-        if (file.size > 5 * 1024 * 1024) {
-            alert('El archivo es demasiado grande. Máximo 5MB.');
+        // Si el producto es nuevo (productId === 'new'), guardar primero
+        if (productId === 'new') {
+            this.showNotification('⚠️ Guarda el producto primero antes de agregar imágenes', 'error');
+            event.target.value = '';
             return;
         }
 
         try {
-            const productId = this.currentProduct.id;
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${this.userId}/${productId}/${Date.now()}_${file.name}`;
-
-            // Subir imagen
-            const { error: uploadError } = await this.supabase.storage
-                .from('product-images')
-                .upload(fileName, file, {
-                    contentType: file.type,
-                    cacheControl: '3600'
-                });
-
-            if (uploadError) throw uploadError;
-
-            // Obtener URL pública
-            const { data: { publicUrl } } = this.supabase.storage
-                .from('product-images')
-                .getPublicUrl(fileName);
-
             // Obtener número de imágenes existentes para el orden
             const { data: existingImages } = await this.supabase
                 .from('product_images')
@@ -778,33 +944,73 @@ if (typeof window.ProductsManager === 'undefined') {
                 .order('image_order', { ascending: false })
                 .limit(1);
 
-            const nextOrder = existingImages && existingImages.length > 0 
+            let nextOrder = existingImages && existingImages.length > 0 
                 ? existingImages[0].image_order + 1 
                 : 0;
 
-            // Insertar registro en base de datos
-            const { error: insertError } = await this.supabase
-                .from('product_images')
-                .insert({
-                    product_id: productId,
-                    image_url: publicUrl,
-                    image_type: 'secundaria',
-                    image_order: nextOrder
-                });
+            // Subir todas las imágenes
+            const uploadPromises = validFiles.map(async (file) => {
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${this.userId}/${productId}/${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name}`;
 
-            if (insertError) throw insertError;
+                // Subir imagen
+                const { error: uploadError } = await this.supabase.storage
+                    .from('product-images')
+                    .upload(fileName, file, {
+                        contentType: file.type,
+                        cacheControl: '3600',
+                        upsert: false
+                    });
+
+                if (uploadError) throw uploadError;
+
+                // Obtener URL pública
+                const { data: { publicUrl } } = this.supabase.storage
+                    .from('product-images')
+                    .getPublicUrl(fileName);
+
+                // Determinar tipo de imagen (primera imagen sin principal = principal)
+                const { data: hasPrincipal } = await this.supabase
+                    .from('product_images')
+                    .select('id')
+                    .eq('product_id', productId)
+                    .eq('image_type', 'principal')
+                    .limit(1);
+
+                const imageType = (!hasPrincipal || hasPrincipal.length === 0) && nextOrder === 0
+                    ? 'principal'
+                    : 'secundaria';
+
+                // Insertar registro en base de datos
+                const { error: insertError } = await this.supabase
+                    .from('product_images')
+                    .insert({
+                        product_id: productId,
+                        image_url: publicUrl,
+                        image_type: imageType,
+                        image_order: nextOrder
+                    });
+
+                if (insertError) throw insertError;
+                nextOrder++;
+            });
+
+            await Promise.all(uploadPromises);
 
             // Limpiar input
             event.target.value = '';
 
             // Recargar detalles del producto
-            await this.loadProductDetails(productId);
+            if (this.currentProduct && this.currentProduct.id === productId) {
+                await this.loadProductDetails(productId);
+            }
             await this.loadProducts();
 
-            this.showNotification('✅ Imagen agregada exitosamente', 'success');
+            this.showNotification(`✅ ${validFiles.length} imagen(es) agregada(s) exitosamente`, 'success');
         } catch (error) {
             console.error('Error subiendo imagen:', error);
-            this.showNotification(`❌ Error al subir imagen: ${error.message}`, 'error');
+            this.showNotification(`❌ Error al subir imagen(es): ${error.message}`, 'error');
+            event.target.value = '';
         }
     }
 
