@@ -119,6 +119,11 @@ class App {
       redirectIfAuth: false
     });
 
+    this.router.register('/hogar', window.HogarView, {
+      requiresAuth: true,
+      redirectIfAuth: false
+    });
+
     this.router.register('/living', window.LivingView, {
       requiresAuth: true,
       redirectIfAuth: false
@@ -173,6 +178,7 @@ class App {
     console.log('    - /login (Login)');
     console.log('    - /planes (Planes)');
     console.log('  Protegidas:');
+    console.log('    - /hogar (Hogar/Organizaciones)');
     console.log('    - /form-record (Form Record)');
     console.log('    - /living (Living/Dashboard)');
     console.log('    - /studio (Studio)');

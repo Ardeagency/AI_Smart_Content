@@ -1,0 +1,64 @@
+<div class="hogar-container">
+    <div class="hogar-header">
+        <div class="hogar-header-content">
+            <h1 class="hogar-title">Mis Organizaciones</h1>
+            <p class="hogar-subtitle">Gestiona tus organizaciones y accede a todas tus marcas</p>
+        </div>
+        <button class="btn btn-primary btn-create-org" id="createOrgBtn">
+            <i class="fas fa-plus"></i>
+            Nueva Organización
+        </button>
+    </div>
+
+    <!-- Loading State -->
+    <div class="hogar-loading" id="hogarLoading">
+        <div class="loading-spinner"></div>
+        <p>Cargando organizaciones...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div class="hogar-empty" id="hogarEmpty" style="display: none;">
+        <div class="empty-icon">
+            <i class="fas fa-building"></i>
+        </div>
+        <h2>No tienes organizaciones</h2>
+        <p>Crea tu primera organización para comenzar a gestionar tus marcas</p>
+        <button class="btn btn-primary" onclick="document.getElementById('createOrgBtn').click()">
+            <i class="fas fa-plus"></i>
+            Crear Organización
+        </button>
+    </div>
+
+    <!-- Organizations Grid -->
+    <div class="organizations-grid" id="organizationsGrid" style="display: none;">
+        <!-- Las cards se insertarán aquí dinámicamente -->
+    </div>
+</div>
+
+<!-- Modal para crear/editar organización -->
+<div class="modal-overlay" id="orgModal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="orgModalTitle">Nueva Organización</h2>
+            <button class="modal-close" id="orgModalClose">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="orgForm">
+                <div class="form-group">
+                    <label for="orgName">Nombre de la Organización *</label>
+                    <input type="text" id="orgName" name="name" required 
+                           placeholder="Ej: Mi Empresa S.A.">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="orgModalCancel">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="orgModalSubmit">
+                        <i class="fas fa-save"></i>
+                        Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

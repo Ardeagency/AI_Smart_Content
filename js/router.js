@@ -133,7 +133,7 @@ class Router {
         const isAuth = await this.checkAuthentication();
         if (isAuth) {
           console.log('✅ Usuario autenticado, redirigiendo...');
-          this.navigate('/living', true);
+          this.navigate('/hogar', true);
           return;
         }
       }

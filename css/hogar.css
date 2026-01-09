@@ -1,0 +1,421 @@
+/* Hogar View Styles */
+.hogar-container {
+    min-height: 100vh;
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.hogar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.hogar-header-content {
+    flex: 1;
+    min-width: 250px;
+}
+
+.hogar-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary, #ecebda);
+    margin-bottom: 0.5rem;
+}
+
+.hogar-subtitle {
+    font-size: 1rem;
+    color: var(--text-secondary, #a0a0a0);
+}
+
+.btn-create-org {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--primary-color, #ecebda);
+    color: var(--bg-dark, #1a1a1a);
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-create-org:hover {
+    background: var(--accent-warm, #e09145);
+    color: var(--text-primary, #ecebda);
+    transform: translateY(-2px);
+}
+
+/* Loading State */
+.hogar-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    gap: 1rem;
+    color: var(--text-secondary, #a0a0a0);
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(236, 235, 218, 0.2);
+    border-top-color: var(--accent-warm, #e09145);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Empty State */
+.hogar-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    text-align: center;
+    padding: 2rem;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: var(--text-secondary, #a0a0a0);
+    margin-bottom: 1rem;
+}
+
+.hogar-empty h2 {
+    font-size: 1.5rem;
+    color: var(--text-primary, #ecebda);
+    margin-bottom: 0.5rem;
+}
+
+.hogar-empty p {
+    color: var(--text-secondary, #a0a0a0);
+    margin-bottom: 1.5rem;
+}
+
+/* Organizations Grid */
+.organizations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+/* Organization Card */
+.org-card {
+    background: var(--bg-secondary, #2a2a2a);
+    border-radius: 12px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.org-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent-warm, #e09145);
+    box-shadow: 0 8px 24px rgba(224, 145, 69, 0.2);
+}
+
+.org-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.org-logo {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent-warm, #e09145), var(--primary-color, #ecebda));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--bg-dark, #1a1a1a);
+}
+
+.org-favorite-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary, #a0a0a0);
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    transition: all 0.2s ease;
+}
+
+.org-favorite-btn:hover {
+    color: var(--accent-warm, #e09145);
+}
+
+.org-favorite-btn.active {
+    color: var(--accent-warm, #e09145);
+}
+
+.org-card-body {
+    flex: 1;
+}
+
+.org-name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary, #ecebda);
+    margin-bottom: 0.5rem;
+}
+
+.org-role-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.org-role-badge.owner {
+    background: rgba(224, 145, 69, 0.2);
+    color: var(--accent-warm, #e09145);
+}
+
+.org-role-badge.admin,
+.org-role-badge.member {
+    background: rgba(236, 235, 218, 0.1);
+    color: var(--text-secondary, #a0a0a0);
+}
+
+/* Organization Stats */
+.org-card-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    padding: 1rem 0;
+    border-top: 1px solid rgba(236, 235, 218, 0.1);
+    border-bottom: 1px solid rgba(236, 235, 218, 0.1);
+}
+
+.org-stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.org-stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: rgba(224, 145, 69, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-warm, #e09145);
+    font-size: 0.875rem;
+}
+
+.org-stat-content {
+    flex: 1;
+}
+
+.org-stat-value {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-primary, #ecebda);
+    line-height: 1.2;
+}
+
+.org-stat-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary, #a0a0a0);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Organization Footer */
+.org-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.org-members {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary, #a0a0a0);
+    font-size: 0.875rem;
+}
+
+.org-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-sm {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 1rem;
+}
+
+.modal-content {
+    background: var(--bg-secondary, #2a2a2a);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(236, 235, 218, 0.1);
+}
+
+.modal-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary, #ecebda);
+}
+
+.modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary, #a0a0a0);
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0.25rem;
+    transition: color 0.2s ease;
+}
+
+.modal-close:hover {
+    color: var(--text-primary, #ecebda);
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary, #ecebda);
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--bg-dark, #1a1a1a);
+    border: 1px solid rgba(236, 235, 218, 0.2);
+    border-radius: 8px;
+    color: var(--text-primary, #ecebda);
+    font-size: 1rem;
+    transition: border-color 0.2s ease;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--accent-warm, #e09145);
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary {
+    background: var(--primary-color, #ecebda);
+    color: var(--bg-dark, #1a1a1a);
+}
+
+.btn-primary:hover {
+    background: var(--accent-warm, #e09145);
+    color: var(--text-primary, #ecebda);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--text-secondary, #a0a0a0);
+    border: 1px solid rgba(236, 235, 218, 0.2);
+}
+
+.btn-secondary:hover {
+    background: rgba(236, 235, 218, 0.1);
+    color: var(--text-primary, #ecebda);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hogar-container {
+        padding: 1rem;
+    }
+
+    .hogar-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .hogar-title {
+        font-size: 1.5rem;
+    }
+
+    .organizations-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .org-card-stats {
+        grid-template-columns: 1fr;
+    }
+}
