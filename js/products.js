@@ -27,6 +27,9 @@ if (typeof window.ProductsManager === 'undefined') {
             return;
         }
 
+        // Hacer disponible globalmente
+        window.productsManager = this;
+
         await this.loadBrandContainer();
         await this.loadUserData();
         this.setupEventListeners();
@@ -652,14 +655,20 @@ if (typeof window.ProductsManager === 'undefined') {
         sidebarContent.innerHTML = this.getProductFormHTML(product);
 
         // Event listeners
-        document.getElementById('productForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.saveProduct();
-        });
+        const form = document.getElementById('productForm');
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.saveProduct();
+            });
+        }
 
-        document.getElementById('cancelBtn').addEventListener('click', () => {
-            this.closeSidebar();
-        });
+        const cancelBtn = document.getElementById('cancelBtn');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                this.closeSidebar();
+            });
+        }
     }
 
     renderProductImages(images) {
@@ -683,7 +692,7 @@ if (typeof window.ProductsManager === 'undefined') {
                 html += `
                     <div class="image-item" data-image-id="${image.id}" draggable="true">
                         <div class="image-wrapper">
-                            <img src="${image.image_url}" alt="Imagen del producto" loading="lazy">
+                        <img src="${image.image_url}" alt="Imagen del producto" loading="lazy">
                             <div class="image-overlay">
                                 <div class="image-actions">
                                     <button type="button" class="btn-image-action ${isPrincipal ? 'active' : ''}" 
@@ -695,7 +704,7 @@ if (typeof window.ProductsManager === 'undefined') {
                                             onclick="productsManager.removeProductImage('${image.id}', '${productId}')" 
                                             title="Eliminar imagen">
                                         <i class="fas fa-trash"></i>
-                                    </button>
+                        </button>
                                 </div>
                                 ${isPrincipal ? '<span class="image-badge">Principal</span>' : ''}
                             </div>
@@ -798,7 +807,7 @@ if (typeof window.ProductsManager === 'undefined') {
 
             // Recargar detalles del producto
             if (this.currentProduct && this.currentProduct.id === productId) {
-                await this.loadProductDetails(productId);
+            await this.loadProductDetails(productId);
             }
             await this.loadProducts();
 
@@ -899,10 +908,10 @@ if (typeof window.ProductsManager === 'undefined') {
 
         // Si no hay productId, usar el producto actual
         if (!productId) {
-            if (!this.currentProduct || !this.currentProduct.id) {
+        if (!this.currentProduct || !this.currentProduct.id) {
                 this.showNotification('❌ No hay producto seleccionado. Crea o selecciona un producto primero.', 'error');
                 event.target.value = '';
-                return;
+            return;
             }
             productId = this.currentProduct.id;
         }
@@ -910,8 +919,8 @@ if (typeof window.ProductsManager === 'undefined') {
         // Validar archivos
         const validFiles = [];
         for (const file of files) {
-            // Validar tamaño (5MB máximo)
-            if (file.size > 5 * 1024 * 1024) {
+        // Validar tamaño (5MB máximo)
+        if (file.size > 5 * 1024 * 1024) {
                 this.showNotification(`❌ ${file.name} es demasiado grande. Máximo 5MB.`, 'error');
                 continue;
             }
@@ -950,48 +959,48 @@ if (typeof window.ProductsManager === 'undefined') {
 
             // Subir todas las imágenes
             const uploadPromises = validFiles.map(async (file) => {
-                const fileExt = file.name.split('.').pop();
+            const fileExt = file.name.split('.').pop();
                 const fileName = `${this.userId}/${productId}/${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name}`;
 
-                // Subir imagen
-                const { error: uploadError } = await this.supabase.storage
-                    .from('product-images')
-                    .upload(fileName, file, {
-                        contentType: file.type,
+            // Subir imagen
+            const { error: uploadError } = await this.supabase.storage
+                .from('product-images')
+                .upload(fileName, file, {
+                    contentType: file.type,
                         cacheControl: '3600',
                         upsert: false
-                    });
+                });
 
-                if (uploadError) throw uploadError;
+            if (uploadError) throw uploadError;
 
-                // Obtener URL pública
-                const { data: { publicUrl } } = this.supabase.storage
-                    .from('product-images')
-                    .getPublicUrl(fileName);
+            // Obtener URL pública
+            const { data: { publicUrl } } = this.supabase.storage
+                .from('product-images')
+                .getPublicUrl(fileName);
 
                 // Determinar tipo de imagen (primera imagen sin principal = principal)
                 const { data: hasPrincipal } = await this.supabase
-                    .from('product_images')
+                .from('product_images')
                     .select('id')
-                    .eq('product_id', productId)
+                .eq('product_id', productId)
                     .eq('image_type', 'principal')
-                    .limit(1);
+                .limit(1);
 
                 const imageType = (!hasPrincipal || hasPrincipal.length === 0) && nextOrder === 0
                     ? 'principal'
                     : 'secundaria';
 
-                // Insertar registro en base de datos
-                const { error: insertError } = await this.supabase
-                    .from('product_images')
-                    .insert({
-                        product_id: productId,
-                        image_url: publicUrl,
+            // Insertar registro en base de datos
+            const { error: insertError } = await this.supabase
+                .from('product_images')
+                .insert({
+                    product_id: productId,
+                    image_url: publicUrl,
                         image_type: imageType,
-                        image_order: nextOrder
-                    });
+                    image_order: nextOrder
+                });
 
-                if (insertError) throw insertError;
+            if (insertError) throw insertError;
                 nextOrder++;
             });
 
@@ -1002,7 +1011,7 @@ if (typeof window.ProductsManager === 'undefined') {
 
             // Recargar detalles del producto
             if (this.currentProduct && this.currentProduct.id === productId) {
-                await this.loadProductDetails(productId);
+            await this.loadProductDetails(productId);
             }
             await this.loadProducts();
 
