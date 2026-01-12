@@ -1,0 +1,2826 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Studio - AI Smart Content</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/navigation.css">
+    <link rel="stylesheet" href="css/studio.css">
+</head>
+<body>
+    <!-- Overlay de navegación -->
+    <div class="nav-overlay" id="navOverlay" onclick="closeNavigation()"></div>
+
+    <!-- Navegación lateral -->
+    <nav class="side-navigation" id="sideNavigation">
+        <!-- Header del panel -->
+        <div class="nav-header">
+            <button class="nav-toggle-btn" id="navToggleBtn" aria-label="Toggle sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="nav-brand-title">
+                <h4>AI SMART CONTENT</h4>
+            </div>
+        </div>
+
+        <!-- Menú Principal -->
+        <div class="nav-menu">
+            <div class="nav-section">
+                <div class="nav-section-title">Principal</div>
+                <div class="nav-item">
+                    <a href="living.html" class="nav-link">
+                        <i class="fas fa-home nav-icon"></i>
+                        <span class="nav-text">Living</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="studio.html" class="nav-link active">
+                        <i class="fas fa-magic nav-icon"></i>
+                        <span class="nav-text">Studio</span>
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="products.html" class="nav-link">
+                        <i class="fas fa-box nav-icon"></i>
+                        <span class="nav-text">Productos</span>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer del panel -->
+        <div class="nav-footer">
+            <div class="nav-footer-profile" id="navFooterProfile">
+                <i class="fas fa-user"></i>
+                <span id="navProfileName">Usuario</span>
+            </div>
+            <a href="#" class="nav-footer-link" id="navAdminBtn">
+                <i class="fas fa-cog"></i>
+                <span>Administrar</span>
+            </a>
+            <a href="#" class="nav-footer-link nav-logout" onclick="logout(); return false;">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Salir</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <main class="main-content">
+        <!-- Layout Principal del Studio -->
+        <div class="studio-layout">
+            <!-- Área Central (entre los dos sidebars) -->
+            <div class="central-area">
+                <!-- Header Contextual (parte del workspace) -->
+                <header class="workspace-header">
+                    <div class="header-content">
+                        <div class="header-left">
+                            <div class="logo-section">
+                                <div class="title-section">
+                                    <h1>
+                                        <span>Estudio</span>
+                                        <span class="brand-separator"> > </span>
+                                        <span>Crear contenido</span>
+                                    </h1>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="header-right">
+                            <div class="header-credits" id="headerCredits">
+                                <span class="header-credits-value" id="headerCreditsValue">0/0</span>
+                            </div>
+                            <button class="hamburger-menu" id="hamburgerMenu">
+                                <div class="hamburger-line"></div>
+                                <div class="hamburger-line"></div>
+                                <div class="hamburger-line"></div>
+                            </button>
+                        </div>
+                    </div>
+                </header>
+                
+                <!-- Canvas Central - Área para outputs de webhooks -->
+                <main class="canvas-area">
+                    <div class="output-container">
+                        <!-- Los outputs de los webhooks se mostrarán aquí -->
+                    </div>
+                    <!-- Footer invisible con botón de generar -->
+                    <div class="canvas-footer">
+                        <button class="btn-generate-content" onclick="generateContent()">
+                            Generar Guiones
+                        </button>
+                    </div>
+                </main>
+            </div> <!-- Cerrar central-area -->
+            
+            <!-- Sidebar de Studio (derecha, full height) -->
+            <nav class="studio-sidebar" id="sidebar-section-1">
+                <!-- Tab Bar para móviles -->
+                <div class="tab-bar">
+                    <div class="tab-bar-item active" onclick="setActiveTab(this); showMobileConfig();">
+                        <i class="fas fa-cog"></i>
+                        <span>Config</span>
+                    </div>
+                    <div class="tab-bar-item" onclick="setActiveTab(this); showOnlyAccordion('sujeto');">
+                        <i class="fas fa-user"></i>
+                        <span>Protagonista</span>
+                    </div>
+                    <div class="tab-bar-item" onclick="setActiveTab(this); showOnlyAccordion('oferta');">
+                        <i class="fas fa-gift"></i>
+                        <span>Contexto (opcional)</span>
+                    </div>
+                    <div class="tab-bar-item" onclick="setActiveTab(this); showOnlyAccordion('configuracion-avanzada');">
+                        <i class="fas fa-sliders-h"></i>
+                        <span>Personalización</span>
+                    </div>
+                </div>
+                
+                <!-- Contenido del sidebar - Marca y Producto -->
+                <div class="sidebar-content">
+                <!-- Configuraciones integradas directamente -->
+                
+                <!-- Marca -->
+                <div class="config-field" style="margin-top: 10px;">
+                    <label>Marca</label>
+                    <div id="brand-card" class="brand-card" onclick="openBrandSelector()">
+                        <div class="brand-card-content">
+                            <div class="brand-card-logo" id="brand-card-logo">
+                                <img id="brand-card-logo-img" src="" alt="" style="display: none;">
+                                <div id="brand-card-logo-placeholder" class="brand-card-logo-placeholder"></div>
+                            </div>
+                            <div class="brand-card-name" id="brand-card-name">Seleccionar marca...</div>
+                        </div>
+                        <input type="hidden" id="brand-selector" value="">
+                    </div>
+                </div>
+
+                <!-- Producto -->
+                    <div class="config-field">
+                        <label>Seleccionar producto:</label>
+                            <select id="product-selector" onchange="onProductSelected(this.value)">
+                                <option value="">Seleccionar producto...</option>
+                            </select>
+                        </div>
+
+                <!-- Galería de Imágenes del Producto -->
+                <div class="config-field" id="product-image-gallery" style="display: none;">
+                    <label>Imágenes del producto</label>
+                        <div class="product-images-grid" id="dynamic-product-images">
+                            <div class="loading-placeholder">
+                                <div class="spinner-small"></div>
+                            <span>Cargando imágenes...</span>
+                        </div>
+            </div>
+        </div>
+                            
+                </div> <!-- Cerrar sidebar-content -->
+                
+                <!-- Secciones desplegables -->
+                <div class="accordions-container">
+                            
+                <!-- Guía creativa -->
+                <div class="accordion-section">
+                    <div class="accordion-header" onclick="toggleAccordion('info-basica')">
+                    <h4>Guía creativa</h4>
+                        <i class="fas fa-chevron-down accordion-icon" id="info-basica-icon"></i>
+                    </div>
+                    <div class="accordion-content" id="info-basica-content">
+                        <!-- Identidad de marca -->
+                    <div class="config-field">
+                            <label>Identidad de marca:</label>
+                            <div class="info-display" id="brand-info">
+                                <div class="info-item">
+                                    <span class="info-label">Tono de Voz:</span>
+                                    <span class="info-value" id="brand-tone">No seleccionado</span>
+                            </div>
+                                <div class="info-item">
+                                    <span class="info-label">Palabras permitidas:</span>
+                                    <span class="info-value" id="brand-keywords-yes">No configurado</span>
+                            </div>
+                                <div class="info-item">
+                                    <span class="info-label">Palabras prohibidas:</span>
+                                    <span class="info-value" id="brand-keywords-no">No configurado</span>
+                            </div>
+                                <div class="info-item">
+                                    <span class="info-label">Reglas creativas:</span>
+                                    <span class="info-value" id="brand-dos-donts">No configurado</span>
+                        </div>
+                                <div class="info-item">
+                                    <span class="info-label">Personalidad de Marca:</span>
+                                    <span class="info-value" id="brand-personalidad">No configurado</span>
+                        </div>
+                                <div class="info-item">
+                                    <span class="info-label">Quiénes Somos:</span>
+                                    <span class="info-value" id="brand-quienes-somos">No configurado</span>
+                        </div>
+                                <div class="info-item">
+                                    <span class="info-label">Objetivos de Marca:</span>
+                                    <span class="info-value" id="brand-objetivos">No configurado</span>
+                        </div>
+                    </div>
+                </div>
+
+                        <!-- Detalles del producto -->
+                    <div class="config-field">
+                            <label>Detalles del producto:</label>
+                            <div class="info-display" id="product-info">
+                                <div class="info-item">
+                                    <span class="info-label">Categoría:</span>
+                                    <span class="info-value" id="product-type">No seleccionado</span>
+                    </div>
+                                <div class="info-item">
+                                    <span class="info-label">Descripción Corta:</span>
+                                    <span class="info-value" id="product-short-desc">No seleccionado</span>
+                            </div>
+                                <div class="info-item">
+                                    <span class="info-label">Beneficios:</span>
+                                    <span class="info-value" id="product-benefits">No seleccionado</span>
+                            </div>
+                                <div class="info-item">
+                                    <span class="info-label">Diferenciadores:</span>
+                                    <span class="info-value" id="product-differentiators">No seleccionado</span>
+                        </div>
+                                <div class="info-item">
+                                    <span class="info-label">Pasos de Uso:</span>
+                                    <span class="info-value" id="product-usage-steps">No seleccionado</span>
+        </div>
+                                <div class="info-item">
+                                    <span class="info-label">Ingredientes:</span>
+                                    <span class="info-value" id="product-ingredients">No seleccionado</span>
+    </div>
+                                <div class="info-item">
+                                    <span class="info-label">Precio:</span>
+                                    <span class="info-value" id="product-price">No seleccionado</span>
+                        </div>
+                                <div class="info-item">
+                                    <span class="info-label">Variantes:</span>
+                                    <span class="info-value" id="product-variants">No seleccionado</span>
+                    </div>
+                </div>
+                    </div>
+                </div>
+            </div>
+
+                <!-- Protagonista -->
+                <div class="accordion-section">
+                    <div class="accordion-header" onclick="toggleAccordion('sujeto')">
+                        <h4>Protagonista</h4>
+                        <i class="fas fa-chevron-down accordion-icon" id="sujeto-icon"></i>
+                            </div>
+                    <div class="accordion-content" id="sujeto-content">
+                <!-- Toggle IA -->
+                    <div class="config-field ai-toggle-field">
+                        <div class="ai-toggle-container">
+                            <label class="ai-toggle-label">Dejar que la IA defina el protagonista</label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="ai-protagonist-toggle" onchange="toggleAIProtagonist(this.checked)">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="ai-suggestion-message" id="ai-suggestion-message" style="display: none;">
+                            <i class="fas fa-lightbulb"></i>
+                            <span>La IA creará el protagonista basándose en la información de marca, producto, audiencia y oferta.</span>
+                        </div>
+                    </div>
+                <!-- Género -->
+                    <div class="config-field">
+                        <label>Género:</label>
+                        <div class="segmented-control" id="gender-selector">
+                            <button type="button" class="segment-btn" data-value="masculino" onclick="selectGender(this, 'masculino')">Masculino</button>
+                            <button type="button" class="segment-btn" data-value="femenino" onclick="selectGender(this, 'femenino')">Femenino</button>
+                            <button type="button" class="segment-btn" data-value="sin-definicion" onclick="selectGender(this, 'sin-definicion')">Sin definición</button>
+                            </div>
+                            </div>
+
+                <!-- Edad -->
+                    <div class="config-field">
+                        <label>Edad:</label>
+                        <div class="age-slider-container">
+                            <input type="range" id="age-slider" min="10" max="70" value="25" step="5" oninput="updateAgeSlider(this.value)" onchange="updateAgeFromSlider(this.value)" onmouseup="updateAgeFromSlider(this.value)" ontouchend="updateAgeFromSlider(this.value)">
+                            <div class="age-slider-labels">
+                                <span class="age-label">10</span>
+                                <span class="age-label">25</span>
+                                <span class="age-label">40</span>
+                                <span class="age-label">55</span>
+                                <span class="age-label">70</span>
+                            </div>
+                            <div class="age-display">
+                                <span id="age-display-value">25 años</span>
+                            </div>
+        </div>
+    </div>
+
+                <!-- Etnia -->
+                    <div class="config-field">
+                        <label>Etnia:</label>
+                        <div class="searchable-dropdown-container">
+                            <input type="text" id="ethnicity-search" placeholder="Buscar o seleccionar etnia..." autocomplete="off" oninput="filterEthnicityOptions(this.value)" onfocus="showEthnicityDropdown()">
+                            <div class="searchable-dropdown" id="ethnicity-dropdown">
+                                <div class="dropdown-option" data-value="caucasico" onclick="selectEthnicity('caucasico')">Caucásico</div>
+                                <div class="dropdown-option" data-value="asiatico" onclick="selectEthnicity('asiatico')">Asiático</div>
+                                <div class="dropdown-option" data-value="arabe" onclick="selectEthnicity('arabe')">Árabe</div>
+                                <div class="dropdown-option" data-value="africano" onclick="selectEthnicity('africano')">Africano</div>
+                                <div class="dropdown-option" data-value="latinoamericano" onclick="selectEthnicity('latinoamericano')">Latinoamericano</div>
+                            </div>
+                    </div>
+                </div>
+
+                <!-- Color de Ojos -->
+                    <div class="config-field">
+                        <label>Color de Ojos:</label>
+                        <div class="eye-color-swatches" id="eyes-selector">
+                            <button type="button" class="eye-swatch" data-value="marron" data-label="Marrón" onclick="selectEyeColor(this, 'marron')" title="Marrón"></button>
+                            <button type="button" class="eye-swatch" data-value="azul" data-label="Azul" onclick="selectEyeColor(this, 'azul')" title="Azul"></button>
+                            <button type="button" class="eye-swatch" data-value="verde" data-label="Verde" onclick="selectEyeColor(this, 'verde')" title="Verde"></button>
+                            <button type="button" class="eye-swatch" data-value="avellana" data-label="Avellana" onclick="selectEyeColor(this, 'avellana')" title="Avellana"></button>
+                            <button type="button" class="eye-swatch" data-value="negro" data-label="Negro" onclick="selectEyeColor(this, 'negro')" title="Negro"></button>
+                            <button type="button" class="eye-swatch" data-value="otro" data-label="Otro" onclick="selectEyeColor(this, 'otro')" title="Otro"></button>
+        </div>
+    </div>
+
+                <!-- Estilo de Cabello -->
+                    <div class="config-field">
+                        <label>Estilo de Cabello:</label>
+                        <div class="visual-dropdown-container">
+                            <select id="hair-selector" class="visual-dropdown" onchange="window.updateHair(this.value)">
+                                <option value="">Seleccionar estilo de cabello...</option>
+                                <option value="liso">Liso</option>
+                                <option value="rizado">Rizado</option>
+                                <option value="afro">Afro</option>
+                                <option value="rapado">Rapado</option>
+                                <option value="ondulado">Ondulado</option>
+                                <option value="largo-moño">Largo en moño</option>
+                                <option value="corto-ondas">Corto con ondas</option>
+                            </select>
+        </div>
+    </div>
+
+                <!-- Expresión -->
+                    <div class="config-field">
+                        <label>Expresión:</label>
+                        <div class="chip-selector" id="expression-selector">
+                            <button type="button" class="chip" data-value="sonriente" onclick="toggleExpressionChip(this, 'sonriente')">Sonriente</button>
+                            <button type="button" class="chip" data-value="serio" onclick="toggleExpressionChip(this, 'serio')">Serio</button>
+                            <button type="button" class="chip" data-value="energetico" onclick="toggleExpressionChip(this, 'energetico')">Energético</button>
+                            <button type="button" class="chip" data-value="natural" onclick="toggleExpressionChip(this, 'natural')">Natural</button>
+                            <button type="button" class="chip" data-value="desafiante" onclick="toggleExpressionChip(this, 'desafiante')">Desafiante</button>
+        </div>
+    </div>
+
+                <!-- Estilo de Vestimenta -->
+                    <div class="config-field">
+                        <label>Estilo de Vestimenta:</label>
+                        <div class="aspirational-dropdown-container">
+                            <select id="style-selector" class="aspirational-dropdown" onchange="window.updateStyle(this.value)">
+                                <option value="">Selecciona tu estilo...</option>
+                                <optgroup label="Estilos Cotidianos">
+                                    <option value="casual">Casual</option>
+                                    <option value="deportivo">Deportivo</option>
+                                    <option value="urbano">Urbano</option>
+                                </optgroup>
+                                <optgroup label="Estilos Refinados">
+                                    <option value="elegante">Elegante</option>
+                                    <option value="profesional">Profesional</option>
+                                </optgroup>
+                                <optgroup label="Estilos Contemporáneos">
+                                    <option value="streetwear">Streetwear</option>
+                                    <option value="minimalista">Minimalista</option>
+                                </optgroup>
+                            </select>
+                    </div>
+                    </div>
+
+                        <!-- Tono -->
+                    <div class="config-field">
+                            <label>Tono:</label>
+                        <div class="semantic-slider-container">
+                            <div class="semantic-slider-labels">
+                                <span class="slider-label-left">Serio</span>
+                                <span class="slider-label-right">Relajado</span>
+                            </div>
+                            <input type="range" id="tone-slider" min="0" max="100" value="50" step="1" oninput="updateToneSlider(this.value)" onchange="updateToneFromSlider(this.value)" onmouseup="updateToneFromSlider(this.value)" ontouchend="updateToneFromSlider(this.value)">
+                            <div class="semantic-slider-display">
+                                <span id="tone-display-value">Equilibrado</span>
+                            </div>
+                            <div class="tone-presets">
+                                <button type="button" class="tone-preset-btn" data-value="profesional" onclick="setTonePreset('profesional')">Profesional</button>
+                                <button type="button" class="tone-preset-btn" data-value="casual" onclick="setTonePreset('casual')">Casual</button>
+                                <button type="button" class="tone-preset-btn" data-value="amigable" onclick="setTonePreset('amigable')">Amigable</button>
+                                <button type="button" class="tone-preset-btn" data-value="autoritario" onclick="setTonePreset('autoritario')">Autoritario</button>
+                                <button type="button" class="tone-preset-btn" data-value="energetico" onclick="setTonePreset('energetico')">Energético</button>
+                                <button type="button" class="tone-preset-btn" data-value="tranquilo" onclick="setTonePreset('tranquilo')">Tranquilo</button>
+                            </div>
+                            </div>
+                            </div>
+
+                        <!-- Personalidad -->
+                    <div class="config-field">
+                            <label>Personalidad: <span class="max-hint">(máx. 2-3)</span></label>
+                        <div class="multi-chip-selector" id="personality-selector">
+                            <button type="button" class="multi-chip" data-value="extrovertido" onclick="togglePersonalityChip(this, 'extrovertido')">Extrovertido</button>
+                            <button type="button" class="multi-chip" data-value="seguro" onclick="togglePersonalityChip(this, 'seguro')">Seguro</button>
+                            <button type="button" class="multi-chip" data-value="creativo" onclick="togglePersonalityChip(this, 'creativo')">Creativo</button>
+                            <button type="button" class="multi-chip" data-value="cercano" onclick="togglePersonalityChip(this, 'cercano')">Cercano</button>
+                            <button type="button" class="multi-chip" data-value="rebelde" onclick="togglePersonalityChip(this, 'rebelde')">Rebelde</button>
+                            </div>
+                            </div>
+
+                <!-- Estética y Color -->
+                    <div class="config-field">
+                        <label>Estética y Color:</label>
+                        <div class="dropdown-container">
+                            <select id="aesthetic-selector" onchange="window.updateAesthetic(this.value)">
+                    <option value="">Seleccionar estética...</option>
+                                <option value="piel-natural-poros">Piel natural con poros</option>
+                                <option value="temperatura-calida">Temperatura ligeramente cálida</option>
+                                <option value="grano-pelicula">Grano sutil tipo película</option>
+                                <option value="contraste-moderado">Contraste moderado, sombras suaves</option>
+                                <option value="reflejos-naturales">Reflejos naturales</option>
+                                <option value="saturacion-natural">Saturación natural</option>
+                                <option value="balance-blancos-realista">Balance de blancos realista</option>
+                                <option value="aberración-cromatica">Aberración cromática sutil</option>
+                                <option value="viñeta-ligera">Viñeta muy ligera</option>
+                                <option value="enfoque-moderado">Enfoque moderado</option>
+                            </select>
+                            </div>
+                            </div>
+
+                <!-- Detalles de Realismo -->
+                    <div class="config-field">
+                        <label>Detalles de Realismo:</label>
+                        <div class="realism-slider-container">
+                            <div class="semantic-slider-labels">
+                                <span class="slider-label-left">Estilizado</span>
+                                <span class="slider-label-right">Ultra realista</span>
+                            </div>
+                            <input type="range" id="realism-slider" min="0" max="100" value="50" step="1" oninput="updateRealismSlider(this.value)" onchange="updateRealismFromSlider(this.value)" onmouseup="updateRealismFromSlider(this.value)" ontouchend="updateRealismFromSlider(this.value)">
+                            <div class="semantic-slider-display">
+                                <span id="realism-display-value">Moderado</span>
+                            </div>
+                            <div class="realism-presets">
+                                <div class="realism-presets-label">Opciones predefinidas:</div>
+                                <div class="realism-presets-grid">
+                                    <button type="button" class="realism-preset-btn" data-value="pelitos-sueltos" onclick="toggleRealismPreset(this, 'pelitos-sueltos')">Pelitos sueltos visibles</button>
+                                    <button type="button" class="realism-preset-btn" data-value="huellas-dactilares" onclick="toggleRealismPreset(this, 'huellas-dactilares')">Huellas dactilares ligeras</button>
+                                    <button type="button" class="realism-preset-btn" data-value="arrugas-tela" onclick="toggleRealismPreset(this, 'arrugas-tela')">Arrugas naturales de tela</button>
+                                    <button type="button" class="realism-preset-btn" data-value="micro-temblor" onclick="toggleRealismPreset(this, 'micro-temblor')">Micro temblor de mano</button>
+                                    <button type="button" class="realism-preset-btn" data-value="polvo-fibra" onclick="toggleRealismPreset(this, 'polvo-fibra')">Polvo/fibra diminuta</button>
+                                    <button type="button" class="realism-preset-btn" data-value="brillo-piel" onclick="toggleRealismPreset(this, 'brillo-piel')">Brillo natural de piel</button>
+                                    <button type="button" class="realism-preset-btn" data-value="sombras-imperfectas" onclick="toggleRealismPreset(this, 'sombras-imperfectas')">Sombras imperfectas</button>
+                                    <button type="button" class="realism-preset-btn" data-value="manchas-mesa" onclick="toggleRealismPreset(this, 'manchas-mesa')">Manchas ligeras en mesa</button>
+                                    <button type="button" class="realism-preset-btn" data-value="reflejo-ventana" onclick="toggleRealismPreset(this, 'reflejo-ventana')">Reflejo suave de ventana</button>
+                                    <button type="button" class="realism-preset-btn" data-value="distorsion-lente" onclick="toggleRealismPreset(this, 'distorsion-lente')">Distorsión sutil de lente</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                <!-- Idioma -->
+                    <div class="config-field">
+                        <label>Idioma:</label>
+                        <div class="dropdown-container">
+                            <select id="language-selector" onchange="window.updateLanguage && window.updateLanguage(this.value)">
+                                <option value="">Seleccionar idioma...</option>
+                                <option value="es">Español</option>
+                                <option value="en">Inglés</option>
+                                <option value="pt">Portugués</option>
+                                <option value="fr">Francés</option>
+                                <option value="de">Alemán</option>
+                                <option value="it">Italiano</option>
+                            </select>
+                        </div>
+                    </div>
+
+                <!-- Acento -->
+                    <div class="config-field">
+                        <label>Acento:</label>
+                        <div class="dropdown-container">
+                            <select id="accent-selector" onchange="window.updateAccent && window.updateAccent(this.value)">
+                                <option value="">Seleccionar acento...</option>
+                                <option value="neutro">Neutro</option>
+                                <option value="espanol-espana">Español (España)</option>
+                                <option value="espanol-mexico">Español (México)</option>
+                                <option value="espanol-argentina">Español (Argentina)</option>
+                                <option value="espanol-colombia">Español (Colombia)</option>
+                                <option value="espanol-chile">Español (Chile)</option>
+                                <option value="ingles-americano">Inglés (Americano)</option>
+                                <option value="ingles-britanico">Inglés (Británico)</option>
+                                <option value="ingles-australiano">Inglés (Australiano)</option>
+                                <option value="portugues-brasil">Portugués (Brasil)</option>
+                                <option value="portugues-portugal">Portugués (Portugal)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                            </div>
+                            </div>
+
+        <!-- Escenario y ambiente -->
+        <div class="accordion-section">
+            <div class="accordion-header" onclick="toggleAccordion('escenario')">
+                <h4>Escenario y ambiente</h4>
+                <i class="fas fa-chevron-down accordion-icon" id="escenario-icon"></i>
+            </div>
+            <div class="accordion-content" id="escenario-content">
+                <div class="section-microcopy">
+                    Define dónde ocurre la escena y cómo se siente visualmente.
+                </div>
+                
+                <!-- Toggle IA -->
+                <div class="config-field ai-toggle-field">
+                    <div class="ai-toggle-container">
+                        <label class="ai-toggle-label">Dejar que la IA defina el escenario y ambiente</label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="ai-scenario-toggle" onchange="toggleAIScenario(this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="ai-suggestion-message" id="ai-scenario-suggestion-message" style="display: none;">
+                        <i class="fas fa-lightbulb"></i>
+                        <span>La IA creará el escenario y ambiente basándose en la información de marca, producto, audiencia y oferta.</span>
+                    </div>
+                </div>
+                
+                <!-- Tono visual -->
+                <div class="config-field">
+                    <label>Tono visual:</label>
+                    <div class="chip-selector" id="visual-tone-selector">
+                        <button type="button" class="chip" data-value="calido" onclick="toggleVisualToneChip(this, 'calido')">Cálido</button>
+                        <button type="button" class="chip" data-value="frio" onclick="toggleVisualToneChip(this, 'frio')">Frío</button>
+                        <button type="button" class="chip" data-value="neutro" onclick="toggleVisualToneChip(this, 'neutro')">Neutro</button>
+                        <button type="button" class="chip" data-value="verano" onclick="toggleVisualToneChip(this, 'verano')">Verano</button>
+                        <button type="button" class="chip" data-value="invierno" onclick="toggleVisualToneChip(this, 'invierno')">Invierno</button>
+                        <button type="button" class="chip" data-value="cinematico" onclick="toggleVisualToneChip(this, 'cinematico')">Cinemático</button>
+                    </div>
+                </div>
+                
+                <!-- Ambiente -->
+                <div class="config-field">
+                    <label>Ambiente:</label>
+                    <div class="chip-selector" id="ambience-selector">
+                        <button type="button" class="chip" data-value="acogedor" onclick="toggleAmbienceChip(this, 'acogedor')">Acogedor</button>
+                        <button type="button" class="chip" data-value="fresco" onclick="toggleAmbienceChip(this, 'fresco')">Fresco</button>
+                        <button type="button" class="chip" data-value="frio" onclick="toggleAmbienceChip(this, 'frio')">Frío</button>
+                        <button type="button" class="chip" data-value="relajado" onclick="toggleAmbienceChip(this, 'relajado')">Relajado</button>
+                        <button type="button" class="chip" data-value="energetico" onclick="toggleAmbienceChip(this, 'energetico')">Energético</button>
+                        <button type="button" class="chip" data-value="intimo" onclick="toggleAmbienceChip(this, 'intimo')">Íntimo</button>
+                        <button type="button" class="chip" data-value="natural" onclick="toggleAmbienceChip(this, 'natural')">Natural</button>
+                    </div>
+                    <div class="field-microcopy">Describe cómo se percibe el ambiente, no la iluminación.</div>
+                </div>
+                
+                <!-- Lugar -->
+                <div class="config-field">
+                    <label>Lugar:</label>
+                    <div class="aspirational-dropdown-container">
+                        <select id="location-selector" class="aspirational-dropdown" onchange="window.updateLocation(this.value)">
+                            <option value="">Seleccionar lugar…</option>
+                            <optgroup label="Interiores">
+                                <option value="en-casa">En casa</option>
+                                <option value="oficina">Oficina</option>
+                                <option value="oficina-en-casa">Oficina en casa</option>
+                                <option value="habitacion">Habitación</option>
+                                <option value="bano">Baño</option>
+                                <option value="cocina">Cocina</option>
+                                <option value="sala">Sala</option>
+                                <option value="gimnasio">Gimnasio</option>
+                            </optgroup>
+                            <optgroup label="Exteriores">
+                                <option value="en-el-carro">En el carro</option>
+                                <option value="en-el-campo">En el campo</option>
+                                <option value="en-la-calle">En la calle</option>
+                                <option value="afuera-local-comercial">Afuera del local comercial</option>
+                                <option value="en-una-boutique">En una boutique</option>
+                                <option value="en-un-parque">En un parque</option>
+                                <option value="en-la-playa">En la playa</option>
+                                <option value="en-la-montana">En la montaña</option>
+                                <option value="en-una-terraza">En una terraza</option>
+                            </optgroup>
+                            <optgroup label="Comerciales">
+                                <option value="dentro-local">Dentro de un local</option>
+                                <option value="punto-de-venta">Punto de venta</option>
+                                <option value="restaurante">Restaurante</option>
+                                <option value="cafeteria">Cafetería</option>
+                                <option value="tienda">Tienda</option>
+                            </optgroup>
+                            </select>
+                            </div>
+                            </div>
+
+                <!-- Tiempo -->
+                <div class="config-field">
+                    <label>Tiempo:</label>
+                    <div class="segmented-control" id="time-selector">
+                        <button type="button" class="segment-btn" data-value="manana" onclick="selectTime(this, 'manana')">Mañana</button>
+                        <button type="button" class="segment-btn" data-value="medio-dia" onclick="selectTime(this, 'medio-dia')">Medio día</button>
+                        <button type="button" class="segment-btn" data-value="tarde" onclick="selectTime(this, 'tarde')">Tarde</button>
+                        <button type="button" class="segment-btn" data-value="atardecer" onclick="selectTime(this, 'atardecer')">Atardecer</button>
+                        <button type="button" class="segment-btn" data-value="noche" onclick="selectTime(this, 'noche')">Noche</button>
+                        <button type="button" class="segment-btn" data-value="madrugada" onclick="selectTime(this, 'madrugada')">Madrugada</button>
+                            </div>
+                            </div>
+
+                <!-- Realismo visual -->
+                <div class="config-field">
+                    <label>Realismo visual:</label>
+                    <div class="semantic-slider-container">
+                        <div class="semantic-slider-labels">
+                            <span class="slider-label-left">Pulido</span>
+                            <span class="slider-label-right">Natural</span>
+                        </div>
+                        <input type="range" id="visual-realism-slider" min="0" max="100" value="50" step="1" oninput="updateVisualRealismSlider(this.value)" onchange="updateVisualRealismFromSlider(this.value)" onmouseup="updateVisualRealismFromSlider(this.value)" ontouchend="updateVisualRealismFromSlider(this.value)">
+                        <div class="semantic-slider-display">
+                            <span id="visual-realism-display-value">Moderado</span>
+                        </div>
+                    </div>
+                    <div class="field-microcopy">Controla el nivel de imperfecciones y naturalidad de la escena.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contexto de conversión (opcional) -->
+        <div class="accordion-section">
+            <div class="accordion-header" onclick="toggleAccordion('oferta')">
+                <h4>Contexto de conversión <span style="font-weight: 400; font-size: 0.9em; opacity: 0.7;">(opcional)</span></h4>
+                <i class="fas fa-chevron-down accordion-icon" id="oferta-icon"></i>
+                        </div>
+            <div class="accordion-content" id="oferta-content">
+                    <div class="config-field">
+                    <label>Qué se ofrece:</label>
+                        <div class="dropdown-container">
+                        <select id="offer-selector" onchange="onOfferSelected(this.value)">
+                            <option value="">Seleccionar oferta...</option>
+                            </select>
+                    </div>
+                </div>
+
+                    <div class="config-field">
+                    <label>Para quién es:</label>
+                        <div class="dropdown-container">
+                        <select id="audience-selector" onchange="onAudienceSelected(this.value)">
+                            <option value="">Seleccionar audiencia...</option>
+                            </select>
+                </div>
+            </div>
+                
+                <!-- Contenido de la oferta -->
+                    <div class="config-field">
+                    <label>Contenido de la oferta:</label>
+                    <div class="info-display" id="offer-info">
+                        <div class="info-item">
+                            <span class="info-label">Estado:</span>
+                            <span class="info-value empty">No seleccionado</span>
+        </div>
+    </div>
+                            </div>
+                
+                <!-- Público objetivo -->
+                    <div class="config-field">
+                    <label>Público objetivo:</label>
+                    <div class="info-display" id="audience-info">
+                        <div class="info-item">
+                            <span class="info-label">Estado:</span>
+                            <span class="info-value empty">No seleccionado</span>
+                            </div>
+                            </div>
+                            </div>
+                            </div>
+                            </div>
+
+                <!-- Personalización avanzada (opcional) -->
+                <div class="accordion-section">
+                    <div class="accordion-header" onclick="toggleAccordion('configuracion-avanzada')">
+                        <h4>Personalización avanzada <span style="font-weight: 400; font-size: 0.9em; opacity: 0.7;">(opcional)</span></h4>
+                        <i class="fas fa-chevron-down accordion-icon" id="configuracion-avanzada-icon"></i>
+                        </div>
+                    <div class="accordion-content" id="configuracion-avanzada-content">
+                        <!-- Resolución -->
+                    <div class="config-field">
+                            <label>Resolución:</label>
+                        <div class="dropdown-container">
+                                <select id="resolution-selector" onchange="updateResolution(this.value)">
+                                    <option value="720p" selected>720p</option>
+                                    <option value="1080p">1080p</option>
+                            </select>
+        </div>
+    </div>
+
+                        <!-- Ratio -->
+                    <div class="config-field">
+                            <label>Ratio:</label>
+                        <div class="dropdown-container">
+                                <select id="ratio-selector" onchange="updateRatio(this.value)">
+                                    <option value="vertical" selected>Vertical (9:16)</option>
+                                    <option value="horizontal">Horizontal (16:9)</option>
+                                    <option value="cuadrado">Cuadrado (1:1)</option>
+                            </select>
+            </div>
+                        </div>
+                        
+                        <!-- Creatividad (Temperatura) -->
+                    <div class="config-field">
+                            <label>Creatividad (Temperatura): <span id="creativity-value">0.7</span></label>
+                            <div class="slider-container">
+                                <input type="range" 
+                                       id="creativity-slider" 
+                                       min="0.01" 
+                                       max="2.00" 
+                                       step="0.01" 
+                                       value="0.7" 
+                                       oninput="updateCreativity(this.value)">
+                                <div class="slider-labels">
+                                    <span>0.01</span>
+                                    <span>2.00</span>
+                        </div>
+                </div>
+                            </div>
+                        
+                        <!-- Prompt Opcional -->
+                    <div class="config-field">
+                            <label>Prompt (Opcional):</label>
+                            <textarea id="prompt-input" 
+                                      placeholder="Describe el estilo, ambiente o elementos específicos que quieres en el video..."
+                                      rows="3"></textarea>
+                            </div>
+                        
+                        <!-- Negative Prompt Opcional -->
+                    <div class="config-field">
+                            <label>Negative Prompt (Opcional):</label>
+                            <textarea id="negative-prompt-input" 
+                                      placeholder="Describe lo que NO quieres que aparezca en el video..."
+                                      rows="3"></textarea>
+                            </div>
+        </div>
+    </div>
+
+                </div> <!-- Cerrar accordions-container -->
+                </nav>
+            </div> <!-- Cerrar workspace-container -->
+        </div> <!-- Cerrar studio-layout -->
+    </main>
+
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/auth-guard.js"></script>
+    <script src="js/sidebar-manager.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/data-collector.js"></script>
+    <script src="js/webhook-manager.js"></script>
+    <script src="js/output-generator.js"></script>
+    <script src="js/studio.js?v=2024-10-29-12-30"></script>
+    
+    <!-- Acordeón JavaScript -->
+    <script>
+        function toggleAccordion(accordionId) {
+            const content = document.getElementById(accordionId + '-content');
+            const icon = document.getElementById(accordionId + '-icon');
+            const header = icon?.closest('.accordion-header');
+            
+            if (!content || !icon) return;
+            
+            // Verificar si está abierto o cerrado
+            const isOpen = content.style.display === 'block' || content.classList.contains('active');
+            
+            if (isOpen) {
+                // Cerrar con animación
+                content.classList.remove('active');
+                // Esperar a que termine la animación antes de ocultar
+                setTimeout(() => {
+                    content.style.display = 'none';
+                }, 400); // Duración de la animación
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+                if (header) header.classList.remove('active');
+            } else {
+                // Abrir con animación
+                content.style.display = 'block';
+                // Forzar reflow para que la animación funcione
+                content.offsetHeight;
+                content.classList.add('active');
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+                if (header) header.classList.add('active');
+            }
+        }
+
+        // Función para abrir un acordeón específico
+        function openAccordion(accordionId) {
+            const content = document.getElementById(accordionId + '-content');
+            const icon = document.getElementById(accordionId + '-icon');
+            
+            if (content && icon) {
+                content.style.display = 'block';
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+            }
+        }
+
+        // Inicializar acordeones como cerrados
+        document.addEventListener('DOMContentLoaded', function() {
+            const accordionContents = document.querySelectorAll('.accordion-content');
+            accordionContents.forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            // Esperar a que StudioManager esté listo antes de inicializar
+            waitForStudioManager();
+        });
+        
+        // Función para esperar a que StudioManager esté listo
+        function waitForStudioManager() {
+            const checkInterval = setInterval(() => {
+                if (window.studioManager && window.studioManager.projectData) {
+                    clearInterval(checkInterval);
+                    console.log('✅ StudioManager listo, inicializando marca...');
+                    initializeDataDisplay();
+                } else if (window.studioManager && window.studioManager.supabase) {
+                    // Si StudioManager existe pero projectData no está cargado, esperar un poco más
+                    setTimeout(() => {
+                        if (window.studioManager.projectData) {
+                            clearInterval(checkInterval);
+                            console.log('✅ ProjectData cargado, inicializando marca...');
+                            initializeDataDisplay();
+                        }
+                    }, 500);
+                }
+            }, 100);
+            
+            // Timeout después de 5 segundos
+            setTimeout(() => {
+                clearInterval(checkInterval);
+                if (window.studioManager && window.studioManager.projectData) {
+                    initializeDataDisplay();
+                } else {
+                    console.warn('⚠️ StudioManager no está listo después de 5 segundos');
+                    // Intentar inicializar de todas formas
+                    initializeDataDisplay();
+                }
+            }, 5000);
+        }
+
+        // Función para inicializar la visualización de datos
+        function initializeDataDisplay() {
+            console.log('=== INICIALIZANDO DATOS ===');
+            
+            // Inicializar marca por defecto desde projectData del usuario
+            if (window.studioManager && window.studioManager.projectData && window.studioManager.projectData.id) {
+                const projectId = window.studioManager.projectData.id;
+                const brandSelector = document.getElementById('brand-selector');
+                if (brandSelector) {
+                    brandSelector.value = projectId;
+                }
+                updateBrandCard(window.studioManager.projectData);
+                console.log('Marca del usuario seleccionada automáticamente:', projectId);
+                onBrandSelected(projectId);
+            } else {
+                // Verificar si hay una marca seleccionada manualmente
+            const brandSelector = document.getElementById('brand-selector');
+            console.log('Selector de marca:', brandSelector?.value);
+            if (brandSelector && brandSelector.value) {
+                console.log('Marca pre-seleccionada encontrada:', brandSelector.value);
+                onBrandSelected(brandSelector.value);
+                }
+            }
+            
+            // Verificar si hay un producto seleccionado
+            const productSelector = document.getElementById('product-selector');
+            console.log('Inicializando datos - Selector de productos:', productSelector?.value);
+            if (productSelector && productSelector.value) {
+                console.log('Producto pre-seleccionado encontrado:', productSelector.value);
+                onProductSelected(productSelector.value);
+            } else {
+                console.log('No hay producto pre-seleccionado');
+            }
+        }
+
+        // Funciones para la navegación lateral
+        // En desktop, el sidebar está siempre abierto
+        function toggleNavigation() {
+            // Solo funciona en móvil
+            if (window.innerWidth <= 768) {
+                const overlay = document.getElementById('navOverlay');
+                const navigation = document.getElementById('sideNavigation');
+                const hamburger = document.getElementById('hamburgerMenu');
+                
+                overlay.classList.toggle('active');
+                navigation.classList.toggle('active');
+                if (hamburger) hamburger.classList.toggle('active');
+            }
+        }
+
+        function closeNavigation() {
+            // Solo funciona en móvil
+            if (window.innerWidth <= 768) {
+                const overlay = document.getElementById('navOverlay');
+                const navigation = document.getElementById('sideNavigation');
+                const hamburger = document.getElementById('hamburgerMenu');
+                
+                overlay.classList.remove('active');
+                navigation.classList.remove('active');
+                if (hamburger) hamburger.classList.remove('active');
+            }
+        }
+        
+        // Inicializar sidebar como abierto en desktop
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.innerWidth > 768) {
+                const navigation = document.getElementById('sideNavigation');
+                if (navigation) {
+                    navigation.classList.add('active');
+                }
+            }
+        });
+
+        // Funciones para el tab bar en móviles
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar-section-1');
+            sidebar.classList.toggle('expanded');
+        }
+
+        // Función para manejar tabs del móvil
+        function setActiveTab(tabElement) {
+            // Remover clase active de todos los tabs
+            const allTabs = document.querySelectorAll('.tab-bar-item');
+            allTabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Agregar clase active al tab seleccionado
+            tabElement.classList.add('active');
+        }
+
+        // Función para mostrar solo el acordeón seleccionado en móvil
+        function showOnlyAccordion(accordionId) {
+            // Verificar si estamos en móvil
+            if (window.innerWidth <= 768) {
+                openMobileModal(accordionId);
+            } else {
+                // En desktop, comportamiento normal de acordeón
+                toggleAccordion(accordionId);
+            }
+        }
+
+        // Función para mostrar configuración móvil (marca y producto)
+        function showMobileConfig() {
+            // Verificar si estamos en móvil
+            if (window.innerWidth <= 768) {
+                openMobileConfigModal();
+            }
+        }
+
+        // Función para abrir modal de configuración móvil
+        function openMobileConfigModal() {
+            // Crear overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'mobile-modal-overlay';
+            overlay.onclick = closeMobileModal;
+            
+            // Crear modal
+            const modal = document.createElement('div');
+            modal.className = 'mobile-modal';
+            modal.id = 'mobile-modal';
+            
+            // Crear header del modal
+            const modalHeader = document.createElement('div');
+            modalHeader.className = 'mobile-modal-header';
+            modalHeader.innerHTML = `
+                <h3>🔹 Configuración</h3>
+                <button class="close-modal" onclick="closeMobileModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            // Crear contenido del modal con marca y producto
+            const modalContent = document.createElement('div');
+            modalContent.className = 'mobile-modal-content';
+            modalContent.innerHTML = `
+                <!-- Marca -->
+                    <div class="config-field">
+                    <label>Seleccionar marca:</label>
+                    <select id="mobile-brand-selector" onchange="onBrandSelected(this.value)">
+                        <option value="">Seleccionar marca...</option>
+                            </select>
+                    </div>
+
+                <!-- Producto e Imágenes -->
+                <div class="config-section" id="mobile-product-images-section">
+                    <h4>🔹 Producto e Imágenes</h4>
+                    <div class="config-field">
+                        <label>Seleccionar producto:</label>
+                        <div class="dropdown-container">
+                            <select id="mobile-product-selector" onchange="onProductSelected(this.value)">
+                                <option value="">Seleccionar producto...</option>
+                            </select>
+                    </div>
+                    </div>
+                    <div class="config-field">
+                        <label>Imágenes del producto:</label>
+                        <div class="product-images-grid" id="mobile-dynamic-product-images">
+                            <div class="loading-placeholder">
+                                <div class="spinner-small"></div>
+                                <span>Selecciona un producto para ver sus imágenes</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+                <!-- Guía creativa -->
+                <div class="config-section" id="mobile-info-basica-section">
+                    <h4>🔹 Guía creativa</h4>
+                    
+                    
+                    <!-- Identidad de marca -->
+                    <div class="config-field">
+                        <label>Identidad de marca:</label>
+                        <div class="info-display" id="mobile-brand-info">
+                            <div class="info-item">
+                                <span class="info-label">Tono de Voz:</span>
+                                <span class="info-value" id="mobile-brand-tone">No seleccionado</span>
+    </div>
+                            <div class="info-item">
+                                <span class="info-label">Palabras permitidas:</span>
+                                <span class="info-value" id="mobile-brand-keywords-yes">No configurado</span>
+            </div>
+                            <div class="info-item">
+                                <span class="info-label">Palabras prohibidas:</span>
+                                <span class="info-value" id="mobile-brand-keywords-no">No configurado</span>
+                </div>
+                            <div class="info-item">
+                                <span class="info-label">Reglas creativas:</span>
+                                <span class="info-value" id="mobile-brand-dos-donts">No configurado</span>
+            </div>
+                            <div class="info-item">
+                                <span class="info-label">Personalidad de Marca:</span>
+                                <span class="info-value" id="mobile-brand-personalidad">No configurado</span>
+            </div>
+                            <div class="info-item">
+                                <span class="info-label">Quiénes Somos:</span>
+                                <span class="info-value" id="mobile-brand-quienes-somos">No configurado</span>
+            </div>
+                            <div class="info-item">
+                                <span class="info-label">Objetivos de Marca:</span>
+                                <span class="info-value" id="mobile-brand-objetivos">No configurado</span>
+            </div>
+        </div>
+    </div>
+
+                    <!-- Detalles del producto -->
+                    <div class="config-field">
+                        <label>Detalles del producto:</label>
+                        <div class="info-display" id="mobile-product-info">
+                            <div class="info-item">
+                                <span class="info-label">Categoría:</span>
+                                <span class="info-value" id="mobile-product-type">No seleccionado</span>
+            </div>
+                            <div class="info-item">
+                                <span class="info-label">Descripción Corta:</span>
+                                <span class="info-value" id="mobile-product-short-desc">No seleccionado</span>
+                </div>
+                            <div class="info-item">
+                                <span class="info-label">Beneficios:</span>
+                                <span class="info-value" id="mobile-product-benefits">No seleccionado</span>
+            </div>
+                            <div class="info-item">
+                                <span class="info-label">Diferenciadores:</span>
+                                <span class="info-value" id="mobile-product-differentiators">No seleccionado</span>
+        </div>
+                            <div class="info-item">
+                                <span class="info-label">Pasos de Uso:</span>
+                                <span class="info-value" id="mobile-product-usage-steps">No seleccionado</span>
+    </div>
+                            <div class="info-item">
+                                <span class="info-label">Ingredientes:</span>
+                                <span class="info-value" id="mobile-product-ingredients">No seleccionado</span>
+            </div>
+                            <div class="info-item">
+                                <span class="info-label">Precio:</span>
+                                <span class="info-value" id="mobile-product-price">No seleccionado</span>
+                </div>
+                            <div class="info-item">
+                                <span class="info-label">Variantes:</span>
+                                <span class="info-value" id="mobile-product-variants">No seleccionado</span>
+            </div>
+        </div>
+    </div>
+            </div>
+            `;
+            
+            // Ensamblar modal
+            modal.appendChild(modalHeader);
+            modal.appendChild(modalContent);
+            
+            // Agregar al DOM
+            document.body.appendChild(overlay);
+            document.body.appendChild(modal);
+            
+            // Poblar selectores con datos existentes
+            populateMobileSelectors();
+            
+            // Configurar sincronización
+            syncMobileModal();
+            
+            // Animar entrada
+            setTimeout(() => {
+                overlay.classList.add('active');
+                modal.classList.add('active');
+            }, 10);
+        }
+
+        // Función para poblar selectores móviles
+        function populateMobileSelectors() {
+            console.log('Poblando selectores móviles...');
+            
+            // Poblar selector de marcas
+            const brandSelector = document.getElementById('mobile-brand-selector');
+            const originalBrandSelector = document.getElementById('brand-selector');
+            if (brandSelector && originalBrandSelector) {
+                brandSelector.innerHTML = originalBrandSelector.innerHTML;
+                brandSelector.value = originalBrandSelector.value;
+                console.log('Selector de marca poblado:', brandSelector.value);
+            }
+            
+            // Poblar selector de productos
+            const productSelector = document.getElementById('mobile-product-selector');
+            const originalProductSelector = document.getElementById('product-selector');
+            if (productSelector && originalProductSelector) {
+                productSelector.innerHTML = originalProductSelector.innerHTML;
+                productSelector.value = originalProductSelector.value;
+                console.log('Selector de producto poblado:', productSelector.value);
+            }
+            
+            // Cargar imágenes si hay producto seleccionado
+            if (productSelector && productSelector.value) {
+                loadMobileProductImages(productSelector.value);
+            }
+            
+            // Sincronizar información básica una sola vez
+            setTimeout(() => {
+                console.log('Sincronizando información básica...');
+                syncMobileBasicInfo();
+            }, 200);
+        }
+
+        // Función para cargar imágenes en modal móvil (delegada a studio.js)
+        function loadMobileProductImages(productId) {
+            const imagesContainer = document.getElementById('mobile-dynamic-product-images');
+            if (!imagesContainer) return;
+            
+            if (!productId) {
+                imagesContainer.innerHTML = `
+                    <div class="loading-placeholder">
+                        <div class="spinner-small"></div>
+                        <span>Selecciona un producto para ver sus imágenes</span>
+                </div>
+                `;
+                return;
+            }
+            
+            // Mostrar indicador de carga
+            imagesContainer.innerHTML = `
+                <div class="loading-placeholder">
+                    <div class="spinner-small"></div>
+                    <span>Cargando imágenes del producto...</span>
+            </div>
+            `;
+            
+            // Delegar completamente a studio.js
+            if (window.studioManager && window.studioManager.loadProductImages) {
+                window.studioManager.loadProductImages(productId).then(() => {
+                    // Copiar las imágenes del contenedor original al móvil
+                    const originalImagesContainer = document.getElementById('dynamic-product-images');
+                    if (originalImagesContainer) {
+                        imagesContainer.innerHTML = originalImagesContainer.innerHTML;
+                    } else {
+                        imagesContainer.innerHTML = `
+                            <div class="no-selection">
+                                <span>No hay imágenes disponibles para este producto</span>
+        </div>
+                        `;
+                    }
+                }).catch(() => {
+                    imagesContainer.innerHTML = `
+                        <div class="no-selection">
+                            <span>Error cargando imágenes del producto</span>
+    </div>
+                    `;
+                });
+            } else {
+                    imagesContainer.innerHTML = `
+                        <div class="no-selection">
+                        <span>StudioManager no disponible</span>
+                        </div>
+                    `;
+            }
+        }
+
+        // Función para abrir modal móvil
+        function openMobileModal(accordionId) {
+            // Crear overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'mobile-modal-overlay';
+            overlay.onclick = closeMobileModal;
+            
+            // Crear modal
+            const modal = document.createElement('div');
+            modal.className = 'mobile-modal';
+            modal.id = 'mobile-modal';
+            
+            // Obtener el contenido del acordeón
+            const accordionContent = document.getElementById(accordionId + '-content');
+            const accordionHeader = document.querySelector(`[onclick*="${accordionId}"] h4`);
+            
+            if (accordionContent && accordionHeader) {
+                // Crear header del modal
+                const modalHeader = document.createElement('div');
+                modalHeader.className = 'mobile-modal-header';
+                modalHeader.innerHTML = `
+                    <h3>${accordionHeader.textContent}</h3>
+                    <button class="close-modal" onclick="closeMobileModal()">
+                        <i class="fas fa-times"></i>
+                </button>
+                `;
+                
+                // Crear contenido del modal
+                const modalContent = document.createElement('div');
+                modalContent.className = 'mobile-modal-content';
+                modalContent.innerHTML = accordionContent.innerHTML;
+                
+                // Ensamblar modal
+                modal.appendChild(modalHeader);
+                modal.appendChild(modalContent);
+                
+                // Agregar al DOM
+                document.body.appendChild(overlay);
+                document.body.appendChild(modal);
+                
+                // Animar entrada
+                setTimeout(() => {
+                    overlay.classList.add('active');
+                    modal.classList.add('active');
+                }, 10);
+            }
+        }
+
+        // Función para cerrar modal móvil
+        function closeMobileModal() {
+            const overlay = document.querySelector('.mobile-modal-overlay');
+            const modal = document.getElementById('mobile-modal');
+            
+            if (overlay && modal) {
+                overlay.classList.remove('active');
+                modal.classList.remove('active');
+                
+                setTimeout(() => {
+                    overlay.remove();
+                    modal.remove();
+                }, 300);
+            }
+        }
+
+        // Función para actualizar modal móvil cuando cambien los datos
+        function updateMobileModal() {
+            const modal = document.getElementById('mobile-modal');
+            if (!modal) return;
+            
+            // Actualizar selector de productos
+            const mobileProductSelector = document.getElementById('mobile-product-selector');
+            const originalProductSelector = document.getElementById('product-selector');
+            if (mobileProductSelector && originalProductSelector) {
+                mobileProductSelector.innerHTML = originalProductSelector.innerHTML;
+                mobileProductSelector.value = originalProductSelector.value;
+                
+                // Actualizar imágenes si hay producto seleccionado
+                if (originalProductSelector.value) {
+                    loadMobileProductImages(originalProductSelector.value);
+                }
+            }
+            
+            // Actualizar selector de marcas
+            const mobileBrandSelector = document.getElementById('mobile-brand-selector');
+            const originalBrandSelector = document.getElementById('brand-selector');
+            if (mobileBrandSelector && originalBrandSelector) {
+                mobileBrandSelector.innerHTML = originalBrandSelector.innerHTML;
+                mobileBrandSelector.value = originalBrandSelector.value;
+            }
+            
+            // Sincronizar información básica
+            syncMobileBasicInfo();
+        }
+
+        // Función para sincronizar información básica móvil
+        function syncMobileBasicInfo() {
+            console.log('=== SINCRONIZANDO INFORMACIÓN BÁSICA MÓVIL ===');
+            
+            // Sincronizar información de marca
+            const originalBrandInfo = document.getElementById('brand-info');
+            const mobileBrandInfo = document.getElementById('mobile-brand-info');
+            if (originalBrandInfo && mobileBrandInfo) {
+                console.log('Sincronizando información de marca...');
+                console.log('Contenido original de marca:', originalBrandInfo.innerHTML.substring(0, 200) + '...');
+                mobileBrandInfo.innerHTML = originalBrandInfo.innerHTML;
+                console.log('Información de marca sincronizada');
+            } else {
+                console.log('No se encontraron contenedores de marca:', {
+                    original: !!originalBrandInfo,
+                    mobile: !!mobileBrandInfo
+                });
+            }
+            
+            // Sincronizar información de producto
+            const originalProductInfo = document.getElementById('product-info');
+            const mobileProductInfo = document.getElementById('mobile-product-info');
+            if (originalProductInfo && mobileProductInfo) {
+                console.log('Sincronizando información de producto...');
+                console.log('Contenido original de producto:', originalProductInfo.innerHTML.substring(0, 200) + '...');
+                mobileProductInfo.innerHTML = originalProductInfo.innerHTML;
+                console.log('Información de producto sincronizada');
+                console.log('Contenido móvil de producto después de sincronizar:', mobileProductInfo.innerHTML.substring(0, 200) + '...');
+            } else {
+                console.log('No se encontraron contenedores de producto:', {
+                    original: !!originalProductInfo,
+                    mobile: !!mobileProductInfo
+                });
+            }
+            
+            console.log('=== FIN SINCRONIZACIÓN ===');
+        }
+
+        // Función para sincronizar cambios del sidebar original con el modal móvil
+        function syncMobileModal() {
+            console.log('Configurando sincronización móvil...');
+            
+            // Observar cambios en el selector de productos original
+            const originalProductSelector = document.getElementById('product-selector');
+            if (originalProductSelector) {
+                originalProductSelector.addEventListener('change', function() {
+                    console.log('Cambio detectado en selector de productos original');
+                    setTimeout(() => {
+                        updateMobileModal();
+                        syncMobileBasicInfo();
+                    }, 300);
+                });
+            }
+            
+            // Observar cambios en el selector de marcas original
+            const originalBrandSelector = document.getElementById('brand-selector');
+            if (originalBrandSelector) {
+                originalBrandSelector.addEventListener('change', function() {
+                    console.log('Cambio detectado en selector de marcas original');
+                    setTimeout(() => {
+                        updateMobileModal();
+                        syncMobileBasicInfo();
+                    }, 300);
+                });
+            }
+        }
+
+        function generateContent() {
+            if (window.outputGenerator) {
+                window.outputGenerator.generateContent();
+            } else if (window.studioManager && window.studioManager.generateScripts) {
+                // Fallback a studioManager si outputGenerator no está disponible
+                window.studioManager.generateScripts();
+            } else {
+                console.error('OutputGenerator o StudioManager no están disponibles');
+            }
+        }
+        
+        // Mantener compatibilidad con generateUGC
+        function generateUGC() {
+            console.warn('⚠️ generateUGC() está deprecado, usar generateContent()');
+            generateContent();
+        }
+
+        // Variables para evitar bucles infinitos
+        let isLoadingBrand = false;
+        let isLoadingProduct = false;
+
+
+
+
+
+
+        // Función para poblar el selector de productos
+        function populateProductSelector(products) {
+            const productSelector = document.getElementById('product-selector');
+            if (!productSelector) {
+                console.error('No se encontró el selector de productos con ID: product-selector');
+                return;
+            }
+
+            console.log('Poblando selector de productos con:', products);
+            console.log('Selector encontrado:', productSelector);
+            console.log('Sección visible:', productSelector.closest('.config-section')?.style.display);
+
+            // Limpiar opciones existentes
+            productSelector.innerHTML = '<option value="">Seleccionar producto...</option>';
+            
+            // Agregar productos
+            products.forEach(product => {
+                const option = document.createElement('option');
+                option.value = product.id;
+                // Usar nombre_producto según el schema.sql
+                option.textContent = product.nombre_producto || product.tipo_producto || 'Producto sin nombre';
+                productSelector.appendChild(option);
+                console.log('Producto agregado al selector:', product.nombre_producto || product.tipo_producto);
+            });
+
+            console.log('Selector de productos actualizado con', products.length, 'productos');
+            
+            // NO hacer visible la sección automáticamente
+            // Solo poblar el selector, las imágenes se mostrarán cuando se seleccione un producto
+            console.log('Selector de productos poblado, pero NO mostrando imágenes automáticamente');
+        }
+
+        // Función para limpiar el selector de productos
+        function clearProductSelector() {
+            const productSelector = document.getElementById('product-selector');
+            if (productSelector) {
+                productSelector.innerHTML = '<option value="">No hay productos disponibles</option>';
+            }
+        }
+
+        // Función para poblar el selector de ofertas
+        function populateOfferSelector(offers) {
+            const offerSelector = document.getElementById('offer-selector');
+            if (!offerSelector) {
+                console.error('No se encontró el selector de ofertas con ID: offer-selector');
+                return;
+            }
+
+            console.log('Poblando selector de ofertas con:', offers);
+
+            // Limpiar opciones existentes
+            offerSelector.innerHTML = '<option value="">Seleccionar oferta...</option>';
+            
+            // Agregar ofertas
+            offers.forEach(offer => {
+                const option = document.createElement('option');
+                option.value = offer.id;
+                // Usar objetivo_principal como nombre principal, luego oferta_desc según schema.sql
+                option.textContent = offer.objetivo_principal || offer.oferta_desc || 'Oferta sin nombre';
+                offerSelector.appendChild(option);
+                console.log('Oferta agregada al selector:', offer.objetivo_principal || offer.oferta_desc);
+            });
+
+            console.log('Selector de ofertas actualizado con', offers.length, 'ofertas');
+        }
+
+        // Función para poblar el selector de audiencias
+        function populateAudienceSelector(audiences) {
+            const audienceSelector = document.getElementById('audience-selector');
+            if (!audienceSelector) {
+                console.error('No se encontró el selector de audiencias con ID: audience-selector');
+                return;
+            }
+
+            console.log('Poblando selector de audiencias con:', audiences);
+
+            // Limpiar opciones existentes
+            audienceSelector.innerHTML = '<option value="">Seleccionar audiencia...</option>';
+            
+            // Agregar audiencias
+            audiences.forEach(audience => {
+                const option = document.createElement('option');
+                option.value = audience.id;
+                // Usar buyer_persona como nombre si está disponible
+                const personaName = audience.buyer_persona?.name || audience.buyer_persona?.title || 'Audiencia sin nombre';
+                option.textContent = personaName;
+                audienceSelector.appendChild(option);
+                console.log('Audiencia agregada al selector:', personaName);
+            });
+
+            console.log('Selector de audiencias actualizado con', audiences.length, 'audiencias');
+        }
+
+        // Función para limpiar el selector de ofertas
+        function clearOfferSelector() {
+            const offerSelector = document.getElementById('offer-selector');
+            if (offerSelector) {
+                offerSelector.innerHTML = '<option value="">No hay ofertas disponibles</option>';
+            }
+        }
+
+        // Función para limpiar el selector de audiencias
+        function clearAudienceSelector() {
+            const audienceSelector = document.getElementById('audience-selector');
+            if (audienceSelector) {
+                audienceSelector.innerHTML = '<option value="">No hay audiencias disponibles</option>';
+            }
+        }
+
+        // Función para mostrar mensaje cuando no hay productos
+        function showNoProductsMessage() {
+            const productInfo = document.getElementById('product-info');
+            if (productInfo) {
+                productInfo.innerHTML = `
+                    <div class="info-item">
+                        <span class="info-label">Estado:</span>
+                        <span class="info-value empty">No hay productos en este proyecto</span>
+            </div>
+                `;
+            }
+        }
+
+
+
+        // Función para cargar información de oferta
+        function loadOfferInfo(offerId) {
+            if (!offerId || !window.studioManager || !window.studioManager.supabase) {
+                clearOfferInfo();
+                return;
+            }
+
+            console.log('Cargando datos de oferta:', offerId);
+
+            // Usar tabla 'campaigns' según schema.sql
+            window.studioManager.supabase
+                .from('campaigns')
+                .select('*')
+                .eq('id', offerId)
+                .single()
+                .then(({ data, error }) => {
+                    if (error) {
+                        console.error('Error cargando datos de oferta:', error);
+                        clearOfferInfo();
+                    } else if (data) {
+                        console.log('✅ Datos de oferta (campaign) cargados:', data);
+                        updateOfferDisplay(data);
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error en consulta de oferta:', error);
+                    clearOfferInfo();
+                });
+        }
+
+        // Función para cargar información de audiencia
+        function loadAudienceInfo(audienceId) {
+            if (!audienceId || !window.studioManager || !window.studioManager.supabase) {
+                clearAudienceInfo();
+                return;
+            }
+
+            console.log('Cargando datos de audiencia:', audienceId);
+
+            window.studioManager.supabase
+                .from('audience')
+                .select('*')
+                .eq('id', audienceId)
+                .single()
+                .then(({ data, error }) => {
+                    if (error) {
+                        console.error('Error cargando datos de audiencia:', error);
+                        clearAudienceInfo();
+                    } else if (data) {
+                        updateAudienceDisplay(data);
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error en consulta de audiencia:', error);
+                    clearAudienceInfo();
+                });
+        }
+
+        // Función para actualizar display de oferta
+        function updateOfferDisplay(data) {
+            if (!data) {
+                clearOfferInfo();
+                return;
+            }
+            
+            console.log('Actualizando display de oferta con datos:', data);
+            
+            const offerInfoContainer = document.getElementById('offer-info');
+            if (!offerInfoContainer) {
+                console.error('No se encontró el contenedor offer-info');
+                return;
+            }
+            
+            console.log('Contenedor offer-info encontrado:', offerInfoContainer);
+            
+            // Actualizar el contenido del contenedor según schema.sql (tabla campaigns)
+            offerInfoContainer.innerHTML = `
+                <div class="info-item">
+                    <span class="info-label">Objetivo del mensaje:</span>
+                    <span class="info-value">${data.objetivo_principal || 'No especificado'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Qué se comunica:</span>
+                    <span class="info-value long-text">${data.oferta_desc || 'No especificada'}</span>
+            </div>
+                <div class="info-item">
+                    <span class="info-label">Audiencia:</span>
+                    <span class="info-value">${data.audiencia_desc || 'No especificada'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Intenciones:</span>
+                    <span class="info-value">${data.intenciones || 'No especificadas'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Llamado a la acción:</span>
+                    <span class="info-value">${data.cta || 'No especificado'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Enlace:</span>
+                    <span class="info-value">
+                        ${data.cta_url ? `<a href="${data.cta_url}" target="_blank" class="url-link">${data.cta_url}</a>` : 'No especificada'}
+                    </span>
+        </div>
+                ${data.valido_hasta ? `
+                <div class="info-item">
+                    <span class="info-label">Vigencia:</span>
+                    <span class="info-value">${data.valido_hasta}</span>
+                </div>
+                ` : ''}
+            `;
+            
+            console.log('Contenido de oferta actualizado en el contenedor');
+        }
+
+        // Función para actualizar display de audiencia
+        function updateAudienceDisplay(data) {
+            if (!data) {
+                clearAudienceInfo();
+                return;
+            }
+            
+            console.log('Actualizando display de audiencia con datos:', data);
+            
+            const audienceInfoContainer = document.getElementById('audience-info');
+            if (!audienceInfoContainer) {
+                console.error('No se encontró el contenedor audience-info');
+                return;
+            }
+            
+            console.log('Contenedor audience-info encontrado:', audienceInfoContainer);
+            
+            // Extraer información del buyer_persona
+            const persona = data.buyer_persona || {};
+            const personaName = persona.name || persona.title || 'No especificado';
+            const personaAge = persona.age || 'No especificado';
+            const personaGender = persona.gender || 'No especificado';
+            
+            // Actualizar el contenido del contenedor
+            audienceInfoContainer.innerHTML = `
+                <div class="info-item">
+                    <span class="info-label">Persona:</span>
+                    <span class="info-value">${personaName}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Edad:</span>
+                    <span class="info-value">${personaAge}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Género:</span>
+                    <span class="info-value">${personaGender}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Intereses:</span>
+                    <span class="info-value">${formatArray(data.interests)}</span>
+                    </div>
+                <div class="info-item">
+                    <span class="info-label">Dolores:</span>
+                    <span class="info-value">${formatArray(data.pains)}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Contextos:</span>
+                    <span class="info-value">${formatArray(data.contexts)}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Idiomas:</span>
+                    <span class="info-value">${formatArray(data.language_codes)}</span>
+                </div>
+            `;
+            
+            console.log('Contenido de audiencia actualizado en el contenedor');
+        }
+
+        // Función para limpiar información de oferta
+        function clearOfferInfo() {
+            const offerInfo = document.getElementById('offer-info');
+            if (offerInfo) {
+                offerInfo.innerHTML = `
+                    <div class="info-item">
+                        <span class="info-label">Estado:</span>
+                        <span class="info-value empty">No seleccionado</span>
+                </div>
+                `;
+            }
+        }
+
+        // Función para limpiar información de audiencia
+        function clearAudienceInfo() {
+            const audienceInfo = document.getElementById('audience-info');
+            if (audienceInfo) {
+                audienceInfo.innerHTML = `
+                    <div class="info-item">
+                        <span class="info-label">Estado:</span>
+                        <span class="info-value empty">No seleccionado</span>
+                </div>
+                `;
+            }
+        }
+
+        // =======================================
+        // Funciones para Protagonista - Nuevos formatos
+        // =======================================
+        
+        // Género - Segmented Control
+        function selectGender(button, value) {
+            // Remover selección anterior
+            const allButtons = document.querySelectorAll('#gender-selector .segment-btn');
+            allButtons.forEach(btn => btn.classList.remove('active'));
+            
+            // Activar botón seleccionado
+            button.classList.add('active');
+            
+            // Llamar función original
+            if (window.updateGender) {
+                window.updateGender(value);
+            }
+        }
+        
+        // Edad - Slider
+        function updateAgeSlider(value) {
+            const display = document.getElementById('age-display-value');
+            if (display) {
+                display.textContent = value + ' años';
+            }
+        }
+        
+        // Debounce para evitar múltiples llamadas
+        let ageUpdateTimeout = null;
+        function updateAgeFromSlider(value) {
+            // Limpiar timeout anterior
+            if (ageUpdateTimeout) {
+                clearTimeout(ageUpdateTimeout);
+            }
+            
+            // Convertir valor a rango
+            let ageRange = '';
+            if (value <= 17) ageRange = '10-17';
+            else if (value <= 25) ageRange = '18-25';
+            else if (value <= 30) ageRange = '26-30';
+            else if (value <= 35) ageRange = '31-35';
+            else if (value <= 40) ageRange = '36-40';
+            else if (value <= 45) ageRange = '41-45';
+            else if (value <= 50) ageRange = '46-50';
+            else if (value <= 55) ageRange = '51-55';
+            else if (value <= 60) ageRange = '56-60';
+            else if (value <= 65) ageRange = '61-65';
+            else ageRange = '66-70';
+            
+            // Usar debounce para evitar llamadas múltiples
+            ageUpdateTimeout = setTimeout(() => {
+                if (window.updateAge) {
+                    window.updateAge(ageRange);
+                }
+            }, 300); // Esperar 300ms después del último cambio
+        }
+        
+        // Etnia - Dropdown con búsqueda
+        function showEthnicityDropdown() {
+            const dropdown = document.getElementById('ethnicity-dropdown');
+            if (dropdown) {
+                dropdown.style.display = 'block';
+            }
+        }
+        
+        function filterEthnicityOptions(searchTerm) {
+            const options = document.querySelectorAll('#ethnicity-dropdown .dropdown-option');
+            const term = searchTerm.toLowerCase();
+            
+            options.forEach(option => {
+                const text = option.textContent.toLowerCase();
+                if (text.includes(term)) {
+                    option.style.display = 'block';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+            
+            // Mostrar dropdown si hay búsqueda
+            const dropdown = document.getElementById('ethnicity-dropdown');
+            if (dropdown && searchTerm) {
+                dropdown.style.display = 'block';
+            }
+        }
+        
+        function selectEthnicity(value) {
+            const input = document.getElementById('ethnicity-search');
+            const dropdown = document.getElementById('ethnicity-dropdown');
+            const selectedOption = document.querySelector(`#ethnicity-dropdown .dropdown-option[data-value="${value}"]`);
+            
+            if (input && selectedOption) {
+                input.value = selectedOption.textContent;
+            }
+            
+            if (dropdown) {
+                dropdown.style.display = 'none';
+            }
+            
+            if (window.updateEthnicity) {
+                window.updateEthnicity(value);
+            }
+        }
+        
+        // Cerrar dropdown al hacer click fuera
+        document.addEventListener('click', function(event) {
+            const container = document.querySelector('.searchable-dropdown-container');
+            if (container && !container.contains(event.target)) {
+                const dropdown = document.getElementById('ethnicity-dropdown');
+                if (dropdown) {
+                    dropdown.style.display = 'none';
+                }
+            }
+        });
+        
+        // Expresión - Chips seleccionables (single)
+        function toggleExpressionChip(button, value) {
+            // Remover selección anterior (single select)
+            const allChips = document.querySelectorAll('#expression-selector .chip');
+            allChips.forEach(chip => chip.classList.remove('active'));
+            
+            // Activar chip seleccionado
+            button.classList.add('active');
+            
+            // Llamar función original
+            if (window.updateExpression) {
+                window.updateExpression(value);
+            }
+        }
+        
+        // Personalidad - Multi-select chips (máx. 2-3)
+        function togglePersonalityChip(button, value) {
+            const maxSelections = 3;
+            const selectedChips = document.querySelectorAll('#personality-selector .multi-chip.active');
+            
+            if (button.classList.contains('active')) {
+                // Deseleccionar
+                button.classList.remove('active');
+                if (window.updatePersonality) {
+                    // Enviar array de valores seleccionados
+                    const selected = Array.from(document.querySelectorAll('#personality-selector .multi-chip.active'))
+                        .map(chip => chip.dataset.value);
+                    window.updatePersonality(selected.join(','));
+                }
+            } else {
+                // Verificar límite
+                if (selectedChips.length >= maxSelections) {
+                    // Remover el primero y agregar el nuevo
+                    selectedChips[0].classList.remove('active');
+                }
+                // Seleccionar
+                button.classList.add('active');
+                if (window.updatePersonality) {
+                    const selected = Array.from(document.querySelectorAll('#personality-selector .multi-chip.active'))
+                        .map(chip => chip.dataset.value);
+                    window.updatePersonality(selected.join(','));
+                }
+            }
+        }
+        
+        // Tono - Slider semántico
+        function updateToneSlider(value) {
+            const display = document.getElementById('tone-display-value');
+            if (display) {
+                const numValue = parseInt(value);
+                // Mapeo más detallado de valores
+                if (numValue < 10) {
+                    display.textContent = 'Muy Serio';
+                } else if (numValue < 20) {
+                    display.textContent = 'Serio';
+                } else if (numValue < 30) {
+                    display.textContent = 'Autoritario';
+                } else if (numValue < 40) {
+                    display.textContent = 'Profesional';
+                } else if (numValue < 50) {
+                    display.textContent = 'Equilibrado';
+                } else if (numValue < 60) {
+                    display.textContent = 'Casual';
+                } else if (numValue < 70) {
+                    display.textContent = 'Amigable';
+                } else if (numValue < 80) {
+                    display.textContent = 'Tranquilo';
+                } else if (numValue < 90) {
+                    display.textContent = 'Relajado';
+                } else {
+                    display.textContent = 'Muy Relajado';
+                }
+            }
+        }
+        
+        // Debounce para evitar múltiples llamadas
+        let toneUpdateTimeout = null;
+        function updateToneFromSlider(value) {
+            // Limpiar timeout anterior
+            if (toneUpdateTimeout) {
+                clearTimeout(toneUpdateTimeout);
+            }
+            
+            const numValue = parseInt(value);
+            let toneValue = '';
+            // Mapeo a valores originales
+            if (numValue < 20) {
+                toneValue = 'serio';
+            } else if (numValue < 30) {
+                toneValue = 'autoritario';
+            } else if (numValue < 40) {
+                toneValue = 'profesional';
+            } else if (numValue < 50) {
+                toneValue = 'equilibrado';
+            } else if (numValue < 60) {
+                toneValue = 'casual';
+            } else if (numValue < 70) {
+                toneValue = 'amigable';
+            } else if (numValue < 80) {
+                toneValue = 'tranquilo';
+            } else {
+                toneValue = 'relajado';
+            }
+            
+            // Usar debounce para evitar llamadas múltiples
+            toneUpdateTimeout = setTimeout(() => {
+                if (window.updateTone) {
+                    window.updateTone(toneValue);
+                }
+            }, 300); // Esperar 300ms después del último cambio
+        }
+        
+        // Tono - Presets
+        function setTonePreset(value) {
+            const slider = document.getElementById('tone-slider');
+            const presetMap = {
+                'profesional': 35,
+                'casual': 55,
+                'amigable': 65,
+                'autoritario': 25,
+                'energetico': 45,
+                'tranquilo': 75
+            };
+            
+            if (slider && presetMap[value] !== undefined) {
+                slider.value = presetMap[value];
+                updateToneSlider(presetMap[value]);
+                updateToneFromSlider(presetMap[value]);
+                
+                // Actualizar botones activos
+                document.querySelectorAll('.tone-preset-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector(`.tone-preset-btn[data-value="${value}"]`).classList.add('active');
+            }
+        }
+        
+        // Realismo - Slider
+        function updateRealismSlider(value) {
+            const display = document.getElementById('realism-display-value');
+            if (display) {
+                const numValue = parseInt(value);
+                if (numValue < 20) {
+                    display.textContent = 'Muy Estilizado';
+                } else if (numValue < 40) {
+                    display.textContent = 'Estilizado';
+                } else if (numValue < 60) {
+                    display.textContent = 'Moderado';
+                } else if (numValue < 80) {
+                    display.textContent = 'Realista';
+                } else {
+                    display.textContent = 'Ultra realista';
+                }
+            }
+        }
+        
+        // Debounce para evitar múltiples llamadas
+        let realismUpdateTimeout = null;
+        function updateRealismFromSlider(value) {
+            // Limpiar timeout anterior
+            if (realismUpdateTimeout) {
+                clearTimeout(realismUpdateTimeout);
+            }
+            
+            const numValue = parseInt(value);
+            let realismValue = '';
+            if (numValue < 30) {
+                realismValue = 'estilizado';
+            } else if (numValue < 70) {
+                realismValue = 'moderado';
+            } else {
+                realismValue = 'ultra-realista';
+            }
+            
+            // Usar debounce para evitar llamadas múltiples
+            realismUpdateTimeout = setTimeout(() => {
+                if (window.updateRealism) {
+                    window.updateRealism(realismValue);
+                }
+            }, 300); // Esperar 300ms después del último cambio
+        }
+        
+        // Realismo - Presets (multi-select)
+        function toggleRealismPreset(button, value) {
+            if (button.classList.contains('active')) {
+                button.classList.remove('active');
+            } else {
+                button.classList.add('active');
+            }
+            
+            // Recopilar todos los presets activos
+            const activePresets = Array.from(document.querySelectorAll('.realism-preset-btn.active'))
+                .map(btn => btn.dataset.value);
+            
+            // Actualizar slider basado en cantidad de presets activos
+            const slider = document.getElementById('realism-slider');
+            if (slider) {
+                if (activePresets.length === 0) {
+                    slider.value = 50; // Moderado por defecto
+                } else if (activePresets.length <= 3) {
+                    slider.value = 60; // Más realista
+                } else if (activePresets.length <= 6) {
+                    slider.value = 75; // Muy realista
+                } else {
+                    slider.value = 90; // Ultra realista
+                }
+                updateRealismSlider(slider.value);
+                updateRealismFromSlider(slider.value);
+            }
+            
+            // Llamar función original con valores combinados
+            if (window.updateRealism) {
+                const combinedValue = activePresets.length > 0 
+                    ? activePresets.join(',') 
+                    : slider.value;
+                window.updateRealism(combinedValue);
+            }
+        }
+        
+        // Toggle IA Protagonista
+        function toggleAIProtagonist(enabled) {
+            const sujetoContent = document.getElementById('sujeto-content');
+            const suggestionMessage = document.getElementById('ai-suggestion-message');
+            
+            if (enabled) {
+                // Activar modo IA
+                if (sujetoContent) {
+                    sujetoContent.classList.add('ai-protagonist-active');
+                }
+                if (suggestionMessage) {
+                    suggestionMessage.style.display = 'flex';
+                }
+            } else {
+                // Desactivar modo IA
+                if (sujetoContent) {
+                    sujetoContent.classList.remove('ai-protagonist-active');
+                }
+                if (suggestionMessage) {
+                    suggestionMessage.style.display = 'none';
+                }
+            }
+        }
+        
+        // Toggle IA Escenario y ambiente
+        function toggleAIScenario(enabled) {
+            const escenarioContent = document.getElementById('escenario-content');
+            const suggestionMessage = document.getElementById('ai-scenario-suggestion-message');
+            
+            if (enabled) {
+                // Activar modo IA
+                if (escenarioContent) {
+                    escenarioContent.classList.add('ai-scenario-active');
+                }
+                if (suggestionMessage) {
+                    suggestionMessage.style.display = 'flex';
+                }
+            } else {
+                // Desactivar modo IA
+                if (escenarioContent) {
+                    escenarioContent.classList.remove('ai-scenario-active');
+                }
+                if (suggestionMessage) {
+                    suggestionMessage.style.display = 'none';
+                }
+            }
+        }
+        
+        // Escenario y ambiente - Funciones
+        // =======================================
+        
+        // Tono visual - Chips (multi-select)
+        function toggleVisualToneChip(button, value) {
+            if (button.classList.contains('active')) {
+                button.classList.remove('active');
+            } else {
+                button.classList.add('active');
+            }
+            
+            // Recopilar valores seleccionados
+            const selected = Array.from(document.querySelectorAll('#visual-tone-selector .chip.active'))
+                .map(chip => chip.dataset.value);
+            
+            if (window.updateVisualTone) {
+                window.updateVisualTone(selected.join(','));
+            }
+        }
+        
+        // Ambiente - Chips (multi-select)
+        function toggleAmbienceChip(button, value) {
+            if (button.classList.contains('active')) {
+                button.classList.remove('active');
+            } else {
+                button.classList.add('active');
+            }
+            
+            // Recopilar valores seleccionados
+            const selected = Array.from(document.querySelectorAll('#ambience-selector .chip.active'))
+                .map(chip => chip.dataset.value);
+            
+            if (window.updateAmbience) {
+                window.updateAmbience(selected.join(','));
+            }
+        }
+        
+        // Tiempo - Segmented control (single)
+        function selectTime(button, value) {
+            // Remover selección anterior
+            const allButtons = document.querySelectorAll('#time-selector .segment-btn');
+            allButtons.forEach(btn => btn.classList.remove('active'));
+            
+            // Activar botón seleccionado
+            button.classList.add('active');
+            
+            if (window.updateTime) {
+                window.updateTime(value);
+            }
+        }
+        
+        // Realismo visual - Slider
+        function updateVisualRealismSlider(value) {
+            const display = document.getElementById('visual-realism-display-value');
+            if (display) {
+                const numValue = parseInt(value);
+                if (numValue < 20) {
+                    display.textContent = 'Muy Pulido';
+                } else if (numValue < 40) {
+                    display.textContent = 'Pulido';
+                } else if (numValue < 60) {
+                    display.textContent = 'Moderado';
+                } else if (numValue < 80) {
+                    display.textContent = 'Natural';
+                } else {
+                    display.textContent = 'Muy Natural';
+                }
+            }
+        }
+        
+        // Debounce para evitar múltiples llamadas
+        let visualRealismUpdateTimeout = null;
+        function updateVisualRealismFromSlider(value) {
+            // Limpiar timeout anterior
+            if (visualRealismUpdateTimeout) {
+                clearTimeout(visualRealismUpdateTimeout);
+            }
+            
+            const numValue = parseInt(value);
+            let realismValue = '';
+            if (numValue < 30) {
+                realismValue = 'pulido';
+            } else if (numValue < 70) {
+                realismValue = 'moderado';
+            } else {
+                realismValue = 'natural';
+            }
+            
+            // Usar debounce para evitar llamadas múltiples
+            visualRealismUpdateTimeout = setTimeout(() => {
+                if (window.updateVisualRealism) {
+                    window.updateVisualRealism(realismValue);
+                }
+            }, 300); // Esperar 300ms después del último cambio
+        }
+        
+        // Color de Ojos - Swatches
+        function selectEyeColor(button, value) {
+            // Remover selección anterior
+            const allSwatches = document.querySelectorAll('#eyes-selector .eye-swatch');
+            allSwatches.forEach(swatch => swatch.classList.remove('active'));
+            
+            // Activar swatch seleccionado
+            button.classList.add('active');
+            
+            // Llamar función original
+            if (window.updateEyes) {
+                window.updateEyes(value);
+            }
+        }
+
+        // Funciones para Configuración Avanzada
+        // =======================================
+
+        // Función para actualizar resolución
+        function updateResolution(value) {
+            console.log('Resolución seleccionada:', value);
+            if (window.studioManager) {
+                window.studioManager.selectedResolution = value;
+            }
+        }
+
+        // Función para actualizar ratio
+        function updateRatio(value) {
+            console.log('Ratio seleccionado:', value);
+            if (window.studioManager) {
+                window.studioManager.selectedRatio = value;
+            }
+        }
+
+        // Función para actualizar creatividad
+        function updateCreativity(value) {
+            const creativityValue = document.getElementById('creativity-value');
+            if (creativityValue) {
+                creativityValue.textContent = value;
+            }
+            console.log('Creatividad actualizada:', value);
+            if (window.studioManager) {
+                window.studioManager.selectedCreativity = parseFloat(value);
+            }
+        }
+
+        // Función para obtener configuración avanzada
+        function getAdvancedConfig() {
+            const resolution = document.getElementById('resolution-selector')?.value || '720p';
+            const ratio = document.getElementById('ratio-selector')?.value || 'vertical';
+            const creativity = document.getElementById('creativity-slider')?.value || '0.7';
+            const prompt = document.getElementById('prompt-input')?.value || '';
+            const negativePrompt = document.getElementById('negative-prompt-input')?.value || '';
+
+            return {
+                resolution: resolution,
+                ratio: ratio,
+                creativity: parseFloat(creativity),
+                prompt: prompt,
+                negativePrompt: negativePrompt
+            };
+        }
+
+        // Función para establecer configuración avanzada
+        function setAdvancedConfig(config) {
+            if (config.resolution) {
+                const resolutionSelector = document.getElementById('resolution-selector');
+                if (resolutionSelector) {
+                    resolutionSelector.value = config.resolution;
+                }
+            }
+            
+            if (config.ratio) {
+                const ratioSelector = document.getElementById('ratio-selector');
+                if (ratioSelector) {
+                    ratioSelector.value = config.ratio;
+                }
+            }
+            
+            if (config.creativity !== undefined) {
+                const creativitySlider = document.getElementById('creativity-slider');
+                const creativityValue = document.getElementById('creativity-value');
+                if (creativitySlider) {
+                    creativitySlider.value = config.creativity;
+                }
+                if (creativityValue) {
+                    creativityValue.textContent = config.creativity;
+                }
+            }
+            
+            if (config.prompt) {
+                const promptInput = document.getElementById('prompt-input');
+                if (promptInput) {
+                    promptInput.value = config.prompt;
+                }
+            }
+            
+            if (config.negativePrompt) {
+                const negativePromptInput = document.getElementById('negative-prompt-input');
+                if (negativePromptInput) {
+                    negativePromptInput.value = config.negativePrompt;
+                }
+            }
+        }
+
+        function formatArray(array) {
+            if (!array || array.length === 0) {
+                return '<span class="empty">No configurado</span>';
+            }
+            
+            // Si es un string, intentar dividirlo por comas
+            if (typeof array === 'string') {
+                const items = array.split(',').map(item => item.trim()).filter(item => item);
+                if (items.length === 0) {
+                    return '<span class="empty">No configurado</span>';
+                }
+                return items.map(item => `<span class="tag">${item}</span>`).join(' ');
+            }
+            
+            // Si es un array, formatearlo como tags
+            return array.map(item => `<span class="tag">${item}</span>`).join(' ');
+        }
+
+        function clearBrandInfo() {
+            const brandTone = document.getElementById('brand-tone');
+            const brandKeywordsYes = document.getElementById('brand-keywords-yes');
+            const brandKeywordsNo = document.getElementById('brand-keywords-no');
+            const brandDosDonts = document.getElementById('brand-dos-donts');
+            
+            if (brandTone) brandTone.textContent = 'No seleccionado';
+            if (brandKeywordsYes) brandKeywordsYes.innerHTML = '<span class="empty">No configurado</span>';
+            if (brandKeywordsNo) brandKeywordsNo.innerHTML = '<span class="empty">No configurado</span>';
+            if (brandDosDonts) brandDosDonts.textContent = 'No configurado';
+            
+            // Ocultar galería de imágenes cuando se limpia la marca
+            if (window.studioManager && window.studioManager.hideImageGallery) {
+                window.studioManager.hideImageGallery();
+            }
+        }
+
+        function clearProductInfo() {
+            const productType = document.getElementById('product-type');
+            const productShortDesc = document.getElementById('product-short-desc');
+            const productBenefits = document.getElementById('product-benefits');
+            const productDifferentiators = document.getElementById('product-differentiators');
+            const productUsageSteps = document.getElementById('product-usage-steps');
+            const productIngredients = document.getElementById('product-ingredients');
+            const productPrice = document.getElementById('product-price');
+            const productVariants = document.getElementById('product-variants');
+            
+            if (productType) productType.textContent = 'No seleccionado';
+            if (productShortDesc) productShortDesc.textContent = 'No seleccionado';
+            if (productBenefits) productBenefits.innerHTML = '<span class="empty">No seleccionado</span>';
+            if (productDifferentiators) productDifferentiators.innerHTML = '<span class="empty">No seleccionado</span>';
+            if (productUsageSteps) productUsageSteps.innerHTML = '<span class="empty">No seleccionado</span>';
+            if (productIngredients) productIngredients.innerHTML = '<span class="empty">No seleccionado</span>';
+            if (productPrice) {
+                productPrice.textContent = 'No seleccionado';
+                productPrice.classList.remove('price');
+            }
+            if (productVariants) productVariants.innerHTML = '<span class="empty">No seleccionado</span>';
+            
+            // Ocultar galería de imágenes
+            if (window.studioManager && window.studioManager.hideImageGallery) {
+                window.studioManager.hideImageGallery();
+            }
+        }
+
+        // Funciones que se ejecutan cuando se selecciona marca o producto
+        async function onBrandSelected(brandId) {
+            console.log('=== MARCA SELECCIONADA ===');
+            console.log('ID de marca:', brandId);
+            
+            // Verificar que el brandId sea válido
+            if (!brandId || brandId === 'null' || brandId === '') {
+                console.log('ID de marca inválido, limpiando información');
+                clearBrandInfo();
+                return;
+            }
+            
+            // Evitar llamadas múltiples
+            if (isLoadingBrand) {
+                console.log('Ya se está cargando una marca, ignorando...');
+                return;
+            }
+            
+            console.log('Iniciando carga de datos de marca...');
+            
+            // Mostrar indicador de carga
+            showLoadingIndicator('brand-info');
+            
+            try {
+                // Delegar completamente a studio.js
+                if (window.studioManager && window.studioManager.selectBrandFromDropdown) {
+                    await window.studioManager.selectBrandFromDropdown(brandId);
+                    
+                    // Actualizar la card con los datos de la marca
+                    if (window.studioManager.projectData && window.studioManager.projectData.id === brandId) {
+                        updateBrandCard(window.studioManager.projectData);
+                    } else {
+                        // Si no está en projectData, cargar desde Supabase
+                        const supabase = window.getSupabaseClient ? window.getSupabaseClient() : 
+                                       (window.supabaseClient && typeof window.supabaseClient.from === 'function' ? window.supabaseClient : null);
+                        if (supabase) {
+                            const { data: projectData } = await supabase
+                                .from('projects')
+                                .select('*')
+                                .eq('id', brandId)
+                                .single();
+                            if (projectData) {
+                                updateBrandCard(projectData);
+                            }
+                        }
+                    }
+                }
+                
+                console.log('=== MARCA CARGADA COMPLETAMENTE ===');
+                
+                // Ocultar indicador de carga
+                hideLoadingIndicator('brand-info');
+            } catch (error) {
+                console.error('Error cargando marca:', error);
+                hideLoadingIndicator('brand-info');
+            }
+        }
+        
+        // Función para actualizar la card de marca
+        function updateBrandCard(projectData) {
+            console.log('🎨 updateBrandCard llamado con:', projectData);
+            
+            const brandCardLogoImg = document.getElementById('brand-card-logo-img');
+            const brandCardLogoPlaceholder = document.getElementById('brand-card-logo-placeholder');
+            const brandCardName = document.getElementById('brand-card-name');
+            const brandSelector = document.getElementById('brand-selector');
+            
+            console.log('Elementos encontrados:', {
+                brandCardLogoImg: !!brandCardLogoImg,
+                brandCardLogoPlaceholder: !!brandCardLogoPlaceholder,
+                brandCardName: !!brandCardName,
+                brandSelector: !!brandSelector
+            });
+            
+            if (!projectData) {
+                console.log('⚠️ No hay projectData, mostrando placeholder');
+                if (brandCardName) {
+                    brandCardName.textContent = 'Seleccionar marca...';
+                    console.log('✅ brandCardName actualizado a placeholder');
+                }
+                if (brandCardLogoImg) brandCardLogoImg.style.display = 'none';
+                if (brandCardLogoPlaceholder) {
+                    brandCardLogoPlaceholder.style.display = 'flex';
+                    brandCardLogoPlaceholder.textContent = '';
+                }
+                if (brandSelector) brandSelector.value = '';
+                return;
+            }
+            
+            console.log('📝 Actualizando card con datos:', {
+                id: projectData.id,
+                nombre_marca: projectData.nombre_marca,
+                logo_url: projectData.logo_url
+            });
+            
+            // Actualizar nombre
+            if (brandCardName) {
+                const nombreMarca = projectData.nombre_marca || 'Sin nombre';
+                brandCardName.textContent = nombreMarca;
+                console.log('✅ brandCardName actualizado a:', nombreMarca);
+            } else {
+                console.error('❌ brandCardName no encontrado');
+            }
+            
+            // Actualizar logo
+            if (projectData.logo_url) {
+                console.log('🖼️ Cargando logo desde:', projectData.logo_url);
+                if (brandCardLogoImg) {
+                    brandCardLogoImg.src = projectData.logo_url + '?t=' + Date.now();
+                    brandCardLogoImg.alt = projectData.nombre_marca || 'Logo';
+                    brandCardLogoImg.style.display = 'block';
+                    brandCardLogoImg.onerror = () => {
+                        console.error('❌ Error cargando logo');
+                        if (brandCardLogoImg) brandCardLogoImg.style.display = 'none';
+                        if (brandCardLogoPlaceholder) {
+                            brandCardLogoPlaceholder.style.display = 'flex';
+                            const initials = (projectData.nombre_marca || 'SN')
+                                .split(' ')
+                                .map(word => word.charAt(0))
+                                .join('')
+                                .toUpperCase()
+                                .substring(0, 2);
+                            brandCardLogoPlaceholder.textContent = initials;
+                        }
+                    };
+                    brandCardLogoImg.onload = () => {
+                        console.log('✅ Logo cargado exitosamente');
+                    };
+                }
+                if (brandCardLogoPlaceholder) {
+                    brandCardLogoPlaceholder.style.display = 'none';
+                }
+            } else {
+                console.log('ℹ️ No hay logo_url, mostrando iniciales');
+                // Mostrar iniciales si no hay logo
+                if (brandCardLogoPlaceholder) {
+                    const initials = (projectData.nombre_marca || 'SN')
+                        .split(' ')
+                        .map(word => word.charAt(0))
+                        .join('')
+                        .toUpperCase()
+                        .substring(0, 2);
+                    brandCardLogoPlaceholder.textContent = initials;
+                    brandCardLogoPlaceholder.style.display = 'flex';
+                    console.log('✅ Iniciales mostradas:', initials);
+                }
+                if (brandCardLogoImg) {
+                    brandCardLogoImg.style.display = 'none';
+                }
+            }
+            
+            // Actualizar selector oculto
+            if (brandSelector && projectData.id) {
+                brandSelector.value = projectData.id;
+                console.log('✅ brand-selector actualizado con ID:', projectData.id);
+            }
+            
+            console.log('✅ updateBrandCard completado');
+        }
+        
+        // Función para abrir selector de marca (si se necesita cambiar)
+        function openBrandSelector() {
+            // Cargar todas las marcas del usuario y mostrar un selector
+            if (!window.studioManager || !window.studioManager.supabase || !window.studioManager.userId) {
+                console.error('StudioManager no está disponible');
+                alert('Error: No se puede cargar las marcas. Por favor, recarga la página.');
+                return;
+            }
+            
+            const supabase = window.studioManager.supabase;
+            const userId = window.studioManager.userId;
+            
+            // Cargar todas las marcas del usuario
+            supabase
+                .from('projects')
+                .select('id, nombre_marca, logo_url')
+                .eq('user_id', userId)
+                .then(({ data: projects, error }) => {
+                    if (error) {
+                        console.error('Error cargando marcas:', error);
+                        alert('Error al cargar las marcas: ' + error.message);
+                        return;
+                    }
+                    
+                    if (!projects || projects.length === 0) {
+                        alert('No tienes marcas disponibles. Por favor, crea una marca primero.');
+                        return;
+                    }
+                    
+                    // Crear modal con opciones seleccionables
+                    showBrandSelectorModal(projects);
+                })
+                .catch(error => {
+                    console.error('Error en openBrandSelector:', error);
+                    alert('Error al cargar las marcas: ' + error.message);
+                });
+        }
+        
+        // Función para mostrar modal de selección de marca
+        function showBrandSelectorModal(projects) {
+            // Crear overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'brand-selector-overlay';
+            overlay.onclick = (e) => {
+                if (e.target === overlay) {
+                    closeBrandSelectorModal();
+                }
+            };
+            
+            // Crear modal
+            const modal = document.createElement('div');
+            modal.className = 'brand-selector-modal';
+            
+            // Crear header
+            const header = document.createElement('div');
+            header.className = 'brand-selector-header';
+            header.innerHTML = `
+                <h3>Seleccionar Marca</h3>
+                <button class="brand-selector-close" onclick="closeBrandSelectorModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            // Crear lista de marcas
+            const brandsList = document.createElement('div');
+            brandsList.className = 'brand-selector-list';
+            
+            projects.forEach((project) => {
+                const brandItem = document.createElement('div');
+                brandItem.className = 'brand-selector-item';
+                brandItem.onclick = () => {
+                    selectBrandFromModal(project);
+                };
+                
+                brandItem.innerHTML = `
+                    <div class="brand-selector-item-logo">
+                        ${project.logo_url 
+                            ? `<img src="${project.logo_url}" alt="${project.nombre_marca || 'Sin nombre'}">`
+                            : `<div class="brand-selector-logo-placeholder"></div>`
+                        }
+                    </div>
+                    <div class="brand-selector-item-name">${project.nombre_marca || 'Sin nombre'}</div>
+                `;
+                
+                brandsList.appendChild(brandItem);
+            });
+            
+            modal.appendChild(header);
+            modal.appendChild(brandsList);
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+        }
+        
+        // Función para seleccionar marca desde el modal
+        function selectBrandFromModal(project) {
+            updateBrandCard(project);
+            const brandSelector = document.getElementById('brand-selector');
+            if (brandSelector) {
+                brandSelector.value = project.id;
+            }
+            onBrandSelected(project.id);
+            closeBrandSelectorModal();
+        }
+        
+        // Función para cerrar modal de selección de marca
+        function closeBrandSelectorModal() {
+            const overlay = document.querySelector('.brand-selector-overlay');
+            if (overlay) {
+                overlay.remove();
+            }
+        }
+
+        async function onProductSelected(productId) {
+            console.log('=== PRODUCTO SELECCIONADO ===');
+            console.log('ID del producto:', productId);
+            
+            // Verificar que el productId sea válido
+            if (!productId || productId === 'null' || productId === '') {
+                console.log('ID de producto inválido, limpiando información');
+                clearProductInfo();
+                return;
+            }
+            
+            // Evitar llamadas múltiples
+            if (isLoadingProduct) {
+                console.log('Ya se está cargando un producto, ignorando...');
+                return;
+            }
+            
+            console.log('Iniciando carga de datos de producto...');
+            
+            // Mostrar indicador de carga
+            showLoadingIndicator('product-info');
+            
+            try {
+                // Delegar completamente a studio.js
+                if (window.studioManager && window.studioManager.selectProductFromDropdown) {
+                    await window.studioManager.selectProductFromDropdown(productId);
+                }
+                
+                console.log('=== PRODUCTO CARGADO COMPLETAMENTE ===');
+            } catch (error) {
+                console.error('Error cargando producto:', error);
+                hideLoadingIndicator('product-info');
+            }
+        }
+
+
+        function onOfferSelected(offerId) {
+            console.log('Oferta seleccionada:', offerId);
+            
+            // Verificar que el offerId sea válido
+            if (!offerId || offerId === 'null' || offerId === '') {
+                console.log('ID de oferta inválido:', offerId);
+                clearOfferInfo();
+                return;
+            }
+            
+            // Usar la función del StudioManager
+            if (window.studioManager) {
+                window.studioManager.selectOfferFromDropdown(offerId);
+            } else {
+                console.error('StudioManager no está disponible');
+            }
+        }
+
+        function onAudienceSelected(audienceId) {
+            console.log('Audiencia seleccionada:', audienceId);
+            
+            // Verificar que el audienceId sea válido
+            if (!audienceId || audienceId === 'null' || audienceId === '') {
+                console.log('ID de audiencia inválido:', audienceId);
+                clearAudienceInfo();
+                return;
+            }
+            
+            // Usar la función del StudioManager
+            if (window.studioManager) {
+                window.studioManager.selectAudienceFromDropdown(audienceId);
+            } else {
+                console.error('StudioManager no está disponible');
+            }
+        }
+
+        // Función para mostrar indicador de carga
+        function showLoadingIndicator(containerId) {
+            const container = document.getElementById(containerId);
+            if (container) {
+                // Guardar el contenido original si no está guardado
+                if (!container.dataset.originalContent) {
+                    container.dataset.originalContent = container.innerHTML;
+                }
+                // Mostrar solo el indicador de carga
+                container.innerHTML = '<div class="loading-indicator">Cargando datos...</div>';
+            }
+        }
+
+        // Función para ocultar indicador de carga
+        function hideLoadingIndicator(containerId) {
+            const container = document.getElementById(containerId);
+            if (container) {
+                const loadingIndicator = container.querySelector('.loading-indicator');
+                if (loadingIndicator) {
+                    loadingIndicator.remove();
+                }
+                // Restaurar contenido original si existe y no hay datos cargados
+                if (container.dataset.originalContent && container.children.length === 0) {
+                    container.innerHTML = container.dataset.originalContent;
+                    delete container.dataset.originalContent;
+                }
+            }
+        }
+
+        // Inicializar componentes globales
+        function initializeGlobalComponents() {
+            console.log('🔧 Inicializando componentes globales...');
+            
+            // Esperar a que todos los managers estén listos
+            const checkManagers = setInterval(() => {
+                const supabaseReady = (window.appLoader && window.appLoader.isReady()) || 
+                                     (window.supabaseClient && typeof window.supabaseClient.from === 'function') ||
+                                     (window.getSupabaseClient && window.getSupabaseClient());
+                
+                if (window.studioManager && supabaseReady) {
+                    clearInterval(checkManagers);
+                    
+                    console.log('✅ Todos los managers están listos');
+                    
+                    // Inicializar instancias que dependen de supabase
+                    const supabase = window.getSupabaseClient ? window.getSupabaseClient() : 
+                                   (window.supabaseClient && typeof window.supabaseClient.from === 'function' ? window.supabaseClient : null);
+                        
+                    if (supabase) {
+                        // Inicializar DataCollector
+                        window.dataCollector = new DataCollector(supabase, window.studioManager.userId);
+                        console.log('✅ DataCollector inicializado');
+                        
+                        // Inicializar WebhookManager
+                        window.webhookManager = new WebhookManager();
+                        console.log('✅ WebhookManager inicializado');
+                        
+                        // Inicializar OutputGenerator
+                        window.outputGenerator = new OutputGenerator(
+                            window.dataCollector,
+                            window.webhookManager
+                        );
+                        console.log('✅ OutputGenerator inicializado');
+                        
+                        console.log('🎉 Todos los componentes están listos');
+                    }
+                }
+            }, 100);
+            
+            // Timeout después de 5 segundos
+            setTimeout(() => {
+                clearInterval(checkManagers);
+                if (!window.dataCollector || !window.webhookManager || !window.outputGenerator) {
+                    console.warn('⚠️ Algunos componentes no se inicializaron a tiempo');
+                }
+            }, 5000);
+        }
+
+        // Función para generar contenido usando el OutputGenerator
+        function generateContent() {
+            console.log('Iniciando generación de contenido...');
+            
+            if (!window.outputGenerator) {
+                console.error('❌ OutputGenerator no está inicializado');
+                alert('Error: OutputGenerator no está listo. Por favor recarga la página.');
+                return;
+            }
+            
+            window.outputGenerator.generateContent();
+        }
+        
+        // Mantener compatibilidad con generateUGC por si hay referencias antiguas
+        function generateUGC() {
+            console.warn('⚠️ generateUGC() está deprecado, usar generateContent()');
+            generateContent();
+        }
+
+        // Ejecutar inicialización cuando el DOM esté listo
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeGlobalComponents);
+        } else {
+            initializeGlobalComponents();
+        }
+    </script>
+</body>
+</html>

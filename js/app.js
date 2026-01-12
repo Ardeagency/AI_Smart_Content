@@ -114,11 +114,6 @@ class App {
     });
 
     // Rutas protegidas - Nueva estructura
-    this.router.register('/dashboard', window.DashboardView, {
-      requiresAuth: true,
-      redirectIfAuth: false
-    });
-
     this.router.register('/organization', window.OrganizationView, {
       requiresAuth: true,
       redirectIfAuth: false
@@ -199,11 +194,6 @@ class App {
       redirectIfAuth: false
     });
 
-    this.router.register('/insights', window.InsightsView, {
-      requiresAuth: true,
-      redirectIfAuth: false
-    });
-
     this.router.register('/settings', window.SettingsView, {
       requiresAuth: true,
       redirectIfAuth: false
@@ -269,7 +259,6 @@ class App {
     console.log('    - /login (Login)');
     console.log('    - /planes (Planes)');
     console.log('  Protegidas - Nueva Estructura:');
-    console.log('    - /dashboard (Dashboard)');
     console.log('    - /organization (Organización)');
     console.log('    - /brands (Marcas)');
     console.log('    - /brands/:brandId (Detalle Marca)');
@@ -285,7 +274,6 @@ class App {
     console.log('    - /create/templates (Plantillas)');
     console.log('    - /content (Biblioteca)');
     console.log('    - /content/:contentId (Detalle Contenido)');
-    console.log('    - /insights (Insights)');
     console.log('    - /settings (Configuración)');
     console.log('  Legacy (compatibilidad):');
     console.log('    - /hogar, /living, /studio, /form-record');

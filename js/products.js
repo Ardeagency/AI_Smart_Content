@@ -658,16 +658,16 @@ if (typeof window.ProductsManager === 'undefined') {
         const form = document.getElementById('productForm');
         if (form) {
             form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.saveProduct();
-            });
+            e.preventDefault();
+            this.saveProduct();
+        });
         }
 
         const cancelBtn = document.getElementById('cancelBtn');
         if (cancelBtn) {
             cancelBtn.addEventListener('click', () => {
-                this.closeSidebar();
-            });
+            this.closeSidebar();
+        });
         }
     }
 

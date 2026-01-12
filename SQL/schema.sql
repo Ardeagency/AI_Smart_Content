@@ -1,6 +1,32 @@
 -- WARNING: This schema is for context only and is not meant to be run.
 -- Table order and constraints may not be valid for execution.
 
+CREATE TABLE public.ai_brand_vectors (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  organization_id uuid NOT NULL,
+  brand_container_id uuid NOT NULL,
+  source_bucket text NOT NULL,
+  source_path text NOT NULL,
+  source_type text NOT NULL,
+  chunk_index integer NOT NULL,
+  content text NOT NULL,
+  embedding USER-DEFINED,
+  metadata jsonb DEFAULT '{}'::jsonb,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT ai_brand_vectors_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.ai_global_vectors (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  source_bucket text NOT NULL,
+  source_path text NOT NULL,
+  source_type text NOT NULL,
+  chunk_index integer NOT NULL,
+  content text NOT NULL,
+  embedding USER-DEFINED,
+  metadata jsonb DEFAULT '{}'::jsonb,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT ai_global_vectors_pkey PRIMARY KEY (id)
+);
 CREATE TABLE public.audiences (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   brand_id uuid NOT NULL,

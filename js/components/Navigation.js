@@ -63,12 +63,6 @@ class Navigation {
           <div class="nav-section">
             <div class="nav-section-title">Principal</div>
             <div class="nav-item">
-              <a href="/dashboard" class="nav-link" data-route="/dashboard">
-                <i class="fas fa-home nav-icon"></i>
-                <span class="nav-text">Dashboard</span>
-              </a>
-            </div>
-            <div class="nav-item">
               <a href="/organization" class="nav-link" data-route="/organization">
                 <i class="fas fa-building nav-icon"></i>
                 <span class="nav-text">Organización</span>
@@ -116,16 +110,6 @@ class Navigation {
               <a href="/content" class="nav-link" data-route="/content">
                 <i class="fas fa-folder nav-icon"></i>
                 <span class="nav-text">Biblioteca</span>
-              </a>
-            </div>
-          </div>
-
-          <div class="nav-section">
-            <div class="nav-section-title">Análisis</div>
-            <div class="nav-item">
-              <a href="/insights" class="nav-link" data-route="/insights">
-                <i class="fas fa-chart-line nav-icon"></i>
-                <span class="nav-text">Insights</span>
               </a>
             </div>
           </div>

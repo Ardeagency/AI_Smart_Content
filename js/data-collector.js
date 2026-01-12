@@ -23,7 +23,7 @@ class DataCollector {
             this.collectSelectedImages()
         ]);
 
-            // Limpiar producto - mapear campos del schema a formato esperado
+        // Limpiar producto - mapear campos del schema a formato esperado
         let productoEnviado = null;
         if (producto) {
             productoEnviado = {
