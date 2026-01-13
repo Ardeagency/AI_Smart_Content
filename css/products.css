@@ -81,9 +81,26 @@
    MAIN CONTAINER
    ============================================ */
 .products-container {
-    min-height: calc(100vh - 80px);
+    min-height: calc(100vh - 48px);
     display: flex;
     position: relative;
+    margin-left: var(--nav-width, 250px);
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding-top: calc(48px + 2rem);
+}
+
+/* Cuando el sidebar está colapsado */
+.side-navigation.collapsed ~ * .products-container,
+body.sidebar-collapsed .products-container {
+    margin-left: var(--nav-width-collapsed, 60px);
+}
+
+/* En móvil, el sidebar se oculta y el contenido ocupa todo el ancho */
+@media (max-width: 768px) {
+    .products-container {
+        margin-left: 0;
+        padding-top: calc(48px + 1rem);
+    }
 }
 
 .products-main {

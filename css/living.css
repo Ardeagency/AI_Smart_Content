@@ -7,6 +7,25 @@
     padding: 2rem;
     max-width: 1400px;
     margin: 0 auto;
+    margin-left: var(--nav-width, 250px);
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding-top: calc(48px + 2rem);
+    min-height: calc(100vh - 48px);
+}
+
+/* Cuando el sidebar está colapsado */
+.side-navigation.collapsed ~ * .living-container,
+body.sidebar-collapsed .living-container {
+    margin-left: var(--nav-width-collapsed, 60px);
+}
+
+/* En móvil, el sidebar se oculta y el contenido ocupa todo el ancho */
+@media (max-width: 768px) {
+    .living-container {
+        margin-left: 0;
+        padding: 1rem;
+        padding-top: calc(48px + 1rem);
+    }
 }
 
 /* Header de la Marca */

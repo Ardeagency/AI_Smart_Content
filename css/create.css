@@ -1,10 +1,28 @@
 /* Create View Styles */
 .create-container {
-    min-height: 100vh;
+    min-height: calc(100vh - 48px);
     padding: 2rem;
     max-width: 1400px;
     margin: 0 auto;
+    margin-left: var(--nav-width, 250px);
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     background: #0E1012;
+    padding-top: calc(48px + 2rem);
+}
+
+/* Cuando el sidebar está colapsado */
+.side-navigation.collapsed ~ * .create-container,
+body.sidebar-collapsed .create-container {
+    margin-left: var(--nav-width-collapsed, 60px);
+}
+
+/* En móvil, el sidebar se oculta y el contenido ocupa todo el ancho */
+@media (max-width: 768px) {
+    .create-container {
+        margin-left: 0;
+        padding: 1rem;
+        padding-top: calc(48px + 1rem);
+    }
 }
 
 .create-header {
