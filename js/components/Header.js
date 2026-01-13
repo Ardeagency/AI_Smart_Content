@@ -177,7 +177,7 @@ class Header {
     if (creditsValue && this.userData) {
       const available = this.userData.credits_available || 0;
       const total = this.userData.credits_total || 0;
-      creditsValue.textContent = `${available}/${total}`;
+      creditsValue.textContent = `${total}/${available}`;
     }
 
     // Actualizar avatar
