@@ -129,11 +129,43 @@ class Header {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data } = await supabase
+        // Intentar cargar desde users primero
+        let { data, error } = await supabase
           .from('users')
           .select('*')
           .eq('id', user.id)
           .single();
+
+        // Si no existe en users, intentar desde user_profiles
+        if (error && error.code === 'PGRST116') {
+          const { data: profileData } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+          
+          if (profileData) {
+            // Combinar datos de auth con profile
+            data = {
+              id: user.id,
+              email: user.email,
+              full_name: profileData.full_name || user.email?.split('@')[0],
+              avatar_url: profileData.avatar_url || null,
+              credits_available: 0,
+              credits_total: 0
+            };
+          } else {
+            // Datos básicos desde auth
+            data = {
+              id: user.id,
+              email: user.email,
+              full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
+              avatar_url: user.user_metadata?.avatar_url || null,
+              credits_available: 0,
+              credits_total: 0
+            };
+          }
+        }
 
         if (data) {
           this.userData = data;
@@ -184,24 +216,31 @@ class Header {
     const avatarImage = document.getElementById('avatarImage');
     const avatarPlaceholder = document.getElementById('avatarPlaceholder');
 
-    if (this.userData && this.userData.avatar_url) {
-      if (avatarImage) {
-        avatarImage.src = this.userData.avatar_url;
-        avatarImage.style.display = 'block';
-      }
-      if (avatarPlaceholder) {
-        avatarPlaceholder.style.display = 'none';
-      }
-    } else {
-      if (avatarImage) {
-        avatarImage.style.display = 'none';
-      }
-      if (avatarPlaceholder) {
-        avatarPlaceholder.style.display = 'flex';
-        // Mostrar iniciales si hay nombre
-        if (this.userData && this.userData.full_name) {
-          const initials = this.getInitials(this.userData.full_name);
+    if (this.userData) {
+      // Intentar cargar avatar desde user_profiles si existe
+      const avatarUrl = this.userData.avatar_url || this.userData.avatar || null;
+      
+      if (avatarUrl) {
+        if (avatarImage) {
+          avatarImage.src = avatarUrl;
+          avatarImage.style.display = 'block';
+        }
+        if (avatarPlaceholder) {
+          avatarPlaceholder.style.display = 'none';
+        }
+      } else {
+        if (avatarImage) {
+          avatarImage.style.display = 'none';
+        }
+        if (avatarPlaceholder) {
+          avatarPlaceholder.style.display = 'flex';
+          // Mostrar iniciales si hay nombre
+          const name = this.userData.full_name || this.userData.email || 'U';
+          const initials = this.getInitials(name);
           avatarPlaceholder.textContent = initials;
+          // Remover el icono si hay texto
+          const icon = avatarPlaceholder.querySelector('i');
+          if (icon) icon.remove();
         }
       }
     }
