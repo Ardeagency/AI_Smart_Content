@@ -242,6 +242,12 @@ class Router {
       // Renderizar nueva vista
       await this.currentView.render();
       
+      // Renderizar header si está disponible
+      if (window.header && typeof window.header.render === 'function') {
+        const pageTitle = this.currentView.getPageTitle ? this.currentView.getPageTitle() : null;
+        await window.header.render(pageTitle);
+      }
+      
       // Actualizar navegación activa
       this.updateNavigation();
       

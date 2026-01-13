@@ -132,6 +132,12 @@ class BaseView {
       // Actualizar links para usar router
       this.updateLinksForRouter();
 
+      // Renderizar header si está disponible
+      if (window.header && typeof window.header.render === 'function') {
+        const pageTitle = this.getPageTitle();
+        await window.header.render(pageTitle);
+      }
+
       // Llamar a onEnter antes de inicializar (para preparar datos, etc.)
       await this.onEnter();
 
@@ -194,6 +200,41 @@ class BaseView {
    */
   async onLeave() {
     // Override en subclases
+  }
+
+  /**
+   * Obtener título de la página (para el header)
+   * Override este método en subclases para personalizar el título
+   * @returns {string} Título de la página
+   */
+  getPageTitle() {
+    const path = window.location.pathname || '/';
+    const routeMap = {
+      '/': 'Hogar',
+      '/hogar': 'Hogar',
+      '/brands': 'Marcas',
+      '/products': 'Productos',
+      '/campaigns': 'Campañas',
+      '/audiences': 'Audiencias',
+      '/create': 'Crear Contenido',
+      '/content': 'Biblioteca',
+      '/settings': 'Ajustes',
+      '/living': 'Living',
+      '/studio': 'Studio'
+    };
+
+    if (routeMap[path]) {
+      return routeMap[path];
+    }
+
+    // Rutas dinámicas
+    if (path.startsWith('/brands/')) return 'Marcas';
+    if (path.startsWith('/products/')) return 'Productos';
+    if (path.startsWith('/campaigns/')) return 'Campañas';
+    if (path.startsWith('/audiences/')) return 'Audiencias';
+    if (path.startsWith('/content/')) return 'Biblioteca';
+
+    return 'AI Smart Content';
   }
 
   /**

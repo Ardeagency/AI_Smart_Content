@@ -127,6 +127,86 @@ body.sidebar-collapsed .main-header {
     flex-wrap: wrap;
     flex: 0 0 auto;
     margin-left: auto;
+    min-width: fit-content;
+}
+
+/* Breadcrumb en header */
+.header-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    flex: 1;
+}
+
+.header-route {
+    font-size: 0.938rem;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.header-separator {
+    font-size: 0.938rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.header-brand {
+    font-size: 0.938rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.header-brand::before {
+    content: '(';
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.header-brand::after {
+    content: ')';
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Avatar del usuario en header */
+.header-user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.header-user-avatar:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.avatar-placeholder i {
+    font-size: 14px;
+}
+
+#avatarImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 /* Botón hamburguesa - solo móvil */
