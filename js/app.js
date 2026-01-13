@@ -114,11 +114,6 @@ class App {
     });
 
     // Rutas protegidas - Nueva estructura
-    this.router.register('/organization', window.OrganizationView, {
-      requiresAuth: true,
-      redirectIfAuth: false
-    });
-
     this.router.register('/brands', window.BrandsView, {
       requiresAuth: true,
       redirectIfAuth: false
@@ -259,7 +254,6 @@ class App {
     console.log('    - /login (Login)');
     console.log('    - /planes (Planes)');
     console.log('  Protegidas - Nueva Estructura:');
-    console.log('    - /organization (Organización)');
     console.log('    - /brands (Marcas)');
     console.log('    - /brands/:brandId (Detalle Marca)');
     console.log('    - /products (Productos)');

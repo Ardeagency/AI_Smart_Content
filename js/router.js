@@ -160,7 +160,7 @@ class Router {
         const isAuth = await this.checkAuthentication();
         if (isAuth) {
           console.log('✅ Usuario autenticado, redirigiendo...');
-          this.navigate('/dashboard', true);
+          this.navigate('/hogar', true);
           return;
         }
       }

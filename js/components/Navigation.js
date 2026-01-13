@@ -61,16 +61,6 @@ class Navigation {
         <!-- Menú Principal -->
         <div class="nav-menu">
           <div class="nav-section">
-            <div class="nav-section-title">Principal</div>
-            <div class="nav-item">
-              <a href="/organization" class="nav-link" data-route="/organization">
-                <i class="fas fa-building nav-icon"></i>
-                <span class="nav-text">Organización</span>
-              </a>
-            </div>
-          </div>
-
-          <div class="nav-section">
             <div class="nav-section-title">Contenido</div>
             <div class="nav-item">
               <a href="/brands" class="nav-link" data-route="/brands">
