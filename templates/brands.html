@@ -1,15 +1,200 @@
 <!-- Vista de Lista de Marcas (por defecto) -->
 <div class="brands-container" id="brandsListContainer">
-    <div class="brands-header">
-        <h1 class="brands-title">Marcas</h1>
-        <button class="btn btn-primary" id="createBrandBtn">
-            <i class="fas fa-plus"></i>
-            Nueva Marca
-        </button>
+    <!-- Grid Principal - Primera Fila: 3 Columnas -->
+    <div class="living-grid-top">
+        <!-- Columna 1: Información de Marca Seleccionada -->
+        <div class="living-column-profile">
+            <div class="living-card profile-card">
+                <div class="profile-image-container">
+                    <img id="brandLogo" src="" alt="Logo de marca" style="display: none;">
+                    <div class="profile-placeholder" id="brandLogoPlaceholder">
+                        <i class="fas fa-image"></i>
+                    </div>
+                </div>
+                <h2 class="profile-name" id="brandName">Selecciona una marca</h2>
+                <div class="profile-details">
+                    <div class="profile-detail-item">
+                        <i class="fas fa-box"></i>
+                        <span id="brandProductsCount">0 productos</span>
+                    </div>
+                    <div class="profile-detail-item">
+                        <i class="fas fa-bullhorn"></i>
+                        <span id="brandCampaignsCount">0 campañas</span>
+                    </div>
+                    <div class="profile-detail-item">
+                        <i class="fas fa-calendar"></i>
+                        <span id="brandLastUpdate">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna 2: Identidad de Marca -->
+        <div class="living-column-guidelines">
+            <div class="living-card">
+                <div class="card-header">
+                    <h2>Identidad de Marca</h2>
+                </div>
+                <div class="card-content">
+                    <div class="info-item">
+                        <span class="info-label">Tono de Voz:</span>
+                        <select class="editable-select" id="brandTonoVozInput">
+                            <option value="">Seleccionar...</option>
+                            <option value="amigable">Amigable</option>
+                            <option value="premium">Premium</option>
+                            <option value="tecnico">Técnico</option>
+                            <option value="irreverente">Irreverente</option>
+                            <option value="divertido">Divertido</option>
+                            <option value="profesional">Profesional</option>
+                            <option value="casual">Casual</option>
+                            <option value="inspirador">Inspirador</option>
+                            <option value="autoritario">Autoritario</option>
+                            <option value="empatico">Empático</option>
+                            <option value="humoristico">Humorístico</option>
+                            <option value="serio">Serio</option>
+                            <option value="joven">Joven</option>
+                            <option value="tradicional">Tradicional</option>
+                            <option value="innovador">Innovador</option>
+                            <option value="calido">Cálido</option>
+                            <option value="directo">Directo</option>
+                            <option value="poetico">Poético</option>
+                            <option value="energico">Enérgico</option>
+                            <option value="tranquilo">Tranquilo</option>
+                        </select>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Palabras a Usar:</span>
+                        <input type="text" class="editable-input" id="brandPalabrasUsarInput" placeholder="Ej: innovador, calidad, premium">
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Palabras a Evitar:</span>
+                        <div class="multiselect-wrapper" id="brandPalabrasEvitarWrapper">
+                            <div class="multiselect-trigger" id="brandPalabrasEvitarTrigger">
+                                <div class="multiselect-value" id="brandPalabrasEvitarValue">Seleccionar palabras...</div>
+                                <div class="multiselect-arrow">▼</div>
+                            </div>
+                            <div class="multiselect-dropdown" id="brandPalabrasEvitarDropdown">
+                                <!-- Opciones se cargarán dinámicamente -->
+                            </div>
+                            <input type="hidden" id="brandPalabrasEvitarInput">
+                        </div>
+                    </div>
+                    <div class="info-item full-width">
+                        <span class="info-label">Reglas Creativas:</span>
+                        <textarea class="editable-textarea" id="brandReglasCreativasInput" rows="4" placeholder="Escribe las reglas creativas de tu marca..."></textarea>
+                    </div>
+                    <div class="info-item full-width">
+                        <span class="info-label">Personalidad de Marca:</span>
+                        <textarea class="editable-textarea" id="brandPersonalidadMarcaInput" rows="3" placeholder="Describe la personalidad de tu marca..."></textarea>
+                    </div>
+                    <div class="info-item full-width">
+                        <span class="info-label">Quiénes Somos:</span>
+                        <textarea class="editable-textarea" id="brandQuienesSomosInput" rows="3" placeholder="Describe quiénes son como marca..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna 3: Assets y Visual -->
+        <div class="living-column-files-payment">
+            <!-- Identidad Visual -->
+            <div class="living-card payment-method-card">
+                <div class="card-header">
+                    <h2>Identidad Visual</h2>
+                </div>
+                <div class="card-content">
+                    <div class="info-item">
+                        <span class="info-label">Paleta de Colores:</span>
+                        <div class="color-palette" id="brandColorPalette">
+                            <div class="empty-state">
+                                <i class="fas fa-palette"></i>
+                                <p>No hay colores definidos</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-item full-width">
+                        <span class="info-label">Estilo Visual:</span>
+                        <textarea class="editable-textarea" id="brandEstiloVisualInput" rows="3" placeholder="Describe el estilo visual de tu marca..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assets de Marca -->
+            <div class="living-card brand-files-card">
+                <div class="card-header">
+                    <h2>Assets de Marca</h2>
+                    <input type="file" id="brandAssetUpload" multiple accept="image/*,.pdf,.doc,.docx" style="display: none;">
+                    <label for="brandAssetUpload" class="file-upload-header-btn">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <span>Subir assets</span>
+                    </label>
+                </div>
+                <div class="card-content">
+                    <div class="files-list" id="brandAssetsList">
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>No hay assets adjuntados</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="brands-grid" id="brandsGrid">
-        <div class="loading-state">Cargando marcas...</div>
+    <!-- Segunda Fila: Lista de Marcas (100% ancho) -->
+    <div class="living-full-width-section">
+        <div class="living-card products-section-card">
+            <div class="card-header">
+                <h2>Marcas</h2>
+                <button class="btn btn-primary" id="createBrandBtn">
+                    <i class="fas fa-plus"></i>
+                    Nueva Marca
+                </button>
+            </div>
+            <div class="card-content">
+                <div class="brands-grid" id="brandsGrid">
+                    <div class="loading-state">Cargando marcas...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tercera Fila: Productos de la Marca (100% ancho) -->
+    <div class="living-full-width-section">
+        <div class="living-card campaigns-section-card">
+            <div class="card-header">
+                <h2>Productos de la Marca</h2>
+                <a href="/products" class="view-all-link">Ver todos</a>
+            </div>
+            <div class="card-content">
+                <div class="products-list-horizontal" id="brandProductsList">
+                    <div class="empty-state">
+                        <i class="fas fa-box-open"></i>
+                        <p>No hay productos registrados para esta marca</p>
+                        <a href="/products" class="btn btn-primary" style="margin-top: 1rem;">Gestionar Productos</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cuarta Fila: Campañas de la Marca (100% ancho) -->
+    <div class="living-full-width-section">
+        <div class="living-card campaigns-section-card">
+            <div class="card-header">
+                <h2>Campañas de la Marca</h2>
+                <a href="/campaigns" class="view-all-link">Ver todas</a>
+            </div>
+            <div class="card-content">
+                <div class="campaigns-list-horizontal" id="brandCampaignsList">
+                    <div class="empty-state">
+                        <i class="fas fa-megaphone"></i>
+                        <p>No hay campañas creadas para esta marca</p>
+                        <button class="btn btn-primary" style="margin-top: 1rem;" onclick="openCampaignModal()">Crear Campaña</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
