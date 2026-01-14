@@ -333,8 +333,9 @@ class BrandsView extends BaseView {
     }
     
     container.innerHTML = colors.map(color => {
-      const hex = color.hex_code || color.color_value || color.hex || '#000000';
-      const role = color.role || color.color_role || color.name || 'Color';
+      // Según schema: brand_colors tiene hex_value y color_role
+      const hex = color.hex_value || color.hex_code || color.color_value || color.hex || '#000000';
+      const role = color.color_role || color.role || color.name || 'Color';
       
       return `
         <div class="color-swatch" style="background: ${hex};">
@@ -390,12 +391,10 @@ class BrandsView extends BaseView {
     }
     
     const colorCount = (this.brandColors || []).length;
+    // Según schema: buscar rule_type === 'typography'
     const hasTypography = (this.brandRules || []).some(rule => 
       rule.rule_type === 'typography' || 
-      rule.category === 'typography' ||
-      rule.rule_name?.toLowerCase().includes('font') ||
-      rule.rule_name?.toLowerCase().includes('tipografia') ||
-      rule.type === 'typography'
+      rule.rule_type?.toLowerCase() === 'typography'
     );
     const fontCount = hasTypography ? 1 : 0;
     
