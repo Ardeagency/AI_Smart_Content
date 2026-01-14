@@ -1515,7 +1515,7 @@ class BrandsView extends BaseView {
   }
 
   // ============================================
-  // MÉTODOS DE RENDERIZADO PARA DASHBOARD
+  // MÉTODOS DE RENDERIZADO PARA DASHBOARD PREMIUM
   // ============================================
 
   renderTeam() {
@@ -1550,9 +1550,22 @@ class BrandsView extends BaseView {
   renderIdentity() {
     if (!this.brandContainerData) return;
 
-    const brandName = document.getElementById('brandNameInput');
-    if (brandName) {
-      brandName.value = this.brandContainerData.nombre_marca || '';
+    // Logo y nombre principal
+    const brandLogoText = document.getElementById('brandLogoText');
+    const brandNameDisplay = document.getElementById('brandNameDisplay');
+    const realtimeBrandName = document.getElementById('realtimeBrandName');
+    
+    const brandName = this.brandContainerData.nombre_marca || 'BRAND';
+    const initials = brandName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 3) || 'ASC';
+    
+    if (brandLogoText) brandLogoText.textContent = initials;
+    if (brandNameDisplay) brandNameDisplay.textContent = brandName;
+    if (realtimeBrandName) realtimeBrandName.textContent = brandName.toUpperCase();
+
+    // Campos editables
+    const brandNameInput = document.getElementById('brandNameInput');
+    if (brandNameInput) {
+      brandNameInput.value = this.brandContainerData.nombre_marca || '';
     }
 
     const brandWebsite = document.getElementById('brandWebsiteInput');
@@ -1580,147 +1593,120 @@ class BrandsView extends BaseView {
       const mercado = this.brandContainerData.mercado_objetivo;
       brandMarket.value = Array.isArray(mercado) ? mercado.join(', ') : (mercado || '');
     }
+
+    // Actualizar timezone
+    this.updateTimezone();
+  }
+
+  updateTimezone() {
+    const timezoneLocal = document.getElementById('timezoneLocal');
+    const timezoneUTC = document.getElementById('timezoneUTC');
+    
+    if (timezoneLocal && timezoneUTC) {
+      const now = new Date();
+      const localTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+      const utcTime = now.toUTCString().slice(17, 22);
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone.split('/').pop();
+      
+      timezoneLocal.textContent = `${localTime} • ${timezone}`;
+      timezoneUTC.textContent = `${utcTime} UTC`;
+    }
+
+    // Actualizar cada minuto
+    setTimeout(() => this.updateTimezone(), 60000);
   }
 
   renderInfoCard() {
-    if (!this.brandData) return;
-
-    // Estado
-    const statusValue = document.getElementById('infoStatusValue');
-    if (statusValue) {
-      const isComplete = this.brandData.tono_voz && 
-                        this.brandData.personalidad_marca && 
-                        this.brandData.palabras_usar;
-      statusValue.textContent = isComplete ? 'Completo' : 'Incompleto';
-      statusValue.className = `status-value ${isComplete ? 'complete' : 'incomplete'}`;
-    }
-
-    // Última actualización
-    const updateValue = document.getElementById('infoUpdateValue');
-    if (updateValue && this.brandData.updated_at) {
-      updateValue.textContent = new Date(this.brandData.updated_at).toLocaleDateString('es-ES');
-    }
-
-    // Tono de voz
-    const tonoVoz = document.getElementById('infoTonoVoz');
-    if (tonoVoz) {
-      tonoVoz.textContent = this.brandData.tono_voz || '-';
-    }
-
-    // Palabras
-    const palabras = document.getElementById('infoPalabras');
-    if (palabras) {
-      palabras.textContent = this.brandData.palabras_usar 
-        ? (this.brandData.palabras_usar.length > 30 
-          ? this.brandData.palabras_usar.substring(0, 30) + '...' 
-          : this.brandData.palabras_usar)
-        : '-';
-    }
-
-    // Reglas activas
-    const reglas = document.getElementById('infoReglas');
-    if (reglas) {
-      reglas.textContent = (this.brandRules?.length || 0).toString();
-    }
+    // La card INFO es simple, no necesita mucho contenido dinámico
+    // Solo asegurarse de que el link funcione
   }
 
   renderVisualCard() {
-    const visualColors = document.getElementById('visualColors');
-    if (!visualColors) return;
-
-    if (!this.brandColors || this.brandColors.length === 0) {
-      visualColors.innerHTML = '<div class="color-preview-empty"><i class="fas fa-palette"></i><span>Sin colores definidos</span></div>';
-      return;
+    // CONCEPT LAB card
+    const conceptCurrentValue = document.getElementById('conceptCurrentValue');
+    const conceptStatsValue = document.getElementById('conceptStatsValue');
+    
+    if (conceptCurrentValue) {
+      conceptCurrentValue.textContent = this.brandData?.tono_voz?.toUpperCase() || 'BRAND GUIDELINES';
     }
-
-    visualColors.innerHTML = this.brandColors.slice(0, 6).map(color => `
-      <div class="color-preview" style="background-color: ${color.hex_value};" title="${this.escapeHtml(color.color_role)}"></div>
-    `).join('');
-
-    // Tipografía (por ahora genérica)
-    const typographyValue = document.getElementById('typographyValue');
-    if (typographyValue) {
-      typographyValue.textContent = 'Inter (Sistema)';
+    
+    if (conceptStatsValue) {
+      const rulesCount = this.brandRules?.length || 0;
+      const colorsCount = this.brandColors?.length || 0;
+      conceptStatsValue.textContent = `${rulesCount} Guidelines • ${colorsCount} Colors`;
     }
   }
 
   renderTokensCard() {
-    // Tokens disponibles
-    const tokensValue = document.getElementById('tokensValue');
-    if (tokensValue) {
-      // Por ahora usar un valor genérico, ajustar según schema real
-      tokensValue.textContent = this.organizationCredits?.credits_available || '0';
+    // SCREENING ROOM card
+    const screeningCurrentValue = document.getElementById('screeningCurrentValue');
+    const progressTime = document.getElementById('progressTime');
+    const progressBarFill = document.getElementById('progressBarFill');
+    const screeningFooterText = document.getElementById('screeningFooterText');
+    
+    const total = parseInt(this.organizationCredits?.credits_available || 100);
+    const used = this.creditUsage.reduce((sum, usage) => sum + (usage.credits_used || 0), 0);
+    const percentage = total > 0 ? Math.min((used / total) * 100, 100) : 0;
+    
+    if (screeningCurrentValue) {
+      const lastRun = this.flowRuns?.[0];
+      screeningCurrentValue.textContent = lastRun?.status?.toUpperCase() || 'CONTENT PRODUCTION';
     }
-
-    // Barra de uso
-    const usageBarFill = document.getElementById('usageBarFill');
-    const usageText = document.getElementById('usageText');
-    if (usageBarFill && usageText) {
-      const total = parseInt(this.organizationCredits?.credits_available || 0);
-      const used = this.creditUsage.reduce((sum, usage) => sum + (usage.credits_used || 0), 0);
-      const percentage = total > 0 ? Math.min((used / total) * 100, 100) : 0;
-      
-      usageBarFill.style.width = `${percentage}%`;
-      usageText.textContent = `${Math.round(percentage)}% usado`;
+    
+    if (progressTime) {
+      progressTime.textContent = `${used} / ${total}`;
     }
-
-    // Producciones recientes
-    const recentList = document.getElementById('recentList');
-    if (recentList) {
-      if (this.flowRuns.length === 0) {
-        recentList.innerHTML = '<div class="recent-empty">Sin producciones recientes</div>';
-      } else {
-        recentList.innerHTML = this.flowRuns.slice(0, 3).map(run => {
-          const output = run.flow_outputs?.[0];
-          const type = output?.output_type || run.status || 'contenido';
-          const fileName = output?.file_url ? output.file_url.split('/').pop() : null;
-          const displayText = fileName || type;
-          return `
-            <div class="recent-item">
-              <div class="recent-item-icon">
-                <i class="fas fa-file-alt"></i>
-              </div>
-              <div class="recent-item-text">${this.escapeHtml(displayText)}</div>
-            </div>
-          `;
-        }).join('');
-      }
+    
+    if (progressBarFill) {
+      progressBarFill.style.width = `${percentage}%`;
+    }
+    
+    if (screeningFooterText) {
+      screeningFooterText.textContent = `${total - used} tokens available`;
     }
   }
 
   renderProductsCard() {
-    const productsGrid = document.getElementById('productsGrid');
-    if (!productsGrid) return;
-
-    if (!this.products || this.products.length === 0) {
-      productsGrid.innerHTML = '<div class="products-empty"><i class="fas fa-box-open"></i><span>Sin productos</span></div>';
-      return;
+    // EVENTS card - mostramos el producto destacado
+    const eventName1 = document.getElementById('eventName1');
+    const eventDesc1 = document.getElementById('eventDesc1');
+    const eventDate1 = document.getElementById('eventDate1');
+    const eventTime1 = document.getElementById('eventTime1');
+    
+    if (this.products && this.products.length > 0) {
+      const product = this.products[0];
+      
+      if (eventName1) eventName1.textContent = product.nombre_producto || 'Product Launch';
+      if (eventDesc1) eventDesc1.textContent = product.descripcion_producto?.substring(0, 50) || 'Featured Product';
+      
+      if (product.created_at) {
+        const date = new Date(product.created_at);
+        if (eventDate1) eventDate1.textContent = date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+        if (eventTime1) eventTime1.textContent = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      } else {
+        if (eventDate1) eventDate1.textContent = '-';
+        if (eventTime1) eventTime1.textContent = '-';
+      }
+    } else {
+      if (eventName1) eventName1.textContent = 'No Products';
+      if (eventDesc1) eventDesc1.textContent = 'Add your first product';
+      if (eventDate1) eventDate1.textContent = '-';
+      if (eventTime1) eventTime1.textContent = '-';
     }
-
-    productsGrid.innerHTML = this.products.slice(0, 4).map(product => {
-      const imageUrl = product.main_image?.image_url;
-      const price = product.precio_producto 
-        ? `${product.precio_producto} ${product.moneda || 'USD'}`
-        : '-';
-
-      return `
-        <div class="product-item">
-          <div class="product-image">
-            ${imageUrl 
-              ? `<img src="${imageUrl}" alt="${this.escapeHtml(product.nombre_producto)}">`
-              : `<div class="product-image-placeholder"><i class="fas fa-box"></i></div>`
-            }
-          </div>
-          <div class="product-info">
-            <div class="product-name">${this.escapeHtml(product.nombre_producto)}</div>
-            <div class="product-price">${price}</div>
-          </div>
-        </div>
-      `;
-    }).join('');
   }
 
   setupIdentityEditable() {
+    // Toggle para mostrar/ocultar campos editables
+    const identityToggle = document.getElementById('identityToggle');
+    const identityFields = document.getElementById('identityFields');
+    
+    if (identityToggle && identityFields) {
+      identityToggle.addEventListener('click', () => {
+        identityToggle.classList.toggle('active');
+        identityFields.classList.toggle('active');
+      });
+    }
+    
     // Guardar cambios en tiempo real con debounce
     const fields = ['brandNameInput', 'brandWebsiteInput', 'brandInstagramInput', 'brandTikTokInput', 'brandFacebookInput', 'brandMarketInput'];
     
@@ -1735,6 +1721,20 @@ class BrandsView extends BaseView {
           const fieldName = field.dataset.field;
           const value = field.value.trim();
           this.saveBrandContainerField(fieldName, value);
+          
+          // Actualizar display si es el nombre
+          if (fieldName === 'nombre_marca') {
+            const brandNameDisplay = document.getElementById('brandNameDisplay');
+            const realtimeBrandName = document.getElementById('realtimeBrandName');
+            const brandLogoText = document.getElementById('brandLogoText');
+            
+            if (brandNameDisplay) brandNameDisplay.textContent = value || 'AI Smart Content';
+            if (realtimeBrandName) realtimeBrandName.textContent = (value || 'BRAND').toUpperCase();
+            if (brandLogoText) {
+              const initials = value ? value.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 3) : 'ASC';
+              brandLogoText.textContent = initials;
+            }
+          }
         }, 1000);
       });
 

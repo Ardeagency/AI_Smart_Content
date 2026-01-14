@@ -1,151 +1,184 @@
-<!-- Vista de Marca - Diseño Dashboard Minimalista -->
+<!-- Vista de Marca - Diseño Premium Inspirado en UAL -->
 <div class="brand-dashboard-container" id="brandsListContainer">
     
-    <!-- FONDO AMARILLO ELÉCTRICO (estado activo) -->
-    <div class="brand-dashboard-background"></div>
+    <!-- FONDO GRADIENTE CÁLIDO -->
+    <div class="brand-dashboard-background">
+        <div class="background-gradient"></div>
+        <div class="background-texture"></div>
+    </div>
     
-    <!-- ESQUINA SUPERIOR IZQUIERDA: Equipo de la organización -->
+    <!-- ESQUINA SUPERIOR IZQUIERDA: Logo + Identidad del sistema -->
     <div class="brand-corner-top-left">
-        <div class="team-avatars" id="teamAvatars">
-            <div class="team-avatar-placeholder">
-                <i class="fas fa-users"></i>
+        <div class="brand-logo-container">
+            <div class="brand-logo" id="brandLogo">
+                <img src="" alt="Logo" id="brandLogoImg" style="display: none;">
+                <span class="brand-logo-text" id="brandLogoText">ASC</span>
+            </div>
+            <div class="brand-subtitle" id="brandSubtitle">
+                <span class="brand-name-display" id="brandNameDisplay">AI Smart Content</span>
             </div>
         </div>
     </div>
     
-    <!-- ESQUINA INFERIOR IZQUIERDA: Identidad básica de la marca (editable) -->
+    <!-- ESQUINA INFERIOR IZQUIERDA: Información + Estado en tiempo real -->
     <div class="brand-corner-bottom-left">
-        <div class="brand-identity-editable">
-            <div class="identity-field">
+        <div class="brand-realtime-info">
+            <div class="realtime-brand">
+                <span class="realtime-brand-name" id="realtimeBrandName">BRAND</span>
+                <div class="realtime-status-dot" id="realtimeStatusDot"></div>
+            </div>
+            <div class="realtime-timezone">
+                <div class="timezone-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2"/>
+                    </svg>
+                </div>
+                <div class="timezone-values">
+                    <span id="timezoneLocal"></span>
+                    <span id="timezoneUTC"></span>
+                </div>
+            </div>
+            <div class="realtime-label">
+                <span class="label-text">REAL:TIME</span>
+            </div>
+        </div>
+        
+        <!-- Identidad editable (colapsable) -->
+        <div class="brand-identity-editable" id="brandIdentityEditable">
+            <div class="identity-toggle" id="identityToggle">
+                <i class="fas fa-pen"></i>
+            </div>
+            <div class="identity-fields" id="identityFields">
                 <input type="text" class="identity-input" id="brandNameInput" placeholder="Nombre de marca" data-field="nombre_marca">
-            </div>
-            <div class="identity-field">
-                <input type="url" class="identity-input" id="brandWebsiteInput" placeholder="Website" data-field="sitio_web">
-                <i class="fas fa-globe"></i>
-            </div>
-            <div class="identity-social">
-                <input type="url" class="identity-input-small" id="brandInstagramInput" placeholder="Instagram" data-field="instagram_url">
-                <i class="fab fa-instagram"></i>
-            </div>
-            <div class="identity-social">
-                <input type="url" class="identity-input-small" id="brandTikTokInput" placeholder="TikTok" data-field="tiktok_url">
-                <i class="fab fa-tiktok"></i>
-            </div>
-            <div class="identity-social">
-                <input type="url" class="identity-input-small" id="brandFacebookInput" placeholder="Facebook" data-field="facebook_url">
-                <i class="fab fa-facebook"></i>
-            </div>
-            <div class="identity-field">
-                <input type="text" class="identity-input" id="brandMarketInput" placeholder="Mercado objetivo" data-field="mercado_objetivo">
+                <input type="url" class="identity-input-small" id="brandWebsiteInput" placeholder="Website" data-field="sitio_web">
+                <div class="identity-social-row">
+                    <input type="url" class="identity-input-social" id="brandInstagramInput" placeholder="Instagram" data-field="instagram_url">
+                    <input type="url" class="identity-input-social" id="brandTikTokInput" placeholder="TikTok" data-field="tiktok_url">
+                    <input type="url" class="identity-input-social" id="brandFacebookInput" placeholder="Facebook" data-field="facebook_url">
+                </div>
+                <input type="text" class="identity-input-small" id="brandMarketInput" placeholder="Mercado objetivo" data-field="mercado_objetivo">
             </div>
         </div>
     </div>
     
-    <!-- ZONA DERECHA: Cards de Control -->
+    <!-- ZONA DERECHA: Cards de Control Premium -->
     <div class="brand-cards-zone">
         
-        <!-- CARD 1 — INFO: Lineamientos de Marca -->
+        <!-- CARD 1 — INFO -->
         <div class="brand-card card-info">
             <div class="card-header">
                 <h2 class="card-title">INFO</h2>
-                <a href="#" class="card-arrow" id="infoCardLink">
+                <a href="/brands/guidelines" class="card-arrow" id="infoCardLink">
                     <i class="fas fa-arrow-right"></i>
                 </a>
             </div>
-            <div class="card-content">
-                <div class="card-status" id="infoCardStatus">
-                    <span class="status-label">Estado:</span>
-                    <span class="status-value" id="infoStatusValue">Cargando...</span>
-                </div>
-                <div class="card-update" id="infoCardUpdate">
-                    <span class="update-label">Última actualización:</span>
-                    <span class="update-value" id="infoUpdateValue">-</span>
-                </div>
-                <div class="card-summary">
-                    <div class="summary-item">
-                        <span class="summary-label">Tono de voz</span>
-                        <span class="summary-value" id="infoTonoVoz">-</span>
-                    </div>
-                    <div class="summary-item">
-                        <span class="summary-label">Palabras clave</span>
-                        <span class="summary-value" id="infoPalabras">-</span>
-                    </div>
-                    <div class="summary-item">
-                        <span class="summary-label">Reglas activas</span>
-                        <span class="summary-value" id="infoReglas">0</span>
-                    </div>
-                </div>
-            </div>
         </div>
         
-        <!-- CARD 2 — BRANDS: Identidad visual -->
-        <div class="brand-card card-visual">
+        <!-- CARD 2 — CONCEPT LAB (Lineamientos) -->
+        <div class="brand-card card-concept">
             <div class="card-header">
-                <h2 class="card-title">BRANDS</h2>
-                <a href="#" class="card-arrow" id="visualCardLink">
+                <h2 class="card-title">CONCEPT LAB</h2>
+                <a href="/brands/visual" class="card-arrow" id="conceptCardLink">
                     <i class="fas fa-arrow-right"></i>
                 </a>
             </div>
             <div class="card-content">
-                <div class="visual-colors" id="visualColors">
-                    <div class="color-preview-empty">
-                        <i class="fas fa-palette"></i>
-                        <span>Sin colores definidos</span>
-                    </div>
+                <div class="card-spacer"></div>
+                <div class="card-current">
+                    <span class="current-label">Current</span>
+                    <span class="current-value" id="conceptCurrentValue">BRAND GUIDELINES</span>
                 </div>
-                <div class="visual-typography" id="visualTypography">
-                    <span class="typography-label">Tipografía:</span>
-                    <span class="typography-value" id="typographyValue">-</span>
+                <div class="card-stats">
+                    <span class="stats-value" id="conceptStatsValue">0 Guidelines</span>
+                </div>
+                <div class="card-icon">
+                    <div class="icon-circle">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <circle cx="6" cy="6" r="1.5" fill="currentColor"/>
+                            <circle cx="12" cy="6" r="1.5" fill="currentColor"/>
+                            <circle cx="18" cy="6" r="1.5" fill="currentColor"/>
+                            <circle cx="6" cy="12" r="1.5" fill="currentColor"/>
+                            <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+                            <circle cx="18" cy="12" r="1.5" fill="currentColor"/>
+                            <circle cx="6" cy="18" r="1.5" fill="currentColor"/>
+                            <circle cx="12" cy="18" r="1.5" fill="currentColor"/>
+                            <circle cx="18" cy="18" r="1.5" fill="currentColor"/>
+                        </svg>
+                    </div>
                 </div>
             </div>
         </div>
         
-        <!-- CARD 3 — TOKENS: Uso del sistema -->
-        <div class="brand-card card-tokens">
+        <!-- CARD 3 — SCREENING ROOM (Tokens/Producción) -->
+        <div class="brand-card card-screening">
             <div class="card-header">
-                <h2 class="card-title">TOKENS</h2>
-                <a href="#" class="card-arrow" id="tokensCardLink">
+                <h2 class="card-title">SCREENING ROOM</h2>
+                <a href="/brands/tokens" class="card-arrow" id="screeningCardLink">
                     <i class="fas fa-arrow-right"></i>
                 </a>
             </div>
             <div class="card-content">
-                <div class="tokens-available" id="tokensAvailable">
-                    <span class="tokens-label">Disponibles:</span>
-                    <span class="tokens-value" id="tokensValue">-</span>
+                <div class="card-spacer"></div>
+                <div class="card-current">
+                    <span class="current-label">Current</span>
+                    <span class="current-value" id="screeningCurrentValue">CONTENT PRODUCTION</span>
                 </div>
-                <div class="tokens-usage">
-                    <div class="usage-bar">
-                        <div class="usage-bar-fill" id="usageBarFill"></div>
+                <div class="card-progress">
+                    <span class="progress-time" id="progressTime">0 / 100</span>
+                    <div class="progress-bar">
+                        <div class="progress-bar-fill" id="progressBarFill"></div>
                     </div>
-                    <div class="usage-text" id="usageText">0% usado</div>
                 </div>
-                <div class="tokens-recent" id="tokensRecent">
-                    <div class="recent-label">Últimas producciones:</div>
-                    <div class="recent-list" id="recentList">
-                        <div class="recent-empty">Sin producciones recientes</div>
+                <div class="card-footer">
+                    <div class="card-icon">
+                        <div class="icon-circle">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <circle cx="6" cy="6" r="1.5" fill="currentColor"/>
+                                <circle cx="12" cy="6" r="1.5" fill="currentColor"/>
+                                <circle cx="18" cy="6" r="1.5" fill="currentColor"/>
+                                <circle cx="6" cy="12" r="1.5" fill="currentColor"/>
+                                <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+                                <circle cx="18" cy="12" r="1.5" fill="currentColor"/>
+                                <circle cx="6" cy="18" r="1.5" fill="currentColor"/>
+                                <circle cx="12" cy="18" r="1.5" fill="currentColor"/>
+                                <circle cx="18" cy="18" r="1.5" fill="currentColor"/>
+                            </svg>
+                        </div>
                     </div>
+                    <span class="footer-text" id="screeningFooterText">Available tokens</span>
                 </div>
             </div>
         </div>
         
-        <!-- CARD 4 — PRODUCTOS: Activos comerciales -->
-        <div class="brand-card card-products">
+        <!-- CARD 4 — EVENTS (Productos) -->
+        <div class="brand-card card-events">
             <div class="card-header">
-                <h2 class="card-title">PRODUCTOS</h2>
-                <a href="#" class="card-arrow" id="productsCardLink">
+                <h2 class="card-title">EVENTS</h2>
+                <a href="/products" class="card-arrow" id="eventsCardLink">
                     <i class="fas fa-arrow-right"></i>
                 </a>
             </div>
             <div class="card-content">
-                <div class="products-grid" id="productsGrid">
-                    <div class="products-empty">
-                        <i class="fas fa-box-open"></i>
-                        <span>Sin productos</span>
+                <div class="card-spacer"></div>
+                <div class="event-item" id="eventItem1">
+                    <div class="event-info">
+                        <span class="event-name" id="eventName1">Product Launch</span>
+                        <span class="event-desc" id="eventDesc1">Featured Product</span>
+                    </div>
+                    <div class="event-date">
+                        <span class="event-date-value" id="eventDate1">-</span>
+                        <span class="event-time-value" id="eventTime1">-</span>
                     </div>
                 </div>
             </div>
         </div>
         
+    </div>
+    
+    <!-- Avatares del equipo (flotante superior derecha de cards) -->
+    <div class="team-avatars-floating" id="teamAvatars">
+        <!-- Se llena dinámicamente -->
     </div>
     
 </div>

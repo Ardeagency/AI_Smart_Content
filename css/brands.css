@@ -1,26 +1,35 @@
 /**
- * Brands Dashboard - Diseño Minimalista con Luz Ambiental
- * Oscuridad como estructura. Luz como intención. Color como energía controlada.
+ * Brands Dashboard - Diseño Premium Inspirado en UAL
+ * Fondo cálido + Cards oscuras + Tipografía elegante
  */
 
 /* ============================================
-   VARIABLES DE COLOR (paleta equilibrada)
+   VARIABLES DE COLOR
    ============================================ */
 :root {
-    /* Base (estructura) */
-    --brand-black: #0B0D10;
-    --brand-charcoal: #12151B;
-    --brand-surface: #181C24;
+    /* Fondo cálido */
+    --brand-warm-1: #D4754E;
+    --brand-warm-2: #C86B45;
+    --brand-warm-3: #B85D3A;
+    --brand-warm-4: #8B4332;
+    --brand-warm-5: #5C2D22;
     
-    /* Amarillo eléctrico (energía) - nunca al 100% */
-    --brand-yellow-core: #C9FF1A;
-    --brand-yellow-soft: rgba(201, 255, 26, 0.08);
-    --brand-yellow-glow: rgba(201, 255, 26, 0.18);
+    /* Cards oscuras */
+    --brand-card-bg: #0D1117;
+    --brand-card-border: rgba(255, 255, 255, 0.06);
     
-    /* Neutrales calmantes */
-    --brand-text-primary: #E6E8EC;
-    --brand-text-secondary: #9BA1AD;
-    --brand-divider: rgba(255, 255, 255, 0.06);
+    /* Texto */
+    --brand-text-light: #E8DDD4;
+    --brand-text-gold: #D4B896;
+    --brand-text-muted: rgba(232, 221, 212, 0.6);
+    
+    /* Acentos */
+    --brand-accent-red: #C44536;
+    --brand-accent-orange: #E07A5F;
+    
+    /* Progress bar */
+    --brand-progress-bg: rgba(255, 255, 255, 0.1);
+    --brand-progress-fill: var(--brand-accent-red);
 }
 
 /* ============================================
@@ -33,7 +42,7 @@
     margin-left: var(--nav-width, 280px);
     transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
-    background: var(--brand-black);
+    background: var(--brand-warm-4);
 }
 
 .side-navigation.collapsed ~ * .brand-dashboard-container,
@@ -48,7 +57,7 @@ body.sidebar-collapsed .brand-dashboard-container {
 }
 
 /* ============================================
-   FONDO ATMOSFÉRICO (luz ambiental, no color)
+   FONDO PREMIUM CON GRADIENTE Y TEXTURA
    ============================================ */
 .brand-dashboard-background {
     position: absolute;
@@ -56,56 +65,525 @@ body.sidebar-collapsed .brand-dashboard-container {
     left: 0;
     right: 0;
     bottom: 0;
-    background: var(--brand-black);
     z-index: 0;
-    /* Textura sutil (grain o noise ultra leve) */
-    background-image: 
-        radial-gradient(circle at 50% 50%, var(--brand-yellow-soft) 0%, transparent 70%),
-        radial-gradient(circle at 30% 30%, rgba(201, 255, 26, 0.05) 0%, transparent 50%);
-    background-size: 100% 100%, 120% 120%;
-    background-position: center, center;
-    /* Sensación: luz ambiental de un estudio futurista */
-    /* No se "ve" como amarillo, se siente como energía */
+    overflow: hidden;
+}
+
+.background-gradient {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(ellipse 120% 80% at 20% 50%, var(--brand-warm-1) 0%, transparent 50%),
+        radial-gradient(ellipse 100% 100% at 80% 20%, var(--brand-warm-2) 0%, transparent 40%),
+        radial-gradient(ellipse 80% 120% at 40% 80%, var(--brand-warm-3) 0%, transparent 50%),
+        linear-gradient(135deg, var(--brand-warm-4) 0%, var(--brand-warm-5) 100%);
+}
+
+.background-texture {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0.15;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
 }
 
 /* ============================================
-   ESQUINAS = INFORMACIÓN FIJA
+   ESQUINA SUPERIOR IZQUIERDA: Logo
    ============================================ */
-
-/* ESQUINA SUPERIOR IZQUIERDA: Equipo */
 .brand-corner-top-left {
     position: absolute;
     top: 2rem;
-    left: 2rem;
+    left: 2.5rem;
     z-index: 10;
 }
 
-.team-avatars {
+.brand-logo-container {
     display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.brand-logo {
+    display: flex;
+    align-items: center;
     gap: 0.5rem;
+}
+
+.brand-logo img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+}
+
+.brand-logo-text {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--brand-text-light);
+    letter-spacing: 0.02em;
+    font-family: 'Inter', system-ui, sans-serif;
+}
+
+.brand-subtitle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.brand-name-display {
+    font-size: 0.75rem;
+    color: var(--brand-text-muted);
+    letter-spacing: 0.05em;
+}
+
+/* ============================================
+   ESQUINA INFERIOR IZQUIERDA: Realtime Info
+   ============================================ */
+.brand-corner-bottom-left {
+    position: absolute;
+    bottom: 2rem;
+    left: 2.5rem;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.brand-realtime-info {
+    display: flex;
+    align-items: flex-end;
+    gap: 2rem;
+}
+
+.realtime-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.realtime-brand-name {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--brand-text-light);
+    letter-spacing: -0.02em;
+    font-family: 'Inter', system-ui, sans-serif;
+}
+
+.realtime-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4ADE80;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.9); }
+}
+
+.realtime-timezone {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.timezone-icon {
+    width: 32px;
+    height: 32px;
+    color: var(--brand-text-muted);
+}
+
+.timezone-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.timezone-values {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    font-size: 0.75rem;
+    color: var(--brand-text-muted);
+    font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.realtime-label {
+    margin-left: auto;
+}
+
+.label-text {
+    font-size: 2rem;
+    font-weight: 500;
+    color: var(--brand-text-light);
+    letter-spacing: 0.05em;
+    font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Identity Editable (collapsed by default) */
+.brand-identity-editable {
+    position: relative;
+    max-width: 320px;
+}
+
+.identity-toggle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--brand-text-muted);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.identity-toggle:hover {
+    background: rgba(0, 0, 0, 0.5);
+    color: var(--brand-text-light);
+}
+
+.identity-toggle.active {
+    background: var(--brand-card-bg);
+    color: var(--brand-text-light);
+}
+
+.identity-fields {
+    display: none;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 0.75rem;
+    backdrop-filter: blur(10px);
+}
+
+.identity-fields.active {
+    display: flex;
+}
+
+.identity-input,
+.identity-input-small,
+.identity-input-social {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--brand-text-light);
+    font-size: 0.875rem;
+    padding: 0.5rem 0;
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.3s ease;
+}
+
+.identity-input:focus,
+.identity-input-small:focus,
+.identity-input-social:focus {
+    outline: none;
+    border-bottom-color: var(--brand-text-gold);
+}
+
+.identity-input::placeholder,
+.identity-input-small::placeholder,
+.identity-input-social::placeholder {
+    color: var(--brand-text-muted);
+}
+
+.identity-input {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.identity-social-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+}
+
+/* ============================================
+   ZONA DERECHA: Cards de Control Premium
+   ============================================ */
+.brand-cards-zone {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    bottom: 2rem;
+    width: 400px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Cards Base */
+.brand-card {
+    background: var(--brand-card-bg);
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.brand-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Card Header */
+.card-header {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
 }
 
-.team-avatar {
-    width: 48px;
-    height: 48px;
+.card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--brand-text-gold);
+    margin: 0;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-family: 'Inter', system-ui, sans-serif;
+}
+
+.card-arrow {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--brand-text-gold);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 0.875rem;
+}
+
+.card-arrow:hover {
+    transform: translateX(4px);
+    color: var(--brand-text-light);
+}
+
+/* Card Content */
+.card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-spacer {
+    height: 1.5rem;
+}
+
+/* Current Label */
+.card-current {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.current-label {
+    font-size: 0.625rem;
+    color: var(--brand-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.current-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--brand-text-light);
+    letter-spacing: 0.02em;
+}
+
+/* Stats */
+.card-stats {
+    margin-bottom: 1rem;
+}
+
+.stats-value {
+    font-size: 0.875rem;
+    color: var(--brand-text-muted);
+}
+
+/* Progress */
+.card-progress {
+    margin-bottom: 1rem;
+}
+
+.progress-time {
+    font-size: 0.75rem;
+    color: var(--brand-text-muted);
+    display: block;
+    margin-bottom: 0.5rem;
+    text-align: right;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--brand-progress-bg);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: var(--brand-progress-fill);
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Card Footer */
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+}
+
+.footer-text {
+    font-size: 0.75rem;
+    color: var(--brand-text-muted);
+}
+
+/* Card Icon (grid pattern) */
+.card-icon {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+}
+
+.icon-circle {
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    background: var(--brand-surface);
-    border: 1px solid var(--brand-divider);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--brand-text-muted);
+    padding: 8px;
+}
+
+.icon-circle svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* Card específica: INFO (más pequeña) */
+.card-info {
+    min-height: 60px;
+    padding: 1rem 1.5rem;
+}
+
+/* Card específica: CONCEPT LAB */
+.card-concept {
+    min-height: 180px;
+}
+
+/* Card específica: SCREENING ROOM */
+.card-screening {
+    min-height: 200px;
+}
+
+/* Card específica: EVENTS */
+.card-events {
+    min-height: 120px;
+}
+
+.event-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.event-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.event-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--brand-text-light);
+}
+
+.event-desc {
+    font-size: 0.75rem;
+    color: var(--brand-text-muted);
+}
+
+.event-date {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.125rem;
+}
+
+.event-date-value {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--brand-text-light);
+}
+
+.event-time-value {
+    font-size: 0.75rem;
+    color: var(--brand-text-muted);
+}
+
+/* ============================================
+   EQUIPO FLOTANTE
+   ============================================ */
+.team-avatars-floating {
+    position: absolute;
+    top: 2rem;
+    right: 420px;
+    z-index: 10;
+    display: flex;
+    flex-direction: row-reverse;
+    gap: -8px;
+}
+
+.team-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--brand-card-bg);
+    border: 2px solid var(--brand-warm-4);
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
     position: relative;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s ease;
+    margin-left: -10px;
+}
+
+.team-avatar:first-child {
+    margin-left: 0;
 }
 
 .team-avatar:hover {
-    transform: scale(1.05);
-    border-color: var(--brand-yellow-glow);
-    box-shadow: 0 0 12px var(--brand-yellow-soft);
+    transform: scale(1.1) translateY(-2px);
     z-index: 11;
+    border-color: var(--brand-text-gold);
 }
 
 .team-avatar img {
@@ -115,553 +593,71 @@ body.sidebar-collapsed .brand-dashboard-container {
 }
 
 .team-avatar-initials {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     font-weight: 600;
-    color: var(--brand-text-primary);
+    color: var(--brand-text-light);
 }
 
 .team-avatar-more {
-    font-size: 0.75rem;
+    font-size: 0.625rem;
     font-weight: 600;
-    color: var(--brand-text-secondary);
-    background: var(--brand-charcoal);
-    border: 1px solid var(--brand-divider);
+    color: var(--brand-text-muted);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .team-avatar-placeholder {
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    background: var(--brand-surface);
-    border: 1px solid var(--brand-divider);
+    background: var(--brand-card-bg);
+    border: 2px solid var(--brand-warm-4);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--brand-text-secondary);
-    font-size: 1.25rem;
-}
-
-/* ESQUINA INFERIOR IZQUIERDA: Identidad editable */
-.brand-corner-bottom-left {
-    position: absolute;
-    bottom: 2rem;
-    left: 2rem;
-    z-index: 10;
-    max-width: 400px;
-}
-
-.brand-identity-editable {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-
-.identity-field {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.identity-input {
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid var(--brand-divider);
-    color: var(--brand-text-primary);
+    color: var(--brand-text-muted);
     font-size: 1rem;
-    font-weight: 500;
-    padding: 0.5rem 0;
-    width: 100%;
-    font-family: 'Inter', sans-serif;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.identity-input:focus {
-    outline: none;
-    border-bottom-color: var(--brand-yellow-core);
-    box-shadow: 0 2px 0 0 var(--brand-yellow-soft);
-}
-
-.identity-input::placeholder {
-    color: var(--brand-text-secondary);
-}
-
-.identity-input-small {
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid var(--brand-divider);
-    color: var(--brand-text-primary);
-    font-size: 0.875rem;
-    font-weight: 400;
-    padding: 0.375rem 0;
-    flex: 1;
-    font-family: 'Inter', sans-serif;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.identity-input-small:focus {
-    outline: none;
-    border-bottom-color: var(--brand-yellow-core);
-    box-shadow: 0 2px 0 0 var(--brand-yellow-soft);
-}
-
-.identity-input-small::placeholder {
-    color: var(--brand-text-secondary);
-}
-
-.identity-social {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.identity-social i {
-    color: var(--brand-text-secondary);
-    font-size: 0.875rem;
-    transition: color 0.3s ease;
-}
-
-.identity-social:hover i {
-    color: var(--brand-yellow-core);
-}
-
-.identity-field i {
-    color: var(--brand-text-secondary);
-    font-size: 1rem;
-    transition: color 0.3s ease;
-}
-
-.identity-field:focus-within i {
-    color: var(--brand-yellow-core);
 }
 
 /* ============================================
-   ZONA DERECHA: Cards de Control
+   RESPONSIVE
    ============================================ */
-.brand-cards-zone {
-    position: absolute;
-    top: 2rem;
-    right: 2rem;
-    bottom: 2rem;
-    width: 420px;
-    z-index: 10;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    overflow-y: auto;
-    padding-right: 0.5rem;
-}
-
-.brand-cards-zone::-webkit-scrollbar {
-    width: 4px;
-}
-
-.brand-cards-zone::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.brand-cards-zone::-webkit-scrollbar-thumb {
-    background: var(--brand-divider);
-    border-radius: 2px;
-}
-
-.brand-cards-zone::-webkit-scrollbar-thumb:hover {
-    background: var(--brand-yellow-soft);
-}
-
-/* Cards */
-.brand-card {
-    background: #141821;
-    border: 1px solid var(--brand-divider);
-    border-radius: 12px;
-    padding: 1.5rem;
-    min-height: 200px;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.brand-card:hover {
-    border-color: var(--brand-yellow-soft);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--brand-yellow-soft);
-}
-
-.card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-}
-
-.card-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: var(--brand-text-primary);
-    margin: 0;
-    letter-spacing: 0.05em;
-}
-
-.card-arrow {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: var(--brand-surface);
-    border: 1px solid var(--brand-divider);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--brand-text-secondary);
-    text-decoration: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.card-arrow:hover {
-    background: var(--brand-charcoal);
-    border-color: var(--brand-yellow-core);
-    color: var(--brand-yellow-core);
-    transform: translateX(2px);
-    box-shadow: 0 0 8px var(--brand-yellow-soft);
-}
-
-.card-arrow i {
-    font-size: 0.875rem;
-}
-
-.card-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-/* Card INFO */
-.card-status {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.status-label {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-}
-
-.status-value {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.status-value.complete {
-    color: var(--brand-yellow-core);
-    text-shadow: 0 0 8px var(--brand-yellow-soft);
-}
-
-.status-value.incomplete {
-    color: var(--brand-text-secondary);
-}
-
-.card-update {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.update-label {
-    font-size: 0.75rem;
-    color: var(--brand-text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.update-value {
-    font-size: 0.875rem;
-    color: var(--brand-text-secondary);
-}
-
-.card-summary {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    margin-top: 0.5rem;
-}
-
-.summary-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid var(--border-divider);
-}
-
-.summary-item:last-child {
-    border-bottom: none;
-}
-
-.summary-label {
-    font-size: 0.813rem;
-    color: var(--brand-text-secondary);
-}
-
-.summary-value {
-    font-size: 0.813rem;
-    font-weight: 500;
-    color: var(--brand-text-primary);
-    text-align: right;
-    max-width: 60%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-/* Card VISUAL */
-.visual-colors {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    margin-bottom: 1rem;
-}
-
-.color-preview {
-    width: 48px;
-    height: 48px;
-    border-radius: 8px;
-    border: 1px solid var(--brand-divider);
-    position: relative;
-    transition: all 0.3s ease;
-}
-
-.color-preview:hover {
-    border-color: var(--brand-yellow-core);
-    box-shadow: 0 0 12px var(--brand-yellow-soft);
-    transform: scale(1.05);
-}
-
-.color-preview-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 1rem;
-    color: var(--brand-text-secondary);
-    font-size: 0.813rem;
-}
-
-.color-preview-empty i {
-    font-size: 1.5rem;
-}
-
-.visual-typography {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem 0;
-    border-top: 1px solid var(--brand-divider);
-}
-
-.typography-label {
-    font-size: 0.813rem;
-    color: var(--brand-text-secondary);
-}
-
-.typography-value {
-    font-size: 0.813rem;
-    font-weight: 500;
-    color: var(--brand-text-primary);
-}
-
-/* Card TOKENS */
-.tokens-available {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-}
-
-.tokens-label {
-    font-size: 0.875rem;
-    color: var(--brand-text-secondary);
-}
-
-.tokens-value {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--brand-text-primary);
-}
-
-.tokens-usage {
-    margin-bottom: 1rem;
-}
-
-.usage-bar {
-    width: 100%;
-    height: 8px;
-    background: var(--brand-surface);
-    border-radius: 4px;
-    overflow: hidden;
-    margin-bottom: 0.5rem;
-    border: 1px solid var(--brand-divider);
-}
-
-.usage-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--brand-yellow-core) 0%, var(--brand-yellow-glow) 100%);
-    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    width: 0%;
-    box-shadow: 0 0 8px var(--brand-yellow-soft);
-}
-
-.usage-text {
-    font-size: 0.75rem;
-    color: var(--brand-text-secondary);
-    text-align: right;
-}
-
-.tokens-recent {
-    margin-top: 1rem;
-}
-
-.recent-label {
-    font-size: 0.75rem;
-    color: var(--brand-text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 0.75rem;
-}
-
-.recent-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.recent-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem;
-    background: var(--brand-surface);
-    border: 1px solid var(--brand-divider);
-    border-radius: 6px;
-    font-size: 0.813rem;
-    color: var(--brand-text-primary);
-    transition: all 0.3s ease;
-}
-
-.recent-item:hover {
-    border-color: var(--brand-yellow-soft);
-    background: var(--brand-charcoal);
-}
-
-.recent-item-icon {
-    width: 24px;
-    height: 24px;
-    border-radius: 4px;
-    background: var(--brand-charcoal);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--brand-yellow-core);
-    font-size: 0.75rem;
-}
-
-.recent-item-text {
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.recent-empty {
-    font-size: 0.813rem;
-    color: var(--brand-text-secondary);
-    text-align: center;
-    padding: 1rem;
-}
-
-/* Card PRODUCTOS */
-.products-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
-}
-
-.product-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.product-image {
-    width: 100%;
-    aspect-ratio: 1;
-    border-radius: 8px;
-    background: var(--brand-surface);
-    border: 1px solid var(--brand-divider);
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-}
-
-.product-image:hover {
-    border-color: var(--brand-yellow-soft);
-    box-shadow: 0 0 12px var(--brand-yellow-soft);
-}
-
-.product-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.product-image-placeholder {
-    color: var(--brand-text-secondary);
-    font-size: 1.5rem;
-}
-
-.product-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.product-name {
-    font-size: 0.813rem;
-    font-weight: 500;
-    color: var(--brand-text-primary);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.product-price {
-    font-size: 0.75rem;
-    color: var(--brand-text-secondary);
-}
-
-.products-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 2rem;
-    color: var(--brand-text-secondary);
-    font-size: 0.813rem;
-}
-
-.products-empty i {
-    font-size: 2rem;
-}
-
-/* Responsive */
-@media (max-width: 1200px) {
+@media (max-width: 1400px) {
     .brand-cards-zone {
         width: 360px;
+    }
+    
+    .team-avatars-floating {
+        right: 380px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .brand-cards-zone {
+        width: 320px;
+    }
+    
+    .team-avatars-floating {
+        right: 340px;
+    }
+    
+    .realtime-brand-name {
+        font-size: 2rem;
+    }
+    
+    .label-text {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 1024px) {
+    .brand-realtime-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .realtime-label {
+        margin-left: 0;
     }
 }
 
@@ -672,7 +668,7 @@ body.sidebar-collapsed .brand-dashboard-container {
         top: auto;
         left: auto;
         bottom: auto;
-        margin: 1rem;
+        padding: 1.5rem;
     }
     
     .brand-cards-zone {
@@ -681,11 +677,50 @@ body.sidebar-collapsed .brand-dashboard-container {
         right: auto;
         bottom: auto;
         width: 100%;
-        margin: 1rem;
+        padding: 1.5rem;
+    }
+    
+    .team-avatars-floating {
+        position: relative;
+        right: auto;
+        top: auto;
+        padding: 1rem 1.5rem;
+        justify-content: flex-start;
+        flex-direction: row;
     }
     
     .brand-dashboard-container {
         height: auto;
         min-height: calc(100vh - 48px);
+        display: flex;
+        flex-direction: column;
     }
+    
+    .realtime-brand-name {
+        font-size: 1.5rem;
+    }
+    
+    .label-text {
+        font-size: 1.25rem;
+    }
+}
+
+/* ============================================
+   SCROLLBAR (si se necesita)
+   ============================================ */
+.brand-cards-zone::-webkit-scrollbar {
+    width: 4px;
+}
+
+.brand-cards-zone::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.brand-cards-zone::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+}
+
+.brand-cards-zone::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
 }
