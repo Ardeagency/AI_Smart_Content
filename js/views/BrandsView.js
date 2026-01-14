@@ -543,187 +543,142 @@ class BrandsView extends BaseView {
     const container = this.container || document.getElementById('app-container');
     if (!container) return;
     
-    // Obtener la card INFO y su posición
     const infoCard = container.querySelector('.card-info');
     if (!infoCard) return;
     
-    const cardRect = infoCard.getBoundingClientRect();
-    
-    // Ocultar otras cards y widgets con animación
     const cardsZone = container.querySelector('.brand-cards-zone');
     const otherCards = cardsZone ? Array.from(cardsZone.querySelectorAll('.brand-card:not(.card-info)')) : [];
     const cornerInfo = container.querySelector('.brand-corner-bottom-left');
     
-    // Agregar clase para ocultar con animación
-    otherCards.forEach(card => {
-      card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-      card.style.opacity = '0';
-      card.style.transform = 'translateY(-20px)';
-    });
-    
-    if (cornerInfo) {
-      cornerInfo.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-      cornerInfo.style.opacity = '0';
-      cornerInfo.style.transform = 'translateY(20px)';
+    // Crear contenido expandido dentro de la card
+    const existingContent = infoCard.querySelector('.card-content-expanded');
+    if (existingContent) {
+      // Ya está expandido
+      return;
     }
     
-    // Ocultar la card INFO pero mantener su espacio inicialmente
-    infoCard.style.opacity = '0';
-    infoCard.style.pointerEvents = 'none';
-    
-    // Crear overlay
-    const overlay = document.createElement('div');
-    overlay.className = 'info-panel-overlay';
-    overlay.id = 'infoPanelOverlay';
-    
-    // Crear panel principal - posicionarlo inicialmente donde está la card
-    const panel = document.createElement('div');
-    panel.className = 'info-panel';
-    panel.id = 'infoPanel';
-    
-    // Posición inicial: donde está la card INFO
-    panel.style.position = 'fixed';
-    panel.style.top = `${cardRect.top}px`;
-    panel.style.right = `${window.innerWidth - cardRect.right}px`;
-    panel.style.width = `${cardRect.width}px`;
-    panel.style.height = `${cardRect.height}px`;
-    panel.style.transformOrigin = 'top right';
-    
-    // Header del panel con botón cerrar
-    const header = document.createElement('div');
-    header.className = 'info-panel-header';
-    header.innerHTML = `
-      <h2 class="info-panel-title">INFO</h2>
-      <button class="info-panel-close" id="infoPanelClose" aria-label="Cerrar">
-        <i class="fas fa-times"></i>
-      </button>
-    `;
-    
-    // Contenido del panel con scroll
     const content = document.createElement('div');
-    content.className = 'info-panel-content';
+    content.className = 'card-content-expanded';
     content.id = 'infoPanelContent';
-    
-    panel.appendChild(header);
-    panel.appendChild(content);
-    overlay.appendChild(panel);
-    
-    // Agregar al body
-    document.body.appendChild(overlay);
     
     // Renderizar contenido
     this.renderInfoPanelContent(content);
     
-    // Event listeners
-    const closeBtn = panel.querySelector('#infoPanelClose');
-    closeBtn.addEventListener('click', () => this.closeInfoPanel());
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) {
-        this.closeInfoPanel();
+    // Agregar botón cerrar al header
+    const header = infoCard.querySelector('.card-header');
+    if (header) {
+      const existingClose = header.querySelector('.info-close-btn');
+      if (!existingClose) {
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'info-close-btn';
+        closeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        closeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.closeInfoPanel();
+        });
+        header.appendChild(closeBtn);
       }
-    });
+    }
     
-    // Animación de expansión
+    // Agregar contenido a la card
+    infoCard.appendChild(content);
+    
+    // Expandir la card
+    infoCard.classList.add('expanded');
+    
+    // Esperar a que el contenido se renderice para calcular altura
     requestAnimationFrame(() => {
-      overlay.classList.add('active');
+      const contentHeight = content.scrollHeight;
+      const cardHeaderHeight = infoCard.querySelector('.card-header')?.offsetHeight || 60;
+      const padding = 40; // padding top + bottom
+      const expandedHeight = Math.min(contentHeight + cardHeaderHeight + padding, window.innerHeight - 150);
       
-      // Pequeño delay para que el overlay aparezca primero
-      setTimeout(() => {
-        panel.classList.add('expanded');
-        
-        // Mostrar contenido después de que el panel se expanda
-        setTimeout(() => {
-          content.style.opacity = '1';
-        }, 200);
-      }, 50);
+      // Establecer altura de la card expandida
+      infoCard.style.height = `${expandedHeight}px`;
+      
+      // Animar otras cards hacia abajo
+      otherCards.forEach((card, index) => {
+        card.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+        card.style.transform = `translateY(${expandedHeight - 50}px)`;
+      });
+      
+      // Animar nombre de marca hacia abajo
+      if (cornerInfo) {
+        cornerInfo.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+        cornerInfo.style.transform = `translateY(${expandedHeight - 50}px)`;
+      }
+      
+      // Actualizar estado con altura calculada
+      this.infoPanelState.expandedHeight = expandedHeight;
     });
     
-    // Inicialmente ocultar contenido
-    content.style.opacity = '0';
-    content.style.transition = 'opacity 0.3s ease';
-    
-    // Prevenir scroll del body
-    document.body.style.overflow = 'hidden';
-    
-    // Guardar referencias para restaurar al cerrar
+    // Guardar estado
     this.infoPanelState = {
       otherCards,
       cornerInfo,
-      infoCard
+      infoCard,
+      expandedHeight
     };
   }
 
   closeInfoPanel() {
-    const overlay = document.getElementById('infoPanelOverlay');
-    if (!overlay) return;
+    const container = this.container || document.getElementById('app-container');
+    if (!container) return;
     
-    const panel = overlay.querySelector('.info-panel');
+    const infoCard = container.querySelector('.card-info');
+    if (!infoCard || !infoCard.classList.contains('expanded')) return;
     
-    // Revertir expansión del panel
-    if (panel) {
-      panel.classList.remove('expanded');
+    if (!this.infoPanelState) return;
+    
+    const { otherCards, cornerInfo } = this.infoPanelState;
+    
+    // Mover otras cards y nombre de marca hacia arriba (empujando INFO hacia arriba)
+    otherCards.forEach(card => {
+      card.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+      card.style.transform = 'translateY(0)';
+    });
+    
+    if (cornerInfo) {
+      cornerInfo.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+      cornerInfo.style.transform = 'translateY(0)';
     }
     
-    // Esperar a que termine la animación de contracción
+    // Restaurar altura de la card
+    infoCard.style.height = '';
+    
+    // Contraer la card después de que las otras cards empiecen a moverse
     setTimeout(() => {
-      if (panel) {
-        panel.classList.remove('active');
-      }
-      overlay.classList.remove('active');
-      
-      // Restaurar otras cards y widgets
-      if (this.infoPanelState) {
-        const { otherCards, cornerInfo, infoCard } = this.infoPanelState;
-        
-        otherCards.forEach(card => {
-          card.style.transition = 'opacity 0.4s ease 0.1s, transform 0.4s ease 0.1s';
-          card.style.opacity = '1';
-          card.style.transform = 'translateY(0)';
-        });
-        
-        if (cornerInfo) {
-          cornerInfo.style.transition = 'opacity 0.4s ease 0.1s, transform 0.4s ease 0.1s';
-          cornerInfo.style.opacity = '1';
-          cornerInfo.style.transform = 'translateY(0)';
-        }
-        
-        if (infoCard) {
-          infoCard.style.transition = 'opacity 0.3s ease 0.2s';
-          infoCard.style.opacity = '1';
-          infoCard.style.pointerEvents = '';
-        }
-        
-        // Limpiar estilos después de la animación
-        setTimeout(() => {
-          otherCards.forEach(card => {
-            card.style.transition = '';
-            card.style.opacity = '';
-            card.style.transform = '';
-          });
-          
-          if (cornerInfo) {
-            cornerInfo.style.transition = '';
-            cornerInfo.style.opacity = '';
-            cornerInfo.style.transform = '';
-          }
-          
-          if (infoCard) {
-            infoCard.style.transition = '';
-            infoCard.style.opacity = '';
-          }
-          
-          this.infoPanelState = null;
-        }, 500);
-      }
-      
-      // Remover overlay después de la animación
-      setTimeout(() => {
-        if (overlay.parentNode) {
-          overlay.parentNode.removeChild(overlay);
-        }
-        document.body.style.overflow = '';
-      }, 400);
+      infoCard.classList.remove('expanded');
     }, 50);
+    
+    // Remover contenido expandido y limpiar después de la animación
+    setTimeout(() => {
+      const content = infoCard.querySelector('.card-content-expanded');
+      if (content) {
+        content.remove();
+      }
+      
+      // Remover botón cerrar
+      const closeBtn = infoCard.querySelector('.info-close-btn');
+      if (closeBtn) {
+        closeBtn.remove();
+      }
+      
+      // Limpiar estilos
+      otherCards.forEach(card => {
+        card.style.transition = '';
+        card.style.transform = '';
+      });
+      
+      if (cornerInfo) {
+        cornerInfo.style.transition = '';
+        cornerInfo.style.transform = '';
+      }
+      
+      infoCard.style.height = '';
+      
+      this.infoPanelState = null;
+    }, 500);
   }
 
   renderInfoPanelContent(container) {
