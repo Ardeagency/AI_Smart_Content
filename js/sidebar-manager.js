@@ -296,6 +296,30 @@ class SidebarManager {
         }
 
         // ============================================
+        // AVATAR EN EL HEADER: Siempre visible
+        // ============================================
+        const avatarInitials = document.getElementById('avatarInitials');
+        const avatarCircle = document.getElementById('avatarCircle');
+        
+        if (avatarInitials && this.userData.avatar_initial) {
+            avatarInitials.textContent = this.userData.avatar_initial;
+        }
+        
+        // Si hay avatar_url, usarlo
+        if (avatarCircle && this.userData.avatar_url) {
+            avatarCircle.style.backgroundImage = `url(${this.userData.avatar_url})`;
+            avatarCircle.style.backgroundSize = 'cover';
+            avatarCircle.style.backgroundPosition = 'center';
+            if (avatarInitials) {
+                avatarInitials.style.display = 'none';
+            }
+        } else if (avatarCircle && avatarInitials) {
+            // Si no hay avatar_url, mostrar iniciales
+            avatarCircle.style.backgroundImage = 'none';
+            avatarInitials.style.display = 'flex';
+        }
+
+        // ============================================
         // NOMBRE DEL PERFIL EN EL FOOTER: Siempre visible
         // ============================================
         const navProfileName = document.getElementById('navProfileName');

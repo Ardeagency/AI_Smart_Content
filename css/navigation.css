@@ -127,86 +127,42 @@ body.sidebar-collapsed .main-header {
     flex-wrap: wrap;
     flex: 0 0 auto;
     margin-left: auto;
-    min-width: fit-content;
 }
 
-/* Breadcrumb en header */
-.header-breadcrumb {
+/* Avatar del usuario en el header */
+.header-avatar {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    flex: 1;
+    justify-content: center;
 }
 
-.header-route {
-    font-size: 0.938rem;
-    font-weight: 600;
-    color: #ffffff;
-}
-
-.header-separator {
-    font-size: 0.938rem;
-    color: rgba(255, 255, 255, 0.6);
-}
-
-.header-brand {
-    font-size: 0.938rem;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.header-brand::before {
-    content: '(';
-    color: rgba(255, 255, 255, 0.6);
-}
-
-.header-brand::after {
-    content: ')';
-    color: rgba(255, 255, 255, 0.6);
-}
-
-/* Avatar del usuario en header */
-.header-user-avatar {
+.avatar-circle {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    overflow: hidden;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(236, 235, 218, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
+    border: 1px solid rgba(236, 235, 218, 0.3);
     transition: all 0.2s ease;
-    flex-shrink: 0;
+    cursor: pointer;
 }
 
-.header-user-avatar:hover {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.3);
+.avatar-circle:hover {
+    background: rgba(236, 235, 218, 0.3);
+    border-color: var(--primary-color, #ecebda);
+    transform: scale(1.05);
 }
 
-.avatar-placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: rgba(255, 255, 255, 0.8);
+.avatar-initials {
     font-size: 0.75rem;
     font-weight: 600;
+    color: var(--text-primary, #ecebda);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-.avatar-placeholder i {
-    font-size: 14px;
-}
-
-#avatarImage {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 /* Botón hamburguesa - solo móvil */

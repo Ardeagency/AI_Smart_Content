@@ -132,12 +132,6 @@ class BaseView {
       // Actualizar links para usar router
       this.updateLinksForRouter();
 
-      // Renderizar header si está disponible
-      if (window.header && typeof window.header.render === 'function') {
-        const pageTitle = this.getPageTitle();
-        await window.header.render(pageTitle);
-      }
-
       // Llamar a onEnter antes de inicializar (para preparar datos, etc.)
       await this.onEnter();
 
@@ -200,41 +194,6 @@ class BaseView {
    */
   async onLeave() {
     // Override en subclases
-  }
-
-  /**
-   * Obtener título de la página (para el header)
-   * Override este método en subclases para personalizar el título
-   * @returns {string} Título de la página
-   */
-  getPageTitle() {
-    const path = window.location.pathname || '/';
-    const routeMap = {
-      '/': 'Hogar',
-      '/hogar': 'Hogar',
-      '/brands': 'Marcas',
-      '/products': 'Productos',
-      '/campaigns': 'Campañas',
-      '/audiences': 'Audiencias',
-      '/create': 'Crear Contenido',
-      '/content': 'Biblioteca',
-      '/settings': 'Ajustes',
-      '/living': 'Living',
-      '/studio': 'Studio'
-    };
-
-    if (routeMap[path]) {
-      return routeMap[path];
-    }
-
-    // Rutas dinámicas
-    if (path.startsWith('/brands/')) return 'Marcas';
-    if (path.startsWith('/products/')) return 'Productos';
-    if (path.startsWith('/campaigns/')) return 'Campañas';
-    if (path.startsWith('/audiences/')) return 'Audiencias';
-    if (path.startsWith('/content/')) return 'Biblioteca';
-
-    return 'AI Smart Content';
   }
 
   /**
@@ -377,6 +336,72 @@ class BaseView {
         link.setAttribute('href', path);
       }
     });
+  }
+
+  /**
+   * Generar HTML del header principal común
+   * @param {string} routeName - Nombre de la ruta (ej: "Marcas", "Productos")
+   * @param {string} subRoute - Sub-ruta opcional (ej: "Detalle", "Nuevo")
+   * @returns {string} HTML del header
+   */
+  getHeaderHTML(routeName, subRoute = null) {
+    const routeDisplay = subRoute ? `${routeName} > ${subRoute}` : routeName;
+    return `
+    <header class="main-header">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="logo-section">
+                    <div class="title-section">
+                        <h1>${routeDisplay}</h1>
+                    </div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="header-credits" id="headerCredits">
+                    <span class="header-credits-value" id="headerCreditsValue">0/0</span>
+                </div>
+                <div class="header-avatar" id="headerAvatar">
+                    <div class="avatar-circle" id="avatarCircle">
+                        <span class="avatar-initials" id="avatarInitials">M</span>
+                    </div>
+                </div>
+                <button class="hamburger-menu" id="hamburgerMenu">
+                    <div class="hamburger-line"></div>
+                    <div class="hamburger-line"></div>
+                    <div class="hamburger-line"></div>
+                </button>
+            </div>
+        </div>
+    </header>
+    `;
+  }
+
+  /**
+   * Actualizar header con datos del usuario
+   * Debe llamarse después de renderizar la vista
+   */
+  updateHeader() {
+    // Actualizar tokens (ya se hace desde sidebar-manager)
+    // Actualizar avatar
+    if (window.sidebarManager && window.sidebarManager.userData) {
+      const userData = window.sidebarManager.userData;
+      const avatarInitials = document.getElementById('avatarInitials');
+      const avatarCircle = document.getElementById('avatarCircle');
+      
+      if (avatarInitials && userData.avatar_initial) {
+        avatarInitials.textContent = userData.avatar_initial;
+      }
+      
+      // Si hay avatar_url, usarlo
+      if (avatarCircle && userData.avatar_url) {
+        avatarCircle.style.backgroundImage = `url(${userData.avatar_url})`;
+        avatarCircle.style.backgroundSize = 'cover';
+        avatarCircle.style.backgroundPosition = 'center';
+        if (avatarInitials) {
+          avatarInitials.style.display = 'none';
+        }
+      }
+    }
   }
 }
 
