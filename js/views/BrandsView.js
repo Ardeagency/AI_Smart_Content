@@ -36,10 +36,6 @@ class BrandsView extends BaseView {
 
   onLeave() {
     this.isActive = false;
-    if (this.timezoneTimerId) {
-      clearTimeout(this.timezoneTimerId);
-      this.timezoneTimerId = null;
-    }
   }
 
   async init() {
@@ -47,7 +43,6 @@ class BrandsView extends BaseView {
     await this.loadData();
     if (this.isActive) {
       this.renderAll();
-      this.startTimezoneUpdate();
     }
   }
 
@@ -153,7 +148,6 @@ class BrandsView extends BaseView {
     this.renderBrandName();
     this.renderLinks();
     this.renderMarket();
-    this.renderTeam();
     this.renderCards();
   }
 
@@ -254,25 +248,6 @@ class BrandsView extends BaseView {
     }
   }
 
-  startTimezoneUpdate() {
-    if (this.timezoneTimerId) {
-      clearTimeout(this.timezoneTimerId);
-    }
-    if (!this.isActive) return;
-    
-    const timeEl = document.getElementById('timeLocal');
-    const zoneEl = document.getElementById('timeZone');
-    
-    if (timeEl && zoneEl) {
-      const now = new Date();
-      timeEl.textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-      zoneEl.textContent = Intl.DateTimeFormat().resolvedOptions().timeZone.split('/').pop().replace('_', ' ');
-      
-      if (this.isActive) {
-        this.timezoneTimerId = setTimeout(() => this.startTimezoneUpdate(), 60000);
-      }
-    }
-  }
 
   setupEventListeners() {
     const infoBtn = document.querySelector('.card-info');
