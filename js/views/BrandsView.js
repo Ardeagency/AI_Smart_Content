@@ -183,26 +183,6 @@ class BrandsView extends BaseView {
     }
   }
 
-  renderTeam() {
-    const container = document.getElementById('teamAvatars');
-    if (!container) return;
-
-    if (!this.organizationMembers?.length) {
-      container.innerHTML = '<div class="team-avatar-placeholder"><i class="fas fa-users"></i></div>';
-      return;
-    }
-
-    const html = this.organizationMembers.slice(0, 5).map(m => {
-      const user = Array.isArray(m.users) ? m.users[0] : m.users;
-      const name = user?.full_name || user?.email || '';
-      const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
-      return `<div class="team-avatar" title="${name}"><span class="team-avatar-initials">${initials}</span></div>`;
-    }).join('');
-
-    container.innerHTML = html + (this.organizationMembers.length > 5 
-      ? `<div class="team-avatar team-avatar-more">+${this.organizationMembers.length - 5}</div>` : '');
-  }
-
   renderCards() {
     // CONCEPT LAB
     const current = document.getElementById('conceptCurrentValue');

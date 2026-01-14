@@ -413,9 +413,6 @@ body.sidebar-collapsed .brand-dashboard-container {
         align-items: flex-start;
         gap: 0.75rem;
     }
-    .realtime-label {
-        font-size: 1.25rem;
-    }
 }
 
 @media (max-width: 768px) {
@@ -425,7 +422,6 @@ body.sidebar-collapsed .brand-dashboard-container {
         min-height: calc(100vh - 48px);
         overflow-y: auto;
     }
-    .brand-corner-top-left,
     .brand-corner-bottom-left {
         position: relative;
         padding: 1.5rem;
