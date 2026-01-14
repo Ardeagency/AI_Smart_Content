@@ -664,7 +664,11 @@ body.sidebar-collapsed .main-content {
 @media (max-width: 768px) {
     .main-header {
         padding: 12px 16px;
-        left: 0;
+        left: 0 !important;
+    }
+    
+    #app-container .main-header {
+        left: 0 !important;
     }
     
     .header-content {
