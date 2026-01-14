@@ -19,6 +19,11 @@ class BrandsView extends BaseView {
     this.brandColors = [];
     this.aiVectors = [];
     this.storageUsage = null;
+    this.organizationMembers = [];
+    this.organizationCredits = null;
+    this.creditUsage = [];
+    this.flowRuns = [];
+    this.organizationId = null;
     this.brandId = null; // Para vista de detalle
     this.eventListenersSetup = false;
     this.savingFields = new Set();
@@ -120,40 +125,34 @@ class BrandsView extends BaseView {
         await this.loadBrandData();
         await this.loadBrandFiles();
         await this.loadProducts();
-        await this.loadCampaigns();
-        await this.loadAudiences();
         await this.loadBrandColors();
-        await this.loadAIVectors();
-        await this.loadStorageUsage();
+        await this.loadBrandRules();
+        await this.loadBrandProfiles();
         
-        // Inicializar CampaignsManager si está disponible
-        if (window.CampaignsManager) {
-          this.campaignsManager = new window.CampaignsManager(
-            this.supabase,
-            this.userId,
-            this.brandContainerId
-          );
-          await this.campaignsManager.loadCampaigns();
+        // Cargar datos de organización
+        if (this.brandContainerData?.organization_id) {
+          this.organizationId = this.brandContainerData.organization_id;
+          await this.loadOrganizationMembers();
+          await this.loadOrganizationCredits();
+          await this.loadCreditUsage();
+          await this.loadFlowRuns();
         }
       }
       
-      // Renderizar todo (nueva estructura de 4 capas)
-      console.log('🎨 Renderizando estructura de 4 capas...');
-      this.renderBrandHeader();
-      console.log('✅ Header de marca renderizado');
-      this.renderControlPanel();
-      console.log('✅ Panel de control renderizado');
-      this.renderTabContent();
-      console.log('✅ Área de trabajo renderizada');
-      console.log('✅ Vista de marca completamente renderizada');
+      // Renderizar nuevo diseño dashboard
+      console.log('🎨 Renderizando dashboard de marca...');
+      this.renderTeam();
+      this.renderIdentity();
+      this.renderInfoCard();
+      this.renderVisualCard();
+      this.renderTokensCard();
+      this.renderProductsCard();
+      console.log('✅ Dashboard completamente renderizado');
       
       // Configurar event listeners solo una vez
       if (!this.eventListenersSetup) {
         this.setupEventListeners();
-        this.setupInternalNavigation();
-        this.setupEditableInputs();
-        this.setupMultiselects();
-        this.setupFileUpload();
+        this.setupIdentityEditable();
         this.eventListenersSetup = true;
       }
     } catch (error) {
@@ -1346,16 +1345,404 @@ class BrandsView extends BaseView {
   }
 
   async renderBrandDetail() {
-    // Para la nueva estructura, el detalle se maneja con tabs
-    // Por ahora, cargar los datos y mostrar la vista principal
+    // Para el nuevo diseño, el detalle se maneja igual que la lista
     console.log('Renderizando detalle de marca:', this.brandId);
-    
-    // Cargar datos del brand específico si es necesario
     await this.renderBrandsList();
+  }
+
+  // ============================================
+  // NUEVOS MÉTODOS DE CARGA PARA DASHBOARD
+  // ============================================
+
+  async loadOrganizationMembers() {
+    if (!this.supabase || !this.organizationId) return;
+
+    try {
+      const { data, error } = await this.supabase
+        .from('organization_members')
+        .select(`
+          *,
+          users (
+            id,
+            full_name,
+            email,
+            avatar_url
+          )
+        `)
+        .eq('organization_id', this.organizationId)
+        .limit(5);
+
+      if (error) throw error;
+      this.organizationMembers = data || [];
+      console.log('✅ Miembros de organización cargados:', this.organizationMembers.length);
+    } catch (error) {
+      console.error('❌ Error cargando miembros:', error);
+      this.organizationMembers = [];
+    }
+  }
+
+  async loadOrganizationCredits() {
+    if (!this.supabase || !this.organizationId) return;
+
+    try {
+      // Buscar en subscriptions o credits
+      const { data, error } = await this.supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('organization_id', this.organizationId)
+        .eq('status', 'active')
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      this.organizationCredits = data;
+      console.log('✅ Créditos de organización cargados');
+    } catch (error) {
+      console.error('❌ Error cargando créditos:', error);
+      this.organizationCredits = null;
+    }
+  }
+
+  async loadCreditUsage() {
+    if (!this.supabase || !this.organizationId) return;
+
+    try {
+      const { data, error } = await this.supabase
+        .from('credit_usage')
+        .select('*')
+        .eq('organization_id', this.organizationId)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      this.creditUsage = data || [];
+      console.log('✅ Uso de créditos cargado:', this.creditUsage.length);
+    } catch (error) {
+      console.error('❌ Error cargando uso de créditos:', error);
+      this.creditUsage = [];
+    }
+  }
+
+  async loadFlowRuns() {
+    if (!this.supabase || !this.brandContainerId) return;
+
+    try {
+      const { data, error } = await this.supabase
+        .from('flow_runs')
+        .select(`
+          *,
+          flow_outputs (
+            id,
+            output_type,
+            output_data,
+            created_at
+          )
+        `)
+        .eq('brand_container_id', this.brandContainerId)
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      if (error) throw error;
+      this.flowRuns = data || [];
+      console.log('✅ Flow runs cargados:', this.flowRuns.length);
+    } catch (error) {
+      console.error('❌ Error cargando flow runs:', error);
+      this.flowRuns = [];
+    }
+  }
+
+  async loadBrandRules() {
+    if (!this.supabase || !this.brandData?.id) return;
+
+    try {
+      const { data, error } = await this.supabase
+        .from('brand_rules')
+        .select('*')
+        .eq('brand_id', this.brandData.id);
+
+      if (error) throw error;
+      this.brandRules = data || [];
+      console.log('✅ Reglas de marca cargadas:', this.brandRules.length);
+    } catch (error) {
+      console.error('❌ Error cargando reglas:', error);
+      this.brandRules = [];
+    }
+  }
+
+  async loadBrandProfiles() {
+    if (!this.supabase || !this.brandData?.id) return;
+
+    try {
+      const { data, error } = await this.supabase
+        .from('brand_profiles')
+        .select('*')
+        .eq('brand_id', this.brandData.id);
+
+      if (error) throw error;
+      this.brandProfiles = data || [];
+      console.log('✅ Perfiles de marca cargados:', this.brandProfiles.length);
+    } catch (error) {
+      console.error('❌ Error cargando perfiles:', error);
+      this.brandProfiles = [];
+    }
+  }
+
+  // ============================================
+  // MÉTODOS DE RENDERIZADO PARA DASHBOARD
+  // ============================================
+
+  renderTeam() {
+    const teamAvatars = document.getElementById('teamAvatars');
+    if (!teamAvatars) return;
+
+    if (!this.organizationMembers || this.organizationMembers.length === 0) {
+      teamAvatars.innerHTML = '<div class="team-avatar-placeholder"><i class="fas fa-users"></i></div>';
+      return;
+    }
+
+    teamAvatars.innerHTML = this.organizationMembers.slice(0, 5).map(member => {
+      const user = member.users;
+      const initials = user?.full_name 
+        ? user.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+        : 'U';
+      const avatarUrl = user?.avatar_url;
+      const name = user?.full_name || user?.email || 'Usuario';
+      const role = member.role || 'Miembro';
+
+      return `
+        <div class="team-avatar" title="${this.escapeHtml(name)} - ${this.escapeHtml(role)}">
+          ${avatarUrl 
+            ? `<img src="${avatarUrl}" alt="${this.escapeHtml(name)}">`
+            : `<span class="team-avatar-initials">${initials}</span>`
+          }
+        </div>
+      `;
+    }).join('') + 
+    (this.organizationMembers.length > 5 
+      ? `<div class="team-avatar team-avatar-more">+${this.organizationMembers.length - 5}</div>`
+      : ''
+    );
+  }
+
+  renderIdentity() {
+    if (!this.brandContainerData) return;
+
+    const brandName = document.getElementById('brandNameInput');
+    if (brandName) {
+      brandName.value = this.brandContainerData.nombre_marca || '';
+    }
+
+    const brandWebsite = document.getElementById('brandWebsiteInput');
+    if (brandWebsite) {
+      brandWebsite.value = this.brandContainerData.sitio_web || '';
+    }
+
+    const brandInstagram = document.getElementById('brandInstagramInput');
+    if (brandInstagram) {
+      brandInstagram.value = this.brandContainerData.instagram_url || '';
+    }
+
+    const brandTikTok = document.getElementById('brandTikTokInput');
+    if (brandTikTok) {
+      brandTikTok.value = this.brandContainerData.tiktok_url || '';
+    }
+
+    const brandFacebook = document.getElementById('brandFacebookInput');
+    if (brandFacebook) {
+      brandFacebook.value = this.brandContainerData.facebook_url || '';
+    }
+
+    const brandMarket = document.getElementById('brandMarketInput');
+    if (brandMarket) {
+      const mercado = this.brandContainerData.mercado_objetivo;
+      brandMarket.value = Array.isArray(mercado) ? mercado.join(', ') : (mercado || '');
+    }
+  }
+
+  renderInfoCard() {
+    if (!this.brandData) return;
+
+    // Estado
+    const statusValue = document.getElementById('infoStatusValue');
+    if (statusValue) {
+      const isComplete = this.brandData.tono_voz && 
+                        this.brandData.personalidad_marca && 
+                        this.brandData.palabras_usar;
+      statusValue.textContent = isComplete ? 'Completo' : 'Incompleto';
+      statusValue.className = `status-value ${isComplete ? 'complete' : 'incomplete'}`;
+    }
+
+    // Última actualización
+    const updateValue = document.getElementById('infoUpdateValue');
+    if (updateValue && this.brandData.updated_at) {
+      updateValue.textContent = new Date(this.brandData.updated_at).toLocaleDateString('es-ES');
+    }
+
+    // Tono de voz
+    const tonoVoz = document.getElementById('infoTonoVoz');
+    if (tonoVoz) {
+      tonoVoz.textContent = this.brandData.tono_voz || '-';
+    }
+
+    // Palabras
+    const palabras = document.getElementById('infoPalabras');
+    if (palabras) {
+      palabras.textContent = this.brandData.palabras_usar 
+        ? (this.brandData.palabras_usar.length > 30 
+          ? this.brandData.palabras_usar.substring(0, 30) + '...' 
+          : this.brandData.palabras_usar)
+        : '-';
+    }
+
+    // Reglas activas
+    const reglas = document.getElementById('infoReglas');
+    if (reglas) {
+      reglas.textContent = (this.brandRules?.length || 0).toString();
+    }
+  }
+
+  renderVisualCard() {
+    const visualColors = document.getElementById('visualColors');
+    if (!visualColors) return;
+
+    if (!this.brandColors || this.brandColors.length === 0) {
+      visualColors.innerHTML = '<div class="color-preview-empty"><i class="fas fa-palette"></i><span>Sin colores definidos</span></div>';
+      return;
+    }
+
+    visualColors.innerHTML = this.brandColors.slice(0, 6).map(color => `
+      <div class="color-preview" style="background-color: ${color.hex_value};" title="${this.escapeHtml(color.color_role)}"></div>
+    `).join('');
+
+    // Tipografía (por ahora genérica)
+    const typographyValue = document.getElementById('typographyValue');
+    if (typographyValue) {
+      typographyValue.textContent = 'Inter (Sistema)';
+    }
+  }
+
+  renderTokensCard() {
+    // Tokens disponibles
+    const tokensValue = document.getElementById('tokensValue');
+    if (tokensValue) {
+      // Por ahora usar un valor genérico, ajustar según schema real
+      tokensValue.textContent = this.organizationCredits?.credits_available || '0';
+    }
+
+    // Barra de uso
+    const usageBarFill = document.getElementById('usageBarFill');
+    const usageText = document.getElementById('usageText');
+    if (usageBarFill && usageText) {
+      const total = parseInt(this.organizationCredits?.credits_available || 0);
+      const used = this.creditUsage.reduce((sum, usage) => sum + (usage.credits_used || 0), 0);
+      const percentage = total > 0 ? Math.min((used / total) * 100, 100) : 0;
+      
+      usageBarFill.style.width = `${percentage}%`;
+      usageText.textContent = `${Math.round(percentage)}% usado`;
+    }
+
+    // Producciones recientes
+    const recentList = document.getElementById('recentList');
+    if (recentList) {
+      if (this.flowRuns.length === 0) {
+        recentList.innerHTML = '<div class="recent-empty">Sin producciones recientes</div>';
+      } else {
+        recentList.innerHTML = this.flowRuns.slice(0, 3).map(run => {
+          const output = run.flow_outputs?.[0];
+          const type = output?.output_type || 'contenido';
+          return `
+            <div class="recent-item">
+              <div class="recent-item-icon">
+                <i class="fas fa-file-alt"></i>
+              </div>
+              <div class="recent-item-text">${this.escapeHtml(type)}</div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+  }
+
+  renderProductsCard() {
+    const productsGrid = document.getElementById('productsGrid');
+    if (!productsGrid) return;
+
+    if (!this.products || this.products.length === 0) {
+      productsGrid.innerHTML = '<div class="products-empty"><i class="fas fa-box-open"></i><span>Sin productos</span></div>';
+      return;
+    }
+
+    productsGrid.innerHTML = this.products.slice(0, 4).map(product => {
+      const imageUrl = product.main_image?.image_url;
+      const price = product.precio_producto 
+        ? `${product.precio_producto} ${product.moneda || 'USD'}`
+        : '-';
+
+      return `
+        <div class="product-item">
+          <div class="product-image">
+            ${imageUrl 
+              ? `<img src="${imageUrl}" alt="${this.escapeHtml(product.nombre_producto)}">`
+              : `<div class="product-image-placeholder"><i class="fas fa-box"></i></div>`
+            }
+          </div>
+          <div class="product-info">
+            <div class="product-name">${this.escapeHtml(product.nombre_producto)}</div>
+            <div class="product-price">${price}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  setupIdentityEditable() {
+    // Guardar cambios en tiempo real con debounce
+    const fields = ['brandNameInput', 'brandWebsiteInput', 'brandInstagramInput', 'brandTikTokInput', 'brandFacebookInput', 'brandMarketInput'];
     
-    // Actualizar header con nombre de marca específica
-    if (this.brandContainerData) {
-      this.updateHeaderContext('Marcas', this.brandContainerData.nombre_marca);
+    fields.forEach(fieldId => {
+      const field = document.getElementById(fieldId);
+      if (!field) return;
+
+      let saveTimeout;
+      field.addEventListener('input', () => {
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+          const fieldName = field.dataset.field;
+          const value = field.value.trim();
+          this.saveBrandContainerField(fieldName, value);
+        }, 1000);
+      });
+
+      field.addEventListener('blur', () => {
+        clearTimeout(saveTimeout);
+        const fieldName = field.dataset.field;
+        const value = field.value.trim();
+        this.saveBrandContainerField(fieldName, value);
+      });
+    });
+  }
+
+  async saveBrandContainerField(fieldName, value) {
+    if (!this.supabase || !this.brandContainerId) return;
+
+    try {
+      const updateData = {};
+      
+      // Manejar mercado_objetivo como array
+      if (fieldName === 'mercado_objetivo') {
+        updateData[fieldName] = value ? value.split(',').map(s => s.trim()).filter(s => s) : [];
+      } else {
+        updateData[fieldName] = value || null;
+      }
+
+      const { error } = await this.supabase
+        .from('brand_containers')
+        .update(updateData)
+        .eq('id', this.brandContainerId);
+
+      if (error) throw error;
+      console.log(`✅ ${fieldName} actualizado`);
+    } catch (error) {
+      console.error(`❌ Error guardando ${fieldName}:`, error);
     }
   }
 }

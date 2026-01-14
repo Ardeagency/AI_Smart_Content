@@ -1,361 +1,151 @@
-<!-- Vista de Marca - Estructura de 4 Capas -->
-<div class="brand-view-container" id="brandsListContainer">
+<!-- Vista de Marca - Diseño Dashboard Minimalista -->
+<div class="brand-dashboard-container" id="brandsListContainer">
     
-    <!-- A. HEADER DE MARCA (identidad + estado) -->
-    <header class="brand-header">
-        <div class="brand-header-content">
-            <!-- Izquierda: Identidad -->
-            <div class="brand-header-identity">
-                <div class="brand-logo-container">
-                    <img id="brandHeaderLogo" src="" alt="Logo de marca" class="brand-logo-img" style="display: none;">
-                    <div class="brand-logo-placeholder" id="brandHeaderLogoPlaceholder">
-                        <i class="fas fa-image"></i>
-                    </div>
-                </div>
-                <div class="brand-identity-info">
-                    <h1 class="brand-name" id="brandHeaderName">Cargando marca...</h1>
-                    <div class="brand-social-links" id="brandHeaderSocialLinks">
-                        <!-- Web, Instagram, Facebook se insertarán aquí -->
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Centro/Derecha: Estado -->
-            <div class="brand-header-status">
-                <div class="brand-status-item" id="brandHeaderLanguages">
-                    <span class="status-label">Idiomas:</span>
-                    <span class="status-value" id="brandHeaderLanguagesValue">-</span>
-                </div>
-                <div class="brand-status-item" id="brandHeaderMarket">
-                    <span class="status-label">Mercado:</span>
-                    <span class="status-value" id="brandHeaderMarketValue">-</span>
-                </div>
-                <div class="brand-status-badge" id="brandHeaderStatusBadge">
-                    <i class="fas fa-check-circle"></i>
-                    <span>Marca activa</span>
-                </div>
+    <!-- FONDO AMARILLO ELÉCTRICO (estado activo) -->
+    <div class="brand-dashboard-background"></div>
+    
+    <!-- ESQUINA SUPERIOR IZQUIERDA: Equipo de la organización -->
+    <div class="brand-corner-top-left">
+        <div class="team-avatars" id="teamAvatars">
+            <div class="team-avatar-placeholder">
+                <i class="fas fa-users"></i>
             </div>
         </div>
-    </header>
-
-    <!-- B. PANEL DE CONTROL (cards de alto nivel) -->
-    <section class="brand-control-panel">
-        <!-- Card: Identidad -->
-        <div class="control-card identity-card">
-            <div class="control-card-header">
-                <i class="fas fa-palette"></i>
-                <h3>Identidad</h3>
-            </div>
-            <div class="control-card-content">
-                <div class="control-item">
-                    <span class="control-label">Tono de voz</span>
-                    <span class="control-value" id="controlTonoVoz">-</span>
-                </div>
-                <div class="control-item">
-                    <span class="control-label">Personalidad</span>
-                    <span class="control-value" id="controlPersonalidad">-</span>
-                </div>
-                <div class="control-item">
-                    <span class="control-label">Palabras clave</span>
-                    <span class="control-value" id="controlPalabrasUsar">-</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Card: Activos -->
-        <div class="control-card assets-card">
-            <div class="control-card-header">
-                <i class="fas fa-folder-open"></i>
-                <h3>Activos</h3>
-            </div>
-            <div class="control-card-content">
-                <div class="control-item">
-                    <span class="control-label">Archivos</span>
-                    <span class="control-value" id="controlFilesCount">0</span>
-                </div>
-                <div class="control-item">
-                    <span class="control-label">Colores</span>
-                    <span class="control-value" id="controlColorsCount">0</span>
-                </div>
-                <div class="control-item">
-                    <span class="control-label">Storage</span>
-                    <span class="control-value" id="controlStorageUsage">-</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Card: Operación -->
-        <div class="control-card operation-card">
-            <div class="control-card-header">
-                <i class="fas fa-cogs"></i>
-                <h3>Operación</h3>
-            </div>
-            <div class="control-card-content">
-                <div class="control-item">
-                    <span class="control-label">Productos</span>
-                    <span class="control-value" id="controlProductsCount">0</span>
-                </div>
-                <div class="control-item">
-                    <span class="control-label">Campañas</span>
-                    <span class="control-value" id="controlCampaignsCount">0</span>
-                </div>
-                <div class="control-item">
-                    <span class="control-label">Audiencias</span>
-                    <span class="control-value" id="controlAudiencesCount">0</span>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- C. NAVEGACIÓN INTERNA DE LA MARCA (tabs horizontales) -->
-    <nav class="brand-internal-nav">
-        <button class="brand-nav-tab active" data-tab="perfil">
-            <i class="fas fa-user-circle"></i>
-            <span>Perfil de marca</span>
-        </button>
-        <button class="brand-nav-tab" data-tab="colores">
-            <i class="fas fa-palette"></i>
-            <span>Colores</span>
-        </button>
-        <button class="brand-nav-tab" data-tab="lineamientos">
-            <i class="fas fa-book"></i>
-            <span>Lineamientos</span>
-        </button>
-        <button class="brand-nav-tab" data-tab="archivos">
-            <i class="fas fa-folder"></i>
-            <span>Archivos</span>
-        </button>
-        <button class="brand-nav-tab" data-tab="productos">
-            <i class="fas fa-box"></i>
-            <span>Productos</span>
-        </button>
-        <button class="brand-nav-tab" data-tab="audiencias">
-            <i class="fas fa-users"></i>
-            <span>Audiencias</span>
-        </button>
-        <button class="brand-nav-tab" data-tab="campañas">
-            <i class="fas fa-megaphone"></i>
-            <span>Campañas</span>
-        </button>
-        <button class="brand-nav-tab" data-tab="ia">
-            <i class="fas fa-robot"></i>
-            <span>IA / Sistema</span>
-        </button>
-    </nav>
-
-    <!-- D. ÁREA DE TRABAJO (contenido editable según tab activo) -->
-    <div class="brand-work-area">
-        
-        <!-- Tab: Perfil de marca -->
-        <div class="brand-tab-content active" id="tabPerfil">
-            <div class="brand-work-section">
-                <h2>Perfil de Marca</h2>
-                <div class="form-group">
-                    <label>Quiénes Somos</label>
-                    <textarea class="editable-textarea" id="quienesSomosInput" rows="4" placeholder="Describe quiénes son como marca..."></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Personalidad de Marca</label>
-                    <textarea class="editable-textarea" id="personalidadMarcaInput" rows="3" placeholder="Describe la personalidad de tu marca..."></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Objetivos de Marca</label>
-                    <div class="multiselect-wrapper" id="objetivosMarcaWrapper">
-                        <div class="multiselect-trigger" id="objetivosMarcaTrigger">
-                            <div class="multiselect-value" id="objetivosMarcaValue">Seleccionar objetivos...</div>
-                            <div class="multiselect-arrow">▼</div>
-                        </div>
-                        <div class="multiselect-dropdown" id="objetivosMarcaDropdown">
-                            <div class="multiselect-optgroup">Crecimiento</div>
-                            <div class="multiselect-option" data-value="aumentar_ventas">Aumentar ventas</div>
-                            <div class="multiselect-option" data-value="expandir_mercado">Expandir mercado</div>
-                            <div class="multiselect-option" data-value="aumentar_cuota_mercado">Aumentar cuota de mercado</div>
-                            <div class="multiselect-option" data-value="crecer_audiencia">Crecer audiencia</div>
-                            <div class="multiselect-optgroup">Engagement</div>
-                            <div class="multiselect-option" data-value="mejorar_engagement">Mejorar engagement</div>
-                            <div class="multiselect-option" data-value="aumentar_interacciones">Aumentar interacciones</div>
-                            <div class="multiselect-option" data-value="fidelizar_clientes">Fidelizar clientes</div>
-                            <div class="multiselect-option" data-value="construir_comunidad">Construir comunidad</div>
-                            <div class="multiselect-optgroup">Branding</div>
-                            <div class="multiselect-option" data-value="aumentar_reconocimiento">Aumentar reconocimiento de marca</div>
-                            <div class="multiselect-option" data-value="mejorar_imagen">Mejorar imagen de marca</div>
-                            <div class="multiselect-option" data-value="posicionar_marca">Posicionar marca</div>
-                            <div class="multiselect-option" data-value="diferenciarse_competencia">Diferenciarse de la competencia</div>
-                            <div class="multiselect-optgroup">Conversión</div>
-                            <div class="multiselect-option" data-value="aumentar_conversiones">Aumentar conversiones</div>
-                            <div class="multiselect-option" data-value="mejorar_ctr">Mejorar CTR</div>
-                            <div class="multiselect-option" data-value="reducir_costo_adquisicion">Reducir costo de adquisición</div>
-                            <div class="multiselect-option" data-value="aumentar_retorno_inversion">Aumentar retorno de inversión</div>
-                        </div>
-                        <input type="hidden" id="objetivosMarcaInput">
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tab: Colores -->
-        <div class="brand-tab-content" id="tabColores">
-            <div class="brand-work-section">
-                <h2>Paleta de Colores</h2>
-                <div class="colors-grid" id="brandColorsGrid">
-                    <div class="empty-state">
-                        <i class="fas fa-palette"></i>
-                        <p>No hay colores definidos</p>
-                        <button class="btn btn-primary" id="addColorBtn">Agregar color</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tab: Lineamientos -->
-        <div class="brand-tab-content" id="tabLineamientos">
-            <div class="brand-work-section">
-                <h2>Lineamientos de Marca</h2>
-                <div class="form-group">
-                    <label>Tono de Voz</label>
-                    <select class="editable-select" id="tonoVozInput">
-                        <option value="">Seleccionar...</option>
-                        <option value="amigable">Amigable</option>
-                        <option value="premium">Premium</option>
-                        <option value="tecnico">Técnico</option>
-                        <option value="irreverente">Irreverente</option>
-                        <option value="divertido">Divertido</option>
-                        <option value="profesional">Profesional</option>
-                        <option value="casual">Casual</option>
-                        <option value="inspirador">Inspirador</option>
-                        <option value="autoritario">Autoritario</option>
-                        <option value="empatico">Empático</option>
-                        <option value="humoristico">Humorístico</option>
-                        <option value="serio">Serio</option>
-                        <option value="joven">Joven</option>
-                        <option value="tradicional">Tradicional</option>
-                        <option value="innovador">Innovador</option>
-                        <option value="calido">Cálido</option>
-                        <option value="directo">Directo</option>
-                        <option value="poetico">Poético</option>
-                        <option value="energico">Enérgico</option>
-                        <option value="tranquilo">Tranquilo</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Palabras a Usar</label>
-                    <input type="text" class="editable-input" id="palabrasUsarInput" placeholder="Ej: innovador, calidad, premium">
-                </div>
-                <div class="form-group">
-                    <label>Palabras a Evitar</label>
-                    <div class="multiselect-wrapper" id="palabrasEvitarWrapper">
-                        <div class="multiselect-trigger" id="palabrasEvitarTrigger">
-                            <div class="multiselect-value" id="palabrasEvitarValue">Seleccionar palabras...</div>
-                            <div class="multiselect-arrow">▼</div>
-                        </div>
-                        <div class="multiselect-dropdown" id="palabrasEvitarDropdown">
-                            <!-- Opciones se cargarán dinámicamente -->
-                        </div>
-                        <input type="hidden" id="palabrasEvitarInput">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Reglas Creativas</label>
-                    <textarea class="editable-textarea" id="reglasCreativasInput" rows="6" placeholder="Escribe las reglas creativas de tu marca..."></textarea>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tab: Archivos -->
-        <div class="brand-tab-content" id="tabArchivos">
-            <div class="brand-work-section">
-                <div class="section-header">
-                    <h2>Archivos de Marca</h2>
-                    <input type="file" id="brandFileUpload" multiple accept="image/*,.pdf,.doc,.docx" style="display: none;">
-                    <label for="brandFileUpload" class="btn btn-primary">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <span>Subir archivos</span>
-                    </label>
-                </div>
-                <div class="files-list" id="brandFilesList">
-                    <div class="empty-state">
-                        <i class="fas fa-inbox"></i>
-                        <p>No hay archivos adjuntados</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tab: Productos -->
-        <div class="brand-tab-content" id="tabProductos">
-            <div class="brand-work-section">
-                <div class="section-header">
-                    <h2>Productos</h2>
-                    <a href="/products" class="btn btn-secondary">Gestionar Productos</a>
-                </div>
-                <div class="products-list" id="productsList">
-                    <div class="empty-state">
-                        <i class="fas fa-box-open"></i>
-                        <p>No hay productos registrados</p>
-                        <a href="/products" class="btn btn-primary">Crear Producto</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tab: Audiencias -->
-        <div class="brand-tab-content" id="tabAudiencias">
-            <div class="brand-work-section">
-                <div class="section-header">
-                    <h2>Audiencias</h2>
-                    <a href="/audiences" class="btn btn-secondary">Gestionar Audiencias</a>
-                </div>
-                <div class="audiences-list" id="audiencesList">
-                    <div class="empty-state">
-                        <i class="fas fa-users"></i>
-                        <p>No hay audiencias creadas</p>
-                        <a href="/audiences" class="btn btn-primary">Crear Audiencia</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tab: Campañas -->
-        <div class="brand-tab-content" id="tabCampañas">
-            <div class="brand-work-section">
-                <div class="section-header">
-                    <h2>Campañas</h2>
-                    <a href="/campaigns" class="btn btn-secondary">Gestionar Campañas</a>
-                </div>
-                <div class="campaigns-list" id="campaignsList">
-                    <div class="empty-state">
-                        <i class="fas fa-megaphone"></i>
-                        <p>No hay campañas creadas</p>
-                        <a href="/campaigns" class="btn btn-primary">Crear Campaña</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tab: IA / Sistema -->
-        <div class="brand-tab-content" id="tabIA">
-            <div class="brand-work-section">
-                <h2>IA / Sistema</h2>
-                <div class="ai-status-card">
-                    <div class="ai-status-item">
-                        <span class="ai-status-label">Estado del entrenamiento</span>
-                        <span class="ai-status-value" id="aiTrainingStatus">-</span>
-                    </div>
-                    <div class="ai-status-item">
-                        <span class="ai-status-label">Vectores entrenados</span>
-                        <span class="ai-status-value" id="aiVectorsCount">0</span>
-                    </div>
-                    <div class="ai-status-item">
-                        <span class="ai-status-label">Última actualización</span>
-                        <span class="ai-status-value" id="aiLastUpdate">-</span>
-                    </div>
-                    <div class="ai-status-item">
-                        <span class="ai-status-label">Fuentes usadas</span>
-                        <span class="ai-status-value" id="aiSourcesCount">0</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
     </div>
+    
+    <!-- ESQUINA INFERIOR IZQUIERDA: Identidad básica de la marca (editable) -->
+    <div class="brand-corner-bottom-left">
+        <div class="brand-identity-editable">
+            <div class="identity-field">
+                <input type="text" class="identity-input" id="brandNameInput" placeholder="Nombre de marca" data-field="nombre_marca">
+            </div>
+            <div class="identity-field">
+                <input type="url" class="identity-input" id="brandWebsiteInput" placeholder="Website" data-field="sitio_web">
+                <i class="fas fa-globe"></i>
+            </div>
+            <div class="identity-social">
+                <input type="url" class="identity-input-small" id="brandInstagramInput" placeholder="Instagram" data-field="instagram_url">
+                <i class="fab fa-instagram"></i>
+            </div>
+            <div class="identity-social">
+                <input type="url" class="identity-input-small" id="brandTikTokInput" placeholder="TikTok" data-field="tiktok_url">
+                <i class="fab fa-tiktok"></i>
+            </div>
+            <div class="identity-social">
+                <input type="url" class="identity-input-small" id="brandFacebookInput" placeholder="Facebook" data-field="facebook_url">
+                <i class="fab fa-facebook"></i>
+            </div>
+            <div class="identity-field">
+                <input type="text" class="identity-input" id="brandMarketInput" placeholder="Mercado objetivo" data-field="mercado_objetivo">
+            </div>
+        </div>
+    </div>
+    
+    <!-- ZONA DERECHA: Cards de Control -->
+    <div class="brand-cards-zone">
+        
+        <!-- CARD 1 — INFO: Lineamientos de Marca -->
+        <div class="brand-card card-info">
+            <div class="card-header">
+                <h2 class="card-title">INFO</h2>
+                <a href="#" class="card-arrow" id="infoCardLink">
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+            <div class="card-content">
+                <div class="card-status" id="infoCardStatus">
+                    <span class="status-label">Estado:</span>
+                    <span class="status-value" id="infoStatusValue">Cargando...</span>
+                </div>
+                <div class="card-update" id="infoCardUpdate">
+                    <span class="update-label">Última actualización:</span>
+                    <span class="update-value" id="infoUpdateValue">-</span>
+                </div>
+                <div class="card-summary">
+                    <div class="summary-item">
+                        <span class="summary-label">Tono de voz</span>
+                        <span class="summary-value" id="infoTonoVoz">-</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Palabras clave</span>
+                        <span class="summary-value" id="infoPalabras">-</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Reglas activas</span>
+                        <span class="summary-value" id="infoReglas">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CARD 2 — BRANDS: Identidad visual -->
+        <div class="brand-card card-visual">
+            <div class="card-header">
+                <h2 class="card-title">BRANDS</h2>
+                <a href="#" class="card-arrow" id="visualCardLink">
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+            <div class="card-content">
+                <div class="visual-colors" id="visualColors">
+                    <div class="color-preview-empty">
+                        <i class="fas fa-palette"></i>
+                        <span>Sin colores definidos</span>
+                    </div>
+                </div>
+                <div class="visual-typography" id="visualTypography">
+                    <span class="typography-label">Tipografía:</span>
+                    <span class="typography-value" id="typographyValue">-</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CARD 3 — TOKENS: Uso del sistema -->
+        <div class="brand-card card-tokens">
+            <div class="card-header">
+                <h2 class="card-title">TOKENS</h2>
+                <a href="#" class="card-arrow" id="tokensCardLink">
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+            <div class="card-content">
+                <div class="tokens-available" id="tokensAvailable">
+                    <span class="tokens-label">Disponibles:</span>
+                    <span class="tokens-value" id="tokensValue">-</span>
+                </div>
+                <div class="tokens-usage">
+                    <div class="usage-bar">
+                        <div class="usage-bar-fill" id="usageBarFill"></div>
+                    </div>
+                    <div class="usage-text" id="usageText">0% usado</div>
+                </div>
+                <div class="tokens-recent" id="tokensRecent">
+                    <div class="recent-label">Últimas producciones:</div>
+                    <div class="recent-list" id="recentList">
+                        <div class="recent-empty">Sin producciones recientes</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CARD 4 — PRODUCTOS: Activos comerciales -->
+        <div class="brand-card card-products">
+            <div class="card-header">
+                <h2 class="card-title">PRODUCTOS</h2>
+                <a href="#" class="card-arrow" id="productsCardLink">
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+            <div class="card-content">
+                <div class="products-grid" id="productsGrid">
+                    <div class="products-empty">
+                        <i class="fas fa-box-open"></i>
+                        <span>Sin productos</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    
 </div>
