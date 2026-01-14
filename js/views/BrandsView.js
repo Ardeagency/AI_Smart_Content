@@ -583,33 +583,45 @@ class BrandsView extends BaseView {
     // Agregar contenido a la card
     infoCard.appendChild(content);
     
+    // Marcar contenedor como expandido para permitir scroll
+    const dashboardContainer = container.querySelector('.brand-dashboard-container') || container;
+    dashboardContainer.classList.add('info-expanded');
+    
     // Expandir la card
     infoCard.classList.add('expanded');
     
     // Esperar a que el contenido se renderice para calcular altura
     requestAnimationFrame(() => {
-      const contentHeight = content.scrollHeight;
-      const cardHeaderHeight = infoCard.querySelector('.card-header')?.offsetHeight || 60;
-      const padding = 40; // padding top + bottom
-      const expandedHeight = Math.min(contentHeight + cardHeaderHeight + padding, window.innerHeight - 150);
-      
-      // Establecer altura de la card expandida
-      infoCard.style.height = `${expandedHeight}px`;
-      
-      // Animar otras cards hacia abajo
-      otherCards.forEach((card, index) => {
-        card.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
-        card.style.transform = `translateY(${expandedHeight - 50}px)`;
+      requestAnimationFrame(() => {
+        const contentHeight = content.scrollHeight;
+        const cardHeaderHeight = infoCard.querySelector('.card-header')?.offsetHeight || 60;
+        const padding = 40; // padding top + bottom
+        const expandedHeight = contentHeight + cardHeaderHeight + padding;
+        
+        // Establecer altura de la card expandida (sin límite máximo)
+        infoCard.style.height = `${expandedHeight}px`;
+        
+        // Calcular altura total necesaria para el contenedor
+        const cardsZone = container.querySelector('.brand-cards-zone');
+        const cardsZoneTop = cardsZone ? cardsZone.getBoundingClientRect().top - container.getBoundingClientRect().top : 0;
+        const totalHeight = cardsZoneTop + expandedHeight + 100; // espacio extra
+        
+        // Animar otras cards hacia abajo
+        otherCards.forEach((card, index) => {
+          card.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+          card.style.transform = `translateY(${expandedHeight - 50}px)`;
+        });
+        
+        // Animar nombre de marca hacia abajo
+        if (cornerInfo) {
+          cornerInfo.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+          cornerInfo.style.transform = `translateY(${expandedHeight - 50}px)`;
+        }
+        
+        // Actualizar estado con altura calculada
+        this.infoPanelState.expandedHeight = expandedHeight;
+        this.infoPanelState.dashboardContainer = dashboardContainer;
       });
-      
-      // Animar nombre de marca hacia abajo
-      if (cornerInfo) {
-        cornerInfo.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
-        cornerInfo.style.transform = `translateY(${expandedHeight - 50}px)`;
-      }
-      
-      // Actualizar estado con altura calculada
-      this.infoPanelState.expandedHeight = expandedHeight;
     });
     
     // Guardar estado
@@ -617,7 +629,8 @@ class BrandsView extends BaseView {
       otherCards,
       cornerInfo,
       infoCard,
-      expandedHeight
+      expandedHeight: 0,
+      dashboardContainer: null
     };
   }
 
@@ -630,7 +643,7 @@ class BrandsView extends BaseView {
     
     if (!this.infoPanelState) return;
     
-    const { otherCards, cornerInfo } = this.infoPanelState;
+    const { otherCards, cornerInfo, dashboardContainer } = this.infoPanelState;
     
     // Mover otras cards y nombre de marca hacia arriba (empujando INFO hacia arriba)
     otherCards.forEach(card => {
@@ -649,6 +662,11 @@ class BrandsView extends BaseView {
     // Contraer la card después de que las otras cards empiecen a moverse
     setTimeout(() => {
       infoCard.classList.remove('expanded');
+      
+      // Remover clase de contenedor expandido
+      if (dashboardContainer) {
+        dashboardContainer.classList.remove('info-expanded');
+      }
     }, 50);
     
     // Remover contenido expandido y limpiar después de la animación

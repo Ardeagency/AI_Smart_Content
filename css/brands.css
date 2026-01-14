@@ -31,8 +31,13 @@
     bottom: 0;
     overflow: hidden;
     background: var(--brand-warm-4);
-    transition: left 0.3s ease;
+    transition: left 0.3s ease, overflow 0.3s ease;
     padding-top: 48px; /* Espacio para header transparente */
+}
+
+.brand-dashboard-container.info-expanded {
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .side-navigation.collapsed ~ * .brand-dashboard-container,
@@ -173,11 +178,17 @@ body.sidebar-collapsed .brand-dashboard-container {
     bottom: 1.5rem;
     width: 380px;
     z-index: 10;
-        display: flex;
-        flex-direction: column;
+    display: flex;
+    flex-direction: column;
     gap: 0.75rem;
     overflow-y: auto;
     scrollbar-width: none;
+    transition: bottom 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.brand-dashboard-container.info-expanded .brand-cards-zone {
+    bottom: 1.5rem;
+    min-height: auto;
 }
 
 .brand-cards-zone::-webkit-scrollbar {
@@ -379,14 +390,13 @@ body.sidebar-collapsed .brand-dashboard-container {
 .card-info.expanded {
     width: calc(100vw - var(--nav-width, 280px) - 3rem) !important;
     min-height: 500px;
-    max-height: calc(90vh - 100px);
     padding: 1.25rem;
     transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
                 min-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
-                height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
-                max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                height 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
     position: relative;
     z-index: 100;
+    height: auto !important;
 }
 
 .side-navigation.collapsed ~ * .card-info.expanded,
