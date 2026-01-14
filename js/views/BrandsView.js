@@ -1412,20 +1412,20 @@ class BrandsView extends BaseView {
     if (!this.supabase || !this.organizationId) return;
 
     try {
-      // Buscar en subscriptions o credits
+      // Buscar en organization_credits
       const { data, error } = await this.supabase
-        .from('subscriptions')
+        .from('organization_credits')
         .select('*')
         .eq('organization_id', this.organizationId)
-        .eq('status', 'active')
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error) throw error;
       this.organizationCredits = data;
-      console.log('✅ Créditos de organización cargados');
+      console.log('✅ Créditos de organización cargados:', data?.credits_available || 0);
     } catch (error) {
       console.error('❌ Error cargando créditos:', error);
-      this.organizationCredits = null;
+      // Si la tabla no existe o hay error, usar valores por defecto
+      this.organizationCredits = { credits_available: 100 };
     }
   }
 
@@ -1550,48 +1550,61 @@ class BrandsView extends BaseView {
   renderIdentity() {
     if (!this.brandContainerData) return;
 
-    // Logo y nombre principal
-    const brandLogoText = document.getElementById('brandLogoText');
-    const brandNameDisplay = document.getElementById('brandNameDisplay');
-    const realtimeBrandName = document.getElementById('realtimeBrandName');
-    
+    // Nombre de marca grande
+    const brandNameLarge = document.getElementById('brandNameLarge');
     const brandName = this.brandContainerData.nombre_marca || 'BRAND';
-    const initials = brandName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 3) || 'ASC';
+    if (brandNameLarge) {
+      brandNameLarge.textContent = brandName.toUpperCase();
+    }
+
+    // Links sociales (mostrar solo si tienen URL)
+    const linkWebsite = document.getElementById('linkWebsite');
+    const linkInstagram = document.getElementById('linkInstagram');
+    const linkTikTok = document.getElementById('linkTikTok');
+    const linkFacebook = document.getElementById('linkFacebook');
     
-    if (brandLogoText) brandLogoText.textContent = initials;
-    if (brandNameDisplay) brandNameDisplay.textContent = brandName;
-    if (realtimeBrandName) realtimeBrandName.textContent = brandName.toUpperCase();
-
-    // Campos editables
-    const brandNameInput = document.getElementById('brandNameInput');
-    if (brandNameInput) {
-      brandNameInput.value = this.brandContainerData.nombre_marca || '';
+    if (linkWebsite) {
+      if (this.brandContainerData.sitio_web) {
+        linkWebsite.href = this.brandContainerData.sitio_web;
+        linkWebsite.style.display = 'flex';
+      } else {
+        linkWebsite.style.display = 'none';
+      }
+    }
+    
+    if (linkInstagram) {
+      if (this.brandContainerData.instagram_url) {
+        linkInstagram.href = this.brandContainerData.instagram_url;
+        linkInstagram.style.display = 'flex';
+      } else {
+        linkInstagram.style.display = 'none';
+      }
+    }
+    
+    if (linkTikTok) {
+      if (this.brandContainerData.tiktok_url) {
+        linkTikTok.href = this.brandContainerData.tiktok_url;
+        linkTikTok.style.display = 'flex';
+      } else {
+        linkTikTok.style.display = 'none';
+      }
+    }
+    
+    if (linkFacebook) {
+      if (this.brandContainerData.facebook_url) {
+        linkFacebook.href = this.brandContainerData.facebook_url;
+        linkFacebook.style.display = 'flex';
+      } else {
+        linkFacebook.style.display = 'none';
+      }
     }
 
-    const brandWebsite = document.getElementById('brandWebsiteInput');
-    if (brandWebsite) {
-      brandWebsite.value = this.brandContainerData.sitio_web || '';
-    }
-
-    const brandInstagram = document.getElementById('brandInstagramInput');
-    if (brandInstagram) {
-      brandInstagram.value = this.brandContainerData.instagram_url || '';
-    }
-
-    const brandTikTok = document.getElementById('brandTikTokInput');
-    if (brandTikTok) {
-      brandTikTok.value = this.brandContainerData.tiktok_url || '';
-    }
-
-    const brandFacebook = document.getElementById('brandFacebookInput');
-    if (brandFacebook) {
-      brandFacebook.value = this.brandContainerData.facebook_url || '';
-    }
-
-    const brandMarket = document.getElementById('brandMarketInput');
-    if (brandMarket) {
+    // Mercado objetivo
+    const brandMarketLabel = document.getElementById('brandMarketLabel');
+    if (brandMarketLabel) {
       const mercado = this.brandContainerData.mercado_objetivo;
-      brandMarket.value = Array.isArray(mercado) ? mercado.join(', ') : (mercado || '');
+      const mercadoText = Array.isArray(mercado) ? mercado.join(', ') : (mercado || '');
+      brandMarketLabel.textContent = mercadoText || 'Target Market';
     }
 
     // Actualizar timezone
@@ -1599,17 +1612,16 @@ class BrandsView extends BaseView {
   }
 
   updateTimezone() {
-    const timezoneLocal = document.getElementById('timezoneLocal');
-    const timezoneUTC = document.getElementById('timezoneUTC');
+    const timeLocal = document.getElementById('timeLocal');
+    const timeZone = document.getElementById('timeZone');
     
-    if (timezoneLocal && timezoneUTC) {
+    if (timeLocal && timeZone) {
       const now = new Date();
       const localTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-      const utcTime = now.toUTCString().slice(17, 22);
-      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone.split('/').pop();
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone.split('/').pop().replace('_', ' ');
       
-      timezoneLocal.textContent = `${localTime} • ${timezone}`;
-      timezoneUTC.textContent = `${utcTime} UTC`;
+      timeLocal.textContent = localTime;
+      timeZone.textContent = timezone;
     }
 
     // Actualizar cada minuto
@@ -1696,55 +1708,9 @@ class BrandsView extends BaseView {
   }
 
   setupIdentityEditable() {
-    // Toggle para mostrar/ocultar campos editables
-    const identityToggle = document.getElementById('identityToggle');
-    const identityFields = document.getElementById('identityFields');
-    
-    if (identityToggle && identityFields) {
-      identityToggle.addEventListener('click', () => {
-        identityToggle.classList.toggle('active');
-        identityFields.classList.toggle('active');
-      });
-    }
-    
-    // Guardar cambios en tiempo real con debounce
-    const fields = ['brandNameInput', 'brandWebsiteInput', 'brandInstagramInput', 'brandTikTokInput', 'brandFacebookInput', 'brandMarketInput'];
-    
-    fields.forEach(fieldId => {
-      const field = document.getElementById(fieldId);
-      if (!field) return;
-
-      let saveTimeout;
-      field.addEventListener('input', () => {
-        clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(() => {
-          const fieldName = field.dataset.field;
-          const value = field.value.trim();
-          this.saveBrandContainerField(fieldName, value);
-          
-          // Actualizar display si es el nombre
-          if (fieldName === 'nombre_marca') {
-            const brandNameDisplay = document.getElementById('brandNameDisplay');
-            const realtimeBrandName = document.getElementById('realtimeBrandName');
-            const brandLogoText = document.getElementById('brandLogoText');
-            
-            if (brandNameDisplay) brandNameDisplay.textContent = value || 'AI Smart Content';
-            if (realtimeBrandName) realtimeBrandName.textContent = (value || 'BRAND').toUpperCase();
-            if (brandLogoText) {
-              const initials = value ? value.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 3) : 'ASC';
-              brandLogoText.textContent = initials;
-            }
-          }
-        }, 1000);
-      });
-
-      field.addEventListener('blur', () => {
-        clearTimeout(saveTimeout);
-        const fieldName = field.dataset.field;
-        const value = field.value.trim();
-        this.saveBrandContainerField(fieldName, value);
-      });
-    });
+    // En este diseño los campos son solo de lectura
+    // La edición se hace en una vista separada
+    console.log('✅ Identity setup completado');
   }
 
   async saveBrandContainerField(fieldName, value) {

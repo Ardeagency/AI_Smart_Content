@@ -1,6 +1,6 @@
 /**
  * Brands Dashboard - Diseño Premium Inspirado en UAL
- * Fondo cálido + Cards oscuras + Tipografía elegante
+ * Fondo cálido + Cards oscuras + Layout preciso
  */
 
 /* ============================================
@@ -16,79 +16,65 @@
     
     /* Cards oscuras */
     --brand-card-bg: #0D1117;
-    --brand-card-border: rgba(255, 255, 255, 0.06);
+    --brand-card-border: rgba(255, 255, 255, 0.08);
     
     /* Texto */
     --brand-text-light: #E8DDD4;
     --brand-text-gold: #D4B896;
-    --brand-text-muted: rgba(232, 221, 212, 0.6);
+    --brand-text-muted: rgba(232, 221, 212, 0.5);
     
     /* Acentos */
     --brand-accent-red: #C44536;
-    --brand-accent-orange: #E07A5F;
-    
-    /* Progress bar */
-    --brand-progress-bg: rgba(255, 255, 255, 0.1);
-    --brand-progress-fill: var(--brand-accent-red);
 }
 
 /* ============================================
-   CONTENEDOR PRINCIPAL
+   CONTENEDOR PRINCIPAL - FULLSCREEN
    ============================================ */
 .brand-dashboard-container {
-    position: relative;
-    width: 100%;
-    height: calc(100vh - 48px);
-    margin-left: var(--nav-width, 280px);
-    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: fixed;
+    top: 48px;
+    left: var(--nav-width, 280px);
+    right: 0;
+    bottom: 0;
     overflow: hidden;
     background: var(--brand-warm-4);
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .side-navigation.collapsed ~ * .brand-dashboard-container,
 body.sidebar-collapsed .brand-dashboard-container {
-    margin-left: var(--nav-width-collapsed, 64px);
+    left: var(--nav-width-collapsed, 64px);
 }
 
 @media (max-width: 768px) {
     .brand-dashboard-container {
-        margin-left: 0;
+        left: 0;
     }
 }
 
 /* ============================================
-   FONDO PREMIUM CON GRADIENTE Y TEXTURA
+   FONDO CON GRADIENTE Y TEXTURA
    ============================================ */
 .brand-dashboard-background {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     z-index: 0;
-    overflow: hidden;
 }
 
 .background-gradient {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     background: 
-        radial-gradient(ellipse 120% 80% at 20% 50%, var(--brand-warm-1) 0%, transparent 50%),
-        radial-gradient(ellipse 100% 100% at 80% 20%, var(--brand-warm-2) 0%, transparent 40%),
-        radial-gradient(ellipse 80% 120% at 40% 80%, var(--brand-warm-3) 0%, transparent 50%),
-        linear-gradient(135deg, var(--brand-warm-4) 0%, var(--brand-warm-5) 100%);
+        radial-gradient(ellipse 150% 100% at 10% 60%, var(--brand-warm-1) 0%, transparent 50%),
+        radial-gradient(ellipse 120% 80% at 60% 20%, var(--brand-warm-2) 0%, transparent 45%),
+        radial-gradient(ellipse 100% 150% at 30% 90%, var(--brand-warm-3) 0%, transparent 50%),
+        linear-gradient(145deg, var(--brand-warm-4) 0%, var(--brand-warm-5) 100%);
 }
 
 .background-texture {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    opacity: 0.15;
+    inset: 0;
+    opacity: 0.12;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
     mix-blend-mode: overlay;
 }
@@ -105,44 +91,25 @@ body.sidebar-collapsed .brand-dashboard-container {
 
 .brand-logo-container {
     display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.brand-logo {
-    display: flex;
-    align-items: center;
+    align-items: baseline;
     gap: 0.5rem;
-}
-
-.brand-logo img {
-    width: 40px;
-    height: 40px;
-    object-fit: contain;
 }
 
 .brand-logo-text {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: var(--brand-text-light);
-    letter-spacing: 0.02em;
     font-family: 'Inter', system-ui, sans-serif;
 }
 
-.brand-subtitle {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.brand-name-display {
-    font-size: 0.75rem;
+.brand-logo-subtitle {
+    font-size: 0.7rem;
     color: var(--brand-text-muted);
-    letter-spacing: 0.05em;
+    letter-spacing: 0.02em;
 }
 
 /* ============================================
-   ESQUINA INFERIOR IZQUIERDA: Realtime Info
+   ESQUINA INFERIOR IZQUIERDA: Brand Info
    ============================================ */
 .brand-corner-bottom-left {
     position: absolute;
@@ -151,32 +118,40 @@ body.sidebar-collapsed .brand-dashboard-container {
     z-index: 10;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1rem;
 }
 
-.brand-realtime-info {
+/* Nombre de marca grande + links */
+.brand-main-info {
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     gap: 2rem;
 }
 
-.realtime-brand {
+.brand-name-row {
     display: flex;
     align-items: center;
     gap: 0.75rem;
 }
 
-.realtime-brand-name {
-    font-size: 2.5rem;
+.brand-name-large {
+    font-size: 3.5rem;
     font-weight: 700;
     color: var(--brand-text-light);
+    margin: 0;
     letter-spacing: -0.02em;
     font-family: 'Inter', system-ui, sans-serif;
+    line-height: 1;
 }
 
-.realtime-status-dot {
-    width: 8px;
-    height: 8px;
+.brand-status-indicator {
+    display: flex;
+    align-items: center;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     background: #4ADE80;
     animation: pulse 2s ease-in-out infinite;
@@ -184,168 +159,135 @@ body.sidebar-collapsed .brand-dashboard-container {
 
 @keyframes pulse {
     0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.6; transform: scale(0.9); }
+    50% { opacity: 0.5; transform: scale(0.85); }
 }
 
-.realtime-timezone {
+/* Links sociales */
+.brand-links-row {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 1rem;
 }
 
-.timezone-icon {
+.brand-link {
     width: 32px;
     height: 32px;
-    color: var(--brand-text-muted);
-}
-
-.timezone-icon svg {
-    width: 100%;
-    height: 100%;
-}
-
-.timezone-values {
-    display: flex;
-    flex-direction: column;
-    gap: 0.125rem;
-    font-size: 0.75rem;
-    color: var(--brand-text-muted);
-    font-family: 'SF Mono', 'Fira Code', monospace;
-}
-
-.realtime-label {
-    margin-left: auto;
-}
-
-.label-text {
-    font-size: 2rem;
-    font-weight: 500;
-    color: var(--brand-text-light);
-    letter-spacing: 0.05em;
-    font-family: 'Inter', system-ui, sans-serif;
-}
-
-/* Identity Editable (collapsed by default) */
-.brand-identity-editable {
-    position: relative;
-    max-width: 320px;
-}
-
-.identity-toggle {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--brand-text-muted);
-    cursor: pointer;
-    transition: all 0.3s ease;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    font-size: 1rem;
 }
 
-.identity-toggle:hover {
-    background: rgba(0, 0, 0, 0.5);
+.brand-link:hover {
     color: var(--brand-text-light);
+    transform: translateY(-2px);
 }
 
-.identity-toggle.active {
-    background: var(--brand-card-bg);
-    color: var(--brand-text-light);
-}
-
-.identity-fields {
+.brand-link[href="#"],
+.brand-link:not([href]) {
     display: none;
-    flex-direction: column;
-    gap: 0.75rem;
-    padding: 1rem;
-    background: rgba(0, 0, 0, 0.4);
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    margin-top: 0.75rem;
-    backdrop-filter: blur(10px);
 }
 
-.identity-fields.active {
+/* Mercado objetivo */
+.brand-market-row {
+    margin-top: -0.5rem;
+}
+
+.market-label {
+    font-size: 0.75rem;
+    color: var(--brand-text-muted);
+    letter-spacing: 0.02em;
+}
+
+/* Zona de tiempo real */
+.brand-realtime-row {
     display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
 }
 
-.identity-input,
-.identity-input-small,
-.identity-input-social {
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    color: var(--brand-text-light);
-    font-size: 0.875rem;
-    padding: 0.5rem 0;
-    width: 100%;
-    font-family: 'Inter', sans-serif;
-    transition: all 0.3s ease;
-}
-
-.identity-input:focus,
-.identity-input-small:focus,
-.identity-input-social:focus {
-    outline: none;
-    border-bottom-color: var(--brand-text-gold);
-}
-
-.identity-input::placeholder,
-.identity-input-small::placeholder,
-.identity-input-social::placeholder {
+.realtime-icon {
+    width: 28px;
+    height: 28px;
     color: var(--brand-text-muted);
 }
 
-.identity-input {
-    font-size: 1rem;
-    font-weight: 500;
+.realtime-icon svg {
+    width: 100%;
+    height: 100%;
 }
 
-.identity-social-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+.realtime-times {
+    display: flex;
+    align-items: baseline;
     gap: 0.5rem;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.realtime-times span:first-child {
+    font-size: 0.875rem;
+    color: var(--brand-text-muted);
+}
+
+.time-zone {
+    font-size: 0.625rem;
+    color: var(--brand-text-muted);
+    opacity: 0.7;
+}
+
+.realtime-label {
+    font-size: 2rem;
+    font-weight: 500;
+    color: var(--brand-text-light);
+    letter-spacing: 0.05em;
+    margin-left: 1rem;
 }
 
 /* ============================================
-   ZONA DERECHA: Cards de Control Premium
+   ZONA DERECHA: Cards - ANCHO FIJO
    ============================================ */
 .brand-cards-zone {
     position: absolute;
-    top: 2rem;
-    right: 2rem;
-    bottom: 2rem;
-    width: 400px;
+    top: 1.5rem;
+    right: 1.5rem;
+    bottom: 1.5rem;
+    width: 380px;
     z-index: 10;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.75rem;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
-/* Cards Base */
+/* Scrollbar oculto pero funcional */
+.brand-cards-zone::-webkit-scrollbar {
+    width: 0;
+}
+
+/* ============================================
+   CARDS BASE
+   ============================================ */
 .brand-card {
     background: var(--brand-card-bg);
     border-radius: 16px;
-    padding: 1.25rem 1.5rem;
+    padding: 1.25rem;
     display: flex;
     flex-direction: column;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
-    overflow: hidden;
-}
-
-.brand-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    flex-shrink: 0;
+    border: 1px solid var(--brand-card-border);
 }
 
 /* Card Header */
 .card-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
 }
 
 .card-title {
@@ -353,26 +295,52 @@ body.sidebar-collapsed .brand-dashboard-container {
     font-weight: 600;
     color: var(--brand-text-gold);
     margin: 0;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    font-family: 'Inter', system-ui, sans-serif;
 }
 
+/* Flecha principal (card INFO) */
 .card-arrow {
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     color: var(--brand-text-gold);
-    text-decoration: none;
-    transition: all 0.3s ease;
     font-size: 0.875rem;
+    text-decoration: none;
+    transition: transform 0.2s ease;
 }
 
 .card-arrow:hover {
-    transform: translateX(4px);
-    color: var(--brand-text-light);
+    transform: translateX(3px);
+}
+
+/* Flecha secundaria (debajo del título) */
+.card-arrow-sub {
+    color: var(--brand-text-gold);
+    font-size: 0.75rem;
+    text-decoration: none;
+    margin-top: 0.25rem;
+    display: inline-block;
+    transition: transform 0.2s ease;
+}
+
+.card-arrow-sub:hover {
+    transform: translateX(3px);
+}
+
+/* Icono circular grid */
+.card-icon-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--brand-card-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--brand-text-muted);
+    padding: 6px;
+}
+
+.card-icon-circle svg {
+    width: 100%;
+    height: 100%;
 }
 
 /* Card Content */
@@ -383,22 +351,21 @@ body.sidebar-collapsed .brand-dashboard-container {
 }
 
 .card-spacer {
-    height: 1.5rem;
+    height: 2rem;
 }
 
-/* Current Label */
+/* Current section */
 .card-current {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
-    margin-bottom: 0.5rem;
+    gap: 0.125rem;
 }
 
 .current-label {
     font-size: 0.625rem;
     color: var(--brand-text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
 }
 
 .current-value {
@@ -410,7 +377,8 @@ body.sidebar-collapsed .brand-dashboard-container {
 
 /* Stats */
 .card-stats {
-    margin-bottom: 1rem;
+    margin-top: 0.5rem;
+    text-align: right;
 }
 
 .stats-value {
@@ -420,39 +388,36 @@ body.sidebar-collapsed .brand-dashboard-container {
 
 /* Progress */
 .card-progress {
-    margin-bottom: 1rem;
+    margin-top: 0.5rem;
+    text-align: right;
 }
 
 .progress-time {
     font-size: 0.75rem;
     color: var(--brand-text-muted);
-    display: block;
-    margin-bottom: 0.5rem;
-    text-align: right;
 }
 
 .progress-bar {
     width: 100%;
-    height: 4px;
-    background: var(--brand-progress-bg);
+    height: 3px;
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 2px;
+    margin-top: 0.5rem;
     overflow: hidden;
 }
 
 .progress-bar-fill {
     height: 100%;
-    background: var(--brand-progress-fill);
+    background: var(--brand-accent-red);
     border-radius: 2px;
     width: 0%;
-    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: width 0.5s ease;
 }
 
 /* Card Footer */
 .card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: auto;
+    margin-top: 1rem;
+    text-align: right;
 }
 
 .footer-text {
@@ -460,56 +425,40 @@ body.sidebar-collapsed .brand-dashboard-container {
     color: var(--brand-text-muted);
 }
 
-/* Card Icon (grid pattern) */
-.card-icon {
-    position: absolute;
-    bottom: 1rem;
-    right: 1rem;
-}
+/* ============================================
+   CARDS ESPECÍFICAS - ALTURAS
+   ============================================ */
 
-.icon-circle {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--brand-text-muted);
-    padding: 8px;
-}
-
-.icon-circle svg {
-    width: 100%;
-    height: 100%;
-}
-
-/* Card específica: INFO (más pequeña) */
+/* INFO - Compacta */
 .card-info {
-    min-height: 60px;
-    padding: 1rem 1.5rem;
+    min-height: 50px;
+    padding: 1rem 1.25rem;
 }
 
-/* Card específica: CONCEPT LAB */
+.card-info .card-header {
+    align-items: center;
+}
+
+/* CONCEPT LAB */
 .card-concept {
     min-height: 180px;
 }
 
-/* Card específica: SCREENING ROOM */
+/* SCREENING ROOM */
 .card-screening {
     min-height: 200px;
 }
 
-/* Card específica: EVENTS */
+/* EVENTS */
 .card-events {
-    min-height: 120px;
+    min-height: 130px;
 }
 
 .event-item {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 1rem;
+    margin-top: 1.5rem;
 }
 
 .event-info {
@@ -520,7 +469,7 @@ body.sidebar-collapsed .brand-dashboard-container {
 
 .event-name {
     font-size: 0.875rem;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--brand-text-light);
 }
 
@@ -552,28 +501,25 @@ body.sidebar-collapsed .brand-dashboard-container {
    ============================================ */
 .team-avatars-floating {
     position: absolute;
-    top: 2rem;
-    right: 420px;
+    top: 1.5rem;
+    right: calc(380px + 2rem);
     z-index: 10;
     display: flex;
     flex-direction: row-reverse;
-    gap: -8px;
 }
 
 .team-avatar {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     background: var(--brand-card-bg);
     border: 2px solid var(--brand-warm-4);
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
-    position: relative;
+    margin-left: -8px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    margin-left: -10px;
+    transition: all 0.2s ease;
 }
 
 .team-avatar:first-child {
@@ -581,33 +527,25 @@ body.sidebar-collapsed .brand-dashboard-container {
 }
 
 .team-avatar:hover {
-    transform: scale(1.1) translateY(-2px);
+    transform: scale(1.1);
     z-index: 11;
     border-color: var(--brand-text-gold);
 }
 
-.team-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
 .team-avatar-initials {
-    font-size: 0.75rem;
+    font-size: 0.625rem;
     font-weight: 600;
     color: var(--brand-text-light);
 }
 
 .team-avatar-more {
-    font-size: 0.625rem;
-    font-weight: 600;
-    color: var(--brand-text-muted);
+    font-size: 0.5rem;
     background: rgba(255, 255, 255, 0.1);
 }
 
 .team-avatar-placeholder {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     background: var(--brand-card-bg);
     border: 2px solid var(--brand-warm-4);
@@ -615,112 +553,88 @@ body.sidebar-collapsed .brand-dashboard-container {
     align-items: center;
     justify-content: center;
     color: var(--brand-text-muted);
-    font-size: 1rem;
+    font-size: 0.875rem;
 }
 
 /* ============================================
    RESPONSIVE
    ============================================ */
-@media (max-width: 1400px) {
-    .brand-cards-zone {
-        width: 360px;
-    }
-    
-    .team-avatars-floating {
-        right: 380px;
-    }
-}
-
 @media (max-width: 1200px) {
     .brand-cards-zone {
-        width: 320px;
+        width: 340px;
     }
     
     .team-avatars-floating {
-        right: 340px;
+        right: calc(340px + 2rem);
     }
     
-    .realtime-brand-name {
-        font-size: 2rem;
+    .brand-name-large {
+        font-size: 2.5rem;
     }
     
-    .label-text {
+    .realtime-label {
         font-size: 1.5rem;
     }
 }
 
-@media (max-width: 1024px) {
-    .brand-realtime-info {
+@media (max-width: 900px) {
+    .brand-cards-zone {
+        width: 300px;
+    }
+    
+    .team-avatars-floating {
+        display: none;
+    }
+    
+    .brand-name-large {
+        font-size: 2rem;
+    }
+    
+    .brand-main-info {
         flex-direction: column;
         align-items: flex-start;
         gap: 1rem;
     }
     
     .realtime-label {
-        margin-left: 0;
+        font-size: 1.25rem;
     }
 }
 
 @media (max-width: 768px) {
+    .brand-dashboard-container {
+        position: relative;
+        top: 0;
+        left: 0;
+        min-height: calc(100vh - 48px);
+        overflow-y: auto;
+    }
+    
     .brand-corner-top-left,
     .brand-corner-bottom-left {
         position: relative;
-        top: auto;
-        left: auto;
-        bottom: auto;
         padding: 1.5rem;
     }
     
     .brand-cards-zone {
         position: relative;
+        width: 100%;
+        padding: 1rem;
         top: auto;
         right: auto;
         bottom: auto;
-        width: 100%;
-        padding: 1.5rem;
     }
     
-    .team-avatars-floating {
-        position: relative;
-        right: auto;
-        top: auto;
-        padding: 1rem 1.5rem;
-        justify-content: flex-start;
-        flex-direction: row;
-    }
-    
-    .brand-dashboard-container {
-        height: auto;
-        min-height: calc(100vh - 48px);
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .realtime-brand-name {
-        font-size: 1.5rem;
-    }
-    
-    .label-text {
-        font-size: 1.25rem;
+    .brand-name-large {
+        font-size: 1.75rem;
     }
 }
 
 /* ============================================
-   SCROLLBAR (si se necesita)
+   OCULTAR ELEMENTOS LEGACY
    ============================================ */
-.brand-cards-zone::-webkit-scrollbar {
-    width: 4px;
-}
-
-.brand-cards-zone::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.brand-cards-zone::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 2px;
-}
-
-.brand-cards-zone::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
+.brand-identity-editable,
+.identity-toggle,
+.identity-fields {
+    display: none !important;
 }
