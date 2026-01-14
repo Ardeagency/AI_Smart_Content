@@ -360,6 +360,17 @@ body.sidebar-collapsed .brand-dashboard-container {
     min-height: 200px;
 }
 
+/* Ocultar elementos antiguos de CONCEPT LAB si quedan */
+.card-concept .card-arrow-sub,
+.card-concept .card-spacer,
+.card-concept .card-current,
+.card-concept .current-label,
+.card-concept .current-value,
+.card-concept .card-stats,
+.card-concept .stats-value {
+    display: none !important;
+}
+
 /* Secciones visuales */
 .visual-section {
     margin-bottom: 1.25rem;
