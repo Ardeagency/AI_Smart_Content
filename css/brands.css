@@ -333,7 +333,10 @@ body.sidebar-collapsed .brand-dashboard-container {
 /* INFO - Solo botón */
 .card-info {
     min-height: 50px;
-    padding: 1rem 1.25rem;
+    /* Quitar spacing/borde solo en INFO (pedido) */
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
     cursor: pointer;
     transition: background 0.2s;
 }
