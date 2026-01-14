@@ -33,6 +33,9 @@ class Navigation {
 
     // Cargar información del usuario si está autenticado
     await this.loadUserInfo();
+    
+    // Cargar información de organización
+    await this.loadOrganizationInfo();
 
     this.initialized = true;
     console.log('✅ Navigation component renderizado');
@@ -48,66 +51,113 @@ class Navigation {
 
       <!-- Navegación lateral -->
       <nav class="side-navigation" id="sideNavigation">
-        <!-- Header del panel -->
-        <div class="nav-header">
-          <button class="nav-toggle-btn" id="navToggleBtn" aria-label="Toggle sidebar">
-            <i class="fas fa-bars"></i>
-          </button>
-          <div class="nav-brand-title">
-            <h4>AI SMART CONTENT</h4>
+        <!-- Capa superior: Identidad + Organización -->
+        <div class="nav-identity-section">
+          <div class="nav-identity-card" id="navIdentityCard">
+            <div class="nav-identity-content">
+              <div class="nav-logo-icon">
+                <i class="fas fa-brain"></i>
+              </div>
+              <div class="nav-identity-info">
+                <div class="nav-org-name" id="navOrgName">Info Arde Agency</div>
+                <div class="nav-org-type" id="navOrgType">Personal</div>
+              </div>
+              <button class="nav-org-chevron" id="navOrgChevron" aria-label="Cambiar organización">
+                <i class="fas fa-chevron-down"></i>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Dropdown de organización -->
+          <div class="nav-org-dropdown" id="navOrgDropdown">
+            <div class="nav-org-dropdown-header">Workspaces</div>
+            <div class="nav-org-dropdown-list">
+              <div class="nav-org-option active" data-org-id="current">
+                <div class="nav-org-option-content">
+                  <div class="nav-org-option-name">Info Arde Agency</div>
+                  <div class="nav-org-option-type">Personal</div>
+                </div>
+                <i class="fas fa-check nav-org-check"></i>
+              </div>
+              <div class="nav-org-divider"></div>
+              <div class="nav-org-option create-org" data-action="create">
+                <i class="fas fa-plus"></i>
+                <span>Create new organization</span>
+              </div>
+            </div>
           </div>
         </div>
 
+        <!-- Toggle button -->
+        <button class="nav-toggle-btn" id="navToggleBtn" aria-label="Toggle sidebar">
+          <i class="fas fa-bars"></i>
+        </button>
+
         <!-- Menú Principal -->
         <div class="nav-menu">
+          <!-- Sección 1: FUNDAMENTOS -->
           <div class="nav-section">
-            <div class="nav-section-title">Contenido</div>
+            <div class="nav-section-title">Fundamentos</div>
             <div class="nav-item">
-              <a href="/brands" class="nav-link" data-route="/brands">
+              <a href="/brands" class="nav-link" data-route="/brands" data-tooltip="Marcas">
                 <i class="fas fa-tags nav-icon"></i>
                 <span class="nav-text">Marcas</span>
               </a>
             </div>
             <div class="nav-item">
-              <a href="/products" class="nav-link" data-route="/products">
+              <a href="/products" class="nav-link" data-route="/products" data-tooltip="Productos">
                 <i class="fas fa-box nav-icon"></i>
                 <span class="nav-text">Productos</span>
               </a>
             </div>
             <div class="nav-item">
-              <a href="/campaigns" class="nav-link" data-route="/campaigns">
-                <i class="fas fa-bullhorn nav-icon"></i>
-                <span class="nav-text">Campañas</span>
-              </a>
-            </div>
-            <div class="nav-item">
-              <a href="/audiences" class="nav-link" data-route="/audiences">
+              <a href="/audiences" class="nav-link" data-route="/audiences" data-tooltip="Audiencias">
                 <i class="fas fa-users nav-icon"></i>
                 <span class="nav-text">Audiencias</span>
               </a>
             </div>
           </div>
 
+          <!-- Sección 2: EJECUCIÓN -->
           <div class="nav-section">
-            <div class="nav-section-title">Generación</div>
+            <div class="nav-section-title">Ejecución</div>
             <div class="nav-item">
-              <a href="/create" class="nav-link" data-route="/create">
-                <i class="fas fa-magic nav-icon"></i>
-                <span class="nav-text">Crear Contenido</span>
+              <a href="/campaigns" class="nav-link" data-route="/campaigns" data-tooltip="Campañas">
+                <i class="fas fa-bullhorn nav-icon"></i>
+                <span class="nav-text">Campañas</span>
               </a>
             </div>
             <div class="nav-item">
-              <a href="/content" class="nav-link" data-route="/content">
+              <a href="/create" class="nav-link" data-route="/create" data-tooltip="Generar contenido">
+                <i class="fas fa-magic nav-icon"></i>
+                <span class="nav-text">Generar contenido</span>
+              </a>
+            </div>
+            <div class="nav-item">
+              <a href="/content" class="nav-link" data-route="/content" data-tooltip="Biblioteca">
                 <i class="fas fa-folder nav-icon"></i>
                 <span class="nav-text">Biblioteca</span>
               </a>
             </div>
           </div>
 
+          <!-- Sección 3: SISTEMA -->
           <div class="nav-section">
-            <div class="nav-section-title">Configuración</div>
+            <div class="nav-section-title">Sistema</div>
             <div class="nav-item">
-              <a href="/settings" class="nav-link" data-route="/settings">
+              <a href="/organization" class="nav-link" data-route="/organization" data-tooltip="Organización">
+                <i class="fas fa-building nav-icon"></i>
+                <span class="nav-text">Organización</span>
+              </a>
+            </div>
+            <div class="nav-item">
+              <a href="/planes" class="nav-link" data-route="/planes" data-tooltip="Planes">
+                <i class="fas fa-credit-card nav-icon"></i>
+                <span class="nav-text">Planes</span>
+              </a>
+            </div>
+            <div class="nav-item">
+              <a href="/settings" class="nav-link" data-route="/settings" data-tooltip="Ajustes">
                 <i class="fas fa-cog nav-icon"></i>
                 <span class="nav-text">Ajustes</span>
               </a>
@@ -115,20 +165,32 @@ class Navigation {
           </div>
         </div>
 
-        <!-- Footer del panel -->
+        <!-- Footer del panel: Perfil -->
         <div class="nav-footer">
           <div class="nav-footer-profile" id="navFooterProfile">
-            <i class="fas fa-user"></i>
-            <span id="navProfileName">Usuario</span>
+            <div class="nav-profile-avatar" id="navProfileAvatar">
+              <span id="navProfileInitials">U</span>
+            </div>
+            <div class="nav-profile-info">
+              <div class="nav-profile-name" id="navProfileName">Usuario</div>
+              <div class="nav-profile-email" id="navProfileEmail">usuario@email.com</div>
+            </div>
+            <button class="nav-profile-chevron" id="navProfileChevron" aria-label="Menú de perfil">
+              <i class="fas fa-chevron-down"></i>
+            </button>
           </div>
-          <a href="#" class="nav-footer-link" id="navAdminBtn">
-            <i class="fas fa-cog"></i>
-            <span>Administrar</span>
-          </a>
-          <a href="#" class="nav-footer-link nav-logout" id="navLogoutBtn">
-            <i class="fas fa-sign-out-alt"></i>
-            <span>Salir</span>
-          </a>
+          
+          <!-- Dropdown de perfil -->
+          <div class="nav-profile-dropdown" id="navProfileDropdown">
+            <div class="nav-profile-dropdown-item" data-action="profile">
+              <i class="fas fa-user"></i>
+              <span>Perfil</span>
+            </div>
+            <div class="nav-profile-dropdown-item nav-logout" id="navLogoutBtn" data-action="logout">
+              <i class="fas fa-sign-out-alt"></i>
+              <span>Cerrar sesión</span>
+            </div>
+          </div>
         </div>
       </nav>
     `;
@@ -152,18 +214,9 @@ class Navigation {
     if (savedState === 'true') {
       this.isCollapsed = true;
       const sideNavigation = document.getElementById('sideNavigation');
-      const navToggleBtn = document.getElementById('navToggleBtn');
       if (sideNavigation) {
         sideNavigation.classList.add('collapsed');
         document.body.classList.add('sidebar-collapsed');
-        // Actualizar icono si está colapsado
-        if (navToggleBtn) {
-          const icon = navToggleBtn.querySelector('i');
-          if (icon) {
-            icon.classList.remove('fa-bars');
-            icon.classList.add('fa-chevron-right');
-          }
-        }
       }
     }
   }
@@ -177,7 +230,10 @@ class Navigation {
     const navToggleBtn = document.getElementById('navToggleBtn');
     const navLinks = document.querySelectorAll('.nav-link');
     const navLogoutBtn = document.getElementById('navLogoutBtn');
-    const navAdminBtn = document.getElementById('navAdminBtn');
+    const navOrgChevron = document.getElementById('navOrgChevron');
+    const navOrgDropdown = document.getElementById('navOrgDropdown');
+    const navProfileChevron = document.getElementById('navProfileChevron');
+    const navProfileDropdown = document.getElementById('navProfileDropdown');
 
     // Hamburger menu toggle - solo funciona en móvil
     if (hamburgerMenu) {
@@ -194,6 +250,8 @@ class Navigation {
         if (window.innerWidth <= 768) {
           this.closeNavigation();
         }
+        // Cerrar dropdowns al hacer click en overlay
+        this.closeAllDropdowns();
       });
     }
 
@@ -203,6 +261,22 @@ class Navigation {
         if (window.innerWidth > 768) {
           this.toggleSidebarCollapse();
         }
+      });
+    }
+
+    // Organization dropdown toggle
+    if (navOrgChevron) {
+      navOrgChevron.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.toggleOrgDropdown();
+      });
+    }
+
+    // Profile dropdown toggle
+    if (navProfileChevron) {
+      navProfileChevron.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.toggleProfileDropdown();
       });
     }
 
@@ -218,6 +292,8 @@ class Navigation {
         if (window.innerWidth <= 768) {
           this.closeNavigation();
         }
+        // Cerrar dropdowns
+        this.closeAllDropdowns();
       });
     });
 
@@ -229,19 +305,23 @@ class Navigation {
       });
     }
 
-    // Admin button (placeholder)
-    if (navAdminBtn) {
-      navAdminBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        // TODO: Implementar funcionalidad de admin
-        console.log('Admin button clicked');
-      });
-    }
+    // Setup tooltips para estado colapsado
+    this.setupTooltips();
+
+    // Cerrar dropdowns al hacer click fuera
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.nav-identity-section') && !e.target.closest('.nav-footer')) {
+        this.closeAllDropdowns();
+      }
+    });
 
     // Close nav on escape key - solo en móvil
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && this.isNavOpen && window.innerWidth <= 768) {
         this.closeNavigation();
+      }
+      if (e.key === 'Escape') {
+        this.closeAllDropdowns();
       }
     });
 
@@ -263,6 +343,8 @@ class Navigation {
         // En móvil, cerrar por defecto
         this.closeNavigation();
       }
+      // Cerrar dropdowns al redimensionar
+      this.closeAllDropdowns();
     });
 
     // Escuchar cambios de ruta para actualizar link activo (con debounce)
@@ -274,6 +356,116 @@ class Navigation {
     window.addEventListener('popstate', updateLinkDebounced);
     // También escuchar cuando el router navega programáticamente
     window.addEventListener('routechange', updateLinkDebounced);
+  }
+
+  /**
+   * Toggle dropdown de organización
+   */
+  toggleOrgDropdown() {
+    const dropdown = document.getElementById('navOrgDropdown');
+    const chevron = document.getElementById('navOrgChevron');
+    if (!dropdown) return;
+
+    const isOpen = dropdown.classList.contains('open');
+    
+    // Cerrar todos los dropdowns primero
+    this.closeAllDropdowns();
+    
+    if (!isOpen) {
+      dropdown.classList.add('open');
+      if (chevron) {
+        const icon = chevron.querySelector('i');
+        if (icon) {
+          icon.classList.remove('fa-chevron-down');
+          icon.classList.add('fa-chevron-up');
+        }
+      }
+    }
+  }
+
+  /**
+   * Toggle dropdown de perfil
+   */
+  toggleProfileDropdown() {
+    const dropdown = document.getElementById('navProfileDropdown');
+    const chevron = document.getElementById('navProfileChevron');
+    if (!dropdown) return;
+
+    const isOpen = dropdown.classList.contains('open');
+    
+    // Cerrar todos los dropdowns primero
+    this.closeAllDropdowns();
+    
+    if (!isOpen) {
+      dropdown.classList.add('open');
+      if (chevron) {
+        const icon = chevron.querySelector('i');
+        if (icon) {
+          icon.classList.remove('fa-chevron-down');
+          icon.classList.add('fa-chevron-up');
+        }
+      }
+    }
+  }
+
+  /**
+   * Cerrar todos los dropdowns
+   */
+  closeAllDropdowns() {
+    const orgDropdown = document.getElementById('navOrgDropdown');
+    const profileDropdown = document.getElementById('navProfileDropdown');
+    const orgChevron = document.getElementById('navOrgChevron');
+    const profileChevron = document.getElementById('navProfileChevron');
+
+    if (orgDropdown) {
+      orgDropdown.classList.remove('open');
+    }
+    if (profileDropdown) {
+      profileDropdown.classList.remove('open');
+    }
+    if (orgChevron) {
+      const icon = orgChevron.querySelector('i');
+      if (icon) {
+        icon.classList.remove('fa-chevron-up');
+        icon.classList.add('fa-chevron-down');
+      }
+    }
+    if (profileChevron) {
+      const icon = profileChevron.querySelector('i');
+      if (icon) {
+        icon.classList.remove('fa-chevron-up');
+        icon.classList.add('fa-chevron-down');
+      }
+    }
+  }
+
+  /**
+   * Configurar tooltips para estado colapsado
+   */
+  setupTooltips() {
+    const navLinks = document.querySelectorAll('.nav-link[data-tooltip]');
+    
+    navLinks.forEach(link => {
+      const tooltip = link.dataset.tooltip;
+      
+      // Crear elemento tooltip
+      const tooltipEl = document.createElement('div');
+      tooltipEl.className = 'nav-tooltip';
+      tooltipEl.textContent = tooltip;
+      link.appendChild(tooltipEl);
+      
+      // Mostrar tooltip en hover cuando está colapsado
+      link.addEventListener('mouseenter', () => {
+        const sideNavigation = document.getElementById('sideNavigation');
+        if (sideNavigation && sideNavigation.classList.contains('collapsed')) {
+          tooltipEl.classList.add('show');
+        }
+      });
+      
+      link.addEventListener('mouseleave', () => {
+        tooltipEl.classList.remove('show');
+      });
+    });
   }
 
   /**
@@ -328,7 +520,6 @@ class Navigation {
    */
   toggleSidebarCollapse() {
     const sideNavigation = document.getElementById('sideNavigation');
-    const navToggleBtn = document.getElementById('navToggleBtn');
     if (!sideNavigation) return;
     
     this.isCollapsed = !this.isCollapsed;
@@ -336,25 +527,11 @@ class Navigation {
     if (this.isCollapsed) {
       sideNavigation.classList.add('collapsed');
       document.body.classList.add('sidebar-collapsed');
-      // Cambiar icono a chevron-right cuando está colapsado
-      if (navToggleBtn) {
-        const icon = navToggleBtn.querySelector('i');
-        if (icon) {
-          icon.classList.remove('fa-bars');
-          icon.classList.add('fa-chevron-right');
-        }
-      }
+      // Cerrar dropdowns cuando se colapsa
+      this.closeAllDropdowns();
     } else {
       sideNavigation.classList.remove('collapsed');
       document.body.classList.remove('sidebar-collapsed');
-      // Cambiar icono a bars cuando está expandido
-      if (navToggleBtn) {
-        const icon = navToggleBtn.querySelector('i');
-        if (icon) {
-          icon.classList.remove('fa-chevron-right');
-          icon.classList.add('fa-bars');
-        }
-      }
     }
     
     // Guardar estado en localStorage
@@ -424,8 +601,56 @@ class Navigation {
    */
   updateUserInfo(user) {
     const navProfileName = document.getElementById('navProfileName');
-    if (navProfileName && user) {
-      navProfileName.textContent = user.full_name || user.email || 'Usuario';
+    const navProfileEmail = document.getElementById('navProfileEmail');
+    const navProfileInitials = document.getElementById('navProfileInitials');
+    const navProfileAvatar = document.getElementById('navProfileAvatar');
+    
+    if (user) {
+      const name = user.full_name || user.name || 'Usuario';
+      const email = user.email || 'usuario@email.com';
+      
+      // Actualizar nombre
+      if (navProfileName) {
+        navProfileName.textContent = name;
+      }
+      
+      // Actualizar email
+      if (navProfileEmail) {
+        navProfileEmail.textContent = email;
+      }
+      
+      // Generar iniciales
+      if (navProfileInitials) {
+        const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        navProfileInitials.textContent = initials || 'U';
+      }
+      
+      // Si hay avatar URL, usarlo
+      if (user.avatar_url && navProfileAvatar) {
+        navProfileAvatar.style.backgroundImage = `url(${user.avatar_url})`;
+        navProfileAvatar.style.backgroundSize = 'cover';
+        navProfileAvatar.style.backgroundPosition = 'center';
+        if (navProfileInitials) {
+          navProfileInitials.style.display = 'none';
+        }
+      }
+    }
+  }
+
+  /**
+   * Cargar información de organización
+   */
+  async loadOrganizationInfo() {
+    // TODO: Implementar carga de información de organización desde Supabase
+    // Por ahora, usar valores por defecto
+    const navOrgName = document.getElementById('navOrgName');
+    const navOrgType = document.getElementById('navOrgType');
+    
+    if (navOrgName) {
+      navOrgName.textContent = 'Info Arde Agency';
+    }
+    if (navOrgType) {
+      navOrgType.textContent = 'Personal';
     }
   }
 
