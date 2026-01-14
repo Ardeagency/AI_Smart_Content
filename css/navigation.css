@@ -21,20 +21,25 @@
    ========================================= */
 
 .main-header {
-    position: fixed;
-    top: 0;
+    position: fixed !important;
+    top: 0 !important;
     left: var(--nav-width, 280px);
     right: 0;
-    background: var(--bg-secondary);
+    background: var(--bg-secondary) !important;
     border-bottom: 1px solid var(--border-color);
     padding: 8px 16px;
-    z-index: 999;
+    z-index: 1000 !important;
     /* backdrop-filter removido para mejor rendimiento */
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     height: 48px;
+    min-height: 48px;
     display: flex;
     align-items: center;
+    will-change: transform;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
 }
 
 /* Cuando el sidebar está colapsado */
@@ -46,7 +51,11 @@ body.sidebar-collapsed .main-header,
 
 /* Asegurar que el header dentro de app-container también respete el sidebar */
 #app-container .main-header {
+    position: fixed !important;
+    top: 0 !important;
     left: var(--nav-width, 280px);
+    background: var(--bg-secondary) !important;
+    z-index: 1000 !important;
     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -992,6 +1001,8 @@ body.sidebar-collapsed #app-container .main-header,
     background: var(--bg-primary);
     transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     padding-top: 48px; /* Altura del header delgado */
+    position: relative;
+    z-index: 1;
 }
 
 .side-navigation.collapsed ~ .main-content,

@@ -15,6 +15,20 @@
     background: var(--bg-primary);
     transition: opacity 0.3s ease;
     will-change: opacity, transform;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+/* Asegurar que el header dentro de app-container esté siempre visible */
+#app-container .main-header {
+    position: fixed !important;
+    top: 0 !important;
+    background: var(--bg-secondary) !important;
+    background-color: var(--bg-secondary) !important;
+    z-index: 1000 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    display: flex !important;
 }
 
 /* Container de navegación (persistente) */
