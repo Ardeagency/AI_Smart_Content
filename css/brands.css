@@ -64,12 +64,9 @@ body.sidebar-collapsed .brand-dashboard-container {
         linear-gradient(145deg, var(--brand-warm-4) 0%, var(--brand-warm-5) 100%);
 }
 
+/* Textura removida - era pesada para GPU */
 .background-texture {
-    position: absolute;
-    inset: 0;
-    opacity: 0.1;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-    mix-blend-mode: overlay;
+    display: none;
 }
 
 /* ============================================
@@ -134,17 +131,12 @@ body.sidebar-collapsed .brand-dashboard-container {
     line-height: 1;
 }
 
+/* Status dot - sin animación para evitar problemas de rendimiento */
 .brand-status-indicator .status-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
     background: #4ADE80;
-    animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
 }
 
 /* Links al lado del nombre */

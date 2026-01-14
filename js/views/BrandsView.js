@@ -21,9 +21,15 @@ class BrandsView extends BaseView {
     this.flowRuns = [];
     this.organizationId = null;
     this.eventListenersSetup = false;
+    
+    // Timer ID para limpiar al salir
+    this.timezoneTimerId = null;
+    this.isActive = false;
   }
 
   async onEnter() {
+    this.isActive = true;
+    
     if (window.authService) {
       const isAuth = await window.authService.checkAccess(true);
       if (!isAuth) {
@@ -36,13 +42,28 @@ class BrandsView extends BaseView {
     }
   }
 
+  // Limpiar recursos al salir de la vista
+  onLeave() {
+    this.isActive = false;
+    
+    // Cancelar timer del timezone
+    if (this.timezoneTimerId) {
+      clearTimeout(this.timezoneTimerId);
+      this.timezoneTimerId = null;
+    }
+  }
+
   async init() {
     await this.initSupabase();
     await this.loadData();
-    this.renderDashboard();
-    if (!this.eventListenersSetup) {
-      this.setupEventListeners();
-      this.eventListenersSetup = true;
+    
+    // Solo renderizar si la vista sigue activa
+    if (this.isActive) {
+      this.renderDashboard();
+      if (!this.eventListenersSetup) {
+        this.setupEventListeners();
+        this.eventListenersSetup = true;
+      }
     }
   }
 
@@ -106,7 +127,7 @@ class BrandsView extends BaseView {
           .order('created_at', { ascending: false }).limit(5);
         this.products = products || [];
 
-        // Colores
+        // Colores y reglas
         if (this.brandData?.id) {
           const { data: colors } = await this.supabase
             .from('brand_colors').select('*').eq('brand_id', this.brandData.id);
@@ -148,12 +169,14 @@ class BrandsView extends BaseView {
   // ============================================
 
   renderDashboard() {
+    if (!this.isActive) return;
+    
     this.renderTeam();
     this.renderBrandInfo();
     this.renderConceptCard();
     this.renderScreeningCard();
     this.renderEventsCard();
-    this.updateTimezone();
+    this.startTimezoneUpdate();
   }
 
   renderTeam() {
@@ -181,17 +204,14 @@ class BrandsView extends BaseView {
 
     const brandName = this.brandContainerData.nombre_marca || 'BRAND';
     
-    // Nombre grande
     const nameEl = document.getElementById('brandNameLarge');
     if (nameEl) nameEl.textContent = brandName.toUpperCase();
 
-    // Links
     this.setLinkVisibility('linkWebsite', this.brandContainerData.sitio_web);
     this.setLinkVisibility('linkInstagram', this.brandContainerData.instagram_url);
     this.setLinkVisibility('linkTikTok', this.brandContainerData.tiktok_url);
     this.setLinkVisibility('linkFacebook', this.brandContainerData.facebook_url);
 
-    // Mercado
     const marketEl = document.getElementById('brandMarketLabel');
     if (marketEl) {
       const mercado = this.brandContainerData.mercado_objetivo;
@@ -254,19 +274,33 @@ class BrandsView extends BaseView {
     }
   }
 
-  updateTimezone() {
+  // Timer controlado con limpieza
+  startTimezoneUpdate() {
+    // Cancelar timer anterior si existe
+    if (this.timezoneTimerId) {
+      clearTimeout(this.timezoneTimerId);
+      this.timezoneTimerId = null;
+    }
+    
+    // Solo actualizar si la vista está activa
+    if (!this.isActive) return;
+    
     const timeEl = document.getElementById('timeLocal');
     const zoneEl = document.getElementById('timeZone');
+    
     if (timeEl && zoneEl) {
       const now = new Date();
       timeEl.textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
       zoneEl.textContent = Intl.DateTimeFormat().resolvedOptions().timeZone.split('/').pop().replace('_', ' ');
+      
+      // Solo programar siguiente actualización si sigue activa
+      if (this.isActive) {
+        this.timezoneTimerId = setTimeout(() => this.startTimezoneUpdate(), 60000);
+      }
     }
-    setTimeout(() => this.updateTimezone(), 60000);
   }
 
   setupEventListeners() {
-    // INFO button - sin función por ahora
     const infoBtn = document.querySelector('.card-info');
     if (infoBtn) {
       infoBtn.style.cursor = 'pointer';
