@@ -132,12 +132,12 @@ body.sidebar-collapsed .brand-dashboard-container {
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    background: var(--bg-primary);
-    border: 2px solid var(--bg-primary);
+    background: var(--brand-surface);
+    border: 1px solid var(--brand-divider);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--text-muted);
+    color: var(--brand-text-secondary);
     font-size: 1.25rem;
 }
 
@@ -261,8 +261,12 @@ body.sidebar-collapsed .brand-dashboard-container {
 }
 
 .brand-cards-zone::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--brand-divider);
     border-radius: 2px;
+}
+
+.brand-cards-zone::-webkit-scrollbar-thumb:hover {
+    background: var(--brand-yellow-soft);
 }
 
 /* Cards */
@@ -350,11 +354,12 @@ body.sidebar-collapsed .brand-dashboard-container {
 }
 
 .status-value.complete {
-    color: var(--accent-yellow);
+    color: var(--brand-yellow-core);
+    text-shadow: 0 0 8px var(--brand-yellow-soft);
 }
 
 .status-value.incomplete {
-    color: var(--text-muted);
+    color: var(--brand-text-secondary);
 }
 
 .card-update {
@@ -365,14 +370,14 @@ body.sidebar-collapsed .brand-dashboard-container {
 
 .update-label {
     font-size: 0.75rem;
-    color: var(--text-muted);
+    color: var(--brand-text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .update-value {
     font-size: 0.875rem;
-    color: var(--text-secondary);
+    color: var(--brand-text-secondary);
 }
 
 .card-summary {
