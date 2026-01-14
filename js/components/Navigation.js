@@ -154,33 +154,6 @@ class Navigation {
           </div>
         </div>
 
-        <!-- Footer del panel: Perfil -->
-        <div class="nav-footer">
-          <div class="nav-footer-profile" id="navFooterProfile">
-            <div class="nav-profile-avatar" id="navProfileAvatar">
-              <span id="navProfileInitials">U</span>
-            </div>
-            <div class="nav-profile-info">
-              <div class="nav-profile-name" id="navProfileName">Usuario</div>
-              <div class="nav-profile-email" id="navProfileEmail">usuario@email.com</div>
-            </div>
-            <button class="nav-profile-chevron" id="navProfileChevron" aria-label="Menú de perfil">
-              <i class="fas fa-chevron-down"></i>
-            </button>
-          </div>
-          
-          <!-- Dropdown de perfil -->
-          <div class="nav-profile-dropdown" id="navProfileDropdown">
-            <div class="nav-profile-dropdown-item" data-action="profile">
-              <i class="fas fa-user"></i>
-              <span>Perfil</span>
-            </div>
-            <div class="nav-profile-dropdown-item nav-logout" id="navLogoutBtn" data-action="logout">
-              <i class="fas fa-sign-out-alt"></i>
-              <span>Cerrar sesión</span>
-            </div>
-          </div>
-        </div>
       </nav>
     `;
   }
@@ -218,11 +191,7 @@ class Navigation {
     const navOverlay = document.getElementById('navOverlay');
     const navToggleBtn = document.getElementById('navToggleBtn');
     const navLinks = document.querySelectorAll('.nav-link');
-    const navLogoutBtn = document.getElementById('navLogoutBtn');
     const navOrgChevron = document.getElementById('navOrgChevron');
-    const navOrgDropdown = document.getElementById('navOrgDropdown');
-    const navProfileChevron = document.getElementById('navProfileChevron');
-    const navProfileDropdown = document.getElementById('navProfileDropdown');
 
     // Hamburger menu toggle - solo funciona en móvil
     if (hamburgerMenu) {
@@ -261,14 +230,6 @@ class Navigation {
       });
     }
 
-    // Profile dropdown toggle
-    if (navProfileChevron) {
-      navProfileChevron.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.toggleProfileDropdown();
-      });
-    }
-
     // Navigation links - usar router
     navLinks.forEach(link => {
       link.addEventListener('click', (e) => {
@@ -286,20 +247,12 @@ class Navigation {
       });
     });
 
-    // Logout
-    if (navLogoutBtn) {
-      navLogoutBtn.addEventListener('click', async (e) => {
-        e.preventDefault();
-        await this.handleLogout();
-      });
-    }
-
     // Setup tooltips para estado colapsado
     this.setupTooltips();
 
     // Cerrar dropdowns al hacer click fuera
     document.addEventListener('click', (e) => {
-      if (!e.target.closest('.nav-identity-section') && !e.target.closest('.nav-footer')) {
+      if (!e.target.closest('.nav-identity-section')) {
         this.closeAllDropdowns();
       }
     });
@@ -373,54 +326,17 @@ class Navigation {
   }
 
   /**
-   * Toggle dropdown de perfil
-   */
-  toggleProfileDropdown() {
-    const dropdown = document.getElementById('navProfileDropdown');
-    const chevron = document.getElementById('navProfileChevron');
-    if (!dropdown) return;
-
-    const isOpen = dropdown.classList.contains('open');
-    
-    // Cerrar todos los dropdowns primero
-    this.closeAllDropdowns();
-    
-    if (!isOpen) {
-      dropdown.classList.add('open');
-      if (chevron) {
-        const icon = chevron.querySelector('i');
-        if (icon) {
-          icon.classList.remove('fa-chevron-down');
-          icon.classList.add('fa-chevron-up');
-        }
-      }
-    }
-  }
-
-  /**
    * Cerrar todos los dropdowns
    */
   closeAllDropdowns() {
     const orgDropdown = document.getElementById('navOrgDropdown');
-    const profileDropdown = document.getElementById('navProfileDropdown');
     const orgChevron = document.getElementById('navOrgChevron');
-    const profileChevron = document.getElementById('navProfileChevron');
 
     if (orgDropdown) {
       orgDropdown.classList.remove('open');
     }
-    if (profileDropdown) {
-      profileDropdown.classList.remove('open');
-    }
     if (orgChevron) {
       const icon = orgChevron.querySelector('i');
-      if (icon) {
-        icon.classList.remove('fa-chevron-up');
-        icon.classList.add('fa-chevron-down');
-      }
-    }
-    if (profileChevron) {
-      const icon = profileChevron.querySelector('i');
       if (icon) {
         icon.classList.remove('fa-chevron-up');
         icon.classList.add('fa-chevron-down');
@@ -844,12 +760,17 @@ class Navigation {
       `;
     });
 
-    // Agregar opción para crear nueva organización
+    // Agregar opciones adicionales
     html += `
       <div class="nav-org-divider"></div>
       <div class="nav-org-option create-org" data-action="create">
         <i class="fas fa-plus"></i>
         <span>Create new organization</span>
+      </div>
+      <div class="nav-org-divider"></div>
+      <div class="nav-org-option manage-org" data-action="manage">
+        <i class="fas fa-sliders-h"></i>
+        <span>Administrar organización</span>
       </div>
     `;
 
@@ -873,6 +794,18 @@ class Navigation {
         // TODO: Implementar navegación a crear organización
         if (window.router) {
           window.router.navigate('/organization?action=create');
+        }
+        this.closeAllDropdowns();
+      });
+    }
+
+    // Event listener para administrar organización
+    const manageOption = dropdownList.querySelector('.nav-org-option.manage-org');
+    if (manageOption) {
+      manageOption.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (window.router) {
+          window.router.navigate('/organization');
         }
         this.closeAllDropdowns();
       });
