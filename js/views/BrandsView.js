@@ -44,13 +44,25 @@ class BrandsView extends BaseView {
       // Función para verificar y renderizar
       const tryRender = (attempt = 0) => {
         // Verificar que los contenedores críticos existan
-        const hasContainers = 
-          document.getElementById('brandColorSwatches') &&
-          document.getElementById('typographyPreview') &&
-          document.getElementById('visualStatus');
+        const brandColorsEl = document.getElementById('brandColorSwatches');
+        const typographyEl = document.getElementById('typographyPreview');
+        const statusEl = document.getElementById('visualStatus');
         
-        if (hasContainers || attempt >= 5) {
-          // Si los contenedores existen o hemos intentado 5 veces, renderizar
+        const hasContainers = brandColorsEl && typographyEl && statusEl;
+        
+        if (hasContainers) {
+          // Si los contenedores existen, renderizar
+          console.log('✅ Contenedores encontrados, renderizando Visual de marca...');
+          this.renderAll();
+        } else if (attempt >= 10) {
+          // Si hemos intentado 10 veces, renderizar de todas formas (puede haber un problema)
+          console.warn('⚠️ Contenedores no encontrados después de 10 intentos. Renderizando de todas formas...');
+          console.log('brandColorSwatches:', brandColorsEl ? '✓' : '✗');
+          console.log('typographyPreview:', typographyEl ? '✓' : '✗');
+          console.log('visualStatus:', statusEl ? '✓' : '✗');
+          if (this.container) {
+            console.log('Container HTML preview:', this.container.innerHTML.substring(0, 1000));
+          }
           this.renderAll();
         } else {
           // Si no existen, esperar un poco más y reintentar
