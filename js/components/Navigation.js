@@ -134,6 +134,12 @@ class Navigation {
           <div class="nav-section">
             <div class="nav-section-title">Sistema</div>
             <div class="nav-item">
+              <a href="/living" class="nav-link" data-route="/living" data-tooltip="Living">
+                <i class="fas fa-home nav-icon"></i>
+                <span class="nav-text">Living</span>
+              </a>
+            </div>
+            <div class="nav-item">
               <a href="/organization" class="nav-link" data-route="/organization" data-tooltip="Organización">
                 <i class="fas fa-building nav-icon"></i>
                 <span class="nav-text">Organización</span>
