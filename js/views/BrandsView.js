@@ -747,14 +747,42 @@ class BrandsView extends BaseView {
     }
   }
 
-  // Métodos legacy (mantener para compatibilidad)
-  renderAll() {
-    // Este método ya no se usa, pero lo mantenemos por compatibilidad
-    this.renderBrandHeader();
-    this.renderControlPanel();
-    this.renderTabContent();
+  // ============================================
+  // MÉTODOS HELPER (mantener)
+  // ============================================
+
+  formatFileSize(bytes) {
+    if (!bytes) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   }
 
+  escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // ============================================
+  // MÉTODOS LEGACY ELIMINADOS
+  // Los siguientes métodos ya no se usan en el nuevo diseño dashboard:
+  // - renderBrandHeader()
+  // - renderControlPanel()
+  // - renderTabContent() y métodos de tabs
+  // - setupInternalNavigation()
+  // - renderProfileCard()
+  // - renderBrandGuidelines()
+  // - renderProducts() (antiguo)
+  // - renderCampaigns() (antiguo)
+  // - setupEditableInputs()
+  // - setupMultiselects()
+  // - setupFileUpload()
+  // ============================================
+
+  // Método legacy mantenido solo para referencia
   renderProfileCard() {
     // Logo de marca como foto de perfil
     const profileLogo = document.getElementById('profileBrandLogo');
@@ -1365,8 +1393,7 @@ class BrandsView extends BaseView {
           users (
             id,
             full_name,
-            email,
-            avatar_url
+            email
           )
         `)
         .eq('organization_id', this.organizationId)
@@ -1423,7 +1450,7 @@ class BrandsView extends BaseView {
   }
 
   async loadFlowRuns() {
-    if (!this.supabase || !this.brandContainerId) return;
+    if (!this.supabase || !this.brandData?.id) return;
 
     try {
       const { data, error } = await this.supabase
@@ -1433,11 +1460,12 @@ class BrandsView extends BaseView {
           flow_outputs (
             id,
             output_type,
-            output_data,
+            file_url,
+            metadata,
             created_at
           )
         `)
-        .eq('brand_container_id', this.brandContainerId)
+        .eq('brand_id', this.brandData.id)
         .order('created_at', { ascending: false })
         .limit(3);
 
@@ -1503,17 +1531,13 @@ class BrandsView extends BaseView {
       const user = member.users;
       const initials = user?.full_name 
         ? user.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-        : 'U';
-      const avatarUrl = user?.avatar_url;
+        : (user?.email ? user.email[0].toUpperCase() : 'U');
       const name = user?.full_name || user?.email || 'Usuario';
       const role = member.role || 'Miembro';
 
       return `
         <div class="team-avatar" title="${this.escapeHtml(name)} - ${this.escapeHtml(role)}">
-          ${avatarUrl 
-            ? `<img src="${avatarUrl}" alt="${this.escapeHtml(name)}">`
-            : `<span class="team-avatar-initials">${initials}</span>`
-          }
+          <span class="team-avatar-initials">${initials}</span>
         </div>
       `;
     }).join('') + 
@@ -1648,13 +1672,15 @@ class BrandsView extends BaseView {
       } else {
         recentList.innerHTML = this.flowRuns.slice(0, 3).map(run => {
           const output = run.flow_outputs?.[0];
-          const type = output?.output_type || 'contenido';
+          const type = output?.output_type || run.status || 'contenido';
+          const fileName = output?.file_url ? output.file_url.split('/').pop() : null;
+          const displayText = fileName || type;
           return `
             <div class="recent-item">
               <div class="recent-item-icon">
                 <i class="fas fa-file-alt"></i>
               </div>
-              <div class="recent-item-text">${this.escapeHtml(type)}</div>
+              <div class="recent-item-text">${this.escapeHtml(displayText)}</div>
             </div>
           `;
         }).join('');
