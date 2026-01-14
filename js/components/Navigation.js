@@ -71,19 +71,8 @@ class Navigation {
           <!-- Dropdown de organización -->
           <div class="nav-org-dropdown" id="navOrgDropdown">
             <div class="nav-org-dropdown-header">Workspaces</div>
-            <div class="nav-org-dropdown-list">
-              <div class="nav-org-option active" data-org-id="current">
-                <div class="nav-org-option-content">
-                  <div class="nav-org-option-name">Info Arde Agency</div>
-                  <div class="nav-org-option-type">Personal</div>
-                </div>
-                <i class="fas fa-check nav-org-check"></i>
-              </div>
-              <div class="nav-org-divider"></div>
-              <div class="nav-org-option create-org" data-action="create">
-                <i class="fas fa-plus"></i>
-                <span>Create new organization</span>
-              </div>
+            <div class="nav-org-dropdown-list" id="navOrgDropdownList">
+              <!-- Las organizaciones se cargarán dinámicamente aquí -->
             </div>
           </div>
         </div>
@@ -648,47 +637,25 @@ class Navigation {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) return;
 
-      // Obtener la organización activa del usuario
-      // Primero intentar obtener desde organization_members
-      const { data: orgMember, error: memberError } = await supabase
-        .from('organization_members')
-        .select(`
-          organization_id,
-          organizations (
-            id,
-            name
-          )
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      // Cargar todas las organizaciones del usuario
+      const organizations = await this.loadUserOrganizations(supabase, user.id);
+      
+      // Obtener la organización activa (la primera o la guardada en localStorage)
+      const activeOrgId = localStorage.getItem('activeOrganizationId');
+      let activeOrg = organizations.find(org => org.id === activeOrgId) || organizations[0];
 
-      let organizationId = null;
-      let organizationName = null;
-
-      if (orgMember && orgMember.organizations) {
-        organizationId = orgMember.organizations.id;
-        organizationName = orgMember.organizations.name;
-      } else {
-        // Si no es miembro, buscar si es owner
-        const { data: ownedOrg, error: ownedError } = await supabase
-          .from('organizations')
-          .select('id, name')
-          .eq('owner_user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (ownedOrg) {
-          organizationId = ownedOrg.id;
-          organizationName = ownedOrg.name;
-        }
+      if (!activeOrg && organizations.length > 0) {
+        activeOrg = organizations[0];
       }
 
-      // Obtener el plan de la suscripción
+      // Si hay organización activa, guardarla
+      if (activeOrg) {
+        localStorage.setItem('activeOrganizationId', activeOrg.id);
+      }
+
+      // Obtener el plan de la suscripción para la organización activa
       let planName = 'Personal';
-      if (user.id) {
+      if (activeOrg && user.id) {
         const { data: subscription, error: subError } = await supabase
           .from('subscriptions')
           .select('plan_type, status')
@@ -706,24 +673,11 @@ class Navigation {
 
       // Obtener el logo de la marca desde brand_containers
       let brandLogoUrl = null;
-      if (organizationId) {
+      if (activeOrg && activeOrg.id) {
         const { data: brandContainer, error: brandError } = await supabase
           .from('brand_containers')
           .select('logo_url')
-          .eq('organization_id', organizationId)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (brandContainer && brandContainer.logo_url) {
-          brandLogoUrl = brandContainer.logo_url;
-        }
-      } else {
-        // Si no hay organización, buscar por user_id
-        const { data: brandContainer, error: brandError } = await supabase
-          .from('brand_containers')
-          .select('logo_url')
-          .eq('user_id', user.id)
+          .eq('organization_id', activeOrg.id)
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -733,13 +687,13 @@ class Navigation {
         }
       }
 
-      // Actualizar UI
+      // Actualizar UI de la organización activa
       const navOrgName = document.getElementById('navOrgName');
       const navOrgType = document.getElementById('navOrgType');
       const navLogoIcon = document.querySelector('.nav-logo-icon');
 
       if (navOrgName) {
-        navOrgName.textContent = organizationName || 'Mi Organización';
+        navOrgName.textContent = activeOrg ? activeOrg.name : 'Mi Organización';
       }
 
       if (navOrgType) {
@@ -751,7 +705,14 @@ class Navigation {
         // Reemplazar el ícono con la imagen del logo
         navLogoIcon.innerHTML = `<img src="${brandLogoUrl}" alt="Logo" style="width: 100%; height: 100%; object-fit: contain; border-radius: 6px;">`;
         navLogoIcon.style.background = 'transparent';
+      } else if (navLogoIcon) {
+        // Mantener el ícono por defecto si no hay logo
+        navLogoIcon.innerHTML = '<i class="fas fa-brain"></i>';
+        navLogoIcon.style.background = 'rgba(216, 255, 0, 0.1)';
       }
+
+      // Renderizar lista de organizaciones en el dropdown
+      this.renderOrganizationsDropdown(organizations, activeOrg ? activeOrg.id : null);
     } catch (error) {
       console.error('Error cargando información de organización:', error);
       // Usar valores por defecto en caso de error
@@ -765,6 +726,177 @@ class Navigation {
         navOrgType.textContent = 'Personal';
       }
     }
+  }
+
+  /**
+   * Cargar todas las organizaciones del usuario
+   */
+  async loadUserOrganizations(supabase, userId) {
+    const orgsMap = new Map();
+
+    try {
+      // Cargar organizaciones donde el usuario es miembro
+      const { data: orgMembers, error: membersError } = await supabase
+        .from('organization_members')
+        .select(`
+          organization_id,
+          role,
+          organizations (
+            id,
+            name,
+            owner_user_id,
+            created_at
+          )
+        `)
+        .eq('user_id', userId);
+
+      if (orgMembers) {
+        orgMembers.forEach(member => {
+          if (member.organizations) {
+            const org = member.organizations;
+            orgsMap.set(org.id, {
+              id: org.id,
+              name: org.name,
+              role: member.role,
+              created_at: org.created_at
+            });
+          }
+        });
+      }
+
+      // Cargar organizaciones donde el usuario es owner
+      const { data: ownedOrgs, error: ownedError } = await supabase
+        .from('organizations')
+        .select('id, name, owner_user_id, created_at')
+        .eq('owner_user_id', userId);
+
+      if (ownedOrgs) {
+        ownedOrgs.forEach(org => {
+          if (!orgsMap.has(org.id)) {
+            orgsMap.set(org.id, {
+              id: org.id,
+              name: org.name,
+              role: 'owner',
+              created_at: org.created_at
+            });
+          }
+        });
+      }
+
+      // Obtener planes para cada organización
+      const organizations = Array.from(orgsMap.values());
+      
+      // Para cada organización, obtener su plan
+      for (const org of organizations) {
+        const { data: subscription, error: subError } = await supabase
+          .from('subscriptions')
+          .select('plan_type, status')
+          .eq('user_id', userId)
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (subscription && subscription.plan_type) {
+          org.plan = subscription.plan_type.charAt(0).toUpperCase() + subscription.plan_type.slice(1);
+        } else {
+          org.plan = 'Personal';
+        }
+      }
+
+      return organizations.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    } catch (error) {
+      console.error('Error cargando organizaciones:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Renderizar lista de organizaciones en el dropdown
+   */
+  renderOrganizationsDropdown(organizations, activeOrgId) {
+    const dropdownList = document.getElementById('navOrgDropdownList');
+    if (!dropdownList) return;
+
+    if (organizations.length === 0) {
+      dropdownList.innerHTML = `
+        <div class="nav-org-option create-org" data-action="create">
+          <i class="fas fa-plus"></i>
+          <span>Create new organization</span>
+        </div>
+      `;
+      return;
+    }
+
+    let html = '';
+
+    // Renderizar cada organización
+    organizations.forEach(org => {
+      const isActive = org.id === activeOrgId;
+      html += `
+        <div class="nav-org-option ${isActive ? 'active' : ''}" data-org-id="${org.id}">
+          <div class="nav-org-option-content">
+            <div class="nav-org-option-name">${this.escapeHtml(org.name)}</div>
+            <div class="nav-org-option-type">${this.escapeHtml(org.plan || 'Personal')}</div>
+          </div>
+          ${isActive ? '<i class="fas fa-check nav-org-check"></i>' : ''}
+        </div>
+      `;
+    });
+
+    // Agregar opción para crear nueva organización
+    html += `
+      <div class="nav-org-divider"></div>
+      <div class="nav-org-option create-org" data-action="create">
+        <i class="fas fa-plus"></i>
+        <span>Create new organization</span>
+      </div>
+    `;
+
+    dropdownList.innerHTML = html;
+
+    // Agregar event listeners para cambiar de organización
+    dropdownList.querySelectorAll('.nav-org-option[data-org-id]').forEach(option => {
+      option.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const orgId = option.dataset.orgId;
+        await this.switchOrganization(orgId);
+        this.closeAllDropdowns();
+      });
+    });
+
+    // Event listener para crear nueva organización
+    const createOption = dropdownList.querySelector('.nav-org-option.create-org');
+    if (createOption) {
+      createOption.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // TODO: Implementar navegación a crear organización
+        if (window.router) {
+          window.router.navigate('/organization?action=create');
+        }
+        this.closeAllDropdowns();
+      });
+    }
+  }
+
+  /**
+   * Cambiar de organización activa
+   */
+  async switchOrganization(organizationId) {
+    localStorage.setItem('activeOrganizationId', organizationId);
+    // Recargar información de organización
+    await this.loadOrganizationInfo();
+    // Recargar información del usuario para actualizar contexto
+    await this.loadUserInfo();
+  }
+
+  /**
+   * Escapar HTML para prevenir XSS
+   */
+  escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 
   /**
