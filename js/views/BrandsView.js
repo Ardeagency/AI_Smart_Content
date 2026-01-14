@@ -38,15 +38,28 @@ class BrandsView extends BaseView {
   }
 
   async render() {
+    // Limpiar caché del template si existe (para forzar recarga)
+    if (window.router && window.router.templateCache && this.templatePath) {
+      window.router.templateCache.delete(this.templatePath);
+      console.log('🧹 Caché del template limpiado para:', this.templatePath);
+    }
+    
     await super.render();
     // Asegurar que renderAll se ejecute después de que el template esté completamente en el DOM
     if (this.isActive) {
       // Función para verificar y renderizar
       const tryRender = (attempt = 0) => {
-        // Verificar que los contenedores críticos existan
-        const brandColorsEl = document.getElementById('brandColorSwatches');
-        const typographyEl = document.getElementById('typographyPreview');
-        const statusEl = document.getElementById('visualStatus');
+        // Buscar dentro del container específico, no en todo el document
+        const container = this.container || document.getElementById('app-container');
+        if (!container) {
+          console.error('❌ Container no encontrado');
+          return;
+        }
+        
+        // Verificar que los contenedores críticos existan dentro del container
+        const brandColorsEl = container.querySelector('#brandColorSwatches') || document.getElementById('brandColorSwatches');
+        const typographyEl = container.querySelector('#typographyPreview') || document.getElementById('typographyPreview');
+        const statusEl = container.querySelector('#visualStatus') || document.getElementById('visualStatus');
         
         const hasContainers = brandColorsEl && typographyEl && statusEl;
         
@@ -60,8 +73,15 @@ class BrandsView extends BaseView {
           console.log('brandColorSwatches:', brandColorsEl ? '✓' : '✗');
           console.log('typographyPreview:', typographyEl ? '✓' : '✗');
           console.log('visualStatus:', statusEl ? '✓' : '✗');
-          if (this.container) {
-            console.log('Container HTML preview:', this.container.innerHTML.substring(0, 1000));
+          if (container) {
+            const htmlPreview = container.innerHTML;
+            console.log('Container HTML length:', htmlPreview.length);
+            console.log('Container HTML preview (first 2000 chars):', htmlPreview.substring(0, 2000));
+            // Buscar si existe la card-concept en el HTML
+            const hasCardConcept = htmlPreview.includes('card-concept');
+            const hasBrandColorSwatches = htmlPreview.includes('brandColorSwatches');
+            console.log('¿Tiene card-concept?', hasCardConcept);
+            console.log('¿Tiene brandColorSwatches?', hasBrandColorSwatches);
           }
           this.renderAll();
         } else {
@@ -348,12 +368,18 @@ class BrandsView extends BaseView {
 
 
   renderBrandColors() {
-    const container = document.getElementById('brandColorSwatches');
+    // Buscar dentro del container específico primero
+    const container = (this.container && this.container.querySelector('#brandColorSwatches')) || 
+                      document.getElementById('brandColorSwatches');
     if (!container) {
       console.warn('⚠️ brandColorSwatches container no encontrado. Verificando DOM...');
       // Debug: verificar qué hay en el container
       if (this.container) {
-        console.log('Container HTML:', this.container.innerHTML.substring(0, 500));
+        const html = this.container.innerHTML;
+        console.log('Container HTML length:', html.length);
+        console.log('Container HTML preview:', html.substring(0, 1000));
+        console.log('¿Tiene brandColorSwatches?', html.includes('brandColorSwatches'));
+        console.log('¿Tiene card-concept?', html.includes('card-concept'));
       }
       return;
     }
@@ -382,8 +408,13 @@ class BrandsView extends BaseView {
   }
 
   renderTypography() {
-    const container = document.getElementById('typographyPreview');
-    if (!container) return;
+    // Buscar dentro del container específico primero
+    const container = (this.container && this.container.querySelector('#typographyPreview')) || 
+                      document.getElementById('typographyPreview');
+    if (!container) {
+      console.warn('⚠️ typographyPreview container no encontrado');
+      return;
+    }
     
     // Buscar regla de tipografía en brand_rules
     const typographyRule = (this.brandRules || []).find(rule => 
@@ -417,7 +448,9 @@ class BrandsView extends BaseView {
   }
 
   renderVisualStatus() {
-    const container = document.getElementById('visualStatus');
+    // Buscar dentro del container específico primero
+    const container = (this.container && this.container.querySelector('#visualStatus')) || 
+                      document.getElementById('visualStatus');
     if (!container) {
       console.warn('⚠️ visualStatus container no encontrado');
       return;
