@@ -70,60 +70,61 @@
             </div>
         </div>
         
-        <!-- SCREENING ROOM -->
-        <div class="brand-card card-screening">
+        <!-- Production Usage -->
+        <div class="brand-card card-production">
             <div class="card-header">
-                <h2 class="card-title">SCREENING ROOM</h2>
-                <div class="card-icon-circle">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <circle cx="6" cy="6" r="1.5"/><circle cx="12" cy="6" r="1.5"/><circle cx="18" cy="6" r="1.5"/>
-                        <circle cx="6" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/>
-                        <circle cx="6" cy="18" r="1.5"/><circle cx="12" cy="18" r="1.5"/><circle cx="18" cy="18" r="1.5"/>
-                    </svg>
-                </div>
+                <h2 class="card-title">Production Usage</h2>
             </div>
-            <a href="/library" class="card-arrow-sub"><i class="fas fa-arrow-right"></i></a>
             <div class="card-content">
-                <div class="card-spacer"></div>
-                <div class="card-current">
-                    <span class="current-label">Current</span>
-                    <span class="current-value" id="screeningCurrentValue">CONTENT PRODUCTION</span>
+                <!-- Estado actual -->
+                <div class="production-section">
+                    <div class="production-current">
+                        <span class="production-label">CURRENT</span>
+                        <span class="production-value" id="productionCurrentValue">Content Production</span>
+                    </div>
                 </div>
-                <div class="card-progress">
-                    <span class="progress-time" id="progressTime">0 / 100</span>
+                
+                <!-- Consumo de tokens -->
+                <div class="production-section">
+                    <div class="production-tokens">
+                        <div class="tokens-bar">
+                            <div class="tokens-bar-fill" id="tokensBarFill"></div>
+                        </div>
+                        <div class="tokens-text" id="tokensText">0 / 0 tokens</div>
+                    </div>
                 </div>
-                <div class="progress-bar">
-                    <div class="progress-bar-fill" id="progressBarFill"></div>
+                
+                <!-- Ritmo -->
+                <div class="production-section">
+                    <div class="production-rhythm">
+                        <span class="rhythm-text" id="rhythmToday">0 outputs today</span>
+                        <span class="rhythm-text" id="rhythmWeek">0 this week</span>
+                    </div>
                 </div>
-                <div class="card-footer">
-                    <span class="footer-text" id="screeningFooterText">Available tokens</span>
+                
+                <!-- CTA silencioso -->
+                <div class="production-cta">
+                    <a href="/content" class="production-cta-link">View activity →</a>
                 </div>
             </div>
         </div>
         
-        <!-- EVENTS -->
-        <div class="brand-card card-events">
+        <!-- Featured Products -->
+        <div class="brand-card card-featured">
             <div class="card-header">
-                <h2 class="card-title">EVENTS</h2>
-                <div class="card-icon-circle">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <circle cx="6" cy="6" r="1.5"/><circle cx="12" cy="6" r="1.5"/><circle cx="18" cy="6" r="1.5"/>
-                        <circle cx="6" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/>
-                        <circle cx="6" cy="18" r="1.5"/><circle cx="12" cy="18" r="1.5"/><circle cx="18" cy="18" r="1.5"/>
-                    </svg>
-                </div>
+                <h2 class="card-title">Featured Products</h2>
             </div>
-            <a href="/products" class="card-arrow-sub"><i class="fas fa-arrow-right"></i></a>
             <div class="card-content">
-                <div class="event-item">
-                    <div class="event-info">
-                        <span class="event-name" id="eventName1">Product</span>
-                        <span class="event-desc" id="eventDesc1">Featured</span>
-                    </div>
-                    <div class="event-date">
-                        <span class="event-date-value" id="eventDate1">-</span>
-                        <span class="event-time-value" id="eventTime1">-</span>
-                    </div>
+                <!-- Producto principal -->
+                <div class="featured-product" id="featuredProductContainer">
+                    <div class="featured-product-name" id="featuredProductName">No products</div>
+                    <div class="featured-product-category" id="featuredProductCategory"></div>
+                    <div class="featured-product-activity" id="featuredProductActivity">Add your first product</div>
+                </div>
+                
+                <!-- CTA -->
+                <div class="featured-cta">
+                    <a href="/products" class="featured-cta-link">View product →</a>
                 </div>
             </div>
         </div>

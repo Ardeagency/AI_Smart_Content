@@ -328,42 +328,11 @@ class BrandsView extends BaseView {
     // Visual de marca - Status
     this.renderVisualStatus();
 
-    // SCREENING ROOM
-    const total = this.organizationCredits?.credits_available || 100;
-    const used = (this.creditUsage || []).reduce((s, u) => s + (u.credits_used || 0), 0);
-    const pct = total > 0 ? Math.min((used / total) * 100, 100) : 0;
-    
-    const screeningCurrent = document.getElementById('screeningCurrentValue');
-    const progressTime = document.getElementById('progressTime');
-    const progressBar = document.getElementById('progressBarFill');
-    const footer = document.getElementById('screeningFooterText');
-    
-    if (screeningCurrent) screeningCurrent.textContent = 'CONTENT PRODUCTION';
-    if (progressTime) progressTime.textContent = `${used} / ${total}`;
-    if (progressBar) progressBar.style.width = `${pct}%`;
-    if (footer) footer.textContent = `${total - used} tokens available`;
+    // Production Usage
+    this.renderProductionUsage();
 
-    // EVENTS
-    const product = this.products?.[0];
-    const eventName = document.getElementById('eventName1');
-    const eventDesc = document.getElementById('eventDesc1');
-    const eventDate = document.getElementById('eventDate1');
-    const eventTime = document.getElementById('eventTime1');
-    
-    if (product) {
-      if (eventName) eventName.textContent = product.nombre_producto || 'Product';
-      if (eventDesc) eventDesc.textContent = (product.descripcion_producto || '').substring(0, 40) || 'Featured';
-      if (product.created_at) {
-        const d = new Date(product.created_at);
-        if (eventDate) eventDate.textContent = d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
-        if (eventTime) eventTime.textContent = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-      }
-    } else {
-      if (eventName) eventName.textContent = 'No Products';
-      if (eventDesc) eventDesc.textContent = 'Add your first product';
-      if (eventDate) eventDate.textContent = '-';
-      if (eventTime) eventTime.textContent = '-';
-    }
+    // Featured Products
+    this.renderFeaturedProducts();
   }
 
 
@@ -469,6 +438,107 @@ class BrandsView extends BaseView {
         ${colorCount} Colors • ${fontCount} Font • Synced
       </div>
     `;
+  }
+
+  renderProductionUsage() {
+    // Estado actual
+    const currentEl = (this.container && this.container.querySelector('#productionCurrentValue')) || 
+                      document.getElementById('productionCurrentValue');
+    if (currentEl) {
+      currentEl.textContent = 'Content Production';
+    }
+
+    // Tokens
+    const total = this.organizationCredits?.credits_available || this.organizationCredits?.credits_total || 2000;
+    const used = (this.creditUsage || []).reduce((s, u) => s + (u.credits_used || 0), 0);
+    const pct = total > 0 ? Math.min((used / total) * 100, 100) : 0;
+    
+    const tokensTextEl = (this.container && this.container.querySelector('#tokensText')) || 
+                        document.getElementById('tokensText');
+    const tokensBarEl = (this.container && this.container.querySelector('#tokensBarFill')) || 
+                        document.getElementById('tokensBarFill');
+    
+    if (tokensTextEl) {
+      tokensTextEl.textContent = `${used} / ${total} tokens`;
+    }
+    if (tokensBarEl) {
+      tokensBarEl.style.width = `${pct}%`;
+    }
+
+    // Ritmo: outputs hoy y esta semana
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekStart = new Date(todayStart);
+    weekStart.setDate(weekStart.getDate() - 7);
+
+    const outputsToday = (this.creditUsage || []).filter(u => {
+      if (!u.created_at) return false;
+      const usageDate = new Date(u.created_at);
+      return usageDate >= todayStart && u.operation_type && u.operation_type.includes('content');
+    }).length;
+
+    const outputsWeek = (this.creditUsage || []).filter(u => {
+      if (!u.created_at) return false;
+      const usageDate = new Date(u.created_at);
+      return usageDate >= weekStart && u.operation_type && u.operation_type.includes('content');
+    }).length;
+
+    const rhythmTodayEl = (this.container && this.container.querySelector('#rhythmToday')) || 
+                          document.getElementById('rhythmToday');
+    const rhythmWeekEl = (this.container && this.container.querySelector('#rhythmWeek')) || 
+                         document.getElementById('rhythmWeek');
+    
+    if (rhythmTodayEl) {
+      rhythmTodayEl.textContent = `${outputsToday} outputs today`;
+    }
+    if (rhythmWeekEl) {
+      rhythmWeekEl.textContent = `${outputsWeek} this week`;
+    }
+  }
+
+  renderFeaturedProducts() {
+    const product = this.products?.[0];
+    
+    const productNameEl = (this.container && this.container.querySelector('#featuredProductName')) || 
+                          document.getElementById('featuredProductName');
+    const productCategoryEl = (this.container && this.container.querySelector('#featuredProductCategory')) || 
+                              document.getElementById('featuredProductCategory');
+    const productActivityEl = (this.container && this.container.querySelector('#featuredProductActivity')) || 
+                             document.getElementById('featuredProductActivity');
+    
+    if (product) {
+      // Nombre del producto
+      if (productNameEl) {
+        productNameEl.textContent = product.nombre_producto || 'Product';
+      }
+      
+      // Categoría (tipo de producto)
+      if (productCategoryEl) {
+        const tipo = product.tipo_producto || '';
+        productCategoryEl.textContent = tipo ? tipo.charAt(0).toUpperCase() + tipo.slice(1) : '';
+        productCategoryEl.style.display = tipo ? 'block' : 'none';
+      }
+      
+      // Última actividad (última generación de contenido relacionada)
+      if (productActivityEl) {
+        // Buscar última actividad relacionada en credit_usage o usar created_at del producto
+        let lastActivity = '';
+        if (product.updated_at) {
+          const d = new Date(product.updated_at);
+          lastActivity = `Last content generated · ${d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+        } else if (product.created_at) {
+          const d = new Date(product.created_at);
+          lastActivity = `Created · ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+        } else {
+          lastActivity = 'No activity yet';
+        }
+        productActivityEl.textContent = lastActivity;
+      }
+    } else {
+      if (productNameEl) productNameEl.textContent = 'No products';
+      if (productCategoryEl) productCategoryEl.textContent = '';
+      if (productActivityEl) productActivityEl.textContent = 'Add your first product';
+    }
   }
 
   setupEventListeners() {
