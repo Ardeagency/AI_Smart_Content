@@ -177,8 +177,8 @@ class BrandsView extends BaseView {
 
         // Brand Assets (archivos de identidad)
         const { data: assets, error: assetsError } = await this.supabase
-          .from('brand_assets')
-          .select('*')
+        .from('brand_assets')
+        .select('*')
           .eq('brand_container_id', container.id)
           .order('created_at', { ascending: false })
           .limit(5);
