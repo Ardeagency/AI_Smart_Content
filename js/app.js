@@ -95,26 +95,57 @@ class App {
       return;
     }
 
+    // Verificar que las vistas estén disponibles antes de registrar
+    const viewsAvailable = {
+      LandingView: typeof window.LandingView !== 'undefined',
+      BrandsView: typeof window.BrandsView !== 'undefined',
+      ProductsView: typeof window.ProductsView !== 'undefined',
+      CampaignsView: typeof window.CampaignsView !== 'undefined',
+      AudiencesView: typeof window.AudiencesView !== 'undefined',
+      CreateView: typeof window.CreateView !== 'undefined',
+      ContentView: typeof window.ContentView !== 'undefined',
+      SettingsView: typeof window.SettingsView !== 'undefined',
+      FormRecordView: typeof window.FormRecordView !== 'undefined',
+      HogarView: typeof window.HogarView !== 'undefined',
+      LivingView: typeof window.LivingView !== 'undefined',
+      StudioView: typeof window.StudioView !== 'undefined',
+      PlanesView: typeof window.PlanesView !== 'undefined'
+    };
+
+    const missingViews = Object.entries(viewsAvailable)
+      .filter(([_, available]) => !available)
+      .map(([name]) => name);
+    
+    if (missingViews.length > 0) {
+      console.warn('⚠️ Algunas vistas no están disponibles:', missingViews);
+    }
+
     // Rutas públicas
     // Las vistas se cargan desde los scripts en index.html
-    this.router.register('/', window.LandingView, {
-      requiresAuth: false,
-      redirectIfAuth: false
-    });
+    if (viewsAvailable.LandingView) {
+      this.router.register('/', window.LandingView, {
+        requiresAuth: false,
+        redirectIfAuth: false
+      });
+    }
 
     // Redirigir /login a la landing (el modal de login está en la landing)
-    this.router.register('/login', window.LandingView, {
-      requiresAuth: false,
-      redirectIfAuth: true // Si ya está autenticado, redirigir
-    });
+    if (viewsAvailable.LandingView) {
+      this.router.register('/login', window.LandingView, {
+        requiresAuth: false,
+        redirectIfAuth: true // Si ya está autenticado, redirigir
+      });
+    }
 
-    this.router.register('/planes', window.PlanesView, {
-      requiresAuth: false,
-      redirectIfAuth: false
-    });
+    if (viewsAvailable.PlanesView) {
+      this.router.register('/planes', window.PlanesView, {
+        requiresAuth: false,
+        redirectIfAuth: false
+      });
+    }
 
     // Rutas protegidas - Nueva estructura
-    if (window.BrandsView) {
+    if (viewsAvailable.BrandsView) {
       this.router.register('/brands', window.BrandsView, {
         requiresAuth: true,
         redirectIfAuth: false
@@ -125,99 +156,117 @@ class App {
         requiresAuth: true,
         redirectIfAuth: false
       });
-    } else {
-      console.error('❌ BrandsView no está disponible para registrar ruta /brands');
     }
 
-    this.router.register('/products', window.ProductsView, {
-      requiresAuth: true,
-      redirectIfAuth: false
-    });
+    if (viewsAvailable.ProductsView) {
+      this.router.register('/products', window.ProductsView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
 
-    // Rutas dinámicas de products (detalle)
-    this.router.register('/products/:productId', window.ProductsView, {
-      requiresAuth: true,
-      redirectIfAuth: false
-    });
+      // Rutas dinámicas de products (detalle)
+      this.router.register('/products/:productId', window.ProductsView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
 
-    this.router.register('/campaigns', window.CampaignsView, {
-      requiresAuth: true,
-      redirectIfAuth: false
-    });
+    if (viewsAvailable.CampaignsView) {
+      this.router.register('/campaigns', window.CampaignsView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
 
-    // Rutas dinámicas de campaigns (detalle)
-    this.router.register('/campaigns/:campaignId', window.CampaignsView, {
-      requiresAuth: true,
-      redirectIfAuth: false
-    });
+      // Rutas dinámicas de campaigns (detalle)
+      this.router.register('/campaigns/:campaignId', window.CampaignsView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
 
-    this.router.register('/audiences', window.AudiencesView, {
-      requiresAuth: true,
-      redirectIfAuth: false
-    });
+    if (viewsAvailable.AudiencesView) {
+      this.router.register('/audiences', window.AudiencesView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
 
-    // Rutas dinámicas de audiences (detalle)
-    this.router.register('/audiences/:audienceId', window.AudiencesView, {
-      requiresAuth: true,
-      redirectIfAuth: false
-    });
+      // Rutas dinámicas de audiences (detalle)
+      this.router.register('/audiences/:audienceId', window.AudiencesView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
 
-    this.router.register('/create', window.CreateView, {
-      requiresAuth: true,
-      redirectIfAuth: false
-    });
+    if (viewsAvailable.CreateView) {
+      this.router.register('/create', window.CreateView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
 
-    this.router.register('/create/guided', window.CreateView, {
-      requiresAuth: true,
-      redirectIfAuth: false
-    });
+      this.router.register('/create/guided', window.CreateView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
 
-    this.router.register('/create/pro', window.CreateView, {
-      requiresAuth: true,
-      redirectIfAuth: false
-    });
+      this.router.register('/create/pro', window.CreateView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
 
-    this.router.register('/create/templates', window.CreateView, {
-      requiresAuth: true,
-      redirectIfAuth: false
-    });
+      this.router.register('/create/templates', window.CreateView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
 
-    this.router.register('/content', window.ContentView, {
-      requiresAuth: true,
-      redirectIfAuth: false
-    });
+    if (viewsAvailable.ContentView) {
+      this.router.register('/content', window.ContentView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
 
-    // Rutas dinámicas de content (detalle)
-    this.router.register('/content/:contentId', window.ContentView, {
-      requiresAuth: true,
-      redirectIfAuth: false
-    });
+      // Rutas dinámicas de content (detalle)
+      this.router.register('/content/:contentId', window.ContentView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
 
-    this.router.register('/settings', window.SettingsView, {
-      requiresAuth: true,
-      redirectIfAuth: false
-    });
+    if (viewsAvailable.SettingsView) {
+      this.router.register('/settings', window.SettingsView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
 
     // Rutas legacy (mantener compatibilidad temporal)
-    this.router.register('/form-record', window.FormRecordView, {
-      requiresAuth: true,
-      redirectIfAuth: false
-    });
+    if (viewsAvailable.FormRecordView) {
+      this.router.register('/form-record', window.FormRecordView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
 
-    this.router.register('/hogar', window.HogarView, {
-      requiresAuth: true,
-      redirectIfAuth: false
-    });
+    if (viewsAvailable.HogarView) {
+      this.router.register('/hogar', window.HogarView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
 
-    this.router.register('/living', window.LivingView, {
-      requiresAuth: true,
-      redirectIfAuth: false
-    });
+    if (viewsAvailable.LivingView) {
+      this.router.register('/living', window.LivingView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
 
-    this.router.register('/studio', window.StudioView, {
-      requiresAuth: true,
-      redirectIfAuth: false
-    });
+    if (viewsAvailable.StudioView) {
+      this.router.register('/studio', window.StudioView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
 
     // Ruta 404
     const BaseView = window.BaseView || class {};
@@ -252,30 +301,13 @@ class App {
       }
     });
 
-    console.log('✅ Rutas registradas');
-    console.log('  Públicas:');
-    console.log('    - / (Landing)');
-    console.log('    - /login (Login)');
-    console.log('    - /planes (Planes)');
-    console.log('  Protegidas - Nueva Estructura:');
-    console.log('    - /brands (Marcas)');
-    console.log('    - /brands/:brandId (Detalle Marca)');
-    console.log('    - /products (Productos)');
-    console.log('    - /products/:productId (Detalle Producto)');
-    console.log('    - /campaigns (Campañas)');
-    console.log('    - /campaigns/:campaignId (Detalle Campaña)');
-    console.log('    - /audiences (Audiencias)');
-    console.log('    - /audiences/:audienceId (Detalle Audiencia)');
-    console.log('    - /create (Crear Contenido)');
-    console.log('    - /create/guided (Modo Guiado)');
-    console.log('    - /create/pro (Modo Experto)');
-    console.log('    - /create/templates (Plantillas)');
-    console.log('    - /content (Biblioteca)');
-    console.log('    - /content/:contentId (Detalle Contenido)');
-    console.log('    - /settings (Configuración)');
-    console.log('  Legacy (compatibilidad):');
-    console.log('    - /hogar, /living, /studio, /form-record');
-    console.log('  - /404 (Not Found)');
+    const registeredRoutes = Object.keys(this.router.routes);
+    console.log(`✅ Rutas registradas: ${registeredRoutes.length}`);
+    console.log('  Rutas:', registeredRoutes);
+    
+    if (missingViews.length > 0) {
+      console.warn(`⚠️ ${missingViews.length} vistas no disponibles, sus rutas no fueron registradas`);
+    }
   }
 
   /**

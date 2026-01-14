@@ -87,12 +87,12 @@ class SessionManager {
         return null;
       }
 
-      // Consultar user_profiles directamente
+      // Consultar user_profiles directamente (usar maybeSingle para evitar 400 si no existe)
       const { data, error } = await supabaseClient
         .from('user_profiles')
         .select('id, email, phone_number, email_verified')
         .eq('id', session.userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('checkUserStatus: Error de Supabase:', error);

@@ -765,12 +765,12 @@ body.sidebar-collapsed #app-container .main-header,
     top: 0;
     bottom: 0;
     width: 3px;
-    background: var(--accent-yellow);
+    background: #ffffff;
     border-radius: 0 2px 2px 0;
 }
 
 .nav-link.active .nav-icon {
-    color: var(--accent-yellow);
+    color: #ffffff;
 }
 
 .side-navigation.collapsed .nav-link.active::before {
@@ -793,9 +793,12 @@ body.sidebar-collapsed #app-container .main-header,
     -webkit-font-smoothing: antialiased;
 }
 
-.nav-link:hover .nav-icon,
-.nav-link.active .nav-icon {
+.nav-link:hover .nav-icon {
     color: var(--accent-yellow);
+}
+
+.nav-link.active .nav-icon {
+    color: #ffffff;
 }
 
 .nav-text {

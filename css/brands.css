@@ -71,6 +71,24 @@ body.sidebar-collapsed .brand-dashboard-container {
 }
 
 /* ============================================
+   WIDGETS ELIMINADOS - Forzar ocultación
+   ============================================ */
+.brand-corner-top-left,
+.brand-realtime-row,
+.brand-realtime-clock,
+.team-avatars-floating,
+[class*="asc:"],
+[class*="realtime"],
+[class*="real-time"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    position: absolute !important;
+    left: -9999px !important;
+}
+
+/* ============================================
    FOOTER - MARCA + INFO (esquina inferior)
    ============================================ */
 .brand-corner-bottom-left {
@@ -390,9 +408,6 @@ body.sidebar-collapsed .brand-dashboard-container {
     .brand-cards-zone {
         width: 340px;
     }
-    .team-avatars-floating {
-        right: calc(340px + 1.5rem);
-    }
     .brand-name-large {
         font-size: 2.5rem;
     }
@@ -401,9 +416,6 @@ body.sidebar-collapsed .brand-dashboard-container {
 @media (max-width: 900px) {
     .brand-cards-zone {
         width: 300px;
-    }
-    .team-avatars-floating {
-        display: none;
     }
     .brand-name-large {
         font-size: 2rem;
