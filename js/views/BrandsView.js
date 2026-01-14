@@ -15,9 +15,14 @@ class BrandsView extends BaseView {
     this.brandFiles = [];
     this.products = [];
     this.campaigns = [];
+    this.audiences = [];
+    this.brandColors = [];
+    this.aiVectors = [];
+    this.storageUsage = null;
     this.brandId = null; // Para vista de detalle
     this.eventListenersSetup = false;
     this.savingFields = new Set();
+    this.activeTab = 'perfil';
   }
 
   async onEnter() {
@@ -97,6 +102,10 @@ class BrandsView extends BaseView {
         await this.loadBrandFiles();
         await this.loadProducts();
         await this.loadCampaigns();
+        await this.loadAudiences();
+        await this.loadBrandColors();
+        await this.loadAIVectors();
+        await this.loadStorageUsage();
         
         // Inicializar CampaignsManager si está disponible
         if (window.CampaignsManager) {
@@ -109,12 +118,22 @@ class BrandsView extends BaseView {
         }
       }
       
-      // Renderizar todo
-      this.renderAll();
+      // Actualizar header con nombre de marca
+      if (this.brandContainerData) {
+        await this.updateHeader('Marcas', this.brandContainerData.nombre_marca);
+      } else {
+        await this.updateHeader('Marcas');
+      }
+
+      // Renderizar todo (nueva estructura de 4 capas)
+      this.renderBrandHeader();
+      this.renderControlPanel();
+      this.renderTabContent();
       
       // Configurar event listeners solo una vez
       if (!this.eventListenersSetup) {
         this.setupEventListeners();
+        this.setupInternalNavigation();
         this.setupEditableInputs();
         this.setupMultiselects();
         this.setupFileUpload();
@@ -262,12 +281,462 @@ class BrandsView extends BaseView {
     }
   }
 
-  renderAll() {
-    this.renderProfileCard();
-    this.renderBrandGuidelines();
+  // ============================================
+  // NUEVOS MÉTODOS PARA ESTRUCTURA DE 4 CAPAS
+  // ============================================
+
+  async loadAudiences() {
+    if (!this.supabase || !this.brandData?.id) return;
+
+    try {
+      const { data, error } = await this.supabase
+        .from('audiences')
+        .select('*')
+        .eq('brand_id', this.brandData.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      this.audiences = data || [];
+      console.log('✅ Audiencias cargadas:', this.audiences.length);
+    } catch (error) {
+      console.error('❌ Error cargando audiencias:', error);
+      this.audiences = [];
+    }
+  }
+
+  async loadBrandColors() {
+    if (!this.supabase || !this.brandData?.id) return;
+
+    try {
+      const { data, error } = await this.supabase
+        .from('brand_colors')
+        .select('*')
+        .eq('brand_id', this.brandData.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      this.brandColors = data || [];
+      console.log('✅ Colores cargados:', this.brandColors.length);
+    } catch (error) {
+      console.error('❌ Error cargando colores:', error);
+      this.brandColors = [];
+    }
+  }
+
+  async loadAIVectors() {
+    if (!this.supabase || !this.brandContainerId) return;
+
+    try {
+      const { data, error } = await this.supabase
+        .from('ai_brand_vectors')
+        .select('*')
+        .eq('brand_container_id', this.brandContainerId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      this.aiVectors = data || [];
+      console.log('✅ Vectores IA cargados:', this.aiVectors.length);
+    } catch (error) {
+      console.error('❌ Error cargando vectores IA:', error);
+      this.aiVectors = [];
+    }
+  }
+
+  async loadStorageUsage() {
+    if (!this.supabase || !this.brandContainerData?.organization_id) return;
+
+    try {
+      const { data, error } = await this.supabase
+        .from('storage_usage')
+        .select('*')
+        .eq('organization_id', this.brandContainerData.organization_id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      this.storageUsage = data;
+      console.log('✅ Storage usage cargado');
+    } catch (error) {
+      console.error('❌ Error cargando storage usage:', error);
+      this.storageUsage = null;
+    }
+  }
+
+  // A. HEADER DE MARCA
+  renderBrandHeader() {
+    if (!this.brandContainerData) return;
+
+    // Logo
+    const logoImg = document.getElementById('brandHeaderLogo');
+    const logoPlaceholder = document.getElementById('brandHeaderLogoPlaceholder');
+    
+    if (this.brandContainerData.logo_url) {
+      if (logoImg) {
+        logoImg.src = this.brandContainerData.logo_url + '?t=' + Date.now();
+        logoImg.style.display = 'block';
+      }
+      if (logoPlaceholder) {
+        logoPlaceholder.style.display = 'none';
+      }
+    } else {
+      if (logoImg) logoImg.style.display = 'none';
+      if (logoPlaceholder) logoPlaceholder.style.display = 'flex';
+    }
+
+    // Nombre
+    const brandName = document.getElementById('brandHeaderName');
+    if (brandName) {
+      brandName.textContent = this.brandContainerData.nombre_marca || 'Sin nombre de marca';
+    }
+
+    // Social links
+    const socialLinks = document.getElementById('brandHeaderSocialLinks');
+    if (socialLinks) {
+      socialLinks.innerHTML = '';
+      
+      if (this.brandContainerData.sitio_web) {
+        const webLink = document.createElement('a');
+        webLink.href = this.brandContainerData.sitio_web;
+        webLink.target = '_blank';
+        webLink.className = 'brand-social-link';
+        webLink.innerHTML = '<i class="fas fa-globe"></i>';
+        socialLinks.appendChild(webLink);
+      }
+      
+      if (this.brandContainerData.instagram_url) {
+        const igLink = document.createElement('a');
+        igLink.href = this.brandContainerData.instagram_url;
+        igLink.target = '_blank';
+        igLink.className = 'brand-social-link';
+        igLink.innerHTML = '<i class="fab fa-instagram"></i>';
+        socialLinks.appendChild(igLink);
+      }
+      
+      if (this.brandContainerData.facebook_url) {
+        const fbLink = document.createElement('a');
+        fbLink.href = this.brandContainerData.facebook_url;
+        fbLink.target = '_blank';
+        fbLink.className = 'brand-social-link';
+        fbLink.innerHTML = '<i class="fab fa-facebook"></i>';
+        socialLinks.appendChild(fbLink);
+      }
+    }
+
+    // Idiomas
+    const languagesValue = document.getElementById('brandHeaderLanguagesValue');
+    if (languagesValue) {
+      const idiomas = this.brandContainerData.idiomas_contenido || [];
+      languagesValue.textContent = idiomas.length > 0 ? idiomas.join(', ') : '-';
+    }
+
+    // Mercado
+    const marketValue = document.getElementById('brandHeaderMarketValue');
+    if (marketValue) {
+      const mercado = this.brandContainerData.mercado_objetivo || [];
+      marketValue.textContent = mercado.length > 0 ? mercado.join(', ') : '-';
+    }
+
+    // Estado (siempre activa por ahora)
+    const statusBadge = document.getElementById('brandHeaderStatusBadge');
+    if (statusBadge && this.brandData) {
+      statusBadge.style.display = 'inline-flex';
+    }
+  }
+
+  // B. PANEL DE CONTROL
+  renderControlPanel() {
+    // Identidad
+    const tonoVoz = document.getElementById('controlTonoVoz');
+    if (tonoVoz && this.brandData) {
+      tonoVoz.textContent = this.brandData.tono_voz || '-';
+    }
+
+    const personalidad = document.getElementById('controlPersonalidad');
+    if (personalidad && this.brandData) {
+      const pers = this.brandData.personalidad_marca;
+      personalidad.textContent = pers ? (pers.length > 30 ? pers.substring(0, 30) + '...' : pers) : '-';
+    }
+
+    const palabrasUsar = document.getElementById('controlPalabrasUsar');
+    if (palabrasUsar && this.brandData) {
+      palabrasUsar.textContent = this.brandData.palabras_usar || '-';
+    }
+
+    // Activos
+    const filesCount = document.getElementById('controlFilesCount');
+    if (filesCount) {
+      filesCount.textContent = this.brandFiles.length.toString();
+    }
+
+    const colorsCount = document.getElementById('controlColorsCount');
+    if (colorsCount) {
+      colorsCount.textContent = this.brandColors.length.toString();
+    }
+
+    const storageUsage = document.getElementById('controlStorageUsage');
+    if (storageUsage) {
+      if (this.storageUsage && this.storageUsage.bytes_used) {
+        storageUsage.textContent = this.formatFileSize(this.storageUsage.bytes_used);
+      } else {
+        storageUsage.textContent = '-';
+      }
+    }
+
+    // Operación
+    const productsCount = document.getElementById('controlProductsCount');
+    if (productsCount) {
+      productsCount.textContent = this.products.length.toString();
+    }
+
+    const campaignsCount = document.getElementById('controlCampaignsCount');
+    if (campaignsCount) {
+      campaignsCount.textContent = this.campaigns.length.toString();
+    }
+
+    const audiencesCount = document.getElementById('controlAudiencesCount');
+    if (audiencesCount) {
+      audiencesCount.textContent = this.audiences.length.toString();
+    }
+  }
+
+  // C. NAVEGACIÓN INTERNA
+  setupInternalNavigation() {
+    const tabs = document.querySelectorAll('.brand-nav-tab');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const tabName = tab.dataset.tab;
+        this.switchTab(tabName);
+      });
+    });
+  }
+
+  switchTab(tabName) {
+    this.activeTab = tabName;
+
+    // Actualizar tabs
+    document.querySelectorAll('.brand-nav-tab').forEach(tab => {
+      tab.classList.remove('active');
+      if (tab.dataset.tab === tabName) {
+        tab.classList.add('active');
+      }
+    });
+
+    // Actualizar contenido
+    document.querySelectorAll('.brand-tab-content').forEach(content => {
+      content.classList.remove('active');
+    });
+
+    const activeContent = document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`);
+    if (activeContent) {
+      activeContent.classList.add('active');
+    }
+
+    // Renderizar contenido específico del tab
+    this.renderTabContent();
+  }
+
+  // D. ÁREA DE TRABAJO
+  renderTabContent() {
+    switch (this.activeTab) {
+      case 'perfil':
+        this.renderPerfilTab();
+        break;
+      case 'colores':
+        this.renderColoresTab();
+        break;
+      case 'lineamientos':
+        this.renderLineamientosTab();
+        break;
+      case 'archivos':
+        this.renderArchivosTab();
+        break;
+      case 'productos':
+        this.renderProductosTab();
+        break;
+      case 'audiencias':
+        this.renderAudienciasTab();
+        break;
+      case 'campañas':
+        this.renderCampañasTab();
+        break;
+      case 'ia':
+        this.renderIATab();
+        break;
+    }
+  }
+
+  renderPerfilTab() {
+    // Ya está en el HTML, solo poblar datos
+    if (this.brandData) {
+      const quienesSomos = document.getElementById('quienesSomosInput');
+      if (quienesSomos) {
+        quienesSomos.value = this.brandData.quienes_somos || '';
+      }
+
+      const personalidad = document.getElementById('personalidadMarcaInput');
+      if (personalidad) {
+        personalidad.value = this.brandData.personalidad_marca || '';
+      }
+    }
+  }
+
+  renderColoresTab() {
+    const colorsGrid = document.getElementById('brandColorsGrid');
+    if (!colorsGrid) return;
+
+    if (!this.brandColors || this.brandColors.length === 0) {
+      colorsGrid.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-palette"></i>
+          <p>No hay colores definidos</p>
+          <button class="btn btn-primary" id="addColorBtn">Agregar color</button>
+        </div>
+      `;
+      return;
+    }
+
+    colorsGrid.innerHTML = this.brandColors.map(color => `
+      <div class="color-item">
+        <div class="color-preview" style="background-color: ${color.hex_value};"></div>
+        <div class="color-info">
+          <span class="color-role">${color.color_role}</span>
+          <span class="color-hex">${color.hex_value}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  renderLineamientosTab() {
+    // Ya está en el HTML, solo poblar datos
+    if (this.brandData) {
+      const tonoVoz = document.getElementById('tonoVozInput');
+      if (tonoVoz) {
+        tonoVoz.value = this.brandData.tono_voz || '';
+      }
+
+      const palabrasUsar = document.getElementById('palabrasUsarInput');
+      if (palabrasUsar) {
+        palabrasUsar.value = this.brandData.palabras_usar || '';
+      }
+    }
+  }
+
+  renderArchivosTab() {
     this.renderBrandFiles();
-    this.renderProducts();
-    this.renderCampaigns();
+  }
+
+  renderProductosTab() {
+    const productsList = document.getElementById('productsList');
+    if (!productsList) return;
+
+    if (!this.products || this.products.length === 0) {
+      productsList.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-box-open"></i>
+          <p>No hay productos registrados</p>
+          <a href="/products" class="btn btn-primary">Crear Producto</a>
+        </div>
+      `;
+      return;
+    }
+
+    productsList.innerHTML = this.products.map(product => `
+      <div class="product-card-horizontal">
+        <div class="product-image">
+          ${product.main_image?.image_url ? `<img src="${product.main_image.image_url}" alt="${product.nombre_producto}">` : '<i class="fas fa-box"></i>'}
+        </div>
+        <div class="product-info">
+          <h3>${product.nombre_producto || 'Sin nombre'}</h3>
+          <p>${product.descripcion_producto || 'Sin descripción'}</p>
+        </div>
+        <a href="/products/${product.id}" class="product-link">
+          <i class="fas fa-arrow-right"></i>
+        </a>
+      </div>
+    `).join('');
+  }
+
+  renderAudienciasTab() {
+    const audiencesList = document.getElementById('audiencesList');
+    if (!audiencesList) return;
+
+    if (!this.audiences || this.audiences.length === 0) {
+      audiencesList.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-users"></i>
+          <p>No hay audiencias creadas</p>
+          <a href="/audiences" class="btn btn-primary">Crear Audiencia</a>
+        </div>
+      `;
+      return;
+    }
+
+    audiencesList.innerHTML = this.audiences.map(audience => `
+      <div class="audience-card">
+        <h3>${audience.name || 'Sin nombre'}</h3>
+        <p>${audience.description || 'Sin descripción'}</p>
+        <a href="/audiences/${audience.id}" class="btn btn-secondary">Ver detalles</a>
+      </div>
+    `).join('');
+  }
+
+  renderCampañasTab() {
+    const campaignsList = document.getElementById('campaignsList');
+    if (!campaignsList) return;
+
+    if (!this.campaigns || this.campaigns.length === 0) {
+      campaignsList.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-megaphone"></i>
+          <p>No hay campañas creadas</p>
+          <a href="/campaigns" class="btn btn-primary">Crear Campaña</a>
+        </div>
+      `;
+      return;
+    }
+
+    campaignsList.innerHTML = this.campaigns.map(campaign => `
+      <div class="campaign-card">
+        <h3>${campaign.name || 'Sin nombre'}</h3>
+        <p>${campaign.description || 'Sin descripción'}</p>
+        <a href="/campaigns/${campaign.id}" class="btn btn-secondary">Ver detalles</a>
+      </div>
+    `).join('');
+  }
+
+  renderIATab() {
+    const trainingStatus = document.getElementById('aiTrainingStatus');
+    if (trainingStatus) {
+      trainingStatus.textContent = this.aiVectors.length > 0 ? 'Entrenado' : 'No entrenado';
+    }
+
+    const vectorsCount = document.getElementById('aiVectorsCount');
+    if (vectorsCount) {
+      vectorsCount.textContent = this.aiVectors.length.toString();
+    }
+
+    const lastUpdate = document.getElementById('aiLastUpdate');
+    if (lastUpdate) {
+      if (this.aiVectors.length > 0) {
+        const last = this.aiVectors[0].created_at;
+        lastUpdate.textContent = new Date(last).toLocaleDateString('es-ES');
+      } else {
+        lastUpdate.textContent = '-';
+      }
+    }
+
+    const sourcesCount = document.getElementById('aiSourcesCount');
+    if (sourcesCount) {
+      const uniqueSources = new Set(this.aiVectors.map(v => v.source_path)).size;
+      sourcesCount.textContent = uniqueSources.toString();
+    }
+  }
+
+  // Métodos legacy (mantener para compatibilidad)
+  renderAll() {
+    // Este método ya no se usa, pero lo mantenemos por compatibilidad
+    this.renderBrandHeader();
+    this.renderControlPanel();
+    this.renderTabContent();
   }
 
   renderProfileCard() {
@@ -402,10 +871,7 @@ class BrandsView extends BaseView {
       return;
     }
 
-    this.brandFiles.forEach(file => {
-      const fileItem = document.createElement('div');
-      fileItem.className = 'file-item';
-
+    filesListEl.innerHTML = this.brandFiles.map(file => {
       const fileExtension = file.file_name.split('.').pop().toLowerCase();
       const iconMap = {
         'pdf': 'fa-file-pdf',
@@ -418,24 +884,31 @@ class BrandsView extends BaseView {
       };
       const icon = iconMap[fileExtension] || 'fa-file';
 
-      fileItem.innerHTML = `
-        <div class="file-info">
-          <div class="file-icon">
-            <i class="fas ${icon}"></i>
+      return `
+        <div class="file-item">
+          <div class="file-info">
+            <div class="file-icon">
+              <i class="fas ${icon}"></i>
+            </div>
+            <div class="file-details">
+              <p class="file-name">${this.escapeHtml(file.file_name)}</p>
+              <span class="file-size">${this.formatFileSize(file.file_size)}</span>
+            </div>
           </div>
-          <div class="file-details">
-            <p class="file-name">${file.file_name}</p>
-            <span class="file-size">${this.formatFileSize(file.file_size)}</span>
-          </div>
+          <a href="${file.file_url}" target="_blank" class="file-link">
+            <i class="fas fa-external-link-alt"></i>
+            Ver
+          </a>
         </div>
-        <a href="${file.file_url}" target="_blank" class="file-link">
-          <i class="fas fa-external-link-alt"></i>
-          Ver
-        </a>
       `;
+    }).join('');
+  }
 
-      filesListEl.appendChild(fileItem);
-    });
+  escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 
   renderProducts() {
