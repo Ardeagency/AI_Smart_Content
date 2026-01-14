@@ -39,21 +39,21 @@ class BrandsView extends BaseView {
 
   async render() {
     await super.render();
-    // Asegurar que renderAll se ejecute después de que el template esté en el DOM
+    // Asegurar que renderAll se ejecute después de que el template esté completamente en el DOM
     if (this.isActive) {
-      // Pequeño delay para asegurar que el DOM esté listo
-      setTimeout(() => {
-        this.renderAll();
-      }, 50);
+      // Usar requestAnimationFrame para asegurar que el DOM esté listo
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          this.renderAll();
+        });
+      });
     }
   }
 
   async init() {
     await this.initSupabase();
     await this.loadData();
-    if (this.isActive) {
-      this.renderAll();
-    }
+    // No llamar renderAll aquí, se llamará desde render() después del DOM
   }
 
   async updateHeader() {
