@@ -55,7 +55,7 @@ class Navigation {
         <div class="nav-identity-section">
           <div class="nav-identity-card" id="navIdentityCard">
             <div class="nav-identity-content">
-              <div class="nav-logo-icon">
+              <div class="nav-logo-icon" id="navLogoIcon">
                 <i class="fas fa-brain"></i>
               </div>
               <div class="nav-identity-info">
@@ -641,16 +641,129 @@ class Navigation {
    * Cargar información de organización
    */
   async loadOrganizationInfo() {
-    // TODO: Implementar carga de información de organización desde Supabase
-    // Por ahora, usar valores por defecto
-    const navOrgName = document.getElementById('navOrgName');
-    const navOrgType = document.getElementById('navOrgType');
-    
-    if (navOrgName) {
-      navOrgName.textContent = 'Info Arde Agency';
-    }
-    if (navOrgType) {
-      navOrgType.textContent = 'Personal';
+    const supabase = await this.getSupabaseClient();
+    if (!supabase) return;
+
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) return;
+
+      // Obtener la organización activa del usuario
+      // Primero intentar obtener desde organization_members
+      const { data: orgMember, error: memberError } = await supabase
+        .from('organization_members')
+        .select(`
+          organization_id,
+          organizations (
+            id,
+            name
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      let organizationId = null;
+      let organizationName = null;
+
+      if (orgMember && orgMember.organizations) {
+        organizationId = orgMember.organizations.id;
+        organizationName = orgMember.organizations.name;
+      } else {
+        // Si no es miembro, buscar si es owner
+        const { data: ownedOrg, error: ownedError } = await supabase
+          .from('organizations')
+          .select('id, name')
+          .eq('owner_user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (ownedOrg) {
+          organizationId = ownedOrg.id;
+          organizationName = ownedOrg.name;
+        }
+      }
+
+      // Obtener el plan de la suscripción
+      let planName = 'Personal';
+      if (user.id) {
+        const { data: subscription, error: subError } = await supabase
+          .from('subscriptions')
+          .select('plan_type, status')
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (subscription && subscription.plan_type) {
+          // Convertir plan_type a formato legible
+          planName = subscription.plan_type.charAt(0).toUpperCase() + subscription.plan_type.slice(1);
+        }
+      }
+
+      // Obtener el logo de la marca desde brand_containers
+      let brandLogoUrl = null;
+      if (organizationId) {
+        const { data: brandContainer, error: brandError } = await supabase
+          .from('brand_containers')
+          .select('logo_url')
+          .eq('organization_id', organizationId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (brandContainer && brandContainer.logo_url) {
+          brandLogoUrl = brandContainer.logo_url;
+        }
+      } else {
+        // Si no hay organización, buscar por user_id
+        const { data: brandContainer, error: brandError } = await supabase
+          .from('brand_containers')
+          .select('logo_url')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (brandContainer && brandContainer.logo_url) {
+          brandLogoUrl = brandContainer.logo_url;
+        }
+      }
+
+      // Actualizar UI
+      const navOrgName = document.getElementById('navOrgName');
+      const navOrgType = document.getElementById('navOrgType');
+      const navLogoIcon = document.querySelector('.nav-logo-icon');
+
+      if (navOrgName) {
+        navOrgName.textContent = organizationName || 'Mi Organización';
+      }
+
+      if (navOrgType) {
+        navOrgType.textContent = planName;
+      }
+
+      // Actualizar logo
+      if (navLogoIcon && brandLogoUrl) {
+        // Reemplazar el ícono con la imagen del logo
+        navLogoIcon.innerHTML = `<img src="${brandLogoUrl}" alt="Logo" style="width: 100%; height: 100%; object-fit: contain; border-radius: 6px;">`;
+        navLogoIcon.style.background = 'transparent';
+      }
+    } catch (error) {
+      console.error('Error cargando información de organización:', error);
+      // Usar valores por defecto en caso de error
+      const navOrgName = document.getElementById('navOrgName');
+      const navOrgType = document.getElementById('navOrgType');
+      
+      if (navOrgName) {
+        navOrgName.textContent = 'Mi Organización';
+      }
+      if (navOrgType) {
+        navOrgType.textContent = 'Personal';
+      }
     }
   }
 
