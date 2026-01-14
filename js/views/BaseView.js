@@ -45,7 +45,18 @@ class BaseView {
     }
 
     try {
-      const response = await fetch(`templates/${this.templatePath}`);
+      // Verificar si se debe forzar recarga (cuando el caché fue limpiado)
+      const forceReload = window.router && window.router.templateCache && 
+                         !window.router.templateCache.has(this.templatePath);
+      
+      // Agregar timestamp para evitar caché del navegador/CDN si se fuerza recarga
+      const url = forceReload 
+        ? `templates/${this.templatePath}?t=${Date.now()}`
+        : `templates/${this.templatePath}`;
+      
+      const response = await fetch(url, {
+        cache: forceReload ? 'no-cache' : 'default'
+      });
       
       if (!response.ok) {
         throw new Error(`Error cargando template: ${response.status} ${response.statusText}`);

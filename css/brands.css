@@ -336,12 +336,12 @@ body.sidebar-collapsed .brand-dashboard-container {
 .card-info {
     min-height: 50px;
     padding: 1rem 1.25rem;
-    cursor: default !important;
-    transition: none !important;
+    cursor: pointer !important;
+    transition: background 0.2s ease !important;
 }
 
 .card-info:hover {
-    background: #15171c !important;
+    background: rgba(255, 255, 255, 0.03) !important;
 }
 
 .card-info .card-header {
@@ -648,5 +648,278 @@ body.sidebar-collapsed .brand-dashboard-container {
         position: relative;
         width: 100%;
         padding: 1rem;
+    }
+}
+
+/* ============================================
+   PANEL INFO EXPANDIDO
+   ============================================ */
+
+.info-panel-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.info-panel-overlay.active {
+    opacity: 1;
+}
+
+.info-panel {
+    background: #15171c;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: 
+        top 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+        right 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+        width 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+        height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+        border-radius 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: top, right, width, height;
+}
+
+.info-panel.expanded {
+    top: 5vh !important;
+    right: 2.5% !important;
+    width: 70% !important;
+    max-width: 1200px;
+    height: 90vh !important;
+    max-height: 900px;
+    border-radius: 20px;
+}
+
+.info-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+}
+
+.info-panel-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--brand-text-gold, #D4B896);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.info-panel-close {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: transparent;
+    color: var(--text-secondary, #A0A0A0);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+}
+
+.info-panel-close:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary, #F2F3F5);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.info-panel-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.info-panel-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.info-panel-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.info-panel-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+.info-panel-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Secciones del panel */
+.info-section {
+    margin-bottom: 3rem;
+}
+
+.info-section:last-child {
+    margin-bottom: 0;
+}
+
+.info-section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--brand-text-gold, #D4B896);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 0 0 1.5rem 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.info-section-content {
+    color: var(--text-primary, #F2F3F5);
+}
+
+/* Grid de identidad */
+.info-identity-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+}
+
+.info-identity-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.info-identity-label {
+    font-size: 0.75rem;
+    color: var(--text-muted, #6B7280);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 500;
+}
+
+.info-identity-value {
+    font-size: 0.875rem;
+    color: var(--text-primary, #F2F3F5);
+    line-height: 1.5;
+}
+
+.info-logo-preview {
+    max-width: 120px;
+    max-height: 80px;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.info-logo-placeholder {
+    width: 120px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted, #6B7280);
+    font-size: 1.5rem;
+}
+
+/* Campos de información */
+.info-field {
+    margin-bottom: 1.5rem;
+}
+
+.info-field:last-child {
+    margin-bottom: 0;
+}
+
+.info-field-label {
+    font-size: 0.75rem;
+    color: var(--text-muted, #6B7280);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.info-field-value {
+    font-size: 0.875rem;
+    color: var(--text-primary, #F2F3F5);
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.info-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.info-list li {
+    padding: 0.5rem 0;
+    padding-left: 1.5rem;
+    position: relative;
+    color: var(--text-primary, #F2F3F5);
+}
+
+.info-list li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: var(--brand-text-gold, #D4B896);
+    font-weight: bold;
+}
+
+.info-empty {
+    color: var(--text-muted, #6B7280);
+    font-size: 0.875rem;
+    font-style: italic;
+    margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .info-panel.expanded {
+        width: 85% !important;
+        right: 7.5% !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .info-panel.expanded {
+        width: 95% !important;
+        right: 2.5% !important;
+        height: 95vh !important;
+        max-height: none;
+        top: 2.5vh !important;
+        border-radius: 16px 16px 0 0;
+    }
+    
+    .info-panel-header {
+        padding: 1.25rem 1.5rem;
+    }
+    
+    .info-panel-content {
+        padding: 1.5rem;
+    }
+    
+    .info-identity-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
     }
 }

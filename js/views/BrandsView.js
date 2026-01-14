@@ -346,6 +346,9 @@ class BrandsView extends BaseView {
 
     // Archivos de identidad
     this.renderIdentityFiles();
+    
+    // Setup event listeners para INFO
+    this.setupEventListeners();
   }
 
 
@@ -514,13 +517,424 @@ class BrandsView extends BaseView {
   }
 
   setupEventListeners() {
-    const infoBtn = document.querySelector('.card-info');
+    const container = this.container || document.getElementById('app-container');
+    if (!container) return;
+    
+    const infoBtn = container.querySelector('.card-info');
     if (infoBtn) {
       infoBtn.style.cursor = 'pointer';
       infoBtn.addEventListener('click', () => {
-        console.log('INFO clicked');
+        this.openInfoPanel();
       });
     }
+  }
+
+  // ============================================
+  // PANEL INFO EXPANDIDO
+  // ============================================
+
+  openInfoPanel() {
+    const container = this.container || document.getElementById('app-container');
+    if (!container) return;
+    
+    // Obtener la card INFO y su posición
+    const infoCard = container.querySelector('.card-info');
+    if (!infoCard) return;
+    
+    const cardRect = infoCard.getBoundingClientRect();
+    
+    // Ocultar otras cards y widgets con animación
+    const cardsZone = container.querySelector('.brand-cards-zone');
+    const otherCards = cardsZone ? Array.from(cardsZone.querySelectorAll('.brand-card:not(.card-info)')) : [];
+    const cornerInfo = container.querySelector('.brand-corner-bottom-left');
+    
+    // Agregar clase para ocultar con animación
+    otherCards.forEach(card => {
+      card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(-20px)';
+    });
+    
+    if (cornerInfo) {
+      cornerInfo.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+      cornerInfo.style.opacity = '0';
+      cornerInfo.style.transform = 'translateY(20px)';
+    }
+    
+    // Ocultar la card INFO pero mantener su espacio inicialmente
+    infoCard.style.opacity = '0';
+    infoCard.style.pointerEvents = 'none';
+    
+    // Crear overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'info-panel-overlay';
+    overlay.id = 'infoPanelOverlay';
+    
+    // Crear panel principal - posicionarlo inicialmente donde está la card
+    const panel = document.createElement('div');
+    panel.className = 'info-panel';
+    panel.id = 'infoPanel';
+    
+    // Posición inicial: donde está la card INFO
+    panel.style.position = 'fixed';
+    panel.style.top = `${cardRect.top}px`;
+    panel.style.right = `${window.innerWidth - cardRect.right}px`;
+    panel.style.width = `${cardRect.width}px`;
+    panel.style.height = `${cardRect.height}px`;
+    panel.style.transformOrigin = 'top right';
+    
+    // Header del panel con botón cerrar
+    const header = document.createElement('div');
+    header.className = 'info-panel-header';
+    header.innerHTML = `
+      <h2 class="info-panel-title">INFO</h2>
+      <button class="info-panel-close" id="infoPanelClose" aria-label="Cerrar">
+        <i class="fas fa-times"></i>
+      </button>
+    `;
+    
+    // Contenido del panel con scroll
+    const content = document.createElement('div');
+    content.className = 'info-panel-content';
+    content.id = 'infoPanelContent';
+    
+    panel.appendChild(header);
+    panel.appendChild(content);
+    overlay.appendChild(panel);
+    
+    // Agregar al body
+    document.body.appendChild(overlay);
+    
+    // Renderizar contenido
+    this.renderInfoPanelContent(content);
+    
+    // Event listeners
+    const closeBtn = panel.querySelector('#infoPanelClose');
+    closeBtn.addEventListener('click', () => this.closeInfoPanel());
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        this.closeInfoPanel();
+      }
+    });
+    
+    // Animación de expansión
+    requestAnimationFrame(() => {
+      overlay.classList.add('active');
+      
+      // Pequeño delay para que el overlay aparezca primero
+      setTimeout(() => {
+        panel.classList.add('expanded');
+        
+        // Mostrar contenido después de que el panel se expanda
+        setTimeout(() => {
+          content.style.opacity = '1';
+        }, 200);
+      }, 50);
+    });
+    
+    // Inicialmente ocultar contenido
+    content.style.opacity = '0';
+    content.style.transition = 'opacity 0.3s ease';
+    
+    // Prevenir scroll del body
+    document.body.style.overflow = 'hidden';
+    
+    // Guardar referencias para restaurar al cerrar
+    this.infoPanelState = {
+      otherCards,
+      cornerInfo,
+      infoCard
+    };
+  }
+
+  closeInfoPanel() {
+    const overlay = document.getElementById('infoPanelOverlay');
+    if (!overlay) return;
+    
+    const panel = overlay.querySelector('.info-panel');
+    
+    // Revertir expansión del panel
+    if (panel) {
+      panel.classList.remove('expanded');
+    }
+    
+    // Esperar a que termine la animación de contracción
+    setTimeout(() => {
+      if (panel) {
+        panel.classList.remove('active');
+      }
+      overlay.classList.remove('active');
+      
+      // Restaurar otras cards y widgets
+      if (this.infoPanelState) {
+        const { otherCards, cornerInfo, infoCard } = this.infoPanelState;
+        
+        otherCards.forEach(card => {
+          card.style.transition = 'opacity 0.4s ease 0.1s, transform 0.4s ease 0.1s';
+          card.style.opacity = '1';
+          card.style.transform = 'translateY(0)';
+        });
+        
+        if (cornerInfo) {
+          cornerInfo.style.transition = 'opacity 0.4s ease 0.1s, transform 0.4s ease 0.1s';
+          cornerInfo.style.opacity = '1';
+          cornerInfo.style.transform = 'translateY(0)';
+        }
+        
+        if (infoCard) {
+          infoCard.style.transition = 'opacity 0.3s ease 0.2s';
+          infoCard.style.opacity = '1';
+          infoCard.style.pointerEvents = '';
+        }
+        
+        // Limpiar estilos después de la animación
+        setTimeout(() => {
+          otherCards.forEach(card => {
+            card.style.transition = '';
+            card.style.opacity = '';
+            card.style.transform = '';
+          });
+          
+          if (cornerInfo) {
+            cornerInfo.style.transition = '';
+            cornerInfo.style.opacity = '';
+            cornerInfo.style.transform = '';
+          }
+          
+          if (infoCard) {
+            infoCard.style.transition = '';
+            infoCard.style.opacity = '';
+          }
+          
+          this.infoPanelState = null;
+        }, 500);
+      }
+      
+      // Remover overlay después de la animación
+      setTimeout(() => {
+        if (overlay.parentNode) {
+          overlay.parentNode.removeChild(overlay);
+        }
+        document.body.style.overflow = '';
+      }, 400);
+    }, 50);
+  }
+
+  renderInfoPanelContent(container) {
+    if (!container) return;
+    
+    const brandContainer = this.brandContainerData;
+    const brand = this.brandData;
+    
+    // Agrupar reglas por tipo
+    const rulesByType = {};
+    (this.brandRules || []).forEach(rule => {
+      const type = rule.rule_type || 'other';
+      if (!rulesByType[type]) {
+        rulesByType[type] = [];
+      }
+      rulesByType[type].push(rule);
+    });
+    
+    container.innerHTML = `
+      <!-- IDENTIDAD -->
+      <section class="info-section">
+        <h3 class="info-section-title">Identidad</h3>
+        <div class="info-section-content">
+          <div class="info-identity-grid">
+            ${this.renderIdentitySection(brandContainer, brand)}
+          </div>
+        </div>
+      </section>
+
+      <!-- ESENCIA -->
+      <section class="info-section">
+        <h3 class="info-section-title">Esencia</h3>
+        <div class="info-section-content">
+          ${this.renderEssenceSection(brand)}
+        </div>
+      </section>
+
+      <!-- LENGUAJE -->
+      <section class="info-section">
+        <h3 class="info-section-title">Lenguaje</h3>
+        <div class="info-section-content">
+          ${this.renderLanguageSection(brand)}
+        </div>
+      </section>
+
+      <!-- REGLAS CREATIVAS -->
+      <section class="info-section">
+        <h3 class="info-section-title">Reglas Creativas</h3>
+        <div class="info-section-content">
+          ${this.renderCreativeRulesSection(brand, rulesByType)}
+        </div>
+      </section>
+    `;
+  }
+
+  renderIdentitySection(brandContainer, brand) {
+    const logoUrl = brandContainer?.logo_url;
+    const nombreMarca = brandContainer?.nombre_marca || 'Sin nombre';
+    const updatedAt = brandContainer?.updated_at 
+      ? new Date(brandContainer.updated_at).toLocaleDateString('es-ES', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        })
+      : 'No disponible';
+    
+    return `
+      <div class="info-identity-item">
+        <div class="info-identity-label">Logo</div>
+        <div class="info-identity-value">
+          ${logoUrl 
+            ? `<img src="${this.escapeHtml(logoUrl)}" alt="${this.escapeHtml(nombreMarca)}" class="info-logo-preview" onerror="this.style.display='none'">`
+            : '<div class="info-logo-placeholder"><i class="fas fa-image"></i></div>'
+          }
+        </div>
+      </div>
+      <div class="info-identity-item">
+        <div class="info-identity-label">Nombre</div>
+        <div class="info-identity-value">${this.escapeHtml(nombreMarca)}</div>
+      </div>
+      <div class="info-identity-item">
+        <div class="info-identity-label">Última actualización</div>
+        <div class="info-identity-value">${updatedAt}</div>
+      </div>
+    `;
+  }
+
+  renderEssenceSection(brand) {
+    if (!brand) {
+      return '<p class="info-empty">No hay información de esencia disponible.</p>';
+    }
+    
+    const quienesSomos = brand.quienes_somos || '';
+    const personalidad = brand.personalidad_marca || '';
+    const objetivos = brand.objetivos_marca || [];
+    
+    let html = '';
+    
+    if (quienesSomos) {
+      html += `
+        <div class="info-field">
+          <div class="info-field-label">Quiénes somos</div>
+          <div class="info-field-value">${this.escapeHtml(quienesSomos)}</div>
+        </div>
+      `;
+    }
+    
+    if (personalidad) {
+      html += `
+        <div class="info-field">
+          <div class="info-field-label">Personalidad</div>
+          <div class="info-field-value">${this.escapeHtml(personalidad)}</div>
+        </div>
+      `;
+    }
+    
+    if (objetivos && Array.isArray(objetivos) && objetivos.length > 0) {
+      html += `
+        <div class="info-field">
+          <div class="info-field-label">Objetivos</div>
+          <div class="info-field-value">
+            <ul class="info-list">
+              ${objetivos.map(obj => `<li>${this.escapeHtml(String(obj))}</li>`).join('')}
+            </ul>
+          </div>
+        </div>
+      `;
+    }
+    
+    return html || '<p class="info-empty">No hay información de esencia disponible.</p>';
+  }
+
+  renderLanguageSection(brand) {
+    if (!brand) {
+      return '<p class="info-empty">No hay información de lenguaje disponible.</p>';
+    }
+    
+    const tonoVoz = brand.tono_voz || '';
+    const palabrasUsar = brand.palabras_usar || '';
+    const palabrasEvitar = brand.palabras_evitar || [];
+    
+    let html = '';
+    
+    if (tonoVoz) {
+      html += `
+        <div class="info-field">
+          <div class="info-field-label">Tono de voz</div>
+          <div class="info-field-value">${this.escapeHtml(String(tonoVoz))}</div>
+        </div>
+      `;
+    }
+    
+    if (palabrasUsar) {
+      html += `
+        <div class="info-field">
+          <div class="info-field-label">Palabras a usar</div>
+          <div class="info-field-value">${this.escapeHtml(palabrasUsar)}</div>
+        </div>
+      `;
+    }
+    
+    if (palabrasEvitar && Array.isArray(palabrasEvitar) && palabrasEvitar.length > 0) {
+      html += `
+        <div class="info-field">
+          <div class="info-field-label">Palabras a evitar</div>
+          <div class="info-field-value">
+            <ul class="info-list">
+              ${palabrasEvitar.map(pal => `<li>${this.escapeHtml(String(pal))}</li>`).join('')}
+            </ul>
+          </div>
+        </div>
+      `;
+    }
+    
+    return html || '<p class="info-empty">No hay información de lenguaje disponible.</p>';
+  }
+
+  renderCreativeRulesSection(brand, rulesByType) {
+    const reglasCreativas = brand?.reglas_creativas || '';
+    const hasRules = Object.keys(rulesByType).length > 0 || reglasCreativas;
+    
+    if (!hasRules) {
+      return '<p class="info-empty">No hay reglas creativas definidas.</p>';
+    }
+    
+    let html = '';
+    
+    if (reglasCreativas) {
+      html += `
+        <div class="info-field">
+          <div class="info-field-label">Reglas generales</div>
+          <div class="info-field-value">${this.escapeHtml(reglasCreativas)}</div>
+        </div>
+      `;
+    }
+    
+    // Renderizar reglas desde brand_rules
+    Object.entries(rulesByType).forEach(([type, rules]) => {
+      if (type === 'typography') return; // Ya se muestra en Visual de marca
+      
+      rules.forEach(rule => {
+        const ruleValue = rule.rule_value || {};
+        const ruleName = ruleValue.name || ruleValue.title || type;
+        const ruleContent = ruleValue.content || ruleValue.description || ruleValue.value || '';
+        
+        if (ruleContent) {
+          html += `
+            <div class="info-field">
+              <div class="info-field-label">${this.escapeHtml(String(ruleName))}</div>
+              <div class="info-field-value">${this.escapeHtml(String(ruleContent))}</div>
+            </div>
+          `;
+        }
+      });
+    });
+    
+    return html || '<p class="info-empty">No hay reglas creativas definidas.</p>';
   }
 }
 
