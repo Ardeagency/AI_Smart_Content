@@ -33,7 +33,7 @@ class Navigation {
 
     // Cargar información del usuario si está autenticado
     await this.loadUserInfo();
-    
+
     // Cargar información de organización
     await this.loadOrganizationInfo();
 
@@ -64,7 +64,7 @@ class Navigation {
               </div>
               <button class="nav-org-chevron" id="navOrgChevron" aria-label="Cambiar organización">
                 <i class="fas fa-chevron-down"></i>
-              </button>
+          </button>
             </div>
           </div>
           

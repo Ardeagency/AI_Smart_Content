@@ -16,7 +16,6 @@ class BrandsView extends BaseView {
     this.organizationMembers = [];
     this.organizationCredits = { credits_available: 100 };
     this.creditUsage = [];
-    this.timezoneTimerId = null;
     this.isActive = false;
   }
 
@@ -25,7 +24,7 @@ class BrandsView extends BaseView {
     if (window.authService) {
       const isAuth = await window.authService.checkAccess(true);
       if (!isAuth && window.router) {
-        window.router.navigate('/login', true);
+          window.router.navigate('/login', true);
         return;
       }
     }
@@ -73,69 +72,145 @@ class BrandsView extends BaseView {
 
     try {
       // Brand container
-      const { data: container } = await this.supabase
+      const { data: container, error: containerError } = await this.supabase
         .from('brand_containers')
         .select('*')
         .eq('user_id', this.userId)
         .limit(1)
         .maybeSingle();
       
+      if (containerError) {
+        console.warn('⚠️ Error cargando brand container:', containerError);
+        return;
+      }
+      
       if (container) {
         this.brandContainerData = container;
         
         // Brand
-        const { data: brand } = await this.supabase
+        const { data: brand, error: brandError } = await this.supabase
           .from('brands')
           .select('*')
           .eq('project_id', container.id)
           .maybeSingle();
-        this.brandData = brand || null;
+        
+        if (brandError) {
+          console.warn('⚠️ Error cargando brand:', brandError);
+        } else {
+          this.brandData = brand || null;
+        }
 
         // Productos
-        const { data: products } = await this.supabase
+        const { data: products, error: productsError } = await this.supabase
           .from('products')
           .select('*')
           .eq('brand_container_id', container.id)
           .limit(5);
-        this.products = products || [];
+        
+        if (productsError) {
+          console.warn('⚠️ Error cargando productos:', productsError);
+          this.products = [];
+        } else {
+          this.products = products || [];
+        }
 
         // Colores y reglas
-        if (brand?.id) {
-          const [colors, rules] = await Promise.all([
-            this.supabase.from('brand_colors').select('*').eq('brand_id', brand.id),
-            this.supabase.from('brand_rules').select('*').eq('brand_id', brand.id)
+        if (this.brandData?.id) {
+          const [colorsResult, rulesResult] = await Promise.allSettled([
+            this.supabase.from('brand_colors').select('*').eq('brand_id', this.brandData.id),
+            this.supabase.from('brand_rules').select('*').eq('brand_id', this.brandData.id)
           ]);
-          this.brandColors = colors.data || [];
-          this.brandRules = rules.data || [];
+          
+          if (colorsResult.status === 'fulfilled' && !colorsResult.value.error) {
+            this.brandColors = colorsResult.value.data || [];
+          } else {
+            console.warn('⚠️ Error cargando colores:', colorsResult.reason || colorsResult.value?.error);
+            this.brandColors = [];
+          }
+          
+          if (rulesResult.status === 'fulfilled' && !rulesResult.value.error) {
+            this.brandRules = rulesResult.value.data || [];
+          } else {
+            console.warn('⚠️ Error cargando reglas:', rulesResult.reason || rulesResult.value?.error);
+            this.brandRules = [];
+          }
         }
 
         // Organización
         if (container.organization_id) {
-          const [members, credits, usage] = await Promise.all([
-            this.supabase
-              .from('organization_members')
-              .select('*, users(id, full_name, email)')
-              .eq('organization_id', container.organization_id)
-              .limit(5),
-            this.supabase
-              .from('organization_credits')
-              .select('*')
-              .eq('organization_id', container.organization_id)
-              .maybeSingle(),
-            this.supabase
-              .from('credit_usage')
-              .select('*')
-              .eq('organization_id', container.organization_id)
-              .limit(10)
-          ]);
-          
-          this.organizationMembers = members.data || [];
-          this.organizationCredits = credits.data || { credits_available: 100 };
-          this.creditUsage = usage.data || [];
+          try {
+            const [membersResult, creditsResult, usageResult] = await Promise.allSettled([
+              this.supabase
+                .from('organization_members')
+                .select('*, users(id, full_name, email)')
+                .eq('organization_id', container.organization_id)
+                .limit(5),
+              this.supabase
+                .from('organization_credits')
+                .select('*')
+                .eq('organization_id', container.organization_id)
+                .maybeSingle(),
+              this.supabase
+                .from('credit_usage')
+                .select('*')
+                .eq('organization_id', container.organization_id)
+                .limit(10)
+            ]);
+            
+            // Members
+            if (membersResult.status === 'fulfilled' && !membersResult.value.error) {
+              this.organizationMembers = membersResult.value.data || [];
+            } else {
+              const error = membersResult.status === 'rejected' ? membersResult.reason : membersResult.value?.error;
+              // Solo loggear si no es un error de permisos común
+              if (error && error.code !== 'PGRST301' && error.code !== '42501') {
+                console.warn('⚠️ Error cargando miembros:', error);
+              }
+              // Fallback sin join
+              try {
+                const { data: membersSimple } = await this.supabase
+                  .from('organization_members')
+                  .select('*')
+                  .eq('organization_id', container.organization_id)
+                  .limit(5);
+                this.organizationMembers = (membersSimple || []).map(m => ({ ...m, users: null }));
+              } catch (fallbackError) {
+                console.warn('⚠️ Error en fallback miembros:', fallbackError);
+                this.organizationMembers = [];
+              }
+            }
+            
+            // Credits
+            if (creditsResult.status === 'fulfilled' && !creditsResult.value.error) {
+              this.organizationCredits = creditsResult.value.data || { credits_available: 100 };
+            } else {
+              const error = creditsResult.status === 'rejected' ? creditsResult.reason : creditsResult.value?.error;
+              if (error && error.code !== 'PGRST116') {
+                console.warn('⚠️ Error cargando créditos:', error);
+              }
+              this.organizationCredits = { credits_available: 100 };
+            }
+            
+            // Usage
+            if (usageResult.status === 'fulfilled' && !usageResult.value.error) {
+              this.creditUsage = usageResult.value.data || [];
+            } else {
+              const error = usageResult.status === 'rejected' ? usageResult.reason : usageResult.value?.error;
+              if (error && error.code !== 'PGRST116') {
+                console.warn('⚠️ Error cargando uso:', error);
+              }
+              this.creditUsage = [];
+            }
+          } catch (error) {
+            console.warn('⚠️ Error en Promise.allSettled organización:', error);
+            this.organizationMembers = [];
+            this.organizationCredits = { credits_available: 100 };
+            this.creditUsage = [];
+          }
         }
       }
     } catch (error) {
-      console.error('Error cargando datos:', error);
+      console.error('❌ Error crítico cargando datos:', error);
     }
   }
 

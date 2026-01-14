@@ -51,11 +51,18 @@ class Router {
    * @param {boolean} options.redirectIfAuth - Si redirige si ya está autenticado
    */
   register(path, viewLoader, options = {}) {
+    if (!viewLoader) {
+      console.error(`❌ Intento de registrar ruta ${path} sin viewLoader`);
+      return;
+    }
+    
     this.routes[path] = {
       viewLoader,
       requiresAuth: options.requiresAuth || false,
       redirectIfAuth: options.redirectIfAuth || false
     };
+    
+    console.log(`✅ Ruta registrada: ${path}`);
   }
 
   /**
@@ -135,12 +142,18 @@ class Router {
 
       // Si aún no hay ruta, usar 404
       if (!route) {
-        console.warn(`⚠️ Ruta no encontrada: ${path}, usando 404`);
+        console.warn(`⚠️ Ruta no encontrada: ${path}`);
+        console.log('📋 Rutas disponibles:', Object.keys(this.routes));
         const route404 = this.routes['/404'];
         if (route404) {
           route = route404;
         } else {
           console.error(`❌ Ruta no encontrada y 404 no disponible: ${path}`);
+          // Intentar redirigir a landing si no hay 404
+          if (this.routes['/']) {
+            console.log('🔄 Redirigiendo a /');
+            this.navigate('/', true);
+          }
           return;
         }
       }

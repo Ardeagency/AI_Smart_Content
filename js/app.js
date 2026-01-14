@@ -114,16 +114,20 @@ class App {
     });
 
     // Rutas protegidas - Nueva estructura
-    this.router.register('/brands', window.BrandsView, {
-      requiresAuth: true,
-      redirectIfAuth: false
-    });
+    if (window.BrandsView) {
+      this.router.register('/brands', window.BrandsView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
 
-    // Rutas dinámicas de brands (detalle)
-    this.router.register('/brands/:brandId', window.BrandsView, {
-      requiresAuth: true,
-      redirectIfAuth: false
-    });
+      // Rutas dinámicas de brands (detalle)
+      this.router.register('/brands/:brandId', window.BrandsView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    } else {
+      console.error('❌ BrandsView no está disponible para registrar ruta /brands');
+    }
 
     this.router.register('/products', window.ProductsView, {
       requiresAuth: true,
