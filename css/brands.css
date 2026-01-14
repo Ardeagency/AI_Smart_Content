@@ -1,10 +1,10 @@
 /**
- * Brands Dashboard - Diseño Premium Inspirado en UAL
- * Fondo cálido + Cards oscuras + Layout preciso
+ * Brands Dashboard - Diseño Premium
+ * Fondo cálido + Cards con color del sistema
  */
 
 /* ============================================
-   VARIABLES DE COLOR
+   VARIABLES (usando colores del sistema)
    ============================================ */
 :root {
     /* Fondo cálido */
@@ -14,21 +14,14 @@
     --brand-warm-4: #8B4332;
     --brand-warm-5: #5C2D22;
     
-    /* Cards oscuras */
-    --brand-card-bg: #0D1117;
-    --brand-card-border: rgba(255, 255, 255, 0.08);
-    
-    /* Texto */
+    /* Texto sobre fondo cálido */
     --brand-text-light: #E8DDD4;
     --brand-text-gold: #D4B896;
     --brand-text-muted: rgba(232, 221, 212, 0.5);
-    
-    /* Acentos */
-    --brand-accent-red: #C44536;
 }
 
 /* ============================================
-   CONTENEDOR PRINCIPAL - FULLSCREEN
+   CONTENEDOR PRINCIPAL
    ============================================ */
 .brand-dashboard-container {
     position: fixed;
@@ -38,7 +31,7 @@
     bottom: 0;
     overflow: hidden;
     background: var(--brand-warm-4);
-    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: left 0.3s ease;
 }
 
 .side-navigation.collapsed ~ * .brand-dashboard-container,
@@ -53,7 +46,7 @@ body.sidebar-collapsed .brand-dashboard-container {
 }
 
 /* ============================================
-   FONDO CON GRADIENTE Y TEXTURA
+   FONDO CON GRADIENTE
    ============================================ */
 .brand-dashboard-background {
     position: absolute;
@@ -74,13 +67,13 @@ body.sidebar-collapsed .brand-dashboard-container {
 .background-texture {
     position: absolute;
     inset: 0;
-    opacity: 0.12;
+    opacity: 0.1;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
     mix-blend-mode: overlay;
 }
 
 /* ============================================
-   ESQUINA SUPERIOR IZQUIERDA: Logo
+   LOGO SUPERIOR IZQUIERDA
    ============================================ */
 .brand-corner-top-left {
     position: absolute;
@@ -99,17 +92,15 @@ body.sidebar-collapsed .brand-dashboard-container {
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--brand-text-light);
-    font-family: 'Inter', system-ui, sans-serif;
 }
 
 .brand-logo-subtitle {
     font-size: 0.7rem;
     color: var(--brand-text-muted);
-    letter-spacing: 0.02em;
 }
 
 /* ============================================
-   ESQUINA INFERIOR IZQUIERDA: Brand Info
+   FOOTER - MARCA + INFO (esquina inferior)
    ============================================ */
 .brand-corner-bottom-left {
     position: absolute;
@@ -118,91 +109,77 @@ body.sidebar-collapsed .brand-dashboard-container {
     z-index: 10;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.5rem;
 }
 
-/* Nombre de marca grande + links */
+/* Fila principal: MARCA + URLs */
 .brand-main-info {
     display: flex;
     align-items: center;
-    gap: 2rem;
+    gap: 1.5rem;
 }
 
 .brand-name-row {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
 }
 
 .brand-name-large {
-    font-size: 3.5rem;
+    font-size: 3rem;
     font-weight: 700;
     color: var(--brand-text-light);
     margin: 0;
     letter-spacing: -0.02em;
-    font-family: 'Inter', system-ui, sans-serif;
     line-height: 1;
 }
 
-.brand-status-indicator {
-    display: flex;
-    align-items: center;
-}
-
-.status-dot {
-    width: 10px;
-    height: 10px;
+.brand-status-indicator .status-dot {
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     background: #4ADE80;
     animation: pulse 2s ease-in-out infinite;
 }
 
 @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(0.85); }
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
 }
 
-/* Links sociales */
+/* Links al lado del nombre */
 .brand-links-row {
     display: flex;
-    align-items: center;
-    gap: 1rem;
+    gap: 0.75rem;
 }
 
 .brand-link {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--brand-text-muted);
     text-decoration: none;
-    transition: all 0.2s ease;
-    font-size: 1rem;
+    font-size: 0.875rem;
+    transition: color 0.2s;
 }
 
 .brand-link:hover {
     color: var(--brand-text-light);
-    transform: translateY(-2px);
 }
 
-.brand-link[href="#"],
-.brand-link:not([href]) {
-    display: none;
-}
-
-/* Mercado objetivo */
+/* Mercado objetivo debajo */
 .brand-market-row {
-    margin-top: -0.5rem;
+    margin-top: 0.25rem;
 }
 
 .market-label {
     font-size: 0.75rem;
     color: var(--brand-text-muted);
-    letter-spacing: 0.02em;
 }
 
-/* Zona de tiempo real */
+/* Zona de tiempo */
 .brand-realtime-row {
     display: flex;
     align-items: center;
@@ -211,8 +188,8 @@ body.sidebar-collapsed .brand-dashboard-container {
 }
 
 .realtime-icon {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     color: var(--brand-text-muted);
 }
 
@@ -225,30 +202,20 @@ body.sidebar-collapsed .brand-dashboard-container {
     display: flex;
     align-items: baseline;
     gap: 0.5rem;
-    font-family: 'SF Mono', 'Fira Code', monospace;
-}
-
-.realtime-times span:first-child {
-    font-size: 0.875rem;
+    font-family: 'SF Mono', monospace;
+    font-size: 0.75rem;
     color: var(--brand-text-muted);
-}
-
-.time-zone {
-    font-size: 0.625rem;
-    color: var(--brand-text-muted);
-    opacity: 0.7;
 }
 
 .realtime-label {
-    font-size: 2rem;
+    font-size: 1.75rem;
     font-weight: 500;
     color: var(--brand-text-light);
     letter-spacing: 0.05em;
-    margin-left: 1rem;
 }
 
 /* ============================================
-   ZONA DERECHA: Cards - ANCHO FIJO
+   CARDS - USANDO COLORES DEL SISTEMA
    ============================================ */
 .brand-cards-zone {
     position: absolute;
@@ -261,26 +228,23 @@ body.sidebar-collapsed .brand-dashboard-container {
     flex-direction: column;
     gap: 0.75rem;
     overflow-y: auto;
-    overflow-x: hidden;
+    scrollbar-width: none;
 }
 
-/* Scrollbar oculto pero funcional */
 .brand-cards-zone::-webkit-scrollbar {
     width: 0;
 }
 
-/* ============================================
-   CARDS BASE
-   ============================================ */
+/* Card base - COLOR OSCURO DEL SISTEMA */
 .brand-card {
-    background: var(--brand-card-bg);
+    background: var(--bg-primary, #0E0F12);
     border-radius: 16px;
     padding: 1.25rem;
     display: flex;
     flex-direction: column;
     position: relative;
     flex-shrink: 0;
-    border: 1px solid var(--brand-card-border);
+    border: 1px solid var(--border-divider, rgba(255,255,255,0.06));
 }
 
 /* Card Header */
@@ -299,43 +263,36 @@ body.sidebar-collapsed .brand-dashboard-container {
     text-transform: uppercase;
 }
 
-/* Flecha principal (card INFO) */
 .card-arrow {
     color: var(--brand-text-gold);
     font-size: 0.875rem;
     text-decoration: none;
-    transition: transform 0.2s ease;
+    transition: transform 0.2s;
 }
 
 .card-arrow:hover {
     transform: translateX(3px);
 }
 
-/* Flecha secundaria (debajo del título) */
 .card-arrow-sub {
     color: var(--brand-text-gold);
     font-size: 0.75rem;
     text-decoration: none;
     margin-top: 0.25rem;
     display: inline-block;
-    transition: transform 0.2s ease;
 }
 
-.card-arrow-sub:hover {
-    transform: translateX(3px);
-}
-
-/* Icono circular grid */
+/* Icono grid */
 .card-icon-circle {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
-    border: 1px solid var(--brand-card-border);
+    border: 1px solid var(--border-divider, rgba(255,255,255,0.1));
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--brand-text-muted);
-    padding: 6px;
+    color: var(--text-muted, #6B7280);
+    padding: 5px;
 }
 
 .card-icon-circle svg {
@@ -343,7 +300,7 @@ body.sidebar-collapsed .brand-dashboard-container {
     height: 100%;
 }
 
-/* Card Content */
+/* Card content */
 .card-content {
     flex: 1;
     display: flex;
@@ -351,10 +308,9 @@ body.sidebar-collapsed .brand-dashboard-container {
 }
 
 .card-spacer {
-    height: 2rem;
+    height: 1.5rem;
 }
 
-/* Current section */
 .card-current {
     display: flex;
     flex-direction: column;
@@ -363,7 +319,7 @@ body.sidebar-collapsed .brand-dashboard-container {
 
 .current-label {
     font-size: 0.625rem;
-    color: var(--brand-text-muted);
+    color: var(--text-muted, #6B7280);
     text-transform: uppercase;
     letter-spacing: 0.08em;
 }
@@ -371,11 +327,9 @@ body.sidebar-collapsed .brand-dashboard-container {
 .current-value {
     font-size: 0.875rem;
     font-weight: 600;
-    color: var(--brand-text-light);
-    letter-spacing: 0.02em;
+    color: var(--text-primary, #F2F3F5);
 }
 
-/* Stats */
 .card-stats {
     margin-top: 0.5rem;
     text-align: right;
@@ -383,10 +337,10 @@ body.sidebar-collapsed .brand-dashboard-container {
 
 .stats-value {
     font-size: 0.875rem;
-    color: var(--brand-text-muted);
+    color: var(--text-muted, #6B7280);
 }
 
-/* Progress */
+/* Progress bar */
 .card-progress {
     margin-top: 0.5rem;
     text-align: right;
@@ -394,13 +348,13 @@ body.sidebar-collapsed .brand-dashboard-container {
 
 .progress-time {
     font-size: 0.75rem;
-    color: var(--brand-text-muted);
+    color: var(--text-muted, #6B7280);
 }
 
 .progress-bar {
     width: 100%;
     height: 3px;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--bg-hover, #232733);
     border-radius: 2px;
     margin-top: 0.5rem;
     overflow: hidden;
@@ -408,13 +362,11 @@ body.sidebar-collapsed .brand-dashboard-container {
 
 .progress-bar-fill {
     height: 100%;
-    background: var(--brand-accent-red);
-    border-radius: 2px;
+    background: #C44536;
     width: 0%;
     transition: width 0.5s ease;
 }
 
-/* Card Footer */
 .card-footer {
     margin-top: 1rem;
     text-align: right;
@@ -422,17 +374,23 @@ body.sidebar-collapsed .brand-dashboard-container {
 
 .footer-text {
     font-size: 0.75rem;
-    color: var(--brand-text-muted);
+    color: var(--text-muted, #6B7280);
 }
 
 /* ============================================
-   CARDS ESPECÍFICAS - ALTURAS
+   CARDS ESPECÍFICAS
    ============================================ */
 
-/* INFO - Compacta */
+/* INFO - Solo botón */
 .card-info {
     min-height: 50px;
     padding: 1rem 1.25rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.card-info:hover {
+    background: var(--bg-secondary, #15171C);
 }
 
 .card-info .card-header {
@@ -441,23 +399,22 @@ body.sidebar-collapsed .brand-dashboard-container {
 
 /* CONCEPT LAB */
 .card-concept {
-    min-height: 180px;
+    min-height: 160px;
 }
 
 /* SCREENING ROOM */
 .card-screening {
-    min-height: 200px;
+    min-height: 180px;
 }
 
 /* EVENTS */
 .card-events {
-    min-height: 130px;
+    min-height: 120px;
 }
 
 .event-item {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
     margin-top: 1.5rem;
 }
 
@@ -470,30 +427,29 @@ body.sidebar-collapsed .brand-dashboard-container {
 .event-name {
     font-size: 0.875rem;
     font-weight: 500;
-    color: var(--brand-text-light);
+    color: var(--text-primary, #F2F3F5);
 }
 
 .event-desc {
     font-size: 0.75rem;
-    color: var(--brand-text-muted);
+    color: var(--text-muted, #6B7280);
 }
 
 .event-date {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 0.125rem;
 }
 
 .event-date-value {
     font-size: 0.875rem;
     font-weight: 500;
-    color: var(--brand-text-light);
+    color: var(--text-primary, #F2F3F5);
 }
 
 .event-time-value {
     font-size: 0.75rem;
-    color: var(--brand-text-muted);
+    color: var(--text-muted, #6B7280);
 }
 
 /* ============================================
@@ -502,7 +458,7 @@ body.sidebar-collapsed .brand-dashboard-container {
 .team-avatars-floating {
     position: absolute;
     top: 1.5rem;
-    right: calc(380px + 2rem);
+    right: calc(380px + 1.5rem);
     z-index: 10;
     display: flex;
     flex-direction: row-reverse;
@@ -512,14 +468,13 @@ body.sidebar-collapsed .brand-dashboard-container {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: var(--brand-card-bg);
+    background: var(--bg-primary, #0E0F12);
     border: 2px solid var(--brand-warm-4);
     display: flex;
     align-items: center;
     justify-content: center;
     margin-left: -8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
+    transition: transform 0.2s;
 }
 
 .team-avatar:first-child {
@@ -529,31 +484,29 @@ body.sidebar-collapsed .brand-dashboard-container {
 .team-avatar:hover {
     transform: scale(1.1);
     z-index: 11;
-    border-color: var(--brand-text-gold);
 }
 
 .team-avatar-initials {
     font-size: 0.625rem;
     font-weight: 600;
-    color: var(--brand-text-light);
+    color: var(--text-primary, #F2F3F5);
 }
 
 .team-avatar-more {
     font-size: 0.5rem;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--bg-secondary, #15171C);
 }
 
 .team-avatar-placeholder {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: var(--brand-card-bg);
+    background: var(--bg-primary, #0E0F12);
     border: 2px solid var(--brand-warm-4);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--brand-text-muted);
-    font-size: 0.875rem;
+    color: var(--text-muted, #6B7280);
 }
 
 /* ============================================
@@ -563,17 +516,11 @@ body.sidebar-collapsed .brand-dashboard-container {
     .brand-cards-zone {
         width: 340px;
     }
-    
     .team-avatars-floating {
-        right: calc(340px + 2rem);
+        right: calc(340px + 1.5rem);
     }
-    
     .brand-name-large {
         font-size: 2.5rem;
-    }
-    
-    .realtime-label {
-        font-size: 1.5rem;
     }
 }
 
@@ -581,21 +528,17 @@ body.sidebar-collapsed .brand-dashboard-container {
     .brand-cards-zone {
         width: 300px;
     }
-    
     .team-avatars-floating {
         display: none;
     }
-    
     .brand-name-large {
         font-size: 2rem;
     }
-    
     .brand-main-info {
         flex-direction: column;
         align-items: flex-start;
-        gap: 1rem;
+        gap: 0.75rem;
     }
-    
     .realtime-label {
         font-size: 1.25rem;
     }
@@ -605,36 +548,17 @@ body.sidebar-collapsed .brand-dashboard-container {
     .brand-dashboard-container {
         position: relative;
         top: 0;
-        left: 0;
         min-height: calc(100vh - 48px);
         overflow-y: auto;
     }
-    
     .brand-corner-top-left,
     .brand-corner-bottom-left {
         position: relative;
         padding: 1.5rem;
     }
-    
     .brand-cards-zone {
         position: relative;
         width: 100%;
         padding: 1rem;
-        top: auto;
-        right: auto;
-        bottom: auto;
     }
-    
-    .brand-name-large {
-        font-size: 1.75rem;
-    }
-}
-
-/* ============================================
-   OCULTAR ELEMENTOS LEGACY
-   ============================================ */
-.brand-identity-editable,
-.identity-toggle,
-.identity-fields {
-    display: none !important;
 }

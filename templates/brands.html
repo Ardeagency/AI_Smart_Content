@@ -1,136 +1,103 @@
-<!-- Vista de Marca - Diseño Premium Inspirado en UAL -->
+<!-- Brands Dashboard - Diseño Premium -->
 <div class="brand-dashboard-container" id="brandsListContainer">
     
-    <!-- FONDO GRADIENTE CÁLIDO -->
+    <!-- Fondo -->
     <div class="brand-dashboard-background">
         <div class="background-gradient"></div>
         <div class="background-texture"></div>
     </div>
     
-    <!-- ESQUINA SUPERIOR IZQUIERDA: Logo del sistema -->
+    <!-- Logo superior izquierda -->
     <div class="brand-corner-top-left">
         <div class="brand-logo-container">
-            <span class="brand-logo-text" id="brandLogoText">asc:</span>
-            <span class="brand-logo-subtitle" id="brandLogoSubtitle">ai smart content</span>
+            <span class="brand-logo-text">asc:</span>
+            <span class="brand-logo-subtitle">ai smart content</span>
         </div>
     </div>
     
-    <!-- ESQUINA INFERIOR IZQUIERDA: Nombre de marca + Info -->
+    <!-- Footer: MARCA + URLs + Mercado -->
     <div class="brand-corner-bottom-left">
+        <!-- MARCA grande + lista de URLs al lado -->
         <div class="brand-main-info">
-            <!-- Nombre de marca grande -->
             <div class="brand-name-row">
                 <h1 class="brand-name-large" id="brandNameLarge">BRAND</h1>
-                <div class="brand-status-indicator">
-                    <span class="status-dot"></span>
-                </div>
+                <div class="brand-status-indicator"><span class="status-dot"></span></div>
             </div>
-            
-            <!-- Links sociales al lado -->
             <div class="brand-links-row">
-                <a href="#" class="brand-link" id="linkWebsite" target="_blank" title="Website">
-                    <i class="fas fa-globe"></i>
-                </a>
-                <a href="#" class="brand-link" id="linkInstagram" target="_blank" title="Instagram">
-                    <i class="fab fa-instagram"></i>
-                </a>
-                <a href="#" class="brand-link" id="linkTikTok" target="_blank" title="TikTok">
-                    <i class="fab fa-tiktok"></i>
-                </a>
-                <a href="#" class="brand-link" id="linkFacebook" target="_blank" title="Facebook">
-                    <i class="fab fa-facebook"></i>
-                </a>
+                <a href="#" class="brand-link" id="linkWebsite" target="_blank"><i class="fas fa-globe"></i></a>
+                <a href="#" class="brand-link" id="linkInstagram" target="_blank"><i class="fab fa-instagram"></i></a>
+                <a href="#" class="brand-link" id="linkTikTok" target="_blank"><i class="fab fa-tiktok"></i></a>
+                <a href="#" class="brand-link" id="linkFacebook" target="_blank"><i class="fab fa-facebook"></i></a>
             </div>
         </div>
-        
-        <!-- Mercado objetivo pequeño -->
+        <!-- Mercado objetivo debajo -->
         <div class="brand-market-row">
-            <span class="market-label" id="brandMarketLabel">Target Market</span>
+            <span class="market-label" id="brandMarketLabel"></span>
         </div>
-        
-        <!-- Zona de tiempo -->
+        <!-- Tiempo real -->
         <div class="brand-realtime-row">
             <div class="realtime-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <circle cx="12" cy="12" r="10"/>
-                    <path d="M12 6v6l4 2"/>
+                    <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
                 </svg>
             </div>
             <div class="realtime-times">
                 <span id="timeLocal">00:00</span>
-                <span class="time-zone" id="timeZone">UTC</span>
+                <span id="timeZone">UTC</span>
             </div>
             <div class="realtime-label">REAL:TIME</div>
         </div>
     </div>
     
-    <!-- ZONA DERECHA: Cards de Control -->
+    <!-- Cards a la derecha -->
     <div class="brand-cards-zone">
         
-        <!-- CARD 1 — INFO -->
+        <!-- INFO - Solo botón expandir -->
         <div class="brand-card card-info">
             <div class="card-header">
                 <h2 class="card-title">INFO</h2>
-                <a href="/brands/guidelines" class="card-arrow">
-                    <i class="fas fa-arrow-right"></i>
-                </a>
+                <span class="card-arrow"><i class="fas fa-arrow-right"></i></span>
             </div>
         </div>
         
-        <!-- CARD 2 — CONCEPT LAB -->
+        <!-- CONCEPT LAB -->
         <div class="brand-card card-concept">
             <div class="card-header">
                 <h2 class="card-title">CONCEPT LAB</h2>
                 <div class="card-icon-circle">
                     <svg viewBox="0 0 24 24" fill="currentColor">
-                        <circle cx="6" cy="6" r="1.5"/>
-                        <circle cx="12" cy="6" r="1.5"/>
-                        <circle cx="18" cy="6" r="1.5"/>
-                        <circle cx="6" cy="12" r="1.5"/>
-                        <circle cx="12" cy="12" r="1.5"/>
-                        <circle cx="18" cy="12" r="1.5"/>
-                        <circle cx="6" cy="18" r="1.5"/>
-                        <circle cx="12" cy="18" r="1.5"/>
-                        <circle cx="18" cy="18" r="1.5"/>
+                        <circle cx="6" cy="6" r="1.5"/><circle cx="12" cy="6" r="1.5"/><circle cx="18" cy="6" r="1.5"/>
+                        <circle cx="6" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/>
+                        <circle cx="6" cy="18" r="1.5"/><circle cx="12" cy="18" r="1.5"/><circle cx="18" cy="18" r="1.5"/>
                     </svg>
                 </div>
             </div>
-            <a href="/brands/visual" class="card-arrow-sub">
-                <i class="fas fa-arrow-right"></i>
-            </a>
+            <a href="/brands/visual" class="card-arrow-sub"><i class="fas fa-arrow-right"></i></a>
             <div class="card-content">
                 <div class="card-spacer"></div>
                 <div class="card-current">
                     <span class="current-label">Current</span>
                     <span class="current-value" id="conceptCurrentValue">BRAND GUIDELINES</span>
                 </div>
-                <div class="card-stats" id="conceptStats">
+                <div class="card-stats">
                     <span class="stats-value" id="conceptStatsValue">0 Projects</span>
                 </div>
             </div>
         </div>
         
-        <!-- CARD 3 — SCREENING ROOM -->
+        <!-- SCREENING ROOM -->
         <div class="brand-card card-screening">
             <div class="card-header">
                 <h2 class="card-title">SCREENING ROOM</h2>
                 <div class="card-icon-circle">
                     <svg viewBox="0 0 24 24" fill="currentColor">
-                        <circle cx="6" cy="6" r="1.5"/>
-                        <circle cx="12" cy="6" r="1.5"/>
-                        <circle cx="18" cy="6" r="1.5"/>
-                        <circle cx="6" cy="12" r="1.5"/>
-                        <circle cx="12" cy="12" r="1.5"/>
-                        <circle cx="18" cy="12" r="1.5"/>
-                        <circle cx="6" cy="18" r="1.5"/>
-                        <circle cx="12" cy="18" r="1.5"/>
-                        <circle cx="18" cy="18" r="1.5"/>
+                        <circle cx="6" cy="6" r="1.5"/><circle cx="12" cy="6" r="1.5"/><circle cx="18" cy="6" r="1.5"/>
+                        <circle cx="6" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/>
+                        <circle cx="6" cy="18" r="1.5"/><circle cx="12" cy="18" r="1.5"/><circle cx="18" cy="18" r="1.5"/>
                     </svg>
                 </div>
             </div>
-            <a href="/brands/tokens" class="card-arrow-sub">
-                <i class="fas fa-arrow-right"></i>
-            </a>
+            <a href="/library" class="card-arrow-sub"><i class="fas fa-arrow-right"></i></a>
             <div class="card-content">
                 <div class="card-spacer"></div>
                 <div class="card-current">
@@ -149,32 +116,24 @@
             </div>
         </div>
         
-        <!-- CARD 4 — EVENTS -->
+        <!-- EVENTS -->
         <div class="brand-card card-events">
             <div class="card-header">
                 <h2 class="card-title">EVENTS</h2>
                 <div class="card-icon-circle">
                     <svg viewBox="0 0 24 24" fill="currentColor">
-                        <circle cx="6" cy="6" r="1.5"/>
-                        <circle cx="12" cy="6" r="1.5"/>
-                        <circle cx="18" cy="6" r="1.5"/>
-                        <circle cx="6" cy="12" r="1.5"/>
-                        <circle cx="12" cy="12" r="1.5"/>
-                        <circle cx="18" cy="12" r="1.5"/>
-                        <circle cx="6" cy="18" r="1.5"/>
-                        <circle cx="12" cy="18" r="1.5"/>
-                        <circle cx="18" cy="18" r="1.5"/>
+                        <circle cx="6" cy="6" r="1.5"/><circle cx="12" cy="6" r="1.5"/><circle cx="18" cy="6" r="1.5"/>
+                        <circle cx="6" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/>
+                        <circle cx="6" cy="18" r="1.5"/><circle cx="12" cy="18" r="1.5"/><circle cx="18" cy="18" r="1.5"/>
                     </svg>
                 </div>
             </div>
-            <a href="/products" class="card-arrow-sub">
-                <i class="fas fa-arrow-right"></i>
-            </a>
+            <a href="/products" class="card-arrow-sub"><i class="fas fa-arrow-right"></i></a>
             <div class="card-content">
                 <div class="event-item">
                     <div class="event-info">
-                        <span class="event-name" id="eventName1">Product Launch</span>
-                        <span class="event-desc" id="eventDesc1">Featured Product</span>
+                        <span class="event-name" id="eventName1">Product</span>
+                        <span class="event-desc" id="eventDesc1">Featured</span>
                     </div>
                     <div class="event-date">
                         <span class="event-date-value" id="eventDate1">-</span>
@@ -186,17 +145,7 @@
         
     </div>
     
-    <!-- Avatares del equipo (flotante) -->
-    <div class="team-avatars-floating" id="teamAvatars">
-        <!-- Se llena dinámicamente -->
-    </div>
+    <!-- Equipo flotante -->
+    <div class="team-avatars-floating" id="teamAvatars"></div>
     
 </div>
-
-<!-- Campos ocultos para edición -->
-<input type="hidden" id="brandNameInput" data-field="nombre_marca">
-<input type="hidden" id="brandWebsiteInput" data-field="sitio_web">
-<input type="hidden" id="brandInstagramInput" data-field="instagram_url">
-<input type="hidden" id="brandTikTokInput" data-field="tiktok_url">
-<input type="hidden" id="brandFacebookInput" data-field="facebook_url">
-<input type="hidden" id="brandMarketInput" data-field="mercado_objetivo">

@@ -25,12 +25,11 @@
     top: 0 !important;
     left: var(--nav-width, 280px);
     right: 0;
-    background: var(--bg-secondary) !important;
-    border-bottom: 1px solid var(--border-color);
+    background: transparent !important;
+    border-bottom: none;
     padding: 8px 16px;
     z-index: 1000 !important;
-    /* backdrop-filter removido para mejor rendimiento */
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: none;
     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     height: 48px;
     min-height: 48px;
@@ -54,7 +53,7 @@ body.sidebar-collapsed .main-header,
     position: fixed !important;
     top: 0 !important;
     left: var(--nav-width, 280px);
-    background: var(--bg-secondary) !important;
+    background: transparent !important;
     z-index: 1000 !important;
     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
