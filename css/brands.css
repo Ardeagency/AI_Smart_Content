@@ -186,29 +186,16 @@ body.sidebar-collapsed .brand-dashboard-container {
 
 /* Card base - COLOR #15171c */
 .brand-card {
-    background: #15171c;
+    background: #15171c !important;
     border-radius: 16px;
     padding: 1.25rem;
     display: flex;
     flex-direction: column;
     position: relative;
     flex-shrink: 0;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-/* ============================================
-   OVERRIDES (evitar conflictos con studio.css)
-   Cards en Brands: sólido, sin hover/cursor, borde sutil
-   ============================================ */
-.brand-dashboard-container .brand-card {
-    background: #15171c !important; /* sólido */
-    border: 1px solid rgba(255, 255, 255, 0.08) !important; /* apenas notorio */
-    cursor: default !important; /* sin efecto de cursor */
-    transition: none !important; /* sin animaciones hover */
-}
-
-.brand-dashboard-container .brand-card:hover {
-    background: #15171c !important; /* sin cambio al hover */
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    cursor: default !important;
+    transition: none !important;
 }
 
 /* Card Header */
@@ -231,11 +218,11 @@ body.sidebar-collapsed .brand-dashboard-container {
     color: var(--brand-text-gold);
     font-size: 0.875rem;
     text-decoration: none;
-    transition: none;
+    transition: transform 0.2s;
 }
 
 .card-arrow:hover {
-    transform: none;
+    transform: translateX(3px);
 }
 
 .card-arrow-sub {
@@ -348,12 +335,9 @@ body.sidebar-collapsed .brand-dashboard-container {
 /* INFO - Solo botón */
 .card-info {
     min-height: 50px;
-    /* Quitar spacing/borde solo en INFO (pedido) */
-    padding: 0 !important;
-    margin: 0 !important;
-    border: 0 !important;
+    padding: 1rem 1.25rem;
     cursor: default !important;
-    transition: background 0.2s;
+    transition: none !important;
 }
 
 .card-info:hover {
@@ -362,6 +346,13 @@ body.sidebar-collapsed .brand-dashboard-container {
 
 .card-info .card-header {
     align-items: center;
+}
+
+/* INFO: quitar padding/border/margin inferior del div interno (card-header) */
+#brandsListContainer > div.brand-cards-zone > div.brand-card.card-info > div {
+    padding: 0 !important;
+    border: 0 !important;
+    margin-bottom: 0 !important;
 }
 
 /* CONCEPT LAB */
