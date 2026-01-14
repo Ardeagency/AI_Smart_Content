@@ -40,8 +40,7 @@ class BrandsView extends BaseView {
     }
   }
 
-  async render() {
-    await super.render();
+  async init() {
     await this.initSupabase();
     
     // Verificar si hay brandId en los parámetros de ruta o en la URL
@@ -57,6 +56,18 @@ class BrandsView extends BaseView {
       } else {
         await this.renderBrandsList();
       }
+    }
+  }
+
+  async updateHeader() {
+    // Llamar al método base primero para actualizar usuario
+    await super.updateHeader();
+    
+    // Luego actualizar contexto con datos de marca
+    if (this.brandContainerData) {
+      this.updateHeaderContext('Marcas', this.brandContainerData.nombre_marca);
+    } else {
+      this.updateHeaderContext('Marcas');
     }
   }
 
@@ -82,10 +93,18 @@ class BrandsView extends BaseView {
   }
 
   async renderBrandsList() {
-    console.log('Renderizando lista de marcas...');
+    console.log('🎨 Renderizando lista de marcas...');
+    
+    // Verificar que el contenedor existe
+    const container = document.getElementById('brandsListContainer');
+    if (!container) {
+      console.error('❌ Contenedor brandsListContainer no encontrado en el DOM');
+      return;
+    }
+    console.log('✅ Contenedor encontrado');
     
     if (!this.supabase || !this.userId) {
-      console.error('❌ Supabase o userId no disponible');
+      console.error('❌ Supabase o userId no disponible', { supabase: !!this.supabase, userId: !!this.userId });
       return;
     }
 
@@ -118,17 +137,15 @@ class BrandsView extends BaseView {
         }
       }
       
-      // Actualizar header con nombre de marca
-      if (this.brandContainerData) {
-        await this.updateHeader('Marcas', this.brandContainerData.nombre_marca);
-      } else {
-        await this.updateHeader('Marcas');
-      }
-
       // Renderizar todo (nueva estructura de 4 capas)
+      console.log('🎨 Renderizando estructura de 4 capas...');
       this.renderBrandHeader();
+      console.log('✅ Header de marca renderizado');
       this.renderControlPanel();
+      console.log('✅ Panel de control renderizado');
       this.renderTabContent();
+      console.log('✅ Área de trabajo renderizada');
+      console.log('✅ Vista de marca completamente renderizada');
       
       // Configurar event listeners solo una vez
       if (!this.eventListenersSetup) {
@@ -1329,15 +1346,17 @@ class BrandsView extends BaseView {
   }
 
   async renderBrandDetail() {
-    // TODO: Implementar vista de detalle con tabs
+    // Para la nueva estructura, el detalle se maneja con tabs
+    // Por ahora, cargar los datos y mostrar la vista principal
     console.log('Renderizando detalle de marca:', this.brandId);
     
-    // Ocultar lista y mostrar detalle
-    const listContainer = document.getElementById('brandsListContainer');
-    const detailContainer = document.getElementById('brandDetailContainer');
+    // Cargar datos del brand específico si es necesario
+    await this.renderBrandsList();
     
-    if (listContainer) listContainer.style.display = 'none';
-    if (detailContainer) detailContainer.style.display = 'block';
+    // Actualizar header con nombre de marca específica
+    if (this.brandContainerData) {
+      this.updateHeaderContext('Marcas', this.brandContainerData.nombre_marca);
+    }
   }
 }
 
