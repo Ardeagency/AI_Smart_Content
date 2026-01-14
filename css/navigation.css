@@ -22,7 +22,7 @@
 .main-header {
     position: fixed;
     top: 0;
-    left: var(--nav-width);
+    left: var(--nav-width, 250px);
     right: 0;
     background: rgba(10, 10, 10, 0.95);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -36,9 +36,22 @@
     align-items: center;
 }
 
-.side-navigation.collapsed ~ .main-content .main-header,
-body.sidebar-collapsed .main-header {
-    left: var(--nav-width-collapsed);
+/* Cuando el sidebar está colapsado */
+.side-navigation.collapsed ~ * .main-header,
+body.sidebar-collapsed .main-header,
+#app-container .main-header {
+    left: var(--nav-width-collapsed, 60px);
+}
+
+/* Asegurar que el header dentro de app-container también respete el sidebar */
+#app-container .main-header {
+    left: var(--nav-width, 250px);
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body.sidebar-collapsed #app-container .main-header,
+.side-navigation.collapsed ~ #app-container .main-header {
+    left: var(--nav-width-collapsed, 60px);
 }
 
 .header-content {
