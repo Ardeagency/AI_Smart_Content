@@ -37,6 +37,17 @@ class BrandsView extends BaseView {
     this.isActive = false;
   }
 
+  async render() {
+    await super.render();
+    // Asegurar que renderAll se ejecute después de que el template esté en el DOM
+    if (this.isActive) {
+      // Pequeño delay para asegurar que el DOM esté listo
+      setTimeout(() => {
+        this.renderAll();
+      }, 50);
+    }
+  }
+
   async init() {
     await this.initSupabase();
     await this.loadData();
@@ -309,18 +320,21 @@ class BrandsView extends BaseView {
 
   renderBrandColors() {
     const container = document.getElementById('brandColorSwatches');
-    if (!container) return;
+    if (!container) {
+      console.warn('⚠️ brandColorSwatches container no encontrado');
+      return;
+    }
     
     const colors = (this.brandColors || []).slice(0, 6); // Máx 6 colores
     
     if (colors.length === 0) {
-      container.innerHTML = '<div style="color: var(--text-muted, #6B7280); font-size: 0.75rem;">No colors defined</div>';
+      container.innerHTML = '<div style="color: var(--text-muted, #6B7280); font-size: 0.75rem; padding: 0.5rem 0;">No colors defined</div>';
       return;
     }
     
     container.innerHTML = colors.map(color => {
-      const hex = color.hex_code || color.color_value || '#000000';
-      const role = color.role || color.color_role || 'Color';
+      const hex = color.hex_code || color.color_value || color.hex || '#000000';
+      const role = color.role || color.color_role || color.name || 'Color';
       
       return `
         <div class="color-swatch" style="background: ${hex};">
@@ -370,14 +384,18 @@ class BrandsView extends BaseView {
 
   renderVisualStatus() {
     const container = document.getElementById('visualStatus');
-    if (!container) return;
+    if (!container) {
+      console.warn('⚠️ visualStatus container no encontrado');
+      return;
+    }
     
     const colorCount = (this.brandColors || []).length;
     const hasTypography = (this.brandRules || []).some(rule => 
       rule.rule_type === 'typography' || 
       rule.category === 'typography' ||
       rule.rule_name?.toLowerCase().includes('font') ||
-      rule.rule_name?.toLowerCase().includes('tipografia')
+      rule.rule_name?.toLowerCase().includes('tipografia') ||
+      rule.type === 'typography'
     );
     const fontCount = hasTypography ? 1 : 0;
     
