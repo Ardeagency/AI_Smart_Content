@@ -13,6 +13,7 @@ class BrandsView extends BaseView {
     this.products = [];
     this.brandColors = [];
     this.brandRules = [];
+    this.brandAssets = [];
     this.organizationMembers = [];
     this.organizationCredits = { credits_available: 100 };
     this.creditUsage = [];
@@ -84,7 +85,7 @@ class BrandsView extends BaseView {
             console.log('¿Tiene brandColorSwatches?', hasBrandColorSwatches);
           }
           this.renderAll();
-        } else {
+    } else {
           // Si no existen, esperar un poco más y reintentar
           setTimeout(() => tryRender(attempt + 1), 100);
         }
@@ -149,8 +150,8 @@ class BrandsView extends BaseView {
         
         // Brand
         const { data: brand, error: brandError } = await this.supabase
-          .from('brands')
-          .select('*')
+        .from('brands')
+        .select('*')
           .eq('project_id', container.id)
           .maybeSingle();
         
@@ -172,6 +173,21 @@ class BrandsView extends BaseView {
           this.products = [];
         } else {
           this.products = products || [];
+        }
+
+        // Brand Assets (archivos de identidad)
+        const { data: assets, error: assetsError } = await this.supabase
+          .from('brand_assets')
+          .select('*')
+          .eq('brand_container_id', container.id)
+          .order('created_at', { ascending: false })
+          .limit(5);
+        
+        if (assetsError) {
+          console.warn('⚠️ Error cargando brand assets:', assetsError);
+          this.brandAssets = [];
+        } else {
+          this.brandAssets = assets || [];
         }
 
         // Colores y reglas
@@ -230,7 +246,7 @@ class BrandsView extends BaseView {
               try {
                 const { data: membersSimple } = await this.supabase
                   .from('organization_members')
-                  .select('*')
+        .select('*')
                   .eq('organization_id', container.organization_id)
                   .limit(5);
                 this.organizationMembers = (membersSimple || []).map(m => ({ ...m, users: null }));
@@ -328,11 +344,8 @@ class BrandsView extends BaseView {
     // Visual de marca - Status
     this.renderVisualStatus();
 
-    // Production Usage
-    this.renderProductionUsage();
-
-    // Featured Products
-    this.renderFeaturedProducts();
+    // Archivos de identidad
+    this.renderIdentityFiles();
   }
 
 
@@ -359,7 +372,7 @@ class BrandsView extends BaseView {
       container.innerHTML = '<div style="color: var(--text-muted, #6B7280); font-size: 0.75rem; padding: 0.5rem 0;">No colors defined</div>';
       return;
     }
-    
+
     container.innerHTML = colors.map(color => {
       // Según schema: brand_colors tiene hex_value y color_role
       const hex = color.hex_value || color.hex_code || color.color_value || color.hex || '#000000';
@@ -402,7 +415,7 @@ class BrandsView extends BaseView {
       `;
       return;
     }
-    
+
     // Extraer información de tipografía
     const fontName = typographyRule.font_family || typographyRule.value || 'Inter';
     const fontWeight = typographyRule.font_weight || '400';
@@ -412,7 +425,7 @@ class BrandsView extends BaseView {
       <div class="typography-samples">
         <div class="typography-sample heading" style="font-family: '${fontName}', sans-serif; font-weight: ${fontWeight === '400' ? '600' : fontWeight};">Heading</div>
         <div class="typography-sample body" style="font-family: '${fontName}', sans-serif; font-weight: ${fontWeight};">Body</div>
-      </div>
+        </div>
     `;
   }
 
@@ -424,7 +437,7 @@ class BrandsView extends BaseView {
       console.warn('⚠️ visualStatus container no encontrado');
       return;
     }
-    
+
     const colorCount = (this.brandColors || []).length;
     // Según schema: buscar rule_type === 'typography'
     const hasTypography = (this.brandRules || []).some(rule => 
@@ -436,109 +449,68 @@ class BrandsView extends BaseView {
     container.innerHTML = `
       <div class="visual-status-synced">
         ${colorCount} Colors • ${fontCount} Font • Synced
-      </div>
+        </div>
     `;
   }
 
-  renderProductionUsage() {
-    // Estado actual
-    const currentEl = (this.container && this.container.querySelector('#productionCurrentValue')) || 
-                      document.getElementById('productionCurrentValue');
-    if (currentEl) {
-      currentEl.textContent = 'Content Production';
+  renderIdentityFiles() {
+    const container = (this.container && this.container.querySelector('#identityFilesContainer')) || 
+                      document.getElementById('identityFilesContainer');
+    if (!container) {
+      console.warn('⚠️ identityFilesContainer no encontrado');
+      return;
     }
 
-    // Tokens
-    const total = this.organizationCredits?.credits_available || this.organizationCredits?.credits_total || 2000;
-    const used = (this.creditUsage || []).reduce((s, u) => s + (u.credits_used || 0), 0);
-    const pct = total > 0 ? Math.min((used / total) * 100, 100) : 0;
+    const assets = (this.brandAssets || []).slice(0, 3); // Máx 3 archivos
     
-    const tokensTextEl = (this.container && this.container.querySelector('#tokensText')) || 
-                        document.getElementById('tokensText');
-    const tokensBarEl = (this.container && this.container.querySelector('#tokensBarFill')) || 
-                        document.getElementById('tokensBarFill');
-    
-    if (tokensTextEl) {
-      tokensTextEl.textContent = `${used} / ${total} tokens`;
-    }
-    if (tokensBarEl) {
-      tokensBarEl.style.width = `${pct}%`;
+    if (assets.length === 0) {
+      container.innerHTML = `
+        <div class="identity-file-empty">
+          <div class="identity-file-empty-text">No files uploaded</div>
+          <div class="identity-file-empty-hint">Upload brand identity files</div>
+        </div>
+      `;
+      return;
     }
 
-    // Ritmo: outputs hoy y esta semana
-    const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const weekStart = new Date(todayStart);
-    weekStart.setDate(weekStart.getDate() - 7);
+    container.innerHTML = assets.map(asset => {
+      const fileName = asset.file_name || 'File';
+      const fileType = asset.file_type || asset.asset_type || 'file';
+      const fileUrl = asset.file_url || '#';
+      const uploadDate = asset.created_at ? new Date(asset.created_at) : null;
+      
+      // Icono según tipo de archivo
+      let icon = 'fa-file';
+      if (fileType.includes('image') || fileType.includes('logo')) {
+        icon = 'fa-image';
+      } else if (fileType.includes('pdf')) {
+        icon = 'fa-file-pdf';
+      } else if (fileType.includes('vector')) {
+        icon = 'fa-file-image';
+      }
 
-    const outputsToday = (this.creditUsage || []).filter(u => {
-      if (!u.created_at) return false;
-      const usageDate = new Date(u.created_at);
-      return usageDate >= todayStart && u.operation_type && u.operation_type.includes('content');
-    }).length;
+      const dateText = uploadDate 
+        ? `Uploaded · ${uploadDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+        : '';
 
-    const outputsWeek = (this.creditUsage || []).filter(u => {
-      if (!u.created_at) return false;
-      const usageDate = new Date(u.created_at);
-      return usageDate >= weekStart && u.operation_type && u.operation_type.includes('content');
-    }).length;
-
-    const rhythmTodayEl = (this.container && this.container.querySelector('#rhythmToday')) || 
-                          document.getElementById('rhythmToday');
-    const rhythmWeekEl = (this.container && this.container.querySelector('#rhythmWeek')) || 
-                         document.getElementById('rhythmWeek');
-    
-    if (rhythmTodayEl) {
-      rhythmTodayEl.textContent = `${outputsToday} outputs today`;
-    }
-    if (rhythmWeekEl) {
-      rhythmWeekEl.textContent = `${outputsWeek} this week`;
-    }
+      return `
+        <div class="identity-file-item">
+          <div class="identity-file-icon">
+            <i class="fas ${icon}"></i>
+          </div>
+          <div class="identity-file-info">
+            <div class="identity-file-name">${this.escapeHtml(fileName)}</div>
+            ${dateText ? `<div class="identity-file-date">${dateText}</div>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
   }
 
-  renderFeaturedProducts() {
-    const product = this.products?.[0];
-    
-    const productNameEl = (this.container && this.container.querySelector('#featuredProductName')) || 
-                          document.getElementById('featuredProductName');
-    const productCategoryEl = (this.container && this.container.querySelector('#featuredProductCategory')) || 
-                              document.getElementById('featuredProductCategory');
-    const productActivityEl = (this.container && this.container.querySelector('#featuredProductActivity')) || 
-                             document.getElementById('featuredProductActivity');
-    
-    if (product) {
-      // Nombre del producto
-      if (productNameEl) {
-        productNameEl.textContent = product.nombre_producto || 'Product';
-      }
-      
-      // Categoría (tipo de producto)
-      if (productCategoryEl) {
-        const tipo = product.tipo_producto || '';
-        productCategoryEl.textContent = tipo ? tipo.charAt(0).toUpperCase() + tipo.slice(1) : '';
-        productCategoryEl.style.display = tipo ? 'block' : 'none';
-      }
-      
-      // Última actividad (última generación de contenido relacionada)
-      if (productActivityEl) {
-        // Buscar última actividad relacionada en credit_usage o usar created_at del producto
-        let lastActivity = '';
-        if (product.updated_at) {
-          const d = new Date(product.updated_at);
-          lastActivity = `Last content generated · ${d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
-        } else if (product.created_at) {
-          const d = new Date(product.created_at);
-          lastActivity = `Created · ${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
-        } else {
-          lastActivity = 'No activity yet';
-        }
-        productActivityEl.textContent = lastActivity;
-      }
-    } else {
-      if (productNameEl) productNameEl.textContent = 'No products';
-      if (productCategoryEl) productCategoryEl.textContent = '';
-      if (productActivityEl) productActivityEl.textContent = 'Add your first product';
-    }
+  escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 
   setupEventListeners() {
