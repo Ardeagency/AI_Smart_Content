@@ -41,10 +41,27 @@ class BrandsView extends BaseView {
     await super.render();
     // Asegurar que renderAll se ejecute después de que el template esté completamente en el DOM
     if (this.isActive) {
+      // Función para verificar y renderizar
+      const tryRender = (attempt = 0) => {
+        // Verificar que los contenedores críticos existan
+        const hasContainers = 
+          document.getElementById('brandColorSwatches') &&
+          document.getElementById('typographyPreview') &&
+          document.getElementById('visualStatus');
+        
+        if (hasContainers || attempt >= 5) {
+          // Si los contenedores existen o hemos intentado 5 veces, renderizar
+          this.renderAll();
+        } else {
+          // Si no existen, esperar un poco más y reintentar
+          setTimeout(() => tryRender(attempt + 1), 100);
+        }
+      };
+      
       // Usar requestAnimationFrame para asegurar que el DOM esté listo
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          this.renderAll();
+          tryRender();
         });
       });
     }
@@ -321,7 +338,11 @@ class BrandsView extends BaseView {
   renderBrandColors() {
     const container = document.getElementById('brandColorSwatches');
     if (!container) {
-      console.warn('⚠️ brandColorSwatches container no encontrado');
+      console.warn('⚠️ brandColorSwatches container no encontrado. Verificando DOM...');
+      // Debug: verificar qué hay en el container
+      if (this.container) {
+        console.log('Container HTML:', this.container.innerHTML.substring(0, 500));
+      }
       return;
     }
     
