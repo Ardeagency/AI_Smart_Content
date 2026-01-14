@@ -6,7 +6,7 @@
     margin: 0 auto;
     margin-left: var(--nav-width, 250px);
     transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background: #0E1012;
+    background: var(--bg-primary);
     padding-top: calc(48px + 2rem);
 }
 
@@ -43,10 +43,10 @@ body.sidebar-collapsed .create-container {
 .create-mode-selector {
     display: flex;
     gap: 0.5rem;
-    background: #121416;
+    background: var(--bg-secondary);
     padding: 0.25rem;
     border-radius: 8px;
-    border: 1px solid #1B1D1F;
+    border: 1px solid var(--border-color);
 }
 
 .mode-btn {
@@ -145,23 +145,24 @@ body.sidebar-collapsed .create-container {
 }
 
 .template-card {
-    background: #121416;
+    background: var(--bg-card);
     padding: 2rem;
     border-radius: 12px;
-    border: 1px solid #1B1D1F;
+    border: 1px solid var(--border-color);
     cursor: pointer;
     transition: all 0.3s ease;
     text-align: center;
 }
 
 .template-card:hover {
-    border-color: var(--accent-warm, #e09145);
-    transform: translateY(-4px);
+    border-color: var(--accent-yellow);
+    background: var(--bg-hover);
+    transform: translateY(-2px);
 }
 
 .template-card i {
     font-size: 3rem;
-    color: var(--accent-warm, #e09145);
+    color: var(--accent-yellow);
     margin-bottom: 1rem;
 }
 

@@ -8,7 +8,7 @@
 
 /* Variables específicas de login */
 :root {
-    --bg-primary: var(--bg-dark);
+    --bg-primary: var(--bg-primary);
 }
 
 body {
@@ -29,8 +29,8 @@ body::before {
     right: 0;
     bottom: 0;
     background: 
-        linear-gradient(135deg, rgba(236, 235, 218, 0.05) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(236, 235, 218, 0.1) 0%, transparent 50%);
+        linear-gradient(135deg, rgba(216, 255, 0, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(216, 255, 0, 0.05) 0%, transparent 50%);
     pointer-events: none;
     z-index: 0;
 }
@@ -60,14 +60,14 @@ body::before {
 
 /* Tarjeta de autenticación */
 .auth-card {
-    background: rgba(42, 42, 42, 0.95);
+    background: var(--bg-card);
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid var(--border-color);
     border-radius: 16px;
     padding: 40px;
     width: 100%;
     max-width: 450px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-floating);
     position: relative;
     overflow: hidden;
     animation: fadeInScale 1s ease-out 0.2s both;
@@ -80,7 +80,7 @@ body::before {
     left: 0;
     right: 0;
     height: 2px;
-    background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+    background: linear-gradient(90deg, transparent, var(--accent-yellow), transparent);
     animation: shimmer 2s infinite;
 }
 
@@ -147,8 +147,8 @@ body::before {
 
 .input-container input:focus,
 .input-container select:focus {
-    border-color: #E09145;
-    box-shadow: 0 0 0 2px rgba(224, 145, 69, 0.1);
+    border-color: var(--accent-yellow);
+    box-shadow: 0 0 0 2px var(--accent-yellow-glow);
     outline: none;
 }
 
@@ -262,13 +262,13 @@ body::before {
 }
 
 .checkbox-container:hover input ~ .checkmark {
-    background: rgba(42, 42, 42, 0.9);
-    border-color: var(--primary-color);
+    background: var(--bg-hover);
+    border-color: var(--accent-yellow);
 }
 
 .checkbox-container input:checked ~ .checkmark {
-    background: var(--primary-color);
-    border-color: var(--primary-color);
+    background: var(--accent-yellow);
+    border-color: var(--accent-yellow);
 }
 
 .checkmark:after {
@@ -291,7 +291,7 @@ body::before {
 /* Enlaces */
 .forgot-password,
 .link {
-    color: var(--primary-color);
+    color: var(--accent-yellow);
     text-decoration: none;
     font-size: 0.9rem;
     transition: color 0.3s ease;
@@ -299,7 +299,7 @@ body::before {
 
 .forgot-password:hover,
 .link:hover {
-    color: var(--primary-light);
+    color: var(--accent-yellow-hover);
     text-decoration: underline;
 }
 
@@ -307,10 +307,10 @@ body::before {
 .auth-button {
     width: 100%;
     padding: 12px;
-    background: #E09145;
+    background: var(--accent-yellow);
     border: none;
     border-radius: 8px;
-    color: white;
+    color: var(--bg-primary);
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
@@ -321,9 +321,9 @@ body::before {
 }
 
 .auth-button:hover {
-    background: #c87d3a;
+    background: var(--accent-yellow-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(224, 145, 69, 0.3);
+    box-shadow: var(--shadow-yellow);
 }
 
 .auth-button:active {
@@ -407,7 +407,7 @@ body::before {
 }
 
 .social-button.google i {
-    color: #E09145;
+    color: var(--accent-yellow);
     font-size: 1.1rem;
 }
 
@@ -420,14 +420,14 @@ body::before {
 }
 
 .register-link a {
-    color: #E09145;
+    color: var(--accent-yellow);
     text-decoration: none;
     font-weight: 500;
     transition: color 0.3s ease;
 }
 
 .register-link a:hover {
-    color: #c87d3a;
+    color: var(--accent-yellow-hover);
     text-decoration: underline;
 }
 

@@ -176,13 +176,19 @@ body.sidebar-collapsed .living-container {
 
 /* Cards */
 .living-card {
-    background: #181a1b;
+    background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: 16px;
     padding: 1.5rem;
     height: 100%;
     display: flex;
     flex-direction: column;
+    transition: var(--transition);
+}
+
+.living-card:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-light);
 }
 
 /* Card de Archivos de Marca - Altura reducida */
@@ -204,8 +210,8 @@ body.sidebar-collapsed .living-container {
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
-    background: var(--primary-color);
-    color: var(--bg-black);
+    background: var(--accent-yellow);
+    color: var(--bg-primary);
     border-radius: 6px;
     cursor: pointer;
     font-size: 0.85rem;
@@ -215,9 +221,9 @@ body.sidebar-collapsed .living-container {
 }
 
 .file-upload-header-btn:hover {
-    background: var(--primary-hover);
+    background: var(--accent-yellow-hover);
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(236, 235, 218, 0.3);
+    box-shadow: var(--shadow-yellow);
 }
 
 .file-upload-header-btn i {
@@ -466,9 +472,9 @@ body.sidebar-collapsed .living-container {
 .editable-input:focus,
 .editable-select:focus,
 .editable-textarea:focus {
-    border-color: var(--primary-color);
-    background: rgba(236, 235, 218, 0.05);
-    box-shadow: 0 0 0 3px rgba(236, 235, 218, 0.1);
+    border-color: var(--accent-yellow);
+    background: var(--bg-hover);
+    box-shadow: 0 0 0 3px var(--accent-yellow-glow);
 }
 
 .editable-input::placeholder,
@@ -608,8 +614,8 @@ body.sidebar-collapsed .living-container {
 }
 
 .multiselect-tag {
-    background: rgba(236, 235, 218, 0.2);
-    color: var(--primary-color);
+    background: rgba(216, 255, 0, 0.15);
+    color: var(--accent-yellow);
     padding: 0.2rem 0.5rem;
     border-radius: 4px;
     font-size: 0.75rem;
@@ -689,10 +695,10 @@ body.sidebar-collapsed .living-container {
     padding: 0.6rem 1rem;
     font-weight: 600;
     font-size: 0.75rem;
-    color: var(--primary-color);
+    color: var(--accent-yellow);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    background: rgba(236, 235, 218, 0.05);
+    background: rgba(216, 255, 0, 0.05);
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -848,9 +854,9 @@ body.sidebar-collapsed .living-container {
 }
 
 .product-card-horizontal:hover {
-    border-color: var(--primary-color);
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(236, 235, 218, 0.15);
+    border-color: var(--accent-yellow);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
     z-index: 10;
 }
 
@@ -908,10 +914,10 @@ body.sidebar-collapsed .living-container {
 .product-card-type-badge {
     display: inline-block;
     padding: 0.35rem 0.75rem;
-    background: rgba(236, 235, 218, 0.1);
-    border: 1px solid var(--primary-color);
+    background: rgba(216, 255, 0, 0.1);
+    border: 1px solid var(--accent-yellow);
     border-radius: 6px;
-    color: var(--primary-color);
+    color: var(--accent-yellow);
     font-size: 0.8rem;
     font-weight: 500;
     width: fit-content;
@@ -1079,9 +1085,9 @@ body.sidebar-collapsed .living-container {
 }
 
 .campaign-action-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    background: var(--bg-hover);
+    border-color: var(--accent-yellow);
+    color: var(--accent-yellow);
 }
 
 .campaign-delete-btn:hover {
@@ -1248,8 +1254,8 @@ body.sidebar-collapsed .living-container {
 .campaign-form-field input:focus,
 .campaign-form-field textarea:focus {
     outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(236, 235, 218, 0.1);
+    border-color: var(--accent-yellow);
+    box-shadow: 0 0 0 3px var(--accent-yellow-glow);
 }
 
 .campaign-form-field textarea {
@@ -1363,9 +1369,9 @@ body.sidebar-collapsed .living-container {
 }
 
 .btn-edit:hover {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
-    background: rgba(210, 254, 63, 0.1);
+    border-color: var(--accent-yellow);
+    color: var(--accent-yellow);
+    background: rgba(216, 255, 0, 0.1);
 }
 
 .card-header {
@@ -1404,7 +1410,7 @@ body.sidebar-collapsed .living-container {
 }
 
 .credits-value {
-    color: var(--primary-color);
+    color: var(--accent-yellow);
     font-weight: 600;
     font-size: 1.1rem;
 }
@@ -1558,13 +1564,13 @@ body.sidebar-collapsed .living-container {
 }
 
 .edit-form .btn-primary {
-    background: var(--primary-color);
-    color: var(--bg-black);
+    background: var(--accent-yellow);
+    color: var(--bg-primary);
 }
 
 .edit-form .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(210, 254, 63, 0.3);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-yellow);
 }
 
 .edit-form .btn-secondary {
@@ -1597,8 +1603,8 @@ body.sidebar-collapsed .living-container {
 }
 
 .edit-form .upload-zone:hover {
-    border-color: var(--primary-color);
-    background: rgba(210, 254, 63, 0.05);
+    border-color: var(--accent-yellow);
+    background: rgba(216, 255, 0, 0.05);
 }
 
 .files-list-edit {

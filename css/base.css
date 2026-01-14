@@ -5,68 +5,75 @@
 
 /* ============================================
    VARIABLES GLOBALES
+   Sistema de diseño: Dark theme por capas, minimalista y funcional
    ============================================ */
 :root {
-    /* Colores Primarios */
-    --primary-color: #ecebda;
-    --primary-dark: #d4d3c0;
-    --primary-light: #f5f4e8;
-    --primary-hover: #e0dfce;
+    /* ============================================
+       PALETA CROMÁTICA - DARK THEME POR CAPAS
+       ============================================ */
     
-    /* Paleta 1 - Tonos Oscuros y Acentos */
-    --palette1-dark: #17181D;
-    --palette1-gray: #181a1b;
-    --palette1-accent: #E09145;
-    --palette1-light: #FCD9B8;
+    /* Background principal (casi negro, no puro) */
+    --bg-primary: #0E0F12;
     
-    /* Paleta 2 - Tonos Tierra y Neutros */
-    --palette2-darkest: #291C0E;
-    --palette2-dark: #6E473B;
-    --palette2-medium: #A78D78;
-    --palette2-light: #BEB5A9;
-    --palette2-lightest: #E1D4C2;
+    /* Superficies / paneles */
+    --bg-secondary: #15171C;
     
-    /* Fondos */
+    /* Cards / bloques activos */
+    --bg-card: #1C1F26;
+    --bg-tertiary: #1C1F26;
+    
+    /* Hover / focus suave */
+    --bg-hover: #232733;
+    
+    /* Divisores sutiles (con opacidad baja) */
+    --border-color: rgba(42, 47, 58, 0.4);
+    --border-light: rgba(42, 47, 58, 0.6);
+    --border-divider: rgba(42, 47, 58, 0.3);
+    
+    /* Overlay y modales */
+    --bg-overlay: rgba(14, 15, 18, 0.9);
     --bg-black: #000000;
-    --bg-dark: #0E1012;
-    --bg-secondary: #121416;
-    --bg-tertiary: #291C0E;
-    --bg-card: #121416;
-    --bg-overlay: rgba(14, 16, 18, 0.9);
     
-    /* Textos */
-    --text-primary: #ecebda;
-    --text-secondary: #BEB5A9;
-    --text-muted: #A78D78;
-    --text-disabled: #6E473B;
+    /* ============================================
+       BLANCO FUNCIONAL (no protagonista)
+       Solo para contenido clave: títulos, datos importantes
+       ============================================ */
+    --text-primary: #F2F3F5;
+    --text-secondary: rgba(242, 243, 245, 0.7);
+    --text-muted: rgba(242, 243, 245, 0.5);
+    --text-disabled: rgba(242, 243, 245, 0.3);
     
-    /* Bordes */
-    --border-color: #1B1D1F;
-    --border-light: #1B1D1F;
-    --border-primary: rgba(236, 235, 218, 0.3);
-    --border-accent: rgba(224, 145, 69, 0.3);
+    /* ============================================
+       AMARILLO COMO ACENTO INTELIGENTE
+       Solo para: CTA principal, estados activos, highlights puntuales
+       ============================================ */
+    --accent-yellow: #D8FF00;
+    --accent-yellow-hover: #E6FF3F;
+    --accent-yellow-glow: rgba(216, 255, 0, 0.2);
     
-    /* Estados */
-    --success-color: #A78D78;
-    --warning-color: #E09145;
+    /* Colores de estado (mantener para compatibilidad) */
+    --success-color: rgba(16, 185, 129, 0.8);
+    --warning-color: #D8FF00;
     --error-color: #ef4444;
-    --info-color: #E09145;
+    --info-color: rgba(59, 130, 246, 0.8);
     
-    /* Colores Secundarios y Acentos */
-    --accent-warm: #E09145;
-    --accent-warm-light: #FCD9B8;
-    --accent-earth: #A78D78;
-    --accent-earth-light: #E1D4C2;
+    /* ============================================
+       EFECTOS Y SOMBRAS
+       ============================================ */
+    --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.3);
+    --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.4);
+    --shadow-floating: 0 12px 32px rgba(0, 0, 0, 0.5);
+    --shadow-yellow: 0 0 16px rgba(216, 255, 0, 0.3);
+    --accent-glow: rgba(216, 255, 0, 0.15);
+    --grid-color: rgba(242, 243, 245, 0.02);
     
-    /* Efectos */
-    --accent-glow: rgba(236, 235, 218, 0.2);
-    --accent-warm-glow: rgba(224, 145, 69, 0.3);
-    --grid-color: rgba(236, 235, 218, 0.03);
-    --shadow-primary: 0 20px 60px rgba(236, 235, 218, 0.15);
-    --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.5);
-    --shadow-floating: 0 8px 32px rgba(0, 0, 0, 0.4);
-    --shadow-hover: 0 12px 40px rgba(236, 235, 218, 0.2);
-    --shadow-warm: 0 12px 40px rgba(224, 145, 69, 0.25);
+    /* ============================================
+       COMPATIBILIDAD (mantener para transición)
+       ============================================ */
+    --primary-color: #F2F3F5;
+    --primary-hover: #F2F3F5;
+    --accent-warm: #D8FF00;
+    --accent-warm-glow: rgba(216, 255, 0, 0.2);
     
     /* Transiciones */
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -196,14 +203,15 @@ a:hover {
 }
 
 .btn-primary {
-    background: var(--primary-color);
-    color: var(--palette1-dark);
+    background: var(--accent-yellow);
+    color: var(--bg-primary);
+    font-weight: 600;
 }
 
 .btn-primary:hover {
-    background: var(--primary-hover);
-    box-shadow: var(--shadow-primary);
-    transform: translateY(-2px);
+    background: var(--accent-yellow-hover);
+    box-shadow: var(--shadow-yellow);
+    transform: translateY(-1px);
 }
 
 .btn-secondary {
@@ -219,15 +227,16 @@ a:hover {
 }
 
 .btn-accent {
-    background: var(--accent-warm);
-    color: var(--text-primary);
+    background: var(--accent-yellow);
+    color: var(--bg-primary);
     border: none;
+    font-weight: 600;
 }
 
 .btn-accent:hover {
-    background: #c87d3a;
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-warm);
+    background: var(--accent-yellow-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-yellow);
 }
 
 .btn-outline {
@@ -279,19 +288,19 @@ a:hover {
 
 /* Variantes de card */
 .card-glass {
-    background: rgba(42, 42, 42, 0.95);
+    background: rgba(28, 31, 38, 0.95);
     /* backdrop-filter removido para mejor rendimiento */
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid var(--border-color);
 }
 
 .card-accent {
-    border-color: var(--accent-warm);
-    background: rgba(224, 145, 69, 0.05);
+    border-color: var(--accent-yellow);
+    background: rgba(216, 255, 0, 0.05);
 }
 
 .card-accent:hover {
-    background: rgba(224, 145, 69, 0.1);
-    box-shadow: 0 4px 12px rgba(224, 145, 69, 0.2);
+    background: rgba(216, 255, 0, 0.08);
+    box-shadow: var(--shadow-yellow);
 }
 
 /* ============================================
@@ -336,9 +345,9 @@ a:hover {
 .form-select:focus,
 .form-textarea:focus {
     outline: none;
-    border-color: var(--accent-warm);
-    background: var(--bg-tertiary);
-    box-shadow: 0 0 0 3px rgba(224, 145, 69, 0.1);
+    border-color: var(--accent-yellow);
+    background: var(--bg-card);
+    box-shadow: 0 0 0 3px var(--accent-yellow-glow);
 }
 
 .form-input::placeholder,
@@ -472,16 +481,16 @@ a:hover {
 }
 
 ::-webkit-scrollbar-track {
-    background: var(--bg-dark);
+    background: var(--bg-primary);
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--bg-tertiary);
+    background: var(--bg-card);
     border-radius: var(--border-radius-full);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--border-color);
+    background: var(--bg-hover);
 }
 
 /* ============================================
@@ -514,15 +523,15 @@ a:hover {
     width: 90%;
     max-height: 90vh;
     overflow-y: auto;
-    box-shadow: var(--shadow-card);
+    box-shadow: var(--shadow-floating);
     animation: modalSlideIn 0.3s ease-out;
     position: relative;
 }
 
 .modal-content.card-glass {
-    background: rgba(42, 42, 42, 0.95);
+    background: rgba(28, 31, 38, 0.98);
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid var(--border-color);
 }
 
 .modal-header {
@@ -602,11 +611,11 @@ a:hover {
 }
 
 .notification-icon.warning {
-    color: var(--accent-warm);
+    color: var(--accent-yellow);
 }
 
 .notification-icon.info {
-    color: var(--accent-warm);
+    color: var(--accent-yellow);
 }
 
 .notification-title {

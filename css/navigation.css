@@ -10,9 +10,9 @@
     --nav-width: 250px;
     --nav-width-collapsed: 60px;
     --nav-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --nav-overlay: rgba(0, 0, 0, 0.7);
-    --nav-bg: rgba(10, 10, 10, 0.95);
-    --nav-border: rgba(236, 235, 218, 0.2);
+    --nav-overlay: rgba(0, 0, 0, 0.8);
+    --nav-bg: var(--bg-secondary);
+    --nav-border: var(--border-color);
 }
 
 /* =========================================
@@ -24,8 +24,8 @@
     top: 0;
     left: var(--nav-width, 250px);
     right: 0;
-    background: rgba(10, 10, 10, 0.95);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
     padding: 8px 16px;
     z-index: 999;
     /* backdrop-filter removido para mejor rendimiento */
@@ -80,7 +80,7 @@ body.sidebar-collapsed #app-container .main-header,
 .title-section h1 {
     font-size: 0.938rem;
     font-weight: 600;
-    color: #ffffff;
+    color: var(--text-primary);
     margin: 0;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     line-height: 1.2;
@@ -91,19 +91,19 @@ body.sidebar-collapsed #app-container .main-header,
     align-items: center;
     gap: 0.5rem;
     text-decoration: none;
-    color: #ffffff;
+    color: var(--text-primary);
     font-size: 1rem;
     font-weight: 600;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .brand-separator {
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--text-secondary);
     margin: 0 4px;
 }
 
 .brand-name-header {
-    color: #ffffff;
+    color: var(--text-primary);
     font-weight: 600;
 }
 
@@ -126,7 +126,7 @@ body.sidebar-collapsed #app-container .main-header,
 .header-credits-value {
     font-size: 0.813rem;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--text-primary);
     line-height: 1;
     white-space: nowrap;
     width: auto;
@@ -153,18 +153,18 @@ body.sidebar-collapsed #app-container .main-header,
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: rgba(236, 235, 218, 0.2);
+    background: var(--bg-card);
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid rgba(236, 235, 218, 0.3);
+    border: 1px solid var(--border-color);
     transition: all 0.2s ease;
     cursor: pointer;
 }
 
 .avatar-circle:hover {
-    background: rgba(236, 235, 218, 0.3);
-    border-color: var(--primary-color, #ecebda);
+    background: var(--bg-hover);
+    border-color: var(--accent-yellow);
     transform: scale(1.05);
 }
 
@@ -206,7 +206,7 @@ body.sidebar-collapsed #app-container .main-header,
 .hamburger-line {
     width: 24px;
     height: 2px;
-        background: #ffffff;
+    background: var(--text-primary);
     border-radius: 2px;
     transition: var(--nav-transition);
     transform-origin: center;
@@ -376,7 +376,7 @@ body.sidebar-collapsed #app-container .main-header,
 .nav-section-title {
     font-size: 0.75rem;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--text-muted);
     text-transform: none;
     letter-spacing: 0;
     padding: 16px 0 8px 0;
@@ -410,13 +410,13 @@ body.sidebar-collapsed #app-container .main-header,
 
 .nav-link:hover {
     color: var(--text-primary);
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-hover);
 }
 
 .nav-link.active {
-    color: var(--primary-color);
-    background: rgba(236, 235, 218, 0.1);
-    border-right: 3px solid var(--primary-color);
+    color: var(--accent-yellow);
+    background: rgba(216, 255, 0, 0.08);
+    border-right: 3px solid var(--accent-yellow);
     margin-right: 0; /* Asegurar que el borde llegue al borde del sidebar */
 }
 
@@ -427,7 +427,7 @@ body.sidebar-collapsed #app-container .main-header,
     top: 0;
     bottom: 0;
     width: 4px;
-    background: var(--primary-color);
+    background: var(--accent-yellow);
     border-radius: 0 2px 2px 0;
 }
 
@@ -449,7 +449,7 @@ body.sidebar-collapsed #app-container .main-header,
 
 .nav-link:hover .nav-icon,
 .nav-link.active .nav-icon {
-    color: var(--primary-color);
+    color: var(--accent-yellow);
 }
 
 .nav-text {
@@ -464,8 +464,8 @@ body.sidebar-collapsed #app-container .main-header,
 }
 
 .nav-badge {
-    background: var(--primary-color);
-    color: white;
+    background: var(--accent-yellow);
+    color: var(--bg-primary);
     font-size: 0.7rem;
     font-weight: 600;
     padding: 2px 6px;
@@ -492,8 +492,8 @@ body.sidebar-collapsed #app-container .main-header,
     left: 0;
     right: 0;
     padding: 16px 20px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(0, 0, 0, 0.3);
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-primary);
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -557,7 +557,7 @@ body.sidebar-collapsed #app-container .main-header,
 
 .nav-footer-link:hover {
     color: var(--text-primary);
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-hover);
 }
 
 .nav-footer-link i {
@@ -608,7 +608,7 @@ body.sidebar-collapsed #app-container .main-header,
     margin-top: 0;
     margin-left: var(--nav-width);
     min-height: 100vh;
-    background: var(--bg-black);
+    background: var(--bg-primary);
     transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     padding-top: 48px; /* Altura del header delgado */
 }
@@ -644,7 +644,7 @@ body.sidebar-collapsed .main-content {
 }
 
 .breadcrumb-item:hover {
-    color: var(--primary-color);
+    color: var(--accent-yellow);
 }
 
 .breadcrumb-item.active {
