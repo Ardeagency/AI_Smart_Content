@@ -102,65 +102,132 @@ class BrandsView extends BaseView {
     if (!this.supabase || !this.userId) return;
 
     try {
-      // Usuario
-      const { data: userData } = await this.supabase
-        .from('users').select('*').eq('id', this.userId).single();
-      this.userData = userData;
+      // Usuario - usar maybeSingle para evitar error 400 si no existe
+      const { data: userData, error: userError } = await this.supabase
+        .from('users').select('*').eq('id', this.userId).maybeSingle();
+      
+      if (userError) {
+        console.warn('⚠️ Error cargando usuario:', userError);
+      } else {
+        this.userData = userData;
+      }
 
       // Brand container
-      const { data: containerData } = await this.supabase
+      const { data: containerData, error: containerError } = await this.supabase
         .from('brand_containers').select('*').eq('user_id', this.userId).limit(1).maybeSingle();
       
-      if (containerData) {
+      if (containerError) {
+        console.warn('⚠️ Error cargando brand container:', containerError);
+      } else if (containerData) {
         this.brandContainerId = containerData.id;
         this.brandContainerData = containerData;
         this.organizationId = containerData.organization_id;
 
         // Brand data
-        const { data: brandData } = await this.supabase
+        const { data: brandData, error: brandError } = await this.supabase
           .from('brands').select('*').eq('project_id', this.brandContainerId).maybeSingle();
-        this.brandData = brandData;
+        
+        if (brandError) {
+          console.warn('⚠️ Error cargando brand data:', brandError);
+        } else {
+          this.brandData = brandData;
+        }
 
         // Productos
-        const { data: products } = await this.supabase
+        const { data: products, error: productsError } = await this.supabase
           .from('products').select('*').eq('brand_container_id', this.brandContainerId)
           .order('created_at', { ascending: false }).limit(5);
-        this.products = products || [];
+        
+        if (productsError) {
+          console.warn('⚠️ Error cargando productos:', productsError);
+          this.products = [];
+        } else {
+          this.products = products || [];
+        }
 
         // Colores y reglas
         if (this.brandData?.id) {
-          const { data: colors } = await this.supabase
+          const { data: colors, error: colorsError } = await this.supabase
             .from('brand_colors').select('*').eq('brand_id', this.brandData.id);
-          this.brandColors = colors || [];
+          
+          if (colorsError) {
+            console.warn('⚠️ Error cargando colores:', colorsError);
+            this.brandColors = [];
+          } else {
+            this.brandColors = colors || [];
+          }
 
-          const { data: rules } = await this.supabase
+          const { data: rules, error: rulesError } = await this.supabase
             .from('brand_rules').select('*').eq('brand_id', this.brandData.id);
-          this.brandRules = rules || [];
+          
+          if (rulesError) {
+            console.warn('⚠️ Error cargando reglas:', rulesError);
+            this.brandRules = [];
+          } else {
+            this.brandRules = rules || [];
+          }
         }
 
         // Datos de organización
         if (this.organizationId) {
-          const { data: members } = await this.supabase
+          // Members - intentar con join primero, fallback sin join
+          let members = [];
+          const { data: membersWithUsers, error: membersError } = await this.supabase
             .from('organization_members')
             .select('*, users(id, full_name, email)')
-            .eq('organization_id', this.organizationId).limit(5);
-          this.organizationMembers = members || [];
+            .eq('organization_id', this.organizationId)
+            .limit(5);
+          
+          if (membersError) {
+            console.warn('⚠️ Error cargando miembros con join:', membersError);
+            // Fallback: cargar sin join
+            const { data: membersSimple, error: simpleError } = await this.supabase
+              .from('organization_members')
+              .select('*')
+              .eq('organization_id', this.organizationId)
+              .limit(5);
+            
+            if (simpleError) {
+              console.warn('⚠️ Error cargando miembros sin join:', simpleError);
+              this.organizationMembers = [];
+            } else {
+              // Mapear a formato esperado sin users
+              this.organizationMembers = (membersSimple || []).map(m => ({
+                ...m,
+                users: null
+              }));
+            }
+          } else {
+            this.organizationMembers = membersWithUsers || [];
+          }
 
-          const { data: credits } = await this.supabase
+          const { data: credits, error: creditsError } = await this.supabase
             .from('organization_credits').select('*')
             .eq('organization_id', this.organizationId).maybeSingle();
-          this.organizationCredits = credits || { credits_available: 100 };
+          
+          if (creditsError) {
+            console.warn('⚠️ Error cargando créditos:', creditsError);
+            this.organizationCredits = { credits_available: 100 };
+          } else {
+            this.organizationCredits = credits || { credits_available: 100 };
+          }
 
-          const { data: usage } = await this.supabase
+          const { data: usage, error: usageError } = await this.supabase
             .from('credit_usage').select('*')
             .eq('organization_id', this.organizationId)
             .order('created_at', { ascending: false }).limit(10);
-          this.creditUsage = usage || [];
+          
+          if (usageError) {
+            console.warn('⚠️ Error cargando uso de créditos:', usageError);
+            this.creditUsage = [];
+          } else {
+            this.creditUsage = usage || [];
+          }
         }
       }
       console.log('✅ Datos cargados');
     } catch (error) {
-      console.error('❌ Error cargando datos:', error);
+      console.error('❌ Error crítico cargando datos:', error);
     }
   }
 
@@ -190,9 +257,13 @@ class BrandsView extends BaseView {
 
     container.innerHTML = this.organizationMembers.slice(0, 5).map(m => {
       const user = m.users;
-      const initials = user?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) 
-        || user?.email?.[0]?.toUpperCase() || 'U';
-      return `<div class="team-avatar" title="${this.escapeHtml(user?.full_name || user?.email || 'Usuario')}">
+      // Manejar caso donde users puede ser null o un array
+      const userObj = Array.isArray(user) ? user[0] : user;
+      const initials = userObj?.full_name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) 
+        || userObj?.email?.[0]?.toUpperCase() 
+        || 'U';
+      const displayName = userObj?.full_name || userObj?.email || 'Usuario';
+      return `<div class="team-avatar" title="${this.escapeHtml(displayName)}">
         <span class="team-avatar-initials">${initials}</span>
       </div>`;
     }).join('') + (this.organizationMembers.length > 5 
