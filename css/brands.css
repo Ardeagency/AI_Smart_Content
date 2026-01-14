@@ -196,6 +196,21 @@ body.sidebar-collapsed .brand-dashboard-container {
     border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
+/* ============================================
+   OVERRIDES (evitar conflictos con studio.css)
+   Cards en Brands: sólido, sin hover/cursor, borde sutil
+   ============================================ */
+.brand-dashboard-container .brand-card {
+    background: #15171c !important; /* sólido */
+    border: 1px solid rgba(255, 255, 255, 0.08) !important; /* apenas notorio */
+    cursor: default !important; /* sin efecto de cursor */
+    transition: none !important; /* sin animaciones hover */
+}
+
+.brand-dashboard-container .brand-card:hover {
+    background: #15171c !important; /* sin cambio al hover */
+}
+
 /* Card Header */
 .card-header {
     display: flex;
@@ -216,11 +231,11 @@ body.sidebar-collapsed .brand-dashboard-container {
     color: var(--brand-text-gold);
     font-size: 0.875rem;
     text-decoration: none;
-    transition: transform 0.2s;
+    transition: none;
 }
 
 .card-arrow:hover {
-    transform: translateX(3px);
+    transform: none;
 }
 
 .card-arrow-sub {
@@ -337,12 +352,12 @@ body.sidebar-collapsed .brand-dashboard-container {
     padding: 0 !important;
     margin: 0 !important;
     border: 0 !important;
-    cursor: pointer;
+    cursor: default !important;
     transition: background 0.2s;
 }
 
 .card-info:hover {
-    background: var(--bg-secondary, #15171C);
+    background: #15171c !important;
 }
 
 .card-info .card-header {
