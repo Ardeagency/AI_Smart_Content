@@ -479,8 +479,14 @@ class BrandsView extends BaseView {
     container.innerHTML = assets.map(asset => {
       const fileName = asset.file_name || 'File';
       const fileType = asset.file_type || asset.asset_type || 'file';
-      const fileUrl = asset.file_url || '#';
+      const fileUrl = asset.file_url || '';
       const uploadDate = asset.created_at ? new Date(asset.created_at) : null;
+      
+      // Validar URL antes de usarla
+      const isValidUrl = fileUrl && 
+        (fileUrl.startsWith('http://') || 
+         fileUrl.startsWith('https://') || 
+         fileUrl.startsWith('/'));
       
       // Icono según tipo de archivo
       let icon = 'fa-file';
@@ -784,12 +790,18 @@ class BrandsView extends BaseView {
         })
       : 'No disponible';
     
+    // Validar URL del logo antes de renderizar
+    const isValidLogoUrl = logoUrl && 
+      (logoUrl.startsWith('http://') || 
+       logoUrl.startsWith('https://') || 
+       logoUrl.startsWith('/'));
+    
     return `
       <div class="info-identity-item">
         <div class="info-identity-label">Logo</div>
         <div class="info-identity-value">
-          ${logoUrl 
-            ? `<img src="${this.escapeHtml(logoUrl)}" alt="${this.escapeHtml(nombreMarca)}" class="info-logo-preview" onerror="this.style.display='none'">`
+          ${isValidLogoUrl 
+            ? `<img src="${this.escapeHtml(logoUrl)}" alt="${this.escapeHtml(nombreMarca)}" class="info-logo-preview" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'info-logo-placeholder\\'><i class=\\'fas fa-image\\'></i></div>'; console.warn('⚠️ Error cargando logo:', '${this.escapeHtml(logoUrl)}');">`
             : '<div class="info-logo-placeholder"><i class="fas fa-image"></i></div>'
           }
         </div>
