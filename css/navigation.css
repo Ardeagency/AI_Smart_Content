@@ -65,118 +65,187 @@ body.sidebar-collapsed #app-container .main-header,
     gap: 1rem;
 }
 
+/* =========================================
+   ZONA IZQUIERDA: CONTEXTO
+   ========================================= */
+
 .header-left {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    flex: 0 0 auto;
+    flex: 1;
+    min-width: 0;
 }
 
-.logo-section {
+.header-context {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.header-context-primary {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 8px;
+    line-height: 1.2;
 }
 
-.title-section h1 {
+.header-section {
     font-size: 0.938rem;
     font-weight: 600;
     color: var(--text-primary);
     margin: 0;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    line-height: 1.2;
-}
-
-.main-logo {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    text-decoration: none;
-    color: var(--text-primary);
-    font-size: 1rem;
-    font-weight: 600;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-.brand-separator {
-    color: var(--text-secondary);
-    margin: 0 4px;
-}
-
-.brand-name-header {
-    color: var(--text-primary);
-    font-weight: 600;
-}
-
-/* Créditos del usuario en el header */
-.header-credits {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    padding: 0;
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    width: auto;
-    height: auto;
-    justify-content: flex-end;
-    flex: 0 0 auto;
-}
-
-.header-credits-value {
-    font-size: 0.813rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    line-height: 1;
     white-space: nowrap;
-    width: auto;
-    height: auto;
 }
+
+.header-separator {
+    color: var(--text-muted);
+    font-size: 0.938rem;
+    font-weight: 400;
+}
+
+.header-active-object {
+    font-size: 0.938rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.header-context-secondary {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* =========================================
+   ZONA DERECHA: USUARIO
+   ========================================= */
 
 .header-right {
     display: flex;
     align-items: center;
     gap: 12px;
-    flex-wrap: wrap;
     flex: 0 0 auto;
     margin-left: auto;
+    position: relative;
 }
 
-/* Avatar del usuario en el header */
-.header-avatar {
+.header-user {
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 8px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: var(--nav-transition);
+    position: relative;
 }
 
-.avatar-circle {
+.header-user:hover {
+    background: var(--bg-hover);
+}
+
+.header-user-avatar {
     width: 32px;
     height: 32px;
     border-radius: 50%;
     background: var(--bg-card);
+    border: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid var(--border-color);
-    transition: all 0.2s ease;
-    cursor: pointer;
+    flex-shrink: 0;
+    overflow: hidden;
 }
 
-.avatar-circle:hover {
-    background: var(--bg-hover);
-    border-color: var(--accent-yellow);
-    transform: scale(1.05);
-}
-
-.avatar-initials {
+.header-user-initials {
     font-size: 0.75rem;
     font-weight: 600;
-    color: var(--text-primary, #ecebda);
+    color: var(--text-primary);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     line-height: 1;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+}
+
+.header-user-chevron {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--nav-transition);
+    flex-shrink: 0;
+}
+
+.header-user-chevron:hover {
+    color: var(--text-primary);
+}
+
+.header-user-chevron i {
+    font-size: 10px;
+}
+
+/* Dropdown de usuario */
+.header-user-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: var(--shadow-floating);
+    z-index: 1000;
+    display: none;
+    overflow: hidden;
+    min-width: 180px;
+}
+
+.header-user-dropdown.open {
+    display: block;
+}
+
+.header-user-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: var(--nav-transition);
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 400;
+}
+
+.header-user-dropdown-item:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.header-user-dropdown-item i {
+    width: 20px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.header-user-dropdown-item.header-user-logout:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.header-user-dropdown-item.header-user-logout:hover i {
+    color: #ef4444;
 }
 
 /* Botón hamburguesa - solo móvil */
@@ -213,9 +282,6 @@ body.sidebar-collapsed #app-container .main-header,
     transform-origin: center;
 }
     
-    .header-credits {
-        display: none; /* Ocultar créditos en móvil para ahorrar espacio */
-    }
     
     .main-header {
         padding: 8px 12px;

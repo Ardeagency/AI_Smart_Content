@@ -138,6 +138,9 @@ class BaseView {
       // Inicializar vista (setup event listeners, componentes, etc.)
       await this.init();
 
+      // Actualizar header con datos del usuario y contexto
+      await this.updateHeader();
+
       this.initialized = true;
 
       // Ocultar loading
@@ -340,32 +343,54 @@ class BaseView {
 
   /**
    * Generar HTML del header principal común
-   * @param {string} routeName - Nombre de la ruta (ej: "Marcas", "Productos")
-   * @param {string} subRoute - Sub-ruta opcional (ej: "Detalle", "Nuevo")
+   * @param {string} section - Nombre de la sección (ej: "Marcas", "Campañas")
+   * @param {string} activeObject - Objeto activo opcional (ej: "Oster", "Q1 Launch")
+   * @param {string} organizationName - Nombre de la organización activa (opcional, sutil)
    * @returns {string} HTML del header
    */
-  getHeaderHTML(routeName, subRoute = null) {
-    const routeDisplay = subRoute ? `${routeName} > ${subRoute}` : routeName;
+  getHeaderHTML(section, activeObject = null, organizationName = null) {
+    // Línea 1: Sección / Objeto activo
+    const line1 = activeObject ? `${section} / ${activeObject}` : section;
+    
     return `
     <header class="main-header">
         <div class="header-content">
+            <!-- ZONA IZQUIERDA: CONTEXTO -->
             <div class="header-left">
-                <div class="logo-section">
-                    <div class="title-section">
-                        <h1>${routeDisplay}</h1>
+                <div class="header-context">
+                    <div class="header-context-primary">
+                        <h1 class="header-section">${this.escapeHtml(section)}</h1>
+                        ${activeObject ? `<span class="header-separator">/</span><span class="header-active-object">${this.escapeHtml(activeObject)}</span>` : ''}
                     </div>
+                    ${organizationName ? `<div class="header-context-secondary">${this.escapeHtml(organizationName)}</div>` : ''}
                 </div>
             </div>
+            
+            <!-- ZONA DERECHA: USUARIO -->
             <div class="header-right">
-                <div class="header-credits" id="headerCredits">
-                    <span class="header-credits-value" id="headerCreditsValue">0/0</span>
+                <div class="header-user" id="headerUser">
+                    <div class="header-user-avatar" id="headerUserAvatar">
+                        <span class="header-user-initials" id="headerUserInitials">U</span>
+                    </div>
+                    <button class="header-user-chevron" id="headerUserChevron" aria-label="Menú de usuario">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
                 </div>
-                <div class="header-avatar" id="headerAvatar">
-                    <div class="avatar-circle" id="avatarCircle">
-                        <span class="avatar-initials" id="avatarInitials">M</span>
+                
+                <!-- Dropdown de usuario -->
+                <div class="header-user-dropdown" id="headerUserDropdown">
+                    <div class="header-user-dropdown-item" data-action="profile">
+                        <i class="fas fa-user"></i>
+                        <span>Perfil</span>
+                    </div>
+                    <div class="header-user-dropdown-item header-user-logout" id="headerUserLogout" data-action="logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Cerrar sesión</span>
                     </div>
                 </div>
-                <button class="hamburger-menu" id="hamburgerMenu">
+                
+                <!-- Hamburger menu (solo móvil) -->
+                <button class="hamburger-menu" id="hamburgerMenu" aria-label="Toggle navigation">
                     <div class="hamburger-line"></div>
                     <div class="hamburger-line"></div>
                     <div class="hamburger-line"></div>
@@ -377,31 +402,272 @@ class BaseView {
   }
 
   /**
-   * Actualizar header con datos del usuario
+   * Escapar HTML para prevenir XSS
+   */
+  escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  /**
+   * Actualizar header existente con nuevo contexto
+   * Útil cuando el header ya está en el DOM (templates)
+   */
+  updateHeaderContext(section, activeObject = null, organizationName = null) {
+    const headerLeft = document.querySelector('.header-left');
+    if (!headerLeft) return;
+
+    let html = `
+      <div class="header-context">
+        <div class="header-context-primary">
+          <h1 class="header-section">${this.escapeHtml(section)}</h1>
+          ${activeObject ? `<span class="header-separator">/</span><span class="header-active-object">${this.escapeHtml(activeObject)}</span>` : ''}
+        </div>
+        ${organizationName ? `<div class="header-context-secondary">${this.escapeHtml(organizationName)}</div>` : ''}
+      </div>
+    `;
+
+    headerLeft.innerHTML = html;
+  }
+
+  /**
+   * Actualizar header con datos del usuario y contexto
    * Debe llamarse después de renderizar la vista
    */
-  updateHeader() {
-    // Actualizar tokens (ya se hace desde sidebar-manager)
-    // Actualizar avatar
-    if (window.sidebarManager && window.sidebarManager.userData) {
-      const userData = window.sidebarManager.userData;
-      const avatarInitials = document.getElementById('avatarInitials');
-      const avatarCircle = document.getElementById('avatarCircle');
-      
-      if (avatarInitials && userData.avatar_initial) {
-        avatarInitials.textContent = userData.avatar_initial;
-      }
-      
-      // Si hay avatar_url, usarlo
-      if (avatarCircle && userData.avatar_url) {
-        avatarCircle.style.backgroundImage = `url(${userData.avatar_url})`;
-        avatarCircle.style.backgroundSize = 'cover';
-        avatarCircle.style.backgroundPosition = 'center';
-        if (avatarInitials) {
-          avatarInitials.style.display = 'none';
-        }
+  async updateHeader() {
+    // Si el header ya existe en el DOM (desde template), actualizarlo
+    const existingHeader = document.querySelector('.main-header');
+    
+    if (existingHeader) {
+      // Actualizar zona derecha (usuario) si no existe
+      const headerRight = existingHeader.querySelector('.header-right');
+      if (headerRight && !headerRight.querySelector('.header-user')) {
+        // Reemplazar header antiguo con nuevo formato
+        this.updateExistingHeader();
       }
     }
+
+    // Actualizar avatar del usuario
+    const supabase = await this.getSupabaseClient();
+    if (!supabase) return;
+
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) return;
+
+      // Obtener perfil del usuario
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('full_name, email, avatar_url')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      const headerUserInitials = document.getElementById('headerUserInitials');
+      const headerUserAvatar = document.getElementById('headerUserAvatar');
+
+      if (profile) {
+        // Generar iniciales
+        if (headerUserInitials) {
+          const name = profile.full_name || profile.email || 'Usuario';
+          const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+          headerUserInitials.textContent = initials || 'U';
+        }
+
+        // Si hay avatar URL, usarlo
+        if (headerUserAvatar && profile.avatar_url) {
+          headerUserAvatar.style.backgroundImage = `url(${profile.avatar_url})`;
+          headerUserAvatar.style.backgroundSize = 'cover';
+          headerUserAvatar.style.backgroundPosition = 'center';
+          if (headerUserInitials) {
+            headerUserInitials.style.display = 'none';
+          }
+        }
+      }
+
+      // Setup event listeners para dropdown de usuario
+      this.setupHeaderUserDropdown();
+    } catch (error) {
+      console.error('Error actualizando header:', error);
+    }
+  }
+
+  /**
+   * Actualizar header existente (desde templates) al nuevo formato
+   */
+  updateExistingHeader() {
+    const existingHeader = document.querySelector('.main-header');
+    if (!existingHeader) return;
+
+    const headerLeft = existingHeader.querySelector('.header-left');
+    const headerRight = existingHeader.querySelector('.header-right');
+    
+    if (!headerLeft || !headerRight) return;
+
+    // Obtener sección actual del header antiguo
+    const oldTitle = headerLeft.querySelector('h1');
+    const section = oldTitle ? oldTitle.textContent.trim() : '';
+
+    // Actualizar zona izquierda con nuevo formato
+    this.updateHeaderContext(section, null, null);
+
+    // Actualizar zona derecha con nuevo formato de usuario
+    headerRight.innerHTML = `
+      <div class="header-user" id="headerUser">
+        <div class="header-user-avatar" id="headerUserAvatar">
+          <span class="header-user-initials" id="headerUserInitials">U</span>
+        </div>
+        <button class="header-user-chevron" id="headerUserChevron" aria-label="Menú de usuario">
+          <i class="fas fa-chevron-down"></i>
+        </button>
+      </div>
+      
+      <!-- Dropdown de usuario -->
+      <div class="header-user-dropdown" id="headerUserDropdown">
+        <div class="header-user-dropdown-item" data-action="profile">
+          <i class="fas fa-user"></i>
+          <span>Perfil</span>
+        </div>
+        <div class="header-user-dropdown-item header-user-logout" id="headerUserLogout" data-action="logout">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Cerrar sesión</span>
+        </div>
+      </div>
+      
+      <!-- Hamburger menu (solo móvil) -->
+      <button class="hamburger-menu" id="hamburgerMenu" aria-label="Toggle navigation">
+        <div class="hamburger-line"></div>
+        <div class="hamburger-line"></div>
+        <div class="hamburger-line"></div>
+      </button>
+    `;
+  }
+
+  /**
+   * Configurar dropdown de usuario en el header
+   */
+  setupHeaderUserDropdown() {
+    const headerUser = document.getElementById('headerUser');
+    const headerUserChevron = document.getElementById('headerUserChevron');
+    const headerUserDropdown = document.getElementById('headerUserDropdown');
+    const headerUserLogout = document.getElementById('headerUserLogout');
+
+    if (!headerUser || !headerUserChevron || !headerUserDropdown) return;
+
+    // Toggle dropdown
+    headerUser.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = headerUserDropdown.classList.contains('open');
+      
+      // Cerrar otros dropdowns
+      document.querySelectorAll('.header-user-dropdown.open').forEach(dropdown => {
+        if (dropdown !== headerUserDropdown) {
+          dropdown.classList.remove('open');
+        }
+      });
+
+      if (isOpen) {
+        headerUserDropdown.classList.remove('open');
+        const icon = headerUserChevron.querySelector('i');
+        if (icon) {
+          icon.classList.remove('fa-chevron-up');
+          icon.classList.add('fa-chevron-down');
+        }
+      } else {
+        headerUserDropdown.classList.add('open');
+        const icon = headerUserChevron.querySelector('i');
+        if (icon) {
+          icon.classList.remove('fa-chevron-down');
+          icon.classList.add('fa-chevron-up');
+        }
+      }
+    });
+
+    // Logout
+    if (headerUserLogout) {
+      headerUserLogout.addEventListener('click', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        await this.handleLogout();
+      });
+    }
+
+    // Perfil
+    const profileItem = headerUserDropdown.querySelector('[data-action="profile"]');
+    if (profileItem) {
+      profileItem.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        // TODO: Navegar a perfil de usuario
+        if (window.router) {
+          window.router.navigate('/settings?tab=profile');
+        }
+        headerUserDropdown.classList.remove('open');
+      });
+    }
+
+    // Cerrar al hacer click fuera
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.header-user')) {
+        headerUserDropdown.classList.remove('open');
+        const icon = headerUserChevron.querySelector('i');
+        if (icon) {
+          icon.classList.remove('fa-chevron-up');
+          icon.classList.add('fa-chevron-down');
+        }
+      }
+    });
+  }
+
+  /**
+   * Manejar logout
+   */
+  async handleLogout() {
+    if (window.authService) {
+      await window.authService.logout();
+      return;
+    }
+
+    const supabase = await this.getSupabaseClient();
+    if (supabase) {
+      try {
+        await supabase.auth.signOut();
+      } catch (error) {
+        console.error('Error en logout:', error);
+      }
+    }
+
+    // Limpiar sesión
+    if (window.sessionManager) {
+      window.sessionManager.clearSession();
+    } else {
+      localStorage.removeItem('user_session');
+      sessionStorage.removeItem('user_session');
+    }
+
+    // Redirigir al login
+    if (window.router) {
+      window.router.navigate('/login', true);
+    } else {
+      window.location.href = '/login.html';
+    }
+  }
+
+  /**
+   * Obtener cliente de Supabase
+   */
+  async getSupabaseClient() {
+    if (window.supabaseService) {
+      return await window.supabaseService.getClient();
+    }
+    if (window.supabase) {
+      return window.supabase;
+    }
+    if (typeof waitForSupabase === 'function') {
+      return await waitForSupabase();
+    }
+    return null;
   }
 }
 

@@ -288,12 +288,8 @@ class SidebarManager {
         // CRÉDITOS EN EL HEADER: Siempre visible
         // ============================================
         // Créditos en el header principal (formato: total/restantes) - siempre hay valores
-        const headerCreditsValue = document.getElementById('headerCreditsValue');
-        if (headerCreditsValue) {
-            const total = this.userData.credits_total || 0;
-            const restantes = this.userData.credits_available || 0;
-            headerCreditsValue.textContent = `${total}/${restantes}`;
-        }
+        // Los créditos ya no se muestran en el header
+        // Viven en "Administrar organización"
 
         // ============================================
         // AVATAR EN EL HEADER: Siempre visible
