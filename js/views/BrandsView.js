@@ -259,11 +259,14 @@ class BrandsView extends BaseView {
   }
 
   renderCards() {
-    // CONCEPT LAB
-    const current = document.getElementById('conceptCurrentValue');
-    const stats = document.getElementById('conceptStatsValue');
-    if (current) current.textContent = (this.brandData?.tono_voz || 'BRAND GUIDELINES').toUpperCase();
-    if (stats) stats.textContent = `${this.brandRules.length || 0} Guidelines • ${this.brandColors.length || 0} Colors`;
+    // Visual de marca - Brand Colors
+    this.renderBrandColors();
+    
+    // Visual de marca - Typography
+    this.renderTypography();
+    
+    // Visual de marca - Status
+    this.renderVisualStatus();
 
     // SCREENING ROOM
     const total = this.organizationCredits?.credits_available || 100;
@@ -303,6 +306,87 @@ class BrandsView extends BaseView {
     }
   }
 
+
+  renderBrandColors() {
+    const container = document.getElementById('brandColorSwatches');
+    if (!container) return;
+    
+    const colors = (this.brandColors || []).slice(0, 6); // Máx 6 colores
+    
+    if (colors.length === 0) {
+      container.innerHTML = '<div style="color: var(--text-muted, #6B7280); font-size: 0.75rem;">No colors defined</div>';
+      return;
+    }
+    
+    container.innerHTML = colors.map(color => {
+      const hex = color.hex_code || color.color_value || '#000000';
+      const role = color.role || color.color_role || 'Color';
+      
+      return `
+        <div class="color-swatch" style="background: ${hex};">
+          <div class="color-swatch-tooltip">
+            <div class="color-swatch-hex">${hex.toUpperCase()}</div>
+            <div class="color-swatch-role">${role}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  renderTypography() {
+    const container = document.getElementById('typographyPreview');
+    if (!container) return;
+    
+    // Buscar regla de tipografía en brand_rules
+    const typographyRule = (this.brandRules || []).find(rule => 
+      rule.rule_type === 'typography' || 
+      rule.category === 'typography' ||
+      rule.rule_name?.toLowerCase().includes('font') ||
+      rule.rule_name?.toLowerCase().includes('tipografia')
+    );
+    
+    if (!typographyRule) {
+      container.innerHTML = `
+        <div class="typography-font-name">No typography defined</div>
+        <div class="typography-samples">
+          <div class="typography-sample body" style="color: var(--text-muted, #6B7280); font-size: 0.75rem;">Add typography in brand guidelines</div>
+        </div>
+      `;
+      return;
+    }
+    
+    // Extraer información de tipografía
+    const fontName = typographyRule.font_family || typographyRule.value || 'Inter';
+    const fontWeight = typographyRule.font_weight || '400';
+    
+    container.innerHTML = `
+      <div class="typography-font-name">${fontName}</div>
+      <div class="typography-samples">
+        <div class="typography-sample heading" style="font-family: '${fontName}', sans-serif; font-weight: ${fontWeight === '400' ? '600' : fontWeight};">Heading</div>
+        <div class="typography-sample body" style="font-family: '${fontName}', sans-serif; font-weight: ${fontWeight};">Body</div>
+      </div>
+    `;
+  }
+
+  renderVisualStatus() {
+    const container = document.getElementById('visualStatus');
+    if (!container) return;
+    
+    const colorCount = (this.brandColors || []).length;
+    const hasTypography = (this.brandRules || []).some(rule => 
+      rule.rule_type === 'typography' || 
+      rule.category === 'typography' ||
+      rule.rule_name?.toLowerCase().includes('font') ||
+      rule.rule_name?.toLowerCase().includes('tipografia')
+    );
+    const fontCount = hasTypography ? 1 : 0;
+    
+    container.innerHTML = `
+      <div class="visual-status-synced">
+        ${colorCount} Colors • ${fontCount} Font • Synced
+      </div>
+    `;
+  }
 
   setupEventListeners() {
     const infoBtn = document.querySelector('.card-info');

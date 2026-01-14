@@ -38,27 +38,34 @@
             </div>
         </div>
         
-        <!-- CONCEPT LAB -->
+        <!-- Visual de marca -->
         <div class="brand-card card-concept">
             <div class="card-header">
-                <h2 class="card-title">CONCEPT LAB</h2>
-                <div class="card-icon-circle">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <circle cx="6" cy="6" r="1.5"/><circle cx="12" cy="6" r="1.5"/><circle cx="18" cy="6" r="1.5"/>
-                        <circle cx="6" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/>
-                        <circle cx="6" cy="18" r="1.5"/><circle cx="12" cy="18" r="1.5"/><circle cx="18" cy="18" r="1.5"/>
-                    </svg>
-                </div>
+                <h2 class="card-title">Visual de marca</h2>
             </div>
-            <a href="/brands/visual" class="card-arrow-sub"><i class="fas fa-arrow-right"></i></a>
             <div class="card-content">
-                <div class="card-spacer"></div>
-                <div class="card-current">
-                    <span class="current-label">Current</span>
-                    <span class="current-value" id="conceptCurrentValue">BRAND GUIDELINES</span>
+                <!-- Brand Colors -->
+                <div class="visual-section">
+                    <div class="visual-section-label">Brand Colors</div>
+                    <div class="color-swatches" id="brandColorSwatches">
+                        <!-- Se renderizarán dinámicamente -->
+                    </div>
                 </div>
-                <div class="card-stats">
-                    <span class="stats-value" id="conceptStatsValue">0 Projects</span>
+                
+                <!-- Typography -->
+                <div class="visual-section">
+                    <div class="visual-section-label">Typography</div>
+                    <div class="typography-preview" id="typographyPreview">
+                        <!-- Se renderizará dinámicamente -->
+                    </div>
+                </div>
+                
+                <!-- Separador -->
+                <div class="visual-separator"></div>
+                
+                <!-- System Status -->
+                <div class="visual-status" id="visualStatus">
+                    <!-- Se renderizará dinámicamente -->
                 </div>
             </div>
         </div>
