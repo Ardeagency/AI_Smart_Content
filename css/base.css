@@ -337,8 +337,28 @@ a:hover {
     color: var(--text-primary);
     font-size: 0.95rem;
     font-family: 'Inter', sans-serif;
-    transition: var(--transition);
+    transition: none !important;
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
     box-sizing: border-box;
+}
+
+/* Eliminar TODAS las transiciones de inputs globales - ESTADO BASE */
+.form-input,
+.form-select,
+.form-textarea,
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="url"],
+input[type="date"],
+textarea,
+select {
+    transition: none !important;
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
 }
 
 /* Eliminar TODOS los efectos hover de inputs globales */
@@ -362,6 +382,13 @@ select:hover {
     height: auto !important;
     min-height: auto !important;
     max-height: none !important;
+    font-size: 0.95rem !important;
+    line-height: inherit !important;
+    scale: 1 !important;
+    transition: none !important;
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
 }
 
 /* Eliminar hover de elementos contenteditable - REGLAS MÁS ESPECÍFICAS */
@@ -398,6 +425,16 @@ h1[contenteditable]:hover {
     border-color: var(--accent-yellow);
     background: var(--bg-card);
     box-shadow: 0 0 0 3px var(--accent-yellow-glow);
+    transition: none !important;
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
+    padding: 0.75rem 1rem !important;
+    margin: 0 !important;
+    transform: none !important;
+    width: 100% !important;
+    font-size: 0.95rem !important;
+    scale: 1 !important;
 }
 
 .form-input::placeholder,
