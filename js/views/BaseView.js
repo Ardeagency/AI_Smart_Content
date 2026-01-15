@@ -753,6 +753,7 @@ class BaseView {
     const letterSpacing = computedStyle.letterSpacing;
     const border = computedStyle.border;
     const borderColor = computedStyle.borderColor;
+    const isBrandName = target.classList && target.classList.contains('brand-name-large');
     
     target.style.background = 'transparent';
     // PRESERVAR BORDE ORIGINAL - NO CAMBIAR
@@ -762,19 +763,23 @@ class BaseView {
     } else {
       target.style.borderColor = 'transparent';
     }
-    target.style.padding = '0';
-    target.style.margin = '0';
+    if (!isBrandName) {
+      target.style.padding = '0';
+      target.style.margin = '0';
+    }
     target.style.transform = 'none';
     target.style.webkitTransform = 'none';
     target.style.mozTransform = 'none';
     target.style.oTransform = 'none';
     target.style.boxShadow = 'none';
-    target.style.width = 'auto';
-    target.style.height = 'auto';
-    target.style.minWidth = 'auto';
-    target.style.maxWidth = 'none';
-    target.style.minHeight = 'auto';
-    target.style.maxHeight = 'none';
+    if (!isBrandName) {
+      target.style.width = 'auto';
+      target.style.height = 'auto';
+      target.style.minWidth = 'auto';
+      target.style.maxWidth = 'none';
+      target.style.minHeight = 'auto';
+      target.style.maxHeight = 'none';
+    }
     target.style.scale = '1';
     target.style.zoom = '1';
     target.style.fontSize = fontSize;

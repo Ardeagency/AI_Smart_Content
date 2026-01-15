@@ -531,6 +531,39 @@ h1[contenteditable]:focus,
     will-change: auto !important;
 }
 
+/* Bloqueo específico para nombre de marca: sin cambios de caja en hover/focus */
+.brand-name-large,
+.brand-name-large:hover,
+.brand-name-large:active,
+.brand-name-large:focus,
+.brand-name-large.editable-field:hover,
+.brand-name-large.editable-field:active,
+.brand-name-large.editable-field:focus,
+h1.brand-name-large:hover,
+h1.brand-name-large:active,
+h1.brand-name-large:focus,
+h1.brand-name-large.editable-field:hover,
+h1.brand-name-large.editable-field:active,
+h1.brand-name-large.editable-field:focus {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    min-width: auto !important;
+    max-width: none !important;
+    min-height: auto !important;
+    max-height: none !important;
+    font-size: inherit !important;
+    line-height: inherit !important;
+    letter-spacing: inherit !important;
+    border: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    transform: none !important;
+    scale: 1 !important;
+    transition: none !important;
+}
+
 /* ============================================
    ESTADO FOCUS UNIFICADO - SIN TRANSICIONES
    ============================================ */

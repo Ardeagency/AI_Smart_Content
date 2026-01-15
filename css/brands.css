@@ -39,8 +39,7 @@
    MODO SECUNDARIO: INFO EXPANDIDO
    ============================================ */
 .brand-dashboard-container {
-    transition: padding 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-                display 0s linear 0.3s; /* Delay para cambio de display */
+    transition: padding 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .brand-dashboard-container.info-mode-secondary {
@@ -201,9 +200,9 @@ h1.brand-name-large[contenteditable="true"]:hover,
     min-height: auto !important;
     max-height: none !important;
     scale: 1 !important;
-    font-size: 3rem !important;
-    line-height: 1 !important;
-    letter-spacing: -0.02em !important;
+    font-size: inherit !important;
+    line-height: inherit !important;
+    letter-spacing: inherit !important;
 }
 
 /* Status dot - sin animación para evitar problemas de rendimiento */
@@ -426,9 +425,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     min-height: 50px;
     padding: 1rem 1.25rem;
     cursor: pointer !important;
-    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
-                min-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
-                max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transition: none !important;
     overflow: hidden;
 }
 
@@ -487,10 +484,8 @@ h1.brand-name-large[contenteditable="true"]:hover,
     box-sizing: border-box;
     flex-shrink: 0;
     transition: opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s,
-                transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s,
-                width 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s,
-                height 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s;
-    will-change: opacity, transform, width, height;
+                transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s;
+    will-change: opacity, transform;
 }
 
 .card-info.expanded .card-content-expanded {
@@ -1030,7 +1025,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     border-radius: 12px;
     padding: 1.25rem;
     margin-bottom: 1.25rem;
-    transition: background 0.2s ease, border-color 0.2s ease;
+    transition: none !important;
 }
 
 .card-content-expanded .info-entity-card:last-child {
@@ -1038,8 +1033,8 @@ h1.brand-name-large[contenteditable="true"]:hover,
 }
 
 .card-content-expanded .info-entity-card:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.03) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 .card-content-expanded .info-entity-header {
@@ -1074,7 +1069,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     border-radius: 12px;
     padding: 1.25rem;
     margin-bottom: 1.25rem;
-    transition: background 0.2s ease, border-color 0.2s ease;
+    transition: none !important;
 }
 
 .card-content-expanded .info-place-card:last-child {
@@ -1082,8 +1077,8 @@ h1.brand-name-large[contenteditable="true"]:hover,
 }
 
 .card-content-expanded .info-place-card:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.03) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 .card-content-expanded .info-place-header {
@@ -1131,7 +1126,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     border-radius: 12px;
     padding: 1.25rem;
     margin-bottom: 1.25rem;
-    transition: background 0.2s ease, border-color 0.2s ease;
+    transition: none !important;
 }
 
 .card-content-expanded .info-audience-card:last-child {
@@ -1139,8 +1134,8 @@ h1.brand-name-large[contenteditable="true"]:hover,
 }
 
 .card-content-expanded .info-audience-card:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.03) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 .card-content-expanded .info-audience-header {

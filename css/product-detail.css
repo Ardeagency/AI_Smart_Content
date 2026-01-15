@@ -113,12 +113,12 @@ body.sidebar-collapsed .product-detail-container {
     overflow: hidden;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: none !important;
 }
 
 .product-image-item:hover {
-    transform: scale(1.02);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    transform: none !important;
+    box-shadow: none !important;
 }
 
 .product-image-item img {
@@ -144,7 +144,7 @@ body.sidebar-collapsed .product-detail-container {
     align-items: center;
     justify-content: center;
     opacity: 0;
-    transition: opacity 0.2s ease;
+    transition: none !important;
     z-index: 10;
 }
 
@@ -153,8 +153,8 @@ body.sidebar-collapsed .product-detail-container {
 }
 
 .delete-image-btn:hover {
-    background: rgba(220, 38, 38, 1);
-    transform: scale(1.1);
+    background: rgba(239, 68, 68, 0.9) !important;
+    transform: none !important;
 }
 
 /* Botón subir imagen */
@@ -172,15 +172,15 @@ body.sidebar-collapsed .product-detail-container {
     border-radius: 12px;
     color: var(--text-primary, #ecebda);
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: none !important;
     font-size: 0.875rem;
     font-weight: 500;
 }
 
 .upload-image-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.5);
-    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    transform: none !important;
 }
 
 .upload-image-btn i {
@@ -234,14 +234,14 @@ body.sidebar-collapsed .product-detail-container {
     border-radius: 8px;
     color: var(--text-primary, #ecebda);
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: none !important;
     font-size: 0.875rem;
     font-weight: 500;
 }
 
 .back-to-products-btn:hover {
-    background: rgba(255, 255, 255, 0.15);
-    transform: translateX(-4px);
+    background: rgba(255, 255, 255, 0.1) !important;
+    transform: none !important;
 }
 
 .product-fields {
