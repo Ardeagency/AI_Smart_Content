@@ -551,7 +551,7 @@ class ProductsView extends BaseView {
   makeEditableText(element, fieldName, fieldType = 'text') {
     if (!element) return;
 
-    element.style.cursor = 'default';
+    element.style.cursor = 'text';
     element.setAttribute('contenteditable', 'true');
     element.classList.add('editable-field');
 
@@ -591,14 +591,15 @@ class ProductsView extends BaseView {
     textarea.className = 'editable-textarea';
     textarea.style.width = '100%';
     textarea.style.minHeight = '100px';
-    textarea.style.padding = '0.75rem';
-    textarea.style.background = 'rgba(255, 255, 255, 0.05)';
+    textarea.style.padding = '0.75rem 1rem';
+    textarea.style.background = 'transparent';
     textarea.style.border = '1px solid rgba(255, 255, 255, 0.1)';
-    textarea.style.borderRadius = '8px';
+    textarea.style.borderRadius = '0';
     textarea.style.color = 'var(--text-primary, #F2F3F5)';
     textarea.style.fontSize = '0.875rem';
     textarea.style.fontFamily = 'inherit';
     textarea.style.resize = 'vertical';
+    textarea.style.transition = 'none';
 
     element.innerHTML = '';
     element.appendChild(textarea);
@@ -630,12 +631,13 @@ class ProductsView extends BaseView {
     const select = document.createElement('select');
     select.className = 'editable-select';
     select.style.width = '100%';
-    select.style.padding = '0.75rem';
-    select.style.background = 'rgba(255, 255, 255, 0.05)';
+    select.style.padding = '0.75rem 1rem';
+    select.style.background = 'transparent';
     select.style.border = '1px solid rgba(255, 255, 255, 0.1)';
-    select.style.borderRadius = '8px';
+    select.style.borderRadius = '0';
     select.style.color = 'var(--text-primary, #F2F3F5)';
     select.style.fontSize = '0.875rem';
+    select.style.transition = 'none';
 
     options.forEach(opt => {
       const option = document.createElement('option');

@@ -23,8 +23,7 @@
     left: var(--nav-width, 280px);
     right: 0;
     bottom: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: hidden;
     background: linear-gradient(135deg, 
         var(--product-warm-5) 0%,
         var(--product-warm-4) 25%,
@@ -34,6 +33,7 @@
     );
     transition: left 0.3s ease;
     padding-top: 48px; /* Espacio para header transparente */
+    overflow-y: auto;
 }
 
 .side-navigation.collapsed ~ * .product-detail-container,
@@ -52,7 +52,6 @@ body.sidebar-collapsed .product-detail-container {
     max-width: 1600px;
     margin: 0 auto;
     min-height: calc(100vh - 48px);
-    position: relative;
 }
 
 @media (max-width: 1200px) {
@@ -70,8 +69,29 @@ body.sidebar-collapsed .product-detail-container {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    overflow: visible;
-    position: relative;
+    max-height: calc(100vh - 48px - 6rem);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 0.5rem;
+}
+
+/* Scrollbar personalizado para la sección de imágenes */
+.product-images-section::-webkit-scrollbar {
+    width: 6px;
+}
+
+.product-images-section::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+.product-images-section::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.product-images-section::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .product-images-gallery {
@@ -231,38 +251,54 @@ body.sidebar-collapsed .product-detail-container {
    ============================================ */
 .editable-field {
     padding: 0.75rem 1rem;
-    background: rgba(255, 255, 255, 0.05);
+    background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    border-radius: 0;
     color: var(--text-primary, #ecebda);
     font-size: 0.875rem;
     line-height: 1.5;
     min-height: 2.5rem;
-    transition: all 0.2s ease;
-    cursor: default !important;
+    /* Sin transiciones ni animaciones */
+    transition: none;
 }
 
 .editable-field:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.2);
+    /* Sin efectos hover */
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
 .editable-field:focus {
     outline: none;
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.3);
-    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: none;
 }
 
 .editable-textarea {
     min-height: 120px;
     resize: vertical;
     font-family: inherit;
-    cursor: default !important;
+    /* Sin transiciones */
+    transition: none;
+}
+
+.editable-textarea:hover {
+    /* Sin efectos hover */
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
 .editable-select {
-    cursor: default !important;
+    cursor: pointer;
+    /* Sin transiciones */
+    transition: none;
+}
+
+.editable-select:hover {
+    /* Sin efectos hover */
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
 .editable-select option {
