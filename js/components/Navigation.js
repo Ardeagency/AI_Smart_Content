@@ -29,6 +29,7 @@ class Navigation {
     // Inicializar
     this.initializeSidebar();
     this.setupEventListeners();
+    this.setupSubmenus();
     this.updateActiveLink();
 
     // Cargar información del usuario si está autenticado
@@ -79,78 +80,85 @@ class Navigation {
 
         <!-- Menú Principal -->
         <div class="nav-menu">
-          <!-- Sección 1: FUNDAMENTOS -->
-          <div class="nav-section">
-            <div class="nav-section-title">Fundamentos</div>
-            <div class="nav-item">
-              <a href="/brands" class="nav-link" data-route="/brands" data-tooltip="Marcas">
-                <i class="fas fa-tags nav-icon"></i>
-                <span class="nav-text">Marcas</span>
-              </a>
+          <!-- Living (primer acceso, sin sección) -->
+          <div class="nav-item">
+            <a href="/living" class="nav-link" data-route="/living" data-tooltip="Living">
+              <i class="fas fa-home nav-icon"></i>
+              <span class="nav-text">Living</span>
+            </a>
+          </div>
+
+          <!-- Marca -->
+          <div class="nav-item">
+            <a href="/brands" class="nav-link" data-route="/brands" data-tooltip="Marca">
+              <i class="fas fa-palette nav-icon"></i>
+              <span class="nav-text">Marca</span>
+            </a>
+          </div>
+
+          <!-- Entidades (con submenú) -->
+          <div class="nav-item nav-item-has-submenu" data-submenu="entidades">
+            <div class="nav-link nav-link-parent" data-tooltip="Entidades">
+              <i class="fas fa-cube nav-icon"></i>
+              <span class="nav-text">Entidades</span>
             </div>
-            <div class="nav-item">
-              <a href="/products" class="nav-link" data-route="/products" data-tooltip="Productos">
-                <i class="fas fa-box nav-icon"></i>
-                <span class="nav-text">Productos</span>
-              </a>
-            </div>
-            <div class="nav-item">
-              <a href="/audiences" class="nav-link" data-route="/audiences" data-tooltip="Audiencias">
-                <i class="fas fa-users nav-icon"></i>
-                <span class="nav-text">Audiencias</span>
-              </a>
+            <div class="nav-submenu" id="navSubmenuEntidades">
+              <div class="nav-submenu-item">
+                <a href="/products" class="nav-link nav-link-sub" data-route="/products" data-tooltip="Productos">
+                  <span class="nav-text">Productos</span>
+                </a>
+              </div>
+              <div class="nav-submenu-item">
+                <a href="/services" class="nav-link nav-link-sub" data-route="/services" data-tooltip="Servicios">
+                  <span class="nav-text">Servicios</span>
+                </a>
+              </div>
+              <div class="nav-submenu-item">
+                <a href="/sedes" class="nav-link nav-link-sub" data-route="/sedes" data-tooltip="Sedes">
+                  <span class="nav-text">Sedes</span>
+                </a>
+              </div>
             </div>
           </div>
 
-          <!-- Sección 2: EJECUCIÓN -->
-          <div class="nav-section">
-            <div class="nav-section-title">Ejecución</div>
-            <div class="nav-item">
-              <a href="/campaigns" class="nav-link" data-route="/campaigns" data-tooltip="Campañas">
-                <i class="fas fa-bullhorn nav-icon"></i>
-                <span class="nav-text">Campañas</span>
-              </a>
-            </div>
-            <div class="nav-item">
-              <a href="/create" class="nav-link" data-route="/create" data-tooltip="Generar contenido">
-                <i class="fas fa-magic nav-icon"></i>
-                <span class="nav-text">Generar contenido</span>
-              </a>
-            </div>
-            <div class="nav-item">
-              <a href="/content" class="nav-link" data-route="/content" data-tooltip="Biblioteca">
-                <i class="fas fa-folder nav-icon"></i>
-                <span class="nav-text">Biblioteca</span>
-              </a>
-            </div>
+          <!-- Audiencias -->
+          <div class="nav-item">
+            <a href="/audiences" class="nav-link" data-route="/audiences" data-tooltip="Audiencias">
+              <i class="fas fa-users nav-icon"></i>
+              <span class="nav-text">Audiencias</span>
+            </a>
           </div>
 
-          <!-- Sección 3: SISTEMA -->
-          <div class="nav-section">
-            <div class="nav-section-title">Sistema</div>
-            <div class="nav-item">
-              <a href="/living" class="nav-link" data-route="/living" data-tooltip="Living">
-                <i class="fas fa-home nav-icon"></i>
-                <span class="nav-text">Living</span>
-              </a>
+          <!-- Marketing -->
+          <div class="nav-item">
+            <a href="/campaigns" class="nav-link" data-route="/campaigns" data-tooltip="Marketing">
+              <i class="fas fa-bullhorn nav-icon"></i>
+              <span class="nav-text">Marketing</span>
+            </a>
+          </div>
+
+          <!-- Producción (con submenú) -->
+          <div class="nav-item nav-item-has-submenu" data-submenu="produccion">
+            <div class="nav-link nav-link-parent" data-tooltip="Producción">
+              <i class="fas fa-video nav-icon"></i>
+              <span class="nav-text">Producción</span>
             </div>
-            <div class="nav-item">
-              <a href="/organization" class="nav-link" data-route="/organization" data-tooltip="Organización">
-                <i class="fas fa-building nav-icon"></i>
-                <span class="nav-text">Organización</span>
-              </a>
-            </div>
-            <div class="nav-item">
-              <a href="/planes" class="nav-link" data-route="/planes" data-tooltip="Planes">
-                <i class="fas fa-credit-card nav-icon"></i>
-                <span class="nav-text">Planes</span>
-              </a>
-            </div>
-            <div class="nav-item">
-              <a href="/settings" class="nav-link" data-route="/settings" data-tooltip="Ajustes">
-                <i class="fas fa-cog nav-icon"></i>
-                <span class="nav-text">Ajustes</span>
-              </a>
+            <div class="nav-submenu" id="navSubmenuProduccion">
+              <div class="nav-submenu-item">
+                <a href="/posts" class="nav-link nav-link-sub" data-route="/posts" data-tooltip="Posts">
+                  <span class="nav-text">Posts</span>
+                </a>
+              </div>
+              <div class="nav-submenu-item">
+                <a href="/reels" class="nav-link nav-link-sub" data-route="/reels" data-tooltip="Reels">
+                  <span class="nav-text">Reels</span>
+                </a>
+              </div>
+              <div class="nav-submenu-item">
+                <a href="/cine" class="nav-link nav-link-sub" data-route="/cine" data-tooltip="Cine">
+                  <span class="nav-text">Cine</span>
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -256,6 +264,17 @@ class Navigation {
     // Navigation links - usar router
     navLinks.forEach(link => {
       link.addEventListener('click', (e) => {
+        // Si es un link padre con submenú, toggle el submenú
+        if (link.classList.contains('nav-link-parent')) {
+          e.preventDefault();
+          const parentItem = link.closest('.nav-item-has-submenu');
+          if (parentItem) {
+            this.toggleSubmenu(parentItem);
+          }
+          return;
+        }
+        
+        // Para links normales y subitems
         e.preventDefault();
         const route = link.dataset.route;
         if (route && window.router) {
@@ -269,6 +288,9 @@ class Navigation {
         this.closeAllDropdowns();
       });
     });
+    
+    // Setup submenus
+    this.setupSubmenus();
 
     // Setup tooltips para estado colapsado
     this.setupTooltips();
@@ -364,6 +386,54 @@ class Navigation {
         icon.classList.remove('fa-chevron-up');
         icon.classList.add('fa-chevron-down');
       }
+    }
+  }
+
+  /**
+   * Configurar submenús
+   */
+  setupSubmenus() {
+    const submenuItems = document.querySelectorAll('.nav-item-has-submenu');
+    
+    submenuItems.forEach(item => {
+      const submenu = item.querySelector('.nav-submenu');
+      if (!submenu) return;
+      
+      // Inicialmente cerrado
+      submenu.classList.remove('open');
+      
+      // Verificar si algún subitem está activo
+      const activeSubitem = submenu.querySelector('.nav-link-sub.active');
+      if (activeSubitem) {
+        submenu.classList.add('open');
+        item.classList.add('active');
+      }
+    });
+  }
+
+  /**
+   * Toggle submenú
+   */
+  toggleSubmenu(parentItem) {
+    const submenu = parentItem.querySelector('.nav-submenu');
+    if (!submenu) return;
+    
+    const isOpen = submenu.classList.contains('open');
+    
+    // Cerrar otros submenús
+    document.querySelectorAll('.nav-submenu').forEach(sm => {
+      if (sm !== submenu) {
+        sm.classList.remove('open');
+      }
+    });
+    
+    // Toggle este submenú
+    if (isOpen) {
+      submenu.classList.remove('open');
+      parentItem.classList.remove('active');
+    } else {
+      submenu.classList.add('open');
+      parentItem.classList.add('active');
     }
   }
 

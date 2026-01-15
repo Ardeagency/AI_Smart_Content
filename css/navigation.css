@@ -793,6 +793,111 @@ body.sidebar-collapsed #app-container .main-header,
 }
 
 /* =========================================
+   SUBMENÚS
+   ========================================= */
+
+.nav-item-has-submenu {
+    position: relative;
+}
+
+.nav-link-parent {
+    cursor: pointer;
+}
+
+.nav-submenu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding-left: 0;
+    margin-top: 0;
+}
+
+.nav-submenu.open {
+    max-height: 500px;
+    padding-left: 0;
+    margin-top: 4px;
+}
+
+.nav-submenu-item {
+    position: relative;
+    margin-left: 40px; /* Indentación para subitems */
+}
+
+.nav-link-sub {
+    padding-left: 12px;
+    height: 28px;
+    min-height: 28px;
+    font-size: 13px;
+    position: relative;
+}
+
+.nav-link-sub::before {
+    content: '';
+    position: absolute;
+    left: -20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 1px;
+    background: var(--text-muted);
+    opacity: 0.4;
+}
+
+.nav-link-sub:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
+.nav-link-sub.active {
+    color: var(--text-primary);
+    background: rgba(216, 255, 0, 0.08);
+}
+
+.nav-link-sub.active::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #ffffff;
+    border-radius: 0 2px 2px 0;
+}
+
+/* Item padre activo cuando un subitem está activo */
+.nav-item-has-submenu.active > .nav-link-parent {
+    color: var(--text-primary);
+    background: rgba(216, 255, 0, 0.08);
+}
+
+.nav-item-has-submenu.active > .nav-link-parent .nav-icon {
+    color: #ffffff;
+}
+
+/* Sin flechas visibles siempre - solo cuando está abierto */
+.nav-link-parent::after {
+    display: none;
+}
+
+/* Ocultar submenús cuando el sidebar está colapsado */
+.side-navigation.collapsed .nav-submenu {
+    display: none;
+}
+
+.side-navigation.collapsed .nav-item-has-submenu.active .nav-link-parent {
+    background: rgba(216, 255, 0, 0.08);
+}
+
+/* Espaciado entre items del menú */
+.nav-menu {
+    gap: 4px;
+}
+
+.nav-item {
+    margin-bottom: 0;
+}
+
+/* =========================================
    FOOTER DEL PANEL: PERFIL
    ========================================= */
 
