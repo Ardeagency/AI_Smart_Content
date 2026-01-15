@@ -77,11 +77,6 @@ class Navigation {
           </div>
         </div>
 
-        <!-- Toggle button -->
-        <button class="nav-toggle-btn" id="navToggleBtn" aria-label="Toggle sidebar">
-          <i class="fas fa-bars"></i>
-        </button>
-
         <!-- Menú Principal -->
         <div class="nav-menu">
           <!-- Sección 1: FUNDAMENTOS -->
@@ -185,6 +180,15 @@ class Navigation {
       if (sideNavigation) {
         sideNavigation.classList.add('collapsed');
         document.body.classList.add('sidebar-collapsed');
+        // Actualizar icono del header si está colapsado
+        const headerSidebarToggle = document.getElementById('headerSidebarToggle');
+        if (headerSidebarToggle) {
+          const icon = headerSidebarToggle.querySelector('i');
+          if (icon) {
+            icon.classList.remove('fa-bars');
+            icon.classList.add('fa-chevron-right');
+          }
+        }
       }
     }
   }
@@ -219,7 +223,20 @@ class Navigation {
       });
     }
 
-    // Toggle button - colapsar/expandir en desktop
+    // Toggle button del header - colapsar/expandir en desktop
+    const headerSidebarToggle = document.getElementById('headerSidebarToggle');
+    if (headerSidebarToggle) {
+      headerSidebarToggle.addEventListener('click', () => {
+        if (window.innerWidth > 768) {
+          this.toggleSidebarCollapse();
+        } else {
+          // En móvil, toggle normal
+          this.toggleNavigation();
+        }
+      });
+    }
+    
+    // Mantener compatibilidad con navToggleBtn si existe (para transición)
     if (navToggleBtn) {
       navToggleBtn.addEventListener('click', () => {
         if (window.innerWidth > 768) {
@@ -434,6 +451,21 @@ class Navigation {
     if (!sideNavigation) return;
     
     this.isCollapsed = !this.isCollapsed;
+    
+    // Actualizar icono del header
+    const headerSidebarToggle = document.getElementById('headerSidebarToggle');
+    if (headerSidebarToggle) {
+      const icon = headerSidebarToggle.querySelector('i');
+      if (icon) {
+        if (this.isCollapsed) {
+          icon.classList.remove('fa-bars');
+          icon.classList.add('fa-chevron-right');
+        } else {
+          icon.classList.remove('fa-chevron-right');
+          icon.classList.add('fa-bars');
+        }
+      }
+    }
     
     if (this.isCollapsed) {
       sideNavigation.classList.add('collapsed');

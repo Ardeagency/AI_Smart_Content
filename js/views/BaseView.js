@@ -366,6 +366,11 @@ class BaseView {
     return `
     <header class="main-header">
         <div class="header-content">
+            <!-- ICONO TOGGLE SIDEBAR -->
+            <button class="header-sidebar-toggle" id="headerSidebarToggle" aria-label="Toggle sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+            
             <!-- ZONA IZQUIERDA: CONTEXTO -->
             <div class="header-left">
                 <div class="header-context">
@@ -429,6 +434,21 @@ class BaseView {
   updateHeaderContext(section, activeObject = null, organizationName = null) {
     const headerLeft = document.querySelector('.header-left');
     if (!headerLeft) return;
+
+    // Verificar si el toggle button ya existe
+    let toggleButton = document.getElementById('headerSidebarToggle');
+    if (!toggleButton) {
+      // Crear toggle button si no existe
+      const headerContent = document.querySelector('.header-content');
+      if (headerContent) {
+        toggleButton = document.createElement('button');
+        toggleButton.className = 'header-sidebar-toggle';
+        toggleButton.id = 'headerSidebarToggle';
+        toggleButton.setAttribute('aria-label', 'Toggle sidebar');
+        toggleButton.innerHTML = '<i class="fas fa-bars"></i>';
+        headerContent.insertBefore(toggleButton, headerContent.firstChild);
+      }
+    }
 
     let html = `
       <div class="header-context">
@@ -519,6 +539,20 @@ class BaseView {
     // Obtener sección actual del header antiguo
     const oldTitle = headerLeft.querySelector('h1');
     const section = oldTitle ? oldTitle.textContent.trim() : '';
+
+    // Agregar toggle button si no existe
+    let toggleButton = existingHeader.querySelector('#headerSidebarToggle');
+    if (!toggleButton) {
+      toggleButton = document.createElement('button');
+      toggleButton.className = 'header-sidebar-toggle';
+      toggleButton.id = 'headerSidebarToggle';
+      toggleButton.setAttribute('aria-label', 'Toggle sidebar');
+      toggleButton.innerHTML = '<i class="fas fa-bars"></i>';
+      const headerContent = existingHeader.querySelector('.header-content');
+      if (headerContent) {
+        headerContent.insertBefore(toggleButton, headerContent.firstChild);
+      }
+    }
 
     // Actualizar zona izquierda con nuevo formato
     this.updateHeaderContext(section, null, null);

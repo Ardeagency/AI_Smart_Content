@@ -32,13 +32,13 @@ class NavigationManager {
         if (savedState === 'true') {
             this.isCollapsed = true;
             const sideNavigation = document.getElementById('sideNavigation');
-            const navToggleBtn = document.getElementById('navToggleBtn');
             if (sideNavigation) {
                 sideNavigation.classList.add('collapsed');
                 document.body.classList.add('sidebar-collapsed');
-                // Actualizar icono si está colapsado
-                if (navToggleBtn) {
-                    const icon = navToggleBtn.querySelector('i');
+                // Actualizar icono del header si está colapsado
+                const headerSidebarToggle = document.getElementById('headerSidebarToggle');
+                if (headerSidebarToggle) {
+                    const icon = headerSidebarToggle.querySelector('i');
                     if (icon) {
                         icon.classList.remove('fa-bars');
                         icon.classList.add('fa-chevron-right');
@@ -117,7 +117,20 @@ class NavigationManager {
             });
         });
         
-        // Toggle button para colapsar/expandir sidebar (solo desktop)
+        // Toggle button del header - colapsar/expandir en desktop
+        const headerSidebarToggle = document.getElementById('headerSidebarToggle');
+        if (headerSidebarToggle) {
+            headerSidebarToggle.addEventListener('click', () => {
+                if (window.innerWidth > 768) {
+                    this.toggleSidebarCollapse();
+                } else {
+                    // En móvil, toggle normal
+                    this.toggleNavigation();
+                }
+            });
+        }
+        
+        // Mantener compatibilidad con navToggleBtn si existe (para transición)
         const navToggleBtn = document.getElementById('navToggleBtn');
         if (navToggleBtn) {
             navToggleBtn.addEventListener('click', () => {
@@ -270,33 +283,46 @@ class NavigationManager {
     // Toggle sidebar collapse/expand (solo desktop)
     toggleSidebarCollapse() {
         const sideNavigation = document.getElementById('sideNavigation');
-        const navToggleBtn = document.getElementById('navToggleBtn');
         if (!sideNavigation) return;
         
         this.isCollapsed = !this.isCollapsed;
         
-        if (this.isCollapsed) {
-            sideNavigation.classList.add('collapsed');
-            document.body.classList.add('sidebar-collapsed');
-            // Cambiar icono a chevron-right cuando está colapsado
-            if (navToggleBtn) {
-                const icon = navToggleBtn.querySelector('i');
-                if (icon) {
+        // Actualizar icono del header
+        const headerSidebarToggle = document.getElementById('headerSidebarToggle');
+        if (headerSidebarToggle) {
+            const icon = headerSidebarToggle.querySelector('i');
+            if (icon) {
+                if (this.isCollapsed) {
                     icon.classList.remove('fa-bars');
                     icon.classList.add('fa-chevron-right');
-                }
-            }
-        } else {
-            sideNavigation.classList.remove('collapsed');
-            document.body.classList.remove('sidebar-collapsed');
-            // Cambiar icono a bars cuando está expandido
-            if (navToggleBtn) {
-                const icon = navToggleBtn.querySelector('i');
-                if (icon) {
+                } else {
                     icon.classList.remove('fa-chevron-right');
                     icon.classList.add('fa-bars');
                 }
             }
+        }
+        
+        // Mantener compatibilidad con navToggleBtn si existe
+        const navToggleBtn = document.getElementById('navToggleBtn');
+        if (navToggleBtn) {
+            const icon = navToggleBtn.querySelector('i');
+            if (icon) {
+                if (this.isCollapsed) {
+                    icon.classList.remove('fa-bars');
+                    icon.classList.add('fa-chevron-right');
+                } else {
+                    icon.classList.remove('fa-chevron-right');
+                    icon.classList.add('fa-bars');
+                }
+            }
+        }
+        
+        if (this.isCollapsed) {
+            sideNavigation.classList.add('collapsed');
+            document.body.classList.add('sidebar-collapsed');
+        } else {
+            sideNavigation.classList.remove('collapsed');
+            document.body.classList.remove('sidebar-collapsed');
         }
         
         // Guardar estado en localStorage

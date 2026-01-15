@@ -39,6 +39,7 @@
     backface-visibility: hidden;
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
+    backdrop-filter: none;
 }
 
 /* Cuando el sidebar está colapsado */
@@ -71,6 +72,40 @@ body.sidebar-collapsed #app-container .main-header,
     max-width: 1600px;
     margin: 0 auto;
     gap: 1rem;
+}
+
+/* =========================================
+   ICONO TOGGLE SIDEBAR EN HEADER
+   ========================================= */
+
+.header-sidebar-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+    margin-right: 0.5rem;
+}
+
+.header-sidebar-toggle:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.header-sidebar-toggle i {
+    font-size: 16px;
+    font-weight: 900;
+    font-style: normal;
+    font-family: "Font Awesome 6 Free";
+    -webkit-font-smoothing: antialiased;
 }
 
 /* =========================================
@@ -574,81 +609,7 @@ body.sidebar-collapsed #app-container .main-header,
     height: 32px;
 }
 
-/* Toggle button */
-.nav-toggle-btn {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    background: transparent;
-    border: none;
-    color: var(--text-secondary);
-    cursor: pointer;
-    padding: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
-    transition: all 0.15s ease;
-    flex-shrink: 0;
-    z-index: 10;
-}
-
-.nav-toggle-btn:hover {
-    color: var(--text-primary);
-    background: var(--bg-hover);
-}
-
-.nav-toggle-btn i {
-    font-size: 16px;
-    font-weight: 900;
-    font-style: normal;
-    font-family: "Font Awesome 6 Free";
-    -webkit-font-smoothing: antialiased;
-}
-
-.side-navigation.collapsed .nav-toggle-btn {
-    position: static;
-    width: 100%;
-    margin: 8px 0;
-}
-
-.nav-toggle-btn {
-    position: absolute;
-    left: 12px;
-    background: transparent;
-    border: none;
-    color: var(--text-secondary);
-    cursor: pointer;
-    padding: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
-    transition: all 0.15s ease;
-    flex-shrink: 0;
-}
-
-.nav-toggle-btn:hover {
-    color: var(--text-primary);
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.nav-toggle-btn i {
-    font-size: 16px;
-    font-weight: 900;
-    font-style: normal;
-    font-family: "Font Awesome 6 Free";
-    -webkit-font-smoothing: antialiased;
-}
-
-.side-navigation.collapsed .nav-toggle-btn {
-    left: 50%;
-    transform: translateX(-50%);
-}
+/* Toggle button removido del sidebar - ahora está en el header */
 
 /* Tooltips para estado colapsado */
 .nav-tooltip {
