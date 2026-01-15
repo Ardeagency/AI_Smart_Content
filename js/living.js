@@ -82,30 +82,30 @@ class LivingManager {
             
             if (!data) {
                 // Crear usuario básico si no existe
-                const { data: { user } } = await this.supabase.auth.getUser();
+                        const { data: { user } } = await this.supabase.auth.getUser();
                 if (user) {
-                    const { error: createError } = await this.supabase
-                        .from('users')
-                        .insert({
-                            id: this.userId,
+                        const { error: createError } = await this.supabase
+                            .from('users')
+                            .insert({
+                                id: this.userId,
                             email: user.email,
                             full_name: user.user_metadata?.full_name || user.email,
-                            plan_type: 'basico',
-                            credits_available: 0,
-                            credits_total: 0
-                        });
-                    
-                    if (!createError) {
+                                plan_type: 'basico',
+                                credits_available: 0,
+                                credits_total: 0
+                            });
+
+                        if (!createError) {
                         const { data: newData } = await this.supabase
-                            .from('users')
-                            .select('*')
-                            .eq('id', this.userId)
-                            .single();
+                                .from('users')
+                                .select('*')
+                                .eq('id', this.userId)
+                                .single();
                         this.userData = newData;
                     }
                 }
             } else {
-                this.userData = data;
+            this.userData = data;
             }
         } catch (error) {
             console.error('Error loading user data:', error);
@@ -225,10 +225,8 @@ class LivingManager {
     }
 
     renderAll() {
-        this.renderTokens();
-        this.renderImagesOfDay();
-        this.renderFavoriteProduct();
-        this.renderTopProductionProduct();
+        this.renderTokensHero();
+        this.renderProductionsOfDay();
         this.renderLatestProductions();
     }
 
@@ -254,15 +252,15 @@ class LivingManager {
         tokensPercentageEl.textContent = `${percentage}% usado`;
     }
 
-    renderImagesOfDay() {
-        const imagesOfDayEl = document.getElementById('imagesOfDay');
-        if (!imagesOfDayEl) return;
+    renderProductionsOfDay() {
+        const productionsOfDayEl = document.getElementById('productionsOfDay');
+        if (!productionsOfDayEl) return;
 
-        // Obtener imágenes generadas hoy
+        // Obtener producciones generadas hoy (flow outputs)
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        const todayImages = this.flowOutputs
+        const todayProductions = this.flowOutputs
             .filter(output => {
                 const outputDate = new Date(output.created_at);
                 outputDate.setHours(0, 0, 0, 0);
@@ -270,21 +268,27 @@ class LivingManager {
             })
             .slice(0, 3);
 
-        if (todayImages.length === 0) {
-            imagesOfDayEl.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-images"></i>
-                    <p>No hay imágenes generadas hoy</p>
-                </div>
-            `;
-            return;
+        // Si hay menos de 3, rellenar con placeholders
+        const items = [];
+        for (let i = 0; i < 3; i++) {
+            if (todayProductions[i]) {
+                items.push(`
+                    <div class="production-day-item">
+                        <img src="${this.escapeHtml(todayProductions[i].file_url)}" alt="Producción del día" onerror="this.parentElement.innerHTML='<div class=\\'production-day-placeholder\\'><i class=\\'fas fa-image\\'></i></div>'">
+                    </div>
+                `);
+            } else {
+                items.push(`
+                    <div class="production-day-item">
+                        <div class="production-day-placeholder">
+                            <i class="fas fa-image"></i>
+                        </div>
+                    </div>
+                `);
+            }
         }
 
-        imagesOfDayEl.innerHTML = todayImages.map(output => `
-            <div class="image-of-day-item">
-                <img src="${output.file_url}" alt="Imagen generada" onerror="this.parentElement.innerHTML='<div class=\\'image-of-day-placeholder\\'><i class=\\'fas fa-image\\'></i></div>'">
-            </div>
-        `).join('');
+        productionsOfDayEl.innerHTML = items.join('');
     }
 
     renderFavoriteProduct() {
@@ -323,11 +327,11 @@ class LivingManager {
                         <div class="favorite-product-stat">
                             <span class="favorite-product-stat-label">Producciones</span>
                             <span class="favorite-product-stat-value">${productionCount}</span>
-                        </div>
+                    </div>
                     </div>
                 </div>
-            </div>
-        `;
+                </div>
+            `;
     }
 
     renderTopProductionProduct() {
@@ -356,7 +360,7 @@ class LivingManager {
                         ? `<img src="${topProduct.mainImage}" alt="${topProduct.nombre_producto}" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'><i class=\\'fas fa-box\\'></i></div>'">`
                         : `<div class="no-image"><i class="fas fa-box"></i></div>`
                     }
-                </div>
+                        </div>
                 <div class="top-production-info">
                     <h3 class="top-production-name">${this.escapeHtml(topProduct.nombre_producto)}</h3>
                     <p class="top-production-type">${this.escapeHtml(topProduct.tipo_producto || 'Producto')}</p>
@@ -365,9 +369,9 @@ class LivingManager {
                         <span class="top-production-count-value">${productionCount}</span>
                         <span class="top-production-count-label">producciones</span>
                     </div>
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
     }
 
     renderLatestProductions() {
@@ -391,6 +395,14 @@ class LivingManager {
             // Buscar output de imagen para este run
             const imageOutput = this.flowOutputs.find(output => output.run_id === run.id);
             const product = run.brand_id ? this.products.find(p => p.id === run.brand_id) : null;
+            
+            // Determinar tipo de contenido basado en el output o run
+            const contentType = this.getContentType(run, imageOutput);
+            const contentTypeIcon = this.getContentTypeIcon(contentType);
+            
+            // Obtener autor (usuario que ejecutó la producción)
+            const authorName = this.userData?.full_name || this.userData?.email || 'Usuario';
+            const authorInitials = this.getInitials(authorName);
 
             return `
                 <div class="production-item">
@@ -403,15 +415,62 @@ class LivingManager {
                     <div class="production-info">
                         <h4 class="production-title">${this.escapeHtml(run.status || 'Producción')}</h4>
                         ${product ? `<p class="production-product">${this.escapeHtml(product.nombre_producto)}</p>` : '<p class="production-product">Sin producto asociado</p>'}
-                        <p class="production-date">${this.formatDate(run.created_at)}</p>
                     </div>
-                    <div class="production-status">
-                        <i class="fas fa-check-circle"></i>
-                        <span>${this.escapeHtml(run.status || 'Completado')}</span>
+                    <div class="production-type">
+                        <i class="${contentTypeIcon}"></i>
+                        <span>${contentType}</span>
+                    </div>
+                    <div class="production-author">
+                        <div class="production-author-avatar">${authorInitials}</div>
+                        <span>${this.escapeHtml(authorName.split('@')[0])}</span>
+                    </div>
+                    <div class="production-date">
+                        ${this.formatDate(run.updated_at || run.created_at)}
                     </div>
                 </div>
             `;
         }).join('');
+    }
+
+    getContentType(run, output) {
+        // Determinar tipo de contenido basado en el run o output
+        if (output) {
+            const url = output.file_url || '';
+            if (url.includes('video') || url.includes('reel') || url.includes('.mp4')) {
+                return 'Reel';
+            } else if (url.includes('image') || url.includes('.jpg') || url.includes('.png')) {
+                return 'Imagen';
+            }
+        }
+        
+        // Fallback basado en el status del run
+        const status = (run.status || '').toLowerCase();
+        if (status.includes('reel') || status.includes('video')) {
+            return 'Reel';
+        } else if (status.includes('post') || status.includes('image')) {
+            return 'Imagen';
+        }
+        
+        return 'Contenido';
+    }
+
+    getContentTypeIcon(contentType) {
+        const icons = {
+            'Reel': 'fas fa-video',
+            'Imagen': 'fas fa-image',
+            'Post': 'fas fa-square',
+            'Contenido': 'fas fa-file-alt'
+        };
+        return icons[contentType] || icons['Contenido'];
+    }
+
+    getInitials(name) {
+        if (!name) return 'U';
+        const parts = name.split(' ');
+        if (parts.length >= 2) {
+            return (parts[0][0] + parts[1][0]).toUpperCase().slice(0, 2);
+        }
+        return name.substring(0, 2).toUpperCase();
     }
 
     setupEventListeners() {

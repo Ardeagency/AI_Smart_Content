@@ -1,17 +1,35 @@
 /**
- * Living Dashboard - Estilos básicos y fáciles de leer
- * Dashboard simple con visualización de tokens, imágenes, productos y producciones
+ * Living Dashboard - Header Grande con Degradado
+ * Dashboard con header hero y sección de producciones
  */
 
+/* ============================================
+   VARIABLES (colores naranja como brands)
+   ============================================ */
+:root {
+    --living-warm-1: #D4754E;
+    --living-warm-2: #C86B45;
+    --living-warm-3: #B85D3A;
+    --living-warm-4: #8B4332;
+    --living-warm-5: #5C2D22;
+    
+    --living-text-light: #E8DDD4;
+    --living-text-gold: #D4B896;
+    --living-text-muted: rgba(232, 221, 212, 0.5);
+}
+
+/* ============================================
+   CONTENEDOR PRINCIPAL
+   ============================================ */
 .living-container {
-    padding: 2rem;
-    padding-top: calc(48px + 2rem);
-    max-width: 1600px;
-    margin: 0 auto;
+    padding: 0;
+    padding-top: 48px;
+    margin: 0;
     margin-left: 20px;
     transition: margin-left 0.3s ease;
     min-height: calc(100vh - 48px);
     background: #0E1012;
+    max-width: none;
 }
 
 .side-navigation.collapsed ~ * .living-container,
@@ -22,393 +40,232 @@ body.sidebar-collapsed .living-container {
 @media (max-width: 768px) {
     .living-container {
         margin-left: 0;
-        padding: 1rem;
-        padding-top: calc(48px + 1rem);
+        padding-top: 48px;
     }
 }
 
 /* ============================================
-   GRID DEL DASHBOARD
+   HEADER HERO GRANDE
    ============================================ */
-.living-dashboard-grid {
+.living-hero-header {
+    position: relative;
+    width: 100%;
+    min-height: 400px;
+    margin-bottom: 3rem;
+    border-radius: 0;
+    overflow: hidden;
+}
+
+.living-hero-background {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+.living-hero-gradient {
+    position: absolute;
+    inset: 0;
+    background: 
+        radial-gradient(ellipse 150% 100% at 10% 60%, var(--living-warm-1) 0%, transparent 50%),
+        radial-gradient(ellipse 120% 80% at 60% 20%, var(--living-warm-2) 0%, transparent 45%),
+        radial-gradient(ellipse 100% 150% at 30% 90%, var(--living-warm-3) 0%, transparent 50%),
+        linear-gradient(145deg, var(--living-warm-4) 0%, var(--living-warm-5) 100%);
+}
+
+.living-hero-content {
+    position: relative;
+    z-index: 1;
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    padding: 3rem;
+    min-height: 400px;
+    align-items: start;
 }
 
-.living-dashboard-grid .full-width {
-    grid-column: 1 / -1;
-}
-
-@media (max-width: 1200px) {
-    .living-dashboard-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* ============================================
-   CARDS BASE
-   ============================================ */
-.living-card {
-    background: #15171c;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    transition: none !important;
-}
-
-.living-card:hover {
-    border-color: rgba(255, 255, 255, 0.12);
-}
-
-.card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    flex-shrink: 0;
-}
-
-.card-header h2 {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--text-primary, #ecebda);
-    margin: 0;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.card-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-
-/* ============================================
-   CARD: USO DE TOKENS
-   ============================================ */
-
-.tokens-visualization {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-.tokens-stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.75rem;
-}
-
-.token-stat {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    text-align: center;
-}
-
-.token-label {
-    font-size: 0.75rem;
-    color: var(--text-muted, #6B7280);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.token-value {
+.living-hero-title {
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--accent-yellow, #e09145);
-}
-
-.tokens-progress-bar {
-    width: 100%;
-    height: 12px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 6px;
-    overflow: hidden;
-    position: relative;
-}
-
-.tokens-progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent-yellow, #e09145) 0%, var(--accent-warm, #e09145) 100%);
-    border-radius: 6px;
-    transition: width 0.3s ease;
-    width: 0%;
-}
-
-.tokens-percentage {
-    text-align: center;
-    font-size: 0.875rem;
-    color: var(--text-secondary, #A0A0A0);
-    font-weight: 500;
+    color: var(--living-text-light);
+    margin: 0 0 2rem 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 /* ============================================
-   CARD: IMÁGENES DEL DÍA
+   COLUMNA IZQUIERDA: PRODUCCIONES DEL DÍA
    ============================================ */
-
-.images-of-day {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.75rem;
+.living-hero-left {
+    display: flex;
+    flex-direction: column;
 }
 
-.image-of-day-item {
+.living-productions-day {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.production-day-item {
     aspect-ratio: 1;
     border-radius: 12px;
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
     position: relative;
     cursor: pointer;
-    transition: none !important;
+    transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
-.image-of-day-item:hover {
-    border-color: rgba(255, 255, 255, 0.2);
+.production-day-item:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255, 255, 255, 0.4);
 }
 
-.image-of-day-item img {
+.production-day-item img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
 }
 
-.image-of-day-placeholder {
+.production-day-placeholder {
     width: 100%;
     height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--text-muted, #6B7280);
-    font-size: 2rem;
-}
-
-@media (max-width: 768px) {
-    .images-of-day {
-        grid-template-columns: 1fr;
-    }
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 2.5rem;
 }
 
 /* ============================================
-   CARD: PRODUCTO FAVORITO
+   COLUMNA DERECHA: TOKENS
    ============================================ */
-
-.favorite-product {
+.living-hero-right {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
 }
 
-.favorite-product-content {
+.living-tokens-hero {
     display: flex;
-    gap: 1.25rem;
-    align-items: flex-start;
+    flex-direction: column;
+    gap: 2rem;
 }
 
-.favorite-product-image {
-    width: 100px;
-    height: 100px;
-    min-width: 100px;
-    border-radius: 12px;
-    overflow: hidden;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+.tokens-hero-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
 }
 
-.favorite-product-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.favorite-product-image .no-image {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-muted, #6B7280);
-    font-size: 2rem;
-}
-
-.favorite-product-info {
-    flex: 1;
+.token-hero-stat {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    text-align: center;
 }
 
-.favorite-product-name {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--text-primary, #ecebda);
-    margin: 0;
-}
-
-.favorite-product-type {
+.token-hero-label {
     font-size: 0.875rem;
-    color: var(--text-secondary, #A0A0A0);
-}
-
-.favorite-product-stats {
-    display: flex;
-    gap: 1.5rem;
-    margin-top: 0.75rem;
-}
-
-.favorite-product-stat {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.favorite-product-stat-label {
-    font-size: 0.75rem;
-    color: var(--text-muted, #6B7280);
+    color: var(--living-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    font-weight: 500;
 }
 
-.favorite-product-stat-value {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--accent-yellow, #e09145);
-}
-
-/* ============================================
-   CARD: MAYOR PRODUCCIÓN
-   ============================================ */
-
-.top-production-product {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.top-production-content {
-    display: flex;
-    gap: 1.25rem;
-    align-items: flex-start;
-}
-
-.top-production-image {
-    width: 100px;
-    height: 100px;
-    min-width: 100px;
-    border-radius: 12px;
-    overflow: hidden;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.top-production-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.top-production-image .no-image {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-muted, #6B7280);
+.token-hero-value {
     font-size: 2rem;
-}
-
-.top-production-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    min-width: 0;
-}
-
-.top-production-name {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--text-primary, #ecebda);
-    margin: 0;
-}
-
-.top-production-type {
-    font-size: 0.875rem;
-    color: var(--text-secondary, #A0A0A0);
-}
-
-.top-production-count {
-    margin-top: 0.5rem;
-    padding: 0.75rem 1rem;
-    background: rgba(224, 145, 69, 0.1);
-    border: 1px solid rgba(224, 145, 69, 0.2);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.top-production-count-icon {
-    color: var(--accent-yellow, #e09145);
-    font-size: 1.25rem;
-}
-
-.top-production-count-value {
-    font-size: 1.5rem;
     font-weight: 700;
-    color: var(--accent-yellow, #e09145);
+    color: var(--living-text-light);
 }
 
-.top-production-count-label {
-    font-size: 0.875rem;
-    color: var(--text-secondary, #A0A0A0);
-}
-
-/* ============================================
-   CARD: ÚLTIMAS PRODUCCIONES
-   ============================================ */
-.latest-productions-card {
-    min-height: 400px;
-}
-
-.productions-list {
+.tokens-hero-progress {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
 }
 
-.production-item {
+.tokens-hero-progress-bar {
+    width: 100%;
+    height: 16px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+}
+
+.tokens-hero-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+    border-radius: 8px;
+    transition: width 0.5s ease;
+    width: 0%;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+.tokens-hero-percentage {
+    text-align: center;
+    font-size: 1rem;
+    color: var(--living-text-light);
+    font-weight: 600;
+}
+
+/* ============================================
+   SECCIÓN: ÚLTIMAS PRODUCCIONES
+   ============================================ */
+.living-productions-section {
+    padding: 0 3rem 3rem 3rem;
+}
+
+.living-productions-header {
+    margin-bottom: 2rem;
+}
+
+.living-productions-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary, #ecebda);
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.living-productions-content {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 1rem;
-    padding: 1rem;
+}
+
+/* ============================================
+   ITEM DE PRODUCCIÓN (NUEVO FORMATO)
+   ============================================ */
+.production-item {
+    display: grid;
+    grid-template-columns: 100px 1fr auto auto auto;
+    gap: 1.5rem;
+    align-items: center;
+    padding: 1.25rem;
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
-    transition: none !important;
-    flex-shrink: 0;
+    transition: all 0.2s ease;
 }
 
 .production-item:hover {
-    border-color: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.15);
     background: rgba(255, 255, 255, 0.05);
+    transform: translateX(4px);
 }
 
 .production-image {
-    width: 80px;
-    height: 80px;
-    min-width: 80px;
+    width: 100px;
+    height: 100px;
     border-radius: 8px;
     overflow: hidden;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
 }
 
 .production-image img {
@@ -428,21 +285,17 @@ body.sidebar-collapsed .living-container {
 }
 
 .production-info {
-    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 0.375rem;
+    gap: 0.5rem;
     min-width: 0;
 }
 
 .production-title {
-    font-size: 0.95rem;
+    font-size: 1rem;
     font-weight: 600;
     color: var(--text-primary, #ecebda);
     margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .production-product {
@@ -450,22 +303,55 @@ body.sidebar-collapsed .living-container {
     color: var(--text-secondary, #A0A0A0);
 }
 
-.production-date {
-    font-size: 0.75rem;
-    color: var(--text-muted, #6B7280);
-}
-
-.production-status {
+/* Clasificación: Tipo de Contenido */
+.production-type {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
+    padding: 0.5rem 1rem;
     background: rgba(224, 145, 69, 0.1);
     border: 1px solid rgba(224, 145, 69, 0.2);
     border-radius: 6px;
-    font-size: 0.75rem;
+    font-size: 0.813rem;
     color: var(--accent-yellow, #e09145);
     font-weight: 500;
+    white-space: nowrap;
+}
+
+.production-type i {
+    font-size: 0.875rem;
+}
+
+/* Clasificación: Autor */
+.production-author {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.813rem;
+    color: var(--text-secondary, #A0A0A0);
+    white-space: nowrap;
+}
+
+.production-author-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.625rem;
+    color: var(--text-primary, #ecebda);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+/* Clasificación: Última Modificación */
+.production-date {
+    font-size: 0.813rem;
+    color: var(--text-muted, #6B7280);
+    white-space: nowrap;
 }
 
 /* ============================================
@@ -492,52 +378,57 @@ body.sidebar-collapsed .living-container {
 /* ============================================
    RESPONSIVE
    ============================================ */
+@media (max-width: 1200px) {
+    .living-hero-content {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    
+    .tokens-hero-stats {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
 @media (max-width: 768px) {
     .living-container {
-        padding: 1rem;
-        padding-top: calc(48px + 1rem);
+        margin-left: 0;
     }
-
-    .living-dashboard-grid {
+    
+    .living-hero-header {
+        min-height: auto;
+    }
+    
+    .living-hero-content {
+        padding: 2rem 1.5rem;
+        grid-template-columns: 1fr;
+    }
+    
+    .living-productions-day {
+        grid-template-columns: 1fr;
+    }
+    
+    .tokens-hero-stats {
+        grid-template-columns: 1fr;
         gap: 1rem;
     }
-
-    .living-card {
-        padding: 1.25rem;
+    
+    .living-productions-section {
+        padding: 0 1.5rem 2rem 1.5rem;
     }
-
-    .card-header {
-        margin-bottom: 1.25rem;
-        padding-bottom: 0.875rem;
-    }
-
-    .tokens-stats {
-        grid-template-columns: 1fr;
-        gap: 0.75rem;
-    }
-
-    .favorite-product-content,
-    .top-production-content {
-        flex-direction: column;
-    }
-
-    .favorite-product-image,
-    .top-production-image {
-        width: 100%;
-        height: 200px;
-    }
-
+    
     .production-item {
-        flex-direction: column;
-        align-items: flex-start;
+        grid-template-columns: 1fr;
+        gap: 1rem;
     }
-
+    
     .production-image {
         width: 100%;
         height: 200px;
     }
-
-    .empty-state {
-        padding: 2rem 1rem;
+    
+    .production-type,
+    .production-author,
+    .production-date {
+        justify-self: start;
     }
 }

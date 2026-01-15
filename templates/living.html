@@ -32,98 +32,74 @@
     <!-- Contenido Principal -->
     <main class="main-content">
         <div class="living-container">
-            <!-- Grid Principal -->
-            <div class="living-dashboard-grid">
-                
-                <!-- Card 1: Uso de Tokens -->
-                <div class="living-card tokens-card">
-                    <div class="card-header">
-                        <h2>Uso de Tokens</h2>
-                    </div>
-                    <div class="card-content">
-                        <div class="tokens-visualization" id="tokensVisualization">
-                            <div class="tokens-stats">
-                                <div class="token-stat">
-                                    <span class="token-label">Usados</span>
-                                    <span class="token-value" id="tokensUsed">0</span>
-                                </div>
-                                <div class="token-stat">
-                                    <span class="token-label">Disponibles</span>
-                                    <span class="token-value" id="tokensAvailable">0</span>
-                                </div>
-                                <div class="token-stat">
-                                    <span class="token-label">Total</span>
-                                    <span class="token-value" id="tokensTotal">0</span>
+            <!-- Header Grande con Degradado -->
+            <div class="living-hero-header">
+                <div class="living-hero-background">
+                    <div class="living-hero-gradient"></div>
+                </div>
+                <div class="living-hero-content">
+                    <!-- Columna Izquierda: Producciones del Día -->
+                    <div class="living-hero-left">
+                        <h2 class="living-hero-title">Producciones del Día</h2>
+                        <div class="living-productions-day" id="productionsOfDay">
+                            <div class="production-day-item">
+                                <div class="production-day-placeholder">
+                                    <i class="fas fa-image"></i>
                                 </div>
                             </div>
-                            <div class="tokens-progress-bar">
-                                <div class="tokens-progress-fill" id="tokensProgressFill"></div>
+                            <div class="production-day-item">
+                                <div class="production-day-placeholder">
+                                    <i class="fas fa-image"></i>
+                                </div>
                             </div>
-                            <div class="tokens-percentage" id="tokensPercentage">0%</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card 2: 3 Imágenes del Día -->
-                <div class="living-card images-card">
-                    <div class="card-header">
-                        <h2>Imágenes del Día</h2>
-                    </div>
-                    <div class="card-content">
-                        <div class="images-of-day" id="imagesOfDay">
-                            <div class="empty-state">
-                                <i class="fas fa-images"></i>
-                                <p>No hay imágenes generadas hoy</p>
+                            <div class="production-day-item">
+                                <div class="production-day-placeholder">
+                                    <i class="fas fa-image"></i>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Card 3: Producto Favorito -->
-                <div class="living-card favorite-product-card">
-                    <div class="card-header">
-                        <h2>Producto Favorito</h2>
-                    </div>
-                    <div class="card-content">
-                        <div class="favorite-product" id="favoriteProduct">
-                            <div class="empty-state">
-                                <i class="fas fa-star"></i>
-                                <p>No hay producto favorito</p>
+                    
+                    <!-- Columna Derecha: Tokens -->
+                    <div class="living-hero-right">
+                        <h2 class="living-hero-title">Uso de Tokens</h2>
+                        <div class="living-tokens-hero" id="tokensHero">
+                            <div class="tokens-hero-stats">
+                                <div class="token-hero-stat">
+                                    <span class="token-hero-label">Usados</span>
+                                    <span class="token-hero-value" id="tokensUsedHero">0</span>
+                                </div>
+                                <div class="token-hero-stat">
+                                    <span class="token-hero-label">Disponibles</span>
+                                    <span class="token-hero-value" id="tokensAvailableHero">0</span>
+                                </div>
+                                <div class="token-hero-stat">
+                                    <span class="token-hero-label">Total</span>
+                                    <span class="token-hero-value" id="tokensTotalHero">0</span>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card 4: Producto con Mayor Producción -->
-                <div class="living-card top-production-card">
-                    <div class="card-header">
-                        <h2>Mayor Producción</h2>
-                    </div>
-                    <div class="card-content">
-                        <div class="top-production-product" id="topProductionProduct">
-                            <div class="empty-state">
-                                <i class="fas fa-chart-line"></i>
-                                <p>No hay producciones registradas</p>
+                            <div class="tokens-hero-progress">
+                                <div class="tokens-hero-progress-bar">
+                                    <div class="tokens-hero-progress-fill" id="tokensProgressFillHero"></div>
+                                </div>
+                                <div class="tokens-hero-percentage" id="tokensPercentageHero">0% usado</div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Card 5: Últimas Producciones (Full Width) -->
-                <div class="living-card latest-productions-card full-width">
-                    <div class="card-header">
-                        <h2>Últimas Producciones</h2>
-                    </div>
-                    <div class="card-content">
-                        <div class="productions-list" id="productionsList">
-                            <div class="empty-state">
-                                <i class="fas fa-file-alt"></i>
-                                <p>No hay producciones recientes</p>
-                            </div>
-                        </div>
+            <!-- Sección: Últimas Producciones -->
+            <div class="living-productions-section">
+                <div class="living-productions-header">
+                    <h2 class="living-productions-title">Últimas Producciones</h2>
+                </div>
+                <div class="living-productions-content" id="productionsList">
+                    <div class="empty-state">
+                        <i class="fas fa-file-alt"></i>
+                        <p>No hay producciones recientes</p>
                     </div>
                 </div>
-
             </div>
         </div>
     </main>
