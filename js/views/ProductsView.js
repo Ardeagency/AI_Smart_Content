@@ -552,6 +552,10 @@ class ProductsView extends BaseView {
     if (!element) return;
 
     element.style.cursor = 'text';
+    element.style.transition = 'none';
+    element.style.webkitTransition = 'none';
+    element.style.mozTransition = 'none';
+    element.style.oTransition = 'none';
     element.setAttribute('contenteditable', 'true');
     element.classList.add('editable-field');
 
@@ -576,6 +580,13 @@ class ProductsView extends BaseView {
         element.blur();
       }
     });
+
+    // Eliminar cualquier efecto hover
+    element.addEventListener('mouseenter', (e) => {
+      e.target.style.background = 'transparent';
+      e.target.style.transform = 'none';
+      e.target.style.boxShadow = 'none';
+    });
   }
 
   /**
@@ -599,7 +610,11 @@ class ProductsView extends BaseView {
     textarea.style.fontSize = '0.875rem';
     textarea.style.fontFamily = 'inherit';
     textarea.style.resize = 'vertical';
+    textarea.style.cursor = 'text';
     textarea.style.transition = 'none';
+    textarea.style.webkitTransition = 'none';
+    textarea.style.mozTransition = 'none';
+    textarea.style.oTransition = 'none';
 
     element.innerHTML = '';
     element.appendChild(textarea);
@@ -637,7 +652,11 @@ class ProductsView extends BaseView {
     select.style.borderRadius = '0';
     select.style.color = 'var(--text-primary, #F2F3F5)';
     select.style.fontSize = '0.875rem';
+    select.style.cursor = 'default';
     select.style.transition = 'none';
+    select.style.webkitTransition = 'none';
+    select.style.mozTransition = 'none';
+    select.style.oTransition = 'none';
 
     options.forEach(opt => {
       const option = document.createElement('option');
