@@ -826,8 +826,7 @@ class BrandsView extends BaseView {
     
     container.innerHTML = `
       <!-- IDENTIDAD - Solo logo -->
-      <section class="info-section">
-        <h3 class="info-section-title">Identidad</h3>
+      <section class="info-section info-section-identity">
         <div class="info-section-content">
           ${this.renderIdentitySection(brandContainer, brand)}
         </div>
