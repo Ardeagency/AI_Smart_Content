@@ -794,7 +794,7 @@ body.sidebar-collapsed #app-container .main-header,
 /* Dominio 1: Living (estado vivo, va solo) */
 .nav-item:first-child {
     margin-top: 0;
-    margin-bottom: 24px; /* Espacio real después de Living */
+    margin-bottom: 5px; /* Espacio reducido después de Living */
 }
 
 /* Dominio 2: Marca (fundacional, sólida) */
