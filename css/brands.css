@@ -264,7 +264,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     right: 1.5rem;
     bottom: 1.5rem;
     width: 380px;
-    z-index: 10;
+    z-index: 1010; /* Por encima del header principal (z-index: 1000) */
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
@@ -488,7 +488,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     padding: 1.25rem;
     margin: 0 !important;
     margin-bottom: 15px !important; /* Margen inferior para que llegue hasta abajo con espacio */
-    z-index: 100;
+    z-index: 1010; /* Por encima del header principal (z-index: 1000) */
     display: flex !important;
     flex-direction: column !important;
     box-sizing: border-box;
