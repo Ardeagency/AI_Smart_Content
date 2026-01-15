@@ -305,54 +305,54 @@ if (typeof window.ProductsManager === 'undefined') {
 
         const tipoLabel = tipoProductoMap[product.tipo_producto] || product.tipo_producto;
 
+        // Formatear precio
+        const precio = product.precio_producto 
+            ? `${product.moneda || 'USD'} $${parseFloat(product.precio_producto).toFixed(2)}` 
+            : null;
+
+        // Tipo de producto como tag (puede ser un string o array)
+        const tipoProducto = product.tipo_producto || 'otro';
+        const tipoTags = Array.isArray(tipoProducto) ? tipoProducto : [tipoProducto];
+
         card.innerHTML = `
             <div class="product-card-image">
                 ${mainImage 
                     ? `<img src="${mainImage}" alt="${product.nombre_producto}" loading="lazy">` 
                     : `<div class="no-image"><i class="fas fa-image"></i></div>`
                 }
-                <div class="product-card-badge">${tipoLabel}</div>
+                ${precio ? `<div class="product-card-price-badge">${precio}</div>` : ''}
             </div>
             <div class="product-card-content">
-                <h3 class="product-card-title">${product.nombre_producto || 'Sin nombre'}</h3>
-                <p class="product-card-description">${product.descripcion_producto || 'Sin descripción'}</p>
-                <div class="product-card-footer">
-                    <div class="product-card-price">
-                        ${product.precio_producto 
-                            ? `${product.moneda || 'USD'} $${parseFloat(product.precio_producto).toFixed(2)}` 
-                            : 'Precio no definido'
-                        }
-                    </div>
-                    <div class="product-card-actions">
-                        <button class="btn-icon edit" title="Editar" data-product-id="${product.id}">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn-icon delete" title="Eliminar" data-product-id="${product.id}">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
+                <div class="product-card-header">
+                    <h3 class="product-card-title">${product.nombre_producto || 'Sin nombre'}</h3>
+                    <button class="product-card-edit-btn" title="Editar" data-product-id="${product.id}">
+                        Editar <i class="fas fa-arrow-up-right"></i>
+                    </button>
                 </div>
+                ${tipoTags.length > 0 ? `
+                    <div class="product-card-types">
+                        ${tipoTags.map(tipo => `
+                            <span class="product-card-type-tag">${tipo}</span>
+                        `).join('')}
+                    </div>
+                ` : ''}
             </div>
         `;
 
         // Event listeners
         card.addEventListener('click', (e) => {
-            if (!e.target.closest('.product-card-actions')) {
+            if (!e.target.closest('.product-card-edit-btn')) {
                 this.openSidebar(product.id);
             }
         });
 
-        card.querySelector('.btn-icon.edit').addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.openSidebar(product.id);
-        });
-
-        card.querySelector('.btn-icon.delete').addEventListener('click', async (e) => {
-            e.stopPropagation();
-            if (confirm('¿Estás seguro de que deseas eliminar este producto?')) {
-                await this.deleteProduct(product.id);
-            }
-        });
+        const editBtn = card.querySelector('.product-card-edit-btn');
+        if (editBtn) {
+            editBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.openSidebar(product.id);
+            });
+        }
 
         return card;
     }
