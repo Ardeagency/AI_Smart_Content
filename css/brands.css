@@ -38,6 +38,11 @@
 /* ============================================
    MODO SECUNDARIO: INFO EXPANDIDO
    ============================================ */
+.brand-dashboard-container {
+    transition: padding 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                display 0s linear 0.3s; /* Delay para cambio de display */
+}
+
 .brand-dashboard-container.info-mode-secondary {
     display: flex;
     align-items: flex-start;
@@ -45,7 +50,8 @@
     overflow-y: auto;
     overflow-x: hidden;
     padding: 15px !important; /* 15px en todos los lados */
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: padding 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    will-change: padding;
 }
 
 /* Ocultar elementos del modo principal cuando está en modo secundario */
@@ -53,7 +59,9 @@
 .brand-dashboard-container.info-mode-secondary .brand-corner-bottom-left {
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.4s ease, transform 0.4s ease;
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s,
+                transform 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s;
+    will-change: opacity, transform;
 }
 
 /* Asegurar que elementos vuelvan a ser visibles cuando NO está en modo secundario */
@@ -61,7 +69,9 @@
 .brand-dashboard-container:not(.info-mode-secondary) .brand-corner-bottom-left {
     opacity: 1 !important;
     pointer-events: auto !important;
-    transition: opacity 0.5s ease 0.2s, transform 0.5s ease 0.2s;
+    transition: opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.3s,
+                transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.3s;
+    will-change: opacity, transform;
 }
 
 .side-navigation.collapsed ~ * .brand-dashboard-container,
@@ -385,6 +395,12 @@ body.sidebar-collapsed .brand-dashboard-container {
 .card-info .card-header {
     align-items: center;
     position: relative;
+    justify-content: space-between !important;
+}
+
+/* Ocultar flecha cuando INFO está expandido */
+.card-info.expanded .card-arrow {
+    display: none !important;
 }
 
 /* Botón cerrar en header */
@@ -417,27 +433,34 @@ body.sidebar-collapsed .brand-dashboard-container {
     max-width: 100% !important;
     min-width: 0 !important;
     min-height: calc(100vh - 48px - 30px); /* Altura completa menos header (48px) y padding (30px total) */
+    height: calc(100vh - 48px - 30px) !important; /* Forzar altura completa */
     padding: 1.25rem;
     margin: 0 !important;
     margin-bottom: 15px !important; /* Margen inferior para que llegue hasta abajo con espacio */
     z-index: 100;
-    height: auto !important;
-    display: block !important;
+    display: flex !important;
+    flex-direction: column !important;
     box-sizing: border-box;
     flex-shrink: 0;
-    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
-                transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s,
+                transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s,
+                width 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s,
+                height 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s;
+    will-change: opacity, transform, width, height;
 }
 
 .card-info.expanded .card-content-expanded {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
     margin-top: 1.5rem;
     opacity: 0;
-    animation: fadeIn 0.5s ease 0.3s both;
-    max-height: calc(100vh - 200px);
+    animation: fadeInContent 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.5s both;
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+    min-height: 0; /* Permite que flex funcione correctamente */
+    will-change: opacity, transform;
 }
 
 .card-info.expanded .card-content-expanded::-webkit-scrollbar {
@@ -457,10 +480,10 @@ body.sidebar-collapsed .brand-dashboard-container {
     background: rgba(255, 255, 255, 0.3);
 }
 
-@keyframes fadeIn {
+@keyframes fadeInContent {
     from {
         opacity: 0;
-        transform: translateY(-10px);
+        transform: translateY(8px);
     }
     to {
         opacity: 1;
@@ -823,11 +846,27 @@ body.sidebar-collapsed .brand-dashboard-container {
     color: var(--text-primary, #F2F3F5);
 }
 
-/* Grid de identidad */
-.card-content-expanded .info-identity-grid {
+/* Contenedor de logo (sin título) */
+.card-content-expanded .info-logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 1rem;
+}
+
+/* Grid de secciones (Esencia y Lenguaje) */
+.card-content-expanded .info-sections-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+}
+
+@media (max-width: 768px) {
+    .card-content-expanded .info-sections-grid {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+    }
 }
 
 .card-content-expanded .info-identity-item {
@@ -850,16 +889,16 @@ body.sidebar-collapsed .brand-dashboard-container {
     line-height: 1.5;
 }
 
-.card-content-expanded .info-logo-preview {
-    max-width: 120px;
-    max-height: 80px;
+.card-content-expanded .info-logo-container .info-logo-preview {
+    max-width: 200px;
+    max-height: 120px;
     object-fit: contain;
     border-radius: 8px;
 }
 
-.card-content-expanded .info-logo-placeholder {
-    width: 120px;
-    height: 80px;
+.card-content-expanded .info-logo-container .info-logo-placeholder {
+    width: 200px;
+    height: 120px;
     background: rgba(255, 255, 255, 0.05);
     border: 1px dashed rgba(255, 255, 255, 0.2);
     border-radius: 8px;
@@ -867,7 +906,7 @@ body.sidebar-collapsed .brand-dashboard-container {
     align-items: center;
     justify-content: center;
     color: var(--text-muted, #6B7280);
-    font-size: 1.5rem;
+    font-size: 2rem;
 }
 
 /* Campos de información */

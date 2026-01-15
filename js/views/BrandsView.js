@@ -595,20 +595,25 @@ class BrandsView extends BaseView {
       cardsZone
     };
     
-    // Ocultar otras cards y nombre de marca con fade out
-    otherCards.forEach(card => {
-      card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+    // Preparar infoCard para animación (antes de moverla)
+    infoCard.style.willChange = 'opacity, transform, width, height';
+    
+    // Ocultar otras cards y nombre de marca con fade out suave
+    otherCards.forEach((card, index) => {
+      card.style.willChange = 'opacity, transform';
+      card.style.transition = `opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.03}s, transform 0.5s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.03}s`;
       card.style.opacity = '0';
-      card.style.transform = 'translateY(-20px)';
+      card.style.transform = 'translateY(-12px) scale(0.98)';
     });
     
     if (cornerInfo) {
-      cornerInfo.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+      cornerInfo.style.willChange = 'opacity, transform';
+      cornerInfo.style.transition = 'opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s, transform 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s';
       cornerInfo.style.opacity = '0';
-      cornerInfo.style.transform = 'translateY(20px)';
+      cornerInfo.style.transform = 'translateY(12px) scale(0.98)';
     }
     
-    // Cambiar a modo secundario: centrado con márgenes (con delay para animación)
+    // Cambiar a modo secundario después de que las otras cards empiecen a desaparecer
     setTimeout(() => {
       dashboardContainer.classList.add('info-mode-secondary');
       dashboardContainer.classList.remove('info-expanded'); // Limpiar clase antigua si existe
@@ -617,18 +622,21 @@ class BrandsView extends BaseView {
       infoCard.classList.add('expanded');
       dashboardContainer.appendChild(infoCard);
       
-      // Animación de entrada de la card
+      // Preparar estado inicial para animación suave
       requestAnimationFrame(() => {
         infoCard.style.opacity = '0';
-        infoCard.style.transform = 'scale(0.95) translateY(20px)';
-        infoCard.style.transition = 'opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+        infoCard.style.transform = 'scale(0.96) translateY(15px)';
+        infoCard.style.transition = 'opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s, transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s';
         
+        // Animar entrada con doble requestAnimationFrame para suavidad
         requestAnimationFrame(() => {
-          infoCard.style.opacity = '1';
-          infoCard.style.transform = 'scale(1) translateY(0)';
+          requestAnimationFrame(() => {
+            infoCard.style.opacity = '1';
+            infoCard.style.transform = 'scale(1) translateY(0)';
+          });
         });
       });
-    }, 200); // Delay para que las otras cards se oculten primero
+    }, 150); // Timing optimizado para mejor sincronización
   }
 
   closeInfoPanel() {
@@ -642,12 +650,26 @@ class BrandsView extends BaseView {
     
     const { dashboardContainer, cardsZone, otherCards, cornerInfo } = this.infoPanelState;
     
-    // Animación de salida de la card
-    infoCard.style.transition = 'opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
-    infoCard.style.opacity = '0';
-    infoCard.style.transform = 'scale(0.95) translateY(-20px)';
+    // Animar contenido primero (fade out rápido)
+    const content = infoCard.querySelector('.card-content-expanded');
+    if (content) {
+      content.style.transition = 'opacity 0.2s cubic-bezier(0.55, 0.055, 0.675, 0.19)';
+      content.style.opacity = '0';
+    }
     
-    // Esperar a que termine la animación de salida
+    // Preparar animación de salida suave de la card
+    infoCard.style.willChange = 'opacity, transform';
+    infoCard.style.transition = 'opacity 0.5s cubic-bezier(0.55, 0.055, 0.675, 0.19), transform 0.5s cubic-bezier(0.55, 0.055, 0.675, 0.19)';
+    
+    // Animar salida con pequeño delay para que el contenido desaparezca primero
+    setTimeout(() => {
+      requestAnimationFrame(() => {
+        infoCard.style.opacity = '0';
+        infoCard.style.transform = 'scale(0.96) translateY(-15px)';
+      });
+    }, 100);
+    
+    // Esperar a que termine la animación de salida (incluyendo el delay del contenido)
     setTimeout(() => {
       // Remover clase expandida de la card
       infoCard.classList.remove('expanded');
@@ -663,6 +685,7 @@ class BrandsView extends BaseView {
       infoCard.style.maxWidth = '';
       infoCard.style.opacity = '';
       infoCard.style.transform = '';
+      infoCard.style.willChange = '';
       
       // Remover contenido expandido
       const content = infoCard.querySelector('.card-content-expanded');
@@ -686,46 +709,51 @@ class BrandsView extends BaseView {
         dashboardContainer.classList.remove('info-mode-secondary');
       }
       
-      // Pequeño delay para que el cambio de modo se aplique
+      // Pequeño delay para que el cambio de modo se aplique antes de mostrar otras cards
       requestAnimationFrame(() => {
-        // Mostrar otras cards y nombre de marca con fade in
-        if (otherCards && otherCards.length > 0) {
-          otherCards.forEach(card => {
-            // Asegurar que las cards estén visibles
-            if (card.parentElement) {
-              card.style.transition = 'opacity 0.5s ease 0.2s, transform 0.5s ease 0.2s';
-              card.style.opacity = '1';
-              card.style.transform = 'translateY(0)';
-            }
-          });
-        }
-        
-        if (cornerInfo && cornerInfo.parentElement) {
-          cornerInfo.style.transition = 'opacity 0.5s ease 0.2s, transform 0.5s ease 0.2s';
-          cornerInfo.style.opacity = '1';
-          cornerInfo.style.transform = 'translateY(0)';
-        }
-        
-        // Limpiar estilos después de la animación
-        setTimeout(() => {
-          if (otherCards) {
-            otherCards.forEach(card => {
-              card.style.transition = '';
-              card.style.opacity = '';
-              card.style.transform = '';
+        requestAnimationFrame(() => {
+          // Mostrar otras cards y nombre de marca con fade in escalonado
+          if (otherCards && otherCards.length > 0) {
+            otherCards.forEach((card, index) => {
+              if (card.parentElement) {
+                card.style.willChange = 'opacity, transform';
+                card.style.transition = `opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${0.3 + index * 0.04}s, transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${0.3 + index * 0.04}s`;
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0) scale(1)';
+              }
             });
           }
           
-          if (cornerInfo) {
-            cornerInfo.style.transition = '';
-            cornerInfo.style.opacity = '';
-            cornerInfo.style.transform = '';
+          if (cornerInfo && cornerInfo.parentElement) {
+            cornerInfo.style.willChange = 'opacity, transform';
+            cornerInfo.style.transition = 'opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.35s, transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.35s';
+            cornerInfo.style.opacity = '1';
+            cornerInfo.style.transform = 'translateY(0) scale(1)';
           }
           
-          this.infoPanelState = null;
-        }, 700);
+          // Limpiar estilos después de la animación
+          setTimeout(() => {
+            if (otherCards) {
+              otherCards.forEach(card => {
+                card.style.transition = '';
+                card.style.opacity = '';
+                card.style.transform = '';
+                card.style.willChange = '';
+              });
+            }
+            
+            if (cornerInfo) {
+              cornerInfo.style.transition = '';
+              cornerInfo.style.opacity = '';
+              cornerInfo.style.transform = '';
+              cornerInfo.style.willChange = '';
+            }
+            
+            this.infoPanelState = null;
+          }, 800); // Tiempo suficiente para todas las animaciones
+        });
       });
-    }, 400); // Tiempo de animación de salida
+    }, 500); // Tiempo de animación de salida (sincronizado con CSS)
   }
 
   renderInfoPanelContent(container) {
@@ -745,31 +773,32 @@ class BrandsView extends BaseView {
     });
     
     container.innerHTML = `
-      <!-- IDENTIDAD -->
+      <!-- IDENTIDAD - Solo logo -->
       <section class="info-section">
         <h3 class="info-section-title">Identidad</h3>
         <div class="info-section-content">
-          <div class="info-identity-grid">
-            ${this.renderIdentitySection(brandContainer, brand)}
+          ${this.renderIdentitySection(brandContainer, brand)}
+        </div>
+      </section>
+
+      <!-- GRID: ESENCIA Y LENGUAJE -->
+      <div class="info-sections-grid">
+        <!-- ESENCIA -->
+        <section class="info-section">
+          <h3 class="info-section-title">Esencia</h3>
+          <div class="info-section-content">
+            ${this.renderEssenceSection(brand)}
           </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- ESENCIA -->
-      <section class="info-section">
-        <h3 class="info-section-title">Esencia</h3>
-        <div class="info-section-content">
-          ${this.renderEssenceSection(brand)}
-        </div>
-      </section>
-
-      <!-- LENGUAJE -->
-      <section class="info-section">
-        <h3 class="info-section-title">Lenguaje</h3>
-        <div class="info-section-content">
-          ${this.renderLanguageSection(brand)}
-        </div>
-      </section>
+        <!-- LENGUAJE -->
+        <section class="info-section">
+          <h3 class="info-section-title">Lenguaje</h3>
+          <div class="info-section-content">
+            ${this.renderLanguageSection(brand)}
+          </div>
+        </section>
+      </div>
 
       <!-- REGLAS CREATIVAS -->
       <section class="info-section">
@@ -784,13 +813,6 @@ class BrandsView extends BaseView {
   renderIdentitySection(brandContainer, brand) {
     const logoUrl = brandContainer?.logo_url;
     const nombreMarca = brandContainer?.nombre_marca || 'Sin nombre';
-    const updatedAt = brandContainer?.updated_at 
-      ? new Date(brandContainer.updated_at).toLocaleDateString('es-ES', { 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric' 
-        })
-      : 'No disponible';
     
     // Validar URL del logo antes de renderizar
     const isValidLogoUrl = logoUrl && 
@@ -799,22 +821,11 @@ class BrandsView extends BaseView {
        logoUrl.startsWith('/'));
     
     return `
-      <div class="info-identity-item">
-        <div class="info-identity-label">Logo</div>
-        <div class="info-identity-value">
-          ${isValidLogoUrl 
-            ? `<img src="${this.escapeHtml(logoUrl)}" alt="${this.escapeHtml(nombreMarca)}" class="info-logo-preview" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'info-logo-placeholder\\'><i class=\\'fas fa-image\\'></i></div>'; console.warn('⚠️ Error cargando logo:', '${this.escapeHtml(logoUrl)}');">`
-            : '<div class="info-logo-placeholder"><i class="fas fa-image"></i></div>'
-          }
-        </div>
-      </div>
-      <div class="info-identity-item">
-        <div class="info-identity-label">Nombre</div>
-        <div class="info-identity-value">${this.escapeHtml(nombreMarca)}</div>
-      </div>
-      <div class="info-identity-item">
-        <div class="info-identity-label">Última actualización</div>
-        <div class="info-identity-value">${updatedAt}</div>
+      <div class="info-logo-container">
+        ${isValidLogoUrl 
+          ? `<img src="${this.escapeHtml(logoUrl)}" alt="${this.escapeHtml(nombreMarca)}" class="info-logo-preview" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'info-logo-placeholder\\'><i class=\\'fas fa-image\\'></i></div>'; console.warn('⚠️ Error cargando logo:', '${this.escapeHtml(logoUrl)}');">`
+          : '<div class="info-logo-placeholder"><i class="fas fa-image"></i></div>'
+        }
       </div>
     `;
   }
