@@ -225,7 +225,8 @@ class LivingManager {
     }
 
     renderAll() {
-        this.renderVisualsOfDay();
+        this.renderProductionsOfDay();
+        this.renderTokensHero();
         this.renderLatestProductions();
         this.renderInsights();
         this.renderEntitiesProduction();
@@ -291,6 +292,28 @@ class LivingManager {
         }
 
         productionsOfDayEl.innerHTML = items.join('');
+    }
+
+    renderTokensHero() {
+        const tokensUsedEl = document.getElementById('tokensUsedHero');
+        const tokensAvailableEl = document.getElementById('tokensAvailableHero');
+        const tokensTotalEl = document.getElementById('tokensTotalHero');
+        const tokensProgressFillEl = document.getElementById('tokensProgressFillHero');
+        const tokensPercentageEl = document.getElementById('tokensPercentageHero');
+
+        if (!tokensUsedEl || !tokensAvailableEl || !tokensTotalEl || !tokensProgressFillEl || !tokensPercentageEl) return;
+
+        const totalCredits = this.userData?.credits_total || 0;
+        const availableCredits = this.userData?.credits_available || 0;
+        const usedCredits = totalCredits - availableCredits;
+
+        tokensUsedEl.textContent = usedCredits.toLocaleString();
+        tokensAvailableEl.textContent = availableCredits.toLocaleString();
+        tokensTotalEl.textContent = totalCredits.toLocaleString();
+
+        const percentage = totalCredits > 0 ? Math.round((usedCredits / totalCredits) * 100) : 0;
+        tokensProgressFillEl.style.width = `${percentage}%`;
+        tokensPercentageEl.textContent = `${percentage}% usado`;
     }
 
     renderFavoriteProduct() {

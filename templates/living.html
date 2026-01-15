@@ -32,29 +32,62 @@
     <!-- Contenido Principal -->
     <main class="main-content">
         <div class="living-container">
-            <!-- 1. HERO - Visuales del Día (emoción + identidad) -->
-            <section class="living-hero-visuals">
+            <!-- HERO - Header Grande con Degradado -->
+            <div class="living-hero-header">
                 <div class="living-hero-background">
                     <div class="living-hero-gradient"></div>
                 </div>
-                <div class="living-visuals-grid" id="productionsOfDay">
-                    <div class="living-visual-item">
-                        <div class="living-visual-placeholder">
-                            <i class="fas fa-image"></i>
+                <div class="living-hero-content">
+                    <!-- Columna Izquierda: Producciones del Día -->
+                    <div class="living-hero-left">
+                        <h2 class="living-hero-title">Producciones del Día</h2>
+                        <div class="living-productions-day" id="productionsOfDay">
+                            <div class="production-day-item">
+                                <div class="production-day-placeholder">
+                                    <i class="fas fa-image"></i>
+                                </div>
+                            </div>
+                            <div class="production-day-item">
+                                <div class="production-day-placeholder">
+                                    <i class="fas fa-image"></i>
+                                </div>
+                            </div>
+                            <div class="production-day-item">
+                                <div class="production-day-placeholder">
+                                    <i class="fas fa-image"></i>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="living-visual-item">
-                        <div class="living-visual-placeholder">
-                            <i class="fas fa-image"></i>
-                        </div>
-                    </div>
-                    <div class="living-visual-item">
-                        <div class="living-visual-placeholder">
-                            <i class="fas fa-image"></i>
+                    
+                    <!-- Columna Derecha: Tokens -->
+                    <div class="living-hero-right">
+                        <h2 class="living-hero-title">Uso de Tokens</h2>
+                        <div class="living-tokens-hero" id="tokensHero">
+                            <div class="tokens-hero-stats">
+                                <div class="token-hero-stat">
+                                    <span class="token-hero-label">Usados</span>
+                                    <span class="token-hero-value" id="tokensUsedHero">0</span>
+                                </div>
+                                <div class="token-hero-stat">
+                                    <span class="token-hero-label">Disponibles</span>
+                                    <span class="token-hero-value" id="tokensAvailableHero">0</span>
+                                </div>
+                                <div class="token-hero-stat">
+                                    <span class="token-hero-label">Total</span>
+                                    <span class="token-hero-value" id="tokensTotalHero">0</span>
+                                </div>
+                            </div>
+                            <div class="tokens-hero-progress">
+                                <div class="tokens-hero-progress-bar">
+                                    <div class="tokens-hero-progress-fill" id="tokensProgressFillHero"></div>
+                                </div>
+                                <div class="tokens-hero-percentage" id="tokensPercentageHero">0% usado</div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
 
             <!-- 2. Últimas Producciones (actividad real) -->
             <section class="living-latest-productions">

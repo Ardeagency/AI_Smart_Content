@@ -35,11 +35,8 @@
     min-height: 100vh;
     background: var(--living-bg-deep);
     max-width: none;
-    display: grid;
-    grid-template-columns: 1fr 320px;
-    gap: var(--living-space);
-    padding-right: var(--living-space);
-    padding-bottom: var(--living-space);
+    display: flex;
+    flex-direction: column;
 }
 
 .side-navigation.collapsed ~ * .living-container,
@@ -63,17 +60,17 @@ body.sidebar-collapsed .living-container {
 }
 
 /* ============================================
-   1. HERO - VISUALES DEL DÍA
+   HERO - HEADER GRANDE CON DEGRADADO
    (Emoción + Identidad - Máxima jerarquía)
    ============================================ */
-.living-hero-visuals {
-    grid-column: 1 / -1;
+.living-hero-header {
     position: relative;
     width: 100%;
-    min-height: 500px;
+    min-height: 400px;
     margin-top: -48px;
     padding-top: 48px;
-    margin-bottom: var(--living-space);
+    margin-bottom: 3rem;
+    border-radius: 0;
     overflow: hidden;
 }
 
@@ -93,51 +90,146 @@ body.sidebar-collapsed .living-container {
         radial-gradient(ellipse 120% 80% at 60% 20%, var(--living-warm-2) 0%, transparent 45%),
         radial-gradient(ellipse 100% 150% at 30% 90%, var(--living-warm-3) 0%, transparent 50%),
         linear-gradient(145deg, var(--living-warm-4) 0%, var(--living-warm-5) 100%);
-    opacity: 0.4;
 }
 
-.living-visuals-grid {
+.living-hero-content {
     position: relative;
     z-index: 1;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
-    padding: calc(48px + 4rem) 4rem 4rem 4rem;
-    min-height: 500px;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    padding: 3rem;
+    padding-top: calc(48px + 3rem);
+    min-height: 400px;
+    align-items: start;
 }
 
-.living-visual-item {
-    aspect-ratio: 4 / 5;
-    border-radius: 20px;
+.living-hero-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--living-text-light);
+    margin: 0 0 2rem 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* ============================================
+   COLUMNA IZQUIERDA: PRODUCCIONES DEL DÍA
+   ============================================ */
+.living-hero-left {
+    display: flex;
+    flex-direction: column;
+}
+
+.living-productions-day {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.production-day-item {
+    aspect-ratio: 1;
+    border-radius: 12px;
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
     position: relative;
     cursor: pointer;
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                border-color 0.4s ease;
+    transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
-.living-visual-item:hover {
-    transform: translateY(-8px);
-    border-color: rgba(255, 255, 255, 0.15);
+.production-day-item:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255, 255, 255, 0.4);
 }
 
-.living-visual-item img {
+.production-day-item img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
 }
 
-.living-visual-placeholder {
+.production-day-placeholder {
     width: 100%;
     height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: rgba(255, 255, 255, 0.3);
-    font-size: 3rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 2.5rem;
+}
+
+/* ============================================
+   COLUMNA DERECHA: TOKENS
+   ============================================ */
+.living-hero-right {
+    display: flex;
+    flex-direction: column;
+}
+
+.living-tokens-hero {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.tokens-hero-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+.token-hero-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+}
+
+.token-hero-label {
+    font-size: 0.875rem;
+    color: var(--living-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+.token-hero-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--living-text-light);
+}
+
+.tokens-hero-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.tokens-hero-progress-bar {
+    width: 100%;
+    height: 16px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+}
+
+.tokens-hero-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+    border-radius: 8px;
+    transition: width 0.5s ease;
+    width: 0%;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+.tokens-hero-percentage {
+    text-align: center;
+    font-size: 1rem;
+    color: var(--living-text-light);
+    font-weight: 600;
 }
 
 /* ============================================
@@ -243,8 +335,8 @@ body.sidebar-collapsed .living-container {
    (Status, no análisis profundo)
    ============================================ */
 .living-insights {
-    grid-column: 1;
     margin-bottom: var(--living-space);
+    padding: 0 3rem;
 }
 
 .living-insights-grid {
@@ -377,12 +469,12 @@ body.sidebar-collapsed .living-container {
    (Control silencioso - Mínima jerarquía)
    ============================================ */
 .living-resources {
-    grid-column: 2;
-    grid-row: 2 / -1;
-    position: sticky;
+    position: fixed;
+    right: 2rem;
     top: calc(48px + 2rem);
+    width: 320px;
     height: fit-content;
-    align-self: start;
+    z-index: 100;
 }
 
 .living-resources-card {
