@@ -189,12 +189,8 @@
 }
 
 .products-grid {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2rem;
-    max-width: 600px;
-    margin: 0 auto;
+    column-count: 4;
+    column-gap: 1.5rem;
     padding: 2rem 0;
 }
 
@@ -202,9 +198,9 @@
    PRODUCT CARD
    ============================================ */
 .product-card {
-    background: var(--bg-card);
-    border: 1px solid rgba(236, 235, 218, 0.3);
-    border-radius: 12px;
+    background: #FFFFFF;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 16px;
     overflow: hidden;
     transition: var(--transition);
     cursor: pointer;
@@ -213,6 +209,7 @@
     margin-bottom: 1.5rem;
     display: inline-block;
     width: 100%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .product-card:hover {
@@ -263,7 +260,7 @@
 
 .product-card-content {
     padding: 1.25rem;
-    background: var(--bg-card);
+    background: #FFFFFF;
 }
 
 /* Header con nombre y botón editar */
@@ -288,7 +285,7 @@
 .product-card-edit-btn {
     background: transparent;
     border: none;
-    color: var(--text-primary);
+    color: #6B7280;
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
@@ -303,8 +300,8 @@
 }
 
 .product-card-edit-btn:hover {
-    background: rgba(236, 235, 218, 0.1);
-    color: var(--primary-color);
+    background: rgba(0, 0, 0, 0.05);
+    color: #1C1F26;
 }
 
 .product-card-edit-btn i {
@@ -321,8 +318,8 @@
 
 .product-card-type-tag {
     display: inline-block;
-    background: rgba(236, 235, 218, 0.1);
-    color: var(--text-secondary);
+    background: #F5F5F5;
+    color: #6B7280;
     padding: 0.375rem 0.75rem;
     border-radius: 12px;
     font-size: 0.75rem;
@@ -762,9 +759,19 @@
 /* ============================================
    RESPONSIVE
    ============================================ */
+@media (max-width: 1400px) {
+    .products-grid {
+        column-count: 3;
+    }
+}
+
 @media (max-width: 1024px) {
     .page-header {
         flex-direction: column;
+    }
+    
+    .products-grid {
+        column-count: 2;
     }
 }
 
@@ -784,6 +791,11 @@
 
     .products-main {
         padding: 1rem;
+    }
+    
+    .products-grid {
+        column-count: 1;
+        column-gap: 1rem;
     }
 
 }
