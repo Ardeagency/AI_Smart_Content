@@ -398,37 +398,23 @@ class LivingManager {
             const imageOutput = this.flowOutputs.find(output => output.run_id === run.id);
             const product = run.brand_id ? this.products.find(p => p.id === run.brand_id) : null;
             
-            // Determinar tipo de contenido basado en el output o run
+            // Determinar tipo de contenido y estado
             const contentType = this.getContentType(run, imageOutput);
-            const contentTypeIcon = this.getContentTypeIcon(contentType);
-            
-            // Obtener autor (usuario que ejecutó la producción)
-            const authorName = this.userData?.full_name || this.userData?.email || 'Usuario';
-            const authorInitials = this.getInitials(authorName);
+            const status = this.getProductionStatus(run);
 
-        return `
-                <div class="production-item">
-                    <div class="production-image">
-                        ${imageOutput 
-                            ? `<img src="${this.escapeHtml(imageOutput.file_url)}" alt="Producción" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'><i class=\\'fas fa-file-image\\'></i></div>'">`
-                            : `<div class="no-image"><i class="fas fa-file-image"></i></div>`
-                        }
-                </div>
-                    <div class="production-info">
-                        <h4 class="production-title">${this.escapeHtml(run.status || 'Producción')}</h4>
-                        ${product ? `<p class="production-product">${this.escapeHtml(product.nombre_producto)}</p>` : '<p class="production-product">Sin producto asociado</p>'}
-                </div>
-                    <div class="production-type">
-                        <i class="${contentTypeIcon}"></i>
-                        <span>${contentType}</span>
+            return `
+                <div class="production-card">
+                    ${imageOutput 
+                        ? `<img src="${this.escapeHtml(imageOutput.file_url)}" alt="Producción" class="production-card-image" onerror="this.style.display='none'">`
+                        : `<div class="production-card-image" style="background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.3);"><i class="fas fa-image" style="font-size: 3rem;"></i></div>`
+                    }
+                    <div class="production-card-info">
+                        <h4 class="production-card-title">${this.escapeHtml(run.status || 'Producción')}</h4>
+                        <div class="production-card-meta">
+                            <span class="production-card-status ${status}">${status}</span>
+                            ${product ? `<span>${this.escapeHtml(product.nombre_producto)}</span>` : ''}
+                        </div>
                     </div>
-                    <div class="production-author">
-                        <div class="production-author-avatar">${authorInitials}</div>
-                        <span>${this.escapeHtml(authorName.split('@')[0])}</span>
-                    </div>
-                    <div class="production-date">
-                        ${this.formatDate(run.updated_at || run.created_at)}
-                </div>
                 </div>
             `;
         }).join('');
@@ -464,6 +450,162 @@ class LivingManager {
             'Contenido': 'fas fa-file-alt'
         };
         return icons[contentType] || icons['Contenido'];
+    }
+
+    renderInsights() {
+        // Producto Favorito
+        const favoriteProductNameEl = document.getElementById('favoriteProductName');
+        if (favoriteProductNameEl) {
+            if (this.products.length > 0) {
+                const favoriteProduct = this.products[0];
+                favoriteProductNameEl.textContent = this.escapeHtml(favoriteProduct.nombre_producto);
+            } else {
+                favoriteProductNameEl.textContent = '-';
+            }
+        }
+
+        // Producto Más Producido
+        const topProductNameEl = document.getElementById('topProductName');
+        if (topProductNameEl) {
+            if (this.products.length > 0) {
+                // Contar producciones por producto
+                const productCounts = {};
+                this.flowRuns.forEach(run => {
+                    if (run.brand_id) {
+                        productCounts[run.brand_id] = (productCounts[run.brand_id] || 0) + 1;
+                    }
+                });
+                
+                let topProduct = this.products[0];
+                let maxCount = 0;
+                this.products.forEach(product => {
+                    const count = productCounts[product.id] || 0;
+                    if (count > maxCount) {
+                        maxCount = count;
+                        topProduct = product;
+                    }
+                });
+                
+                topProductNameEl.textContent = this.escapeHtml(topProduct.nombre_producto);
+            } else {
+                topProductNameEl.textContent = '-';
+            }
+        }
+
+        // Formato Más Usado
+        const topFormatNameEl = document.getElementById('topFormatName');
+        if (topFormatNameEl) {
+            const formatCounts = {};
+            this.flowRuns.forEach(run => {
+                const contentType = this.getContentType(run, null);
+                formatCounts[contentType] = (formatCounts[contentType] || 0) + 1;
+            });
+            
+            let topFormat = 'Contenido';
+            let maxCount = 0;
+            Object.keys(formatCounts).forEach(format => {
+                if (formatCounts[format] > maxCount) {
+                    maxCount = formatCounts[format];
+                    topFormat = format;
+                }
+            });
+            
+            topFormatNameEl.textContent = topFormat;
+        }
+
+        // Tokens Hoy
+        const tokensTodayEl = document.getElementById('tokensToday');
+        if (tokensTodayEl) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const todayUsage = this.creditUsage.filter(usage => {
+                const usageDate = new Date(usage.created_at);
+                usageDate.setHours(0, 0, 0, 0);
+                return usageDate.getTime() === today.getTime();
+            });
+            
+            const tokensUsedToday = todayUsage.reduce((sum, usage) => sum + (usage.credits_used || 0), 0);
+            tokensTodayEl.textContent = tokensUsedToday.toLocaleString();
+        }
+    }
+
+    renderEntityProduction() {
+        const entityProductionEl = document.getElementById('entityProduction');
+        if (!entityProductionEl) return;
+
+        if (this.products.length === 0) {
+            entityProductionEl.innerHTML = `
+                <div class="empty-state-small">
+                    <i class="fas fa-box"></i>
+                    <p>No hay datos disponibles</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Contar producciones por producto
+        const productCounts = {};
+        this.flowRuns.forEach(run => {
+            if (run.brand_id) {
+                productCounts[run.brand_id] = (productCounts[run.brand_id] || 0) + 1;
+            }
+        });
+
+        // Ordenar productos por producción
+        const sortedProducts = this.products
+            .map(product => ({
+                product,
+                count: productCounts[product.id] || 0
+            }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 3);
+
+        entityProductionEl.innerHTML = sortedProducts.map(({ product, count }) => `
+            <div class="entity-item">
+                <div class="entity-item-label">${this.escapeHtml(product.nombre_producto)}</div>
+                <div class="entity-item-value">${count}</div>
+                <div class="entity-item-count">producciones</div>
+            </div>
+        `).join('');
+    }
+
+    renderResources() {
+        const tokensAvailableEl = document.getElementById('tokensAvailableResource');
+        const tokensUsedTodayEl = document.getElementById('tokensUsedTodayResource');
+        const tokensProgressEl = document.getElementById('tokensProgressResource');
+
+        if (!tokensAvailableEl || !tokensUsedTodayEl || !tokensProgressEl) return;
+
+        const totalCredits = this.userData?.credits_total || 0;
+        const availableCredits = this.userData?.credits_available || 0;
+        const usedCredits = totalCredits - availableCredits;
+
+        // Tokens usados hoy
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayUsage = this.creditUsage.filter(usage => {
+            const usageDate = new Date(usage.created_at);
+            usageDate.setHours(0, 0, 0, 0);
+            return usageDate.getTime() === today.getTime();
+        });
+        const tokensUsedToday = todayUsage.reduce((sum, usage) => sum + (usage.credits_used || 0), 0);
+
+        tokensAvailableEl.textContent = availableCredits.toLocaleString();
+        tokensUsedTodayEl.textContent = tokensUsedToday.toLocaleString();
+
+        const percentage = totalCredits > 0 ? Math.round((usedCredits / totalCredits) * 100) : 0;
+        tokensProgressEl.style.width = `${percentage}%`;
+    }
+
+    getProductionStatus(run) {
+        const status = (run.status || '').toLowerCase();
+        if (status.includes('complete') || status.includes('final')) {
+            return 'final';
+        } else if (status.includes('render') || status.includes('process')) {
+            return 'rendering';
+        }
+        return 'draft';
     }
 
     getInitials(name) {
