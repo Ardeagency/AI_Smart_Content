@@ -341,6 +341,41 @@ a:hover {
     box-sizing: border-box;
 }
 
+/* Eliminar TODOS los efectos hover de inputs globales */
+.form-input:hover,
+.form-select:hover,
+.form-textarea:hover,
+input[type="text"]:hover,
+input[type="number"]:hover,
+input[type="email"]:hover,
+input[type="url"]:hover,
+input[type="date"]:hover,
+textarea:hover,
+select:hover {
+    background: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+    padding: 0.75rem 1rem !important;
+    margin: 0 !important;
+    transform: none !important;
+    box-shadow: none !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+}
+
+/* Eliminar hover de elementos contenteditable */
+[contenteditable="true"]:hover,
+[contenteditable="true"].editable-field:hover {
+    background: transparent !important;
+    border-color: inherit !important;
+    padding: inherit !important;
+    margin: 0 !important;
+    transform: none !important;
+    box-shadow: none !important;
+    width: auto !important;
+}
+
 .form-input:focus,
 .form-select:focus,
 .form-textarea:focus {

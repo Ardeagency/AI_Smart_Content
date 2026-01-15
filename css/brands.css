@@ -160,6 +160,21 @@ body.sidebar-collapsed .brand-dashboard-container {
     margin: 0;
     letter-spacing: -0.02em;
     line-height: 1;
+    transition: none !important;
+}
+
+/* Eliminar hover del nombre de marca */
+.brand-name-large:hover,
+.brand-name-large.editable-field:hover,
+[contenteditable="true"].brand-name-large:hover {
+    background: transparent !important;
+    border-color: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    transform: none !important;
+    box-shadow: none !important;
+    width: auto !important;
+    height: auto !important;
 }
 
 /* Status dot - sin animación para evitar problemas de rendimiento */
