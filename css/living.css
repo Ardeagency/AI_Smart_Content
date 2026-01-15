@@ -454,41 +454,42 @@ body.sidebar-collapsed .living-container {
     white-space: pre-wrap;
 }
 
-/* Inputs Editables */
+/* Inputs Editables - Heredan de base.css */
+/* Eliminadas duplicaciones - usar reglas base unificadas */
+
+/* Override específico solo para background en living */
 .editable-input,
 .editable-select,
 .editable-textarea {
-    width: 100%;
-    padding: 0.75rem 1rem;
     background: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    color: var(--text-primary);
-    font-size: 0.95rem;
-    font-family: inherit;
-    transition: none;
-    outline: none;
+    transition: none !important;
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
+    animation: none !important;
+    transform: none !important;
+    scale: 1 !important;
 }
 
-/* Eliminar hover de editable-input */
 .editable-input:hover,
 .editable-select:hover,
 .editable-textarea:hover {
     background: var(--bg-primary) !important;
     border-color: var(--border-color) !important;
-    padding: 0.75rem 1rem !important;
-    margin: 0 !important;
+    transition: none !important;
     transform: none !important;
-    box-shadow: none !important;
-    width: 100% !important;
+    scale: 1 !important;
 }
 
 .editable-input:focus,
 .editable-select:focus,
 .editable-textarea:focus {
-    border-color: var(--accent-yellow);
     background: var(--bg-hover);
+    border-color: var(--accent-yellow);
     box-shadow: 0 0 0 3px var(--accent-yellow-glow);
+    transition: none !important;
+    transform: none !important;
+    scale: 1 !important;
 }
 
 .editable-input::placeholder,

@@ -207,23 +207,8 @@
     margin-bottom: 0.5rem;
 }
 
-.form-input {
-    width: 100%;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
-    padding: 0.875rem;
-    color: var(--text-primary);
-    font-size: 0.9rem;
-    transition: var(--transition);
-    box-sizing: border-box;
-}
-
-.form-input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(210, 254, 63, 0.1);
-}
+/* Estilos de inputs heredan de base.css - sin duplicación */
+/* Eliminadas transiciones - usar reglas base unificadas */
 
 .form-input::placeholder {
     color: var(--text-muted);

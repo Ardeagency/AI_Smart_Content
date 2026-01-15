@@ -148,28 +148,33 @@
     margin-left: 0.25rem;
 }
 
+/* Estilos de inputs heredan de base.css - sin duplicación */
+/* Eliminadas transiciones - usar reglas base unificadas */
+
+/* Override específico solo para background oscuro en form-record */
 .form-input,
 .form-textarea,
 .form-select {
-    width: 100%;
-    padding: 0.75rem 1rem;
     background: #181a1b;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    color: var(--text-primary);
-    font-size: 0.95rem;
-    font-family: 'Inter', sans-serif;
-    transition: all 0.3s ease;
-    box-sizing: border-box;
+    transition: none !important;
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
+    animation: none !important;
+    transform: none !important;
+    scale: 1 !important;
 }
 
 .form-input:focus,
 .form-textarea:focus,
 .form-select:focus {
-    outline: none;
-    border-color: var(--primary-color);
     background: #181a1b;
+    border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(210, 254, 63, 0.1);
+    transition: none !important;
+    transform: none !important;
+    scale: 1 !important;
 }
 
 .form-textarea {

@@ -326,9 +326,15 @@ a:hover {
     margin-left: 0.25rem;
 }
 
+/* ============================================
+   INPUTS TEXT UNIFICADOS - REGLAS BASE GLOBALES
+   ============================================ */
 .form-input,
 .form-select,
-.form-textarea {
+.form-textarea,
+.editable-input,
+.editable-select,
+.editable-textarea {
     width: 100%;
     padding: 0.75rem 1rem;
     background: var(--bg-secondary);
@@ -337,11 +343,24 @@ a:hover {
     color: var(--text-primary);
     font-size: 0.95rem;
     font-family: 'Inter', sans-serif;
+    box-sizing: border-box;
+    /* ELIMINAR COMPLETAMENTE TODAS LAS TRANSICIONES */
     transition: none !important;
     -webkit-transition: none !important;
     -moz-transition: none !important;
     -o-transition: none !important;
-    box-sizing: border-box;
+    animation: none !important;
+    -webkit-animation: none !important;
+    -moz-animation: none !important;
+    -o-animation: none !important;
+    will-change: auto !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+    -moz-transform: none !important;
+    -o-transform: none !important;
+    scale: 1 !important;
+    -webkit-scale: 1 !important;
+    zoom: 1 !important;
 }
 
 /* ============================================
@@ -378,22 +397,48 @@ select {
     zoom: 1 !important;
 }
 
-/* Eliminar TODOS los efectos hover de inputs globales */
+/* ============================================
+   ELIMINAR TODOS LOS EFECTOS HOVER/ACTIVE/FOCUS
+   DE INPUTS GLOBALES - ESTADOS UNIFICADOS
+   ============================================ */
 .form-input:hover,
+.form-input:active,
 .form-select:hover,
+.form-select:active,
 .form-textarea:hover,
+.form-textarea:active,
+.editable-input:hover,
+.editable-input:active,
+.editable-select:hover,
+.editable-select:active,
+.editable-textarea:hover,
+.editable-textarea:active,
 input[type="text"]:hover,
+input[type="text"]:active,
 input[type="number"]:hover,
+input[type="number"]:active,
 input[type="email"]:hover,
+input[type="email"]:active,
 input[type="url"]:hover,
+input[type="url"]:active,
 input[type="date"]:hover,
+input[type="date"]:active,
+input[type="password"]:hover,
+input[type="password"]:active,
+input[type="search"]:hover,
+input[type="search"]:active,
 textarea:hover,
-select:hover {
+textarea:active,
+select:hover,
+select:active {
     background: var(--bg-secondary) !important;
     border-color: var(--border-color) !important;
     padding: 0.75rem 1rem !important;
     margin: 0 !important;
     transform: none !important;
+    -webkit-transform: none !important;
+    -moz-transform: none !important;
+    -o-transform: none !important;
     box-shadow: none !important;
     width: 100% !important;
     height: auto !important;
@@ -402,10 +447,17 @@ select:hover {
     font-size: 0.95rem !important;
     line-height: inherit !important;
     scale: 1 !important;
+    -webkit-scale: 1 !important;
+    zoom: 1 !important;
     transition: none !important;
     -webkit-transition: none !important;
     -moz-transition: none !important;
     -o-transition: none !important;
+    animation: none !important;
+    -webkit-animation: none !important;
+    -moz-animation: none !important;
+    -o-animation: none !important;
+    will-change: auto !important;
 }
 
 /* ============================================
@@ -502,13 +554,29 @@ h1[contenteditable]:focus,
     will-change: auto !important;
 }
 
+/* ============================================
+   ESTADO FOCUS UNIFICADO - SIN TRANSICIONES
+   ============================================ */
 .form-input:focus,
 .form-select:focus,
-.form-textarea:focus {
+.form-textarea:focus,
+.editable-input:focus,
+.editable-select:focus,
+.editable-textarea:focus,
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="email"]:focus,
+input[type="url"]:focus,
+input[type="date"]:focus,
+input[type="password"]:focus,
+input[type="search"]:focus,
+textarea:focus,
+select:focus {
     outline: none;
     border-color: var(--accent-yellow);
     background: var(--bg-card);
     box-shadow: 0 0 0 3px var(--accent-yellow-glow);
+    /* ELIMINAR COMPLETAMENTE TODAS LAS TRANSICIONES */
     transition: none !important;
     -webkit-transition: none !important;
     -moz-transition: none !important;

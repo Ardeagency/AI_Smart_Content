@@ -431,26 +431,31 @@
     color: var(--error-color);
 }
 
+/* Estilos de inputs heredan de base.css - sin duplicación */
+/* Eliminadas transiciones - usar reglas base unificadas */
+
+/* Override específico solo para border en products */
 .form-input,
 .form-textarea,
 .form-select {
-    width: 100%;
-    padding: 0.75rem;
-    background: var(--bg-secondary);
     border: 1px solid rgba(236, 235, 218, 0.3);
     border-radius: 6px;
-    color: var(--text-primary);
-    font-size: 0.95rem;
-    font-family: 'Inter', sans-serif;
-    transition: var(--transition);
+    transition: none !important;
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
+    transform: none !important;
+    scale: 1 !important;
 }
 
 .form-input:focus,
 .form-textarea:focus,
 .form-select:focus {
-    outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(236, 235, 218, 0.1);
+    transition: none !important;
+    transform: none !important;
+    scale: 1 !important;
 }
 
 .form-textarea {

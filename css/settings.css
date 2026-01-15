@@ -77,22 +77,29 @@ body.sidebar-collapsed .settings-container {
     font-size: 0.875rem;
 }
 
+/* Estilos de inputs heredan de base.css - sin duplicación */
+/* Eliminadas transiciones - usar reglas base unificadas */
+
+/* Override específico solo para settings */
 .form-input,
 .form-select {
-    width: 100%;
-    padding: 0.75rem;
     background: var(--bg-dark, #1a1a1a);
     border: 1px solid rgba(236, 235, 218, 0.2);
-    border-radius: 8px;
-    color: var(--text-primary, #ecebda);
     font-size: 1rem;
-    transition: border-color 0.2s ease;
+    transition: none !important;
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
+    transform: none !important;
+    scale: 1 !important;
 }
 
 .form-input:focus,
 .form-select:focus {
-    outline: none;
     border-color: var(--accent-warm, #e09145);
+    transition: none !important;
+    transform: none !important;
+    scale: 1 !important;
 }
 
 @media (max-width: 768px) {
