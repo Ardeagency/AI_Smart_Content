@@ -12,6 +12,7 @@ if (typeof window.ProductsManager === 'undefined') {
         this.brandContainerId = null;
         this.products = [];
         this.currentProduct = null;
+        this.activeFilter = 'todos'; // Filtro activo por categoría
         this.init();
     }
 
@@ -152,6 +153,52 @@ if (typeof window.ProductsManager === 'undefined') {
             });
         }
 
+        // Renderizar tabs de categorías
+        this.renderCategoryTabs();
+    }
+
+    renderCategoryTabs() {
+        // Buscar contenedor de tabs (ya existe en el HTML)
+        const tabsContainer = document.getElementById('categoryTabs');
+        if (!tabsContainer) {
+            console.warn('⚠️ Contenedor de tabs no encontrado');
+            return;
+        }
+
+        const categories = [
+            { id: 'todos', label: 'Todos', icon: 'fa-th' },
+            { id: 'bebida', label: 'Bebidas', icon: 'fa-glass-water' },
+            { id: 'bebida_alcoholica', label: 'Bebidas Alcohólicas', icon: 'fa-wine-glass' },
+            { id: 'alimento', label: 'Alimentos', icon: 'fa-utensils' },
+            { id: 'snack', label: 'Snacks', icon: 'fa-cookie' },
+            { id: 'cosmetico', label: 'Cosméticos', icon: 'fa-palette' },
+            { id: 'skincare', label: 'Skincare', icon: 'fa-spa' },
+            { id: 'electronico', label: 'Electrónicos', icon: 'fa-laptop' },
+            { id: 'ropa', label: 'Ropa', icon: 'fa-shirt' },
+            { id: 'otro', label: 'Otros', icon: 'fa-box' }
+        ];
+
+        tabsContainer.innerHTML = categories.map(cat => `
+            <button class="category-tab ${this.activeFilter === cat.id ? 'active' : ''}" 
+                    data-category="${cat.id}">
+                <i class="fas ${cat.icon}"></i>
+                <span>${cat.label}</span>
+            </button>
+        `).join('');
+
+        // Event listeners para los tabs
+        tabsContainer.querySelectorAll('.category-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                const category = e.currentTarget.dataset.category;
+                this.setActiveFilter(category);
+            });
+        });
+    }
+
+    setActiveFilter(category) {
+        this.activeFilter = category;
+        this.renderCategoryTabs(); // Re-renderizar tabs para actualizar estado activo
+        this.renderProducts(); // Re-renderizar productos con el nuevo filtro
     }
 
     async loadProducts() {
@@ -216,6 +263,7 @@ if (typeof window.ProductsManager === 'undefined') {
 
             this.products = products || [];
             console.log('✅ Productos cargados:', this.products.length);
+            this.renderCategoryTabs(); // Renderizar tabs después de cargar productos
             this.renderProducts();
 
         } catch (error) {
@@ -245,12 +293,48 @@ if (typeof window.ProductsManager === 'undefined') {
             return;
         }
 
-        console.log(`🎨 Renderizando ${this.products.length} producto(s)`);
+        // Filtrar productos por categoría activa
+        const filteredProducts = this.activeFilter === 'todos' 
+            ? this.products 
+            : this.products.filter(p => (p.tipo_producto || 'otro') === this.activeFilter);
+
+        if (filteredProducts.length === 0) {
+            console.log(`ℹ️ No hay productos en la categoría: ${this.activeFilter}`);
+            emptyState.style.display = 'block';
+            productsGrid.style.display = 'none';
+            
+            // Actualizar mensaje del estado vacío según la categoría
+            const emptyStateTitle = emptyState.querySelector('h3');
+            const emptyStateText = emptyState.querySelector('p');
+            if (emptyStateTitle && emptyStateText) {
+                if (this.activeFilter === 'todos') {
+                    emptyStateTitle.textContent = 'No hay productos';
+                    emptyStateText.textContent = 'Aún no has creado ningún producto';
+                } else {
+                    const categoryLabels = {
+                        'bebida': 'Bebidas',
+                        'bebida_alcoholica': 'Bebidas Alcohólicas',
+                        'alimento': 'Alimentos',
+                        'snack': 'Snacks',
+                        'cosmetico': 'Cosméticos',
+                        'skincare': 'Skincare',
+                        'electronico': 'Electrónicos',
+                        'ropa': 'Ropa',
+                        'otro': 'Otros'
+                    };
+                    emptyStateTitle.textContent = `No hay productos en ${categoryLabels[this.activeFilter] || 'esta categoría'}`;
+                    emptyStateText.textContent = 'Intenta seleccionar otra categoría o crea un nuevo producto';
+                }
+            }
+            return;
+        }
+
+        console.log(`🎨 Renderizando ${filteredProducts.length} producto(s) de ${this.products.length} total`);
         emptyState.style.display = 'none';
         productsGrid.style.display = 'block';
         productsGrid.innerHTML = '';
 
-        this.products.forEach((product, index) => {
+        filteredProducts.forEach((product, index) => {
             try {
                 const card = this.createProductCard(product);
                 productsGrid.appendChild(card);
@@ -267,25 +351,11 @@ if (typeof window.ProductsManager === 'undefined') {
         const card = document.createElement('div');
         card.className = 'product-card';
         card.dataset.productId = product.id;
+        card.dataset.tipoProducto = product.tipo_producto || 'otro';
 
         const mainImage = product.images && product.images.length > 0 
             ? product.images[0].image_url 
             : null;
-
-        // Formatear precio
-        const precio = product.precio_producto 
-            ? `${product.moneda || 'USD'} $${parseFloat(product.precio_producto).toFixed(2)}` 
-            : null;
-
-        // Tipo de producto como tag (puede ser un string o array)
-        const tipoProducto = product.tipo_producto || 'otro';
-        const tipoTags = Array.isArray(tipoProducto) ? tipoProducto : [tipoProducto];
-
-        // Formatear tipo de producto para mostrar (capitalizar primera letra)
-        const formatTipo = (tipo) => {
-            if (!tipo) return '';
-            return tipo.charAt(0).toUpperCase() + tipo.slice(1).replace(/_/g, ' ');
-        };
 
         card.innerHTML = `
             <div class="product-card-image">
@@ -293,34 +363,15 @@ if (typeof window.ProductsManager === 'undefined') {
                     ? `<img src="${mainImage}" alt="${product.nombre_producto}" loading="lazy">` 
                     : `<div class="no-image"><i class="fas fa-image"></i></div>`
                 }
-                ${precio ? `<div class="product-card-price-badge">${precio}</div>` : ''}
-            </div>
-            <div class="product-card-content">
-                <div class="product-card-header">
-                    <h3 class="product-card-title">${product.nombre_producto || 'Sin nombre'}</h3>
-                    <button class="product-card-edit-btn" title="Editar" data-product-id="${product.id}">
-                        Editar <i class="fas fa-arrow-up-right"></i>
-                    </button>
-                </div>
-                ${tipoTags.length > 0 && tipoTags[0] !== 'otro' ? `
-                    <div class="product-card-types">
-                        ${tipoTags.map(tipo => `
-                            <span class="product-card-type-tag">${formatTipo(tipo)}</span>
-                        `).join('')}
-                    </div>
-                ` : ''}
             </div>
         `;
 
-        // Event listener para botón editar (por ahora sin acción, se puede implementar modal más adelante)
-        const editBtn = card.querySelector('.product-card-edit-btn');
-        if (editBtn) {
-            editBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                // TODO: Implementar modal de edición si es necesario
-                console.log('Editar producto:', product.id);
-            });
-        }
+        // Event listener para click en la card (puede abrir modal de edición en el futuro)
+        card.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // TODO: Implementar modal de edición si es necesario
+            console.log('Ver/Editar producto:', product.id);
+        });
 
         return card;
     }

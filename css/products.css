@@ -104,6 +104,9 @@
     margin: 0 auto;
     width: 100%;
     transition: margin-right 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 }
 
 
@@ -112,14 +115,93 @@
    ============================================ */
 .page-header {
     display: flex;
-    justify-content: flex-end;
-    align-items: center;
+    flex-direction: column;
+    gap: 1.5rem;
     margin-bottom: 2rem;
     padding-top: 1rem;
 }
 
+.page-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+    gap: 1rem;
+}
+
+.page-header-top .category-tabs {
+    flex: 1;
+    min-width: 0;
+}
+
 .page-header .btn-add-product {
     flex-shrink: 0;
+}
+
+/* ============================================
+   CATEGORY TABS
+   ============================================ */
+.category-tabs {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    width: 100%;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(236, 235, 218, 0.2);
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(236, 235, 218, 0.3) transparent;
+}
+
+.category-tabs::-webkit-scrollbar {
+    height: 4px;
+}
+
+.category-tabs::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.category-tabs::-webkit-scrollbar-thumb {
+    background: rgba(236, 235, 218, 0.3);
+    border-radius: 2px;
+}
+
+.category-tabs::-webkit-scrollbar-thumb:hover {
+    background: rgba(236, 235, 218, 0.5);
+}
+
+.category-tab {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    background: transparent;
+    border: 1px solid rgba(236, 235, 218, 0.2);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.category-tab:hover {
+    background: rgba(236, 235, 218, 0.1);
+    border-color: rgba(236, 235, 218, 0.4);
+    color: var(--text-primary);
+}
+
+.category-tab.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--bg-black);
+    font-weight: 600;
+}
+
+.category-tab i {
+    font-size: 0.875rem;
 }
 
 .btn-add-product {
@@ -151,6 +233,10 @@
    ============================================ */
 .products-gallery {
     position: relative;
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .loading-state,
@@ -192,14 +278,36 @@
     column-count: 4;
     column-gap: 1.5rem;
     padding: 2rem 0;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(236, 235, 218, 0.3) transparent;
+}
+
+.products-grid::-webkit-scrollbar {
+    width: 8px;
+}
+
+.products-grid::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.products-grid::-webkit-scrollbar-thumb {
+    background: rgba(236, 235, 218, 0.3);
+    border-radius: 4px;
+}
+
+.products-grid::-webkit-scrollbar-thumb:hover {
+    background: rgba(236, 235, 218, 0.5);
 }
 
 /* ============================================
    PRODUCT CARD
    ============================================ */
 .product-card {
-    background: #FFFFFF;
-    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: transparent;
+    border: none;
     border-radius: 16px;
     overflow: hidden;
     transition: var(--transition);
@@ -209,7 +317,7 @@
     margin-bottom: 1.5rem;
     display: inline-block;
     width: 100%;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: none;
 }
 
 .product-card:hover {
@@ -766,8 +874,10 @@
 }
 
 @media (max-width: 1024px) {
-    .page-header {
+    .page-header-top {
         flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
     }
     
     .products-grid {
