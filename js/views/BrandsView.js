@@ -14,6 +14,9 @@ class BrandsView extends BaseView {
     this.brandColors = [];
     this.brandRules = [];
     this.brandAssets = [];
+    this.brandEntities = [];
+    this.brandPlaces = [];
+    this.brandAudiences = [];
     this.organizationMembers = [];
     this.organizationCredits = { credits_available: 100 };
     this.creditUsage = [];
@@ -188,6 +191,55 @@ class BrandsView extends BaseView {
           this.brandAssets = [];
         } else {
           this.brandAssets = assets || [];
+        }
+
+        // Brand Entities (identidad estructural)
+        const { data: entities, error: entitiesError } = await this.supabase
+          .from('brand_entities')
+          .select('*')
+          .eq('brand_container_id', container.id)
+          .order('created_at', { ascending: true });
+        
+        if (entitiesError) {
+          console.warn('⚠️ Error cargando brand entities:', entitiesError);
+          this.brandEntities = [];
+        } else {
+          this.brandEntities = entities || [];
+          
+          // Cargar places asociados a las entidades
+          if (this.brandEntities.length > 0) {
+            const entityIds = this.brandEntities.map(e => e.id);
+            const { data: places, error: placesError } = await this.supabase
+              .from('brand_places')
+              .select('*')
+              .in('entity_id', entityIds)
+              .order('created_at', { ascending: true });
+            
+            if (placesError) {
+              console.warn('⚠️ Error cargando brand places:', placesError);
+              this.brandPlaces = [];
+            } else {
+              this.brandPlaces = places || [];
+            }
+          } else {
+            this.brandPlaces = [];
+          }
+        }
+
+        // Audiences asociadas a la marca
+        if (this.brandData?.id) {
+          const { data: audiences, error: audiencesError } = await this.supabase
+            .from('audiences')
+            .select('*')
+            .eq('brand_id', this.brandData.id)
+            .order('created_at', { ascending: true });
+          
+          if (audiencesError) {
+            console.warn('⚠️ Error cargando audiences:', audiencesError);
+            this.brandAudiences = [];
+          } else {
+            this.brandAudiences = audiences || [];
+          }
         }
 
         // Colores y reglas
@@ -800,6 +852,30 @@ class BrandsView extends BaseView {
         </section>
       </div>
 
+      <!-- IDENTIDAD ESTRUCTURAL -->
+      <section class="info-section">
+        <h3 class="info-section-title">Identidad Estructural</h3>
+        <div class="info-section-content">
+          ${this.renderStructuralIdentitySection()}
+        </div>
+      </section>
+
+      <!-- IDENTIDAD TERRITORIAL -->
+      <section class="info-section">
+        <h3 class="info-section-title">Identidad Territorial</h3>
+        <div class="info-section-content">
+          ${this.renderTerritorialIdentitySection()}
+        </div>
+      </section>
+
+      <!-- IDENTIDAD HUMANA -->
+      <section class="info-section">
+        <h3 class="info-section-title">Identidad Humana</h3>
+        <div class="info-section-content">
+          ${this.renderHumanIdentitySection()}
+        </div>
+      </section>
+
       <!-- REGLAS CREATIVAS -->
       <section class="info-section">
         <h3 class="info-section-title">Reglas Creativas</h3>
@@ -960,6 +1036,191 @@ class BrandsView extends BaseView {
     });
     
     return html || '<p class="info-empty">No hay reglas creativas definidas.</p>';
+  }
+
+  renderStructuralIdentitySection() {
+    if (!this.brandEntities || this.brandEntities.length === 0) {
+      return '<p class="info-empty">No hay entidades definidas. Define qué vende o qué ofrece tu marca.</p>';
+    }
+
+    let html = '';
+    
+    this.brandEntities.forEach(entity => {
+      const entityType = entity.entity_type || 'entidad';
+      const name = entity.name || 'Sin nombre';
+      const description = entity.description || '';
+      const coreBenefits = entity.core_benefits || [];
+      const differentiation = entity.differentiation || '';
+      const usageContext = entity.usage_context || '';
+      const price = entity.price;
+      const currency = entity.currency || 'USD';
+
+      html += `
+        <div class="info-entity-card">
+          <div class="info-entity-header">
+            <span class="info-entity-type">${this.escapeHtml(entityType)}</span>
+            <h4 class="info-entity-name">${this.escapeHtml(name)}</h4>
+          </div>
+          
+          ${description ? `
+            <div class="info-field">
+              <div class="info-field-label">Descripción</div>
+              <div class="info-field-value">${this.escapeHtml(description)}</div>
+            </div>
+          ` : ''}
+          
+          ${coreBenefits && Array.isArray(coreBenefits) && coreBenefits.length > 0 ? `
+            <div class="info-field">
+              <div class="info-field-label">Beneficios clave</div>
+              <div class="info-field-value">
+                <ul class="info-list">
+                  ${coreBenefits.map(benefit => `<li>${this.escapeHtml(String(benefit))}</li>`).join('')}
+                </ul>
+              </div>
+            </div>
+          ` : ''}
+          
+          ${differentiation ? `
+            <div class="info-field">
+              <div class="info-field-label">Diferenciación</div>
+              <div class="info-field-value">${this.escapeHtml(differentiation)}</div>
+            </div>
+          ` : ''}
+          
+          ${usageContext ? `
+            <div class="info-field">
+              <div class="info-field-label">Contexto de uso</div>
+              <div class="info-field-value">${this.escapeHtml(usageContext)}</div>
+            </div>
+          ` : ''}
+          
+          ${price !== null && price !== undefined ? `
+            <div class="info-field">
+              <div class="info-field-label">Precio</div>
+              <div class="info-field-value">${this.escapeHtml(currency)} ${this.escapeHtml(String(price))}</div>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    });
+
+    return html;
+  }
+
+  renderTerritorialIdentitySection() {
+    if (!this.brandPlaces || this.brandPlaces.length === 0) {
+      return '<p class="info-empty">No hay lugares definidos. Define dónde existe físicamente tu marca.</p>';
+    }
+
+    // Agrupar places por entity_id para mostrar contexto
+    const placesByEntity = {};
+    this.brandPlaces.forEach(place => {
+      const entityId = place.entity_id;
+      if (!placesByEntity[entityId]) {
+        placesByEntity[entityId] = [];
+      }
+      placesByEntity[entityId].push(place);
+    });
+
+    // Obtener nombres de entidades para contexto
+    const entityMap = {};
+    this.brandEntities.forEach(entity => {
+      entityMap[entity.id] = entity.name;
+    });
+
+    let html = '';
+    
+    Object.keys(placesByEntity).forEach(entityId => {
+      const places = placesByEntity[entityId];
+      const entityName = entityMap[entityId] || 'Entidad';
+      
+      places.forEach(place => {
+        const placeType = place.place_type || 'lugar';
+        const address = place.address || '';
+        const city = place.city || '';
+        const country = place.country || '';
+        const openingHours = place.opening_hours || {};
+        const contactInfo = place.contact_info || {};
+
+        html += `
+          <div class="info-place-card">
+            <div class="info-place-header">
+              <span class="info-place-type">${this.escapeHtml(placeType)}</span>
+              <h4 class="info-place-name">${this.escapeHtml(entityName)}</h4>
+            </div>
+            
+            ${address || city || country ? `
+              <div class="info-field">
+                <div class="info-field-label">Ubicación</div>
+                <div class="info-field-value">
+                  ${[address, city, country].filter(Boolean).map(loc => this.escapeHtml(loc)).join(', ')}
+                </div>
+              </div>
+            ` : ''}
+            
+            ${Object.keys(openingHours).length > 0 ? `
+              <div class="info-field">
+                <div class="info-field-label">Horarios</div>
+                <div class="info-field-value">
+                  <pre class="info-place-hours">${this.escapeHtml(JSON.stringify(openingHours, null, 2))}</pre>
+                </div>
+              </div>
+            ` : ''}
+            
+            ${Object.keys(contactInfo).length > 0 ? `
+              <div class="info-field">
+                <div class="info-field-label">Contacto</div>
+                <div class="info-field-value">
+                  <pre class="info-place-contact">${this.escapeHtml(JSON.stringify(contactInfo, null, 2))}</pre>
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      });
+    });
+
+    return html;
+  }
+
+  renderHumanIdentitySection() {
+    if (!this.brandAudiences || this.brandAudiences.length === 0) {
+      return '<p class="info-empty">No hay audiencias asociadas. Las audiencias se definen en la sección Audiences.</p>';
+    }
+
+    let html = '';
+    
+    this.brandAudiences.forEach(audience => {
+      const name = audience.name || 'Sin nombre';
+      const description = audience.description || '';
+      const languageStyle = audience.language_style || '';
+      const awarenessLevel = audience.awareness_level || '';
+
+      html += `
+        <div class="info-audience-card">
+          <div class="info-audience-header">
+            <h4 class="info-audience-name">${this.escapeHtml(name)}</h4>
+            ${awarenessLevel ? `<span class="info-audience-level">${this.escapeHtml(awarenessLevel)}</span>` : ''}
+          </div>
+          
+          ${description ? `
+            <div class="info-field">
+              <div class="info-field-label">Descripción</div>
+              <div class="info-field-value">${this.escapeHtml(description)}</div>
+            </div>
+          ` : ''}
+          
+          ${languageStyle ? `
+            <div class="info-field">
+              <div class="info-field-label">Lenguaje predominante</div>
+              <div class="info-field-value">${this.escapeHtml(languageStyle)}</div>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    });
+
+    return html;
   }
 }
 

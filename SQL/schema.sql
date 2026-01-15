@@ -85,6 +85,38 @@ CREATE TABLE public.brand_containers (
   CONSTRAINT projects_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
   CONSTRAINT brand_containers_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id)
 );
+CREATE TABLE public.brand_entities (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  brand_container_id uuid NOT NULL,
+  entity_type text NOT NULL,
+  name text NOT NULL,
+  description text,
+  core_benefits jsonb DEFAULT '[]'::jsonb,
+  differentiation text,
+  usage_context text,
+  price numeric,
+  currency text DEFAULT 'USD'::text,
+  metadata jsonb DEFAULT '{}'::jsonb,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT brand_entities_pkey PRIMARY KEY (id),
+  CONSTRAINT brand_entities_brand_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id)
+);
+CREATE TABLE public.brand_places (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  entity_id uuid NOT NULL,
+  address text,
+  city text,
+  country text,
+  latitude numeric,
+  longitude numeric,
+  place_type text,
+  opening_hours jsonb,
+  contact_info jsonb,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT brand_places_pkey PRIMARY KEY (id),
+  CONSTRAINT brand_places_entity_fkey FOREIGN KEY (entity_id) REFERENCES public.brand_entities(id)
+);
 CREATE TABLE public.brand_profiles (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   brand_id uuid NOT NULL,
