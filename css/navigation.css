@@ -407,15 +407,17 @@ body.sidebar-collapsed #app-container .main-header,
    ========================================= */
 
 /* =========================================
-   NIVEL 0 — CONTEXTO (Organización)
+   CAPA 1 — CONTEXTO (Identidad de espacio)
+   Responde: "¿En qué espacio estoy trabajando ahora?"
    ========================================= */
 
 .nav-identity-section {
     position: relative;
     padding: 16px;
     border-bottom: 1px solid var(--nav-separator);
-    /* Espacio extra antes del menú principal */
-    margin-bottom: 8px;
+    /* Espacio real antes del menú principal */
+    margin-bottom: 20px;
+    background: var(--nav-bg);
 }
 
 .nav-identity-card {
@@ -659,14 +661,15 @@ body.sidebar-collapsed #app-container .main-header,
    ========================================= */
 
 /* =========================================
-   MENÚ PRINCIPAL — RITMO VERTICAL
+   CAPA 2 — ESTRUCTURA (Dominios conceptuales)
+   No lista páginas, lista dominios conceptuales
    ========================================= */
 
 .nav-menu {
-    padding: 8px 12px 16px 12px;
+    padding: 0 12px 16px 12px;
     display: flex;
     flex-direction: column;
-    gap: 0; /* Sin gap fijo, usamos margin en items */
+    gap: 0;
     overflow-y: auto;
     overflow-x: hidden;
     flex: 1;
@@ -697,37 +700,83 @@ body.sidebar-collapsed #app-container .main-header,
     display: none;
 }
 
+/* =========================================
+   DOMINIOS CONCEPTUALES — SEPARACIÓN VISUAL
+   ========================================= */
+
 .nav-item {
     position: relative;
+    margin-bottom: 0;
 }
+
+/* Dominio 1: Living (estado vivo, va solo) */
+.nav-item:first-child {
+    margin-top: 0;
+    margin-bottom: 24px; /* Espacio real después de Living */
+}
+
+/* Dominio 2: Marca (fundacional, sólida) */
+.nav-item:nth-child(2) {
+    margin-bottom: 24px; /* Espacio real después de Marca */
+}
+
+/* Dominio 3: Entidades (contenedor sólido) */
+.nav-item-has-submenu[data-submenu="entidades"] {
+    margin-top: 0;
+    margin-bottom: 24px; /* Espacio real después de Entidades */
+}
+
+/* Dominio 4: Audiencias + Marketing (juntos, mismo peso) */
+.nav-item:nth-child(4),
+.nav-item:nth-child(5) {
+    margin-bottom: 4px; /* Poco espacio entre ellos */
+}
+
+.nav-item:nth-child(5) {
+    margin-bottom: 24px; /* Espacio real después del bloque Audiencias/Marketing */
+}
+
+/* Dominio 5: Producción (operativo, activo) */
+.nav-item-has-submenu[data-submenu="produccion"] {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+/* =========================================
+   ITEMS PRIMARIOS — PESO TIPOGRÁFICO NIVEL 1
+   ========================================= */
 
 .nav-link {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 0 12px; /* Padding horizontal para separar del borde */
-    height: 32px;
-    min-height: 32px;
-    color: var(--text-secondary);
+    gap: 12px;
+    padding: 0 12px;
+    height: var(--nav-item-height);
+    min-height: var(--nav-item-height);
+    color: rgba(255, 255, 255, 0.85); /* Texto normal, no grita */
     text-decoration: none;
     transition: all 0.15s ease;
     position: relative;
-    font-weight: 400;
+    font-weight: 400; /* Texto normal, no medium */
     font-size: 14px;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    line-height: 1;
+    line-height: 1.4;
     margin-bottom: 0;
-    border-radius: 6px; /* Bordes redondeados para mejor apariencia */
+    border-radius: 6px;
+    background: transparent;
 }
 
+/* Hover sutil */
 .nav-link:hover {
-    color: var(--text-primary);
-    background: var(--bg-hover);
+    color: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.04);
 }
 
+/* Estado activo que susurra, no grita */
 .nav-link.active {
-    color: var(--text-primary);
-    background: rgba(224, 145, 69, 0.08);
+    color: rgba(255, 255, 255, 1); /* Texto 100%, pero no más grande */
+    background: rgba(255, 255, 255, 0.05); /* Fondo apenas distinto */
+    font-weight: 500; /* Ligeramente más peso, pero sutil */
 }
 
 .nav-link.active::before {
@@ -736,13 +785,13 @@ body.sidebar-collapsed #app-container .main-header,
     left: 0;
     top: 0;
     bottom: 0;
-    width: 3px;
-    background: #ffffff;
+    width: 2px;
+    background: rgba(224, 145, 69, 0.5); /* Marcador lateral sutil */
     border-radius: 0 2px 2px 0;
 }
 
 .nav-link.active .nav-icon {
-    color: #ffffff;
+    color: rgba(255, 255, 255, 0.95); /* Ligeramente más brillante, pero sutil */
 }
 
 .side-navigation.collapsed .nav-link.active::before {
@@ -807,39 +856,90 @@ body.sidebar-collapsed #app-container .main-header,
    SUBMENÚS
    ========================================= */
 
+/* =========================================
+   DOMINIO 3: ENTIDADES — CONTENEDOR SÓLIDO Y FUNDACIONAL
+   Se siente como arquitectura, no navegación plana
+   ========================================= */
+
 .nav-item-has-submenu {
     position: relative;
 }
 
 .nav-link-parent {
     cursor: pointer;
+    font-weight: 500; /* Peso mayor que hijos, pero controlado */
+    color: rgba(255, 255, 255, 0.9); /* Ligeramente más visible que items normales */
+    position: relative;
 }
+
+/* Entidades se siente fundacional */
+.nav-item-has-submenu[data-submenu="entidades"] .nav-link-parent {
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Producción se siente operativo */
+.nav-item-has-submenu[data-submenu="produccion"] .nav-link-parent {
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Item padre activo cuando un subitem está activo */
+.nav-item-has-submenu.active > .nav-link-parent {
+    color: rgba(255, 255, 255, 1);
+    background: rgba(255, 255, 255, 0.05);
+    font-weight: 500;
+}
+
+.nav-item-has-submenu.active > .nav-link-parent::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: rgba(224, 145, 69, 0.5);
+    border-radius: 0 2px 2px 0;
+}
+
+.nav-item-has-submenu.active > .nav-link-parent .nav-icon {
+    color: rgba(255, 255, 255, 0.95);
+}
+
+/* =========================================
+   NIVEL 3 — HIJOS SUBORDINADOS
+   Se sienten subordinados, más pequeños, más silenciosos
+   ========================================= */
 
 .nav-submenu {
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     padding-left: 0;
-    margin-top: 0;
+    margin-top: 2px;
+    margin-bottom: 0;
 }
 
 .nav-submenu.open {
     max-height: 500px;
     padding-left: 0;
-    margin-top: 4px;
+    margin-top: 2px;
 }
 
 .nav-submenu-item {
     position: relative;
-    margin-left: 40px; /* Indentación para subitems */
+    margin-left: 24px; /* Indentado real para subordinación clara */
+    margin-bottom: 1px;
 }
 
 .nav-link-sub {
     padding-left: 12px;
-    height: 28px;
-    min-height: 28px;
-    font-size: 13px;
+    height: 32px; /* Más pequeño que padre */
+    min-height: 32px;
+    font-size: 13px; /* Tamaño menor - nivel 3 */
+    font-weight: 400; /* Peso menor que el padre */
     position: relative;
+    color: rgba(255, 255, 255, 0.6); /* Color 60% - más silencioso */
 }
 
 .nav-link-sub::before {
@@ -848,20 +948,21 @@ body.sidebar-collapsed #app-container .main-header,
     left: -20px;
     top: 50%;
     transform: translateY(-50%);
-    width: 8px;
+    width: 4px;
     height: 1px;
-    background: var(--text-muted);
-    opacity: 0.4;
+    background: rgba(255, 255, 255, 0.15);
+    opacity: 0.5;
 }
 
 .nav-link-sub:hover {
-    color: var(--text-primary);
-    background: var(--bg-hover);
+    color: rgba(255, 255, 255, 0.75);
+    background: rgba(255, 255, 255, 0.03);
 }
 
 .nav-link-sub.active {
-    color: var(--text-primary);
-    background: rgba(224, 145, 69, 0.08);
+    color: rgba(255, 255, 255, 0.9); /* No 100%, más sutil */
+    background: rgba(255, 255, 255, 0.04);
+    font-weight: 400; /* Sin cambio de peso */
 }
 
 .nav-link-sub.active::after {
@@ -871,18 +972,8 @@ body.sidebar-collapsed #app-container .main-header,
     top: 0;
     bottom: 0;
     width: 2px;
-    background: #ffffff;
+    background: rgba(224, 145, 69, 0.4); /* Más sutil que el padre */
     border-radius: 0 2px 2px 0;
-}
-
-/* Item padre activo cuando un subitem está activo */
-.nav-item-has-submenu.active > .nav-link-parent {
-    color: var(--text-primary);
-    background: rgba(224, 145, 69, 0.08);
-}
-
-.nav-item-has-submenu.active > .nav-link-parent .nav-icon {
-    color: #ffffff;
 }
 
 /* Sin flechas visibles siempre - solo cuando está abierto */
@@ -899,14 +990,7 @@ body.sidebar-collapsed #app-container .main-header,
     background: rgba(224, 145, 69, 0.08);
 }
 
-/* Espaciado entre items del menú */
-.nav-menu {
-    gap: 4px;
-}
-
-.nav-item {
-    margin-bottom: 0;
-}
+/* El aire comunica estructura - espacios reales entre dominios */
 
 /* =========================================
    FOOTER DEL PANEL: PERFIL
