@@ -21,6 +21,7 @@ class BrandsView extends BaseView {
     this.organizationCredits = { credits_available: 100 };
     this.creditUsage = [];
     this.isActive = false;
+    this.savingFields = new Set(); // Para evitar guardados simultáneos
   }
 
   async onEnter() {
@@ -358,22 +359,42 @@ class BrandsView extends BaseView {
     const el = document.getElementById('brandNameLarge');
     if (el) {
       el.textContent = (this.brandContainerData?.nombre_marca || 'BRAND').toUpperCase();
+      this.makeEditableText(el, 'nombre_marca', 'container', () => {
+        this.renderBrandName();
+      });
     }
   }
 
   renderLinks() {
     const links = {
-      linkWebsite: this.brandContainerData?.sitio_web,
-      linkInstagram: this.brandContainerData?.instagram_url,
-      linkTikTok: this.brandContainerData?.tiktok_url,
-      linkFacebook: this.brandContainerData?.facebook_url
+      linkWebsite: { url: this.brandContainerData?.sitio_web, field: 'sitio_web' },
+      linkInstagram: { url: this.brandContainerData?.instagram_url, field: 'instagram_url' },
+      linkTikTok: { url: this.brandContainerData?.tiktok_url, field: 'tiktok_url' },
+      linkFacebook: { url: this.brandContainerData?.facebook_url, field: 'facebook_url' }
     };
     
-    Object.entries(links).forEach(([id, url]) => {
+    Object.entries(links).forEach(([id, data]) => {
       const el = document.getElementById(id);
       if (el) {
-        el.style.display = url ? 'flex' : 'none';
-        if (url) el.href = url;
+        if (data.url) {
+          el.style.display = 'flex';
+          el.href = data.url;
+          el.title = data.url;
+        } else {
+          el.style.display = 'flex';
+          el.href = '#';
+          el.title = 'Click para editar';
+        }
+        
+        // Hacer editable con doble click
+        el.addEventListener('dblclick', (e) => {
+          e.preventDefault();
+          const newUrl = prompt(`Ingresa la URL para ${data.field}:`, data.url || '');
+          if (newUrl !== null) {
+            this.saveContainerField(data.field, newUrl || null);
+            this.renderLinks();
+          }
+        });
       }
     });
   }
@@ -382,7 +403,18 @@ class BrandsView extends BaseView {
     const el = document.getElementById('brandMarketLabel');
     if (el) {
       const mercado = this.brandContainerData?.mercado_objetivo;
-      el.textContent = Array.isArray(mercado) ? mercado.join(', ') : (mercado || '');
+      el.setAttribute('data-field', 'mercado_objetivo');
+      el.textContent = Array.isArray(mercado) && mercado.length > 0 
+        ? mercado.join(', ') 
+        : 'Click para agregar mercado objetivo';
+      el.style.cursor = 'pointer';
+      el.style.opacity = Array.isArray(mercado) && mercado.length > 0 ? '1' : '0.6';
+      
+      el.addEventListener('click', () => {
+        this.makeEditableMultiSelect(el, 'mercado_objetivo', [], 'container', () => {
+          this.renderMarket();
+        });
+      });
     }
   }
 
@@ -398,6 +430,7 @@ class BrandsView extends BaseView {
 
     // Archivos de identidad
     this.renderIdentityFiles();
+    this.setupFileUpload();
     
     // Setup event listeners para INFO
     this.setupEventListeners();
@@ -429,19 +462,67 @@ class BrandsView extends BaseView {
     }
 
     container.innerHTML = colors.map(color => {
-      // Según schema: brand_colors tiene hex_value y color_role
       const hex = color.hex_value || color.hex_code || color.color_value || color.hex || '#000000';
       const role = color.color_role || color.role || color.name || 'Color';
+      const colorId = color.id;
       
       return `
-        <div class="color-swatch" style="background: ${hex};">
+        <div class="color-swatch" style="background: ${hex}; position: relative; cursor: pointer;" data-color-id="${colorId}">
           <div class="color-swatch-tooltip">
             <div class="color-swatch-hex">${hex.toUpperCase()}</div>
             <div class="color-swatch-role">${role}</div>
           </div>
+          <div class="color-swatch-actions" style="position: absolute; top: 0; right: 0; display: none; gap: 0.25rem; padding: 0.25rem;">
+            <button class="color-edit-btn" style="background: rgba(0,0,0,0.5); border: none; color: white; padding: 0.25rem; border-radius: 4px; cursor: pointer; font-size: 0.7rem;">✎</button>
+            <button class="color-delete-btn" style="background: rgba(220,38,38,0.7); border: none; color: white; padding: 0.25rem; border-radius: 4px; cursor: pointer; font-size: 0.7rem;">×</button>
+          </div>
         </div>
       `;
-    }).join('');
+    }).join('') + `
+      <div class="color-swatch-add" style="width: 40px; height: 40px; border: 2px dashed rgba(255,255,255,0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: rgba(255,255,255,0.5); font-size: 1.5rem;" title="Agregar color">+</div>
+    `;
+
+    // Event listeners para editar/eliminar colores
+    container.querySelectorAll('.color-swatch').forEach(swatch => {
+      const colorId = swatch.getAttribute('data-color-id');
+      const color = colors.find(c => c.id === colorId);
+      
+      swatch.addEventListener('mouseenter', () => {
+        const actions = swatch.querySelector('.color-swatch-actions');
+        if (actions) actions.style.display = 'flex';
+      });
+      
+      swatch.addEventListener('mouseleave', () => {
+        const actions = swatch.querySelector('.color-swatch-actions');
+        if (actions) actions.style.display = 'none';
+      });
+
+      const editBtn = swatch.querySelector('.color-edit-btn');
+      if (editBtn) {
+        editBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.editColor(color);
+        });
+      }
+
+      const deleteBtn = swatch.querySelector('.color-delete-btn');
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (confirm('¿Eliminar este color?')) {
+            this.deleteColor(colorId);
+          }
+        });
+      }
+    });
+
+    // Event listener para agregar color
+    const addBtn = container.querySelector('.color-swatch-add');
+    if (addBtn) {
+      addBtn.addEventListener('click', () => {
+        this.addColor();
+      });
+    }
   }
 
   renderTypography() {
@@ -883,6 +964,127 @@ class BrandsView extends BaseView {
         </div>
       </section>
     `;
+
+    // Hacer editables todos los campos después de renderizar
+    this.setupInfoPanelEditables(container);
+  }
+
+  setupInfoPanelEditables(container) {
+    if (!container) return;
+
+    // Logo upload
+    const logoInput = container.querySelector('.info-logo-container input[type="file"]');
+    if (logoInput) {
+      logoInput.addEventListener('change', (e) => {
+        if (e.target.files[0]) {
+          this.uploadLogo(e.target.files[0]);
+        }
+      });
+    }
+
+    // Esencia - hacer editables los campos
+    const quienesSomos = container.querySelector('.info-field-value');
+    if (quienesSomos && quienesSomos.textContent.includes(this.brandData?.quienes_somos || '')) {
+      quienesSomos.style.cursor = 'text';
+      quienesSomos.setAttribute('contenteditable', 'true');
+      quienesSomos.addEventListener('blur', () => {
+        this.saveBrandField('quienes_somos', quienesSomos.textContent.trim());
+      });
+    }
+
+    // Buscar todos los campos editables y hacerlos editables
+    container.querySelectorAll('.info-field-value').forEach(field => {
+      const label = field.previousElementSibling;
+      if (!label || !label.classList.contains('info-field-label')) return;
+
+      const labelText = label.textContent.trim();
+      let fieldName = null;
+
+      // Mapear labels a field names
+      if (labelText === 'Quiénes somos') {
+        field.style.cursor = 'text';
+        field.setAttribute('contenteditable', 'true');
+        field.classList.add('editable-field');
+        field.addEventListener('blur', () => {
+          const value = field.textContent.trim();
+          this.saveBrandField('quienes_somos', value);
+        });
+      } else if (labelText === 'Personalidad') {
+        field.style.cursor = 'text';
+        field.setAttribute('contenteditable', 'true');
+        field.classList.add('editable-field');
+        field.addEventListener('blur', () => {
+          const value = field.textContent.trim();
+          this.saveBrandField('personalidad_marca', value);
+        });
+      } else if (labelText === 'Tono de voz') {
+        // Dropdown para tono de voz
+        field.style.cursor = 'pointer';
+        field.addEventListener('click', () => {
+          const options = [
+            { value: 'formal', label: 'Formal' },
+            { value: 'informal', label: 'Informal' },
+            { value: 'profesional', label: 'Profesional' },
+            { value: 'amigable', label: 'Amigable' },
+            { value: 'técnico', label: 'Técnico' },
+            { value: 'creativo', label: 'Creativo' },
+            { value: 'empático', label: 'Empático' },
+            { value: 'directo', label: 'Directo' }
+          ];
+          this.makeEditableSelect(field, 'tono_voz', options, 'brand', () => {
+            const infoCard = document.querySelector('.card-info.expanded');
+            if (infoCard) {
+              const content = infoCard.querySelector('.card-content-expanded');
+              if (content) {
+                this.renderInfoPanelContent(content);
+              }
+            }
+          });
+        });
+      } else if (labelText === 'Palabras a usar') {
+        field.style.cursor = 'text';
+        field.setAttribute('contenteditable', 'true');
+        field.classList.add('editable-field');
+        field.addEventListener('blur', () => {
+          const value = field.textContent.trim();
+          this.saveBrandField('palabras_usar', value);
+        });
+      } else if (labelText === 'Reglas generales') {
+        field.style.cursor = 'text';
+        field.setAttribute('contenteditable', 'true');
+        field.classList.add('editable-field');
+        field.addEventListener('blur', () => {
+          const value = field.textContent.trim();
+          this.saveBrandField('reglas_creativas', value);
+        });
+      }
+    });
+
+    // Objetivos y palabras a evitar (multi-select)
+    container.querySelectorAll('.info-list').forEach(list => {
+      const label = list.closest('.info-field')?.querySelector('.info-field-label');
+      if (!label) return;
+
+      const labelText = label.textContent.trim();
+      if (labelText === 'Objetivos' || labelText === 'Palabras a evitar') {
+        const fieldName = labelText === 'Objetivos' ? 'objetivos_marca' : 'palabras_evitar';
+        const parent = list.parentElement;
+        parent.style.cursor = 'pointer';
+        parent.addEventListener('click', () => {
+          const currentValues = Array.from(list.querySelectorAll('li')).map(li => li.textContent.trim());
+          this.makeEditableMultiSelect(parent, fieldName, currentValues, 'brand', () => {
+            // Recargar panel
+            const infoCard = document.querySelector('.card-info.expanded');
+            if (infoCard) {
+              const content = infoCard.querySelector('.card-content-expanded');
+              if (content) {
+                this.renderInfoPanelContent(content);
+              }
+            }
+          });
+        });
+      }
+    });
   }
 
   renderIdentitySection(brandContainer, brand) {
@@ -896,11 +1098,12 @@ class BrandsView extends BaseView {
        logoUrl.startsWith('/'));
     
     return `
-      <div class="info-logo-container">
+      <div class="info-logo-container" style="position: relative;">
         ${isValidLogoUrl 
           ? `<img src="${this.escapeHtml(logoUrl)}" alt="${this.escapeHtml(nombreMarca)}" class="info-logo-preview" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'info-logo-placeholder\\'><i class=\\'fas fa-image\\'></i></div>'; console.warn('⚠️ Error cargando logo:', '${this.escapeHtml(logoUrl)}');">`
           : '<div class="info-logo-placeholder"><i class="fas fa-image"></i></div>'
         }
+        <input type="file" accept="image/*" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;" title="Click para cambiar logo">
       </div>
     `;
   }
@@ -1220,6 +1423,487 @@ class BrandsView extends BaseView {
     });
 
     return html;
+  }
+
+  // ============================================
+  // MÉTODOS DE GUARDADO
+  // ============================================
+
+  async saveContainerField(fieldName, value) {
+    if (!this.supabase || !this.brandContainerData) return;
+
+    const saveKey = `container_${fieldName}`;
+    if (this.savingFields.has(saveKey)) {
+      console.log(`⏳ Guardado de ${fieldName} ya en curso`);
+      return;
+    }
+
+    this.savingFields.add(saveKey);
+
+    try {
+      const { error } = await this.supabase
+        .from('brand_containers')
+        .update({ [fieldName]: value || null, updated_at: new Date().toISOString() })
+        .eq('id', this.brandContainerData.id);
+
+      if (error) throw error;
+
+      this.brandContainerData[fieldName] = value || null;
+      console.log(`✅ ${fieldName} actualizado correctamente`);
+    } catch (error) {
+      console.error(`❌ Error al guardar ${fieldName}:`, error);
+      alert(`Error al guardar ${fieldName}. Por favor, intenta de nuevo.`);
+    } finally {
+      this.savingFields.delete(saveKey);
+    }
+  }
+
+  async saveBrandField(fieldName, value) {
+    if (!this.supabase || !this.brandData) {
+      // Si no existe brand, crearlo
+      if (!this.brandContainerData) return;
+      
+      try {
+        const { data: newBrand, error } = await this.supabase
+          .from('brands')
+          .insert({
+            project_id: this.brandContainerData.id,
+            [fieldName]: value || null,
+            tono_voz: 'formal' // Valor por defecto requerido
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        this.brandData = newBrand;
+        console.log(`✅ Brand creado y ${fieldName} guardado`);
+        return;
+      } catch (error) {
+        console.error(`❌ Error al crear brand:`, error);
+        alert(`Error al crear brand. Por favor, intenta de nuevo.`);
+        return;
+      }
+    }
+
+    const saveKey = `brand_${fieldName}`;
+    if (this.savingFields.has(saveKey)) {
+      console.log(`⏳ Guardado de ${fieldName} ya en curso`);
+      return;
+    }
+
+    this.savingFields.add(saveKey);
+
+    try {
+      const { error } = await this.supabase
+        .from('brands')
+        .update({ [fieldName]: value || null, updated_at: new Date().toISOString() })
+        .eq('id', this.brandData.id);
+
+      if (error) throw error;
+
+      this.brandData[fieldName] = value || null;
+      console.log(`✅ ${fieldName} actualizado correctamente`);
+    } catch (error) {
+      console.error(`❌ Error al guardar ${fieldName}:`, error);
+      alert(`Error al guardar ${fieldName}. Por favor, intenta de nuevo.`);
+    } finally {
+      this.savingFields.delete(saveKey);
+    }
+  }
+
+  async saveColor(colorId, colorRole, hexValue) {
+    if (!this.supabase || !this.brandData) return;
+
+    try {
+      if (colorId) {
+        // Actualizar color existente
+        const { error } = await this.supabase
+          .from('brand_colors')
+          .update({ color_role: colorRole, hex_value: hexValue })
+          .eq('id', colorId);
+
+        if (error) throw error;
+        console.log(`✅ Color actualizado`);
+      } else {
+        // Crear nuevo color
+        const { error } = await this.supabase
+          .from('brand_colors')
+          .insert({
+            brand_id: this.brandData.id,
+            color_role: colorRole,
+            hex_value: hexValue
+          });
+
+        if (error) throw error;
+        console.log(`✅ Color creado`);
+      }
+
+      // Recargar colores
+      await this.loadData();
+      this.renderCards();
+    } catch (error) {
+      console.error(`❌ Error al guardar color:`, error);
+      alert(`Error al guardar color. Por favor, intenta de nuevo.`);
+    }
+  }
+
+  async deleteColor(colorId) {
+    if (!this.supabase) return;
+
+    try {
+      const { error } = await this.supabase
+        .from('brand_colors')
+        .delete()
+        .eq('id', colorId);
+
+      if (error) throw error;
+
+      // Recargar colores
+      await this.loadData();
+      this.renderCards();
+      console.log(`✅ Color eliminado`);
+    } catch (error) {
+      console.error(`❌ Error al eliminar color:`, error);
+      alert(`Error al eliminar color. Por favor, intenta de nuevo.`);
+    }
+  }
+
+  async uploadLogo(file) {
+    if (!this.supabase || !this.brandContainerData) return;
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `logo_${this.brandContainerData.id}_${Date.now()}.${fileExt}`;
+      const filePath = `brands/${this.brandContainerData.id}/${fileName}`;
+
+      const { error: uploadError } = await this.supabase.storage
+        .from('brand-assets')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = this.supabase.storage
+        .from('brand-assets')
+        .getPublicUrl(filePath);
+
+      await this.saveContainerField('logo_url', publicUrl);
+      await this.loadData();
+      this.renderAll();
+      console.log(`✅ Logo subido correctamente`);
+    } catch (error) {
+      console.error(`❌ Error al subir logo:`, error);
+      alert(`Error al subir logo. Por favor, intenta de nuevo.`);
+    }
+  }
+
+  async uploadAsset(file) {
+    if (!this.supabase || !this.brandContainerData) return;
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `asset_${this.brandContainerData.id}_${Date.now()}.${fileExt}`;
+      const filePath = `brands/${this.brandContainerData.id}/assets/${fileName}`;
+
+      const { error: uploadError } = await this.supabase.storage
+        .from('brand-assets')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = this.supabase.storage
+        .from('brand-assets')
+        .getPublicUrl(filePath);
+
+      // Crear registro en brand_assets
+      const { error: insertError } = await this.supabase
+        .from('brand_assets')
+        .insert({
+          brand_container_id: this.brandContainerData.id,
+          file_name: file.name,
+          file_url: publicUrl,
+          file_type: file.type,
+          file_size: file.size
+        });
+
+      if (insertError) throw insertError;
+
+      await this.loadData();
+      this.renderCards();
+      console.log(`✅ Archivo subido correctamente`);
+    } catch (error) {
+      console.error(`❌ Error al subir archivo:`, error);
+      alert(`Error al subir archivo. Por favor, intenta de nuevo.`);
+    }
+  }
+
+  // ============================================
+  // MÉTODOS DE EDICIÓN INLINE
+  // ============================================
+
+  makeEditableText(element, fieldName, table = 'container', onSave = null) {
+    if (!element) return;
+
+    element.style.cursor = 'text';
+    element.setAttribute('contenteditable', 'true');
+    element.classList.add('editable-field');
+
+    element.addEventListener('blur', async () => {
+      const value = element.textContent.trim();
+      const originalValue = table === 'container' 
+        ? (this.brandContainerData?.[fieldName] || '')
+        : (this.brandData?.[fieldName] || '');
+
+      if (value !== originalValue) {
+        if (table === 'container') {
+          await this.saveContainerField(fieldName, value);
+          this.renderBrandName();
+        } else {
+          await this.saveBrandField(fieldName, value);
+        }
+        if (onSave) onSave();
+      }
+    });
+
+    element.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        element.blur();
+      }
+    });
+  }
+
+  makeEditableTextarea(element, fieldName, table = 'brand', onSave = null) {
+    if (!element) return;
+
+    const originalValue = table === 'container' 
+      ? (this.brandContainerData?.[fieldName] || '')
+      : (this.brandData?.[fieldName] || '');
+
+    const textarea = document.createElement('textarea');
+    textarea.value = originalValue;
+    textarea.className = 'editable-textarea';
+    textarea.style.width = '100%';
+    textarea.style.minHeight = '80px';
+    textarea.style.padding = '0.5rem';
+    textarea.style.background = 'rgba(255, 255, 255, 0.05)';
+    textarea.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+    textarea.style.borderRadius = '6px';
+    textarea.style.color = 'var(--text-primary, #F2F3F5)';
+    textarea.style.fontSize = '0.875rem';
+    textarea.style.fontFamily = 'inherit';
+    textarea.style.resize = 'vertical';
+
+    element.innerHTML = '';
+    element.appendChild(textarea);
+
+    textarea.addEventListener('blur', async () => {
+      const value = textarea.value.trim();
+      if (value !== originalValue) {
+        if (table === 'container') {
+          await this.saveContainerField(fieldName, value);
+        } else {
+          await this.saveBrandField(fieldName, value);
+        }
+        if (onSave) onSave();
+        // Restaurar visualización
+        element.innerHTML = value || '<span style="opacity: 0.5;">Sin contenido</span>';
+        this.makeEditableTextarea(element, fieldName, table, onSave);
+      } else {
+        element.innerHTML = originalValue || '<span style="opacity: 0.5;">Sin contenido</span>';
+        this.makeEditableTextarea(element, fieldName, table, onSave);
+      }
+    });
+
+    textarea.focus();
+  }
+
+  makeEditableSelect(element, fieldName, options, table = 'brand', onSave = null) {
+    if (!element) return;
+
+    const originalValue = table === 'container' 
+      ? (this.brandContainerData?.[fieldName] || '')
+      : (this.brandData?.[fieldName] || '');
+
+    const select = document.createElement('select');
+    select.className = 'editable-select';
+    select.style.width = '100%';
+    select.style.padding = '0.5rem';
+    select.style.background = 'rgba(255, 255, 255, 0.05)';
+    select.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+    select.style.borderRadius = '6px';
+    select.style.color = 'var(--text-primary, #F2F3F5)';
+    select.style.fontSize = '0.875rem';
+
+    options.forEach(opt => {
+      const option = document.createElement('option');
+      option.value = opt.value;
+      option.textContent = opt.label;
+      if (opt.value === originalValue) option.selected = true;
+      select.appendChild(option);
+    });
+
+    element.innerHTML = '';
+    element.appendChild(select);
+
+    select.addEventListener('change', async () => {
+      const value = select.value;
+      if (value !== originalValue) {
+        if (table === 'container') {
+          await this.saveContainerField(fieldName, value);
+        } else {
+          await this.saveBrandField(fieldName, value);
+        }
+        if (onSave) onSave();
+      }
+    });
+  }
+
+  makeEditableMultiSelect(element, fieldName, allOptions, table = 'container', onSave = null) {
+    if (!element) return;
+
+    const originalValue = table === 'container' 
+      ? (this.brandContainerData?.[fieldName] || [])
+      : (this.brandData?.[fieldName] || []);
+    
+    const currentValues = Array.isArray(originalValue) ? originalValue : [];
+
+    // Crear contenedor de tags
+    const container = document.createElement('div');
+    container.className = 'editable-multiselect';
+    container.style.display = 'flex';
+    container.style.flexWrap = 'wrap';
+    container.style.gap = '0.5rem';
+
+    // Renderizar tags actuales
+    currentValues.forEach(val => {
+      const tag = document.createElement('span');
+      tag.className = 'editable-tag';
+      tag.textContent = val;
+      tag.style.padding = '0.25rem 0.5rem';
+      tag.style.background = 'rgba(212, 184, 150, 0.2)';
+      tag.style.border = '1px solid rgba(212, 184, 150, 0.3)';
+      tag.style.borderRadius = '4px';
+      tag.style.fontSize = '0.75rem';
+      tag.style.color = 'var(--brand-text-gold, #D4B896)';
+      tag.style.cursor = 'pointer';
+      tag.style.position = 'relative';
+
+      const removeBtn = document.createElement('span');
+      removeBtn.innerHTML = ' ×';
+      removeBtn.style.cursor = 'pointer';
+      removeBtn.style.marginLeft = '0.25rem';
+      removeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const newValues = currentValues.filter(v => v !== val);
+        this.saveMultiSelect(fieldName, newValues, table, onSave);
+      });
+
+      tag.appendChild(removeBtn);
+      container.appendChild(tag);
+    });
+
+    // Input para agregar nuevos
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = '+ Agregar';
+    input.style.padding = '0.25rem 0.5rem';
+    input.style.background = 'rgba(255, 255, 255, 0.05)';
+    input.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+    input.style.borderRadius = '4px';
+    input.style.fontSize = '0.75rem';
+    input.style.color = 'var(--text-primary, #F2F3F5)';
+    input.style.minWidth = '80px';
+    input.style.flex = '1';
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && input.value.trim()) {
+        e.preventDefault();
+        const newValue = input.value.trim();
+        if (!currentValues.includes(newValue)) {
+          currentValues.push(newValue);
+          this.saveMultiSelect(fieldName, currentValues, table, onSave);
+        }
+        input.value = '';
+      }
+    });
+
+    container.appendChild(input);
+    element.innerHTML = '';
+    element.appendChild(container);
+  }
+
+  async saveMultiSelect(fieldName, values, table, onSave) {
+    if (table === 'container') {
+      await this.saveContainerField(fieldName, values);
+      this.renderMarket();
+    } else {
+      await this.saveBrandField(fieldName, values);
+    }
+    if (onSave) onSave();
+    // Re-renderizar
+    const element = document.querySelector(`[data-field="${fieldName}"]`);
+    if (element) {
+      this.makeEditableMultiSelect(element, fieldName, [], table, onSave);
+    }
+  }
+
+  addColor() {
+    const hex = prompt('Ingresa el código hexadecimal del color (ej: #FF5733):', '#000000');
+    if (!hex) return;
+
+    const role = prompt('Ingresa el rol del color (ej: Primary, Secondary, Accent):', 'Primary');
+    if (!role) return;
+
+    this.saveColor(null, role, hex);
+  }
+
+  editColor(color) {
+    if (!color) return;
+
+    const newHex = prompt('Ingresa el nuevo código hexadecimal:', color.hex_value || '#000000');
+    if (!newHex) return;
+
+    const newRole = prompt('Ingresa el nuevo rol del color:', color.color_role || 'Color');
+    if (!newRole) return;
+
+    this.saveColor(color.id, newRole, newHex);
+  }
+
+  setupFileUpload() {
+    const container = document.getElementById('identityFilesContainer');
+    if (!container) return;
+
+    // Agregar botón de upload si no existe
+    let uploadBtn = container.querySelector('.file-upload-btn');
+    if (!uploadBtn) {
+      uploadBtn = document.createElement('button');
+      uploadBtn.className = 'file-upload-btn';
+      uploadBtn.innerHTML = '<i class="fas fa-plus"></i> Subir archivo';
+      uploadBtn.style.marginTop = '1rem';
+      uploadBtn.style.padding = '0.5rem 1rem';
+      uploadBtn.style.background = 'rgba(212, 184, 150, 0.2)';
+      uploadBtn.style.border = '1px solid rgba(212, 184, 150, 0.3)';
+      uploadBtn.style.borderRadius = '6px';
+      uploadBtn.style.color = 'var(--brand-text-gold, #D4B896)';
+      uploadBtn.style.cursor = 'pointer';
+      uploadBtn.style.fontSize = '0.875rem';
+      uploadBtn.style.width = '100%';
+
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.style.display = 'none';
+      fileInput.multiple = true;
+      fileInput.addEventListener('change', (e) => {
+        Array.from(e.target.files).forEach(file => {
+          this.uploadAsset(file);
+        });
+        fileInput.value = '';
+      });
+
+      uploadBtn.addEventListener('click', () => fileInput.click());
+      container.appendChild(fileInput);
+      container.appendChild(uploadBtn);
+    }
   }
 }
 

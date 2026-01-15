@@ -1129,6 +1129,66 @@ body.sidebar-collapsed .brand-dashboard-container {
     border-radius: 4px;
 }
 
+/* ============================================
+   CAMPOS EDITABLES
+   ============================================ */
+
+.editable-field {
+    transition: background 0.2s ease, border 0.2s ease;
+}
+
+.editable-field:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-radius: 4px;
+    padding: 0.25rem;
+    margin: -0.25rem;
+}
+
+.editable-field:focus {
+    background: rgba(255, 255, 255, 0.08) !important;
+    outline: 1px solid rgba(212, 184, 150, 0.3);
+    border-radius: 4px;
+    padding: 0.25rem;
+    margin: -0.25rem;
+}
+
+.editable-textarea {
+    font-family: inherit;
+}
+
+.editable-select {
+    font-family: inherit;
+}
+
+.editable-tag {
+    display: inline-flex;
+    align-items: center;
+}
+
+.editable-multiselect input {
+    border: none;
+    outline: none;
+}
+
+.editable-multiselect input:focus {
+    outline: 1px solid rgba(212, 184, 150, 0.3);
+}
+
+/* Color swatch actions */
+.color-swatch {
+    transition: transform 0.2s ease;
+}
+
+.color-swatch:hover {
+    transform: scale(1.05);
+}
+
+/* File upload button */
+.file-upload-btn:hover {
+    background: rgba(212, 184, 150, 0.3) !important;
+    border-color: rgba(212, 184, 150, 0.5) !important;
+}
+
 /* Responsive para contenido expandido */
 @media (max-width: 768px) {
     .card-info.expanded {
