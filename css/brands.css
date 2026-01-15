@@ -1134,14 +1134,16 @@ body.sidebar-collapsed .brand-dashboard-container {
    ============================================ */
 
 .editable-field {
-    transition: background 0.2s ease, border 0.2s ease;
+    transition: none;
 }
 
 .editable-field:hover {
-    background: rgba(255, 255, 255, 0.05) !important;
-    border-radius: 4px;
-    padding: 0.25rem;
-    margin: -0.25rem;
+    background: transparent !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    transform: none !important;
+    box-shadow: none !important;
 }
 
 .editable-field:focus {
