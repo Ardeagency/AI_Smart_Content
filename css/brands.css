@@ -44,8 +44,7 @@
     justify-content: center;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 15px;
-    padding-top: 63px; /* 48px header + 15px margen */
+    padding: 15px !important; /* 15px en todos los lados */
     transition: all 0.3s ease;
 }
 
@@ -407,17 +406,16 @@ body.sidebar-collapsed .brand-dashboard-container {
 .brand-dashboard-container.info-mode-secondary .card-info.expanded {
     position: relative !important;
     width: 100% !important;
-    max-width: 1200px;
+    max-width: 100% !important;
+    min-width: 0 !important;
     min-height: 500px;
     padding: 1.25rem;
-    margin: 0 auto;
+    margin: 0 !important;
     z-index: 100;
     height: auto !important;
-}
-
-/* Asegurar que en modo secundario la card esté visible */
-.brand-dashboard-container.info-mode-secondary .card-info.expanded {
     display: block !important;
+    box-sizing: border-box;
+    flex-shrink: 0;
 }
 
 .card-info.expanded .card-content-expanded {
