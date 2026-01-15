@@ -285,6 +285,11 @@
     scrollbar-color: rgba(236, 235, 218, 0.3) transparent;
 }
 
+.products-grid.rendering .product-card {
+    opacity: 0;
+    transform: translateY(20px);
+}
+
 .products-grid::-webkit-scrollbar {
     width: 8px;
 }
@@ -310,7 +315,7 @@
     border: none;
     border-radius: 16px;
     overflow: hidden;
-    transition: var(--transition);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     position: relative;
     break-inside: avoid;
@@ -331,6 +336,12 @@
     background: #F5F5F5;
     position: relative;
     overflow: hidden;
+    border-radius: 16px;
+    transition: transform 0.3s ease;
+}
+
+.product-card:hover .product-card-image {
+    transform: scale(1.02);
 }
 
 .product-card-image img {
@@ -342,6 +353,7 @@
 
 .product-card-image .no-image {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     width: 100%;
@@ -349,95 +361,16 @@
     color: #9CA3AF;
     font-size: 3rem;
     background: #F5F5F5;
-}
-
-/* Precio en la esquina superior derecha */
-.product-card-price-badge {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    background: #FFFFFF;
-    color: #1C1F26;
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    z-index: 10;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.product-card-content {
-    padding: 1.25rem;
-    background: #FFFFFF;
-}
-
-/* Header con nombre y botón editar */
-.product-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 1rem;
-    margin-bottom: 0.75rem;
-}
-
-.product-card-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #1C1F26;
-    margin: 0;
-    flex: 1;
-    line-height: 1.4;
-}
-
-/* Botón editar */
-.product-card-edit-btn {
-    background: transparent;
-    border: none;
-    color: #6B7280;
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
-.product-card-edit-btn:hover {
-    background: rgba(0, 0, 0, 0.05);
-    color: #1C1F26;
-}
-
-.product-card-edit-btn i {
-    font-size: 0.75rem;
-}
-
-/* Tags de tipo de producto */
-.product-card-types {
-    display: flex;
-    flex-wrap: wrap;
     gap: 0.5rem;
-    margin-top: 0.5rem;
 }
 
-.product-card-type-tag {
-    display: inline-block;
-    background: #F5F5F5;
+.product-card-image .no-image span {
+    font-size: 0.875rem;
     color: #6B7280;
-    padding: 0.375rem 0.75rem;
-    border-radius: 12px;
-    font-size: 0.75rem;
     font-weight: 500;
 }
 
-/* Descripción removida del nuevo diseño */
-.product-card-description {
-    display: none;
-}
+/* Estilos removidos - cards ahora solo muestran imágenes */
 
 .btn-icon {
     width: 32px;

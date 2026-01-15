@@ -13,7 +13,55 @@ if (typeof window.ProductsManager === 'undefined') {
         this.products = [];
         this.currentProduct = null;
         this.activeFilter = 'todos'; // Filtro activo por categoría
+        this.availableCategories = new Set(); // Categorías disponibles basadas en productos
         this.init();
+    }
+
+    // Mapeo completo de todas las categorías posibles
+    getCategoryMap() {
+        return {
+            'todos': { label: 'Todos', icon: 'fa-th' },
+            'bebida': { label: 'Bebidas', icon: 'fa-glass-water' },
+            'bebida_alcoholica': { label: 'Bebidas Alcohólicas', icon: 'fa-wine-glass' },
+            'agua': { label: 'Agua', icon: 'fa-droplet' },
+            'energetica': { label: 'Bebidas Energéticas', icon: 'fa-bolt' },
+            'alimento': { label: 'Alimentos', icon: 'fa-utensils' },
+            'snack': { label: 'Snacks', icon: 'fa-cookie' },
+            'suplemento_alimenticio': { label: 'Suplementos', icon: 'fa-pills' },
+            'cosmetico': { label: 'Cosméticos', icon: 'fa-palette' },
+            'skincare': { label: 'Skincare', icon: 'fa-spa' },
+            'maquillaje': { label: 'Maquillaje', icon: 'fa-paintbrush' },
+            'perfume': { label: 'Perfumes', icon: 'fa-spray-can' },
+            'cuidado_cabello': { label: 'Cuidado del Cabello', icon: 'fa-scissors' },
+            'app': { label: 'Apps/Software', icon: 'fa-mobile-screen' },
+            'electronico': { label: 'Electrónicos', icon: 'fa-laptop' },
+            'smartphone': { label: 'Smartphones', icon: 'fa-mobile-screen-button' },
+            'ropa': { label: 'Ropa', icon: 'fa-shirt' },
+            'calzado': { label: 'Calzado', icon: 'fa-shoe-prints' },
+            'accesorio_moda': { label: 'Accesorios de Moda', icon: 'fa-bag-shopping' },
+            'otro': { label: 'Otros', icon: 'fa-box' }
+        };
+    }
+
+    // Detectar categorías disponibles basándose en productos existentes
+    detectAvailableCategories() {
+        if (!this.products || this.products.length === 0) {
+            this.availableCategories = new Set(['todos']);
+            return;
+        }
+
+        // Obtener todas las categorías únicas de los productos
+        const categories = new Set(['todos']); // Siempre incluir "Todos"
+        
+        this.products.forEach(product => {
+            const tipo = product.tipo_producto || 'otro';
+            if (tipo) {
+                categories.add(tipo);
+            }
+        });
+
+        this.availableCategories = categories;
+        console.log('📊 Categorías detectadas:', Array.from(categories));
     }
 
     async init() {
@@ -153,8 +201,7 @@ if (typeof window.ProductsManager === 'undefined') {
             });
         }
 
-        // Renderizar tabs de categorías
-        this.renderCategoryTabs();
+        // Los tabs se renderizarán después de cargar productos
     }
 
     renderCategoryTabs() {
@@ -165,22 +212,39 @@ if (typeof window.ProductsManager === 'undefined') {
             return;
         }
 
-        const categories = [
-            { id: 'todos', label: 'Todos', icon: 'fa-th' },
-            { id: 'bebida', label: 'Bebidas', icon: 'fa-glass-water' },
-            { id: 'bebida_alcoholica', label: 'Bebidas Alcohólicas', icon: 'fa-wine-glass' },
-            { id: 'alimento', label: 'Alimentos', icon: 'fa-utensils' },
-            { id: 'snack', label: 'Snacks', icon: 'fa-cookie' },
-            { id: 'cosmetico', label: 'Cosméticos', icon: 'fa-palette' },
-            { id: 'skincare', label: 'Skincare', icon: 'fa-spa' },
-            { id: 'electronico', label: 'Electrónicos', icon: 'fa-laptop' },
-            { id: 'ropa', label: 'Ropa', icon: 'fa-shirt' },
-            { id: 'otro', label: 'Otros', icon: 'fa-box' }
-        ];
+        // Si no hay categorías disponibles, no mostrar tabs
+        if (!this.availableCategories || this.availableCategories.size === 0) {
+            tabsContainer.innerHTML = '';
+            return;
+        }
 
-        tabsContainer.innerHTML = categories.map(cat => `
+        const categoryMap = this.getCategoryMap();
+        
+        // Filtrar solo las categorías disponibles y ordenarlas
+        const availableCategoriesList = Array.from(this.availableCategories)
+            .map(catId => ({
+                id: catId,
+                ...categoryMap[catId]
+            }))
+            .filter(cat => cat.label) // Solo incluir si existe en el mapeo
+            .sort((a, b) => {
+                // "Todos" siempre primero
+                if (a.id === 'todos') return -1;
+                if (b.id === 'todos') return 1;
+                // Resto alfabéticamente por label
+                return a.label.localeCompare(b.label);
+            });
+
+        // Si solo hay "Todos" y no hay productos, no mostrar tabs
+        if (availableCategoriesList.length === 1 && availableCategoriesList[0].id === 'todos' && this.products.length === 0) {
+            tabsContainer.innerHTML = '';
+            return;
+        }
+
+        tabsContainer.innerHTML = availableCategoriesList.map(cat => `
             <button class="category-tab ${this.activeFilter === cat.id ? 'active' : ''}" 
-                    data-category="${cat.id}">
+                    data-category="${cat.id}"
+                    title="${cat.label}">
                 <i class="fas ${cat.icon}"></i>
                 <span>${cat.label}</span>
             </button>
@@ -196,6 +260,12 @@ if (typeof window.ProductsManager === 'undefined') {
     }
 
     setActiveFilter(category) {
+        // Validar que la categoría esté disponible
+        if (!this.availableCategories.has(category)) {
+            console.warn(`⚠️ Categoría ${category} no disponible, cambiando a "todos"`);
+            category = 'todos';
+        }
+        
         this.activeFilter = category;
         this.renderCategoryTabs(); // Re-renderizar tabs para actualizar estado activo
         this.renderProducts(); // Re-renderizar productos con el nuevo filtro
@@ -263,7 +333,20 @@ if (typeof window.ProductsManager === 'undefined') {
 
             this.products = products || [];
             console.log('✅ Productos cargados:', this.products.length);
-            this.renderCategoryTabs(); // Renderizar tabs después de cargar productos
+            
+            // Detectar categorías disponibles basándose en productos
+            this.detectAvailableCategories();
+            
+            // Validar y ajustar filtro activo si es necesario
+            if (!this.availableCategories.has(this.activeFilter)) {
+                console.log(`ℹ️ Filtro activo "${this.activeFilter}" ya no está disponible, cambiando a "todos"`);
+                this.activeFilter = 'todos';
+            }
+            
+            // Renderizar tabs después de detectar categorías
+            this.renderCategoryTabs();
+            
+            // Renderizar productos
             this.renderProducts();
 
         } catch (error) {
@@ -307,22 +390,17 @@ if (typeof window.ProductsManager === 'undefined') {
             const emptyStateTitle = emptyState.querySelector('h3');
             const emptyStateText = emptyState.querySelector('p');
             if (emptyStateTitle && emptyStateText) {
+                const categoryMap = this.getCategoryMap();
+                const categoryInfo = categoryMap[this.activeFilter];
+                
                 if (this.activeFilter === 'todos') {
                     emptyStateTitle.textContent = 'No hay productos';
                     emptyStateText.textContent = 'Aún no has creado ningún producto';
+                } else if (categoryInfo) {
+                    emptyStateTitle.textContent = `No hay productos en ${categoryInfo.label}`;
+                    emptyStateText.textContent = 'Intenta seleccionar otra categoría o crea un nuevo producto';
                 } else {
-                    const categoryLabels = {
-                        'bebida': 'Bebidas',
-                        'bebida_alcoholica': 'Bebidas Alcohólicas',
-                        'alimento': 'Alimentos',
-                        'snack': 'Snacks',
-                        'cosmetico': 'Cosméticos',
-                        'skincare': 'Skincare',
-                        'electronico': 'Electrónicos',
-                        'ropa': 'Ropa',
-                        'otro': 'Otros'
-                    };
-                    emptyStateTitle.textContent = `No hay productos en ${categoryLabels[this.activeFilter] || 'esta categoría'}`;
+                    emptyStateTitle.textContent = 'No hay productos en esta categoría';
                     emptyStateText.textContent = 'Intenta seleccionar otra categoría o crea un nuevo producto';
                 }
             }
@@ -334,15 +412,31 @@ if (typeof window.ProductsManager === 'undefined') {
         productsGrid.style.display = 'block';
         productsGrid.innerHTML = '';
 
+        // Renderizar productos con animación escalonada
         filteredProducts.forEach((product, index) => {
             try {
                 const card = this.createProductCard(product);
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
                 productsGrid.appendChild(card);
+                
+                // Animación escalonada
+                setTimeout(() => {
+                    card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 50);
+                
                 console.log(`✅ Producto ${index + 1} renderizado: ${product.nombre_producto}`);
             } catch (error) {
                 console.error(`❌ Error renderizando producto ${product.id}:`, error);
             }
         });
+
+        // Remover clase de renderizado después de un momento
+        setTimeout(() => {
+            productsGrid.classList.remove('rendering');
+        }, filteredProducts.length * 50 + 100);
 
         console.log('✅ Todos los productos renderizados');
     }
@@ -360,8 +454,8 @@ if (typeof window.ProductsManager === 'undefined') {
         card.innerHTML = `
             <div class="product-card-image">
                 ${mainImage 
-                    ? `<img src="${mainImage}" alt="${product.nombre_producto}" loading="lazy">` 
-                    : `<div class="no-image"><i class="fas fa-image"></i></div>`
+                    ? `<img src="${mainImage}" alt="${product.nombre_producto}" loading="lazy" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'no-image\\'><i class=\\'fas fa-image\\'></i><span>Sin imagen</span></div>'">` 
+                    : `<div class="no-image"><i class="fas fa-image"></i><span>Sin imagen</span></div>`
                 }
             </div>
         `;
@@ -477,11 +571,13 @@ if (typeof window.ProductsManager === 'undefined') {
 
             this.closeNewProductModal();
             await this.loadProducts();
-            alert('Producto creado exitosamente');
+            
+            // Mostrar notificación en lugar de alert
+            this.showNotification('✅ Producto creado exitosamente', 'success');
 
         } catch (error) {
             console.error('Error creando producto:', error);
-            alert(`Error al crear el producto: ${error.message}`);
+            this.showNotification(`❌ Error al crear el producto: ${error.message}`, 'error');
         } finally {
             saveBtn.disabled = false;
             saveBtn.textContent = 'Crear Producto';
@@ -1015,11 +1111,14 @@ if (typeof window.ProductsManager === 'undefined') {
             }
 
             await this.loadProducts();
-            alert(this.currentProduct ? 'Producto actualizado exitosamente' : 'Producto creado exitosamente');
+            this.showNotification(
+                this.currentProduct ? '✅ Producto actualizado exitosamente' : '✅ Producto creado exitosamente',
+                'success'
+            );
 
         } catch (error) {
             console.error('Error guardando producto:', error);
-            alert(`Error al guardar el producto: ${error.message}`);
+            this.showNotification(`❌ Error al guardar el producto: ${error.message}`, 'error');
         } finally {
             saveBtn.disabled = false;
             saveBtn.textContent = this.currentProduct ? 'Guardar Cambios' : 'Crear Producto';
@@ -1047,7 +1146,7 @@ if (typeof window.ProductsManager === 'undefined') {
             if (error) throw error;
 
             await this.loadProducts();
-            alert('Producto eliminado exitosamente');
+            this.showNotification('✅ Producto eliminado exitosamente', 'success');
 
         } catch (error) {
             console.error('Error eliminando producto:', error);
