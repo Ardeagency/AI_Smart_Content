@@ -87,6 +87,7 @@
     margin-left: var(--nav-width, 250px);
     transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     padding-top: calc(48px + 2rem);
+    background: #0E1012;
 }
 
 /* Cuando el sidebar está colapsado */
@@ -221,9 +222,33 @@ body.sidebar-collapsed .products-container {
 }
 
 .products-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
+    column-count: 4;
+    column-gap: 1.5rem;
+    column-fill: balance;
+}
+
+@media (min-width: 1400px) {
+    .products-grid {
+        column-count: 5;
+    }
+}
+
+@media (max-width: 1200px) {
+    .products-grid {
+        column-count: 3;
+    }
+}
+
+@media (max-width: 900px) {
+    .products-grid {
+        column-count: 2;
+    }
+}
+
+@media (max-width: 600px) {
+    .products-grid {
+        column-count: 1;
+    }
 }
 
 /* ============================================
@@ -237,6 +262,10 @@ body.sidebar-collapsed .products-container {
     transition: var(--transition);
     cursor: pointer;
     position: relative;
+    break-inside: avoid;
+    margin-bottom: 1.5rem;
+    display: inline-block;
+    width: 100%;
 }
 
 .product-card:hover {
@@ -255,7 +284,8 @@ body.sidebar-collapsed .products-container {
 
 .product-card-image img {
     width: 100%;
-    height: 100%;
+    height: auto;
+    display: block;
     object-fit: cover;
 }
 
@@ -881,7 +911,7 @@ body.sidebar-collapsed .products-container {
     }
 
     .products-grid {
-        grid-template-columns: 1fr;
+        column-count: 1;
     }
 
     .page-title {

@@ -269,7 +269,7 @@ if (typeof window.ProductsManager === 'undefined') {
 
         console.log(`🎨 Renderizando ${this.products.length} producto(s)`);
         emptyState.style.display = 'none';
-        productsGrid.style.display = 'grid';
+        productsGrid.style.display = 'block';
         productsGrid.innerHTML = '';
 
         this.products.forEach((product, index) => {

@@ -11,6 +11,7 @@
     transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     padding-top: calc(48px + 2rem);
     min-height: calc(100vh - 48px);
+    background: #0E1012;
 }
 
 /* Cuando el sidebar está colapsado */
