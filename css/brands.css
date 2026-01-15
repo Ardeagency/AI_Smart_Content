@@ -177,6 +177,16 @@ body.sidebar-collapsed .brand-dashboard-container {
     zoom: 1 !important;
 }
 
+/* Asegurar tamaño GRANDE en el contenedor exacto (override a base.css) */
+#brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large,
+#brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:hover,
+#brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:active,
+#brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:focus {
+    font-size: 4.5rem !important;
+    line-height: 1 !important;
+    letter-spacing: -0.02em !important;
+}
+
 /* Eliminar hover del nombre de marca - REGLAS MÁS ESPECÍFICAS */
 .brand-name-large:hover,
 .brand-name-large.editable-field:hover,
@@ -825,6 +835,12 @@ h1.brand-name-large[contenteditable="true"]:hover,
     .brand-name-large {
         font-size: 4rem !important;
     }
+    #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large,
+    #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:hover,
+    #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:active,
+    #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:focus {
+        font-size: 4rem !important;
+    }
 }
 
 @media (max-width: 900px) {
@@ -832,6 +848,12 @@ h1.brand-name-large[contenteditable="true"]:hover,
         width: 300px;
     }
     .brand-name-large {
+        font-size: 3.5rem !important;
+    }
+    #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large,
+    #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:hover,
+    #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:active,
+    #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:focus {
         font-size: 3.5rem !important;
     }
     .brand-main-info {
