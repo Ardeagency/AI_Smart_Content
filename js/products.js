@@ -294,17 +294,6 @@ if (typeof window.ProductsManager === 'undefined') {
             ? product.images[0].image_url 
             : null;
 
-        const tipoProductoMap = {
-            'bebida': '🥤 Bebida',
-            'cosmetico': '💄 Cosmético',
-            'skincare': '✨ Skincare',
-            'app': '📱 App',
-            'ropa': '👕 Ropa',
-            'otro': '📦 Otro'
-        };
-
-        const tipoLabel = tipoProductoMap[product.tipo_producto] || product.tipo_producto;
-
         // Formatear precio
         const precio = product.precio_producto 
             ? `${product.moneda || 'USD'} $${parseFloat(product.precio_producto).toFixed(2)}` 
@@ -313,6 +302,12 @@ if (typeof window.ProductsManager === 'undefined') {
         // Tipo de producto como tag (puede ser un string o array)
         const tipoProducto = product.tipo_producto || 'otro';
         const tipoTags = Array.isArray(tipoProducto) ? tipoProducto : [tipoProducto];
+
+        // Formatear tipo de producto para mostrar (capitalizar primera letra)
+        const formatTipo = (tipo) => {
+            if (!tipo) return '';
+            return tipo.charAt(0).toUpperCase() + tipo.slice(1).replace(/_/g, ' ');
+        };
 
         card.innerHTML = `
             <div class="product-card-image">
@@ -329,10 +324,10 @@ if (typeof window.ProductsManager === 'undefined') {
                         Editar <i class="fas fa-arrow-up-right"></i>
                     </button>
                 </div>
-                ${tipoTags.length > 0 ? `
+                ${tipoTags.length > 0 && tipoTags[0] !== 'otro' ? `
                     <div class="product-card-types">
                         ${tipoTags.map(tipo => `
-                            <span class="product-card-type-tag">${tipo}</span>
+                            <span class="product-card-type-tag">${formatTipo(tipo)}</span>
                         `).join('')}
                     </div>
                 ` : ''}
