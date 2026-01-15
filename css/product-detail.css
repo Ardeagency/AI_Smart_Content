@@ -278,43 +278,46 @@ body.sidebar-collapsed .product-detail-container {
 }
 
 /* ============================================
-   CAMPOS EDITABLES - SIN HOVER NI ANIMACIONES
+   CAMPOS EDITABLES - OVERRIDE ESPECÍFICO PARA PRODUCT DETAIL
    ============================================ */
-.editable-field,
-.editable-field *,
-.editable-textarea,
-.editable-select {
-    /* Eliminar TODOS los efectos hover y animaciones */
-    transition: none !important;
-    -webkit-transition: none !important;
-    -moz-transition: none !important;
-    -o-transition: none !important;
-}
+/* Reglas base heredan de base.css - solo overrides específicos */
 
 .editable-field {
     padding: 0.75rem 1rem;
     background: transparent !important;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
     border-radius: 0;
     color: var(--text-primary, #ecebda);
     font-size: 0.875rem;
     line-height: 1.5;
     min-height: 2.5rem;
     cursor: text !important;
+    transition: none !important;
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
+    animation: none !important;
+    transform: none !important;
+    scale: 1 !important;
 }
 
+/* BORDE FIJO - NO CAMBIA EN HOVER */
 .editable-field:hover,
-.editable-field:active,
-.editable-field:focus {
+.editable-field:active {
     background: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
     border-color: rgba(255, 255, 255, 0.1) !important;
     transform: none !important;
     box-shadow: none !important;
     outline: none !important;
+    transition: none !important;
+    scale: 1 !important;
 }
 
 .editable-field:focus {
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
     border-color: rgba(255, 255, 255, 0.2) !important;
+    outline: none !important;
 }
 
 .editable-textarea {
@@ -323,49 +326,65 @@ body.sidebar-collapsed .product-detail-container {
     font-family: inherit;
     padding: 0.75rem 1rem;
     background: transparent !important;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
     border-radius: 0;
     color: var(--text-primary, #ecebda);
     font-size: 0.875rem;
     cursor: text !important;
+    transition: none !important;
+    transform: none !important;
+    scale: 1 !important;
 }
 
+/* BORDE FIJO - NO CAMBIA EN HOVER */
 .editable-textarea:hover,
-.editable-textarea:active,
-.editable-textarea:focus {
+.editable-textarea:active {
     background: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
     border-color: rgba(255, 255, 255, 0.1) !important;
     transform: none !important;
     box-shadow: none !important;
     outline: none !important;
+    transition: none !important;
+    scale: 1 !important;
 }
 
 .editable-textarea:focus {
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
     border-color: rgba(255, 255, 255, 0.2) !important;
+    outline: none !important;
 }
 
 .editable-select {
     padding: 0.75rem 1rem;
     background: transparent !important;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
     border-radius: 0;
     color: var(--text-primary, #ecebda);
     font-size: 0.875rem;
     cursor: default !important;
+    transition: none !important;
+    transform: none !important;
+    scale: 1 !important;
 }
 
+/* BORDE FIJO - NO CAMBIA EN HOVER */
 .editable-select:hover,
-.editable-select:active,
-.editable-select:focus {
+.editable-select:active {
     background: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
     border-color: rgba(255, 255, 255, 0.1) !important;
     transform: none !important;
     box-shadow: none !important;
     outline: none !important;
+    transition: none !important;
+    scale: 1 !important;
 }
 
 .editable-select:focus {
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
     border-color: rgba(255, 255, 255, 0.2) !important;
+    outline: none !important;
 }
 
 .editable-select option {

@@ -328,13 +328,23 @@ a:hover {
 
 /* ============================================
    INPUTS TEXT UNIFICADOS - REGLAS BASE GLOBALES
+   SIN TRANSICIONES NI EFECTOS
    ============================================ */
 .form-input,
 .form-select,
 .form-textarea,
 .editable-input,
 .editable-select,
-.editable-textarea {
+.editable-textarea,
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="url"],
+input[type="date"],
+input[type="password"],
+input[type="search"],
+textarea,
+select {
     width: 100%;
     padding: 0.75rem 1rem;
     background: var(--bg-secondary);
@@ -364,42 +374,8 @@ a:hover {
 }
 
 /* ============================================
-   ELIMINAR COMPLETAMENTE TODAS LAS TRANSICIONES
-   Y EFECTOS DE INPUTS - ESTADO BASE
-   ============================================ */
-.form-input,
-.form-select,
-.form-textarea,
-input[type="text"],
-input[type="number"],
-input[type="email"],
-input[type="url"],
-input[type="date"],
-input[type="password"],
-input[type="search"],
-textarea,
-select {
-    transition: none !important;
-    -webkit-transition: none !important;
-    -moz-transition: none !important;
-    -o-transition: none !important;
-    animation: none !important;
-    -webkit-animation: none !important;
-    -moz-animation: none !important;
-    -o-animation: none !important;
-    will-change: auto !important;
-    transform: none !important;
-    -webkit-transform: none !important;
-    -moz-transform: none !important;
-    -o-transform: none !important;
-    scale: 1 !important;
-    -webkit-scale: 1 !important;
-    zoom: 1 !important;
-}
-
-/* ============================================
-   ELIMINAR TODOS LOS EFECTOS HOVER/ACTIVE/FOCUS
-   DE INPUTS GLOBALES - ESTADOS UNIFICADOS
+   ELIMINAR TODOS LOS EFECTOS HOVER/ACTIVE
+   DE INPUTS GLOBALES - BORDE FIJO
    ============================================ */
 .form-input:hover,
 .form-input:active,
@@ -432,6 +408,7 @@ textarea:active,
 select:hover,
 select:active {
     background: var(--bg-secondary) !important;
+    border: 1px solid var(--border-color) !important;
     border-color: var(--border-color) !important;
     padding: 0.75rem 1rem !important;
     margin: 0 !important;
@@ -599,6 +576,64 @@ select:focus {
     -webkit-scale: 1 !important;
     zoom: 1 !important;
     will-change: auto !important;
+}
+
+/* ============================================
+   CAMPOS EDITABLES UNIFICADOS - SIN BORDE EN HOVER
+   ============================================ */
+.editable-field {
+    transition: none !important;
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
+    animation: none !important;
+    -webkit-animation: none !important;
+    -moz-animation: none !important;
+    -o-animation: none !important;
+    will-change: auto !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+    -moz-transform: none !important;
+    -o-transform: none !important;
+    scale: 1 !important;
+    -webkit-scale: 1 !important;
+    zoom: 1 !important;
+}
+
+.editable-field:hover,
+.editable-field:active {
+    background: transparent !important;
+    border: inherit !important;
+    border-color: inherit !important;
+    padding: inherit !important;
+    margin: 0 !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+    -moz-transform: none !important;
+    -o-transform: none !important;
+    box-shadow: none !important;
+    scale: 1 !important;
+    -webkit-scale: 1 !important;
+    zoom: 1 !important;
+    transition: none !important;
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
+    animation: none !important;
+    -webkit-animation: none !important;
+    -moz-animation: none !important;
+    -o-animation: none !important;
+    will-change: auto !important;
+    font-size: inherit !important;
+    line-height: inherit !important;
+    width: auto !important;
+    height: auto !important;
+}
+
+.editable-field:focus {
+    outline: 1px solid rgba(212, 184, 150, 0.3);
+    border: inherit !important;
+    border-color: inherit !important;
 }
 
 .form-input::placeholder,

@@ -751,9 +751,17 @@ class BaseView {
     const fontSize = computedStyle.fontSize;
     const lineHeight = computedStyle.lineHeight;
     const letterSpacing = computedStyle.letterSpacing;
+    const border = computedStyle.border;
+    const borderColor = computedStyle.borderColor;
     
     target.style.background = 'transparent';
-    target.style.borderColor = 'transparent';
+    // PRESERVAR BORDE ORIGINAL - NO CAMBIAR
+    if (border && border !== 'none' && border !== '0px') {
+      target.style.border = border;
+      target.style.borderColor = borderColor;
+    } else {
+      target.style.borderColor = 'transparent';
+    }
     target.style.padding = '0';
     target.style.margin = '0';
     target.style.transform = 'none';

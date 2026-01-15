@@ -1177,62 +1177,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
    CAMPOS EDITABLES
    ============================================ */
 
-/* ============================================
-   ELIMINAR COMPLETAMENTE TODOS LOS EFECTOS
-   DE CURSOR EN CAMPOS EDITABLES
-   ============================================ */
-.editable-field {
-    transition: none !important;
-    -webkit-transition: none !important;
-    -moz-transition: none !important;
-    -o-transition: none !important;
-    animation: none !important;
-    -webkit-animation: none !important;
-    -moz-animation: none !important;
-    -o-animation: none !important;
-    will-change: auto !important;
-    transform: none !important;
-    -webkit-transform: none !important;
-    -moz-transform: none !important;
-    -o-transform: none !important;
-    scale: 1 !important;
-    -webkit-scale: 1 !important;
-    zoom: 1 !important;
-}
-
-.editable-field:hover,
-.editable-field:active,
-.editable-field:focus {
-    background: transparent !important;
-    border-radius: 0 !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    transform: none !important;
-    -webkit-transform: none !important;
-    -moz-transform: none !important;
-    -o-transform: none !important;
-    box-shadow: none !important;
-    scale: 1 !important;
-    -webkit-scale: 1 !important;
-    zoom: 1 !important;
-    transition: none !important;
-    -webkit-transition: none !important;
-    -moz-transition: none !important;
-    -o-transition: none !important;
-    animation: none !important;
-    -webkit-animation: none !important;
-    -moz-animation: none !important;
-    -o-animation: none !important;
-    will-change: auto !important;
-    font-size: inherit !important;
-    line-height: inherit !important;
-    width: auto !important;
-    height: auto !important;
-}
-
-.editable-field:focus {
-    outline: 1px solid rgba(212, 184, 150, 0.3);
-}
+/* Reglas de .editable-field heredan de base.css - sin duplicación */
 
 .editable-textarea {
     font-family: inherit;
