@@ -1,11 +1,11 @@
 /**
  * Living Dashboard - Centro Operativo Visual
  * Filosofía: Primero emoción, luego información
- * Living posiciona, luego acompaña
+ * Lenguaje: Netflix (visual) + Spotify (ritmo) + Notion Dashboard (control)
  */
 
 /* ============================================
-   VARIABLES
+   VARIABLES (colores naranja como brands)
    ============================================ */
 :root {
     --living-warm-1: #D4754E;
@@ -16,11 +16,12 @@
     
     --living-text-light: #E8DDD4;
     --living-text-gold: #D4B896;
-    --living-text-muted: rgba(232, 221, 212, 0.4);
+    --living-text-muted: rgba(232, 221, 212, 0.5);
     
-    --living-bg-deep: #0A0C0E;
-    --living-bg-card: rgba(15, 17, 20, 0.6);
-    --living-space: 4rem;
+    /* Fondos oscuros profundos */
+    --living-bg-deep: #0A0C0F;
+    --living-bg-surface: #0E1012;
+    --living-bg-card: rgba(21, 23, 28, 0.4);
 }
 
 /* ============================================
@@ -33,36 +34,8 @@
     margin-left: 20px;
     transition: margin-left 0.3s ease;
     min-height: 100vh;
-    height: auto;
     background: var(--living-bg-deep);
     max-width: none;
-    display: grid;
-    grid-template-columns: 1fr 280px;
-    gap: var(--living-space);
-    padding-right: var(--living-space);
-    padding-bottom: var(--living-space);
-    overflow: visible;
-    position: relative;
-}
-
-/* Capa 1: Fondo atmosférico (iluminación del escenario) */
-.living-container::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    top: 48px;
-    left: var(--nav-width, 280px);
-    z-index: 0;
-    background: 
-        radial-gradient(ellipse 100% 80% at 20% 30%, rgba(212, 117, 78, 0.15) 0%, transparent 70%),
-        radial-gradient(ellipse 80% 100% at 80% 70%, rgba(200, 107, 69, 0.12) 0%, transparent 70%),
-        linear-gradient(180deg, rgba(139, 67, 50, 0.08) 0%, transparent 50%);
-    pointer-events: none;
-}
-
-.side-navigation.collapsed ~ * .living-container::before,
-body.sidebar-collapsed .living-container::before {
-    left: var(--nav-width-collapsed, 64px);
 }
 
 .side-navigation.collapsed ~ * .living-container,
@@ -70,39 +43,23 @@ body.sidebar-collapsed .living-container {
     margin-left: var(--nav-width-collapsed, 64px);
 }
 
-@media (max-width: 1200px) {
-    .living-container {
-        grid-template-columns: 1fr;
-    }
-}
-
 @media (max-width: 768px) {
     .living-container {
         margin-left: 0;
-        padding-right: 2rem;
-        padding-bottom: 2rem;
-        gap: 3rem;
-    }
-    
-    .living-container::before {
-        left: 0;
     }
 }
 
 /* ============================================
-   1. HERO - VISUALES DEL DÍA
-   (Capa emocional - Una sola idea dominante)
+   1. HERO - Visuales del Día (Emoción + Identidad)
    ============================================ */
-.living-hero-visuals {
-    grid-column: 1 / -1;
+.living-hero-section {
     position: relative;
     width: 100%;
-    min-height: 650px;
+    min-height: 60vh;
     margin-top: -48px;
     padding-top: 48px;
-    margin-bottom: calc(var(--living-space) * 1.5);
-    overflow: visible;
-    z-index: 1;
+    margin-bottom: 4rem;
+    overflow: hidden;
 }
 
 .living-hero-background {
@@ -117,306 +74,215 @@ body.sidebar-collapsed .living-container {
     inset: 0;
     top: -48px;
     background: 
-        radial-gradient(ellipse 110% 90% at 15% 40%, var(--living-warm-1) 0%, transparent 65%),
-        radial-gradient(ellipse 90% 70% at 75% 25%, var(--living-warm-2) 0%, transparent 55%),
-        radial-gradient(ellipse 85% 100% at 45% 90%, var(--living-warm-3) 0%, transparent 60%),
-        linear-gradient(160deg, var(--living-warm-4) 0%, var(--living-warm-5) 100%);
-    opacity: 0.35;
+        radial-gradient(ellipse 150% 100% at 10% 60%, var(--living-warm-1) 0%, transparent 50%),
+        radial-gradient(ellipse 120% 80% at 60% 20%, var(--living-warm-2) 0%, transparent 45%),
+        radial-gradient(ellipse 100% 150% at 30% 90%, var(--living-warm-3) 0%, transparent 50%),
+        linear-gradient(145deg, var(--living-warm-4) 0%, var(--living-warm-5) 100%);
+    opacity: 0.6; /* Más sutil, no grita */
 }
 
-.living-visuals-grid {
+.living-hero-visuals {
     position: relative;
     z-index: 1;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 2.5rem;
-    padding: calc(48px + 6rem) 6rem 6rem 6rem;
-    min-height: 650px;
+    gap: 2rem;
+    padding: 4rem 3rem;
+    padding-top: calc(48px + 4rem);
+    max-width: 1600px;
+    margin: 0 auto;
 }
 
-.living-visual-item {
-    aspect-ratio: 4 / 5;
-    border-radius: 28px;
+.visual-day-item {
+    aspect-ratio: 16/9;
+    border-radius: 0;
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.3);
     position: relative;
     cursor: pointer;
     transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1),
-                border-color 0.6s ease,
-                box-shadow 0.6s ease;
-    /* Contenido flotante: sombras grandes, mucho aire */
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4),
-                0 0 0 1px rgba(255, 255, 255, 0.05);
+                opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Sin bordes, sin líneas duras */
 }
 
-.living-visual-item:hover {
-    transform: translateY(-16px) scale(1.03);
-    border-color: rgba(255, 255, 255, 0.15);
-    box-shadow: 0 32px 80px rgba(0, 0, 0, 0.6),
-                0 0 0 1px rgba(255, 255, 255, 0.1);
+.visual-day-item:hover {
+    transform: scale(1.02);
+    opacity: 0.95;
 }
 
-.living-visual-item img {
+.visual-day-item img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
-    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.living-visual-item:hover img {
-    transform: scale(1.08);
-}
-
-.living-visual-placeholder {
+.visual-day-placeholder {
     width: 100%;
     height: 100%;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 1.5rem;
-    color: rgba(255, 255, 255, 0.15);
-    font-size: 4.5rem;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.005) 100%);
-    transition: color 0.4s ease;
-}
-
-.living-visual-placeholder::after {
-    content: 'Visual del día';
-    font-size: 0.875rem;
-    font-weight: 500;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.2);
-    margin-top: 0.5rem;
-}
-
-.living-visual-item:hover .living-visual-placeholder {
-    color: rgba(255, 255, 255, 0.25);
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 4rem;
 }
 
 /* ============================================
-   2. ÚLTIMAS PRODUCCIONES
-   (Capa operativa - Actividad real)
+   2. Últimas Producciones (Scroll Horizontal)
    ============================================ */
-.living-latest-productions {
-    grid-column: 1;
-    margin-bottom: calc(var(--living-space) * 1.5);
-    position: relative;
-    z-index: 1;
+.living-latest-section {
+    padding: 0 3rem 4rem 3rem;
+    max-width: 1600px;
+    margin: 0 auto;
 }
 
-.living-section-header {
-    margin-bottom: 3rem;
+.living-latest-header {
+    margin-bottom: 2rem;
 }
 
 .living-section-title {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.95);
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.7);
     margin: 0;
-    letter-spacing: -0.8px;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 400;
 }
 
-.living-productions-scroll {
+.living-latest-scroll {
     display: flex;
-    gap: 2rem;
+    gap: 1.5rem;
     overflow-x: auto;
     overflow-y: hidden;
-    padding: 1.5rem 0 2.5rem 0;
+    padding-bottom: 1rem;
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
     -webkit-overflow-scrolling: touch;
 }
 
-.living-productions-scroll::-webkit-scrollbar {
-    height: 6px;
+.living-latest-scroll::-webkit-scrollbar {
+    height: 4px;
 }
 
-.living-productions-scroll::-webkit-scrollbar-track {
+.living-latest-scroll::-webkit-scrollbar-track {
     background: transparent;
-    border-radius: 3px;
 }
 
-.living-productions-scroll::-webkit-scrollbar-thumb {
+.living-latest-scroll::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.1);
-    border-radius: 3px;
-    transition: background 0.2s ease;
+    border-radius: 2px;
 }
 
-.living-productions-scroll::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-.living-production-card {
-    flex: 0 0 360px;
-    aspect-ratio: 16 / 9;
-    border-radius: 24px;
+.production-card {
+    flex: 0 0 320px;
+    height: 400px;
+    border-radius: 0;
     overflow: hidden;
-    /* Contenido flotante: card grande con sombra */
     background: var(--living-bg-card);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
     position: relative;
     cursor: pointer;
-    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1),
-                border-color 0.5s ease,
-                box-shadow 0.5s ease;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3),
-                0 0 0 1px rgba(255, 255, 255, 0.05);
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Sin bordes, sin líneas duras */
 }
 
-.living-production-card:hover {
-    transform: scale(1.04) translateY(-6px);
-    border-color: rgba(255, 255, 255, 0.18);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5),
-                0 0 0 1px rgba(255, 255, 255, 0.1);
+.production-card:hover {
+    transform: translateY(-8px);
 }
 
-.living-production-card img {
+.production-card-image {
     width: 100%;
-    height: 100%;
+    height: 70%;
     object-fit: cover;
-    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    display: block;
 }
 
-.living-production-card:hover img {
-    transform: scale(1.1);
+.production-card-info {
+    padding: 1.5rem;
+    height: 30%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
-.living-production-overlay {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 2.5rem;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.6) 60%, transparent 100%);
-    color: white;
-    opacity: 0;
-    transition: opacity 0.5s ease;
+.production-card-title {
+    font-size: 1rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0 0 0.5rem 0;
 }
 
-.living-production-card:hover .living-production-overlay {
-    opacity: 1;
+.production-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.813rem;
+    color: rgba(255, 255, 255, 0.5);
 }
 
-.living-production-type {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    font-weight: 600;
-    opacity: 0.9;
-    margin-bottom: 1rem;
-}
-
-.living-production-status {
+.production-card-status {
     display: inline-flex;
     align-items: center;
-    gap: 0.625rem;
-    padding: 0.625rem 1.25rem;
-    background: rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(10px);
-    border-radius: 24px;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
     font-size: 0.75rem;
-    font-weight: 600;
-    margin-top: 1rem;
+    font-weight: 500;
 }
 
-.living-production-status.final {
-    background: rgba(16, 185, 129, 0.25);
-    color: rgba(16, 185, 129, 1);
+.production-card-status.final {
+    background: rgba(224, 145, 69, 0.15);
+    color: var(--living-text-gold);
 }
 
-.living-production-status.draft {
-    background: rgba(251, 191, 36, 0.25);
-    color: rgba(251, 191, 36, 1);
+.production-card-status.draft {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
 }
 
-.living-production-status.rendering {
-    background: rgba(59, 130, 246, 0.25);
-    color: rgba(59, 130, 246, 1);
+.production-card-status.rendering {
+    background: rgba(224, 145, 69, 0.2);
+    color: var(--living-text-gold);
 }
 
 /* ============================================
-   3. BLOQUE HÍBRIDO: INSIGHTS RÁPIDOS
-   (Capa informativa - Estado silencioso)
+   3. Insights Rápidos (Sin Romper el Mood)
    ============================================ */
-.living-insights {
-    grid-column: 1;
-    margin-bottom: calc(var(--living-space) * 1.5);
-    position: relative;
-    z-index: 1;
-}
-
-.living-insights-grid {
+.living-insights-section {
+    padding: 0 3rem 4rem 3rem;
+    max-width: 1600px;
+    margin: 0 auto;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 2rem;
+    gap: 1.5rem;
 }
 
 .living-insight-card {
-    /* Contenido flotante: card con mucho aire */
     background: var(--living-bg-card);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 24px;
-    padding: 2.5rem;
+    border-radius: 0;
+    padding: 2rem;
     display: flex;
     align-items: center;
-    gap: 1.75rem;
-    transition: border-color 0.4s ease,
-                transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                background 0.4s ease,
-                box-shadow 0.4s ease;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2),
-                0 0 0 1px rgba(255, 255, 255, 0.05);
-}
-
-.living-insight-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%);
-    opacity: 0;
-    transition: opacity 0.4s ease;
+    gap: 1.5rem;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+                background 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Sin bordes, sin líneas duras */
 }
 
 .living-insight-card:hover {
-    border-color: rgba(255, 255, 255, 0.15);
-    transform: translateY(-6px);
-    background: rgba(15, 17, 20, 0.7);
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4),
-                0 0 0 1px rgba(255, 255, 255, 0.08);
-}
-
-.living-insight-card:hover::before {
-    opacity: 1;
+    transform: translateY(-4px);
+    background: rgba(21, 23, 28, 0.6);
 }
 
 .insight-icon {
-    width: 64px;
-    height: 64px;
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-    border-radius: 20px;
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 1.75rem;
+    color: var(--living-text-gold);
+    font-size: 1.5rem;
     flex-shrink: 0;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    transition: all 0.4s ease;
-}
-
-.living-insight-card:hover .insight-icon {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
-    color: rgba(255, 255, 255, 0.95);
-    transform: scale(1.08);
 }
 
 .insight-content {
@@ -427,321 +293,240 @@ body.sidebar-collapsed .living-container {
 .insight-label {
     font-size: 0.813rem;
     color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 0.5rem;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    font-weight: 500;
-    margin-bottom: 1rem;
+    letter-spacing: 0.5px;
 }
 
 .insight-value {
-    font-size: 2rem;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.95);
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    letter-spacing: -1px;
-    line-height: 1.2;
 }
 
 /* ============================================
-   4. PRODUCCIÓN POR ENTIDAD
-   (Capa informativa - Contexto de negocio)
+   4. Producción por Entidad (Contexto de Negocio)
    ============================================ */
-.living-entities {
-    grid-column: 1;
-    margin-bottom: calc(var(--living-space) * 1.5);
-    position: relative;
-    z-index: 1;
-}
-
-.living-entities-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 2rem;
+.living-entity-section {
+    padding: 0 3rem 4rem 3rem;
+    max-width: 1600px;
+    margin: 0 auto;
 }
 
 .living-entity-card {
-    /* Contenido flotante: card grande con aire */
     background: var(--living-bg-card);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 24px;
+    border-radius: 0;
     padding: 3rem;
-    transition: border-color 0.4s ease,
-                transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                background 0.4s ease,
-                box-shadow 0.4s ease;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2),
-                0 0 0 1px rgba(255, 255, 255, 0.05);
+    /* Sin bordes, sin líneas duras */
 }
 
-.living-entity-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, var(--living-warm-1), var(--living-warm-3));
-    opacity: 0;
-    transition: opacity 0.4s ease;
-}
-
-.living-entity-card:hover {
-    border-color: rgba(255, 255, 255, 0.15);
-    transform: translateY(-8px);
-    background: rgba(15, 17, 20, 0.7);
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4),
-                0 0 0 1px rgba(255, 255, 255, 0.08);
-}
-
-.living-entity-card:hover::before {
-    opacity: 1;
-}
-
-.entity-name {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.95);
-    margin-bottom: 0.75rem;
-    letter-spacing: -0.5px;
-    line-height: 1.3;
-}
-
-.entity-type {
-    font-size: 0.813rem;
-    color: rgba(255, 255, 255, 0.5);
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    font-weight: 500;
+.entity-header {
     margin-bottom: 2rem;
 }
 
-.entity-stats {
-    display: flex;
-    align-items: center;
-    gap: 2.5rem;
+.entity-title {
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0;
+    text-transform: none;
 }
 
-.entity-stat {
+.entity-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.entity-item {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 1rem;
 }
 
-.entity-stat-label {
-    font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.4);
+.entity-item-label {
+    font-size: 0.813rem;
+    color: rgba(255, 255, 255, 0.5);
     text-transform: uppercase;
-    letter-spacing: 1px;
-    font-weight: 500;
+    letter-spacing: 0.5px;
 }
 
-.entity-stat-value {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.95);
-    letter-spacing: -1px;
-    line-height: 1;
+.entity-item-value {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.entity-item-count {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.4);
 }
 
 /* ============================================
-   5. USO DE RECURSOS (Lateral Derecho)
-   (Control silencioso - Mínima jerarquía)
+   5. Uso de Recursos (Control Silencioso)
    ============================================ */
-.living-resources {
-    grid-column: 2;
-    grid-row: 2 / -1;
-    position: sticky;
-    top: calc(48px + 3rem);
-    height: fit-content;
-    align-self: start;
-    z-index: 1;
+.living-resources-section {
+    padding: 0 3rem 4rem 3rem;
+    max-width: 1600px;
+    margin: 0 auto;
 }
 
 .living-resources-card {
-    /* Contenido flotante: card silenciosa */
     background: var(--living-bg-card);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 24px;
-    padding: 2.5rem;
-    transition: border-color 0.3s ease;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2),
-                0 0 0 1px rgba(255, 255, 255, 0.05);
-}
-
-.living-resources-card:hover {
-    border-color: rgba(255, 255, 255, 0.12);
+    border-radius: 0;
+    padding: 2rem;
+    max-width: 400px;
+    margin-left: auto;
+    /* Sin bordes, sin líneas duras */
 }
 
 .resources-header {
-    margin-bottom: 2.5rem;
-    padding-bottom: 2rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 1.5rem;
 }
 
-.resources-title {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.5);
-    margin: 0;
+.resources-label {
+    font-size: 0.813rem;
+    color: rgba(255, 255, 255, 0.4);
     text-transform: uppercase;
-    letter-spacing: 1.5px;
+    letter-spacing: 0.5px;
 }
 
 .resources-content {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 1rem;
 }
 
 .resource-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.5rem 0;
 }
 
 .resource-label {
-    font-size: 0.813rem;
-    color: rgba(255, 255, 255, 0.4);
-    font-weight: 500;
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .resource-value {
-    font-size: 1.125rem;
+    font-size: 1.25rem;
     font-weight: 600;
     color: rgba(255, 255, 255, 0.7);
-    letter-spacing: -0.3px;
 }
 
 .resource-progress {
-    margin-top: 1.5rem;
-    padding-top: 2rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    margin-top: 0.5rem;
 }
 
 .resource-progress-bar {
     width: 100%;
-    height: 6px;
+    height: 2px;
     background: rgba(255, 255, 255, 0.05);
-    border-radius: 3px;
+    border-radius: 0;
     overflow: hidden;
-    margin-bottom: 1rem;
 }
 
 .resource-progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, rgba(212, 117, 78, 0.4) 0%, rgba(184, 93, 58, 0.4) 100%);
-    border-radius: 3px;
+    background: rgba(224, 145, 69, 0.4);
     transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     width: 0%;
 }
 
-.resource-progress-text {
-    font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.4);
-    text-align: center;
-    font-weight: 500;
-}
-
 /* ============================================
-   EMPTY STATE (Intencional e invitador)
+   EMPTY STATES
    ============================================ */
 .empty-state {
     text-align: center;
-    padding: 6rem 3rem;
+    padding: 4rem 1rem;
     color: rgba(255, 255, 255, 0.3);
-    /* Contenido flotante: card para empty state */
-    background: var(--living-bg-card);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 24px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
 .empty-state i {
-    font-size: 5rem;
-    margin-bottom: 2rem;
-    opacity: 0.15;
-    color: rgba(255, 255, 255, 0.2);
-    display: block;
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.3;
 }
 
 .empty-state p {
     margin: 0;
-    font-size: 1.125rem;
-    color: rgba(255, 255, 255, 0.4);
-    font-weight: 500;
-    letter-spacing: 0.3px;
+    font-size: 0.875rem;
 }
 
-.empty-state::after {
-    content: 'Aquí aparecerá tu contenido cuando lo generes';
-    display: block;
-    margin-top: 1rem;
-    font-size: 0.875rem;
-    color: rgba(255, 255, 255, 0.25);
-    font-weight: 400;
-    font-style: italic;
+.empty-state-small {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.empty-state-small i {
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+    opacity: 0.3;
+}
+
+.empty-state-small p {
+    margin: 0;
+    font-size: 0.813rem;
 }
 
 /* ============================================
    RESPONSIVE
    ============================================ */
-@media (max-width: 1200px) {
-    .living-container {
-        grid-template-columns: 1fr;
+@media (max-width: 1400px) {
+    .living-hero-visuals {
+        gap: 1.5rem;
+        padding: 3rem 2rem;
+        padding-top: calc(48px + 3rem);
     }
     
-    .living-resources {
-        grid-column: 1;
-        grid-row: auto;
-        position: static;
-    }
-    
-    .living-insights-grid {
+    .living-insights-section {
         grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .living-visuals-grid {
-        padding: calc(48px + 4rem) 4rem 4rem 4rem;
-        gap: 2rem;
     }
 }
 
 @media (max-width: 768px) {
-    .living-visuals-grid {
+    .living-container {
+        margin-left: 0;
+    }
+    
+    .living-hero-section {
+        min-height: 40vh;
+    }
+    
+    .living-hero-visuals {
         grid-template-columns: 1fr;
-        padding: calc(48px + 3rem) 2rem 3rem 2rem;
-        gap: 1.5rem;
-    }
-
-    .living-visual-item {
-        aspect-ratio: 16 / 9;
+        gap: 1rem;
+        padding: 2rem 1.5rem;
+        padding-top: calc(48px + 2rem);
     }
     
-    .living-insights-grid {
+    .visual-day-item {
+        aspect-ratio: 16/9;
+    }
+    
+    .living-latest-section,
+    .living-insights-section,
+    .living-entity-section,
+    .living-resources-section {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+    
+    .living-insights-section {
         grid-template-columns: 1fr;
     }
     
-    .living-entities-grid {
-        grid-template-columns: 1fr;
+    .production-card {
+        flex: 0 0 280px;
+        height: 350px;
     }
     
-    .living-production-card {
-        flex: 0 0 300px;
-    }
-    
-    .living-section-title {
-        font-size: 1.5rem;
-    }
-    
-    .living-container::before {
-        display: none;
+    .living-resources-card {
+        max-width: 100%;
+        margin-left: 0;
     }
 }

@@ -32,165 +32,120 @@
     <!-- Contenido Principal -->
     <main class="main-content">
         <div class="living-container">
-            <!-- HERO - Header Grande con Degradado -->
-            <div class="living-hero-header">
+            <!-- 1. HERO - Visuales del Día (Emoción + Identidad) -->
+            <div class="living-hero-section">
                 <div class="living-hero-background">
                     <div class="living-hero-gradient"></div>
                 </div>
-                <div class="living-hero-content">
-                    <!-- Columna Izquierda: Producciones del Día -->
-                    <div class="living-hero-left">
-                        <h2 class="living-hero-title">Producciones del Día</h2>
-                        <div class="living-productions-day" id="productionsOfDay">
-                            <div class="production-day-item">
-                                <div class="production-day-placeholder">
-                                    <i class="fas fa-image"></i>
-                                </div>
-                            </div>
-                            <div class="production-day-item">
-                                <div class="production-day-placeholder">
-                                    <i class="fas fa-image"></i>
-                                </div>
-                            </div>
-                            <div class="production-day-item">
-                                <div class="production-day-placeholder">
-                                    <i class="fas fa-image"></i>
-                                </div>
-                            </div>
+                <div class="living-hero-visuals" id="productionsOfDay">
+                    <div class="visual-day-item">
+                        <div class="visual-day-placeholder">
+                            <i class="fas fa-image"></i>
                         </div>
                     </div>
-                    
-                    <!-- Columna Derecha: Tokens -->
-                    <div class="living-hero-right">
-                        <h2 class="living-hero-title">Uso de Tokens</h2>
-                        <div class="living-tokens-hero" id="tokensHero">
-                            <div class="tokens-hero-stats">
-                                <div class="token-hero-stat">
-                                    <span class="token-hero-label">Usados</span>
-                                    <span class="token-hero-value" id="tokensUsedHero">0</span>
-                                </div>
-                                <div class="token-hero-stat">
-                                    <span class="token-hero-label">Disponibles</span>
-                                    <span class="token-hero-value" id="tokensAvailableHero">0</span>
-                                </div>
-                                <div class="token-hero-stat">
-                                    <span class="token-hero-label">Total</span>
-                                    <span class="token-hero-value" id="tokensTotalHero">0</span>
-                                </div>
-                            </div>
-                            <div class="tokens-hero-progress">
-                                <div class="tokens-hero-progress-bar">
-                                    <div class="tokens-hero-progress-fill" id="tokensProgressFillHero"></div>
-                                </div>
-                                <div class="tokens-hero-percentage" id="tokensPercentageHero">0% usado</div>
-                            </div>
+                    <div class="visual-day-item">
+                        <div class="visual-day-placeholder">
+                            <i class="fas fa-image"></i>
+                        </div>
+                    </div>
+                    <div class="visual-day-item">
+                        <div class="visual-day-placeholder">
+                            <i class="fas fa-image"></i>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 2. Últimas Producciones (actividad real) -->
-            <section class="living-latest-productions">
-                <div class="living-section-header">
+            <!-- 2. Últimas Producciones (Actividad Real) - Scroll Horizontal -->
+            <div class="living-latest-section">
+                <div class="living-latest-header">
                     <h2 class="living-section-title">Últimas Producciones</h2>
                 </div>
-                <div class="living-productions-scroll" id="productionsList">
+                <div class="living-latest-scroll" id="productionsList">
                     <div class="empty-state">
                         <i class="fas fa-file-alt"></i>
                         <p>No hay producciones recientes</p>
                     </div>
                 </div>
-            </section>
+            </div>
 
-            <!-- 3. Bloque Híbrido: Insights Rápidos -->
-            <section class="living-insights">
-                <div class="living-insights-grid">
-                    <!-- Producto Más Producido -->
-                    <div class="living-insight-card">
-                        <div class="insight-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <div class="insight-content">
-                            <div class="insight-label">Más Producido</div>
-                            <div class="insight-value" id="topProductionProduct">-</div>
-                        </div>
+            <!-- 3. Insights Rápidos (Sin Romper el Mood) -->
+            <div class="living-insights-section">
+                <div class="living-insight-card">
+                    <div class="insight-icon">
+                        <i class="fas fa-star"></i>
                     </div>
-
-                    <!-- Producto Favorito -->
-                    <div class="living-insight-card">
-                        <div class="insight-icon">
-                            <i class="fas fa-star"></i>
-                        </div>
-                        <div class="insight-content">
-                            <div class="insight-label">Favorito</div>
-                            <div class="insight-value" id="favoriteProduct">-</div>
-                        </div>
+                    <div class="insight-content">
+                        <div class="insight-label">Producto Favorito</div>
+                        <div class="insight-value" id="favoriteProductName">-</div>
                     </div>
-
-                    <!-- Formato Más Usado -->
-                    <div class="living-insight-card">
-                        <div class="insight-icon">
-                            <i class="fas fa-film"></i>
-                        </div>
-                        <div class="insight-content">
-                            <div class="insight-label">Formato</div>
-                            <div class="insight-value" id="topFormat">-</div>
-                        </div>
+                </div>
+                <div class="living-insight-card">
+                    <div class="insight-icon">
+                        <i class="fas fa-chart-line"></i>
                     </div>
+                    <div class="insight-content">
+                        <div class="insight-label">Más Producido</div>
+                        <div class="insight-value" id="topProductName">-</div>
+                    </div>
+                </div>
+                <div class="living-insight-card">
+                    <div class="insight-icon">
+                        <i class="fas fa-film"></i>
+                    </div>
+                    <div class="insight-content">
+                        <div class="insight-label">Formato Más Usado</div>
+                        <div class="insight-value" id="topFormatName">-</div>
+                    </div>
+                </div>
+                <div class="living-insight-card">
+                    <div class="insight-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div class="insight-content">
+                        <div class="insight-label">Tokens Hoy</div>
+                        <div class="insight-value" id="tokensToday">0</div>
+                    </div>
+                </div>
+            </div>
 
-                    <!-- Tokens Hoy -->
-                    <div class="living-insight-card">
-                        <div class="insight-icon">
-                            <i class="fas fa-coins"></i>
-                        </div>
-                        <div class="insight-content">
-                            <div class="insight-label">Tokens Hoy</div>
-                            <div class="insight-value" id="tokensToday">0</div>
+            <!-- 4. Producción por Entidad (Contexto de Negocio) -->
+            <div class="living-entity-section">
+                <div class="living-entity-card">
+                    <div class="entity-header">
+                        <h3 class="entity-title">Producción por Entidad</h3>
+                    </div>
+                    <div class="entity-content" id="entityProduction">
+                        <div class="empty-state-small">
+                            <i class="fas fa-box"></i>
+                            <p>No hay datos disponibles</p>
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
 
-            <!-- 4. Producción por Entidad (contexto de negocio) -->
-            <section class="living-entities">
-                <div class="living-section-header">
-                    <h2 class="living-section-title">Por Entidad</h2>
-                </div>
-                <div class="living-entities-grid" id="entitiesProduction">
-                    <div class="empty-state">
-                        <i class="fas fa-box"></i>
-                        <p>No hay datos de entidades</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 5. Uso de Recursos (control silencioso) - Lateral Derecho -->
-            <aside class="living-resources">
+            <!-- 5. Uso de Recursos (Control Silencioso) - Lateral Inferior -->
+            <div class="living-resources-section">
                 <div class="living-resources-card">
                     <div class="resources-header">
-                        <h3 class="resources-title">Recursos</h3>
+                        <span class="resources-label">Recursos</span>
                     </div>
                     <div class="resources-content" id="tokensResources">
                         <div class="resource-item">
                             <span class="resource-label">Disponibles</span>
-                            <span class="resource-value" id="tokensAvailable">0</span>
+                            <span class="resource-value" id="tokensAvailableResource">0</span>
                         </div>
                         <div class="resource-item">
-                            <span class="resource-label">Usados</span>
-                            <span class="resource-value" id="tokensUsed">0</span>
-                        </div>
-                        <div class="resource-item">
-                            <span class="resource-label">Total</span>
-                            <span class="resource-value" id="tokensTotal">0</span>
+                            <span class="resource-label">Usados Hoy</span>
+                            <span class="resource-value" id="tokensUsedTodayResource">0</span>
                         </div>
                         <div class="resource-progress">
                             <div class="resource-progress-bar">
-                                <div class="resource-progress-fill" id="tokensProgressFill"></div>
+                                <div class="resource-progress-fill" id="tokensProgressResource"></div>
                             </div>
-                            <div class="resource-progress-text" id="tokensPercentage">0%</div>
                         </div>
                     </div>
                 </div>
-            </aside>
+            </div>
         </div>
     </main>

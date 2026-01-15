@@ -226,10 +226,9 @@ class LivingManager {
 
     renderAll() {
         this.renderProductionsOfDay();
-        this.renderTokensHero();
         this.renderLatestProductions();
         this.renderInsights();
-        this.renderEntitiesProduction();
+        this.renderEntityProduction();
         this.renderResources();
     }
 
@@ -276,14 +275,14 @@ class LivingManager {
         for (let i = 0; i < 3; i++) {
             if (todayProductions[i]) {
                 items.push(`
-                    <div class="production-day-item">
-                        <img src="${this.escapeHtml(todayProductions[i].file_url)}" alt="Producción del día" onerror="this.parentElement.innerHTML='<div class=\\'production-day-placeholder\\'><i class=\\'fas fa-image\\'></i></div>'">
+                    <div class="visual-day-item">
+                        <img src="${this.escapeHtml(todayProductions[i].file_url)}" alt="Visual del día" onerror="this.parentElement.innerHTML='<div class=\\'visual-day-placeholder\\'><i class=\\'fas fa-image\\'></i></div>'">
                     </div>
                 `);
             } else {
                 items.push(`
-                    <div class="production-day-item">
-                        <div class="production-day-placeholder">
+                    <div class="visual-day-item">
+                        <div class="visual-day-placeholder">
                             <i class="fas fa-image"></i>
                         </div>
                     </div>
@@ -292,28 +291,6 @@ class LivingManager {
         }
 
         productionsOfDayEl.innerHTML = items.join('');
-    }
-
-    renderTokensHero() {
-        const tokensUsedEl = document.getElementById('tokensUsedHero');
-        const tokensAvailableEl = document.getElementById('tokensAvailableHero');
-        const tokensTotalEl = document.getElementById('tokensTotalHero');
-        const tokensProgressFillEl = document.getElementById('tokensProgressFillHero');
-        const tokensPercentageEl = document.getElementById('tokensPercentageHero');
-
-        if (!tokensUsedEl || !tokensAvailableEl || !tokensTotalEl || !tokensProgressFillEl || !tokensPercentageEl) return;
-
-        const totalCredits = this.userData?.credits_total || 0;
-        const availableCredits = this.userData?.credits_available || 0;
-        const usedCredits = totalCredits - availableCredits;
-
-        tokensUsedEl.textContent = usedCredits.toLocaleString();
-        tokensAvailableEl.textContent = availableCredits.toLocaleString();
-        tokensTotalEl.textContent = totalCredits.toLocaleString();
-
-        const percentage = totalCredits > 0 ? Math.round((usedCredits / totalCredits) * 100) : 0;
-        tokensProgressFillEl.style.width = `${percentage}%`;
-        tokensPercentageEl.textContent = `${percentage}% usado`;
     }
 
     renderFavoriteProduct() {
@@ -344,7 +321,7 @@ class LivingManager {
                         ? `<img src="${this.escapeHtml(favoriteProduct.mainImage)}" alt="${this.escapeHtml(favoriteProduct.nombre_producto)}" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'><i class=\\'fas fa-box\\'></i></div>'">`
                         : `<div class="no-image"><i class="fas fa-box"></i></div>`
                     }
-                </div>
+                    </div>
                 <div class="favorite-product-info">
                     <h3 class="favorite-product-name">${this.escapeHtml(favoriteProduct.nombre_producto)}</h3>
                     <p class="favorite-product-type">${this.escapeHtml(favoriteProduct.tipo_producto || 'Producto')}</p>
@@ -353,7 +330,7 @@ class LivingManager {
                             <span class="favorite-product-stat-label">Producciones</span>
                             <span class="favorite-product-stat-value">${productionCount}</span>
                     </div>
-                    </div>
+                </div>
                 </div>
                 </div>
             `;
@@ -385,7 +362,7 @@ class LivingManager {
                         ? `<img src="${topProduct.mainImage}" alt="${topProduct.nombre_producto}" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'><i class=\\'fas fa-box\\'></i></div>'">`
                         : `<div class="no-image"><i class="fas fa-box"></i></div>`
                     }
-                        </div>
+                </div>
                 <div class="top-production-info">
                     <h3 class="top-production-name">${this.escapeHtml(topProduct.nombre_producto)}</h3>
                     <p class="top-production-type">${this.escapeHtml(topProduct.tipo_producto || 'Producto')}</p>
@@ -413,163 +390,48 @@ class LivingManager {
             return;
         }
 
-        // Obtener últimas producciones con sus outputs
-        const latestRuns = this.flowRuns.slice(0, 12);
+        // Obtener últimas 10 producciones
+        const latestRuns = this.flowRuns.slice(0, 10);
 
         productionsListEl.innerHTML = latestRuns.map(run => {
+            // Buscar output de imagen para este run
             const imageOutput = this.flowOutputs.find(output => output.run_id === run.id);
+            const product = run.brand_id ? this.products.find(p => p.id === run.brand_id) : null;
+            
+            // Determinar tipo de contenido basado en el output o run
             const contentType = this.getContentType(run, imageOutput);
-            const status = run.status || 'Completado';
-            const statusClass = status.toLowerCase().includes('draft') ? 'draft' : 
-                               status.toLowerCase().includes('rendering') ? 'rendering' : 'final';
+            const contentTypeIcon = this.getContentTypeIcon(contentType);
+            
+            // Obtener autor (usuario que ejecutó la producción)
+            const authorName = this.userData?.full_name || this.userData?.email || 'Usuario';
+            const authorInitials = this.getInitials(authorName);
 
-            return `
-                <div class="living-production-card">
-                    ${imageOutput 
-                        ? `<img src="${this.escapeHtml(imageOutput.file_url)}" alt="Producción" onerror="this.style.display='none'">`
-                        : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.3);"><i class="fas fa-file-image" style="font-size:2rem;"></i></div>`
-                    }
-                    <div class="living-production-overlay">
-                        <div class="living-production-type">${contentType}</div>
-                        <div class="living-production-status ${statusClass}">
-                            <i class="fas fa-${statusClass === 'final' ? 'check' : statusClass === 'draft' ? 'edit' : 'spinner'}"></i>
-                            <span>${this.escapeHtml(status)}</span>
-                        </div>
+        return `
+                <div class="production-item">
+                    <div class="production-image">
+                        ${imageOutput 
+                            ? `<img src="${this.escapeHtml(imageOutput.file_url)}" alt="Producción" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'><i class=\\'fas fa-file-image\\'></i></div>'">`
+                            : `<div class="no-image"><i class="fas fa-file-image"></i></div>`
+                        }
+                </div>
+                    <div class="production-info">
+                        <h4 class="production-title">${this.escapeHtml(run.status || 'Producción')}</h4>
+                        ${product ? `<p class="production-product">${this.escapeHtml(product.nombre_producto)}</p>` : '<p class="production-product">Sin producto asociado</p>'}
+                </div>
+                    <div class="production-type">
+                        <i class="${contentTypeIcon}"></i>
+                        <span>${contentType}</span>
                     </div>
+                    <div class="production-author">
+                        <div class="production-author-avatar">${authorInitials}</div>
+                        <span>${this.escapeHtml(authorName.split('@')[0])}</span>
+                    </div>
+                    <div class="production-date">
+                        ${this.formatDate(run.updated_at || run.created_at)}
+                </div>
                 </div>
             `;
         }).join('');
-    }
-
-    renderInsights() {
-        // Producto Más Producido
-        const topProductEl = document.getElementById('topProductionProduct');
-        if (topProductEl) {
-            if (this.products.length === 0) {
-                topProductEl.textContent = '-';
-            } else {
-                // Contar producciones por producto
-                const productCounts = {};
-                this.flowRuns.forEach(run => {
-                    if (run.brand_id) {
-                        productCounts[run.brand_id] = (productCounts[run.brand_id] || 0) + 1;
-                    }
-                });
-                
-                const topProductId = Object.keys(productCounts).reduce((a, b) => 
-                    productCounts[a] > productCounts[b] ? a : b, Object.keys(productCounts)[0]);
-                const topProduct = this.products.find(p => p.id === topProductId);
-                topProductEl.textContent = topProduct ? this.escapeHtml(topProduct.nombre_producto) : '-';
-            }
-        }
-
-        // Producto Favorito
-        const favoriteProductEl = document.getElementById('favoriteProduct');
-        if (favoriteProductEl) {
-            if (this.products.length === 0) {
-                favoriteProductEl.textContent = '-';
-            } else {
-                // El más reciente
-                const favoriteProduct = this.products[0];
-                favoriteProductEl.textContent = this.escapeHtml(favoriteProduct.nombre_producto);
-            }
-        }
-
-        // Formato Más Usado
-        const topFormatEl = document.getElementById('topFormat');
-        if (topFormatEl) {
-            const formatCounts = {};
-            this.flowRuns.forEach(run => {
-                const contentType = this.getContentType(run, null);
-                formatCounts[contentType] = (formatCounts[contentType] || 0) + 1;
-            });
-            
-            const topFormat = Object.keys(formatCounts).reduce((a, b) => 
-                formatCounts[a] > formatCounts[b] ? a : b, Object.keys(formatCounts)[0]);
-            topFormatEl.textContent = topFormat || '-';
-        }
-
-        // Tokens Hoy
-        const tokensTodayEl = document.getElementById('tokensToday');
-        if (tokensTodayEl) {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
-            const todayUsage = this.creditUsage.filter(usage => {
-                const usageDate = new Date(usage.created_at);
-                usageDate.setHours(0, 0, 0, 0);
-                return usageDate.getTime() === today.getTime();
-            }).reduce((sum, usage) => sum + (usage.credits_used || 0), 0);
-            
-            tokensTodayEl.textContent = todayUsage.toLocaleString();
-        }
-    }
-
-    renderEntitiesProduction() {
-        const entitiesEl = document.getElementById('entitiesProduction');
-        if (!entitiesEl) return;
-
-        if (this.products.length === 0) {
-            entitiesEl.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-box"></i>
-                    <p>No hay datos de entidades</p>
-                </div>
-            `;
-            return;
-        }
-
-        // Contar producciones por producto
-        const productCounts = {};
-        this.flowRuns.forEach(run => {
-            if (run.brand_id) {
-                productCounts[run.brand_id] = (productCounts[run.brand_id] || 0) + 1;
-            }
-        });
-
-        // Ordenar por producción
-        const sortedProducts = this.products
-            .map(product => ({
-                product,
-                count: productCounts[product.id] || 0
-            }))
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 6);
-
-        entitiesEl.innerHTML = sortedProducts.map(({ product, count }) => `
-            <div class="living-entity-card">
-                <div class="entity-name">${this.escapeHtml(product.nombre_producto)}</div>
-                <div class="entity-type">${this.escapeHtml(product.tipo_producto || 'Producto')}</div>
-                <div class="entity-stats">
-                    <div class="entity-stat">
-                        <div class="entity-stat-label">Producciones</div>
-                        <div class="entity-stat-value">${count}</div>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    renderResources() {
-        const tokensAvailableEl = document.getElementById('tokensAvailable');
-        const tokensUsedEl = document.getElementById('tokensUsed');
-        const tokensTotalEl = document.getElementById('tokensTotal');
-        const tokensProgressFillEl = document.getElementById('tokensProgressFill');
-        const tokensPercentageEl = document.getElementById('tokensPercentage');
-
-        if (!tokensAvailableEl || !tokensUsedEl || !tokensTotalEl || !tokensProgressFillEl || !tokensPercentageEl) return;
-
-        const totalCredits = this.userData?.credits_total || 0;
-        const availableCredits = this.userData?.credits_available || 0;
-        const usedCredits = totalCredits - availableCredits;
-
-        tokensUsedEl.textContent = usedCredits.toLocaleString();
-        tokensAvailableEl.textContent = availableCredits.toLocaleString();
-        tokensTotalEl.textContent = totalCredits.toLocaleString();
-
-        const percentage = totalCredits > 0 ? Math.round((usedCredits / totalCredits) * 100) : 0;
-        tokensProgressFillEl.style.width = `${percentage}%`;
-        tokensPercentageEl.textContent = `${percentage}%`;
     }
 
     getContentType(run, output) {
@@ -633,9 +495,9 @@ class LivingManager {
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
-        });
+            });
+        }
     }
-}
 
 // Hacer disponible globalmente
 window.LivingManager = LivingManager;
