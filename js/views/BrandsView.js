@@ -583,12 +583,28 @@ class BrandsView extends BaseView {
     // Agregar contenido a la card
     infoCard.appendChild(content);
     
-    // Marcar contenedor como expandido para permitir scroll
+    // Obtener posición inicial de la card antes de moverla
+    const cardRect = infoCard.getBoundingClientRect();
     const dashboardContainer = container.querySelector('.brand-dashboard-container') || container;
-    dashboardContainer.classList.add('info-expanded');
+    const containerRect = dashboardContainer.getBoundingClientRect();
     
-    // Expandir la card
+    // Calcular posición relativa al contenedor
+    const initialTop = cardRect.top - containerRect.top;
+    const initialRight = containerRect.right - cardRect.right;
+    
+    // Mover la card fuera del contenedor de cards y al contenedor principal
     infoCard.classList.add('expanded');
+    dashboardContainer.appendChild(infoCard);
+    
+    // Establecer posición inicial (donde estaba)
+    infoCard.style.position = 'absolute';
+    infoCard.style.top = `${initialTop}px`;
+    infoCard.style.right = `${initialRight}px`;
+    infoCard.style.width = `${cardRect.width}px`;
+    infoCard.style.height = `${cardRect.height}px`;
+    
+    // Marcar contenedor como expandido para permitir scroll
+    dashboardContainer.classList.add('info-expanded');
     
     // Esperar a que el contenido se renderice para calcular altura
     requestAnimationFrame(() => {
@@ -598,13 +614,25 @@ class BrandsView extends BaseView {
         const padding = 40; // padding top + bottom
         const expandedHeight = contentHeight + cardHeaderHeight + padding;
         
-        // Establecer altura de la card expandida (sin límite máximo)
-        infoCard.style.height = `${expandedHeight}px`;
+        // Calcular ancho disponible con márgenes de 20px
+        // Verificar si el sidebar está colapsado
+        const isSidebarCollapsed = document.body.classList.contains('sidebar-collapsed') || 
+                                   document.querySelector('.side-navigation.collapsed');
+        const navWidth = isSidebarCollapsed 
+          ? (window.getComputedStyle(document.documentElement).getPropertyValue('--nav-width-collapsed') || '64px')
+          : (window.getComputedStyle(document.documentElement).getPropertyValue('--nav-width') || '280px');
+        const navWidthNum = parseInt(navWidth);
+        const availableWidth = window.innerWidth - navWidthNum - 40; // 20px margen a cada lado
         
-        // Calcular altura total necesaria para el contenedor
-        const cardsZone = container.querySelector('.brand-cards-zone');
-        const cardsZoneTop = cardsZone ? cardsZone.getBoundingClientRect().top - container.getBoundingClientRect().top : 0;
-        const totalHeight = cardsZoneTop + expandedHeight + 100; // espacio extra
+        // Animar expansión a posición final con márgenes
+        infoCard.style.transition = 'top 0.5s cubic-bezier(0.4, 0, 0.2, 1), right 0.5s cubic-bezier(0.4, 0, 0.2, 1), width 0.5s cubic-bezier(0.4, 0, 0.2, 1), height 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+        
+        setTimeout(() => {
+          infoCard.style.top = '20px';
+          infoCard.style.right = '20px';
+          infoCard.style.width = `${availableWidth}px`;
+          infoCard.style.height = `${expandedHeight}px`;
+        }, 10);
         
         // Animar otras cards hacia abajo
         otherCards.forEach((card, index) => {
@@ -621,6 +649,13 @@ class BrandsView extends BaseView {
         // Actualizar estado con altura calculada
         this.infoPanelState.expandedHeight = expandedHeight;
         this.infoPanelState.dashboardContainer = dashboardContainer;
+        this.infoPanelState.cardsZone = cardsZone;
+        this.infoPanelState.initialPosition = {
+          top: initialTop,
+          right: initialRight,
+          width: cardRect.width,
+          height: cardRect.height
+        };
       });
     });
     
@@ -638,12 +673,12 @@ class BrandsView extends BaseView {
     const container = this.container || document.getElementById('app-container');
     if (!container) return;
     
-    const infoCard = container.querySelector('.card-info');
-    if (!infoCard || !infoCard.classList.contains('expanded')) return;
+    const infoCard = container.querySelector('.card-info.expanded');
+    if (!infoCard) return;
     
     if (!this.infoPanelState) return;
     
-    const { otherCards, cornerInfo, dashboardContainer } = this.infoPanelState;
+    const { otherCards, cornerInfo, dashboardContainer, cardsZone, initialPosition } = this.infoPanelState;
     
     // Mover otras cards y nombre de marca hacia arriba (empujando INFO hacia arriba)
     otherCards.forEach(card => {
@@ -656,21 +691,25 @@ class BrandsView extends BaseView {
       cornerInfo.style.transform = 'translateY(0)';
     }
     
-    // Restaurar altura de la card
-    infoCard.style.height = '';
+    // Contraer la card a su posición y tamaño original
+    if (initialPosition) {
+      infoCard.style.top = `${initialPosition.top}px`;
+      infoCard.style.right = `${initialPosition.right}px`;
+      infoCard.style.width = `${initialPosition.width}px`;
+      infoCard.style.height = `${initialPosition.height}px`;
+    }
     
-    // Contraer la card después de que las otras cards empiecen a moverse
+    // Esperar a que termine la animación de contracción
     setTimeout(() => {
+      // Remover clase expandida
       infoCard.classList.remove('expanded');
       
       // Remover clase de contenedor expandido
       if (dashboardContainer) {
         dashboardContainer.classList.remove('info-expanded');
       }
-    }, 50);
-    
-    // Remover contenido expandido y limpiar después de la animación
-    setTimeout(() => {
+      
+      // Remover contenido expandido
       const content = infoCard.querySelector('.card-content-expanded');
       if (content) {
         content.remove();
@@ -682,7 +721,20 @@ class BrandsView extends BaseView {
         closeBtn.remove();
       }
       
-      // Limpiar estilos
+      // Remover estilos de posición absoluta
+      infoCard.style.position = '';
+      infoCard.style.top = '';
+      infoCard.style.right = '';
+      infoCard.style.width = '';
+      infoCard.style.height = '';
+      infoCard.style.transition = '';
+      
+      // Devolver la card al contenedor de cards
+      if (cardsZone) {
+        cardsZone.insertBefore(infoCard, cardsZone.firstChild);
+      }
+      
+      // Limpiar estilos de otras cards
       otherCards.forEach(card => {
         card.style.transition = '';
         card.style.transform = '';
@@ -692,8 +744,6 @@ class BrandsView extends BaseView {
         cornerInfo.style.transition = '';
         cornerInfo.style.transform = '';
       }
-      
-      infoCard.style.height = '';
       
       this.infoPanelState = null;
     }, 500);

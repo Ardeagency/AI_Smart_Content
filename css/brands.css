@@ -38,6 +38,7 @@
 .brand-dashboard-container.info-expanded {
     overflow-y: auto;
     overflow-x: hidden;
+    position: relative;
 }
 
 .side-navigation.collapsed ~ * .brand-dashboard-container,
@@ -386,22 +387,19 @@ body.sidebar-collapsed .brand-dashboard-container {
     border-color: rgba(255, 255, 255, 0.2);
 }
 
-/* INFO expandida */
+/* INFO expandida - Sale del contenedor de cards */
 .card-info.expanded {
-    width: calc(100vw - var(--nav-width, 280px) - 3rem) !important;
+    position: absolute !important;
+    z-index: 1000;
     min-height: 500px;
     padding: 1.25rem;
-    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
-                min-height 0.5s cubic-bezier(0.4, 0, 0.2, 1),
-                height 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    position: relative;
-    z-index: 100;
-    height: auto !important;
+    margin: 0;
+    /* Posición y tamaño se establecen dinámicamente en JS */
 }
 
 .side-navigation.collapsed ~ * .card-info.expanded,
 body.sidebar-collapsed .card-info.expanded {
-    width: calc(100vw - var(--nav-width-collapsed, 64px) - 3rem) !important;
+    /* El ancho se calcula dinámicamente en JS considerando el sidebar colapsado */
 }
 
 .card-info.expanded .card-content-expanded {
