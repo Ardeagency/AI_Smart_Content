@@ -23,11 +23,11 @@
    ============================================ */
 .living-container {
     padding: 0;
-    padding-top: 48px;
+    padding-top: 0; /* El header hero maneja el espacio del header principal */
     margin: 0;
     margin-left: 20px;
     transition: margin-left 0.3s ease;
-    min-height: calc(100vh - 48px);
+    min-height: 100vh;
     background: #0E1012;
     max-width: none;
 }
@@ -54,17 +54,21 @@ body.sidebar-collapsed .living-container {
     margin-bottom: 3rem;
     border-radius: 0;
     overflow: hidden;
+    margin-top: -48px; /* Extiende hacia arriba para cubrir el header principal */
+    padding-top: 48px; /* Espacio para el header principal */
 }
 
 .living-hero-background {
     position: absolute;
     inset: 0;
+    top: -48px; /* Extiende el fondo hasta arriba */
     z-index: 0;
 }
 
 .living-hero-gradient {
     position: absolute;
     inset: 0;
+    top: -48px; /* Extiende el degradado hasta arriba */
     background: 
         radial-gradient(ellipse 150% 100% at 10% 60%, var(--living-warm-1) 0%, transparent 50%),
         radial-gradient(ellipse 120% 80% at 60% 20%, var(--living-warm-2) 0%, transparent 45%),
@@ -79,6 +83,7 @@ body.sidebar-collapsed .living-container {
     grid-template-columns: 1fr 1fr;
     gap: 3rem;
     padding: 3rem;
+    padding-top: calc(48px + 3rem); /* Respeta el header principal (48px) + padding */
     min-height: 400px;
     align-items: start;
 }

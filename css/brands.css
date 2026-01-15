@@ -260,7 +260,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
    ============================================ */
 .brand-cards-zone {
     position: absolute;
-    top: 1.5rem;
+    top: calc(48px + 1.5rem); /* Respeta el header principal (48px) + espacio */
     right: 1.5rem;
     bottom: 1.5rem;
     width: 380px;
