@@ -121,13 +121,13 @@
 
 .plan-card-small:hover {
     border-color: var(--accent-yellow);
-    background: rgba(216, 255, 0, 0.05);
+    background: rgba(224, 145, 69, 0.05);
     transform: translateY(-1px);
 }
 
 .plan-card-small.selected {
     border-color: var(--accent-yellow);
-    background: rgba(216, 255, 0, 0.1);
+    background: rgba(224, 145, 69, 0.1);
     box-shadow: var(--shadow-yellow);
 }
 
@@ -282,8 +282,8 @@
     right: 0;
     bottom: 0;
     background: 
-        linear-gradient(135deg, rgba(216, 255, 0, 0.03) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(216, 255, 0, 0.05) 0%, transparent 50%);
+        linear-gradient(135deg, rgba(224, 145, 69, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(224, 145, 69, 0.05) 0%, transparent 50%);
 }
 
 .image-logo {
@@ -292,11 +292,11 @@
     width: 120px;
     height: 120px;
     border-radius: 50%;
-    background: rgba(216, 255, 0, 0.1);
+    background: rgba(224, 145, 69, 0.1);
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px dashed rgba(216, 255, 0, 0.3);
+    border: 2px dashed rgba(224, 145, 69, 0.3);
     /* backdrop-filter removido para mejor rendimiento */
 }
 
@@ -315,8 +315,8 @@
     transform: translateY(-50%);
     width: 2px;
     height: 80%;
-    background: linear-gradient(to bottom, transparent, rgba(216, 255, 0, 0.3), transparent);
-    border-left: 1px dashed rgba(216, 255, 0, 0.2);
+    background: linear-gradient(to bottom, transparent, rgba(224, 145, 69, 0.3), transparent);
+    border-left: 1px dashed rgba(224, 145, 69, 0.2);
     }
     
 /* ============================================
@@ -350,8 +350,8 @@
     right: 0;
     bottom: 0;
     background: 
-        linear-gradient(135deg, rgba(216, 255, 0, 0.03) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(216, 255, 0, 0.05) 0%, transparent 50%);
+        linear-gradient(135deg, rgba(224, 145, 69, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(224, 145, 69, 0.05) 0%, transparent 50%);
     pointer-events: none;
     z-index: 0;
 }
@@ -471,7 +471,7 @@
 .btn-back-login:hover {
     border-color: var(--accent-yellow);
     color: var(--accent-yellow);
-    background: rgba(216, 255, 0, 0.05);
+    background: rgba(224, 145, 69, 0.05);
 }
 
 /* ============================================

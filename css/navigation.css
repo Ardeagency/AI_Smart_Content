@@ -445,7 +445,7 @@ body.sidebar-collapsed #app-container .main-header,
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(216, 255, 0, 0.1);
+    background: rgba(224, 145, 69, 0.1);
     border-radius: 6px;
     color: var(--accent-yellow);
     font-size: 16px;
@@ -559,7 +559,7 @@ body.sidebar-collapsed #app-container .main-header,
 }
 
 .nav-org-option.active {
-    background: rgba(216, 255, 0, 0.08);
+    background: rgba(224, 145, 69, 0.08);
 }
 
 .nav-org-option-content {
@@ -727,7 +727,7 @@ body.sidebar-collapsed #app-container .main-header,
 
 .nav-link.active {
     color: var(--text-primary);
-    background: rgba(216, 255, 0, 0.08);
+    background: rgba(224, 145, 69, 0.08);
 }
 
 .nav-link.active::before {
@@ -861,7 +861,7 @@ body.sidebar-collapsed #app-container .main-header,
 
 .nav-link-sub.active {
     color: var(--text-primary);
-    background: rgba(216, 255, 0, 0.08);
+    background: rgba(224, 145, 69, 0.08);
 }
 
 .nav-link-sub.active::after {
@@ -878,7 +878,7 @@ body.sidebar-collapsed #app-container .main-header,
 /* Item padre activo cuando un subitem está activo */
 .nav-item-has-submenu.active > .nav-link-parent {
     color: var(--text-primary);
-    background: rgba(216, 255, 0, 0.08);
+    background: rgba(224, 145, 69, 0.08);
 }
 
 .nav-item-has-submenu.active > .nav-link-parent .nav-icon {
@@ -896,7 +896,7 @@ body.sidebar-collapsed #app-container .main-header,
 }
 
 .side-navigation.collapsed .nav-item-has-submenu.active .nav-link-parent {
-    background: rgba(216, 255, 0, 0.08);
+    background: rgba(224, 145, 69, 0.08);
 }
 
 /* Espaciado entre items del menú */

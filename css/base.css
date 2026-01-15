@@ -44,16 +44,16 @@
     --text-disabled: rgba(242, 243, 245, 0.3);
     
     /* ============================================
-       AMARILLO COMO ACENTO INTELIGENTE
+       NARANJA COMO ACENTO INTELIGENTE
        Solo para: CTA principal, estados activos, highlights puntuales
        ============================================ */
-    --accent-yellow: #D8FF00;
-    --accent-yellow-hover: #E6FF3F;
-    --accent-yellow-glow: rgba(216, 255, 0, 0.2);
+    --accent-yellow: #e09145; /* Naranja de brands */
+    --accent-yellow-hover: #f0a055; /* Naranja hover más claro */
+    --accent-yellow-glow: rgba(224, 145, 69, 0.2);
     
     /* Colores de estado (mantener para compatibilidad) */
     --success-color: rgba(16, 185, 129, 0.8);
-    --warning-color: #D8FF00;
+    --warning-color: #e09145;
     --error-color: #ef4444;
     --info-color: rgba(59, 130, 246, 0.8);
     
@@ -63,8 +63,8 @@
     --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.3);
     --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.4);
     --shadow-floating: 0 12px 32px rgba(0, 0, 0, 0.5);
-    --shadow-yellow: 0 0 16px rgba(216, 255, 0, 0.3);
-    --accent-glow: rgba(216, 255, 0, 0.15);
+    --shadow-yellow: 0 0 16px rgba(224, 145, 69, 0.3);
+    --accent-glow: rgba(224, 145, 69, 0.15);
     --grid-color: rgba(242, 243, 245, 0.02);
     
     /* ============================================
@@ -72,8 +72,8 @@
        ============================================ */
     --primary-color: #F2F3F5;
     --primary-hover: #F2F3F5;
-    --accent-warm: #D8FF00;
-    --accent-warm-glow: rgba(216, 255, 0, 0.2);
+    --accent-warm: #e09145;
+    --accent-warm-glow: rgba(224, 145, 69, 0.2);
     
     /* Transiciones */
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -295,11 +295,11 @@ a:hover {
 
 .card-accent {
     border-color: var(--accent-yellow);
-    background: rgba(216, 255, 0, 0.05);
+    background: rgba(224, 145, 69, 0.05);
 }
 
 .card-accent:hover {
-    background: rgba(216, 255, 0, 0.08);
+    background: rgba(224, 145, 69, 0.08);
     box-shadow: var(--shadow-yellow);
 }
 

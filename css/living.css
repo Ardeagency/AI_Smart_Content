@@ -121,7 +121,7 @@ body.sidebar-collapsed .living-container {
 .token-value {
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--accent-yellow, #D4FF3F);
+    color: var(--accent-yellow, #e09145);
 }
 
 .tokens-progress-bar {
@@ -135,7 +135,7 @@ body.sidebar-collapsed .living-container {
 
 .tokens-progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--accent-yellow, #D4FF3F) 0%, var(--accent-warm, #e09145) 100%);
+    background: linear-gradient(90deg, var(--accent-yellow, #e09145) 0%, var(--accent-warm, #e09145) 100%);
     border-radius: 6px;
     transition: width 0.3s ease;
     width: 0%;
@@ -279,7 +279,7 @@ body.sidebar-collapsed .living-container {
 .favorite-product-stat-value {
     font-size: 1rem;
     font-weight: 600;
-    color: var(--accent-yellow, #D4FF3F);
+    color: var(--accent-yellow, #e09145);
 }
 
 /* ============================================
@@ -347,8 +347,8 @@ body.sidebar-collapsed .living-container {
 .top-production-count {
     margin-top: 0.5rem;
     padding: 0.75rem 1rem;
-    background: rgba(212, 255, 63, 0.1);
-    border: 1px solid rgba(212, 255, 63, 0.2);
+    background: rgba(224, 145, 69, 0.1);
+    border: 1px solid rgba(224, 145, 69, 0.2);
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -356,14 +356,14 @@ body.sidebar-collapsed .living-container {
 }
 
 .top-production-count-icon {
-    color: var(--accent-yellow, #D4FF3F);
+    color: var(--accent-yellow, #e09145);
     font-size: 1.25rem;
 }
 
 .top-production-count-value {
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--accent-yellow, #D4FF3F);
+    color: var(--accent-yellow, #e09145);
 }
 
 .top-production-count-label {
@@ -460,11 +460,11 @@ body.sidebar-collapsed .living-container {
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 0.75rem;
-    background: rgba(212, 255, 63, 0.1);
-    border: 1px solid rgba(212, 255, 63, 0.2);
+    background: rgba(224, 145, 69, 0.1);
+    border: 1px solid rgba(224, 145, 69, 0.2);
     border-radius: 6px;
     font-size: 0.75rem;
-    color: var(--accent-yellow, #D4FF3F);
+    color: var(--accent-yellow, #e09145);
     font-weight: 500;
 }
 
