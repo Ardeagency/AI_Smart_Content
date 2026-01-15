@@ -48,7 +48,7 @@
     justify-content: center;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 15px !important; /* 15px en todos los lados */
+    padding: calc(48px + 15px) 15px 15px 15px !important; /* Respeta header principal (48px) + padding */
     transition: padding 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     will-change: padding;
 }
