@@ -345,12 +345,6 @@ body.sidebar-collapsed .product-detail-container {
     scale: 1 !important;
 }
 
-.editable-field:focus {
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    border-color: rgba(255, 255, 255, 0.2) !important;
-    outline: none !important;
-}
-
 .editable-textarea {
     min-height: 120px;
     resize: vertical;
