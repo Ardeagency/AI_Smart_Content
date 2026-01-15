@@ -98,6 +98,7 @@ class Navigation {
             <div class="nav-link nav-link-parent" data-tooltip="Entidades">
               <i class="fas fa-cube nav-icon"></i>
               <span class="nav-text">Entidades</span>
+              <i class="fas fa-chevron-right nav-chevron"></i>
             </div>
             <div class="nav-submenu" id="navSubmenuEntidades">
               <div class="nav-submenu-item">
@@ -118,27 +119,12 @@ class Navigation {
             </div>
           </div>
 
-          <!-- Audiencias -->
-          <div class="nav-item">
-            <a href="/audiences" class="nav-link" data-route="/audiences" data-tooltip="Audiencias">
-              <i class="fas fa-users nav-icon"></i>
-              <span class="nav-text">Audiencias</span>
-            </a>
-          </div>
-
-          <!-- Marketing -->
-          <div class="nav-item">
-            <a href="/campaigns" class="nav-link" data-route="/campaigns" data-tooltip="Marketing">
-              <i class="fas fa-bullhorn nav-icon"></i>
-              <span class="nav-text">Marketing</span>
-            </a>
-          </div>
-
           <!-- Producción (con submenú) -->
           <div class="nav-item nav-item-has-submenu" data-submenu="produccion">
             <div class="nav-link nav-link-parent" data-tooltip="Producción">
               <i class="fas fa-video nav-icon"></i>
               <span class="nav-text">Producción</span>
+              <i class="fas fa-chevron-right nav-chevron"></i>
             </div>
             <div class="nav-submenu" id="navSubmenuProduccion">
               <div class="nav-submenu-item">
@@ -157,6 +143,22 @@ class Navigation {
                 </a>
               </div>
             </div>
+          </div>
+
+          <!-- Audiencias -->
+          <div class="nav-item">
+            <a href="/audiences" class="nav-link" data-route="/audiences" data-tooltip="Audiencias">
+              <i class="fas fa-users nav-icon"></i>
+              <span class="nav-text">Audiencias</span>
+            </a>
+          </div>
+
+          <!-- Marketing -->
+          <div class="nav-item">
+            <a href="/campaigns" class="nav-link" data-route="/campaigns" data-tooltip="Marketing">
+              <i class="fas fa-bullhorn nav-icon"></i>
+              <span class="nav-text">Marketing</span>
+            </a>
           </div>
         </div>
 
@@ -413,6 +415,7 @@ class Navigation {
    */
   toggleSubmenu(parentItem) {
     const submenu = parentItem.querySelector('.nav-submenu');
+    const chevron = parentItem.querySelector('.nav-chevron');
     if (!submenu) return;
     
     const isOpen = submenu.classList.contains('open');
@@ -421,6 +424,14 @@ class Navigation {
     document.querySelectorAll('.nav-submenu').forEach(sm => {
       if (sm !== submenu) {
         sm.classList.remove('open');
+        const otherItem = sm.closest('.nav-item-has-submenu');
+        if (otherItem) {
+          otherItem.classList.remove('active');
+          const otherChevron = otherItem.querySelector('.nav-chevron');
+          if (otherChevron) {
+            otherChevron.style.transform = 'rotate(0deg)';
+          }
+        }
       }
     });
     
@@ -428,9 +439,15 @@ class Navigation {
     if (isOpen) {
       submenu.classList.remove('open');
       parentItem.classList.remove('active');
+      if (chevron) {
+        chevron.style.transform = 'rotate(0deg)';
+      }
     } else {
       submenu.classList.add('open');
       parentItem.classList.add('active');
+      if (chevron) {
+        chevron.style.transform = 'rotate(90deg)';
+      }
     }
   }
 

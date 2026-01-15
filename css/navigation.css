@@ -726,20 +726,20 @@ body.sidebar-collapsed #app-container .main-header,
     margin-bottom: 24px; /* Espacio real después de Entidades */
 }
 
-/* Dominio 4: Audiencias + Marketing (juntos, mismo peso) */
-.nav-item:nth-child(4),
-.nav-item:nth-child(5) {
+/* Dominio 4: Producción (operativo, activo) - ahora debajo de Entidades */
+.nav-item-has-submenu[data-submenu="produccion"] {
+    margin-top: 0;
+    margin-bottom: 24px; /* Espacio real después de Producción */
+}
+
+/* Dominio 5: Audiencias + Marketing (juntos, mismo peso) */
+.nav-item:nth-child(5),
+.nav-item:nth-child(6) {
     margin-bottom: 4px; /* Poco espacio entre ellos */
 }
 
-.nav-item:nth-child(5) {
+.nav-item:nth-child(6) {
     margin-bottom: 24px; /* Espacio real después del bloque Audiencias/Marketing */
-}
-
-/* Dominio 5: Producción (operativo, activo) */
-.nav-item-has-submenu[data-submenu="produccion"] {
-    margin-top: 0;
-    margin-bottom: 0;
 }
 
 /* =========================================
@@ -870,6 +870,23 @@ body.sidebar-collapsed #app-container .main-header,
     font-weight: 500; /* Peso mayor que hijos, pero controlado */
     color: rgba(255, 255, 255, 0.9); /* Ligeramente más visible que items normales */
     position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Chevron indicador de estado abierto/cerrado */
+.nav-chevron {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    transition: transform 0.2s ease, color 0.15s ease;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.nav-item-has-submenu.active .nav-chevron {
+    transform: rotate(90deg);
+    color: rgba(255, 255, 255, 0.7);
 }
 
 /* Entidades se siente fundacional */
@@ -942,16 +959,19 @@ body.sidebar-collapsed #app-container .main-header,
     color: rgba(255, 255, 255, 0.6); /* Color 60% - más silencioso */
 }
 
+/* Punto conector en la línea vertical (opcional, para mejor visualización) */
 .nav-link-sub::before {
     content: '';
     position: absolute;
     left: -20px;
     top: 50%;
     transform: translateY(-50%);
-    width: 4px;
-    height: 1px;
-    background: rgba(255, 255, 255, 0.15);
-    opacity: 0.5;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 2;
 }
 
 .nav-link-sub:hover {
