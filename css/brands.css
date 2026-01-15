@@ -45,7 +45,7 @@
     overflow-y: auto;
     overflow-x: hidden;
     padding: 15px !important; /* 15px en todos los lados */
-    transition: all 0.3s ease;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Ocultar elementos del modo principal cuando está en modo secundario */
@@ -53,7 +53,15 @@
 .brand-dashboard-container.info-mode-secondary .brand-corner-bottom-left {
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+/* Asegurar que elementos vuelvan a ser visibles cuando NO está en modo secundario */
+.brand-dashboard-container:not(.info-mode-secondary) .brand-cards-zone,
+.brand-dashboard-container:not(.info-mode-secondary) .brand-corner-bottom-left {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transition: opacity 0.5s ease 0.2s, transform 0.5s ease 0.2s;
 }
 
 .side-navigation.collapsed ~ * .brand-dashboard-container,
@@ -408,21 +416,45 @@ body.sidebar-collapsed .brand-dashboard-container {
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
-    min-height: 500px;
+    min-height: calc(100vh - 48px - 30px); /* Altura completa menos header (48px) y padding (30px total) */
     padding: 1.25rem;
     margin: 0 !important;
+    margin-bottom: 15px !important; /* Margen inferior para que llegue hasta abajo con espacio */
     z-index: 100;
     height: auto !important;
     display: block !important;
     box-sizing: border-box;
     flex-shrink: 0;
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), 
+                transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card-info.expanded .card-content-expanded {
     display: block;
     margin-top: 1.5rem;
-    opacity: 1;
-    animation: fadeIn 0.3s ease 0.2s both;
+    opacity: 0;
+    animation: fadeIn 0.5s ease 0.3s both;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.card-info.expanded .card-content-expanded::-webkit-scrollbar {
+    width: 8px;
+}
+
+.card-info.expanded .card-content-expanded::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.card-info.expanded .card-content-expanded::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+.card-info.expanded .card-content-expanded::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
 }
 
 @keyframes fadeIn {

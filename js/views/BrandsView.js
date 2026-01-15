@@ -586,15 +586,7 @@ class BrandsView extends BaseView {
     // Obtener contenedor principal
     const dashboardContainer = container.querySelector('.brand-dashboard-container') || container;
     
-    // Cambiar a modo secundario: centrado con márgenes
-    dashboardContainer.classList.add('info-mode-secondary');
-    dashboardContainer.classList.remove('info-expanded'); // Limpiar clase antigua si existe
-    
-    // Mover la card fuera del contenedor de cards al contenedor principal
-    infoCard.classList.add('expanded');
-    dashboardContainer.appendChild(infoCard);
-    
-    // Guardar referencia del contenedor de cards para restaurar después
+    // Guardar estado ANTES de hacer cambios
     this.infoPanelState = {
       otherCards,
       cornerInfo,
@@ -603,14 +595,40 @@ class BrandsView extends BaseView {
       cardsZone
     };
     
-    // Guardar estado
-    this.infoPanelState = {
-      otherCards,
-      cornerInfo,
-      infoCard,
-      expandedHeight: 0,
-      dashboardContainer: null
-    };
+    // Ocultar otras cards y nombre de marca con fade out
+    otherCards.forEach(card => {
+      card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(-20px)';
+    });
+    
+    if (cornerInfo) {
+      cornerInfo.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+      cornerInfo.style.opacity = '0';
+      cornerInfo.style.transform = 'translateY(20px)';
+    }
+    
+    // Cambiar a modo secundario: centrado con márgenes (con delay para animación)
+    setTimeout(() => {
+      dashboardContainer.classList.add('info-mode-secondary');
+      dashboardContainer.classList.remove('info-expanded'); // Limpiar clase antigua si existe
+      
+      // Mover la card fuera del contenedor de cards al contenedor principal
+      infoCard.classList.add('expanded');
+      dashboardContainer.appendChild(infoCard);
+      
+      // Animación de entrada de la card
+      requestAnimationFrame(() => {
+        infoCard.style.opacity = '0';
+        infoCard.style.transform = 'scale(0.95) translateY(20px)';
+        infoCard.style.transition = 'opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+        
+        requestAnimationFrame(() => {
+          infoCard.style.opacity = '1';
+          infoCard.style.transform = 'scale(1) translateY(0)';
+        });
+      });
+    }, 200); // Delay para que las otras cards se oculten primero
   }
 
   closeInfoPanel() {
@@ -622,44 +640,92 @@ class BrandsView extends BaseView {
     
     if (!this.infoPanelState) return;
     
-    const { dashboardContainer, cardsZone } = this.infoPanelState;
+    const { dashboardContainer, cardsZone, otherCards, cornerInfo } = this.infoPanelState;
     
-    // Remover clase expandida de la card
-    infoCard.classList.remove('expanded');
+    // Animación de salida de la card
+    infoCard.style.transition = 'opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+    infoCard.style.opacity = '0';
+    infoCard.style.transform = 'scale(0.95) translateY(-20px)';
     
-    // Volver a modo principal: remover modo secundario
-    if (dashboardContainer) {
-      dashboardContainer.classList.remove('info-mode-secondary');
-    }
-    
-    // Remover contenido expandido
-    const content = infoCard.querySelector('.card-content-expanded');
-    if (content) {
-      content.remove();
-    }
-    
-    // Remover botón cerrar
-    const closeBtn = infoCard.querySelector('.info-close-btn');
-    if (closeBtn) {
-      closeBtn.remove();
-    }
-    
-    // Limpiar estilos de la card
-    infoCard.style.position = '';
-    infoCard.style.top = '';
-    infoCard.style.right = '';
-    infoCard.style.width = '';
-    infoCard.style.height = '';
-    infoCard.style.transition = '';
-    infoCard.style.margin = '';
-    infoCard.style.maxWidth = '';
-    
-    // Devolver la card al contenedor de cards (al inicio)
-    if (cardsZone) {
-      cardsZone.insertBefore(infoCard, cardsZone.firstChild);
-    }
-    
-    this.infoPanelState = null;
+    // Esperar a que termine la animación de salida
+    setTimeout(() => {
+      // Remover clase expandida de la card
+      infoCard.classList.remove('expanded');
+      
+      // Limpiar estilos de la card
+      infoCard.style.position = '';
+      infoCard.style.top = '';
+      infoCard.style.right = '';
+      infoCard.style.width = '';
+      infoCard.style.height = '';
+      infoCard.style.transition = '';
+      infoCard.style.margin = '';
+      infoCard.style.maxWidth = '';
+      infoCard.style.opacity = '';
+      infoCard.style.transform = '';
+      
+      // Remover contenido expandido
+      const content = infoCard.querySelector('.card-content-expanded');
+      if (content) {
+        content.remove();
+      }
+      
+      // Remover botón cerrar
+      const closeBtn = infoCard.querySelector('.info-close-btn');
+      if (closeBtn) {
+        closeBtn.remove();
+      }
+      
+      // Devolver la card al contenedor de cards (al inicio) ANTES de cambiar modo
+      if (cardsZone) {
+        cardsZone.insertBefore(infoCard, cardsZone.firstChild);
+      }
+      
+      // Volver a modo principal: remover modo secundario
+      if (dashboardContainer) {
+        dashboardContainer.classList.remove('info-mode-secondary');
+      }
+      
+      // Pequeño delay para que el cambio de modo se aplique
+      requestAnimationFrame(() => {
+        // Mostrar otras cards y nombre de marca con fade in
+        if (otherCards && otherCards.length > 0) {
+          otherCards.forEach(card => {
+            // Asegurar que las cards estén visibles
+            if (card.parentElement) {
+              card.style.transition = 'opacity 0.5s ease 0.2s, transform 0.5s ease 0.2s';
+              card.style.opacity = '1';
+              card.style.transform = 'translateY(0)';
+            }
+          });
+        }
+        
+        if (cornerInfo && cornerInfo.parentElement) {
+          cornerInfo.style.transition = 'opacity 0.5s ease 0.2s, transform 0.5s ease 0.2s';
+          cornerInfo.style.opacity = '1';
+          cornerInfo.style.transform = 'translateY(0)';
+        }
+        
+        // Limpiar estilos después de la animación
+        setTimeout(() => {
+          if (otherCards) {
+            otherCards.forEach(card => {
+              card.style.transition = '';
+              card.style.opacity = '';
+              card.style.transform = '';
+            });
+          }
+          
+          if (cornerInfo) {
+            cornerInfo.style.transition = '';
+            cornerInfo.style.opacity = '';
+            cornerInfo.style.transform = '';
+          }
+          
+          this.infoPanelState = null;
+        }, 700);
+      });
+    }, 400); // Tiempo de animación de salida
   }
 
   renderInfoPanelContent(container) {
