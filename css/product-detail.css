@@ -314,6 +314,37 @@ body.sidebar-collapsed .product-detail-container {
     scale: 1 !important;
 }
 
+/* BLOQUEO GLOBAL EN PRODUCT DETAIL (evitar resets de base.css) */
+.product-detail-container .product-data-section .editable-field:hover,
+.product-detail-container .product-data-section .editable-field:active,
+.product-detail-container .product-data-section [contenteditable="true"]:hover,
+.product-detail-container .product-data-section [contenteditable="true"]:active {
+    background: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    padding: 0.75rem 1rem !important;
+    margin: 0 !important;
+    transform: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    transition: none !important;
+    scale: 1 !important;
+}
+
+.product-detail-container .product-data-section .editable-field:focus,
+.product-detail-container .product-data-section [contenteditable="true"]:focus {
+    background: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    padding: 0.75rem 1rem !important;
+    margin: 0 !important;
+    transform: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    transition: none !important;
+    scale: 1 !important;
+}
+
 .editable-field:focus {
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
     border-color: rgba(255, 255, 255, 0.2) !important;
@@ -342,6 +373,7 @@ body.sidebar-collapsed .product-detail-container {
     background: transparent !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
     border-color: rgba(255, 255, 255, 0.1) !important;
+    padding: 0.75rem 1rem !important;
     transform: none !important;
     box-shadow: none !important;
     outline: none !important;
@@ -352,6 +384,7 @@ body.sidebar-collapsed .product-detail-container {
 .editable-textarea:focus {
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
     border-color: rgba(255, 255, 255, 0.2) !important;
+    padding: 0.75rem 1rem !important;
     outline: none !important;
 }
 
@@ -374,6 +407,7 @@ body.sidebar-collapsed .product-detail-container {
     background: transparent !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
     border-color: rgba(255, 255, 255, 0.1) !important;
+    padding: 0.75rem 1rem !important;
     transform: none !important;
     box-shadow: none !important;
     outline: none !important;
@@ -384,6 +418,7 @@ body.sidebar-collapsed .product-detail-container {
 .editable-select:focus {
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
     border-color: rgba(255, 255, 255, 0.2) !important;
+    padding: 0.75rem 1rem !important;
     outline: none !important;
 }
 

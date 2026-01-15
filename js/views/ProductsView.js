@@ -595,7 +595,7 @@ class ProductsView extends BaseView {
 
     const textarea = document.createElement('textarea');
     textarea.value = originalValue;
-    textarea.className = 'editable-textarea';
+    textarea.className = 'editable-textarea product-editable';
     textarea.style.width = '100%';
     textarea.style.minHeight = '100px';
     textarea.style.padding = '0.75rem 1rem';
@@ -607,10 +607,8 @@ class ProductsView extends BaseView {
     textarea.style.fontFamily = 'inherit';
     textarea.style.resize = 'vertical';
     textarea.style.cursor = 'text';
-    textarea.style.transition = 'none';
-    textarea.style.webkitTransition = 'none';
-    textarea.style.mozTransition = 'none';
-    textarea.style.oTransition = 'none';
+    this.applyNoTransitionStyles(textarea);
+    this.addNoHoverListeners(textarea);
 
     element.innerHTML = '';
     element.appendChild(textarea);
