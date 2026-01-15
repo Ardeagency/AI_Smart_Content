@@ -754,6 +754,8 @@ class BaseView {
     const border = computedStyle.border;
     const borderColor = computedStyle.borderColor;
     const isBrandName = target.classList && target.classList.contains('brand-name-large');
+    const isInfoEditable = target.classList && target.classList.contains('info-editable');
+    const isInfoPanel = target.closest && target.closest('.card-content-expanded');
     
     target.style.background = 'transparent';
     // PRESERVAR BORDE ORIGINAL - NO CAMBIAR
@@ -763,7 +765,7 @@ class BaseView {
     } else {
       target.style.borderColor = 'transparent';
     }
-    if (!isBrandName) {
+    if (!isBrandName && !isInfoEditable && !isInfoPanel) {
       target.style.padding = '0';
       target.style.margin = '0';
     }
@@ -772,7 +774,7 @@ class BaseView {
     target.style.mozTransform = 'none';
     target.style.oTransform = 'none';
     target.style.boxShadow = 'none';
-    if (!isBrandName) {
+    if (!isBrandName && !isInfoEditable && !isInfoPanel) {
       target.style.width = 'auto';
       target.style.height = 'auto';
       target.style.minWidth = 'auto';

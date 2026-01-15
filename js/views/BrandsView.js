@@ -991,6 +991,7 @@ class BrandsView extends BaseView {
 
       // Mapear labels a field names y usar makeEditableText() unificado
       if (labelText === 'Quiénes somos') {
+        field.classList.add('info-editable');
         this.makeEditableText(field, 'quienes_somos', 'brand', () => {
           const infoCard = document.querySelector('.card-info.expanded');
           if (infoCard) {
@@ -1001,6 +1002,7 @@ class BrandsView extends BaseView {
           }
         });
       } else if (labelText === 'Personalidad') {
+        field.classList.add('info-editable');
         this.makeEditableText(field, 'personalidad_marca', 'brand', () => {
           const infoCard = document.querySelector('.card-info.expanded');
           if (infoCard) {
@@ -1012,6 +1014,7 @@ class BrandsView extends BaseView {
         });
       } else if (labelText === 'Tono de voz') {
         // Dropdown para tono de voz
+        field.classList.add('info-editable');
         field.style.cursor = 'pointer';
         field.addEventListener('click', () => {
           const options = [
@@ -1035,6 +1038,7 @@ class BrandsView extends BaseView {
           });
         });
       } else if (labelText === 'Palabras a usar') {
+        field.classList.add('info-editable');
         this.makeEditableText(field, 'palabras_usar', 'brand', () => {
           const infoCard = document.querySelector('.card-info.expanded');
           if (infoCard) {
@@ -1045,6 +1049,7 @@ class BrandsView extends BaseView {
           }
         });
       } else if (labelText === 'Reglas generales') {
+        field.classList.add('info-editable');
         this.makeEditableText(field, 'reglas_creativas', 'brand', () => {
           const infoCard = document.querySelector('.card-info.expanded');
           if (infoCard) {

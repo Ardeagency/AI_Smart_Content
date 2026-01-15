@@ -823,7 +823,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
         width: 340px;
     }
     .brand-name-large {
-        font-size: 2.5rem;
+        font-size: 3rem !important;
     }
 }
 
@@ -832,7 +832,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
         width: 300px;
     }
     .brand-name-large {
-        font-size: 2rem;
+        font-size: 3rem !important;
     }
     .brand-main-info {
         flex-direction: column;
@@ -984,6 +984,35 @@ h1.brand-name-large[contenteditable="true"]:hover,
     color: var(--text-primary, #F2F3F5);
     line-height: 1.6;
     white-space: pre-wrap;
+}
+
+/* Inputs de INFO - borde fijo y contenedor estable */
+.card-content-expanded .info-field-value.editable-field {
+    display: block;
+    padding: 0.75rem 1rem !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 8px;
+    background: transparent !important;
+    min-height: 2.5rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.card-content-expanded .info-field-value.editable-field:hover,
+.card-content-expanded .info-field-value.editable-field:active,
+.card-content-expanded .info-field-value.editable-field:focus,
+.card-content-expanded .info-field-value.editable-field[contenteditable="true"]:hover,
+.card-content-expanded .info-field-value.editable-field[contenteditable="true"]:active,
+.card-content-expanded .info-field-value.editable-field[contenteditable="true"]:focus {
+    background: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    padding: 0.75rem 1rem !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    transform: none !important;
+    box-shadow: none !important;
 }
 
 .card-content-expanded .info-list {
