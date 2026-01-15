@@ -344,7 +344,10 @@ a:hover {
     box-sizing: border-box;
 }
 
-/* Eliminar TODAS las transiciones de inputs globales - ESTADO BASE */
+/* ============================================
+   ELIMINAR COMPLETAMENTE TODAS LAS TRANSICIONES
+   Y EFECTOS DE INPUTS - ESTADO BASE
+   ============================================ */
 .form-input,
 .form-select,
 .form-textarea,
@@ -353,12 +356,26 @@ input[type="number"],
 input[type="email"],
 input[type="url"],
 input[type="date"],
+input[type="password"],
+input[type="search"],
 textarea,
 select {
     transition: none !important;
     -webkit-transition: none !important;
     -moz-transition: none !important;
     -o-transition: none !important;
+    animation: none !important;
+    -webkit-animation: none !important;
+    -moz-animation: none !important;
+    -o-animation: none !important;
+    will-change: auto !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+    -moz-transform: none !important;
+    -o-transform: none !important;
+    scale: 1 !important;
+    -webkit-scale: 1 !important;
+    zoom: 1 !important;
 }
 
 /* Eliminar TODOS los efectos hover de inputs globales */
@@ -391,20 +408,76 @@ select:hover {
     -o-transition: none !important;
 }
 
-/* Eliminar hover de elementos contenteditable - REGLAS MÁS ESPECÍFICAS */
+/* ============================================
+   ELIMINAR COMPLETAMENTE TODOS LOS EFECTOS DE CURSOR
+   EN ELEMENTOS CONTENTEDITABLE
+   ============================================ */
+[contenteditable="true"],
+[contenteditable="true"].editable-field,
+h1[contenteditable="true"],
+h1[contenteditable="true"].editable-field,
+h1.brand-name-large[contenteditable="true"],
+h1.brand-name-large.editable-field,
+h1.editable-field,
+h1[contenteditable],
+.brand-name-large,
+.brand-name-large.editable-field {
+    transition: none !important;
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
+    animation: none !important;
+    -webkit-animation: none !important;
+    -moz-animation: none !important;
+    -o-animation: none !important;
+    will-change: auto !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+    -moz-transform: none !important;
+    -o-transform: none !important;
+    scale: 1 !important;
+    -webkit-scale: 1 !important;
+    zoom: 1 !important;
+}
+
 [contenteditable="true"]:hover,
+[contenteditable="true"]:active,
+[contenteditable="true"]:focus,
 [contenteditable="true"].editable-field:hover,
+[contenteditable="true"].editable-field:active,
+[contenteditable="true"].editable-field:focus,
 h1[contenteditable="true"]:hover,
+h1[contenteditable="true"]:active,
+h1[contenteditable="true"]:focus,
 h1[contenteditable="true"].editable-field:hover,
+h1[contenteditable="true"].editable-field:active,
+h1[contenteditable="true"].editable-field:focus,
 h1.brand-name-large[contenteditable="true"]:hover,
+h1.brand-name-large[contenteditable="true"]:active,
+h1.brand-name-large[contenteditable="true"]:focus,
 h1.brand-name-large.editable-field:hover,
+h1.brand-name-large.editable-field:active,
+h1.brand-name-large.editable-field:focus,
 h1.editable-field:hover,
-h1[contenteditable]:hover {
+h1.editable-field:active,
+h1.editable-field:focus,
+h1[contenteditable]:hover,
+h1[contenteditable]:active,
+h1[contenteditable]:focus,
+.brand-name-large:hover,
+.brand-name-large:active,
+.brand-name-large:focus,
+.brand-name-large.editable-field:hover,
+.brand-name-large.editable-field:active,
+.brand-name-large.editable-field:focus {
     background: transparent !important;
     border-color: transparent !important;
     padding: 0 !important;
     margin: 0 !important;
     transform: none !important;
+    -webkit-transform: none !important;
+    -moz-transform: none !important;
+    -o-transform: none !important;
     box-shadow: none !important;
     width: auto !important;
     height: auto !important;
@@ -413,9 +486,20 @@ h1[contenteditable]:hover {
     min-height: auto !important;
     max-height: none !important;
     scale: 1 !important;
+    -webkit-scale: 1 !important;
+    zoom: 1 !important;
     font-size: inherit !important;
     line-height: inherit !important;
     letter-spacing: inherit !important;
+    transition: none !important;
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
+    animation: none !important;
+    -webkit-animation: none !important;
+    -moz-animation: none !important;
+    -o-animation: none !important;
+    will-change: auto !important;
 }
 
 .form-input:focus,
@@ -429,12 +513,24 @@ h1[contenteditable]:hover {
     -webkit-transition: none !important;
     -moz-transition: none !important;
     -o-transition: none !important;
+    animation: none !important;
+    -webkit-animation: none !important;
+    -moz-animation: none !important;
+    -o-animation: none !important;
     padding: 0.75rem 1rem !important;
     margin: 0 !important;
     transform: none !important;
+    -webkit-transform: none !important;
+    -moz-transform: none !important;
+    -o-transform: none !important;
     width: 100% !important;
+    height: auto !important;
     font-size: 0.95rem !important;
+    line-height: inherit !important;
     scale: 1 !important;
+    -webkit-scale: 1 !important;
+    zoom: 1 !important;
+    will-change: auto !important;
 }
 
 .form-input::placeholder,

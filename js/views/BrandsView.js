@@ -1643,37 +1643,70 @@ class BrandsView extends BaseView {
   makeEditableText(element, fieldName, table = 'container', onSave = null) {
     if (!element) return;
 
+    // ELIMINAR COMPLETAMENTE TODAS LAS TRANSICIONES Y EFECTOS
     element.style.cursor = 'text';
     element.style.transition = 'none';
     element.style.webkitTransition = 'none';
     element.style.mozTransition = 'none';
     element.style.oTransition = 'none';
+    element.style.animation = 'none';
+    element.style.webkitAnimation = 'none';
+    element.style.mozAnimation = 'none';
+    element.style.oAnimation = 'none';
+    element.style.willChange = 'auto';
+    element.style.transform = 'none';
+    element.style.webkitTransform = 'none';
+    element.style.mozTransform = 'none';
+    element.style.oTransform = 'none';
+    element.style.scale = '1';
+    element.style.zoom = '1';
+    
     element.setAttribute('contenteditable', 'true');
     element.classList.add('editable-field');
     
-    // Prevenir cualquier efecto hover con event listeners
-    element.addEventListener('mouseenter', (e) => {
-      e.target.style.background = 'transparent';
-      e.target.style.borderColor = 'transparent';
-      e.target.style.padding = '0';
-      e.target.style.margin = '0';
-      e.target.style.transform = 'none';
-      e.target.style.boxShadow = 'none';
-      e.target.style.width = 'auto';
-      e.target.style.height = 'auto';
-      e.target.style.scale = '1';
-    });
+    // Función para forzar tamaños fijos
+    const forceFixedSize = (target) => {
+      const computedStyle = window.getComputedStyle(target);
+      const fontSize = computedStyle.fontSize;
+      const lineHeight = computedStyle.lineHeight;
+      const letterSpacing = computedStyle.letterSpacing;
+      
+      target.style.background = 'transparent';
+      target.style.borderColor = 'transparent';
+      target.style.padding = '0';
+      target.style.margin = '0';
+      target.style.transform = 'none';
+      target.style.webkitTransform = 'none';
+      target.style.mozTransform = 'none';
+      target.style.oTransform = 'none';
+      target.style.boxShadow = 'none';
+      target.style.width = 'auto';
+      target.style.height = 'auto';
+      target.style.minWidth = 'auto';
+      target.style.maxWidth = 'none';
+      target.style.minHeight = 'auto';
+      target.style.maxHeight = 'none';
+      target.style.scale = '1';
+      target.style.zoom = '1';
+      target.style.fontSize = fontSize;
+      target.style.lineHeight = lineHeight;
+      target.style.letterSpacing = letterSpacing;
+      target.style.transition = 'none';
+      target.style.webkitTransition = 'none';
+      target.style.mozTransition = 'none';
+      target.style.oTransition = 'none';
+      target.style.animation = 'none';
+      target.style.webkitAnimation = 'none';
+      target.style.mozAnimation = 'none';
+      target.style.oAnimation = 'none';
+      target.style.willChange = 'auto';
+    };
     
-    element.addEventListener('mouseleave', (e) => {
-      e.target.style.background = 'transparent';
-      e.target.style.borderColor = 'transparent';
-      e.target.style.padding = '0';
-      e.target.style.margin = '0';
-      e.target.style.transform = 'none';
-      e.target.style.boxShadow = 'none';
-      e.target.style.width = 'auto';
-      e.target.style.height = 'auto';
-      e.target.style.scale = '1';
+    // Prevenir cualquier efecto hover/active/focus con event listeners
+    ['mouseenter', 'mouseleave', 'mouseover', 'mouseout', 'focus', 'blur', 'click'].forEach(eventType => {
+      element.addEventListener(eventType, (e) => {
+        forceFixedSize(e.target);
+      }, { passive: true });
     });
 
     element.addEventListener('blur', async () => {
