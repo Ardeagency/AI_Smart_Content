@@ -152,28 +152,6 @@ if (typeof window.ProductsManager === 'undefined') {
             });
         }
 
-        // Sidebar close
-        const sidebarClose = document.getElementById('sidebarClose');
-        if (sidebarClose) {
-            sidebarClose.addEventListener('click', () => {
-                this.closeSidebar();
-            });
-        }
-
-        // Sidebar overlay
-        const sidebarOverlay = document.getElementById('sidebarOverlay');
-        if (sidebarOverlay) {
-            sidebarOverlay.addEventListener('click', () => {
-                this.closeSidebar();
-            });
-        }
-
-        // ESC key to close sidebar
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                this.closeSidebar();
-            }
-        });
     }
 
     async loadProducts() {
@@ -334,74 +312,19 @@ if (typeof window.ProductsManager === 'undefined') {
             </div>
         `;
 
-        // Event listeners
-        card.addEventListener('click', (e) => {
-            if (!e.target.closest('.product-card-edit-btn')) {
-                this.openSidebar(product.id);
-            }
-        });
-
+        // Event listener para botón editar (por ahora sin acción, se puede implementar modal más adelante)
         const editBtn = card.querySelector('.product-card-edit-btn');
         if (editBtn) {
             editBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                this.openSidebar(product.id);
+                // TODO: Implementar modal de edición si es necesario
+                console.log('Editar producto:', product.id);
             });
         }
 
         return card;
     }
 
-    openSidebar(productId) {
-        if (!productId) {
-            console.warn('No se puede abrir sidebar sin un productId');
-            return;
-        }
-
-        const sidebar = document.getElementById('productsSidebar');
-        const overlay = document.getElementById('sidebarOverlay');
-        const main = document.querySelector('.products-main');
-
-        sidebar.classList.add('open');
-        overlay.classList.add('active');
-        main.classList.add('sidebar-open');
-
-        this.loadProductDetails(productId);
-    }
-
-    closeSidebar() {
-        const sidebar = document.getElementById('productsSidebar');
-        const overlay = document.getElementById('sidebarOverlay');
-        const main = document.querySelector('.products-main');
-
-        sidebar.classList.remove('open');
-        overlay.classList.remove('active');
-        main.classList.remove('sidebar-open');
-
-        this.currentProduct = null;
-    }
-
-    async loadProductDetails(productId) {
-        const sidebarContent = document.getElementById('sidebarContent');
-        const sidebarTitle = document.getElementById('sidebarTitle');
-
-        sidebarContent.innerHTML = '<div class="loading-state"><i class="fas fa-spinner fa-spin"></i><p>Cargando...</p></div>';
-
-        try {
-            const product = this.products.find(p => p.id === productId);
-            if (!product) {
-                throw new Error('Producto no encontrado');
-            }
-
-            this.currentProduct = product;
-            sidebarTitle.textContent = 'Editar Producto';
-            this.showProductForm(product);
-
-        } catch (error) {
-            console.error('Error cargando detalles:', error);
-            sidebarContent.innerHTML = `<div class="error-state"><p>Error al cargar el producto: ${error.message}</p></div>`;
-        }
-    }
 
     showNewProductModal() {
         // Crear modal para nuevo producto
@@ -645,26 +568,6 @@ if (typeof window.ProductsManager === 'undefined') {
         `;
     }
 
-    showProductForm(product) {
-        const sidebarContent = document.getElementById('sidebarContent');
-        sidebarContent.innerHTML = this.getProductFormHTML(product);
-
-        // Event listeners
-        const form = document.getElementById('productForm');
-        if (form) {
-            form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.saveProduct();
-        });
-        }
-
-        const cancelBtn = document.getElementById('cancelBtn');
-        if (cancelBtn) {
-            cancelBtn.addEventListener('click', () => {
-            this.closeSidebar();
-        });
-        }
-    }
 
     renderProductImages(images) {
         const productId = this.currentProduct?.id || 'new';
@@ -800,10 +703,6 @@ if (typeof window.ProductsManager === 'undefined') {
                 }
             }
 
-            // Recargar detalles del producto
-            if (this.currentProduct && this.currentProduct.id === productId) {
-            await this.loadProductDetails(productId);
-            }
             await this.loadProducts();
 
             this.showNotification('✅ Imagen eliminada exitosamente', 'success');
@@ -829,10 +728,6 @@ if (typeof window.ProductsManager === 'undefined') {
 
             if (error) throw error;
 
-            // Recargar detalles del producto
-            if (this.currentProduct && this.currentProduct.id === productId) {
-                await this.loadProductDetails(productId);
-            }
             await this.loadProducts();
 
             this.showNotification('✅ Imagen marcada como principal', 'success');
@@ -885,10 +780,6 @@ if (typeof window.ProductsManager === 'undefined') {
                 .update({ image_order: currentOrder })
                 .eq('id', targetImage.id);
 
-            // Recargar detalles del producto
-            if (this.currentProduct && this.currentProduct.id === productId) {
-                await this.loadProductDetails(productId);
-            }
             await this.loadProducts();
 
         } catch (error) {
@@ -1004,10 +895,6 @@ if (typeof window.ProductsManager === 'undefined') {
             // Limpiar input
             event.target.value = '';
 
-            // Recargar detalles del producto
-            if (this.currentProduct && this.currentProduct.id === productId) {
-            await this.loadProductDetails(productId);
-            }
             await this.loadProducts();
 
             this.showNotification(`✅ ${validFiles.length} imagen(es) agregada(s) exitosamente`, 'success');
@@ -1076,7 +963,6 @@ if (typeof window.ProductsManager === 'undefined') {
                 if (error) throw error;
             }
 
-            this.closeSidebar();
             await this.loadProducts();
             alert(this.currentProduct ? 'Producto actualizado exitosamente' : 'Producto creado exitosamente');
 
