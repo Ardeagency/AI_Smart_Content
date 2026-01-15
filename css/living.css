@@ -8,7 +8,7 @@
     padding-top: calc(48px + 2rem);
     max-width: 1600px;
     margin: 0 auto;
-    margin-left: var(--nav-width, 280px);
+    margin-left: 20px;
     transition: margin-left 0.3s ease;
     min-height: calc(100vh - 48px);
     background: #0E1012;
