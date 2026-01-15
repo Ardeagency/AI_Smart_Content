@@ -86,7 +86,7 @@
     min-height: 100vh;
     display: flex;
     position: relative;
-    padding-top: 40px;
+    padding: 40px 2rem 0 2rem;
     background: #0E1012;
     box-sizing: border-box;
 }
@@ -101,7 +101,7 @@
 
 .products-main {
     flex: 1;
-    padding: 2rem;
+    padding: 0;
     max-width: 1400px;
     margin: 0 auto;
     width: 100%;
@@ -121,7 +121,7 @@
     flex-direction: column;
     gap: 1.5rem;
     margin-bottom: 2rem;
-    padding-top: 1rem;
+    padding-top: 0;
 }
 
 .page-header-top {
