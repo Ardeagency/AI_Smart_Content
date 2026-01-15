@@ -551,11 +551,10 @@ class ProductsView extends BaseView {
   makeEditableText(element, fieldName, fieldType = 'text') {
     if (!element) return;
 
+    // Aplicar estilos sin transiciones usando función común de BaseView
     element.style.cursor = 'text';
-    element.style.transition = 'none';
-    element.style.webkitTransition = 'none';
-    element.style.mozTransition = 'none';
-    element.style.oTransition = 'none';
+    this.applyNoTransitionStyles(element);
+    
     element.setAttribute('contenteditable', 'true');
     element.classList.add('editable-field');
 
@@ -581,12 +580,8 @@ class ProductsView extends BaseView {
       }
     });
 
-    // Eliminar cualquier efecto hover
-    element.addEventListener('mouseenter', (e) => {
-      e.target.style.background = 'transparent';
-      e.target.style.transform = 'none';
-      e.target.style.boxShadow = 'none';
-    });
+    // Agregar listeners para prevenir efectos hover usando función común
+    this.addNoHoverListeners(element);
   }
 
   /**

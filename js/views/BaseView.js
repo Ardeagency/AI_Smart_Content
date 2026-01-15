@@ -714,6 +714,83 @@ class BaseView {
     }
     return null;
   }
+
+  /**
+   * Aplicar estilos inline para eliminar transiciones y efectos hover
+   * Función común para todos los inputs editables
+   * @param {HTMLElement} element - Elemento a estilizar
+   */
+  applyNoTransitionStyles(element) {
+    if (!element) return;
+    
+    element.style.transition = 'none';
+    element.style.webkitTransition = 'none';
+    element.style.mozTransition = 'none';
+    element.style.oTransition = 'none';
+    element.style.animation = 'none';
+    element.style.webkitAnimation = 'none';
+    element.style.mozAnimation = 'none';
+    element.style.oAnimation = 'none';
+    element.style.willChange = 'auto';
+    element.style.transform = 'none';
+    element.style.webkitTransform = 'none';
+    element.style.mozTransform = 'none';
+    element.style.oTransform = 'none';
+    element.style.scale = '1';
+    element.style.zoom = '1';
+  }
+
+  /**
+   * Función para forzar tamaños fijos en eventos del cursor
+   * @param {HTMLElement} target - Elemento objetivo
+   */
+  forceFixedSize(target) {
+    if (!target) return;
+    
+    const computedStyle = window.getComputedStyle(target);
+    const fontSize = computedStyle.fontSize;
+    const lineHeight = computedStyle.lineHeight;
+    const letterSpacing = computedStyle.letterSpacing;
+    
+    target.style.background = 'transparent';
+    target.style.borderColor = 'transparent';
+    target.style.padding = '0';
+    target.style.margin = '0';
+    target.style.transform = 'none';
+    target.style.webkitTransform = 'none';
+    target.style.mozTransform = 'none';
+    target.style.oTransform = 'none';
+    target.style.boxShadow = 'none';
+    target.style.width = 'auto';
+    target.style.height = 'auto';
+    target.style.minWidth = 'auto';
+    target.style.maxWidth = 'none';
+    target.style.minHeight = 'auto';
+    target.style.maxHeight = 'none';
+    target.style.scale = '1';
+    target.style.zoom = '1';
+    target.style.fontSize = fontSize;
+    target.style.lineHeight = lineHeight;
+    target.style.letterSpacing = letterSpacing;
+    
+    // Aplicar estilos sin transición
+    this.applyNoTransitionStyles(target);
+  }
+
+  /**
+   * Agregar event listeners para prevenir efectos hover
+   * @param {HTMLElement} element - Elemento al que agregar listeners
+   */
+  addNoHoverListeners(element) {
+    if (!element) return;
+    
+    const events = ['mouseenter', 'mouseleave', 'mouseover', 'mouseout', 'focus', 'blur', 'click'];
+    events.forEach(eventType => {
+      element.addEventListener(eventType, (e) => {
+        this.forceFixedSize(e.target);
+      }, { passive: true });
+    });
+  }
 }
 
 // Hacer disponible globalmente

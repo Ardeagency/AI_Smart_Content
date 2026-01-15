@@ -982,40 +982,33 @@ class BrandsView extends BaseView {
       });
     }
 
-    // Esencia - hacer editables los campos
-    const quienesSomos = container.querySelector('.info-field-value');
-    if (quienesSomos && quienesSomos.textContent.includes(this.brandData?.quienes_somos || '')) {
-      quienesSomos.style.cursor = 'text';
-      quienesSomos.setAttribute('contenteditable', 'true');
-      quienesSomos.addEventListener('blur', () => {
-        this.saveBrandField('quienes_somos', quienesSomos.textContent.trim());
-      });
-    }
-
-    // Buscar todos los campos editables y hacerlos editables
+    // Esencia - hacer editables los campos usando makeEditableText() unificado
     container.querySelectorAll('.info-field-value').forEach(field => {
       const label = field.previousElementSibling;
       if (!label || !label.classList.contains('info-field-label')) return;
 
       const labelText = label.textContent.trim();
-      let fieldName = null;
 
-      // Mapear labels a field names
+      // Mapear labels a field names y usar makeEditableText() unificado
       if (labelText === 'Quiénes somos') {
-        field.style.cursor = 'text';
-        field.setAttribute('contenteditable', 'true');
-        field.classList.add('editable-field');
-        field.addEventListener('blur', () => {
-          const value = field.textContent.trim();
-          this.saveBrandField('quienes_somos', value);
+        this.makeEditableText(field, 'quienes_somos', 'brand', () => {
+          const infoCard = document.querySelector('.card-info.expanded');
+          if (infoCard) {
+            const content = infoCard.querySelector('.card-content-expanded');
+            if (content) {
+              this.renderInfoPanelContent(content);
+            }
+          }
         });
       } else if (labelText === 'Personalidad') {
-        field.style.cursor = 'text';
-        field.setAttribute('contenteditable', 'true');
-        field.classList.add('editable-field');
-        field.addEventListener('blur', () => {
-          const value = field.textContent.trim();
-          this.saveBrandField('personalidad_marca', value);
+        this.makeEditableText(field, 'personalidad_marca', 'brand', () => {
+          const infoCard = document.querySelector('.card-info.expanded');
+          if (infoCard) {
+            const content = infoCard.querySelector('.card-content-expanded');
+            if (content) {
+              this.renderInfoPanelContent(content);
+            }
+          }
         });
       } else if (labelText === 'Tono de voz') {
         // Dropdown para tono de voz
@@ -1042,20 +1035,24 @@ class BrandsView extends BaseView {
           });
         });
       } else if (labelText === 'Palabras a usar') {
-        field.style.cursor = 'text';
-        field.setAttribute('contenteditable', 'true');
-        field.classList.add('editable-field');
-        field.addEventListener('blur', () => {
-          const value = field.textContent.trim();
-          this.saveBrandField('palabras_usar', value);
+        this.makeEditableText(field, 'palabras_usar', 'brand', () => {
+          const infoCard = document.querySelector('.card-info.expanded');
+          if (infoCard) {
+            const content = infoCard.querySelector('.card-content-expanded');
+            if (content) {
+              this.renderInfoPanelContent(content);
+            }
+          }
         });
       } else if (labelText === 'Reglas generales') {
-        field.style.cursor = 'text';
-        field.setAttribute('contenteditable', 'true');
-        field.classList.add('editable-field');
-        field.addEventListener('blur', () => {
-          const value = field.textContent.trim();
-          this.saveBrandField('reglas_creativas', value);
+        this.makeEditableText(field, 'reglas_creativas', 'brand', () => {
+          const infoCard = document.querySelector('.card-info.expanded');
+          if (infoCard) {
+            const content = infoCard.querySelector('.card-content-expanded');
+            if (content) {
+              this.renderInfoPanelContent(content);
+            }
+          }
         });
       }
     });
@@ -1643,71 +1640,15 @@ class BrandsView extends BaseView {
   makeEditableText(element, fieldName, table = 'container', onSave = null) {
     if (!element) return;
 
-    // ELIMINAR COMPLETAMENTE TODAS LAS TRANSICIONES Y EFECTOS
+    // Aplicar estilos sin transiciones usando función común de BaseView
     element.style.cursor = 'text';
-    element.style.transition = 'none';
-    element.style.webkitTransition = 'none';
-    element.style.mozTransition = 'none';
-    element.style.oTransition = 'none';
-    element.style.animation = 'none';
-    element.style.webkitAnimation = 'none';
-    element.style.mozAnimation = 'none';
-    element.style.oAnimation = 'none';
-    element.style.willChange = 'auto';
-    element.style.transform = 'none';
-    element.style.webkitTransform = 'none';
-    element.style.mozTransform = 'none';
-    element.style.oTransform = 'none';
-    element.style.scale = '1';
-    element.style.zoom = '1';
+    this.applyNoTransitionStyles(element);
     
     element.setAttribute('contenteditable', 'true');
     element.classList.add('editable-field');
     
-    // Función para forzar tamaños fijos
-    const forceFixedSize = (target) => {
-      const computedStyle = window.getComputedStyle(target);
-      const fontSize = computedStyle.fontSize;
-      const lineHeight = computedStyle.lineHeight;
-      const letterSpacing = computedStyle.letterSpacing;
-      
-      target.style.background = 'transparent';
-      target.style.borderColor = 'transparent';
-      target.style.padding = '0';
-      target.style.margin = '0';
-      target.style.transform = 'none';
-      target.style.webkitTransform = 'none';
-      target.style.mozTransform = 'none';
-      target.style.oTransform = 'none';
-      target.style.boxShadow = 'none';
-      target.style.width = 'auto';
-      target.style.height = 'auto';
-      target.style.minWidth = 'auto';
-      target.style.maxWidth = 'none';
-      target.style.minHeight = 'auto';
-      target.style.maxHeight = 'none';
-      target.style.scale = '1';
-      target.style.zoom = '1';
-      target.style.fontSize = fontSize;
-      target.style.lineHeight = lineHeight;
-      target.style.letterSpacing = letterSpacing;
-      target.style.transition = 'none';
-      target.style.webkitTransition = 'none';
-      target.style.mozTransition = 'none';
-      target.style.oTransition = 'none';
-      target.style.animation = 'none';
-      target.style.webkitAnimation = 'none';
-      target.style.mozAnimation = 'none';
-      target.style.oAnimation = 'none';
-      target.style.willChange = 'auto';
-    };
-    
-    // Prevenir cualquier efecto hover/active/focus con event listeners
-    ['mouseenter', 'mouseleave', 'mouseover', 'mouseout', 'focus', 'blur', 'click'].forEach(eventType => {
-      element.addEventListener(eventType, (e) => {
-        forceFixedSize(e.target);
-      }, { passive: true });
-    });
+    // Agregar listeners para prevenir efectos hover usando función común
+    this.addNoHoverListeners(element);
 
     element.addEventListener('blur', async () => {
       const value = element.textContent.trim();
