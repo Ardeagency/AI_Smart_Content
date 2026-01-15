@@ -337,18 +337,8 @@ a:hover {
     color: var(--text-primary);
     font-size: 0.95rem;
     font-family: 'Inter', sans-serif;
-    transition: none;
+    transition: var(--transition);
     box-sizing: border-box;
-}
-
-/* Eliminar TODOS los efectos hover de inputs */
-.form-input:hover,
-.form-select:hover,
-.form-textarea:hover {
-    background: var(--bg-secondary);
-    border-color: var(--border-color);
-    transform: none;
-    box-shadow: none;
 }
 
 .form-input:focus,
@@ -358,7 +348,6 @@ a:hover {
     border-color: var(--accent-yellow);
     background: var(--bg-card);
     box-shadow: 0 0 0 3px var(--accent-yellow-glow);
-    transition: none;
 }
 
 .form-input::placeholder,
