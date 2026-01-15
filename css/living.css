@@ -5,11 +5,11 @@
 
 .living-container {
     padding: 2rem;
+    padding-top: calc(48px + 2rem);
     max-width: 1600px;
     margin: 0 auto;
     margin-left: var(--nav-width, 280px);
     transition: margin-left 0.3s ease;
-    padding-top: calc(48px + 2rem);
     min-height: calc(100vh - 48px);
     background: #0E1012;
 }
@@ -34,7 +34,6 @@ body.sidebar-collapsed .living-container {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
-    margin-bottom: 1.5rem;
 }
 
 .living-dashboard-grid .full-width {
@@ -71,6 +70,7 @@ body.sidebar-collapsed .living-container {
     margin-bottom: 1.5rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    flex-shrink: 0;
 }
 
 .card-header h2 {
@@ -91,9 +91,6 @@ body.sidebar-collapsed .living-container {
 /* ============================================
    CARD: USO DE TOKENS
    ============================================ */
-.tokens-card {
-    min-height: 200px;
-}
 
 .tokens-visualization {
     display: flex;
@@ -104,7 +101,7 @@ body.sidebar-collapsed .living-container {
 .tokens-stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
+    gap: 0.75rem;
 }
 
 .token-stat {
@@ -154,14 +151,11 @@ body.sidebar-collapsed .living-container {
 /* ============================================
    CARD: IMÁGENES DEL DÍA
    ============================================ */
-.images-card {
-    min-height: 200px;
-}
 
 .images-of-day {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
+    gap: 0.75rem;
 }
 
 .image-of-day-item {
@@ -205,9 +199,6 @@ body.sidebar-collapsed .living-container {
 /* ============================================
    CARD: PRODUCTO FAVORITO
    ============================================ */
-.favorite-product-card {
-    min-height: 200px;
-}
 
 .favorite-product {
     display: flex;
@@ -217,7 +208,7 @@ body.sidebar-collapsed .living-container {
 
 .favorite-product-content {
     display: flex;
-    gap: 1rem;
+    gap: 1.25rem;
     align-items: flex-start;
 }
 
@@ -269,7 +260,7 @@ body.sidebar-collapsed .living-container {
 .favorite-product-stats {
     display: flex;
     gap: 1.5rem;
-    margin-top: 0.5rem;
+    margin-top: 0.75rem;
 }
 
 .favorite-product-stat {
@@ -294,9 +285,6 @@ body.sidebar-collapsed .living-container {
 /* ============================================
    CARD: MAYOR PRODUCCIÓN
    ============================================ */
-.top-production-card {
-    min-height: 200px;
-}
 
 .top-production-product {
     display: flex;
@@ -306,7 +294,7 @@ body.sidebar-collapsed .living-container {
 
 .top-production-content {
     display: flex;
-    gap: 1rem;
+    gap: 1.25rem;
     align-items: flex-start;
 }
 
@@ -341,6 +329,7 @@ body.sidebar-collapsed .living-container {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    min-width: 0;
 }
 
 .top-production-name {
@@ -386,13 +375,13 @@ body.sidebar-collapsed .living-container {
    CARD: ÚLTIMAS PRODUCCIONES
    ============================================ */
 .latest-productions-card {
-    min-height: 300px;
+    min-height: 400px;
 }
 
 .productions-list {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.75rem;
 }
 
 .production-item {
@@ -404,6 +393,7 @@ body.sidebar-collapsed .living-container {
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     transition: none !important;
+    flex-shrink: 0;
 }
 
 .production-item:hover {
@@ -441,7 +431,7 @@ body.sidebar-collapsed .living-container {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.375rem;
     min-width: 0;
 }
 
@@ -463,7 +453,6 @@ body.sidebar-collapsed .living-container {
 .production-date {
     font-size: 0.75rem;
     color: var(--text-muted, #6B7280);
-    margin-top: 0.25rem;
 }
 
 .production-status {
@@ -484,7 +473,7 @@ body.sidebar-collapsed .living-container {
    ============================================ */
 .empty-state {
     text-align: center;
-    padding: 2rem 1rem;
+    padding: 3rem 1rem;
     color: var(--text-secondary, #A0A0A0);
 }
 
@@ -504,12 +493,22 @@ body.sidebar-collapsed .living-container {
    RESPONSIVE
    ============================================ */
 @media (max-width: 768px) {
+    .living-container {
+        padding: 1rem;
+        padding-top: calc(48px + 1rem);
+    }
+
     .living-dashboard-grid {
         gap: 1rem;
     }
 
     .living-card {
         padding: 1.25rem;
+    }
+
+    .card-header {
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.875rem;
     }
 
     .tokens-stats {
@@ -536,5 +535,9 @@ body.sidebar-collapsed .living-container {
     .production-image {
         width: 100%;
         height: 200px;
+    }
+
+    .empty-state {
+        padding: 2rem 1rem;
     }
 }

@@ -301,15 +301,18 @@ class LivingManager {
             return;
         }
 
-        // Producto favorito: el más usado en producciones (flow_runs con brand_id que corresponde a producto)
-        // Por ahora, usar el primer producto como favorito
+        // Producto favorito: el más reciente
         const favoriteProduct = this.products[0];
+        const productionCount = this.flowRuns.filter(run => {
+            // Contar producciones que puedan estar relacionadas con este producto
+            return run.brand_id && this.products.some(p => p.id === run.brand_id);
+        }).length;
 
         favoriteProductEl.innerHTML = `
             <div class="favorite-product-content">
                 <div class="favorite-product-image">
                     ${favoriteProduct.mainImage 
-                        ? `<img src="${favoriteProduct.mainImage}" alt="${favoriteProduct.nombre_producto}" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'><i class=\\'fas fa-box\\'></i></div>'">`
+                        ? `<img src="${this.escapeHtml(favoriteProduct.mainImage)}" alt="${this.escapeHtml(favoriteProduct.nombre_producto)}" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'><i class=\\'fas fa-box\\'></i></div>'">`
                         : `<div class="no-image"><i class="fas fa-box"></i></div>`
                     }
                 </div>
@@ -319,7 +322,7 @@ class LivingManager {
                     <div class="favorite-product-stats">
                         <div class="favorite-product-stat">
                             <span class="favorite-product-stat-label">Producciones</span>
-                            <span class="favorite-product-stat-value">0</span>
+                            <span class="favorite-product-stat-value">${productionCount}</span>
                         </div>
                     </div>
                 </div>
@@ -387,24 +390,24 @@ class LivingManager {
         productionsListEl.innerHTML = latestRuns.map(run => {
             // Buscar output de imagen para este run
             const imageOutput = this.flowOutputs.find(output => output.run_id === run.id);
-            const product = this.products.find(p => p.id === run.brand_id) || null;
+            const product = run.brand_id ? this.products.find(p => p.id === run.brand_id) : null;
 
             return `
                 <div class="production-item">
                     <div class="production-image">
                         ${imageOutput 
-                            ? `<img src="${imageOutput.file_url}" alt="Producción" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'><i class=\\'fas fa-file-image\\'></i></div>'">`
+                            ? `<img src="${this.escapeHtml(imageOutput.file_url)}" alt="Producción" onerror="this.parentElement.innerHTML='<div class=\\'no-image\\'><i class=\\'fas fa-file-image\\'></i></div>'">`
                             : `<div class="no-image"><i class="fas fa-file-image"></i></div>`
                         }
                     </div>
                     <div class="production-info">
-                        <h4 class="production-title">${run.status || 'Producción'}</h4>
-                        ${product ? `<p class="production-product">${this.escapeHtml(product.nombre_producto)}</p>` : ''}
+                        <h4 class="production-title">${this.escapeHtml(run.status || 'Producción')}</h4>
+                        ${product ? `<p class="production-product">${this.escapeHtml(product.nombre_producto)}</p>` : '<p class="production-product">Sin producto asociado</p>'}
                         <p class="production-date">${this.formatDate(run.created_at)}</p>
                     </div>
                     <div class="production-status">
                         <i class="fas fa-check-circle"></i>
-                        <span>${run.status}</span>
+                        <span>${this.escapeHtml(run.status || 'Completado')}</span>
                     </div>
                 </div>
             `;
