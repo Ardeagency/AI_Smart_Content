@@ -753,37 +753,75 @@ class BaseView {
     const letterSpacing = computedStyle.letterSpacing;
     const border = computedStyle.border;
     const borderColor = computedStyle.borderColor;
+    const padding = computedStyle.padding;
+    const width = computedStyle.width;
+    const height = computedStyle.height;
+    const minHeight = computedStyle.minHeight;
+    
+    // Detectar elementos protegidos que NO deben tener sus estilos reseteados
     const isBrandName = target.classList && target.classList.contains('brand-name-large');
     const isInfoEditable = target.classList && target.classList.contains('info-editable');
     const isInfoPanel = target.closest && target.closest('.card-content-expanded');
+    const isProductEditable = target.classList && (
+      target.classList.contains('product-editable') ||
+      target.classList.contains('editable-field') ||
+      target.classList.contains('editable-textarea') ||
+      target.classList.contains('editable-select')
+    );
+    const isProductSection = target.closest && target.closest('.product-data-section');
     
-    target.style.background = 'transparent';
-    // PRESERVAR BORDE ORIGINAL - NO CAMBIAR
+    // Para elementos protegidos, preservar TODOS los estilos CSS importantes
+    const isProtected = isBrandName || isInfoEditable || isInfoPanel || isProductEditable || isProductSection;
+    
+    // Solo aplicar background transparent si no está protegido o si el CSS no lo define
+    if (!isProtected || computedStyle.background === 'rgba(0, 0, 0, 0)' || computedStyle.background === 'transparent') {
+      target.style.background = 'transparent';
+    }
+    
+    // PRESERVAR BORDE ORIGINAL - SIEMPRE usar el borde del CSS
     if (border && border !== 'none' && border !== '0px') {
       target.style.border = border;
       target.style.borderColor = borderColor;
-    } else {
+    } else if (!isProtected) {
       target.style.borderColor = 'transparent';
     }
-    if (!isBrandName && !isInfoEditable && !isInfoPanel) {
+    
+    // NO resetear padding/width/height para elementos protegidos
+    if (!isProtected) {
       target.style.padding = '0';
       target.style.margin = '0';
-    }
-    target.style.transform = 'none';
-    target.style.webkitTransform = 'none';
-    target.style.mozTransform = 'none';
-    target.style.oTransform = 'none';
-    target.style.boxShadow = 'none';
-    if (!isBrandName && !isInfoEditable && !isInfoPanel) {
       target.style.width = 'auto';
       target.style.height = 'auto';
       target.style.minWidth = 'auto';
       target.style.maxWidth = 'none';
       target.style.minHeight = 'auto';
       target.style.maxHeight = 'none';
+    } else {
+      // Para elementos protegidos, preservar los valores del CSS
+      if (padding && padding !== '0px') {
+        target.style.padding = padding;
+      }
+      if (width && width !== 'auto') {
+        target.style.width = width;
+      }
+      if (height && height !== 'auto') {
+        target.style.height = height;
+      }
+      if (minHeight && minHeight !== 'auto' && minHeight !== '0px') {
+        target.style.minHeight = minHeight;
+      }
     }
+    
+    // Siempre prevenir transformaciones y animaciones
+    target.style.transform = 'none';
+    target.style.webkitTransform = 'none';
+    target.style.mozTransform = 'none';
+    target.style.oTransform = 'none';
+    target.style.boxShadow = 'none';
     target.style.scale = '1';
     target.style.zoom = '1';
+    
+    // Preservar tipografía
     target.style.fontSize = fontSize;
     target.style.lineHeight = lineHeight;
     target.style.letterSpacing = letterSpacing;

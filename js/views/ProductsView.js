@@ -557,6 +557,7 @@ class ProductsView extends BaseView {
     
     element.setAttribute('contenteditable', 'true');
     element.classList.add('editable-field');
+    element.classList.add('product-editable'); // Clase para protección en forceFixedSize
 
     const originalValue = this.productData?.[fieldName] || '';
 
@@ -639,7 +640,7 @@ class ProductsView extends BaseView {
     const originalValue = this.productData?.[fieldName] || '';
 
     const select = document.createElement('select');
-    select.className = 'editable-select';
+    select.className = 'editable-select product-editable'; // Clase para protección
     select.style.width = '100%';
     select.style.padding = '0.75rem 1rem';
     select.style.background = 'transparent';
@@ -648,10 +649,10 @@ class ProductsView extends BaseView {
     select.style.color = 'var(--text-primary, #F2F3F5)';
     select.style.fontSize = '0.875rem';
     select.style.cursor = 'default';
-    select.style.transition = 'none';
-    select.style.webkitTransition = 'none';
-    select.style.mozTransition = 'none';
-    select.style.oTransition = 'none';
+    
+    // Aplicar protección completa usando funciones de BaseView
+    this.applyNoTransitionStyles(select);
+    this.addNoHoverListeners(select);
 
     options.forEach(opt => {
       const option = document.createElement('option');
