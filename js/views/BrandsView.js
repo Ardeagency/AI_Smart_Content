@@ -583,81 +583,25 @@ class BrandsView extends BaseView {
     // Agregar contenido a la card
     infoCard.appendChild(content);
     
-    // Obtener posición inicial de la card antes de moverla
-    const cardRect = infoCard.getBoundingClientRect();
+    // Obtener contenedor principal
     const dashboardContainer = container.querySelector('.brand-dashboard-container') || container;
-    const containerRect = dashboardContainer.getBoundingClientRect();
     
-    // Calcular posición relativa al contenedor
-    const initialTop = cardRect.top - containerRect.top;
-    const initialRight = containerRect.right - cardRect.right;
+    // Cambiar a modo secundario: centrado con márgenes
+    dashboardContainer.classList.add('info-mode-secondary');
+    dashboardContainer.classList.remove('info-expanded'); // Limpiar clase antigua si existe
     
-    // Mover la card fuera del contenedor de cards y al contenedor principal
+    // Mover la card fuera del contenedor de cards al contenedor principal
     infoCard.classList.add('expanded');
     dashboardContainer.appendChild(infoCard);
     
-    // Establecer posición inicial (donde estaba)
-    infoCard.style.position = 'absolute';
-    infoCard.style.top = `${initialTop}px`;
-    infoCard.style.right = `${initialRight}px`;
-    infoCard.style.width = `${cardRect.width}px`;
-    infoCard.style.height = `${cardRect.height}px`;
-    
-    // Marcar contenedor como expandido para permitir scroll
-    dashboardContainer.classList.add('info-expanded');
-    
-    // Esperar a que el contenido se renderice para calcular altura
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        const contentHeight = content.scrollHeight;
-        const cardHeaderHeight = infoCard.querySelector('.card-header')?.offsetHeight || 60;
-        const padding = 40; // padding top + bottom
-        const expandedHeight = contentHeight + cardHeaderHeight + padding;
-        
-        // Calcular ancho disponible con márgenes de 20px
-        // Verificar si el sidebar está colapsado
-        const isSidebarCollapsed = document.body.classList.contains('sidebar-collapsed') || 
-                                   document.querySelector('.side-navigation.collapsed');
-        const navWidth = isSidebarCollapsed 
-          ? (window.getComputedStyle(document.documentElement).getPropertyValue('--nav-width-collapsed') || '64px')
-          : (window.getComputedStyle(document.documentElement).getPropertyValue('--nav-width') || '280px');
-        const navWidthNum = parseInt(navWidth);
-        const availableWidth = window.innerWidth - navWidthNum - 40; // 20px margen a cada lado
-        
-        // Animar expansión a posición final con márgenes
-        infoCard.style.transition = 'top 0.5s cubic-bezier(0.4, 0, 0.2, 1), right 0.5s cubic-bezier(0.4, 0, 0.2, 1), width 0.5s cubic-bezier(0.4, 0, 0.2, 1), height 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
-        
-        setTimeout(() => {
-          infoCard.style.top = '20px';
-          infoCard.style.right = '20px';
-          infoCard.style.width = `${availableWidth}px`;
-          infoCard.style.height = `${expandedHeight}px`;
-        }, 10);
-        
-        // Animar otras cards hacia abajo
-        otherCards.forEach((card, index) => {
-          card.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
-          card.style.transform = `translateY(${expandedHeight - 50}px)`;
-        });
-        
-        // Animar nombre de marca hacia abajo
-        if (cornerInfo) {
-          cornerInfo.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
-          cornerInfo.style.transform = `translateY(${expandedHeight - 50}px)`;
-        }
-        
-        // Actualizar estado con altura calculada
-        this.infoPanelState.expandedHeight = expandedHeight;
-        this.infoPanelState.dashboardContainer = dashboardContainer;
-        this.infoPanelState.cardsZone = cardsZone;
-        this.infoPanelState.initialPosition = {
-          top: initialTop,
-          right: initialRight,
-          width: cardRect.width,
-          height: cardRect.height
-        };
-      });
-    });
+    // Guardar referencia del contenedor de cards para restaurar después
+    this.infoPanelState = {
+      otherCards,
+      cornerInfo,
+      infoCard,
+      dashboardContainer,
+      cardsZone
+    };
     
     // Guardar estado
     this.infoPanelState = {
@@ -678,75 +622,44 @@ class BrandsView extends BaseView {
     
     if (!this.infoPanelState) return;
     
-    const { otherCards, cornerInfo, dashboardContainer, cardsZone, initialPosition } = this.infoPanelState;
+    const { dashboardContainer, cardsZone } = this.infoPanelState;
     
-    // Mover otras cards y nombre de marca hacia arriba (empujando INFO hacia arriba)
-    otherCards.forEach(card => {
-      card.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
-      card.style.transform = 'translateY(0)';
-    });
+    // Remover clase expandida de la card
+    infoCard.classList.remove('expanded');
     
-    if (cornerInfo) {
-      cornerInfo.style.transition = 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
-      cornerInfo.style.transform = 'translateY(0)';
+    // Volver a modo principal: remover modo secundario
+    if (dashboardContainer) {
+      dashboardContainer.classList.remove('info-mode-secondary');
     }
     
-    // Contraer la card a su posición y tamaño original
-    if (initialPosition) {
-      infoCard.style.top = `${initialPosition.top}px`;
-      infoCard.style.right = `${initialPosition.right}px`;
-      infoCard.style.width = `${initialPosition.width}px`;
-      infoCard.style.height = `${initialPosition.height}px`;
+    // Remover contenido expandido
+    const content = infoCard.querySelector('.card-content-expanded');
+    if (content) {
+      content.remove();
     }
     
-    // Esperar a que termine la animación de contracción
-    setTimeout(() => {
-      // Remover clase expandida
-      infoCard.classList.remove('expanded');
-      
-      // Remover clase de contenedor expandido
-      if (dashboardContainer) {
-        dashboardContainer.classList.remove('info-expanded');
-      }
-      
-      // Remover contenido expandido
-      const content = infoCard.querySelector('.card-content-expanded');
-      if (content) {
-        content.remove();
-      }
-      
-      // Remover botón cerrar
-      const closeBtn = infoCard.querySelector('.info-close-btn');
-      if (closeBtn) {
-        closeBtn.remove();
-      }
-      
-      // Remover estilos de posición absoluta
-      infoCard.style.position = '';
-      infoCard.style.top = '';
-      infoCard.style.right = '';
-      infoCard.style.width = '';
-      infoCard.style.height = '';
-      infoCard.style.transition = '';
-      
-      // Devolver la card al contenedor de cards
-      if (cardsZone) {
-        cardsZone.insertBefore(infoCard, cardsZone.firstChild);
-      }
-      
-      // Limpiar estilos de otras cards
-      otherCards.forEach(card => {
-        card.style.transition = '';
-        card.style.transform = '';
-      });
-      
-      if (cornerInfo) {
-        cornerInfo.style.transition = '';
-        cornerInfo.style.transform = '';
-      }
-      
-      this.infoPanelState = null;
-    }, 500);
+    // Remover botón cerrar
+    const closeBtn = infoCard.querySelector('.info-close-btn');
+    if (closeBtn) {
+      closeBtn.remove();
+    }
+    
+    // Limpiar estilos de la card
+    infoCard.style.position = '';
+    infoCard.style.top = '';
+    infoCard.style.right = '';
+    infoCard.style.width = '';
+    infoCard.style.height = '';
+    infoCard.style.transition = '';
+    infoCard.style.margin = '';
+    infoCard.style.maxWidth = '';
+    
+    // Devolver la card al contenedor de cards (al inicio)
+    if (cardsZone) {
+      cardsZone.insertBefore(infoCard, cardsZone.firstChild);
+    }
+    
+    this.infoPanelState = null;
   }
 
   renderInfoPanelContent(container) {

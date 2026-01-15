@@ -31,14 +31,30 @@
     bottom: 0;
     overflow: hidden;
     background: var(--brand-warm-4);
-    transition: left 0.3s ease, overflow 0.3s ease;
+    transition: left 0.3s ease;
     padding-top: 48px; /* Espacio para header transparente */
 }
 
-.brand-dashboard-container.info-expanded {
+/* ============================================
+   MODO SECUNDARIO: INFO EXPANDIDO
+   ============================================ */
+.brand-dashboard-container.info-mode-secondary {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
     overflow-y: auto;
     overflow-x: hidden;
-    position: relative;
+    padding: 15px;
+    padding-top: 63px; /* 48px header + 15px margen */
+    transition: all 0.3s ease;
+}
+
+/* Ocultar elementos del modo principal cuando está en modo secundario */
+.brand-dashboard-container.info-mode-secondary .brand-cards-zone,
+.brand-dashboard-container.info-mode-secondary .brand-corner-bottom-left {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
 }
 
 .side-navigation.collapsed ~ * .brand-dashboard-container,
@@ -387,19 +403,21 @@ body.sidebar-collapsed .brand-dashboard-container {
     border-color: rgba(255, 255, 255, 0.2);
 }
 
-/* INFO expandida - Sale del contenedor de cards */
-.card-info.expanded {
-    position: absolute !important;
-    z-index: 1000;
+/* INFO expandida - Modo secundario */
+.brand-dashboard-container.info-mode-secondary .card-info.expanded {
+    position: relative !important;
+    width: 100% !important;
+    max-width: 1200px;
     min-height: 500px;
     padding: 1.25rem;
-    margin: 0;
-    /* Posición y tamaño se establecen dinámicamente en JS */
+    margin: 0 auto;
+    z-index: 100;
+    height: auto !important;
 }
 
-.side-navigation.collapsed ~ * .card-info.expanded,
-body.sidebar-collapsed .card-info.expanded {
-    /* El ancho se calcula dinámicamente en JS considerando el sidebar colapsado */
+/* Asegurar que en modo secundario la card esté visible */
+.brand-dashboard-container.info-mode-secondary .card-info.expanded {
+    display: block !important;
 }
 
 .card-info.expanded .card-content-expanded {
