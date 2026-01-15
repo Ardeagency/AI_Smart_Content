@@ -153,7 +153,7 @@ body.sidebar-collapsed .brand-dashboard-container {
 }
 
 .brand-name-large {
-    font-size: 3rem !important;
+    font-size: 4.5rem !important;
     font-weight: 700;
     color: var(--brand-text-light);
     margin: 0;
@@ -823,7 +823,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
         width: 340px;
     }
     .brand-name-large {
-        font-size: 3rem !important;
+        font-size: 4rem !important;
     }
 }
 
@@ -832,7 +832,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
         width: 300px;
     }
     .brand-name-large {
-        font-size: 3rem !important;
+        font-size: 3.5rem !important;
     }
     .brand-main-info {
         flex-direction: column;
