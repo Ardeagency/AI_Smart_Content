@@ -161,12 +161,22 @@ body.sidebar-collapsed .brand-dashboard-container {
     letter-spacing: -0.02em;
     line-height: 1;
     transition: none !important;
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -o-transition: none !important;
+    will-change: auto !important;
 }
 
-/* Eliminar hover del nombre de marca */
+/* Eliminar hover del nombre de marca - REGLAS MÁS ESPECÍFICAS */
 .brand-name-large:hover,
 .brand-name-large.editable-field:hover,
-[contenteditable="true"].brand-name-large:hover {
+.brand-name-large[contenteditable="true"]:hover,
+h1.brand-name-large:hover,
+h1.brand-name-large.editable-field:hover,
+h1.brand-name-large[contenteditable="true"]:hover,
+.brand-name-row:hover .brand-name-large,
+.brand-main-info:hover .brand-name-large,
+.brand-corner-bottom-left:hover .brand-name-large {
     background: transparent !important;
     border-color: transparent !important;
     padding: 0 !important;
@@ -175,6 +185,14 @@ body.sidebar-collapsed .brand-dashboard-container {
     box-shadow: none !important;
     width: auto !important;
     height: auto !important;
+    min-width: auto !important;
+    max-width: none !important;
+    min-height: auto !important;
+    max-height: none !important;
+    scale: 1 !important;
+    font-size: 3rem !important;
+    line-height: 1 !important;
+    letter-spacing: -0.02em !important;
 }
 
 /* Status dot - sin animación para evitar problemas de rendimiento */

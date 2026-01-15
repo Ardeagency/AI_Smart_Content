@@ -1644,8 +1644,37 @@ class BrandsView extends BaseView {
     if (!element) return;
 
     element.style.cursor = 'text';
+    element.style.transition = 'none';
+    element.style.webkitTransition = 'none';
+    element.style.mozTransition = 'none';
+    element.style.oTransition = 'none';
     element.setAttribute('contenteditable', 'true');
     element.classList.add('editable-field');
+    
+    // Prevenir cualquier efecto hover con event listeners
+    element.addEventListener('mouseenter', (e) => {
+      e.target.style.background = 'transparent';
+      e.target.style.borderColor = 'transparent';
+      e.target.style.padding = '0';
+      e.target.style.margin = '0';
+      e.target.style.transform = 'none';
+      e.target.style.boxShadow = 'none';
+      e.target.style.width = 'auto';
+      e.target.style.height = 'auto';
+      e.target.style.scale = '1';
+    });
+    
+    element.addEventListener('mouseleave', (e) => {
+      e.target.style.background = 'transparent';
+      e.target.style.borderColor = 'transparent';
+      e.target.style.padding = '0';
+      e.target.style.margin = '0';
+      e.target.style.transform = 'none';
+      e.target.style.boxShadow = 'none';
+      e.target.style.width = 'auto';
+      e.target.style.height = 'auto';
+      e.target.style.scale = '1';
+    });
 
     element.addEventListener('blur', async () => {
       const value = element.textContent.trim();
