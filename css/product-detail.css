@@ -23,7 +23,8 @@
     left: var(--nav-width, 280px);
     right: 0;
     bottom: 0;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
     background: linear-gradient(135deg, 
         var(--product-warm-5) 0%,
         var(--product-warm-4) 25%,
@@ -33,7 +34,6 @@
     );
     transition: left 0.3s ease;
     padding-top: 48px; /* Espacio para header transparente */
-    overflow-y: auto;
 }
 
 .side-navigation.collapsed ~ * .product-detail-container,
@@ -52,6 +52,7 @@ body.sidebar-collapsed .product-detail-container {
     max-width: 1600px;
     margin: 0 auto;
     min-height: calc(100vh - 48px);
+    position: relative;
 }
 
 @media (max-width: 1200px) {
@@ -69,6 +70,8 @@ body.sidebar-collapsed .product-detail-container {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    overflow: visible;
+    position: relative;
 }
 
 .product-images-gallery {
@@ -236,6 +239,7 @@ body.sidebar-collapsed .product-detail-container {
     line-height: 1.5;
     min-height: 2.5rem;
     transition: all 0.2s ease;
+    cursor: default !important;
 }
 
 .editable-field:hover {
@@ -254,10 +258,11 @@ body.sidebar-collapsed .product-detail-container {
     min-height: 120px;
     resize: vertical;
     font-family: inherit;
+    cursor: default !important;
 }
 
 .editable-select {
-    cursor: pointer;
+    cursor: default !important;
 }
 
 .editable-select option {

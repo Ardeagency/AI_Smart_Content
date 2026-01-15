@@ -551,7 +551,7 @@ class ProductsView extends BaseView {
   makeEditableText(element, fieldName, fieldType = 'text') {
     if (!element) return;
 
-    element.style.cursor = 'text';
+    element.style.cursor = 'default';
     element.setAttribute('contenteditable', 'true');
     element.classList.add('editable-field');
 
