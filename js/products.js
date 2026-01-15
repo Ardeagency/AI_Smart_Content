@@ -460,11 +460,14 @@ if (typeof window.ProductsManager === 'undefined') {
             </div>
         `;
 
-        // Event listener para click en la card (puede abrir modal de edición en el futuro)
+        // Event listener para click en la card - navegar al detalle
         card.addEventListener('click', (e) => {
             e.stopPropagation();
-            // TODO: Implementar modal de edición si es necesario
-            console.log('Ver/Editar producto:', product.id);
+            if (window.router) {
+                window.router.navigate(`/products/${product.id}`);
+            } else {
+                window.location.href = `/products/${product.id}`;
+            }
         });
 
         return card;
