@@ -11,9 +11,11 @@
     --nav-width-collapsed: 64px;
     --nav-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --nav-overlay: rgba(0, 0, 0, 0.8);
-    --nav-bg: var(--bg-secondary);
-    --nav-border: var(--border-color);
-    --nav-separator: var(--border-divider);
+    --nav-bg: #0E1115; /* Panel estructurado, distinto al canvas principal */
+    --nav-border: rgba(255, 255, 255, 0.06); /* Divider vertical ultra sutil */
+    --nav-separator: rgba(255, 255, 255, 0.06);
+    --nav-item-height: 44px; /* Altura consistente para items primarios */
+    --nav-item-height-sub: 36px; /* Altura para subitems */
 }
 
 /* =========================================
@@ -404,15 +406,21 @@ body.sidebar-collapsed #app-container .main-header,
    CAPA SUPERIOR: IDENTIDAD + ORGANIZACIÓN
    ========================================= */
 
+/* =========================================
+   NIVEL 0 — CONTEXTO (Organización)
+   ========================================= */
+
 .nav-identity-section {
     position: relative;
     padding: 16px;
     border-bottom: 1px solid var(--nav-separator);
+    /* Espacio extra antes del menú principal */
+    margin-bottom: 8px;
 }
 
 .nav-identity-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.03); /* Fondo ligeramente elevado */
+    border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 8px;
     padding: 12px;
     cursor: pointer;
@@ -420,8 +428,8 @@ body.sidebar-collapsed #app-container .main-header,
 }
 
 .nav-identity-card:hover {
-    background: var(--bg-hover);
-    border-color: var(--border-light);
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.08);
 }
 
 .nav-identity-content {
@@ -650,11 +658,15 @@ body.sidebar-collapsed #app-container .main-header,
    MENÚ PRINCIPAL
    ========================================= */
 
+/* =========================================
+   MENÚ PRINCIPAL — RITMO VERTICAL
+   ========================================= */
+
 .nav-menu {
-    padding: 16px;
+    padding: 8px 12px 16px 12px;
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 0; /* Sin gap fijo, usamos margin en items */
     overflow-y: auto;
     overflow-x: hidden;
     flex: 1;
@@ -767,9 +779,9 @@ body.sidebar-collapsed #app-container .main-header,
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     transition: opacity 0.15s ease;
     opacity: 1;
-    overflow: visible; /* Cambiar de hidden a visible para que no se corte la "g" */
-    line-height: 1.5; /* Aumentar line-height para que la "g" no se corte */
-    padding-top: 1px; /* Pequeño padding superior para dar espacio a descenders */
+    overflow: visible;
+    line-height: 1.4;
+    padding-top: 0;
 }
 
 .nav-badge {
