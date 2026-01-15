@@ -301,19 +301,6 @@ body.sidebar-collapsed .product-detail-container {
     scale: 1 !important;
 }
 
-/* BORDE FIJO - NO CAMBIA EN HOVER */
-.editable-field:hover,
-.editable-field:active {
-    background: transparent !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-color: rgba(255, 255, 255, 0.1) !important;
-    transform: none !important;
-    box-shadow: none !important;
-    outline: none !important;
-    transition: none !important;
-    scale: 1 !important;
-}
-
 /* BLOQUEO GLOBAL EN PRODUCT DETAIL (evitar resets de base.css) */
 .product-detail-container .product-data-section .editable-field:hover,
 .product-detail-container .product-data-section .editable-field:active,
