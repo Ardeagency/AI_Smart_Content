@@ -811,7 +811,7 @@ body.sidebar-collapsed #app-container .main-header,
 /* Dominio 4: Producción (operativo, activo) - ahora debajo de Entidades */
 .nav-item-has-submenu[data-submenu="produccion"] {
     margin-top: 0;
-    margin-bottom: 24px; /* Espacio real después de Producción */
+    margin-bottom: 5px; /* Espacio reducido después de Producción */
 }
 
 /* Dominio 5: Audiencias + Marketing (juntos, mismo peso) */
