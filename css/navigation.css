@@ -427,6 +427,7 @@ body.sidebar-collapsed #app-container .main-header,
 .nav-identity-content {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 10px;
 }
 
@@ -459,6 +460,9 @@ body.sidebar-collapsed #app-container .main-header,
 .nav-identity-info {
     flex: 1;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
 .nav-org-name {
@@ -602,11 +606,6 @@ body.sidebar-collapsed #app-container .main-header,
 .side-navigation.collapsed .nav-identity-info,
 .side-navigation.collapsed .nav-org-chevron {
     display: none;
-}
-
-.side-navigation.collapsed .nav-logo-icon {
-    width: 100%;
-    height: 32px;
 }
 
 /* Toggle button removido del sidebar - ahora está en el header */

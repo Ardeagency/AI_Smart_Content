@@ -56,9 +56,6 @@ class Navigation {
         <div class="nav-identity-section">
           <div class="nav-identity-card" id="navIdentityCard">
             <div class="nav-identity-content">
-              <div class="nav-logo-icon" id="navLogoIcon">
-                <i class="fas fa-brain"></i>
-              </div>
               <div class="nav-identity-info">
                 <div class="nav-org-name" id="navOrgName">Info Arde Agency</div>
                 <div class="nav-org-type" id="navOrgType">Personal</div>
@@ -714,7 +711,6 @@ class Navigation {
       // Actualizar UI de la organización activa
       const navOrgName = document.getElementById('navOrgName');
       const navOrgType = document.getElementById('navOrgType');
-      const navLogoIcon = document.querySelector('.nav-logo-icon');
 
       if (navOrgName) {
         navOrgName.textContent = activeOrg ? activeOrg.name : 'Mi Organización';
@@ -722,17 +718,6 @@ class Navigation {
 
       if (navOrgType) {
         navOrgType.textContent = planName;
-      }
-
-      // Actualizar logo
-      if (navLogoIcon && brandLogoUrl) {
-        // Reemplazar el ícono con la imagen del logo
-        navLogoIcon.innerHTML = `<img src="${brandLogoUrl}" alt="Logo" style="width: 100%; height: 100%; object-fit: contain; border-radius: 6px;">`;
-        navLogoIcon.style.background = 'transparent';
-      } else if (navLogoIcon) {
-        // Mantener el ícono por defecto si no hay logo
-        navLogoIcon.innerHTML = '<i class="fas fa-brain"></i>';
-        navLogoIcon.style.background = 'rgba(216, 255, 0, 0.1)';
       }
 
       // Renderizar lista de organizaciones en el dropdown
