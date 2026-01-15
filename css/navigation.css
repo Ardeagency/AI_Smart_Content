@@ -799,13 +799,13 @@ body.sidebar-collapsed #app-container .main-header,
 
 /* Dominio 2: Marca (fundacional, sólida) */
 .nav-item:nth-child(2) {
-    margin-bottom: 24px; /* Espacio real después de Marca */
+    margin-bottom: 5px; /* Espacio reducido después de Marca */
 }
 
 /* Dominio 3: Entidades (contenedor sólido) */
 .nav-item-has-submenu[data-submenu="entidades"] {
     margin-top: 0;
-    margin-bottom: 24px; /* Espacio real después de Entidades */
+    margin-bottom: 5px; /* Espacio reducido después de Entidades */
 }
 
 /* Dominio 4: Producción (operativo, activo) - ahora debajo de Entidades */
@@ -817,11 +817,11 @@ body.sidebar-collapsed #app-container .main-header,
 /* Dominio 5: Audiencias + Marketing (juntos, mismo peso) */
 .nav-item:nth-child(5),
 .nav-item:nth-child(6) {
-    margin-bottom: 4px; /* Poco espacio entre ellos */
+    margin-bottom: 5px; /* Espacio reducido entre items */
 }
 
 .nav-item:nth-child(6) {
-    margin-bottom: 24px; /* Espacio real después del bloque Audiencias/Marketing */
+    margin-bottom: 5px; /* Espacio reducido después del bloque Audiencias/Marketing */
 }
 
 /* =========================================
