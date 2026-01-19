@@ -620,7 +620,7 @@ class LivingManager {
                 <div class="featured-card-prompt-overlay">
                     <div class="featured-card-prompt-title">Prompt</div>
                     <div class="featured-card-prompt-text">${this.escapeHtml(prompt)}</div>
-                </div>
+                    </div>
                 <button class="featured-card-download-btn" title="Descargar imagen" data-image-url="${this.escapeHtml(finalImageUrl || '')}">
                     <i class="fas fa-download"></i>
                 </button>
@@ -712,12 +712,12 @@ class LivingManager {
     openViewerModal(data) {
         const modal = document.getElementById('livingViewerModal');
         const image = document.getElementById('livingViewerImage');
-        const prompt = document.getElementById('livingViewerPrompt');
-        const metadata = document.getElementById('livingViewerMetadata');
+        const promptEl = document.getElementById('livingViewerPrompt');
+        const metadataEl = document.getElementById('livingViewerMetadata');
         const closeBtn = document.getElementById('livingViewerClose');
         const backdrop = document.getElementById('livingViewerBackdrop');
         
-        if (!modal || !image || !prompt || !metadata) {
+        if (!modal || !image || !promptEl || !metadataEl) {
             console.error('❌ Elementos del modal no encontrados');
             return;
         }
@@ -732,7 +732,7 @@ class LivingManager {
         }
         
         // Cargar prompt
-        prompt.textContent = data.prompt || 'Sin prompt disponible';
+        promptEl.textContent = data.prompt || 'Sin prompt disponible';
         
         // Cargar metadatos
         const item = data.item || {};
@@ -803,7 +803,7 @@ class LivingManager {
             }
         }
         
-        metadata.innerHTML = metadataItems.length > 0
+        metadataEl.innerHTML = metadataItems.length > 0
             ? metadataItems.map(item => `
                 <div class="metadata-item">
                     <div class="metadata-label">${this.escapeHtml(item.label)}</div>

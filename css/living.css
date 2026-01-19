@@ -755,19 +755,27 @@ body.sidebar-collapsed .living-container {
 }
 
 /* ============================================
-   MODAL DE VISUALIZACIÓN
+   MODAL DE VISUALIZACIÓN - Diseño Simple
    ============================================ */
 .living-viewer-modal {
     position: fixed;
-    inset: 0;
-    z-index: 10000;
+    top: 0;
+    left: var(--nav-width, 280px); /* Respeta el sidebar */
+    right: 0;
+    bottom: 0;
+    z-index: 999; /* Debajo del sidebar (1000+) */
     display: flex;
     align-items: center;
     justify-content: center;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
+    transition: opacity 0.2s ease, visibility 0.2s ease, left 0.3s ease;
     pointer-events: none;
+}
+
+.side-navigation.collapsed ~ * .living-viewer-modal,
+body.sidebar-collapsed .living-viewer-modal {
+    left: var(--nav-width-collapsed, 64px);
 }
 
 .living-viewer-modal.active {
@@ -779,138 +787,127 @@ body.sidebar-collapsed .living-container {
 .living-viewer-backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(10px);
+    background: rgba(0, 0, 0, 0.8);
     cursor: pointer;
 }
 
 .living-viewer-container {
     position: relative;
-    z-index: 10001;
+    z-index: 1000;
     background: var(--living-bg-surface);
-    border-radius: 20px;
-    box-shadow: var(--living-shadow-deep);
-    max-width: 90vw;
+    border-radius: 8px;
+    max-width: calc(90vw - var(--nav-width, 280px));
     max-height: 90vh;
-    width: 1400px;
+    width: 1200px;
     overflow: hidden;
     display: flex;
-    flex-direction: column;
-    transform: scale(0.95);
-    transition: transform 0.3s ease;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
-.living-viewer-modal.active .living-viewer-container {
-    transform: scale(1);
+.side-navigation.collapsed ~ * .living-viewer-container,
+body.sidebar-collapsed .living-viewer-container {
+    max-width: calc(90vw - var(--nav-width-collapsed, 64px));
 }
 
 .living-viewer-close {
     position: absolute;
     top: 1rem;
     right: 1rem;
-    z-index: 10002;
-    background: rgba(0, 0, 0, 0.6);
+    z-index: 1001;
+    background: rgba(0, 0, 0, 0.5);
     border: none;
     color: var(--living-text-light);
-    font-size: 1.5rem;
-    width: 40px;
-    height: 40px;
+    font-size: 1.25rem;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background 0.2s ease;
 }
 
 .living-viewer-close:hover {
-    background: rgba(0, 0, 0, 0.8);
-    transform: rotate(90deg);
+    background: rgba(0, 0, 0, 0.7);
 }
 
 .living-viewer-content {
     display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 2rem;
-    padding: 2rem;
-    flex-grow: 1;
-    overflow: hidden;
-    max-height: calc(90vh - 4rem);
+    grid-template-columns: 1.5fr 1fr;
+    width: 100%;
+    height: 100%;
+    max-height: 90vh;
 }
 
-.living-viewer-image-section {
+.living-viewer-image {
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--living-bg-deep);
-    border-radius: 12px;
+    padding: 2rem;
     overflow: hidden;
-    position: relative;
-    min-height: 400px;
 }
 
-.living-viewer-image-section img {
-    max-width: 100%;
+.living-viewer-image img {
+        max-width: 100%;
     max-height: 100%;
     object-fit: contain;
     display: block;
 }
 
-.living-viewer-info-section {
+.living-viewer-info {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    padding: 2rem;
     overflow-y: auto;
-    padding-right: 1rem;
+    background: var(--living-bg-surface);
 }
 
-.living-viewer-prompt,
-.living-viewer-metadata {
-    background: var(--living-bg-card);
-    border-radius: 12px;
-    padding: 1.5rem;
-}
-
-.living-viewer-prompt-title,
-.living-viewer-metadata-title {
-    font-size: 1rem;
+.living-viewer-info h3 {
+    font-size: 0.75rem;
     font-weight: 600;
     color: var(--living-text-gold);
-    margin-bottom: 1rem;
+    margin: 0 0 1rem 0;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
 }
 
-.living-viewer-prompt-text {
+.living-viewer-prompt {
+    margin-bottom: 2rem;
+}
+
+.living-viewer-prompt > div {
     color: var(--living-text-light);
     line-height: 1.6;
-    font-size: 0.95rem;
+    font-size: 0.875rem;
     max-height: 300px;
     overflow-y: auto;
     padding-right: 0.5rem;
 }
 
-.living-viewer-prompt-text::-webkit-scrollbar {
-    width: 6px;
+.living-viewer-prompt > div::-webkit-scrollbar {
+    width: 4px;
 }
 
-.living-viewer-prompt-text::-webkit-scrollbar-track {
+.living-viewer-prompt > div::-webkit-scrollbar-track {
     background: transparent;
 }
 
-.living-viewer-prompt-text::-webkit-scrollbar-thumb {
+.living-viewer-prompt > div::-webkit-scrollbar-thumb {
     background: rgba(212, 117, 78, 0.3);
-    border-radius: 3px;
+    border-radius: 2px;
 }
 
-.living-viewer-metadata-content {
+.living-viewer-metadata > div {
     color: var(--living-text-light);
-    font-size: 0.875rem;
+    font-size: 0.813rem;
+    line-height: 1.5;
 }
 
 .metadata-item {
-    margin-bottom: 1rem;
-    padding-bottom: 1rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -924,38 +921,37 @@ body.sidebar-collapsed .living-container {
     font-weight: 600;
     color: var(--living-text-gold);
     margin-bottom: 0.25rem;
-    font-size: 0.813rem;
+    font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .metadata-value {
     color: var(--living-text-light);
-    line-height: 1.5;
     word-break: break-word;
 }
 
 .metadata-value pre {
     background: var(--living-bg-deep);
-    padding: 0.75rem;
-    border-radius: 8px;
+    padding: 0.5rem;
+    border-radius: 4px;
     overflow-x: auto;
-    font-size: 0.813rem;
+    font-size: 0.75rem;
     margin-top: 0.5rem;
 }
 
 @media (max-width: 1200px) {
-    .living-viewer-content {
-        grid-template-columns: 1fr;
-        max-height: calc(90vh - 8rem);
-    }
-    
-    .living-viewer-image-section {
-        min-height: 300px;
-        max-height: 50vh;
-    }
-    
     .living-viewer-container {
         width: 95vw;
+    }
+    
+    .living-viewer-content {
+        grid-template-columns: 1fr;
+        max-height: 90vh;
+    }
+    
+    .living-viewer-image {
+        max-height: 50vh;
+        padding: 1rem;
     }
 }
