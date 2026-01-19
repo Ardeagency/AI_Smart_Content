@@ -897,10 +897,10 @@ body.sidebar-collapsed .living-container {
 .living-viewer-modal {
     position: fixed;
     top: 0;
-    left: var(--nav-width, 280px);
+    left: 0;
     right: 0;
     bottom: 0;
-    z-index: 999;
+    z-index: 10000; /* Muy alto para estar sobre todo */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -908,13 +908,8 @@ body.sidebar-collapsed .living-container {
     margin: 0;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.35s ease-out, visibility 0.35s ease-out, left 0.3s ease;
+    transition: opacity 0.35s ease-out, visibility 0.35s ease-out;
     pointer-events: none;
-}
-
-.side-navigation.collapsed ~ * .living-viewer-modal,
-body.sidebar-collapsed .living-viewer-modal {
-    left: var(--nav-width-collapsed, 64px);
 }
 
 .living-viewer-modal.active {
