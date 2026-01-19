@@ -446,13 +446,37 @@ class LivingManager {
     }
 
     async renderAll() {
+        console.log('🎨 Iniciando renderAll...');
+        console.log('📊 Datos disponibles:', {
+            latestGeneratedContent: this.latestGeneratedContent?.length || 0,
+            flowRuns: this.flowRuns?.length || 0,
+            flowOutputs: this.flowOutputs?.length || 0,
+            products: this.products?.length || 0
+        });
+        
         // Mover el modal fuera de #app-container al body
         this.moveModalToBody();
         
         // Renderizar las 3 secciones
-        await this.renderHeroSection();
-        await this.renderHistorySection();
-        await this.renderHighlightsSection();
+        try {
+            await this.renderHeroSection();
+        } catch (error) {
+            console.error('❌ Error renderizando hero section:', error);
+        }
+        
+        try {
+            await this.renderHistorySection();
+        } catch (error) {
+            console.error('❌ Error renderizando history section:', error);
+        }
+        
+        try {
+            await this.renderHighlightsSection();
+        } catch (error) {
+            console.error('❌ Error renderizando highlights section:', error);
+        }
+        
+        console.log('✅ renderAll completado');
     }
     
     moveModalToBody() {
