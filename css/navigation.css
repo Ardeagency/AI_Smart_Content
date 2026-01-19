@@ -1268,6 +1268,8 @@ body.sidebar-collapsed #app-container .main-header,
     padding-top: 48px; /* Altura del header delgado */
     position: relative;
     z-index: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .side-navigation.collapsed ~ .main-content,
