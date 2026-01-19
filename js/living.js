@@ -438,41 +438,103 @@ class LivingManager {
                     prompt: output?.prompt_used || run.status || '',
                     image_url: output?.file_url || output?.storage_path || null,
                     run: run,
-                    output: output
+                    output: output,
+                    created_at: run.created_at || output?.created_at
                 };
+            })
+            .sort((a, b) => {
+                // Ordenar por fecha más reciente primero
+                const dateA = new Date(a.created_at || 0);
+                const dateB = new Date(b.created_at || 0);
+                return dateB - dateA;
             });
         
         if (historyItems.length === 0) {
             historyGrid.innerHTML = `
-                <div style="text-align: center; padding: 2rem; color: var(--living-text-muted);">
-                    <i class="fas fa-history" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
-                    <p>No hay historial de producciones</p>
+                <div style="text-align: center; padding: 2rem; color: var(--living-text-muted); opacity: 0.6;">
+                    <p style="font-size: 0.875rem;">Sin producciones ejecutadas</p>
                 </div>
             `;
             return;
         }
 
-        historyGrid.innerHTML = historyItems.map((item, index) => {
-            const imageUrl = item.image_url;
-            const prompt = item.prompt;
-            
-            // Construir URL completa si es necesario
-            let finalImageUrl = imageUrl;
-            if (imageUrl && !imageUrl.startsWith('http') && item.output) {
-                const storagePath = item.output.storage_path || item.output.storage_object_id;
-                if (storagePath) {
-                    finalImageUrl = this.getPublicUrlFromStorage('production-outputs', storagePath) || imageUrl;
-                }
-            }
-            
+        // Agrupación narrativa: agrupar por día o tipo
+        const groupedItems = this.groupProductionsByNarrative(historyItems);
+        
+        // Renderizar con agrupación narrativa
+        historyGrid.innerHTML = Object.entries(groupedItems).map(([groupTitle, items]) => {
             return `
-                <div class="living-masonry-item">
-                    ${this.renderCard(finalImageUrl, prompt, index, false)}
+                <div class="living-history-group">
+                    <div class="living-history-group-title">${groupTitle}</div>
+                    ${items.map((item, index) => {
+                        const imageUrl = item.image_url;
+                        const prompt = item.prompt;
+                        
+                        // Construir URL completa si es necesario
+                        let finalImageUrl = imageUrl;
+                        if (imageUrl && !imageUrl.startsWith('http') && item.output) {
+                            const storagePath = item.output.storage_path || item.output.storage_object_id;
+                            if (storagePath) {
+                                finalImageUrl = this.getPublicUrlFromStorage('production-outputs', storagePath) || imageUrl;
+                            }
+                        }
+                        
+                        return `
+                            <div class="living-masonry-item">
+                                ${this.renderCard(finalImageUrl, prompt, index, false)}
+                </div>
+                        `;
+                    }).join('')}
                 </div>
             `;
         }).join('');
         
         this.setupDownloadButtons(historyGrid);
+    }
+    
+    groupProductionsByNarrative(items) {
+        // Agrupar por narrativa: "Hoy", "Ayer", "Esta semana", "Este mes"
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const weekAgo = new Date(today);
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        const monthAgo = new Date(today);
+        monthAgo.setMonth(monthAgo.getMonth() - 1);
+        
+        const groups = {
+            'Generado hoy': [],
+            'Generado ayer': [],
+            'Generado esta semana': [],
+            'Generado este mes': [],
+            'Anteriores': []
+        };
+        
+        items.forEach(item => {
+            const itemDate = new Date(item.created_at || 0);
+            
+            if (itemDate >= today) {
+                groups['Generado hoy'].push(item);
+            } else if (itemDate >= yesterday) {
+                groups['Generado ayer'].push(item);
+            } else if (itemDate >= weekAgo) {
+                groups['Generado esta semana'].push(item);
+            } else if (itemDate >= monthAgo) {
+                groups['Generado este mes'].push(item);
+            } else {
+                groups['Anteriores'].push(item);
+            }
+        });
+        
+        // Eliminar grupos vacíos
+        Object.keys(groups).forEach(key => {
+            if (groups[key].length === 0) {
+                delete groups[key];
+            }
+        });
+        
+        return groups;
     }
 
     async renderHighlightsSection() {
@@ -549,7 +611,7 @@ class LivingManager {
                 <div class="featured-card-prompt-overlay">
                     <div class="featured-card-prompt-title">Prompt</div>
                     <div class="featured-card-prompt-text">${this.escapeHtml(prompt)}</div>
-                </div>
+                    </div>
                 <button class="featured-card-download-btn" title="Descargar imagen" data-image-url="${this.escapeHtml(finalImageUrl || '')}">
                     <i class="fas fa-download"></i>
                 </button>
