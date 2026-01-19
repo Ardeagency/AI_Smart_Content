@@ -86,7 +86,11 @@
             </button>
             <div class="living-viewer-content">
                 <div class="living-viewer-visual">
-                    <img id="livingViewerImage" src="" alt="" />
+                    <img id="livingViewerImage" src="" alt="" style="display: none;" />
+                    <video id="livingViewerVideo" controls style="display: none;">
+                        <source id="livingViewerVideoSource" src="" type="video/mp4">
+                        Tu navegador no soporta la reproducción de video.
+                    </video>
                 </div>
                 <div class="living-viewer-editorial">
                     <div class="living-viewer-prompt">
@@ -99,6 +103,9 @@
                     <div class="living-viewer-actions">
                         <button class="living-viewer-download" id="livingViewerDownload" title="Descargar producción">
                             <i class="fas fa-download"></i>
+                        </button>
+                        <button class="living-viewer-duplicate" id="livingViewerDuplicate" title="Duplicar producción" style="display: none;">
+                            <i class="fas fa-copy"></i>
                         </button>
                     </div>
                 </div>

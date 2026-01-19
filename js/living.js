@@ -551,13 +551,38 @@ class LivingManager {
             item: { run: run, output: output }
         }).replace(/"/g, '&quot;');
         
-        // Obtener duración si está disponible (ejemplo, podría venir de metadata)
+        // Obtener duración si está disponible
         const duration = output?.duration || run?.duration || null;
         
+        // Detectar ratio aproximado basado en metadata o nombre
+        let aspectRatio = '16/9'; // Default horizontal
+        if (output?.technical_params) {
+            try {
+                const techParams = typeof output.technical_params === 'string' 
+                    ? JSON.parse(output.technical_params) 
+                    : output.technical_params;
+                if (techParams.aspect_ratio) {
+                    aspectRatio = techParams.aspect_ratio;
+                } else if (techParams.width && techParams.height) {
+                    aspectRatio = `${techParams.width}/${techParams.height}`;
+                }
+            } catch (e) {
+                // Usar default
+            }
+        }
+        
+        // Detectar si es vertical (ratio > 1 significa vertical en formato height/width)
+        const isVertical = aspectRatio.includes('9/16') || aspectRatio.includes('1/1') || 
+                          (finalUrl && (finalUrl.includes('vertical') || finalUrl.includes('reel')));
+        
         return `
-            <div class="history-video-card" data-production-id="${productionId}" data-run-id="${run?.id || ''}" data-card-info="${this.escapeHtml(cardData)}">
+            <div class="history-video-card ${isVertical ? 'history-video-card-vertical' : ''}" 
+                 data-production-id="${productionId}" 
+                 data-run-id="${run?.id || ''}" 
+                 data-card-info="${this.escapeHtml(cardData)}"
+                 style="${isVertical ? 'width: 160px;' : 'width: 300px;'}">
                 ${finalUrl
-                    ? `<img src="${this.escapeHtml(finalUrl)}" alt="Video thumbnail" class="history-video-card-thumbnail" loading="lazy" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'history-video-card-thumbnail\\' style=\\'background: #0F1115; display: flex; align-items: center; justify-content: center;\\'><i class=\\'fas fa-video\\' style=\\'font-size: 2rem; color: var(--living-text-muted);\\'></i></div>';" />`
+                    ? `<img src="${this.escapeHtml(finalUrl)}" alt="Video thumbnail" class="history-video-card-thumbnail" loading="lazy" onload="this.style.opacity='1';" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'history-video-card-thumbnail\\' style=\\'background: #0F1115; display: flex; align-items: center; justify-content: center;\\'><i class=\\'fas fa-video\\' style=\\'font-size: 2rem; color: var(--living-text-muted);\\'></i></div>';" style="opacity: 0; transition: opacity 0.3s ease;" />`
                     : `<div class="history-video-card-thumbnail" style="background: #0F1115; display: flex; align-items: center; justify-content: center;">
                         <i class="fas fa-video" style="font-size: 2rem; color: var(--living-text-muted);"></i>
                     </div>`
@@ -566,18 +591,18 @@ class LivingManager {
                     <div class="history-video-card-icons">
                         <div class="history-video-card-icon" title="Video">
                             <i class="fas fa-video"></i>
-                    </div>
+                        </div>
                         <div class="history-video-card-icon history-video-download" title="Descargar" data-image-url="${this.escapeHtml(finalUrl || '')}">
                             <i class="fas fa-download"></i>
+                        </div>
                     </div>
-                </div>
                     <div class="history-video-card-play">
                         <i class="fas fa-play"></i>
-                </div>
+                    </div>
                     ${duration ? `<div class="history-video-card-duration">${duration}</div>` : ''}
                 </div>
-                </div>
-            `;
+            </div>
+        `;
     }
 
     renderHistoryImageCard(imageUrl, run, output, index, prompt = '') {
@@ -640,7 +665,7 @@ class LivingManager {
     }
 
     setupHistoryCardListeners(container, type) {
-        // Click en cards para abrir vista editorial (modal)
+        // Click en cards para abrir vista editorial (modal) o redirigir (texto)
         const cards = container.querySelectorAll(`.history-${type}-card, .history-text-card`);
         cards.forEach(card => {
             card.addEventListener('click', (e) => {
@@ -649,6 +674,17 @@ class LivingManager {
                     return;
                 }
                 
+                // Cards de texto redirigen a vista del flujo
+                if (card.classList.contains('history-text-card')) {
+                    const runId = card.dataset.runId;
+                    if (runId && window.router) {
+                        // Redirigir a vista de producción/flujo
+                        window.router.navigate(`/production/${runId}`);
+                    }
+                    return;
+                }
+                
+                // Cards de video/imagen abren modal
                 const cardData = card.dataset.cardInfo;
                 if (cardData) {
                     try {
@@ -914,41 +950,62 @@ class LivingManager {
     openViewerModal(data) {
         const modal = document.getElementById('livingViewerModal');
         const image = document.getElementById('livingViewerImage');
+        const video = document.getElementById('livingViewerVideo');
+        const videoSource = document.getElementById('livingViewerVideoSource');
         const promptEl = document.getElementById('livingViewerPrompt');
         const metadataEl = document.getElementById('livingViewerMetadata');
         const closeBtn = document.getElementById('livingViewerClose');
         const backdrop = document.getElementById('livingViewerBackdrop');
         const downloadBtn = document.getElementById('livingViewerDownload');
+        const duplicateBtn = document.getElementById('livingViewerDuplicate');
         
-        if (!modal || !image || !promptEl || !metadataEl) {
+        if (!modal || !image || !video || !promptEl || !metadataEl) {
             console.error('❌ Elementos del modal no encontrados');
             return;
         }
 
-        // Cargar imagen
-        if (data.imageUrl) {
-            image.src = data.imageUrl;
-            image.alt = data.prompt || 'Producción';
-            // Resetear zoom al cargar nueva imagen
-            image.style.transform = 'scale(1)';
-            image.style.transformOrigin = 'center center';
+        // Detectar si es video o imagen
+        const isVideo = data.imageUrl && (
+            data.imageUrl.includes('.mp4') || 
+            data.imageUrl.includes('.mov') || 
+            data.imageUrl.includes('.webm') ||
+            data.imageUrl.includes('video')
+        );
+        
+        // Mostrar imagen o video según corresponda
+        if (isVideo) {
+            image.style.display = 'none';
+            video.style.display = 'block';
+            if (videoSource && data.imageUrl) {
+                videoSource.src = data.imageUrl;
+                video.load();
+            }
         } else {
-            image.src = '';
-            image.alt = 'Sin imagen disponible';
+            video.style.display = 'none';
+            image.style.display = 'block';
+            if (data.imageUrl) {
+                image.src = data.imageUrl;
+                image.alt = data.prompt || 'Producción';
+                // Resetear zoom al cargar nueva imagen
+                image.style.transform = 'scale(1)';
+                image.style.transformOrigin = 'center center';
+                // Configurar zoom solo para imágenes
+                this.setupImageZoom(image);
+            } else {
+                image.src = '';
+                image.alt = 'Sin imagen disponible';
+            }
         }
         
-        // Guardar URL de imagen para descarga
+        // Guardar URL para descarga
         if (downloadBtn) {
             downloadBtn.dataset.imageUrl = data.imageUrl || '';
         }
         
-        // Configurar zoom en la imagen
-        this.setupImageZoom(image);
-        
         // Cargar prompt
         promptEl.textContent = data.prompt || 'Sin prompt disponible';
         
-        // Cargar metadatos
+        // Cargar metadatos técnicos completos
         const item = data.item || {};
         const output = item.output || {};
         const run = item.run || {};
@@ -956,18 +1013,54 @@ class LivingManager {
         
         const metadataItems = [];
         
-        // Solo mostrar la fecha sin label
+        // Fecha
         let creationDate = null;
         if (output.created_at) {
             creationDate = new Date(output.created_at).toLocaleString('es-ES');
         } else if (itemData.created_at) {
             creationDate = new Date(itemData.created_at).toLocaleString('es-ES');
+        } else if (run.created_at) {
+            creationDate = new Date(run.created_at).toLocaleString('es-ES');
+        }
+        if (creationDate) {
+            metadataItems.push({ label: 'Fecha', value: creationDate });
         }
         
-        // Solo mostrar la fecha, sin otros metadatos
-        metadataEl.innerHTML = creationDate
-            ? `<div style="color: var(--living-text-muted); font-size: 13px;">${this.escapeHtml(creationDate)}</div>`
-            : '<div style="color: var(--living-text-muted); font-size: 13px;">Fecha no disponible</div>';
+        // Modelo (si está en technical_params)
+        if (output.technical_params) {
+            try {
+                const techParams = typeof output.technical_params === 'string' 
+                    ? JSON.parse(output.technical_params) 
+                    : output.technical_params;
+                
+                if (techParams.model) {
+                    metadataItems.push({ label: 'Modelo', value: techParams.model });
+                }
+                if (techParams.resolution) {
+                    metadataItems.push({ label: 'Resolución', value: techParams.resolution });
+                }
+                if (techParams.tags && Array.isArray(techParams.tags)) {
+                    metadataItems.push({ label: 'Tags', value: techParams.tags.join(', ') });
+                }
+            } catch (e) {
+                // Ignorar si no se puede parsear
+            }
+        }
+        
+        // Tipo de output
+        if (output.output_type) {
+            metadataItems.push({ label: 'Tipo', value: output.output_type });
+        }
+        
+        // Renderizar metadatos
+        metadataEl.innerHTML = metadataItems.length > 0
+            ? metadataItems.map(item => `
+                <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                    <div style="font-weight: 600; color: var(--living-text-gold); margin-bottom: 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">${this.escapeHtml(item.label)}</div>
+                    <div style="color: var(--living-text-muted); font-size: 13px; word-break: break-word;">${this.escapeHtml(item.value)}</div>
+                </div>
+            `).join('')
+            : '<div style="color: var(--living-text-muted); font-size: 13px;">No hay metadatos disponibles</div>';
         
         // Mostrar modal
         modal.classList.add('active');
@@ -1005,6 +1098,16 @@ class LivingManager {
                     }
                 });
             }
+        }
+        
+        // Listener para botón de duplicar (si existe)
+        if (duplicateBtn) {
+            duplicateBtn.style.display = 'flex';
+            duplicateBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // TODO: Implementar lógica de duplicación
+                console.log('📋 Duplicar producción:', data);
+            });
         }
         
         // Cerrar con ESC

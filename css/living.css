@@ -183,8 +183,9 @@ body.sidebar-collapsed .living-container {
 /* Card de video - Flotante, profesional */
 .history-video-card {
     flex: 0 0 auto;
-    width: 300px;
     height: 200px; /* Altura consistente */
+    min-width: 160px; /* Mínimo para videos verticales */
+    max-width: 400px; /* Máximo para videos horizontales */
     border-radius: 16px; /* Bordes redondeados grandes */
     overflow: hidden;
     position: relative;
@@ -214,6 +215,11 @@ body.sidebar-collapsed .living-container {
 .history-video-card:nth-child(5) { animation-delay: 0.3s; }
 .history-video-card:nth-child(n+6) { animation-delay: 0.35s; }
 
+/* Video vertical (más estrecho) */
+.history-video-card-vertical {
+    width: 160px !important;
+}
+
 .history-video-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
@@ -223,7 +229,7 @@ body.sidebar-collapsed .living-container {
     width: 100%;
     height: 100%;
     display: block;
-    object-fit: cover; /* Respeta formato original */
+    object-fit: contain; /* Respeta formato original sin recortar */
     background: #0F1115;
 }
 
@@ -1221,7 +1227,8 @@ body.sidebar-collapsed .living-container {
     position: relative;
 }
 
-.living-viewer-visual img {
+.living-viewer-visual img,
+.living-viewer-visual video {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain; /* NUNCA cover */
@@ -1230,6 +1237,12 @@ body.sidebar-collapsed .living-container {
     cursor: zoom-in;
     user-select: none;
     -webkit-user-drag: none;
+}
+
+.living-viewer-visual video {
+    cursor: default;
+    width: 100%;
+    height: auto;
 }
 
 /* Columna derecha - CONTENIDO EDITORIAL */
@@ -1357,6 +1370,26 @@ body.sidebar-collapsed .living-container {
 }
 
 .living-viewer-download:hover {
+    background: var(--living-bg-card-hover);
+}
+
+.living-viewer-duplicate {
+    background: var(--living-bg-card);
+    border: none;
+    border-radius: 999px;
+    padding: 12px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--living-text-light);
+    font-size: 16px;
+    transition: background 0.2s ease;
+}
+
+.living-viewer-duplicate:hover {
     background: var(--living-bg-card-hover);
 }
 
