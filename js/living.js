@@ -604,9 +604,13 @@ class LivingManager {
             prompt: prompt || '',
             item: itemData
         });
+        
+        // Escapar JSON para atributo HTML: escapar comillas dobles con &quot;
+        // El navegador desescapará automáticamente cuando leamos con dataset
+        const escapedCardData = cardData.replace(/"/g, '&quot;');
 
             return `
-            <div class="featured-card" data-index="${index}" data-image-url="${this.escapeHtml(finalImageUrl || '')}" data-card-info="${this.escapeHtml(cardData)}">
+            <div class="featured-card" data-index="${index}" data-image-url="${this.escapeHtml(finalImageUrl || '')}" data-card-info="${escapedCardData}">
                 <div class="featured-card-visual">
                     ${finalImageUrl
                         ? `<img src="${this.escapeHtml(finalImageUrl)}" alt="${this.escapeHtml(prompt)}" loading="${index < 3 ? 'eager' : 'lazy'}" onerror="this.parentElement.innerHTML='<div class=\\'featured-card-visual-placeholder\\'><i class=\\'fas fa-image\\'></i></div>';" onload="this.style.opacity='1';">`
@@ -616,7 +620,7 @@ class LivingManager {
                 <div class="featured-card-prompt-overlay">
                     <div class="featured-card-prompt-title">Prompt</div>
                     <div class="featured-card-prompt-text">${this.escapeHtml(prompt)}</div>
-                    </div>
+                </div>
                 <button class="featured-card-download-btn" title="Descargar imagen" data-image-url="${this.escapeHtml(finalImageUrl || '')}">
                     <i class="fas fa-download"></i>
                 </button>
@@ -656,12 +660,27 @@ class LivingManager {
                 }
                 
                 try {
-                    // El escapeHtml ya maneja las comillas, solo necesitamos parsear
-                    const data = JSON.parse(cardData);
+                    // El navegador debería desescapar automáticamente, pero por si acaso
+                    // desescapamos manualmente las entidades HTML
+                    let unescapedData = cardData;
+                    // Si todavía tiene &quot;, desescapar
+                    if (cardData.includes('&quot;')) {
+                        unescapedData = cardData.replace(/&quot;/g, '"');
+                    }
+                    // También manejar otros escapes comunes
+                    unescapedData = unescapedData
+                        .replace(/&#39;/g, "'")
+                        .replace(/&amp;/g, '&')
+                        .replace(/&lt;/g, '<')
+                        .replace(/&gt;/g, '>');
+                    
+                    const data = JSON.parse(unescapedData);
                     console.log('✅ Abriendo modal con datos:', data);
                     this.openViewerModal(data);
                 } catch (error) {
-                    console.error('❌ Error parsing card data:', error, 'Raw data:', cardData);
+                    console.error('❌ Error parsing card data:', error);
+                    console.error('Raw data:', cardData);
+                    console.error('Card element:', newCard);
                 }
             });
         });
