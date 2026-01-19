@@ -54,31 +54,40 @@ class LivingManager {
 
             console.log('✅ Supabase inicializado, cargando datos del dashboard...');
             
-            // Cargar datos en paralelo cuando sea posible
-            await Promise.all([
-                this.loadUserData(),
-                this.loadProjectData()
+            // Cargar datos en paralelo cuando sea posible, con manejo de errores individual
+            await Promise.allSettled([
+                this.loadUserData().catch(err => console.warn('⚠️ Error cargando userData:', err)),
+                this.loadProjectData().catch(err => console.warn('⚠️ Error cargando projectData:', err))
             ]);
 
-            // Cargar datos relacionados (no dependen de projectData, usan userId directamente)
-            await Promise.all([
-                this.loadProducts(),
-                this.loadFlowRuns(),
-                this.loadCreditUsage()
+            // Cargar datos relacionados con manejo de errores individual
+            await Promise.allSettled([
+                this.loadProducts().catch(err => console.warn('⚠️ Error cargando products:', err)),
+                this.loadFlowRuns().catch(err => console.warn('⚠️ Error cargando flowRuns:', err)),
+                this.loadCreditUsage().catch(err => console.warn('⚠️ Error cargando creditUsage:', err))
             ]);
 
             // Cargar flow outputs después de flow runs
             if (this.flowRuns.length > 0) {
-                await this.loadFlowOutputs();
+                try {
+                    await this.loadFlowOutputs();
+                } catch (error) {
+                    console.warn('⚠️ Error cargando flowOutputs:', error);
+                }
             }
 
             // Cargar contenido generado después de obtener brand_id
-            await this.loadLatestGeneratedContent();
+            try {
+                await this.loadLatestGeneratedContent();
+            } catch (error) {
+                console.warn('⚠️ Error cargando latestGeneratedContent:', error);
+            }
 
-            // Renderizar todo
+            // SIEMPRE renderizar, incluso si hay errores
             await this.renderAll();
         } catch (error) {
-            console.error('❌ Error en init de LivingManager:', error);
+            console.error('❌ Error crítico en init de LivingManager:', error);
+            // SIEMPRE renderizar, incluso con errores críticos
             try {
                 await this.renderAll();
             } catch (renderError) {
@@ -87,10 +96,15 @@ class LivingManager {
         }
 
         if (!this.eventListenersSetup) {
-            this.setupEventListeners();
-            this.eventListenersSetup = true;
+            try {
+                this.setupEventListeners();
+                this.eventListenersSetup = true;
+            } catch (error) {
+                console.warn('⚠️ Error configurando event listeners:', error);
+            }
         }
         
+        // SIEMPRE marcar como inicializado
         this.initialized = true;
     }
 
@@ -166,7 +180,10 @@ class LivingManager {
     }
 
     async loadUserData() {
-        if (!this.supabase || !this.userId) return;
+        if (!this.supabase || !this.userId) {
+            this.userData = null;
+            return;
+        }
 
         try {
             const { data, error } = await this.supabase
@@ -175,15 +192,27 @@ class LivingManager {
                 .eq('id', this.userId)
                 .maybeSingle();
 
-            if (error) throw error;
-            this.userData = data;
+            if (error) {
+                // Si es error 400 o similar, no lanzar excepción, solo log
+                if (error.code === 'PGRST205' || error.code === '400') {
+                    console.warn('⚠️ Tabla users no encontrada o error de acceso:', error.message);
+                } else {
+                    throw error;
+                }
+            }
+            this.userData = data || null;
         } catch (error) {
-            console.error('❌ Error cargando datos de usuario:', error);
+            console.warn('⚠️ Error cargando datos de usuario:', error.message || error);
+            this.userData = null;
+            // NO lanzar error - continuar sin datos de usuario
         }
     }
 
     async loadProjectData() {
-        if (!this.supabase || !this.userId) return;
+        if (!this.supabase || !this.userId) {
+            this.projectData = null;
+            return;
+        }
 
         try {
             // La tabla projects tiene user_id directamente, no hay user_projects
@@ -194,11 +223,19 @@ class LivingManager {
                 .eq('is_active', true)
                 .maybeSingle();
 
-            if (error) throw error;
-            this.projectData = data;
+            if (error) {
+                // Si es error 400 o tabla no encontrada, no lanzar excepción
+                if (error.code === 'PGRST205' || error.code === '400') {
+                    console.warn('⚠️ Tabla projects no encontrada o error de acceso:', error.message);
+                } else {
+                    throw error;
+                }
+            }
+            this.projectData = data || null;
         } catch (error) {
-            console.error('❌ Error cargando datos del proyecto:', error);
+            console.warn('⚠️ Error cargando datos del proyecto:', error.message || error);
             this.projectData = null;
+            // NO lanzar error - continuar sin datos de proyecto
         }
     }
 
