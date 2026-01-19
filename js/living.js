@@ -16,6 +16,7 @@ class LivingManager {
         this.brandId = null;
         this.latestGeneratedContent = [];
         this.eventListenersSetup = false;
+        this.activeCategory = 'all'; // Categoría activa para filtros
 
         this.init();
     }
@@ -392,32 +393,66 @@ class LivingManager {
         const livingGrid = document.getElementById('livingGrid');
         if (!livingGrid) return;
         
-        // Obtener las mejores producciones (de RPC o flow outputs) - NO duplicar, usar solo las que hay
+        // Obtener todas las producciones (de RPC o flow outputs)
         const latestContent = this.latestGeneratedContent || [];
-        let featuredItems = [];
+        let allItems = [];
         
         // Priorizar contenido de RPC
         if (latestContent.length > 0) {
-            featuredItems = latestContent.map(item => ({
+            allItems = latestContent.map(item => ({
                 prompt: item.prompt_used || item.prompt || '',
                 image_url: item.image_url || item.url || item.storage_url || item.file_url,
                 item: item,
-                output: null
+                output: null,
+                run: null,
+                type: 'rpc'
             }));
         }
         
-        // Si no hay suficiente contenido de RPC, agregar flow runs
-        if (featuredItems.length === 0 && this.flowRuns.length > 0) {
-            featuredItems = this.flowRuns.map(run => {
+        // Agregar flow runs si hay
+        if (this.flowRuns.length > 0) {
+            const flowRunItems = this.flowRuns.map(run => {
                 const output = this.flowOutputs.find(o => o.run_id === run.id);
                 return {
                     prompt: output?.prompt_used || run.status || '',
                     image_url: output?.file_url || output?.storage_path || null,
                     run: run,
-                    output: output
+                    output: output,
+                    item: null,
+                    type: 'flow'
                 };
             });
+            allItems = [...allItems, ...flowRunItems];
         }
+        
+        // Aplicar filtro de categoría si no es 'all'
+        let filteredItems = allItems;
+        if (this.activeCategory && this.activeCategory !== 'all') {
+            filteredItems = allItems.filter(item => {
+                const contentType = this.getContentType(item.run, item.output).toLowerCase();
+                
+                if (this.activeCategory === 'image') return contentType.includes('imagen') || contentType.includes('image');
+                if (this.activeCategory === 'video') return contentType.includes('video');
+                if (this.activeCategory === 'reel') return contentType.includes('reel');
+                if (this.activeCategory === 'product') return item.run?.brand_id && this.products.some(p => p.id === item.run.brand_id);
+                if (this.activeCategory === 'brand') return item.run?.brand_id;
+                
+                return true;
+            });
+        }
+        
+        // Si no hay contenido después del filtro, mostrar mensaje
+        if (filteredItems.length === 0) {
+            livingGrid.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 4rem; color: var(--living-text-muted);">
+                    <i class="fas fa-filter" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                    <p>No hay producciones en esta categoría</p>
+                </div>
+            `;
+            return;
+        }
+
+        let featuredItems = filteredItems;
         
         // Si no hay contenido, mostrar placeholders aspiracionales
         if (featuredItems.length === 0) {
@@ -565,6 +600,8 @@ class LivingManager {
     }
 
     filterByCategory(category) {
+        // Guardar categoría activa para usar en renderUnifiedGrid
+        this.activeCategory = category;
         // Re-renderizar el grid unificado con el filtro aplicado
         this.renderUnifiedGrid();
     }
