@@ -317,13 +317,15 @@ class LivingManager {
             // Log de URLs disponibles para debug
             if (this.flowOutputs.length > 0) {
                 this.flowOutputs.forEach((output, index) => {
-                    if (output.storage_path || output.file_url) {
-                        console.log(`  📸 Output ${index + 1}:`, {
-                            storage_path: output.storage_path,
-                            file_url: output.file_url,
-                            has_prompt: !!output.prompt_used
-                        });
-                    }
+                    console.log(`  📸 Output ${index + 1}:`, {
+                        id: output.id,
+                        storage_path: output.storage_path,
+                        storage_object_id: output.storage_object_id,
+                        file_url: output.file_url,
+                        metadata: output.metadata,
+                        has_prompt: !!output.prompt_used,
+                        created_at: output.created_at
+                    });
                 });
             }
         } catch (error) {
@@ -391,6 +393,16 @@ class LivingManager {
             this.latestGeneratedContent = data || [];
             if (this.latestGeneratedContent.length > 0) {
                 console.log('✅ Contenido generado cargado:', this.latestGeneratedContent.length, 'elementos');
+                // Log detallado de lo que devuelve la RPC
+                this.latestGeneratedContent.forEach((item, index) => {
+                    console.log(`  📸 RPC Item ${index + 1}:`, {
+                        image_url: item.image_url,
+                        prompt_used: item.prompt_used,
+                        style_trend: item.style_trend,
+                        created_at: item.created_at,
+                        full_item: item
+                    });
+                });
             } else {
                 console.log('ℹ️ No hay contenido generado disponible');
             }
@@ -442,11 +454,56 @@ class LivingManager {
         if (latestContent.length > 0) {
             // Usar los datos de la función RPC
             console.log('📸 Usando contenido de RPC:', latestContent.length, 'elementos');
-            todayProductions = latestContent.slice(0, 3).map(item => ({
-                image_url: item.image_url,
-                prompt_used: item.prompt_used,
-                style_trend: item.style_trend,
-                created_at: item.created_at
+            
+            // Validar y procesar URLs de la RPC
+            todayProductions = await Promise.all(latestContent.slice(0, 3).map(async (item) => {
+                let imageUrl = item.image_url;
+                
+                // Si la URL de la RPC no es válida o no existe, intentar obtener desde storage_path si está disponible
+                if (!imageUrl || (!imageUrl.startsWith('http') && !imageUrl.startsWith('/'))) {
+                    if (item.storage_path && this.supabase) {
+                        // Intentar obtener URL desde storage_path
+                        const possibleBuckets = ['production-outputs', 'generated-content', 'flow-outputs', 'content-images'];
+                        for (const bucket of possibleBuckets) {
+                            try {
+                                const path = item.storage_path.endsWith('/') 
+                                    ? item.storage_path 
+                                    : item.storage_path;
+                                
+                                if (path.endsWith('/')) {
+                                    // Es una carpeta, listar archivos
+                                    const { data: files } = await this.supabase.storage
+                                        .from(bucket)
+                                        .list(path, { limit: 1, sortBy: { column: 'created_at', order: 'desc' } });
+                                    
+                                    if (files && files.length > 0) {
+                                        const { data: { publicUrl } } = this.supabase.storage
+                                            .from(bucket)
+                                            .getPublicUrl(path + files[0].name);
+                                        imageUrl = publicUrl;
+                                        break;
+                                    }
+                                } else {
+                                    // Es un archivo, obtener URL directamente
+                                    const { data: { publicUrl } } = this.supabase.storage
+                                        .from(bucket)
+                                        .getPublicUrl(path);
+                                    imageUrl = publicUrl;
+                                    break;
+                                }
+                            } catch (error) {
+                                continue;
+                            }
+                        }
+                    }
+                }
+                
+                return {
+                    image_url: imageUrl,
+                    prompt_used: item.prompt_used,
+                    style_trend: item.style_trend,
+                    created_at: item.created_at
+                };
             }));
         } else {
             // Fallback: Obtener últimas producciones de flow outputs (no solo de hoy)
@@ -463,24 +520,59 @@ class LivingManager {
 
             // Convertir storage_path a URL pública si es necesario
             todayProductions = await Promise.all(imageOutputs.map(async (output) => {
-                let imageUrl = output.file_url || output.storage_path;
+                let imageUrl = output.file_url;
                 
-                // Si es storage_path y no es una URL completa, intentar convertir a URL pública
-                if (output.storage_path && !output.storage_path.startsWith('http') && !output.storage_path.startsWith('/')) {
-                    if (this.supabase && output.storage_path) {
+                // Si no hay file_url, intentar obtener desde storage_path o storage_object_id
+                if (!imageUrl && this.supabase) {
+                    // Opción 1: Si hay storage_object_id, intentar obtener desde storage.objects
+                    if (output.storage_object_id) {
                         try {
-                            // Intentar obtener URL pública desde diferentes buckets posibles
-                            const possibleBuckets = ['generated-content', 'flow-outputs', 'content-images', 'images'];
-                            let publicUrl = null;
+                            // Buscar en storage.objects usando el ID
+                            const { data: objects, error: objError } = await this.supabase
+                                .from('storage.objects')
+                                .select('bucket_id, name')
+                                .eq('id', output.storage_object_id)
+                                .maybeSingle();
+                            
+                            if (!objError && objects) {
+                                const { data: { publicUrl } } = this.supabase.storage
+                                    .from(objects.bucket_id)
+                                    .getPublicUrl(objects.name);
+                                imageUrl = publicUrl;
+                                console.log(`✅ URL obtenida desde storage_object_id:`, imageUrl);
+                            }
+                        } catch (error) {
+                            console.warn('⚠️ Error obteniendo URL desde storage_object_id:', error);
+                        }
+                    }
+                    
+                    // Opción 2: Si hay storage_path, intentar obtener URL
+                    if (!imageUrl && output.storage_path) {
+                        const storagePath = output.storage_path;
+                        
+                        // Si storage_path es solo una carpeta (termina en /), buscar archivos en esa carpeta
+                        if (storagePath.endsWith('/')) {
+                            // Buscar archivos en diferentes buckets posibles
+                            const possibleBuckets = ['production-outputs', 'generated-content', 'flow-outputs', 'content-images', 'images'];
                             
                             for (const bucket of possibleBuckets) {
                                 try {
-                                    const { data } = this.supabase.storage
+                                    // Listar archivos en la carpeta
+                                    const { data: files, error: listError } = await this.supabase.storage
                                         .from(bucket)
-                                        .getPublicUrl(output.storage_path);
-                                    if (data && data.publicUrl) {
-                                        publicUrl = data.publicUrl;
-                                        console.log(`✅ URL pública obtenida desde bucket '${bucket}':`, publicUrl);
+                                        .list(storagePath, {
+                                            limit: 1,
+                                            sortBy: { column: 'created_at', order: 'desc' }
+                                        });
+                                    
+                                    if (!listError && files && files.length > 0) {
+                                        const fileName = files[0].name;
+                                        const fullPath = storagePath + fileName;
+                                        const { data: { publicUrl } } = this.supabase.storage
+                                            .from(bucket)
+                                            .getPublicUrl(fullPath);
+                                        imageUrl = publicUrl;
+                                        console.log(`✅ URL obtenida desde carpeta '${storagePath}' en bucket '${bucket}':`, imageUrl);
                                         break;
                                     }
                                 } catch (bucketError) {
@@ -488,16 +580,60 @@ class LivingManager {
                                     continue;
                                 }
                             }
+                        } else {
+                            // storage_path es un archivo completo, intentar obtener URL desde diferentes buckets
+                            const possibleBuckets = ['production-outputs', 'generated-content', 'flow-outputs', 'content-images', 'images'];
                             
-                            if (publicUrl) {
-                                imageUrl = publicUrl;
-                            } else {
-                                console.warn('⚠️ No se pudo obtener URL pública para:', output.storage_path);
+                            for (const bucket of possibleBuckets) {
+                                try {
+                                    const { data: { publicUrl }, error: urlError } = this.supabase.storage
+                                        .from(bucket)
+                                        .getPublicUrl(storagePath);
+                                    
+                                    if (!urlError && publicUrl) {
+                                        // Verificar que la URL sea válida haciendo una petición HEAD
+                                        try {
+                                            const response = await fetch(publicUrl, { method: 'HEAD' });
+                                            if (response.ok) {
+                                                imageUrl = publicUrl;
+                                                console.log(`✅ URL válida obtenida desde bucket '${bucket}':`, imageUrl);
+                                                break;
+                                            }
+                                        } catch (fetchError) {
+                                            // Continuar con el siguiente bucket
+                                            continue;
+                                        }
+                                    }
+                                } catch (bucketError) {
+                                    // Continuar con el siguiente bucket
+                                    continue;
+                                }
                             }
-                        } catch (error) {
-                            console.warn('⚠️ Error al obtener URL pública:', error);
                         }
                     }
+                    
+                    // Opción 3: Revisar metadata por si tiene información de URL
+                    if (!imageUrl && output.metadata) {
+                        if (output.metadata.image_url) {
+                            imageUrl = output.metadata.image_url;
+                            console.log('✅ URL obtenida desde metadata:', imageUrl);
+                        } else if (output.metadata.url) {
+                            imageUrl = output.metadata.url;
+                            console.log('✅ URL obtenida desde metadata.url:', imageUrl);
+                        } else if (output.metadata.storage_url) {
+                            imageUrl = output.metadata.storage_url;
+                            console.log('✅ URL obtenida desde metadata.storage_url:', imageUrl);
+                        }
+                    }
+                }
+                
+                if (!imageUrl) {
+                    console.warn('⚠️ No se pudo obtener URL para output:', {
+                        id: output.id,
+                        storage_path: output.storage_path,
+                        storage_object_id: output.storage_object_id,
+                        file_url: output.file_url
+                    });
                 }
                 
                 return {
