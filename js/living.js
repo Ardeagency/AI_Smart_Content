@@ -130,7 +130,7 @@ class LivingManager {
                 const supabaseClient = await window.appLoader.waitFor('supabase');
                 if (supabaseClient) {
                     this.supabase = supabaseClient;
-                    const { data: { user } } = await this.supabase.auth.getUser();
+                const { data: { user } } = await this.supabase.auth.getUser();
                     this.userId = user?.id;
                     if (this.supabase && this.userId) {
                         console.log('✅ Supabase inicializado desde appLoader');
@@ -423,8 +423,10 @@ class LivingManager {
     }
 
     async renderHistorySection() {
-        const historyGrid = document.getElementById('livingHistoryGrid');
-        if (!historyGrid) return;
+        const videosContainer = document.getElementById('livingHistoryVideos');
+        const imagesContainer = document.getElementById('livingHistoryImages');
+        
+        if (!videosContainer || !imagesContainer) return;
         
         // Producciones de flujos que el usuario haya usado
         // Excluir las que ya están en hero (latestGeneratedContent)
@@ -434,9 +436,32 @@ class LivingManager {
             .filter(run => !automatedIds.has(run.id))
             .map(run => {
                 const output = this.flowOutputs.find(o => o.run_id === run.id);
+                const fileUrl = output?.file_url || output?.storage_path || null;
+                
+                // Detectar tipo de contenido
+                let contentType = 'text';
+                if (fileUrl) {
+                    const url = fileUrl.toLowerCase();
+                    if (url.includes('.mp4') || url.includes('.mov') || url.includes('.webm') || 
+                        url.includes('video') || url.includes('reel') || url.includes('clip')) {
+                        contentType = 'video';
+                    } else if (url.includes('.jpg') || url.includes('.jpeg') || url.includes('.png') || 
+                               url.includes('.webp') || url.includes('image') || url.includes('img')) {
+                        contentType = 'image';
+                    }
+                } else if (output?.output_type) {
+                    const type = output.output_type.toLowerCase();
+                    if (type.includes('video') || type.includes('reel') || type.includes('clip')) {
+                        contentType = 'video';
+                    } else if (type.includes('image') || type.includes('img') || type.includes('still')) {
+                        contentType = 'image';
+                    }
+                }
+                
                 return {
+                    contentType,
+                    fileUrl,
                     prompt: output?.prompt_used || run.status || '',
-                    image_url: output?.file_url || output?.storage_path || null,
                     run: run,
                     output: output,
                     created_at: run.created_at || output?.created_at
@@ -449,47 +474,125 @@ class LivingManager {
                 return dateB - dateA;
             });
         
-        if (historyItems.length === 0) {
-            historyGrid.innerHTML = `
+        // Separar videos e imágenes/texto
+        const videos = historyItems.filter(item => item.contentType === 'video');
+        const images = historyItems.filter(item => item.contentType === 'image');
+        const texts = historyItems.filter(item => item.contentType === 'text');
+        
+        // Renderizar videos (scroll horizontal)
+        if (videos.length === 0) {
+            videosContainer.innerHTML = '';
+        } else {
+            videosContainer.innerHTML = videos.map((item, index) => {
+                let thumbnailUrl = item.fileUrl;
+                if (thumbnailUrl && !thumbnailUrl.startsWith('http') && item.output) {
+                    const storagePath = item.output.storage_path || item.output.storage_object_id;
+                    if (storagePath) {
+                        thumbnailUrl = this.getPublicUrlFromStorage('production-outputs', storagePath) || thumbnailUrl;
+                    }
+                }
+                
+                return this.renderVideoCard(thumbnailUrl, item.run, item.output, index);
+            }).join('');
+            
+            this.setupHistoryCardListeners(videosContainer, 'video');
+        }
+        
+        // Renderizar imágenes y textos (masonry)
+        const allVisualItems = [...images, ...texts];
+        if (allVisualItems.length === 0) {
+            imagesContainer.innerHTML = `
                 <div style="text-align: center; padding: 2rem; color: var(--living-text-muted); opacity: 0.6;">
                     <p style="font-size: 0.875rem;">Sin producciones ejecutadas</p>
                 </div>
             `;
-            return;
-        }
-
-        // Agrupación narrativa: agrupar por día o tipo
-        const groupedItems = this.groupProductionsByNarrative(historyItems);
-        
-        // Renderizar con agrupación narrativa
-        historyGrid.innerHTML = Object.entries(groupedItems).map(([groupTitle, items]) => {
-            return `
-                <div class="living-history-group">
-                    <div class="living-history-group-title">${groupTitle}</div>
-                    ${items.map((item, index) => {
-                        const imageUrl = item.image_url;
-                        const prompt = item.prompt;
-                        
-                        // Construir URL completa si es necesario
-                        let finalImageUrl = imageUrl;
-                        if (imageUrl && !imageUrl.startsWith('http') && item.output) {
-                            const storagePath = item.output.storage_path || item.output.storage_object_id;
-                            if (storagePath) {
-                                finalImageUrl = this.getPublicUrlFromStorage('production-outputs', storagePath) || imageUrl;
-                            }
+        } else {
+            imagesContainer.innerHTML = allVisualItems.map((item, index) => {
+                if (item.contentType === 'text') {
+                    return this.renderTextCard(item.run, item.output, index);
+                } else {
+                    let imageUrl = item.fileUrl;
+                    if (imageUrl && !imageUrl.startsWith('http') && item.output) {
+                        const storagePath = item.output.storage_path || item.output.storage_object_id;
+                        if (storagePath) {
+                            imageUrl = this.getPublicUrlFromStorage('production-outputs', storagePath) || imageUrl;
                         }
-                        
-                        return `
-                            <div class="living-masonry-item">
-                                ${this.renderCard(finalImageUrl, prompt, index, false, { item: null, output: item.output, run: item.run })}
-                </div>
-                        `;
-                    }).join('')}
+                    }
+                    return this.renderHistoryImageCard(imageUrl, item.run, item.output, index);
+                }
+            }).join('');
+            
+            this.setupHistoryCardListeners(imagesContainer, 'image');
+        }
+    }
+    
+    renderVideoCard(thumbnailUrl, run, output, index) {
+        const finalUrl = thumbnailUrl && thumbnailUrl.startsWith('http') ? thumbnailUrl : null;
+        const productionId = run?.id || output?.id;
+        
+        return `
+            <div class="history-video-card" data-production-id="${productionId}" data-run-id="${run?.id || ''}">
+                ${finalUrl
+                    ? `<img src="${this.escapeHtml(finalUrl)}" alt="Video thumbnail" class="history-video-card-thumbnail" loading="lazy" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'history-video-card-thumbnail\\' style=\\'background: var(--living-bg-deep); display: flex; align-items: center; justify-content: center;\\'><i class=\\'fas fa-video\\' style=\\'font-size: 2rem; color: var(--living-text-muted);\\'></i></div>';" />`
+                    : `<div class="history-video-card-thumbnail" style="background: var(--living-bg-deep); display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-video" style="font-size: 2rem; color: var(--living-text-muted);"></i>
+                    </div>`
+                }
+                <div class="history-video-card-overlay">
+                    <div class="history-video-card-play">
+                        <i class="fas fa-play"></i>
+                    </div>
+                    </div>
                 </div>
             `;
-        }).join('');
+    }
+
+    renderHistoryImageCard(imageUrl, run, output, index) {
+        const finalUrl = imageUrl && imageUrl.startsWith('http') ? imageUrl : null;
+        const productionId = run?.id || output?.id;
         
-        this.setupDownloadButtons(historyGrid);
+        return `
+            <div class="living-masonry-item">
+                <div class="history-image-card" data-production-id="${productionId}" data-run-id="${run?.id || ''}">
+                    ${finalUrl
+                        ? `<img src="${this.escapeHtml(finalUrl)}" alt="Producción" loading="lazy" onerror="this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: var(--living-text-muted);\\'><i class=\\'fas fa-image\\'></i></div>';" />`
+                        : `<div style="padding: 2rem; text-align: center; color: var(--living-text-muted);">
+                            <i class="fas fa-image" style="font-size: 2rem;"></i>
+                        </div>`
+                    }
+                </div>
+                </div>
+            `;
+    }
+    
+    renderTextCard(run, output, index) {
+        const productionId = run?.id || output?.id;
+
+            return `
+            <div class="living-masonry-item">
+                <div class="history-text-card" data-production-id="${productionId}" data-run-id="${run?.id || ''}">
+                    <div class="history-text-card-icon">?</div>
+                    </div>
+                </div>
+            `;
+    }
+    
+    setupHistoryCardListeners(container, type) {
+        const cards = container.querySelectorAll(`.history-${type}-card, .history-text-card`);
+        cards.forEach(card => {
+            card.addEventListener('click', (e) => {
+                const productionId = card.dataset.productionId;
+                const runId = card.dataset.runId;
+                
+                if (productionId || runId) {
+                    // Redirigir a vista de producción
+                    // TODO: Implementar navegación a vista de producción
+                    console.log('📋 Redirigiendo a producción:', { productionId, runId });
+                    // Por ahora, podríamos usar el router o navegación de la app
+                    // window.location.href = `/production/${productionId || runId}`;
+                }
+            });
+        });
     }
     
     groupProductionsByNarrative(items) {
@@ -556,7 +659,7 @@ class LivingManager {
         }
         
         // Productos
-        if (this.products.length > 0) {
+            if (this.products.length > 0) {
             highlights.push({
                 title: 'Productos',
                 value: this.products.length,
@@ -721,7 +824,7 @@ class LivingManager {
             console.error('❌ Elementos del modal no encontrados');
             return;
         }
-        
+
         // Cargar imagen
         if (data.imageUrl) {
             image.src = data.imageUrl;

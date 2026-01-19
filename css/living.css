@@ -141,52 +141,174 @@ body.sidebar-collapsed .living-container {
 }
 
 /* Sección 2: Historial de Producciones (Izquierda) */
-/* Más denso, más funcional, archivo de producción */
+/* Archivo editorial, línea de tiempo del trabajo */
 .living-history-section {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
     min-height: 400px;
 }
 
-.living-section-header {
-    margin-bottom: 2rem;
+/* Sub-sección 2A: Videos - Bandeja de ediciones */
+.living-history-videos {
+    width: 100%;
 }
 
-.living-section-title {
-    font-size: 1.25rem; /* Más pequeño que hero */
-    font-weight: 500; /* Menos protagonista */
-    color: var(--living-text-light);
-    letter-spacing: -0.2px;
-    opacity: 0.85;
-    margin-bottom: 1rem;
+.living-history-videos-container {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.5rem 0 1rem;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(212, 117, 78, 0.2) transparent;
 }
 
-/* Agrupación narrativa - subtítulos de sección */
-.living-history-group {
-    margin-bottom: 2.5rem;
+.living-history-videos-container::-webkit-scrollbar {
+    height: 6px;
 }
 
-.living-history-group-title {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--living-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 1rem;
-    opacity: 0.7;
+.living-history-videos-container::-webkit-scrollbar-track {
+    background: transparent;
 }
 
-/* Galería Masonry - Archivo de producción, no galería estética */
+.living-history-videos-container::-webkit-scrollbar-thumb {
+    background: rgba(212, 117, 78, 0.3);
+    border-radius: 3px;
+}
+
+/* Card de video */
+.history-video-card {
+    flex: 0 0 auto;
+    width: 280px;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    background: var(--living-bg-deep);
+    transition: transform 0.2s ease;
+}
+
+.history-video-card:hover {
+    transform: translateY(-2px);
+}
+
+.history-video-card-thumbnail {
+    width: 100%;
+    height: auto;
+    display: block;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    background: var(--living-bg-deep);
+}
+
+.history-video-card-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+    pointer-events: none;
+}
+
+.history-video-card:hover .history-video-card-overlay {
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.history-video-card-play {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--living-bg-deep);
+    font-size: 1.25rem;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.2s ease;
+}
+
+.history-video-card:hover .history-video-card-play {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Sub-sección 2B: Imágenes - Archivo editorial (Masonry funcional) */
+.living-history-images {
+    width: 100%;
+}
+
 .living-masonry-grid {
     column-count: 3;
-    column-gap: 1.25rem; /* Más denso */
+    column-gap: 1rem;
     column-fill: balance;
 }
 
 .living-masonry-item {
     break-inside: avoid;
-    margin-bottom: 1.25rem; /* Más denso */
+    margin-bottom: 1rem;
     page-break-inside: avoid;
     display: inline-block;
     width: 100%;
+}
+
+/* Card de imagen (historial) */
+.history-image-card {
+    width: 100%;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    background: var(--living-bg-deep);
+    transition: opacity 0.2s ease;
+}
+
+.history-image-card:hover {
+    opacity: 0.85;
+}
+
+.history-image-card img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain;
+}
+
+/* Card de texto (producciones sin imagen) */
+.history-text-card {
+    width: 100%;
+    min-height: 200px;
+    border-radius: 6px;
+    background: var(--living-bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.history-text-card:hover {
+    background: var(--living-bg-card-hover);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.history-text-card-icon {
+    font-size: 2rem;
+    color: var(--living-text-muted);
+    opacity: 0.5;
+    font-weight: 300;
+}
+
+.history-text-card:hover .history-text-card-icon {
+    opacity: 0.7;
 }
 
 /* Sección 3: Destacados / Control (Derecha) */
@@ -255,6 +377,10 @@ body.sidebar-collapsed .living-container {
     .living-masonry-grid {
         column-count: 2;
     }
+    
+    .history-video-card {
+        width: 240px;
+    }
 }
 
 @media (max-width: 768px) {
@@ -269,6 +395,14 @@ body.sidebar-collapsed .living-container {
     
     .living-masonry-grid {
         column-count: 1;
+    }
+    
+    .history-video-card {
+        width: 200px;
+    }
+    
+    .living-history-section {
+        gap: 2rem;
     }
 }
 
@@ -852,7 +986,7 @@ body.sidebar-collapsed .living-viewer-modal {
 }
 
 .living-viewer-image img {
-    max-width: 100%;
+        max-width: 100%;
     max-height: calc(90vh - 4rem);
     object-fit: contain;
     display: block;
