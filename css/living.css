@@ -904,7 +904,7 @@ body.sidebar-collapsed .living-container {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 2rem;
+    padding: 0;
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.35s ease-out, visibility 0.35s ease-out, left 0.3s ease;
@@ -936,7 +936,7 @@ body.sidebar-collapsed .living-viewer-modal {
 .living-viewer-container {
     position: relative;
     z-index: 1000;
-    background: #ffffff;
+    background: var(--living-bg-surface);
     border-radius: 24px;
     width: 100%;
     max-width: 1400px;
@@ -945,10 +945,12 @@ body.sidebar-collapsed .living-viewer-modal {
     display: flex;
     flex-direction: column;
     box-shadow: 
-        0 40px 80px rgba(0, 0, 0, 0.25),
-        0 8px 24px rgba(0, 0, 0, 0.15);
-    margin: auto;
+        0 40px 80px rgba(0, 0, 0, 0.5),
+        0 8px 24px rgba(0, 0, 0, 0.3);
+    margin: 0;
     animation: modalIn 0.35s ease-out;
+    align-self: center;
+    justify-self: center;
 }
 
 @keyframes modalIn {
@@ -968,9 +970,9 @@ body.sidebar-collapsed .living-viewer-modal {
     top: 1.5rem;
     right: 1.5rem;
     z-index: 1001;
-    background: rgba(0, 0, 0, 0.05);
+    background: var(--living-bg-card);
     border: none;
-    color: #1c1e21;
+    color: var(--living-text-light);
     font-size: 1.125rem;
     width: 40px;
     height: 40px;
@@ -983,7 +985,7 @@ body.sidebar-collapsed .living-viewer-modal {
 }
 
 .living-viewer-close:hover {
-    background: rgba(0, 0, 0, 0.1);
+    background: var(--living-bg-card-hover);
 }
 
 /* Layout interno - 2 columnas */
@@ -1001,7 +1003,7 @@ body.sidebar-collapsed .living-viewer-modal {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #f5f6f7;
+    background: var(--living-bg-deep);
     padding: 2rem;
     overflow: hidden;
     position: relative;
@@ -1022,7 +1024,7 @@ body.sidebar-collapsed .living-viewer-modal {
     padding: 32px;
     gap: 20px;
     overflow-y: auto;
-    background: #ffffff;
+    background: var(--living-bg-surface);
 }
 
 /* Labels editoriales */
@@ -1030,7 +1032,7 @@ body.sidebar-collapsed .living-viewer-modal {
     font-size: 14px;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: #9aa0a6;
+    color: var(--living-text-muted);
     font-weight: 500;
     margin: 0 0 12px 0;
     display: block;
@@ -1044,7 +1046,7 @@ body.sidebar-collapsed .living-viewer-modal {
 .living-viewer-prompt-text {
     font-size: 16px;
     line-height: 1.6;
-    color: #1c1e21;
+    color: var(--living-text-light);
     margin: 0;
     max-height: 300px;
     overflow-y: auto;
@@ -1060,7 +1062,7 @@ body.sidebar-collapsed .living-viewer-modal {
 }
 
 .living-viewer-prompt-text::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(212, 117, 78, 0.3);
     border-radius: 3px;
 }
 
@@ -1071,14 +1073,14 @@ body.sidebar-collapsed .living-viewer-modal {
 
 .living-viewer-metadata-content {
     font-size: 13px;
-    color: #6b7280;
+    color: var(--living-text-muted);
     line-height: 1.5;
 }
 
 .metadata-item {
     margin-bottom: 12px;
     padding-bottom: 12px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .metadata-item:last-child {
@@ -1089,7 +1091,7 @@ body.sidebar-collapsed .living-viewer-modal {
 
 .metadata-label {
     font-weight: 600;
-    color: #6b7280;
+    color: var(--living-text-gold);
     margin-bottom: 4px;
     font-size: 11px;
     text-transform: uppercase;
@@ -1097,18 +1099,19 @@ body.sidebar-collapsed .living-viewer-modal {
 }
 
 .metadata-value {
-    color: #6b7280;
+    color: var(--living-text-muted);
     word-break: break-word;
 }
 
 .metadata-value pre {
-    background: #f5f6f7;
+    background: var(--living-bg-deep);
     padding: 8px;
     border-radius: 6px;
     overflow-x: auto;
     font-size: 12px;
     margin-top: 8px;
     font-family: 'Monaco', 'Menlo', monospace;
+    color: var(--living-text-light);
 }
 
 /* Acciones */
@@ -1120,7 +1123,7 @@ body.sidebar-collapsed .living-viewer-modal {
 }
 
 .living-viewer-download {
-    background: #f0f1f3;
+    background: var(--living-bg-card);
     border: none;
     border-radius: 999px;
     padding: 12px;
@@ -1130,13 +1133,13 @@ body.sidebar-collapsed .living-viewer-modal {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    color: #1c1e21;
+    color: var(--living-text-light);
     font-size: 16px;
     transition: background 0.2s ease;
 }
 
 .living-viewer-download:hover {
-    background: #e4e6eb;
+    background: var(--living-bg-card-hover);
 }
 
 /* Responsive */

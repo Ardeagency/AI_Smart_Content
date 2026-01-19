@@ -919,7 +919,7 @@ class LivingManager {
                     <div class="metadata-value">${this.escapeHtml(item.value)}</div>
                 </div>
             `).join('')
-            : '<p style="color: #6b7280; font-size: 13px;">No hay metadatos disponibles</p>';
+            : '<p style="color: var(--living-text-muted); font-size: 13px;">No hay metadatos disponibles</p>';
         
         // Mostrar modal
         modal.classList.add('active');
