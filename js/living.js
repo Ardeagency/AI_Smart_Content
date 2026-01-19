@@ -393,47 +393,44 @@ class LivingManager {
         const featuredGrid = document.getElementById('livingFeaturedGrid');
         if (!featuredGrid) return;
         
-        // Obtener las mejores producciones (de RPC o flow outputs) - más cards para scroll horizontal
+        // Obtener las mejores producciones (de RPC o flow outputs) - NO duplicar, usar solo las que hay
         const latestContent = this.latestGeneratedContent || [];
         let featuredItems = [];
         
         // Priorizar contenido de RPC
         if (latestContent.length > 0) {
-            featuredItems = latestContent.slice(0, 8).map(item => ({
-                title: item.prompt_used || item.title || 'Producción destacada',
+            featuredItems = latestContent.map(item => ({
+                prompt: item.prompt_used || item.prompt || '',
                 image_url: item.image_url || item.url || item.storage_url || item.file_url,
-                item: item
+                item: item,
+                output: null
             }));
         }
         
-        // Si no hay suficiente contenido de RPC, completar con flow runs
-        if (featuredItems.length < 8 && this.flowRuns.length > 0) {
-            const flowRunItems = this.flowRuns.slice(0, 8 - featuredItems.length).map(run => {
+        // Si no hay suficiente contenido de RPC, agregar flow runs
+        if (featuredItems.length === 0 && this.flowRuns.length > 0) {
+            featuredItems = this.flowRuns.map(run => {
                 const output = this.flowOutputs.find(o => o.run_id === run.id);
                 return {
-                    title: run.status || output?.prompt_used || 'Producción',
+                    prompt: output?.prompt_used || run.status || '',
                     image_url: output?.file_url || output?.storage_path || null,
                     run: run,
                     output: output
                 };
             });
-            featuredItems = [...featuredItems, ...flowRunItems];
         }
         
         // Si no hay contenido, mostrar placeholders aspiracionales
         if (featuredItems.length === 0) {
             featuredItems = [
-                { title: 'Create cinematic content', image_url: null },
-                { title: 'Visuals, motion and storytelling', image_url: null },
-                { title: 'Selected projects from the last month', image_url: null },
-                { title: 'Otherworldly places located on Earth', image_url: null },
-                { title: 'Visualizing distorted sound mixes', image_url: null }
+                { prompt: 'Create cinematic content', image_url: null },
+                { prompt: 'Visuals, motion and storytelling', image_url: null }
             ];
         }
         
         featuredGrid.innerHTML = featuredItems.map((item, index) => {
             const imageUrl = item.image_url || item.url || item.storage_url;
-            const title = item.title || item.prompt_used || 'Producción destacada';
+            const prompt = item.prompt || '';
             
             // Construir URL completa si es necesario
             let finalImageUrl = imageUrl;
@@ -445,21 +442,26 @@ class LivingManager {
                 }
             }
             
+            // Si el item tiene storage_path pero no URL completa, intentar construirla
+            if (!finalImageUrl && item.item?.storage_path) {
+                finalImageUrl = this.getPublicUrlFromStorage('production-outputs', item.item.storage_path);
+            }
+            
             return `
-                <div class="featured-card" data-index="${index}">
+                <div class="featured-card" data-index="${index}" data-image-url="${this.escapeHtml(finalImageUrl || '')}">
                     <div class="featured-card-visual">
                         ${finalImageUrl && finalImageUrl.startsWith('http')
-                            ? `<img src="${this.escapeHtml(finalImageUrl)}" alt="${this.escapeHtml(title)}" loading="${index < 3 ? 'eager' : 'lazy'}" onerror="this.parentElement.innerHTML='<div class=\\'featured-card-visual-placeholder\\'><i class=\\'fas fa-image\\'></i></div>';" onload="this.style.opacity='1';">`
+                            ? `<img src="${this.escapeHtml(finalImageUrl)}" alt="${this.escapeHtml(prompt)}" loading="${index < 3 ? 'eager' : 'lazy'}" onerror="this.parentElement.innerHTML='<div class=\\'featured-card-visual-placeholder\\'><i class=\\'fas fa-image\\'></i></div>';" onload="this.style.opacity='1';">`
                             : `<div class="featured-card-visual-placeholder"><i class="fas fa-image"></i></div>`
                         }
                     </div>
-                    <div class="featured-card-content">
-                        <h2 class="featured-card-title">${this.escapeHtml(title)}</h2>
-                        <button class="featured-card-button">
-                            <i class="fas fa-play"></i>
-                            <span>Ver producción</span>
-                        </button>
+                    <div class="featured-card-prompt-overlay">
+                        <div class="featured-card-prompt-title">Prompt</div>
+                        <div class="featured-card-prompt-text">${this.escapeHtml(prompt)}</div>
                     </div>
+                    <button class="featured-card-download-btn" title="Descargar imagen" data-image-url="${this.escapeHtml(finalImageUrl || '')}">
+                        <i class="fas fa-download"></i>
+                    </button>
                 </div>
             `;
         }).join('');
@@ -470,6 +472,34 @@ class LivingManager {
             img.style.opacity = '0';
             img.style.transition = 'opacity 0.5s ease';
         });
+        
+        // Agregar event listeners para descarga
+        const downloadBtns = featuredGrid.querySelectorAll('.featured-card-download-btn');
+        downloadBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const imageUrl = btn.dataset.imageUrl;
+                if (imageUrl && imageUrl.startsWith('http')) {
+                    this.downloadImage(imageUrl);
+                }
+            });
+        });
+    }
+    
+    downloadImage(imageUrl) {
+        try {
+            const link = document.createElement('a');
+            link.href = imageUrl;
+            link.download = `production-${Date.now()}.jpg`;
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error) {
+            console.error('Error descargando imagen:', error);
+            // Fallback: abrir en nueva pestaña
+            window.open(imageUrl, '_blank');
+        }
     }
 
     renderContentGrid(runs = null) {
