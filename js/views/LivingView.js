@@ -43,16 +43,25 @@ class LivingView extends BaseView {
    * Inicializar la vista
    */
   async init() {
-    // Inicializar LivingManager (usar la clase existente)
-    if (window.LivingManager) {
-      this.livingManager = new window.LivingManager();
-      await this.livingManager.init();
+    // Reutilizar LivingManager existente o crear uno nuevo
+    if (window.livingManager && window.livingManager.initialized) {
+      // Si ya existe y está inicializado, solo re-renderizar
+      this.livingManager = window.livingManager;
+      await this.livingManager.renderAll();
     } else {
-      // Si LivingManager no está disponible, cargar el script
-      await this.loadLivingScript();
+      // Si no existe o no está inicializado, crear uno nuevo
       if (window.LivingManager) {
         this.livingManager = new window.LivingManager();
+        window.livingManager = this.livingManager; // Guardar referencia global
         await this.livingManager.init();
+      } else {
+        // Si LivingManager no está disponible, cargar el script
+        await this.loadLivingScript();
+        if (window.LivingManager) {
+          this.livingManager = new window.LivingManager();
+          window.livingManager = this.livingManager; // Guardar referencia global
+          await this.livingManager.init();
+        }
       }
     }
 
@@ -141,12 +150,11 @@ class LivingView extends BaseView {
 
   /**
    * Cleanup al salir de la vista
+   * NO destruir LivingManager - se reutiliza entre navegaciones
    */
   async onLeave() {
-    // Limpiar LivingManager si existe
-    if (this.livingManager && typeof this.livingManager.destroy === 'function') {
-      await this.livingManager.destroy();
-    }
+    // No hacer nada - dejar que el manager persista
+    // El modal se mantiene en el body y no se pierde
   }
 }
 

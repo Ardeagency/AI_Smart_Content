@@ -138,6 +138,7 @@ body.sidebar-collapsed .living-container {
     padding: 0 4rem var(--living-spacing-section);
     max-width: 1800px;
     margin: 0 auto;
+    align-items: start; /* Alinear al inicio para evitar desorden */
 }
 
 /* Sección 2: Historial de Producciones - Archivo Operativo */
@@ -148,6 +149,8 @@ body.sidebar-collapsed .living-container {
     gap: 4rem;
     min-height: 400px;
     padding-top: 2rem;
+    width: 100%; /* Asegurar ancho completo */
+    box-sizing: border-box; /* Incluir padding en el ancho */
 }
 
 /* Sub-sección 2A: Videos - Strip editorial horizontal */
@@ -539,6 +542,8 @@ body.sidebar-collapsed .living-container {
 /* No compite visualmente, acompaña - Mesa del productor */
 .living-highlights-section {
     min-height: 400px;
+    width: 100%; /* Asegurar ancho completo */
+    box-sizing: border-box; /* Incluir padding en el ancho */
 }
 
 .living-highlights-content {
@@ -939,11 +944,7 @@ body.sidebar-collapsed .living-container {
     transform: translateY(-2px);
 }
 
-.living-content-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.5rem;
-}
+/* CSS duplicado eliminado - usar el grid de 2 columnas definido arriba */
 
 .content-card {
     background: var(--living-bg-glass);
@@ -1067,9 +1068,7 @@ body.sidebar-collapsed .living-container {
     max-width: 400px;
     }
     
-    .living-content-grid {
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    }
+    /* Grid de 2 columnas se mantiene en responsive */
 }
 
 @media (max-width: 768px) {
@@ -1106,10 +1105,7 @@ body.sidebar-collapsed .living-container {
         font-size: 1.5rem;
     }
     
-    .living-content-grid {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1rem;
-    }
+    /* Grid de 2 columnas se convierte en 1 columna en móvil (ya definido arriba) */
 }
 
 /* ============================================

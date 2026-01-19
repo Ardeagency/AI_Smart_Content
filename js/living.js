@@ -17,10 +17,17 @@ class LivingManager {
         this.latestGeneratedContent = [];
         this.eventListenersSetup = false;
 
-        this.init();
+        this.initialized = false;
+        // NO llamar init() automáticamente en constructor
+        // Se llamará desde LivingView cuando sea necesario
     }
 
     async init() {
+        if (this.initialized) {
+            // Si ya está inicializado, solo re-renderizar
+            await this.renderAll();
+            return;
+        }
         try {
         // Verificar acceso antes de continuar
         if (typeof verifyUserAccess === 'function') {
@@ -83,6 +90,8 @@ class LivingManager {
             this.setupEventListeners();
             this.eventListenersSetup = true;
         }
+        
+        this.initialized = true;
     }
 
     async initSupabase() {
@@ -394,14 +403,21 @@ class LivingManager {
     
     moveModalToBody() {
         const modal = document.getElementById('livingViewerModal');
-        if (!modal) return;
+        if (!modal) {
+            // Si el modal no existe, crearlo desde el template
+            // Esto puede pasar si se navega y el template se recarga
+            console.warn('⚠️ Modal no encontrado, puede que necesite recargarse');
+            return;
+        }
         
-        // Verificar si el modal está dentro de #app-container
+        // Verificar si el modal está dentro de #app-container o en cualquier lugar que no sea body
         const appContainer = document.getElementById('app-container');
-        if (appContainer && appContainer.contains(modal)) {
-            // Mover el modal al body
+        const isInBody = modal.parentElement === document.body;
+        
+        if (!isInBody) {
+            // Mover el modal al body si no está ahí
             document.body.appendChild(modal);
-            console.log('✅ Modal movido fuera de #app-container al body');
+            console.log('✅ Modal movido al body');
         }
     }
 
@@ -591,18 +607,18 @@ class LivingManager {
                     <div class="history-video-card-icons">
                         <div class="history-video-card-icon" title="Video">
                             <i class="fas fa-video"></i>
-                        </div>
+                    </div>
                         <div class="history-video-card-icon history-video-download" title="Descargar" data-image-url="${this.escapeHtml(finalUrl || '')}">
                             <i class="fas fa-download"></i>
-                        </div>
                     </div>
+                </div>
                     <div class="history-video-card-play">
                         <i class="fas fa-play"></i>
-                    </div>
+                </div>
                     ${duration ? `<div class="history-video-card-duration">${duration}</div>` : ''}
                 </div>
-            </div>
-        `;
+                </div>
+            `;
     }
 
     renderHistoryImageCard(imageUrl, run, output, index, prompt = '') {
@@ -1058,7 +1074,7 @@ class LivingManager {
                 <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
                     <div style="font-weight: 600; color: var(--living-text-gold); margin-bottom: 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">${this.escapeHtml(item.label)}</div>
                     <div style="color: var(--living-text-muted); font-size: 13px; word-break: break-word;">${this.escapeHtml(item.value)}</div>
-                </div>
+            </div>
             `).join('')
             : '<div style="color: var(--living-text-muted); font-size: 13px;">No hay metadatos disponibles</div>';
         
@@ -1293,11 +1309,5 @@ class LivingManager {
     }
 }
 
-// Inicializar cuando el DOM esté listo
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        window.livingManager = new LivingManager();
-    });
-} else {
-    window.livingManager = new LivingManager();
-}
+// NO inicializar automáticamente - se inicializa desde LivingView
+// Esto evita conflictos cuando se navega entre vistas
