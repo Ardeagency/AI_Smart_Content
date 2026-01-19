@@ -154,13 +154,29 @@ class BaseView {
       this.updateLinksForRouter();
 
       // Llamar a onEnter antes de inicializar (para preparar datos, etc.)
-      await this.onEnter();
+      try {
+        await this.onEnter();
+      } catch (error) {
+        console.warn('⚠️ Error en onEnter:', error);
+        // Continuar de todas formas
+      }
 
       // Inicializar vista (setup event listeners, componentes, etc.)
-      await this.init();
+      // NO bloquear si hay errores - renderizar de todas formas
+      try {
+        await this.init();
+      } catch (error) {
+        console.error('❌ Error en init(), pero continuando:', error);
+        // Continuar de todas formas para mostrar la vista
+      }
 
       // Actualizar header con datos del usuario y contexto
-      await this.updateHeader();
+      try {
+        await this.updateHeader();
+      } catch (error) {
+        console.warn('⚠️ Error actualizando header:', error);
+        // Continuar de todas formas
+      }
 
       this.initialized = true;
 
@@ -169,7 +185,10 @@ class BaseView {
       
       console.log(`✅ Vista renderizada: ${this.constructor.name}`);
     } catch (error) {
-      console.error('❌ Error renderizando vista:', error);
+      console.error('❌ Error crítico renderizando vista:', error);
+      // Aún así, marcar como inicializada para que no se quede en loading
+      this.initialized = true;
+      this.hideLoading();
       
       // Usar ErrorHandler si está disponible
       if (window.errorHandler) {
