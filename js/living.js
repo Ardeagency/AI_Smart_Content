@@ -395,13 +395,27 @@ class LivingManager {
                 console.log('✅ Contenido generado cargado:', this.latestGeneratedContent.length, 'elementos');
                 // Log detallado de lo que devuelve la RPC
                 this.latestGeneratedContent.forEach((item, index) => {
+                    const imageUrl = item.image_url || item.url || item.storage_url || item.imageUrl;
                     console.log(`  📸 RPC Item ${index + 1}:`, {
-                        image_url: item.image_url,
+                        image_url: imageUrl,
+                        storage_path: item.storage_path,
                         prompt_used: item.prompt_used,
                         style_trend: item.style_trend,
                         created_at: item.created_at,
                         full_item: item
                     });
+                    
+                    // Validar URL si existe
+                    if (imageUrl) {
+                        try {
+                            const urlObj = new URL(imageUrl);
+                            console.log(`    ✅ URL ${index + 1} es válida:`, imageUrl);
+                        } catch (error) {
+                            console.warn(`    ⚠️ URL ${index + 1} no es válida:`, imageUrl, error);
+                        }
+                    } else {
+                        console.warn(`    ⚠️ RPC Item ${index + 1} no tiene image_url`);
+                    }
                 });
             } else {
                 console.log('ℹ️ No hay contenido generado disponible');
@@ -457,7 +471,16 @@ class LivingManager {
             
             // Validar y procesar URLs de la RPC
             todayProductions = await Promise.all(latestContent.slice(0, 3).map(async (item) => {
-                let imageUrl = item.image_url;
+                // Intentar obtener URL desde diferentes campos posibles
+                let imageUrl = item.image_url || item.url || item.storage_url || item.imageUrl;
+                
+                console.log('🔍 Procesando item RPC:', {
+                    image_url: item.image_url,
+                    url: item.url,
+                    storage_url: item.storage_url,
+                    storage_path: item.storage_path,
+                    found_url: imageUrl
+                });
                 
                 // Si la URL de la RPC no es válida o no existe, intentar obtener desde storage_path si está disponible
                 if (!imageUrl || (!imageUrl.startsWith('http') && !imageUrl.startsWith('/'))) {
@@ -505,6 +528,12 @@ class LivingManager {
                     created_at: item.created_at
                 };
             }));
+            
+            console.log('📊 Resumen de producciones obtenidas desde RPC:', {
+                total: todayProductions.length,
+                con_url: todayProductions.filter(p => p.image_url).length,
+                urls: todayProductions.map(p => p.image_url)
+            });
         } else {
             // Fallback: Obtener últimas producciones de flow outputs (no solo de hoy)
             console.log('📸 Usando fallback de flow_outputs:', this.flowOutputs.length, 'elementos disponibles');
@@ -632,7 +661,17 @@ class LivingManager {
                         id: output.id,
                         storage_path: output.storage_path,
                         storage_object_id: output.storage_object_id,
-                        file_url: output.file_url
+                        file_url: output.file_url,
+                        metadata: output.metadata
+                    });
+                } else {
+                    console.log('✅ URL obtenida para output:', {
+                        id: output.id,
+                        url: imageUrl,
+                        source: output.file_url ? 'file_url' : 
+                               output.storage_object_id ? 'storage_object_id' :
+                               output.metadata?.image_url ? 'metadata.image_url' :
+                               'storage_path'
                     });
                 }
                 
@@ -642,6 +681,12 @@ class LivingManager {
                     created_at: output.created_at
                 };
             }));
+            
+            console.log('📊 Resumen de producciones obtenidas desde flow_outputs:', {
+                total: todayProductions.length,
+                con_url: todayProductions.filter(p => p.image_url).length,
+                urls: todayProductions.map(p => p.image_url)
+            });
         }
 
         // Renderizar items (siempre mostrar 3)
@@ -649,11 +694,47 @@ class LivingManager {
         for (let i = 0; i < 3; i++) {
             if (todayProductions[i] && todayProductions[i].image_url) {
                 const item = todayProductions[i];
-                const imageUrl = item.image_url;
+                let imageUrl = item.image_url;
+                
+                console.log(`🖼️ Procesando imagen ${i + 1}:`, {
+                    original_url: imageUrl,
+                    has_prompt: !!item.prompt_used,
+                    has_style: !!item.style_trend
+                });
                 
                 // Validar que sea una URL válida
                 if (!imageUrl || (!imageUrl.startsWith('http') && !imageUrl.startsWith('/'))) {
-                    console.warn('⚠️ URL de imagen inválida:', imageUrl);
+                    console.warn(`⚠️ URL de imagen ${i + 1} inválida:`, imageUrl);
+                    items.push(`
+                        <div class="visual-day-item">
+                            <div class="visual-day-placeholder">
+                                <i class="fas fa-image"></i>
+                            </div>
+                        </div>
+                    `);
+                    continue;
+                }
+                
+                // Validar URL antes de renderizar (verificar que sea accesible)
+                let isValidUrl = false;
+                try {
+                    // Verificar que la URL tenga un formato válido
+                    const urlObj = new URL(imageUrl);
+                    isValidUrl = urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+                    console.log(`✅ URL ${i + 1} tiene formato válido:`, imageUrl);
+                } catch (urlError) {
+                    // Si no es una URL absoluta, verificar si es relativa válida
+                    if (imageUrl.startsWith('/')) {
+                        isValidUrl = true;
+                        console.log(`✅ URL ${i + 1} es ruta relativa válida:`, imageUrl);
+                    } else {
+                        console.warn(`⚠️ URL ${i + 1} no es válida:`, imageUrl, urlError);
+                        isValidUrl = false;
+                    }
+                }
+                
+                if (!isValidUrl) {
+                    console.warn(`⚠️ URL ${i + 1} no pasó validación, usando placeholder`);
                     items.push(`
                         <div class="visual-day-item">
                             <div class="visual-day-placeholder">
@@ -667,14 +748,24 @@ class LivingManager {
                 const promptInfo = item.prompt_used ? `<div class="visual-day-prompt">${this.escapeHtml(item.prompt_used.substring(0, 50))}...</div>` : '';
                 const styleInfo = item.style_trend ? `<div class="visual-day-style">Estilo: ${this.escapeHtml(item.style_trend)}</div>` : '';
                 
+                // Agregar timestamp para evitar caché
+                const imageUrlWithCache = imageUrl + (imageUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
+                
+                console.log(`🎨 Renderizando imagen ${i + 1} con URL:`, imageUrlWithCache);
+                
                 items.push(`
                     <div class="visual-day-item">
-                        <img src="${this.escapeHtml(imageUrl)}" alt="Visual generado por IA" onerror="this.parentElement.innerHTML='<div class=\\'visual-day-placeholder\\'><i class=\\'fas fa-image\\'></i></div>'">
+                        <img src="${this.escapeHtml(imageUrlWithCache)}" 
+                             alt="Visual generado por IA" 
+                             loading="lazy"
+                             onerror="console.error('❌ Error cargando imagen ${i + 1}:', '${this.escapeHtml(imageUrl)}'); this.parentElement.innerHTML='<div class=\\'visual-day-placeholder\\'><i class=\\'fas fa-image\\'></i></div>';"
+                             onload="console.log('✅ Imagen ${i + 1} cargada exitosamente');">
                         ${promptInfo}
                         ${styleInfo}
                     </div>
                 `);
             } else {
+                console.log(`ℹ️ No hay imagen ${i + 1} disponible`);
                 items.push(`
                     <div class="visual-day-item">
                         <div class="visual-day-placeholder">
@@ -685,6 +776,7 @@ class LivingManager {
             }
         }
 
+        console.log('🎨 Renderizando', items.length, 'items en el Hero');
         productionsOfDayEl.innerHTML = items.join('');
     }
 
