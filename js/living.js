@@ -495,6 +495,13 @@ class LivingManager {
         const images = historyItems.filter(item => item.contentType === 'image');
         const texts = historyItems.filter(item => item.contentType === 'text');
         
+        // Si no hay ningún contenido, mostrar estado vacío solo en imágenes
+        if (videos.length === 0 && images.length === 0 && texts.length === 0) {
+            videosContainer.innerHTML = '';
+            imagesContainer.innerHTML = this.renderEmptyState();
+            return;
+        }
+        
         // Renderizar videos (scroll horizontal)
         if (videos.length === 0) {
             videosContainer.innerHTML = '';
@@ -547,14 +554,11 @@ class LivingManager {
             item: { item: null, output: output, run: run }
         }).replace(/"/g, '&quot;');
         
-        // Calcular ancho según ratio (asumiendo 16:9 por defecto, pero puede variar)
-        const width = 'auto'; // Se ajustará según el ratio de la imagen
-        
         return `
-            <div class="history-video-card" data-production-id="${productionId}" data-run-id="${run?.id || ''}" data-card-info="${this.escapeHtml(cardData)}" style="width: ${width};">
+            <div class="history-video-card" data-production-id="${productionId}" data-run-id="${run?.id || ''}" data-card-info="${this.escapeHtml(cardData)}">
                 ${finalUrl
-                    ? `<img src="${this.escapeHtml(finalUrl)}" alt="Video thumbnail" class="history-video-card-thumbnail" loading="lazy" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'history-video-card-thumbnail\\' style=\\'background: #0F1115; display: flex; align-items: center; justify-content: center;\\'><i class=\\'fas fa-video\\' style=\\'font-size: 2rem; color: var(--living-text-muted);\\'></i></div>';" />`
-                    : `<div class="history-video-card-thumbnail" style="background: #0F1115; display: flex; align-items: center; justify-content: center;">
+                    ? `<img src="${this.escapeHtml(finalUrl)}" alt="Video thumbnail" class="history-video-card-thumbnail" loading="lazy" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'history-video-card-thumbnail\\' style=\\'background: #0F1115; display: flex; align-items: center; justify-content: center;\\'><i class=\\'fas fa-video\\' style=\\'font-size: 2rem; color: var(--living-text-muted);\\'></i></div>';" onload="this.parentElement.style.width=this.naturalWidth/(this.naturalHeight/240)+'px';" />`
+                    : `<div class="history-video-card-thumbnail" style="background: #0F1115; display: flex; align-items: center; justify-content: center; width: 180px;">
                         <i class="fas fa-video" style="font-size: 2rem; color: var(--living-text-muted);"></i>
                     </div>`
                 }
