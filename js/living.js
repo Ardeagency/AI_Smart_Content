@@ -536,53 +536,6 @@ class LivingManager {
         }
     }
 
-    renderContentGrid(runs = null) {
-        const contentGrid = document.getElementById('livingContentGrid');
-        if (!contentGrid) return;
-        
-        // Usar runs proporcionados o todos los flowRuns
-        const allProductions = runs || this.flowRuns.slice(0, 12);
-        
-        if (allProductions.length === 0) {
-            contentGrid.innerHTML = `
-                <div style="grid-column: 1 / -1; text-align: center; padding: 4rem; color: var(--living-text-muted);">
-                    <i class="fas fa-image" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
-                    <p>No hay producciones aún</p>
-                </div>
-            `;
-            return;
-        }
-
-        contentGrid.innerHTML = allProductions.map(run => {
-            const imageOutput = this.flowOutputs.find(output => output.run_id === run.id);
-            const contentType = this.getContentType(run, imageOutput);
-            const imageUrl = imageOutput?.file_url || imageOutput?.storage_path || null;
-            const title = run.status || contentType || 'Producción';
-            const year = new Date(run.created_at || Date.now()).getFullYear();
-
-            return `
-                <div class="content-card" data-run-id="${run.id}">
-                    <div class="content-card-image-container">
-                        ${imageUrl && imageUrl.startsWith('http')
-                            ? `<img src="${this.escapeHtml(imageUrl)}" alt="${this.escapeHtml(title)}" class="content-card-image" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'content-card-image-placeholder\\'><i class=\\'fas fa-image\\'></i></div>';" onload="this.style.height='auto'; this.style.minHeight='200px'; this.style.maxHeight='500px';">`
-                            : `<div class="content-card-image-placeholder"><i class="fas fa-image"></i></div>`
-                        }
-                    </div>
-                    <div class="content-card-info">
-                        <h3 class="content-card-title">${this.escapeHtml(title)}</h3>
-                        <div class="content-card-meta">
-                            <span class="content-card-rating">
-                                <i class="fas fa-star"></i>
-                                <span>${(Math.random() * 2 + 6).toFixed(1)}</span>
-                            </span>
-                            <span class="content-card-year">${year}</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    }
-
     setupCategoryFilters() {
         const categoryBtns = document.querySelectorAll('.category-btn');
         
