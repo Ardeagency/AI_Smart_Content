@@ -261,18 +261,88 @@ class LivingManager {
     }
 
     async loadFlowOutputs() {
-        if (!this.supabase || !this.flowRuns.length) return;
+        if (!this.supabase) return;
 
         try {
-            const runIds = this.flowRuns.map(run => run.id);
-            const { data, error } = await this.supabase
+            // Obtener brand_id si no lo tenemos
+            if (!this.brandId) {
+                await this.loadBrandId();
+            }
+
+            let query = this.supabase
                 .from('flow_outputs')
-                .select('*')
-                .in('run_id', runIds)
-                .order('created_at', { ascending: false });
+                .select(`
+                    id,
+                    run_id,
+                    output_type,
+                    metadata,
+                    created_at,
+                    storage_path,
+                    prompt_used,
+                    generated_copy,
+                    generated_hashtags,
+                    creative_rationale,
+                    technical_params,
+                    text_content,
+                    storage_object_id
+                `)
+                .order('created_at', { ascending: false })
+                .limit(50);
+
+            // Si tenemos brand_id, filtrar por flow_runs relacionados
+            if (this.brandId) {
+                // Primero obtener run_ids del brand
+                const { data: runs } = await this.supabase
+                    .from('flow_runs')
+                    .select('id')
+                    .eq('brand_id', this.brandId)
+                    .limit(100);
+
+                if (runs && runs.length > 0) {
+                    const runIds = runs.map(r => r.id);
+                    query = query.in('run_id', runIds);
+                } else {
+                    // Si no hay runs del brand, usar user_id
+                    const { data: userRuns } = await this.supabase
+                        .from('flow_runs')
+                        .select('id')
+                        .eq('user_id', this.userId)
+                        .limit(100);
+
+                    if (userRuns && userRuns.length > 0) {
+                        const runIds = userRuns.map(r => r.id);
+                        query = query.in('run_id', runIds);
+                    } else {
+                        // No hay runs, retornar vacío
+                        this.flowOutputs = [];
+                        return;
+                    }
+                }
+            } else if (this.userId) {
+                // Si no hay brand_id, filtrar por user_id a través de flow_runs
+                const { data: userRuns } = await this.supabase
+                    .from('flow_runs')
+                    .select('id')
+                    .eq('user_id', this.userId)
+                    .limit(100);
+
+                if (userRuns && userRuns.length > 0) {
+                    const runIds = userRuns.map(r => r.id);
+                    query = query.in('run_id', runIds);
+                } else {
+                    this.flowOutputs = [];
+                    return;
+                }
+            }
+
+            const { data, error } = await query;
 
             if (error) throw error;
             this.flowOutputs = data || [];
+            
+            if (this.flowOutputs.length > 0) {
+                console.log('✅ Flow outputs cargados:', this.flowOutputs.length, 'elementos');
+            }
         } catch (error) {
             console.error('❌ Error cargando flow outputs:', error);
             this.flowOutputs = [];
@@ -393,58 +463,68 @@ class LivingManager {
         const featuredGrid = document.getElementById('livingFeaturedGrid');
         if (!featuredGrid) return;
         
-        // Obtener las mejores producciones (de RPC o flow outputs) - NO duplicar, usar solo las que hay
-        const latestContent = this.latestGeneratedContent || [];
+        // Usar directamente flow_outputs como fuente principal
         let featuredItems = [];
         
-        // Priorizar contenido de RPC
-        if (latestContent.length > 0) {
-            featuredItems = latestContent.map(item => ({
-                prompt: item.prompt_used || item.prompt || '',
-                image_url: item.image_url || item.url || item.storage_url || item.file_url,
-                item: item,
-                output: null
-            }));
+        // Priorizar flow_outputs (fuente principal según el schema)
+        if (this.flowOutputs && this.flowOutputs.length > 0) {
+            featuredItems = this.flowOutputs
+                .filter(output => {
+                    // Solo incluir outputs de tipo imagen
+                    const outputType = (output.output_type || '').toLowerCase();
+                    return outputType.includes('image') || outputType.includes('photo') || 
+                           output.storage_path || output.storage_object_id;
+                })
+                .map(output => ({
+                    prompt: output.prompt_used || '',
+                    storage_path: output.storage_path,
+                    storage_object_id: output.storage_object_id,
+                    output_type: output.output_type,
+                    created_at: output.created_at,
+                    output: output
+                }));
         }
         
-        // Si no hay suficiente contenido de RPC, agregar flow runs
-        if (featuredItems.length === 0 && this.flowRuns.length > 0) {
-            featuredItems = this.flowRuns.map(run => {
-                const output = this.flowOutputs.find(o => o.run_id === run.id);
-                return {
-                    prompt: output?.prompt_used || run.status || '',
-                    image_url: output?.file_url || output?.storage_path || null,
-                    run: run,
-                    output: output
-                };
-            });
+        // Si no hay flow_outputs, intentar con RPC como fallback
+        if (featuredItems.length === 0 && this.latestGeneratedContent && this.latestGeneratedContent.length > 0) {
+            featuredItems = this.latestGeneratedContent.map(item => ({
+                prompt: item.prompt_used || item.prompt || '',
+                storage_path: item.storage_path,
+                storage_object_id: item.storage_object_id,
+                image_url: item.image_url || item.url || item.storage_url || item.file_url,
+                output: null
+            }));
         }
         
         // Si no hay contenido, mostrar placeholders aspiracionales
         if (featuredItems.length === 0) {
             featuredItems = [
-                { prompt: 'Create cinematic content', image_url: null },
-                { prompt: 'Visuals, motion and storytelling', image_url: null }
+                { prompt: 'Create cinematic content', storage_path: null },
+                { prompt: 'Visuals, motion and storytelling', storage_path: null }
             ];
         }
         
         featuredGrid.innerHTML = featuredItems.map((item, index) => {
-            const imageUrl = item.image_url || item.url || item.storage_url;
             const prompt = item.prompt || '';
             
-            // Construir URL completa si es necesario
-            let finalImageUrl = imageUrl;
-            if (imageUrl && !imageUrl.startsWith('http') && item.output) {
+            // Construir URL desde storage_path (campo principal en flow_outputs)
+            let finalImageUrl = null;
+            
+            if (item.storage_path) {
                 // Intentar construir URL desde storage_path
-                const storagePath = item.output.storage_path || item.output.storage_object_id;
-                if (storagePath) {
-                    finalImageUrl = this.getPublicUrlFromStorage('production-outputs', storagePath) || imageUrl;
-                }
+                finalImageUrl = this.getPublicUrlFromStorage('production-outputs', item.storage_path);
             }
             
-            // Si el item tiene storage_path pero no URL completa, intentar construirla
-            if (!finalImageUrl && item.item?.storage_path) {
-                finalImageUrl = this.getPublicUrlFromStorage('production-outputs', item.item.storage_path);
+            // Si storage_path no funcionó, intentar con storage_object_id
+            if (!finalImageUrl && item.storage_object_id) {
+                // storage_object_id es un UUID, necesitamos obtener el path desde storage.objects
+                // Por ahora, intentar construir URL directa
+                finalImageUrl = this.getPublicUrlFromStorage('production-outputs', item.storage_object_id);
+            }
+            
+            // Fallback: usar image_url si existe (de RPC)
+            if (!finalImageUrl && item.image_url && item.image_url.startsWith('http')) {
+                finalImageUrl = item.image_url;
             }
             
             return `
