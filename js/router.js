@@ -270,6 +270,9 @@ class Router {
           this.currentView.container.style.display = '';
         }
         
+        // Ligero retraso para suavizar la transición
+        await new Promise(resolve => setTimeout(resolve, 100));
+
         // Llamar onEnter para que la vista pueda hacer verificaciones
         if (typeof this.currentView.onEnter === 'function') {
           await this.currentView.onEnter();
@@ -291,6 +294,14 @@ class Router {
       if (container) {
         container.classList.add('view-enter');
       }
+
+      // Mostrar loading minimalista antes de renderizar
+      if (this.currentView.container) {
+        this.currentView.showLoading();
+      }
+
+      // Ligero retraso para suavizar la transición
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Renderizar nueva vista
       await this.currentView.render();
