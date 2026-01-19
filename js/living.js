@@ -554,11 +554,20 @@ class LivingManager {
                     return this.renderTextCard(item.run, item.output, index);
                 } else {
                     let imageUrl = item.fileUrl;
-                    if (imageUrl && !imageUrl.startsWith('http') && item.output) {
+                    if (imageUrl && !this.isValidUrl(imageUrl) && item.output) {
                         const storagePath = item.output.storage_path || item.output.storage_object_id;
                         if (storagePath) {
-                            imageUrl = this.getPublicUrlFromStorage('production-outputs', storagePath) || imageUrl;
+                            const constructedUrl = this.getPublicUrlFromStorage('production-outputs', storagePath);
+                            if (constructedUrl && this.isValidUrl(constructedUrl)) {
+                                imageUrl = constructedUrl;
+                            } else {
+                                imageUrl = null; // Descartar URL inválida
+                            }
+                        } else {
+                            imageUrl = null; // Sin storage_path, descartar
                         }
+                    } else if (imageUrl && !this.isValidUrl(imageUrl)) {
+                        imageUrl = null; // URL no válida, descartar
                     }
                     return this.renderHistoryImageCard(imageUrl, item.run, item.output, index, item.prompt);
                 }
