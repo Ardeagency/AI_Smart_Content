@@ -71,19 +71,169 @@ body.sidebar-collapsed .living-container {
 }
 
 /* ============================================
-   GRID UNIFICADO DE PRODUCCIONES
+   SECCIÓN 1: HERO/ENCABEZADO - Producciones Automatizadas
    ============================================ */
-.living-grid-section {
+.living-hero-section {
+    padding: 2rem 4rem var(--living-spacing-section);
+    max-width: 1800px;
+    margin: 0 auto;
+}
+
+.living-hero-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.living-hero-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--living-text-light);
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.5px;
+}
+
+.living-hero-grid {
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 1rem;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(212, 117, 78, 0.3) transparent;
+}
+
+.living-hero-grid::-webkit-scrollbar {
+    height: 8px;
+}
+
+.living-hero-grid::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.living-hero-grid::-webkit-scrollbar-thumb {
+    background: rgba(212, 117, 78, 0.3);
+    border-radius: 4px;
+}
+
+.living-hero-grid::-webkit-scrollbar-thumb:hover {
+    background: rgba(212, 117, 78, 0.5);
+}
+
+/* ============================================
+   SECCIONES 2 Y 3: Grid de 2 columnas
+   ============================================ */
+.living-content-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
     padding: 0 4rem var(--living-spacing-section);
     max-width: 1800px;
     margin: 0 auto;
 }
 
-.living-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+/* Sección 2: Historial de Producciones (Izquierda) */
+.living-history-section {
+    min-height: 400px;
+}
+
+.living-section-header {
+    margin-bottom: 1.5rem;
+}
+
+.living-section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--living-text-light);
+    letter-spacing: -0.3px;
+}
+
+/* Galería Masonry */
+.living-masonry-grid {
+    column-count: 3;
+    column-gap: 1.5rem;
+    column-fill: balance;
+}
+
+.living-masonry-item {
+    break-inside: avoid;
+    margin-bottom: 1.5rem;
+    page-break-inside: avoid;
+    display: inline-block;
+    width: 100%;
+}
+
+/* Sección 3: Destacados del Usuario (Derecha) */
+.living-highlights-section {
+    min-height: 400px;
+}
+
+.living-highlights-content {
+    display: flex;
+    flex-direction: column;
     gap: 1.5rem;
-    padding-bottom: 2rem;
+}
+
+/* Cards de destacados */
+.highlight-card {
+    background: var(--living-bg-card);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: var(--living-shadow-soft);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}
+
+.highlight-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--living-shadow-medium);
+    border-color: rgba(212, 117, 78, 0.2);
+}
+
+.highlight-card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--living-text-light);
+    margin-bottom: 0.75rem;
+}
+
+.highlight-card-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--living-text-gold);
+    margin-bottom: 0.5rem;
+}
+
+.highlight-card-label {
+    font-size: 0.875rem;
+    color: var(--living-text-muted);
+}
+
+/* Responsive para grid de 2 columnas */
+@media (max-width: 1024px) {
+    .living-content-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .living-masonry-grid {
+        column-count: 2;
+    }
+}
+
+@media (max-width: 768px) {
+    .living-hero-section,
+    .living-content-grid {
+        padding: 0 2rem var(--living-spacing-section);
+    }
+    
+    .living-hero-grid .featured-card {
+        width: 250px;
+    }
+    
+    .living-masonry-grid {
+        column-count: 1;
+    }
 }
 
 /* Card de producción - más pequeña */

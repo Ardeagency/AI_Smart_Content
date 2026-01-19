@@ -32,40 +32,36 @@
     <!-- Contenido Principal -->
     <main class="main-content living-main-content">
         <div class="living-container">
-            <!-- Category Selection Bar -->
-            <section class="living-categories-section">
-                <div class="living-categories-bar" id="livingCategoriesBar">
-                    <button class="category-btn active" data-category="all">
-                        <i class="fas fa-fire"></i>
-                        <span>Todas</span>
-                    </button>
-                    <button class="category-btn" data-category="image">
-                        <i class="fas fa-image"></i>
-                        <span>Imágenes</span>
-                    </button>
-                    <button class="category-btn" data-category="video">
-                        <i class="fas fa-video"></i>
-                        <span>Videos</span>
-                    </button>
-                    <button class="category-btn" data-category="reel">
-                        <i class="fas fa-film"></i>
-                        <span>Reels</span>
-                    </button>
-                    <button class="category-btn" data-category="product">
-                        <i class="fas fa-box"></i>
-                        <span>Productos</span>
-                    </button>
-                    <button class="category-btn" data-category="brand">
-                        <i class="fas fa-tag"></i>
-                        <span>Marcas</span>
-                    </button>
+            <!-- Sección 1: Hero/Encabezado - Producciones Automatizadas -->
+            <section class="living-hero-section">
+                <div class="living-hero-container">
+                    <h2 class="living-hero-title">Producciones Automatizadas</h2>
+                    <div class="living-hero-grid" id="livingHeroGrid">
+                        <!-- Cards de producciones automatizadas (scroll horizontal) -->
+                    </div>
                 </div>
             </section>
 
-            <!-- Grid Unificado de Producciones -->
-            <section class="living-grid-section">
-                <div class="living-grid" id="livingGrid">
-                    <!-- Todas las cards de producción se generan aquí -->
+            <!-- Sección 2 y 3: Grid de 2 columnas -->
+            <section class="living-content-grid">
+                <!-- Sección 2: Historial de Producciones (Izquierda) -->
+                <div class="living-history-section">
+                    <div class="living-section-header">
+                        <h2 class="living-section-title">Historial de Producciones</h2>
+                    </div>
+                    <div class="living-masonry-grid" id="livingHistoryGrid">
+                        <!-- Galería masonry de producciones de flujos -->
+                    </div>
+                </div>
+
+                <!-- Sección 3: Destacados del Usuario (Derecha) -->
+                <div class="living-highlights-section">
+                    <div class="living-section-header">
+                        <h2 class="living-section-title">Destacados</h2>
+                    </div>
+                    <div class="living-highlights-content" id="livingHighlightsContent">
+                        <!-- Cards de flujos, productos, campañas, gráficos -->
+                    </div>
                 </div>
             </section>
         </div>

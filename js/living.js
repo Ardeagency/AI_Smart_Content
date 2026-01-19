@@ -384,14 +384,198 @@ class LivingManager {
     }
 
     async renderAll() {
-        // Renderizar grid unificado con todas las producciones
-        await this.renderUnifiedGrid();
-        this.setupCategoryFilters();
+        // Renderizar las 3 secciones
+        await this.renderHeroSection();
+        await this.renderHistorySection();
+        await this.renderHighlightsSection();
     }
 
-    async renderUnifiedGrid() {
-        const livingGrid = document.getElementById('livingGrid');
-        if (!livingGrid) return;
+    async renderHeroSection() {
+        const heroGrid = document.getElementById('livingHeroGrid');
+        if (!heroGrid) return;
+        
+        // Solo producciones automatizadas (latestGeneratedContent)
+        const automatedContent = this.latestGeneratedContent || [];
+        
+        if (automatedContent.length === 0) {
+            heroGrid.innerHTML = `
+                <div style="text-align: center; padding: 2rem; color: var(--living-text-muted);">
+                    <i class="fas fa-image" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
+                    <p>No hay producciones automatizadas aún</p>
+                </div>
+            `;
+            return;
+        }
+
+        heroGrid.innerHTML = automatedContent.map((item, index) => {
+            const imageUrl = item.image_url || item.url || item.storage_url || item.file_url;
+            const prompt = item.prompt_used || item.prompt || '';
+            
+            // Construir URL completa si es necesario
+            let finalImageUrl = imageUrl;
+            if (!finalImageUrl && item.storage_path) {
+                finalImageUrl = this.getPublicUrlFromStorage('production-outputs', item.storage_path);
+            }
+            
+            return this.renderCard(finalImageUrl, prompt, index, true);
+        }).join('');
+        
+        this.setupDownloadButtons(heroGrid);
+    }
+
+    async renderHistorySection() {
+        const historyGrid = document.getElementById('livingHistoryGrid');
+        if (!historyGrid) return;
+        
+        // Producciones de flujos que el usuario haya usado
+        // Excluir las que ya están en hero (latestGeneratedContent)
+        const automatedIds = new Set((this.latestGeneratedContent || []).map(item => item.id || item.run_id));
+        
+        const historyItems = this.flowRuns
+            .filter(run => !automatedIds.has(run.id))
+            .map(run => {
+                const output = this.flowOutputs.find(o => o.run_id === run.id);
+                return {
+                    prompt: output?.prompt_used || run.status || '',
+                    image_url: output?.file_url || output?.storage_path || null,
+                    run: run,
+                    output: output
+                };
+            });
+        
+        if (historyItems.length === 0) {
+            historyGrid.innerHTML = `
+                <div style="text-align: center; padding: 2rem; color: var(--living-text-muted);">
+                    <i class="fas fa-history" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
+                    <p>No hay historial de producciones</p>
+                </div>
+            `;
+            return;
+        }
+        
+        historyGrid.innerHTML = historyItems.map((item, index) => {
+            const imageUrl = item.image_url;
+            const prompt = item.prompt;
+            
+            // Construir URL completa si es necesario
+            let finalImageUrl = imageUrl;
+            if (imageUrl && !imageUrl.startsWith('http') && item.output) {
+                const storagePath = item.output.storage_path || item.output.storage_object_id;
+                if (storagePath) {
+                    finalImageUrl = this.getPublicUrlFromStorage('production-outputs', storagePath) || imageUrl;
+                }
+            }
+            
+            return `
+                <div class="living-masonry-item">
+                    ${this.renderCard(finalImageUrl, prompt, index, false)}
+                </div>
+            `;
+        }).join('');
+        
+        this.setupDownloadButtons(historyGrid);
+    }
+
+    async renderHighlightsSection() {
+        const highlightsContent = document.getElementById('livingHighlightsContent');
+        if (!highlightsContent) return;
+        
+        // Cards de destacados: flujos, productos, campañas, etc.
+        const highlights = [];
+        
+        // Flujos usados
+        if (this.flowRuns.length > 0) {
+            highlights.push({
+                title: 'Flujos Ejecutados',
+                value: this.flowRuns.length,
+                label: 'Total de ejecuciones',
+                icon: 'fas fa-project-diagram'
+            });
+        }
+        
+        // Productos
+        if (this.products.length > 0) {
+            highlights.push({
+                title: 'Productos',
+                value: this.products.length,
+                label: 'En tu marca',
+                icon: 'fas fa-box'
+            });
+        }
+        
+        // Producciones
+        const totalProductions = (this.latestGeneratedContent?.length || 0) + this.flowRuns.length;
+        if (totalProductions > 0) {
+            highlights.push({
+                title: 'Producciones',
+                value: totalProductions,
+                label: 'Total generadas',
+                icon: 'fas fa-images'
+            });
+        }
+        
+        if (highlights.length === 0) {
+            highlightsContent.innerHTML = `
+                <div style="text-align: center; padding: 2rem; color: var(--living-text-muted);">
+                    <i class="fas fa-chart-line" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
+                    <p>No hay datos destacados aún</p>
+                </div>
+            `;
+            return;
+        }
+
+        highlightsContent.innerHTML = highlights.map(highlight => `
+            <div class="highlight-card">
+                <div class="highlight-card-title">
+                    <i class="${highlight.icon}"></i> ${highlight.title}
+                </div>
+                <div class="highlight-card-value">${highlight.value}</div>
+                <div class="highlight-card-label">${highlight.label}</div>
+            </div>
+        `).join('');
+    }
+
+    renderCard(imageUrl, prompt, index, isHero = false) {
+        const finalImageUrl = imageUrl && imageUrl.startsWith('http') ? imageUrl : null;
+        
+        return `
+            <div class="featured-card" data-index="${index}" data-image-url="${this.escapeHtml(finalImageUrl || '')}">
+                <div class="featured-card-visual">
+                    ${finalImageUrl
+                        ? `<img src="${this.escapeHtml(finalImageUrl)}" alt="${this.escapeHtml(prompt)}" loading="${index < 3 ? 'eager' : 'lazy'}" onerror="this.parentElement.innerHTML='<div class=\\'featured-card-visual-placeholder\\'><i class=\\'fas fa-image\\'></i></div>';" onload="this.style.opacity='1';">`
+                        : `<div class="featured-card-visual-placeholder"><i class="fas fa-image"></i></div>`
+                    }
+                </div>
+                <div class="featured-card-prompt-overlay">
+                    <div class="featured-card-prompt-title">Prompt</div>
+                    <div class="featured-card-prompt-text">${this.escapeHtml(prompt)}</div>
+                </div>
+                <button class="featured-card-download-btn" title="Descargar imagen" data-image-url="${this.escapeHtml(finalImageUrl || '')}">
+                    <i class="fas fa-download"></i>
+                </button>
+                </div>
+            `;
+    }
+
+    setupDownloadButtons(container) {
+        const downloadBtns = container.querySelectorAll('.featured-card-download-btn');
+        downloadBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const imageUrl = btn.dataset.imageUrl;
+                if (imageUrl && imageUrl.startsWith('http')) {
+                    this.downloadImage(imageUrl);
+                }
+            });
+        });
+        
+        // Agregar estilos para transición suave de imágenes
+        const images = container.querySelectorAll('.featured-card-visual img');
+        images.forEach(img => {
+            img.style.opacity = '0';
+            img.style.transition = 'opacity 0.5s ease';
+        });
+    }
         
         // Obtener todas las producciones (de RPC o flow outputs)
         const latestContent = this.latestGeneratedContent || [];
@@ -480,7 +664,7 @@ class LivingManager {
             if (!finalImageUrl && item.item?.storage_path) {
                 finalImageUrl = this.getPublicUrlFromStorage('production-outputs', item.item.storage_path);
             }
-            
+
             return `
                 <div class="featured-card" data-index="${index}" data-image-url="${this.escapeHtml(finalImageUrl || '')}">
                     <div class="featured-card-visual">
@@ -488,7 +672,7 @@ class LivingManager {
                             ? `<img src="${this.escapeHtml(finalImageUrl)}" alt="${this.escapeHtml(prompt)}" loading="${index < 3 ? 'eager' : 'lazy'}" onerror="this.parentElement.innerHTML='<div class=\\'featured-card-visual-placeholder\\'><i class=\\'fas fa-image\\'></i></div>';" onload="this.style.opacity='1';">`
                             : `<div class="featured-card-visual-placeholder"><i class="fas fa-image"></i></div>`
                         }
-                    </div>
+                        </div>
                     <div class="featured-card-prompt-overlay">
                         <div class="featured-card-prompt-title">Prompt</div>
                         <div class="featured-card-prompt-text">${this.escapeHtml(prompt)}</div>
