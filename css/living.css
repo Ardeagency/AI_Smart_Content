@@ -72,36 +72,42 @@ body.sidebar-collapsed .living-container {
 
 /* ============================================
    SECCIÓN 1: HERO/ENCABEZADO - Producciones Automatizadas
+   Jerarquía: Protagonista absoluto, mesa de edición, daily output
    ============================================ */
 .living-hero-section {
-    padding: 2rem 4rem var(--living-spacing-section);
+    padding: 4rem 4rem 5rem;
     max-width: 1800px;
     margin: 0 auto;
+    /* Aire alrededor, no full-width */
 }
 
 .living-hero-container {
-    max-width: 1400px;
+    max-width: 1200px; /* Más estrecho para dar aire */
     margin: 0 auto;
+    /* El contenedor respira */
 }
 
 .living-hero-title {
-    font-size: 1.75rem;
-    font-weight: 600;
+    font-size: 1.5rem;
+    font-weight: 500; /* Más sutil, no grita */
     color: var(--living-text-light);
-    margin-bottom: 1.5rem;
-    letter-spacing: -0.5px;
+    margin-bottom: 2.5rem; /* Más espacio */
+    letter-spacing: -0.3px;
+    opacity: 0.9; /* No compite con las imágenes */
+    text-transform: none;
+    font-style: normal;
 }
 
 .living-hero-grid {
     display: flex;
-    gap: 1.5rem;
+    gap: 2rem; /* Más espacio entre cards, respiran */
     overflow-x: auto;
     overflow-y: hidden;
-    padding-bottom: 1rem;
+    padding: 1rem 0 2rem; /* Aire arriba y abajo */
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
-    scrollbar-color: rgba(212, 117, 78, 0.3) transparent;
+    scrollbar-color: rgba(212, 117, 78, 0.2) transparent; /* Más sutil */
 }
 
 .living-hero-grid::-webkit-scrollbar {
@@ -123,48 +129,68 @@ body.sidebar-collapsed .living-container {
 
 /* ============================================
    SECCIONES 2 Y 3: Grid de 2 columnas
+   Jerarquía: Flujo continuo (izq) + Soporte estratégico (der)
    ============================================ */
 .living-content-grid {
     display: grid;
     grid-template-columns: 2fr 1fr;
-    gap: 2rem;
+    gap: 3rem; /* Más separación entre secciones */
     padding: 0 4rem var(--living-spacing-section);
     max-width: 1800px;
     margin: 0 auto;
 }
 
 /* Sección 2: Historial de Producciones (Izquierda) */
+/* Más denso, más funcional, archivo de producción */
 .living-history-section {
     min-height: 400px;
 }
 
 .living-section-header {
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
 }
 
 .living-section-title {
-    font-size: 1.5rem;
-    font-weight: 600;
+    font-size: 1.25rem; /* Más pequeño que hero */
+    font-weight: 500; /* Menos protagonista */
     color: var(--living-text-light);
-    letter-spacing: -0.3px;
+    letter-spacing: -0.2px;
+    opacity: 0.85;
+    margin-bottom: 1rem;
 }
 
-/* Galería Masonry */
+/* Agrupación narrativa - subtítulos de sección */
+.living-history-group {
+    margin-bottom: 2.5rem;
+}
+
+.living-history-group-title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--living-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 1rem;
+    opacity: 0.7;
+}
+
+/* Galería Masonry - Archivo de producción, no galería estética */
 .living-masonry-grid {
     column-count: 3;
-    column-gap: 1.5rem;
+    column-gap: 1.25rem; /* Más denso */
     column-fill: balance;
 }
 
 .living-masonry-item {
     break-inside: avoid;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem; /* Más denso */
     page-break-inside: avoid;
     display: inline-block;
     width: 100%;
 }
 
-/* Sección 3: Destacados del Usuario (Derecha) */
+/* Sección 3: Destacados / Control (Derecha) */
+/* No compite visualmente, acompaña - Mesa del productor */
 .living-highlights-section {
     min-height: 400px;
 }
@@ -172,42 +198,52 @@ body.sidebar-collapsed .living-container {
 .living-highlights-content {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1rem; /* Más compacto */
 }
 
-/* Cards de destacados */
+/* Cards de destacados - Más pequeñas, menos contraste */
 .highlight-card {
     background: var(--living-bg-card);
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: var(--living-shadow-soft);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    transition: all 0.3s ease;
+    border-radius: 8px; /* Más sutil */
+    padding: 1.25rem; /* Más compacto */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); /* Muy sutil */
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    transition: all 0.2s ease;
+    /* Menos imagen, más estructura */
 }
 
 .highlight-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--living-shadow-medium);
-    border-color: rgba(212, 117, 78, 0.2);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.06);
 }
 
 .highlight-card-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--living-text-light);
-    margin-bottom: 0.75rem;
+    font-size: 0.875rem; /* Más pequeño */
+    font-weight: 500; /* Menos peso */
+    color: var(--living-text-muted); /* Más sutil */
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.highlight-card-title i {
+    font-size: 0.75rem;
+    opacity: 0.6;
 }
 
 .highlight-card-value {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--living-text-gold);
-    margin-bottom: 0.5rem;
+    font-size: 1.75rem; /* Más pequeño */
+    font-weight: 600; /* Menos dramático */
+    color: var(--living-text-light); /* No gold, más sutil */
+    margin-bottom: 0.25rem;
 }
 
 .highlight-card-label {
-    font-size: 0.875rem;
+    font-size: 0.75rem; /* Más pequeño */
     color: var(--living-text-muted);
+    opacity: 0.7;
 }
 
 /* Responsive para grid de 2 columnas */

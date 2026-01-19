@@ -394,13 +394,13 @@ class LivingManager {
         if (!heroGrid) return;
         
         // Solo producciones automatizadas (latestGeneratedContent)
+        // "Esto es lo que tu sistema produjo"
         const automatedContent = this.latestGeneratedContent || [];
         
         if (automatedContent.length === 0) {
             heroGrid.innerHTML = `
-                <div style="text-align: center; padding: 2rem; color: var(--living-text-muted);">
-                    <i class="fas fa-image" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
-                    <p>No hay producciones automatizadas aún</p>
+                <div style="text-align: center; padding: 3rem; color: var(--living-text-muted); opacity: 0.6;">
+                    <p style="font-size: 0.938rem;">Sistema en espera de producción</p>
                 </div>
             `;
             return;
@@ -451,7 +451,7 @@ class LivingManager {
             `;
             return;
         }
-        
+
         historyGrid.innerHTML = historyItems.map((item, index) => {
             const imageUrl = item.image_url;
             const prompt = item.prompt;
@@ -479,15 +479,16 @@ class LivingManager {
         const highlightsContent = document.getElementById('livingHighlightsContent');
         if (!highlightsContent) return;
         
-        // Cards de destacados: flujos, productos, campañas, etc.
+        // Cards de destacados: mesa del productor
+        // "Esto es lo que impulsa y mide tu producción"
         const highlights = [];
         
-        // Flujos usados
+        // Flujos ejecutados
         if (this.flowRuns.length > 0) {
             highlights.push({
-                title: 'Flujos Ejecutados',
+                title: 'Ejecutado',
                 value: this.flowRuns.length,
-                label: 'Total de ejecuciones',
+                label: 'flujos procesados',
                 icon: 'fas fa-project-diagram'
             });
         }
@@ -497,18 +498,18 @@ class LivingManager {
             highlights.push({
                 title: 'Productos',
                 value: this.products.length,
-                label: 'En tu marca',
+                label: 'en tu marca',
                 icon: 'fas fa-box'
             });
         }
         
-        // Producciones
+        // Producciones totales
         const totalProductions = (this.latestGeneratedContent?.length || 0) + this.flowRuns.length;
         if (totalProductions > 0) {
             highlights.push({
-                title: 'Producciones',
+                title: 'Producido',
                 value: totalProductions,
-                label: 'Total generadas',
+                label: 'renders generados',
                 icon: 'fas fa-images'
             });
         }
@@ -536,15 +537,15 @@ class LivingManager {
 
     renderCard(imageUrl, prompt, index, isHero = false) {
         const finalImageUrl = imageUrl && imageUrl.startsWith('http') ? imageUrl : null;
-        
-        return `
+
+            return `
             <div class="featured-card" data-index="${index}" data-image-url="${this.escapeHtml(finalImageUrl || '')}">
                 <div class="featured-card-visual">
                     ${finalImageUrl
                         ? `<img src="${this.escapeHtml(finalImageUrl)}" alt="${this.escapeHtml(prompt)}" loading="${index < 3 ? 'eager' : 'lazy'}" onerror="this.parentElement.innerHTML='<div class=\\'featured-card-visual-placeholder\\'><i class=\\'fas fa-image\\'></i></div>';" onload="this.style.opacity='1';">`
                         : `<div class="featured-card-visual-placeholder"><i class="fas fa-image"></i></div>`
                     }
-                </div>
+                        </div>
                 <div class="featured-card-prompt-overlay">
                     <div class="featured-card-prompt-title">Prompt</div>
                     <div class="featured-card-prompt-text">${this.escapeHtml(prompt)}</div>
@@ -552,8 +553,8 @@ class LivingManager {
                 <button class="featured-card-download-btn" title="Descargar imagen" data-image-url="${this.escapeHtml(finalImageUrl || '')}">
                     <i class="fas fa-download"></i>
                 </button>
-            </div>
-        `;
+                </div>
+            `;
     }
 
     setupDownloadButtons(container) {
