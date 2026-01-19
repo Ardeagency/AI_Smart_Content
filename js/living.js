@@ -552,8 +552,8 @@ class LivingManager {
                 <button class="featured-card-download-btn" title="Descargar imagen" data-image-url="${this.escapeHtml(finalImageUrl || '')}">
                     <i class="fas fa-download"></i>
                 </button>
-                </div>
-            `;
+            </div>
+        `;
     }
 
     setupDownloadButtons(container) {
