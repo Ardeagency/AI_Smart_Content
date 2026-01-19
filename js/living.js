@@ -94,10 +94,13 @@ class LivingManager {
             // Prioridad 1: Usar SupabaseService si está disponible
             if (window.supabaseService) {
                 this.supabase = await window.supabaseService.getClient();
-                this.userId = window.supabaseService.getUserId();
-                if (this.supabase && this.userId) {
-                    console.log('✅ Supabase inicializado desde SupabaseService');
-                    return;
+                if (this.supabase) {
+                    const { data: { user } } = await this.supabase.auth.getUser();
+                    this.userId = user?.id;
+                    if (this.userId) {
+                        console.log('✅ Supabase inicializado desde SupabaseService');
+                        return;
+                    }
                 }
             }
 
