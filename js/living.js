@@ -31,25 +31,25 @@ class LivingManager {
         // SIEMPRE renderizar primero, incluso si hay errores
         // Esto asegura que la página se muestre
         try {
-            // Verificar acceso antes de continuar
-            if (typeof verifyUserAccess === 'function') {
+        // Verificar acceso antes de continuar
+        if (typeof verifyUserAccess === 'function') {
                 try {
-                    const hasAccess = await verifyUserAccess();
-                    if (!hasAccess) {
+            const hasAccess = await verifyUserAccess();
+            if (!hasAccess) {
                         console.warn('⚠️ Usuario no tiene acceso, renderizando sin datos');
                         await this.renderAll(); // Renderizar de todas formas
                         this.initialized = true;
-                        return;
+                return;
                     }
                 } catch (error) {
                     console.warn('⚠️ Error verificando acceso:', error);
                     // Continuar de todas formas
-                }
             }
+        }
 
             // Intentar inicializar Supabase, pero no bloquear si falla
             try {
-                await this.initSupabase();
+        await this.initSupabase();
             } catch (error) {
                 console.warn('⚠️ Error inicializando Supabase:', error);
                 // Continuar sin Supabase
@@ -87,7 +87,7 @@ class LivingManager {
             // Cargar flow outputs después de flow runs
             if (this.flowRuns.length > 0) {
                 try {
-                    await this.loadFlowOutputs();
+                await this.loadFlowOutputs();
                 } catch (error) {
                     console.warn('⚠️ Error cargando flowOutputs:', error);
                 }
@@ -114,11 +114,11 @@ class LivingManager {
 
         if (!this.eventListenersSetup) {
             try {
-                this.setupEventListeners();
-                this.eventListenersSetup = true;
+            this.setupEventListeners();
+            this.eventListenersSetup = true;
             } catch (error) {
                 console.warn('⚠️ Error configurando event listeners:', error);
-            }
+        }
         }
         
         // SIEMPRE marcar como inicializado
@@ -213,9 +213,9 @@ class LivingManager {
                 // Si es error 400 o similar, no lanzar excepción, solo log
                 if (error.code === 'PGRST205' || error.code === '400') {
                     console.warn('⚠️ Tabla users no encontrada o error de acceso:', error.message);
-                } else {
+            } else {
                     throw error;
-                }
+            }
             }
             this.userData = data || null;
         } catch (error) {
@@ -501,7 +501,12 @@ class LivingManager {
 
     async renderHeroSection() {
         const heroGrid = document.getElementById('livingHeroGrid');
-        if (!heroGrid) return;
+        if (!heroGrid) {
+            console.warn('⚠️ livingHeroGrid no encontrado en el DOM');
+            return;
+        }
+        
+        console.log('🎨 Renderizando hero section...');
         
         // Solo producciones automatizadas (latestGeneratedContent)
         // "Esto es lo que tu sistema produjo"
