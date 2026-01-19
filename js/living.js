@@ -57,11 +57,15 @@ class LivingManager {
             await Promise.all([
                 this.loadProducts(),
                 this.loadFlowRuns(),
-                this.loadCreditUsage(),
-                this.loadFlowOutputs() // Cargar flow_outputs directamente (fuente principal)
+                this.loadCreditUsage()
             ]);
 
-            // Cargar contenido generado después de obtener brand_id (fallback)
+            // Cargar flow outputs después de flow runs
+            if (this.flowRuns.length > 0) {
+                await this.loadFlowOutputs();
+            }
+
+            // Cargar contenido generado después de obtener brand_id
             await this.loadLatestGeneratedContent();
 
             // Renderizar todo
@@ -257,88 +261,18 @@ class LivingManager {
     }
 
     async loadFlowOutputs() {
-        if (!this.supabase) return;
+        if (!this.supabase || !this.flowRuns.length) return;
 
         try {
-            // Obtener brand_id si no lo tenemos
-            if (!this.brandId) {
-                await this.loadBrandId();
-            }
-
-            let query = this.supabase
+            const runIds = this.flowRuns.map(run => run.id);
+            const { data, error } = await this.supabase
                 .from('flow_outputs')
-                .select(`
-                    id,
-                    run_id,
-                    output_type,
-                    metadata,
-                    created_at,
-                    storage_path,
-                    prompt_used,
-                    generated_copy,
-                    generated_hashtags,
-                    creative_rationale,
-                    technical_params,
-                    text_content,
-                    storage_object_id
-                `)
-                .order('created_at', { ascending: false })
-                .limit(50);
-
-            // Si tenemos brand_id, filtrar por flow_runs relacionados
-            if (this.brandId) {
-                // Primero obtener run_ids del brand
-                const { data: runs } = await this.supabase
-                    .from('flow_runs')
-                    .select('id')
-                    .eq('brand_id', this.brandId)
-                    .limit(100);
-
-                if (runs && runs.length > 0) {
-                    const runIds = runs.map(r => r.id);
-                    query = query.in('run_id', runIds);
-                } else {
-                    // Si no hay runs del brand, usar user_id
-                    const { data: userRuns } = await this.supabase
-                        .from('flow_runs')
-                        .select('id')
-                        .eq('user_id', this.userId)
-                        .limit(100);
-
-                    if (userRuns && userRuns.length > 0) {
-                        const runIds = userRuns.map(r => r.id);
-                        query = query.in('run_id', runIds);
-                    } else {
-                        // No hay runs, retornar vacío
-                        this.flowOutputs = [];
-                        return;
-                    }
-                }
-            } else if (this.userId) {
-                // Si no hay brand_id, filtrar por user_id a través de flow_runs
-                const { data: userRuns } = await this.supabase
-                    .from('flow_runs')
-                    .select('id')
-                    .eq('user_id', this.userId)
-                    .limit(100);
-
-                if (userRuns && userRuns.length > 0) {
-                    const runIds = userRuns.map(r => r.id);
-                    query = query.in('run_id', runIds);
-                } else {
-                    this.flowOutputs = [];
-                    return;
-                }
-            }
-
-            const { data, error } = await query;
+                .select('*')
+                .in('run_id', runIds)
+                .order('created_at', { ascending: false });
 
             if (error) throw error;
             this.flowOutputs = data || [];
-            
-            if (this.flowOutputs.length > 0) {
-                console.log('✅ Flow outputs cargados:', this.flowOutputs.length, 'elementos');
-            }
         } catch (error) {
             console.error('❌ Error cargando flow outputs:', error);
             this.flowOutputs = [];
@@ -449,119 +383,356 @@ class LivingManager {
     }
 
     async renderAll() {
-        // Renderizar estructura única estilo Netflix/Flix.id
-        await this.renderFeaturedContent();
-        this.renderContentGrid();
-        this.setupCategoryFilters();
+        // Renderizar nueva estructura: Centro de Control Visual
+        await this.renderHero();
+        await this.renderHistory();
+        await this.renderControlCreative();
+        await this.renderHighlights();
+        this.renderResources();
     }
 
-    async renderFeaturedContent() {
-        const featuredGrid = document.getElementById('livingFeaturedGrid');
-        if (!featuredGrid) return;
+    /**
+     * 1️⃣ HERO - Producción Protagonista
+     * Una sola producción dominante elegida por el sistema
+     */
+    async renderHero() {
+        const heroContainer = document.getElementById('livingHero');
+        if (!heroContainer) return;
         
-        // Usar directamente flow_outputs como fuente principal
-        let featuredItems = [];
+        // Obtener la producción protagonista (más reciente, más usada, más descargada, etc.)
+        const latestContent = this.latestGeneratedContent || [];
+        let heroItem = null;
         
-        // Priorizar flow_outputs (fuente principal según el schema)
-        if (this.flowOutputs && this.flowOutputs.length > 0) {
-            featuredItems = this.flowOutputs
-                .filter(output => {
-                    // Solo incluir outputs de tipo imagen
-                    const outputType = (output.output_type || '').toLowerCase();
-                    return outputType.includes('image') || outputType.includes('photo') || 
-                           output.storage_path || output.storage_object_id;
-                })
-                .map(output => ({
-                    prompt: output.prompt_used || '',
-                    storage_path: output.storage_path,
-                    storage_object_id: output.storage_object_id,
-                    output_type: output.output_type,
-                    created_at: output.created_at,
-                    output: output
-                }));
+        // Priorizar contenido de RPC (más reciente)
+        if (latestContent.length > 0) {
+            heroItem = latestContent[0];
+        } else if (this.flowRuns.length > 0) {
+            // Usar el flow run más reciente
+            const latestRun = this.flowRuns[0];
+            const output = this.flowOutputs.find(o => o.run_id === latestRun.id);
+            heroItem = {
+                prompt: output?.prompt_used || latestRun.status || '',
+                image_url: output?.file_url || output?.storage_path || null,
+                run: latestRun,
+                output: output
+            };
         }
         
-        // Si no hay flow_outputs, intentar con RPC como fallback
-        if (featuredItems.length === 0 && this.latestGeneratedContent && this.latestGeneratedContent.length > 0) {
-            featuredItems = this.latestGeneratedContent.map(item => ({
+        if (!heroItem) {
+            heroContainer.innerHTML = `
+                <div class="living-hero-placeholder">
+                    <i class="fas fa-sparkles"></i>
+                    <h2>Tu producción protagonista aparecerá aquí</h2>
+                </div>
+            `;
+            return;
+        }
+        
+        const prompt = heroItem.prompt_used || heroItem.prompt || 'Producción del sistema';
+        let imageUrl = heroItem.image_url || heroItem.url || heroItem.storage_url || heroItem.file_url;
+        
+        // Construir URL completa si es necesario
+        if (imageUrl && !imageUrl.startsWith('http') && heroItem.output) {
+            const storagePath = heroItem.output.storage_path || heroItem.output.storage_object_id;
+            if (storagePath) {
+                imageUrl = this.getPublicUrlFromStorage('production-outputs', storagePath) || imageUrl;
+            }
+        }
+        
+        if (!imageUrl && heroItem.storage_path) {
+            imageUrl = this.getPublicUrlFromStorage('production-outputs', heroItem.storage_path);
+        }
+        
+        heroContainer.innerHTML = `
+            <div class="living-hero-visual">
+                ${imageUrl && imageUrl.startsWith('http')
+                    ? `<img src="${this.escapeHtml(imageUrl)}" alt="${this.escapeHtml(prompt)}" loading="eager" onerror="this.parentElement.innerHTML='<div class=\\'living-hero-placeholder\\'><i class=\\'fas fa-image\\'></i><h2>Error cargando imagen</h2></div>';" onload="this.style.opacity='1';">`
+                    : `<div class="living-hero-placeholder"><i class="fas fa-image"></i><h2>Sin imagen disponible</h2></div>`
+                }
+            </div>
+            <div class="living-hero-overlay">
+                <h1 class="living-hero-title">${this.escapeHtml(prompt)}</h1>
+                <p class="living-hero-subtitle">Producción protagonista del sistema</p>
+            </div>
+            <button class="living-hero-download" title="Descargar imagen" data-image-url="${this.escapeHtml(imageUrl || '')}">
+                <i class="fas fa-download"></i>
+            </button>
+        `;
+        
+        // Event listener para descarga
+        const downloadBtn = heroContainer.querySelector('.living-hero-download');
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const url = downloadBtn.dataset.imageUrl;
+                if (url && url.startsWith('http')) {
+                    this.downloadImage(url);
+                }
+            });
+        }
+    }
+    
+    /**
+     * 2️⃣ HISTORIAL VIVO - Últimas Producciones
+     * Scroll horizontal con continuidad, no grid rígido
+     */
+    async renderHistory() {
+        const historyScroll = document.getElementById('livingHistoryScroll');
+        if (!historyScroll) return;
+        
+        const latestContent = this.latestGeneratedContent || [];
+        let historyItems = [];
+        
+        // Priorizar contenido de RPC (excluyendo el hero)
+        if (latestContent.length > 1) {
+            historyItems = latestContent.slice(1, 10).map(item => ({
                 prompt: item.prompt_used || item.prompt || '',
-                storage_path: item.storage_path,
-                storage_object_id: item.storage_object_id,
                 image_url: item.image_url || item.url || item.storage_url || item.file_url,
+                item: item,
                 output: null
             }));
         }
         
-        // Si no hay contenido, mostrar placeholders aspiracionales
-        if (featuredItems.length === 0) {
-            featuredItems = [
-                { prompt: 'Create cinematic content', storage_path: null },
-                { prompt: 'Visuals, motion and storytelling', storage_path: null }
-            ];
+        // Completar con flow runs si es necesario
+        if (historyItems.length < 10 && this.flowRuns.length > 0) {
+            const flowItems = this.flowRuns.slice(0, 10 - historyItems.length).map(run => {
+                const output = this.flowOutputs.find(o => o.run_id === run.id);
+                return {
+                    prompt: output?.prompt_used || run.status || '',
+                    image_url: output?.file_url || output?.storage_path || null,
+                    run: run,
+                    output: output
+                };
+            });
+            historyItems = [...historyItems, ...flowItems];
         }
         
-        featuredGrid.innerHTML = featuredItems.map((item, index) => {
+        if (historyItems.length === 0) {
+            historyScroll.innerHTML = `
+                <div style="padding: 3rem; text-align: center; color: var(--living-text-muted);">
+                    <p>No hay producciones recientes</p>
+                </div>
+            `;
+            return;
+        }
+
+        historyScroll.innerHTML = historyItems.map((item, index) => {
             const prompt = item.prompt || '';
+            let imageUrl = item.image_url || item.url || item.storage_url;
             
-            // Construir URL desde storage_path (campo principal en flow_outputs)
-            let finalImageUrl = null;
-            
-            if (item.storage_path) {
-                // Intentar construir URL desde storage_path
-                finalImageUrl = this.getPublicUrlFromStorage('production-outputs', item.storage_path);
+            // Construir URL completa
+            if (imageUrl && !imageUrl.startsWith('http') && item.output) {
+                const storagePath = item.output.storage_path || item.output.storage_object_id;
+                if (storagePath) {
+                    imageUrl = this.getPublicUrlFromStorage('production-outputs', storagePath) || imageUrl;
+                }
             }
             
-            // Si storage_path no funcionó, intentar con storage_object_id
-            if (!finalImageUrl && item.storage_object_id) {
-                // storage_object_id es un UUID, necesitamos obtener el path desde storage.objects
-                // Por ahora, intentar construir URL directa
-                finalImageUrl = this.getPublicUrlFromStorage('production-outputs', item.storage_object_id);
-            }
-            
-            // Fallback: usar image_url si existe (de RPC)
-            if (!finalImageUrl && item.image_url && item.image_url.startsWith('http')) {
-                finalImageUrl = item.image_url;
+            if (!imageUrl && item.item?.storage_path) {
+                imageUrl = this.getPublicUrlFromStorage('production-outputs', item.item.storage_path);
             }
             
             return `
-                <div class="featured-card" data-index="${index}" data-image-url="${this.escapeHtml(finalImageUrl || '')}">
-                    <div class="featured-card-visual">
-                        ${finalImageUrl && finalImageUrl.startsWith('http')
-                            ? `<img src="${this.escapeHtml(finalImageUrl)}" alt="${this.escapeHtml(prompt)}" loading="${index < 3 ? 'eager' : 'lazy'}" onerror="this.parentElement.innerHTML='<div class=\\'featured-card-visual-placeholder\\'><i class=\\'fas fa-image\\'></i></div>';" onload="this.style.opacity='1';">`
-                            : `<div class="featured-card-visual-placeholder"><i class="fas fa-image"></i></div>`
-                        }
+                <div class="living-history-card" data-index="${index}">
+                    <div class="living-history-card-visual">
+                        ${imageUrl && imageUrl.startsWith('http')
+                            ? `<img src="${this.escapeHtml(imageUrl)}" alt="${this.escapeHtml(prompt)}" loading="lazy" onerror="this.parentElement.innerHTML='<div style=\\'width:100%;height:200px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.2);color:var(--living-text-whisper);\\'><i class=\\'fas fa-image\\'></i></div>';" onload="this.style.opacity='1';">`
+                            : `<div style="width:100%;height:200px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.2);color:var(--living-text-whisper);"><i class="fas fa-image"></i></div>`
+                    }
                     </div>
-                    <div class="featured-card-prompt-overlay">
-                        <div class="featured-card-prompt-title">Prompt</div>
-                        <div class="featured-card-prompt-text">${this.escapeHtml(prompt)}</div>
+                    <div class="living-history-card-prompt">
+                        <div class="living-history-card-prompt-title">Prompt</div>
+                        <div class="living-history-card-prompt-text">${this.escapeHtml(prompt)}</div>
                     </div>
-                    <button class="featured-card-download-btn" title="Descargar imagen" data-image-url="${this.escapeHtml(finalImageUrl || '')}">
+                    <button class="living-history-card-download" title="Descargar" data-image-url="${this.escapeHtml(imageUrl || '')}">
                         <i class="fas fa-download"></i>
                     </button>
                 </div>
             `;
         }).join('');
         
-        // Agregar estilos para transición suave de imágenes
-        const images = featuredGrid.querySelectorAll('.featured-card-visual img');
-        images.forEach(img => {
-            img.style.opacity = '0';
-            img.style.transition = 'opacity 0.5s ease';
-        });
-        
-        // Agregar event listeners para descarga
-        const downloadBtns = featuredGrid.querySelectorAll('.featured-card-download-btn');
+        // Event listeners para descarga
+        const downloadBtns = historyScroll.querySelectorAll('.living-history-card-download');
         downloadBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const imageUrl = btn.dataset.imageUrl;
-                if (imageUrl && imageUrl.startsWith('http')) {
-                    this.downloadImage(imageUrl);
+                const url = btn.dataset.imageUrl;
+                if (url && url.startsWith('http')) {
+                    this.downloadImage(url);
                 }
             });
         });
     }
     
+    /**
+     * 3️⃣ CONTROL CREATIVO - Insights
+     * Lectura creativa del sistema, no analítica dura
+     */
+    async renderControlCreative() {
+        const controlGrid = document.getElementById('livingControlGrid');
+        if (!controlGrid) return;
+        
+        const insights = [];
+        
+        // Producto más producido
+        if (this.products.length > 0) {
+            const mostProducedProduct = this.products[0]; // Simplificado, se puede mejorar con conteo
+            insights.push({
+                icon: 'fas fa-box',
+                title: 'Producto más producido',
+                value: mostProducedProduct.nombre_producto || 'N/A',
+                description: 'Contenido generado para este producto'
+            });
+        }
+        
+        // Tipo de contenido dominante
+        const contentTypes = this.flowOutputs.map(o => {
+            const url = o.file_url || '';
+            if (url.includes('video') || url.includes('.mp4')) return 'video';
+            if (url.includes('image') || url.includes('.jpg') || url.includes('.png')) return 'imagen';
+            return 'otro';
+        });
+        const dominantType = contentTypes.reduce((a, b, i, arr) => 
+            arr.filter(v => v === a).length >= arr.filter(v => v === b).length ? a : b
+        , 'imagen');
+        
+        insights.push({
+            icon: dominantType === 'video' ? 'fas fa-video' : 'fas fa-image',
+            title: 'Tipo dominante',
+            value: dominantType === 'video' ? 'Video' : 'Imagen',
+            description: 'Formato más generado por tu sistema'
+        });
+        
+        // Total de producciones
+        insights.push({
+            icon: 'fas fa-layer-group',
+            title: 'Producciones totales',
+            value: this.flowRuns.length.toString(),
+            description: 'Contenido generado hasta ahora'
+        });
+        
+        // Flujo más usado (simplificado)
+        if (this.flowRuns.length > 0) {
+            insights.push({
+                icon: 'fas fa-project-diagram',
+                title: 'Sistema activo',
+                value: 'En funcionamiento',
+                description: 'Generando contenido automáticamente'
+            });
+        }
+        
+        if (insights.length === 0) {
+            controlGrid.innerHTML = `
+                <div style="grid-column: 1 / -1; padding: 2rem; text-align: center; color: var(--living-text-muted);">
+                    <p>No hay datos de control creativo disponibles</p>
+                </div>
+            `;
+            return;
+        }
+        
+        controlGrid.innerHTML = insights.map(insight => `
+            <div class="living-control-card">
+                <div class="living-control-card-icon">
+                    <i class="${insight.icon}"></i>
+                </div>
+                <div class="living-control-card-title">${this.escapeHtml(insight.title)}</div>
+                <div class="living-control-card-value">${this.escapeHtml(insight.value)}</div>
+                <div class="living-control-card-description">${this.escapeHtml(insight.description)}</div>
+            </div>
+        `).join('');
+    }
+    
+    /**
+     * 4️⃣ DESTACADOS INTELIGENTES - Curaduría del Sistema
+     */
+    async renderHighlights() {
+        const highlightsScroll = document.getElementById('livingHighlightsScroll');
+        if (!highlightsScroll) return;
+        
+        // Usar las siguientes producciones después del historial
+        const latestContent = this.latestGeneratedContent || [];
+        let highlightItems = [];
+        
+        if (latestContent.length > 10) {
+            highlightItems = latestContent.slice(10, 20).map(item => ({
+                prompt: item.prompt_used || item.prompt || '',
+                image_url: item.image_url || item.url || item.storage_url || item.file_url,
+                item: item
+            }));
+        }
+        
+        if (highlightItems.length === 0) {
+            highlightsScroll.innerHTML = `
+                <div style="padding: 2rem; text-align: center; color: var(--living-text-muted);">
+                    <p>No hay destacados disponibles</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Reutilizar el mismo estilo de cards del historial
+        highlightsScroll.innerHTML = highlightItems.map((item, index) => {
+            const prompt = item.prompt || '';
+            let imageUrl = item.image_url || item.url || item.storage_url;
+            
+            if (!imageUrl && item.item?.storage_path) {
+                imageUrl = this.getPublicUrlFromStorage('production-outputs', item.item.storage_path);
+            }
+            
+            return `
+                <div class="living-highlight-card" data-index="${index}">
+                    <div class="living-history-card-visual">
+                        ${imageUrl && imageUrl.startsWith('http')
+                            ? `<img src="${this.escapeHtml(imageUrl)}" alt="${this.escapeHtml(prompt)}" loading="lazy">`
+                            : `<div style="width:100%;height:200px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.2);color:var(--living-text-whisper);"><i class="fas fa-image"></i></div>`
+                        }
+                    </div>
+                    <div class="living-history-card-prompt">
+                        <div class="living-history-card-prompt-title">Prompt</div>
+                        <div class="living-history-card-prompt-text">${this.escapeHtml(prompt)}</div>
+                    </div>
+                    <button class="living-history-card-download" title="Descargar" data-image-url="${this.escapeHtml(imageUrl || '')}">
+                        <i class="fas fa-download"></i>
+                    </button>
+                </div>
+            `;
+        }).join('');
+        
+        // Event listeners para descarga
+        const downloadBtns = highlightsScroll.querySelectorAll('.living-history-card-download');
+        downloadBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const url = btn.dataset.imageUrl;
+                if (url && url.startsWith('http')) {
+                    this.downloadImage(url);
+                }
+            });
+        });
+    }
+    
+    /**
+     * 5️⃣ RECURSOS - Estado del Sistema (Secundario)
+     */
+    renderResources() {
+        const resourcesContainer = document.getElementById('livingResources');
+        if (!resourcesContainer) return;
+        
+        const creditUsage = this.creditUsage || [];
+        const totalCredits = creditUsage.reduce((sum, usage) => sum + (usage.credits_used || 0), 0);
+        
+        resourcesContainer.innerHTML = `
+            <div class="living-resource-item">
+                <i class="fas fa-coins"></i>
+                <span>Créditos usados: ${totalCredits}</span>
+            </div>
+            <div class="living-resource-item">
+                <i class="fas fa-database"></i>
+                <span>Producciones: ${this.flowRuns.length}</span>
+                </div>
+            `;
+    }
+
     downloadImage(imageUrl) {
         try {
             const link = document.createElement('a');
