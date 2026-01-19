@@ -1,6 +1,6 @@
 /**
- * Living - Centro de Control Visual del Estado Creativo
- * No es galería, es lectura estratégica de la producción
+ * Living - Estilo Netflix/Flix.id
+ * Estructura única con featured content, categorías y grid
  */
 
 /* ============================================
@@ -28,13 +28,21 @@
     --living-shadow-medium: 0 12px 48px rgba(0, 0, 0, 0.5);
     --living-shadow-deep: 0 20px 64px rgba(0, 0, 0, 0.6);
     
-    --living-spacing-section: 4rem;
+    --living-spacing-section: 3rem;
     --living-spacing-card: 1.5rem;
 }
 
 /* ============================================
    CONTENEDOR PRINCIPAL
    ============================================ */
+.living-main-content {
+    /* Asegurar que el scroll funcione correctamente */
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    height: auto !important;
+    max-height: none !important;
+}
+
 .living-container {
     padding: 0;
     margin: 0;
@@ -63,232 +71,62 @@ body.sidebar-collapsed .living-container {
 }
 
 /* ============================================
-   1️⃣ HERO - Producción Protagonista
+   GRID UNIFICADO DE PRODUCCIONES
    ============================================ */
-.living-hero-section {
+.living-grid-section {
     padding: 0 4rem var(--living-spacing-section);
     max-width: 1800px;
     margin: 0 auto;
 }
 
-.living-hero {
-    width: 100%;
-    max-width: 1400px;
-    margin: 0 auto;
-    border-radius: 24px;
-    overflow: hidden;
-    position: relative;
-    box-shadow: var(--living-shadow-deep);
-    background: var(--living-bg-card);
-    /* Altura adaptativa según imagen */
-    min-height: 60vh;
-    max-height: 80vh;
-}
-
-.living-hero-visual {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    min-height: 60vh;
-    display: block;
-    line-height: 0;
-}
-
-.living-hero-visual img {
-    width: 100%;
-    height: auto;
-    display: block;
-    /* Mantener aspect ratio original */
-}
-
-.living-hero-visual::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-        to top,
-        rgba(0, 0, 0, 0.8) 0%,
-        rgba(0, 0, 0, 0.4) 50%,
-        transparent 100%
-    );
-    z-index: 2;
-    pointer-events: none;
-}
-
-.living-hero-overlay {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 3rem;
-    z-index: 3;
-    pointer-events: none;
-}
-
-.living-hero-title {
-    font-size: 2.5rem;
-    font-weight: 600;
-    color: var(--living-text-light);
-    margin: 0 0 1rem 0;
-    line-height: 1.2;
-    letter-spacing: -0.5px;
-    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-}
-
-.living-hero-subtitle {
-    font-size: 1.125rem;
-    font-weight: 400;
-    color: var(--living-text-muted);
-    margin: 0;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-}
-
-.living-hero-download {
-    position: absolute;
-    bottom: 2rem;
-    right: 2rem;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: var(--living-text-light);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 4;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.living-hero-download:hover {
-    background: rgba(212, 117, 78, 0.9);
-    border-color: rgba(212, 117, 78, 0.5);
-    transform: scale(1.1);
-}
-
-.living-hero-download i {
-    font-size: 1.25rem;
-}
-
-.living-hero-placeholder {
-    width: 100%;
-    min-height: 60vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, 
-        rgba(212, 117, 78, 0.2) 0%, 
-        rgba(184, 93, 58, 0.1) 50%,
-        rgba(92, 45, 34, 0.2) 100%);
-    color: var(--living-text-whisper);
-    padding: 4rem;
-    text-align: center;
-}
-
-.living-hero-placeholder i {
-    font-size: 4rem;
-    margin-bottom: 1.5rem;
-    opacity: 0.5;
-}
-
-.living-hero-placeholder h2 {
-    font-size: 1.5rem;
-    font-weight: 500;
-    color: var(--living-text-muted);
-    margin: 0;
-}
-
-/* ============================================
-   2️⃣ HISTORIAL VIVO - Últimas Producciones
-   ============================================ */
-.living-history-section {
-    padding: 0 4rem var(--living-spacing-section);
-    max-width: 1800px;
-    margin: 0 auto;
-}
-
-.living-history-header {
-    margin-bottom: 2rem;
-}
-
-.living-section-title {
-    font-size: 1.75rem;
-    font-weight: 600;
-    color: var(--living-text-light);
-    margin: 0 0 0.5rem 0;
-    letter-spacing: -0.3px;
-}
-
-.living-section-subtitle {
-    font-size: 0.938rem;
-    font-weight: 400;
-    color: var(--living-text-muted);
-    margin: 0;
-}
-
-.living-history-scroll {
-    display: flex;
+.living-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 1.5rem;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding-bottom: 1rem;
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(212, 117, 78, 0.3) transparent;
+    padding-bottom: 2rem;
 }
 
-.living-history-scroll::-webkit-scrollbar {
-    height: 8px;
-}
-
-.living-history-scroll::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.living-history-scroll::-webkit-scrollbar-thumb {
-    background: rgba(212, 117, 78, 0.3);
-    border-radius: 4px;
-}
-
-.living-history-scroll::-webkit-scrollbar-thumb:hover {
-    background: rgba(212, 117, 78, 0.5);
-}
-
-/* Cards del historial (reutilizar estilo de featured cards) */
-.living-history-card {
-    flex: 0 0 auto;
-    width: 400px;
-    border-radius: 20px;
+/* Card de producción - más pequeña */
+.featured-card {
+    width: 100%;
+    border-radius: 16px;
     overflow: hidden;
     position: relative;
     cursor: pointer;
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: var(--living-shadow-medium);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--living-shadow-soft);
     background: var(--living-bg-card);
-    display: inline-block;
+    display: block;
+    aspect-ratio: auto;
 }
 
-.living-history-card:hover {
+.featured-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: var(--living-shadow-medium);
+    z-index: 10;
+}
+
+.featured-card:hover {
     transform: translateY(-8px) scale(1.02);
     box-shadow: var(--living-shadow-deep);
     z-index: 10;
 }
 
-.living-history-card-visual {
+/* Overlay oscuro en hover */
+.featured-card:hover .featured-card-visual::after {
+    opacity: 1;
+}
+
+.featured-card-visual {
     position: relative;
     width: 100%;
     height: auto;
     z-index: 1;
     display: block;
-    line-height: 0;
+    line-height: 0; /* Eliminar espacio extra debajo de la imagen */
 }
 
-.living-history-card-visual::after {
+.featured-card-visual::after {
     content: '';
     position: absolute;
     inset: 0;
@@ -299,17 +137,30 @@ body.sidebar-collapsed .living-container {
     pointer-events: none;
 }
 
-.living-history-card:hover .living-history-card-visual::after {
-    opacity: 1;
-}
-
-.living-history-card-visual img {
+.featured-card-visual img {
     width: 100%;
     height: auto;
     display: block;
+    /* La imagen mantiene su aspect ratio natural */
+    /* No usar object-fit para que respete el tamaño original */
 }
 
-.living-history-card-prompt {
+.featured-card-visual-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, 
+        rgba(212, 117, 78, 0.3) 0%, 
+        rgba(184, 93, 58, 0.2) 50%,
+        rgba(92, 45, 34, 0.3) 100%);
+    color: var(--living-text-whisper);
+    font-size: 4rem;
+}
+
+/* Overlay del prompt - aparece en hover */
+.featured-card-prompt-overlay {
     position: absolute;
     bottom: 0;
     left: 0;
@@ -320,6 +171,8 @@ body.sidebar-collapsed .living-container {
     transform: translateY(20px);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     pointer-events: none;
+    max-height: 60%;
+    overflow: hidden;
     background: linear-gradient(
         to top,
         rgba(0, 0, 0, 0.95) 0%,
@@ -328,12 +181,12 @@ body.sidebar-collapsed .living-container {
     );
 }
 
-.living-history-card:hover .living-history-card-prompt {
+.featured-card:hover .featured-card-prompt-overlay {
     opacity: 1;
     transform: translateY(0);
 }
 
-.living-history-card-prompt-title {
+.featured-card-prompt-title {
     font-size: 0.875rem;
     font-weight: 600;
     color: var(--living-text-light);
@@ -343,18 +196,34 @@ body.sidebar-collapsed .living-container {
     opacity: 0.9;
 }
 
-.living-history-card-prompt-text {
+.featured-card-prompt-text {
     font-size: 0.938rem;
     font-weight: 400;
     color: var(--living-text-light);
     line-height: 1.6;
-    max-height: 150px;
+    max-height: 200px;
     overflow-y: auto;
+    padding-right: 0.5rem;
+    /* Fade en la parte inferior */
     mask-image: linear-gradient(to bottom, black 0%, black 85%, transparent 100%);
     -webkit-mask-image: linear-gradient(to bottom, black 0%, black 85%, transparent 100%);
 }
 
-.living-history-card-download {
+.featured-card-prompt-text::-webkit-scrollbar {
+    width: 4px;
+}
+
+.featured-card-prompt-text::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.featured-card-prompt-text::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+}
+
+/* Botón de descarga - esquina inferior derecha */
+.featured-card-download-btn {
     position: absolute;
     bottom: 1.5rem;
     right: 1.5rem;
@@ -374,201 +243,327 @@ body.sidebar-collapsed .living-container {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.living-history-card-download:hover {
+.featured-card-download-btn:hover {
     background: rgba(212, 117, 78, 0.9);
     border-color: rgba(212, 117, 78, 0.5);
     transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
-.living-history-card-download i {
+.featured-card-download-btn i {
     font-size: 1.125rem;
 }
 
+/* Responsive */
+@media (max-width: 768px) {
+    .living-grid-section {
+        padding: 0 2rem var(--living-spacing-section);
+    }
+    
+    .living-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    
+    .featured-card {
+        border-radius: 12px;
+    }
+    
+    .featured-card-prompt-overlay {
+        padding: 1.5rem;
+        max-height: 70%;
+    }
+    
+    .featured-card-prompt-title {
+    font-size: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .featured-card-prompt-text {
+        font-size: 0.875rem;
+        max-height: 150px;
+    }
+    
+    .featured-card-download-btn {
+        width: 40px;
+        height: 40px;
+        bottom: 1rem;
+        right: 1rem;
+    }
+    
+    .featured-card-download-btn i {
+        font-size: 1rem;
+    }
+}
+
 /* ============================================
-   3️⃣ CONTROL CREATIVO - Insights
+   CATEGORIES SECTION
    ============================================ */
-.living-control-section {
+.living-categories-section {
     padding: 0 4rem var(--living-spacing-section);
     max-width: 1800px;
     margin: 0 auto;
 }
 
-.living-control-header {
-    margin-bottom: 2rem;
-}
-
-.living-control-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-}
-
-.living-control-card {
-    background: var(--living-bg-glass);
-    backdrop-filter: blur(20px);
-    border-radius: 16px;
-    padding: 1.5rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    cursor: pointer;
-}
-
-.living-control-card:hover {
-    background: var(--living-bg-card);
-    border-color: rgba(212, 117, 78, 0.3);
-    transform: translateY(-4px);
-    box-shadow: var(--living-shadow-soft);
-}
-
-.living-control-card-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    background: rgba(212, 117, 78, 0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 1rem;
-    color: var(--living-text-gold);
-    font-size: 1.25rem;
-}
-
-.living-control-card-title {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--living-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 0.5rem;
-}
-
-.living-control-card-value {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--living-text-light);
-    margin: 0;
-    line-height: 1.2;
-}
-
-.living-control-card-description {
-    font-size: 0.813rem;
-    color: var(--living-text-whisper);
-    margin-top: 0.5rem;
-    line-height: 1.4;
-}
-
-/* ============================================
-   4️⃣ DESTACADOS INTELIGENTES
-   ============================================ */
-.living-highlights-section {
-    padding: 0 4rem var(--living-spacing-section);
-    max-width: 1800px;
-    margin: 0 auto;
-}
-
-.living-highlights-header {
-    margin-bottom: 2rem;
-}
-
-.living-highlights-scroll {
-    display: flex;
-    gap: 1.5rem;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding-bottom: 1rem;
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-}
-
-/* Reutilizar estilo de history cards */
-.living-highlight-card {
-    flex: 0 0 auto;
-    width: 400px;
-    border-radius: 20px;
-    overflow: hidden;
-    position: relative;
-    cursor: pointer;
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: var(--living-shadow-medium);
-    background: var(--living-bg-card);
-    display: inline-block;
-}
-
-.living-highlight-card:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: var(--living-shadow-deep);
-    z-index: 10;
-}
-
-/* ============================================
-   5️⃣ RECURSOS - Secundario
-   ============================================ */
-.living-resources-section {
-    padding: 0 4rem var(--living-spacing-section);
-    max-width: 1800px;
-    margin: 0 auto;
-}
-
-.living-resources {
+.living-categories-bar {
     display: flex;
     gap: 1rem;
     flex-wrap: wrap;
-    opacity: 0.6;
-    transition: opacity 0.3s ease;
 }
 
-.living-resources:hover {
-    opacity: 1;
-}
-
-.living-resource-item {
-    padding: 0.75rem 1.25rem;
+.category-btn {
+    padding: 0.875rem 1.5rem;
     background: var(--living-bg-glass);
     backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 50px;
-    font-size: 0.875rem;
     color: var(--living-text-muted);
+    font-size: 0.938rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
 }
 
-.living-resource-item i {
-    font-size: 0.75rem;
+.category-btn:hover {
+    background: var(--living-bg-card);
+    border-color: rgba(212, 117, 78, 0.3);
+    color: var(--living-text-light);
+    transform: translateY(-2px);
+}
+
+.category-btn.active {
+    background: rgba(212, 117, 78, 0.2);
+    border-color: rgba(212, 117, 78, 0.4);
+    color: var(--living-text-gold);
+}
+
+.category-btn i {
+    font-size: 0.875rem;
+}
+
+/* ============================================
+   CONTENT GRID SECTION
+   ============================================ */
+.living-content-section {
+    padding: 0 4rem var(--living-spacing-section);
+    max-width: 1800px;
+    margin: 0 auto;
+}
+
+.living-content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.living-content-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--living-text-light);
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+.living-content-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.content-action-btn {
+    width: 40px;
+    height: 40px;
+    background: var(--living-bg-glass);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: var(--living-text-muted);
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.content-action-btn:hover {
+    background: var(--living-bg-card);
+    border-color: rgba(212, 117, 78, 0.3);
+    color: var(--living-text-light);
+    transform: translateY(-2px);
+}
+
+.living-content-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.content-card {
+    background: var(--living-bg-glass);
+    backdrop-filter: blur(20px);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--living-shadow-soft);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.content-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--living-shadow-medium);
+    border-color: rgba(212, 117, 78, 0.3);
+}
+
+.content-card-image-container {
+    width: 100%;
+    min-height: 200px;
+    max-height: 500px;
+    overflow: hidden;
+    border-radius: 16px 16px 0 0;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.content-card-image {
+    width: 100%;
+    height: auto;
+    min-height: 200px;
+    max-height: 500px;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    /* Permitir que la imagen mantenga su proporción natural */
+    min-width: 0;
+}
+
+.content-card-image-placeholder {
+    width: 100%;
+    min-height: 200px;
+    max-height: 400px;
+    aspect-ratio: 16/10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(212, 117, 78, 0.1) 0%, rgba(184, 93, 58, 0.1) 100%);
+    color: var(--living-text-whisper);
+    font-size: 2rem;
+}
+
+.content-card-info {
+    padding: 1.25rem;
+}
+
+.content-card-title {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--living-text-light);
+    margin: 0 0 0.75rem 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.content-card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.813rem;
+    color: var(--living-text-muted);
+}
+
+.content-card-rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--living-text-gold);
+}
+
+.content-card-year {
+    color: var(--living-text-muted);
 }
 
 /* ============================================
    RESPONSIVE
    ============================================ */
-@media (max-width: 768px) {
-    .living-hero-section,
-    .living-history-section,
-    .living-control-section,
-    .living-highlights-section,
-    .living-resources-section {
-        padding: 0 2rem var(--living-spacing-section);
+@media (max-width: 1600px) {
+    .living-featured-section,
+    .living-categories-section,
+    .living-content-section {
+        padding-left: 3rem;
+        padding-right: 3rem;
     }
-    
-    .living-hero {
-        min-height: 50vh;
-        max-height: 70vh;
-    }
-    
-    .living-hero-title {
-        font-size: 1.75rem;
-    }
-    
-    .living-hero-overlay {
-        padding: 2rem;
-    }
-    
-    .living-history-card,
-    .living-highlight-card {
-        width: 75vw;
-    }
-    
-    .living-control-grid {
+}
+
+@media (max-width: 1200px) {
+    .living-featured-grid {
         grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    
+    .featured-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .featured-card-visual {
+        width: 100%;
+        max-width: 400px;
+    }
+    
+    .living-content-grid {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .living-container {
+        margin-left: 0;
+    }
+    
+    .living-featured-section,
+    .living-categories-section,
+    .living-content-section {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+    
+    .featured-card {
+        padding: 2rem;
+        min-height: 280px;
+    }
+    
+    .featured-card-title {
+        font-size: 1.5rem;
+    }
+    
+    .living-categories-bar {
+        gap: 0.75rem;
+    }
+    
+    .category-btn {
+        padding: 0.75rem 1.25rem;
+        font-size: 0.875rem;
+    }
+    
+    .living-content-title {
+        font-size: 1.5rem;
+    }
+    
+    .living-content-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
     }
 }
