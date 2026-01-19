@@ -71,19 +71,9 @@ class BaseView {
       
       return html;
     } catch (error) {
-      console.error('❌ Error cargando template:', error);
-      
-      // Retornar HTML de error amigable
+      console.error('Error cargando template:', error);
       return `
-        <div class="error-container" style="
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          min-height: 400px;
-          padding: 2rem;
-          text-align: center;
-        ">
+        <div class="error-container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; padding: 2rem; text-align: center;">
           <div class="error-icon" style="font-size: 3rem; color: var(--accent-warm, #e09145); margin-bottom: 1rem;">
             <i class="fas fa-exclamation-triangle"></i>
           </div>
@@ -112,78 +102,45 @@ class BaseView {
    */
   async render() {
     if (!this.container) {
-      console.error('❌ Container no encontrado. Asegúrate de que existe #app-container en el DOM.');
+      console.error('Container no encontrado');
       return;
     }
 
-    // Si ya está renderizado, no volver a renderizar
     if (this.initialized && this.container.innerHTML.trim() !== '') {
-      console.log(`ℹ️ Vista ${this.constructor.name} ya renderizada, omitiendo re-renderizado`);
-      // Solo asegurar que esté visible
       this.show();
       return;
     }
 
-    // Mostrar loading
     this.showLoading();
 
     try {
-      // Generar HTML (puede ser desde template o desde renderHTML)
       let html;
       if (typeof this.renderHTML === 'function' && this.renderHTML !== BaseView.prototype.renderHTML) {
-        // Si renderHTML está sobrescrito, usarlo
         html = await this.renderHTML();
       } else if (this.templatePath) {
-        // Si tiene templatePath, usar loadTemplate (compatibilidad)
         html = await this.loadTemplate();
       } else {
         throw new Error('No se puede renderizar: falta renderHTML() o templatePath');
       }
       
-      // Si html es una Promise, esperarla
       if (html instanceof Promise) {
         html = await html;
       }
       
-      // Inyectar HTML en el container (siempre reemplazar para asegurar que se muestre)
       this.container.innerHTML = html;
-      
-      // Actualizar links para usar router
       this.updateLinksForRouter();
-
-      // Llamar a onEnter antes de inicializar (para preparar datos, etc.)
       await this.onEnter();
-
-      // Inicializar vista (setup event listeners, componentes, etc.)
       await this.init();
-
-      // Actualizar header con datos del usuario y contexto
       await this.updateHeader();
-
       this.initialized = true;
-
-      // Ocultar loading
       this.hideLoading();
-      
-      console.log(`✅ Vista renderizada: ${this.constructor.name}`);
     } catch (error) {
-      console.error('❌ Error renderizando vista:', error);
-      
-      // Usar ErrorHandler si está disponible
+      console.error('Error renderizando vista:', error);
       if (window.errorHandler) {
         window.errorHandler.handle(error, { view: this.constructor.name });
       }
-      
       this.container.innerHTML = `
-        <div class="error-container" style="
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          min-height: 400px;
-          padding: 2rem;
-          text-align: center;
-        ">
+        <div class="error-container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; padding: 2rem; text-align: center;">
           <div class="error-icon" style="font-size: 3rem; color: var(--accent-warm, #e09145); margin-bottom: 1rem;">
             <i class="fas fa-exclamation-triangle"></i>
           </div>

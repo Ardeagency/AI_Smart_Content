@@ -20,9 +20,8 @@ class Router {
     this.routes = {};
     this.currentView = null;
     this.currentRoute = null;
-    this.viewCache = {}; // Cache de templates
-    this.viewInstances = {}; // Cache de instancias de vistas (persistencia)
-    this.templateCache = new Map(); // Cache de templates
+    this.viewInstances = {};
+    this.templateCache = new Map();
     this.init();
   }
 
@@ -52,18 +51,13 @@ class Router {
    * @param {boolean} options.redirectIfAuth - Si redirige si ya está autenticado
    */
   register(path, viewLoader, options = {}) {
-    if (!viewLoader) {
-      console.error(`❌ Intento de registrar ruta ${path} sin viewLoader`);
-      return;
-    }
+    if (!viewLoader) return;
     
     this.routes[path] = {
       viewLoader,
       requiresAuth: options.requiresAuth || false,
       redirectIfAuth: options.redirectIfAuth || false
     };
-    
-    console.log(`✅ Ruta registrada: ${path}`);
   }
 
   /**
@@ -141,50 +135,36 @@ class Router {
         }
       }
 
-      // Si aún no hay ruta, usar 404
       if (!route) {
-        console.warn(`⚠️ Ruta no encontrada: ${path}`);
-        console.log('📋 Rutas disponibles:', Object.keys(this.routes));
         const route404 = this.routes['/404'];
         if (route404) {
           route = route404;
+        } else if (this.routes['/']) {
+          this.navigate('/', true);
+          return;
         } else {
-          console.error(`❌ Ruta no encontrada y 404 no disponible: ${path}`);
-          // Intentar redirigir a landing si no hay 404
-          if (this.routes['/']) {
-            console.log('🔄 Redirigiendo a /');
-            this.navigate('/', true);
-          }
           return;
         }
       }
 
-      // Verificar autenticación si es necesario
       if (route.requiresAuth) {
         const isAuth = await this.checkAuthentication();
         if (!isAuth) {
-          console.log('⚠️ Ruta protegida, redirigiendo a login...');
           this.navigate('/login', true);
           return;
         }
       }
 
-      // Redirigir si ya está autenticado (ej: login cuando ya hay sesión)
       if (route.redirectIfAuth) {
         const isAuth = await this.checkAuthentication();
         if (isAuth) {
-          console.log('✅ Usuario autenticado, redirigiendo...');
           this.navigate('/hogar', true);
           return;
         }
       }
 
-      // Obtener container
       const container = document.getElementById('app-container');
-      if (!container) {
-        console.error('❌ Container no encontrado');
-        return;
-      }
+      if (!container) return;
 
       // Aplicar animación de salida a la vista actual
       if (this.currentView && container) {
@@ -205,12 +185,11 @@ class Router {
           this.currentView.container.style.display = 'none';
         }
         
-        // Llamar onLeave para cleanup temporal (no destruir datos)
         if (typeof this.currentView.onLeave === 'function') {
           try {
             await this.currentView.onLeave();
           } catch (error) {
-            console.error('Error en onLeave de vista actual:', error);
+            console.error('Error en onLeave:', error);
           }
         }
       }
@@ -241,107 +220,49 @@ class Router {
         ViewClass = route.viewLoader;
       }
 
-      if (!ViewClass) {
-        console.error('❌ Vista no encontrada para ruta:', path);
+      if (!ViewClass || typeof ViewClass !== 'function') {
+        console.error('Vista no válida para ruta:', path);
         return;
       }
 
-      // Verificar que ViewClass sea una clase antes de instanciar
-      if (typeof ViewClass !== 'function') {
-        console.error('❌ ViewClass no es una función/clase:', ViewClass);
-        return;
-      }
-
-      // Verificar si ya existe una instancia de esta vista en cache
       let viewInstance = this.viewInstances[path];
       
       if (viewInstance && viewInstance.initialized) {
-        // Reutilizar vista existente
-        console.log(`♻️ Reutilizando vista existente: ${path}`);
         this.currentView = viewInstance;
-        
-        // Mostrar la vista
         if (this.currentView.container) {
           this.currentView.container.style.display = '';
         }
-        
-        // Llamar onEnter para que la vista pueda hacer verificaciones
         if (typeof this.currentView.onEnter === 'function') {
           await this.currentView.onEnter();
         }
       } else {
-        // Crear nueva instancia de vista solo si no existe
         this.currentView = new ViewClass();
         this.currentRoute = path;
-        
-        // Guardar en cache
         this.viewInstances[path] = this.currentView;
         
-        // Pasar parámetros de ruta a la vista si los hay
         if (Object.keys(routeParams).length > 0) {
           this.currentView.routeParams = routeParams;
         }
 
-        // Aplicar animación de entrada antes de renderizar
         if (container) {
           container.classList.add('view-enter');
         }
 
-        // Renderizar nueva vista
         await this.currentView.render();
       }
       
-      // Si reutilizamos vista, también pasar parámetros si los hay
       if (viewInstance && viewInstance.initialized && Object.keys(routeParams).length > 0) {
         this.currentView.routeParams = routeParams;
       }
       
-      // Actualizar navegación activa
       this.updateNavigation();
-      
-      // Disparar evento personalizado para que Navigation se actualice
       window.dispatchEvent(new CustomEvent('routechange', { detail: { path } }));
-      
-      console.log(`✅ Vista cargada: ${path}`);
     } catch (error) {
-      console.error('❌ Error manejando ruta:', error);
-      console.error('Stack:', error.stack);
-      
-      // Mostrar error en el container
-      const container = document.getElementById('app-container');
-      if (container) {
-        container.innerHTML = `
-          <div style="
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 2rem;
-            text-align: center;
-            background: var(--bg-primary, #1a1a1a);
-          ">
-            <div style="font-size: 3rem; color: var(--accent-warm, #e09145); margin-bottom: 1rem;">
-              <i class="fas fa-exclamation-triangle"></i>
-            </div>
-            <h2 style="color: var(--text-primary, #ecebda); margin-bottom: 1rem;">Error cargando la página</h2>
-            <p style="color: var(--text-secondary, #a0a0a0); margin-bottom: 2rem;">${error.message || 'Error desconocido'}</p>
-            <button onclick="window.location.reload()" style="
-              padding: 0.75rem 1.5rem;
-              background: var(--primary-color, #ecebda);
-              color: var(--bg-dark, #1a1a1a);
-              border: none;
-              border-radius: 8px;
-              cursor: pointer;
-              font-weight: 600;
-            ">Recargar Página</button>
-          </div>
-        `;
-      }
-      
-      // Usar ErrorHandler si está disponible
+      console.error('Error manejando ruta:', error);
       if (window.errorHandler) {
         window.errorHandler.showError(error, 'Error cargando la página. Por favor, recarga.');
+      } else {
+        this.showError('Error cargando la página. Por favor, recarga.');
       }
     }
   }
@@ -410,12 +331,8 @@ class Router {
     });
   }
 
-  /**
-   * Obtener ruta actual
-   * @returns {string}
-   */
   getCurrentRoute() {
-    return this.currentRoute || (window.location.hash.slice(1) || '/');
+    return this.currentRoute || window.location.pathname || '/';
   }
 
   /**

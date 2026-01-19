@@ -12,54 +12,30 @@ class App {
    * Inicializar la aplicación
    */
   async init() {
-    if (this.initialized) {
-      console.warn('⚠️ App ya está inicializada');
-      return;
-    }
-
-    console.log('🚀 Inicializando AI Smart Content SPA...');
+    if (this.initialized) return;
 
     try {
-      // 1. Cargar Supabase
       await this.initSupabase();
-
-      // 2. Inicializar Router (ya está creado globalmente, solo verificar)
       this.initRouter();
-
-      // 3. Registrar rutas (se hará después cuando tengamos las vistas)
-      // Por ahora solo registramos una ruta de prueba
       this.registerRoutes();
 
-    // 4. Inicializar Navigation component (se hará en Fase 3)
-    // this.initNavigation();
-
-      // 5. Manejar ruta inicial (con un pequeño delay para asegurar que todo esté listo)
       if (window.router) {
-        // Pequeño delay para asegurar que el DOM esté completamente listo y las rutas estén registradas
         setTimeout(() => {
-          // Verificar que las rutas estén registradas
           if (Object.keys(window.router.routes).length > 0) {
-            console.log('✅ Rutas registradas, manejando ruta inicial...');
             window.router.handleRoute();
           } else {
-            console.warn('⚠️ No hay rutas registradas, reintentando...');
             setTimeout(() => {
               if (Object.keys(window.router.routes).length > 0) {
                 window.router.handleRoute();
-              } else {
-                console.error('❌ No se pudieron registrar rutas. Verificar que las vistas estén cargadas.');
               }
             }, 500);
           }
         }, 200);
-      } else {
-        console.error('❌ Router no está disponible');
       }
 
       this.initialized = true;
-      console.log('✅ App inicializada correctamente');
     } catch (error) {
-      console.error('❌ Error inicializando app:', error);
+      console.error('Error inicializando app:', error);
       this.showInitError(error);
     }
   }
@@ -68,17 +44,12 @@ class App {
    * Inicializar Supabase
    */
   async initSupabase() {
-    // Esperar a que app-loader cargue Supabase
     if (typeof window.appLoader !== 'undefined' && window.appLoader.waitFor) {
       try {
         await window.appLoader.waitFor();
-        console.log('✅ Supabase cargado');
       } catch (error) {
-        console.warn('⚠️ Error cargando Supabase:', error);
-        // Continuar aunque Supabase no esté disponible (modo desarrollo)
+        // Continuar aunque Supabase no esté disponible
       }
-    } else {
-      console.warn('⚠️ app-loader no está disponible');
     }
   }
 
@@ -86,25 +57,18 @@ class App {
    * Inicializar Router
    */
   initRouter() {
-    // Router ya está creado globalmente en router.js
     if (!window.router) {
       throw new Error('Router no está disponible');
     }
-    
     this.router = window.router;
-    console.log('✅ Router inicializado');
   }
 
   /**
    * Registrar todas las rutas de la aplicación
    */
   registerRoutes() {
-    if (!this.router) {
-      console.error('❌ Router no está disponible');
-      return;
-    }
+    if (!this.router) return;
 
-    // Verificar que las vistas estén disponibles antes de registrar
     const viewsAvailable = {
       LandingView: typeof window.LandingView !== 'undefined',
       BrandsView: typeof window.BrandsView !== 'undefined',
@@ -120,14 +84,6 @@ class App {
       StudioView: typeof window.StudioView !== 'undefined',
       PlanesView: typeof window.PlanesView !== 'undefined'
     };
-
-    const missingViews = Object.entries(viewsAvailable)
-      .filter(([_, available]) => !available)
-      .map(([name]) => name);
-    
-    if (missingViews.length > 0) {
-      console.warn('⚠️ Algunas vistas no están disponibles:', missingViews);
-    }
 
     // Rutas públicas
     // Las vistas se cargan desde los scripts en index.html
@@ -310,13 +266,6 @@ class App {
       }
     });
 
-    const registeredRoutes = Object.keys(this.router.routes);
-    console.log(`✅ Rutas registradas: ${registeredRoutes.length}`);
-    console.log('  Rutas:', registeredRoutes);
-    
-    if (missingViews.length > 0) {
-      console.warn(`⚠️ ${missingViews.length} vistas no disponibles, sus rutas no fueron registradas`);
-    }
   }
 
   /**
@@ -359,16 +308,12 @@ class App {
   }
 }
 
-// Inicializar app cuando el DOM esté listo
 function initializeApp() {
-  if (window.app && window.app.initialized) {
-    console.log('⚠️ App ya está inicializada');
-    return;
-  }
+  if (window.app && window.app.initialized) return;
   
   window.app = new App();
   window.app.init().catch(error => {
-    console.error('❌ Error crítico inicializando app:', error);
+    console.error('Error crítico inicializando app:', error);
   });
 }
 
