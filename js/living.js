@@ -13,6 +13,8 @@ class LivingManager {
         this.flowRuns = [];
         this.flowOutputs = [];
         this.creditUsage = [];
+        this.brandId = null;
+        this.latestGeneratedContent = [];
         this.eventListenersSetup = false;
 
         this.init();
@@ -37,6 +39,7 @@ class LivingManager {
                 await this.loadFlowRuns();
                 await this.loadFlowOutputs();
                 await this.loadCreditUsage();
+                await this.loadLatestGeneratedContent();
             }
             this.renderAll();
         } else {
@@ -126,9 +129,37 @@ class LivingManager {
 
             if (error && error.code !== 'PGRST116') throw error;
             this.projectData = data || null;
+            
+            // Cargar brand_id si hay projectData
+            if (this.projectData) {
+                await this.loadBrandId();
+            }
         } catch (error) {
             console.error('Error loading project data:', error);
             this.projectData = null;
+        }
+    }
+
+    async loadBrandId() {
+        if (!this.supabase || !this.projectData) return;
+
+        try {
+            const { data, error } = await this.supabase
+                .from('brands')
+                .select('id')
+                .eq('project_id', this.projectData.id)
+                .maybeSingle();
+
+            if (error) {
+                console.error('Error loading brand_id:', error);
+                this.brandId = null;
+                return;
+            }
+
+            this.brandId = data?.id || null;
+        } catch (error) {
+            console.error('Error loading brand_id:', error);
+            this.brandId = null;
         }
     }
 
@@ -224,6 +255,34 @@ class LivingManager {
         }
     }
 
+    async loadLatestGeneratedContent() {
+        if (!this.supabase || !this.brandId) {
+            console.log('ℹ️ No hay brand_id disponible para cargar contenido generado');
+            this.latestGeneratedContent = [];
+            return;
+        }
+
+        try {
+            const { data, error } = await this.supabase
+                .rpc('get_latest_generated_content', {
+                    p_brand_id: this.brandId,
+                    p_limit: 3 // Obtener las últimas 3 para el Hero
+                });
+
+            if (error) {
+                console.error('Error cargando contenido generado:', error);
+                this.latestGeneratedContent = [];
+                return;
+            }
+
+            this.latestGeneratedContent = data || [];
+            console.log('✅ Contenido generado cargado:', this.latestGeneratedContent.length, 'elementos');
+        } catch (error) {
+            console.error('Error loading latest generated content:', error);
+            this.latestGeneratedContent = [];
+        }
+    }
+
     renderAll() {
         this.renderProductionsOfDay();
         this.renderLatestProductions();
@@ -258,25 +317,52 @@ class LivingManager {
         const productionsOfDayEl = document.getElementById('productionsOfDay');
         if (!productionsOfDayEl) return;
 
-        // Obtener producciones generadas hoy (flow outputs)
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        // Usar el contenido generado por IA desde la función RPC
+        const latestContent = this.latestGeneratedContent || [];
+        
+        // Si no hay contenido desde RPC, usar fallback a flow outputs
+        let todayProductions = [];
+        if (latestContent.length > 0) {
+            // Usar los datos de la función RPC
+            todayProductions = latestContent.slice(0, 3).map(item => ({
+                image_url: item.image_url,
+                prompt_used: item.prompt_used,
+                style_trend: item.style_trend,
+                created_at: item.created_at
+            }));
+        } else {
+            // Fallback: Obtener producciones generadas hoy (flow outputs)
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
 
-        const todayProductions = this.flowOutputs
-            .filter(output => {
-                const outputDate = new Date(output.created_at);
-                outputDate.setHours(0, 0, 0, 0);
-                return outputDate.getTime() === today.getTime();
-            })
-            .slice(0, 3);
+            todayProductions = this.flowOutputs
+                .filter(output => {
+                    const outputDate = new Date(output.created_at);
+                    outputDate.setHours(0, 0, 0, 0);
+                    return outputDate.getTime() === today.getTime();
+                })
+                .slice(0, 3)
+                .map(output => ({
+                    image_url: output.storage_path || output.file_url,
+                    prompt_used: output.prompt_used,
+                    created_at: output.created_at
+                }));
+        }
 
-        // Si hay menos de 3, rellenar con placeholders
+        // Renderizar items (siempre mostrar 3)
         const items = [];
         for (let i = 0; i < 3; i++) {
-            if (todayProductions[i]) {
+            if (todayProductions[i] && todayProductions[i].image_url) {
+                const item = todayProductions[i];
+                const imageUrl = item.image_url;
+                const promptInfo = item.prompt_used ? `<div class="visual-day-prompt">${this.escapeHtml(item.prompt_used.substring(0, 50))}...</div>` : '';
+                const styleInfo = item.style_trend ? `<div class="visual-day-style">Estilo: ${this.escapeHtml(item.style_trend)}</div>` : '';
+                
                 items.push(`
                     <div class="visual-day-item">
-                        <img src="${this.escapeHtml(todayProductions[i].file_url)}" alt="Visual del día" onerror="this.parentElement.innerHTML='<div class=\\'visual-day-placeholder\\'><i class=\\'fas fa-image\\'></i></div>'">
+                        <img src="${this.escapeHtml(imageUrl)}" alt="Visual generado por IA" onerror="this.parentElement.innerHTML='<div class=\\'visual-day-placeholder\\'><i class=\\'fas fa-image\\'></i></div>'">
+                        ${promptInfo}
+                        ${styleInfo}
                     </div>
                 `);
             } else {

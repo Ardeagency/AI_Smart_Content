@@ -127,6 +127,41 @@ body.sidebar-collapsed .living-container {
     font-size: 4rem;
 }
 
+.visual-day-prompt,
+.visual-day-style {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 1rem;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.75rem;
+    line-height: 1.4;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.visual-day-item:hover .visual-day-prompt,
+.visual-day-item:hover .visual-day-style {
+    opacity: 1;
+}
+
+.visual-day-prompt {
+    bottom: 2.5rem;
+    font-weight: 400;
+}
+
+.visual-day-style {
+    bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--living-text-gold);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.688rem;
+}
+
 /* ============================================
    2. Últimas Producciones (Scroll Horizontal)
    ============================================ */

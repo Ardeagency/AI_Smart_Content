@@ -42,8 +42,10 @@ CREATE TABLE public.audiences (
   triggers jsonb,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  entity_id uuid,
   CONSTRAINT audiences_pkey PRIMARY KEY (id),
-  CONSTRAINT audiences_brand_id_fkey FOREIGN KEY (brand_id) REFERENCES public.brands(id)
+  CONSTRAINT audiences_brand_id_fkey FOREIGN KEY (brand_id) REFERENCES public.brands(id),
+  CONSTRAINT audiences_entity_id_fkey FOREIGN KEY (entity_id) REFERENCES public.brand_entities(id)
 );
 CREATE TABLE public.brand_assets (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -99,8 +101,21 @@ CREATE TABLE public.brand_entities (
   metadata jsonb DEFAULT '{}'::jsonb,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  is_active_for_automation boolean DEFAULT false,
   CONSTRAINT brand_entities_pkey PRIMARY KEY (id),
   CONSTRAINT brand_entities_brand_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id)
+);
+CREATE TABLE public.brand_fonts (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  brand_id uuid NOT NULL,
+  font_family text NOT NULL,
+  font_usage text NOT NULL,
+  font_weight text DEFAULT '400'::text,
+  font_url text,
+  fallback_font text DEFAULT 'sans-serif'::text,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT brand_fonts_pkey PRIMARY KEY (id),
+  CONSTRAINT brand_fonts_brand_id_fkey FOREIGN KEY (brand_id) REFERENCES public.brands(id)
 );
 CREATE TABLE public.brand_places (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -150,6 +165,16 @@ CREATE TABLE public.brands (
   objetivos_marca jsonb DEFAULT '[]'::jsonb,
   CONSTRAINT brands_pkey PRIMARY KEY (id),
   CONSTRAINT brands_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.brand_containers(id)
+);
+CREATE TABLE public.campaign_entities (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  campaign_id uuid NOT NULL,
+  entity_id uuid NOT NULL,
+  is_hero boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT campaign_entities_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_campaign FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id),
+  CONSTRAINT fk_entity FOREIGN KEY (entity_id) REFERENCES public.brand_entities(id)
 );
 CREATE TABLE public.campaigns (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -214,9 +239,16 @@ CREATE TABLE public.flow_outputs (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   run_id uuid,
   output_type text NOT NULL,
-  file_url text NOT NULL,
   metadata jsonb,
   created_at timestamp with time zone DEFAULT now(),
+  storage_path text,
+  prompt_used text,
+  generated_copy text,
+  generated_hashtags jsonb,
+  creative_rationale text,
+  technical_params jsonb,
+  text_content text,
+  storage_object_id uuid,
   CONSTRAINT flow_outputs_pkey PRIMARY KEY (id),
   CONSTRAINT flow_outputs_run_id_fkey FOREIGN KEY (run_id) REFERENCES public.flow_runs(id)
 );
@@ -227,10 +259,14 @@ CREATE TABLE public.flow_runs (
   user_id uuid,
   status text NOT NULL,
   created_at timestamp with time zone DEFAULT now(),
+  entity_id uuid,
+  audience_id uuid,
   CONSTRAINT flow_runs_pkey PRIMARY KEY (id),
   CONSTRAINT flow_runs_flow_id_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id),
   CONSTRAINT flow_runs_brand_id_fkey FOREIGN KEY (brand_id) REFERENCES public.brands(id),
-  CONSTRAINT flow_runs_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+  CONSTRAINT flow_runs_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
+  CONSTRAINT flow_runs_entity_id_fkey FOREIGN KEY (entity_id) REFERENCES public.brand_entities(id),
+  CONSTRAINT flow_runs_audience_id_fkey FOREIGN KEY (audience_id) REFERENCES public.audiences(id)
 );
 CREATE TABLE public.organization_credits (
   organization_id uuid NOT NULL,
@@ -285,8 +321,27 @@ CREATE TABLE public.products (
   variantes_producto text,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  entity_id uuid,
   CONSTRAINT products_pkey PRIMARY KEY (id),
-  CONSTRAINT products_project_id_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id)
+  CONSTRAINT products_project_id_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id),
+  CONSTRAINT products_entity_id_fkey FOREIGN KEY (entity_id) REFERENCES public.brand_entities(id)
+);
+CREATE TABLE public.services (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  brand_container_id uuid NOT NULL,
+  entity_id uuid NOT NULL,
+  nombre_servicio text NOT NULL,
+  descripcion_servicio text,
+  duracion_estimada text,
+  entregables jsonb DEFAULT '[]'::jsonb,
+  metodologia text,
+  precio_base numeric,
+  moneda text DEFAULT 'USD'::text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT services_pkey PRIMARY KEY (id),
+  CONSTRAINT services_project_id_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id),
+  CONSTRAINT services_entity_id_fkey FOREIGN KEY (entity_id) REFERENCES public.brand_entities(id)
 );
 CREATE TABLE public.storage_usage (
   organization_id uuid NOT NULL,
@@ -310,6 +365,18 @@ CREATE TABLE public.subscriptions (
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT subscriptions_pkey PRIMARY KEY (id),
   CONSTRAINT subscriptions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.user_flow_favorites (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid NOT NULL,
+  flow_id uuid NOT NULL,
+  is_favorite boolean DEFAULT true,
+  rating integer CHECK (rating >= 1 AND rating <= 5),
+  last_used_at timestamp with time zone DEFAULT now(),
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT user_flow_favorites_pkey PRIMARY KEY (id),
+  CONSTRAINT favorites_user_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
+  CONSTRAINT favorites_flow_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id)
 );
 CREATE TABLE public.user_profiles (
   id uuid NOT NULL,
@@ -336,4 +403,21 @@ CREATE TABLE public.users (
   form_verified boolean NOT NULL DEFAULT false,
   CONSTRAINT users_pkey PRIMARY KEY (id),
   CONSTRAINT users_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
+);
+CREATE TABLE public.visual_references (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  image_url text,
+  thumbnail_url text,
+  category text NOT NULL,
+  visual_type text NOT NULL,
+  prompt_details jsonb NOT NULL,
+  priority integer DEFAULT 1,
+  usable_for_generation boolean DEFAULT true,
+  brand_container_id uuid,
+  entity_type text,
+  entity_subtype text,
+  created_at timestamp with time zone DEFAULT now(),
+  bucket text DEFAULT 'visual-references'::text,
+  object_path text NOT NULL,
+  CONSTRAINT visual_references_pkey PRIMARY KEY (id)
 );
