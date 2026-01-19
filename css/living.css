@@ -329,14 +329,8 @@ body.sidebar-collapsed .living-container {
     filter: brightness(1.05);
 }
 
-.featured-card:hover {
-    transform: translateY(-8px) scale(1.02);
-    box-shadow: var(--living-shadow-deep);
-    z-index: 10;
-}
-
-/* Overlay oscuro en hover */
-.featured-card:hover .featured-card-visual::after {
+/* Overlay oscuro en hover - solo para masonry, no para hero */
+.living-masonry-item .featured-card:hover .featured-card-visual::after {
     opacity: 1;
 }
 
