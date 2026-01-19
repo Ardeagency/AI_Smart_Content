@@ -1260,8 +1260,14 @@ class LivingManager {
 
         try {
             // Validar que filePath no esté vacío o sea solo espacios
-            if (!filePath.trim() || filePath.trim().length === 0) {
+            if (!filePath || typeof filePath !== 'string' || !filePath.trim() || filePath.trim().length === 0) {
                 console.warn('⚠️ filePath vacío o inválido:', filePath);
+                return null;
+            }
+
+            // Validar que bucketName sea válido
+            if (!bucketName || typeof bucketName !== 'string' || bucketName.trim().length === 0) {
+                console.warn('⚠️ bucketName inválido:', bucketName);
                 return null;
             }
 
@@ -1279,12 +1285,30 @@ class LivingManager {
                 return null;
             }
 
-            // Obtener URL pública desde Supabase Storage
-            const { data } = this.supabase.storage
-                .from(bucketName)
-                .getPublicUrl(cleanPath);
+            // Validar que storage esté disponible
+            if (!this.supabase.storage || typeof this.supabase.storage.from !== 'function') {
+                console.warn('⚠️ Supabase storage no disponible');
+                return null;
+            }
 
-            const publicUrl = data?.publicUrl || null;
+            // Obtener URL pública desde Supabase Storage con manejo de errores
+            let publicUrl = null;
+            try {
+                const { data, error } = this.supabase.storage
+                    .from(bucketName)
+                    .getPublicUrl(cleanPath);
+
+                if (error) {
+                    console.warn('⚠️ Error en getPublicUrl:', error.message, 'Path:', cleanPath);
+                    return null;
+                }
+
+                publicUrl = data?.publicUrl || null;
+            } catch (storageError) {
+                // Capturar errores de la librería de Supabase (como 400 Bad Request)
+                console.warn('⚠️ Error de Supabase storage (posible 400):', storageError.message || storageError, 'Bucket:', bucketName, 'Path:', cleanPath);
+                return null;
+            }
             
             // Validar que la URL generada sea válida
             if (publicUrl && this.isValidUrl(publicUrl)) {
@@ -1294,7 +1318,8 @@ class LivingManager {
                 return null;
             }
         } catch (error) {
-            console.warn('⚠️ Error obteniendo URL pública de storage:', error);
+            // Capturar cualquier otro error inesperado
+            console.warn('⚠️ Error inesperado obteniendo URL pública de storage:', error.message || error);
             return null;
         }
     }
