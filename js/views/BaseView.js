@@ -116,8 +116,14 @@ class BaseView {
       return;
     }
 
-    // Si ya está renderizado, no volver a renderizar
-    if (this.initialized && this.container.innerHTML.trim() !== '') {
+    // Si ya está renderizado Y tiene contenido real (no solo loading), no volver a renderizar
+    const currentContent = this.container.innerHTML.trim();
+    const hasRealContent = currentContent !== '' && 
+                           !currentContent.includes('view-loading') && 
+                           !currentContent.includes('loading-spinner') &&
+                           currentContent.length > 100; // Más que solo el loading
+    
+    if (this.initialized && hasRealContent) {
       console.log(`ℹ️ Vista ${this.constructor.name} ya renderizada, omitiendo re-renderizado`);
       // Solo asegurar que esté visible
       this.show();
