@@ -482,61 +482,62 @@ class LivingManager {
                     found_url: imageUrl
                 });
                 
+                // Verificar si la URL está incompleta o truncada
+                const isUrlIncomplete = imageUrl && (
+                    (imageUrl.includes('supabase.co/storage/v') && !imageUrl.includes('/object/public/')) ||
+                    imageUrl.endsWith('-') ||
+                    imageUrl.endsWith('...') ||
+                    (imageUrl.includes('supabase.co') && imageUrl.split('supabase.co/storage/')[1]?.split('/').length < 3) ||
+                    !imageUrl.match(/\.(jpg|jpeg|png|gif|webp)/i)
+                );
+                
+                if (isUrlIncomplete) {
+                    console.warn('⚠️ URL de RPC parece estar incompleta/truncada:', imageUrl);
+                    console.log('🔧 Intentando reconstruir desde storage_path...');
+                    imageUrl = null; // Forzar reconstrucción desde storage_path
+                }
+                
                 // Si la URL de la RPC no es válida o no existe, intentar obtener desde storage_path si está disponible
                 if (!imageUrl || (!imageUrl.startsWith('http') && !imageUrl.startsWith('/'))) {
                     if (item.storage_path && this.supabase) {
                         // Intentar obtener URL desde storage_path
-                        const possibleBuckets = ['production-outputs', 'generated-content', 'flow-outputs', 'content-images'];
-                        for (const bucket of possibleBuckets) {
-                            try {
-                                const path = item.storage_path.endsWith('/') 
-                                    ? item.storage_path 
-                                    : item.storage_path;
-                                
-                                if (path.endsWith('/')) {
-                                    // Es una carpeta, listar archivos
-                                    const { data: files, error: listError } = await this.supabase.storage
-                                        .from(bucket)
-                                        .list(path, { limit: 1, sortBy: { column: 'created_at', order: 'desc' } });
-                                    
-                                    if (listError) {
-                                        console.warn(`⚠️ Error listando archivos en bucket '${bucket}' carpeta '${path}':`, listError);
-                                        continue;
-                                    }
-                                    
-                                    if (files && files.length > 0) {
-                                        const fullPath = path + files[0].name;
-                                        const { data: { publicUrl }, error: urlError } = this.supabase.storage
-                                            .from(bucket)
-                                            .getPublicUrl(fullPath);
-                                        
-                                        if (urlError) {
-                                            console.warn(`⚠️ Error obteniendo URL pública desde bucket '${bucket}' path '${fullPath}':`, urlError);
-                                            continue;
-                                        }
-                                        
-                                        imageUrl = publicUrl;
-                                        console.log(`✅ URL obtenida desde carpeta '${path}' en bucket '${bucket}':`, imageUrl);
-                                        break;
-                                    }
-                                } else {
-                                    // Es un archivo, obtener URL directamente
-                                    const { data: { publicUrl }, error: urlError } = this.supabase.storage
-                                        .from(bucket)
-                                        .getPublicUrl(path);
-                                    
-                                    if (urlError) {
-                                        console.warn(`⚠️ Error obteniendo URL pública desde bucket '${bucket}' path '${path}':`, urlError);
-                                        continue;
-                                    }
-                                    
-                                    imageUrl = publicUrl;
-                                    console.log(`✅ URL obtenida desde bucket '${bucket}' path '${path}':`, imageUrl);
-                                    break;
-                                }
-                            } catch (error) {
-                                continue;
+                        // El storage_path parece tener el formato: 'production-outputs/.../img_X.jpg'
+                        const storagePath = item.storage_path;
+                        
+                        // Extraer el bucket y la ruta del storage_path
+                        let bucketName = 'production-outputs'; // Bucket por defecto
+                        let filePath = storagePath;
+                        
+                        // Si storage_path incluye el nombre del bucket al inicio, extraerlo
+                        if (storagePath.includes('/')) {
+                            const parts = storagePath.split('/');
+                            // Verificar si el primer segmento es un bucket conocido
+                            const knownBuckets = ['production-outputs', 'generated-content', 'flow-outputs', 'content-images'];
+                            if (knownBuckets.includes(parts[0])) {
+                                bucketName = parts[0];
+                                filePath = parts.slice(1).join('/');
                             }
+                        }
+                        
+                        console.log(`🔧 Construyendo URL desde storage_path:`, {
+                            original_path: storagePath,
+                            bucket: bucketName,
+                            file_path: filePath
+                        });
+                        
+                        try {
+                            const { data: { publicUrl }, error: urlError } = this.supabase.storage
+                                .from(bucketName)
+                                .getPublicUrl(filePath);
+                            
+                            if (urlError) {
+                                console.error(`❌ Error obteniendo URL pública desde bucket '${bucketName}' path '${filePath}':`, urlError);
+                            } else if (publicUrl) {
+                                imageUrl = publicUrl;
+                                console.log(`✅ URL construida correctamente desde storage_path:`, imageUrl);
+                            }
+                        } catch (error) {
+                            console.error(`❌ Error al construir URL desde storage_path:`, error);
                         }
                     }
                 }
