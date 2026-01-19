@@ -629,6 +629,32 @@ class LivingManager {
         });
     }
 
+    getPublicUrlFromStorage(bucketName, filePath) {
+        if (!this.supabase || !bucketName || !filePath) {
+            return null;
+        }
+
+        try {
+            // Limpiar el path si viene con el nombre del bucket
+            let cleanPath = filePath;
+            if (filePath.startsWith(`${bucketName}/`)) {
+                cleanPath = filePath.replace(`${bucketName}/`, '');
+            } else if (filePath.startsWith('/')) {
+                cleanPath = filePath.substring(1);
+            }
+
+            // Obtener URL pública desde Supabase Storage
+            const { data } = this.supabase.storage
+                .from(bucketName)
+                .getPublicUrl(cleanPath);
+
+            return data?.publicUrl || null;
+        } catch (error) {
+            console.warn('⚠️ Error obteniendo URL pública de storage:', error);
+            return null;
+        }
+    }
+
     escapeHtml(text) {
         if (!text) return '';
         const div = document.createElement('div');
