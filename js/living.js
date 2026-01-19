@@ -57,15 +57,11 @@ class LivingManager {
             await Promise.all([
                 this.loadProducts(),
                 this.loadFlowRuns(),
-                this.loadCreditUsage()
+                this.loadCreditUsage(),
+                this.loadFlowOutputs() // Cargar flow_outputs directamente (fuente principal)
             ]);
 
-            // Cargar flow outputs después de flow runs
-            if (this.flowRuns.length > 0) {
-                await this.loadFlowOutputs();
-            }
-
-            // Cargar contenido generado después de obtener brand_id
+            // Cargar contenido generado después de obtener brand_id (fallback)
             await this.loadLatestGeneratedContent();
 
             // Renderizar todo
