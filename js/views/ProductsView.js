@@ -379,16 +379,29 @@ class ProductsView extends BaseView {
       await this.loadProductsScript();
     }
 
-    // Inicializar ProductsManager
+    // Inicializar ProductsManager - esperar a que el DOM esté completamente renderizado
     if (window.ProductsManager) {
       // Crear instancia solo si no existe
       if (!this.productsManager) {
         this.productsManager = new window.ProductsManager();
-        // NO llamar init() automáticamente - ProductsManager.init() se llama desde el template
-        // porque necesita que el DOM esté renderizado
-        if (this.container && this.container.innerHTML) {
-          await this.productsManager.init();
-        }
+        
+        // Esperar a que los elementos del DOM estén disponibles antes de inicializar
+        await new Promise(resolve => {
+          const checkDOM = () => {
+            const emptyState = document.getElementById('emptyState');
+            const productsGrid = document.getElementById('productsGrid');
+            if (emptyState && productsGrid) {
+              resolve();
+            } else {
+              requestAnimationFrame(checkDOM);
+            }
+          };
+          // Dar tiempo para que el navegador renderice el HTML inyectado
+          setTimeout(checkDOM, 50);
+        });
+        
+        // Ahora sí inicializar ProductsManager
+        await this.productsManager.init();
       }
     }
 

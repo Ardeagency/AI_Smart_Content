@@ -272,12 +272,28 @@ if (typeof window.ProductsManager === 'undefined') {
     }
 
     async loadProducts() {
-        // Cargar productos - filtrar por brand_container_id
-        const emptyState = document.getElementById('emptyState');
-        const productsGrid = document.getElementById('productsGrid');
+        // Esperar a que los elementos del DOM estén disponibles
+        const maxRetries = 10;
+        let retries = 0;
+        let emptyState, productsGrid;
+        
+        while (retries < maxRetries && (!emptyState || !productsGrid)) {
+            emptyState = document.getElementById('emptyState');
+            productsGrid = document.getElementById('productsGrid');
+            
+            if (!emptyState || !productsGrid) {
+                await new Promise(resolve => requestAnimationFrame(resolve));
+                retries++;
+            }
+        }
 
         if (!emptyState || !productsGrid) {
-            console.error('❌ Elementos del DOM no encontrados');
+            console.error('❌ Elementos del DOM no encontrados después de', maxRetries, 'intentos');
+            console.error('Buscando elementos:', {
+                emptyState: !!emptyState,
+                productsGrid: !!productsGrid,
+                container: document.getElementById('app-container')?.innerHTML?.substring(0, 200)
+            });
             return;
         }
 
