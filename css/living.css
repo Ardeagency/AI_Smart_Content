@@ -99,8 +99,8 @@ body.sidebar-collapsed .living-container {
 
 .featured-card {
     flex: 0 0 auto;
-    width: 600px;
-    height: 500px; /* Altura aumentada para imágenes verticales */
+    width: 400px; /* Ancho fijo para controlar el tamaño base */
+    min-height: 200px; /* Altura mínima */
     border-radius: 20px;
     overflow: hidden;
     position: relative;
@@ -108,6 +108,8 @@ body.sidebar-collapsed .living-container {
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: var(--living-shadow-medium);
     background: var(--living-bg-card);
+    display: flex;
+    flex-direction: column;
 }
 
 .featured-card:hover {
@@ -122,11 +124,15 @@ body.sidebar-collapsed .living-container {
 }
 
 .featured-card-visual {
-    position: absolute;
-    inset: 0;
+    position: relative;
     width: 100%;
-    height: 100%;
+    height: auto;
     z-index: 1;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
 }
 
 .featured-card-visual::after {
@@ -142,10 +148,11 @@ body.sidebar-collapsed .living-container {
 
 .featured-card-visual img {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
+    height: auto;
     display: block;
+    /* Mantener el aspect ratio original de la imagen */
+    object-fit: contain;
+    object-position: center;
 }
 
 .featured-card-visual-placeholder {
@@ -176,6 +183,12 @@ body.sidebar-collapsed .living-container {
     pointer-events: none;
     max-height: 60%;
     overflow: hidden;
+    background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.95) 0%,
+        rgba(0, 0, 0, 0.8) 50%,
+        transparent 100%
+    );
 }
 
 .featured-card:hover .featured-card-prompt-overlay {
@@ -258,8 +271,8 @@ body.sidebar-collapsed .living-container {
     }
     
     .featured-card {
-        width: 85vw;
-        height: 400px; /* Mantener altura para imágenes verticales */
+        width: 75vw;
+        min-height: 200px;
     }
     
     .featured-card-prompt-overlay {
