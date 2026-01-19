@@ -559,7 +559,15 @@ class LivingManager {
         const videosContainer = document.getElementById('livingHistoryVideos');
         const imagesContainer = document.getElementById('livingHistoryImages');
         
-        if (!videosContainer || !imagesContainer) return;
+        if (!videosContainer || !imagesContainer) {
+            console.warn('⚠️ Contenedores de history no encontrados:', {
+                videos: !!videosContainer,
+                images: !!imagesContainer
+            });
+            return;
+        }
+        
+        console.log('🎨 Renderizando history section...');
         
         // Producciones de flujos que el usuario haya usado
         // Excluir las que ya están en hero (latestGeneratedContent)
