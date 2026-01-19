@@ -276,25 +276,24 @@ class Router {
         
         // Guardar en cache
         this.viewInstances[path] = this.currentView;
-      
-      // Pasar parámetros de ruta a la vista si los hay
-      if (Object.keys(routeParams).length > 0) {
-        this.currentView.routeParams = routeParams;
-      }
-
-      // Aplicar animación de entrada antes de renderizar
-      if (container) {
-        container.classList.add('view-enter');
-      }
-
-      // Renderizar vista (solo si no está inicializada o necesita actualización)
-      if (!viewInstance || !viewInstance.initialized) {
-        await this.currentView.render();
-      } else {
-        // Vista ya renderizada, solo actualizar si es necesario
-        if (typeof this.currentView.onEnter === 'function') {
-          await this.currentView.onEnter();
+        
+        // Pasar parámetros de ruta a la vista si los hay
+        if (Object.keys(routeParams).length > 0) {
+          this.currentView.routeParams = routeParams;
         }
+
+        // Aplicar animación de entrada antes de renderizar
+        if (container) {
+          container.classList.add('view-enter');
+        }
+
+        // Renderizar nueva vista
+        await this.currentView.render();
+      }
+      
+      // Si reutilizamos vista, también pasar parámetros si los hay
+      if (viewInstance && viewInstance.initialized && Object.keys(routeParams).length > 0) {
+        this.currentView.routeParams = routeParams;
       }
       
       // Actualizar navegación activa
