@@ -181,17 +181,19 @@ class LivingManager {
         if (!this.supabase || !this.userId) return;
 
         try {
+            // La tabla projects tiene user_id directamente, no hay user_projects
             const { data, error } = await this.supabase
-                .from('user_projects')
-                .select('*, projects(*)')
+                .from('projects')
+                .select('*')
                 .eq('user_id', this.userId)
                 .eq('is_active', true)
                 .maybeSingle();
 
             if (error) throw error;
-            this.projectData = data?.projects;
+            this.projectData = data;
         } catch (error) {
             console.error('❌ Error cargando datos del proyecto:', error);
+            this.projectData = null;
         }
     }
 
