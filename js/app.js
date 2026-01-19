@@ -39,12 +39,21 @@ class App {
         setTimeout(() => {
           // Verificar que las rutas estén registradas
           if (Object.keys(window.router.routes).length > 0) {
+            console.log('✅ Rutas registradas, manejando ruta inicial...');
             window.router.handleRoute();
           } else {
             console.warn('⚠️ No hay rutas registradas, reintentando...');
-            setTimeout(() => window.router.handleRoute(), 100);
+            setTimeout(() => {
+              if (Object.keys(window.router.routes).length > 0) {
+                window.router.handleRoute();
+              } else {
+                console.error('❌ No se pudieron registrar rutas. Verificar que las vistas estén cargadas.');
+              }
+            }, 500);
           }
-        }, 100);
+        }, 200);
+      } else {
+        console.error('❌ Router no está disponible');
       }
 
       this.initialized = true;
@@ -351,18 +360,24 @@ class App {
 }
 
 // Inicializar app cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', async () => {
+function initializeApp() {
+  if (window.app && window.app.initialized) {
+    console.log('⚠️ App ya está inicializada');
+    return;
+  }
+  
   window.app = new App();
-  await window.app.init();
-});
+  window.app.init().catch(error => {
+    console.error('❌ Error crítico inicializando app:', error);
+  });
+}
 
-// También inicializar si el DOM ya está listo
+// Inicializar cuando el DOM esté listo
 if (document.readyState === 'loading') {
-  // DOM aún cargando, el evento DOMContentLoaded se disparará
+  document.addEventListener('DOMContentLoaded', initializeApp);
 } else {
   // DOM ya está listo, inicializar inmediatamente
-  window.app = new App();
-  window.app.init();
+  initializeApp();
 }
 
 // Exportar para uso en otros módulos

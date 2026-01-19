@@ -145,10 +145,8 @@ class BaseView {
         html = await html;
       }
       
-      // Inyectar HTML en el container solo si está vacío
-      if (this.container.innerHTML.trim() === '') {
-        this.container.innerHTML = html;
-      }
+      // Inyectar HTML en el container (siempre reemplazar para asegurar que se muestre)
+      this.container.innerHTML = html;
       
       // Actualizar links para usar router
       this.updateLinksForRouter();
@@ -298,21 +296,31 @@ class BaseView {
    * Mostrar loading state
    */
   showLoading() {
-    // Solo mostrar loading para la vista inicial (LandingView) antes del login
-    // Las demás vistas no muestran loading para evitar estados intermedios
-    if (this.container && this.templatePath === 'landing.html') {
-      // Solo para landing, mostrar un estado mínimo mientras carga
-      if (this.container.innerHTML.trim() === '') {
-        this.container.innerHTML = `
-          <div style="
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            background: var(--bg-primary, #1a1a1a);
+    if (this.container) {
+      this.container.innerHTML = `
+        <div class="view-loading" style="
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-height: 400px;
+          padding: 2rem;
+        ">
+          <div class="loading-spinner" style="
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(236, 235, 218, 0.2);
+            border-top-color: var(--accent-warm, #e09145);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
           "></div>
-        `;
-      }
+          <p style="
+            margin-top: 1rem;
+            color: var(--text-secondary, #a0a0a0);
+            font-size: 0.875rem;
+          ">Cargando...</p>
+        </div>
+      `;
     }
   }
 
