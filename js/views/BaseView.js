@@ -145,8 +145,14 @@ class BaseView {
         html = await html;
       }
       
-      // Inyectar HTML en el container solo si está vacío
-      if (this.container.innerHTML.trim() === '') {
+      // Inyectar HTML en el container (reemplazar loading si existe)
+      // Si solo tiene el loading spinner, reemplazarlo con el contenido real
+      const currentContent = this.container.innerHTML.trim();
+      const isOnlyLoading = currentContent === '' || 
+                            currentContent.includes('view-loading') || 
+                            currentContent.includes('loading-spinner');
+      
+      if (isOnlyLoading || currentContent === '') {
         this.container.innerHTML = html;
       }
       
@@ -332,7 +338,21 @@ class BaseView {
    * Ocultar loading state
    */
   hideLoading() {
-    // El contenido ya está renderizado, no hay que hacer nada
+    if (this.container) {
+      // Remover el loading spinner si existe
+      const loadingEl = this.container.querySelector('.view-loading');
+      if (loadingEl) {
+        loadingEl.remove();
+      }
+      // También limpiar si solo tiene el loading
+      const currentContent = this.container.innerHTML.trim();
+      if (currentContent.includes('view-loading') || currentContent.includes('loading-spinner')) {
+        // Si solo tiene loading, limpiarlo (el contenido real debería estar ya inyectado)
+        if (currentContent.length < 500) { // Solo si es muy pequeño (probablemente solo loading)
+          this.container.innerHTML = '';
+        }
+      }
+    }
   }
 
   /**
