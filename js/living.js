@@ -495,23 +495,43 @@ class LivingManager {
                                 
                                 if (path.endsWith('/')) {
                                     // Es una carpeta, listar archivos
-                                    const { data: files } = await this.supabase.storage
+                                    const { data: files, error: listError } = await this.supabase.storage
                                         .from(bucket)
                                         .list(path, { limit: 1, sortBy: { column: 'created_at', order: 'desc' } });
                                     
+                                    if (listError) {
+                                        console.warn(`⚠️ Error listando archivos en bucket '${bucket}' carpeta '${path}':`, listError);
+                                        continue;
+                                    }
+                                    
                                     if (files && files.length > 0) {
-                                        const { data: { publicUrl } } = this.supabase.storage
+                                        const fullPath = path + files[0].name;
+                                        const { data: { publicUrl }, error: urlError } = this.supabase.storage
                                             .from(bucket)
-                                            .getPublicUrl(path + files[0].name);
+                                            .getPublicUrl(fullPath);
+                                        
+                                        if (urlError) {
+                                            console.warn(`⚠️ Error obteniendo URL pública desde bucket '${bucket}' path '${fullPath}':`, urlError);
+                                            continue;
+                                        }
+                                        
                                         imageUrl = publicUrl;
+                                        console.log(`✅ URL obtenida desde carpeta '${path}' en bucket '${bucket}':`, imageUrl);
                                         break;
                                     }
                                 } else {
                                     // Es un archivo, obtener URL directamente
-                                    const { data: { publicUrl } } = this.supabase.storage
+                                    const { data: { publicUrl }, error: urlError } = this.supabase.storage
                                         .from(bucket)
                                         .getPublicUrl(path);
+                                    
+                                    if (urlError) {
+                                        console.warn(`⚠️ Error obteniendo URL pública desde bucket '${bucket}' path '${path}':`, urlError);
+                                        continue;
+                                    }
+                                    
                                     imageUrl = publicUrl;
+                                    console.log(`✅ URL obtenida desde bucket '${bucket}' path '${path}':`, imageUrl);
                                     break;
                                 }
                             } catch (error) {
@@ -594,12 +614,28 @@ class LivingManager {
                                             sortBy: { column: 'created_at', order: 'desc' }
                                         });
                                     
-                                    if (!listError && files && files.length > 0) {
+                                    if (listError) {
+                                        // Si el bucket no existe o no hay permisos, continuar con el siguiente
+                                        if (listError.message?.includes('not found') || listError.message?.includes('does not exist')) {
+                                            console.log(`ℹ️ Bucket '${bucket}' no existe o no accesible`);
+                                        } else {
+                                            console.warn(`⚠️ Error listando archivos en bucket '${bucket}' carpeta '${storagePath}':`, listError);
+                                        }
+                                        continue;
+                                    }
+                                    
+                                    if (files && files.length > 0) {
                                         const fileName = files[0].name;
                                         const fullPath = storagePath + fileName;
-                                        const { data: { publicUrl } } = this.supabase.storage
+                                        const { data: { publicUrl }, error: urlError } = this.supabase.storage
                                             .from(bucket)
                                             .getPublicUrl(fullPath);
+                                        
+                                        if (urlError) {
+                                            console.warn(`⚠️ Error obteniendo URL pública desde bucket '${bucket}' path '${fullPath}':`, urlError);
+                                            continue;
+                                        }
+                                        
                                         imageUrl = publicUrl;
                                         console.log(`✅ URL obtenida desde carpeta '${storagePath}' en bucket '${bucket}':`, imageUrl);
                                         break;
@@ -619,19 +655,21 @@ class LivingManager {
                                         .from(bucket)
                                         .getPublicUrl(storagePath);
                                     
-                                    if (!urlError && publicUrl) {
-                                        // Verificar que la URL sea válida haciendo una petición HEAD
-                                        try {
-                                            const response = await fetch(publicUrl, { method: 'HEAD' });
-                                            if (response.ok) {
-                                                imageUrl = publicUrl;
-                                                console.log(`✅ URL válida obtenida desde bucket '${bucket}':`, imageUrl);
-                                                break;
-                                            }
-                                        } catch (fetchError) {
-                                            // Continuar con el siguiente bucket
-                                            continue;
+                                    if (urlError) {
+                                        // Si el bucket no existe o no hay permisos, continuar con el siguiente
+                                        if (urlError.message?.includes('not found') || urlError.message?.includes('does not exist')) {
+                                            console.log(`ℹ️ Bucket '${bucket}' no existe o no accesible`);
+                                        } else {
+                                            console.warn(`⚠️ Error obteniendo URL pública desde bucket '${bucket}' path '${storagePath}':`, urlError);
                                         }
+                                        continue;
+                                    }
+                                    
+                                    if (publicUrl) {
+                                        // No validar con fetch para evitar demoras, solo usar la URL generada
+                                        imageUrl = publicUrl;
+                                        console.log(`✅ URL obtenida desde bucket '${bucket}' path '${storagePath}':`, imageUrl);
+                                        break;
                                     }
                                 } catch (bucketError) {
                                     // Continuar con el siguiente bucket
@@ -704,7 +742,7 @@ class LivingManager {
                 
                 // Validar que sea una URL válida
                 if (!imageUrl || (!imageUrl.startsWith('http') && !imageUrl.startsWith('/'))) {
-                    console.warn(`⚠️ URL de imagen ${i + 1} inválida:`, imageUrl);
+                    console.warn(`⚠️ URL de imagen ${i + 1} inválida (no empieza con http o /):`, imageUrl);
                     items.push(`
                         <div class="visual-day-item">
                             <div class="visual-day-placeholder">
@@ -719,18 +757,34 @@ class LivingManager {
                 let isValidUrl = false;
                 try {
                     // Verificar que la URL tenga un formato válido
-                    const urlObj = new URL(imageUrl);
-                    isValidUrl = urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
-                    console.log(`✅ URL ${i + 1} tiene formato válido:`, imageUrl);
-                } catch (urlError) {
-                    // Si no es una URL absoluta, verificar si es relativa válida
-                    if (imageUrl.startsWith('/')) {
+                    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+                        const urlObj = new URL(imageUrl);
+                        isValidUrl = urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+                        
+                        // Verificar que la URL de Supabase tenga el formato correcto
+                        if (imageUrl.includes('supabase.co/storage/v1/object/public/')) {
+                            const pathAfterPublic = imageUrl.split('object/public/')[1];
+                            if (!pathAfterPublic || pathAfterPublic.trim() === '') {
+                                console.warn(`⚠️ URL ${i + 1} de Supabase está incompleta (falta ruta después de object/public/):`, imageUrl);
+                                isValidUrl = false;
+                            } else {
+                                console.log(`✅ URL ${i + 1} de Supabase tiene formato válido:`, imageUrl);
+                                isValidUrl = true;
+                            }
+                        } else {
+                            console.log(`✅ URL ${i + 1} tiene formato válido:`, imageUrl);
+                            isValidUrl = true;
+                        }
+                    } else if (imageUrl.startsWith('/')) {
                         isValidUrl = true;
                         console.log(`✅ URL ${i + 1} es ruta relativa válida:`, imageUrl);
                     } else {
-                        console.warn(`⚠️ URL ${i + 1} no es válida:`, imageUrl, urlError);
+                        console.warn(`⚠️ URL ${i + 1} no es válida (formato desconocido):`, imageUrl);
                         isValidUrl = false;
                     }
+                } catch (urlError) {
+                    console.warn(`⚠️ Error validando URL ${i + 1}:`, imageUrl, urlError);
+                    isValidUrl = false;
                 }
                 
                 if (!isValidUrl) {
@@ -747,6 +801,20 @@ class LivingManager {
                 
                 const promptInfo = item.prompt_used ? `<div class="visual-day-prompt">${this.escapeHtml(item.prompt_used.substring(0, 50))}...</div>` : '';
                 const styleInfo = item.style_trend ? `<div class="visual-day-style">Estilo: ${this.escapeHtml(item.style_trend)}</div>` : '';
+                
+                // Validar que la URL no sea solo el dominio de Supabase sin ruta
+                if (imageUrl.includes('supabase.co/storage/v1/object/public/') && 
+                    !imageUrl.split('object/public/')[1]) {
+                    console.warn(`⚠️ URL ${i + 1} parece estar incompleta (solo dominio):`, imageUrl);
+                    items.push(`
+                        <div class="visual-day-item">
+                            <div class="visual-day-placeholder">
+                                <i class="fas fa-image"></i>
+                            </div>
+                        </div>
+                    `);
+                    continue;
+                }
                 
                 // Agregar timestamp para evitar caché
                 const imageUrlWithCache = imageUrl + (imageUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
