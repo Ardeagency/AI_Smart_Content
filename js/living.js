@@ -53,24 +53,20 @@ class LivingManager {
                 this.loadProjectData()
             ]);
 
-            if (this.projectData) {
-                // Cargar datos relacionados al proyecto
-                await Promise.all([
-                    this.loadProducts(),
-                    this.loadFlowRuns(),
-                    this.loadCreditUsage()
-                ]);
+            // Cargar datos relacionados (no dependen de projectData, usan userId directamente)
+            await Promise.all([
+                this.loadProducts(),
+                this.loadFlowRuns(),
+                this.loadCreditUsage()
+            ]);
 
-                // Cargar flow outputs después de flow runs
-                if (this.flowRuns.length > 0) {
-                    await this.loadFlowOutputs();
-                }
-
-                // Cargar contenido generado después de obtener brand_id
-                await this.loadLatestGeneratedContent();
-            } else {
-                console.warn('⚠️ No hay projectData disponible');
+            // Cargar flow outputs después de flow runs
+            if (this.flowRuns.length > 0) {
+                await this.loadFlowOutputs();
             }
+
+            // Cargar contenido generado después de obtener brand_id
+            await this.loadLatestGeneratedContent();
 
             // Renderizar todo
             await this.renderAll();
@@ -198,13 +194,29 @@ class LivingManager {
     }
 
     async loadProducts() {
-        if (!this.supabase || !this.projectData) return;
+        if (!this.supabase || !this.userId) return;
 
         try {
+            // Primero obtener brand_container por user_id
+            const { data: container, error: containerError } = await this.supabase
+                .from('brand_containers')
+                .select('id')
+                .eq('user_id', this.userId)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+            if (containerError) throw containerError;
+            if (!container) {
+                this.products = [];
+                return;
+            }
+
+            // Products usa brand_container_id, no project_id
             const { data, error } = await this.supabase
                 .from('products')
                 .select('*')
-                .eq('project_id', this.projectData.id)
+                .eq('brand_container_id', container.id)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
@@ -216,15 +228,29 @@ class LivingManager {
     }
 
     async loadFlowRuns() {
-        if (!this.supabase || !this.projectData) return;
+        if (!this.supabase || !this.userId) return;
 
         try {
-            const { data, error } = await this.supabase
+            // flow_runs no tiene project_id, usa brand_id o user_id
+            // Primero intentar obtener brand_id
+            if (!this.brandId) {
+                await this.loadBrandId();
+            }
+
+            let query = this.supabase
                 .from('flow_runs')
                 .select('*')
-                .eq('project_id', this.projectData.id)
                 .order('created_at', { ascending: false })
                 .limit(100);
+
+            // Filtrar por brand_id si está disponible, sino por user_id
+            if (this.brandId) {
+                query = query.eq('brand_id', this.brandId);
+            } else {
+                query = query.eq('user_id', this.userId);
+            }
+
+            const { data, error } = await query;
 
             if (error) throw error;
             this.flowRuns = data || [];
@@ -273,17 +299,34 @@ class LivingManager {
     }
 
     async loadBrandId() {
-        if (!this.supabase || !this.projectData) return;
+        if (!this.supabase || !this.userId) return;
 
         try {
-            const { data, error } = await this.supabase
+            // Primero obtener brand_container por user_id
+            const { data: container, error: containerError } = await this.supabase
                 .from('brand_containers')
-                .select('brand_id')
-                .eq('project_id', this.projectData.id)
+                .select('id')
+                .eq('user_id', this.userId)
+                .order('created_at', { ascending: false })
+                .limit(1)
                 .maybeSingle();
 
-            if (error) throw error;
-            this.brandId = data?.brand_id || null;
+            if (containerError) throw containerError;
+            
+            if (!container) {
+                this.brandId = null;
+                return;
+            }
+
+            // Luego obtener brand usando project_id que referencia a brand_container.id
+            const { data: brand, error: brandError } = await this.supabase
+                .from('brands')
+                .select('id')
+                .eq('project_id', container.id)
+                .maybeSingle();
+
+            if (brandError) throw brandError;
+            this.brandId = brand?.id || null;
         } catch (error) {
             console.error('❌ Error cargando brand_id:', error);
             this.brandId = null;
