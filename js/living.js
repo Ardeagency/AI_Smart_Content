@@ -383,10 +383,26 @@ class LivingManager {
     }
 
     async renderAll() {
+        // Mover el modal fuera de #app-container al body
+        this.moveModalToBody();
+        
         // Renderizar las 3 secciones
         await this.renderHeroSection();
         await this.renderHistorySection();
         await this.renderHighlightsSection();
+    }
+    
+    moveModalToBody() {
+        const modal = document.getElementById('livingViewerModal');
+        if (!modal) return;
+        
+        // Verificar si el modal está dentro de #app-container
+        const appContainer = document.getElementById('app-container');
+        if (appContainer && appContainer.contains(modal)) {
+            // Mover el modal al body
+            document.body.appendChild(modal);
+            console.log('✅ Modal movido fuera de #app-container al body');
+        }
     }
 
     async renderHeroSection() {
@@ -919,7 +935,7 @@ class LivingManager {
                     <div class="metadata-value">${this.escapeHtml(item.value)}</div>
                 </div>
             `).join('')
-            : '<p style="color: var(--living-text-muted); font-size: 13px;">No hay metadatos disponibles</p>';
+            : '<p style="color: #6b7280; font-size: 13px;">No hay metadatos disponibles</p>';
         
         // Mostrar modal
         modal.classList.add('active');
