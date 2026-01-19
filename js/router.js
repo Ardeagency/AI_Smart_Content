@@ -94,8 +94,13 @@ class Router {
 
   /**
    * Manejar cambio de ruta
+   * Con ligero retraso para suavizar la transición
    */
   async handleRoute() {
+    // Ligero retraso para suavizar la navegación (solo si hay vista actual)
+    if (this.currentView) {
+      await new Promise(resolve => setTimeout(resolve, 150));
+    }
     try {
       // Obtener path actual usando History API
       let path = window.location.pathname || '/';
@@ -209,7 +214,7 @@ class Router {
         if (typeof this.currentView.onLeave === 'function') {
           try {
             await this.currentView.onLeave();
-          } catch (error) {
+        } catch (error) {
             console.error('Error en onLeave de vista actual:', error);
           }
         }
@@ -271,24 +276,24 @@ class Router {
         }
       } else {
         // Crear nueva instancia de vista solo si no existe
-        this.currentView = new ViewClass();
-        this.currentRoute = path;
+      this.currentView = new ViewClass();
+      this.currentRoute = path;
         
         // Guardar en cache
         this.viewInstances[path] = this.currentView;
-        
-        // Pasar parámetros de ruta a la vista si los hay
-        if (Object.keys(routeParams).length > 0) {
-          this.currentView.routeParams = routeParams;
-        }
+      
+      // Pasar parámetros de ruta a la vista si los hay
+      if (Object.keys(routeParams).length > 0) {
+        this.currentView.routeParams = routeParams;
+      }
 
-        // Aplicar animación de entrada antes de renderizar
-        if (container) {
-          container.classList.add('view-enter');
-        }
+      // Aplicar animación de entrada antes de renderizar
+      if (container) {
+        container.classList.add('view-enter');
+      }
 
-        // Renderizar nueva vista
-        await this.currentView.render();
+      // Renderizar nueva vista
+      await this.currentView.render();
       }
       
       // Si reutilizamos vista, también pasar parámetros si los hay

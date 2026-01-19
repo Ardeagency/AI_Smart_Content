@@ -295,32 +295,15 @@ class BaseView {
   }
 
   /**
-   * Mostrar loading state
+   * Mostrar loading state minimalista
+   * Solo se muestra si la vista no está ya renderizada
    */
   showLoading() {
-    if (this.container) {
+    // Solo mostrar loading si el container está vacío o no tiene contenido renderizado
+    if (this.container && (!this.initialized || this.container.innerHTML.trim() === '')) {
       this.container.innerHTML = `
-        <div class="view-loading" style="
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          min-height: 400px;
-          padding: 2rem;
-        ">
-          <div class="loading-spinner" style="
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(236, 235, 218, 0.2);
-            border-top-color: var(--accent-warm, #e09145);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-          "></div>
-          <p style="
-            margin-top: 1rem;
-            color: var(--text-secondary, #a0a0a0);
-            font-size: 0.875rem;
-          ">Cargando...</p>
+        <div class="view-loading">
+          <div class="loading-spinner"></div>
         </div>
       `;
     }
