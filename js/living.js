@@ -516,8 +516,12 @@ class LivingManager {
         
         // Renderizar imágenes y textos (masonry)
         const allVisualItems = [...images, ...texts];
-        if (allVisualItems.length === 0) {
+        if (allVisualItems.length === 0 && videos.length === 0) {
+            // Solo mostrar estado vacío si no hay videos ni imágenes
             imagesContainer.innerHTML = this.renderEmptyState();
+        } else if (allVisualItems.length === 0) {
+            // Si hay videos pero no imágenes, dejar vacío
+            imagesContainer.innerHTML = '';
         } else {
             imagesContainer.innerHTML = allVisualItems.map((item, index) => {
                 if (item.contentType === 'text') {
