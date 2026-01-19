@@ -520,7 +520,7 @@ class LivingManager {
             imagesContainer.innerHTML = `
                 <div style="text-align: center; padding: 2rem; color: var(--living-text-muted); opacity: 0.6;">
                     <p style="font-size: 0.875rem;">Sin producciones ejecutadas</p>
-                    </div>
+                </div>
             `;
         } else {
             imagesContainer.innerHTML = allVisualItems.map((item, index) => {
@@ -557,8 +557,8 @@ class LivingManager {
                 <div class="history-video-card-overlay">
                     <div class="history-video-card-play">
                         <i class="fas fa-play"></i>
-                </div>
-                </div>
+                    </div>
+                    </div>
                 </div>
             `;
     }
@@ -846,7 +846,10 @@ class LivingManager {
         if (data.imageUrl) {
             image.src = data.imageUrl;
             image.alt = data.prompt || 'Producción';
-            } else {
+            // Resetear zoom al cargar nueva imagen
+            image.style.transform = 'scale(1)';
+            image.style.transformOrigin = 'center center';
+        } else {
             image.src = '';
             image.alt = 'Sin imagen disponible';
         }
@@ -855,6 +858,9 @@ class LivingManager {
         if (downloadBtn) {
             downloadBtn.dataset.imageUrl = data.imageUrl || '';
         }
+        
+        // Configurar zoom en la imagen
+        this.setupImageZoom(image);
         
         // Cargar prompt
         promptEl.textContent = data.prompt || 'Sin prompt disponible';
@@ -867,75 +873,18 @@ class LivingManager {
         
         const metadataItems = [];
         
+        // Solo mostrar la fecha sin label
+        let creationDate = null;
         if (output.created_at) {
-            metadataItems.push({
-                label: 'Fecha de creación',
-                value: new Date(output.created_at).toLocaleString('es-ES')
-            });
+            creationDate = new Date(output.created_at).toLocaleString('es-ES');
         } else if (itemData.created_at) {
-            metadataItems.push({
-                label: 'Fecha de creación',
-                value: new Date(itemData.created_at).toLocaleString('es-ES')
-            });
+            creationDate = new Date(itemData.created_at).toLocaleString('es-ES');
         }
         
-        if (output.output_type) {
-            metadataItems.push({
-                label: 'Tipo de output',
-                value: output.output_type
-            });
-        }
-        
-        if (output.storage_path) {
-            metadataItems.push({
-                label: 'Ruta de almacenamiento',
-                value: output.storage_path
-            });
-        } else if (itemData.storage_path) {
-            metadataItems.push({
-                label: 'Ruta de almacenamiento',
-                value: itemData.storage_path
-            });
-        }
-        
-        if (run.status) {
-            metadataItems.push({
-                label: 'Estado',
-                value: run.status
-            });
-        }
-        
-        if (run.created_at) {
-            metadataItems.push({
-                label: 'Ejecutado',
-                value: new Date(run.created_at).toLocaleString('es-ES')
-            });
-        }
-        
-        if (output.technical_params) {
-            try {
-                const techParams = typeof output.technical_params === 'string' 
-                    ? JSON.parse(output.technical_params) 
-                    : output.technical_params;
-                Object.entries(techParams).forEach(([key, value]) => {
-                    metadataItems.push({
-                        label: key,
-                        value: String(value)
-                    });
-                });
-            } catch (e) {
-                // Ignorar si no se puede parsear
-            }
-        }
-        
-        metadataEl.innerHTML = metadataItems.length > 0
-            ? metadataItems.map(item => `
-                <div class="metadata-item">
-                    <div class="metadata-label">${this.escapeHtml(item.label)}</div>
-                    <div class="metadata-value">${this.escapeHtml(item.value)}</div>
-                </div>
-            `).join('')
-            : '<p style="color: #6b7280; font-size: 13px;">No hay metadatos disponibles</p>';
+        // Solo mostrar la fecha, sin otros metadatos
+        metadataEl.innerHTML = creationDate
+            ? `<div style="color: var(--living-text-muted); font-size: 13px;">${this.escapeHtml(creationDate)}</div>`
+            : '<div style="color: var(--living-text-muted); font-size: 13px;">Fecha no disponible</div>';
         
         // Mostrar modal
         modal.classList.add('active');
@@ -1078,6 +1027,83 @@ class LivingManager {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    setupImageZoom(image) {
+        if (!image) return;
+        
+        let scale = 1;
+        const minScale = 1;
+        const maxScale = 3;
+        let isDragging = false;
+        let startX = 0;
+        let startY = 0;
+        let translateX = 0;
+        let translateY = 0;
+        
+        // Zoom con rueda del mouse
+        image.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.1 : 0.1;
+            const oldScale = scale;
+            scale = Math.max(minScale, Math.min(maxScale, scale + delta));
+            
+            if (scale !== oldScale) {
+                // Calcular el punto relativo en la imagen antes del zoom
+                const rect = image.getBoundingClientRect();
+                const x = (e.clientX - rect.left - rect.width / 2) / oldScale;
+                const y = (e.clientY - rect.top - rect.height / 2) / oldScale;
+                
+                // Ajustar translate para mantener el punto bajo el cursor
+                translateX = -x * (scale - oldScale);
+                translateY = -y * (scale - oldScale);
+                
+                image.style.transform = `scale(${scale}) translate(${translateX}px, ${translateY}px)`;
+                image.style.cursor = scale > 1 ? 'grab' : 'zoom-in';
+            }
+        });
+        
+        // Arrastrar cuando está con zoom
+        image.addEventListener('mousedown', (e) => {
+            if (scale > 1) {
+                isDragging = true;
+                startX = e.clientX - translateX * scale;
+                startY = e.clientY - translateY * scale;
+                image.style.cursor = 'grabbing';
+            }
+        });
+        
+        image.addEventListener('mousemove', (e) => {
+            if (isDragging && scale > 1) {
+                translateX = (e.clientX - startX) / scale;
+                translateY = (e.clientY - startY) / scale;
+                image.style.transform = `scale(${scale}) translate(${translateX}px, ${translateY}px)`;
+            }
+        });
+        
+        image.addEventListener('mouseup', () => {
+            isDragging = false;
+            if (scale > 1) {
+                image.style.cursor = 'grab';
+            }
+        });
+        
+        image.addEventListener('mouseleave', () => {
+            isDragging = false;
+        });
+        
+        // Doble click para resetear zoom
+        image.addEventListener('dblclick', () => {
+            scale = 1;
+            translateX = 0;
+            translateY = 0;
+            image.style.transform = 'scale(1)';
+            image.style.cursor = 'zoom-in';
+        });
+        
+        // Cursor inicial
+        image.style.cursor = 'zoom-in';
+        image.style.transition = 'transform 0.1s ease-out';
     }
 }
 
