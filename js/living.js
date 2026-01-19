@@ -17,94 +17,61 @@ class LivingManager {
         this.latestGeneratedContent = [];
         this.eventListenersSetup = false;
 
-        this.initialized = false;
-        // NO llamar init() automáticamente en constructor
-        // Se llamará desde LivingView cuando sea necesario
+        this.init();
     }
 
     async init() {
-        if (this.initialized) {
-            // Si ya está inicializado, solo re-renderizar
-            await this.renderAll();
-            return;
-        }
-        // SIEMPRE renderizar primero, incluso si hay errores
-        // Esto asegura que la página se muestre
         try {
         // Verificar acceso antes de continuar
         if (typeof verifyUserAccess === 'function') {
-                try {
             const hasAccess = await verifyUserAccess();
             if (!hasAccess) {
-                        console.warn('⚠️ Usuario no tiene acceso, renderizando sin datos');
-                        await this.renderAll(); // Renderizar de todas formas
-                        this.initialized = true;
+                    console.warn('⚠️ Usuario no tiene acceso, deteniendo inicialización');
                 return;
-                    }
-                } catch (error) {
-                    console.warn('⚠️ Error verificando acceso:', error);
-                    // Continuar de todas formas
             }
         }
 
-            // Intentar inicializar Supabase, pero no bloquear si falla
-            try {
         await this.initSupabase();
-            } catch (error) {
-                console.warn('⚠️ Error inicializando Supabase:', error);
-                // Continuar sin Supabase
-            }
             
             if (!this.supabase) {
-                console.warn('⚠️ No se pudo inicializar Supabase, renderizando sin datos');
+                console.error('❌ No se pudo inicializar Supabase');
                 await this.renderAll();
-                this.initialized = true;
                 return;
             }
 
             if (!this.userId) {
-                console.warn('⚠️ No hay usuario autenticado, renderizando sin datos');
+                console.warn('⚠️ No hay usuario autenticado');
                 await this.renderAll();
-                this.initialized = true;
                 return;
             }
 
             console.log('✅ Supabase inicializado, cargando datos del dashboard...');
             
-            // Cargar datos en paralelo cuando sea posible, con manejo de errores individual
-            await Promise.allSettled([
-                this.loadUserData().catch(err => console.warn('⚠️ Error cargando userData:', err)),
-                this.loadProjectData().catch(err => console.warn('⚠️ Error cargando projectData:', err))
+            // Cargar datos en paralelo cuando sea posible
+            await Promise.all([
+                this.loadUserData(),
+                this.loadProjectData()
             ]);
 
-            // Cargar datos relacionados con manejo de errores individual
-            await Promise.allSettled([
-                this.loadProducts().catch(err => console.warn('⚠️ Error cargando products:', err)),
-                this.loadFlowRuns().catch(err => console.warn('⚠️ Error cargando flowRuns:', err)),
-                this.loadCreditUsage().catch(err => console.warn('⚠️ Error cargando creditUsage:', err))
+            // Cargar datos relacionados (no dependen de projectData, usan userId directamente)
+            await Promise.all([
+                this.loadProducts(),
+                this.loadFlowRuns(),
+                this.loadCreditUsage()
             ]);
 
             // Cargar flow outputs después de flow runs
             if (this.flowRuns.length > 0) {
-                try {
                 await this.loadFlowOutputs();
-                } catch (error) {
-                    console.warn('⚠️ Error cargando flowOutputs:', error);
-                }
             }
 
             // Cargar contenido generado después de obtener brand_id
-            try {
-                await this.loadLatestGeneratedContent();
-            } catch (error) {
-                console.warn('⚠️ Error cargando latestGeneratedContent:', error);
-            }
+            await this.loadLatestGeneratedContent();
 
-            // SIEMPRE renderizar, incluso si hay errores
+            // Renderizar todo
             await this.renderAll();
         } catch (error) {
-            console.error('❌ Error crítico en init de LivingManager:', error);
-            // SIEMPRE renderizar, incluso con errores críticos
+            console.error('❌ Error en init de LivingManager:', error);
             try {
                 await this.renderAll();
             } catch (renderError) {
@@ -113,29 +80,9 @@ class LivingManager {
         }
 
         if (!this.eventListenersSetup) {
-            try {
             this.setupEventListeners();
             this.eventListenersSetup = true;
-            } catch (error) {
-                console.warn('⚠️ Error configurando event listeners:', error);
         }
-        }
-        
-        // SIEMPRE marcar como inicializado
-        this.initialized = true;
-        
-        // Forzar un re-renderizado después de un breve delay para asegurar que los datos se muestren
-        // Esto ayuda cuando los datos se cargan después del primer render
-        setTimeout(async () => {
-            console.log('🔄 Re-renderizando después de delay para asegurar datos...');
-            console.log('📊 Estado de datos antes de re-render:', {
-                latestGeneratedContent: this.latestGeneratedContent?.length || 0,
-                flowRuns: this.flowRuns?.length || 0,
-                flowOutputs: this.flowOutputs?.length || 0,
-                products: this.products?.length || 0
-            });
-            await this.renderAll();
-        }, 1000);
     }
 
     async initSupabase() {
@@ -210,10 +157,7 @@ class LivingManager {
     }
 
     async loadUserData() {
-        if (!this.supabase || !this.userId) {
-            this.userData = null;
-            return;
-        }
+        if (!this.supabase || !this.userId) return;
 
         try {
             const { data, error } = await this.supabase
@@ -222,27 +166,15 @@ class LivingManager {
                 .eq('id', this.userId)
                 .maybeSingle();
 
-            if (error) {
-                // Si es error 400 o similar, no lanzar excepción, solo log
-                if (error.code === 'PGRST205' || error.code === '400') {
-                    console.warn('⚠️ Tabla users no encontrada o error de acceso:', error.message);
-            } else {
-                    throw error;
-            }
-            }
-            this.userData = data || null;
+            if (error) throw error;
+            this.userData = data;
         } catch (error) {
-            console.warn('⚠️ Error cargando datos de usuario:', error.message || error);
-            this.userData = null;
-            // NO lanzar error - continuar sin datos de usuario
+            console.error('❌ Error cargando datos de usuario:', error);
         }
     }
 
     async loadProjectData() {
-        if (!this.supabase || !this.userId) {
-            this.projectData = null;
-            return;
-        }
+        if (!this.supabase || !this.userId) return;
 
         try {
             // La tabla projects tiene user_id directamente, no hay user_projects
@@ -253,19 +185,11 @@ class LivingManager {
                 .eq('is_active', true)
                 .maybeSingle();
 
-            if (error) {
-                // Si es error 400 o tabla no encontrada, no lanzar excepción
-                if (error.code === 'PGRST205' || error.code === '400') {
-                    console.warn('⚠️ Tabla projects no encontrada o error de acceso:', error.message);
-                } else {
-                    throw error;
-                }
-            }
-            this.projectData = data || null;
+            if (error) throw error;
+            this.projectData = data;
         } catch (error) {
-            console.warn('⚠️ Error cargando datos del proyecto:', error.message || error);
+            console.error('❌ Error cargando datos del proyecto:', error);
             this.projectData = null;
-            // NO lanzar error - continuar sin datos de proyecto
         }
     }
 
@@ -459,97 +383,31 @@ class LivingManager {
     }
 
     async renderAll() {
-        console.log('🎨 Iniciando renderAll...');
-        console.log('📊 Datos disponibles:', {
-            latestGeneratedContent: this.latestGeneratedContent?.length || 0,
-            flowRuns: this.flowRuns?.length || 0,
-            flowOutputs: this.flowOutputs?.length || 0,
-            products: this.products?.length || 0
-        });
-        
-        // Esperar a que el DOM esté listo
-        await new Promise(resolve => {
-            if (document.readyState === 'complete') {
-                resolve();
-            } else {
-                window.addEventListener('load', resolve);
-                // Timeout de seguridad
-                setTimeout(resolve, 100);
-            }
-        });
-        
-        // Verificar que los contenedores existan
-        const heroGrid = document.getElementById('livingHeroGrid');
-        const videosContainer = document.getElementById('livingHistoryVideos');
-        const imagesContainer = document.getElementById('livingHistoryImages');
-        const highlightsContent = document.getElementById('livingHighlightsContent');
-        
-        console.log('🔍 Verificando contenedores:', {
-            heroGrid: !!heroGrid,
-            videosContainer: !!videosContainer,
-            imagesContainer: !!imagesContainer,
-            highlightsContent: !!highlightsContent
-        });
-        
-        if (!heroGrid || !videosContainer || !imagesContainer || !highlightsContent) {
-            console.warn('⚠️ Algunos contenedores no están disponibles, esperando...');
-            // Esperar un poco más y reintentar
-            await new Promise(resolve => setTimeout(resolve, 200));
-        }
-        
         // Mover el modal fuera de #app-container al body
         this.moveModalToBody();
         
         // Renderizar las 3 secciones
-        try {
-            await this.renderHeroSection();
-        } catch (error) {
-            console.error('❌ Error renderizando hero section:', error);
-        }
-        
-        try {
-            await this.renderHistorySection();
-        } catch (error) {
-            console.error('❌ Error renderizando history section:', error);
-        }
-        
-        try {
-            await this.renderHighlightsSection();
-        } catch (error) {
-            console.error('❌ Error renderizando highlights section:', error);
-        }
-        
-        console.log('✅ renderAll completado');
+        await this.renderHeroSection();
+        await this.renderHistorySection();
+        await this.renderHighlightsSection();
     }
     
     moveModalToBody() {
         const modal = document.getElementById('livingViewerModal');
-        if (!modal) {
-            // Si el modal no existe, crearlo desde el template
-            // Esto puede pasar si se navega y el template se recarga
-            console.warn('⚠️ Modal no encontrado, puede que necesite recargarse');
-            return;
-        }
+        if (!modal) return;
         
-        // Verificar si el modal está dentro de #app-container o en cualquier lugar que no sea body
+        // Verificar si el modal está dentro de #app-container
         const appContainer = document.getElementById('app-container');
-        const isInBody = modal.parentElement === document.body;
-        
-        if (!isInBody) {
-            // Mover el modal al body si no está ahí
+        if (appContainer && appContainer.contains(modal)) {
+            // Mover el modal al body
             document.body.appendChild(modal);
-            console.log('✅ Modal movido al body');
+            console.log('✅ Modal movido fuera de #app-container al body');
         }
     }
 
     async renderHeroSection() {
         const heroGrid = document.getElementById('livingHeroGrid');
-        if (!heroGrid) {
-            console.warn('⚠️ livingHeroGrid no encontrado en el DOM');
-            return;
-        }
-        
-        console.log('🎨 Renderizando hero section...');
+        if (!heroGrid) return;
         
         // Solo producciones automatizadas (latestGeneratedContent)
         // "Esto es lo que tu sistema produjo"
@@ -570,26 +428,8 @@ class LivingManager {
             
             // Construir URL completa si es necesario
             let finalImageUrl = imageUrl;
-            
-            // Si no hay URL directa pero hay storage_path, intentar construirla
-            // Solo intentar si la URL actual no es válida
-            if (!finalImageUrl || !this.isValidUrl(finalImageUrl)) {
-                if (item.storage_path && typeof item.storage_path === 'string' && item.storage_path.trim().length > 0) {
-                    try {
-                        finalImageUrl = this.getPublicUrlFromStorage('production-outputs', item.storage_path);
-                    } catch (error) {
-                        console.warn('⚠️ Error construyendo URL desde storage_path:', error);
-                        finalImageUrl = null;
-                    }
-                } else {
-                    finalImageUrl = null;
-                }
-            }
-            
-            // Validar URL final antes de renderizar
-            if (finalImageUrl && !this.isValidUrl(finalImageUrl)) {
-                console.warn('⚠️ URL inválida descartada para item:', item.id || index, finalImageUrl);
-                finalImageUrl = null;
+            if (!finalImageUrl && item.storage_path) {
+                finalImageUrl = this.getPublicUrlFromStorage('production-outputs', item.storage_path);
             }
             
             return this.renderCard(finalImageUrl, prompt, index, true, { item: item, output: null, run: null });
@@ -602,15 +442,7 @@ class LivingManager {
         const videosContainer = document.getElementById('livingHistoryVideos');
         const imagesContainer = document.getElementById('livingHistoryImages');
         
-        if (!videosContainer || !imagesContainer) {
-            console.warn('⚠️ Contenedores de history no encontrados:', {
-                videos: !!videosContainer,
-                images: !!imagesContainer
-            });
-            return;
-        }
-        
-        console.log('🎨 Renderizando history section...');
+        if (!videosContainer || !imagesContainer) return;
         
         // Producciones de flujos que el usuario haya usado
         // Excluir las que ya están en hero (latestGeneratedContent)
@@ -676,7 +508,7 @@ class LivingManager {
                     }
                 }
                 
-                return this.renderVideoCard(thumbnailUrl, item.run, item.output, index, item.prompt);
+                return this.renderVideoCard(thumbnailUrl, item.run, item.output, item.prompt, index);
             }).join('');
             
             this.setupHistoryCardListeners(videosContainer, 'video');
@@ -684,34 +516,21 @@ class LivingManager {
         
         // Renderizar imágenes y textos (masonry)
         const allVisualItems = [...images, ...texts];
-        if (allVisualItems.length === 0 && videos.length === 0) {
-            // Solo mostrar estado vacío si no hay videos ni imágenes
+        if (allVisualItems.length === 0) {
             imagesContainer.innerHTML = this.renderEmptyState();
-        } else if (allVisualItems.length === 0) {
-            // Si hay videos pero no imágenes, dejar vacío
-            imagesContainer.innerHTML = '';
         } else {
             imagesContainer.innerHTML = allVisualItems.map((item, index) => {
                 if (item.contentType === 'text') {
                     return this.renderTextCard(item.run, item.output, index);
                 } else {
                     let imageUrl = item.fileUrl;
-                    if (imageUrl && !this.isValidUrl(imageUrl) && item.output) {
+                    if (imageUrl && !imageUrl.startsWith('http') && item.output) {
                         const storagePath = item.output.storage_path || item.output.storage_object_id;
                         if (storagePath) {
-                            const constructedUrl = this.getPublicUrlFromStorage('production-outputs', storagePath);
-                            if (constructedUrl && this.isValidUrl(constructedUrl)) {
-                                imageUrl = constructedUrl;
-                            } else {
-                                imageUrl = null; // Descartar URL inválida
-                            }
-                        } else {
-                            imageUrl = null; // Sin storage_path, descartar
+                            imageUrl = this.getPublicUrlFromStorage('production-outputs', storagePath) || imageUrl;
                         }
-                    } else if (imageUrl && !this.isValidUrl(imageUrl)) {
-                        imageUrl = null; // URL no válida, descartar
                     }
-                    return this.renderHistoryImageCard(imageUrl, item.run, item.output, index, item.prompt);
+                    return this.renderHistoryImageCard(imageUrl, item.run, item.output, item.prompt, index);
                 }
             }).join('');
             
@@ -719,78 +538,43 @@ class LivingManager {
         }
     }
     
-    renderVideoCard(thumbnailUrl, run, output, index, prompt = '') {
-        // Validar URL antes de usarla
-        const finalUrl = thumbnailUrl && this.isValidUrl(thumbnailUrl) ? thumbnailUrl : null;
+    renderVideoCard(thumbnailUrl, run, output, prompt, index) {
+        const finalUrl = thumbnailUrl && thumbnailUrl.startsWith('http') ? thumbnailUrl : null;
         const productionId = run?.id || output?.id;
         const cardData = JSON.stringify({
             imageUrl: finalUrl,
-            prompt: prompt,
-            item: { run: run, output: output }
+            prompt: prompt || '',
+            item: { item: null, output: output, run: run }
         }).replace(/"/g, '&quot;');
         
-        // Obtener duración si está disponible
-        const duration = output?.duration || run?.duration || null;
-        
-        // Detectar ratio aproximado basado en metadata o nombre
-        let aspectRatio = '16/9'; // Default horizontal
-        if (output?.technical_params) {
-            try {
-                const techParams = typeof output.technical_params === 'string' 
-                    ? JSON.parse(output.technical_params) 
-                    : output.technical_params;
-                if (techParams.aspect_ratio) {
-                    aspectRatio = techParams.aspect_ratio;
-                } else if (techParams.width && techParams.height) {
-                    aspectRatio = `${techParams.width}/${techParams.height}`;
-                }
-            } catch (e) {
-                // Usar default
-            }
-        }
-        
-        // Detectar si es vertical (ratio > 1 significa vertical en formato height/width)
-        const isVertical = aspectRatio.includes('9/16') || aspectRatio.includes('1/1') || 
-                          (finalUrl && (finalUrl.includes('vertical') || finalUrl.includes('reel')));
+        // Calcular ancho según ratio (asumiendo 16:9 por defecto, pero puede variar)
+        const width = 'auto'; // Se ajustará según el ratio de la imagen
         
         return `
-            <div class="history-video-card ${isVertical ? 'history-video-card-vertical' : ''}" 
-                 data-production-id="${productionId}" 
-                 data-run-id="${run?.id || ''}" 
-                 data-card-info="${this.escapeHtml(cardData)}"
-                 style="${isVertical ? 'width: 160px;' : 'width: 300px;'}">
+            <div class="history-video-card" data-production-id="${productionId}" data-run-id="${run?.id || ''}" data-card-info="${this.escapeHtml(cardData)}" style="width: ${width};">
                 ${finalUrl
-                    ? `<img src="${this.escapeHtml(finalUrl)}" alt="Video thumbnail" class="history-video-card-thumbnail" loading="lazy" onload="this.style.opacity='1';" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'history-video-card-thumbnail\\' style=\\'background: #0F1115; display: flex; align-items: center; justify-content: center;\\'><i class=\\'fas fa-video\\' style=\\'font-size: 2rem; color: var(--living-text-muted);\\'></i></div>';" style="opacity: 0; transition: opacity 0.3s ease;" />`
+                    ? `<img src="${this.escapeHtml(finalUrl)}" alt="Video thumbnail" class="history-video-card-thumbnail" loading="lazy" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'history-video-card-thumbnail\\' style=\\'background: #0F1115; display: flex; align-items: center; justify-content: center;\\'><i class=\\'fas fa-video\\' style=\\'font-size: 2rem; color: var(--living-text-muted);\\'></i></div>';" />`
                     : `<div class="history-video-card-thumbnail" style="background: #0F1115; display: flex; align-items: center; justify-content: center;">
                         <i class="fas fa-video" style="font-size: 2rem; color: var(--living-text-muted);"></i>
                     </div>`
                 }
-                <div class="history-video-card-overlay">
-                    <div class="history-video-card-icons">
-                        <div class="history-video-card-icon" title="Video">
-                            <i class="fas fa-video"></i>
-                    </div>
-                        <div class="history-video-card-icon history-video-download" title="Descargar" data-image-url="${this.escapeHtml(finalUrl || '')}">
-                            <i class="fas fa-download"></i>
-                    </div>
-                </div>
-                    <div class="history-video-card-play">
-                        <i class="fas fa-play"></i>
-                </div>
-                    ${duration ? `<div class="history-video-card-duration">${duration}</div>` : ''}
-                </div>
-                </div>
-            `;
+                <i class="fas fa-video history-video-card-video-icon"></i>
+                <button class="history-video-card-download" title="Descargar" data-image-url="${this.escapeHtml(finalUrl || '')}">
+                    <i class="fas fa-download"></i>
+                </button>
+                <div class="history-video-card-duration">--:--</div>
+                <div class="history-video-card-overlay"></div>
+            </div>
+        `;
     }
 
-    renderHistoryImageCard(imageUrl, run, output, index, prompt = '') {
-        // Validar URL antes de usarla
-        const finalUrl = imageUrl && this.isValidUrl(imageUrl) ? imageUrl : null;
+    renderHistoryImageCard(imageUrl, run, output, prompt, index) {
+        const finalUrl = imageUrl && imageUrl.startsWith('http') ? imageUrl : null;
         const productionId = run?.id || output?.id;
         const cardData = JSON.stringify({
             imageUrl: finalUrl,
-            prompt: prompt,
-            item: { run: run, output: output }
+            prompt: prompt || '',
+            item: { item: null, output: output, run: run }
         }).replace(/"/g, '&quot;');
         
         return `
@@ -803,20 +587,18 @@ class LivingManager {
                         </div>`
                     }
                     <div class="history-image-card-overlay">
-                        <div class="history-image-card-actions">
-                            <div class="history-image-card-action history-image-download" title="Descargar producción" data-image-url="${this.escapeHtml(finalUrl || '')}">
-                                <i class="fas fa-download"></i>
-                </div>
-                            <div class="history-image-card-action history-image-view" title="Ver detalles">
-                                <i class="fas fa-eye"></i>
-                            </div>
-                        </div>
-                    </div>
+                        <button class="history-image-card-action" title="Descargar" data-image-url="${this.escapeHtml(finalUrl || '')}">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        <button class="history-image-card-action" title="Ver detalles">
+                            <i class="fas fa-eye"></i>
+                        </button>
                     </div>
                 </div>
-            `;
+            </div>
+        `;
     }
-
+    
     renderTextCard(run, output, index) {
         const productionId = run?.id || output?.id;
         
@@ -826,83 +608,70 @@ class LivingManager {
                     <div class="history-text-card-icon">?</div>
                     <div class="history-text-card-title">Producción de texto</div>
                 </div>
-                </div>
-            `;
+            </div>
+        `;
     }
     
     renderEmptyState() {
-            return `
+        return `
             <div class="living-history-empty">
-                <div class="living-history-empty-illustration"></div>
+                <div class="living-history-empty-illustration">
+                    <i class="fas fa-layer-group" style="font-size: 3rem; color: var(--living-text-muted); opacity: 0.3;"></i>
+                </div>
                 <h3 class="living-history-empty-title">Aún no hay historial</h3>
                 <p class="living-history-empty-description">
                     Cuando ejecutes flujos y generes contenido, aquí quedará registrado todo tu trabajo creativo.
                 </p>
-                <a href="#" class="living-history-empty-cta" onclick="if(window.router){window.router.navigate('/production');return false;}">Ir a Producción</a>
-                </div>
-            `;
+                <a href="#" class="living-history-empty-cta" onclick="if(window.router){window.router.navigate('/production');return false;}">
+                    Ir a Producción
+                </a>
+            </div>
+        `;
     }
 
     setupHistoryCardListeners(container, type) {
-        // Click en cards para abrir vista editorial (modal) o redirigir (texto)
         const cards = container.querySelectorAll(`.history-${type}-card, .history-text-card`);
         cards.forEach(card => {
+            // Prevenir clicks en botones de acción
+            const actions = card.querySelectorAll('.history-video-card-download, .history-image-card-action');
+            actions.forEach(action => {
+                action.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (action.dataset.imageUrl) {
+                        this.downloadImage(action.dataset.imageUrl);
+                    }
+                });
+            });
+            
+            // Click en la card abre vista de visualización editorial
             card.addEventListener('click', (e) => {
                 // No abrir si se clickeó un botón de acción
-                if (e.target.closest('.history-video-card-icon, .history-image-card-action')) {
+                if (e.target.closest('.history-video-card-download, .history-image-card-action')) {
                     return;
                 }
                 
-                // Cards de texto redirigen a vista del flujo
-                if (card.classList.contains('history-text-card')) {
-                    const runId = card.dataset.runId;
-                    if (runId && window.router) {
-                        // Redirigir a vista de producción/flujo
-                        window.router.navigate(`/production/${runId}`);
-                    }
-                    return;
-                }
-                
-                // Cards de video/imagen abren modal
                 const cardData = card.dataset.cardInfo;
                 if (cardData) {
                     try {
-                        const unescapedData = cardData.replace(/&quot;/g, '"');
+                        let unescapedData = cardData.replace(/&quot;/g, '"');
+                        unescapedData = unescapedData
+                            .replace(/&#39;/g, "'")
+                            .replace(/&amp;/g, '&')
+                            .replace(/&lt;/g, '<')
+                            .replace(/&gt;/g, '>');
+                        
                         const data = JSON.parse(unescapedData);
                         this.openViewerModal(data);
                     } catch (error) {
-                        console.error('Error parsing card data:', error);
+                        console.error('❌ Error parsing card data:', error);
                     }
-                }
-            });
-        });
-        
-        // Botones de descarga
-        const downloadBtns = container.querySelectorAll('.history-video-download, .history-image-download');
-        downloadBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const imageUrl = btn.dataset.imageUrl;
-                if (imageUrl && imageUrl.startsWith('http')) {
-                    this.downloadImage(imageUrl);
-                }
-            });
-        });
-        
-        // Botón ver detalles (imágenes)
-        const viewBtns = container.querySelectorAll('.history-image-view');
-        viewBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const card = btn.closest('.history-image-card');
-                const cardData = card?.dataset.cardInfo;
-                if (cardData) {
-                    try {
-                        const unescapedData = cardData.replace(/&quot;/g, '"');
-                        const data = JSON.parse(unescapedData);
-                        this.openViewerModal(data);
-                    } catch (error) {
-                        console.error('Error parsing card data:', error);
+                } else {
+                    // Para cards de texto, redirigir a producción
+                    const productionId = card.dataset.productionId;
+                    const runId = card.dataset.runId;
+                    if (productionId || runId) {
+                        console.log('📋 Redirigiendo a producción:', { productionId, runId });
+                        // TODO: Implementar navegación a vista de producción
                     }
                 }
             });
@@ -1015,25 +784,7 @@ class LivingManager {
     }
 
     renderCard(imageUrl, prompt, index, isHero = false, itemData = null) {
-        // Validar URL antes de usarla
-        let finalImageUrl = null;
-        if (imageUrl && typeof imageUrl === 'string') {
-            // Si ya es una URL válida, usarla directamente
-            if (this.isValidUrl(imageUrl)) {
-                finalImageUrl = imageUrl;
-            } else if (imageUrl.startsWith('http')) {
-                // Si empieza con http pero no es válida, intentar validarla
-                try {
-                    const urlObj = new URL(imageUrl);
-                    if (urlObj.hostname.length > 0) {
-                        finalImageUrl = imageUrl;
-                    }
-                } catch (e) {
-                    console.warn('⚠️ URL inválida descartada:', imageUrl);
-                }
-            }
-        }
-        
+        const finalImageUrl = imageUrl && imageUrl.startsWith('http') ? imageUrl : null;
         const cardData = JSON.stringify({
             imageUrl: finalImageUrl,
             prompt: prompt || '',
@@ -1044,23 +795,23 @@ class LivingManager {
         // El navegador desescapará automáticamente cuando leamos con dataset
         const escapedCardData = cardData.replace(/"/g, '&quot;');
 
-        return `
+            return `
             <div class="featured-card" data-index="${index}" data-image-url="${this.escapeHtml(finalImageUrl || '')}" data-card-info="${escapedCardData}">
                 <div class="featured-card-visual">
                     ${finalImageUrl
-                        ? `<img src="${this.escapeHtml(finalImageUrl)}" alt="${this.escapeHtml(prompt)}" loading="${index < 3 ? 'eager' : 'lazy'}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'featured-card-visual-placeholder\\'><i class=\\'fas fa-image\\'></i></div>';" onload="this.style.opacity='1';">`
+                        ? `<img src="${this.escapeHtml(finalImageUrl)}" alt="${this.escapeHtml(prompt)}" loading="${index < 3 ? 'eager' : 'lazy'}" onerror="this.parentElement.innerHTML='<div class=\\'featured-card-visual-placeholder\\'><i class=\\'fas fa-image\\'></i></div>';" onload="this.style.opacity='1';">`
                         : `<div class="featured-card-visual-placeholder"><i class="fas fa-image"></i></div>`
                     }
-                </div>
+                        </div>
                 <div class="featured-card-prompt-overlay">
                     <div class="featured-card-prompt-title">Prompt</div>
                     <div class="featured-card-prompt-text">${this.escapeHtml(prompt)}</div>
-                </div>
+                    </div>
                 <button class="featured-card-download-btn" title="Descargar imagen" data-image-url="${this.escapeHtml(finalImageUrl || '')}">
                     <i class="fas fa-download"></i>
                 </button>
-            </div>
-        `;
+                </div>
+            `;
     }
 
     setupDownloadButtons(container) {
@@ -1147,62 +898,41 @@ class LivingManager {
     openViewerModal(data) {
         const modal = document.getElementById('livingViewerModal');
         const image = document.getElementById('livingViewerImage');
-        const video = document.getElementById('livingViewerVideo');
-        const videoSource = document.getElementById('livingViewerVideoSource');
         const promptEl = document.getElementById('livingViewerPrompt');
         const metadataEl = document.getElementById('livingViewerMetadata');
         const closeBtn = document.getElementById('livingViewerClose');
         const backdrop = document.getElementById('livingViewerBackdrop');
         const downloadBtn = document.getElementById('livingViewerDownload');
-        const duplicateBtn = document.getElementById('livingViewerDuplicate');
         
-        if (!modal || !image || !video || !promptEl || !metadataEl) {
+        if (!modal || !image || !promptEl || !metadataEl) {
             console.error('❌ Elementos del modal no encontrados');
             return;
         }
 
-        // Detectar si es video o imagen
-        const isVideo = data.imageUrl && (
-            data.imageUrl.includes('.mp4') || 
-            data.imageUrl.includes('.mov') || 
-            data.imageUrl.includes('.webm') ||
-            data.imageUrl.includes('video')
-        );
-        
-        // Mostrar imagen o video según corresponda
-        if (isVideo) {
-            image.style.display = 'none';
-            video.style.display = 'block';
-            if (videoSource && data.imageUrl) {
-                videoSource.src = data.imageUrl;
-                video.load();
-            }
+        // Cargar imagen
+        if (data.imageUrl) {
+            image.src = data.imageUrl;
+            image.alt = data.prompt || 'Producción';
+            // Resetear zoom al cargar nueva imagen
+            image.style.transform = 'scale(1)';
+            image.style.transformOrigin = 'center center';
         } else {
-            video.style.display = 'none';
-            image.style.display = 'block';
-            if (data.imageUrl) {
-                image.src = data.imageUrl;
-                image.alt = data.prompt || 'Producción';
-                // Resetear zoom al cargar nueva imagen
-                image.style.transform = 'scale(1)';
-                image.style.transformOrigin = 'center center';
-                // Configurar zoom solo para imágenes
-                this.setupImageZoom(image);
-            } else {
-                image.src = '';
-                image.alt = 'Sin imagen disponible';
-            }
+            image.src = '';
+            image.alt = 'Sin imagen disponible';
         }
         
-        // Guardar URL para descarga
+        // Guardar URL de imagen para descarga
         if (downloadBtn) {
             downloadBtn.dataset.imageUrl = data.imageUrl || '';
         }
         
+        // Configurar zoom en la imagen
+        this.setupImageZoom(image);
+        
         // Cargar prompt
         promptEl.textContent = data.prompt || 'Sin prompt disponible';
         
-        // Cargar metadatos técnicos completos
+        // Cargar metadatos
         const item = data.item || {};
         const output = item.output || {};
         const run = item.run || {};
@@ -1210,54 +940,18 @@ class LivingManager {
         
         const metadataItems = [];
         
-        // Fecha
+        // Solo mostrar la fecha sin label
         let creationDate = null;
         if (output.created_at) {
             creationDate = new Date(output.created_at).toLocaleString('es-ES');
         } else if (itemData.created_at) {
             creationDate = new Date(itemData.created_at).toLocaleString('es-ES');
-        } else if (run.created_at) {
-            creationDate = new Date(run.created_at).toLocaleString('es-ES');
-        }
-        if (creationDate) {
-            metadataItems.push({ label: 'Fecha', value: creationDate });
         }
         
-        // Modelo (si está en technical_params)
-        if (output.technical_params) {
-            try {
-                const techParams = typeof output.technical_params === 'string' 
-                    ? JSON.parse(output.technical_params) 
-                    : output.technical_params;
-                
-                if (techParams.model) {
-                    metadataItems.push({ label: 'Modelo', value: techParams.model });
-                }
-                if (techParams.resolution) {
-                    metadataItems.push({ label: 'Resolución', value: techParams.resolution });
-                }
-                if (techParams.tags && Array.isArray(techParams.tags)) {
-                    metadataItems.push({ label: 'Tags', value: techParams.tags.join(', ') });
-                }
-            } catch (e) {
-                // Ignorar si no se puede parsear
-            }
-        }
-        
-        // Tipo de output
-        if (output.output_type) {
-            metadataItems.push({ label: 'Tipo', value: output.output_type });
-        }
-        
-        // Renderizar metadatos
-        metadataEl.innerHTML = metadataItems.length > 0
-            ? metadataItems.map(item => `
-                <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
-                    <div style="font-weight: 600; color: var(--living-text-gold); margin-bottom: 4px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">${this.escapeHtml(item.label)}</div>
-                    <div style="color: var(--living-text-muted); font-size: 13px; word-break: break-word;">${this.escapeHtml(item.value)}</div>
-            </div>
-            `).join('')
-            : '<div style="color: var(--living-text-muted); font-size: 13px;">No hay metadatos disponibles</div>';
+        // Solo mostrar la fecha, sin otros metadatos
+        metadataEl.innerHTML = creationDate
+            ? `<div style="color: var(--living-text-muted); font-size: 13px;">${this.escapeHtml(creationDate)}</div>`
+            : '<div style="color: var(--living-text-muted); font-size: 13px;">Fecha no disponible</div>';
         
         // Mostrar modal
         modal.classList.add('active');
@@ -1295,16 +989,6 @@ class LivingManager {
                     }
                 });
             }
-        }
-        
-        // Listener para botón de duplicar (si existe)
-        if (duplicateBtn) {
-            duplicateBtn.style.display = 'flex';
-            duplicateBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                // TODO: Implementar lógica de duplicación
-                console.log('📋 Duplicar producción:', data);
-            });
         }
         
         // Cerrar con ESC
@@ -1379,89 +1063,28 @@ class LivingManager {
         // después de que se renderizan las cards
     }
 
-    /**
-     * Validar que una URL sea válida antes de usarla
-     */
-    isValidUrl(url) {
-        if (!url || typeof url !== 'string') return false;
-        
-        // Debe ser una URL HTTP/HTTPS válida
-        try {
-            const urlObj = new URL(url);
-            return (urlObj.protocol === 'http:' || urlObj.protocol === 'https:') && 
-                   urlObj.hostname.length > 0;
-        } catch (e) {
-            return false;
-        }
-    }
-
     getPublicUrlFromStorage(bucketName, filePath) {
         if (!this.supabase || !bucketName || !filePath) {
             return null;
         }
 
         try {
-            // Validar que filePath no esté vacío o sea solo espacios
-            if (!filePath || typeof filePath !== 'string' || !filePath.trim() || filePath.trim().length === 0) {
-                console.warn('⚠️ filePath vacío o inválido:', filePath);
-                return null;
-            }
-
-            // Validar que bucketName sea válido
-            if (!bucketName || typeof bucketName !== 'string' || bucketName.trim().length === 0) {
-                console.warn('⚠️ bucketName inválido:', bucketName);
-                return null;
-            }
-
             // Limpiar el path si viene con el nombre del bucket
-            let cleanPath = filePath.trim();
-            if (cleanPath.startsWith(`${bucketName}/`)) {
-                cleanPath = cleanPath.replace(`${bucketName}/`, '');
-            } else if (cleanPath.startsWith('/')) {
-                cleanPath = cleanPath.substring(1);
+            let cleanPath = filePath;
+            if (filePath.startsWith(`${bucketName}/`)) {
+                cleanPath = filePath.replace(`${bucketName}/`, '');
+            } else if (filePath.startsWith('/')) {
+                cleanPath = filePath.substring(1);
             }
 
-            // Validar que el path limpio no esté vacío
-            if (!cleanPath || cleanPath.length === 0) {
-                console.warn('⚠️ Path limpio vacío después de procesar:', filePath);
-                return null;
-            }
+            // Obtener URL pública desde Supabase Storage
+            const { data } = this.supabase.storage
+                .from(bucketName)
+                .getPublicUrl(cleanPath);
 
-            // Validar que storage esté disponible
-            if (!this.supabase.storage || typeof this.supabase.storage.from !== 'function') {
-                console.warn('⚠️ Supabase storage no disponible');
-                return null;
-            }
-
-            // Obtener URL pública desde Supabase Storage con manejo de errores
-            let publicUrl = null;
-            try {
-                const { data, error } = this.supabase.storage
-                    .from(bucketName)
-                    .getPublicUrl(cleanPath);
-
-                if (error) {
-                    console.warn('⚠️ Error en getPublicUrl:', error.message, 'Path:', cleanPath);
-                    return null;
-                }
-
-                publicUrl = data?.publicUrl || null;
-            } catch (storageError) {
-                // Capturar errores de la librería de Supabase (como 400 Bad Request)
-                console.warn('⚠️ Error de Supabase storage (posible 400):', storageError.message || storageError, 'Bucket:', bucketName, 'Path:', cleanPath);
-                return null;
-            }
-            
-            // Validar que la URL generada sea válida
-            if (publicUrl && this.isValidUrl(publicUrl)) {
-                return publicUrl;
-            } else {
-                console.warn('⚠️ URL pública generada no es válida:', publicUrl);
-                return null;
-            }
+            return data?.publicUrl || null;
         } catch (error) {
-            // Capturar cualquier otro error inesperado
-            console.warn('⚠️ Error inesperado obteniendo URL pública de storage:', error.message || error);
+            console.warn('⚠️ Error obteniendo URL pública de storage:', error);
             return null;
         }
     }
@@ -1551,5 +1174,11 @@ class LivingManager {
     }
 }
 
-// NO inicializar automáticamente - se inicializa desde LivingView
-// Esto evita conflictos cuando se navega entre vistas
+// Inicializar cuando el DOM esté listo
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        window.livingManager = new LivingManager();
+    });
+} else {
+    window.livingManager = new LivingManager();
+}

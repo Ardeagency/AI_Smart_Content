@@ -46,22 +46,22 @@
             <!-- Sección 2 y 3: Grid de 2 columnas -->
             <section class="living-content-grid">
                 <!-- Sección 2: Historial de Producciones (Izquierda) -->
-                <!-- Jerarquía: Archivo editorial, línea de tiempo del trabajo -->
+                <!-- Archivo operativo del usuario - Productora/Estudio/Archivo creativo -->
                 <div class="living-history-section">
-                    <!-- Sub-sección 2A: Videos -->
-                    <div class="living-history-videos">
-                        <div class="living-history-videos-container" id="livingHistoryVideos">
-                            <!-- Bandeja de ediciones - scroll horizontal -->
-                </div>
-            </div>
+                    <!-- Bloque A: Historial de Video - Strip editorial -->
+                    <div class="living-history-videos-block">
+                        <div class="living-history-videos-strip" id="livingHistoryVideos">
+                            <!-- Scroll horizontal tipo strip editorial -->
+                        </div>
+                    </div>
 
-                    <!-- Sub-sección 2B: Imágenes -->
-                    <div class="living-history-images">
-                        <div class="living-masonry-grid" id="livingHistoryImages">
-                            <!-- Archivo editorial - masonry funcional -->
+                    <!-- Bloque B: Historial de Imágenes - Masonry real -->
+                    <div class="living-history-images-block">
+                        <div class="living-history-masonry" id="livingHistoryImages">
+                            <!-- Masonry fluido, respeta ratios 100% -->
+                        </div>
                     </div>
                 </div>
-            </div>
 
                 <!-- Sección 3: Destacados / Control (Derecha) -->
                 <!-- Jerarquía: Soporte estratégico, mesa del productor -->
@@ -86,11 +86,7 @@
             </button>
             <div class="living-viewer-content">
                 <div class="living-viewer-visual">
-                    <img id="livingViewerImage" src="" alt="" style="display: none;" />
-                    <video id="livingViewerVideo" controls style="display: none;">
-                        <source id="livingViewerVideoSource" src="" type="video/mp4">
-                        Tu navegador no soporta la reproducción de video.
-                    </video>
+                    <img id="livingViewerImage" src="" alt="" />
                 </div>
                 <div class="living-viewer-editorial">
                     <div class="living-viewer-prompt">
@@ -103,9 +99,6 @@
                     <div class="living-viewer-actions">
                         <button class="living-viewer-download" id="livingViewerDownload" title="Descargar producción">
                             <i class="fas fa-download"></i>
-                        </button>
-                        <button class="living-viewer-duplicate" id="livingViewerDuplicate" title="Duplicar producción" style="display: none;">
-                            <i class="fas fa-copy"></i>
                         </button>
                     </div>
                 </div>
