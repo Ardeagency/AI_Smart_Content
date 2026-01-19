@@ -428,40 +428,204 @@ class LivingManager {
     }
 
     async     renderAll() {
-        // Determinar estado del Living
-        this.determineLivingState();
-        
-        // Renderizar según el estado
-        this.renderProductionsOfDay();
-        this.renderLatestProductions();
-        this.renderInsights();
+        // Renderizar estructura única estilo Netflix/Flix.id
+        this.renderFeaturedContent();
+        this.renderContentGrid();
+        this.setupCategoryFilters();
         this.renderResources();
-        this.renderIntelligence();
     }
 
-    determineLivingState() {
-        const hasProductions = this.flowRuns.length > 0;
-        const hasRecentProductions = this.flowRuns.length >= 5;
-        const hasManyProductions = this.flowRuns.length >= 20;
+    async renderFeaturedContent() {
+        const featuredGrid = document.getElementById('livingFeaturedGrid');
+        if (!featuredGrid) return;
         
-        if (!hasProductions) {
-            this.livingState = 'empty';
-        } else if (hasManyProductions) {
-            this.livingState = 'heavy';
-        } else {
-            this.livingState = 'active';
+        // Obtener las 2 mejores producciones (de RPC o flow outputs)
+        const latestContent = this.latestGeneratedContent || [];
+        let featuredItems = [];
+        
+        if (latestContent.length >= 2) {
+            featuredItems = latestContent.slice(0, 2);
+        } else if (this.flowRuns.length >= 2) {
+            // Usar flow runs si no hay suficiente contenido de RPC
+            featuredItems = this.flowRuns.slice(0, 2).map(run => {
+                const output = this.flowOutputs.find(o => o.run_id === run.id);
+                return {
+                    title: run.status || 'Producción',
+                    image_url: output?.file_url || null,
+                    run: run
+                };
+            });
+        } else if (latestContent.length === 1 || this.flowRuns.length === 1) {
+            // Si solo hay una, duplicarla o usar placeholder
+            const item = latestContent[0] || this.flowRuns[0];
+            featuredItems = [item, item];
         }
         
-        console.log(`📊 Estado del Living: ${this.livingState}`, {
-            producciones: this.flowRuns.length,
-            outputs: this.flowOutputs.length
+        // Si no hay contenido, mostrar placeholders
+        if (featuredItems.length === 0) {
+            featuredItems = [
+                { title: 'Create cinematic content', image_url: null },
+                { title: 'Visuals, motion and storytelling', image_url: null }
+            ];
+        }
+        
+        featuredGrid.innerHTML = featuredItems.slice(0, 2).map((item, index) => {
+            const imageUrl = item.image_url || item.url || item.storage_url;
+            const title = item.title || item.prompt_used || 'Producción destacada';
+            
+            return `
+                <div class="featured-card">
+                    <div class="featured-card-content">
+                        <h2 class="featured-card-title">${this.escapeHtml(title)}</h2>
+                        <button class="featured-card-button">
+                            <i class="fas fa-play"></i>
+                            <span>Ver producción</span>
+                        </button>
+                    </div>
+                    <div class="featured-card-visual">
+                        ${imageUrl 
+                            ? `<img src="${this.escapeHtml(imageUrl)}" alt="${this.escapeHtml(title)}" loading="eager" onerror="this.parentElement.innerHTML='<div class=\\'featured-card-visual-placeholder\\'><i class=\\'fas fa-image\\'></i></div>';">`
+                            : `<div class="featured-card-visual-placeholder"><i class="fas fa-image"></i></div>`
+                        }
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    renderContentGrid() {
+        const contentGrid = document.getElementById('livingContentGrid');
+        if (!contentGrid) return;
+        
+        // Obtener todas las producciones para el grid
+        const allProductions = this.flowRuns.slice(0, 12); // Mostrar hasta 12 inicialmente
+        
+        if (allProductions.length === 0) {
+            contentGrid.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 4rem; color: var(--living-text-muted);">
+                    <i class="fas fa-image" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                    <p>No hay producciones aún</p>
+                </div>
+            `;
+            return;
+        }
+        
+        contentGrid.innerHTML = allProductions.map(run => {
+            const imageOutput = this.flowOutputs.find(output => output.run_id === run.id);
+            const contentType = this.getContentType(run, imageOutput);
+            const imageUrl = imageOutput?.file_url || imageOutput?.storage_path || null;
+            const title = run.status || contentType || 'Producción';
+            const year = new Date(run.created_at || Date.now()).getFullYear();
+            
+            return `
+                <div class="content-card" data-run-id="${run.id}">
+                    ${imageUrl && imageUrl.startsWith('http')
+                        ? `<img src="${this.escapeHtml(imageUrl)}" alt="${this.escapeHtml(title)}" class="content-card-image" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'content-card-image-placeholder\\'><i class=\\'fas fa-image\\'></i></div>'; this.parentElement.querySelector('.content-card-info').style.paddingTop='2rem';">`
+                        : `<div class="content-card-image-placeholder"><i class="fas fa-image"></i></div>`
+                    }
+                    <div class="content-card-info">
+                        <h3 class="content-card-title">${this.escapeHtml(title)}</h3>
+                        <div class="content-card-meta">
+                            <span class="content-card-rating">
+                                <i class="fas fa-star"></i>
+                                <span>${(Math.random() * 2 + 6).toFixed(1)}</span>
+                            </span>
+                            <span class="content-card-year">${year}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    setupCategoryFilters() {
+        const categoryBtns = document.querySelectorAll('.category-btn');
+        const contentGrid = document.getElementById('livingContentGrid');
+        const contentTitle = document.getElementById('livingContentTitle');
+        
+        categoryBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remover active de todos
+                categoryBtns.forEach(b => b.classList.remove('active'));
+                // Agregar active al clickeado
+                btn.classList.add('active');
+                
+                const category = btn.dataset.category;
+                this.filterByCategory(category, contentGrid, contentTitle);
+            });
         });
+    }
+
+    filterByCategory(category, contentGrid, contentTitle) {
+        if (!contentGrid) return;
         
-        // Aplicar clase de estado al contenedor
-        const container = document.querySelector('.living-container');
-        if (container) {
-            container.className = `living-container living-state-${this.livingState}`;
+        let filteredRuns = this.flowRuns;
+        
+        if (category !== 'all') {
+            filteredRuns = this.flowRuns.filter(run => {
+                const imageOutput = this.flowOutputs.find(output => output.run_id === run.id);
+                const contentType = this.getContentType(run, imageOutput).toLowerCase();
+                
+                if (category === 'image') return contentType.includes('imagen') || contentType.includes('image');
+                if (category === 'video') return contentType.includes('video') || contentType.includes('reel');
+                if (category === 'reel') return contentType.includes('reel');
+                if (category === 'product') return run.brand_id && this.products.some(p => p.id === run.brand_id);
+                if (category === 'brand') return run.brand_id;
+                
+                return true;
+            });
         }
+        
+        // Actualizar título
+        if (contentTitle) {
+            const titles = {
+                'all': 'Producciones recientes',
+                'image': 'Imágenes',
+                'video': 'Videos',
+                'reel': 'Reels',
+                'product': 'Productos',
+                'brand': 'Marcas'
+            };
+            contentTitle.textContent = titles[category] || 'Producciones recientes';
+        }
+        
+        // Re-renderizar grid con filtro
+        if (filteredRuns.length === 0) {
+            contentGrid.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 4rem; color: var(--living-text-muted);">
+                    <i class="fas fa-filter" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                    <p>No hay producciones en esta categoría</p>
+                </div>
+            `;
+            return;
+        }
+        
+        contentGrid.innerHTML = filteredRuns.slice(0, 12).map(run => {
+            const imageOutput = this.flowOutputs.find(output => output.run_id === run.id);
+            const contentType = this.getContentType(run, imageOutput);
+            const imageUrl = imageOutput?.file_url || imageOutput?.storage_path || null;
+            const title = run.status || contentType || 'Producción';
+            const year = new Date(run.created_at || Date.now()).getFullYear();
+            
+            return `
+                <div class="content-card" data-run-id="${run.id}">
+                    ${imageUrl && imageUrl.startsWith('http')
+                        ? `<img src="${this.escapeHtml(imageUrl)}" alt="${this.escapeHtml(title)}" class="content-card-image" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'content-card-image-placeholder\\'><i class=\\'fas fa-image\\'></i></div>'; this.parentElement.querySelector('.content-card-info').style.paddingTop='2rem';">`
+                        : `<div class="content-card-image-placeholder"><i class="fas fa-image"></i></div>`
+                    }
+                    <div class="content-card-info">
+                        <h3 class="content-card-title">${this.escapeHtml(title)}</h3>
+                        <div class="content-card-meta">
+                            <span class="content-card-rating">
+                                <i class="fas fa-star"></i>
+                                <span>${(Math.random() * 2 + 6).toFixed(1)}</span>
+                            </span>
+                            <span class="content-card-year">${year}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
     }
 
     renderTokens() {

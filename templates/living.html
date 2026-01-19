@@ -32,127 +32,58 @@
     <!-- Contenido Principal -->
     <main class="main-content">
         <div class="living-container">
-            <!-- ESTADO VACÍO: Hero Cinematográfico con Mensaje Aspiracional -->
-            <section class="living-hero-cinematic living-hero-empty" id="livingHeroSection">
-                <div class="living-hero-backdrop">
-                    <div class="living-hero-gradient"></div>
+            <!-- Featured Content Section - 2 Cards Grandes -->
+            <section class="living-featured-section">
+                <div class="living-featured-grid" id="livingFeaturedGrid">
+                    <!-- 2 cards destacadas se generan aquí -->
                 </div>
-                <div class="living-hero-empty-content" id="heroEmptyContent">
-                    <div class="hero-empty-visual" id="heroEmptyVisual">
-                        <!-- Visual aspiracional se carga aquí -->
-                    </div>
-                    <div class="hero-empty-text">
-                        <h1 class="hero-empty-title">Create cinematic content. At scale.</h1>
-                        <p class="hero-empty-subtitle">Visuals, motion and storytelling — powered by AI.</p>
-                        <button class="hero-empty-cta" id="heroEmptyCTA">
-                            Create your first production
+            </section>
+
+            <!-- Category Selection Bar -->
+            <section class="living-categories-section">
+                <div class="living-categories-bar" id="livingCategoriesBar">
+                    <button class="category-btn active" data-category="all">
+                        <i class="fas fa-fire"></i>
+                        <span>Todas</span>
+                    </button>
+                    <button class="category-btn" data-category="image">
+                            <i class="fas fa-image"></i>
+                        <span>Imágenes</span>
+                    </button>
+                    <button class="category-btn" data-category="video">
+                        <i class="fas fa-video"></i>
+                        <span>Videos</span>
+                    </button>
+                    <button class="category-btn" data-category="reel">
+                        <i class="fas fa-film"></i>
+                        <span>Reels</span>
+                    </button>
+                    <button class="category-btn" data-category="product">
+                        <i class="fas fa-box"></i>
+                        <span>Productos</span>
+                    </button>
+                    <button class="category-btn" data-category="brand">
+                        <i class="fas fa-tag"></i>
+                        <span>Marcas</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Content Grid Section -->
+            <section class="living-content-section">
+                <div class="living-content-header">
+                    <h2 class="living-content-title" id="livingContentTitle">Producciones recientes</h2>
+                    <div class="living-content-actions">
+                        <button class="content-action-btn" id="contentSortBtn">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <button class="content-action-btn" id="contentFilterBtn">
+                            <i class="fas fa-filter"></i>
                         </button>
                     </div>
                 </div>
-            </section>
-
-            <!-- ESTADO VACÍO: Bloque de Activación -->
-            <section class="living-activation-section" id="livingActivationSection">
-                <div class="living-activation-grid">
-                    <div class="activation-card" data-action="generate">
-                        <div class="activation-card-icon">
-                            <i class="fas fa-image"></i>
-                        </div>
-                        <h3 class="activation-card-title">Generate visuals</h3>
-                        <p class="activation-card-description">Product shots, keyframes, concepts</p>
-                    </div>
-                    <div class="activation-card" data-action="motion">
-                        <div class="activation-card-icon">
-                            <i class="fas fa-video"></i>
-                        </div>
-                        <h3 class="activation-card-title">Create motion</h3>
-                        <p class="activation-card-description">Reels, ads, cinematic sequences</p>
-                    </div>
-                    <div class="activation-card" data-action="intelligence">
-                        <div class="activation-card-icon">
-                            <i class="fas fa-brain"></i>
-                        </div>
-                        <h3 class="activation-card-title">Build brand intelligence</h3>
-                        <p class="activation-card-description">Brands, entities, audiences</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ESTADO ACTIVO: Hero Contextual (reducido) -->
-            <section class="living-hero-contextual living-hero-active" id="livingHeroActive" style="display: none;">
-                <div class="living-hero-contextual-backdrop">
-                    <div class="living-hero-gradient"></div>
-                </div>
-                <div class="living-hero-contextual-content">
-                    <div class="hero-contextual-visual" id="heroContextualVisual">
-                        <!-- Última producción destacada se carga aquí -->
-                        <div class="hero-contextual-placeholder">
-                            <i class="fas fa-image"></i>
-            </div>
-                    </div>
-                    <div class="hero-contextual-text">
-                        <p class="hero-contextual-label">Esto ya está pasando</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ESTADO ACTIVO: Producciones del Día (Protagonista) -->
-            <section class="living-productions-today" id="livingProductionsToday" style="display: none;">
-                <div class="productions-today-header">
-                    <h2 class="productions-today-title">Producciones del día</h2>
-                    </div>
-                <div class="productions-today-grid" id="productionsOfDay">
-                    <!-- 3 piezas horizontales se generan aquí -->
-                </div>
-            </section>
-
-            <!-- ESTADO ACTIVO: Feed Curado (Historial Vivo) -->
-            <section class="living-feed-curated" id="livingActivitySection" style="display: none;">
-                <div class="living-feed-header">
-                    <h2 class="living-feed-title">Tu obra</h2>
-                    <p class="living-feed-subtitle">Archivo vivo curado automáticamente</p>
-                </div>
-                <div class="living-feed-grid" id="productionsList">
-                    <!-- 6-8 ítems coleccionables se generan aquí -->
-                </div>
-                <div class="living-feed-load-more" id="feedLoadMore" style="display: none;">
-                    <button class="feed-load-more-btn">Cargar más</button>
-                </div>
-            </section>
-
-            <!-- PULSO DEL SISTEMA - Con Contexto (Estado Activo) -->
-            <section class="living-pulse-section" id="livingPulseSection">
-                <div class="living-pulse-layout">
-                    <!-- Métricas con contexto (derecha) -->
-                    <div class="living-pulse-sidebar">
-                        <div class="pulse-resources-card">
-                            <div class="pulse-resources-header">
-                                <span class="pulse-label-whisper">Pulso del workspace</span>
-                            </div>
-                            <div class="pulse-resources-content" id="tokensResources">
-                                <div class="pulse-resource-item">
-                                    <span class="pulse-resource-label">Tokens hoy</span>
-                                    <span class="pulse-resource-value" id="tokensUsedTodayResource">0</span>
-                                </div>
-                                <div class="pulse-resource-item">
-                                    <span class="pulse-resource-label">Disponibles</span>
-                                    <span class="pulse-resource-value" id="tokensAvailableResource">0</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Comportamiento Inteligente (Insights) -->
-                    <div class="living-intelligence" id="livingIntelligence">
-                        <div class="intelligence-card">
-                            <div class="intelligence-icon">
-                                <i class="fas fa-lightbulb"></i>
-                            </div>
-                            <div class="intelligence-content">
-                                <p class="intelligence-text" id="intelligenceText">Tu workspace está activo</p>
-                            </div>
-                        </div>
-                    </div>
+                <div class="living-content-grid" id="livingContentGrid">
+                    <!-- Grid de cards se generan aquí -->
                 </div>
             </section>
         </div>
