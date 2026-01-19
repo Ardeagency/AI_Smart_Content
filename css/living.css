@@ -567,6 +567,44 @@ body.sidebar-collapsed .living-container {
 }
 
 /* ============================================
+   ESTADOS DEL LIVING (Empty, Active, Heavy)
+   ============================================ */
+
+/* Estado Vacío - Nuevo usuario */
+.living-state-empty .living-hero-visuals {
+    opacity: 0.6;
+}
+
+.living-state-empty .hero-visual-placeholder {
+    background: linear-gradient(135deg, rgba(212, 117, 78, 0.15) 0%, rgba(184, 93, 58, 0.15) 100%);
+    border: 2px dashed rgba(212, 117, 78, 0.3);
+}
+
+/* Estado Activo - Uso normal */
+.living-state-active {
+    /* Estilos por defecto ya aplicados */
+}
+
+/* Estado Heavy - Muchas producciones */
+.living-state-heavy .living-hero-visuals {
+    gap: 1.5rem;
+}
+
+.living-state-heavy .living-activity-grid {
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    gap: 3rem;
+}
+
+.living-state-heavy .production-card-cinematic {
+    transform: scale(1);
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.living-state-heavy .production-card-cinematic:hover {
+    transform: translateY(-12px) scale(1.01);
+}
+
+/* ============================================
    RESPONSIVE
    ============================================ */
 @media (max-width: 1600px) {
