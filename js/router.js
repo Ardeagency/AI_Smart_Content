@@ -277,6 +277,16 @@ class Router {
         if (typeof this.currentView.onEnter === 'function') {
           await this.currentView.onEnter();
         }
+        
+        // IMPORTANTE: Llamar init() para que la vista recargue/refresque datos si es necesario
+        // Esto asegura que los datos se muestren cuando regresas a la vista
+        if (typeof this.currentView.init === 'function') {
+          try {
+            await this.currentView.init();
+          } catch (error) {
+            console.warn('⚠️ Error en init() al reutilizar vista:', error);
+          }
+        }
       } else {
         // Crear nueva instancia de vista solo si no existe
       this.currentView = new ViewClass();

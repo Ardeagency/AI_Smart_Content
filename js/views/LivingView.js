@@ -43,20 +43,15 @@ class LivingView extends BaseView {
    * Inicializar la vista
    */
   async init() {
-    // Solo inicializar si no está ya inicializado
-    if (this.initialized && this.livingManager && this.livingManager.initialized) {
-      // Vista ya inicializada, solo mostrar
-      this.show();
-      return;
-    }
-    
     // Reutilizar LivingManager existente o crear uno nuevo
     if (window.livingManager && window.livingManager.initialized) {
       // Si ya existe y está inicializado, reutilizar
       this.livingManager = window.livingManager;
-      // NO re-renderizar - los datos se mantienen
-      // Solo asegurar que el modal esté en el lugar correcto
+      // IMPORTANTE: Re-renderizar los datos cuando regresas a la vista
+      // Esto asegura que los datos se muestren correctamente
       this.livingManager.moveModalToBody();
+      // Re-renderizar para mostrar los datos
+      await this.livingManager.renderAll();
     } else {
       // Si no existe o no está inicializado, crear uno nuevo
       if (window.LivingManager) {
