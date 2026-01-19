@@ -467,6 +467,36 @@ class LivingManager {
             products: this.products?.length || 0
         });
         
+        // Esperar a que el DOM esté listo
+        await new Promise(resolve => {
+            if (document.readyState === 'complete') {
+                resolve();
+            } else {
+                window.addEventListener('load', resolve);
+                // Timeout de seguridad
+                setTimeout(resolve, 100);
+            }
+        });
+        
+        // Verificar que los contenedores existan
+        const heroGrid = document.getElementById('livingHeroGrid');
+        const videosContainer = document.getElementById('livingHistoryVideos');
+        const imagesContainer = document.getElementById('livingHistoryImages');
+        const highlightsContent = document.getElementById('livingHighlightsContent');
+        
+        console.log('🔍 Verificando contenedores:', {
+            heroGrid: !!heroGrid,
+            videosContainer: !!videosContainer,
+            imagesContainer: !!imagesContainer,
+            highlightsContent: !!highlightsContent
+        });
+        
+        if (!heroGrid || !videosContainer || !imagesContainer || !highlightsContent) {
+            console.warn('⚠️ Algunos contenedores no están disponibles, esperando...');
+            // Esperar un poco más y reintentar
+            await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        
         // Mover el modal fuera de #app-container al body
         this.moveModalToBody();
         
