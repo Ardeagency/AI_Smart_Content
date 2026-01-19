@@ -601,9 +601,9 @@ class LivingManager {
         const finalImageUrl = imageUrl && imageUrl.startsWith('http') ? imageUrl : null;
         const cardData = JSON.stringify({
             imageUrl: finalImageUrl,
-            prompt: prompt,
+            prompt: prompt || '',
             item: itemData
-        }).replace(/"/g, '&quot;');
+        });
 
             return `
             <div class="featured-card" data-index="${index}" data-image-url="${this.escapeHtml(finalImageUrl || '')}" data-card-info="${this.escapeHtml(cardData)}">
@@ -638,21 +638,30 @@ class LivingManager {
         
         // Agregar event listeners para abrir modal de visualización
         const cards = container.querySelectorAll('.featured-card');
-        cards.forEach(card => {
-            card.addEventListener('click', (e) => {
+        cards.forEach((card, idx) => {
+            // Remover listener anterior si existe para evitar duplicados
+            const newCard = card.cloneNode(true);
+            card.parentNode.replaceChild(newCard, card);
+            
+            newCard.addEventListener('click', (e) => {
                 // No abrir modal si se clickeó el botón de descarga
                 if (e.target.closest('.featured-card-download-btn')) {
                     return;
                 }
                 
-                const cardData = card.dataset.cardInfo;
-                if (cardData) {
-                    try {
-                        const data = JSON.parse(cardData.replace(/&quot;/g, '"'));
-                        this.openViewerModal(data);
-                    } catch (error) {
-                        console.error('Error parsing card data:', error);
-                    }
+                const cardData = newCard.dataset.cardInfo;
+                if (!cardData) {
+                    console.warn('⚠️ No se encontró data-card-info en la card', newCard);
+                    return;
+                }
+                
+                try {
+                    // El escapeHtml ya maneja las comillas, solo necesitamos parsear
+                    const data = JSON.parse(cardData);
+                    console.log('✅ Abriendo modal con datos:', data);
+                    this.openViewerModal(data);
+                } catch (error) {
+                    console.error('❌ Error parsing card data:', error, 'Raw data:', cardData);
                 }
             });
         });
