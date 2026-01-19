@@ -519,10 +519,12 @@ class LivingManager {
             
             return `
                 <div class="content-card" data-run-id="${run.id}">
-                    ${imageUrl && imageUrl.startsWith('http')
-                        ? `<img src="${this.escapeHtml(imageUrl)}" alt="${this.escapeHtml(title)}" class="content-card-image" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'content-card-image-placeholder\\'><i class=\\'fas fa-image\\'></i></div>'; this.parentElement.querySelector('.content-card-info').style.paddingTop='2rem';">`
-                        : `<div class="content-card-image-placeholder"><i class="fas fa-image"></i></div>`
-                    }
+                    <div class="content-card-image-container">
+                        ${imageUrl && imageUrl.startsWith('http')
+                            ? `<img src="${this.escapeHtml(imageUrl)}" alt="${this.escapeHtml(title)}" class="content-card-image" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'content-card-image-placeholder\\'><i class=\\'fas fa-image\\'></i></div>';" onload="this.style.height='auto'; this.style.minHeight='200px'; this.style.maxHeight='400px';">`
+                            : `<div class="content-card-image-placeholder"><i class="fas fa-image"></i></div>`
+                        }
+                    </div>
                     <div class="content-card-info">
                         <h3 class="content-card-title">${this.escapeHtml(title)}</h3>
                         <div class="content-card-meta">
@@ -609,10 +611,12 @@ class LivingManager {
             
             return `
                 <div class="content-card" data-run-id="${run.id}">
-                    ${imageUrl && imageUrl.startsWith('http')
-                        ? `<img src="${this.escapeHtml(imageUrl)}" alt="${this.escapeHtml(title)}" class="content-card-image" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'content-card-image-placeholder\\'><i class=\\'fas fa-image\\'></i></div>'; this.parentElement.querySelector('.content-card-info').style.paddingTop='2rem';">`
-                        : `<div class="content-card-image-placeholder"><i class="fas fa-image"></i></div>`
-                    }
+                    <div class="content-card-image-container">
+                        ${imageUrl && imageUrl.startsWith('http')
+                            ? `<img src="${this.escapeHtml(imageUrl)}" alt="${this.escapeHtml(title)}" class="content-card-image" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'content-card-image-placeholder\\'><i class=\\'fas fa-image\\'></i></div>';" onload="this.style.height='auto'; this.style.minHeight='200px'; this.style.maxHeight='400px';">`
+                            : `<div class="content-card-image-placeholder"><i class="fas fa-image"></i></div>`
+                        }
+                    </div>
                     <div class="content-card-info">
                         <h3 class="content-card-title">${this.escapeHtml(title)}</h3>
                         <div class="content-card-meta">
@@ -1007,7 +1011,7 @@ class LivingManager {
                         <div class="production-today-info">
                             <span class="production-today-type">${this.escapeHtml(contentType)}</span>
                             <span class="production-today-status ${status}">${status}</span>
-                        </div>
+                    </div>
                     </div>
                 `;
             } else {
@@ -1051,15 +1055,15 @@ class LivingManager {
             } else {
                 heroContextualVisual.innerHTML = `
                     <div class="hero-contextual-placeholder">
-                        <i class="fas fa-image"></i>
-                    </div>
+                            <i class="fas fa-image"></i>
+                        </div>
                 `;
             }
         } else {
             heroContextualVisual.innerHTML = `
                 <div class="hero-contextual-placeholder">
                     <i class="fas fa-image"></i>
-                </div>
+                    </div>
             `;
         }
     }
@@ -1397,8 +1401,8 @@ class LivingManager {
         tokensUsedTodayEl.textContent = tokensUsedToday.toLocaleString();
 
         if (tokensProgressEl) {
-            const percentage = totalCredits > 0 ? Math.round((usedCredits / totalCredits) * 100) : 0;
-            tokensProgressEl.style.width = `${percentage}%`;
+        const percentage = totalCredits > 0 ? Math.round((usedCredits / totalCredits) * 100) : 0;
+        tokensProgressEl.style.width = `${percentage}%`;
         }
     }
 
