@@ -40,6 +40,17 @@ VALUES (
 )
 ON CONFLICT (id) DO NOTHING;
 
+-- Bucket para contenido generado por IA (producción automatizada)
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+    'production-outputs',
+    'production-outputs',
+    true,
+    10485760, -- 10MB
+    ARRAY['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif']
+)
+ON CONFLICT (id) DO NOTHING;
+
 -- ============================================
 -- POLÍTICAS DE STORAGE
 -- ============================================
