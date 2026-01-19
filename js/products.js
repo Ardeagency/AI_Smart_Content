@@ -374,7 +374,17 @@ if (typeof window.ProductsManager === 'undefined') {
         const productsGrid = document.getElementById('productsGrid');
 
         if (!emptyState || !productsGrid) {
-            console.error('❌ Elementos del DOM no encontrados para renderizar productos');
+            console.warn('⚠️ Elementos del DOM no encontrados para renderizar productos. Reintentando...');
+            // Reintentar después de un breve delay
+            setTimeout(() => {
+                const retryEmptyState = document.getElementById('emptyState');
+                const retryProductsGrid = document.getElementById('productsGrid');
+                if (retryEmptyState && retryProductsGrid) {
+                    this.renderProducts();
+                } else {
+                    console.error('❌ Elementos del DOM no encontrados después del reintento');
+                }
+            }, 100);
             return;
         }
 
