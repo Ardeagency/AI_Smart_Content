@@ -455,6 +455,12 @@ class LivingManager {
             producciones: this.flowRuns.length,
             outputs: this.flowOutputs.length
         });
+        
+        // Aplicar clase de estado al contenedor
+        const container = document.querySelector('.living-container');
+        if (container) {
+            container.className = `living-container living-state-${this.livingState}`;
+        }
     }
 
     renderTokens() {
@@ -480,14 +486,26 @@ class LivingManager {
     }
 
     async renderProductionsOfDay() {
-        const productionsOfDayEl = document.getElementById('productionsOfDay');
-        const heroSection = document.getElementById('livingHeroSection');
-        if (!productionsOfDayEl) return;
-        
-        // Aplicar clase de estado al hero
-        if (heroSection) {
-            heroSection.className = `living-hero-cinematic living-state-${this.livingState}`;
+        // Si está en estado vacío, renderizar hero vacío
+        if (this.livingState === 'empty') {
+            this.renderEmptyHero();
+            return;
         }
+        
+        // Estado activo/heavy: renderizar hero con imágenes
+        const productionsOfDayEl = document.getElementById('productionsOfDay');
+        const heroEmpty = document.getElementById('livingHeroSection');
+        const heroActive = document.getElementById('livingHeroActive');
+        
+        // Mostrar/ocultar secciones según estado
+        if (heroEmpty) {
+            heroEmpty.style.display = 'none';
+        }
+        if (heroActive) {
+            heroActive.style.display = 'flex';
+        }
+        
+        if (!productionsOfDayEl) return;
 
         // Usar el contenido generado por IA desde la función RPC
         const latestContent = this.latestGeneratedContent || [];
@@ -861,6 +879,39 @@ class LivingManager {
         productionsOfDayEl.innerHTML = heroHTML;
     }
 
+    renderEmptyHero() {
+        const heroEmpty = document.getElementById('livingHeroSection');
+        const heroActive = document.getElementById('livingHeroActive');
+        const heroEmptyVisual = document.getElementById('heroEmptyVisual');
+        const heroEmptyCTA = document.getElementById('heroEmptyCTA');
+        
+        // Mostrar hero vacío, ocultar hero activo
+        if (heroEmpty) {
+            heroEmpty.style.display = 'flex';
+        }
+        if (heroActive) {
+            heroActive.style.display = 'none';
+        }
+        
+        // Cargar visual aspiracional si hay imágenes disponibles
+        if (heroEmptyVisual && this.flowOutputs.length > 0) {
+            const firstImage = this.flowOutputs[0];
+            // Intentar obtener URL de la primera imagen
+            // Por ahora usar placeholder elegante
+        }
+        
+        // Event listener para CTA
+        if (heroEmptyCTA) {
+            heroEmptyCTA.addEventListener('click', () => {
+                if (window.router) {
+                    window.router.navigate('/create');
+                } else {
+                    window.location.href = '/create';
+                }
+            });
+        }
+    }
+
     renderFavoriteProduct() {
         const favoriteProductEl = document.getElementById('favoriteProduct');
         if (!favoriteProductEl) return;
@@ -946,23 +997,22 @@ class LivingManager {
 
     renderLatestProductions() {
         const productionsListEl = document.getElementById('productionsList');
-        const emptyStateEl = document.getElementById('emptyProductionsState');
-        if (!productionsListEl) return;
-
-        // Manejar diferentes estados
+        const activitySection = document.getElementById('livingActivitySection');
+        
+        // Si está en estado vacío, ocultar sección de actividad
         if (this.livingState === 'empty' || this.flowRuns.length === 0) {
-            // Estado vacío aspiracional
-            if (emptyStateEl) {
-                emptyStateEl.style.display = 'flex';
+            if (activitySection) {
+                activitySection.style.display = 'none';
             }
-            productionsListEl.innerHTML = '';
             return;
         }
 
-        // Ocultar estado vacío si hay producciones
-        if (emptyStateEl) {
-            emptyStateEl.style.display = 'none';
+        // Mostrar sección de actividad para estados activo/heavy
+        if (activitySection) {
+            activitySection.style.display = 'block';
         }
+        
+        if (!productionsListEl) return;
         
         // Ajustar cantidad según el estado
         const maxCards = this.livingState === 'heavy' ? 12 : 8;
@@ -1041,81 +1091,9 @@ class LivingManager {
     }
 
     renderInsights() {
-        // Producto Favorito
-        const favoriteProductNameEl = document.getElementById('favoriteProductName');
-        if (favoriteProductNameEl) {
-            if (this.products.length > 0) {
-                const favoriteProduct = this.products[0];
-                favoriteProductNameEl.textContent = this.escapeHtml(favoriteProduct.nombre_producto);
-            } else {
-                favoriteProductNameEl.textContent = '-';
-            }
-        }
-
-        // Producto Más Producido
-        const topProductNameEl = document.getElementById('topProductName');
-        if (topProductNameEl) {
-            if (this.products.length > 0) {
-                // Contar producciones por producto
-                const productCounts = {};
-                this.flowRuns.forEach(run => {
-                    if (run.brand_id) {
-                        productCounts[run.brand_id] = (productCounts[run.brand_id] || 0) + 1;
-                    }
-                });
-                
-                let topProduct = this.products[0];
-                let maxCount = 0;
-                this.products.forEach(product => {
-                    const count = productCounts[product.id] || 0;
-                    if (count > maxCount) {
-                        maxCount = count;
-                        topProduct = product;
-                    }
-                });
-                
-                topProductNameEl.textContent = this.escapeHtml(topProduct.nombre_producto);
-            } else {
-                topProductNameEl.textContent = '-';
-            }
-        }
-
-        // Formato Más Usado
-        const topFormatNameEl = document.getElementById('topFormatName');
-        if (topFormatNameEl) {
-            const formatCounts = {};
-            this.flowRuns.forEach(run => {
-                const contentType = this.getContentType(run, null);
-                formatCounts[contentType] = (formatCounts[contentType] || 0) + 1;
-            });
-            
-            let topFormat = 'Contenido';
-            let maxCount = 0;
-            Object.keys(formatCounts).forEach(format => {
-                if (formatCounts[format] > maxCount) {
-                    maxCount = formatCounts[format];
-                    topFormat = format;
-                }
-            });
-            
-            topFormatNameEl.textContent = topFormat;
-        }
-
-        // Tokens Hoy
-        const tokensTodayEl = document.getElementById('tokensToday');
-        if (tokensTodayEl) {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
-            const todayUsage = this.creditUsage.filter(usage => {
-                const usageDate = new Date(usage.created_at);
-                usageDate.setHours(0, 0, 0, 0);
-                return usageDate.getTime() === today.getTime();
-            });
-            
-            const tokensUsedToday = todayUsage.reduce((sum, usage) => sum + (usage.credits_used || 0), 0);
-            tokensTodayEl.textContent = tokensUsedToday.toLocaleString();
-        }
+        // En estado vacío, no hay insights (elementos no existen en el HTML)
+        // Solo renderizar si los elementos existen (estados activo/heavy)
+        // Por ahora, los insights se manejan en el HTML directamente
     }
 
     renderEntityProduction() {
@@ -1206,7 +1184,26 @@ class LivingManager {
     }
 
     setupEventListeners() {
-        // Event listeners básicos si se necesitan
+        // Event listeners para cards de activación (estado vacío)
+        const activationCards = document.querySelectorAll('.activation-card');
+        activationCards.forEach(card => {
+            card.addEventListener('click', () => {
+                const action = card.dataset.action;
+                if (window.router) {
+                    if (action === 'generate' || action === 'motion') {
+                        window.router.navigate('/create');
+                    } else if (action === 'intelligence') {
+                        window.router.navigate('/brands');
+                    }
+                } else {
+                    if (action === 'generate' || action === 'motion') {
+                        window.location.href = '/create';
+                    } else if (action === 'intelligence') {
+                        window.location.href = '/brands';
+                    }
+                }
+            });
+        });
     }
 
     escapeHtml(text) {
