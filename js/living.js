@@ -504,7 +504,7 @@ class LivingManager {
             imagesContainer.innerHTML = `
                 <div style="text-align: center; padding: 2rem; color: var(--living-text-muted); opacity: 0.6;">
                     <p style="font-size: 0.875rem;">Sin producciones ejecutadas</p>
-                </div>
+                    </div>
             `;
         } else {
             imagesContainer.innerHTML = allVisualItems.map((item, index) => {
@@ -541,8 +541,8 @@ class LivingManager {
                 <div class="history-video-card-overlay">
                     <div class="history-video-card-play">
                         <i class="fas fa-play"></i>
-                    </div>
-                    </div>
+                </div>
+                </div>
                 </div>
             `;
     }
@@ -576,7 +576,7 @@ class LivingManager {
                 </div>
             `;
     }
-    
+
     setupHistoryCardListeners(container, type) {
         const cards = container.querySelectorAll(`.history-${type}-card, .history-text-card`);
         cards.forEach(card => {
@@ -819,6 +819,7 @@ class LivingManager {
         const metadataEl = document.getElementById('livingViewerMetadata');
         const closeBtn = document.getElementById('livingViewerClose');
         const backdrop = document.getElementById('livingViewerBackdrop');
+        const downloadBtn = document.getElementById('livingViewerDownload');
         
         if (!modal || !image || !promptEl || !metadataEl) {
             console.error('❌ Elementos del modal no encontrados');
@@ -829,9 +830,14 @@ class LivingManager {
         if (data.imageUrl) {
             image.src = data.imageUrl;
             image.alt = data.prompt || 'Producción';
-        } else {
+            } else {
             image.src = '';
             image.alt = 'Sin imagen disponible';
+        }
+        
+        // Guardar URL de imagen para descarga
+        if (downloadBtn) {
+            downloadBtn.dataset.imageUrl = data.imageUrl || '';
         }
         
         // Cargar prompt
@@ -913,7 +919,7 @@ class LivingManager {
                     <div class="metadata-value">${this.escapeHtml(item.value)}</div>
                 </div>
             `).join('')
-            : '<p style="color: var(--living-text-muted); font-size: 0.875rem;">No hay metadatos disponibles</p>';
+            : '<p style="color: #6b7280; font-size: 13px;">No hay metadatos disponibles</p>';
         
         // Mostrar modal
         modal.classList.add('active');
@@ -930,10 +936,28 @@ class LivingManager {
         closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
         const newBackdrop = backdrop.cloneNode(true);
         backdrop.parentNode.replaceChild(newBackdrop, backdrop);
+        const newDownloadBtn = downloadBtn ? downloadBtn.cloneNode(true) : null;
+        if (downloadBtn && newDownloadBtn) {
+            downloadBtn.parentNode.replaceChild(newDownloadBtn, downloadBtn);
+        }
         
         // Agregar nuevos listeners
         document.getElementById('livingViewerClose').addEventListener('click', closeModal);
         document.getElementById('livingViewerBackdrop').addEventListener('click', closeModal);
+        
+        // Listener para botón de descarga
+        if (newDownloadBtn) {
+            const finalDownloadBtn = document.getElementById('livingViewerDownload');
+            if (finalDownloadBtn) {
+                finalDownloadBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const imageUrl = finalDownloadBtn.dataset.imageUrl;
+                    if (imageUrl && imageUrl.startsWith('http')) {
+                        this.downloadImage(imageUrl);
+                    }
+                });
+            }
+        }
         
         // Cerrar con ESC
         const handleEsc = (e) => {
