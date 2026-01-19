@@ -94,13 +94,8 @@ class Router {
 
   /**
    * Manejar cambio de ruta
-   * Con ligero retraso para suavizar la transición
    */
   async handleRoute() {
-    // Ligero retraso para suavizar la navegación (solo si hay vista actual)
-    if (this.currentView) {
-      await new Promise(resolve => setTimeout(resolve, 150));
-    }
     try {
       // Obtener path actual usando History API
       let path = window.location.pathname || '/';
@@ -214,7 +209,7 @@ class Router {
         if (typeof this.currentView.onLeave === 'function') {
           try {
             await this.currentView.onLeave();
-        } catch (error) {
+          } catch (error) {
             console.error('Error en onLeave de vista actual:', error);
           }
         }
@@ -270,51 +265,30 @@ class Router {
           this.currentView.container.style.display = '';
         }
         
-        // Ligero retraso para suavizar la transición
-        await new Promise(resolve => setTimeout(resolve, 100));
-
         // Llamar onEnter para que la vista pueda hacer verificaciones
         if (typeof this.currentView.onEnter === 'function') {
           await this.currentView.onEnter();
         }
-        
-        // IMPORTANTE: Llamar init() para que la vista recargue/refresque datos si es necesario
-        // Esto asegura que los datos se muestren cuando regresas a la vista
-        if (typeof this.currentView.init === 'function') {
-          try {
-            await this.currentView.init();
-          } catch (error) {
-            console.warn('⚠️ Error en init() al reutilizar vista:', error);
-          }
-        }
       } else {
         // Crear nueva instancia de vista solo si no existe
-      this.currentView = new ViewClass();
-      this.currentRoute = path;
+        this.currentView = new ViewClass();
+        this.currentRoute = path;
         
         // Guardar en cache
         this.viewInstances[path] = this.currentView;
-      
-      // Pasar parámetros de ruta a la vista si los hay
-      if (Object.keys(routeParams).length > 0) {
-        this.currentView.routeParams = routeParams;
-      }
+        
+        // Pasar parámetros de ruta a la vista si los hay
+        if (Object.keys(routeParams).length > 0) {
+          this.currentView.routeParams = routeParams;
+        }
 
-      // Aplicar animación de entrada antes de renderizar
-      if (container) {
-        container.classList.add('view-enter');
-      }
+        // Aplicar animación de entrada antes de renderizar
+        if (container) {
+          container.classList.add('view-enter');
+        }
 
-      // Mostrar loading minimalista antes de renderizar
-      if (this.currentView.container) {
-        this.currentView.showLoading();
-      }
-
-      // Ligero retraso para suavizar la transición
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      // Renderizar nueva vista
-      await this.currentView.render();
+        // Renderizar nueva vista
+        await this.currentView.render();
       }
       
       // Si reutilizamos vista, también pasar parámetros si los hay
@@ -331,13 +305,43 @@ class Router {
       console.log(`✅ Vista cargada: ${path}`);
     } catch (error) {
       console.error('❌ Error manejando ruta:', error);
+      console.error('Stack:', error.stack);
+      
+      // Mostrar error en el container
+      const container = document.getElementById('app-container');
+      if (container) {
+        container.innerHTML = `
+          <div style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+            text-align: center;
+            background: var(--bg-primary, #1a1a1a);
+          ">
+            <div style="font-size: 3rem; color: var(--accent-warm, #e09145); margin-bottom: 1rem;">
+              <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h2 style="color: var(--text-primary, #ecebda); margin-bottom: 1rem;">Error cargando la página</h2>
+            <p style="color: var(--text-secondary, #a0a0a0); margin-bottom: 2rem;">${error.message || 'Error desconocido'}</p>
+            <button onclick="window.location.reload()" style="
+              padding: 0.75rem 1.5rem;
+              background: var(--primary-color, #ecebda);
+              color: var(--bg-dark, #1a1a1a);
+              border: none;
+              border-radius: 8px;
+              cursor: pointer;
+              font-weight: 600;
+            ">Recargar Página</button>
+          </div>
+        `;
+      }
       
       // Usar ErrorHandler si está disponible
       if (window.errorHandler) {
         window.errorHandler.showError(error, 'Error cargando la página. Por favor, recarga.');
-      } else {
-        // Fallback
-        this.showError('Error cargando la página. Por favor, recarga.');
       }
     }
   }

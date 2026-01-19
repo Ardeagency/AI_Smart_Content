@@ -298,8 +298,22 @@ class BaseView {
    * Mostrar loading state
    */
   showLoading() {
-    // No mostrar estado de carga - el contenido se renderiza directamente
-    // Solo mantener el contenedor vacío hasta que se cargue el contenido
+    // Solo mostrar loading para la vista inicial (LandingView) antes del login
+    // Las demás vistas no muestran loading para evitar estados intermedios
+    if (this.container && this.templatePath === 'landing.html') {
+      // Solo para landing, mostrar un estado mínimo mientras carga
+      if (this.container.innerHTML.trim() === '') {
+        this.container.innerHTML = `
+          <div style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: var(--bg-primary, #1a1a1a);
+          "></div>
+        `;
+      }
+    }
   }
 
   /**

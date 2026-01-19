@@ -197,7 +197,14 @@
     <!-- App Container (Dinámico) -->
     <!-- Las vistas se cargarán aquí dinámicamente -->
     <div id="app-container">
-        <!-- Sin estado de carga inicial - el contenido se renderiza directamente -->
+        <!-- Contenido inicial mínimo - será reemplazado por el router -->
+        <div style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: var(--bg-primary, #1a1a1a);
+        "></div>
     </div>
 
     <!-- External Scripts -->
