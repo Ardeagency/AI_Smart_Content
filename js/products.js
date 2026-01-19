@@ -273,24 +273,21 @@ if (typeof window.ProductsManager === 'undefined') {
 
     async loadProducts() {
         // Cargar productos - filtrar por brand_container_id
-        const loadingState = document.getElementById('loadingState');
         const emptyState = document.getElementById('emptyState');
         const productsGrid = document.getElementById('productsGrid');
 
-        if (!loadingState || !emptyState || !productsGrid) {
+        if (!emptyState || !productsGrid) {
             console.error('❌ Elementos del DOM no encontrados');
             return;
         }
 
         try {
-            loadingState.style.display = 'block';
             emptyState.style.display = 'none';
             productsGrid.style.display = 'none';
 
             // Si no hay brand_container, no hay productos
             if (!this.brandContainerId) {
                 console.log('ℹ️ No hay brand_container, mostrando estado vacío');
-                loadingState.style.display = 'none';
                 emptyState.style.display = 'block';
                 this.products = [];
                 return;
@@ -351,23 +348,19 @@ if (typeof window.ProductsManager === 'undefined') {
 
         } catch (error) {
             console.error('❌ Error completo cargando productos:', error);
-            if (loadingState) loadingState.style.display = 'none';
             if (emptyState) emptyState.style.display = 'block';
             if (productsGrid) productsGrid.style.display = 'none';
         }
     }
 
     renderProducts() {
-        const loadingState = document.getElementById('loadingState');
         const emptyState = document.getElementById('emptyState');
         const productsGrid = document.getElementById('productsGrid');
 
-        if (!loadingState || !emptyState || !productsGrid) {
+        if (!emptyState || !productsGrid) {
             console.error('❌ Elementos del DOM no encontrados para renderizar productos');
             return;
         }
-
-        loadingState.style.display = 'none';
 
         if (!this.products || this.products.length === 0) {
             console.log('ℹ️ No hay productos para mostrar');

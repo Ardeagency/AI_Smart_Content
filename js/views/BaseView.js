@@ -116,14 +116,8 @@ class BaseView {
       return;
     }
 
-    // Si ya está renderizado Y tiene contenido real (no solo loading), no volver a renderizar
-    const currentContent = this.container.innerHTML.trim();
-    const hasRealContent = currentContent !== '' && 
-                           !currentContent.includes('view-loading') && 
-                           !currentContent.includes('loading-spinner') &&
-                           currentContent.length > 100; // Más que solo el loading
-    
-    if (this.initialized && hasRealContent) {
+    // Si ya está renderizado, no volver a renderizar
+    if (this.initialized && this.container.innerHTML.trim() !== '') {
       console.log(`ℹ️ Vista ${this.constructor.name} ya renderizada, omitiendo re-renderizado`);
       // Solo asegurar que esté visible
       this.show();
@@ -151,14 +145,8 @@ class BaseView {
         html = await html;
       }
       
-      // Inyectar HTML en el container (reemplazar loading si existe)
-      // Si solo tiene el loading spinner, reemplazarlo con el contenido real
-      const currentContent = this.container.innerHTML.trim();
-      const isOnlyLoading = currentContent === '' || 
-                            currentContent.includes('view-loading') || 
-                            currentContent.includes('loading-spinner');
-      
-      if (isOnlyLoading || currentContent === '') {
+      // Inyectar HTML en el container solo si está vacío
+      if (this.container.innerHTML.trim() === '') {
         this.container.innerHTML = html;
       }
       
@@ -166,29 +154,13 @@ class BaseView {
       this.updateLinksForRouter();
 
       // Llamar a onEnter antes de inicializar (para preparar datos, etc.)
-      try {
-        await this.onEnter();
-      } catch (error) {
-        console.warn('⚠️ Error en onEnter:', error);
-        // Continuar de todas formas
-      }
+      await this.onEnter();
 
       // Inicializar vista (setup event listeners, componentes, etc.)
-      // NO bloquear si hay errores - renderizar de todas formas
-      try {
-        await this.init();
-      } catch (error) {
-        console.error('❌ Error en init(), pero continuando:', error);
-        // Continuar de todas formas para mostrar la vista
-      }
+      await this.init();
 
       // Actualizar header con datos del usuario y contexto
-      try {
-        await this.updateHeader();
-      } catch (error) {
-        console.warn('⚠️ Error actualizando header:', error);
-        // Continuar de todas formas
-      }
+      await this.updateHeader();
 
       this.initialized = true;
 
@@ -197,10 +169,7 @@ class BaseView {
       
       console.log(`✅ Vista renderizada: ${this.constructor.name}`);
     } catch (error) {
-      console.error('❌ Error crítico renderizando vista:', error);
-      // Aún así, marcar como inicializada para que no se quede en loading
-      this.initialized = true;
-      this.hideLoading();
+      console.error('❌ Error renderizando vista:', error);
       
       // Usar ErrorHandler si está disponible
       if (window.errorHandler) {
@@ -326,39 +295,18 @@ class BaseView {
   }
 
   /**
-   * Mostrar loading state minimalista
-   * Solo se muestra si la vista no está ya renderizada
+   * Mostrar loading state
    */
   showLoading() {
-    // Solo mostrar loading si el container está vacío o no tiene contenido renderizado
-    if (this.container && (!this.initialized || this.container.innerHTML.trim() === '')) {
-      this.container.innerHTML = `
-        <div class="view-loading">
-          <div class="loading-spinner"></div>
-        </div>
-      `;
-    }
+    // No mostrar estado de carga - el contenido se renderiza directamente
+    // Solo mantener el contenedor vacío hasta que se cargue el contenido
   }
 
   /**
    * Ocultar loading state
    */
   hideLoading() {
-    if (this.container) {
-      // Remover el loading spinner si existe
-      const loadingEl = this.container.querySelector('.view-loading');
-      if (loadingEl) {
-        loadingEl.remove();
-      }
-      // También limpiar si solo tiene el loading
-      const currentContent = this.container.innerHTML.trim();
-      if (currentContent.includes('view-loading') || currentContent.includes('loading-spinner')) {
-        // Si solo tiene loading, limpiarlo (el contenido real debería estar ya inyectado)
-        if (currentContent.length < 500) { // Solo si es muy pequeño (probablemente solo loading)
-          this.container.innerHTML = '';
-        }
-      }
-    }
+    // El contenido ya está renderizado, no hay que hacer nada
   }
 
   /**
