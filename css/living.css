@@ -355,6 +355,17 @@ body.sidebar-collapsed .living-container {
 }
 
 /* Imagen respeta formato original - sin recorte, sin fill forzado, sin crop */
+/* REGLA MADRE: La imagen nunca se adapta al layout. El layout se adapta a la imagen. */
+.featured-card-visual {
+    position: relative;
+    width: 100%;
+    height: auto; /* Altura se adapta al aspect ratio de la imagen */
+    z-index: 1;
+    display: block;
+    line-height: 0;
+    background: transparent; /* Fondo transparente para que la imagen sea protagonista */
+}
+
 .featured-card-visual img {
     width: 100%;
     height: auto;
@@ -363,6 +374,7 @@ body.sidebar-collapsed .living-container {
     /* Sin object-fit: cover - respetamos el material original */
     object-fit: contain; /* Mostrar imagen completa sin recortar */
     object-position: center;
+    /* Sin altura fija - el ritmo visual se vuelve editorial, no matemático */
 }
 
 .featured-card-visual-placeholder {
