@@ -525,19 +525,56 @@ class LivingManager {
                             file_path: filePath
                         });
                         
+                        // Intentar verificar si el bucket existe listando su contenido
+                        let bucketExists = false;
                         try {
-                            const { data: { publicUrl }, error: urlError } = this.supabase.storage
-                                .from(bucketName)
-                                .getPublicUrl(filePath);
-                            
-                            if (urlError) {
-                                console.error(`❌ Error obteniendo URL pública desde bucket '${bucketName}' path '${filePath}':`, urlError);
-                            } else if (publicUrl) {
-                                imageUrl = publicUrl;
-                                console.log(`✅ URL construida correctamente desde storage_path:`, imageUrl);
+                            const { data: buckets, error: bucketsError } = await this.supabase.storage.listBuckets();
+                            if (!bucketsError && buckets) {
+                                bucketExists = buckets.some(b => b.id === bucketName || b.name === bucketName);
+                                console.log(`ℹ️ Bucket '${bucketName}' existe:`, bucketExists);
                             }
                         } catch (error) {
-                            console.error(`❌ Error al construir URL desde storage_path:`, error);
+                            console.warn(`⚠️ No se pudo verificar existencia del bucket:`, error);
+                        }
+                        
+                        // Si el bucket no existe, intentar con buckets alternativos
+                        const bucketsToTry = bucketExists 
+                            ? [bucketName] 
+                            : ['production-outputs', 'generated-content', 'flow-outputs', 'content-images', 'product-images', 'brand-files'];
+                        
+                        for (const bucket of bucketsToTry) {
+                            try {
+                                const { data: { publicUrl }, error: urlError } = this.supabase.storage
+                                    .from(bucket)
+                                    .getPublicUrl(filePath);
+                                
+                                if (urlError) {
+                                    if (urlError.message?.includes('not found') || urlError.message?.includes('does not exist')) {
+                                        console.log(`ℹ️ Bucket '${bucket}' no existe, intentando siguiente...`);
+                                        continue;
+                                    }
+                                    console.warn(`⚠️ Error obteniendo URL pública desde bucket '${bucket}' path '${filePath}':`, urlError);
+                                    continue;
+                                }
+                                
+                                if (publicUrl) {
+                                    // Verificar que la URL tenga el formato correcto
+                                    if (publicUrl.includes('/object/public/') && publicUrl.includes(bucket)) {
+                                        imageUrl = publicUrl;
+                                        console.log(`✅ URL construida correctamente desde bucket '${bucket}':`, imageUrl);
+                                        break;
+                                    } else {
+                                        console.warn(`⚠️ URL generada no tiene formato esperado:`, publicUrl);
+                                    }
+                                }
+                            } catch (error) {
+                                console.warn(`⚠️ Error al construir URL desde bucket '${bucket}':`, error);
+                                continue;
+                            }
+                        }
+                        
+                        if (!imageUrl) {
+                            console.error(`❌ No se pudo construir URL desde storage_path '${storagePath}' en ningún bucket disponible`);
                         }
                     }
                 }
