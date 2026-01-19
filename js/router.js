@@ -20,7 +20,8 @@ class Router {
     this.routes = {};
     this.currentView = null;
     this.currentRoute = null;
-    this.viewCache = {};
+    this.viewCache = {}; // Cache de templates
+    this.viewInstances = {}; // Cache de instancias de vistas (persistencia)
     this.templateCache = new Map(); // Cache de templates
     this.init();
   }
@@ -192,12 +193,25 @@ class Router {
         await new Promise(resolve => setTimeout(resolve, 150));
       }
 
-      // Limpiar vista actual
-      if (this.currentView && typeof this.currentView.destroy === 'function') {
-        try {
-          await this.currentView.destroy();
-        } catch (error) {
-          console.error('Error destruyendo vista actual:', error);
+      // Ocultar vista actual (NO destruir - mantener en cache)
+      if (this.currentView) {
+        // Guardar instancia en cache antes de ocultar
+        if (this.currentRoute) {
+          this.viewInstances[this.currentRoute] = this.currentView;
+        }
+        
+        // Solo ocultar, no destruir
+        if (this.currentView.container) {
+          this.currentView.container.style.display = 'none';
+        }
+        
+        // Llamar onLeave para cleanup temporal (no destruir datos)
+        if (typeof this.currentView.onLeave === 'function') {
+          try {
+            await this.currentView.onLeave();
+          } catch (error) {
+            console.error('Error en onLeave de vista actual:', error);
+          }
         }
       }
 
@@ -238,9 +252,30 @@ class Router {
         return;
       }
 
-      // Crear nueva instancia de vista
-      this.currentView = new ViewClass();
-      this.currentRoute = path;
+      // Verificar si ya existe una instancia de esta vista en cache
+      let viewInstance = this.viewInstances[path];
+      
+      if (viewInstance && viewInstance.initialized) {
+        // Reutilizar vista existente
+        console.log(`♻️ Reutilizando vista existente: ${path}`);
+        this.currentView = viewInstance;
+        
+        // Mostrar la vista
+        if (this.currentView.container) {
+          this.currentView.container.style.display = '';
+        }
+        
+        // Llamar onEnter para que la vista pueda hacer verificaciones
+        if (typeof this.currentView.onEnter === 'function') {
+          await this.currentView.onEnter();
+        }
+      } else {
+        // Crear nueva instancia de vista solo si no existe
+        this.currentView = new ViewClass();
+        this.currentRoute = path;
+        
+        // Guardar en cache
+        this.viewInstances[path] = this.currentView;
       
       // Pasar parámetros de ruta a la vista si los hay
       if (Object.keys(routeParams).length > 0) {
@@ -252,8 +287,15 @@ class Router {
         container.classList.add('view-enter');
       }
 
-      // Renderizar nueva vista
-      await this.currentView.render();
+      // Renderizar vista (solo si no está inicializada o necesita actualización)
+      if (!viewInstance || !viewInstance.initialized) {
+        await this.currentView.render();
+      } else {
+        // Vista ya renderizada, solo actualizar si es necesario
+        if (typeof this.currentView.onEnter === 'function') {
+          await this.currentView.onEnter();
+        }
+      }
       
       // Actualizar navegación activa
       this.updateNavigation();

@@ -116,6 +116,14 @@ class BaseView {
       return;
     }
 
+    // Si ya está renderizado, no volver a renderizar
+    if (this.initialized && this.container.innerHTML.trim() !== '') {
+      console.log(`ℹ️ Vista ${this.constructor.name} ya renderizada, omitiendo re-renderizado`);
+      // Solo asegurar que esté visible
+      this.show();
+      return;
+    }
+
     // Mostrar loading
     this.showLoading();
 
@@ -137,8 +145,10 @@ class BaseView {
         html = await html;
       }
       
-      // Inyectar HTML en el container
-      this.container.innerHTML = html;
+      // Inyectar HTML en el container solo si está vacío
+      if (this.container.innerHTML.trim() === '') {
+        this.container.innerHTML = html;
+      }
       
       // Actualizar links para usar router
       this.updateLinksForRouter();
@@ -212,7 +222,8 @@ class BaseView {
 
   /**
    * Destruir la vista
-   * Limpia recursos, event listeners, etc.
+   * NOTA: Las vistas ya NO se destruyen al navegar - se mantienen en cache
+   * Este método solo se usa para limpieza completa cuando sea necesario
    */
   async destroy() {
     if (!this.initialized) {
@@ -226,7 +237,7 @@ class BaseView {
       // Limpiar event listeners registrados
       this.cleanup();
 
-      // Limpiar container
+      // Limpiar container solo si se solicita destrucción completa
       if (this.container) {
         this.container.innerHTML = '';
       }
@@ -235,6 +246,24 @@ class BaseView {
       console.log(`🧹 Vista destruida: ${this.constructor.name}`);
     } catch (error) {
       console.error('❌ Error destruyendo vista:', error);
+    }
+  }
+  
+  /**
+   * Ocultar la vista (sin destruir)
+   */
+  hide() {
+    if (this.container) {
+      this.container.style.display = 'none';
+    }
+  }
+  
+  /**
+   * Mostrar la vista
+   */
+  show() {
+    if (this.container) {
+      this.container.style.display = '';
     }
   }
 
