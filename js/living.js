@@ -28,27 +28,44 @@ class LivingManager {
             await this.renderAll();
             return;
         }
+        // SIEMPRE renderizar primero, incluso si hay errores
+        // Esto asegura que la página se muestre
         try {
-        // Verificar acceso antes de continuar
-        if (typeof verifyUserAccess === 'function') {
-            const hasAccess = await verifyUserAccess();
-            if (!hasAccess) {
-                    console.warn('⚠️ Usuario no tiene acceso, deteniendo inicialización');
-                return;
+            // Verificar acceso antes de continuar
+            if (typeof verifyUserAccess === 'function') {
+                try {
+                    const hasAccess = await verifyUserAccess();
+                    if (!hasAccess) {
+                        console.warn('⚠️ Usuario no tiene acceso, renderizando sin datos');
+                        await this.renderAll(); // Renderizar de todas formas
+                        this.initialized = true;
+                        return;
+                    }
+                } catch (error) {
+                    console.warn('⚠️ Error verificando acceso:', error);
+                    // Continuar de todas formas
+                }
             }
-        }
 
-        await this.initSupabase();
+            // Intentar inicializar Supabase, pero no bloquear si falla
+            try {
+                await this.initSupabase();
+            } catch (error) {
+                console.warn('⚠️ Error inicializando Supabase:', error);
+                // Continuar sin Supabase
+            }
             
             if (!this.supabase) {
-                console.error('❌ No se pudo inicializar Supabase');
+                console.warn('⚠️ No se pudo inicializar Supabase, renderizando sin datos');
                 await this.renderAll();
+                this.initialized = true;
                 return;
             }
 
             if (!this.userId) {
-                console.warn('⚠️ No hay usuario autenticado');
+                console.warn('⚠️ No hay usuario autenticado, renderizando sin datos');
                 await this.renderAll();
+                this.initialized = true;
                 return;
             }
 
