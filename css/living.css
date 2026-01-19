@@ -99,8 +99,7 @@ body.sidebar-collapsed .living-container {
 
 .featured-card {
     flex: 0 0 auto;
-    width: 400px; /* Ancho fijo para controlar el tamaño base */
-    min-height: 200px; /* Altura mínima */
+    width: 400px; /* Ancho fijo */
     border-radius: 20px;
     overflow: hidden;
     position: relative;
@@ -108,8 +107,8 @@ body.sidebar-collapsed .living-container {
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: var(--living-shadow-medium);
     background: var(--living-bg-card);
-    display: flex;
-    flex-direction: column;
+    /* La altura se ajusta automáticamente según el aspect ratio de la imagen */
+    display: inline-block;
 }
 
 .featured-card:hover {
@@ -128,11 +127,8 @@ body.sidebar-collapsed .living-container {
     width: 100%;
     height: auto;
     z-index: 1;
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 200px;
+    display: block;
+    line-height: 0; /* Eliminar espacio extra debajo de la imagen */
 }
 
 .featured-card-visual::after {
@@ -150,9 +146,8 @@ body.sidebar-collapsed .living-container {
     width: 100%;
     height: auto;
     display: block;
-    /* Mantener el aspect ratio original de la imagen */
-    object-fit: contain;
-    object-position: center;
+    /* La imagen mantiene su aspect ratio natural */
+    /* No usar object-fit para que respete el tamaño original */
 }
 
 .featured-card-visual-placeholder {
