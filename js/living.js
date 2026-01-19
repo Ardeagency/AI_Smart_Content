@@ -633,7 +633,8 @@ class LivingManager {
     }
 
     renderHistoryImageCard(imageUrl, run, output, index, prompt = '') {
-        const finalUrl = imageUrl && imageUrl.startsWith('http') ? imageUrl : null;
+        // Validar URL antes de usarla
+        const finalUrl = imageUrl && this.isValidUrl(imageUrl) ? imageUrl : null;
         const productionId = run?.id || output?.id;
         const cardData = JSON.stringify({
             imageUrl: finalUrl,
