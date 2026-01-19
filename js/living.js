@@ -481,8 +481,8 @@ class LivingManager {
                         
                         return `
                             <div class="living-masonry-item">
-                                ${this.renderCard(finalImageUrl, prompt, index, false)}
-                </div>
+                                ${this.renderCard(finalImageUrl, prompt, index, false, { item: null, output: item.output, run: item.run })}
+                            </div>
                         `;
                     }).join('')}
                 </div>
@@ -604,24 +604,24 @@ class LivingManager {
             prompt: prompt,
             item: itemData
         }).replace(/"/g, '&quot;');
-
-            return `
+        
+        return `
             <div class="featured-card" data-index="${index}" data-image-url="${this.escapeHtml(finalImageUrl || '')}" data-card-info="${this.escapeHtml(cardData)}">
                 <div class="featured-card-visual">
                     ${finalImageUrl
                         ? `<img src="${this.escapeHtml(finalImageUrl)}" alt="${this.escapeHtml(prompt)}" loading="${index < 3 ? 'eager' : 'lazy'}" onerror="this.parentElement.innerHTML='<div class=\\'featured-card-visual-placeholder\\'><i class=\\'fas fa-image\\'></i></div>';" onload="this.style.opacity='1';">`
                         : `<div class="featured-card-visual-placeholder"><i class="fas fa-image"></i></div>`
                     }
-                        </div>
+                </div>
                 <div class="featured-card-prompt-overlay">
                     <div class="featured-card-prompt-title">Prompt</div>
                     <div class="featured-card-prompt-text">${this.escapeHtml(prompt)}</div>
-                    </div>
+                </div>
                 <button class="featured-card-download-btn" title="Descargar imagen" data-image-url="${this.escapeHtml(finalImageUrl || '')}">
                     <i class="fas fa-download"></i>
                 </button>
-                </div>
-            `;
+            </div>
+        `;
     }
 
     setupDownloadButtons(container) {
