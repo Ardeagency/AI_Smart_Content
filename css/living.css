@@ -272,24 +272,26 @@ body.sidebar-collapsed .living-container {
     }
 }
 
-/* Card de producción - más pequeña */
-.featured-card {
-    width: 100%;
-    border-radius: 16px;
+/* Card de producción - para Hero (scroll horizontal) */
+.living-hero-grid .featured-card {
+    flex: 0 0 auto;
+    width: 320px; /* Tamaño cómodo, no apretado */
+    border-radius: 12px; /* Más sutil */
     overflow: hidden;
     position: relative;
-    cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: var(--living-shadow-soft);
+    cursor: default; /* No pide interacción inmediata */
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3); /* Sombra más suave */
     background: var(--living-bg-card);
-    display: block;
-    aspect-ratio: auto;
+    display: inline-block;
+    /* Primero se observa, luego se explora */
 }
 
-.featured-card:hover {
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: var(--living-shadow-medium);
+.living-hero-grid .featured-card:hover {
+    transform: translateY(-2px); /* Movimiento más sutil */
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     z-index: 10;
+    cursor: pointer; /* Solo en hover muestra interacción */
 }
 
 .featured-card:hover {
@@ -462,7 +464,7 @@ body.sidebar-collapsed .living-container {
     
     .featured-card-prompt-title {
     font-size: 0.75rem;
-        margin-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
     }
     
     .featured-card-prompt-text {
