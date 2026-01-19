@@ -416,7 +416,7 @@ class LivingManager {
                 finalImageUrl = this.getPublicUrlFromStorage('production-outputs', item.storage_path);
             }
             
-            return this.renderCard(finalImageUrl, prompt, index, true);
+            return this.renderCard(finalImageUrl, prompt, index, true, { item: item, output: null, run: null });
         }).join('');
         
         this.setupDownloadButtons(heroGrid);
@@ -597,35 +597,31 @@ class LivingManager {
         `).join('');
     }
 
-    renderCard(imageUrl, prompt, index, isHero = false) {
+    renderCard(imageUrl, prompt, index, isHero = false, itemData = null) {
         const finalImageUrl = imageUrl && imageUrl.startsWith('http') ? imageUrl : null;
-        const cardId = `card-${index}-${Date.now()}`;
-        
-        return `
-            <div class="featured-card" 
-                 data-index="${index}" 
-                 data-image-url="${this.escapeHtml(finalImageUrl || '')}"
-                 data-prompt="${this.escapeHtml(prompt)}"
-                 data-card-id="${cardId}">
+        const cardData = JSON.stringify({
+            imageUrl: finalImageUrl,
+            prompt: prompt,
+            item: itemData
+        }).replace(/"/g, '&quot;');
+
+            return `
+            <div class="featured-card" data-index="${index}" data-image-url="${this.escapeHtml(finalImageUrl || '')}" data-card-info="${this.escapeHtml(cardData)}">
                 <div class="featured-card-visual">
                     ${finalImageUrl
                         ? `<img src="${this.escapeHtml(finalImageUrl)}" alt="${this.escapeHtml(prompt)}" loading="${index < 3 ? 'eager' : 'lazy'}" onerror="this.parentElement.innerHTML='<div class=\\'featured-card-visual-placeholder\\'><i class=\\'fas fa-image\\'></i></div>';" onload="this.style.opacity='1';">`
                         : `<div class="featured-card-visual-placeholder"><i class="fas fa-image"></i></div>`
                     }
-                </div>
-                ${!isHero ? `
-                    <div class="featured-card-prompt-overlay">
-                        <div class="featured-card-prompt-title">Prompt</div>
-                        <div class="featured-card-prompt-text">${this.escapeHtml(prompt)}</div>
+                        </div>
+                <div class="featured-card-prompt-overlay">
+                    <div class="featured-card-prompt-title">Prompt</div>
+                    <div class="featured-card-prompt-text">${this.escapeHtml(prompt)}</div>
                     </div>
-                ` : ''}
-                <button class="featured-card-download-btn" 
-                        title="Descargar producción" 
-                        data-image-url="${this.escapeHtml(finalImageUrl || '')}">
+                <button class="featured-card-download-btn" title="Descargar imagen" data-image-url="${this.escapeHtml(finalImageUrl || '')}">
                     <i class="fas fa-download"></i>
                 </button>
-            </div>
-        `;
+                </div>
+            `;
     }
 
     setupDownloadButtons(container) {

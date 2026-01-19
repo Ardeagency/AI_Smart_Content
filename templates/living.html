@@ -69,3 +69,28 @@
             </section>
         </div>
     </main>
+
+    <!-- Modal de Visualización -->
+    <div class="living-viewer-modal" id="livingViewerModal">
+        <div class="living-viewer-backdrop" id="livingViewerBackdrop"></div>
+        <div class="living-viewer-container">
+            <button class="living-viewer-close" id="livingViewerClose">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="living-viewer-content">
+                <div class="living-viewer-image-section">
+                    <img id="livingViewerImage" src="" alt="" />
+                </div>
+                <div class="living-viewer-info-section">
+                    <div class="living-viewer-prompt">
+                        <h3 class="living-viewer-prompt-title">Prompt</h3>
+                        <div class="living-viewer-prompt-text" id="livingViewerPrompt"></div>
+                    </div>
+                    <div class="living-viewer-metadata">
+                        <h3 class="living-viewer-metadata-title">Metadatos</h3>
+                        <div class="living-viewer-metadata-content" id="livingViewerMetadata"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>

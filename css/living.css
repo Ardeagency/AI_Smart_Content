@@ -72,53 +72,42 @@ body.sidebar-collapsed .living-container {
 
 /* ============================================
    SECCIÓN 1: HERO/ENCABEZADO - Producciones Automatizadas
-   Escaparate vivo, mesa de edición, tanda reciente
+   Jerarquía: Protagonista absoluto, mesa de edición, daily output
    ============================================ */
 .living-hero-section {
     padding: 4rem 4rem 5rem;
     max-width: 1800px;
     margin: 0 auto;
-    display: flex;
-    justify-content: center;
+    /* Aire alrededor, no full-width */
 }
 
-/* Contenedor encapsulado - NO full-width, bordes redondeados, mucho aire */
 .living-hero-container {
-    max-width: 1400px;
-    width: 100%;
+    max-width: 1200px; /* Más estrecho para dar aire */
     margin: 0 auto;
-    background: var(--living-bg-surface);
-    border-radius: 24px; /* Bordes suavemente redondeados */
-    padding: 3rem 4rem;
-    box-shadow: 0 8px 48px rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    /* Nunca toca los bordes de la pantalla */
+    /* El contenedor respira */
 }
 
 .living-hero-title {
     font-size: 1.5rem;
-    font-weight: 500;
+    font-weight: 500; /* Más sutil, no grita */
     color: var(--living-text-light);
-    margin-bottom: 2.5rem;
+    margin-bottom: 2.5rem; /* Más espacio */
     letter-spacing: -0.3px;
-    opacity: 0.9;
+    opacity: 0.9; /* No compite con las imágenes */
     text-transform: none;
     font-style: normal;
 }
 
-/* Scroll horizontal con peek - cards visibles parcialmente */
 .living-hero-grid {
     display: flex;
-    gap: 1.5rem;
+    gap: 2rem; /* Más espacio entre cards, respiran */
     overflow-x: auto;
     overflow-y: hidden;
-    padding: 1rem 0 2rem;
+    padding: 1rem 0 2rem; /* Aire arriba y abajo */
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
-    scrollbar-color: rgba(212, 117, 78, 0.15) transparent;
-    /* Peek: mostrar parte de la siguiente card */
-    padding-right: 2rem;
+    scrollbar-color: rgba(212, 117, 78, 0.2) transparent; /* Más sutil */
 }
 
 .living-hero-grid::-webkit-scrollbar {
@@ -284,53 +273,33 @@ body.sidebar-collapsed .living-container {
 }
 
 /* Card de producción - para Hero (scroll horizontal) */
-/* REGLA MADRE: La imagen nunca se adapta al layout. El layout se adapta a la imagen. */
 .living-hero-grid .featured-card {
     flex: 0 0 auto;
-    width: 360px; /* Ancho consistente */
-    /* Altura NO fija - se adapta al aspect ratio de la imagen */
-    border-radius: 12px;
+    width: 260px; /* Más pequeñas */
+    border-radius: 12px; /* Más sutil */
     overflow: hidden;
     position: relative;
-    cursor: default;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-    background: rgba(21, 23, 28, 0.4); /* Fondo neutro oscuro/transparente */
+    cursor: pointer; /* Ahora sí pide interacción para abrir modal */
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3); /* Sombra más suave */
+    background: var(--living-bg-card);
     display: inline-block;
-    /* Card = envoltorio, no marco. La imagen manda. */
 }
 
-/* Estado base: Imagen pura, sin texto, sin overlays */
-.living-hero-grid .featured-card .featured-card-prompt-overlay {
-    display: none; /* Oculto en estado base */
-}
-
-.living-hero-grid .featured-card .featured-card-download-btn {
-    opacity: 0;
-    transform: scale(0.9);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Hover: Solo ícono de descarga flotante, discreto */
 .living-hero-grid .featured-card:hover {
-    transform: translateY(-3px); /* Micro elevación */
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    transform: translateY(-2px); /* Movimiento más sutil */
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     z-index: 10;
-    cursor: pointer;
 }
 
-.living-hero-grid .featured-card:hover .featured-card-download-btn {
-    opacity: 1;
-    transform: scale(1);
+.featured-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: var(--living-shadow-deep);
+    z-index: 10;
 }
 
-/* Leve brillo en hover */
-.living-hero-grid .featured-card:hover .featured-card-visual {
-    filter: brightness(1.05);
-}
-
-/* Overlay oscuro en hover - solo para masonry, no para hero */
-.living-masonry-item .featured-card:hover .featured-card-visual::after {
+/* Overlay oscuro en hover */
+.featured-card:hover .featured-card-visual::after {
     opacity: 1;
 }
 
@@ -354,27 +323,12 @@ body.sidebar-collapsed .living-container {
     pointer-events: none;
 }
 
-/* Imagen respeta formato original - sin recorte, sin fill forzado, sin crop */
-/* REGLA MADRE: La imagen nunca se adapta al layout. El layout se adapta a la imagen. */
-.featured-card-visual {
-    position: relative;
-    width: 100%;
-    height: auto; /* Altura se adapta al aspect ratio de la imagen */
-    z-index: 1;
-    display: block;
-    line-height: 0;
-    background: transparent; /* Fondo transparente para que la imagen sea protagonista */
-}
-
 .featured-card-visual img {
     width: 100%;
     height: auto;
     display: block;
-    /* Formato libre: horizontal → horizontal, vertical → vertical, cuadrado → cuadrado */
-    /* Sin object-fit: cover - respetamos el material original */
-    object-fit: contain; /* Mostrar imagen completa sin recortar */
-    object-position: center;
-    /* Sin altura fija - el ritmo visual se vuelve editorial, no matemático */
+    /* La imagen mantiene su aspect ratio natural */
+    /* No usar object-fit para que respete el tamaño original */
 }
 
 .featured-card-visual-placeholder {
@@ -454,17 +408,17 @@ body.sidebar-collapsed .living-container {
     border-radius: 2px;
 }
 
-/* Botón de descarga - flotante, discreto, profesional */
+/* Botón de descarga - esquina inferior derecha */
 .featured-card-download-btn {
     position: absolute;
-    bottom: 1.25rem;
-    right: 1.25rem;
-    width: 44px;
-    height: 44px;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
-    background: rgba(0, 0, 0, 0.75);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     color: var(--living-text-light);
     cursor: pointer;
     display: flex;
@@ -472,33 +426,18 @@ body.sidebar-collapsed .living-container {
     justify-content: center;
     z-index: 4;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-    /* Aparece flotando, no botón duro */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .featured-card-download-btn:hover {
-    background: rgba(212, 117, 78, 0.85);
-    border-color: rgba(212, 117, 78, 0.4);
-    transform: scale(1.05);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    background: rgba(212, 117, 78, 0.9);
+    border-color: rgba(212, 117, 78, 0.5);
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
 .featured-card-download-btn i {
-    font-size: 1rem;
-}
-
-/* Para hero: botón más discreto */
-.living-hero-grid .featured-card-download-btn {
-    width: 40px;
-    height: 40px;
-    bottom: 1rem;
-    right: 1rem;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(8px);
-}
-
-.living-hero-grid .featured-card-download-btn:hover {
-    background: rgba(212, 117, 78, 0.8);
+    font-size: 1.125rem;
 }
 
 /* Responsive */
