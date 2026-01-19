@@ -22,16 +22,16 @@ class LivingManager {
 
     async init() {
         try {
-            // Verificar acceso antes de continuar
-            if (typeof verifyUserAccess === 'function') {
-                const hasAccess = await verifyUserAccess();
-                if (!hasAccess) {
+        // Verificar acceso antes de continuar
+        if (typeof verifyUserAccess === 'function') {
+            const hasAccess = await verifyUserAccess();
+            if (!hasAccess) {
                     console.warn('⚠️ Usuario no tiene acceso, deteniendo inicialización');
-                    return;
-                }
+                return;
             }
+        }
 
-            await this.initSupabase();
+        await this.initSupabase();
             
             if (!this.supabase) {
                 console.error('❌ No se pudo inicializar Supabase');
@@ -393,42 +393,66 @@ class LivingManager {
         const featuredGrid = document.getElementById('livingFeaturedGrid');
         if (!featuredGrid) return;
         
-        // Obtener las 2 mejores producciones (de RPC o flow outputs)
+        // Obtener las mejores producciones (de RPC o flow outputs) - más cards para scroll horizontal
         const latestContent = this.latestGeneratedContent || [];
         let featuredItems = [];
         
-        if (latestContent.length >= 2) {
-            featuredItems = latestContent.slice(0, 2);
-        } else if (this.flowRuns.length >= 2) {
-            // Usar flow runs si no hay suficiente contenido de RPC
-            featuredItems = this.flowRuns.slice(0, 2).map(run => {
-                const output = this.flowOutputs.find(o => o.run_id === run.id);
-                return {
-                    title: run.status || 'Producción',
-                    image_url: output?.file_url || null,
-                    run: run
-                };
-            });
-        } else if (latestContent.length === 1 || this.flowRuns.length === 1) {
-            // Si solo hay una, duplicarla o usar placeholder
-            const item = latestContent[0] || this.flowRuns[0];
-            featuredItems = [item, item];
+        // Priorizar contenido de RPC
+        if (latestContent.length > 0) {
+            featuredItems = latestContent.slice(0, 8).map(item => ({
+                title: item.prompt_used || item.title || 'Producción destacada',
+                image_url: item.image_url || item.url || item.storage_url || item.file_url,
+                item: item
+            }));
         }
         
-        // Si no hay contenido, mostrar placeholders
+        // Si no hay suficiente contenido de RPC, completar con flow runs
+        if (featuredItems.length < 8 && this.flowRuns.length > 0) {
+            const flowRunItems = this.flowRuns.slice(0, 8 - featuredItems.length).map(run => {
+                const output = this.flowOutputs.find(o => o.run_id === run.id);
+                return {
+                    title: run.status || output?.prompt_used || 'Producción',
+                    image_url: output?.file_url || output?.storage_path || null,
+                    run: run,
+                    output: output
+                };
+            });
+            featuredItems = [...featuredItems, ...flowRunItems];
+        }
+        
+        // Si no hay contenido, mostrar placeholders aspiracionales
         if (featuredItems.length === 0) {
             featuredItems = [
                 { title: 'Create cinematic content', image_url: null },
-                { title: 'Visuals, motion and storytelling', image_url: null }
+                { title: 'Visuals, motion and storytelling', image_url: null },
+                { title: 'Selected projects from the last month', image_url: null },
+                { title: 'Otherworldly places located on Earth', image_url: null },
+                { title: 'Visualizing distorted sound mixes', image_url: null }
             ];
         }
         
-        featuredGrid.innerHTML = featuredItems.slice(0, 2).map((item, index) => {
+        featuredGrid.innerHTML = featuredItems.map((item, index) => {
             const imageUrl = item.image_url || item.url || item.storage_url;
             const title = item.title || item.prompt_used || 'Producción destacada';
             
+            // Construir URL completa si es necesario
+            let finalImageUrl = imageUrl;
+            if (imageUrl && !imageUrl.startsWith('http') && item.output) {
+                // Intentar construir URL desde storage_path
+                const storagePath = item.output.storage_path || item.output.storage_object_id;
+                if (storagePath) {
+                    finalImageUrl = this.getPublicUrlFromStorage('production-outputs', storagePath) || imageUrl;
+                }
+            }
+            
             return `
-                <div class="featured-card">
+                <div class="featured-card" data-index="${index}">
+                    <div class="featured-card-visual">
+                        ${finalImageUrl && finalImageUrl.startsWith('http')
+                            ? `<img src="${this.escapeHtml(finalImageUrl)}" alt="${this.escapeHtml(title)}" loading="${index < 3 ? 'eager' : 'lazy'}" onerror="this.parentElement.innerHTML='<div class=\\'featured-card-visual-placeholder\\'><i class=\\'fas fa-image\\'></i></div>';" onload="this.style.opacity='1';">`
+                            : `<div class="featured-card-visual-placeholder"><i class="fas fa-image"></i></div>`
+                        }
+                    </div>
                     <div class="featured-card-content">
                         <h2 class="featured-card-title">${this.escapeHtml(title)}</h2>
                         <button class="featured-card-button">
@@ -436,15 +460,16 @@ class LivingManager {
                             <span>Ver producción</span>
                         </button>
                     </div>
-                    <div class="featured-card-visual">
-                        ${imageUrl 
-                            ? `<img src="${this.escapeHtml(imageUrl)}" alt="${this.escapeHtml(title)}" loading="eager" onerror="this.parentElement.innerHTML='<div class=\\'featured-card-visual-placeholder\\'><i class=\\'fas fa-image\\'></i></div>';">`
-                            : `<div class="featured-card-visual-placeholder"><i class="fas fa-image"></i></div>`
-                        }
-                    </div>
                 </div>
             `;
         }).join('');
+        
+        // Agregar estilos para transición suave de imágenes
+        const images = featuredGrid.querySelectorAll('.featured-card-visual img');
+        images.forEach(img => {
+            img.style.opacity = '0';
+            img.style.transition = 'opacity 0.5s ease';
+        });
     }
 
     renderContentGrid(runs = null) {
@@ -463,14 +488,14 @@ class LivingManager {
             `;
             return;
         }
-        
+
         contentGrid.innerHTML = allProductions.map(run => {
             const imageOutput = this.flowOutputs.find(output => output.run_id === run.id);
             const contentType = this.getContentType(run, imageOutput);
             const imageUrl = imageOutput?.file_url || imageOutput?.storage_path || null;
             const title = run.status || contentType || 'Producción';
             const year = new Date(run.created_at || Date.now()).getFullYear();
-            
+
             return `
                 <div class="content-card" data-run-id="${run.id}">
                     <div class="content-card-image-container">
