@@ -508,7 +508,7 @@ class LivingManager {
                     }
                 }
                 
-                return this.renderVideoCard(thumbnailUrl, item.run, item.output, index);
+                return this.renderVideoCard(thumbnailUrl, item.run, item.output, index, item.prompt);
             }).join('');
             
             this.setupHistoryCardListeners(videosContainer, 'video');
@@ -517,11 +517,7 @@ class LivingManager {
         // Renderizar imágenes y textos (masonry)
         const allVisualItems = [...images, ...texts];
         if (allVisualItems.length === 0) {
-            imagesContainer.innerHTML = `
-                <div style="text-align: center; padding: 2rem; color: var(--living-text-muted); opacity: 0.6;">
-                    <p style="font-size: 0.875rem;">Sin producciones ejecutadas</p>
-                </div>
-            `;
+            imagesContainer.innerHTML = this.renderEmptyState();
         } else {
             imagesContainer.innerHTML = allVisualItems.map((item, index) => {
                 if (item.contentType === 'text') {
@@ -534,7 +530,7 @@ class LivingManager {
                             imageUrl = this.getPublicUrlFromStorage('production-outputs', storagePath) || imageUrl;
                         }
                     }
-                    return this.renderHistoryImageCard(imageUrl, item.run, item.output, index);
+                    return this.renderHistoryImageCard(imageUrl, item.run, item.output, index, item.prompt);
                 }
             }).join('');
             
@@ -542,70 +538,153 @@ class LivingManager {
         }
     }
     
-    renderVideoCard(thumbnailUrl, run, output, index) {
+    renderVideoCard(thumbnailUrl, run, output, index, prompt = '') {
         const finalUrl = thumbnailUrl && thumbnailUrl.startsWith('http') ? thumbnailUrl : null;
         const productionId = run?.id || output?.id;
+        const cardData = JSON.stringify({
+            imageUrl: finalUrl,
+            prompt: prompt,
+            item: { run: run, output: output }
+        }).replace(/"/g, '&quot;');
+        
+        // Obtener duración si está disponible (ejemplo, podría venir de metadata)
+        const duration = output?.duration || run?.duration || null;
         
         return `
-            <div class="history-video-card" data-production-id="${productionId}" data-run-id="${run?.id || ''}">
+            <div class="history-video-card" data-production-id="${productionId}" data-run-id="${run?.id || ''}" data-card-info="${this.escapeHtml(cardData)}">
                 ${finalUrl
-                    ? `<img src="${this.escapeHtml(finalUrl)}" alt="Video thumbnail" class="history-video-card-thumbnail" loading="lazy" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'history-video-card-thumbnail\\' style=\\'background: var(--living-bg-deep); display: flex; align-items: center; justify-content: center;\\'><i class=\\'fas fa-video\\' style=\\'font-size: 2rem; color: var(--living-text-muted);\\'></i></div>';" />`
-                    : `<div class="history-video-card-thumbnail" style="background: var(--living-bg-deep); display: flex; align-items: center; justify-content: center;">
+                    ? `<img src="${this.escapeHtml(finalUrl)}" alt="Video thumbnail" class="history-video-card-thumbnail" loading="lazy" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'history-video-card-thumbnail\\' style=\\'background: #0F1115; display: flex; align-items: center; justify-content: center;\\'><i class=\\'fas fa-video\\' style=\\'font-size: 2rem; color: var(--living-text-muted);\\'></i></div>';" />`
+                    : `<div class="history-video-card-thumbnail" style="background: #0F1115; display: flex; align-items: center; justify-content: center;">
                         <i class="fas fa-video" style="font-size: 2rem; color: var(--living-text-muted);"></i>
                     </div>`
                 }
                 <div class="history-video-card-overlay">
+                    <div class="history-video-card-icons">
+                        <div class="history-video-card-icon" title="Video">
+                            <i class="fas fa-video"></i>
+                    </div>
+                        <div class="history-video-card-icon history-video-download" title="Descargar" data-image-url="${this.escapeHtml(finalUrl || '')}">
+                            <i class="fas fa-download"></i>
+                    </div>
+                </div>
                     <div class="history-video-card-play">
                         <i class="fas fa-play"></i>
-                    </div>
-                    </div>
+                </div>
+                    ${duration ? `<div class="history-video-card-duration">${duration}</div>` : ''}
+                </div>
                 </div>
             `;
     }
 
-    renderHistoryImageCard(imageUrl, run, output, index) {
+    renderHistoryImageCard(imageUrl, run, output, index, prompt = '') {
         const finalUrl = imageUrl && imageUrl.startsWith('http') ? imageUrl : null;
         const productionId = run?.id || output?.id;
+        const cardData = JSON.stringify({
+            imageUrl: finalUrl,
+            prompt: prompt,
+            item: { run: run, output: output }
+        }).replace(/"/g, '&quot;');
         
         return `
             <div class="living-masonry-item">
-                <div class="history-image-card" data-production-id="${productionId}" data-run-id="${run?.id || ''}">
+                <div class="history-image-card" data-production-id="${productionId}" data-run-id="${run?.id || ''}" data-card-info="${this.escapeHtml(cardData)}">
                     ${finalUrl
                         ? `<img src="${this.escapeHtml(finalUrl)}" alt="Producción" loading="lazy" onerror="this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: var(--living-text-muted);\\'><i class=\\'fas fa-image\\'></i></div>';" />`
                         : `<div style="padding: 2rem; text-align: center; color: var(--living-text-muted);">
                             <i class="fas fa-image" style="font-size: 2rem;"></i>
                         </div>`
                     }
+                    <div class="history-image-card-overlay">
+                        <div class="history-image-card-actions">
+                            <div class="history-image-card-action history-image-download" title="Descargar producción" data-image-url="${this.escapeHtml(finalUrl || '')}">
+                                <i class="fas fa-download"></i>
                 </div>
-                </div>
-            `;
-    }
-    
-    renderTextCard(run, output, index) {
-        const productionId = run?.id || output?.id;
-
-            return `
-            <div class="living-masonry-item">
-                <div class="history-text-card" data-production-id="${productionId}" data-run-id="${run?.id || ''}">
-                    <div class="history-text-card-icon">?</div>
+                            <div class="history-image-card-action history-image-view" title="Ver detalles">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                        </div>
+                    </div>
                     </div>
                 </div>
             `;
     }
 
+    renderTextCard(run, output, index) {
+        const productionId = run?.id || output?.id;
+        
+        return `
+            <div class="living-masonry-item">
+                <div class="history-text-card" data-production-id="${productionId}" data-run-id="${run?.id || ''}">
+                    <div class="history-text-card-icon">?</div>
+                    <div class="history-text-card-title">Producción de texto</div>
+                </div>
+                </div>
+            `;
+    }
+    
+    renderEmptyState() {
+            return `
+            <div class="living-history-empty">
+                <div class="living-history-empty-illustration"></div>
+                <h3 class="living-history-empty-title">Aún no hay historial</h3>
+                <p class="living-history-empty-description">
+                    Cuando ejecutes flujos y generes contenido, aquí quedará registrado todo tu trabajo creativo.
+                </p>
+                <a href="#" class="living-history-empty-cta" onclick="if(window.router){window.router.navigate('/production');return false;}">Ir a Producción</a>
+                </div>
+            `;
+    }
+
     setupHistoryCardListeners(container, type) {
+        // Click en cards para abrir vista editorial (modal)
         const cards = container.querySelectorAll(`.history-${type}-card, .history-text-card`);
         cards.forEach(card => {
             card.addEventListener('click', (e) => {
-                const productionId = card.dataset.productionId;
-                const runId = card.dataset.runId;
+                // No abrir si se clickeó un botón de acción
+                if (e.target.closest('.history-video-card-icon, .history-image-card-action')) {
+                    return;
+                }
                 
-                if (productionId || runId) {
-                    // Redirigir a vista de producción
-                    // TODO: Implementar navegación a vista de producción
-                    console.log('📋 Redirigiendo a producción:', { productionId, runId });
-                    // Por ahora, podríamos usar el router o navegación de la app
-                    // window.location.href = `/production/${productionId || runId}`;
+                const cardData = card.dataset.cardInfo;
+                if (cardData) {
+                    try {
+                        const unescapedData = cardData.replace(/&quot;/g, '"');
+                        const data = JSON.parse(unescapedData);
+                        this.openViewerModal(data);
+                    } catch (error) {
+                        console.error('Error parsing card data:', error);
+                    }
+                }
+            });
+        });
+        
+        // Botones de descarga
+        const downloadBtns = container.querySelectorAll('.history-video-download, .history-image-download');
+        downloadBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const imageUrl = btn.dataset.imageUrl;
+                if (imageUrl && imageUrl.startsWith('http')) {
+                    this.downloadImage(imageUrl);
+                }
+            });
+        });
+        
+        // Botón ver detalles (imágenes)
+        const viewBtns = container.querySelectorAll('.history-image-view');
+        viewBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const card = btn.closest('.history-image-card');
+                const cardData = card?.dataset.cardInfo;
+                if (cardData) {
+                    try {
+                        const unescapedData = cardData.replace(/&quot;/g, '"');
+                        const data = JSON.parse(unescapedData);
+                        this.openViewerModal(data);
+                    } catch (error) {
+                        console.error('Error parsing card data:', error);
+                    }
                 }
             });
         });

@@ -140,34 +140,35 @@ body.sidebar-collapsed .living-container {
     margin: 0 auto;
 }
 
-/* Sección 2: Historial de Producciones (Izquierda) */
-/* Archivo editorial, línea de tiempo del trabajo */
+/* Sección 2: Historial de Producciones - Archivo Operativo */
+/* Mentalidad: Productora / Estudio / Archivo creativo */
 .living-history-section {
     display: flex;
     flex-direction: column;
-    gap: 3rem;
+    gap: 4rem;
     min-height: 400px;
+    padding-top: 2rem;
 }
 
-/* Sub-sección 2A: Videos - Bandeja de ediciones */
+/* Sub-sección 2A: Videos - Strip editorial horizontal */
 .living-history-videos {
     width: 100%;
 }
 
 .living-history-videos-container {
     display: flex;
-    gap: 1rem;
+    gap: 1.5rem; /* Separación generosa */
     overflow-x: auto;
     overflow-y: hidden;
-    padding: 0.5rem 0 1rem;
+    padding: 1rem 0 2rem;
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
-    scrollbar-color: rgba(212, 117, 78, 0.2) transparent;
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
 }
 
 .living-history-videos-container::-webkit-scrollbar {
-    height: 6px;
+    height: 4px;
 }
 
 .living-history-videos-container::-webkit-scrollbar-track {
@@ -175,35 +176,58 @@ body.sidebar-collapsed .living-container {
 }
 
 .living-history-videos-container::-webkit-scrollbar-thumb {
-    background: rgba(212, 117, 78, 0.3);
-    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 2px;
 }
 
-/* Card de video */
+/* Card de video - Flotante, profesional */
 .history-video-card {
     flex: 0 0 auto;
-    width: 280px;
-    border-radius: 8px;
+    width: 300px;
+    height: 200px; /* Altura consistente */
+    border-radius: 16px; /* Bordes redondeados grandes */
     overflow: hidden;
     position: relative;
     cursor: pointer;
-    background: var(--living-bg-deep);
-    transition: transform 0.2s ease;
+    background: #0F1115; /* Fondo negro suave */
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); /* Sombra muy difusa */
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Lento y pesado */
+    opacity: 0;
+    animation: fadeInCard 0.6s ease-out forwards;
 }
 
+@keyframes fadeInCard {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.history-video-card:nth-child(1) { animation-delay: 0.1s; }
+.history-video-card:nth-child(2) { animation-delay: 0.15s; }
+.history-video-card:nth-child(3) { animation-delay: 0.2s; }
+.history-video-card:nth-child(4) { animation-delay: 0.25s; }
+.history-video-card:nth-child(5) { animation-delay: 0.3s; }
+.history-video-card:nth-child(n+6) { animation-delay: 0.35s; }
+
 .history-video-card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
 }
 
 .history-video-card-thumbnail {
     width: 100%;
-    height: auto;
+    height: 100%;
     display: block;
-    aspect-ratio: 16/9;
-    object-fit: cover;
-    background: var(--living-bg-deep);
+    object-fit: cover; /* Respeta formato original */
+    background: #0F1115;
 }
 
+/* Overlay mínimo - Solo iconos esenciales */
 .history-video-card-overlay {
     position: absolute;
     inset: 0;
@@ -211,27 +235,61 @@ body.sidebar-collapsed .living-container {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.2s ease;
+    transition: background 0.3s ease;
     pointer-events: none;
 }
 
 .history-video-card:hover .history-video-card-overlay {
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.3);
 }
 
-.history-video-card-play {
-    width: 48px;
-    height: 48px;
+/* Iconos mínimos en overlay */
+.history-video-card-icons {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    gap: 8px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.history-video-card:hover .history-video-card-icons {
+    opacity: 1;
+}
+
+.history-video-card-icon {
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--living-bg-deep);
+    color: var(--living-text-light);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.history-video-card-icon:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.history-video-card-play {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #0F1115;
     font-size: 1.25rem;
     opacity: 0;
-    transform: scale(0.8);
-    transition: all 0.2s ease;
+    transform: scale(0.9);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .history-video-card:hover .history-video-card-play {
@@ -239,76 +297,236 @@ body.sidebar-collapsed .living-container {
     transform: scale(1);
 }
 
-/* Sub-sección 2B: Imágenes - Archivo editorial (Masonry funcional) */
+/* Duración del video (si aplica) */
+.history-video-card-duration {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    color: var(--living-text-light);
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.history-video-card:hover .history-video-card-duration {
+    opacity: 1;
+}
+
+/* Sub-sección 2B: Imágenes - Masonry real, profesional */
 .living-history-images {
     width: 100%;
 }
 
 .living-masonry-grid {
     column-count: 3;
-    column-gap: 1rem;
+    column-gap: 1.5rem; /* Más espacio */
     column-fill: balance;
 }
 
 .living-masonry-item {
     break-inside: avoid;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
     page-break-inside: avoid;
     display: inline-block;
     width: 100%;
 }
 
-/* Card de imagen (historial) */
+/* Card de imagen - Flotante sobre fondo oscuro */
 .history-image-card {
     width: 100%;
-    border-radius: 6px;
+    border-radius: 12px; /* Border radius medio */
     overflow: hidden;
     position: relative;
     cursor: pointer;
-    background: var(--living-bg-deep);
-    transition: opacity 0.2s ease;
+    background: transparent; /* Sin fondo sólido */
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2); /* Sombra muy suave */
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0;
+    animation: fadeInCard 0.6s ease-out forwards;
 }
 
+.living-masonry-item:nth-child(1) .history-image-card { animation-delay: 0.1s; }
+.living-masonry-item:nth-child(2) .history-image-card { animation-delay: 0.15s; }
+.living-masonry-item:nth-child(3) .history-image-card { animation-delay: 0.2s; }
+.living-masonry-item:nth-child(4) .history-image-card { animation-delay: 0.25s; }
+.living-masonry-item:nth-child(5) .history-image-card { animation-delay: 0.3s; }
+.living-masonry-item:nth-child(n+6) .history-image-card { animation-delay: 0.35s; }
+
 .history-image-card:hover {
-    opacity: 0.85;
+    transform: scale(1.02); /* Zoom sutil */
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .history-image-card img {
     width: 100%;
     height: auto;
     display: block;
-    object-fit: contain;
+    object-fit: contain; /* Respeta 100% su ratio */
 }
 
-/* Card de texto (producciones sin imagen) */
-.history-text-card {
-    width: 100%;
-    min-height: 200px;
-    border-radius: 6px;
-    background: var(--living-bg-card);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+/* Overlay al hover - Acciones mínimas */
+.history-image-card-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0);
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding: 12px;
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+.history-image-card:hover .history-image-card-overlay {
+    background: rgba(0, 0, 0, 0.4);
+    opacity: 1;
+}
+
+.history-image-card-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.history-image-card-action {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
     justify-content: center;
+    color: var(--living-text-light);
+    font-size: 0.875rem;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background 0.2s ease;
+    pointer-events: all;
+}
+
+.history-image-card-action:hover {
+    background: rgba(0, 0, 0, 0.9);
+}
+
+/* Card de texto - Minimalista, elegante */
+.history-text-card {
+    width: 100%;
+    min-height: 200px;
+    border-radius: 12px;
+    background: rgba(15, 17, 21, 0.6); /* Fondo oscuro ligeramente elevado */
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
+    padding: 2rem;
+    opacity: 0;
+    animation: fadeInCard 0.6s ease-out forwards;
 }
 
 .history-text-card:hover {
-    background: var(--living-bg-card-hover);
+    background: rgba(15, 17, 21, 0.8);
     border-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 .history-text-card-icon {
-    font-size: 2rem;
+    font-size: 2.5rem;
     color: var(--living-text-muted);
-    opacity: 0.5;
+    opacity: 0.4;
     font-weight: 300;
+    transition: opacity 0.3s ease;
+}
+
+.history-text-card-title {
+    font-size: 0.875rem;
+    color: var(--living-text-muted);
+    text-align: center;
+    opacity: 0.7;
 }
 
 .history-text-card:hover .history-text-card-icon {
+    opacity: 0.6;
+}
+
+/* Estado vacío - Aspiracional y elegante */
+.living-history-empty {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--living-text-muted);
+}
+
+.living-history-empty-illustration {
+    width: 200px;
+    height: 200px;
+    margin: 0 auto 2rem;
+    opacity: 0.3;
+    background: linear-gradient(135deg, 
+        rgba(212, 117, 78, 0.1) 0%, 
+        rgba(184, 93, 58, 0.05) 50%,
+        transparent 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.living-history-empty-illustration::before {
+    content: '';
+    position: absolute;
+    inset: 20px;
+    border: 2px solid rgba(212, 117, 78, 0.2);
+    border-radius: 50%;
+    border-style: dashed;
+}
+
+.living-history-empty-title {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--living-text-light);
+    margin-bottom: 0.75rem;
+    opacity: 0.9;
+}
+
+.living-history-empty-description {
+    font-size: 0.938rem;
+    line-height: 1.6;
+    color: var(--living-text-muted);
+    margin-bottom: 2rem;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
     opacity: 0.7;
+}
+
+.living-history-empty-cta {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background: var(--living-bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: var(--living-text-light);
+    font-size: 0.875rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    opacity: 0.8;
+}
+
+.living-history-empty-cta:hover {
+    background: var(--living-bg-card-hover);
+    border-color: rgba(255, 255, 255, 0.2);
+    opacity: 1;
+    transform: translateY(-1px);
 }
 
 /* Sección 3: Destacados / Control (Derecha) */
@@ -840,7 +1058,7 @@ body.sidebar-collapsed .living-container {
     
     .featured-card-visual {
         width: 100%;
-        max-width: 400px;
+    max-width: 400px;
     }
     
     .living-content-grid {
@@ -884,7 +1102,7 @@ body.sidebar-collapsed .living-container {
     
     .living-content-grid {
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 1rem;
+    gap: 1rem;
     }
 }
 
