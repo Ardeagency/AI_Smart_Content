@@ -446,9 +446,17 @@ class LivingManager {
             let finalImageUrl = imageUrl;
             
             // Si no hay URL directa pero hay storage_path, intentar construirla
+            // Solo intentar si la URL actual no es válida
             if (!finalImageUrl || !this.isValidUrl(finalImageUrl)) {
-                if (item.storage_path) {
-                    finalImageUrl = this.getPublicUrlFromStorage('production-outputs', item.storage_path);
+                if (item.storage_path && typeof item.storage_path === 'string' && item.storage_path.trim().length > 0) {
+                    try {
+                        finalImageUrl = this.getPublicUrlFromStorage('production-outputs', item.storage_path);
+                    } catch (error) {
+                        console.warn('⚠️ Error construyendo URL desde storage_path:', error);
+                        finalImageUrl = null;
+                    }
+                } else {
+                    finalImageUrl = null;
                 }
             }
             
