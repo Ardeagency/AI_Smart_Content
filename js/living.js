@@ -444,8 +444,18 @@ class LivingManager {
             
             // Construir URL completa si es necesario
             let finalImageUrl = imageUrl;
-            if (!finalImageUrl && item.storage_path) {
-                finalImageUrl = this.getPublicUrlFromStorage('production-outputs', item.storage_path);
+            
+            // Si no hay URL directa pero hay storage_path, intentar construirla
+            if (!finalImageUrl || !this.isValidUrl(finalImageUrl)) {
+                if (item.storage_path) {
+                    finalImageUrl = this.getPublicUrlFromStorage('production-outputs', item.storage_path);
+                }
+            }
+            
+            // Validar URL final antes de renderizar
+            if (finalImageUrl && !this.isValidUrl(finalImageUrl)) {
+                console.warn('⚠️ URL inválida descartada para item:', item.id || index, finalImageUrl);
+                finalImageUrl = null;
             }
             
             return this.renderCard(finalImageUrl, prompt, index, true, { item: item, output: null, run: null });
@@ -559,7 +569,8 @@ class LivingManager {
     }
     
     renderVideoCard(thumbnailUrl, run, output, index, prompt = '') {
-        const finalUrl = thumbnailUrl && thumbnailUrl.startsWith('http') ? thumbnailUrl : null;
+        // Validar URL antes de usarla
+        const finalUrl = thumbnailUrl && this.isValidUrl(thumbnailUrl) ? thumbnailUrl : null;
         const productionId = run?.id || output?.id;
         const cardData = JSON.stringify({
             imageUrl: finalUrl,
@@ -852,7 +863,25 @@ class LivingManager {
     }
 
     renderCard(imageUrl, prompt, index, isHero = false, itemData = null) {
-        const finalImageUrl = imageUrl && imageUrl.startsWith('http') ? imageUrl : null;
+        // Validar URL antes de usarla
+        let finalImageUrl = null;
+        if (imageUrl && typeof imageUrl === 'string') {
+            // Si ya es una URL válida, usarla directamente
+            if (this.isValidUrl(imageUrl)) {
+                finalImageUrl = imageUrl;
+            } else if (imageUrl.startsWith('http')) {
+                // Si empieza con http pero no es válida, intentar validarla
+                try {
+                    const urlObj = new URL(imageUrl);
+                    if (urlObj.hostname.length > 0) {
+                        finalImageUrl = imageUrl;
+                    }
+                } catch (e) {
+                    console.warn('⚠️ URL inválida descartada:', imageUrl);
+                }
+            }
+        }
+        
         const cardData = JSON.stringify({
             imageUrl: finalImageUrl,
             prompt: prompt || '',
@@ -863,23 +892,23 @@ class LivingManager {
         // El navegador desescapará automáticamente cuando leamos con dataset
         const escapedCardData = cardData.replace(/"/g, '&quot;');
 
-            return `
+        return `
             <div class="featured-card" data-index="${index}" data-image-url="${this.escapeHtml(finalImageUrl || '')}" data-card-info="${escapedCardData}">
                 <div class="featured-card-visual">
                     ${finalImageUrl
-                        ? `<img src="${this.escapeHtml(finalImageUrl)}" alt="${this.escapeHtml(prompt)}" loading="${index < 3 ? 'eager' : 'lazy'}" onerror="this.parentElement.innerHTML='<div class=\\'featured-card-visual-placeholder\\'><i class=\\'fas fa-image\\'></i></div>';" onload="this.style.opacity='1';">`
+                        ? `<img src="${this.escapeHtml(finalImageUrl)}" alt="${this.escapeHtml(prompt)}" loading="${index < 3 ? 'eager' : 'lazy'}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'featured-card-visual-placeholder\\'><i class=\\'fas fa-image\\'></i></div>';" onload="this.style.opacity='1';">`
                         : `<div class="featured-card-visual-placeholder"><i class="fas fa-image"></i></div>`
                     }
-                        </div>
+                </div>
                 <div class="featured-card-prompt-overlay">
                     <div class="featured-card-prompt-title">Prompt</div>
                     <div class="featured-card-prompt-text">${this.escapeHtml(prompt)}</div>
-                    </div>
+                </div>
                 <button class="featured-card-download-btn" title="Descargar imagen" data-image-url="${this.escapeHtml(finalImageUrl || '')}">
                     <i class="fas fa-download"></i>
                 </button>
-                </div>
-            `;
+            </div>
+        `;
     }
 
     setupDownloadButtons(container) {
@@ -1198,18 +1227,46 @@ class LivingManager {
         // después de que se renderizan las cards
     }
 
+    /**
+     * Validar que una URL sea válida antes de usarla
+     */
+    isValidUrl(url) {
+        if (!url || typeof url !== 'string') return false;
+        
+        // Debe ser una URL HTTP/HTTPS válida
+        try {
+            const urlObj = new URL(url);
+            return (urlObj.protocol === 'http:' || urlObj.protocol === 'https:') && 
+                   urlObj.hostname.length > 0;
+        } catch (e) {
+            return false;
+        }
+    }
+
     getPublicUrlFromStorage(bucketName, filePath) {
         if (!this.supabase || !bucketName || !filePath) {
             return null;
         }
 
         try {
+            // Validar que filePath no esté vacío o sea solo espacios
+            if (!filePath.trim() || filePath.trim().length === 0) {
+                console.warn('⚠️ filePath vacío o inválido:', filePath);
+                return null;
+            }
+
             // Limpiar el path si viene con el nombre del bucket
-            let cleanPath = filePath;
-            if (filePath.startsWith(`${bucketName}/`)) {
-                cleanPath = filePath.replace(`${bucketName}/`, '');
-            } else if (filePath.startsWith('/')) {
-                cleanPath = filePath.substring(1);
+            let cleanPath = filePath.trim();
+            if (cleanPath.startsWith(`${bucketName}/`)) {
+                cleanPath = cleanPath.replace(`${bucketName}/`, '');
+            } else if (cleanPath.startsWith('/')) {
+                cleanPath = cleanPath.substring(1);
+            }
+
+            // Validar que el path limpio no esté vacío
+            if (!cleanPath || cleanPath.length === 0) {
+                console.warn('⚠️ Path limpio vacío después de procesar:', filePath);
+                return null;
             }
 
             // Obtener URL pública desde Supabase Storage
@@ -1217,7 +1274,15 @@ class LivingManager {
                 .from(bucketName)
                 .getPublicUrl(cleanPath);
 
-            return data?.publicUrl || null;
+            const publicUrl = data?.publicUrl || null;
+            
+            // Validar que la URL generada sea válida
+            if (publicUrl && this.isValidUrl(publicUrl)) {
+                return publicUrl;
+            } else {
+                console.warn('⚠️ URL pública generada no es válida:', publicUrl);
+                return null;
+            }
         } catch (error) {
             console.warn('⚠️ Error obteniendo URL pública de storage:', error);
             return null;
