@@ -123,6 +123,19 @@ class LivingManager {
         
         // SIEMPRE marcar como inicializado
         this.initialized = true;
+        
+        // Forzar un re-renderizado después de un breve delay para asegurar que los datos se muestren
+        // Esto ayuda cuando los datos se cargan después del primer render
+        setTimeout(async () => {
+            console.log('🔄 Re-renderizando después de delay para asegurar datos...');
+            console.log('📊 Estado de datos antes de re-render:', {
+                latestGeneratedContent: this.latestGeneratedContent?.length || 0,
+                flowRuns: this.flowRuns?.length || 0,
+                flowOutputs: this.flowOutputs?.length || 0,
+                products: this.products?.length || 0
+            });
+            await this.renderAll();
+        }, 1000);
     }
 
     async initSupabase() {
