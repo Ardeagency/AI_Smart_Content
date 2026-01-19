@@ -15,6 +15,7 @@ class LivingManager {
         this.creditUsage = [];
         this.brandId = null;
         this.latestGeneratedContent = [];
+        this.livingState = 'active'; // 'empty', 'active', 'heavy'
         this.eventListenersSetup = false;
 
         this.init();
@@ -427,10 +428,33 @@ class LivingManager {
     }
 
     async     renderAll() {
-        await this.renderProductionsOfDay();
+        // Determinar estado del Living
+        this.determineLivingState();
+        
+        // Renderizar según el estado
+        this.renderProductionsOfDay();
         this.renderLatestProductions();
         this.renderInsights();
         this.renderResources();
+    }
+
+    determineLivingState() {
+        const hasProductions = this.flowRuns.length > 0;
+        const hasRecentProductions = this.flowRuns.length >= 5;
+        const hasManyProductions = this.flowRuns.length >= 20;
+        
+        if (!hasProductions) {
+            this.livingState = 'empty';
+        } else if (hasManyProductions) {
+            this.livingState = 'heavy';
+        } else {
+            this.livingState = 'active';
+        }
+        
+        console.log(`📊 Estado del Living: ${this.livingState}`, {
+            producciones: this.flowRuns.length,
+            outputs: this.flowOutputs.length
+        });
     }
 
     renderTokens() {
@@ -457,7 +481,13 @@ class LivingManager {
 
     async renderProductionsOfDay() {
         const productionsOfDayEl = document.getElementById('productionsOfDay');
+        const heroSection = document.getElementById('livingHeroSection');
         if (!productionsOfDayEl) return;
+        
+        // Aplicar clase de estado al hero
+        if (heroSection) {
+            heroSection.className = `living-hero-cinematic living-state-${this.livingState}`;
+        }
 
         // Usar el contenido generado por IA desde la función RPC
         const latestContent = this.latestGeneratedContent || [];
@@ -919,8 +949,9 @@ class LivingManager {
         const emptyStateEl = document.getElementById('emptyProductionsState');
         if (!productionsListEl) return;
 
-        if (this.flowRuns.length === 0) {
-            // Mostrar estado vacío aspiracional
+        // Manejar diferentes estados
+        if (this.livingState === 'empty' || this.flowRuns.length === 0) {
+            // Estado vacío aspiracional
             if (emptyStateEl) {
                 emptyStateEl.style.display = 'flex';
             }
@@ -932,9 +963,12 @@ class LivingManager {
         if (emptyStateEl) {
             emptyStateEl.style.display = 'none';
         }
+        
+        // Ajustar cantidad según el estado
+        const maxCards = this.livingState === 'heavy' ? 12 : 8;
 
-        // Obtener últimas 8 producciones (cards grandes, menos cantidad)
-        const latestRuns = this.flowRuns.slice(0, 8);
+        // Obtener producciones según el estado
+        const latestRuns = this.flowRuns.slice(0, maxCards);
 
         productionsListEl.innerHTML = latestRuns.map(run => {
             // Buscar output de imagen para este run
