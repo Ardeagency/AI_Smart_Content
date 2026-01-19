@@ -482,7 +482,7 @@ class LivingManager {
                         return `
                             <div class="living-masonry-item">
                                 ${this.renderCard(finalImageUrl, prompt, index, false, { item: null, output: item.output, run: item.run })}
-                            </div>
+                </div>
                         `;
                     }).join('')}
                 </div>
@@ -604,24 +604,24 @@ class LivingManager {
             prompt: prompt,
             item: itemData
         }).replace(/"/g, '&quot;');
-        
-        return `
+
+            return `
             <div class="featured-card" data-index="${index}" data-image-url="${this.escapeHtml(finalImageUrl || '')}" data-card-info="${this.escapeHtml(cardData)}">
                 <div class="featured-card-visual">
                     ${finalImageUrl
                         ? `<img src="${this.escapeHtml(finalImageUrl)}" alt="${this.escapeHtml(prompt)}" loading="${index < 3 ? 'eager' : 'lazy'}" onerror="this.parentElement.innerHTML='<div class=\\'featured-card-visual-placeholder\\'><i class=\\'fas fa-image\\'></i></div>';" onload="this.style.opacity='1';">`
                         : `<div class="featured-card-visual-placeholder"><i class="fas fa-image"></i></div>`
                     }
-                </div>
+                        </div>
                 <div class="featured-card-prompt-overlay">
                     <div class="featured-card-prompt-title">Prompt</div>
                     <div class="featured-card-prompt-text">${this.escapeHtml(prompt)}</div>
-                </div>
+                    </div>
                 <button class="featured-card-download-btn" title="Descargar imagen" data-image-url="${this.escapeHtml(finalImageUrl || '')}">
                     <i class="fas fa-download"></i>
                 </button>
-            </div>
-        `;
+                </div>
+            `;
     }
 
     setupDownloadButtons(container) {
@@ -632,6 +632,27 @@ class LivingManager {
                 const imageUrl = btn.dataset.imageUrl;
                 if (imageUrl && imageUrl.startsWith('http')) {
                     this.downloadImage(imageUrl);
+                }
+            });
+        });
+        
+        // Agregar event listeners para abrir modal de visualización
+        const cards = container.querySelectorAll('.featured-card');
+        cards.forEach(card => {
+            card.addEventListener('click', (e) => {
+                // No abrir modal si se clickeó el botón de descarga
+                if (e.target.closest('.featured-card-download-btn')) {
+                    return;
+                }
+                
+                const cardData = card.dataset.cardInfo;
+                if (cardData) {
+                    try {
+                        const data = JSON.parse(cardData.replace(/&quot;/g, '"'));
+                        this.openViewerModal(data);
+                    } catch (error) {
+                        console.error('Error parsing card data:', error);
+                    }
                 }
             });
         });
@@ -658,6 +679,139 @@ class LivingManager {
             // Fallback: abrir en nueva pestaña
             window.open(imageUrl, '_blank');
         }
+    }
+    
+    openViewerModal(data) {
+        const modal = document.getElementById('livingViewerModal');
+        const image = document.getElementById('livingViewerImage');
+        const prompt = document.getElementById('livingViewerPrompt');
+        const metadata = document.getElementById('livingViewerMetadata');
+        const closeBtn = document.getElementById('livingViewerClose');
+        const backdrop = document.getElementById('livingViewerBackdrop');
+        
+        if (!modal || !image || !prompt || !metadata) {
+            console.error('❌ Elementos del modal no encontrados');
+            return;
+        }
+        
+        // Cargar imagen
+        if (data.imageUrl) {
+            image.src = data.imageUrl;
+            image.alt = data.prompt || 'Producción';
+        } else {
+            image.src = '';
+            image.alt = 'Sin imagen disponible';
+        }
+        
+        // Cargar prompt
+        prompt.textContent = data.prompt || 'Sin prompt disponible';
+        
+        // Cargar metadatos
+        const item = data.item || {};
+        const output = item.output || {};
+        const run = item.run || {};
+        const itemData = item.item || {};
+        
+        const metadataItems = [];
+        
+        if (output.created_at) {
+            metadataItems.push({
+                label: 'Fecha de creación',
+                value: new Date(output.created_at).toLocaleString('es-ES')
+            });
+        } else if (itemData.created_at) {
+            metadataItems.push({
+                label: 'Fecha de creación',
+                value: new Date(itemData.created_at).toLocaleString('es-ES')
+            });
+        }
+        
+        if (output.output_type) {
+            metadataItems.push({
+                label: 'Tipo de output',
+                value: output.output_type
+            });
+        }
+        
+        if (output.storage_path) {
+            metadataItems.push({
+                label: 'Ruta de almacenamiento',
+                value: output.storage_path
+            });
+        } else if (itemData.storage_path) {
+            metadataItems.push({
+                label: 'Ruta de almacenamiento',
+                value: itemData.storage_path
+            });
+        }
+        
+        if (run.status) {
+            metadataItems.push({
+                label: 'Estado',
+                value: run.status
+            });
+        }
+        
+        if (run.created_at) {
+            metadataItems.push({
+                label: 'Ejecutado',
+                value: new Date(run.created_at).toLocaleString('es-ES')
+            });
+        }
+        
+        if (output.technical_params) {
+            try {
+                const techParams = typeof output.technical_params === 'string' 
+                    ? JSON.parse(output.technical_params) 
+                    : output.technical_params;
+                Object.entries(techParams).forEach(([key, value]) => {
+                    metadataItems.push({
+                        label: key,
+                        value: String(value)
+                    });
+                });
+            } catch (e) {
+                // Ignorar si no se puede parsear
+            }
+        }
+        
+        metadata.innerHTML = metadataItems.length > 0
+            ? metadataItems.map(item => `
+                <div class="metadata-item">
+                    <div class="metadata-label">${this.escapeHtml(item.label)}</div>
+                    <div class="metadata-value">${this.escapeHtml(item.value)}</div>
+                </div>
+            `).join('')
+            : '<p style="color: var(--living-text-muted); font-size: 0.875rem;">No hay metadatos disponibles</p>';
+        
+        // Mostrar modal
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+        // Cerrar modal - remover listeners anteriores para evitar duplicados
+        const closeModal = () => {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        };
+        
+        // Remover listeners anteriores
+        const newCloseBtn = closeBtn.cloneNode(true);
+        closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+        const newBackdrop = backdrop.cloneNode(true);
+        backdrop.parentNode.replaceChild(newBackdrop, backdrop);
+        
+        // Agregar nuevos listeners
+        document.getElementById('livingViewerClose').addEventListener('click', closeModal);
+        document.getElementById('livingViewerBackdrop').addEventListener('click', closeModal);
+        
+        // Cerrar con ESC
+        const handleEsc = (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+                document.removeEventListener('keydown', handleEsc);
+            }
+        };
+        document.addEventListener('keydown', handleEsc);
     }
 
     setupCategoryFilters() {
@@ -718,14 +872,8 @@ class LivingManager {
     }
 
     setupEventListeners() {
-        // Event listeners para featured cards
-        const featuredCards = document.querySelectorAll('.featured-card');
-        featuredCards.forEach(card => {
-            card.addEventListener('click', () => {
-                // Navegar a detalle de producción si es necesario
-                console.log('Featured card clicked');
-            });
-        });
+        // Los event listeners para las cards se configuran en setupDownloadButtons()
+        // después de que se renderizan las cards
     }
 
     getPublicUrlFromStorage(bucketName, filePath) {
