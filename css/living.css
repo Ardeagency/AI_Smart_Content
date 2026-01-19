@@ -41,10 +41,14 @@
     margin-left: 20px;
     transition: margin-left 0.3s ease;
     min-height: 100vh;
+    height: auto; /* Permitir que crezca más allá de 100vh */
     background: var(--living-bg-deep);
     max-width: none;
     padding-top: 2rem;
     padding-bottom: 4rem;
+    /* Asegurar que no bloquee el scroll */
+    overflow: visible;
+    position: relative;
 }
 
 .side-navigation.collapsed ~ * .living-container,

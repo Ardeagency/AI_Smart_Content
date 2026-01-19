@@ -1263,6 +1263,7 @@ body.sidebar-collapsed #app-container .main-header,
     margin-top: 0;
     margin-left: var(--nav-width, 280px);
     min-height: 100vh;
+    height: auto; /* Permitir que crezca más allá de 100vh */
     background: var(--bg-primary);
     transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     padding-top: 48px; /* Altura del header delgado */
@@ -1270,6 +1271,8 @@ body.sidebar-collapsed #app-container .main-header,
     z-index: 1;
     overflow-y: auto;
     overflow-x: hidden;
+    /* Asegurar que el scroll funcione */
+    -webkit-overflow-scrolling: touch;
 }
 
 .side-navigation.collapsed ~ .main-content,
