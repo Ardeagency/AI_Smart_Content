@@ -32,120 +32,131 @@
     <!-- Contenido Principal -->
     <main class="main-content">
         <div class="living-container">
-            <!-- 1. HERO - Visuales del Día (Emoción + Identidad) -->
-            <div class="living-hero-section">
-                <div class="living-hero-background">
+            <!-- 1️⃣ HERO CINEMATOGRÁFICO (70-80vh) - Jerarquía Visual -->
+            <section class="living-hero-cinematic" id="livingHeroSection">
+                <div class="living-hero-backdrop">
                     <div class="living-hero-gradient"></div>
                 </div>
-                <div class="living-hero-visuals" id="productionsOfDay">
-                    <div class="visual-day-item">
-                        <div class="visual-day-placeholder">
-                            <i class="fas fa-image"></i>
+                <div class="living-hero-content">
+                    <div class="living-hero-visuals" id="productionsOfDay">
+                        <!-- Imagen dominante (grande) -->
+                        <div class="hero-visual-dominant">
+                            <div class="hero-visual-placeholder">
+                                <i class="fas fa-image"></i>
+                            </div>
                         </div>
-                    </div>
-                    <div class="visual-day-item">
-                        <div class="visual-day-placeholder">
-                            <i class="fas fa-image"></i>
-                        </div>
-                    </div>
-                    <div class="visual-day-item">
-                        <div class="visual-day-placeholder">
-                            <i class="fas fa-image"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 2. Últimas Producciones (Actividad Real) - Scroll Horizontal -->
-            <div class="living-latest-section">
-                <div class="living-latest-header">
-                    <h2 class="living-section-title">Últimas Producciones</h2>
-                </div>
-                <div class="living-latest-scroll" id="productionsList">
-                    <div class="empty-state">
-                        <i class="fas fa-file-alt"></i>
-                        <p>No hay producciones recientes</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 3. Insights Rápidos (Sin Romper el Mood) -->
-            <div class="living-insights-section">
-                <div class="living-insight-card">
-                    <div class="insight-icon">
-                        <i class="fas fa-star"></i>
-                    </div>
-                    <div class="insight-content">
-                        <div class="insight-label">Producto Favorito</div>
-                        <div class="insight-value" id="favoriteProductName">-</div>
-                    </div>
-                </div>
-                <div class="living-insight-card">
-                    <div class="insight-icon">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <div class="insight-content">
-                        <div class="insight-label">Más Producido</div>
-                        <div class="insight-value" id="topProductName">-</div>
-                    </div>
-                </div>
-                <div class="living-insight-card">
-                    <div class="insight-icon">
-                        <i class="fas fa-film"></i>
-                    </div>
-                    <div class="insight-content">
-                        <div class="insight-label">Formato Más Usado</div>
-                        <div class="insight-value" id="topFormatName">-</div>
-                    </div>
-                </div>
-                <div class="living-insight-card">
-                    <div class="insight-icon">
-                        <i class="fas fa-bolt"></i>
-                    </div>
-                    <div class="insight-content">
-                        <div class="insight-label">Tokens Hoy</div>
-                        <div class="insight-value" id="tokensToday">0</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 4. Producción por Entidad (Contexto de Negocio) -->
-            <div class="living-entity-section">
-                <div class="living-entity-card">
-                    <div class="entity-header">
-                        <h3 class="entity-title">Producción por Entidad</h3>
-                    </div>
-                    <div class="entity-content" id="entityProduction">
-                        <div class="empty-state-small">
-                            <i class="fas fa-box"></i>
-                            <p>No hay datos disponibles</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 5. Uso de Recursos (Control Silencioso) - Lateral Inferior -->
-            <div class="living-resources-section">
-                <div class="living-resources-card">
-                    <div class="resources-header">
-                        <span class="resources-label">Recursos</span>
-                    </div>
-                    <div class="resources-content" id="tokensResources">
-                        <div class="resource-item">
-                            <span class="resource-label">Disponibles</span>
-                            <span class="resource-value" id="tokensAvailableResource">0</span>
-                        </div>
-                        <div class="resource-item">
-                            <span class="resource-label">Usados Hoy</span>
-                            <span class="resource-value" id="tokensUsedTodayResource">0</span>
-                        </div>
-                        <div class="resource-progress">
-                            <div class="resource-progress-bar">
-                                <div class="resource-progress-fill" id="tokensProgressResource"></div>
+                        <!-- Dos imágenes secundarias (más pequeñas) -->
+                        <div class="hero-visuals-secondary">
+                            <div class="hero-visual-secondary">
+                                <div class="hero-visual-placeholder">
+                                    <i class="fas fa-image"></i>
+                                </div>
+                            </div>
+                            <div class="hero-visual-secondary">
+                                <div class="hero-visual-placeholder">
+                                    <i class="fas fa-image"></i>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
+
+            <!-- 2️⃣ ACTIVIDAD RECIENTE - Cards Grandes que Flotan -->
+            <section class="living-activity-section">
+                <div class="living-activity-header">
+                    <h2 class="living-section-title-whisper">Actividad reciente</h2>
+                </div>
+                <div class="living-activity-grid" id="productionsList">
+                    <!-- Cards grandes se generan aquí -->
+                    <div class="living-empty-aspirational" id="emptyProductionsState">
+                        <div class="empty-aspirational-visual">
+                            <div class="empty-aspirational-icon">
+                                <i class="fas fa-sparkles"></i>
+                            </div>
+                        </div>
+                        <div class="empty-aspirational-content">
+                            <h3 class="empty-aspirational-title">Tu primera producción está a un click</h3>
+                            <p class="empty-aspirational-text">Crea contenido que conecte con tu audiencia</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3️⃣ PULSO DEL SISTEMA - Métricas Silenciosas (Lateral) -->
+            <section class="living-pulse-section">
+                <div class="living-pulse-grid">
+                    <!-- Métricas principales (izquierda) -->
+                    <div class="living-pulse-main">
+                        <!-- Card de pulso principal -->
+                        <div class="pulse-card-large">
+                            <div class="pulse-card-header">
+                                <span class="pulse-label-whisper">Pulso</span>
+                            </div>
+                            <div class="pulse-content" id="pulseContent">
+                                <div class="pulse-metric">
+                                    <div class="pulse-metric-value" id="tokensToday">0</div>
+                                    <div class="pulse-metric-label">tokens hoy</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Insights silenciosos -->
+                        <div class="pulse-insights-grid">
+                            <div class="pulse-insight-card">
+                                <div class="pulse-insight-icon">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <div class="pulse-insight-content">
+                                    <div class="pulse-insight-label">Favorito</div>
+                                    <div class="pulse-insight-value" id="favoriteProductName">-</div>
+                                </div>
+                            </div>
+                            <div class="pulse-insight-card">
+                                <div class="pulse-insight-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="pulse-insight-content">
+                                    <div class="pulse-insight-label">Más activo</div>
+                                    <div class="pulse-insight-value" id="topProductName">-</div>
+                                </div>
+                            </div>
+                            <div class="pulse-insight-card">
+                                <div class="pulse-insight-icon">
+                                    <i class="fas fa-film"></i>
+                                </div>
+                                <div class="pulse-insight-content">
+                                    <div class="pulse-insight-label">Formato</div>
+                                    <div class="pulse-insight-value" id="topFormatName">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recursos (derecha, secundario) -->
+                    <div class="living-pulse-sidebar">
+                        <div class="pulse-resources-card">
+                            <div class="pulse-resources-header">
+                                <span class="pulse-label-whisper">Recursos</span>
+                            </div>
+                            <div class="pulse-resources-content" id="tokensResources">
+                                <div class="pulse-resource-item">
+                                    <span class="pulse-resource-label">Disponibles</span>
+                                    <span class="pulse-resource-value" id="tokensAvailableResource">0</span>
+                                </div>
+                                <div class="pulse-resource-item">
+                                    <span class="pulse-resource-label">Usados hoy</span>
+                                    <span class="pulse-resource-value" id="tokensUsedTodayResource">0</span>
+                                </div>
+                                <div class="pulse-resource-progress">
+                                    <div class="pulse-resource-progress-bar">
+                                        <div class="pulse-resource-progress-fill" id="tokensProgressResource"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
     </main>

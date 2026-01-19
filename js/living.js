@@ -426,11 +426,10 @@ class LivingManager {
         }
     }
 
-    async renderAll() {
+    async     renderAll() {
         await this.renderProductionsOfDay();
         this.renderLatestProductions();
         this.renderInsights();
-        this.renderEntityProduction();
         this.renderResources();
     }
 
@@ -765,125 +764,71 @@ class LivingManager {
             });
         }
 
-        // Renderizar items (siempre mostrar 3)
-        const items = [];
-        for (let i = 0; i < 3; i++) {
-            if (todayProductions[i] && todayProductions[i].image_url) {
-                const item = todayProductions[i];
-                let imageUrl = item.image_url;
+        // Renderizar con jerarquía: imagen dominante (primera) + 2 secundarias
+        const dominantItem = todayProductions[0];
+        const secondaryItems = todayProductions.slice(1, 3);
+        
+        let heroHTML = '';
+        
+        // Imagen dominante (grande)
+        if (dominantItem && dominantItem.image_url) {
+            const imageUrl = dominantItem.image_url + (dominantItem.image_url.includes('?') ? '&' : '?') + 't=' + Date.now();
+            const promptInfo = dominantItem.prompt_used ? `<div class="hero-visual-prompt">${this.escapeHtml(dominantItem.prompt_used.substring(0, 60))}...</div>` : '';
+            const styleInfo = dominantItem.style_trend ? `<div class="hero-visual-style">${this.escapeHtml(dominantItem.style_trend)}</div>` : '';
+            
+            heroHTML += `
+                <div class="hero-visual-dominant">
+                    <img src="${this.escapeHtml(imageUrl)}" 
+                         alt="Visual principal generado por IA" 
+                         loading="eager"
+                         onerror="this.parentElement.innerHTML='<div class=\\'hero-visual-placeholder\\'><i class=\\'fas fa-image\\'></i></div>';">
+                    ${promptInfo}
+                    ${styleInfo}
+                </div>
+            `;
+        } else {
+            heroHTML += `
+                <div class="hero-visual-dominant">
+                    <div class="hero-visual-placeholder">
+                        <i class="fas fa-image"></i>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Dos imágenes secundarias
+        heroHTML += '<div class="hero-visuals-secondary">';
+        for (let i = 0; i < 2; i++) {
+            const item = secondaryItems[i];
+            if (item && item.image_url) {
+                const imageUrl = item.image_url + (item.image_url.includes('?') ? '&' : '?') + 't=' + Date.now();
+                const promptInfo = item.prompt_used ? `<div class="hero-visual-prompt">${this.escapeHtml(item.prompt_used.substring(0, 50))}...</div>` : '';
+                const styleInfo = item.style_trend ? `<div class="hero-visual-style">${this.escapeHtml(item.style_trend)}</div>` : '';
                 
-                console.log(`🖼️ Procesando imagen ${i + 1}:`, {
-                    original_url: imageUrl,
-                    has_prompt: !!item.prompt_used,
-                    has_style: !!item.style_trend
-                });
-                
-                // Validar que sea una URL válida
-                if (!imageUrl || (!imageUrl.startsWith('http') && !imageUrl.startsWith('/'))) {
-                    console.warn(`⚠️ URL de imagen ${i + 1} inválida (no empieza con http o /):`, imageUrl);
-                    items.push(`
-                        <div class="visual-day-item">
-                            <div class="visual-day-placeholder">
-                                <i class="fas fa-image"></i>
-                            </div>
-                        </div>
-                    `);
-                    continue;
-                }
-                
-                // Validar URL antes de renderizar (verificar que sea accesible)
-                let isValidUrl = false;
-                try {
-                    // Verificar que la URL tenga un formato válido
-                    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-                        const urlObj = new URL(imageUrl);
-                        isValidUrl = urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
-                        
-                        // Verificar que la URL de Supabase tenga el formato correcto
-                        if (imageUrl.includes('supabase.co/storage/v1/object/public/')) {
-                            const pathAfterPublic = imageUrl.split('object/public/')[1];
-                            if (!pathAfterPublic || pathAfterPublic.trim() === '') {
-                                console.warn(`⚠️ URL ${i + 1} de Supabase está incompleta (falta ruta después de object/public/):`, imageUrl);
-                                isValidUrl = false;
-                            } else {
-                                console.log(`✅ URL ${i + 1} de Supabase tiene formato válido:`, imageUrl);
-                                isValidUrl = true;
-                            }
-                        } else {
-                            console.log(`✅ URL ${i + 1} tiene formato válido:`, imageUrl);
-                            isValidUrl = true;
-                        }
-                    } else if (imageUrl.startsWith('/')) {
-                        isValidUrl = true;
-                        console.log(`✅ URL ${i + 1} es ruta relativa válida:`, imageUrl);
-                    } else {
-                        console.warn(`⚠️ URL ${i + 1} no es válida (formato desconocido):`, imageUrl);
-                        isValidUrl = false;
-                    }
-                } catch (urlError) {
-                    console.warn(`⚠️ Error validando URL ${i + 1}:`, imageUrl, urlError);
-                    isValidUrl = false;
-                }
-                
-                if (!isValidUrl) {
-                    console.warn(`⚠️ URL ${i + 1} no pasó validación, usando placeholder`);
-                    items.push(`
-                        <div class="visual-day-item">
-                            <div class="visual-day-placeholder">
-                                <i class="fas fa-image"></i>
-                            </div>
-                        </div>
-                    `);
-                    continue;
-                }
-                
-                const promptInfo = item.prompt_used ? `<div class="visual-day-prompt">${this.escapeHtml(item.prompt_used.substring(0, 50))}...</div>` : '';
-                const styleInfo = item.style_trend ? `<div class="visual-day-style">Estilo: ${this.escapeHtml(item.style_trend)}</div>` : '';
-                
-                // Validar que la URL no sea solo el dominio de Supabase sin ruta
-                if (imageUrl.includes('supabase.co/storage/v1/object/public/') && 
-                    !imageUrl.split('object/public/')[1]) {
-                    console.warn(`⚠️ URL ${i + 1} parece estar incompleta (solo dominio):`, imageUrl);
-                    items.push(`
-                        <div class="visual-day-item">
-                            <div class="visual-day-placeholder">
-                                <i class="fas fa-image"></i>
-                            </div>
-                        </div>
-                    `);
-                    continue;
-                }
-                
-                // Agregar timestamp para evitar caché
-                const imageUrlWithCache = imageUrl + (imageUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
-                
-                console.log(`🎨 Renderizando imagen ${i + 1} con URL:`, imageUrlWithCache);
-                
-                items.push(`
-                    <div class="visual-day-item">
-                        <img src="${this.escapeHtml(imageUrlWithCache)}" 
-                             alt="Visual generado por IA" 
+                heroHTML += `
+                    <div class="hero-visual-secondary">
+                        <img src="${this.escapeHtml(imageUrl)}" 
+                             alt="Visual secundario generado por IA" 
                              loading="lazy"
-                             onerror="console.error('❌ Error cargando imagen ${i + 1}:', '${this.escapeHtml(imageUrl)}'); this.parentElement.innerHTML='<div class=\\'visual-day-placeholder\\'><i class=\\'fas fa-image\\'></i></div>';"
-                             onload="console.log('✅ Imagen ${i + 1} cargada exitosamente');">
+                             onerror="this.parentElement.innerHTML='<div class=\\'hero-visual-placeholder\\'><i class=\\'fas fa-image\\'></i></div>';">
                         ${promptInfo}
                         ${styleInfo}
                     </div>
-                `);
+                `;
             } else {
-                console.log(`ℹ️ No hay imagen ${i + 1} disponible`);
-                items.push(`
-                    <div class="visual-day-item">
-                        <div class="visual-day-placeholder">
+                heroHTML += `
+                    <div class="hero-visual-secondary">
+                        <div class="hero-visual-placeholder">
                             <i class="fas fa-image"></i>
                         </div>
                     </div>
-                `);
+                `;
             }
         }
-
-        console.log('🎨 Renderizando', items.length, 'items en el Hero');
-        productionsOfDayEl.innerHTML = items.join('');
+        heroHTML += '</div>';
+        
+        console.log('🎨 Renderizando Hero con jerarquía visual (1 dominante + 2 secundarias)');
+        productionsOfDayEl.innerHTML = heroHTML;
     }
 
     renderFavoriteProduct() {
@@ -971,20 +916,25 @@ class LivingManager {
 
     renderLatestProductions() {
         const productionsListEl = document.getElementById('productionsList');
+        const emptyStateEl = document.getElementById('emptyProductionsState');
         if (!productionsListEl) return;
 
         if (this.flowRuns.length === 0) {
-            productionsListEl.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-file-alt"></i>
-                    <p>No hay producciones recientes</p>
-                </div>
-            `;
+            // Mostrar estado vacío aspiracional
+            if (emptyStateEl) {
+                emptyStateEl.style.display = 'flex';
+            }
+            productionsListEl.innerHTML = '';
             return;
         }
 
-        // Obtener últimas 10 producciones
-        const latestRuns = this.flowRuns.slice(0, 10);
+        // Ocultar estado vacío si hay producciones
+        if (emptyStateEl) {
+            emptyStateEl.style.display = 'none';
+        }
+
+        // Obtener últimas 8 producciones (cards grandes, menos cantidad)
+        const latestRuns = this.flowRuns.slice(0, 8);
 
         productionsListEl.innerHTML = latestRuns.map(run => {
             // Buscar output de imagen para este run
@@ -994,17 +944,28 @@ class LivingManager {
             // Determinar tipo de contenido y estado
             const contentType = this.getContentType(run, imageOutput);
             const status = this.getProductionStatus(run);
+            
+            // Obtener URL de imagen
+            let imageUrl = null;
+            if (imageOutput) {
+                imageUrl = imageOutput.file_url || imageOutput.storage_path;
+                if (imageUrl && !imageUrl.startsWith('http')) {
+                    // Si es storage_path, intentar construir URL
+                    // Esto se manejará mejor en el futuro, por ahora usar placeholder
+                    imageUrl = null;
+                }
+            }
 
             return `
-                <div class="production-card">
-                    ${imageOutput 
-                        ? `<img src="${this.escapeHtml(imageOutput.file_url)}" alt="Producción" class="production-card-image" onerror="this.style.display='none'">`
-                        : `<div class="production-card-image" style="background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.3);"><i class="fas fa-image" style="font-size: 3rem;"></i></div>`
+                <div class="production-card-cinematic">
+                    ${imageUrl 
+                        ? `<img src="${this.escapeHtml(imageUrl)}" alt="Producción" class="production-card-cinematic-image" loading="lazy" onerror="this.style.display='none'; this.parentElement.querySelector('.production-card-cinematic-info').style.paddingTop='4rem';">`
+                        : `<div class="production-card-cinematic-image" style="background: linear-gradient(135deg, rgba(212, 117, 78, 0.1) 0%, rgba(184, 93, 58, 0.1) 100%); display: flex; align-items: center; justify-content: center; color: var(--living-text-whisper);"><i class="fas fa-image" style="font-size: 3rem;"></i></div>`
                     }
-                    <div class="production-card-info">
-                        <h4 class="production-card-title">${this.escapeHtml(run.status || 'Producción')}</h4>
-                        <div class="production-card-meta">
-                            <span class="production-card-status ${status}">${status}</span>
+                    <div class="production-card-cinematic-info">
+                        <h4 class="production-card-cinematic-title">${this.escapeHtml(run.status || 'Producción')}</h4>
+                        <div class="production-card-cinematic-meta">
+                            <span class="production-card-cinematic-status ${status}">${status}</span>
                             ${product ? `<span>${this.escapeHtml(product.nombre_producto)}</span>` : ''}
                         </div>
                     </div>
