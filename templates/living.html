@@ -78,68 +78,78 @@
                 </div>
             </section>
 
-            <!-- ESTADO ACTIVO/HEAVY: Hero con Jerarquía Visual -->
-            <section class="living-hero-cinematic living-hero-active" id="livingHeroActive" style="display: none;">
-                <div class="living-hero-backdrop">
+            <!-- ESTADO ACTIVO: Hero Contextual (reducido) -->
+            <section class="living-hero-contextual living-hero-active" id="livingHeroActive" style="display: none;">
+                <div class="living-hero-contextual-backdrop">
                     <div class="living-hero-gradient"></div>
                 </div>
-                <div class="living-hero-content">
-                    <div class="living-hero-visuals" id="productionsOfDay">
-                        <!-- Imagen dominante (grande) -->
-                        <div class="hero-visual-dominant">
-                            <div class="hero-visual-placeholder">
-                                <i class="fas fa-image"></i>
-                            </div>
-                        </div>
-                        <!-- Dos imágenes secundarias (más pequeñas) -->
-                        <div class="hero-visuals-secondary">
-                            <div class="hero-visual-secondary">
-                                <div class="hero-visual-placeholder">
-                                    <i class="fas fa-image"></i>
-                                </div>
-                            </div>
-                            <div class="hero-visual-secondary">
-                                <div class="hero-visual-placeholder">
-                                    <i class="fas fa-image"></i>
-                                </div>
-                            </div>
-                        </div>
+                <div class="living-hero-contextual-content">
+                    <div class="hero-contextual-visual" id="heroContextualVisual">
+                        <!-- Última producción destacada se carga aquí -->
+                        <div class="hero-contextual-placeholder">
+                            <i class="fas fa-image"></i>
+            </div>
+                    </div>
+                    <div class="hero-contextual-text">
+                        <p class="hero-contextual-label">Esto ya está pasando</p>
                     </div>
                 </div>
             </section>
 
-            <!-- ESTADO ACTIVO/HEAVY: Actividad Reciente -->
-            <section class="living-activity-section" id="livingActivitySection" style="display: none;">
-                <div class="living-activity-header">
-                    <h2 class="living-section-title-whisper">Actividad reciente</h2>
-                </div>
-                <div class="living-activity-grid" id="productionsList">
-                    <!-- Cards grandes se generan aquí -->
+            <!-- ESTADO ACTIVO: Producciones del Día (Protagonista) -->
+            <section class="living-productions-today" id="livingProductionsToday" style="display: none;">
+                <div class="productions-today-header">
+                    <h2 class="productions-today-title">Producciones del día</h2>
+                    </div>
+                <div class="productions-today-grid" id="productionsOfDay">
+                    <!-- 3 piezas horizontales se generan aquí -->
                 </div>
             </section>
 
-            <!-- PULSO DEL SISTEMA - Siempre visible pero discreto -->
+            <!-- ESTADO ACTIVO: Feed Curado (Historial Vivo) -->
+            <section class="living-feed-curated" id="livingActivitySection" style="display: none;">
+                <div class="living-feed-header">
+                    <h2 class="living-feed-title">Tu obra</h2>
+                    <p class="living-feed-subtitle">Archivo vivo curado automáticamente</p>
+                </div>
+                <div class="living-feed-grid" id="productionsList">
+                    <!-- 6-8 ítems coleccionables se generan aquí -->
+                </div>
+                <div class="living-feed-load-more" id="feedLoadMore" style="display: none;">
+                    <button class="feed-load-more-btn">Cargar más</button>
+                </div>
+            </section>
+
+            <!-- PULSO DEL SISTEMA - Con Contexto (Estado Activo) -->
             <section class="living-pulse-section" id="livingPulseSection">
-                <div class="living-pulse-grid">
-                    <!-- Recursos (derecha, secundario) -->
+                <div class="living-pulse-layout">
+                    <!-- Métricas con contexto (derecha) -->
                     <div class="living-pulse-sidebar">
                         <div class="pulse-resources-card">
                             <div class="pulse-resources-header">
-                                <span class="pulse-label-whisper">Your workspace is ready</span>
+                                <span class="pulse-label-whisper">Pulso del workspace</span>
                             </div>
                             <div class="pulse-resources-content" id="tokensResources">
                                 <div class="pulse-resource-item">
-                                    <span class="pulse-resource-label">Credits ready</span>
+                                    <span class="pulse-resource-label">Tokens hoy</span>
+                                    <span class="pulse-resource-value" id="tokensUsedTodayResource">0</span>
+                                </div>
+                                <div class="pulse-resource-item">
+                                    <span class="pulse-resource-label">Disponibles</span>
                                     <span class="pulse-resource-value" id="tokensAvailableResource">0</span>
                                 </div>
-                                <div class="pulse-resource-item">
-                                    <span class="pulse-resource-label">Storage available</span>
-                                    <span class="pulse-resource-value pulse-resource-status">Active</span>
-                                </div>
-                                <div class="pulse-resource-item">
-                                    <span class="pulse-resource-label">System</span>
-                                    <span class="pulse-resource-value pulse-resource-status">Ready</span>
-                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Comportamiento Inteligente (Insights) -->
+                    <div class="living-intelligence" id="livingIntelligence">
+                        <div class="intelligence-card">
+                            <div class="intelligence-icon">
+                                <i class="fas fa-lightbulb"></i>
+                            </div>
+                            <div class="intelligence-content">
+                                <p class="intelligence-text" id="intelligenceText">Tu workspace está activo</p>
                             </div>
                         </div>
                     </div>

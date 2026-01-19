@@ -23,16 +23,16 @@ class LivingManager {
 
     async init() {
         try {
-            // Verificar acceso antes de continuar
-            if (typeof verifyUserAccess === 'function') {
-                const hasAccess = await verifyUserAccess();
-                if (!hasAccess) {
+        // Verificar acceso antes de continuar
+        if (typeof verifyUserAccess === 'function') {
+            const hasAccess = await verifyUserAccess();
+            if (!hasAccess) {
                     console.warn('⚠️ Usuario no tiene acceso, deteniendo inicialización');
-                    return;
-                }
+                return;
             }
+        }
 
-            await this.initSupabase();
+        await this.initSupabase();
             
             if (!this.supabase) {
                 console.error('❌ No se pudo inicializar Supabase');
@@ -66,12 +66,12 @@ class LivingManager {
 
                 // Cargar flow outputs después de flow runs
                 if (this.flowRuns.length > 0) {
-                    await this.loadFlowOutputs();
-                }
+                await this.loadFlowOutputs();
+            }
 
                 // Cargar contenido generado después de obtener brand_id
                 await this.loadLatestGeneratedContent();
-            } else {
+        } else {
                 console.warn('⚠️ No hay projectData disponible');
             }
 
@@ -436,6 +436,7 @@ class LivingManager {
         this.renderLatestProductions();
         this.renderInsights();
         this.renderResources();
+        this.renderIntelligence();
     }
 
     determineLivingState() {
@@ -492,10 +493,11 @@ class LivingManager {
             return;
         }
         
-        // Estado activo/heavy: renderizar hero con imágenes
-        const productionsOfDayEl = document.getElementById('productionsOfDay');
+        // Estado activo/heavy: renderizar hero contextual y producciones del día
         const heroEmpty = document.getElementById('livingHeroSection');
         const heroActive = document.getElementById('livingHeroActive');
+        const productionsTodaySection = document.getElementById('livingProductionsToday');
+        const productionsOfDayEl = document.getElementById('productionsOfDay');
         
         // Mostrar/ocultar secciones según estado
         if (heroEmpty) {
@@ -504,6 +506,12 @@ class LivingManager {
         if (heroActive) {
             heroActive.style.display = 'flex';
         }
+        if (productionsTodaySection) {
+            productionsTodaySection.style.display = 'block';
+        }
+        
+        // Renderizar hero contextual (última producción destacada)
+        this.renderContextualHero();
         
         if (!productionsOfDayEl) return;
 
@@ -645,12 +653,12 @@ class LivingManager {
             
             // Obtener las últimas imágenes generadas (no solo de hoy)
             const imageOutputs = this.flowOutputs
-                .filter(output => {
+            .filter(output => {
                     // Filtrar solo outputs de tipo imagen
                     return output.output_type === 'image' && 
                            (output.storage_path || output.file_url || output.storage_object_id);
-                })
-                .slice(0, 3);
+            })
+            .slice(0, 3);
 
             // Convertir storage_path a URL pública si es necesario
             todayProductions = await Promise.all(imageOutputs.map(async (output) => {
@@ -812,71 +820,84 @@ class LivingManager {
             });
         }
 
-        // Renderizar con jerarquía: imagen dominante (primera) + 2 secundarias
-        const dominantItem = todayProductions[0];
-        const secondaryItems = todayProductions.slice(1, 3);
+        // Renderizar producciones del día (3 piezas horizontales)
+        // Si no hay 3 de hoy, usar las últimas relevantes
+        const productionsToShow = todayProductions.slice(0, 3);
         
-        let heroHTML = '';
+        let productionsHTML = '';
         
-        // Imagen dominante (grande)
-        if (dominantItem && dominantItem.image_url) {
-            const imageUrl = dominantItem.image_url + (dominantItem.image_url.includes('?') ? '&' : '?') + 't=' + Date.now();
-            const promptInfo = dominantItem.prompt_used ? `<div class="hero-visual-prompt">${this.escapeHtml(dominantItem.prompt_used.substring(0, 60))}...</div>` : '';
-            const styleInfo = dominantItem.style_trend ? `<div class="hero-visual-style">${this.escapeHtml(dominantItem.style_trend)}</div>` : '';
-            
-            heroHTML += `
-                <div class="hero-visual-dominant">
-                    <img src="${this.escapeHtml(imageUrl)}" 
-                         alt="Visual principal generado por IA" 
-                         loading="eager"
-                         onerror="this.parentElement.innerHTML='<div class=\\'hero-visual-placeholder\\'><i class=\\'fas fa-image\\'></i></div>';">
-                    ${promptInfo}
-                    ${styleInfo}
-                </div>
-            `;
-        } else {
-            heroHTML += `
-                <div class="hero-visual-dominant">
-                    <div class="hero-visual-placeholder">
-                        <i class="fas fa-image"></i>
-                    </div>
-                </div>
-            `;
-        }
-        
-        // Dos imágenes secundarias
-        heroHTML += '<div class="hero-visuals-secondary">';
-        for (let i = 0; i < 2; i++) {
-            const item = secondaryItems[i];
+        for (let i = 0; i < 3; i++) {
+            const item = productionsToShow[i];
             if (item && item.image_url) {
                 const imageUrl = item.image_url + (item.image_url.includes('?') ? '&' : '?') + 't=' + Date.now();
-                const promptInfo = item.prompt_used ? `<div class="hero-visual-prompt">${this.escapeHtml(item.prompt_used.substring(0, 50))}...</div>` : '';
-                const styleInfo = item.style_trend ? `<div class="hero-visual-style">${this.escapeHtml(item.style_trend)}</div>` : '';
+                const contentType = item.style_trend || 'Imagen';
+                const status = 'final'; // Por ahora, asumir final
                 
-                heroHTML += `
-                    <div class="hero-visual-secondary">
+                productionsHTML += `
+                    <div class="production-today-card">
                         <img src="${this.escapeHtml(imageUrl)}" 
-                             alt="Visual secundario generado por IA" 
+                             alt="Producción del día" 
+                             class="production-today-image"
                              loading="lazy"
-                             onerror="this.parentElement.innerHTML='<div class=\\'hero-visual-placeholder\\'><i class=\\'fas fa-image\\'></i></div>';">
-                        ${promptInfo}
-                        ${styleInfo}
+                             onerror="this.style.display='none';">
+                        <div class="production-today-info">
+                            <span class="production-today-type">${this.escapeHtml(contentType)}</span>
+                            <span class="production-today-status ${status}">${status}</span>
+                        </div>
                     </div>
                 `;
             } else {
-                heroHTML += `
-                    <div class="hero-visual-secondary">
-                        <div class="hero-visual-placeholder">
-                            <i class="fas fa-image"></i>
+                productionsHTML += `
+                    <div class="production-today-card">
+                        <div class="production-today-image" style="background: linear-gradient(135deg, rgba(212, 117, 78, 0.1) 0%, rgba(184, 93, 58, 0.1) 100%); display: flex; align-items: center; justify-content: center; color: var(--living-text-whisper);">
+                            <i class="fas fa-image" style="font-size: 2rem;"></i>
+                        </div>
+                        <div class="production-today-info">
+                            <span class="production-today-type">-</span>
+                            <span class="production-today-status draft">-</span>
                         </div>
                     </div>
                 `;
             }
         }
-        heroHTML += '</div>';
         
-        console.log('🎨 Renderizando Hero con jerarquía visual (1 dominante + 2 secundarias)');
-        productionsOfDayEl.innerHTML = heroHTML;
+        console.log('🎨 Renderizando Producciones del día (3 piezas horizontales)');
+        productionsOfDayEl.innerHTML = productionsHTML;
+    }
+
+    renderContextualHero() {
+        const heroContextualVisual = document.getElementById('heroContextualVisual');
+        if (!heroContextualVisual) return;
+        
+        // Obtener última producción destacada (de RPC o flow outputs)
+        const latestContent = this.latestGeneratedContent || [];
+        const latestProduction = latestContent[0] || this.flowOutputs.find(output => output.output_type === 'image');
+        
+        if (latestProduction) {
+            let imageUrl = latestProduction.image_url || latestProduction.file_url || latestProduction.url;
+            
+            if (imageUrl) {
+                imageUrl = imageUrl + (imageUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
+                heroContextualVisual.innerHTML = `
+                    <img src="${this.escapeHtml(imageUrl)}" 
+                         alt="Última producción destacada" 
+                         loading="eager"
+                         onerror="this.parentElement.innerHTML='<div class=\\'hero-contextual-placeholder\\'><i class=\\'fas fa-image\\'></i></div>';">
+                `;
+            } else {
+                heroContextualVisual.innerHTML = `
+                    <div class="hero-contextual-placeholder">
+                        <i class="fas fa-image"></i>
+                    </div>
+                `;
+            }
+        } else {
+            heroContextualVisual.innerHTML = `
+                <div class="hero-contextual-placeholder">
+                    <i class="fas fa-image"></i>
+                </div>
+            `;
+        }
     }
 
     renderEmptyHero() {
@@ -999,7 +1020,7 @@ class LivingManager {
         const productionsListEl = document.getElementById('productionsList');
         const activitySection = document.getElementById('livingActivitySection');
         
-        // Si está en estado vacío, ocultar sección de actividad
+        // Si está en estado vacío, ocultar sección de feed
         if (this.livingState === 'empty' || this.flowRuns.length === 0) {
             if (activitySection) {
                 activitySection.style.display = 'none';
@@ -1007,23 +1028,33 @@ class LivingManager {
             return;
         }
 
-        // Mostrar sección de actividad para estados activo/heavy
+        // Mostrar sección de feed para estados activo/heavy
         if (activitySection) {
             activitySection.style.display = 'block';
         }
         
         if (!productionsListEl) return;
         
-        // Ajustar cantidad según el estado
-        const maxCards = this.livingState === 'heavy' ? 12 : 8;
+        // Feed curado: máximo 6-8 ítems inicialmente
+        const maxCards = this.livingState === 'heavy' ? 8 : 6;
+        const loadMoreBtn = document.getElementById('feedLoadMore');
 
-        // Obtener producciones según el estado
+        // Obtener producciones para feed curado (coleccionables)
         const latestRuns = this.flowRuns.slice(0, maxCards);
+        
+        // Mostrar botón "Cargar más" si hay más producciones
+        if (this.flowRuns.length > maxCards && loadMoreBtn) {
+            loadMoreBtn.style.display = 'block';
+            loadMoreBtn.querySelector('button').onclick = () => {
+                this.loadMoreProductions(maxCards);
+            };
+        } else if (loadMoreBtn) {
+            loadMoreBtn.style.display = 'none';
+        }
 
         productionsListEl.innerHTML = latestRuns.map(run => {
             // Buscar output de imagen para este run
             const imageOutput = this.flowOutputs.find(output => output.run_id === run.id);
-            const product = run.brand_id ? this.products.find(p => p.id === run.brand_id) : null;
             
             // Determinar tipo de contenido y estado
             const contentType = this.getContentType(run, imageOutput);
@@ -1034,28 +1065,69 @@ class LivingManager {
             if (imageOutput) {
                 imageUrl = imageOutput.file_url || imageOutput.storage_path;
                 if (imageUrl && !imageUrl.startsWith('http')) {
-                    // Si es storage_path, intentar construir URL
-                    // Esto se manejará mejor en el futuro, por ahora usar placeholder
                     imageUrl = null;
                 }
             }
 
             return `
-                <div class="production-card-cinematic">
+                <div class="feed-item-collectible">
                     ${imageUrl 
-                        ? `<img src="${this.escapeHtml(imageUrl)}" alt="Producción" class="production-card-cinematic-image" loading="lazy" onerror="this.style.display='none'; this.parentElement.querySelector('.production-card-cinematic-info').style.paddingTop='4rem';">`
-                        : `<div class="production-card-cinematic-image" style="background: linear-gradient(135deg, rgba(212, 117, 78, 0.1) 0%, rgba(184, 93, 58, 0.1) 100%); display: flex; align-items: center; justify-content: center; color: var(--living-text-whisper);"><i class="fas fa-image" style="font-size: 3rem;"></i></div>`
+                        ? `<img src="${this.escapeHtml(imageUrl)}" alt="Producción" class="feed-item-image" loading="lazy" onerror="this.style.display='none';">`
+                        : `<div class="feed-item-image" style="background: linear-gradient(135deg, rgba(212, 117, 78, 0.1) 0%, rgba(184, 93, 58, 0.1) 100%); display: flex; align-items: center; justify-content: center; color: var(--living-text-whisper);"><i class="fas fa-image" style="font-size: 2rem;"></i></div>`
                     }
-                    <div class="production-card-cinematic-info">
-                        <h4 class="production-card-cinematic-title">${this.escapeHtml(run.status || 'Producción')}</h4>
-                        <div class="production-card-cinematic-meta">
-                            <span class="production-card-cinematic-status ${status}">${status}</span>
-                            ${product ? `<span>${this.escapeHtml(product.nombre_producto)}</span>` : ''}
-                        </div>
+                    <div class="feed-item-info">
+                        <span class="feed-item-type">${this.escapeHtml(contentType)}</span>
+                        <span class="feed-item-status ${status}">${status}</span>
                     </div>
                 </div>
             `;
         }).join('');
+    }
+
+    loadMoreProductions(currentCount) {
+        const productionsListEl = document.getElementById('productionsList');
+        if (!productionsListEl) return;
+        
+        const nextBatch = this.flowRuns.slice(currentCount, currentCount + 6);
+        const loadMoreBtn = document.getElementById('feedLoadMore');
+        
+        nextBatch.forEach(run => {
+            const imageOutput = this.flowOutputs.find(output => output.run_id === run.id);
+            const contentType = this.getContentType(run, imageOutput);
+            const status = this.getProductionStatus(run);
+            let imageUrl = null;
+            
+            if (imageOutput) {
+                imageUrl = imageOutput.file_url || imageOutput.storage_path;
+                if (imageUrl && !imageUrl.startsWith('http')) {
+                    imageUrl = null;
+                }
+            }
+            
+            const itemHTML = `
+                <div class="feed-item-collectible">
+                    ${imageUrl 
+                        ? `<img src="${this.escapeHtml(imageUrl)}" alt="Producción" class="feed-item-image" loading="lazy" onerror="this.style.display='none';">`
+                        : `<div class="feed-item-image" style="background: linear-gradient(135deg, rgba(212, 117, 78, 0.1) 0%, rgba(184, 93, 58, 0.1) 100%); display: flex; align-items: center; justify-content: center; color: var(--living-text-whisper);"><i class="fas fa-image" style="font-size: 2rem;"></i></div>`
+                    }
+                    <div class="feed-item-info">
+                        <span class="feed-item-type">${this.escapeHtml(contentType)}</span>
+                        <span class="feed-item-status ${status}">${status}</span>
+                    </div>
+                </div>
+            `;
+            
+            productionsListEl.insertAdjacentHTML('beforeend', itemHTML);
+        });
+        
+        // Ocultar botón si no hay más
+        if (currentCount + nextBatch.length >= this.flowRuns.length && loadMoreBtn) {
+            loadMoreBtn.style.display = 'none';
+        } else if (loadMoreBtn) {
+            loadMoreBtn.querySelector('button').onclick = () => {
+                this.loadMoreProductions(currentCount + nextBatch.length);
+            };
+        }
     }
 
     getContentType(run, output) {
@@ -1141,7 +1213,7 @@ class LivingManager {
         const tokensUsedTodayEl = document.getElementById('tokensUsedTodayResource');
         const tokensProgressEl = document.getElementById('tokensProgressResource');
 
-        if (!tokensAvailableEl || !tokensUsedTodayEl || !tokensProgressEl) return;
+        if (!tokensAvailableEl || !tokensUsedTodayEl) return;
 
         const totalCredits = this.userData?.credits_total || 0;
         const availableCredits = this.userData?.credits_available || 0;
@@ -1160,8 +1232,74 @@ class LivingManager {
         tokensAvailableEl.textContent = availableCredits.toLocaleString();
         tokensUsedTodayEl.textContent = tokensUsedToday.toLocaleString();
 
-        const percentage = totalCredits > 0 ? Math.round((usedCredits / totalCredits) * 100) : 0;
-        tokensProgressEl.style.width = `${percentage}%`;
+        if (tokensProgressEl) {
+            const percentage = totalCredits > 0 ? Math.round((usedCredits / totalCredits) * 100) : 0;
+            tokensProgressEl.style.width = `${percentage}%`;
+        }
+    }
+
+    renderIntelligence() {
+        // Solo en estados activo/heavy
+        if (this.livingState === 'empty') return;
+        
+        const intelligenceTextEl = document.getElementById('intelligenceText');
+        if (!intelligenceTextEl) return;
+        
+        // Generar insight inteligente basado en datos
+        const insights = [];
+        
+        // Producto más producido
+        if (this.products.length > 0 && this.flowRuns.length > 0) {
+            const productCounts = {};
+            this.flowRuns.forEach(run => {
+                if (run.brand_id) {
+                    productCounts[run.brand_id] = (productCounts[run.brand_id] || 0) + 1;
+                }
+            });
+            
+            let topProduct = null;
+            let maxCount = 0;
+            this.products.forEach(product => {
+                const count = productCounts[product.id] || 0;
+                if (count > maxCount) {
+                    maxCount = count;
+                    topProduct = product;
+                }
+            });
+            
+            if (topProduct && maxCount > 0) {
+                insights.push(`Tu marca está produciendo más contenido de producto.`);
+            }
+        }
+        
+        // Formato más usado
+        const formatCounts = {};
+        this.flowRuns.forEach(run => {
+            const contentType = this.getContentType(run, null);
+            formatCounts[contentType] = (formatCounts[contentType] || 0) + 1;
+        });
+        
+        let topFormat = null;
+        let maxFormatCount = 0;
+        Object.keys(formatCounts).forEach(format => {
+            if (formatCounts[format] > maxFormatCount) {
+                maxFormatCount = formatCounts[format];
+                topFormat = format;
+            }
+        });
+        
+        if (topFormat && maxFormatCount > 0) {
+            insights.push(`El formato más usado esta semana fue ${topFormat.toLowerCase()}.`);
+        }
+        
+        // Insight por defecto
+        if (insights.length === 0) {
+            insights.push('Tu workspace está activo.');
+        }
+        
+        // Mostrar insight aleatorio o el primero
+        const insight = insights[Math.floor(Math.random() * insights.length)];
+        intelligenceTextEl.textContent = insight;
     }
 
     getProductionStatus(run) {

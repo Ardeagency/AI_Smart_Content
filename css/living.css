@@ -277,20 +277,184 @@ body.sidebar-collapsed .living-container {
 }
 
 /* ============================================
-   HERO CINEMATOGRÁFICO - ESTADO ACTIVO/HEAVY
+   HERO CONTEXTUAL - ESTADO ACTIVO (Reducido)
    ============================================ */
-.living-hero-active {
+.living-hero-contextual {
     position: relative;
     width: 100%;
-    min-height: 75vh;
+    min-height: 40vh;
+    max-height: 45vh;
     margin-top: -48px;
     padding-top: 48px;
-    padding-bottom: 4rem;
-    margin-bottom: var(--living-spacing-section);
+    padding-bottom: 3rem;
+    margin-bottom: 2rem;
     overflow: visible;
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.living-hero-contextual-backdrop {
+    position: absolute;
+    inset: 0;
+    top: -48px;
+    z-index: 0;
+}
+
+.living-hero-contextual-content {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 1800px;
+    margin: 0 auto;
+    padding: 0 var(--living-spacing-hero);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.hero-contextual-visual {
+    width: 100%;
+    max-width: 800px;
+    aspect-ratio: 16/9;
+    border-radius: 16px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.4);
+    box-shadow: var(--living-shadow-medium);
+    cursor: pointer;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hero-contextual-visual:hover {
+    transform: scale(1.02);
+    box-shadow: var(--living-shadow-deep);
+}
+
+.hero-contextual-visual img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.hero-contextual-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--living-text-whisper);
+    font-size: 3rem;
+    background: linear-gradient(135deg, rgba(212, 117, 78, 0.1) 0%, rgba(184, 93, 58, 0.1) 100%);
+}
+
+.hero-contextual-text {
+    text-align: center;
+}
+
+.hero-contextual-label {
+    font-size: 0.875rem;
+    color: var(--living-text-whisper);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 300;
+    margin: 0;
+}
+
+/* ============================================
+   PRODUCCIONES DEL DÍA - Protagonista (Estado Activo)
+   ============================================ */
+.living-productions-today {
+    padding: 0 var(--living-spacing-hero) 4rem;
+    max-width: 1800px;
+    margin: 0 auto;
+}
+
+.productions-today-header {
+    margin-bottom: 2.5rem;
+}
+
+.productions-today-title {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--living-text-light);
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+.productions-today-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+}
+
+.production-today-card {
+    background: var(--living-bg-card);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--living-shadow-soft);
+    cursor: pointer;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.production-today-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--living-shadow-medium);
+}
+
+.production-today-image {
+    width: 100%;
+    aspect-ratio: 16/10;
+    object-fit: cover;
+    display: block;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.production-today-info {
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.production-today-type {
+    font-size: 0.813rem;
+    color: var(--living-text-muted);
+    text-transform: capitalize;
+}
+
+.production-today-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 1rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.production-today-status.final {
+    background: rgba(212, 117, 78, 0.2);
+    color: var(--living-text-gold);
+    border: 1px solid rgba(212, 117, 78, 0.3);
+}
+
+.production-today-status.draft {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--living-text-muted);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.production-today-status.rendering {
+    background: rgba(212, 117, 78, 0.25);
+    color: var(--living-text-gold);
+    border: 1px solid rgba(212, 117, 78, 0.4);
 }
 
 .living-hero-content {
@@ -420,32 +584,129 @@ body.sidebar-collapsed .living-container {
 }
 
 /* ============================================
-   ACTIVIDAD RECIENTE - ESTADO ACTIVO/HEAVY
+   FEED CURADO - Historial Vivo (Estado Activo)
    ============================================ */
-.living-activity-section {
+.living-feed-curated {
     padding: 0 var(--living-spacing-hero) var(--living-spacing-section);
     max-width: 1800px;
     margin: 0 auto;
 }
 
-.living-activity-header {
+.living-feed-header {
     margin-bottom: 3rem;
 }
 
-.living-section-title-whisper {
-    font-size: 0.875rem;
-    font-weight: 400;
-    color: var(--living-text-whisper);
+.living-feed-title {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--living-text-light);
+    margin: 0 0 0.5rem 0;
+    letter-spacing: -0.5px;
+}
+
+.living-feed-subtitle {
+    font-size: 0.938rem;
+    color: var(--living-text-muted);
     margin: 0;
-    text-transform: uppercase;
-    letter-spacing: 2px;
     font-weight: 300;
 }
 
-.living-activity-grid {
+.living-feed-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-    gap: 2.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.feed-item-collectible {
+    background: var(--living-bg-card);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--living-shadow-soft);
+    cursor: pointer;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.feed-item-collectible:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--living-shadow-medium);
+    border-color: rgba(212, 117, 78, 0.3);
+}
+
+.feed-item-image {
+    width: 100%;
+    aspect-ratio: 16/10;
+    object-fit: cover;
+    display: block;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.feed-item-info {
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.feed-item-type {
+    font-size: 0.813rem;
+    color: var(--living-text-muted);
+    text-transform: capitalize;
+}
+
+.feed-item-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 1rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.feed-item-status.final {
+    background: rgba(212, 117, 78, 0.2);
+    color: var(--living-text-gold);
+    border: 1px solid rgba(212, 117, 78, 0.3);
+}
+
+.feed-item-status.draft {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--living-text-muted);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.feed-item-status.rendering {
+    background: rgba(212, 117, 78, 0.25);
+    color: var(--living-text-gold);
+    border: 1px solid rgba(212, 117, 78, 0.4);
+}
+
+.living-feed-load-more {
+    margin-top: 3rem;
+    text-align: center;
+}
+
+.feed-load-more-btn {
+    padding: 1rem 2.5rem;
+    font-size: 0.938rem;
+    font-weight: 500;
+    color: var(--living-text-light);
+    background: var(--living-bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.feed-load-more-btn:hover {
+    background: var(--living-bg-card-hover);
+    border-color: rgba(212, 117, 78, 0.3);
+    transform: translateY(-2px);
 }
 
 /* Cards grandes que flotan */
@@ -525,7 +786,7 @@ body.sidebar-collapsed .living-container {
 }
 
 /* ============================================
-   PULSO DEL SISTEMA - Siempre Discreto
+   PULSO DEL SISTEMA - Con Contexto (Estado Activo)
    ============================================ */
 .living-pulse-section {
     padding: 0 var(--living-spacing-hero) var(--living-spacing-section);
@@ -533,15 +794,57 @@ body.sidebar-collapsed .living-container {
     margin: 0 auto;
 }
 
-.living-pulse-grid {
-    display: flex;
-    justify-content: flex-end;
+.living-pulse-layout {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 3rem;
     align-items: start;
 }
 
 .living-pulse-sidebar {
+    justify-self: end;
     width: 100%;
     max-width: 380px;
+}
+
+.living-intelligence {
+    max-width: 400px;
+}
+
+.intelligence-card {
+    background: var(--living-bg-card);
+    border-radius: 16px;
+    padding: 2rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1.25rem;
+    box-shadow: var(--living-shadow-soft);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.intelligence-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--living-text-gold);
+    font-size: 1.125rem;
+    flex-shrink: 0;
+    background: rgba(212, 117, 78, 0.1);
+    border-radius: 10px;
+}
+
+.intelligence-content {
+    flex: 1;
+}
+
+.intelligence-text {
+    font-size: 0.938rem;
+    color: var(--living-text-light);
+    margin: 0;
+    line-height: 1.6;
+    font-weight: 400;
 }
 
 .pulse-resources-card {
@@ -630,12 +933,28 @@ body.sidebar-collapsed .living-container {
     padding-top: 0;
 }
 
-/* Estado Activo/Heavy - Ocultar secciones vacías */
+/* Estado Activo - Mostrar secciones activas */
 .living-state-active .living-hero-empty,
-.living-state-active .living-activation-section,
+.living-state-active .living-activation-section {
+    display: none !important;
+}
+
+.living-state-active .living-hero-active,
+.living-state-active .living-productions-today,
+.living-state-active .living-feed-curated {
+    display: block !important;
+}
+
+/* Estado Heavy - Similar a activo pero con optimizaciones */
 .living-state-heavy .living-hero-empty,
 .living-state-heavy .living-activation-section {
     display: none !important;
+}
+
+.living-state-heavy .living-hero-active,
+.living-state-heavy .living-productions-today,
+.living-state-heavy .living-feed-curated {
+    display: block !important;
 }
 
 /* Estado Heavy - Optimizaciones */
