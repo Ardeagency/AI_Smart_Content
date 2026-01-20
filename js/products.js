@@ -91,6 +91,7 @@ if (typeof window.ProductsManager === 'undefined') {
 
     /**
      * Esperar a que los elementos del DOM estén disponibles
+     * Busca primero en todo el documento, luego en app-container
      */
     async waitForElements(elementIds, maxAttempts = 10) {
         const elements = {};
@@ -106,7 +107,17 @@ if (typeof window.ProductsManager === 'undefined') {
                 
                 for (const id of elementIds) {
                     if (!elements[id]) {
-                        const element = document.getElementById(id);
+                        // Buscar primero en todo el documento
+                        let element = document.getElementById(id);
+                        
+                        // Si no se encuentra, buscar en app-container
+                        if (!element) {
+                            const appContainer = document.getElementById('app-container');
+                            if (appContainer) {
+                                element = appContainer.querySelector(`#${id}`);
+                            }
+                        }
+                        
                         if (element) {
                             elements[id] = element;
                         } else {
@@ -348,13 +359,26 @@ if (typeof window.ProductsManager === 'undefined') {
         const elements = await this.waitForElements(['loadingState', 'emptyState', 'productsGrid'], 10);
         
         if (!elements.loadingState || !elements.emptyState || !elements.productsGrid) {
-            console.error('❌ Elementos del DOM no encontrados después de 10 intentos');
-            console.warn('⚠️ Buscando elementos:', {
-                container: elements.loadingState?.parentElement?.innerHTML?.substring(0, 50) || 'no encontrado',
-                emptyState: !!elements.emptyState,
-                productsGrid: !!elements.productsGrid
-            });
-            return;
+            // Si no se encontraron, intentar buscar directamente en app-container
+            const appContainer = document.getElementById('app-container');
+            if (appContainer) {
+                const containerLoading = appContainer.querySelector('#loadingState');
+                const containerEmpty = appContainer.querySelector('#emptyState');
+                const containerGrid = appContainer.querySelector('#productsGrid');
+                
+                if (containerLoading && containerEmpty && containerGrid) {
+                    // Usar elementos encontrados en el container
+                    elements.loadingState = containerLoading;
+                    elements.emptyState = containerEmpty;
+                    elements.productsGrid = containerGrid;
+                } else {
+                    // Si aún no se encuentran, retornar sin error (puede que el template aún no se haya renderizado)
+                    return;
+                }
+            } else {
+                // Si no hay app-container, retornar sin error
+                return;
+            }
         }
 
         const { loadingState, emptyState, productsGrid } = elements;
