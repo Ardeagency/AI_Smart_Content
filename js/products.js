@@ -399,35 +399,21 @@ if (typeof window.ProductsManager === 'undefined') {
     }
 
     async loadProducts() {
-        console.log('🚀 loadProducts() iniciado');
-        console.log('🔍 Estado actual:', {
-            supabase: !!this.supabase,
-            isValidClient: this.supabase ? this.isValidSupabaseClient(this.supabase) : false,
-            userId: this.userId,
-            brandContainerId: this.brandContainerId
-        });
-
-        // Validar cliente de Supabase antes de hacer consulta
+        // ============================================
+        // VALIDACIONES INICIALES
+        // ============================================
+        
+        // Validar cliente de Supabase
         if (!this.supabase || !this.isValidSupabaseClient(this.supabase) || !this.userId) {
-            console.warn('⚠️ Cliente de Supabase no válido o userId no disponible');
-            const elements = await this.waitForElements(['loadingState', 'emptyState', 'productsGrid'], 10);
-            if (elements.loadingState && elements.emptyState && elements.productsGrid) {
-                elements.loadingState.style.display = 'none';
-                elements.emptyState.style.display = 'block';
-                elements.productsGrid.style.display = 'none';
-            }
             this.products = [];
             return;
         }
 
-        console.log('✅ Validaciones pasadas, buscando elementos del DOM...');
-        
-        // Buscar elementos directamente - pueden estar en app-container o en productsGallery
+        // Buscar elementos del DOM
         let loadingState = document.getElementById('loadingState');
         let emptyState = document.getElementById('emptyState');
         let productsGrid = document.getElementById('productsGrid');
         
-        // Si no se encuentran directamente, buscar en app-container
         if (!loadingState || !emptyState || !productsGrid) {
             const appContainer = document.getElementById('app-container');
             if (appContainer) {
@@ -437,7 +423,6 @@ if (typeof window.ProductsManager === 'undefined') {
             }
         }
         
-        // Si aún no se encuentran, buscar en productsGallery
         if (!loadingState || !emptyState || !productsGrid) {
             const productsGallery = document.getElementById('productsGallery');
             if (productsGallery) {
@@ -447,166 +432,103 @@ if (typeof window.ProductsManager === 'undefined') {
             }
         }
         
-        console.log('🔍 Elementos encontrados:', {
-            loadingState: !!loadingState,
-            emptyState: !!emptyState,
-            productsGrid: !!productsGrid
-        });
-        
         if (!loadingState || !emptyState || !productsGrid) {
-            console.error('❌ No se pudieron encontrar los elementos necesarios del DOM');
-            console.error('❌ loadingState:', loadingState);
-            console.error('❌ emptyState:', emptyState);
-            console.error('❌ productsGrid:', productsGrid);
+            return;
+        }
+
+        // Mostrar estado de carga
+        loadingState.style.display = 'block';
+        emptyState.style.display = 'none';
+        productsGrid.style.display = 'none';
+
+        // Validar brandContainerId
+        if (!this.brandContainerId) {
+            loadingState.style.display = 'none';
+            emptyState.style.display = 'block';
+            this.products = [];
+            return;
+        }
+
+        // Validar UUID
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (!uuidRegex.test(this.brandContainerId)) {
+            loadingState.style.display = 'none';
+            emptyState.style.display = 'block';
+            this.products = [];
             return;
         }
 
         try {
-            loadingState.style.display = 'block';
-            emptyState.style.display = 'none';
-            productsGrid.style.display = 'none';
-
-            // Si no hay brand_container, no hay productos
-            if (!this.brandContainerId) {
-                console.warn('⚠️ No hay brandContainerId, no se pueden cargar productos');
-                loadingState.style.display = 'none';
-                emptyState.style.display = 'block';
-                this.products = [];
-                return;
-            }
-
-            console.log('🔍 Intentando cargar productos para brandContainerId:', this.brandContainerId);
-
-            // Validar que brandContainerId sea un UUID válido
-            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-            if (!uuidRegex.test(this.brandContainerId)) {
-                console.warn('⚠️ brandContainerId no es un UUID válido:', this.brandContainerId);
-                loadingState.style.display = 'none';
-                emptyState.style.display = 'block';
-                this.products = [];
-                return;
-            }
-
-            // Validar nuevamente el cliente antes de consultar
-            if (!this.isValidSupabaseClient(this.supabase)) {
-                console.warn('⚠️ Cliente de Supabase no válido antes de consultar productos');
-                loadingState.style.display = 'none';
-                emptyState.style.display = 'block';
-                this.products = [];
-                return;
-            }
-
-            // Nuevo método: Primero obtener brand_entities, luego products, luego product_images
-            // Paso 1: Obtener brand_entities según schema.sql (línea 90-107)
-            console.log('🔍 Paso 1: Obteniendo brand_entities...');
-            const { data: brandEntities, error: entitiesError } = await this.supabase
-                .from('brand_entities')
-                .select('id, brand_container_id, entity_type, name, description, core_benefits, differentiation, usage_context, price, currency, metadata, created_at, updated_at')
-                .eq('brand_container_id', this.brandContainerId)
-                .order('created_at', { ascending: false });
-
-            if (entitiesError) {
-                if (entitiesError.status === 400 || entitiesError.code === '400') {
-                    console.warn('⚠️ Error 400 cargando brand_entities:', entitiesError.message);
-                }
-                console.error('❌ Error cargando brand_entities:', entitiesError);
-                loadingState.style.display = 'none';
-                emptyState.style.display = 'block';
-                this.products = [];
-                return;
-            }
-
-            console.log(`✅ ${brandEntities?.length || 0} brand_entity(ies) encontrado(s)`);
-
-            // Paso 2: Obtener products relacionados con esas brand_entities según schema.sql (línea 307-328)
-            // products tiene entity_id que referencia a brand_entities(id)
-            if (!brandEntities || brandEntities.length === 0) {
-                console.warn('⚠️ No hay brand_entities, no se pueden cargar productos');
-                loadingState.style.display = 'none';
-                emptyState.style.display = 'block';
-                this.products = [];
-                return;
-            }
-
-            // Obtener los IDs de las brand_entities
-            const entityIds = brandEntities.map(entity => entity.id).filter(id => id && uuidRegex.test(id));
-            
-            if (entityIds.length === 0) {
-                console.warn('⚠️ No hay entityIds válidos');
-                loadingState.style.display = 'none';
-                emptyState.style.display = 'block';
-                this.products = [];
-                return;
-            }
-
-            console.log('🔍 Paso 2: Obteniendo products relacionados con brand_entities...');
+            // ============================================
+            // PASO 1: OBTENER PRODUCTS según schema.sql (línea 307-328)
+            // ============================================
+            // products.brand_container_id -> brand_containers.id
             const { data: products, error: productsError } = await this.supabase
                 .from('products')
                 .select('id, brand_container_id, tipo_producto, nombre_producto, descripcion_producto, beneficio_1, beneficio_2, beneficio_3, diferenciacion, modo_uso, ingredientes, precio_producto, moneda, variantes_producto, created_at, updated_at, entity_id')
                 .eq('brand_container_id', this.brandContainerId)
-                .in('entity_id', entityIds)
                 .order('created_at', { ascending: false });
 
             if (productsError) {
                 if (productsError.status === 400 || productsError.code === '400') {
                     console.warn('⚠️ Error 400 cargando products:', productsError.message);
-                    console.warn('⚠️ brand_container_id usado:', this.brandContainerId);
-                    console.warn('⚠️ entityIds usados:', entityIds);
                 }
-                console.error('❌ Error cargando products:', productsError);
+                throw productsError;
+            }
+
+            if (!products || products.length === 0) {
                 loadingState.style.display = 'none';
                 emptyState.style.display = 'block';
                 this.products = [];
                 return;
             }
 
-            console.log(`✅ ${products?.length || 0} producto(s) encontrado(s)`);
+            // ============================================
+            // PASO 2: OBTENER PRODUCT_IMAGES según schema.sql (línea 297-306)
+            // ============================================
+            // product_images.product_id -> products.id
+            const productIds = products
+                .map(p => p.id)
+                .filter(id => id && uuidRegex.test(id));
 
-            // Paso 3: Cargar product_images para cada producto según schema.sql (línea 297-306)
-            if (products && products.length > 0) {
-                console.log('🔍 Paso 3: Obteniendo product_images para cada producto...');
-                const productIds = products.map(p => p.id).filter(id => id && uuidRegex.test(id));
-                
-                if (productIds.length > 0) {
-                    // Obtener todas las imágenes de una vez usando .in()
-                    const { data: allImages, error: imagesError } = await this.supabase
-                        .from('product_images')
-                        .select('id, product_id, image_url, image_type, image_order, created_at')
-                        .in('product_id', productIds)
-                        .order('product_id, image_order', { ascending: true });
+            if (productIds.length > 0) {
+                const { data: allImages, error: imagesError } = await this.supabase
+                    .from('product_images')
+                    .select('id, product_id, image_url, image_type, image_order, created_at')
+                    .in('product_id', productIds)
+                    .order('product_id, image_order', { ascending: true });
 
-                    if (!imagesError && allImages) {
-                        // Agrupar imágenes por product_id
-                        const imagesByProduct = {};
-                        allImages.forEach(image => {
-                            if (!imagesByProduct[image.product_id]) {
-                                imagesByProduct[image.product_id] = [];
-                            }
-                            imagesByProduct[image.product_id].push(image);
-                        });
-
-                        // Asignar imágenes a cada producto
-                        products.forEach(product => {
-                            product.images = imagesByProduct[product.id] || [];
-                        });
-
-                        console.log(`✅ ${allImages.length} imagen(es) cargada(s) para ${products.length} producto(s)`);
-                    } else {
-                        if (imagesError && (imagesError.status === 400 || imagesError.code === '400')) {
-                            console.warn('⚠️ Error 400 cargando product_images:', imagesError.message);
+                if (!imagesError && allImages) {
+                    // Agrupar imágenes por product_id
+                    const imagesByProduct = {};
+                    allImages.forEach(image => {
+                        if (!imagesByProduct[image.product_id]) {
+                            imagesByProduct[image.product_id] = [];
                         }
-                        // Si hay error, asignar array vacío a cada producto
-                        products.forEach(product => {
-                            product.images = [];
-                        });
-                    }
+                        imagesByProduct[image.product_id].push(image);
+                    });
+
+                    // Asignar imágenes a cada producto
+                    products.forEach(product => {
+                        product.images = imagesByProduct[product.id] || [];
+                    });
                 } else {
-                    // Si no hay productIds válidos, asignar array vacío
+                    // Si hay error, asignar array vacío
                     products.forEach(product => {
                         product.images = [];
                     });
                 }
+            } else {
+                // Si no hay productIds válidos, asignar array vacío
+                products.forEach(product => {
+                    product.images = [];
+                });
             }
+
+            // ============================================
+            // ASIGNAR PRODUCTOS Y RENDERIZAR
+            // ============================================
+            this.products = products;
 
             this.products = products || [];
             console.log('📦 Productos asignados:', this.products.length);
