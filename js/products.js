@@ -264,12 +264,10 @@ if (typeof window.ProductsManager === 'undefined') {
                 return;
             }
 
-            if (brandContainer) {
+            if (brandContainer && brandContainer.id) {
                 this.brandContainerId = brandContainer.id;
-                console.log('✅ Brand container cargado:', this.brandContainerId);
             } else {
                 this.brandContainerId = null;
-                console.log('ℹ️ No hay brand_container asociado');
             }
         } catch (error) {
             console.warn('⚠️ Error cargando brand_container:', error);
@@ -433,8 +431,6 @@ if (typeof window.ProductsManager === 'undefined') {
                 console.error('❌ Error cargando productos:', error);
                 throw error;
             }
-
-            console.log(`✅ ${products?.length || 0} producto(s) encontrado(s)`);
 
             // Cargar imágenes para cada producto
             if (products && products.length > 0) {

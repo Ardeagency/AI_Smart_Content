@@ -182,13 +182,28 @@ class ProductsView extends BaseView {
     if (!this.supabase || !this.userId) return;
 
     try {
+      // Validar que userId sea válido
+      if (!this.userId || typeof this.userId !== 'string' || this.userId.trim() === '') {
+        return;
+      }
+
+      // Usar maybeSingle() en lugar de single() para evitar errores si no hay registro
       const { data, error } = await this.supabase
         .from('brand_containers')
         .select('id')
         .eq('user_id', this.userId)
-        .single();
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      if (!error && data) {
+      if (error) {
+        if (error.status === 400 || error.code === '400') {
+          console.warn('⚠️ Error 400 cargando brand_container en ProductsView:', error.message);
+        }
+        return;
+      }
+
+      if (data && data.id) {
         this.brandContainerId = data.id;
       }
     } catch (error) {
