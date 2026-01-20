@@ -508,10 +508,11 @@ class BaseView {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError || !user) return;
 
-      // Obtener perfil del usuario
+      // Obtener perfil del usuario según schema.sql (línea 381-393)
+      // Nota: user_profiles NO tiene columna avatar_url según schema
       const { data: profile } = await supabase
         .from('user_profiles')
-        .select('full_name, email, avatar_url')
+        .select('id, full_name, email, phone_number, role, email_verified, is_active')
         .eq('id', user.id)
         .maybeSingle();
 
@@ -526,15 +527,8 @@ class BaseView {
           headerUserInitials.textContent = initials || 'U';
         }
 
-        // Si hay avatar URL, usarlo
-        if (headerUserAvatar && profile.avatar_url) {
-          headerUserAvatar.style.backgroundImage = `url(${profile.avatar_url})`;
-          headerUserAvatar.style.backgroundSize = 'cover';
-          headerUserAvatar.style.backgroundPosition = 'center';
-          if (headerUserInitials) {
-            headerUserInitials.style.display = 'none';
-          }
-        }
+        // Nota: user_profiles no tiene avatar_url según schema.sql
+        // Usar solo iniciales generadas desde full_name o email
       }
 
       // Setup event listeners para dropdown de usuario
