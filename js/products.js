@@ -413,7 +413,7 @@ if (typeof window.ProductsManager === 'undefined') {
         let loadingState = document.getElementById('loadingState');
         let emptyState = document.getElementById('emptyState');
         let productsGrid = document.getElementById('productsGrid');
-        
+
         if (!loadingState || !emptyState || !productsGrid) {
             const appContainer = document.getElementById('app-container');
             if (appContainer) {
@@ -437,17 +437,17 @@ if (typeof window.ProductsManager === 'undefined') {
         }
 
         // Mostrar estado de carga
-        loadingState.style.display = 'block';
-        emptyState.style.display = 'none';
-        productsGrid.style.display = 'none';
+            loadingState.style.display = 'block';
+            emptyState.style.display = 'none';
+            productsGrid.style.display = 'none';
 
         // Validar brandContainerId
-        if (!this.brandContainerId) {
-            loadingState.style.display = 'none';
-            emptyState.style.display = 'block';
-            this.products = [];
-            return;
-        }
+            if (!this.brandContainerId) {
+                loadingState.style.display = 'none';
+                emptyState.style.display = 'block';
+                this.products = [];
+                return;
+            }
 
         // Validar UUID
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -472,16 +472,22 @@ if (typeof window.ProductsManager === 'undefined') {
             if (productsError) {
                 if (productsError.status === 400 || productsError.code === '400') {
                     console.warn('⚠️ Error 400 cargando products:', productsError.message);
+                    console.warn('⚠️ brand_container_id usado:', this.brandContainerId);
                 }
                 throw productsError;
             }
 
+            console.log(`✅ ${products?.length || 0} producto(s) encontrado(s) en la consulta`);
+
             if (!products || products.length === 0) {
+                console.log('ℹ️ No hay productos en la base de datos para este brand_container_id');
                 loadingState.style.display = 'none';
                 emptyState.style.display = 'block';
                 this.products = [];
                 return;
             }
+
+            console.log('📦 Productos obtenidos:', products.map(p => ({ id: p.id, nombre: p.nombre_producto })));
 
             // ============================================
             // PASO 2: OBTENER PRODUCT_IMAGES según schema.sql (línea 297-306)
@@ -493,7 +499,7 @@ if (typeof window.ProductsManager === 'undefined') {
 
             if (productIds.length > 0) {
                 const { data: allImages, error: imagesError } = await this.supabase
-                    .from('product_images')
+                        .from('product_images')
                     .select('id, product_id, image_url, image_type, image_order, created_at')
                     .in('product_id', productIds)
                     .order('product_id, image_order', { ascending: true });
@@ -512,7 +518,7 @@ if (typeof window.ProductsManager === 'undefined') {
                     products.forEach(product => {
                         product.images = imagesByProduct[product.id] || [];
                     });
-                } else {
+                    } else {
                     // Si hay error, asignar array vacío
                     products.forEach(product => {
                         product.images = [];
@@ -529,18 +535,24 @@ if (typeof window.ProductsManager === 'undefined') {
             // ASIGNAR PRODUCTOS Y RENDERIZAR
             // ============================================
             this.products = products;
+            console.log(`📦 ${this.products.length} producto(s) asignado(s) a this.products`);
             
             // Detectar categorías disponibles
             this.detectAvailableCategories();
+            console.log('📊 Categorías detectadas:', Array.from(this.availableCategories));
             
             // Validar y ajustar filtro activo
             if (!this.availableCategories.has(this.activeFilter)) {
                 this.activeFilter = 'todos';
             }
+            console.log('🎯 Filtro activo:', this.activeFilter);
             
             // Renderizar
+            console.log('🎨 Renderizando categorías...');
             this.renderCategoryTabs();
+            console.log('🎨 Renderizando productos...');
             await this.renderProducts();
+            console.log('✅ Renderizado completado');
 
         } catch (error) {
             console.error('❌ Error completo cargando productos:', error);
@@ -551,32 +563,52 @@ if (typeof window.ProductsManager === 'undefined') {
     }
 
     renderProducts() {
+        console.log('🎨 renderProducts() iniciado');
+        console.log('🔍 Estado de productos:', {
+            productsLength: this.products?.length || 0,
+            activeFilter: this.activeFilter
+        });
+
         // Buscar elementos directamente sin espera (ya deberían estar disponibles)
-        const loadingState = document.getElementById('loadingState');
-        const emptyState = document.getElementById('emptyState');
-        const productsGrid = document.getElementById('productsGrid');
+        let loadingState = document.getElementById('loadingState');
+        let emptyState = document.getElementById('emptyState');
+        let productsGrid = document.getElementById('productsGrid');
 
         if (!loadingState || !emptyState || !productsGrid) {
             // Intentar buscar en el container de la vista si existe
             const viewContainer = document.getElementById('app-container');
             if (viewContainer) {
-                const containerLoading = viewContainer.querySelector('#loadingState');
-                const containerEmpty = viewContainer.querySelector('#emptyState');
-                const containerGrid = viewContainer.querySelector('#productsGrid');
-                if (containerLoading && containerEmpty && containerGrid) {
-                    // Usar elementos encontrados en el container
-                    this.renderProductsWithElements(containerLoading, containerEmpty, containerGrid);
-                    return;
-                }
+                loadingState = loadingState || viewContainer.querySelector('#loadingState');
+                emptyState = emptyState || viewContainer.querySelector('#emptyState');
+                productsGrid = productsGrid || viewContainer.querySelector('#productsGrid');
             }
-            // Si no se encuentran, retornar silenciosamente
+        }
+
+        if (!loadingState || !emptyState || !productsGrid) {
+            // Intentar buscar en productsGallery
+            const productsGallery = document.getElementById('productsGallery');
+            if (productsGallery) {
+                loadingState = loadingState || productsGallery.querySelector('#loadingState');
+                emptyState = emptyState || productsGallery.querySelector('#emptyState');
+                productsGrid = productsGrid || productsGallery.querySelector('#productsGrid');
+            }
+        }
+
+        if (!loadingState || !emptyState || !productsGrid) {
+            console.error('❌ No se encontraron elementos del DOM para renderizar productos');
+            console.error('❌ loadingState:', loadingState);
+            console.error('❌ emptyState:', emptyState);
+            console.error('❌ productsGrid:', productsGrid);
             return;
         }
 
+        console.log('✅ Elementos del DOM encontrados, llamando a renderProductsWithElements()');
         this.renderProductsWithElements(loadingState, emptyState, productsGrid);
     }
 
     renderProductsWithElements(loadingState, emptyState, productsGrid) {
+        console.log('🎨 renderProductsWithElements() iniciado');
+        console.log('🔍 Productos disponibles:', this.products?.length || 0);
 
         loadingState.style.display = 'none';
 
@@ -591,6 +623,8 @@ if (typeof window.ProductsManager === 'undefined') {
         const filteredProducts = this.activeFilter === 'todos' 
             ? this.products 
             : this.products.filter(p => (p.tipo_producto || 'otro') === this.activeFilter);
+
+        console.log(`🔍 Productos filtrados: ${filteredProducts.length} de ${this.products.length} (filtro: ${this.activeFilter})`);
 
         if (filteredProducts.length === 0) {
             console.log(`ℹ️ No hay productos en la categoría: ${this.activeFilter}`);
