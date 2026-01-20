@@ -529,25 +529,17 @@ if (typeof window.ProductsManager === 'undefined') {
             // ASIGNAR PRODUCTOS Y RENDERIZAR
             // ============================================
             this.products = products;
-
-            this.products = products || [];
-            console.log('📦 Productos asignados:', this.products.length);
             
-            // Detectar categorías disponibles basándose en productos
+            // Detectar categorías disponibles
             this.detectAvailableCategories();
-            console.log('📊 Categorías detectadas:', Array.from(this.availableCategories));
             
-            // Validar y ajustar filtro activo si es necesario
+            // Validar y ajustar filtro activo
             if (!this.availableCategories.has(this.activeFilter)) {
                 this.activeFilter = 'todos';
             }
             
-            console.log('🎯 Filtro activo:', this.activeFilter);
-            
-            // Renderizar tabs después de detectar categorías
+            // Renderizar
             this.renderCategoryTabs();
-            
-            // Renderizar productos
             await this.renderProducts();
 
         } catch (error) {
