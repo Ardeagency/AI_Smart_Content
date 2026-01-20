@@ -289,10 +289,16 @@ if (typeof window.ProductsManager === 'undefined') {
 
     renderCategoryTabs() {
         // Buscar contenedor de tabs (ya existe en el HTML)
-        const tabsContainer = document.getElementById('categoryTabs');
+        let tabsContainer = document.getElementById('categoryTabs');
         if (!tabsContainer) {
-            console.warn('⚠️ Contenedor de tabs no encontrado');
-            return;
+            // Intentar buscar en app-container
+            const appContainer = document.getElementById('app-container');
+            if (appContainer) {
+                tabsContainer = appContainer.querySelector('#categoryTabs');
+            }
+            if (!tabsContainer) {
+                return;
+            }
         }
 
         // Si no hay categorías disponibles, no mostrar tabs
@@ -464,7 +470,6 @@ if (typeof window.ProductsManager === 'undefined') {
         const productsGrid = document.getElementById('productsGrid');
 
         if (!loadingState || !emptyState || !productsGrid) {
-            console.error('❌ Elementos del DOM no encontrados para renderizar productos');
             // Intentar buscar en el container de la vista si existe
             const viewContainer = document.getElementById('app-container');
             if (viewContainer) {
@@ -477,6 +482,7 @@ if (typeof window.ProductsManager === 'undefined') {
                     return;
                 }
             }
+            // Si no se encuentran, retornar silenciosamente
             return;
         }
 
