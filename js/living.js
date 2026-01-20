@@ -650,19 +650,6 @@ class LivingManager {
 
             if (this.latestGeneratedContent.length > 0) {
                 console.log('✅ Contenido generado cargado:', this.latestGeneratedContent.length, 'elementos');
-                // Logging para debugging de prompts
-                this.latestGeneratedContent.forEach((item, idx) => {
-                    console.log(`📝 Item ${idx}:`, {
-                        id: item.id,
-                        prompt_used: item.prompt_used || 'NO HAY PROMPT',
-                        prompt: item.prompt || 'NO HAY PROMPT',
-                        storage_path: item.storage_path || 'NO HAY PATH',
-                        output_type: item.output_type,
-                        has_prompt: !!(item.prompt_used || item.prompt)
-                    });
-                });
-            } else {
-                console.log('ℹ️ No hay contenido generado disponible');
             }
         } catch (error) {
             console.error('❌ Error loading latest generated content:', error);
@@ -736,19 +723,6 @@ class LivingManager {
                             item.metadata.generated_prompt || 
                             '';
                 }
-            }
-            
-            // Logging para debugging si no hay prompt
-            if (!prompt && index < 3) {
-                console.warn(`⚠️ Item ${index} sin prompt:`, {
-                    id: item.id,
-                    available_fields: Object.keys(item),
-                    prompt_used: item.prompt_used,
-                    prompt: item.prompt,
-                    generated_copy: item.generated_copy,
-                    text_content: item.text_content,
-                    metadata: item.metadata
-                });
             }
             
             // Construir URL completa si es necesario
