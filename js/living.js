@@ -53,21 +53,24 @@ class LivingManager {
 
             console.log('✅ Supabase inicializado, cargando datos del dashboard...');
             
-            // Cargar datos en paralelo cuando sea posible
-            await Promise.all([
+            // Cargar datos base primero (en paralelo)
+            await Promise.allSettled([
                 this.loadUserData(),
                 this.loadProjectData()
             ]);
 
-            // Cargar datos relacionados (no dependen de projectData, usan userId directamente)
-            await Promise.all([
+            // Cargar brand_id antes de las consultas que lo necesitan
+            await this.loadBrandId();
+
+            // Cargar datos relacionados usando Promise.allSettled para que errores no detengan todo
+            await Promise.allSettled([
                 this.loadProducts(),
                 this.loadFlowRuns(),
                 this.loadCreditUsage()
             ]);
 
             // Cargar flow outputs después de flow runs
-            if (this.flowRuns.length > 0) {
+            if (this.flowRuns && this.flowRuns.length > 0) {
                 await this.loadFlowOutputs();
             }
 
@@ -165,26 +168,54 @@ class LivingManager {
     }
 
     async loadUserData() {
-        if (!this.supabase || !this.userId) return;
+        if (!this.supabase || !this.userId) {
+            this.userData = null;
+            return;
+        }
 
         try {
+            // Validar que userId sea válido
+            if (!this.userId || this.userId === null || this.userId === undefined || this.userId === '') {
+                console.warn('⚠️ userId no válido para loadUserData');
+                this.userData = null;
+                return;
+            }
+
             const { data, error } = await this.supabase
                 .from('users')
                 .select('*')
                 .eq('id', this.userId)
                 .maybeSingle();
 
-            if (error) throw error;
+            if (error) {
+                if (error.status === 400 || error.code === '400') {
+                    console.warn('⚠️ Error 400 cargando users:', error.message);
+                    this.userData = null;
+                    return;
+                }
+                throw error;
+            }
             this.userData = data;
         } catch (error) {
             console.error('❌ Error cargando datos de usuario:', error);
+            this.userData = null;
         }
     }
 
     async loadProjectData() {
-        if (!this.supabase || !this.userId) return;
+        if (!this.supabase || !this.userId) {
+            this.projectData = null;
+            return;
+        }
 
         try {
+            // Validar que userId sea válido
+            if (!this.userId || this.userId === null || this.userId === undefined || this.userId === '') {
+                console.warn('⚠️ userId no válido para loadProjectData');
+                this.projectData = null;
+                return;
+            }
+
             // La tabla correcta es brand_containers, no projects
             // brand_containers no tiene columna is_active
             const { data, error } = await this.supabase
@@ -195,7 +226,14 @@ class LivingManager {
                 .limit(1)
                 .maybeSingle();
 
-            if (error) throw error;
+            if (error) {
+                if (error.status === 400 || error.code === '400') {
+                    console.warn('⚠️ Error 400 cargando brand_containers:', error.message);
+                    this.projectData = null;
+                    return;
+                }
+                throw error;
+            }
             this.projectData = data;
         } catch (error) {
             console.error('❌ Error cargando datos del proyecto:', error);
@@ -250,13 +288,21 @@ class LivingManager {
     }
 
     async loadFlowRuns() {
-        if (!this.supabase || !this.userId) return;
+        if (!this.supabase || !this.userId) {
+            this.flowRuns = [];
+            return;
+        }
 
         try {
-            // flow_runs no tiene project_id, usa brand_id o user_id
-            // Primero intentar obtener brand_id
-            if (!this.brandId) {
-                await this.loadBrandId();
+            // brand_id ya debería estar cargado antes de llamar a esta función
+            // Validar que al menos uno de los IDs sea válido
+            const hasValidBrandId = this.brandId && this.brandId !== null && this.brandId !== undefined && this.brandId !== '';
+            const hasValidUserId = this.userId && this.userId !== null && this.userId !== undefined && this.userId !== '';
+
+            if (!hasValidBrandId && !hasValidUserId) {
+                console.warn('⚠️ No hay brand_id ni user_id válido para filtrar flow_runs');
+                this.flowRuns = [];
+                return;
             }
 
             let query = this.supabase
@@ -266,24 +312,21 @@ class LivingManager {
                 .limit(100);
 
             // Filtrar por brand_id si está disponible y es válido, sino por user_id
-            if (this.brandId && this.brandId !== null && this.brandId !== undefined) {
+            if (hasValidBrandId) {
                 query = query.eq('brand_id', this.brandId);
-            } else if (this.userId && this.userId !== null && this.userId !== undefined) {
-                query = query.eq('user_id', this.userId);
             } else {
-                // Si no hay filtros válidos, retornar array vacío
-                console.warn('⚠️ No hay brand_id ni user_id válido para filtrar flow_runs');
-                this.flowRuns = [];
-                return;
+                query = query.eq('user_id', this.userId);
             }
 
             const { data, error } = await query;
 
             if (error) {
-                // Si es un error 400, loguear más información
-                if (error.status === 400 || error.code === 'PGRST301') {
+                // Si es un error 400, loguear pero no lanzar error
+                if (error.status === 400 || error.code === '400' || error.code === 'PGRST301') {
                     console.warn('⚠️ Error 400 en loadFlowRuns:', error.message);
                     console.warn('⚠️ Parámetros:', { brandId: this.brandId, userId: this.userId });
+                    this.flowRuns = [];
+                    return;
                 }
                 throw error;
             }
@@ -328,9 +371,19 @@ class LivingManager {
     }
 
     async loadCreditUsage() {
-        if (!this.supabase || !this.userId) return;
+        if (!this.supabase || !this.userId) {
+            this.creditUsage = [];
+            return;
+        }
 
         try {
+            // Validar que userId sea válido antes de hacer la consulta
+            if (!this.userId || this.userId === null || this.userId === undefined || this.userId === '') {
+                console.warn('⚠️ userId no válido para loadCreditUsage');
+                this.creditUsage = [];
+                return;
+            }
+
             const { data, error } = await this.supabase
                 .from('credit_usage')
                 .select('*')
@@ -338,7 +391,16 @@ class LivingManager {
                 .order('created_at', { ascending: false })
                 .limit(100);
 
-            if (error) throw error;
+            if (error) {
+                // Si es un error 400, loguear pero no lanzar error
+                if (error.status === 400 || error.code === '400') {
+                    console.warn('⚠️ Error 400 cargando credit_usage:', error.message);
+                    console.warn('⚠️ userId:', this.userId);
+                    this.creditUsage = [];
+                    return;
+                }
+                throw error;
+            }
             this.creditUsage = data || [];
         } catch (error) {
             console.error('❌ Error cargando credit usage:', error);
@@ -415,14 +477,14 @@ class LivingManager {
                 if (runsError.status === 400 || runsError.code === '400') {
                     console.warn('⚠️ Error 400 cargando flow_runs:', runsError.message);
                 }
-                this.latestGeneratedContent = [];
-                return;
-            }
+                    this.latestGeneratedContent = [];
+                    return;
+                }
 
             if (!runs || runs.length === 0) {
-                this.latestGeneratedContent = [];
-                return;
-            }
+                    this.latestGeneratedContent = [];
+                    return;
+                }
 
             // Paso 2: Obtener flow_outputs usando los run_ids
             const runIds = runs.map(r => r.id).filter(id => id !== null && id !== undefined);
