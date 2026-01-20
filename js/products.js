@@ -297,8 +297,10 @@ if (typeof window.ProductsManager === 'undefined') {
 
             if (brandContainer && brandContainer.id) {
                 this.brandContainerId = brandContainer.id;
+                console.log('✅ Brand container cargado:', this.brandContainerId);
             } else {
                 this.brandContainerId = null;
+                console.warn('⚠️ No se encontró brand_container para el usuario');
             }
         } catch (error) {
             console.warn('⚠️ Error cargando brand_container:', error);
@@ -440,11 +442,14 @@ if (typeof window.ProductsManager === 'undefined') {
 
             // Si no hay brand_container, no hay productos
             if (!this.brandContainerId) {
+                console.warn('⚠️ No hay brandContainerId, no se pueden cargar productos');
                 loadingState.style.display = 'none';
                 emptyState.style.display = 'block';
                 this.products = [];
                 return;
             }
+
+            console.log('🔍 Intentando cargar productos para brandContainerId:', this.brandContainerId);
 
             // Validar que brandContainerId sea un UUID válido
             const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -477,6 +482,7 @@ if (typeof window.ProductsManager === 'undefined') {
                 if (error.status === 400 || error.code === '400') {
                     console.warn('⚠️ Error 400 cargando productos:', error.message);
                     console.warn('⚠️ brand_container_id usado:', this.brandContainerId);
+                    console.warn('⚠️ Detalles del error:', error);
                     loadingState.style.display = 'none';
                     emptyState.style.display = 'block';
                     this.products = [];
@@ -485,6 +491,8 @@ if (typeof window.ProductsManager === 'undefined') {
                 console.error('❌ Error cargando productos:', error);
                 throw error;
             }
+
+            console.log(`✅ ${products?.length || 0} producto(s) encontrado(s)`);
 
             // Cargar imágenes para cada producto según schema.sql (línea 297-306)
             if (products && products.length > 0) {
@@ -514,6 +522,7 @@ if (typeof window.ProductsManager === 'undefined') {
             }
 
             this.products = products || [];
+            console.log('📦 Productos asignados:', this.products.length);
             
             // Detectar categorías disponibles basándose en productos
             this.detectAvailableCategories();
