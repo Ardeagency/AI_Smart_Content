@@ -137,8 +137,9 @@ body.sidebar-collapsed .living-container {
     gap: 3rem; /* Más separación entre secciones */
     padding: 0 0 0 4rem; /* Padding solo a la izquierda */
     padding-bottom: var(--living-spacing-section);
-    max-width: 1800px;
-    margin: 0 auto;
+    max-width: none; /* Sin límite de ancho para que llegue a la derecha */
+    margin: 0; /* Sin margin auto para que no se centre */
+    width: 100%; /* Ocupa todo el ancho disponible */
 }
 
 /* ============================================
@@ -501,7 +502,9 @@ body.sidebar-collapsed .living-container {
 /* No compite visualmente, acompaña - Mesa del productor */
 .living-highlights-section {
     min-height: 400px;
-    /* Pegado a la derecha - sin padding adicional */
+    margin-right: 0; /* Sin margin derecho */
+    padding-right: 2rem; /* Padding mínimo para que no toque el borde */
+    /* Pegado a la derecha */
 }
 
 .living-highlights-content {
