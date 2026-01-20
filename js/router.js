@@ -166,15 +166,20 @@ class Router {
       const container = document.getElementById('app-container');
       if (!container) return;
 
-      // Aplicar animación de salida a la vista actual
-      if (this.currentView && container) {
+      // Si estamos navegando a la misma ruta, no hacer nada
+      if (this.currentRoute === path && this.currentView && this.currentView.initialized) {
+        return;
+      }
+
+      // Aplicar animación de salida a la vista actual solo si hay una vista diferente
+      if (this.currentView && this.currentRoute !== path && container) {
         container.classList.add('view-leave');
         // Esperar un poco para la animación
         await new Promise(resolve => setTimeout(resolve, 150));
       }
 
-      // Ocultar vista actual (NO destruir - mantener en cache)
-      if (this.currentView) {
+      // Ocultar vista actual (NO destruir - mantener en cache) solo si es diferente
+      if (this.currentView && this.currentRoute !== path) {
         // Guardar instancia en cache antes de ocultar
         if (this.currentRoute) {
           this.viewInstances[this.currentRoute] = this.currentView;
@@ -227,15 +232,31 @@ class Router {
 
       let viewInstance = this.viewInstances[path];
       
+      // Reutilizar vista en caché si existe y está inicializada
       if (viewInstance && viewInstance.initialized) {
         this.currentView = viewInstance;
+        this.currentRoute = path;
+        
+        // Mostrar la vista
         if (this.currentView.container) {
           this.currentView.container.style.display = '';
         }
+        
+        // Actualizar parámetros de ruta si existen
+        if (Object.keys(routeParams).length > 0) {
+          this.currentView.routeParams = routeParams;
+        }
+        
+        // Llamar onEnter para que la vista pueda actualizar datos si es necesario
         if (typeof this.currentView.onEnter === 'function') {
-          await this.currentView.onEnter();
+          try {
+            await this.currentView.onEnter();
+          } catch (error) {
+            console.error('Error en onEnter de vista reutilizada:', error);
+          }
         }
       } else {
+        // Crear nueva instancia de vista
         this.currentView = new ViewClass();
         this.currentRoute = path;
         this.viewInstances[path] = this.currentView;
@@ -248,11 +269,8 @@ class Router {
           container.classList.add('view-enter');
         }
 
+        // Renderizar la vista (esto llamará a init() y onEnter() internamente)
         await this.currentView.render();
-      }
-      
-      if (viewInstance && viewInstance.initialized && Object.keys(routeParams).length > 0) {
-        this.currentView.routeParams = routeParams;
       }
       
       this.updateNavigation();

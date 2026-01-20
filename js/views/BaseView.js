@@ -237,6 +237,95 @@ class BaseView {
   }
 
   /**
+   * Sistema centralizado de carga de scripts dinámicos
+   * Evita duplicaciones y maneja correctamente scripts ya cargados
+   * 
+   * @param {string} scriptSrc - Ruta del script (ej: 'js/living.js')
+   * @param {string} globalVar - Variable global que debe estar disponible después de cargar (ej: 'LivingManager')
+   * @param {number} timeout - Timeout en ms para esperar la variable global (default: 5000)
+   * @returns {Promise<void>}
+   * @example
+   * await this.loadScript('js/living.js', 'LivingManager');
+   */
+  async loadScript(scriptSrc, globalVar = null, timeout = 5000) {
+    // Si se especifica una variable global y ya está disponible, resolver inmediatamente
+    if (globalVar && window[globalVar]) {
+      return Promise.resolve();
+    }
+
+    // Verificar si el script ya está cargado en el DOM
+    const existingScript = document.querySelector(`script[src="${scriptSrc}"]`);
+    if (existingScript) {
+      // El script ya está en el DOM, esperar a que la variable global esté disponible
+      if (globalVar) {
+        return new Promise((resolve, reject) => {
+          // Si ya está disponible, resolver inmediatamente
+          if (window[globalVar]) {
+            resolve();
+            return;
+          }
+
+          // Esperar a que se cargue con polling
+          const checkInterval = setInterval(() => {
+            if (window[globalVar]) {
+              clearInterval(checkInterval);
+              resolve();
+            }
+          }, 100);
+
+          // Timeout de seguridad
+          setTimeout(() => {
+            clearInterval(checkInterval);
+            if (window[globalVar]) {
+              resolve();
+            } else {
+              reject(new Error(`${globalVar} no se cargó después de esperar (script: ${scriptSrc})`));
+            }
+          }, timeout);
+        });
+      }
+      // Si no hay variable global, asumir que el script ya está listo
+      return Promise.resolve();
+    }
+
+    // El script no está cargado, cargarlo
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = scriptSrc;
+      
+      script.onload = () => {
+        if (globalVar) {
+          // Esperar a que la variable global esté disponible
+          const checkInterval = setInterval(() => {
+            if (window[globalVar]) {
+              clearInterval(checkInterval);
+              resolve();
+            }
+          }, 100);
+
+          setTimeout(() => {
+            clearInterval(checkInterval);
+            if (window[globalVar]) {
+              resolve();
+            } else {
+              reject(new Error(`${globalVar} no se registró después de cargar ${scriptSrc}`));
+            }
+          }, timeout);
+        } else {
+          // Sin variable global, resolver inmediatamente después de onload
+          resolve();
+        }
+      };
+
+      script.onerror = () => {
+        reject(new Error(`Error cargando script: ${scriptSrc}`));
+      };
+
+      document.head.appendChild(script);
+    });
+  }
+
+  /**
    * Helper para agregar event listeners que se limpian automáticamente
    * @param {HTMLElement} element - Elemento
    * @param {string} event - Tipo de evento

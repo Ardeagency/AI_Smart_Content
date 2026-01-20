@@ -45,17 +45,17 @@ class FormRecordView extends BaseView {
       await window.navigation.render();
     }
 
-    // Inicializar FormRecord (usar la clase existente)
+    // Cargar script si es necesario usando el método centralizado
+    if (!window.FormRecord) {
+      await this.loadScript('js/form-record.js', 'FormRecord');
+    }
+
+    // Inicializar FormRecord
     if (window.FormRecord) {
       this.formRecord = new window.FormRecord();
       await this.formRecord.init();
     } else {
-      // Si FormRecord no está disponible, cargar el script
-      await this.loadFormRecordScript();
-      if (window.FormRecord) {
-        this.formRecord = new window.FormRecord();
-        await this.formRecord.init();
-      }
+      console.error('❌ No se pudo cargar FormRecord');
     }
 
     // Setup botón de "Ir al Living"
@@ -69,24 +69,6 @@ class FormRecordView extends BaseView {
         }
       });
     }
-  }
-
-  /**
-   * Cargar script de FormRecord si no está disponible
-   */
-  async loadFormRecordScript() {
-    return new Promise((resolve, reject) => {
-      if (window.FormRecord) {
-        resolve();
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.src = 'js/form-record.js';
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error('Error cargando form-record.js'));
-      document.head.appendChild(script);
-    });
   }
 
   /**

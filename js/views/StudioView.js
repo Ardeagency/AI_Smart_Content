@@ -52,41 +52,21 @@ class StudioView extends BaseView {
   }
 
   /**
-   * Cargar scripts de Studio
+   * Cargar scripts de Studio usando el método centralizado de BaseView
    */
   async loadStudioScripts() {
     const scripts = [
-      'js/sidebar-manager.js',
-      'js/campaigns-manager.js',
-      'js/studio.js'
+      { src: 'js/sidebar-manager.js', globalVar: null },
+      { src: 'js/campaigns-manager.js', globalVar: null },
+      { src: 'js/studio.js', globalVar: null }
     ];
 
-    for (const src of scripts) {
-      await this.loadScript(src);
+    for (const { src, globalVar } of scripts) {
+      await this.loadScript(src, globalVar);
     }
 
     // Si hay funciones globales que necesitan inicializarse, hacerlo aquí
     // Por ejemplo, si studio.js tiene una función init(), llamarla
-  }
-
-  /**
-   * Cargar un script dinámicamente
-   */
-  loadScript(src) {
-    return new Promise((resolve, reject) => {
-      // Verificar si el script ya está cargado
-      const existingScript = document.querySelector(`script[src="${src}"]`);
-      if (existingScript) {
-        resolve();
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.src = src;
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error(`Error cargando ${src}`));
-      document.head.appendChild(script);
-    });
   }
 
   /**

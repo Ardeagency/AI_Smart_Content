@@ -374,85 +374,26 @@ class ProductsView extends BaseView {
    * Inicializar la vista (para lista de productos)
    */
   async init() {
-    // Cargar script de Products si no está disponible
+    // Cargar script de Products si no está disponible usando el método centralizado
     if (!window.ProductsManager) {
-      await this.loadProductsScript();
+      await this.loadScript('js/products.js', 'ProductsManager');
     }
 
-    // Inicializar ProductsManager - esperar a que el DOM esté completamente renderizado
+    // Inicializar ProductsManager
     if (window.ProductsManager) {
       // Crear instancia solo si no existe
       if (!this.productsManager) {
         this.productsManager = new window.ProductsManager();
-        
-        // Esperar a que los elementos del DOM estén disponibles antes de inicializar
-        await new Promise(resolve => {
-          const checkDOM = () => {
-            const emptyState = document.getElementById('emptyState');
-            const productsGrid = document.getElementById('productsGrid');
-            if (emptyState && productsGrid) {
-              resolve();
-            } else {
-              requestAnimationFrame(checkDOM);
-            }
-          };
-          // Dar tiempo para que el navegador renderice el HTML inyectado
-          setTimeout(checkDOM, 50);
-        });
-        
-        // Ahora sí inicializar ProductsManager
-        await this.productsManager.init();
+        // NO llamar init() automáticamente - ProductsManager.init() se llama desde el template
+        // porque necesita que el DOM esté renderizado
+        if (this.container && this.container.innerHTML) {
+          await this.productsManager.init();
+        }
       }
     }
 
     // Setup links para usar router
     this.setupRouterLinks();
-  }
-
-  /**
-   * Cargar script de Products si no está disponible
-   */
-  async loadProductsScript() {
-    return new Promise((resolve, reject) => {
-      if (window.ProductsManager) {
-        resolve();
-        return;
-      }
-
-      // Verificar si el script ya está cargado
-      const existingScript = document.querySelector('script[src="js/products.js"]');
-      if (existingScript) {
-        // Esperar a que se cargue
-        const checkInterval = setInterval(() => {
-          if (window.ProductsManager) {
-            clearInterval(checkInterval);
-            resolve();
-          }
-        }, 100);
-        setTimeout(() => {
-          clearInterval(checkInterval);
-          if (!window.ProductsManager) {
-            reject(new Error('ProductsManager no se cargó'));
-          }
-        }, 5000);
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.src = 'js/products.js';
-      script.onload = () => {
-        // Esperar un poco para que la clase se registre
-        setTimeout(() => {
-          if (window.ProductsManager) {
-            resolve();
-          } else {
-            reject(new Error('ProductsManager no se registró después de cargar'));
-          }
-        }, 100);
-      };
-      script.onerror = () => reject(new Error('Error cargando products.js'));
-      document.head.appendChild(script);
-    });
   }
 
   /**

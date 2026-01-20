@@ -57,39 +57,21 @@ class LivingView extends BaseView {
       this.livingManager = null;
     }
 
-    // Inicializar LivingManager (usar la clase existente)
+    // Cargar script si es necesario usando el método centralizado de BaseView
+    if (!window.LivingManager) {
+      await this.loadScript('js/living.js', 'LivingManager');
+    }
+
+    // Inicializar LivingManager
     if (window.LivingManager) {
       this.livingManager = new window.LivingManager();
       await this.livingManager.init();
     } else {
-      // Si LivingManager no está disponible, cargar el script
-      await this.loadLivingScript();
-      if (window.LivingManager) {
-        this.livingManager = new window.LivingManager();
-        await this.livingManager.init();
-      }
+      console.error('❌ No se pudo cargar LivingManager');
     }
 
     // Setup links para usar router
     this.setupRouterLinks();
-  }
-
-  /**
-   * Cargar script de Living si no está disponible
-   */
-  async loadLivingScript() {
-    return new Promise((resolve, reject) => {
-      if (window.LivingManager) {
-        resolve();
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.src = 'js/living.js';
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error('Error cargando living.js'));
-      document.head.appendChild(script);
-    });
   }
 
   /**
