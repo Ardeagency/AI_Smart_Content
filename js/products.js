@@ -443,16 +443,16 @@ if (typeof window.ProductsManager === 'undefined') {
 
                     if (!imagesError) {
                         product.images = images || [];
-                        console.log(`📸 Producto ${product.nombre_producto}: ${images?.length || 0} imagen(es)`);
                     } else {
-                        console.warn(`⚠️ Error cargando imágenes para producto ${product.id}:`, imagesError);
+                        if (imagesError.status === 400 || imagesError.code === '400') {
+                            console.warn(`⚠️ Error 400 cargando imágenes para producto ${product.id}:`, imagesError.message);
+                        }
                         product.images = [];
                     }
                 }
             }
 
             this.products = products || [];
-            console.log('✅ Productos cargados:', this.products.length);
             
             // Detectar categorías disponibles basándose en productos
             this.detectAvailableCategories();
