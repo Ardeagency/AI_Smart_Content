@@ -1277,21 +1277,47 @@ if (typeof window.ProductsManager === 'undefined') {
         saveBtn.textContent = 'Guardando...';
 
         try {
+            // Validar brandContainerId antes de operar
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            if (!this.brandContainerId || !uuidRegex.test(this.brandContainerId)) {
+                throw new Error('brand_container_id no válido');
+            }
+
+            // Validar campos requeridos según schema.sql (línea 307-328)
+            if (!formData.tipo_producto || !formData.nombre_producto || !formData.descripcion_producto) {
+                throw new Error('Los campos tipo_producto, nombre_producto y descripcion_producto son requeridos');
+            }
+
             if (this.currentProduct) {
-                // Actualizar producto existente
+                // Actualizar producto existente según schema.sql (línea 307-328)
                 const { error } = await this.supabase
                     .from('products')
-                    .update(formData)
+                    .update({
+                        ...formData,
+                        updated_at: new Date().toISOString() // Actualizar timestamp según schema (línea 323)
+                    })
                     .eq('id', this.currentProduct.id);
 
-                if (error) throw error;
+                if (error) {
+                    if (error.status === 400 || error.code === '400') {
+                        console.warn('⚠️ Error 400 actualizando producto:', error.message);
+                        throw new Error(`Error al actualizar producto: ${error.message}`);
+                    }
+                    throw error;
+                }
             } else {
-                // Crear nuevo producto
+                // Crear nuevo producto según schema.sql (línea 307-328)
                 const { error } = await this.supabase
                     .from('products')
                     .insert(formData);
 
-                if (error) throw error;
+                if (error) {
+                    if (error.status === 400 || error.code === '400') {
+                        console.warn('⚠️ Error 400 creando producto:', error.message);
+                        throw new Error(`Error al crear producto: ${error.message}`);
+                    }
+                    throw error;
+                }
             }
 
             await this.loadProducts();
@@ -1310,22 +1336,41 @@ if (typeof window.ProductsManager === 'undefined') {
     }
 
     async deleteProduct(productId) {
+        // Validar que productId sea un UUID válido
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (!productId || !uuidRegex.test(productId)) {
+            console.warn('⚠️ productId no es un UUID válido:', productId);
+            return;
+        }
+
         try {
-            // Eliminar imágenes primero
+            // Eliminar imágenes primero según schema.sql (línea 297-306)
             const { error: imagesError } = await this.supabase
                 .from('product_images')
                 .delete()
                 .eq('product_id', productId);
 
             if (imagesError) {
-                console.warn('Error eliminando imágenes:', imagesError);
+                if (imagesError.status === 400 || imagesError.code === '400') {
+                    console.warn('⚠️ Error 400 eliminando imágenes del producto:', imagesError.message);
+                } else {
+                    console.warn('⚠️ Error eliminando imágenes:', imagesError);
+                }
             }
 
-            // Eliminar producto
+            // Eliminar producto según schema.sql (línea 307-328)
             const { error } = await this.supabase
                 .from('products')
                 .delete()
                 .eq('id', productId);
+
+            if (error) {
+                if (error.status === 400 || error.code === '400') {
+                    console.warn('⚠️ Error 400 eliminando producto:', error.message);
+                    throw new Error(`Error al eliminar producto: ${error.message}`);
+                }
+                throw error;
+            }
 
             if (error) throw error;
 
