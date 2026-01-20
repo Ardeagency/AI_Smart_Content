@@ -657,6 +657,8 @@ if (typeof window.ProductsManager === 'undefined') {
         productsGrid.style.display = 'block';
         productsGrid.innerHTML = '';
 
+        console.log(`🎨 Renderizando ${filteredProducts.length} producto(s) en el grid`);
+
         // Renderizar productos con animación escalonada
         filteredProducts.forEach((product, index) => {
             try {
