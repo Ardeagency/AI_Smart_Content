@@ -421,38 +421,47 @@ if (typeof window.ProductsManager === 'undefined') {
         }
 
         console.log('✅ Validaciones pasadas, buscando elementos del DOM...');
-        // Esperar a que los elementos del DOM estén disponibles
-        const elements = await this.waitForElements(['loadingState', 'emptyState', 'productsGrid'], 10);
-        console.log('🔍 Elementos encontrados:', {
-            loadingState: !!elements.loadingState,
-            emptyState: !!elements.emptyState,
-            productsGrid: !!elements.productsGrid
-        });
         
-        if (!elements.loadingState || !elements.emptyState || !elements.productsGrid) {
-            // Si no se encontraron, intentar buscar directamente en app-container
+        // Buscar elementos directamente - pueden estar en app-container o en productsGallery
+        let loadingState = document.getElementById('loadingState');
+        let emptyState = document.getElementById('emptyState');
+        let productsGrid = document.getElementById('productsGrid');
+        
+        // Si no se encuentran directamente, buscar en app-container
+        if (!loadingState || !emptyState || !productsGrid) {
             const appContainer = document.getElementById('app-container');
             if (appContainer) {
-                const containerLoading = appContainer.querySelector('#loadingState');
-                const containerEmpty = appContainer.querySelector('#emptyState');
-                const containerGrid = appContainer.querySelector('#productsGrid');
-                
-                if (containerLoading && containerEmpty && containerGrid) {
-                    // Usar elementos encontrados en el container
-                    elements.loadingState = containerLoading;
-                    elements.emptyState = containerEmpty;
-                    elements.productsGrid = containerGrid;
-                } else {
-                    // Si aún no se encuentran, retornar sin error (puede que el template aún no se haya renderizado)
-                    console.warn('⚠️ No se encontraron elementos en app-container');
-                    return;
-                }
-            } else {
-                // Si no hay app-container, retornar sin error
-                console.warn('⚠️ No se encontró app-container');
-                return;
+                loadingState = loadingState || appContainer.querySelector('#loadingState');
+                emptyState = emptyState || appContainer.querySelector('#emptyState');
+                productsGrid = productsGrid || appContainer.querySelector('#productsGrid');
             }
         }
+        
+        // Si aún no se encuentran, buscar en productsGallery
+        if (!loadingState || !emptyState || !productsGrid) {
+            const productsGallery = document.getElementById('productsGallery');
+            if (productsGallery) {
+                loadingState = loadingState || productsGallery.querySelector('#loadingState');
+                emptyState = emptyState || productsGallery.querySelector('#emptyState');
+                productsGrid = productsGrid || productsGallery.querySelector('#productsGrid');
+            }
+        }
+        
+        console.log('🔍 Elementos encontrados:', {
+            loadingState: !!loadingState,
+            emptyState: !!emptyState,
+            productsGrid: !!productsGrid
+        });
+        
+        if (!loadingState || !emptyState || !productsGrid) {
+            console.error('❌ No se pudieron encontrar los elementos necesarios del DOM');
+            console.error('❌ loadingState:', loadingState);
+            console.error('❌ emptyState:', emptyState);
+            console.error('❌ productsGrid:', productsGrid);
+            return;
+        }
+        
+        const elements = { loadingState, emptyState, productsGrid };
 
         const { loadingState, emptyState, productsGrid } = elements;
 
