@@ -628,9 +628,11 @@ class LivingManager {
                 return;
             }
 
+            // Seleccionar campos específicos incluyendo prompt_used y otros campos de texto
+            // Esto asegura que prompt_used se traiga correctamente
             const { data: outputs, error: outputsError } = await this.supabase
                 .from('flow_outputs')
-                .select('*')
+                .select('id, run_id, output_type, storage_path, storage_object_id, prompt_used, generated_copy, text_content, metadata, created_at, generated_hashtags, creative_rationale')
                 .in('run_id', validRunIds)
                 .order('created_at', { ascending: false })
                 .limit(10);
