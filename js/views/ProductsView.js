@@ -415,14 +415,48 @@ class ProductsView extends BaseView {
 
     // Inicializar ProductsManager
     if (window.ProductsManager) {
-      // Crear instancia solo si no existe
-      if (!this.productsManager) {
+      // Usar instancia global si existe, sino crear nueva
+      if (window.productsManager && !window.productsManager.initialized) {
+        // Si existe pero no está inicializado, inicializarlo
+        this.productsManager = window.productsManager;
+        await this.productsManager.init();
+      } else if (!window.productsManager) {
+        // Crear nueva instancia solo si no existe globalmente
         this.productsManager = new window.ProductsManager();
-        // NO llamar init() automáticamente - ProductsManager.init() se llama desde el template
-        // porque necesita que el DOM esté renderizado
-        if (this.container && this.container.innerHTML) {
+        // Esperar a que el DOM esté completamente renderizado
+        await new Promise(resolve => {
+          if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                resolve();
+              });
+            });
+          } else {
+            window.addEventListener('load', () => {
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                  resolve();
+                });
+              });
+            });
+          }
+        });
+        
+        // Verificar que los elementos del DOM estén disponibles
+        const productsGallery = document.getElementById('productsGallery');
+        if (productsGallery && this.container && this.container.innerHTML) {
           await this.productsManager.init();
+        } else {
+          console.warn('⚠️ DOM no está listo o elementos no encontrados, esperando...');
+          // Esperar un poco más y reintentar
+          await new Promise(resolve => setTimeout(resolve, 500));
+          if (document.getElementById('productsGallery')) {
+            await this.productsManager.init();
+          }
         }
+      } else {
+        // Ya existe y está inicializado, usar esa instancia
+        this.productsManager = window.productsManager;
       }
     }
 

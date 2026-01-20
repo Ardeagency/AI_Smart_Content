@@ -14,7 +14,8 @@ if (typeof window.ProductsManager === 'undefined') {
         this.currentProduct = null;
         this.activeFilter = 'todos'; // Filtro activo por categoría
         this.availableCategories = new Set(); // Categorías disponibles basadas en productos
-        this.init();
+        this.initialized = false; // Evitar múltiples inicializaciones
+        // NO llamar init() automáticamente - debe ser llamado explícitamente cuando el DOM esté listo
     }
 
     /**
@@ -73,6 +74,12 @@ if (typeof window.ProductsManager === 'undefined') {
     }
 
     async init() {
+        // Evitar múltiples inicializaciones
+        if (this.initialized) {
+            console.log('⚠️ ProductsManager ya está inicializado, omitiendo...');
+            return;
+        }
+
         await this.initSupabase();
         if (!this.supabase || !this.isValidSupabaseClient(this.supabase) || !this.userId) {
             console.warn('⚠️ Supabase no inicializado correctamente o usuario no autenticado');
@@ -98,8 +105,31 @@ if (typeof window.ProductsManager === 'undefined') {
         console.log('⏳ Esperando a que el DOM esté listo...');
         await this.waitForDOMReady();
         console.log('✅ DOM listo, llamando a loadProducts()...');
+        
+        // Verificar que los elementos del DOM estén disponibles antes de cargar
+        const productsGallery = document.getElementById('productsGallery');
+        const productsGrid = document.getElementById('productsGrid');
+        const loadingState = document.getElementById('loadingState');
+        const emptyState = document.getElementById('emptyState');
+        
+        console.log('🔍 Verificando elementos del DOM:', {
+            productsGallery: !!productsGallery,
+            productsGrid: !!productsGrid,
+            loadingState: !!loadingState,
+            emptyState: !!emptyState
+        });
+        
+        if (!productsGallery || !productsGrid || !loadingState || !emptyState) {
+            console.warn('⚠️ Algunos elementos del DOM no están disponibles, esperando...');
+            // Esperar un poco más y verificar de nuevo
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        
         await this.loadProducts();
         console.log('✅ loadProducts() completado');
+        
+        // Marcar como inicializado
+        this.initialized = true;
         // Sidebar se actualiza automáticamente por SidebarManager (persistente)
     }
 
@@ -573,13 +603,20 @@ if (typeof window.ProductsManager === 'undefined') {
         console.log('🎨 renderProducts() iniciado');
         console.log('🔍 Estado de productos:', {
             productsLength: this.products?.length || 0,
-            activeFilter: this.activeFilter
+            activeFilter: this.activeFilter,
+            products: this.products?.map(p => ({ id: p.id, nombre: p.nombre_producto }))
         });
 
         // Buscar elementos directamente sin espera (ya deberían estar disponibles)
         let loadingState = document.getElementById('loadingState');
         let emptyState = document.getElementById('emptyState');
         let productsGrid = document.getElementById('productsGrid');
+
+        console.log('🔍 Búsqueda inicial de elementos:', {
+            loadingState: !!loadingState,
+            emptyState: !!emptyState,
+            productsGrid: !!productsGrid
+        });
 
         if (!loadingState || !emptyState || !productsGrid) {
             // Intentar buscar en el container de la vista si existe
@@ -588,6 +625,11 @@ if (typeof window.ProductsManager === 'undefined') {
                 loadingState = loadingState || viewContainer.querySelector('#loadingState');
                 emptyState = emptyState || viewContainer.querySelector('#emptyState');
                 productsGrid = productsGrid || viewContainer.querySelector('#productsGrid');
+                console.log('🔍 Búsqueda en app-container:', {
+                    loadingState: !!loadingState,
+                    emptyState: !!emptyState,
+                    productsGrid: !!productsGrid
+                });
             }
         }
 
@@ -598,6 +640,12 @@ if (typeof window.ProductsManager === 'undefined') {
                 loadingState = loadingState || productsGallery.querySelector('#loadingState');
                 emptyState = emptyState || productsGallery.querySelector('#emptyState');
                 productsGrid = productsGrid || productsGallery.querySelector('#productsGrid');
+                console.log('🔍 Búsqueda en productsGallery:', {
+                    loadingState: !!loadingState,
+                    emptyState: !!emptyState,
+                    productsGrid: !!productsGrid,
+                    productsGallery: !!productsGallery
+                });
             }
         }
 
@@ -606,6 +654,9 @@ if (typeof window.ProductsManager === 'undefined') {
             console.error('❌ loadingState:', loadingState);
             console.error('❌ emptyState:', emptyState);
             console.error('❌ productsGrid:', productsGrid);
+            console.error('❌ Document body:', document.body);
+            console.error('❌ app-container:', document.getElementById('app-container'));
+            console.error('❌ productsGallery:', document.getElementById('productsGallery'));
             return;
         }
 
@@ -660,19 +711,33 @@ if (typeof window.ProductsManager === 'undefined') {
         }
 
         console.log(`🎨 Renderizando ${filteredProducts.length} producto(s) de ${this.products.length} total`);
+        console.log('🔍 Productos a renderizar:', filteredProducts.map(p => ({ id: p.id, nombre: p.nombre_producto })));
+        
         emptyState.style.display = 'none';
         productsGrid.style.display = 'block';
         productsGrid.innerHTML = '';
 
         console.log(`🎨 Renderizando ${filteredProducts.length} producto(s) en el grid`);
+        console.log('🔍 productsGrid antes de renderizar:', {
+            display: productsGrid.style.display,
+            innerHTML: productsGrid.innerHTML.substring(0, 100),
+            parentElement: productsGrid.parentElement?.id
+        });
 
         // Renderizar productos con animación escalonada
         filteredProducts.forEach((product, index) => {
             try {
                 const card = this.createProductCard(product);
+                if (!card) {
+                    console.error(`❌ createProductCard retornó null para producto ${product.id}`);
+                    return;
+                }
+                
                 card.style.opacity = '0';
                 card.style.transform = 'translateY(20px)';
                 productsGrid.appendChild(card);
+                
+                console.log(`✅ Card ${index + 1} agregada al grid para producto: ${product.nombre_producto}`);
                 
                 // Animación escalonada
                 setTimeout(() => {
@@ -684,7 +749,13 @@ if (typeof window.ProductsManager === 'undefined') {
                 // Producto renderizado
             } catch (error) {
                 console.error(`❌ Error renderizando producto ${product.id}:`, error);
+                console.error('Stack:', error.stack);
             }
+        });
+        
+        console.log('🔍 productsGrid después de renderizar:', {
+            childrenCount: productsGrid.children.length,
+            innerHTML: productsGrid.innerHTML.substring(0, 200)
         });
 
         // Remover clase de renderizado después de un momento
