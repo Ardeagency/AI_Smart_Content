@@ -23,7 +23,6 @@ class LivingManager {
     async init() {
         // Evitar múltiples inicializaciones
         if (this.initialized) {
-            console.log('ℹ️ LivingManager ya está inicializado, saltando...');
             return;
         }
 
