@@ -638,6 +638,7 @@ class LivingManager {
             if (outputsError) {
                 if (outputsError.status === 400 || outputsError.code === '400') {
                     console.warn('⚠️ Error 400 cargando flow_outputs:', outputsError.message);
+                    console.warn('⚠️ runIds usados:', validRunIds);
                 }
                 this.latestGeneratedContent = [];
                 return;
