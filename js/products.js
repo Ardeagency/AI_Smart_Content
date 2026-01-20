@@ -104,15 +104,19 @@ if (typeof window.ProductsManager === 'undefined') {
         // Esperar a que el DOM esté listo antes de cargar productos
         console.log('⏳ Esperando a que el DOM esté listo...');
         await this.waitForDOMReady();
-        console.log('✅ DOM listo, llamando a loadProducts()...');
+        console.log('✅ DOM listo, esperando elementos específicos...');
         
-        // Verificar que los elementos del DOM estén disponibles antes de cargar
+        // Esperar específicamente a que los elementos necesarios estén disponibles
+        const requiredElements = ['productsGallery', 'productsGrid', 'loadingState', 'emptyState'];
+        await this.waitForElements(requiredElements, 20); // 20 intentos = 2 segundos máximo
+        
+        // Verificar que los elementos estén disponibles
         const productsGallery = document.getElementById('productsGallery');
         const productsGrid = document.getElementById('productsGrid');
         const loadingState = document.getElementById('loadingState');
         const emptyState = document.getElementById('emptyState');
         
-        console.log('🔍 Verificando elementos del DOM:', {
+        console.log('🔍 Verificando elementos del DOM después de espera:', {
             productsGallery: !!productsGallery,
             productsGrid: !!productsGrid,
             loadingState: !!loadingState,
@@ -120,9 +124,11 @@ if (typeof window.ProductsManager === 'undefined') {
         });
         
         if (!productsGallery || !productsGrid || !loadingState || !emptyState) {
-            console.warn('⚠️ Algunos elementos del DOM no están disponibles, esperando...');
-            // Esperar un poco más y verificar de nuevo
-            await new Promise(resolve => setTimeout(resolve, 500));
+            console.error('❌ Elementos del DOM aún no disponibles después de espera');
+            console.error('❌ Esto puede causar que los productos no se rendericen');
+            // Continuar de todos modos, loadProducts() manejará el error
+        } else {
+            console.log('✅ Todos los elementos del DOM están disponibles');
         }
         
         await this.loadProducts();
@@ -135,7 +141,7 @@ if (typeof window.ProductsManager === 'undefined') {
 
     /**
      * Esperar a que los elementos del DOM estén disponibles
-     * Busca primero en todo el documento, luego en app-container
+     * Busca primero en todo el documento, luego en app-container y productsGallery
      */
     async waitForElements(elementIds, maxAttempts = 10) {
         const elements = {};
@@ -162,20 +168,37 @@ if (typeof window.ProductsManager === 'undefined') {
                             }
                         }
                         
+                        // Si aún no se encuentra, buscar dentro de productsGallery
+                        if (!element) {
+                            const productsGallery = document.getElementById('productsGallery');
+                            if (productsGallery) {
+                                element = productsGallery.querySelector(`#${id}`);
+                            }
+                        }
+                        
                         if (element) {
                             elements[id] = element;
+                            if (attempts[id] > 0) {
+                                console.log(`✅ Elemento encontrado: ${id} (después de ${attempts[id]} intentos)`);
+                            }
                         } else {
                             allFound = false;
                             attempts[id]++;
+                            if (attempts[id] === 1 || attempts[id] % 5 === 0) {
+                                console.log(`⏳ Esperando elemento: ${id} (intento ${attempts[id]}/${maxAttempts})`);
+                            }
                         }
                     }
                 }
 
                 if (allFound) {
+                    console.log('✅ Todos los elementos requeridos están disponibles');
                     resolve(elements);
                 } else {
                     const maxAttemptsReached = elementIds.some(id => attempts[id] >= maxAttempts);
                     if (maxAttemptsReached) {
+                        const missing = elementIds.filter(id => !elements[id]);
+                        console.warn(`⚠️ Algunos elementos no se encontraron después de ${maxAttempts} intentos:`, missing);
                         resolve(elements);
                     } else {
                         setTimeout(checkElements, 100);
