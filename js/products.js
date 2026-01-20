@@ -61,7 +61,6 @@ if (typeof window.ProductsManager === 'undefined') {
         });
 
         this.availableCategories = categories;
-        console.log('📊 Categorías detectadas:', Array.from(categories));
     }
 
     async init() {
@@ -433,10 +432,11 @@ if (typeof window.ProductsManager === 'undefined') {
                 return;
             }
 
-            // Consultar productos por brand_container_id (según schema.sql)
+            // Consultar productos por brand_container_id según schema.sql (línea 307-328)
+            // Seleccionar campos específicos según schema para evitar problemas
             const { data: products, error } = await this.supabase
                 .from('products')
-                .select('*')
+                .select('id, brand_container_id, tipo_producto, nombre_producto, descripcion_producto, beneficio_1, beneficio_2, beneficio_3, diferenciacion, modo_uso, ingredientes, precio_producto, moneda, variantes_producto, created_at, updated_at, entity_id')
                 .eq('brand_container_id', this.brandContainerId)
                 .order('created_at', { ascending: false });
 
@@ -453,12 +453,19 @@ if (typeof window.ProductsManager === 'undefined') {
                 throw error;
             }
 
-            // Cargar imágenes para cada producto
+            // Cargar imágenes para cada producto según schema.sql (línea 297-306)
             if (products && products.length > 0) {
                 for (const product of products) {
+                    // Validar que product.id sea un UUID válido
+                    if (!product.id || !uuidRegex.test(product.id)) {
+                        product.images = [];
+                        continue;
+                    }
+
+                    // Seleccionar campos específicos según schema
                     const { data: images, error: imagesError } = await this.supabase
                         .from('product_images')
-                        .select('*')
+                        .select('id, product_id, image_url, image_type, image_order, created_at')
                         .eq('product_id', product.id)
                         .order('image_order', { ascending: true });
 
@@ -724,11 +731,27 @@ if (typeof window.ProductsManager === 'undefined') {
         saveBtn.textContent = 'Creando...';
 
         try {
+            // Validar brandContainerId antes de insertar
+            if (!this.brandContainerId || !uuidRegex.test(this.brandContainerId)) {
+                throw new Error('brand_container_id no válido');
+            }
+
+            // Validar campos requeridos según schema.sql (línea 307-328)
+            if (!formData.tipo_producto || !formData.nombre_producto || !formData.descripcion_producto) {
+                throw new Error('Los campos tipo_producto, nombre_producto y descripcion_producto son requeridos');
+            }
+
             const { error } = await this.supabase
                 .from('products')
                 .insert(formData);
 
-            if (error) throw error;
+            if (error) {
+                if (error.status === 400 || error.code === '400') {
+                    console.warn('⚠️ Error 400 creando producto:', error.message);
+                    throw new Error(`Error al crear producto: ${error.message}`);
+                }
+                throw error;
+            }
 
             this.closeNewProductModal();
             await this.loadProducts();
