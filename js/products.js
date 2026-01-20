@@ -526,17 +526,20 @@ if (typeof window.ProductsManager === 'undefined') {
             
             // Detectar categorías disponibles basándose en productos
             this.detectAvailableCategories();
+            console.log('📊 Categorías detectadas:', Array.from(this.availableCategories));
             
             // Validar y ajustar filtro activo si es necesario
             if (!this.availableCategories.has(this.activeFilter)) {
                 this.activeFilter = 'todos';
             }
             
+            console.log('🎯 Filtro activo:', this.activeFilter);
+            
             // Renderizar tabs después de detectar categorías
             this.renderCategoryTabs();
             
             // Renderizar productos
-            this.renderProducts();
+            await this.renderProducts();
 
         } catch (error) {
             console.error('❌ Error completo cargando productos:', error);
