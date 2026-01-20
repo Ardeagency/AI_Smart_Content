@@ -177,12 +177,14 @@ class LivingManager {
         if (!this.supabase || !this.userId) return;
 
         try {
-            // La tabla projects tiene user_id directamente, no hay user_projects
+            // La tabla correcta es brand_containers, no projects
+            // brand_containers no tiene columna is_active
             const { data, error } = await this.supabase
-                .from('projects')
+                .from('brand_containers')
                 .select('*')
                 .eq('user_id', this.userId)
-                .eq('is_active', true)
+                .order('created_at', { ascending: false })
+                .limit(1)
                 .maybeSingle();
 
             if (error) throw error;
