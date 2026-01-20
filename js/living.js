@@ -216,8 +216,14 @@ class LivingManager {
                 .limit(1)
                 .maybeSingle();
 
-            if (containerError) throw containerError;
-            if (!container) {
+            if (containerError) {
+                if (containerError.status === 400 || containerError.code === '400') {
+                    console.warn('⚠️ Error 400 cargando brand_container:', containerError.message);
+                }
+                throw containerError;
+            }
+            
+            if (!container || !container.id) {
                 this.products = [];
                 return;
             }
@@ -229,7 +235,13 @@ class LivingManager {
                 .eq('brand_container_id', container.id)
                 .order('created_at', { ascending: false });
 
-            if (error) throw error;
+            if (error) {
+                if (error.status === 400 || error.code === '400') {
+                    console.warn('⚠️ Error 400 cargando productos:', error.message);
+                    console.warn('⚠️ brand_container_id:', container.id);
+                }
+                throw error;
+            }
             this.products = data || [];
         } catch (error) {
             console.error('❌ Error cargando productos:', error);
@@ -253,16 +265,28 @@ class LivingManager {
                 .order('created_at', { ascending: false })
                 .limit(100);
 
-            // Filtrar por brand_id si está disponible, sino por user_id
-            if (this.brandId) {
+            // Filtrar por brand_id si está disponible y es válido, sino por user_id
+            if (this.brandId && this.brandId !== null && this.brandId !== undefined) {
                 query = query.eq('brand_id', this.brandId);
-            } else {
+            } else if (this.userId && this.userId !== null && this.userId !== undefined) {
                 query = query.eq('user_id', this.userId);
+            } else {
+                // Si no hay filtros válidos, retornar array vacío
+                console.warn('⚠️ No hay brand_id ni user_id válido para filtrar flow_runs');
+                this.flowRuns = [];
+                return;
             }
 
             const { data, error } = await query;
 
-            if (error) throw error;
+            if (error) {
+                // Si es un error 400, loguear más información
+                if (error.status === 400 || error.code === 'PGRST301') {
+                    console.warn('⚠️ Error 400 en loadFlowRuns:', error.message);
+                    console.warn('⚠️ Parámetros:', { brandId: this.brandId, userId: this.userId });
+                }
+                throw error;
+            }
             this.flowRuns = data || [];
         } catch (error) {
             console.error('❌ Error cargando flow runs:', error);
@@ -274,14 +298,28 @@ class LivingManager {
         if (!this.supabase || !this.flowRuns.length) return;
 
         try {
-            const runIds = this.flowRuns.map(run => run.id);
+            const runIds = this.flowRuns
+                .map(run => run?.id)
+                .filter(id => id !== null && id !== undefined);
+            
+            if (runIds.length === 0) {
+                this.flowOutputs = [];
+                return;
+            }
+
             const { data, error } = await this.supabase
                 .from('flow_outputs')
                 .select('*')
                 .in('run_id', runIds)
                 .order('created_at', { ascending: false });
 
-            if (error) throw error;
+            if (error) {
+                if (error.status === 400 || error.code === '400') {
+                    console.warn('⚠️ Error 400 cargando flow_outputs:', error.message);
+                    console.warn('⚠️ runIds:', runIds);
+                }
+                throw error;
+            }
             this.flowOutputs = data || [];
         } catch (error) {
             console.error('❌ Error cargando flow outputs:', error);
@@ -358,6 +396,13 @@ class LivingManager {
                 return;
             }
 
+            // Validar que brandId sea válido antes de hacer la llamada RPC
+            if (!this.brandId || this.brandId === null || this.brandId === undefined) {
+                console.warn('⚠️ brandId no válido para get_latest_generated_content');
+                this.latestGeneratedContent = [];
+                return;
+            }
+
             const { data, error } = await this.supabase
                 .rpc('get_latest_generated_content', {
                     p_brand_id: this.brandId,
@@ -365,13 +410,15 @@ class LivingManager {
                 });
 
             if (error) {
+                // Manejar diferentes tipos de errores
                 if (error.code === 'PGRST301' || error.code === '42883') {
                     console.warn('⚠️ Función RPC get_latest_generated_content no disponible:', error.message);
                     this.latestGeneratedContent = [];
                     return;
                 }
-                if (error.code === 'PGRST301' || error.code === '400') {
-                    console.warn('⚠️ Error en llamada RPC (posible función no disponible o parámetros incorrectos):', error.message);
+                if (error.status === 400 || error.code === '400' || error.code === 'PGRST301') {
+                    console.warn('⚠️ Error 400 en llamada RPC get_latest_generated_content:', error.message);
+                    console.warn('⚠️ Parámetros enviados:', { p_brand_id: this.brandId, p_limit: 10 });
                     this.latestGeneratedContent = [];
                     return;
                 }
