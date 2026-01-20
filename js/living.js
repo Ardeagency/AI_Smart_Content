@@ -341,7 +341,15 @@ class LivingManager {
                 return;
             }
 
-            // Products usa brand_container_id, no project_id
+            // Validar que container.id sea un UUID válido
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            if (!container.id || !uuidRegex.test(container.id)) {
+                console.warn('⚠️ container.id no es un UUID válido:', container.id);
+                this.products = [];
+                return;
+            }
+
+            // Products usa brand_container_id según schema.sql (línea 309)
             const { data, error } = await this.supabase
                 .from('products')
                 .select('*')
@@ -351,7 +359,9 @@ class LivingManager {
             if (error) {
                 if (error.status === 400 || error.code === '400') {
                     console.warn('⚠️ Error 400 cargando productos:', error.message);
-                    console.warn('⚠️ brand_container_id:', container.id);
+                    console.warn('⚠️ brand_container_id usado:', container.id);
+                    this.products = [];
+                    return;
                 }
                 throw error;
             }

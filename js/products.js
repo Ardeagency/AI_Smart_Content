@@ -253,11 +253,13 @@ if (typeof window.ProductsManager === 'undefined') {
             // Si no hay registros o hay error, continuar sin brandContainerId
             if (error) {
                 if (error.code === 'PGRST116') {
-                    console.log('ℹ️ No hay brand_container, continuando sin él');
+                    // No hay brand_container, continuar sin él (es normal si el usuario no ha creado uno)
                     this.brandContainerId = null;
                     return;
                 }
-                console.warn('⚠️ Error cargando brand_container:', error.message);
+                if (error.status === 400 || error.code === '400') {
+                    console.warn('⚠️ Error 400 cargando brand_container:', error.message);
+                }
                 this.brandContainerId = null;
                 return;
             }
@@ -396,16 +398,23 @@ if (typeof window.ProductsManager === 'undefined') {
 
             // Si no hay brand_container, no hay productos
             if (!this.brandContainerId) {
-                console.log('ℹ️ No hay brand_container, mostrando estado vacío');
                 loadingState.style.display = 'none';
                 emptyState.style.display = 'block';
                 this.products = [];
                 return;
             }
 
-            console.log('📦 Cargando productos para brand_container:', this.brandContainerId);
+            // Validar que brandContainerId sea un UUID válido
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            if (!uuidRegex.test(this.brandContainerId)) {
+                console.warn('⚠️ brandContainerId no es un UUID válido:', this.brandContainerId);
+                loadingState.style.display = 'none';
+                emptyState.style.display = 'block';
+                this.products = [];
+                return;
+            }
 
-            // Consultar productos por brand_container_id
+            // Consultar productos por brand_container_id (según schema.sql)
             const { data: products, error } = await this.supabase
                 .from('products')
                 .select('*')
@@ -413,6 +422,14 @@ if (typeof window.ProductsManager === 'undefined') {
                 .order('created_at', { ascending: false });
 
             if (error) {
+                if (error.status === 400 || error.code === '400') {
+                    console.warn('⚠️ Error 400 cargando productos:', error.message);
+                    console.warn('⚠️ brand_container_id usado:', this.brandContainerId);
+                    loadingState.style.display = 'none';
+                    emptyState.style.display = 'block';
+                    this.products = [];
+                    return;
+                }
                 console.error('❌ Error cargando productos:', error);
                 throw error;
             }
