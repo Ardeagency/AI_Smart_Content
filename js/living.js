@@ -559,12 +559,20 @@ class LivingManager {
     async loadLatestGeneratedContent() {
         // Función RPC eliminada para evitar errores 400
         // Usar flow_outputs directamente en su lugar
-        if (!this.supabase) {
+        // Validar cliente de Supabase antes de hacer consulta
+        if (!this.supabase || !this.isValidSupabaseClient(this.supabase)) {
             this.latestGeneratedContent = [];
             return;
         }
 
         try {
+            // Validar que el cliente tenga el método from
+            if (typeof this.supabase.from !== 'function') {
+                console.error('❌ Cliente de Supabase no tiene método from()');
+                this.latestGeneratedContent = [];
+                return;
+            }
+
             // Primero obtener brand_id si no lo tenemos
             if (!this.brandId) {
                 await this.loadBrandId();
