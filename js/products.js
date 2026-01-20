@@ -496,54 +496,115 @@ if (typeof window.ProductsManager === 'undefined') {
                 return;
             }
 
-            // Consultar productos por brand_container_id según schema.sql (línea 307-328)
-            // Usar select('*') primero para verificar si hay productos, luego podemos optimizar
-            const { data: products, error } = await this.supabase
-                .from('products')
-                .select('*')
+            // Nuevo método: Primero obtener brand_entities, luego products, luego product_images
+            // Paso 1: Obtener brand_entities según schema.sql (línea 90-107)
+            console.log('🔍 Paso 1: Obteniendo brand_entities...');
+            const { data: brandEntities, error: entitiesError } = await this.supabase
+                .from('brand_entities')
+                .select('id, brand_container_id, entity_type, name, description, core_benefits, differentiation, usage_context, price, currency, metadata, created_at, updated_at')
                 .eq('brand_container_id', this.brandContainerId)
                 .order('created_at', { ascending: false });
 
-            if (error) {
-                if (error.status === 400 || error.code === '400') {
-                    console.warn('⚠️ Error 400 cargando productos:', error.message);
-                    console.warn('⚠️ brand_container_id usado:', this.brandContainerId);
-                    console.warn('⚠️ Detalles del error:', error);
-                    loadingState.style.display = 'none';
-                    emptyState.style.display = 'block';
-                    this.products = [];
-                    return;
+            if (entitiesError) {
+                if (entitiesError.status === 400 || entitiesError.code === '400') {
+                    console.warn('⚠️ Error 400 cargando brand_entities:', entitiesError.message);
                 }
-                console.error('❌ Error cargando productos:', error);
-                throw error;
+                console.error('❌ Error cargando brand_entities:', entitiesError);
+                loadingState.style.display = 'none';
+                emptyState.style.display = 'block';
+                this.products = [];
+                return;
+            }
+
+            console.log(`✅ ${brandEntities?.length || 0} brand_entity(ies) encontrado(s)`);
+
+            // Paso 2: Obtener products relacionados con esas brand_entities según schema.sql (línea 307-328)
+            // products tiene entity_id que referencia a brand_entities(id)
+            if (!brandEntities || brandEntities.length === 0) {
+                console.warn('⚠️ No hay brand_entities, no se pueden cargar productos');
+                loadingState.style.display = 'none';
+                emptyState.style.display = 'block';
+                this.products = [];
+                return;
+            }
+
+            // Obtener los IDs de las brand_entities
+            const entityIds = brandEntities.map(entity => entity.id).filter(id => id && uuidRegex.test(id));
+            
+            if (entityIds.length === 0) {
+                console.warn('⚠️ No hay entityIds válidos');
+                loadingState.style.display = 'none';
+                emptyState.style.display = 'block';
+                this.products = [];
+                return;
+            }
+
+            console.log('🔍 Paso 2: Obteniendo products relacionados con brand_entities...');
+            const { data: products, error: productsError } = await this.supabase
+                .from('products')
+                .select('id, brand_container_id, tipo_producto, nombre_producto, descripcion_producto, beneficio_1, beneficio_2, beneficio_3, diferenciacion, modo_uso, ingredientes, precio_producto, moneda, variantes_producto, created_at, updated_at, entity_id')
+                .eq('brand_container_id', this.brandContainerId)
+                .in('entity_id', entityIds)
+                .order('created_at', { ascending: false });
+
+            if (productsError) {
+                if (productsError.status === 400 || productsError.code === '400') {
+                    console.warn('⚠️ Error 400 cargando products:', productsError.message);
+                    console.warn('⚠️ brand_container_id usado:', this.brandContainerId);
+                    console.warn('⚠️ entityIds usados:', entityIds);
+                }
+                console.error('❌ Error cargando products:', productsError);
+                loadingState.style.display = 'none';
+                emptyState.style.display = 'block';
+                this.products = [];
+                return;
             }
 
             console.log(`✅ ${products?.length || 0} producto(s) encontrado(s)`);
 
-            // Cargar imágenes para cada producto según schema.sql (línea 297-306)
+            // Paso 3: Cargar product_images para cada producto según schema.sql (línea 297-306)
             if (products && products.length > 0) {
-                for (const product of products) {
-                    // Validar que product.id sea un UUID válido
-                    if (!product.id || !uuidRegex.test(product.id)) {
-                        product.images = [];
-                        continue;
-                    }
-
-                    // Seleccionar campos específicos según schema
-                    const { data: images, error: imagesError } = await this.supabase
+                console.log('🔍 Paso 3: Obteniendo product_images para cada producto...');
+                const productIds = products.map(p => p.id).filter(id => id && uuidRegex.test(id));
+                
+                if (productIds.length > 0) {
+                    // Obtener todas las imágenes de una vez usando .in()
+                    const { data: allImages, error: imagesError } = await this.supabase
                         .from('product_images')
                         .select('id, product_id, image_url, image_type, image_order, created_at')
-                        .eq('product_id', product.id)
-                        .order('image_order', { ascending: true });
+                        .in('product_id', productIds)
+                        .order('product_id, image_order', { ascending: true });
 
-                    if (!imagesError) {
-                        product.images = images || [];
+                    if (!imagesError && allImages) {
+                        // Agrupar imágenes por product_id
+                        const imagesByProduct = {};
+                        allImages.forEach(image => {
+                            if (!imagesByProduct[image.product_id]) {
+                                imagesByProduct[image.product_id] = [];
+                            }
+                            imagesByProduct[image.product_id].push(image);
+                        });
+
+                        // Asignar imágenes a cada producto
+                        products.forEach(product => {
+                            product.images = imagesByProduct[product.id] || [];
+                        });
+
+                        console.log(`✅ ${allImages.length} imagen(es) cargada(s) para ${products.length} producto(s)`);
                     } else {
-                        if (imagesError.status === 400 || imagesError.code === '400') {
-                            console.warn(`⚠️ Error 400 cargando imágenes para producto ${product.id}:`, imagesError.message);
+                        if (imagesError && (imagesError.status === 400 || imagesError.code === '400')) {
+                            console.warn('⚠️ Error 400 cargando product_images:', imagesError.message);
                         }
-                        product.images = [];
+                        // Si hay error, asignar array vacío a cada producto
+                        products.forEach(product => {
+                            product.images = [];
+                        });
                     }
+                } else {
+                    // Si no hay productIds válidos, asignar array vacío
+                    products.forEach(product => {
+                        product.images = [];
+                    });
                 }
             }
 
