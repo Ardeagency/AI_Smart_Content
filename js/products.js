@@ -82,8 +82,79 @@ if (typeof window.ProductsManager === 'undefined') {
         await this.loadBrandContainer();
         await this.loadUserData();
         this.setupEventListeners();
+        
+        // Esperar a que el DOM esté listo antes de cargar productos
+        await this.waitForDOMReady();
         await this.loadProducts();
         // Sidebar se actualiza automáticamente por SidebarManager (persistente)
+    }
+
+    /**
+     * Esperar a que los elementos del DOM estén disponibles
+     */
+    async waitForElements(elementIds, maxAttempts = 10) {
+        const elements = {};
+        const attempts = {};
+        
+        for (const id of elementIds) {
+            attempts[id] = 0;
+        }
+
+        return new Promise((resolve) => {
+            const checkElements = () => {
+                let allFound = true;
+                
+                for (const id of elementIds) {
+                    if (!elements[id]) {
+                        const element = document.getElementById(id);
+                        if (element) {
+                            elements[id] = element;
+                        } else {
+                            allFound = false;
+                            attempts[id]++;
+                        }
+                    }
+                }
+
+                if (allFound) {
+                    resolve(elements);
+                } else {
+                    const maxAttemptsReached = elementIds.some(id => attempts[id] >= maxAttempts);
+                    if (maxAttemptsReached) {
+                        resolve(elements);
+                    } else {
+                        setTimeout(checkElements, 100);
+                    }
+                }
+            };
+
+            // Iniciar verificación
+            checkElements();
+        });
+    }
+
+    /**
+     * Esperar a que el DOM esté completamente listo
+     */
+    async waitForDOMReady() {
+        return new Promise((resolve) => {
+            if (document.readyState === 'complete' || document.readyState === 'interactive') {
+                // Usar requestAnimationFrame para asegurar que el DOM esté renderizado
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        resolve();
+                    });
+                });
+            } else {
+                window.addEventListener('load', () => {
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            resolve();
+                        });
+                    });
+                });
+            }
+        });
     }
 
     async loadUserData() {
@@ -129,20 +200,21 @@ if (typeof window.ProductsManager === 'undefined') {
                 this.supabase = await window.appLoader.waitFor();
             }
             // Prioridad 3: Usar supabase global
-            else if (window.supabase) {
+            else if (window.supabase && typeof window.supabase.from === 'function') {
                 this.supabase = window.supabase;
             }
             // Prioridad 4: Funciones legacy
             else if (typeof waitForSupabase === 'function') {
                 this.supabase = await waitForSupabase(15000);
-            } else if (window.supabaseClient) {
+            } else if (window.supabaseClient && typeof window.supabaseClient.from === 'function') {
                 this.supabase = window.supabaseClient;
             } else if (typeof initSupabase === 'function') {
                 this.supabase = await initSupabase();
             }
 
-            if (!this.supabase) {
-                throw new Error('No se pudo inicializar Supabase');
+            // Validar que el cliente tenga los métodos necesarios
+            if (!this.supabase || typeof this.supabase.from !== 'function' || !this.supabase.auth) {
+                throw new Error('Cliente de Supabase no válido');
             }
 
             const { data: { user }, error: userError } = await this.supabase.auth.getUser();
@@ -273,37 +345,29 @@ if (typeof window.ProductsManager === 'undefined') {
 
     async loadProducts() {
         // Esperar a que los elementos del DOM estén disponibles
-        const maxRetries = 10;
-        let retries = 0;
-        let emptyState, productsGrid;
+        const elements = await this.waitForElements(['loadingState', 'emptyState', 'productsGrid'], 10);
         
-        while (retries < maxRetries && (!emptyState || !productsGrid)) {
-            emptyState = document.getElementById('emptyState');
-            productsGrid = document.getElementById('productsGrid');
-            
-            if (!emptyState || !productsGrid) {
-                await new Promise(resolve => requestAnimationFrame(resolve));
-                retries++;
-            }
-        }
-
-        if (!emptyState || !productsGrid) {
-            console.error('❌ Elementos del DOM no encontrados después de', maxRetries, 'intentos');
-            console.error('Buscando elementos:', {
-                emptyState: !!emptyState,
-                productsGrid: !!productsGrid,
-                container: document.getElementById('app-container')?.innerHTML?.substring(0, 200)
+        if (!elements.loadingState || !elements.emptyState || !elements.productsGrid) {
+            console.error('❌ Elementos del DOM no encontrados después de 10 intentos');
+            console.warn('⚠️ Buscando elementos:', {
+                container: elements.loadingState?.parentElement?.innerHTML?.substring(0, 50) || 'no encontrado',
+                emptyState: !!elements.emptyState,
+                productsGrid: !!elements.productsGrid
             });
             return;
         }
 
+        const { loadingState, emptyState, productsGrid } = elements;
+
         try {
+            loadingState.style.display = 'block';
             emptyState.style.display = 'none';
             productsGrid.style.display = 'none';
 
             // Si no hay brand_container, no hay productos
             if (!this.brandContainerId) {
                 console.log('ℹ️ No hay brand_container, mostrando estado vacío');
+                loadingState.style.display = 'none';
                 emptyState.style.display = 'block';
                 this.products = [];
                 return;
@@ -364,29 +428,41 @@ if (typeof window.ProductsManager === 'undefined') {
 
         } catch (error) {
             console.error('❌ Error completo cargando productos:', error);
+            if (loadingState) loadingState.style.display = 'none';
             if (emptyState) emptyState.style.display = 'block';
             if (productsGrid) productsGrid.style.display = 'none';
         }
     }
 
     renderProducts() {
+        // Buscar elementos directamente sin espera (ya deberían estar disponibles)
+        const loadingState = document.getElementById('loadingState');
         const emptyState = document.getElementById('emptyState');
         const productsGrid = document.getElementById('productsGrid');
 
-        if (!emptyState || !productsGrid) {
-            console.warn('⚠️ Elementos del DOM no encontrados para renderizar productos. Reintentando...');
-            // Reintentar después de un breve delay
-            setTimeout(() => {
-                const retryEmptyState = document.getElementById('emptyState');
-                const retryProductsGrid = document.getElementById('productsGrid');
-                if (retryEmptyState && retryProductsGrid) {
-                    this.renderProducts();
-                } else {
-                    console.error('❌ Elementos del DOM no encontrados después del reintento');
+        if (!loadingState || !emptyState || !productsGrid) {
+            console.error('❌ Elementos del DOM no encontrados para renderizar productos');
+            // Intentar buscar en el container de la vista si existe
+            const viewContainer = document.getElementById('app-container');
+            if (viewContainer) {
+                const containerLoading = viewContainer.querySelector('#loadingState');
+                const containerEmpty = viewContainer.querySelector('#emptyState');
+                const containerGrid = viewContainer.querySelector('#productsGrid');
+                if (containerLoading && containerEmpty && containerGrid) {
+                    // Usar elementos encontrados en el container
+                    this.renderProductsWithElements(containerLoading, containerEmpty, containerGrid);
+                    return;
                 }
-            }, 100);
+            }
             return;
         }
+
+        this.renderProductsWithElements(loadingState, emptyState, productsGrid);
+    }
+
+    renderProductsWithElements(loadingState, emptyState, productsGrid) {
+
+        loadingState.style.display = 'none';
 
         if (!this.products || this.products.length === 0) {
             console.log('ℹ️ No hay productos para mostrar');
