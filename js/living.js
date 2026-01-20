@@ -1213,5 +1213,10 @@ class LivingManager {
     }
 }
 
+// Hacer disponible globalmente para que pueda ser usado por LivingView
+if (typeof window !== 'undefined') {
+    window.LivingManager = LivingManager;
+}
+
 // NO inicializar automáticamente - LivingView se encargará de crear la instancia cuando sea necesario
 // Esto evita conflictos cuando se navega entre rutas

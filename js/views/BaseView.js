@@ -296,21 +296,24 @@ class BaseView {
       script.onload = () => {
         if (globalVar) {
           // Esperar a que la variable global esté disponible
-          const checkInterval = setInterval(() => {
-            if (window[globalVar]) {
-              clearInterval(checkInterval);
-              resolve();
-            }
-          }, 100);
-
+          // Dar un pequeño delay inicial para que el script se ejecute completamente
           setTimeout(() => {
-            clearInterval(checkInterval);
-            if (window[globalVar]) {
-              resolve();
-            } else {
-              reject(new Error(`${globalVar} no se registró después de cargar ${scriptSrc}`));
-            }
-          }, timeout);
+            const checkInterval = setInterval(() => {
+              if (window[globalVar]) {
+                clearInterval(checkInterval);
+                resolve();
+              }
+            }, 50); // Verificar cada 50ms para ser más rápido
+
+            setTimeout(() => {
+              clearInterval(checkInterval);
+              if (window[globalVar]) {
+                resolve();
+              } else {
+                reject(new Error(`${globalVar} no se registró después de cargar ${scriptSrc}`));
+              }
+            }, timeout);
+          }, 100); // Esperar 100ms después de onload para que el script se ejecute
         } else {
           // Sin variable global, resolver inmediatamente después de onload
           resolve();
