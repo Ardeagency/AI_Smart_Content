@@ -199,6 +199,16 @@ if (typeof window.ProductsManager === 'undefined') {
 
     // updateNavHeader() removido - El sidebar es persistente y se maneja por SidebarManager
 
+    /**
+     * Validar que el cliente de Supabase sea válido
+     */
+    isValidSupabaseClient(client) {
+        if (!client) return false;
+        if (typeof client.from !== 'function') return false;
+        if (!client.auth || typeof client.auth.getUser !== 'function') return false;
+        return true;
+    }
+
     async initSupabase() {
         try {
             // Prioridad 1: Usar SupabaseService
@@ -381,6 +391,19 @@ if (typeof window.ProductsManager === 'undefined') {
     }
 
     async loadProducts() {
+        // Validar cliente de Supabase antes de hacer consulta
+        if (!this.supabase || !this.isValidSupabaseClient(this.supabase) || !this.userId) {
+            console.warn('⚠️ Cliente de Supabase no válido o userId no disponible');
+            const elements = await this.waitForElements(['loadingState', 'emptyState', 'productsGrid'], 10);
+            if (elements.loadingState && elements.emptyState && elements.productsGrid) {
+                elements.loadingState.style.display = 'none';
+                elements.emptyState.style.display = 'block';
+                elements.productsGrid.style.display = 'none';
+            }
+            this.products = [];
+            return;
+        }
+
         // Esperar a que los elementos del DOM estén disponibles
         const elements = await this.waitForElements(['loadingState', 'emptyState', 'productsGrid'], 10);
         
@@ -426,6 +449,15 @@ if (typeof window.ProductsManager === 'undefined') {
             const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
             if (!uuidRegex.test(this.brandContainerId)) {
                 console.warn('⚠️ brandContainerId no es un UUID válido:', this.brandContainerId);
+                loadingState.style.display = 'none';
+                emptyState.style.display = 'block';
+                this.products = [];
+                return;
+            }
+
+            // Validar nuevamente el cliente antes de consultar
+            if (!this.isValidSupabaseClient(this.supabase)) {
+                console.warn('⚠️ Cliente de Supabase no válido antes de consultar productos');
                 loadingState.style.display = 'none';
                 emptyState.style.display = 'block';
                 this.products = [];
