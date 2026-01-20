@@ -466,10 +466,10 @@ if (typeof window.ProductsManager === 'undefined') {
             }
 
             // Consultar productos por brand_container_id según schema.sql (línea 307-328)
-            // Seleccionar campos específicos según schema para evitar problemas
+            // Usar select('*') primero para verificar si hay productos, luego podemos optimizar
             const { data: products, error } = await this.supabase
                 .from('products')
-                .select('id, brand_container_id, tipo_producto, nombre_producto, descripcion_producto, beneficio_1, beneficio_2, beneficio_3, diferenciacion, modo_uso, ingredientes, precio_producto, moneda, variantes_producto, created_at, updated_at, entity_id')
+                .select('*')
                 .eq('brand_container_id', this.brandContainerId)
                 .order('created_at', { ascending: false });
 
