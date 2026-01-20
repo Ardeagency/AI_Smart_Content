@@ -17,6 +17,15 @@ if (typeof window.ProductsManager === 'undefined') {
         this.init();
     }
 
+    /**
+     * Helper para validar UUIDs - evita duplicación de código
+     */
+    isValidUUID(uuid) {
+        if (!uuid || typeof uuid !== 'string') return false;
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        return uuidRegex.test(uuid);
+    }
+
     // Mapeo completo de todas las categorías posibles
     getCategoryMap() {
         return {
@@ -250,7 +259,7 @@ if (typeof window.ProductsManager === 'undefined') {
             }
 
             // Validar que userId sea un UUID válido
-            if (!user.id || typeof user.id !== 'string') {
+            if (!this.isValidUUID(user.id)) {
                 throw new Error('userId no válido');
             }
 
@@ -270,8 +279,7 @@ if (typeof window.ProductsManager === 'undefined') {
 
         try {
             // Validar que userId sea un UUID válido
-            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-            if (!uuidRegex.test(this.userId)) {
+            if (!this.isValidUUID(this.userId)) {
                 console.warn('⚠️ userId no es un UUID válido:', this.userId);
                 this.brandContainerId = null;
                 return;
@@ -450,8 +458,7 @@ if (typeof window.ProductsManager === 'undefined') {
             }
 
         // Validar UUID
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-        if (!uuidRegex.test(this.brandContainerId)) {
+        if (!this.isValidUUID(this.brandContainerId)) {
             loadingState.style.display = 'none';
             emptyState.style.display = 'block';
             this.products = [];
@@ -495,7 +502,7 @@ if (typeof window.ProductsManager === 'undefined') {
             // product_images.product_id -> products.id
             const productIds = products
                 .map(p => p.id)
-                .filter(id => id && uuidRegex.test(id));
+                .filter(id => id && this.isValidUUID(id));
 
             if (productIds.length > 0) {
                 const { data: allImages, error: imagesError } = await this.supabase
@@ -814,7 +821,7 @@ if (typeof window.ProductsManager === 'undefined') {
 
         try {
             // Validar brandContainerId antes de insertar
-            if (!this.brandContainerId || !uuidRegex.test(this.brandContainerId)) {
+            if (!this.isValidUUID(this.brandContainerId)) {
                 throw new Error('brand_container_id no válido');
             }
 
@@ -1360,8 +1367,7 @@ if (typeof window.ProductsManager === 'undefined') {
 
         try {
             // Validar brandContainerId antes de operar
-            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-            if (!this.brandContainerId || !uuidRegex.test(this.brandContainerId)) {
+            if (!this.isValidUUID(this.brandContainerId)) {
                 throw new Error('brand_container_id no válido');
             }
 
@@ -1419,8 +1425,7 @@ if (typeof window.ProductsManager === 'undefined') {
 
     async deleteProduct(productId) {
         // Validar que productId sea un UUID válido
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-        if (!productId || !uuidRegex.test(productId)) {
+        if (!this.isValidUUID(productId)) {
             console.warn('⚠️ productId no es un UUID válido:', productId);
             return;
         }
@@ -1453,8 +1458,6 @@ if (typeof window.ProductsManager === 'undefined') {
                 }
                 throw error;
             }
-
-            if (error) throw error;
 
             await this.loadProducts();
             this.showNotification('✅ Producto eliminado exitosamente', 'success');

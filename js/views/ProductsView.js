@@ -177,13 +177,27 @@ class ProductsView extends BaseView {
 
   /**
    * Cargar brand container ID
+   * Reutiliza la lógica de ProductsManager si está disponible para evitar duplicación
    */
   async loadBrandContainer() {
+    // Intentar usar ProductsManager si está disponible
+    if (window.productsManager && window.productsManager.brandContainerId) {
+      this.brandContainerId = window.productsManager.brandContainerId;
+      return;
+    }
+
     if (!this.supabase || !this.userId) return;
 
     try {
       // Validar que userId sea válido
       if (!this.userId || typeof this.userId !== 'string' || this.userId.trim() === '') {
+        return;
+      }
+
+      // Validar UUID
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(this.userId)) {
+        console.warn('⚠️ userId no es un UUID válido en ProductsView:', this.userId);
         return;
       }
 
@@ -356,9 +370,17 @@ class ProductsView extends BaseView {
   }
 
   /**
-   * Obtener mapeo de categorías (igual que ProductsManager)
+   * Obtener mapeo de categorías desde ProductsManager para evitar duplicación
    */
   getCategoryMap() {
+    // Usar ProductsManager si está disponible, sino usar versión local sin "todos"
+    if (window.productsManager && typeof window.productsManager.getCategoryMap === 'function') {
+      const fullMap = window.productsManager.getCategoryMap();
+      // Remover "todos" para la vista de detalle
+      const { todos, ...mapWithoutTodos } = fullMap;
+      return mapWithoutTodos;
+    }
+    // Fallback local sin "todos"
     return {
       'bebida': { label: 'Bebidas', icon: 'fa-glass-water' },
       'bebida_alcoholica': { label: 'Bebidas Alcohólicas', icon: 'fa-wine-glass' },
@@ -700,32 +722,46 @@ class ProductsView extends BaseView {
 
     try {
       // Subir a Supabase Storage
+      // Estandarizar ruta: usar userId/productId/ como en ProductsManager
+      if (!this.userId) {
+        const { data: { user } } = await this.supabase.auth.getUser();
+        if (user) this.userId = user.id;
+      }
+      
       const fileExt = file.name.split('.').pop();
-      const fileName = `${this.productId}/${Date.now()}.${fileExt}`;
-      const filePath = `products/${fileName}`;
+      const fileName = `${this.userId}/${this.productId}/${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name}`;
 
-      const { data: uploadData, error: uploadError } = await this.supabase.storage
+      const { error: uploadError } = await this.supabase.storage
         .from('product-images')
-        .upload(filePath, file, { upsert: false });
+        .upload(fileName, file, {
+          contentType: file.type,
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (uploadError) throw uploadError;
 
       // Obtener URL pública
       const { data: { publicUrl } } = this.supabase.storage
         .from('product-images')
-        .getPublicUrl(filePath);
+        .getPublicUrl(fileName);
 
       // Guardar referencia en product_images
+      // Estandarizar: usar 'principal' y 'secundaria' como en ProductsManager
       const maxOrder = this.productImages.length > 0
         ? Math.max(...this.productImages.map(img => img.image_order || 0))
         : -1;
+
+      // Verificar si ya hay una imagen principal
+      const hasPrincipal = this.productImages.some(img => img.image_type === 'principal');
+      const imageType = (!hasPrincipal && maxOrder === -1) ? 'principal' : 'secundaria';
 
       const { data: imageData, error: dbError } = await this.supabase
         .from('product_images')
         .insert({
           product_id: this.productId,
           image_url: publicUrl,
-          image_type: 'product',
+          image_type: imageType,
           image_order: maxOrder + 1
         })
         .select()
@@ -808,14 +844,14 @@ class ProductsView extends BaseView {
 
       // Intentar eliminar del storage (opcional, puede fallar si no existe)
       if (imageData?.image_url) {
-        const urlParts = imageData.image_url.split('/');
-        const fileName = urlParts[urlParts.length - 1];
-        const productId = urlParts[urlParts.length - 2];
-        const filePath = `products/${productId}/${fileName}`;
+        // Extraer path del URL para eliminar de storage
+        const url = new URL(imageData.image_url);
+        const pathParts = url.pathname.split('/');
+        const fileName = pathParts.slice(pathParts.indexOf('product-images') + 1).join('/');
         
         await this.supabase.storage
           .from('product-images')
-          .remove([filePath]);
+          .remove([fileName]);
       }
 
       // Recargar imágenes y actualizar UI

@@ -298,6 +298,11 @@ class LivingManager {
         }
     }
 
+    /**
+     * Cargar productos para el dashboard Living
+     * NOTA: Esta función es una versión simplificada que solo carga datos básicos.
+     * Para funcionalidad completa (con imágenes), usar ProductsManager.
+     */
     async loadProducts() {
         // Validar cliente de Supabase antes de hacer consulta
         if (!this.supabase || !this.isValidSupabaseClient(this.supabase) || !this.userId) {
@@ -307,7 +312,7 @@ class LivingManager {
 
         try {
             // Validar que userId sea válido
-            if (!this.userId || this.userId === null || this.userId === undefined || this.userId === '') {
+            if (!this.userId || typeof this.userId !== 'string' || this.userId.trim() === '') {
                 console.warn('⚠️ userId no válido para loadProducts');
                 this.products = [];
                 return;
@@ -320,46 +325,51 @@ class LivingManager {
                 return;
             }
 
-            // Primero obtener brand_container por user_id
-            const { data: container, error: containerError } = await this.supabase
-                .from('brand_containers')
-                .select('id')
-                .eq('user_id', this.userId)
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .maybeSingle();
+            // Usar brandContainerId si ya está cargado, sino cargarlo
+            if (!this.brandContainerId) {
+                const { data: container, error: containerError } = await this.supabase
+                    .from('brand_containers')
+                    .select('id')
+                    .eq('user_id', this.userId)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
 
-            if (containerError) {
-                if (containerError.status === 400 || containerError.code === '400') {
-                    console.warn('⚠️ Error 400 cargando brand_container:', containerError.message);
+                if (containerError) {
+                    if (containerError.status === 400 || containerError.code === '400') {
+                        console.warn('⚠️ Error 400 cargando brand_container:', containerError.message);
+                    }
+                    this.products = [];
+                    return;
                 }
-                throw containerError;
-            }
-            
-            if (!container || !container.id) {
-                this.products = [];
-                return;
-            }
+                
+                if (!container || !container.id) {
+                    this.products = [];
+                    return;
+                }
 
-            // Validar que container.id sea un UUID válido
-            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-            if (!container.id || !uuidRegex.test(container.id)) {
-                console.warn('⚠️ container.id no es un UUID válido:', container.id);
-                this.products = [];
-                return;
+                // Validar que container.id sea un UUID válido
+                const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+                if (!uuidRegex.test(container.id)) {
+                    console.warn('⚠️ container.id no es un UUID válido:', container.id);
+                    this.products = [];
+                    return;
+                }
+
+                this.brandContainerId = container.id;
             }
 
             // Products usa brand_container_id según schema.sql (línea 309)
             const { data, error } = await this.supabase
                 .from('products')
-                .select('*')
-                .eq('brand_container_id', container.id)
+                .select('id, nombre_producto, tipo_producto, precio_producto, moneda, created_at')
+                .eq('brand_container_id', this.brandContainerId)
                 .order('created_at', { ascending: false });
 
             if (error) {
                 if (error.status === 400 || error.code === '400') {
                     console.warn('⚠️ Error 400 cargando productos:', error.message);
-                    console.warn('⚠️ brand_container_id usado:', container.id);
+                    console.warn('⚠️ brand_container_id usado:', this.brandContainerId);
                     this.products = [];
                     return;
                 }
