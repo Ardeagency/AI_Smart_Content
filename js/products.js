@@ -242,12 +242,28 @@ if (typeof window.ProductsManager === 'undefined') {
     }
 
     async loadBrandContainer() {
+        // Validar cliente y userId antes de hacer consulta
+        if (!this.supabase || typeof this.supabase.from !== 'function' || !this.userId) {
+            this.brandContainerId = null;
+            return;
+        }
+
         try {
-            // Cargar brand_container asociado al usuario
+            // Validar que userId sea un UUID válido
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            if (!uuidRegex.test(this.userId)) {
+                console.warn('⚠️ userId no es un UUID válido:', this.userId);
+                this.brandContainerId = null;
+                return;
+            }
+
+            // Cargar brand_container asociado al usuario (según schema.sql línea 72-89)
             const { data: brandContainer, error } = await this.supabase
                 .from('brand_containers')
                 .select('id')
                 .eq('user_id', this.userId)
+                .order('created_at', { ascending: false })
+                .limit(1)
                 .maybeSingle();
 
             // Si no hay registros o hay error, continuar sin brandContainerId
