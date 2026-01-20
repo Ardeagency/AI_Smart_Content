@@ -65,7 +65,8 @@ if (typeof window.ProductsManager === 'undefined') {
 
     async init() {
         await this.initSupabase();
-        if (!this.supabase || !this.userId) {
+        if (!this.supabase || !this.isValidSupabaseClient(this.supabase) || !this.userId) {
+            console.warn('⚠️ Supabase no inicializado correctamente o usuario no autenticado');
             // Usar router si está disponible
             if (window.router) {
                 window.router.navigate('/login', true);
