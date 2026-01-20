@@ -11,6 +11,7 @@ class LivingView extends BaseView {
 
   /**
    * Hook llamado al entrar a la vista
+   * Simplificado - sin lógica compleja de reinicialización
    */
   async onEnter() {
     // Verificar autenticación usando AuthService
@@ -37,32 +38,19 @@ class LivingView extends BaseView {
     if (window.navigation && !window.navigation.initialized) {
       await window.navigation.render();
     }
-
-    // Si la vista ya está inicializada pero LivingManager no está inicializado o necesita reinicialización
-    // Esto puede pasar cuando se vuelve a entrar a la vista desde otra ruta
-    if (this.initialized && (!this.livingManager || !this.livingManager.initialized)) {
-      console.log('ℹ️ Reinicializando LivingManager al volver a entrar a la vista...');
-      await this.init();
-    }
   }
 
   /**
    * Inicializar la vista
+   * Simplificado - siempre crear nueva instancia sin limpieza
    */
   async init() {
-    // Si ya hay una instancia y está inicializada, reinicializarla
-    if (this.livingManager && this.livingManager.initialized) {
-      console.log('ℹ️ Reinicializando LivingManager...');
-      await this.livingManager.destroy();
-      this.livingManager = null;
-    }
-
     // Cargar script si es necesario usando el método centralizado de BaseView
     if (!window.LivingManager) {
       await this.loadScript('js/living.js', 'LivingManager');
     }
 
-    // Inicializar LivingManager
+    // Siempre crear nueva instancia de LivingManager
     if (window.LivingManager) {
       this.livingManager = new window.LivingManager();
       await this.livingManager.init();
@@ -136,13 +124,10 @@ class LivingView extends BaseView {
   }
 
   /**
-   * Cleanup al salir de la vista
+   * Hook al salir de la vista - sin limpieza
    */
   async onLeave() {
-    // Limpiar LivingManager si existe
-    if (this.livingManager && typeof this.livingManager.destroy === 'function') {
-      await this.livingManager.destroy();
-    }
+    // Sin limpieza - el navegador maneja todo automáticamente
   }
 }
 

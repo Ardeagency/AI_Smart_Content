@@ -107,13 +107,10 @@ class FormRecordView extends BaseView {
   }
 
   /**
-   * Cleanup al salir de la vista
+   * Hook al salir de la vista - sin limpieza
    */
   async onLeave() {
-    // Limpiar FormRecord si existe
-    if (this.formRecord && typeof this.formRecord.destroy === 'function') {
-      await this.formRecord.destroy();
-    }
+    // Sin limpieza - el navegador maneja todo automáticamente
   }
 }
 

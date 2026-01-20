@@ -1,7 +1,7 @@
 /**
  * BaseView - Clase base para todas las vistas de la SPA
  * 
- * Proporciona funcionalidad común: carga de templates, renderizado, cleanup.
+ * Proporciona funcionalidad común: carga de templates y renderizado.
  * Todas las vistas deben extender esta clase.
  * 
  * @class BaseView
@@ -36,26 +36,12 @@ class BaseView {
       throw new Error('templatePath no definido. Debes definir templatePath o implementar renderHTML() en la subclase.');
     }
 
-    // Verificar cache del router
-    if (window.router && window.router.templateCache) {
-      const cached = window.router.templateCache.get(this.templatePath);
-      if (cached) {
-        return cached;
-      }
-    }
-
     try {
-      // Verificar si se debe forzar recarga (cuando el caché fue limpiado)
-      const forceReload = window.router && window.router.templateCache && 
-                         !window.router.templateCache.has(this.templatePath);
-      
-      // Agregar timestamp para evitar caché del navegador/CDN si se fuerza recarga
-      const url = forceReload 
-        ? `templates/${this.templatePath}?t=${Date.now()}`
-        : `templates/${this.templatePath}`;
+      // Siempre cargar template sin caché - agregar timestamp para evitar caché del navegador
+      const url = `templates/${this.templatePath}?t=${Date.now()}`;
       
       const response = await fetch(url, {
-        cache: forceReload ? 'no-cache' : 'default'
+        cache: 'no-cache'
       });
       
       if (!response.ok) {
@@ -64,11 +50,7 @@ class BaseView {
       
       const html = await response.text();
       
-      // Guardar en cache
-      if (window.router && window.router.templateCache) {
-        window.router.templateCache.set(this.templatePath, html);
-      }
-      
+      // Caché eliminado - siempre cargar templates frescos
       return html;
     } catch (error) {
       console.error('Error cargando template:', error);
@@ -106,10 +88,7 @@ class BaseView {
       return;
     }
 
-    if (this.initialized && this.container.innerHTML.trim() !== '') {
-      this.show();
-      return;
-    }
+    // Eliminada verificación de inicialización - siempre renderizar desde cero
 
     this.showLoading();
 
@@ -169,39 +148,10 @@ class BaseView {
 
   /**
    * Hook llamado al salir de la vista
-   * Override este método para guardar estado, limpiar recursos, etc.
+   * Método vacío - sin limpieza
    */
   async onLeave() {
-    // Override en subclases
-  }
-
-  /**
-   * Destruir la vista
-   * NOTA: Las vistas ya NO se destruyen al navegar - se mantienen en cache
-   * Este método solo se usa para limpieza completa cuando sea necesario
-   */
-  async destroy() {
-    if (!this.initialized) {
-      return;
-    }
-
-    try {
-      // Llamar a onLeave para que la vista pueda hacer cleanup
-      await this.onLeave();
-
-      // Limpiar event listeners registrados
-      this.cleanup();
-
-      // Limpiar container solo si se solicita destrucción completa
-      if (this.container) {
-        this.container.innerHTML = '';
-      }
-
-      this.initialized = false;
-      console.log(`🧹 Vista destruida: ${this.constructor.name}`);
-    } catch (error) {
-      console.error('❌ Error destruyendo vista:', error);
-    }
+    // Override en subclases si es necesario
   }
   
   /**
@@ -223,17 +173,11 @@ class BaseView {
   }
 
   /**
-   * Limpiar recursos
-   * Override este método en subclases para remover event listeners específicos, timers, etc.
+   * Limpiar recursos - ELIMINADO
+   * El navegador maneja la limpieza automáticamente cuando se elimina el DOM
    */
   cleanup() {
-    // Remover todos los event listeners registrados
-    this.eventListeners.forEach(({ element, event, handler }) => {
-      if (element && handler) {
-        element.removeEventListener(event, handler);
-      }
-    });
-    this.eventListeners = [];
+    // Método vacío - sin limpieza manual
   }
 
   /**

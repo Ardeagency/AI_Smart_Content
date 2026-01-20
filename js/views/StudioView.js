@@ -128,14 +128,10 @@ class StudioView extends BaseView {
   }
 
   /**
-   * Cleanup al salir de la vista
+   * Hook al salir de la vista - sin limpieza
    */
   async onLeave() {
-    // Limpiar recursos de Studio si es necesario
-    // Por ejemplo, detener timers, cancelar requests, etc.
-    if (this.studioManager && typeof this.studioManager.destroy === 'function') {
-      await this.studioManager.destroy();
-    }
+    // Sin limpieza - el navegador maneja todo automáticamente
   }
 }
 

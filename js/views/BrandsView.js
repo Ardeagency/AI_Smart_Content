@@ -39,15 +39,11 @@ class BrandsView extends BaseView {
   }
 
   onLeave() {
-    this.isActive = false;
+    // Sin limpieza - el navegador maneja todo automáticamente
   }
 
   async render() {
-    // Limpiar caché del template si existe (para forzar recarga)
-    if (window.router && window.router.templateCache && this.templatePath) {
-      window.router.templateCache.delete(this.templatePath);
-      console.log('🧹 Caché del template limpiado para:', this.templatePath);
-    }
+    // Sistema de caché eliminado - siempre cargar templates frescos
     
     await super.render();
     // Asegurar que renderAll se ejecute después de que el template esté completamente en el DOM
@@ -72,12 +68,24 @@ class BrandsView extends BaseView {
           // Si los contenedores existen, renderizar
           console.log('✅ Contenedores encontrados, renderizando Visual de marca...');
           this.renderAll();
-        } else if (attempt >= 5) {
-          // Reducir a 5 intentos y renderizar de todas formas
-          console.warn('⚠️ Contenedores no encontrados después de 5 intentos. Renderizando de todas formas...');
+        } else if (attempt >= 10) {
+          // Si hemos intentado 10 veces, renderizar de todas formas (puede haber un problema)
+          console.warn('⚠️ Contenedores no encontrados después de 10 intentos. Renderizando de todas formas...');
+          console.log('brandColorSwatches:', brandColorsEl ? '✓' : '✗');
+          console.log('typographyPreview:', typographyEl ? '✓' : '✗');
+          console.log('visualStatus:', statusEl ? '✓' : '✗');
+          if (container) {
+            const htmlPreview = container.innerHTML;
+            console.log('Container HTML length:', htmlPreview.length);
+            console.log('Container HTML preview (first 2000 chars):', htmlPreview.substring(0, 2000));
+            // Buscar si existe la card-concept en el HTML
+            const hasCardConcept = htmlPreview.includes('card-concept');
+            const hasBrandColorSwatches = htmlPreview.includes('brandColorSwatches');
+            console.log('¿Tiene card-concept?', hasCardConcept);
+            console.log('¿Tiene brandColorSwatches?', hasBrandColorSwatches);
+          }
           this.renderAll();
-          return; // IMPORTANTE: Salir para evitar más intentos
-        } else {
+    } else {
           // Si no existen, esperar un poco más y reintentar
           setTimeout(() => tryRender(attempt + 1), 100);
         }

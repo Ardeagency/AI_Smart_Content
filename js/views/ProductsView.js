@@ -50,10 +50,7 @@ class ProductsView extends BaseView {
    * Renderizar la vista
    */
   async render() {
-    // Limpiar caché del template si existe
-    if (window.router && window.router.templateCache && this.templatePath) {
-      window.router.templateCache.delete(this.templatePath);
-    }
+    // Sistema de caché eliminado - siempre cargar templates frescos
 
     // Detectar si hay productId en los parámetros de ruta
     if (this.routeParams && this.routeParams.productId) {
@@ -867,13 +864,10 @@ class ProductsView extends BaseView {
   }
 
   /**
-   * Cleanup al salir de la vista
+   * Hook al salir de la vista - sin limpieza
    */
   async onLeave() {
-    // Limpiar ProductsManager si existe
-    if (this.productsManager && typeof this.productsManager.destroy === 'function') {
-      await this.productsManager.destroy();
-    }
+    // Sin limpieza - el navegador maneja todo automáticamente
   }
 }
 

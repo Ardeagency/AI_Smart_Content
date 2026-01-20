@@ -86,11 +86,13 @@ class HogarView extends BaseView {
       return;
     }
 
+    const loadingEl = this.querySelector('#hogarLoading');
     const emptyEl = this.querySelector('#hogarEmpty');
     const gridEl = this.querySelector('#organizationsGrid');
 
     try {
-      // Ocultar estados iniciales
+      // Mostrar loading
+      if (loadingEl) loadingEl.style.display = 'flex';
       if (emptyEl) emptyEl.style.display = 'none';
       if (gridEl) gridEl.style.display = 'none';
 
@@ -159,9 +161,11 @@ class HogarView extends BaseView {
 
       // Renderizar
       if (this.organizations.length === 0) {
+        if (loadingEl) loadingEl.style.display = 'none';
         if (emptyEl) emptyEl.style.display = 'flex';
         if (gridEl) gridEl.style.display = 'none';
       } else {
+        if (loadingEl) loadingEl.style.display = 'none';
         if (emptyEl) emptyEl.style.display = 'none';
         if (gridEl) gridEl.style.display = 'grid';
         this.renderOrganizations();
@@ -169,6 +173,7 @@ class HogarView extends BaseView {
     } catch (error) {
       console.error('Error cargando organizaciones:', error);
       this.showError('Error cargando organizaciones. Por favor, recarga la página.');
+      if (loadingEl) loadingEl.style.display = 'none';
     }
   }
 
@@ -620,13 +625,10 @@ class HogarView extends BaseView {
   }
 
   /**
-   * Limpiar al salir de la vista
+   * Hook al salir de la vista - sin limpieza
    */
-  async destroy() {
-    this.organizations = [];
-    this.supabase = null;
-    this.userId = null;
-    await super.destroy();
+  async onLeave() {
+    // Sin limpieza - el navegador maneja todo automáticamente
   }
 }
 

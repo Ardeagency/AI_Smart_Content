@@ -23,8 +23,8 @@ class LivingManager {
     async init() {
         // Evitar múltiples inicializaciones
         if (this.initialized) {
-            console.log('ℹ️ LivingManager ya está inicializado, reinicializando...');
-            await this.destroy();
+            console.log('ℹ️ LivingManager ya está inicializado, saltando...');
+            return;
         }
 
         try {
@@ -382,7 +382,12 @@ class LivingManager {
     }
 
     async loadLatestGeneratedContent() {
-        if (!this.supabase) return;
+        // Función RPC eliminada para evitar errores 400
+        // Usar flow_outputs directamente en su lugar
+        if (!this.supabase) {
+            this.latestGeneratedContent = [];
+            return;
+        }
 
         try {
             // Primero obtener brand_id si no lo tenemos
@@ -396,38 +401,54 @@ class LivingManager {
                 return;
             }
 
-            // Validar que brandId sea válido antes de hacer la llamada RPC
-            if (!this.brandId || this.brandId === null || this.brandId === undefined) {
-                console.warn('⚠️ brandId no válido para get_latest_generated_content');
+            // Cargar contenido desde flow_outputs usando método seguro (sin joins complejos)
+            // Esto evita errores 400 de consultas complejas
+            // Paso 1: Obtener flow_runs por brand_id
+            const { data: runs, error: runsError } = await this.supabase
+                .from('flow_runs')
+                .select('id')
+                .eq('brand_id', this.brandId)
+                .order('created_at', { ascending: false })
+                .limit(10);
+
+            if (runsError) {
+                if (runsError.status === 400 || runsError.code === '400') {
+                    console.warn('⚠️ Error 400 cargando flow_runs:', runsError.message);
+                }
                 this.latestGeneratedContent = [];
                 return;
             }
 
-            const { data, error } = await this.supabase
-                .rpc('get_latest_generated_content', {
-                    p_brand_id: this.brandId,
-                    p_limit: 10
-                });
-
-            if (error) {
-                // Manejar diferentes tipos de errores
-                if (error.code === 'PGRST301' || error.code === '42883') {
-                    console.warn('⚠️ Función RPC get_latest_generated_content no disponible:', error.message);
-                    this.latestGeneratedContent = [];
-                    return;
-                }
-                if (error.status === 400 || error.code === '400' || error.code === 'PGRST301') {
-                    console.warn('⚠️ Error 400 en llamada RPC get_latest_generated_content:', error.message);
-                    console.warn('⚠️ Parámetros enviados:', { p_brand_id: this.brandId, p_limit: 10 });
-                    this.latestGeneratedContent = [];
-                    return;
-                }
-                console.error('❌ Error cargando contenido generado:', error);
+            if (!runs || runs.length === 0) {
                 this.latestGeneratedContent = [];
                 return;
             }
 
-            this.latestGeneratedContent = data || [];
+            // Paso 2: Obtener flow_outputs usando los run_ids
+            const runIds = runs.map(r => r.id).filter(id => id !== null && id !== undefined);
+            
+            if (runIds.length === 0) {
+                this.latestGeneratedContent = [];
+                return;
+            }
+
+            const { data: outputs, error: outputsError } = await this.supabase
+                .from('flow_outputs')
+                .select('*')
+                .in('run_id', runIds)
+                .order('created_at', { ascending: false })
+                .limit(10);
+
+            if (outputsError) {
+                if (outputsError.status === 400 || outputsError.code === '400') {
+                    console.warn('⚠️ Error 400 cargando flow_outputs:', outputsError.message);
+                }
+                this.latestGeneratedContent = [];
+                return;
+            }
+
+            this.latestGeneratedContent = outputs || [];
+
             if (this.latestGeneratedContent.length > 0) {
                 console.log('✅ Contenido generado cargado:', this.latestGeneratedContent.length, 'elementos');
             } else {
@@ -1234,30 +1255,7 @@ class LivingManager {
         image.style.transition = 'transform 0.1s ease-out';
     }
 
-    /**
-     * Limpiar recursos y resetear estado
-     */
-    async destroy() {
-        try {
-            // Limpiar datos
-            this.supabase = null;
-            this.userId = null;
-            this.userData = null;
-            this.projectData = null;
-            this.products = [];
-            this.flowRuns = [];
-            this.flowOutputs = [];
-            this.creditUsage = [];
-            this.brandId = null;
-            this.latestGeneratedContent = [];
-            this.eventListenersSetup = false;
-            this.initialized = false;
-
-            console.log('🧹 LivingManager limpiado');
-        } catch (error) {
-            console.error('❌ Error limpiando LivingManager:', error);
-        }
-    }
+    // Método destroy() eliminado - sin limpieza manual
 }
 
 // Hacer disponible globalmente para que pueda ser usado por LivingView
