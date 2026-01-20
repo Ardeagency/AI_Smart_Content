@@ -638,7 +638,7 @@ if (typeof window.ProductsManager === 'undefined') {
         }
     }
 
-    renderProducts() {
+    async renderProducts() {
         console.log('🎨 renderProducts() iniciado');
         console.log('🔍 Estado de productos:', {
             productsLength: this.products?.length || 0,
@@ -705,7 +705,7 @@ if (typeof window.ProductsManager === 'undefined') {
             
             if (!productsGrid || !emptyState) {
                 console.error('❌ Elementos aún no disponibles después de espera adicional');
-            return;
+                return;
             }
             console.log('✅ Elementos encontrados después de espera adicional');
         }
