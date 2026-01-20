@@ -470,7 +470,7 @@ if (typeof window.ProductsManager === 'undefined') {
             return;
         }
 
-        // Buscar elementos del DOM
+        // Buscar elementos del DOM - ser más flexible con loadingState
         let loadingState = document.getElementById('loadingState');
         let emptyState = document.getElementById('emptyState');
         let productsGrid = document.getElementById('productsGrid');
@@ -493,8 +493,24 @@ if (typeof window.ProductsManager === 'undefined') {
             }
         }
         
-        if (!loadingState || !emptyState || !productsGrid) {
+        // Si productsGrid y emptyState están disponibles, continuar aunque loadingState no esté
+        // loadingState es opcional para mostrar/ocultar, pero no crítico
+        if (!productsGrid || !emptyState) {
+            console.error('❌ Elementos críticos del DOM no encontrados (productsGrid o emptyState)');
             return;
+        }
+        
+        // Si loadingState no está, crear uno temporal o simplemente continuar
+        if (!loadingState) {
+            console.warn('⚠️ loadingState no encontrado, continuando sin él');
+            // Crear un elemento temporal para evitar errores
+            loadingState = document.createElement('div');
+            loadingState.id = 'loadingState';
+            loadingState.style.display = 'none';
+            const productsGallery = document.getElementById('productsGallery');
+            if (productsGallery) {
+                productsGallery.insertBefore(loadingState, productsGallery.firstChild);
+            }
         }
 
         // Mostrar estado de carga
@@ -672,15 +688,32 @@ if (typeof window.ProductsManager === 'undefined') {
             }
         }
 
-        if (!loadingState || !emptyState || !productsGrid) {
-            console.error('❌ No se encontraron elementos del DOM para renderizar productos');
-            console.error('❌ loadingState:', loadingState);
-            console.error('❌ emptyState:', emptyState);
+        // loadingState es opcional, pero productsGrid y emptyState son críticos
+        if (!productsGrid || !emptyState) {
+            console.error('❌ Elementos críticos del DOM no encontrados para renderizar productos');
             console.error('❌ productsGrid:', productsGrid);
+            console.error('❌ emptyState:', emptyState);
+            console.error('❌ loadingState (opcional):', loadingState);
             console.error('❌ Document body:', document.body);
             console.error('❌ app-container:', document.getElementById('app-container'));
             console.error('❌ productsGallery:', document.getElementById('productsGallery'));
+            
+            // Intentar una última vez después de un breve delay
+            await new Promise(resolve => setTimeout(resolve, 500));
+            productsGrid = document.getElementById('productsGrid');
+            emptyState = document.getElementById('emptyState');
+            
+            if (!productsGrid || !emptyState) {
+                console.error('❌ Elementos aún no disponibles después de espera adicional');
             return;
+            }
+            console.log('✅ Elementos encontrados después de espera adicional');
+        }
+        
+        // Si loadingState no está disponible, crear uno temporal o usar null
+        if (!loadingState) {
+            console.warn('⚠️ loadingState no encontrado, continuando sin él');
+            loadingState = { style: { display: 'none' } }; // Objeto dummy para evitar errores
         }
 
         console.log('✅ Elementos del DOM encontrados, llamando a renderProductsWithElements()');
