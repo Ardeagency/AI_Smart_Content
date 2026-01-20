@@ -460,10 +460,6 @@ if (typeof window.ProductsManager === 'undefined') {
             console.error('❌ productsGrid:', productsGrid);
             return;
         }
-        
-        const elements = { loadingState, emptyState, productsGrid };
-
-        const { loadingState, emptyState, productsGrid } = elements;
 
         try {
             loadingState.style.display = 'block';
