@@ -648,6 +648,17 @@ class LivingManager {
 
             if (this.latestGeneratedContent.length > 0) {
                 console.log('✅ Contenido generado cargado:', this.latestGeneratedContent.length, 'elementos');
+                // Logging para debugging de prompts
+                this.latestGeneratedContent.forEach((item, idx) => {
+                    console.log(`📝 Item ${idx}:`, {
+                        id: item.id,
+                        prompt_used: item.prompt_used || 'NO HAY PROMPT',
+                        prompt: item.prompt || 'NO HAY PROMPT',
+                        storage_path: item.storage_path || 'NO HAY PATH',
+                        output_type: item.output_type,
+                        has_prompt: !!(item.prompt_used || item.prompt)
+                    });
+                });
             } else {
                 console.log('ℹ️ No hay contenido generado disponible');
             }
@@ -699,7 +710,44 @@ class LivingManager {
 
         heroGrid.innerHTML = automatedContent.map((item, index) => {
             const imageUrl = item.image_url || item.url || item.storage_url || item.file_url;
-            const prompt = item.prompt_used || item.prompt || '';
+            
+            // Buscar prompt en múltiples campos posibles según el schema de flow_outputs
+            // El schema tiene: prompt_used, generated_copy, text_content, metadata
+            let prompt = item.prompt_used || 
+                        item.prompt || 
+                        item.generated_copy || 
+                        item.text_content || 
+                        '';
+            
+            // Si no hay prompt directo, buscar en metadata
+            if (!prompt && item.metadata) {
+                if (typeof item.metadata === 'string') {
+                    try {
+                        const metadata = JSON.parse(item.metadata);
+                        prompt = metadata.prompt || metadata.prompt_used || metadata.generated_prompt || '';
+                    } catch (e) {
+                        // metadata no es JSON válido, ignorar
+                    }
+                } else if (typeof item.metadata === 'object') {
+                    prompt = item.metadata.prompt || 
+                            item.metadata.prompt_used || 
+                            item.metadata.generated_prompt || 
+                            '';
+                }
+            }
+            
+            // Logging para debugging si no hay prompt
+            if (!prompt && index < 3) {
+                console.warn(`⚠️ Item ${index} sin prompt:`, {
+                    id: item.id,
+                    available_fields: Object.keys(item),
+                    prompt_used: item.prompt_used,
+                    prompt: item.prompt,
+                    generated_copy: item.generated_copy,
+                    text_content: item.text_content,
+                    metadata: item.metadata
+                });
+            }
             
             // Construir URL completa si es necesario
             let finalImageUrl = imageUrl;
@@ -758,10 +806,39 @@ class LivingManager {
                     }
                 }
                 
+                // Buscar prompt en múltiples campos posibles
+                let prompt = output?.prompt_used || 
+                            output?.prompt || 
+                            output?.generated_copy || 
+                            output?.text_content || 
+                            '';
+                
+                // Si no hay prompt directo, buscar en metadata
+                if (!prompt && output?.metadata) {
+                    if (typeof output.metadata === 'string') {
+                        try {
+                            const metadata = JSON.parse(output.metadata);
+                            prompt = metadata.prompt || metadata.prompt_used || metadata.generated_prompt || '';
+                        } catch (e) {
+                            // metadata no es JSON válido, ignorar
+                        }
+                    } else if (typeof output.metadata === 'object') {
+                        prompt = output.metadata.prompt || 
+                                output.metadata.prompt_used || 
+                                output.metadata.generated_prompt || 
+                                '';
+                    }
+                }
+                
+                // Fallback a run.status si no hay prompt
+                if (!prompt) {
+                    prompt = run.status || '';
+                }
+                
                 return {
                     contentType,
                     fileUrl,
-                    prompt: output?.prompt_used || run.status || '',
+                    prompt: prompt,
                     run: run,
                     output: output,
                     created_at: run.created_at || output?.created_at
