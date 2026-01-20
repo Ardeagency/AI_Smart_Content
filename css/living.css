@@ -128,15 +128,14 @@ body.sidebar-collapsed .living-container {
 }
 
 /* ============================================
-   SECCIONES 2 Y 3: Grid de 2 columnas
+   SECCIONES 2 Y 3: Grid de 2 columnas - Contenedores separados
    Jerarquía: Flujo continuo (izq) + Soporte estratégico (der)
    ============================================ */
-.living-content-grid {
+.living-sections-wrapper {
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: 3rem; /* Más separación entre secciones */
-    padding: 0 0 0 4rem; /* Padding solo a la izquierda */
-    padding-bottom: var(--living-spacing-section);
+    padding: 0 0 var(--living-spacing-section) 4rem; /* Padding solo a la izquierda y abajo */
     max-width: none; /* Sin límite de ancho para que llegue a la derecha */
     margin: 0; /* Sin margin auto para que no se centre */
     width: 100%; /* Ocupa todo el ancho disponible */
@@ -504,7 +503,8 @@ body.sidebar-collapsed .living-container {
     min-height: 400px;
     margin-right: 0; /* Sin margin derecho */
     padding-right: 2rem; /* Padding mínimo para que no toque el borde */
-    /* Pegado a la derecha */
+    /* Pegado a la derecha - contenedor independiente */
+    width: 100%; /* Ocupa todo el espacio de su columna del grid */
 }
 
 .living-highlights-content {
@@ -560,7 +560,7 @@ body.sidebar-collapsed .living-container {
 
 /* Responsive para grid de 2 columnas */
 @media (max-width: 1024px) {
-    .living-content-grid {
+    .living-sections-wrapper {
         grid-template-columns: 1fr;
     }
     
@@ -575,7 +575,7 @@ body.sidebar-collapsed .living-container {
 
 @media (max-width: 768px) {
     .living-hero-section,
-    .living-content-grid {
+    .living-sections-wrapper {
         padding: 0 2rem var(--living-spacing-section);
     }
     
