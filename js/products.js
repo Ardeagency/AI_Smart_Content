@@ -80,12 +80,17 @@ if (typeof window.ProductsManager === 'undefined') {
         window.productsManager = this;
 
         await this.loadBrandContainer();
+        console.log('🔍 Después de loadBrandContainer, brandContainerId:', this.brandContainerId);
+        
         await this.loadUserData();
         this.setupEventListeners();
         
         // Esperar a que el DOM esté listo antes de cargar productos
+        console.log('⏳ Esperando a que el DOM esté listo...');
         await this.waitForDOMReady();
+        console.log('✅ DOM listo, llamando a loadProducts()...');
         await this.loadProducts();
+        console.log('✅ loadProducts() completado');
         // Sidebar se actualiza automáticamente por SidebarManager (persistente)
     }
 
@@ -330,7 +335,7 @@ if (typeof window.ProductsManager === 'undefined') {
                 tabsContainer = appContainer.querySelector('#categoryTabs');
             }
             if (!tabsContainer) {
-                return;
+            return;
             }
         }
 
@@ -394,6 +399,14 @@ if (typeof window.ProductsManager === 'undefined') {
     }
 
     async loadProducts() {
+        console.log('🚀 loadProducts() iniciado');
+        console.log('🔍 Estado actual:', {
+            supabase: !!this.supabase,
+            isValidClient: this.supabase ? this.isValidSupabaseClient(this.supabase) : false,
+            userId: this.userId,
+            brandContainerId: this.brandContainerId
+        });
+
         // Validar cliente de Supabase antes de hacer consulta
         if (!this.supabase || !this.isValidSupabaseClient(this.supabase) || !this.userId) {
             console.warn('⚠️ Cliente de Supabase no válido o userId no disponible');
@@ -407,8 +420,14 @@ if (typeof window.ProductsManager === 'undefined') {
             return;
         }
 
+        console.log('✅ Validaciones pasadas, buscando elementos del DOM...');
         // Esperar a que los elementos del DOM estén disponibles
         const elements = await this.waitForElements(['loadingState', 'emptyState', 'productsGrid'], 10);
+        console.log('🔍 Elementos encontrados:', {
+            loadingState: !!elements.loadingState,
+            emptyState: !!elements.emptyState,
+            productsGrid: !!elements.productsGrid
+        });
         
         if (!elements.loadingState || !elements.emptyState || !elements.productsGrid) {
             // Si no se encontraron, intentar buscar directamente en app-container
@@ -425,10 +444,12 @@ if (typeof window.ProductsManager === 'undefined') {
                     elements.productsGrid = containerGrid;
                 } else {
                     // Si aún no se encuentran, retornar sin error (puede que el template aún no se haya renderizado)
+                    console.warn('⚠️ No se encontraron elementos en app-container');
                     return;
                 }
             } else {
                 // Si no hay app-container, retornar sin error
+                console.warn('⚠️ No se encontró app-container');
                 return;
             }
         }
