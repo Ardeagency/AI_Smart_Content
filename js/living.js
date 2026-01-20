@@ -16,11 +16,17 @@ class LivingManager {
         this.brandId = null;
         this.latestGeneratedContent = [];
         this.eventListenersSetup = false;
-
-        this.init();
+        this.initialized = false;
+        // NO llamar init() automáticamente - debe ser llamado explícitamente
     }
 
     async init() {
+        // Evitar múltiples inicializaciones
+        if (this.initialized) {
+            console.log('ℹ️ LivingManager ya está inicializado, reinicializando...');
+            await this.destroy();
+        }
+
         try {
         // Verificar acceso antes de continuar
         if (typeof verifyUserAccess === 'function') {
@@ -70,6 +76,8 @@ class LivingManager {
 
             // Renderizar todo
             await this.renderAll();
+            
+            this.initialized = true;
         } catch (error) {
             console.error('❌ Error en init de LivingManager:', error);
             try {
@@ -1178,13 +1186,32 @@ class LivingManager {
         image.style.cursor = 'zoom-in';
         image.style.transition = 'transform 0.1s ease-out';
     }
+
+    /**
+     * Limpiar recursos y resetear estado
+     */
+    async destroy() {
+        try {
+            // Limpiar datos
+            this.supabase = null;
+            this.userId = null;
+            this.userData = null;
+            this.projectData = null;
+            this.products = [];
+            this.flowRuns = [];
+            this.flowOutputs = [];
+            this.creditUsage = [];
+            this.brandId = null;
+            this.latestGeneratedContent = [];
+            this.eventListenersSetup = false;
+            this.initialized = false;
+
+            console.log('🧹 LivingManager limpiado');
+        } catch (error) {
+            console.error('❌ Error limpiando LivingManager:', error);
+        }
+    }
 }
 
-// Inicializar cuando el DOM esté listo
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        window.livingManager = new LivingManager();
-    });
-} else {
-    window.livingManager = new LivingManager();
-}
+// NO inicializar automáticamente - LivingView se encargará de crear la instancia cuando sea necesario
+// Esto evita conflictos cuando se navega entre rutas

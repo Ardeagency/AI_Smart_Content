@@ -37,35 +37,36 @@ class LivingView extends BaseView {
     if (window.navigation && !window.navigation.initialized) {
       await window.navigation.render();
     }
+
+    // Si la vista ya está inicializada pero LivingManager no está inicializado o necesita reinicialización
+    // Esto puede pasar cuando se vuelve a entrar a la vista desde otra ruta
+    if (this.initialized && (!this.livingManager || !this.livingManager.initialized)) {
+      console.log('ℹ️ Reinicializando LivingManager al volver a entrar a la vista...');
+      await this.init();
+    }
   }
 
   /**
    * Inicializar la vista
    */
   async init() {
-    // Reutilizar LivingManager existente o crear uno nuevo
-    if (window.livingManager && window.livingManager.initialized) {
-      // Si ya existe y está inicializado, reutilizar
-      this.livingManager = window.livingManager;
-      // IMPORTANTE: Re-renderizar los datos cuando regresas a la vista
-      // Esto asegura que los datos se muestren correctamente
-      this.livingManager.moveModalToBody();
-      // Re-renderizar para mostrar los datos
-      await this.livingManager.renderAll();
+    // Si ya hay una instancia y está inicializada, reinicializarla
+    if (this.livingManager && this.livingManager.initialized) {
+      console.log('ℹ️ Reinicializando LivingManager...');
+      await this.livingManager.destroy();
+      this.livingManager = null;
+    }
+
+    // Inicializar LivingManager (usar la clase existente)
+    if (window.LivingManager) {
+      this.livingManager = new window.LivingManager();
+      await this.livingManager.init();
     } else {
-      // Si no existe o no está inicializado, crear uno nuevo
+      // Si LivingManager no está disponible, cargar el script
+      await this.loadLivingScript();
       if (window.LivingManager) {
         this.livingManager = new window.LivingManager();
-        window.livingManager = this.livingManager; // Guardar referencia global
         await this.livingManager.init();
-      } else {
-        // Si LivingManager no está disponible, cargar el script
-        await this.loadLivingScript();
-        if (window.LivingManager) {
-          this.livingManager = new window.LivingManager();
-          window.livingManager = this.livingManager; // Guardar referencia global
-          await this.livingManager.init();
-        }
       }
     }
 
@@ -154,11 +155,12 @@ class LivingView extends BaseView {
 
   /**
    * Cleanup al salir de la vista
-   * NO destruir LivingManager - se reutiliza entre navegaciones
    */
   async onLeave() {
-    // No hacer nada - dejar que el manager persista
-    // El modal se mantiene en el body y no se pierde
+    // Limpiar LivingManager si existe
+    if (this.livingManager && typeof this.livingManager.destroy === 'function') {
+      await this.livingManager.destroy();
+    }
   }
 }
 
