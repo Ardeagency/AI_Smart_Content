@@ -234,6 +234,11 @@ if (typeof window.ProductsManager === 'undefined') {
                 throw new Error('Usuario no autenticado');
             }
 
+            // Validar que userId sea un UUID válido
+            if (!user.id || typeof user.id !== 'string') {
+                throw new Error('userId no válido');
+            }
+
             this.userId = user.id;
         } catch (error) {
             console.error('Error inicializando Supabase:', error);
