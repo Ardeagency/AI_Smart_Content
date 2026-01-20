@@ -414,21 +414,28 @@ DECLARE
 BEGIN
     SELECT jsonb_agg(
         jsonb_build_object(
-            'user_id', u.id,
-            'user_name', COALESCE(u.full_name, u.email),
-            'total_outputs', COUNT(DISTINCT fo.id)
+            'user_id', user_data.user_id,
+            'user_name', user_data.user_name,
+            'total_outputs', user_data.total_outputs
         )
-        ORDER BY COUNT(DISTINCT fo.id) DESC
-        LIMIT 5
+        ORDER BY user_data.total_outputs DESC
     )
     INTO v_result
-    FROM organization_members om
-    INNER JOIN users u ON u.id = om.user_id
-    LEFT JOIN flow_runs fr ON fr.user_id = u.id
-    LEFT JOIN flow_outputs fo ON fo.run_id = fr.id
-    WHERE om.organization_id = p_organization_id
-    GROUP BY u.id, u.full_name, u.email
-    HAVING COUNT(DISTINCT fo.id) > 0;
+    FROM (
+        SELECT 
+            u.id as user_id,
+            COALESCE(u.full_name, u.email) as user_name,
+            COUNT(DISTINCT fo.id) as total_outputs
+        FROM organization_members om
+        INNER JOIN users u ON u.id = om.user_id
+        LEFT JOIN flow_runs fr ON fr.user_id = u.id
+        LEFT JOIN flow_outputs fo ON fo.run_id = fr.id
+        WHERE om.organization_id = p_organization_id
+        GROUP BY u.id, u.full_name, u.email
+        HAVING COUNT(DISTINCT fo.id) > 0
+        ORDER BY COUNT(DISTINCT fo.id) DESC
+        LIMIT 5
+    ) user_data;
 
     RETURN COALESCE(v_result, jsonb_build_array());
 END;

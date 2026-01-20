@@ -558,6 +558,13 @@ body.sidebar-collapsed .living-container {
     opacity: 0.7;
 }
 
+.highlight-card-subtitle {
+    font-size: 0.7rem;
+    color: var(--living-text-muted);
+    opacity: 0.5;
+    margin-top: 0.25rem;
+}
+
 /* Responsive para grid de 2 columnas */
 @media (max-width: 1024px) {
     .living-sections-wrapper {

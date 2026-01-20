@@ -14,9 +14,24 @@ class LivingManager {
         this.flowOutputs = [];
         this.creditUsage = [];
         this.brandId = null;
+        this.brandContainerId = null;
+        this.organizationId = null;
         this.latestGeneratedContent = [];
         this.eventListenersSetup = false;
         this.initialized = false;
+        
+        // Datos de la Sección 3: Tráfico y Control de Producción
+        this.section3Data = {
+            studioStatus: null,
+            topEntity: null,
+            formatDistribution: null,
+            activityTimeline: null,
+            activeCampaign: null,
+            keyProductions: null,
+            productionEfficiency: null,
+            teamOverview: null
+        };
+        
         // NO llamar init() automáticamente - debe ser llamado explícitamente
     }
 
@@ -75,6 +90,13 @@ class LivingManager {
 
             // Cargar contenido generado después de obtener brand_id
             await this.loadLatestGeneratedContent();
+
+            // Cargar datos de la Sección 3: Tráfico y Control de Producción
+            if (this.brandId) {
+                await Promise.allSettled([
+                    this.loadSection3Data()
+                ]);
+            }
 
             // Renderizar todo
             await this.renderAll();
@@ -513,7 +535,7 @@ class LivingManager {
             // Primero obtener brand_container por user_id
             const { data: container, error: containerError } = await this.supabase
                 .from('brand_containers')
-                .select('id')
+                .select('id, organization_id')
                 .eq('user_id', this.userId)
                 .order('created_at', { ascending: false })
                 .limit(1)
@@ -523,6 +545,8 @@ class LivingManager {
                 if (containerError.status === 400 || containerError.code === '400') {
                     console.warn('⚠️ Error 400 cargando brand_containers en loadBrandId:', containerError.message);
                     this.brandId = null;
+                    this.brandContainerId = null;
+                    this.organizationId = null;
                     return;
                 }
                 throw containerError;
@@ -530,8 +554,14 @@ class LivingManager {
             
             if (!container || !container.id) {
                 this.brandId = null;
+                this.brandContainerId = null;
+                this.organizationId = null;
                 return;
             }
+
+            // Guardar brand_container_id y organization_id
+            this.brandContainerId = container.id;
+            this.organizationId = container.organization_id;
 
             // Luego obtener brand usando project_id que referencia a brand_container.id
             const { data: brand, error: brandError } = await this.supabase
@@ -653,6 +683,202 @@ class LivingManager {
         } catch (error) {
             console.error('❌ Error loading latest generated content:', error);
             this.latestGeneratedContent = [];
+        }
+    }
+
+    // ============================================
+    // SECCIÓN 3: TRÁFICO Y CONTROL DE PRODUCCIÓN
+    // ============================================
+
+    async loadSection3Data() {
+        if (!this.supabase || !this.isValidSupabaseClient(this.supabase)) {
+            return;
+        }
+
+        try {
+            // Cargar todas las métricas en paralelo
+            await Promise.allSettled([
+                this.loadStudioStatus(),
+                this.loadTopEntity(),
+                this.loadFormatDistribution(),
+                this.loadActivityTimeline(),
+                this.loadActiveCampaign(),
+                this.loadKeyProductions(),
+                this.loadProductionEfficiency(),
+                this.loadTeamOverview()
+            ]);
+        } catch (error) {
+            console.error('❌ Error cargando datos de la sección 3:', error);
+        }
+    }
+
+    async loadStudioStatus() {
+        if (!this.brandId) return;
+
+        try {
+            const { data, error } = await this.supabase.rpc('get_studio_activity_status', {
+                p_brand_id: this.brandId
+            });
+
+            if (error) {
+                console.warn('⚠️ Error cargando estado del estudio:', error);
+                this.section3Data.studioStatus = null;
+                return;
+            }
+
+            this.section3Data.studioStatus = data;
+        } catch (error) {
+            console.error('❌ Error en loadStudioStatus:', error);
+            this.section3Data.studioStatus = null;
+        }
+    }
+
+    async loadTopEntity() {
+        if (!this.brandContainerId) return;
+
+        try {
+            const { data, error } = await this.supabase.rpc('get_top_produced_entity', {
+                p_brand_container_id: this.brandContainerId
+            });
+
+            if (error) {
+                console.warn('⚠️ Error cargando entidad más producida:', error);
+                this.section3Data.topEntity = null;
+                return;
+            }
+
+            this.section3Data.topEntity = data;
+        } catch (error) {
+            console.error('❌ Error en loadTopEntity:', error);
+            this.section3Data.topEntity = null;
+        }
+    }
+
+    async loadFormatDistribution() {
+        if (!this.brandId) return;
+
+        try {
+            const { data, error } = await this.supabase.rpc('get_production_format_distribution', {
+                p_brand_id: this.brandId
+            });
+
+            if (error) {
+                console.warn('⚠️ Error cargando distribución de formatos:', error);
+                this.section3Data.formatDistribution = null;
+                return;
+            }
+
+            this.section3Data.formatDistribution = data;
+        } catch (error) {
+            console.error('❌ Error en loadFormatDistribution:', error);
+            this.section3Data.formatDistribution = null;
+        }
+    }
+
+    async loadActivityTimeline() {
+        if (!this.brandId) return;
+
+        try {
+            const { data, error } = await this.supabase.rpc('get_activity_timeline', {
+                p_brand_id: this.brandId,
+                p_days: 30
+            });
+
+            if (error) {
+                console.warn('⚠️ Error cargando timeline de actividad:', error);
+                this.section3Data.activityTimeline = null;
+                return;
+            }
+
+            this.section3Data.activityTimeline = data;
+        } catch (error) {
+            console.error('❌ Error en loadActivityTimeline:', error);
+            this.section3Data.activityTimeline = null;
+        }
+    }
+
+    async loadActiveCampaign() {
+        if (!this.brandId) return;
+
+        try {
+            const { data, error } = await this.supabase.rpc('get_active_campaign_summary', {
+                p_brand_id: this.brandId
+            });
+
+            if (error) {
+                console.warn('⚠️ Error cargando campaña activa:', error);
+                this.section3Data.activeCampaign = null;
+                return;
+            }
+
+            this.section3Data.activeCampaign = data;
+        } catch (error) {
+            console.error('❌ Error en loadActiveCampaign:', error);
+            this.section3Data.activeCampaign = null;
+        }
+    }
+
+    async loadKeyProductions() {
+        if (!this.brandId) return;
+
+        try {
+            const { data, error } = await this.supabase.rpc('get_key_productions', {
+                p_brand_id: this.brandId,
+                p_limit: 5
+            });
+
+            if (error) {
+                console.warn('⚠️ Error cargando producciones destacadas:', error);
+                this.section3Data.keyProductions = null;
+                return;
+            }
+
+            this.section3Data.keyProductions = data;
+        } catch (error) {
+            console.error('❌ Error en loadKeyProductions:', error);
+            this.section3Data.keyProductions = null;
+        }
+    }
+
+    async loadProductionEfficiency() {
+        if (!this.brandId) return;
+
+        try {
+            const { data, error } = await this.supabase.rpc('get_production_efficiency', {
+                p_brand_id: this.brandId
+            });
+
+            if (error) {
+                console.warn('⚠️ Error cargando eficiencia de producción:', error);
+                this.section3Data.productionEfficiency = null;
+                return;
+            }
+
+            this.section3Data.productionEfficiency = data;
+        } catch (error) {
+            console.error('❌ Error en loadProductionEfficiency:', error);
+            this.section3Data.productionEfficiency = null;
+        }
+    }
+
+    async loadTeamOverview() {
+        if (!this.organizationId) return;
+
+        try {
+            const { data, error } = await this.supabase.rpc('get_team_living_overview', {
+                p_organization_id: this.organizationId
+            });
+
+            if (error) {
+                console.warn('⚠️ Error cargando overview del equipo:', error);
+                this.section3Data.teamOverview = null;
+                return;
+            }
+
+            this.section3Data.teamOverview = data;
+        } catch (error) {
+            console.error('❌ Error en loadTeamOverview:', error);
+            this.section3Data.teamOverview = null;
         }
     }
 
@@ -1081,35 +1307,114 @@ class LivingManager {
         // "Esto es lo que impulsa y mide tu producción"
         const highlights = [];
         
-        // Flujos ejecutados
-        if (this.flowRuns.length > 0) {
+        // 1️⃣ Estado del Estudio
+        if (this.section3Data.studioStatus) {
+            const status = this.section3Data.studioStatus;
+            const statusIcon = status.status === 'active' ? 'fas fa-circle' : 
+                             status.status === 'paused' ? 'fas fa-pause-circle' : 
+                             'fas fa-stop-circle';
+            const statusColor = status.status === 'active' ? '#4ade80' : 
+                               status.status === 'paused' ? '#fbbf24' : 
+                               '#6b7280';
+            
             highlights.push({
-                title: 'Ejecutado',
-                value: this.flowRuns.length,
-                label: 'flujos procesados',
-                icon: 'fas fa-project-diagram'
+                title: 'Estado del Estudio',
+                value: status.message || 'Sin actividad',
+                label: status.last_activity ? 
+                    `Última actividad: ${new Date(status.last_activity).toLocaleDateString('es-ES')}` : 
+                    'Sin actividad reciente',
+                icon: statusIcon,
+                status: status.status,
+                statusColor: statusColor
             });
         }
         
-        // Productos
+        // 2️⃣ Entidad Más Producida
+        if (this.section3Data.topEntity && this.section3Data.topEntity.entity_name) {
+            highlights.push({
+                title: 'Entidad Dominante',
+                value: this.section3Data.topEntity.entity_name,
+                label: `${this.section3Data.topEntity.total_productions} producciones`,
+                icon: 'fas fa-star',
+                subtitle: this.section3Data.topEntity.entity_type
+            });
+        }
+        
+        // 3️⃣ Formato de Producción Dominante
+        if (this.section3Data.formatDistribution && this.section3Data.formatDistribution.formats) {
+            const topFormat = this.section3Data.formatDistribution.formats[0];
+            if (topFormat) {
+                const formatIcon = topFormat.type === 'image' ? 'fas fa-image' :
+                                 topFormat.type === 'video' ? 'fas fa-video' :
+                                 'fas fa-file-alt';
+                
+                highlights.push({
+                    title: 'Formato Preferido',
+                    value: `${topFormat.percentage}%`,
+                    label: topFormat.type,
+                    icon: formatIcon,
+                    subtitle: `${topFormat.count} de ${this.section3Data.formatDistribution.total}`
+                });
+            }
+        }
+        
+        // 7️⃣ Eficiencia del Sistema
+        if (this.section3Data.productionEfficiency) {
+            const eff = this.section3Data.productionEfficiency;
+            highlights.push({
+                title: 'Eficiencia',
+                value: eff.efficiency_percentage ? `${eff.efficiency_percentage}%` : '0%',
+                label: `${eff.total_outputs} outputs / ${eff.total_runs} runs`,
+                icon: 'fas fa-chart-line'
+            });
+        }
+        
+        // Campaña Activa (si existe)
+        if (this.section3Data.activeCampaign && this.section3Data.activeCampaign.has_active_campaign) {
+            const campaign = this.section3Data.activeCampaign;
+            highlights.push({
+                title: 'Campaña Activa',
+                value: campaign.campaign_name || 'Campaña sin nombre',
+                label: `${campaign.total_productions} producciones`,
+                icon: 'fas fa-bullhorn',
+                subtitle: campaign.last_production ? 
+                    `Última: ${new Date(campaign.last_production).toLocaleDateString('es-ES')}` : 
+                    null
+            });
+        }
+        
+        // Fallback: Métricas básicas si no hay datos de sección 3
+        if (highlights.length === 0) {
+            // Flujos ejecutados
+            if (this.flowRuns.length > 0) {
+                highlights.push({
+                    title: 'Ejecutado',
+                    value: this.flowRuns.length,
+                    label: 'flujos procesados',
+                    icon: 'fas fa-project-diagram'
+                });
+            }
+            
+            // Productos
             if (this.products.length > 0) {
-            highlights.push({
-                title: 'Productos',
-                value: this.products.length,
-                label: 'en tu marca',
-                icon: 'fas fa-box'
-            });
-        }
-        
-        // Producciones totales
-        const totalProductions = (this.latestGeneratedContent?.length || 0) + this.flowRuns.length;
-        if (totalProductions > 0) {
-            highlights.push({
-                title: 'Producido',
-                value: totalProductions,
-                label: 'renders generados',
-                icon: 'fas fa-images'
-            });
+                highlights.push({
+                    title: 'Productos',
+                    value: this.products.length,
+                    label: 'en tu marca',
+                    icon: 'fas fa-box'
+                });
+            }
+            
+            // Producciones totales
+            const totalProductions = (this.latestGeneratedContent?.length || 0) + this.flowRuns.length;
+            if (totalProductions > 0) {
+                highlights.push({
+                    title: 'Producido',
+                    value: totalProductions,
+                    label: 'renders generados',
+                    icon: 'fas fa-images'
+                });
+            }
         }
         
         if (highlights.length === 0) {
@@ -1122,15 +1427,21 @@ class LivingManager {
             return;
         }
 
-        highlightsContent.innerHTML = highlights.map(highlight => `
+        highlightsContent.innerHTML = highlights.map(highlight => {
+            const statusStyle = highlight.statusColor ? 
+                `style="color: ${highlight.statusColor};"` : '';
+            
+            return `
             <div class="highlight-card">
                 <div class="highlight-card-title">
-                    <i class="${highlight.icon}"></i> ${highlight.title}
+                    <i class="${highlight.icon}" ${statusStyle}></i> ${highlight.title}
                 </div>
-                <div class="highlight-card-value">${highlight.value}</div>
-                <div class="highlight-card-label">${highlight.label}</div>
+                <div class="highlight-card-value">${this.escapeHtml(String(highlight.value))}</div>
+                <div class="highlight-card-label">${this.escapeHtml(highlight.label)}</div>
+                ${highlight.subtitle ? `<div class="highlight-card-subtitle">${this.escapeHtml(highlight.subtitle)}</div>` : ''}
             </div>
-        `).join('');
+        `;
+        }).join('');
     }
 
     renderCard(imageUrl, prompt, index, isHero = false, itemData = null) {
