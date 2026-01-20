@@ -585,7 +585,7 @@ if (typeof window.ProductsManager === 'undefined') {
                     card.style.transform = 'translateY(0)';
                 }, index * 50);
                 
-                console.log(`✅ Producto ${index + 1} renderizado: ${product.nombre_producto}`);
+                // Producto renderizado
             } catch (error) {
                 console.error(`❌ Error renderizando producto ${product.id}:`, error);
             }
