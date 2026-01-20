@@ -106,7 +106,7 @@ class LivingManager {
                     if (!authError && user) {
                         this.userId = user.id;
                     if (this.userId) {
-                        console.log('✅ Supabase inicializado desde SupabaseService');
+                        // Supabase inicializado desde SupabaseService
                         return;
                         }
                     }
@@ -122,7 +122,7 @@ class LivingManager {
                     if (!authError && user) {
                         this.userId = user.id;
                         if (this.userId) {
-                        console.log('✅ Supabase inicializado desde waitForSupabase');
+                        // Supabase inicializado desde waitForSupabase
                         return;
                         }
                     }
@@ -136,7 +136,7 @@ class LivingManager {
                 if (!authError && user) {
                     this.userId = user.id;
                     if (this.userId) {
-                    console.log('✅ Supabase inicializado desde window.supabaseClient');
+                    // Supabase inicializado desde window.supabaseClient
                     return;
                     }
                 }
@@ -151,7 +151,7 @@ class LivingManager {
                     if (!authError && user) {
                         this.userId = user.id;
                         if (this.userId) {
-                        console.log('✅ Supabase inicializado desde appLoader');
+                        // Supabase inicializado desde appLoader
                         return;
                         }
                     }
@@ -165,7 +165,7 @@ class LivingManager {
                 if (!authError && user) {
                     this.userId = user.id;
                     if (this.userId) {
-                    console.log('✅ Supabase inicializado desde window.supabase');
+                    // Supabase inicializado desde window.supabase
                     return;
                     }
                 }
@@ -579,7 +579,7 @@ class LivingManager {
             }
 
             if (!this.brandId) {
-                console.log('ℹ️ No hay brand_id disponible, saltando carga de contenido generado');
+                // No hay brand_id disponible, saltando carga de contenido generado
                 this.latestGeneratedContent = [];
                 return;
             }
@@ -649,7 +649,7 @@ class LivingManager {
             this.latestGeneratedContent = outputs || [];
 
             if (this.latestGeneratedContent.length > 0) {
-                console.log('✅ Contenido generado cargado:', this.latestGeneratedContent.length, 'elementos');
+                // Contenido generado cargado
             }
         } catch (error) {
             console.error('❌ Error loading latest generated content:', error);
@@ -676,7 +676,6 @@ class LivingManager {
         if (appContainer && appContainer.contains(modal)) {
             // Mover el modal al body
             document.body.appendChild(modal);
-            console.log('✅ Modal movido fuera de #app-container al body');
         }
     }
 
@@ -1213,7 +1212,6 @@ class LivingManager {
                         .replace(/&gt;/g, '>');
                     
                     const data = JSON.parse(unescapedData);
-                    console.log('✅ Abriendo modal con datos:', data);
                     this.openViewerModal(data);
                 } catch (error) {
                     console.error('❌ Error parsing card data:', error);
