@@ -615,10 +615,23 @@ class LivingManager {
                 return;
             }
 
+            // Validar que runIds sean UUIDs válidos antes de usar en .in()
+            const validRunIds = runIds.filter(id => {
+                // Validar que sea un UUID válido (formato básico)
+                const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+                return id && typeof id === 'string' && uuidRegex.test(id);
+            });
+
+            if (validRunIds.length === 0) {
+                console.warn('⚠️ No hay run_ids válidos (UUIDs) para cargar flow_outputs');
+                this.latestGeneratedContent = [];
+                return;
+            }
+
             const { data: outputs, error: outputsError } = await this.supabase
                 .from('flow_outputs')
                 .select('*')
-                .in('run_id', runIds)
+                .in('run_id', validRunIds)
                 .order('created_at', { ascending: false })
                 .limit(10);
 
@@ -689,8 +702,17 @@ class LivingManager {
             
             // Construir URL completa si es necesario
             let finalImageUrl = imageUrl;
-            if (!finalImageUrl && item.storage_path) {
+            // Validar que storage_path sea válido antes de usarlo
+            if (!finalImageUrl && item.storage_path && typeof item.storage_path === 'string' && item.storage_path.trim() !== '') {
                 finalImageUrl = this.getPublicUrlFromStorage('production-outputs', item.storage_path);
+            }
+            // Si storage_path falló, intentar con storage_object_id
+            if (!finalImageUrl && item.storage_object_id && typeof item.storage_object_id === 'string' && item.storage_object_id.trim() !== '') {
+                // storage_object_id puede ser un UUID, necesitamos el path real
+                // Por ahora, intentar usarlo directamente si parece un path
+                if (item.storage_object_id.includes('/') || item.storage_object_id.includes('.')) {
+                    finalImageUrl = this.getPublicUrlFromStorage('production-outputs', item.storage_object_id);
+                }
             }
             
             return this.renderCard(finalImageUrl, prompt, index, true, { item: item, output: null, run: null });
@@ -770,9 +792,13 @@ class LivingManager {
             videosContainer.innerHTML = videos.map((item, index) => {
                 let thumbnailUrl = item.fileUrl;
                 if (thumbnailUrl && !thumbnailUrl.startsWith('http') && item.output) {
+                    // Validar que storage_path sea válido antes de usarlo
                     const storagePath = item.output.storage_path || item.output.storage_object_id;
-                    if (storagePath) {
-                        thumbnailUrl = this.getPublicUrlFromStorage('production-outputs', storagePath) || thumbnailUrl;
+                    if (storagePath && typeof storagePath === 'string' && storagePath.trim() !== '') {
+                        const publicUrl = this.getPublicUrlFromStorage('production-outputs', storagePath);
+                        if (publicUrl) {
+                            thumbnailUrl = publicUrl;
+                        }
                     }
                 }
                 
@@ -793,9 +819,13 @@ class LivingManager {
                 } else {
                     let imageUrl = item.fileUrl;
                     if (imageUrl && !imageUrl.startsWith('http') && item.output) {
+                        // Validar que storage_path sea válido antes de usarlo
                         const storagePath = item.output.storage_path || item.output.storage_object_id;
-                        if (storagePath) {
-                            imageUrl = this.getPublicUrlFromStorage('production-outputs', storagePath) || imageUrl;
+                        if (storagePath && typeof storagePath === 'string' && storagePath.trim() !== '') {
+                            const publicUrl = this.getPublicUrlFromStorage('production-outputs', storagePath);
+                            if (publicUrl) {
+                                imageUrl = publicUrl;
+                            }
                         }
                     }
                     return this.renderHistoryImageCard(imageUrl, item.run, item.output, item.prompt, index);
@@ -1332,27 +1362,64 @@ class LivingManager {
     }
 
     getPublicUrlFromStorage(bucketName, filePath) {
+        // Validar parámetros antes de hacer la llamada
         if (!this.supabase || !bucketName || !filePath) {
+            return null;
+        }
+
+        // Validar que el cliente tenga storage
+        if (!this.supabase.storage || typeof this.supabase.storage.from !== 'function') {
+            console.warn('⚠️ Cliente de Supabase no tiene storage disponible');
+            return null;
+        }
+
+        // Validar que filePath sea un string válido
+        if (typeof filePath !== 'string' || filePath.trim() === '') {
+            console.warn('⚠️ filePath no es válido:', filePath);
             return null;
         }
 
         try {
             // Limpiar el path si viene con el nombre del bucket
-            let cleanPath = filePath;
-            if (filePath.startsWith(`${bucketName}/`)) {
-                cleanPath = filePath.replace(`${bucketName}/`, '');
-            } else if (filePath.startsWith('/')) {
-                cleanPath = filePath.substring(1);
+            let cleanPath = filePath.trim();
+            if (cleanPath.startsWith(`${bucketName}/`)) {
+                cleanPath = cleanPath.replace(`${bucketName}/`, '');
+            } else if (cleanPath.startsWith('/')) {
+                cleanPath = cleanPath.substring(1);
+            }
+
+            // Validar que el path limpio no esté vacío
+            if (!cleanPath || cleanPath.trim() === '') {
+                console.warn('⚠️ Path limpio está vacío después de procesar:', filePath);
+                return null;
             }
 
             // Obtener URL pública desde Supabase Storage
-            const { data } = this.supabase.storage
+            // getPublicUrl retorna directamente { data: { publicUrl: string } }
+            const result = this.supabase.storage
                 .from(bucketName)
                 .getPublicUrl(cleanPath);
 
-            return data?.publicUrl || null;
+            // Validar que el resultado tenga la estructura esperada
+            if (result && result.data && result.data.publicUrl) {
+                return result.data.publicUrl;
+            }
+
+            // Fallback: intentar acceder directamente a publicUrl si la estructura es diferente
+            if (result && result.publicUrl) {
+                return result.publicUrl;
+            }
+
+            console.warn('⚠️ getPublicUrl no retornó una URL válida:', result);
+            return null;
         } catch (error) {
+            // Si es un error 400, loguear más información
+            if (error.status === 400 || error.code === '400') {
+                console.warn('⚠️ Error 400 obteniendo URL pública de storage:', error.message);
+                console.warn('⚠️ Parámetros:', { bucketName, filePath });
+            } else {
             console.warn('⚠️ Error obteniendo URL pública de storage:', error);
+            }
             return null;
         }
     }
