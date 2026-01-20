@@ -440,7 +440,6 @@ if (typeof window.ProductsManager === 'undefined') {
             
             // Validar y ajustar filtro activo si es necesario
             if (!this.availableCategories.has(this.activeFilter)) {
-                console.log(`ℹ️ Filtro activo "${this.activeFilter}" ya no está disponible, cambiando a "todos"`);
                 this.activeFilter = 'todos';
             }
             
