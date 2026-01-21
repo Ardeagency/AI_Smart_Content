@@ -67,8 +67,8 @@ class ProductsView extends BaseView {
         await this.renderProductDetail();
       } else {
         // Renderizar lista de productos
+        // NO llamar init() aquí - BaseView.render() ya lo llama automáticamente
         await super.render();
-        await this.init();
       }
     }
   }
