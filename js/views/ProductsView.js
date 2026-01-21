@@ -177,12 +177,12 @@ class ProductsView extends BaseView {
 
   /**
    * Cargar brand container ID
-   * Reutiliza la lógica de ProductsManager si está disponible para evitar duplicación
+   * Carga directa sin caché (igual que LivingView)
    */
   async loadBrandContainer() {
-    // Intentar usar ProductsManager si está disponible
-    if (window.productsManager && window.productsManager.brandContainerId) {
-      this.brandContainerId = window.productsManager.brandContainerId;
+    // Usar la instancia local si está disponible
+    if (this.productsManager && this.productsManager.brandContainerId) {
+      this.brandContainerId = this.productsManager.brandContainerId;
       return;
     }
 
@@ -373,9 +373,9 @@ class ProductsView extends BaseView {
    * Obtener mapeo de categorías desde ProductsManager para evitar duplicación
    */
   getCategoryMap() {
-    // Usar ProductsManager si está disponible, sino usar versión local sin "todos"
-    if (window.productsManager && typeof window.productsManager.getCategoryMap === 'function') {
-      const fullMap = window.productsManager.getCategoryMap();
+    // Usar la instancia local si está disponible, sino usar versión local sin "todos"
+    if (this.productsManager && typeof this.productsManager.getCategoryMap === 'function') {
+      const fullMap = this.productsManager.getCategoryMap();
       // Remover "todos" para la vista de detalle
       const { todos, ...mapWithoutTodos } = fullMap;
       return mapWithoutTodos;
