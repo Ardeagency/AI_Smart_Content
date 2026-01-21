@@ -74,11 +74,11 @@ if (typeof window.ProductsManager === 'undefined') {
     }
 
     async init() {
-        // Evitar múltiples inicializaciones
-        if (this.initialized) {
-            console.log('⚠️ ProductsManager ya está inicializado, omitiendo...');
-            return;
-        }
+        // NO evitar múltiples inicializaciones - siempre recargar datos frescos
+        // Resetear estado para asegurar carga limpia
+        this.products = [];
+        this.brandContainerId = null;
+        this.initialized = false;
 
         await this.initSupabase();
         if (!this.supabase || !this.isValidSupabaseClient(this.supabase) || !this.userId) {
@@ -92,8 +92,8 @@ if (typeof window.ProductsManager === 'undefined') {
             return;
         }
 
-        // Hacer disponible globalmente
-        window.productsManager = this;
+        // NO hacer disponible globalmente - cada vista crea su propia instancia (sin caché)
+        // window.productsManager = this; // Comentado para evitar caché fantasma
 
         await this.loadBrandContainer();
         console.log('🔍 Después de loadBrandContainer, brandContainerId:', this.brandContainerId);
@@ -705,7 +705,7 @@ if (typeof window.ProductsManager === 'undefined') {
             
             if (!productsGrid || !emptyState) {
                 console.error('❌ Elementos aún no disponibles después de espera adicional');
-                return;
+            return;
             }
             console.log('✅ Elementos encontrados después de espera adicional');
         }
