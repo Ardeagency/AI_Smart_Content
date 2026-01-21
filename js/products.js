@@ -96,15 +96,11 @@ if (typeof window.ProductsManager === 'undefined') {
         // window.productsManager = this; // Comentado para evitar caché fantasma
 
         await this.loadBrandContainer();
-        console.log('🔍 Después de loadBrandContainer, brandContainerId:', this.brandContainerId);
-        
         await this.loadUserData();
         this.setupEventListeners();
         
         // Esperar a que el DOM esté listo antes de cargar productos
-        console.log('⏳ Esperando a que el DOM esté listo...');
         await this.waitForDOMReady();
-        console.log('✅ DOM listo, esperando elementos específicos...');
         
         // Esperar específicamente a que los elementos necesarios estén disponibles
         const requiredElements = ['productsGallery', 'productsGrid', 'loadingState', 'emptyState'];
@@ -116,23 +112,12 @@ if (typeof window.ProductsManager === 'undefined') {
         const loadingState = document.getElementById('loadingState');
         const emptyState = document.getElementById('emptyState');
         
-        console.log('🔍 Verificando elementos del DOM después de espera:', {
-            productsGallery: !!productsGallery,
-            productsGrid: !!productsGrid,
-            loadingState: !!loadingState,
-            emptyState: !!emptyState
-        });
-        
         if (!productsGallery || !productsGrid || !loadingState || !emptyState) {
-            console.error('❌ Elementos del DOM aún no disponibles después de espera');
-            console.error('❌ Esto puede causar que los productos no se rendericen');
+            console.error('❌ Elementos del DOM no disponibles después de espera - los productos pueden no renderizarse');
             // Continuar de todos modos, loadProducts() manejará el error
-        } else {
-            console.log('✅ Todos los elementos del DOM están disponibles');
         }
         
         await this.loadProducts();
-        console.log('✅ loadProducts() completado');
         
         // Marcar como inicializado
         this.initialized = true;
@@ -178,27 +163,20 @@ if (typeof window.ProductsManager === 'undefined') {
                         
                         if (element) {
                             elements[id] = element;
-                            if (attempts[id] > 0) {
-                                console.log(`✅ Elemento encontrado: ${id} (después de ${attempts[id]} intentos)`);
-                            }
                         } else {
                             allFound = false;
                             attempts[id]++;
-                            if (attempts[id] === 1 || attempts[id] % 5 === 0) {
-                                console.log(`⏳ Esperando elemento: ${id} (intento ${attempts[id]}/${maxAttempts})`);
-                            }
                         }
                     }
                 }
 
                 if (allFound) {
-                    console.log('✅ Todos los elementos requeridos están disponibles');
                     resolve(elements);
                 } else {
                     const maxAttemptsReached = elementIds.some(id => attempts[id] >= maxAttempts);
                     if (maxAttemptsReached) {
                         const missing = elementIds.filter(id => !elements[id]);
-                        console.warn(`⚠️ Algunos elementos no se encontraron después de ${maxAttempts} intentos:`, missing);
+                        console.warn(`⚠️ Elementos del DOM no encontrados después de ${maxAttempts} intentos:`, missing);
                         resolve(elements);
                     } else {
                         setTimeout(checkElements, 100);
@@ -363,10 +341,8 @@ if (typeof window.ProductsManager === 'undefined') {
 
             if (brandContainer && brandContainer.id) {
                 this.brandContainerId = brandContainer.id;
-                console.log('✅ Brand container cargado:', this.brandContainerId);
             } else {
                 this.brandContainerId = null;
-                console.warn('⚠️ No se encontró brand_container para el usuario');
             }
         } catch (error) {
             console.warn('⚠️ Error cargando brand_container:', error);
@@ -450,7 +426,6 @@ if (typeof window.ProductsManager === 'undefined') {
     setActiveFilter(category) {
         // Validar que la categoría esté disponible
         if (!this.availableCategories.has(category)) {
-            console.warn(`⚠️ Categoría ${category} no disponible, cambiando a "todos"`);
             category = 'todos';
         }
         
@@ -502,7 +477,6 @@ if (typeof window.ProductsManager === 'undefined') {
         
         // Si loadingState no está, crear uno temporal o simplemente continuar
         if (!loadingState) {
-            console.warn('⚠️ loadingState no encontrado, continuando sin él');
             // Crear un elemento temporal para evitar errores
             loadingState = document.createElement('div');
             loadingState.id = 'loadingState';
@@ -547,23 +521,17 @@ if (typeof window.ProductsManager === 'undefined') {
 
             if (productsError) {
                 if (productsError.status === 400 || productsError.code === '400') {
-                    console.warn('⚠️ Error 400 cargando products:', productsError.message);
-                    console.warn('⚠️ brand_container_id usado:', this.brandContainerId);
+                    console.error('❌ Error cargando productos:', productsError.message);
                 }
                 throw productsError;
             }
 
-            console.log(`✅ ${products?.length || 0} producto(s) encontrado(s) en la consulta`);
-
             if (!products || products.length === 0) {
-                console.log('ℹ️ No hay productos en la base de datos para este brand_container_id');
                 loadingState.style.display = 'none';
                 emptyState.style.display = 'block';
                 this.products = [];
                 return;
             }
-
-            console.log('📦 Productos obtenidos:', products.map(p => ({ id: p.id, nombre: p.nombre_producto })));
 
             // ============================================
             // PASO 2: OBTENER PRODUCT_IMAGES según schema.sql (línea 297-306)
@@ -611,24 +579,18 @@ if (typeof window.ProductsManager === 'undefined') {
             // ASIGNAR PRODUCTOS Y RENDERIZAR
             // ============================================
             this.products = products;
-            console.log(`📦 ${this.products.length} producto(s) asignado(s) a this.products`);
             
             // Detectar categorías disponibles
             this.detectAvailableCategories();
-            console.log('📊 Categorías detectadas:', Array.from(this.availableCategories));
             
             // Validar y ajustar filtro activo
             if (!this.availableCategories.has(this.activeFilter)) {
                 this.activeFilter = 'todos';
             }
-            console.log('🎯 Filtro activo:', this.activeFilter);
             
             // Renderizar
-            console.log('🎨 Renderizando categorías...');
             this.renderCategoryTabs();
-            console.log('🎨 Renderizando productos...');
             await this.renderProducts();
-            console.log('✅ Renderizado completado');
 
         } catch (error) {
             console.error('❌ Error completo cargando productos:', error);
@@ -639,23 +601,10 @@ if (typeof window.ProductsManager === 'undefined') {
     }
 
     async renderProducts() {
-        console.log('🎨 renderProducts() iniciado');
-        console.log('🔍 Estado de productos:', {
-            productsLength: this.products?.length || 0,
-            activeFilter: this.activeFilter,
-            products: this.products?.map(p => ({ id: p.id, nombre: p.nombre_producto }))
-        });
-
         // Buscar elementos directamente sin espera (ya deberían estar disponibles)
         let loadingState = document.getElementById('loadingState');
         let emptyState = document.getElementById('emptyState');
         let productsGrid = document.getElementById('productsGrid');
-
-        console.log('🔍 Búsqueda inicial de elementos:', {
-            loadingState: !!loadingState,
-            emptyState: !!emptyState,
-            productsGrid: !!productsGrid
-        });
 
         if (!loadingState || !emptyState || !productsGrid) {
             // Intentar buscar en el container de la vista si existe
@@ -664,11 +613,6 @@ if (typeof window.ProductsManager === 'undefined') {
                 loadingState = loadingState || viewContainer.querySelector('#loadingState');
                 emptyState = emptyState || viewContainer.querySelector('#emptyState');
                 productsGrid = productsGrid || viewContainer.querySelector('#productsGrid');
-                console.log('🔍 Búsqueda en app-container:', {
-                    loadingState: !!loadingState,
-                    emptyState: !!emptyState,
-                    productsGrid: !!productsGrid
-                });
             }
         }
 
@@ -679,24 +623,12 @@ if (typeof window.ProductsManager === 'undefined') {
                 loadingState = loadingState || productsGallery.querySelector('#loadingState');
                 emptyState = emptyState || productsGallery.querySelector('#emptyState');
                 productsGrid = productsGrid || productsGallery.querySelector('#productsGrid');
-                console.log('🔍 Búsqueda en productsGallery:', {
-                    loadingState: !!loadingState,
-                    emptyState: !!emptyState,
-                    productsGrid: !!productsGrid,
-                    productsGallery: !!productsGallery
-                });
             }
         }
 
         // loadingState es opcional, pero productsGrid y emptyState son críticos
         if (!productsGrid || !emptyState) {
             console.error('❌ Elementos críticos del DOM no encontrados para renderizar productos');
-            console.error('❌ productsGrid:', productsGrid);
-            console.error('❌ emptyState:', emptyState);
-            console.error('❌ loadingState (opcional):', loadingState);
-            console.error('❌ Document body:', document.body);
-            console.error('❌ app-container:', document.getElementById('app-container'));
-            console.error('❌ productsGallery:', document.getElementById('productsGallery'));
             
             // Intentar una última vez después de un breve delay
             await new Promise(resolve => setTimeout(resolve, 500));
@@ -707,27 +639,20 @@ if (typeof window.ProductsManager === 'undefined') {
                 console.error('❌ Elementos aún no disponibles después de espera adicional');
             return;
             }
-            console.log('✅ Elementos encontrados después de espera adicional');
         }
         
         // Si loadingState no está disponible, crear uno temporal o usar null
         if (!loadingState) {
-            console.warn('⚠️ loadingState no encontrado, continuando sin él');
             loadingState = { style: { display: 'none' } }; // Objeto dummy para evitar errores
         }
 
-        console.log('✅ Elementos del DOM encontrados, llamando a renderProductsWithElements()');
         this.renderProductsWithElements(loadingState, emptyState, productsGrid);
     }
 
     renderProductsWithElements(loadingState, emptyState, productsGrid) {
-        console.log('🎨 renderProductsWithElements() iniciado');
-        console.log('🔍 Productos disponibles:', this.products?.length || 0);
-
         loadingState.style.display = 'none';
 
         if (!this.products || this.products.length === 0) {
-            console.log('ℹ️ No hay productos para mostrar');
             emptyState.style.display = 'block';
             productsGrid.style.display = 'none';
             return;
@@ -738,10 +663,7 @@ if (typeof window.ProductsManager === 'undefined') {
             ? this.products 
             : this.products.filter(p => (p.tipo_producto || 'otro') === this.activeFilter);
 
-        console.log(`🔍 Productos filtrados: ${filteredProducts.length} de ${this.products.length} (filtro: ${this.activeFilter})`);
-
         if (filteredProducts.length === 0) {
-            console.log(`ℹ️ No hay productos en la categoría: ${this.activeFilter}`);
             emptyState.style.display = 'block';
             productsGrid.style.display = 'none';
             
@@ -766,26 +688,16 @@ if (typeof window.ProductsManager === 'undefined') {
             return;
         }
 
-        console.log(`🎨 Renderizando ${filteredProducts.length} producto(s) de ${this.products.length} total`);
-        console.log('🔍 Productos a renderizar:', filteredProducts.map(p => ({ id: p.id, nombre: p.nombre_producto })));
-        
         emptyState.style.display = 'none';
         productsGrid.style.display = 'block';
         productsGrid.innerHTML = '';
-
-        console.log(`🎨 Renderizando ${filteredProducts.length} producto(s) en el grid`);
-        console.log('🔍 productsGrid antes de renderizar:', {
-            display: productsGrid.style.display,
-            innerHTML: productsGrid.innerHTML.substring(0, 100),
-            parentElement: productsGrid.parentElement?.id
-        });
 
         // Renderizar productos con animación escalonada
         filteredProducts.forEach((product, index) => {
             try {
                 const card = this.createProductCard(product);
                 if (!card) {
-                    console.error(`❌ createProductCard retornó null para producto ${product.id}`);
+                    console.error(`❌ Error: createProductCard retornó null para producto ${product.id}`);
                     return;
                 }
                 
@@ -793,33 +705,21 @@ if (typeof window.ProductsManager === 'undefined') {
                 card.style.transform = 'translateY(20px)';
                 productsGrid.appendChild(card);
                 
-                console.log(`✅ Card ${index + 1} agregada al grid para producto: ${product.nombre_producto}`);
-                
                 // Animación escalonada
                 setTimeout(() => {
                     card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
                     card.style.opacity = '1';
                     card.style.transform = 'translateY(0)';
                 }, index * 50);
-                
-                // Producto renderizado
             } catch (error) {
                 console.error(`❌ Error renderizando producto ${product.id}:`, error);
-                console.error('Stack:', error.stack);
             }
-        });
-        
-        console.log('🔍 productsGrid después de renderizar:', {
-            childrenCount: productsGrid.children.length,
-            innerHTML: productsGrid.innerHTML.substring(0, 200)
         });
 
         // Remover clase de renderizado después de un momento
         setTimeout(() => {
             productsGrid.classList.remove('rendering');
         }, filteredProducts.length * 50 + 100);
-
-        console.log('✅ Todos los productos renderizados');
     }
 
     createProductCard(product) {
@@ -963,7 +863,7 @@ if (typeof window.ProductsManager === 'undefined') {
 
             if (error) {
                 if (error.status === 400 || error.code === '400') {
-                    console.warn('⚠️ Error 400 creando producto:', error.message);
+                    console.error('❌ Error creando producto:', error.message);
                     throw new Error(`Error al crear producto: ${error.message}`);
                 }
                 throw error;
@@ -1220,8 +1120,7 @@ if (typeof window.ProductsManager === 'undefined') {
                     .remove([fileName]);
 
                 if (storageError) {
-                    console.warn('Error eliminando de storage:', storageError);
-                    // Continuar aunque falle el storage
+                    // Continuar aunque falle el storage (no crítico)
                 }
             }
 
@@ -1515,7 +1414,7 @@ if (typeof window.ProductsManager === 'undefined') {
 
                 if (error) {
                     if (error.status === 400 || error.code === '400') {
-                        console.warn('⚠️ Error 400 actualizando producto:', error.message);
+                    console.error('❌ Error actualizando producto:', error.message);
                         throw new Error(`Error al actualizar producto: ${error.message}`);
                     }
                     throw error;
@@ -1527,10 +1426,10 @@ if (typeof window.ProductsManager === 'undefined') {
                     .insert(formData);
 
                 if (error) {
-                    if (error.status === 400 || error.code === '400') {
-                        console.warn('⚠️ Error 400 creando producto:', error.message);
-                        throw new Error(`Error al crear producto: ${error.message}`);
-                    }
+                if (error.status === 400 || error.code === '400') {
+                    console.error('❌ Error creando producto:', error.message);
+                    throw new Error(`Error al crear producto: ${error.message}`);
+                }
                     throw error;
                 }
             }
@@ -1553,7 +1452,7 @@ if (typeof window.ProductsManager === 'undefined') {
     async deleteProduct(productId) {
         // Validar que productId sea un UUID válido
         if (!this.isValidUUID(productId)) {
-            console.warn('⚠️ productId no es un UUID válido:', productId);
+            console.error('❌ Error: productId no es un UUID válido');
             return;
         }
 
@@ -1566,9 +1465,7 @@ if (typeof window.ProductsManager === 'undefined') {
 
             if (imagesError) {
                 if (imagesError.status === 400 || imagesError.code === '400') {
-                    console.warn('⚠️ Error 400 eliminando imágenes del producto:', imagesError.message);
-                } else {
-                    console.warn('⚠️ Error eliminando imágenes:', imagesError);
+                    console.error('❌ Error eliminando imágenes del producto:', imagesError.message);
                 }
             }
 
@@ -1580,7 +1477,7 @@ if (typeof window.ProductsManager === 'undefined') {
 
             if (error) {
                 if (error.status === 400 || error.code === '400') {
-                    console.warn('⚠️ Error 400 eliminando producto:', error.message);
+                    console.error('❌ Error eliminando producto:', error.message);
                     throw new Error(`Error al eliminar producto: ${error.message}`);
                 }
                 throw error;
