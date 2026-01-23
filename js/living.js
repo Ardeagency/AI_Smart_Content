@@ -327,33 +327,33 @@ class LivingManager {
 
             // Usar brandContainerId si ya está cargado, sino cargarlo
             if (!this.brandContainerId) {
-                const { data: container, error: containerError } = await this.supabase
-                    .from('brand_containers')
-                    .select('id')
-                    .eq('user_id', this.userId)
-                    .order('created_at', { ascending: false })
-                    .limit(1)
-                    .maybeSingle();
+            const { data: container, error: containerError } = await this.supabase
+                .from('brand_containers')
+                .select('id')
+                .eq('user_id', this.userId)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
 
-                if (containerError) {
-                    if (containerError.status === 400 || containerError.code === '400') {
-                        console.warn('⚠️ Error 400 cargando brand_container:', containerError.message);
-                    }
+            if (containerError) {
+                if (containerError.status === 400 || containerError.code === '400') {
+                    console.warn('⚠️ Error 400 cargando brand_container:', containerError.message);
+                }
                     this.products = [];
                     return;
-                }
-                
-                if (!container || !container.id) {
-                    this.products = [];
-                    return;
-                }
+            }
+            
+            if (!container || !container.id) {
+                this.products = [];
+                return;
+            }
 
-                // Validar que container.id sea un UUID válido
-                const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            // Validar que container.id sea un UUID válido
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
                 if (!uuidRegex.test(container.id)) {
-                    console.warn('⚠️ container.id no es un UUID válido:', container.id);
-                    this.products = [];
-                    return;
+                console.warn('⚠️ container.id no es un UUID válido:', container.id);
+                this.products = [];
+                return;
                 }
 
                 this.brandContainerId = container.id;

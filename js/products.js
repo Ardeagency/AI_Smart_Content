@@ -638,7 +638,7 @@ if (typeof window.ProductsManager === 'undefined') {
             if (!productsGrid || !emptyState) {
                 console.error('❌ Elementos aún no disponibles después de espera adicional');
             return;
-            }
+        }
         }
         
         // Si loadingState no está disponible, crear uno temporal o usar null
@@ -1426,10 +1426,10 @@ if (typeof window.ProductsManager === 'undefined') {
                     .insert(formData);
 
                 if (error) {
-                if (error.status === 400 || error.code === '400') {
+                    if (error.status === 400 || error.code === '400') {
                     console.error('❌ Error creando producto:', error.message);
-                    throw new Error(`Error al crear producto: ${error.message}`);
-                }
+                        throw new Error(`Error al crear producto: ${error.message}`);
+                    }
                     throw error;
                 }
             }

@@ -50,26 +50,24 @@ class ProductsView extends BaseView {
    * Renderizar la vista
    */
   async render() {
-    // Sistema de caché eliminado - siempre cargar templates frescos
-
-    // Detectar si hay productId en los parámetros de ruta
+    // Detectar productId desde parámetros de ruta o path
+    let productId = null;
     if (this.routeParams && this.routeParams.productId) {
-      this.productId = this.routeParams.productId;
-      await this.initSupabase();
-      await this.renderProductDetail();
+      productId = this.routeParams.productId;
     } else {
-      // Verificar también en el path por si acaso
       const path = window.location.pathname;
       const match = path.match(/\/products\/([^\/]+)/);
       if (match) {
-        this.productId = match[1];
-        await this.initSupabase();
+        productId = match[1];
+      }
+    }
+
+    if (productId) {
+      this.productId = productId;
         await this.renderProductDetail();
       } else {
         // Renderizar lista de productos
-        // NO llamar init() aquí - BaseView.render() ya lo llama automáticamente
         await super.render();
-      }
     }
   }
 
@@ -88,12 +86,13 @@ class ProductsView extends BaseView {
 
       if (this.supabase) {
         const { data: { user } } = await this.supabase.auth.getUser();
-        if (user) {
-          this.userId = user.id;
-        }
+        this.userId = user?.id || null;
+      } else {
+        this.userId = null;
       }
     } catch (error) {
-      console.error('Error inicializando Supabase:', error);
+      this.supabase = null;
+      this.userId = null;
     }
   }
 
@@ -101,14 +100,19 @@ class ProductsView extends BaseView {
    * Renderizar detalle del producto
    */
   async renderProductDetail() {
-    // Renderizar header primero
+    // Resetear datos previos
+    this.productData = null;
+    this.productImages = [];
+    this.brandContainerId = null;
+    this.supabase = null;
+    this.userId = null;
+    
     await super.render();
     
-    // Cambiar el template a product-detail
     const container = this.container || document.getElementById('app-container');
     if (!container) return;
 
-    // Cargar datos del producto
+    await this.initSupabase();
     await this.loadProductData();
     await this.loadProductImages();
     await this.loadBrandContainer();
@@ -149,7 +153,6 @@ class ProductsView extends BaseView {
       if (error) throw error;
       this.productData = data || {};
     } catch (error) {
-      console.error('Error cargando producto:', error);
       this.productData = {};
     }
   }
@@ -170,38 +173,23 @@ class ProductsView extends BaseView {
       if (error) throw error;
       this.productImages = data || [];
     } catch (error) {
-      console.error('Error cargando imágenes:', error);
       this.productImages = [];
     }
   }
 
   /**
    * Cargar brand container ID
-   * Carga directa sin caché (igual que LivingView)
    */
   async loadBrandContainer() {
-    // Usar la instancia local si está disponible
-    if (this.productsManager && this.productsManager.brandContainerId) {
-      this.brandContainerId = this.productsManager.brandContainerId;
-      return;
-    }
-
     if (!this.supabase || !this.userId) return;
 
     try {
-      // Validar que userId sea válido
-      if (!this.userId || typeof this.userId !== 'string' || this.userId.trim() === '') {
-        return;
-      }
-
-      // Validar UUID
+      // Validar UUID básico
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (!uuidRegex.test(this.userId)) {
-        console.warn('⚠️ userId no es un UUID válido en ProductsView:', this.userId);
+      if (!this.userId || typeof this.userId !== 'string' || !uuidRegex.test(this.userId)) {
         return;
       }
 
-      // Usar maybeSingle() en lugar de single() para evitar errores si no hay registro
       const { data, error } = await this.supabase
         .from('brand_containers')
         .select('id')
@@ -210,18 +198,13 @@ class ProductsView extends BaseView {
         .limit(1)
         .maybeSingle();
 
-      if (error) {
-        if (error.status === 400 || error.code === '400') {
-          console.warn('⚠️ Error 400 cargando brand_container en ProductsView:', error.message);
-        }
-        return;
-      }
+      if (error) return;
 
-      if (data && data.id) {
+      if (data?.id) {
         this.brandContainerId = data.id;
       }
     } catch (error) {
-      console.error('Error cargando brand container:', error);
+      // Silencioso - no es crítico
     }
   }
 
@@ -370,17 +353,9 @@ class ProductsView extends BaseView {
   }
 
   /**
-   * Obtener mapeo de categorías desde ProductsManager para evitar duplicación
+   * Obtener mapeo de categorías (sin "todos" para vista de detalle)
    */
   getCategoryMap() {
-    // Usar la instancia local si está disponible, sino usar versión local sin "todos"
-    if (this.productsManager && typeof this.productsManager.getCategoryMap === 'function') {
-      const fullMap = this.productsManager.getCategoryMap();
-      // Remover "todos" para la vista de detalle
-      const { todos, ...mapWithoutTodos } = fullMap;
-      return mapWithoutTodos;
-    }
-    // Fallback local sin "todos"
     return {
       'bebida': { label: 'Bebidas', icon: 'fa-glass-water' },
       'bebida_alcoholica': { label: 'Bebidas Alcohólicas', icon: 'fa-wine-glass' },
@@ -406,23 +381,22 @@ class ProductsView extends BaseView {
 
   /**
    * Inicializar la vista (para lista de productos)
-   * Simplificado - siempre crear nueva instancia sin caché (igual que LivingView)
    */
   async init() {
-    // Cargar script de Products si no está disponible usando el método centralizado
+    // Resetear estado
+    this.productsManager = null;
+    this.supabase = null;
+    this.userId = null;
+
     if (!window.ProductsManager) {
       await this.loadScript('js/products.js', 'ProductsManager');
     }
 
-    // Siempre crear nueva instancia de ProductsManager (sin caché, igual que LivingView)
     if (window.ProductsManager) {
       this.productsManager = new window.ProductsManager();
       await this.productsManager.init();
-    } else {
-      console.error('❌ No se pudo cargar ProductsManager');
     }
 
-    // Setup links para usar router
     this.setupRouterLinks();
   }
 
@@ -683,7 +657,6 @@ class ProductsView extends BaseView {
       this.productData[fieldName] = value;
       this.showNotification('Campo guardado correctamente', 'success');
     } catch (error) {
-      console.error('Error guardando campo:', error);
       this.showNotification('Error al guardar el campo', 'error');
     } finally {
       this.savingFields.delete(fieldName);
@@ -770,7 +743,6 @@ class ProductsView extends BaseView {
       this.renderProductImages();
       this.showNotification('Imagen subida correctamente', 'success');
     } catch (error) {
-      console.error('Error subiendo imagen:', error);
       this.showNotification('Error al subir la imagen', 'error');
     }
   }
@@ -855,7 +827,6 @@ class ProductsView extends BaseView {
       this.renderProductImages();
       this.showNotification('Imagen eliminada correctamente', 'success');
     } catch (error) {
-      console.error('Error eliminando imagen:', error);
       this.showNotification('Error al eliminar la imagen', 'error');
     }
   }
@@ -911,10 +882,17 @@ class ProductsView extends BaseView {
   }
 
   /**
-   * Hook al salir de la vista - sin limpieza
+   * Hook al salir de la vista
    */
   async onLeave() {
-    // Sin limpieza - el navegador maneja todo automáticamente
+    // Resetear estado completo
+    this.productData = null;
+    this.productImages = [];
+    this.productId = null;
+    this.brandContainerId = null;
+    this.productsManager = null;
+    this.supabase = null;
+    this.userId = null;
   }
 }
 
