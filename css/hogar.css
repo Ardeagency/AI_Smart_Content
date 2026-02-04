@@ -1,4 +1,31 @@
-/* Hogar View Styles */
+/* Hogar View Styles - Home = User Control Gateway (sin sidebar workspace) */
+.hogar-user-hub {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.08));
+}
+.hogar-hub-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary, #a0a0a0);
+    text-decoration: none;
+    font-size: 0.9375rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    transition: color 0.2s, background 0.2s;
+}
+.hogar-hub-link:hover {
+    color: var(--accent-warm, #e09145);
+    background: rgba(255,255,255,0.04);
+}
+.hogar-hub-link i {
+    opacity: 0.9;
+}
+
 .hogar-container {
     min-height: calc(100vh - 48px);
     padding: 2rem;

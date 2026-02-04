@@ -12,32 +12,25 @@ class HogarView extends BaseView {
   }
 
   /**
-   * Hook llamado al entrar a la vista
+   * Hook llamado al entrar a la vista.
+   * Home = User Control Gateway: NUNCA carga contexto organización.
    */
   async onEnter() {
-    // Verificar autenticación
     if (window.authService) {
       const isAuth = await window.authService.checkAccess(true);
       if (!isAuth) {
-        if (window.router) {
-          window.router.navigate('/login', true);
-        }
+        if (window.router) window.router.navigate('/login', true);
         return;
       }
     } else {
       const isAuth = await this.checkAuthentication();
       if (!isAuth) {
-        if (window.router) {
-          window.router.navigate('/login', true);
-        }
+        if (window.router) window.router.navigate('/login', true);
         return;
       }
     }
-
-    // Renderizar Navigation si no está visible
-    if (window.navigation && !window.navigation.initialized) {
-      await window.navigation.render();
-    }
+    // Regla: Home nunca tiene contexto workspace activo
+    if (window.appState) window.appState.clearWorkspaceContext();
   }
 
   /**
@@ -410,9 +403,8 @@ class HogarView extends BaseView {
       window.appState.set('selectedOrganizationId', orgId, true);
     }
     
-    // Navegar a living
     if (window.router) {
-      window.router.navigate('/living');
+      window.router.navigate(`/org/${orgId}/living`);
     }
   }
 

@@ -11,20 +11,29 @@ class Navigation {
   }
 
   /**
-   * Renderizar el componente de navegación
+   * Renderizar el componente de navegación (solo dentro de workspace: /org/:orgId/*)
    */
   async render() {
-    if (this.initialized) {
+    const orgId = window.appState && window.appState.getCurrentOrgId();
+    if (!orgId) {
+      console.warn('Navigation: sin orgId, no se muestra sidebar');
       return;
     }
 
+    if (this.initialized && this._lastOrgId === orgId) {
+      return;
+    }
+    this._lastOrgId = orgId;
+
+    if (!this.container) {
+      this.container = document.getElementById('navigation-container');
+    }
     if (!this.container) {
       console.error('❌ Navigation container no encontrado');
       return;
     }
 
-    // Renderizar HTML del sidebar
-    this.container.innerHTML = this.getNavigationHTML();
+    this.container.innerHTML = this.getNavigationHTML(orgId);
 
     // Inicializar
     this.initializeSidebar();
@@ -43,57 +52,45 @@ class Navigation {
   }
 
   /**
-   * Obtener HTML del sidebar
+   * Obtener HTML del sidebar. Rutas siempre /org/:orgId/:module (Workspace First).
+   * @param {string} orgId - ID de la organización activa
    */
-  getNavigationHTML() {
+  getNavigationHTML(orgId) {
+    const o = orgId || (window.appState && window.appState.getCurrentOrgId()) || '';
+    const p = (module) => `/org/${o}/${module}`;
     return `
-      <!-- Overlay de navegación -->
       <div class="nav-overlay" id="navOverlay"></div>
-
-      <!-- Navegación lateral -->
       <nav class="side-navigation" id="sideNavigation">
-        <!-- Capa superior: Identidad + Organización -->
         <div class="nav-identity-section">
           <div class="nav-identity-card" id="navIdentityCard">
             <div class="nav-identity-content">
               <div class="nav-identity-info">
-                <div class="nav-org-name" id="navOrgName">Info Arde Agency</div>
+                <div class="nav-org-name" id="navOrgName">Workspace</div>
                 <div class="nav-org-type" id="navOrgType">Personal</div>
               </div>
               <button class="nav-org-chevron" id="navOrgChevron" aria-label="Cambiar organización">
                 <i class="fas fa-chevron-down"></i>
-          </button>
+              </button>
             </div>
           </div>
-          
-          <!-- Dropdown de organización -->
           <div class="nav-org-dropdown" id="navOrgDropdown">
             <div class="nav-org-dropdown-header">Workspaces</div>
-            <div class="nav-org-dropdown-list" id="navOrgDropdownList">
-              <!-- Las organizaciones se cargarán dinámicamente aquí -->
-            </div>
+            <div class="nav-org-dropdown-list" id="navOrgDropdownList"></div>
           </div>
         </div>
-
-        <!-- Menú Principal -->
         <div class="nav-menu">
-          <!-- Living (primer acceso, sin sección) -->
           <div class="nav-item">
-            <a href="/living" class="nav-link" data-route="/living" data-tooltip="Living">
+            <a href="${p('living')}" class="nav-link" data-route="${p('living')}" data-tooltip="Living">
               <i class="fas fa-home nav-icon"></i>
               <span class="nav-text">Living</span>
             </a>
           </div>
-
-          <!-- Marca -->
           <div class="nav-item">
-            <a href="/brands" class="nav-link" data-route="/brands" data-tooltip="Marca">
+            <a href="${p('brand')}" class="nav-link" data-route="${p('brand')}" data-tooltip="Marca">
               <i class="fas fa-palette nav-icon"></i>
               <span class="nav-text">Marca</span>
             </a>
           </div>
-
-          <!-- Entidades (con submenú) -->
           <div class="nav-item nav-item-has-submenu" data-submenu="entidades">
             <div class="nav-link nav-link-parent" data-tooltip="Entidades">
               <i class="fas fa-cube nav-icon"></i>
@@ -102,24 +99,12 @@ class Navigation {
             </div>
             <div class="nav-submenu" id="navSubmenuEntidades">
               <div class="nav-submenu-item">
-                <a href="/products" class="nav-link nav-link-sub" data-route="/products" data-tooltip="Productos">
+                <a href="${p('entities')}" class="nav-link nav-link-sub" data-route="${p('entities')}" data-tooltip="Productos">
                   <span class="nav-text">Productos</span>
-                </a>
-              </div>
-              <div class="nav-submenu-item">
-                <a href="/services" class="nav-link nav-link-sub" data-route="/services" data-tooltip="Servicios">
-                  <span class="nav-text">Servicios</span>
-                </a>
-              </div>
-              <div class="nav-submenu-item">
-                <a href="/sedes" class="nav-link nav-link-sub" data-route="/sedes" data-tooltip="Sedes">
-                  <span class="nav-text">Sedes</span>
                 </a>
               </div>
             </div>
           </div>
-
-          <!-- Producción (con submenú) -->
           <div class="nav-item nav-item-has-submenu" data-submenu="produccion">
             <div class="nav-link nav-link-parent" data-tooltip="Producción">
               <i class="fas fa-video nav-icon"></i>
@@ -128,40 +113,25 @@ class Navigation {
             </div>
             <div class="nav-submenu" id="navSubmenuProduccion">
               <div class="nav-submenu-item">
-                <a href="/posts" class="nav-link nav-link-sub" data-route="/posts" data-tooltip="Posts">
-                  <span class="nav-text">Posts</span>
-                </a>
-              </div>
-              <div class="nav-submenu-item">
-                <a href="/reels" class="nav-link nav-link-sub" data-route="/reels" data-tooltip="Reels">
-                  <span class="nav-text">Reels</span>
-                </a>
-              </div>
-              <div class="nav-submenu-item">
-                <a href="/cine" class="nav-link nav-link-sub" data-route="/cine" data-tooltip="Cine">
-                  <span class="nav-text">Cine</span>
+                <a href="${p('production')}" class="nav-link nav-link-sub" data-route="${p('production')}" data-tooltip="Producción">
+                  <span class="nav-text">Producción</span>
                 </a>
               </div>
             </div>
           </div>
-
-          <!-- Audiencias -->
           <div class="nav-item">
-            <a href="/audiences" class="nav-link" data-route="/audiences" data-tooltip="Audiencias">
+            <a href="${p('audiences')}" class="nav-link" data-route="${p('audiences')}" data-tooltip="Audiencias">
               <i class="fas fa-users nav-icon"></i>
               <span class="nav-text">Audiencias</span>
             </a>
           </div>
-
-          <!-- Marketing -->
           <div class="nav-item">
-            <a href="/campaigns" class="nav-link" data-route="/campaigns" data-tooltip="Marketing">
+            <a href="${p('marketing')}" class="nav-link" data-route="${p('marketing')}" data-tooltip="Marketing">
               <i class="fas fa-bullhorn nav-icon"></i>
               <span class="nav-text">Marketing</span>
             </a>
           </div>
         </div>
-
       </nav>
     `;
   }
@@ -896,41 +866,36 @@ class Navigation {
       });
     });
 
-    // Event listener para crear nueva organización
     const createOption = dropdownList.querySelector('.nav-org-option.create-org');
     if (createOption) {
       createOption.addEventListener('click', (e) => {
         e.stopPropagation();
-        // TODO: Implementar navegación a crear organización
-        if (window.router) {
-          window.router.navigate('/organization?action=create');
-        }
+        if (window.router) window.router.navigate('/home');
         this.closeAllDropdowns();
       });
     }
 
-    // Event listener para administrar organización
     const manageOption = dropdownList.querySelector('.nav-org-option.manage-org');
     if (manageOption) {
       manageOption.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (window.router) {
-          window.router.navigate('/organization');
-        }
+        const orgId = window.appState && window.appState.getCurrentOrgId();
+        if (orgId && window.router) window.router.navigate(`/org/${orgId}/settings`);
         this.closeAllDropdowns();
       });
     }
   }
 
   /**
-   * Cambiar de organización activa
+   * Cambiar de organización activa. Navega a /org/:newOrgId/living.
    */
   async switchOrganization(organizationId) {
     localStorage.setItem('activeOrganizationId', organizationId);
-    // Recargar información de organización
     await this.loadOrganizationInfo();
-    // Recargar información del usuario para actualizar contexto
     await this.loadUserInfo();
+    if (window.router) {
+      window.router.navigate(`/org/${organizationId}/living`);
+    }
   }
 
   /**
@@ -1032,13 +997,10 @@ class Navigation {
 // Crear instancia global
 window.navigation = new Navigation();
 
-// Función para verificar si la ruta actual requiere navegación
+// Sidebar solo dentro de workspace (/org/:orgId/:module)
 function shouldShowNavigation() {
-  // Usar History API (pathname) en lugar de hash
-  const currentPath = window.location.pathname || '/';
-  const publicRoutes = ['/', '/login', '/planes'];
-  const isPublicRoute = publicRoutes.some(route => currentPath === route || currentPath === route + '/');
-  return !isPublicRoute;
+  const path = window.location.pathname || '/';
+  return /^\/org\/[^/]+\/.+/.test(path);
 }
 
 // Inicializar cuando el DOM esté listo

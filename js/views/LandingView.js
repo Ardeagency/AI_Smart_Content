@@ -192,7 +192,7 @@ class LandingView extends BaseView {
         
         // Redirigir según el resultado
         if (window.router) {
-          window.router.navigate(result.redirectRoute || '/products');
+          window.router.navigate(result.redirectRoute || '/home');
         } else {
           window.location.href = '/products.html';
         }
@@ -237,7 +237,7 @@ class LandingView extends BaseView {
 
       // Redirigir
       if (window.router) {
-        window.router.navigate('/products');
+        window.router.navigate('/home');
       } else {
         window.location.href = '/products.html';
       }

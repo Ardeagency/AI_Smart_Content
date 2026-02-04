@@ -49,13 +49,29 @@ class Router {
    * @param {boolean} options.requiresAuth - Si requiere autenticación
    * @param {boolean} options.redirectIfAuth - Si redirige si ya está autenticado
    */
+  /**
+   * Determina si una ruta es de workspace (/org/:orgId/...)
+   */
+  isWorkspacePath(path) {
+    return /^\/org\/[^/]+\/.+/.test(path);
+  }
+
+  /**
+   * Determina si es la ruta exacta /org/:orgId (sin módulo)
+   */
+  isOrgRootPath(path) {
+    return /^\/org\/[^/]+\/?$/.test(path);
+  }
+
   register(path, viewLoader, options = {}) {
-    if (!viewLoader) return;
-    
+    if (!viewLoader && !options.redirectTo) return;
+
     this.routes[path] = {
-      viewLoader,
-      requiresAuth: options.requiresAuth || false,
-      redirectIfAuth: options.redirectIfAuth || false
+      viewLoader: viewLoader || null,
+      requiresAuth: options.requiresAuth ?? false,
+      redirectIfAuth: options.redirectIfAuth ?? false,
+      layout: options.layout || 'root', // 'root' | 'workspace'
+      redirectTo: options.redirectTo || null // para /org/:orgId → /org/:orgId/living
     };
   }
 
@@ -96,6 +112,15 @@ class Router {
       if (path === '' || path === '/index.html') {
         path = '/';
       }
+
+      // Regla: /org/:orgId exacto → redirigir a /org/:orgId/living (excepto /org/new, que es User Space)
+      if (path !== '/org/new' && this.isOrgRootPath(path)) {
+        const orgId = path.replace(/^\/org\//, '').replace(/\/$/, '');
+        if (orgId) {
+          this.navigate(`/org/${orgId}/living`, true);
+          return;
+        }
+      }
       
       // Buscar ruta exacta primero
       let route = this.routes[path];
@@ -132,6 +157,9 @@ class Router {
         const route404 = this.routes['/404'];
         if (route404) {
           route = route404;
+        } else if (this.routes['/home']) {
+          this.navigate('/home', true);
+          return;
         } else if (this.routes['/']) {
           this.navigate('/', true);
           return;
@@ -139,6 +167,10 @@ class Router {
           return;
         }
       }
+
+      if (route.requiresAuth === undefined) route.requiresAuth = false;
+      if (route.redirectIfAuth === undefined) route.redirectIfAuth = false;
+      if (route.layout === undefined) route.layout = 'root';
 
       if (route.requiresAuth) {
         const isAuth = await this.checkAuthentication();
@@ -151,38 +183,57 @@ class Router {
       if (route.redirectIfAuth) {
         const isAuth = await this.checkAuthentication();
         if (isAuth) {
-          this.navigate('/hogar', true);
+          this.navigate('/home', true);
           return;
         }
       }
 
-      const container = document.getElementById('app-container');
-      if (!container) return;
+      const appContainer = document.getElementById('app-container');
+      if (!appContainer) return;
 
-      // Preparar container para nueva vista
-      if (container) {
-        container.innerHTML = '';
+      const isWorkspaceRoute = this.isWorkspacePath(path);
+      let container;
+
+      if (isWorkspaceRoute && routeParams.orgId) {
+        // --- WORKSPACE: validar org y usar WorkspaceLayout ---
+        if (window.workspaceContext && typeof window.workspaceContext.loadOrganizationContext === 'function') {
+          const ok = await window.workspaceContext.loadOrganizationContext(routeParams.orgId);
+          if (!ok) return;
+        }
+        if (window.workspaceLayout) {
+          if (!window.workspaceLayout.isMounted()) {
+            window.workspaceLayout.mount(appContainer);
+            if (window.navigation) await window.navigation.render();
+          }
+          container = window.workspaceLayout.getContentContainer();
+        }
+        if (!container) container = appContainer;
+      } else {
+        // --- ROOT: desmontar workspace si estaba montado ---
+        if (window.workspaceLayout && window.workspaceLayout.isMounted()) {
+          window.workspaceLayout.unmount();
+        }
+        container = appContainer;
       }
 
-      // Remover clases de animación
-      if (container) {
-        container.classList.remove('view-leave', 'view-enter');
+      if (!container) return;
+
+      container.innerHTML = '';
+      container.classList.remove('view-leave', 'view-enter');
+
+      if (!route.viewLoader) {
+        this.updateNavigation();
+        window.dispatchEvent(new CustomEvent('routechange', { detail: { path } }));
+        return;
       }
 
       // Cargar clase de vista (puede ser lazy loading)
       let ViewClass;
-      
-      // Verificar si es una función async o una función que retorna una promesa (lazy loading)
       if (typeof route.viewLoader === 'function') {
-        // Verificar si es una clase (constructor) o una función de lazy loading
-        // Las clases tienen prototype.constructor === themselves
         const isClass = route.viewLoader.prototype && route.viewLoader.prototype.constructor === route.viewLoader;
-        
         if (isClass) {
-          // Es una clase directa, usar directamente
           ViewClass = route.viewLoader;
         } else {
-          // Es una función de lazy loading, ejecutarla
           const result = await route.viewLoader();
           ViewClass = result.default || result;
         }
@@ -195,21 +246,15 @@ class Router {
         return;
       }
 
-      // Siempre crear nueva instancia - sin caché
       this.currentView = new ViewClass();
       this.currentRoute = path;
-      
-      if (Object.keys(routeParams).length > 0) {
-        this.currentView.routeParams = routeParams;
-      }
+      this.currentView.routeParams = routeParams || {};
+      this.currentView.container = container;
 
-      if (container) {
-        container.classList.add('view-enter');
-      }
+      container.classList.add('view-enter');
 
-      // Renderizar la vista (esto llamará a init() y onEnter() internamente)
       await this.currentView.render();
-      
+
       this.updateNavigation();
       window.dispatchEvent(new CustomEvent('routechange', { detail: { path } }));
     } catch (error) {
@@ -269,17 +314,13 @@ class Router {
       link.classList.remove('active');
       const href = link.getAttribute('href');
       
-      // Comparar href con pathname actual
       if (href) {
-        // Normalizar href (puede ser '#/ruta', '/ruta', o 'ruta.html')
-        let linkPath = href.replace('#', '').replace('.html', '');
-        if (!linkPath.startsWith('/')) {
-          linkPath = '/' + linkPath;
-        }
+        let linkPath = href.replace('#', '').replace('.html', '').split('?')[0];
+        if (!linkPath.startsWith('/')) linkPath = '/' + linkPath;
         
-        // Comparar paths
-        if (linkPath === currentPath || 
-            (linkPath === '/' && currentPath === '/')) {
+        if (linkPath === currentPath ||
+            (linkPath === '/' && currentPath === '/') ||
+            (linkPath === '/home' && currentPath === '/')) {
           link.classList.add('active');
         }
       }

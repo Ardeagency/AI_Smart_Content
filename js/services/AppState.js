@@ -191,6 +191,65 @@ class AppState {
   getAll() {
     return { ...this.state };
   }
+
+  // --- Workspace First: estado de usuario y organización activa ---
+
+  /**
+   * Establecer usuario actual (persistente para sesión)
+   * @param {Object|null} user - Objeto usuario de Supabase auth o null para limpiar
+   */
+  setCurrentUser(user) {
+    this.set('currentUser', user, true);
+  }
+
+  /**
+   * Obtener usuario actual
+   * @returns {Object|null}
+   */
+  getCurrentUser() {
+    return this.get('currentUser');
+  }
+
+  /**
+   * Establecer organización activa (workspace)
+   * @param {Object|null} org - { id, name, ... } o null para salir del workspace
+   */
+  setCurrentOrganization(org) {
+    this.set('currentOrganization', org, true);
+  }
+
+  /**
+   * Obtener organización activa
+   * @returns {Object|null}
+   */
+  getCurrentOrganization() {
+    return this.get('currentOrganization');
+  }
+
+  /**
+   * Obtener ID de la organización activa (para navegación)
+   * @returns {string|null}
+   */
+  getCurrentOrgId() {
+    const org = this.get('currentOrganization');
+    return org ? (org.id || org.organization_id || null) : null;
+  }
+
+  /**
+   * Limpiar contexto de workspace (al cerrar sesión o salir a root)
+   */
+  clearWorkspaceContext() {
+    this.set('currentOrganization', null, true);
+    this.cacheClear();
+  }
+
+  /**
+   * Limpiar todo el estado de sesión (logout)
+   */
+  clearSession() {
+    this.set('currentUser', null, true);
+    this.clearWorkspaceContext();
+  }
 }
 
 // Crear instancia global

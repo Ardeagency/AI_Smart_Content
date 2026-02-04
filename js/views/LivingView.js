@@ -68,22 +68,21 @@ class LivingView extends BaseView {
   setupRouterLinks() {
     const productsLinks = this.querySelectorAll('a[href*="products"]');
     const studioLinks = this.querySelectorAll('a[href*="studio"]');
+    const orgId = (this.routeParams && this.routeParams.orgId) || (window.appState && window.appState.getCurrentOrgId());
 
     productsLinks.forEach(link => {
       this.addEventListener(link, 'click', (e) => {
         e.preventDefault();
-        if (window.router) {
-          window.router.navigate('/products');
-        }
+        if (window.workspaceContext) window.workspaceContext.navigateToModule('entities', orgId);
+        else if (orgId && window.router) window.router.navigate(`/org/${orgId}/entities`);
       });
     });
 
     studioLinks.forEach(link => {
       this.addEventListener(link, 'click', (e) => {
         e.preventDefault();
-        if (window.router) {
-          window.router.navigate('/studio');
-        }
+        if (window.workspaceContext) window.workspaceContext.navigateToModule('production', orgId);
+        else if (orgId && window.router) window.router.navigate(`/org/${orgId}/production`);
       });
     });
   }

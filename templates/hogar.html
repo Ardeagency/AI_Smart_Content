@@ -30,15 +30,36 @@
 </header>
 
 <div class="hogar-container">
+    <!-- User Control Gateway: identidad + accesos (sin contexto org) -->
+    <div class="hogar-user-hub">
+        <a href="/account/profile" class="hogar-hub-link" data-route="/account/profile">
+            <i class="fas fa-user"></i>
+            <span>Perfil</span>
+        </a>
+        <a href="/org/new" class="hogar-hub-link" data-route="/org/new">
+            <i class="fas fa-plus"></i>
+            <span>Crear organización</span>
+        </a>
+        <a href="/invitations" class="hogar-hub-link" data-route="/invitations">
+            <i class="fas fa-envelope"></i>
+            <span>Invitaciones</span>
+        </a>
+    </div>
     <div class="hogar-header">
         <div class="hogar-header-content">
             <h1 class="hogar-title">Mis Organizaciones</h1>
-            <p class="hogar-subtitle">Gestiona tus organizaciones y accede a todas tus marcas</p>
+            <p class="hogar-subtitle">Elige una organización para entrar al workspace</p>
         </div>
         <button class="btn btn-primary btn-create-org" id="createOrgBtn">
             <i class="fas fa-plus"></i>
             Nueva Organización
         </button>
+    </div>
+
+    <!-- Loading State -->
+    <div class="hogar-loading" id="hogarLoading">
+        <div class="loading-spinner"></div>
+        <p>Cargando organizaciones...</p>
     </div>
 
     <!-- Empty State -->
