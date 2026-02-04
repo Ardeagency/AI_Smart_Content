@@ -49,7 +49,8 @@ body.sidebar-collapsed .product-detail-container {
     grid-template-columns: 1fr 1fr;
     gap: 3rem;
     padding: 3rem;
-    max-width: 1600px;
+    width: 100%;
+    max-width: min(1920px, 100%);
     margin: 0 auto;
     height: calc(100vh - 48px);
     overflow: hidden;

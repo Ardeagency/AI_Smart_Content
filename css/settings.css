@@ -2,7 +2,8 @@
 .settings-container {
     min-height: calc(100vh - 48px);
     padding: 2rem;
-    max-width: 1200px;
+    width: 100%;
+    max-width: min(1920px, 100%);
     margin: 0 auto;
     margin-left: var(--nav-width, 250px);
     transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);

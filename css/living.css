@@ -76,13 +76,14 @@ body.sidebar-collapsed .living-container {
    ============================================ */
 .living-hero-section {
     padding: 4rem 4rem 5rem;
-    max-width: 1800px;
+    width: 100%;
+    max-width: min(1920px, 100%);
     margin: 0 auto;
-    /* Aire alrededor, no full-width */
 }
 
 .living-hero-container {
-    max-width: 1200px; /* Más estrecho para dar aire */
+    width: 100%;
+    max-width: min(1400px, 100%);
     margin: 0 auto;
     /* El contenedor respira */
 }
@@ -830,7 +831,7 @@ body.sidebar-collapsed .living-container {
    ============================================ */
 .living-categories-section {
     padding: 0 4rem var(--living-spacing-section);
-    max-width: 1800px;
+    max-width: min(1920px, 100%);
     margin: 0 auto;
 }
 
@@ -878,7 +879,7 @@ body.sidebar-collapsed .living-container {
    ============================================ */
 .living-content-section {
     padding: 0 4rem var(--living-spacing-section);
-    max-width: 1800px;
+    max-width: min(1920px, 100%);
     margin: 0 auto;
 }
 
