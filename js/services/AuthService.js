@@ -233,7 +233,7 @@ class AuthService {
    * Determinar ruta de redirección basado en el estado del usuario
    */
   async determineRedirectRoute(userId) {
-    if (!this.supabase || !userId) return '/form-record';
+    if (!this.supabase || !userId) return '/home';
 
     try {
       // Verificar si completó el formulario
@@ -244,13 +244,13 @@ class AuthService {
         .single();
 
       if (!userData || userData.form_verified !== true) {
-        return '/form-record';
+        return '/onboarding';
       }
 
-      return '/living';
+      return '/home';
     } catch (error) {
       console.error('Error determinando ruta:', error);
-      return '/form-record';
+      return '/home';
     }
   }
 
@@ -326,7 +326,7 @@ class AuthService {
       const { data, error } = await this.supabase.auth.signInWithOAuth({
         provider: provider,
         options: {
-          redirectTo: `${window.location.origin}/#/living`
+          redirectTo: `${window.location.origin}/home`
         }
       });
 
@@ -355,7 +355,7 @@ class AuthService {
 
     try {
       const { error } = await this.supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/#/login`
+          redirectTo: `${window.location.origin}/login`
       });
 
       if (error) {

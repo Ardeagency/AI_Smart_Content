@@ -408,16 +408,13 @@ class AuthManager {
                 .eq('id', userId)
                 .single();
 
-            // Si no completó el formulario, siempre redirigir al formulario
             if (!userData || userData.form_verified !== true) {
-                return 'form-record.html';
+                return '/onboarding';
             }
-
-            // Si completó el formulario, ir al living
-            return 'living.html';
+            return '/home';
         } catch (error) {
             console.error('Error determining redirect:', error);
-            return 'form-record.html';
+            return '/home';
         }
     }
 

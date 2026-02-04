@@ -26,28 +26,19 @@
     opacity: 0.9;
 }
 
+/* Home = User Space, sin sidebar: no margin-left ni padding-left extra */
 .hogar-container {
     min-height: calc(100vh - 48px);
     padding: 2rem;
     width: 100%;
     max-width: min(1920px, 100%);
     margin: 0 auto;
-    margin-left: var(--nav-width, 250px);
-    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     background: #0E1012;
     padding-top: calc(48px + 2rem);
 }
 
-/* Cuando el sidebar está colapsado */
-.side-navigation.collapsed ~ * .hogar-container,
-body.sidebar-collapsed .hogar-container {
-    margin-left: var(--nav-width-collapsed, 60px);
-}
-
-/* En móvil, el sidebar se oculta y el contenido ocupa todo el ancho */
 @media (max-width: 768px) {
     .hogar-container {
-        margin-left: 0;
         padding: 1rem;
         padding-top: calc(48px + 1rem);
     }
