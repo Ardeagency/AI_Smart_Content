@@ -307,14 +307,15 @@
     display: flex;
 }
 
-/* Modal login: tamaño pequeño fijo y tema oscuro como el resto de la plataforma */
+/* Modal login: tamaño pequeño fijo (como en commit ce5eeb81) y tema oscuro */
 .login-card {
     background: var(--bg-card, #1C1F26);
     border: 1px solid var(--border-color, rgba(42, 47, 58, 0.4));
     border-radius: 16px;
     padding: 2.5rem;
-    max-width: 420px;
-    width: 90%;
+    width: 420px;
+    max-width: calc(100vw - 2rem);
+    flex: 0 0 auto;
     box-shadow: var(--shadow-floating, 0 12px 32px rgba(0, 0, 0, 0.5));
     animation: modalSlideIn 0.3s ease-out;
     position: relative;
@@ -342,7 +343,7 @@
 .login-header h2 {
     font-size: 1.5rem;
     font-weight: 600;
-    color: #1e293b;
+    color: var(--text-primary, #F2F3F5);
     margin: 0;
 }
 
@@ -350,7 +351,7 @@
 .modal-close {
     background: transparent;
     border: none;
-    color: #64748b;
+    color: var(--text-muted, rgba(242, 243, 245, 0.5));
     font-size: 1.5rem;
     cursor: pointer;
     padding: 0.25rem;
@@ -538,7 +539,7 @@
 @media (max-width: 768px) {
     .login-card {
         padding: 2rem 1.5rem;
-        width: 90%;
+        width: 100%;
         max-width: 420px;
     }
 
