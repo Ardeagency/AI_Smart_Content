@@ -169,7 +169,7 @@ class Navigation {
             <div class="user-dropdown-email" id="userDropdownEmail">usuario@email.com</div>
           </div>
           <div class="user-dropdown-divider"></div>
-          <a href="/settings" class="user-dropdown-item">
+          <a href="${this.currentOrgId ? `/org/${this.currentOrgId}/settings` : '/settings'}" class="user-dropdown-item">
             <i class="fas fa-cog"></i>
             <span>Configuración</span>
           </a>
@@ -220,7 +220,7 @@ class Navigation {
             <div class="user-dropdown-email" id="userDropdownEmail">usuario@email.com</div>
           </div>
           <div class="user-dropdown-divider"></div>
-          <a href="/settings" class="user-dropdown-item">
+          <a href="${this.currentOrgId ? `/org/${this.currentOrgId}/settings` : '/settings'}" class="user-dropdown-item">
             <i class="fas fa-cog"></i>
             <span>Configuración</span>
           </a>

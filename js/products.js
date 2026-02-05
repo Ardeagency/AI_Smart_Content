@@ -714,13 +714,22 @@ if (typeof window.ProductsManager === 'undefined') {
             </div>
         `;
 
-        // Event listener para click en la card - navegar al detalle
+        // Event listener para click en la card - navegar al detalle (respetar contexto org si aplica)
         card.addEventListener('click', (e) => {
             e.stopPropagation();
+            const path = window.location.pathname || '';
+            const orgMatch = path.match(/^\/org\/([^/]+)/);
+            const brandId = product.brand_container_id || this.brandContainerId;
             if (window.router) {
-                window.router.navigate(`/products/${product.id}`);
+                if (orgMatch && brandId) {
+                    window.router.navigate(`/org/${orgMatch[1]}/product-detail/${brandId}/${product.id}`);
+                } else {
+                    window.router.navigate(`/products/${product.id}`);
+                }
             } else {
-                window.location.href = `/products/${product.id}`;
+                window.location.href = orgMatch && brandId
+                    ? `/org/${orgMatch[1]}/product-detail/${brandId}/${product.id}`
+                    : `/products/${product.id}`;
             }
         });
 

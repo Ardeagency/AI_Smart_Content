@@ -1937,13 +1937,13 @@ class DevBuilderView extends BaseView {
       const filePath = `flow-images/${fileName}`;
       
       const { data, error } = await this.supabase.storage
-        .from('flow-assets')
+        .from('production-inputs')
         .upload(filePath, file, { upsert: true });
       
       if (error) throw error;
       
       const { data: urlData } = this.supabase.storage
-        .from('flow-assets')
+        .from('production-inputs')
         .getPublicUrl(filePath);
       
       this.flowData.flow_image_url = urlData.publicUrl;

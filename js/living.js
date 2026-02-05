@@ -1080,6 +1080,7 @@ class LivingManager {
         if (videos.length === 0 && images.length === 0 && texts.length === 0) {
             videosContainer.innerHTML = '';
             imagesContainer.innerHTML = this.renderEmptyState();
+            this.setupEmptyStateCta(imagesContainer);
             return;
         }
         
@@ -1110,6 +1111,7 @@ class LivingManager {
         const allVisualItems = [...images, ...texts];
         if (allVisualItems.length === 0) {
             imagesContainer.innerHTML = this.renderEmptyState();
+            this.setupEmptyStateCta(imagesContainer);
         } else {
             imagesContainer.innerHTML = allVisualItems.map((item, index) => {
                 if (item.contentType === 'text') {
@@ -1215,11 +1217,27 @@ class LivingManager {
                 <p class="living-history-empty-description">
                     Cuando ejecutes flujos y generes contenido, aquí quedará registrado todo tu trabajo creativo.
                 </p>
-                <a href="#" class="living-history-empty-cta" onclick="if(window.router){window.router.navigate('/production');return false;}">
+                <a href="#" class="living-history-empty-cta" data-living-empty-cta="studio">
                     Ir a Producción
                 </a>
             </div>
         `;
+    }
+
+    /**
+     * Configura el botón "Ir a Producción" del estado vacío (navega a Studio con contexto org si aplica)
+     */
+    setupEmptyStateCta(container) {
+        if (!container) return;
+        const cta = container.querySelector('[data-living-empty-cta="studio"]');
+        if (!cta || !window.router) return;
+        cta.addEventListener('click', (e) => {
+            e.preventDefault();
+            const path = window.location.pathname || '';
+            const base = path.startsWith('/org/') ? path.split('/').slice(0, 3).join('/') : '';
+            const studioPath = base ? `${base}/studio` : '/studio';
+            window.router.navigate(studioPath);
+        });
     }
 
     setupHistoryCardListeners(container, type) {

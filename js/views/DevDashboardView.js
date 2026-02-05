@@ -240,7 +240,13 @@ class DevDashboardView extends BaseView {
       if (stats) {
         this.stats = stats;
       } else {
-        // Calcular estadísticas manualmente
+        // Calcular estadísticas manualmente (dos pasos para .in() con array, evita "object is not iterable")
+        const { data: flowIds } = await this.supabase
+          .from('content_flows')
+          .select('id')
+          .eq('owner_id', this.userId);
+        const ids = Array.isArray(flowIds) ? flowIds.map(f => f.id) : [];
+
         const [flowsResult, publishedResult, runsResult] = await Promise.all([
           this.supabase
             .from('content_flows')
@@ -251,17 +257,19 @@ class DevDashboardView extends BaseView {
             .select('*', { count: 'exact', head: true })
             .eq('owner_id', this.userId)
             .eq('status', 'published'),
-          this.supabase
-            .from('flow_runs')
-            .select('*', { count: 'exact', head: true })
-            .in('flow_id', this.supabase.from('content_flows').select('id').eq('owner_id', this.userId))
-            .eq('status', 'completed')
+          ids.length > 0
+            ? this.supabase
+                .from('flow_runs')
+                .select('*', { count: 'exact', head: true })
+                .in('flow_id', ids)
+                .eq('status', 'completed')
+            : Promise.resolve({ count: 0 })
         ]);
 
         this.stats = {
-          total_flows_created: flowsResult.count || 0,
-          total_published_flows: publishedResult.count || 0,
-          total_successful_runs: runsResult.count || 0,
+          total_flows_created: flowsResult.count ?? 0,
+          total_published_flows: publishedResult.count ?? 0,
+          total_successful_runs: (runsResult && runsResult.count != null) ? runsResult.count : 0,
           avg_flow_rating: 0
         };
       }

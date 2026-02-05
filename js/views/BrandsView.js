@@ -1575,13 +1575,13 @@ class BrandsView extends BaseView {
       const filePath = `brands/${this.brandContainerData.id}/${fileName}`;
 
       const { error: uploadError } = await this.supabase.storage
-        .from('brand-assets')
+        .from('brand-core')
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = this.supabase.storage
-        .from('brand-assets')
+        .from('brand-core')
         .getPublicUrl(filePath);
 
       await this.saveContainerField('logo_url', publicUrl);
@@ -1603,13 +1603,13 @@ class BrandsView extends BaseView {
       const filePath = `brands/${this.brandContainerData.id}/assets/${fileName}`;
 
       const { error: uploadError } = await this.supabase.storage
-        .from('brand-assets')
+        .from('brand-core')
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = this.supabase.storage
-        .from('brand-assets')
+        .from('brand-core')
         .getPublicUrl(filePath);
 
       // Crear registro en brand_assets

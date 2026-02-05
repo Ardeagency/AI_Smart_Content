@@ -1131,7 +1131,7 @@ class FormRecord {
                     console.log('📤 Subiendo archivo:', file.name, 'a', fileName);
 
                 const { data: uploadData, error: uploadError } = await this.supabase.storage
-                    .from('brand-files')
+                    .from('brand-core')
                         .upload(fileName, file, {
                             contentType: file.type,
                             cacheControl: '3600'
@@ -1145,7 +1145,7 @@ class FormRecord {
                     console.log('✅ Archivo subido:', file.name);
 
                     const { data: { publicUrl } } = this.supabase.storage
-                        .from('brand-files')
+                        .from('brand-core')
                         .getPublicUrl(fileName);
 
                     console.log('🔗 URL pública:', publicUrl);

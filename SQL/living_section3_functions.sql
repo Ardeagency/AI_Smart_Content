@@ -1,6 +1,15 @@
 -- ============================================
--- FUNCIONES SQL PARA SECCIÓN 3: TRÁFICO Y CONTROL DE PRODUCCIÓN
--- Living Dashboard - Data Layer
+-- FUNCIONES SQL - SECCIÓN 3: TRÁFICO Y CONTROL DE PRODUCCIÓN
+-- Living Dashboard (usuario consumidor)
+-- ============================================
+--
+-- CONTEXTO: Este archivo es SOLO para el usuario consumidor (Living).
+-- No incluye lógica de desarrolladores (PaaS): developer_logs, developer_stats,
+-- flow_collaborators, flow_technical_details, etc.
+--
+-- Tablas usadas (según schema.sql):
+--   flow_runs, flow_outputs, brands, brand_containers, brand_entities,
+--   campaigns, organizations, organization_members, users
 -- ============================================
 
 -- ============================================
@@ -155,6 +164,7 @@ $$;
 
 -- ============================================
 -- 4️⃣ HISTORIAL DE ACTIVIDAD (TIMELINE)
+-- Un día por entrada; días sin actividad con count 0 (alineado con schema: flow_runs)
 -- ============================================
 CREATE OR REPLACE FUNCTION get_activity_timeline(
     p_brand_id UUID,
@@ -170,51 +180,37 @@ DECLARE
 BEGIN
     v_start_date := CURRENT_DATE - (p_days - 1);
 
-    -- Agrupar por día y contar ejecuciones
+    -- Base: un día por cada fecha en el rango; LEFT JOIN con conteo real por día
     SELECT jsonb_build_object(
         'days', p_days,
         'start_date', v_start_date,
         'end_date', CURRENT_DATE,
-        'timeline', jsonb_agg(
-            jsonb_build_object(
-                'date', activity_date,
-                'count', run_count
-            )
-            ORDER BY activity_date
+        'timeline', COALESCE(
+            (
+                SELECT jsonb_agg(
+                    jsonb_build_object(
+                        'date', d.activity_date,
+                        'count', COALESCE(agg.run_count, 0)
+                    )
+                    ORDER BY d.activity_date
+                )
+                FROM generate_series(v_start_date, CURRENT_DATE, '1 day'::INTERVAL)::DATE AS d(activity_date)
+                LEFT JOIN (
+                    SELECT DATE(fr.created_at) AS activity_date,
+                           COUNT(*)::INTEGER AS run_count
+                    FROM flow_runs fr
+                    WHERE fr.brand_id = p_brand_id
+                      AND DATE(fr.created_at) >= v_start_date
+                      AND DATE(fr.created_at) <= CURRENT_DATE
+                    GROUP BY DATE(fr.created_at)
+                ) agg ON agg.activity_date = d.activity_date
+            ),
+            jsonb_build_array()
         )
     )
-    INTO v_result
-    FROM (
-        SELECT 
-            DATE(fr.created_at) as activity_date,
-            COUNT(*) as run_count
-        FROM flow_runs fr
-        WHERE fr.brand_id = p_brand_id
-            AND DATE(fr.created_at) >= v_start_date
-        GROUP BY DATE(fr.created_at)
-        
-        UNION ALL
-        
-        -- Rellenar días sin actividad con 0
-        SELECT 
-            generate_series(v_start_date, CURRENT_DATE, '1 day'::INTERVAL)::DATE as activity_date,
-            0 as run_count
-        WHERE NOT EXISTS (
-            SELECT 1 
-            FROM flow_runs fr2
-            WHERE fr2.brand_id = p_brand_id
-                AND DATE(fr2.created_at) = generate_series(v_start_date, CURRENT_DATE, '1 day'::INTERVAL)::DATE
-        )
-    ) timeline_data
-    GROUP BY activity_date
-    ORDER BY activity_date;
+    INTO v_result;
 
-    RETURN COALESCE(v_result, jsonb_build_object(
-        'days', p_days,
-        'start_date', v_start_date,
-        'end_date', CURRENT_DATE,
-        'timeline', jsonb_build_array()
-    ));
+    RETURN v_result;
 END;
 $$;
 
@@ -601,4 +597,11 @@ COMMENT ON FUNCTION get_production_by_user IS 'Retorna distribución de producci
 COMMENT ON FUNCTION get_user_content_specialization IS 'Retorna especialización de contenido por usuario (qué tipo produce cada uno)';
 COMMENT ON FUNCTION get_user_flow_usage IS 'Retorna uso de flujos/herramientas por usuario';
 COMMENT ON FUNCTION get_team_activity_status IS 'Retorna estado de actividad del equipo (activos hoy/semana/inactivos)';
-COMMENT ON FUNCTION get_team_living_overview IS 'Función agregada que retorna overview completo del equipo para Living dashboard';
+COMMENT ON FUNCTION get_team_living_overview IS 'Función agregada que retorna overview completo del equipo para Living dashboard (usuario consumidor)';
+
+-- ============================================
+-- NOTA: Parámetros de marca
+-- ============================================
+-- Las funciones que reciben p_brand_id esperan brands.id (FK en flow_runs, campaigns).
+-- get_top_produced_entity recibe p_brand_container_id (brand_containers.id).
+-- El frontend (living.js) obtiene ambos: brandId desde brands.id, brandContainerId desde brand_containers.id.

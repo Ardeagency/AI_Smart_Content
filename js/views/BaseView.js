@@ -194,8 +194,12 @@ class BaseView {
       return Promise.resolve();
     }
 
+    // Usar ruta absoluta para que funcione en rutas profundas (ej: /org/:id/living)
+    // Si no, js/living.js se resuelve a /org/:id/js/living.js y el servidor devuelve HTML → SyntaxError
+    const resolvedSrc = scriptSrc.startsWith('http') ? scriptSrc : (scriptSrc.startsWith('/') ? scriptSrc : '/' + scriptSrc);
+
     // Verificar si el script ya está cargado en el DOM
-    const existingScript = document.querySelector(`script[src="${scriptSrc}"]`);
+    const existingScript = document.querySelector(`script[src="${resolvedSrc}"]`) || document.querySelector(`script[src="${scriptSrc}"]`);
     if (existingScript) {
       // El script ya está en el DOM, esperar a que la variable global esté disponible
       if (globalVar) {
@@ -229,10 +233,10 @@ class BaseView {
       return Promise.resolve();
     }
 
-    // El script no está cargado, cargarlo
+    // El script no está cargado, cargarlo con URL absoluta
     return new Promise((resolve, reject) => {
       const script = document.createElement('script');
-      script.src = scriptSrc;
+      script.src = resolvedSrc;
       
       script.onload = () => {
         if (globalVar) {
@@ -616,9 +620,11 @@ class BaseView {
       profileItem.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        // TODO: Navegar a perfil de usuario
         if (window.router) {
-          window.router.navigate('/settings?tab=profile');
+          const path = window.location.pathname || '';
+          const orgMatch = path.match(/^\/org\/([^/]+)/);
+          const settingsPath = orgMatch ? `/org/${orgMatch[1]}/settings?tab=profile` : '/settings?tab=profile';
+          window.router.navigate(settingsPath);
         }
         headerUserDropdown.classList.remove('open');
       });
