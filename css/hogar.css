@@ -136,13 +136,13 @@
     transition: transform 0.25s ease, box-shadow 0.25s ease;
     border-radius: var(--org-card-radius);
     border: 1px solid rgba(255, 255, 255, 0.06);
-    /* Drop shadow para profundidad tipo carpeta */
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.25);
+    /* Drop shadow (reducido 10% en borde inferior para consistencia con header) */
+    box-shadow: 0 7px 22px rgba(0, 0, 0, 0.36), 0 2px 6px rgba(0, 0, 0, 0.22);
 }
 
 .org-card.org-card-folder:hover {
     transform: translateY(-3px);
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(224, 145, 69, 0.12);
+    box-shadow: 0 14px 42px rgba(0, 0, 0, 0.45), 0 4px 10px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(224, 145, 69, 0.12);
 }
 
 /* ----- 1. VOLUMETRIC / GLASS GRADIENT (fintech / iOS premium) ----- */
@@ -232,7 +232,7 @@
     box-shadow: 0 6px 20px rgba(224, 145, 69, 0.4);
 }
 
-/* Kebab: glass opacity 0.35, backdrop blur (accesibilidad) */
+/* Kebab: glass más opaco + borde para contraste sobre highlight (ERROR 4) */
 .org-card-kebab {
     position: absolute;
     top: 12px;
@@ -241,7 +241,7 @@
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    border: none;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     background: rgba(255, 255, 255, 0.35);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -250,12 +250,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.2s, color 0.2s;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
 
 .org-card-kebab:hover {
-    background: rgba(255, 255, 255, 0.45);
+    background: rgba(255, 255, 255, 0.5);
     color: #fff;
+    border-color: rgba(255, 255, 255, 0.15);
 }
 
 /* ----- 2. BODY con folder tab notch | overlap 12-16px, sombra interna ----- */
@@ -295,7 +296,8 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 2px;
+    /* Título → 8px → Badge (ERROR 6: agrupar semánticamente) */
+    margin-bottom: 8px;
 }
 
 .org-card-name {
@@ -381,6 +383,7 @@
     height: 100%;
     border-radius: 999px;
     background: linear-gradient(90deg, var(--accent-warm, #e09145), #c97b38);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1);
     transition: width 0.3s ease;
 }
 
@@ -429,10 +432,10 @@
     color: var(--text-secondary, #a0a0a0);
 }
 
-/* Last production: 12-13px, opacity 0.6 */
+/* Empty state: contraste legible pero secundario (ERROR 8: opacity 0.65) */
 .org-card-activity {
     font-size: 12px;
-    opacity: 0.6;
+    opacity: 0.65;
     color: var(--text-secondary, #a0a0a0);
     margin-top: auto;
     padding-top: 4px;
