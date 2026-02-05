@@ -630,7 +630,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     transform: scale(1.05);
 }
 
-/* Circulito eliminar: sobresale ligeramente en la esquina derecha del swatch */
+/* Circulito eliminar: solo visible al hover del swatch; sobresale en la esquina derecha */
 .color-delete-btn {
     position: absolute;
     top: -4px;
@@ -649,8 +649,15 @@ h1.brand-name-large[contenteditable="true"]:hover,
     align-items: center;
     justify-content: center;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-    transition: transform 0.15s ease, background 0.15s ease;
+    transition: opacity 0.2s ease, transform 0.15s ease, background 0.15s ease;
     z-index: 2;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.color-swatch:hover .color-delete-btn {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .color-delete-btn:hover {
