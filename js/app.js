@@ -24,18 +24,8 @@ class App {
       this.initRouter();
       this.registerRoutes();
 
-      if (window.router) {
-        setTimeout(() => {
-          if (Object.keys(window.router.routes).length > 0) {
-            window.router.handleRoute();
-          } else {
-            setTimeout(() => {
-              if (Object.keys(window.router.routes).length > 0) {
-                window.router.handleRoute();
-              }
-            }, 500);
-          }
-        }, 200);
+      if (window.router && Object.keys(window.router.routes).length > 0) {
+        window.router.handleRoute();
       }
 
       this.initialized = true;

@@ -15,6 +15,9 @@ class OutputGenerator {
      * @returns {Promise<void>}
      */
     async generateContent() {
+        if (window.appLoader && typeof window.appLoader.showSpinner === 'function') {
+            window.appLoader.showSpinner();
+        }
         try {
             // Recolectar todos los datos
             console.log('📦 Recolectando datos del sidebar...');
@@ -91,31 +94,10 @@ class OutputGenerator {
         } catch (error) {
             console.error('Error generando contenido:', error);
             this.showNotification('Error al procesar: ' + error.message, 'error');
-        }
-    }
-
-    /**
-     * Mostrar estado de carga en el output container
-     */
-    showLoadingState() {
-        const outputContainer = document.querySelector('.output-container');
-        if (outputContainer) {
-            outputContainer.innerHTML = `
-                <div class="loading-state">
-                    <div class="loading-spinner"></div>
-                    <p>Generando contenido...</p>
-                </div>
-            `;
-        }
-    }
-
-    /**
-     * Ocultar estado de carga
-     */
-    hideLoadingState() {
-        const outputContainer = document.querySelector('.output-container');
-        if (outputContainer && outputContainer.querySelector('.loading-state')) {
-            outputContainer.innerHTML = '';
+        } finally {
+            if (window.appLoader && typeof window.appLoader.hideSpinner === 'function') {
+                window.appLoader.hideSpinner();
+            }
         }
     }
 
@@ -360,6 +342,7 @@ class OutputGenerator {
                 return;
             }
 
+            if (window.appLoader && typeof window.appLoader.showSpinner === 'function') window.appLoader.showSpinner();
             this.showNotification('Reajustando guion...', 'info');
 
             // Recolectar todos los datos originales
@@ -393,6 +376,8 @@ class OutputGenerator {
         } catch (error) {
             console.error('Error reajustando guion:', error);
             this.showNotification('Error al procesar: ' + error.message, 'error');
+        } finally {
+            if (window.appLoader && typeof window.appLoader.hideSpinner === 'function') window.appLoader.hideSpinner();
         }
     }
 
@@ -410,6 +395,7 @@ class OutputGenerator {
                 return;
             }
 
+            if (window.appLoader && typeof window.appLoader.showSpinner === 'function') window.appLoader.showSpinner();
             this.showNotification('Generando escenas...', 'info');
 
             // Recolectar todos los datos originales
@@ -444,6 +430,8 @@ class OutputGenerator {
         } catch (error) {
             console.error('Error generando escenas:', error);
             this.showNotification('Error al procesar: ' + error.message, 'error');
+        } finally {
+            if (window.appLoader && typeof window.appLoader.hideSpinner === 'function') window.appLoader.hideSpinner();
         }
     }
 }

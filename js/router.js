@@ -31,14 +31,7 @@ class Router {
     // Usar History API en lugar de hash-based routing
     // Escuchar cambios en el historial (botones atrás/adelante)
     window.addEventListener('popstate', () => this.handleRoute());
-    
-    // Manejar ruta inicial cuando se carga la página
-    window.addEventListener('load', () => this.handleRoute());
-    
-    // Manejar ruta inicial si no hay evento load
-    if (document.readyState === 'complete') {
-      this.handleRoute();
-    }
+    // Ruta inicial la dispara app.init() una sola vez para evitar doble render y parpadeo
   }
 
   /**
@@ -226,6 +219,10 @@ class Router {
         window.errorHandler.showError(error, 'Error cargando la página. Por favor, recarga.');
       } else {
         this.showError('Error cargando la página. Por favor, recarga.');
+      }
+    } finally {
+      if (window.appLoader && typeof window.appLoader.hideSpinner === 'function') {
+        window.appLoader.hideSpinner();
       }
     }
   }
