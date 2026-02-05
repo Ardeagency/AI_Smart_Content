@@ -1,0 +1,13 @@
+---
+description: Tras completar cada solicitud del usuario, hacer commit y push con permisos completos
+alwaysApply: true
+---
+
+# Git: commit y push al terminar
+
+Después de terminar cualquier tarea o cambio solicitado por el usuario:
+
+1. **Commit**: Hacer `git add -A` y `git commit` con un mensaje claro y descriptivo del cambio.
+2. **Push**: Ejecutar `git push origin main` (o la rama actual) con **permisos completos** (`required_permissions: ["all"]`) para que las credenciales funcionen.
+
+No preguntar si quiere hacer push; hacerlo siempre como parte del cierre de la solicitud.
