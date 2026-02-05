@@ -380,89 +380,6 @@
     color: var(--text-primary, #ecebda);
 }
 
-/* ==========================================
-   Selector de Modo (SaaS vs PaaS)
-   ========================================== */
-.hogar-mode-selector {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2.5rem;
-}
-
-.mode-card {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1.25rem 1.5rem;
-    background: #121416;
-    border: 2px solid #1B1D1F;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.mode-card:hover {
-    border-color: var(--accent-warm, #e09145);
-    transform: translateY(-2px);
-}
-
-.mode-card.active {
-    border-color: var(--accent-warm, #e09145);
-    background: rgba(224, 145, 69, 0.05);
-}
-
-.mode-card-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    flex-shrink: 0;
-    transition: all 0.3s ease;
-}
-
-.mode-card.mode-saas .mode-card-icon {
-    background: linear-gradient(135deg, var(--accent-warm, #e09145), #f97316);
-    color: white;
-}
-
-.mode-card.mode-paas .mode-card-icon {
-    background: linear-gradient(135deg, #7c3aed, #8b5cf6);
-    color: white;
-}
-
-.mode-card-content {
-    flex: 1;
-    min-width: 0;
-}
-
-.mode-card-content h3 {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--text-primary, #ecebda);
-    margin: 0 0 0.25rem 0;
-}
-
-.mode-card-content p {
-    font-size: 0.875rem;
-    color: var(--text-secondary, #a0a0a0);
-    margin: 0;
-}
-
-.mode-card-arrow {
-    color: var(--text-secondary, #a0a0a0);
-    transition: all 0.2s ease;
-}
-
-.mode-card:hover .mode-card-arrow,
-.mode-card.active .mode-card-arrow {
-    color: var(--accent-warm, #e09145);
-    transform: translateX(4px);
-}
-
 /* Responsive */
 @media (max-width: 768px) {
     .hogar-container {
@@ -485,19 +402,5 @@
 
     .org-card-stats {
         grid-template-columns: 1fr;
-    }
-
-    .hogar-mode-selector {
-        grid-template-columns: 1fr;
-    }
-
-    .mode-card {
-        padding: 1rem;
-    }
-
-    .mode-card-icon {
-        width: 48px;
-        height: 48px;
-        font-size: 1.25rem;
     }
 }
