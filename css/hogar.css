@@ -6,6 +6,8 @@
     margin: 0 auto;
     background: #0E1012;
     padding-top: calc(48px + 2rem);
+    display: flex;
+    flex-direction: column;
 }
 
 /* En móvil */
@@ -42,13 +44,14 @@
     color: var(--text-secondary, #a0a0a0);
 }
 
-/* Footer con botón Nueva Organización */
+/* Footer con botón Nueva Organización (alineado a la derecha) */
 .hogar-footer {
-    margin-top: 2rem;
+    margin-top: auto;
     padding-top: 1.5rem;
+    padding-bottom: 0.5rem;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
     display: flex;
-    justify-content: flex-start;
+    justify-content: flex-end;
 }
 
 .btn-create-org {
