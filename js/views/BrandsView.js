@@ -50,48 +50,53 @@ class BrandsView extends BaseView {
   }
 
   async render() {
-    // Sistema de caché eliminado - siempre cargar templates frescos
-    
     await super.render();
-    // Asegurar que renderAll se ejecute después de que el template esté completamente en el DOM
-    if (this.isActive) {
-      const MAX_ATTEMPTS = 15;
+    if (!this.isActive) return;
 
-      const tryRender = (attempt = 0) => {
-        if (!this.isActive) return;
+    const container = this.container || document.getElementById('app-container');
+    if (!container) return;
 
-        const container = this.container || document.getElementById('app-container');
-        if (!container) {
-          if (attempt < MAX_ATTEMPTS) {
-            this._tryRenderTimeout = setTimeout(() => tryRender(attempt + 1), 120);
-          }
-          return;
-        }
-
-        const brandColorsEl = container.querySelector('#brandColorSwatches') || document.getElementById('brandColorSwatches');
-        const typographyEl = container.querySelector('#typographyPreview') || document.getElementById('typographyPreview');
-        const statusEl = container.querySelector('#visualStatus') || document.getElementById('visualStatus');
-        const hasContainers = brandColorsEl && typographyEl && statusEl;
-
-        if (hasContainers) {
-          this._tryRenderTimeout = null;
-          this.renderAll();
-          return;
-        }
-
-        if (attempt >= MAX_ATTEMPTS) {
-          this._tryRenderTimeout = null;
-          this.renderAll();
-          return;
-        }
-
-        this._tryRenderTimeout = setTimeout(() => tryRender(attempt + 1), 120);
-      };
-
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => tryRender());
-      });
+    // Si el template no es el de marcas (p. ej. fetch devolvió error o index.html), no intentar renderAll
+    const brandsRoot = container.querySelector('#brandsListContainer');
+    if (!brandsRoot) {
+      if (!this._containerWarned.template) {
+        this._containerWarned.template = true;
+        console.warn('⚠️ Vista Marcas: no se cargó el template (comprueba que /templates/brands.html esté disponible).');
+      }
+      return;
     }
+
+    const MAX_ATTEMPTS = 15;
+    const tryRender = (attempt = 0) => {
+      if (!this.isActive) return;
+
+      const brandColorsEl = container.querySelector('#brandColorSwatches') || document.getElementById('brandColorSwatches');
+      const typographyEl = container.querySelector('#typographyPreview') || document.getElementById('typographyPreview');
+      const statusEl = container.querySelector('#visualStatus') || document.getElementById('visualStatus');
+      const hasContainers = brandColorsEl && typographyEl && statusEl;
+
+      if (hasContainers) {
+        this._tryRenderTimeout = null;
+        this.renderAll();
+        return;
+      }
+
+      if (attempt >= MAX_ATTEMPTS) {
+        this._tryRenderTimeout = null;
+        // Solo un aviso si tras todos los intentos siguen faltando contenedores
+        if (!this._containerWarned.template) {
+          this._containerWarned.template = true;
+          console.warn('⚠️ Vista Marcas: contenedores del template no disponibles tras varios intentos.');
+        }
+        return;
+      }
+
+      this._tryRenderTimeout = setTimeout(() => tryRender(attempt + 1), 120);
+    };
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => tryRender());
+    });
   }
 
   async init() {

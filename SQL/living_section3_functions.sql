@@ -3,12 +3,12 @@
 -- Living Dashboard (usuario consumidor)
 -- ============================================
 --
--- CONTEXTO: Este archivo es SOLO para el usuario consumidor (Living).
--- No incluye lógica de desarrolladores (PaaS): developer_logs, developer_stats,
--- flow_collaborators, flow_technical_details, etc.
+-- IMPORTANTE: Ejecutar este archivo en Supabase (SQL Editor) para crear/actualizar
+-- las funciones. Si no, living.js seguirá recibiendo 400 (column fo.metadata,
+-- aggregate function calls cannot be nested) porque la base usará versiones viejas.
 --
--- Tablas usadas (según schema.sql):
---   flow_runs, runs_outputs, brands, brand_containers, brand_entities,
+-- CONTEXTO: Solo usuario consumidor (Living). No incluye lógica PaaS.
+-- Tablas: flow_runs, runs_outputs, brands, brand_containers, brand_entities,
 --   campaigns, organizations, organization_members, users
 -- ============================================
 

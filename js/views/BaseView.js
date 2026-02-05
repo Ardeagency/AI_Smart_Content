@@ -37,9 +37,9 @@ class BaseView {
     }
 
     try {
-      // Siempre cargar template sin caché - agregar timestamp para evitar caché del navegador
-      const url = `templates/${this.templatePath}?t=${Date.now()}`;
-      
+      // Ruta absoluta para que funcione en rutas tipo /org/xxx/brand (evita 404)
+      const url = `/templates/${this.templatePath}?t=${Date.now()}`;
+
       const response = await fetch(url, {
         cache: 'no-cache'
       });
