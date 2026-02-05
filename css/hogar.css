@@ -347,7 +347,6 @@ body.sidebar-collapsed .hogar-container {
 
 .form-group input:focus {
     outline: none;
-    border-color: var(--accent-warm, #e09145);
 }
 
 .form-actions {

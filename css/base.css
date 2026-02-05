@@ -373,69 +373,7 @@ select {
     zoom: 1 !important;
 }
 
-/* ============================================
-   ELIMINAR TODOS LOS EFECTOS HOVER/ACTIVE
-   DE INPUTS GLOBALES - BORDE FIJO
-   ============================================ */
-.form-input:hover,
-.form-input:active,
-.form-select:hover,
-.form-select:active,
-.form-textarea:hover,
-.form-textarea:active,
-.editable-input:hover,
-.editable-input:active,
-.editable-select:hover,
-.editable-select:active,
-.editable-textarea:hover,
-.editable-textarea:active,
-input[type="text"]:hover,
-input[type="text"]:active,
-input[type="number"]:hover,
-input[type="number"]:active,
-input[type="email"]:hover,
-input[type="email"]:active,
-input[type="url"]:hover,
-input[type="url"]:active,
-input[type="date"]:hover,
-input[type="date"]:active,
-input[type="password"]:hover,
-input[type="password"]:active,
-input[type="search"]:hover,
-input[type="search"]:active,
-textarea:hover,
-textarea:active,
-select:hover,
-select:active {
-    background: var(--bg-secondary) !important;
-    border: 1px solid var(--border-color) !important;
-    border-color: var(--border-color) !important;
-    padding: 0.75rem 1rem !important;
-    margin: 0 !important;
-    transform: none !important;
-    -webkit-transform: none !important;
-    -moz-transform: none !important;
-    -o-transform: none !important;
-    box-shadow: none !important;
-    width: 100% !important;
-    height: auto !important;
-    min-height: auto !important;
-    max-height: none !important;
-    font-size: 0.95rem !important;
-    line-height: inherit !important;
-    scale: 1 !important;
-    -webkit-scale: 1 !important;
-    zoom: 1 !important;
-    transition: none !important;
-    -webkit-transition: none !important;
-    -moz-transition: none !important;
-    -o-transition: none !important;
-    animation: none !important;
-    -webkit-animation: none !important;
-    -moz-animation: none !important;
-    -o-animation: none !important;
-    will-change: auto !important;
-}
+/* Sin efectos hover/active en inputs: se eliminan por completo. */
 
 /* ============================================
    ELIMINAR COMPLETAMENTE TODOS LOS EFECTOS DE CURSOR
@@ -564,9 +502,7 @@ h1.brand-name-large.editable-field:focus {
     transition: none !important;
 }
 
-/* ============================================
-   ESTADO FOCUS UNIFICADO - SIN TRANSICIONES
-   ============================================ */
+/* Focus: solo quitar outline del navegador. Sin cambio de color ni estado. */
 .form-input:focus,
 .form-select:focus,
 .form-textarea:focus,
@@ -583,64 +519,18 @@ input[type="search"]:focus,
 textarea:focus,
 select:focus {
     outline: none;
-    border-color: var(--accent-yellow);
-    background: var(--bg-card);
-    box-shadow: 0 0 0 3px var(--accent-yellow-glow);
-    /* ELIMINAR COMPLETAMENTE TODAS LAS TRANSICIONES */
-    transition: none !important;
-    -webkit-transition: none !important;
-    -moz-transition: none !important;
-    -o-transition: none !important;
-    animation: none !important;
-    -webkit-animation: none !important;
-    -moz-animation: none !important;
-    -o-animation: none !important;
-    padding: 0.75rem 1rem !important;
-    margin: 0 !important;
-    transform: none !important;
-    -webkit-transform: none !important;
-    -moz-transform: none !important;
-    -o-transform: none !important;
-    width: 100% !important;
-    height: auto !important;
-    font-size: 0.95rem !important;
-    line-height: inherit !important;
-    scale: 1 !important;
-    -webkit-scale: 1 !important;
-    zoom: 1 !important;
-    will-change: auto !important;
 }
 
-/* ============================================
-   CAMPOS EDITABLES UNIFICADOS - SIN BORDE EN HOVER
-   ============================================ */
+/* Campos editables: sin transiciones ni efectos */
 .editable-field {
     transition: none !important;
     -webkit-transition: none !important;
     -moz-transition: none !important;
     -o-transition: none !important;
     animation: none !important;
-    -webkit-animation: none !important;
-    -moz-animation: none !important;
-    -o-animation: none !important;
     will-change: auto !important;
     transform: none !important;
-    -webkit-transform: none !important;
-    -moz-transform: none !important;
-    -o-transform: none !important;
     scale: 1 !important;
-    -webkit-scale: 1 !important;
-    zoom: 1 !important;
-}
-
-.editable-field:hover,
-.editable-field:active {
-    background: transparent !important;
-    border: inherit !important;
-    border-color: inherit !important;
-    padding: inherit !important;
-    margin: 0 !important;
-    transform: none !important;
     -webkit-transform: none !important;
     -moz-transform: none !important;
     -o-transform: none !important;
@@ -664,9 +554,7 @@ select:focus {
 }
 
 .editable-field:focus {
-    outline: 1px solid rgba(212, 184, 150, 0.3);
-    border: inherit !important;
-    border-color: inherit !important;
+    outline: none;
 }
 
 .form-input::placeholder,

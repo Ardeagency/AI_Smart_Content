@@ -443,11 +443,7 @@
 .form-input:focus,
 .form-textarea:focus,
 .form-select:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(236, 235, 218, 0.1);
-    transition: none !important;
-    transform: none !important;
-    scale: 1 !important;
+    outline: none;
 }
 
 .form-textarea {

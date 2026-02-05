@@ -147,8 +147,6 @@ body::before {
 
 .input-container input:focus,
 .input-container select:focus {
-    border-color: var(--accent-yellow);
-    box-shadow: 0 0 0 2px var(--accent-yellow-glow);
     outline: none;
 }
 

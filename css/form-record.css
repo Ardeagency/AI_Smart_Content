@@ -169,12 +169,7 @@
 .form-input:focus,
 .form-textarea:focus,
 .form-select:focus {
-    background: #181a1b;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(210, 254, 63, 0.1);
-    transition: none !important;
-    transform: none !important;
-    scale: 1 !important;
+    outline: none;
 }
 
 .form-textarea {

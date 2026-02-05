@@ -348,27 +348,6 @@ body.sidebar-collapsed .product-detail-container {
     scale: 1 !important;
 }
 
-/* BORDE FIJO - NO CAMBIA EN HOVER */
-.editable-textarea:hover,
-.editable-textarea:active {
-    background: transparent !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-color: rgba(255, 255, 255, 0.1) !important;
-    padding: 0.75rem 1rem !important;
-    transform: none !important;
-    box-shadow: none !important;
-    outline: none !important;
-    transition: none !important;
-    scale: 1 !important;
-}
-
-.editable-textarea:focus {
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    border-color: rgba(255, 255, 255, 0.2) !important;
-    padding: 0.75rem 1rem !important;
-    outline: none !important;
-}
-
 .editable-select {
     padding: 0.75rem 1rem;
     background: transparent !important;
@@ -382,25 +361,8 @@ body.sidebar-collapsed .product-detail-container {
     scale: 1 !important;
 }
 
-/* BORDE FIJO - NO CAMBIA EN HOVER */
-.editable-select:hover,
-.editable-select:active {
-    background: transparent !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-color: rgba(255, 255, 255, 0.1) !important;
-    padding: 0.75rem 1rem !important;
-    transform: none !important;
-    box-shadow: none !important;
-    outline: none !important;
-    transition: none !important;
-    scale: 1 !important;
-}
-
 .editable-select:focus {
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    border-color: rgba(255, 255, 255, 0.2) !important;
-    padding: 0.75rem 1rem !important;
-    outline: none !important;
+    outline: none;
 }
 
 .editable-select option {

@@ -853,7 +853,6 @@
 
 .dev-logs-filter select:focus {
   outline: none;
-  border-color: var(--dev-primary);
 }
 
 .dev-logs-count {
@@ -1374,14 +1373,8 @@ body.sidebar-collapsed .builder-header {
   transition: all 0.2s ease;
 }
 
-.builder-name-input:hover {
-  border-color: var(--border-color);
-}
-
 .builder-name-input:focus {
   outline: none;
-  border-color: var(--dev-primary);
-  background: var(--bg-card);
 }
 
 .builder-name-input::placeholder {
@@ -2049,7 +2042,6 @@ body.sidebar-collapsed .builder-main {
 .settings-field textarea:focus,
 .settings-field select:focus {
   outline: none;
-  border-color: var(--dev-primary);
 }
 
 .settings-field textarea {
@@ -2264,7 +2256,6 @@ body.sidebar-collapsed .builder-main {
 .property-field input:focus,
 .property-field select:focus {
   outline: none;
-  border-color: var(--dev-primary);
 }
 
 .property-row {
@@ -2561,7 +2552,6 @@ body.sidebar-collapsed .builder-main {
 .test-field textarea:focus,
 .test-field select:focus {
   outline: none;
-  border-color: var(--dev-primary);
 }
 
 .test-checkbox,
@@ -2902,7 +2892,6 @@ body.sidebar-collapsed .dev-test-container {
 
 .flow-select:focus {
   outline: none;
-  border-color: var(--dev-primary);
 }
 
 .flow-info {
@@ -3220,7 +3209,6 @@ body.sidebar-collapsed .dev-test-container {
 .form-field textarea:focus,
 .form-field select:focus {
   outline: none;
-  border-color: var(--dev-primary);
 }
 
 .form-field textarea {
