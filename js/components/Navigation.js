@@ -517,10 +517,6 @@ class Navigation {
         e.stopPropagation();
         userDropdown.classList.toggle('active');
       });
-      
-      document.addEventListener('click', () => {
-        userDropdown.classList.remove('active');
-      });
     }
 
     // Logout
@@ -537,9 +533,16 @@ class Navigation {
         e.stopPropagation();
         orgDropdown.classList.toggle('active');
       });
-      
+    }
+
+    // Un solo listener en document para cerrar todos los dropdowns (evita duplicados al re-render)
+    if (!this._documentClickAttached) {
+      this._documentClickAttached = true;
       document.addEventListener('click', () => {
-        orgDropdown.classList.remove('active');
+        const ud = document.getElementById('userDropdown');
+        const od = document.getElementById('navOrgDropdown');
+        if (ud) ud.classList.remove('active');
+        if (od) od.classList.remove('active');
       });
     }
 
@@ -554,12 +557,15 @@ class Navigation {
       });
     });
 
-    // Escuchar cambios de ruta
-    window.addEventListener('popstate', () => this.render());
-    window.addEventListener('routechange', () => {
-      this.updateActiveLink();
-      this.updateHeaderTitle();
-    });
+    // Escuchar cambios de ruta (solo una vez para no acumular)
+    if (!this._routeListenersAttached) {
+      this._routeListenersAttached = true;
+      window.addEventListener('popstate', () => this.render());
+      window.addEventListener('routechange', () => {
+        this.updateActiveLink();
+        this.updateHeaderTitle();
+      });
+    }
   }
 
   /**

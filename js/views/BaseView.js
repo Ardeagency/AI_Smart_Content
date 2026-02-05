@@ -410,17 +410,23 @@ class BaseView {
   }
 
   /**
-   * Actualizar header existente con nuevo contexto
-   * Útil cuando el header ya está en el DOM (templates)
+   * Actualizar header existente con nuevo contexto.
+   * Si el header es el de Navigation (#appHeader), solo actualiza #headerTitle sin tocar el hamburger.
    */
   updateHeaderContext(section, activeObject = null, organizationName = null) {
+    const appHeader = document.getElementById('appHeader');
+    const headerTitle = document.getElementById('headerTitle');
+    if (appHeader && headerTitle) {
+      const line = activeObject ? `${this.escapeHtml(section)} / ${this.escapeHtml(activeObject)}` : this.escapeHtml(section);
+      headerTitle.textContent = line;
+      return;
+    }
+
     const headerLeft = document.querySelector('.header-left');
     if (!headerLeft) return;
 
-    // Verificar si el toggle button ya existe
     let toggleButton = document.getElementById('headerSidebarToggle');
     if (!toggleButton) {
-      // Crear toggle button si no existe
       const headerContent = document.querySelector('.header-content');
       if (headerContent) {
         toggleButton = document.createElement('button');
@@ -432,7 +438,7 @@ class BaseView {
       }
     }
 
-    let html = `
+    const html = `
       <div class="header-context">
         <div class="header-context-primary">
           <h1 class="header-section">${this.escapeHtml(section)}</h1>
@@ -441,7 +447,6 @@ class BaseView {
         ${organizationName ? `<div class="header-context-secondary">${this.escapeHtml(organizationName)}</div>` : ''}
       </div>
     `;
-
     headerLeft.innerHTML = html;
   }
 
