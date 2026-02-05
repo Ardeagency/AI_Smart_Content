@@ -313,12 +313,6 @@ class Navigation {
             <span id="navTokensValue">0</span>
             <span class="nav-tokens-label">tokens</span>
           </div>
-          
-          <!-- Modo switcher -->
-          <button class="nav-mode-switch" id="navModeSwitch" title="Cambiar a modo desarrollador">
-            <i class="fas fa-code"></i>
-            <span>Modo Dev</span>
-          </button>
         </div>
       </nav>
     `;
@@ -459,19 +453,13 @@ class Navigation {
               <span id="navRatingValue">0.0</span>
             </div>
           </div>
-          
-          <!-- Modo switcher -->
-          <button class="nav-mode-switch" id="navModeSwitch" title="Cambiar a modo usuario">
-            <i class="fas fa-user"></i>
-            <span>Modo User</span>
-          </button>
         </div>
       </nav>
     `;
   }
 
   /**
-   * Cambiar el modo de navegación
+   * Cambiar el modo de navegación (legacy; ya no se muestra el botón en el sidebar)
    */
   async switchMode(mode) {
     if (mode === 'developer') {
@@ -503,10 +491,16 @@ class Navigation {
    * Configurar event listeners
    */
   setupEventListeners() {
-    // Hamburger menu
+    // Hamburger: en móvil abre/cierra overlay; en desktop colapsa/expande sidebar
     const hamburger = document.getElementById('headerHamburger');
     if (hamburger) {
-      hamburger.addEventListener('click', () => this.toggleMobileNav());
+      hamburger.addEventListener('click', () => {
+        if (window.matchMedia('(max-width: 768px)').matches) {
+          this.toggleMobileNav();
+        } else {
+          this.toggleSidebarCollapse();
+        }
+      });
     }
 
     // Overlay
@@ -533,15 +527,6 @@ class Navigation {
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
       logoutBtn.addEventListener('click', () => this.handleLogout());
-    }
-
-    // Mode switch
-    const modeSwitch = document.getElementById('navModeSwitch');
-    if (modeSwitch) {
-      modeSwitch.addEventListener('click', () => {
-        const newMode = this.currentMode === 'developer' ? 'user' : 'developer';
-        this.switchMode(newMode);
-      });
     }
 
     // Org dropdown
@@ -661,6 +646,19 @@ class Navigation {
         return;
       }
     }
+  }
+
+  /**
+   * Toggle colapsar/expandir sidebar (desktop)
+   */
+  toggleSidebarCollapse() {
+    const sidebar = document.getElementById('sideNavigation');
+    if (!sidebar) return;
+
+    this.isCollapsed = !this.isCollapsed;
+    sidebar.classList.toggle('collapsed', this.isCollapsed);
+    document.body.classList.toggle('sidebar-collapsed', this.isCollapsed);
+    localStorage.setItem('sidebarCollapsed', this.isCollapsed ? 'true' : 'false');
   }
 
   /**
