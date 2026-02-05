@@ -554,7 +554,7 @@
     color: var(--text-primary, #ecebda);
 }
 
-/* Responsive: imagen 2 en móvil = card en columna, degradado arriba */
+/* Responsive */
 @media (max-width: 768px) {
     .hogar-container {
         padding: 1rem;
@@ -567,32 +567,5 @@
 
     .hogar-title {
         font-size: 1.5rem;
-    }
-
-    .organizations-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
-
-    .org-card.org-card-folder {
-        flex-direction: column;
-        height: auto;
-        min-height: 160px;
-    }
-
-    .org-card-cover {
-        flex: 0 0 100px;
-        min-width: 100%;
-        width: 100%;
-        border-radius: var(--org-card-radius) var(--org-card-radius) 0 0;
-    }
-
-    .org-card-body {
-        border-radius: 0 0 var(--org-card-radius) var(--org-card-radius);
-        padding: 14px 16px;
-    }
-
-    .org-card-name {
-        font-size: 1.125rem;
     }
 }

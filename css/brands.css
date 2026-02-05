@@ -627,54 +627,35 @@ h1.brand-name-large[contenteditable="true"]:hover,
 }
 
 .color-swatch:hover {
-    transform: scale(1.1);
+    transform: scale(1.05);
 }
 
-.color-swatch-tooltip {
+/* Circulito eliminar: sobresale ligeramente en la esquina derecha del swatch */
+.color-delete-btn {
     position: absolute;
-    bottom: calc(100% + 8px);
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--bg-card, #1E1E1E);
-    border: 1px solid var(--border-color, rgba(255,255,255,0.1));
-    border-radius: 6px;
-    padding: 6px 10px;
+    top: -4px;
+    right: -4px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(220, 38, 38, 0.85);
+    color: #fff;
     font-size: 0.75rem;
-    color: var(--text-primary, #F2F3F5);
-    white-space: nowrap;
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-    transition: opacity 0.2s ease;
-    z-index: 100;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    transition: transform 0.15s ease, background 0.15s ease;
+    z-index: 2;
 }
 
-.color-swatch-tooltip::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 4px solid transparent;
-    border-top-color: var(--bg-card, #1E1E1E);
-}
-
-.color-swatch:hover .color-swatch-tooltip {
-    opacity: 1;
-    visibility: visible;
-}
-
-.color-swatch-hex {
-    font-family: 'Courier New', monospace;
-    font-weight: 600;
-    margin-bottom: 2px;
-}
-
-.color-swatch-role {
-    font-size: 0.625rem;
-    color: var(--text-muted, #6B7280);
-    text-transform: capitalize;
+.color-delete-btn:hover {
+    background: rgba(220, 38, 38, 1);
+    transform: scale(1.1);
 }
 
 /* Typography Preview */

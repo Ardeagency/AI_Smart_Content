@@ -582,35 +582,17 @@ class BrandsView extends BaseView {
 
     container.innerHTML = colors.map(color => {
       const hex = color.hex_value || color.hex_code || color.color_value || color.hex || '#000000';
-      const role = color.color_role || color.role || color.name || 'Color';
       const colorId = color.id;
       
       return `
-        <div class="color-swatch" style="background: ${hex}; position: relative; cursor: pointer;" data-color-id="${colorId}">
-          <div class="color-swatch-tooltip">
-            <div class="color-swatch-hex">${hex.toUpperCase()}</div>
-            <div class="color-swatch-role">${role}</div>
-          </div>
-          <div class="color-swatch-actions" style="position: absolute; top: 0; right: 0; display: none; gap: 0.25rem; padding: 0.25rem;">
-            <button class="color-delete-btn" style="background: rgba(220,38,38,0.7); border: none; color: white; padding: 0.25rem; border-radius: 4px; cursor: pointer; font-size: 0.7rem;" title="Eliminar">×</button>
-          </div>
+        <div class="color-swatch" style="background: ${hex};" data-color-id="${colorId}">
+          <button type="button" class="color-delete-btn" title="Eliminar" aria-label="Eliminar color">×</button>
         </div>
       `;
     }).join('');
 
     container.querySelectorAll('.color-swatch').forEach(swatch => {
       const colorId = swatch.getAttribute('data-color-id');
-      
-      swatch.addEventListener('mouseenter', () => {
-        const actions = swatch.querySelector('.color-swatch-actions');
-        if (actions) actions.style.display = 'flex';
-      });
-      
-      swatch.addEventListener('mouseleave', () => {
-        const actions = swatch.querySelector('.color-swatch-actions');
-        if (actions) actions.style.display = 'none';
-      });
-
       const deleteBtn = swatch.querySelector('.color-delete-btn');
       if (deleteBtn) {
         deleteBtn.addEventListener('click', (e) => {
