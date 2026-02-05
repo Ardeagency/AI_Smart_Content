@@ -105,17 +105,27 @@ class OutputGenerator {
 
     /**
      * Mostrar estado de carga en el output container
-     * (Deshabilitado - no mostrar loading states)
      */
     showLoadingState() {
-        // No mostrar estado de carga - el contenido se renderiza directamente
+        const outputContainer = document.querySelector('.output-container');
+        if (outputContainer) {
+            outputContainer.innerHTML = `
+                <div class="loading-state">
+                    <div class="loading-spinner"></div>
+                    <p>Generando contenido...</p>
+                </div>
+            `;
+        }
     }
 
     /**
      * Ocultar estado de carga
      */
     hideLoadingState() {
-        // No hay estado de carga que ocultar
+        const outputContainer = document.querySelector('.output-container');
+        if (outputContainer && outputContainer.querySelector('.loading-state')) {
+            outputContainer.innerHTML = '';
+        }
     }
 
     /**

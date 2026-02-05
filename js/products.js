@@ -744,10 +744,7 @@ if (typeof window.ProductsManager === 'undefined') {
         // Event listener para click en la card - navegar al detalle
         card.addEventListener('click', (e) => {
             e.stopPropagation();
-            const orgId = window.appState && window.appState.getCurrentOrgId();
-            if (orgId && window.router) {
-                window.router.navigate(`/org/${orgId}/entities/${product.id}`);
-            } else if (window.router) {
+            if (window.router) {
                 window.router.navigate(`/products/${product.id}`);
             } else {
                 window.location.href = `/products/${product.id}`;

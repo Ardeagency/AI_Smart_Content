@@ -1215,7 +1215,7 @@ class LivingManager {
                 <p class="living-history-empty-description">
                     Cuando ejecutes flujos y generes contenido, aquí quedará registrado todo tu trabajo creativo.
                 </p>
-                <a href="#" class="living-history-empty-cta" onclick="if(window.workspaceContext){window.workspaceContext.navigateToModule('production');}else if(window.appState&&window.router){var o=window.appState.getCurrentOrgId();if(o)window.router.navigate('/org/'+o+'/production');} return false;">
+                <a href="#" class="living-history-empty-cta" onclick="if(window.router){window.router.navigate('/production');return false;}">
                     Ir a Producción
                 </a>
             </div>
@@ -1265,11 +1265,8 @@ class LivingManager {
                     if (productionId || runId) {
                         console.log('📋 Redirigiendo a producción:', { productionId, runId });
                         // Navegación a vista de producción
-                        if (window.workspaceContext) {
-                            window.workspaceContext.navigateToModule('entities');
-                        } else if (window.appState && window.router) {
-                            var o = window.appState.getCurrentOrgId();
-                            if (o) window.router.navigate('/org/' + o + '/entities');
+                        if (window.router) {
+                            window.router.navigate('/products');
                         }
                     }
                 }

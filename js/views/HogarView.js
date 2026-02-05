@@ -12,25 +12,32 @@ class HogarView extends BaseView {
   }
 
   /**
-   * Hook llamado al entrar a la vista.
-   * Home = User Control Gateway: NUNCA carga contexto organización.
+   * Hook llamado al entrar a la vista
    */
   async onEnter() {
+    // Verificar autenticación
     if (window.authService) {
       const isAuth = await window.authService.checkAccess(true);
       if (!isAuth) {
-        if (window.router) window.router.navigate('/login', true);
+        if (window.router) {
+          window.router.navigate('/login', true);
+        }
         return;
       }
     } else {
       const isAuth = await this.checkAuthentication();
       if (!isAuth) {
-        if (window.router) window.router.navigate('/login', true);
+        if (window.router) {
+          window.router.navigate('/login', true);
+        }
         return;
       }
     }
-    // Regla: Home nunca tiene contexto workspace activo
-    if (window.appState) window.appState.clearWorkspaceContext();
+
+    // Renderizar Navigation si no está visible
+    if (window.navigation && !window.navigation.initialized) {
+      await window.navigation.render();
+    }
   }
 
   /**
@@ -403,8 +410,9 @@ class HogarView extends BaseView {
       window.appState.set('selectedOrganizationId', orgId, true);
     }
     
+    // Navegar a living
     if (window.router) {
-      window.router.navigate(`/org/${orgId}/living`);
+      window.router.navigate('/living');
     }
   }
 
@@ -413,6 +421,9 @@ class HogarView extends BaseView {
    * Configurar event listeners
    */
   setupEventListeners() {
+    // Selector de modo (SaaS vs PaaS)
+    this.setupModeSelector();
+
     // Botón crear organización
     const createBtn = this.querySelector('#createOrgBtn');
     if (createBtn) {
@@ -445,6 +456,43 @@ class HogarView extends BaseView {
       orgForm.addEventListener('submit', (e) => {
         e.preventDefault();
         this.handleOrgSubmit();
+      });
+    }
+  }
+
+  /**
+   * Configurar selector de modo (SaaS vs PaaS)
+   */
+  setupModeSelector() {
+    const saasCard = this.querySelector('#modeSaasCard');
+    const paasCard = this.querySelector('#modePaasCard');
+
+    // Click en modo SaaS (ya estamos aquí, solo actualizar visual)
+    if (saasCard) {
+      saasCard.addEventListener('click', () => {
+        saasCard.classList.add('active');
+        if (paasCard) paasCard.classList.remove('active');
+        // Ya estamos en modo organizaciones, no hacer nada más
+      });
+    }
+
+    // Click en modo PaaS (Developer) → navegar al portal de desarrollador
+    if (paasCard) {
+      paasCard.addEventListener('click', async () => {
+        paasCard.classList.add('active');
+        if (saasCard) saasCard.classList.remove('active');
+        
+        // Cambiar el modo del usuario
+        if (window.authService && typeof window.authService.setUserMode === 'function') {
+          await window.authService.setUserMode('developer', true);
+        } else {
+          localStorage.setItem('userViewMode', 'developer');
+        }
+
+        // Navegar al dashboard de desarrollador
+        if (window.router) {
+          window.router.navigate('/dev/dashboard');
+        }
       });
     }
   }

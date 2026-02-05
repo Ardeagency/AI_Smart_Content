@@ -56,8 +56,10 @@ class ProductsView extends BaseView {
       productId = this.routeParams.productId;
     } else {
       const path = window.location.pathname;
-      const match = path.match(/\/(?:products|entities)\/([^\/]+)/);
-      if (match) productId = match[1];
+      const match = path.match(/\/products\/([^\/]+)/);
+      if (match) {
+        productId = match[1];
+      }
     }
 
     if (productId) {
@@ -243,7 +245,7 @@ class ProductsView extends BaseView {
           <!-- Sección de Datos (Derecha) -->
           <div class="product-data-section">
             <div class="product-detail-header">
-              <button class="back-to-products-btn" data-nav-module="entities">
+              <button class="back-to-products-btn" onclick="window.router.navigate('/products')">
                 <i class="fas fa-arrow-left"></i>
                 <span>Volver a Productos</span>
               </button>
@@ -405,16 +407,22 @@ class ProductsView extends BaseView {
     const livingLinks = this.querySelectorAll('a[href*="living"]');
     const studioLinks = this.querySelectorAll('a[href*="studio"]');
 
-    const orgId = (this.routeParams && this.routeParams.orgId) || (window.appState && window.appState.getCurrentOrgId());
-    const nav = (module) => {
-      if (window.workspaceContext) window.workspaceContext.navigateToModule(module, orgId);
-      else if (orgId && window.router) window.router.navigate(`/org/${orgId}/${module}`);
-    };
     livingLinks.forEach(link => {
-      this.addEventListener(link, 'click', (e) => { e.preventDefault(); nav('living'); });
+      this.addEventListener(link, 'click', (e) => {
+        e.preventDefault();
+        if (window.router) {
+          window.router.navigate('/living');
+        }
+      });
     });
+
     studioLinks.forEach(link => {
-      this.addEventListener(link, 'click', (e) => { e.preventDefault(); nav('production'); });
+      this.addEventListener(link, 'click', (e) => {
+        e.preventDefault();
+        if (window.router) {
+          window.router.navigate('/studio');
+        }
+      });
     });
   }
 
@@ -830,12 +838,13 @@ class ProductsView extends BaseView {
     const container = this.container || document.getElementById('app-container');
     if (!container) return;
 
+    // Botón de volver
     const backBtn = container.querySelector('.back-to-products-btn');
     if (backBtn) {
       backBtn.addEventListener('click', () => {
-        const orgId = (this.routeParams && this.routeParams.orgId) || (window.appState && window.appState.getCurrentOrgId());
-        if (window.workspaceContext) window.workspaceContext.navigateToModule('entities', orgId);
-        else if (orgId && window.router) window.router.navigate(`/org/${orgId}/entities`);
+        if (window.router) {
+          window.router.navigate('/products');
+        }
       });
     }
 

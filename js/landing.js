@@ -109,7 +109,7 @@
         }
 
         // Si el usuario está autenticado, redirigir al dashboard
-        window.location.href = '/home';
+        window.location.href = '/products.html';
     }
 
     // Esperar a que el DOM esté listo
@@ -339,7 +339,7 @@
                     }
 
                     // Si pasa todas las validaciones, redirigir al dashboard
-                    window.location.href = '/home';
+                    window.location.href = '/products.html';
                 } catch (error) {
                     console.error('Error en login:', error);
                     alert('Error al iniciar sesión: ' + (error.message || 'Error desconocido'));

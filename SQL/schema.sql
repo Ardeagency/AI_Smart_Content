@@ -208,8 +208,23 @@ CREATE TABLE public.content_flows (
   output_type text NOT NULL,
   is_active boolean DEFAULT true,
   created_at timestamp with time zone DEFAULT now(),
+  webhook_url text,
+  input_schema jsonb DEFAULT '{}'::jsonb,
+  flow_image_url text,
+  description text,
+  flow_category_type text DEFAULT 'manual'::text CHECK (flow_category_type = ANY (ARRAY['manual'::text, 'automated'::text])),
+  token_cost integer DEFAULT 1,
+  owner_id uuid,
+  version text DEFAULT '1.0.0'::text,
+  status USER-DEFINED DEFAULT 'draft'::flow_lifecycle_status,
+  builder_version text DEFAULT 'v1'::text,
+  ui_layout_config jsonb DEFAULT '{}'::jsonb,
+  likes_count integer DEFAULT 0,
+  saves_count integer DEFAULT 0,
+  run_count integer DEFAULT 0,
   CONSTRAINT content_flows_pkey PRIMARY KEY (id),
-  CONSTRAINT content_flows_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.content_categories(id)
+  CONSTRAINT content_flows_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.content_categories(id),
+  CONSTRAINT fk_flow_owner FOREIGN KEY (owner_id) REFERENCES public.users(id)
 );
 CREATE TABLE public.credit_usage (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -222,6 +237,56 @@ CREATE TABLE public.credit_usage (
   CONSTRAINT credit_usage_pkey PRIMARY KEY (id),
   CONSTRAINT credit_usage_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
   CONSTRAINT credit_usage_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id)
+);
+CREATE TABLE public.developer_logs (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  flow_id uuid NOT NULL,
+  run_id uuid,
+  environment text DEFAULT 'test'::text CHECK (environment = ANY (ARRAY['test'::text, 'prod'::text])),
+  severity USER-DEFINED DEFAULT 'error'::log_severity_level,
+  error_message text NOT NULL,
+  raw_details jsonb DEFAULT '{}'::jsonb,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT developer_logs_pkey PRIMARY KEY (id),
+  CONSTRAINT logs_flow_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id)
+);
+CREATE TABLE public.developer_notifications (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  recipient_user_id uuid NOT NULL,
+  flow_id uuid,
+  severity USER-DEFINED DEFAULT 'info'::notification_severity_type,
+  title text NOT NULL,
+  message text,
+  is_read boolean DEFAULT false,
+  read_at timestamp with time zone,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT developer_notifications_pkey PRIMARY KEY (id),
+  CONSTRAINT notif_recipient_fkey FOREIGN KEY (recipient_user_id) REFERENCES public.users(id),
+  CONSTRAINT notif_flow_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id)
+);
+CREATE TABLE public.developer_stats (
+  user_id uuid NOT NULL,
+  total_flows_created integer DEFAULT 0,
+  total_published_flows integer DEFAULT 0,
+  total_successful_runs bigint DEFAULT 0,
+  avg_flow_rating numeric DEFAULT 0.00,
+  current_rank USER-DEFINED DEFAULT 'novice'::developer_rank_type,
+  last_promotion_at timestamp with time zone,
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT developer_stats_pkey PRIMARY KEY (user_id),
+  CONSTRAINT stats_user_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.flow_collaborators (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  flow_id uuid NOT NULL,
+  developer_id uuid NOT NULL,
+  role USER-DEFINED NOT NULL DEFAULT 'viewer'::flow_collaborator_role,
+  invited_by uuid,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT flow_collaborators_pkey PRIMARY KEY (id),
+  CONSTRAINT collab_flow_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id),
+  CONSTRAINT collab_dev_fkey FOREIGN KEY (developer_id) REFERENCES public.users(id),
+  CONSTRAINT collab_inviter_fkey FOREIGN KEY (invited_by) REFERENCES public.users(id)
 );
 CREATE TABLE public.flow_inputs (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -261,12 +326,35 @@ CREATE TABLE public.flow_runs (
   created_at timestamp with time zone DEFAULT now(),
   entity_id uuid,
   audience_id uuid,
+  inputs_used jsonb DEFAULT '{}'::jsonb,
+  tokens_consumed integer DEFAULT 0,
+  webhook_response_code integer,
+  payment_status USER-DEFINED DEFAULT 'pending'::payment_status_type,
   CONSTRAINT flow_runs_pkey PRIMARY KEY (id),
   CONSTRAINT flow_runs_flow_id_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id),
   CONSTRAINT flow_runs_brand_id_fkey FOREIGN KEY (brand_id) REFERENCES public.brands(id),
   CONSTRAINT flow_runs_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
   CONSTRAINT flow_runs_entity_id_fkey FOREIGN KEY (entity_id) REFERENCES public.brand_entities(id),
   CONSTRAINT flow_runs_audience_id_fkey FOREIGN KEY (audience_id) REFERENCES public.audiences(id)
+);
+CREATE TABLE public.flow_technical_details (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  flow_id uuid NOT NULL UNIQUE,
+  platform_name text DEFAULT 'n8n'::text,
+  platform_flow_id text,
+  platform_flow_name text,
+  webhook_url_test text,
+  webhook_url_prod text,
+  webhook_method text DEFAULT 'POST'::text CHECK (webhook_method = ANY (ARRAY['POST'::text, 'GET'::text, 'PUT'::text])),
+  editor_url text,
+  credential_id text,
+  is_healthy boolean DEFAULT true,
+  last_health_check timestamp with time zone,
+  avg_execution_time_ms integer,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT flow_technical_details_pkey PRIMARY KEY (id),
+  CONSTRAINT flow_tech_flow_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id)
 );
 CREATE TABLE public.organization_credits (
   organization_id uuid NOT NULL,
@@ -366,6 +454,20 @@ CREATE TABLE public.subscriptions (
   CONSTRAINT subscriptions_pkey PRIMARY KEY (id),
   CONSTRAINT subscriptions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
 );
+CREATE TABLE public.ui_component_templates (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  name text NOT NULL,
+  description text,
+  category text DEFAULT 'basic'::text,
+  icon_name text,
+  base_schema jsonb NOT NULL,
+  default_ui_config jsonb DEFAULT '{}'::jsonb,
+  is_active boolean DEFAULT true,
+  order_index integer DEFAULT 0,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT ui_component_templates_pkey PRIMARY KEY (id)
+);
 CREATE TABLE public.user_flow_favorites (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   user_id uuid NOT NULL,
@@ -388,6 +490,7 @@ CREATE TABLE public.user_profiles (
   is_active boolean NOT NULL DEFAULT true,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  default_view_mode text DEFAULT 'user'::text CHECK (default_view_mode = ANY (ARRAY['user'::text, 'developer'::text])),
   CONSTRAINT user_profiles_pkey PRIMARY KEY (id),
   CONSTRAINT user_profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
 );
@@ -398,9 +501,10 @@ CREATE TABLE public.users (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   plan_type USER-DEFINED DEFAULT 'basico'::plan_tipo_enum,
-  credits_available integer DEFAULT 0,
+  credits_available integer DEFAULT 0 CHECK (credits_available >= 0),
   credits_total integer DEFAULT 0,
   form_verified boolean NOT NULL DEFAULT false,
+  lifetime_credits_used integer DEFAULT 0,
   CONSTRAINT users_pkey PRIMARY KEY (id),
   CONSTRAINT users_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
 );

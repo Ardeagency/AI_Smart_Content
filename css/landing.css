@@ -80,7 +80,7 @@
 }
 
 .landing-header-logo {
-    max-width: min(1600px, 100%);
+    max-width: 1200px;
     width: 100%;
     height: auto;
     display: block;
@@ -131,7 +131,7 @@
 }
 
 .landing-footer-content {
-    max-width: min(1600px, 100%);
+    max-width: 1200px;
     width: 100%;
     display: flex;
     justify-content: space-between;

@@ -1,6 +1,10 @@
 /**
  * Navigation Component - Componente de navegación lateral persistente
  * Maneja el sidebar y la navegación de la aplicación
+ * 
+ * Soporta dos modos de navegación (MPA + SPA):
+ * - 'user': Navegación para usuarios SaaS (consumidores de contenido)
+ * - 'developer': Navegación para desarrolladores PaaS (constructores de flujos)
  */
 class Navigation {
   constructor() {
@@ -8,32 +12,28 @@ class Navigation {
     this.isNavOpen = false;
     this.isCollapsed = false;
     this.initialized = false;
+    this.currentMode = 'user'; // 'user' | 'developer'
   }
 
   /**
-   * Renderizar el componente de navegación (solo dentro de workspace: /org/:orgId/*)
+   * Renderizar el componente de navegación
+   * Detecta automáticamente el modo según la ruta o preferencia del usuario
    */
   async render() {
-    const orgId = window.appState && window.appState.getCurrentOrgId();
-    if (!orgId) {
-      console.warn('Navigation: sin orgId, no se muestra sidebar');
+    if (this.initialized) {
       return;
     }
 
-    if (this.initialized && this._lastOrgId === orgId) {
-      return;
-    }
-    this._lastOrgId = orgId;
-
-    if (!this.container) {
-      this.container = document.getElementById('navigation-container');
-    }
     if (!this.container) {
       console.error('❌ Navigation container no encontrado');
       return;
     }
 
-    this.container.innerHTML = this.getNavigationHTML(orgId);
+    // Detectar modo basado en la ruta actual o preferencia del usuario
+    this.currentMode = this.detectNavigationMode();
+
+    // Renderizar HTML del sidebar según el modo
+    this.container.innerHTML = this.getNavigationHTML();
 
     // Inicializar
     this.initializeSidebar();
@@ -44,28 +44,80 @@ class Navigation {
     // Cargar información del usuario si está autenticado
     await this.loadUserInfo();
 
-    // Cargar información de organización
-    await this.loadOrganizationInfo();
+    // Cargar información según el modo
+    if (this.currentMode === 'developer') {
+      await this.loadDeveloperInfo();
+    } else {
+      await this.loadOrganizationInfo();
+    }
 
     this.initialized = true;
-    console.log('✅ Navigation component renderizado');
+    console.log(`✅ Navigation component renderizado en modo: ${this.currentMode}`);
   }
 
   /**
-   * Obtener HTML del sidebar. Rutas siempre /org/:orgId/:module (Workspace First).
-   * @param {string} orgId - ID de la organización activa
+   * Detectar el modo de navegación
+   * @returns {'user' | 'developer'}
    */
-  getNavigationHTML(orgId) {
-    const o = orgId || (window.appState && window.appState.getCurrentOrgId()) || '';
-    const p = (module) => `/org/${o}/${module}`;
+  detectNavigationMode() {
+    // Prioridad 1: Verificar si estamos en ruta de desarrollador
+    const currentPath = window.location.pathname || '/';
+    if (currentPath.startsWith('/dev')) {
+      return 'developer';
+    }
+
+    // Prioridad 2: Usar AuthService para obtener el modo del usuario
+    if (window.authService && typeof window.authService.getUserMode === 'function') {
+      return window.authService.getUserMode();
+    }
+
+    // Prioridad 3: Verificar localStorage
+    const savedMode = localStorage.getItem('userViewMode');
+    if (savedMode === 'developer') {
+      return 'developer';
+    }
+
+    return 'user';
+  }
+
+  /**
+   * Cambiar el modo de navegación y re-renderizar
+   * @param {'user' | 'developer'} mode
+   */
+  async switchMode(mode) {
+    if (mode !== this.currentMode) {
+      this.currentMode = mode;
+      this.initialized = false;
+      await this.render();
+    }
+  }
+
+  /**
+   * Obtener HTML del sidebar según el modo actual
+   */
+  getNavigationHTML() {
+    if (this.currentMode === 'developer') {
+      return this.getDeveloperNavigationHTML();
+    }
+    return this.getUserNavigationHTML();
+  }
+
+  /**
+   * Obtener HTML del sidebar para usuarios SaaS (consumidores)
+   */
+  getUserNavigationHTML() {
     return `
+      <!-- Overlay de navegación -->
       <div class="nav-overlay" id="navOverlay"></div>
-      <nav class="side-navigation" id="sideNavigation">
+
+      <!-- Navegación lateral - Modo Usuario SaaS -->
+      <nav class="side-navigation nav-mode-user" id="sideNavigation">
+        <!-- Capa superior: Identidad + Organización -->
         <div class="nav-identity-section">
           <div class="nav-identity-card" id="navIdentityCard">
             <div class="nav-identity-content">
               <div class="nav-identity-info">
-                <div class="nav-org-name" id="navOrgName">Workspace</div>
+                <div class="nav-org-name" id="navOrgName">Mi Organización</div>
                 <div class="nav-org-type" id="navOrgType">Personal</div>
               </div>
               <button class="nav-org-chevron" id="navOrgChevron" aria-label="Cambiar organización">
@@ -73,24 +125,35 @@ class Navigation {
               </button>
             </div>
           </div>
+          
+          <!-- Dropdown de organización -->
           <div class="nav-org-dropdown" id="navOrgDropdown">
             <div class="nav-org-dropdown-header">Workspaces</div>
-            <div class="nav-org-dropdown-list" id="navOrgDropdownList"></div>
+            <div class="nav-org-dropdown-list" id="navOrgDropdownList">
+              <!-- Las organizaciones se cargarán dinámicamente aquí -->
+            </div>
           </div>
         </div>
+
+        <!-- Menú Principal - Usuario SaaS -->
         <div class="nav-menu">
+          <!-- Living (Dashboard principal) -->
           <div class="nav-item">
-            <a href="${p('living')}" class="nav-link" data-route="${p('living')}" data-tooltip="Living">
+            <a href="/living" class="nav-link" data-route="/living" data-tooltip="Living">
               <i class="fas fa-home nav-icon"></i>
               <span class="nav-text">Living</span>
             </a>
           </div>
+
+          <!-- Marca -->
           <div class="nav-item">
-            <a href="${p('brand')}" class="nav-link" data-route="${p('brand')}" data-tooltip="Marca">
+            <a href="/brands" class="nav-link" data-route="/brands" data-tooltip="Marca">
               <i class="fas fa-palette nav-icon"></i>
               <span class="nav-text">Marca</span>
             </a>
           </div>
+
+          <!-- Entidades (con submenú) -->
           <div class="nav-item nav-item-has-submenu" data-submenu="entidades">
             <div class="nav-link nav-link-parent" data-tooltip="Entidades">
               <i class="fas fa-cube nav-icon"></i>
@@ -99,38 +162,194 @@ class Navigation {
             </div>
             <div class="nav-submenu" id="navSubmenuEntidades">
               <div class="nav-submenu-item">
-                <a href="${p('entities')}" class="nav-link nav-link-sub" data-route="${p('entities')}" data-tooltip="Productos">
+                <a href="/products" class="nav-link nav-link-sub" data-route="/products" data-tooltip="Productos">
                   <span class="nav-text">Productos</span>
                 </a>
               </div>
-            </div>
-          </div>
-          <div class="nav-item nav-item-has-submenu" data-submenu="produccion">
-            <div class="nav-link nav-link-parent" data-tooltip="Producción">
-              <i class="fas fa-video nav-icon"></i>
-              <span class="nav-text">Producción</span>
-              <i class="fas fa-chevron-right nav-chevron"></i>
-            </div>
-            <div class="nav-submenu" id="navSubmenuProduccion">
               <div class="nav-submenu-item">
-                <a href="${p('production')}" class="nav-link nav-link-sub" data-route="${p('production')}" data-tooltip="Producción">
-                  <span class="nav-text">Producción</span>
+                <a href="/services" class="nav-link nav-link-sub" data-route="/services" data-tooltip="Servicios">
+                  <span class="nav-text">Servicios</span>
+                </a>
+              </div>
+              <div class="nav-submenu-item">
+                <a href="/sedes" class="nav-link nav-link-sub" data-route="/sedes" data-tooltip="Sedes">
+                  <span class="nav-text">Sedes</span>
                 </a>
               </div>
             </div>
           </div>
+
+          <!-- Studio (Generación de contenido) -->
           <div class="nav-item">
-            <a href="${p('audiences')}" class="nav-link" data-route="${p('audiences')}" data-tooltip="Audiencias">
+            <a href="/studio" class="nav-link" data-route="/studio" data-tooltip="Studio">
+              <i class="fas fa-wand-magic-sparkles nav-icon"></i>
+              <span class="nav-text">Studio</span>
+            </a>
+          </div>
+
+          <!-- Audiencias -->
+          <div class="nav-item">
+            <a href="/audiences" class="nav-link" data-route="/audiences" data-tooltip="Audiencias">
               <i class="fas fa-users nav-icon"></i>
               <span class="nav-text">Audiencias</span>
             </a>
           </div>
+
+          <!-- Marketing -->
           <div class="nav-item">
-            <a href="${p('marketing')}" class="nav-link" data-route="${p('marketing')}" data-tooltip="Marketing">
+            <a href="/campaigns" class="nav-link" data-route="/campaigns" data-tooltip="Marketing">
               <i class="fas fa-bullhorn nav-icon"></i>
               <span class="nav-text">Marketing</span>
             </a>
           </div>
+        </div>
+
+        <!-- Separador -->
+        <div class="nav-separator"></div>
+
+        <!-- Sección inferior: Créditos y Modo -->
+        <div class="nav-footer">
+          <!-- Indicador de créditos -->
+          <div class="nav-credits-indicator" id="navCreditsIndicator">
+            <i class="fas fa-coins"></i>
+            <span id="navCreditsCount">0</span>
+            <span class="nav-credits-label">tokens</span>
+          </div>
+          
+          <!-- Cambiar a modo desarrollador (si está disponible) -->
+          <button class="nav-mode-switch" id="navModeSwitchBtn" title="Cambiar a modo Desarrollador">
+            <i class="fas fa-code"></i>
+            <span class="nav-text">Modo Dev</span>
+          </button>
+        </div>
+      </nav>
+    `;
+  }
+
+  /**
+   * Obtener HTML del sidebar para desarrolladores PaaS
+   */
+  getDeveloperNavigationHTML() {
+    return `
+      <!-- Overlay de navegación -->
+      <div class="nav-overlay" id="navOverlay"></div>
+
+      <!-- Navegación lateral - Modo Desarrollador PaaS -->
+      <nav class="side-navigation nav-mode-developer" id="sideNavigation">
+        <!-- Capa superior: Identidad de desarrollador -->
+        <div class="nav-identity-section nav-dev-identity">
+          <div class="nav-identity-card" id="navIdentityCard">
+            <div class="nav-identity-content">
+              <div class="nav-identity-info">
+                <div class="nav-org-name" id="navDevName">Developer Portal</div>
+                <div class="nav-org-type nav-dev-rank" id="navDevRank">Novice</div>
+              </div>
+              <div class="nav-dev-badge">
+                <i class="fas fa-code"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Menú Principal - Desarrollador PaaS -->
+        <div class="nav-menu">
+          <!-- Dashboard de desarrollador -->
+          <div class="nav-item">
+            <a href="/dev/dashboard" class="nav-link" data-route="/dev/dashboard" data-tooltip="Dashboard">
+              <i class="fas fa-chart-line nav-icon"></i>
+              <span class="nav-text">Dashboard</span>
+            </a>
+          </div>
+
+          <!-- Mis Flujos de IA -->
+          <div class="nav-item">
+            <a href="/dev/flows" class="nav-link" data-route="/dev/flows" data-tooltip="Mis Flujos">
+              <i class="fas fa-diagram-project nav-icon"></i>
+              <span class="nav-text">Mis Flujos</span>
+            </a>
+          </div>
+
+          <!-- Flow Builder -->
+          <div class="nav-item">
+            <a href="/dev/builder" class="nav-link" data-route="/dev/builder" data-tooltip="Builder">
+              <i class="fas fa-hammer nav-icon"></i>
+              <span class="nav-text">Builder</span>
+            </a>
+          </div>
+
+          <!-- Logs y Debug -->
+          <div class="nav-item nav-item-has-submenu" data-submenu="dev-debug">
+            <div class="nav-link nav-link-parent" data-tooltip="Debug">
+              <i class="fas fa-bug nav-icon"></i>
+              <span class="nav-text">Debug</span>
+              <i class="fas fa-chevron-right nav-chevron"></i>
+            </div>
+            <div class="nav-submenu" id="navSubmenuDevDebug">
+              <div class="nav-submenu-item">
+                <a href="/dev/logs" class="nav-link nav-link-sub" data-route="/dev/logs" data-tooltip="Logs">
+                  <span class="nav-text">Logs</span>
+                </a>
+              </div>
+              <div class="nav-submenu-item">
+                <a href="/dev/runs" class="nav-link nav-link-sub" data-route="/dev/runs" data-tooltip="Ejecuciones">
+                  <span class="nav-text">Ejecuciones</span>
+                </a>
+              </div>
+              <div class="nav-submenu-item">
+                <a href="/dev/webhooks" class="nav-link nav-link-sub" data-route="/dev/webhooks" data-tooltip="Webhooks">
+                  <span class="nav-text">Webhooks</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Colaboradores -->
+          <div class="nav-item">
+            <a href="/dev/collaborators" class="nav-link" data-route="/dev/collaborators" data-tooltip="Colaboradores">
+              <i class="fas fa-users-gear nav-icon"></i>
+              <span class="nav-text">Colaboradores</span>
+            </a>
+          </div>
+
+          <!-- Marketplace (flujos publicados) -->
+          <div class="nav-item">
+            <a href="/dev/marketplace" class="nav-link" data-route="/dev/marketplace" data-tooltip="Marketplace">
+              <i class="fas fa-store nav-icon"></i>
+              <span class="nav-text">Marketplace</span>
+            </a>
+          </div>
+
+          <!-- Documentación -->
+          <div class="nav-item">
+            <a href="/dev/docs" class="nav-link" data-route="/dev/docs" data-tooltip="Documentación">
+              <i class="fas fa-book nav-icon"></i>
+              <span class="nav-text">Documentación</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Separador -->
+        <div class="nav-separator"></div>
+
+        <!-- Sección inferior: Stats y Modo -->
+        <div class="nav-footer">
+          <!-- Estadísticas del desarrollador -->
+          <div class="nav-dev-stats" id="navDevStats">
+            <div class="nav-dev-stat">
+              <i class="fas fa-play"></i>
+              <span id="navDevRunCount">0</span>
+            </div>
+            <div class="nav-dev-stat">
+              <i class="fas fa-star"></i>
+              <span id="navDevRating">0.0</span>
+            </div>
+          </div>
+          
+          <!-- Cambiar a modo usuario -->
+          <button class="nav-mode-switch" id="navModeSwitchBtn" title="Cambiar a modo Usuario">
+            <i class="fas fa-user"></i>
+            <span class="nav-text">Modo User</span>
+          </button>
         </div>
       </nav>
     `;
@@ -230,6 +449,17 @@ class Navigation {
       });
     }
 
+    // Mode switch button (cambiar entre usuario y desarrollador)
+    const modeSwitchBtn = document.getElementById('navModeSwitchBtn');
+    if (modeSwitchBtn) {
+      modeSwitchBtn.addEventListener('click', () => this.handleModeSwitch());
+    }
+
+    // Cargar créditos si estamos en modo usuario
+    if (this.currentMode === 'user') {
+      this.loadCreditsInfo();
+    }
+
     // Navigation links - usar router
     navLinks.forEach(link => {
       link.addEventListener('click', (e) => {
@@ -312,6 +542,62 @@ class Navigation {
     window.addEventListener('popstate', updateLinkDebounced);
     // También escuchar cuando el router navega programáticamente
     window.addEventListener('routechange', updateLinkDebounced);
+  }
+
+  /**
+   * Manejar cambio de modo (usuario ↔ desarrollador)
+   */
+  async handleModeSwitch() {
+    const newMode = this.currentMode === 'user' ? 'developer' : 'user';
+    
+    // Actualizar modo en AuthService
+    if (window.authService && typeof window.authService.setUserMode === 'function') {
+      await window.authService.setUserMode(newMode, true); // Persistir en BD
+    } else {
+      localStorage.setItem('userViewMode', newMode);
+    }
+
+    // Navegar a la ruta apropiada
+    const targetRoute = newMode === 'developer' ? '/dev/dashboard' : '/hogar';
+    
+    // Re-renderizar navegación y navegar
+    this.initialized = false;
+    this.currentMode = newMode;
+    
+    if (window.router) {
+      window.router.navigate(targetRoute);
+    }
+    
+    // Re-renderizar con el nuevo modo
+    await this.render();
+  }
+
+  /**
+   * Cargar información de créditos (modo usuario)
+   */
+  async loadCreditsInfo() {
+    const supabase = await this.getSupabaseClient();
+    if (!supabase) return;
+
+    try {
+      // Obtener organización activa
+      const activeOrgId = localStorage.getItem('activeOrganizationId');
+      if (!activeOrgId) return;
+
+      // Cargar créditos de la organización
+      const { data: credits, error } = await supabase
+        .from('organization_credits')
+        .select('credits_available')
+        .eq('organization_id', activeOrgId)
+        .maybeSingle();
+
+      const creditsCount = document.getElementById('navCreditsCount');
+      if (creditsCount) {
+        creditsCount.textContent = credits ? this.formatNumber(credits.credits_available) : '0';
+      }
+    } catch (error) {
+      console.error('Error cargando créditos:', error);
+    }
   }
 
   /**
@@ -635,6 +921,91 @@ class Navigation {
   }
 
   /**
+   * Cargar información del desarrollador (modo PaaS)
+   */
+  async loadDeveloperInfo() {
+    const supabase = await this.getSupabaseClient();
+    if (!supabase) return;
+
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) return;
+
+      // Cargar estadísticas del desarrollador
+      const { data: devStats, error: statsError } = await supabase
+        .from('developer_stats')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      // Actualizar UI con estadísticas
+      const navDevName = document.getElementById('navDevName');
+      const navDevRank = document.getElementById('navDevRank');
+      const navDevRunCount = document.getElementById('navDevRunCount');
+      const navDevRating = document.getElementById('navDevRating');
+
+      // Cargar nombre del usuario
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .single();
+
+      if (navDevName && profile) {
+        navDevName.textContent = profile.full_name || 'Developer Portal';
+      }
+
+      if (devStats) {
+        if (navDevRank) {
+          // Formatear rank (novice, intermediate, expert, etc.)
+          const rankLabels = {
+            'novice': 'Novato',
+            'intermediate': 'Intermedio',
+            'expert': 'Experto',
+            'master': 'Maestro'
+          };
+          navDevRank.textContent = rankLabels[devStats.current_rank] || 'Novato';
+        }
+        if (navDevRunCount) {
+          navDevRunCount.textContent = this.formatNumber(devStats.total_successful_runs || 0);
+        }
+        if (navDevRating) {
+          navDevRating.textContent = (devStats.avg_flow_rating || 0).toFixed(1);
+        }
+      } else {
+        // Sin estadísticas aún
+        if (navDevRank) navDevRank.textContent = 'Novato';
+        if (navDevRunCount) navDevRunCount.textContent = '0';
+        if (navDevRating) navDevRating.textContent = '0.0';
+      }
+
+      // Cargar conteo de flujos del desarrollador
+      const { count: flowCount } = await supabase
+        .from('content_flows')
+        .select('*', { count: 'exact', head: true })
+        .eq('owner_id', user.id);
+
+      // Se podría mostrar el conteo de flujos en algún lugar si se desea
+
+    } catch (error) {
+      console.error('Error cargando información de desarrollador:', error);
+    }
+  }
+
+  /**
+   * Formatear número grande (1000 → 1K, etc.)
+   */
+  formatNumber(num) {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
+    }
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toString();
+  }
+
+  /**
    * Cargar información de organización
    */
   async loadOrganizationInfo() {
@@ -866,36 +1237,41 @@ class Navigation {
       });
     });
 
+    // Event listener para crear nueva organización
     const createOption = dropdownList.querySelector('.nav-org-option.create-org');
     if (createOption) {
       createOption.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (window.router) window.router.navigate('/home');
+        // TODO: Implementar navegación a crear organización
+        if (window.router) {
+          window.router.navigate('/organization?action=create');
+        }
         this.closeAllDropdowns();
       });
     }
 
+    // Event listener para administrar organización
     const manageOption = dropdownList.querySelector('.nav-org-option.manage-org');
     if (manageOption) {
       manageOption.addEventListener('click', (e) => {
         e.stopPropagation();
-        const orgId = window.appState && window.appState.getCurrentOrgId();
-        if (orgId && window.router) window.router.navigate(`/org/${orgId}/settings`);
+        if (window.router) {
+          window.router.navigate('/organization');
+        }
         this.closeAllDropdowns();
       });
     }
   }
 
   /**
-   * Cambiar de organización activa. Navega a /org/:newOrgId/living.
+   * Cambiar de organización activa
    */
   async switchOrganization(organizationId) {
     localStorage.setItem('activeOrganizationId', organizationId);
+    // Recargar información de organización
     await this.loadOrganizationInfo();
+    // Recargar información del usuario para actualizar contexto
     await this.loadUserInfo();
-    if (window.router) {
-      window.router.navigate(`/org/${organizationId}/living`);
-    }
   }
 
   /**
@@ -997,10 +1373,13 @@ class Navigation {
 // Crear instancia global
 window.navigation = new Navigation();
 
-// Sidebar solo dentro de workspace (/org/:orgId/:module)
+// Función para verificar si la ruta actual requiere navegación
 function shouldShowNavigation() {
-  const path = window.location.pathname || '/';
-  return /^\/org\/[^/]+\/.+/.test(path);
+  // Usar History API (pathname) en lugar de hash
+  const currentPath = window.location.pathname || '/';
+  const publicRoutes = ['/', '/login', '/planes'];
+  const isPublicRoute = publicRoutes.some(route => currentPath === route || currentPath === route + '/');
+  return !isPublicRoute;
 }
 
 // Inicializar cuando el DOM esté listo

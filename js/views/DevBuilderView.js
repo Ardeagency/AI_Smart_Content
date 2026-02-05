@@ -1,0 +1,2551 @@
+/**
+ * DevBuilderView.js
+ * Constructor visual de flujos de IA para el Portal de Desarrolladores (PaaS)
+ * Permite crear y editar content_flows con input_schema y ui_layout_config
+ */
+
+class DevBuilderView extends BaseView {
+  constructor() {
+    super();
+    this.supabase = null;
+    this.userId = null;
+    this.flowId = null; // null = nuevo flujo, UUID = editando
+    this.isEditMode = false;
+    
+    // Estado del flujo
+    this.flowData = {
+      name: '',
+      description: '',
+      category_id: null,
+      output_type: 'text',
+      flow_category_type: 'manual',
+      token_cost: 1,
+      flow_image_url: null,
+      status: 'draft',
+      version: '1.0.0'
+    };
+    
+    // Schema de inputs (array de campos)
+    this.inputSchema = [];
+    
+    // Configuración de UI
+    this.uiLayoutConfig = {
+      theme: 'default',
+      columns: 1,
+      showLabels: true,
+      showHelperText: true,
+      submitButtonText: 'Generar',
+      submitButtonPosition: 'right'
+    };
+    
+    // Detalles técnicos
+    this.technicalDetails = {
+      webhook_url_test: '',
+      webhook_url_prod: '',
+      webhook_method: 'POST',
+      platform_name: 'n8n',
+      editor_url: ''
+    };
+    
+    // Templates de componentes disponibles
+    this.componentTemplates = [];
+    
+    // Categorías disponibles
+    this.categories = [];
+    
+    // Campo siendo editado
+    this.selectedFieldIndex = null;
+    
+    // Drag state
+    this.draggedFieldIndex = null;
+    
+    // Unsaved changes
+    this.hasUnsavedChanges = false;
+  }
+
+  async onEnter() {
+    // Verificar autenticación
+    if (window.authService) {
+      const isAuth = await window.authService.isAuthenticated();
+      if (!isAuth) {
+        window.router?.navigate('/login');
+        return;
+      }
+    }
+    
+    // Verificar que estamos en modo desarrollador
+    if (window.navigation) {
+      window.navigation.switchMode('developer');
+    }
+  }
+
+  renderHTML() {
+    return `
+      <!-- Header del Builder -->
+      <header class="builder-header">
+        <div class="builder-header-left">
+          <button class="builder-back-btn" id="builderBackBtn">
+            <i class="ph ph-arrow-left"></i>
+            <span>Mis Flujos</span>
+          </button>
+          <div class="builder-title-section">
+            <input type="text" 
+                   class="builder-name-input" 
+                   id="flowNameInput" 
+                   placeholder="Nombre del flujo..."
+                   maxlength="100">
+            <span class="builder-status-badge draft" id="flowStatusBadge">Borrador</span>
+          </div>
+        </div>
+        <div class="builder-header-right">
+          <button class="btn-builder-secondary" id="previewFlowBtn">
+            <i class="ph ph-eye"></i>
+            Preview
+          </button>
+          <button class="btn-builder-secondary" id="testFlowBtn">
+            <i class="ph ph-play"></i>
+            Probar
+          </button>
+          <button class="btn-builder-primary" id="saveFlowBtn">
+            <i class="ph ph-floppy-disk"></i>
+            Guardar
+          </button>
+          <div class="builder-more-menu">
+            <button class="btn-builder-icon" id="moreActionsBtn">
+              <i class="ph ph-dots-three-vertical"></i>
+            </button>
+            <div class="builder-dropdown" id="moreActionsDropdown" style="display: none;">
+              <button class="dropdown-item" id="publishFlowBtn">
+                <i class="ph ph-rocket-launch"></i> Publicar
+              </button>
+              <button class="dropdown-item" id="duplicateFlowBtn">
+                <i class="ph ph-copy"></i> Duplicar
+              </button>
+              <button class="dropdown-item" id="exportFlowBtn">
+                <i class="ph ph-export"></i> Exportar JSON
+              </button>
+              <hr>
+              <button class="dropdown-item danger" id="deleteFlowBtn">
+                <i class="ph ph-trash"></i> Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Builder Container -->
+      <main class="builder-main">
+        <!-- Panel izquierdo: Componentes -->
+        <aside class="builder-sidebar builder-components">
+          <div class="builder-sidebar-header">
+            <h3><i class="ph ph-puzzle-piece"></i> Componentes</h3>
+          </div>
+          <div class="builder-components-list" id="componentsList">
+            <!-- Se llenan dinámicamente -->
+            <div class="components-loading">
+              <i class="ph ph-spinner ph-spin"></i>
+              Cargando componentes...
+            </div>
+          </div>
+        </aside>
+
+        <!-- Panel central: Canvas de construcción -->
+        <div class="builder-canvas-wrapper">
+          <!-- Tabs de navegación -->
+          <div class="builder-tabs">
+            <button class="builder-tab active" data-tab="inputs">
+              <i class="ph ph-textbox"></i> Inputs
+            </button>
+            <button class="builder-tab" data-tab="settings">
+              <i class="ph ph-gear"></i> Configuración
+            </button>
+            <button class="builder-tab" data-tab="technical">
+              <i class="ph ph-code"></i> Técnico
+            </button>
+          </div>
+
+          <!-- Tab: Inputs (Canvas) -->
+          <div class="builder-tab-content active" id="tabInputs">
+            <div class="builder-canvas" id="builderCanvas">
+              <div class="canvas-empty-state" id="canvasEmptyState">
+                <i class="ph ph-plus-circle"></i>
+                <h4>Arrastra componentes aquí</h4>
+                <p>Construye el formulario de entrada de tu flujo</p>
+              </div>
+              <div class="canvas-fields" id="canvasFields">
+                <!-- Los campos se agregan aquí -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab: Configuración General -->
+          <div class="builder-tab-content" id="tabSettings">
+            <div class="builder-settings-form">
+              <div class="settings-section">
+                <h4><i class="ph ph-info"></i> Información Básica</h4>
+                
+                <div class="settings-field">
+                  <label for="flowDescription">Descripción</label>
+                  <textarea id="flowDescription" placeholder="Describe qué hace este flujo..." rows="3"></textarea>
+                </div>
+
+                <div class="settings-row">
+                  <div class="settings-field">
+                    <label for="flowCategory">Categoría</label>
+                    <select id="flowCategory">
+                      <option value="">Seleccionar categoría...</option>
+                    </select>
+                  </div>
+                  <div class="settings-field">
+                    <label for="flowOutputType">Tipo de Output</label>
+                    <select id="flowOutputType">
+                      <option value="text">Texto</option>
+                      <option value="image">Imagen</option>
+                      <option value="video">Video</option>
+                      <option value="audio">Audio</option>
+                      <option value="document">Documento</option>
+                      <option value="mixed">Mixto</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="settings-row">
+                  <div class="settings-field">
+                    <label for="flowType">Tipo de Flujo</label>
+                    <select id="flowType">
+                      <option value="manual">Manual</option>
+                      <option value="automated">Automatizado</option>
+                    </select>
+                  </div>
+                  <div class="settings-field">
+                    <label for="flowTokenCost">Costo (tokens)</label>
+                    <input type="number" id="flowTokenCost" min="1" max="100" value="1">
+                  </div>
+                </div>
+
+                <div class="settings-field">
+                  <label for="flowVersion">Versión</label>
+                  <input type="text" id="flowVersion" value="1.0.0" placeholder="1.0.0">
+                </div>
+              </div>
+
+              <div class="settings-section">
+                <h4><i class="ph ph-image"></i> Imagen del Flujo</h4>
+                <div class="flow-image-upload" id="flowImageUpload">
+                  <div class="image-preview" id="flowImagePreview">
+                    <i class="ph ph-image"></i>
+                    <span>Sin imagen</span>
+                  </div>
+                  <div class="image-actions">
+                    <button class="btn-small" id="uploadImageBtn">
+                      <i class="ph ph-upload"></i> Subir imagen
+                    </button>
+                    <button class="btn-small secondary" id="removeImageBtn" style="display: none;">
+                      <i class="ph ph-trash"></i> Eliminar
+                    </button>
+                  </div>
+                  <input type="file" id="flowImageInput" accept="image/*" style="display: none;">
+                </div>
+              </div>
+
+              <div class="settings-section">
+                <h4><i class="ph ph-layout"></i> Configuración de UI</h4>
+                
+                <div class="settings-row">
+                  <div class="settings-field">
+                    <label for="uiTheme">Tema</label>
+                    <select id="uiTheme">
+                      <option value="default">Default</option>
+                      <option value="minimal">Minimal</option>
+                      <option value="card">Card</option>
+                      <option value="wizard">Wizard</option>
+                    </select>
+                  </div>
+                  <div class="settings-field">
+                    <label for="uiColumns">Columnas</label>
+                    <select id="uiColumns">
+                      <option value="1">1 columna</option>
+                      <option value="2">2 columnas</option>
+                      <option value="3">3 columnas</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="settings-toggles">
+                  <label class="toggle-field">
+                    <input type="checkbox" id="uiShowLabels" checked>
+                    <span>Mostrar labels</span>
+                  </label>
+                  <label class="toggle-field">
+                    <input type="checkbox" id="uiShowHelperText" checked>
+                    <span>Mostrar texto de ayuda</span>
+                  </label>
+                </div>
+
+                <div class="settings-row">
+                  <div class="settings-field">
+                    <label for="uiSubmitText">Texto del botón</label>
+                    <input type="text" id="uiSubmitText" value="Generar" placeholder="Generar">
+                  </div>
+                  <div class="settings-field">
+                    <label for="uiSubmitPosition">Posición del botón</label>
+                    <select id="uiSubmitPosition">
+                      <option value="right">Derecha</option>
+                      <option value="center">Centro</option>
+                      <option value="full">Ancho completo</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab: Detalles Técnicos -->
+          <div class="builder-tab-content" id="tabTechnical">
+            <div class="builder-settings-form">
+              <div class="settings-section">
+                <h4><i class="ph ph-webhooks-logo"></i> Webhooks</h4>
+                
+                <div class="settings-field">
+                  <label for="webhookTest">URL de Prueba (Test)</label>
+                  <input type="url" id="webhookTest" placeholder="https://tu-n8n.com/webhook-test/...">
+                  <span class="field-help">URL del webhook en modo prueba</span>
+                </div>
+
+                <div class="settings-field">
+                  <label for="webhookProd">URL de Producción</label>
+                  <input type="url" id="webhookProd" placeholder="https://tu-n8n.com/webhook/...">
+                  <span class="field-help">URL del webhook en producción (usado por usuarios finales)</span>
+                </div>
+
+                <div class="settings-row">
+                  <div class="settings-field">
+                    <label for="webhookMethod">Método HTTP</label>
+                    <select id="webhookMethod">
+                      <option value="POST">POST</option>
+                      <option value="GET">GET</option>
+                      <option value="PUT">PUT</option>
+                    </select>
+                  </div>
+                  <div class="settings-field">
+                    <label for="platformName">Plataforma</label>
+                    <select id="platformName">
+                      <option value="n8n">n8n</option>
+                      <option value="make">Make (Integromat)</option>
+                      <option value="zapier">Zapier</option>
+                      <option value="custom">Custom</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="settings-field">
+                  <label for="editorUrl">URL del Editor</label>
+                  <input type="url" id="editorUrl" placeholder="https://tu-n8n.com/workflow/123">
+                  <span class="field-help">Link directo para editar el flujo en la plataforma</span>
+                </div>
+              </div>
+
+              <div class="settings-section">
+                <h4><i class="ph ph-code"></i> Schema JSON</h4>
+                <p class="section-description">Vista del input_schema generado automáticamente</p>
+                <div class="json-preview" id="jsonSchemaPreview">
+                  <pre><code>{ "fields": [] }</code></pre>
+                </div>
+                <button class="btn-small" id="copySchemaBtn">
+                  <i class="ph ph-copy"></i> Copiar JSON
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel derecho: Propiedades del campo seleccionado -->
+        <aside class="builder-sidebar builder-properties">
+          <div class="builder-sidebar-header">
+            <h3><i class="ph ph-sliders-horizontal"></i> Propiedades</h3>
+          </div>
+          <div class="builder-properties-content" id="propertiesPanel">
+            <div class="properties-empty">
+              <i class="ph ph-cursor-click"></i>
+              <p>Selecciona un campo para editar sus propiedades</p>
+            </div>
+          </div>
+        </aside>
+      </main>
+
+      <!-- Modal: Preview -->
+      <div class="modal builder-modal" id="previewModal" style="display: none;">
+        <div class="modal-overlay"></div>
+        <div class="modal-content modal-lg">
+          <div class="modal-header">
+            <h3><i class="ph ph-eye"></i> Preview del Flujo</h3>
+            <button class="modal-close" id="closePreviewModal">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="preview-container" id="previewContainer">
+              <!-- Preview del formulario -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal: Test -->
+      <div class="modal builder-modal" id="testModal" style="display: none;">
+        <div class="modal-overlay"></div>
+        <div class="modal-content modal-lg">
+          <div class="modal-header">
+            <h3><i class="ph ph-play"></i> Probar Flujo</h3>
+            <button class="modal-close" id="closeTestModal">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="test-container">
+              <div class="test-form" id="testFormContainer">
+                <!-- Formulario de prueba -->
+              </div>
+              <div class="test-results" id="testResults" style="display: none;">
+                <h4>Resultado:</h4>
+                <pre id="testResultOutput"></pre>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-builder-secondary" id="closeTestBtn">Cerrar</button>
+            <button class="btn-builder-primary" id="runTestBtn">
+              <i class="ph ph-play"></i> Ejecutar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal: Confirmar eliminar -->
+      <div class="modal builder-modal" id="deleteModal" style="display: none;">
+        <div class="modal-overlay"></div>
+        <div class="modal-content modal-sm">
+          <div class="modal-header">
+            <h3><i class="ph ph-warning"></i> Confirmar eliminación</h3>
+            <button class="modal-close" id="closeDeleteModal">&times;</button>
+          </div>
+          <div class="modal-body">
+            <p>¿Estás seguro de que deseas eliminar este flujo?</p>
+            <p class="text-danger">Esta acción no se puede deshacer.</p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-builder-secondary" id="cancelDeleteBtn">Cancelar</button>
+            <button class="btn-builder-danger" id="confirmDeleteBtn">
+              <i class="ph ph-trash"></i> Eliminar
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  async init() {
+    await this.initSupabase();
+    this.checkUrlParams();
+    await this.loadCategories();
+    await this.loadComponentTemplates();
+    
+    if (this.flowId) {
+      await this.loadFlow();
+    }
+    
+    this.setupEventListeners();
+    this.renderCanvas();
+    this.updateJsonPreview();
+  }
+
+  async initSupabase() {
+    if (window.supabase) {
+      this.supabase = window.supabase;
+    } else if (window.authService?.supabase) {
+      this.supabase = window.authService.supabase;
+    }
+    
+    const user = window.authService?.getCurrentUser();
+    this.userId = user?.id;
+  }
+
+  checkUrlParams() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const flowId = urlParams.get('id');
+    
+    if (flowId && flowId !== 'new') {
+      this.flowId = flowId;
+      this.isEditMode = true;
+    }
+  }
+
+  async loadCategories() {
+    if (!this.supabase) return;
+    
+    try {
+      const { data, error } = await this.supabase
+        .from('content_categories')
+        .select('id, name, description')
+        .order('order_index', { ascending: true });
+      
+      if (error) throw error;
+      
+      this.categories = data || [];
+      this.renderCategorySelect();
+    } catch (err) {
+      console.error('Error loading categories:', err);
+    }
+  }
+
+  renderCategorySelect() {
+    const select = this.querySelector('#flowCategory');
+    if (!select) return;
+    
+    select.innerHTML = '<option value="">Seleccionar categoría...</option>';
+    
+    this.categories.forEach(cat => {
+      const option = document.createElement('option');
+      option.value = cat.id;
+      option.textContent = cat.name;
+      if (this.flowData.category_id === cat.id) {
+        option.selected = true;
+      }
+      select.appendChild(option);
+    });
+  }
+
+  async loadComponentTemplates() {
+    if (!this.supabase) {
+      // Usar templates por defecto si no hay BD
+      this.componentTemplates = this.getDefaultTemplates();
+      this.renderComponentsList();
+      return;
+    }
+    
+    try {
+      const { data, error } = await this.supabase
+        .from('ui_component_templates')
+        .select('*')
+        .eq('is_active', true)
+        .order('order_index', { ascending: true });
+      
+      if (error) throw error;
+      
+      this.componentTemplates = data && data.length > 0 ? data : this.getDefaultTemplates();
+      this.renderComponentsList();
+    } catch (err) {
+      console.error('Error loading component templates:', err);
+      this.componentTemplates = this.getDefaultTemplates();
+      this.renderComponentsList();
+    }
+  }
+
+  getDefaultTemplates() {
+    return [
+      {
+        id: 'text',
+        name: 'Texto Corto',
+        description: 'Campo de texto de una línea',
+        category: 'basic',
+        icon_name: 'textbox',
+        base_schema: {
+          input_type: 'text',
+          placeholder: '',
+          maxLength: 255
+        }
+      },
+      {
+        id: 'textarea',
+        name: 'Texto Largo',
+        description: 'Área de texto multilínea',
+        category: 'basic',
+        icon_name: 'article',
+        base_schema: {
+          input_type: 'textarea',
+          placeholder: '',
+          rows: 4,
+          maxLength: 2000
+        }
+      },
+      {
+        id: 'select',
+        name: 'Selector',
+        description: 'Lista desplegable de opciones',
+        category: 'basic',
+        icon_name: 'list-bullets',
+        base_schema: {
+          input_type: 'select',
+          options: []
+        }
+      },
+      {
+        id: 'number',
+        name: 'Número',
+        description: 'Campo numérico',
+        category: 'basic',
+        icon_name: 'hash',
+        base_schema: {
+          input_type: 'number',
+          min: 0,
+          max: 100,
+          step: 1
+        }
+      },
+      {
+        id: 'checkbox',
+        name: 'Checkbox',
+        description: 'Casilla de verificación',
+        category: 'basic',
+        icon_name: 'check-square',
+        base_schema: {
+          input_type: 'checkbox',
+          defaultValue: false
+        }
+      },
+      {
+        id: 'radio',
+        name: 'Radio',
+        description: 'Opciones mutuamente excluyentes',
+        category: 'basic',
+        icon_name: 'radio-button',
+        base_schema: {
+          input_type: 'radio',
+          options: []
+        }
+      },
+      {
+        id: 'range',
+        name: 'Slider',
+        description: 'Control deslizante numérico',
+        category: 'advanced',
+        icon_name: 'sliders',
+        base_schema: {
+          input_type: 'range',
+          min: 0,
+          max: 100,
+          step: 1,
+          defaultValue: 50
+        }
+      },
+      {
+        id: 'brand_selector',
+        name: 'Selector de Marca',
+        description: 'Selecciona una marca del usuario',
+        category: 'context',
+        icon_name: 'storefront',
+        base_schema: {
+          input_type: 'brand_selector',
+          includeEntities: false
+        }
+      },
+      {
+        id: 'entity_selector',
+        name: 'Selector de Entidad',
+        description: 'Selecciona producto/servicio',
+        category: 'context',
+        icon_name: 'package',
+        base_schema: {
+          input_type: 'entity_selector',
+          entityTypes: ['product', 'service', 'place']
+        }
+      },
+      {
+        id: 'audience_selector',
+        name: 'Selector de Audiencia',
+        description: 'Selecciona una audiencia definida',
+        category: 'context',
+        icon_name: 'users',
+        base_schema: {
+          input_type: 'audience_selector'
+        }
+      },
+      {
+        id: 'tone_selector',
+        name: 'Tono de Voz',
+        description: 'Selector de tono/estilo',
+        category: 'ai',
+        icon_name: 'microphone',
+        base_schema: {
+          input_type: 'select',
+          options: [
+            { value: 'profesional', label: 'Profesional' },
+            { value: 'casual', label: 'Casual' },
+            { value: 'humoristico', label: 'Humorístico' },
+            { value: 'inspirador', label: 'Inspirador' },
+            { value: 'urgente', label: 'Urgente' }
+          ]
+        }
+      },
+      {
+        id: 'length_selector',
+        name: 'Longitud',
+        description: 'Selector de longitud del contenido',
+        category: 'ai',
+        icon_name: 'text-align-left',
+        base_schema: {
+          input_type: 'select',
+          options: [
+            { value: 'corto', label: 'Corto (< 100 palabras)' },
+            { value: 'medio', label: 'Medio (100-300 palabras)' },
+            { value: 'largo', label: 'Largo (> 300 palabras)' }
+          ]
+        }
+      }
+    ];
+  }
+
+  renderComponentsList() {
+    const container = this.querySelector('#componentsList');
+    if (!container) return;
+    
+    // Agrupar por categoría
+    const groups = {
+      basic: { name: 'Básicos', icon: 'shapes', items: [] },
+      context: { name: 'Contexto', icon: 'database', items: [] },
+      ai: { name: 'IA', icon: 'magic-wand', items: [] },
+      advanced: { name: 'Avanzados', icon: 'gear-six', items: [] }
+    };
+    
+    this.componentTemplates.forEach(template => {
+      const category = template.category || 'basic';
+      if (groups[category]) {
+        groups[category].items.push(template);
+      } else {
+        groups.basic.items.push(template);
+      }
+    });
+    
+    let html = '';
+    
+    Object.entries(groups).forEach(([key, group]) => {
+      if (group.items.length === 0) return;
+      
+      html += `
+        <div class="component-group">
+          <div class="component-group-header">
+            <i class="ph ph-${group.icon}"></i>
+            <span>${group.name}</span>
+          </div>
+          <div class="component-group-items">
+            ${group.items.map(template => `
+              <div class="component-item" 
+                   draggable="true" 
+                   data-template-id="${template.id}"
+                   data-template='${JSON.stringify(template.base_schema)}'>
+                <i class="ph ph-${template.icon_name || 'textbox'}"></i>
+                <div class="component-info">
+                  <span class="component-name">${template.name}</span>
+                  <span class="component-desc">${template.description || ''}</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    });
+    
+    container.innerHTML = html;
+    this.setupDragAndDrop();
+  }
+
+  setupDragAndDrop() {
+    // Componentes arrastrables
+    const components = this.querySelectorAll('.component-item');
+    components.forEach(comp => {
+      comp.addEventListener('dragstart', (e) => this.handleComponentDragStart(e));
+      comp.addEventListener('dragend', (e) => this.handleDragEnd(e));
+    });
+    
+    // Canvas como drop zone
+    const canvas = this.querySelector('#builderCanvas');
+    if (canvas) {
+      canvas.addEventListener('dragover', (e) => this.handleDragOver(e));
+      canvas.addEventListener('dragleave', (e) => this.handleDragLeave(e));
+      canvas.addEventListener('drop', (e) => this.handleDrop(e));
+    }
+  }
+
+  handleComponentDragStart(e) {
+    const templateId = e.target.dataset.templateId;
+    const templateData = e.target.dataset.template;
+    
+    e.dataTransfer.setData('text/plain', JSON.stringify({
+      type: 'new_component',
+      templateId,
+      templateData: JSON.parse(templateData)
+    }));
+    
+    e.target.classList.add('dragging');
+    this.querySelector('#builderCanvas')?.classList.add('drag-active');
+  }
+
+  handleDragEnd(e) {
+    e.target.classList.remove('dragging');
+    this.querySelector('#builderCanvas')?.classList.remove('drag-active', 'drag-over');
+  }
+
+  handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    this.querySelector('#builderCanvas')?.classList.add('drag-over');
+  }
+
+  handleDragLeave(e) {
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      this.querySelector('#builderCanvas')?.classList.remove('drag-over');
+    }
+  }
+
+  handleDrop(e) {
+    e.preventDefault();
+    this.querySelector('#builderCanvas')?.classList.remove('drag-active', 'drag-over');
+    
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+      
+      if (data.type === 'new_component') {
+        this.addField(data.templateId, data.templateData);
+      } else if (data.type === 'reorder') {
+        // Reordenamiento de campos existentes
+        this.reorderField(data.fromIndex, this.getDropIndex(e));
+      }
+    } catch (err) {
+      console.error('Error handling drop:', err);
+    }
+  }
+
+  addField(templateId, baseSchema) {
+    const template = this.componentTemplates.find(t => t.id === templateId);
+    const fieldName = this.generateFieldKey(template?.name || templateId);
+    
+    const newField = {
+      key: fieldName,
+      label: template?.name || 'Campo',
+      input_type: baseSchema.input_type || 'text',
+      required: false,
+      placeholder: baseSchema.placeholder || '',
+      description: '',
+      ...baseSchema,
+      // UI config específica del campo
+      ui: {
+        width: 'full',
+        hidden: false
+      }
+    };
+    
+    this.inputSchema.push(newField);
+    this.hasUnsavedChanges = true;
+    this.renderCanvas();
+    this.updateJsonPreview();
+    
+    // Seleccionar el nuevo campo
+    this.selectField(this.inputSchema.length - 1);
+  }
+
+  generateFieldKey(baseName) {
+    const base = baseName
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '_')
+      .replace(/_+/g, '_')
+      .replace(/^_|_$/g, '');
+    
+    let key = base;
+    let counter = 1;
+    
+    while (this.inputSchema.some(f => f.key === key)) {
+      key = `${base}_${counter}`;
+      counter++;
+    }
+    
+    return key;
+  }
+
+  reorderField(fromIndex, toIndex) {
+    if (fromIndex === toIndex) return;
+    
+    const [field] = this.inputSchema.splice(fromIndex, 1);
+    this.inputSchema.splice(toIndex, 0, field);
+    
+    this.hasUnsavedChanges = true;
+    this.renderCanvas();
+    
+    if (this.selectedFieldIndex === fromIndex) {
+      this.selectedFieldIndex = toIndex;
+    }
+  }
+
+  getDropIndex(e) {
+    const fields = this.querySelectorAll('.canvas-field');
+    let index = this.inputSchema.length;
+    
+    fields.forEach((field, i) => {
+      const rect = field.getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+      
+      if (e.clientY < midY && index === this.inputSchema.length) {
+        index = i;
+      }
+    });
+    
+    return index;
+  }
+
+  renderCanvas() {
+    const canvas = this.querySelector('#canvasFields');
+    const emptyState = this.querySelector('#canvasEmptyState');
+    
+    if (!canvas) return;
+    
+    if (this.inputSchema.length === 0) {
+      canvas.style.display = 'none';
+      if (emptyState) emptyState.style.display = 'flex';
+      return;
+    }
+    
+    canvas.style.display = 'block';
+    if (emptyState) emptyState.style.display = 'none';
+    
+    canvas.innerHTML = this.inputSchema.map((field, index) => this.renderCanvasField(field, index)).join('');
+    
+    this.setupCanvasFieldListeners();
+  }
+
+  renderCanvasField(field, index) {
+    const isSelected = this.selectedFieldIndex === index;
+    const inputPreview = this.renderInputPreview(field);
+    
+    return `
+      <div class="canvas-field ${isSelected ? 'selected' : ''}" 
+           data-index="${index}"
+           draggable="true">
+        <div class="canvas-field-header">
+          <div class="canvas-field-drag">
+            <i class="ph ph-dots-six-vertical"></i>
+          </div>
+          <div class="canvas-field-info">
+            <span class="field-label">${field.label || field.key}</span>
+            <span class="field-type">${field.input_type}</span>
+            ${field.required ? '<span class="field-required">*</span>' : ''}
+          </div>
+          <div class="canvas-field-actions">
+            <button class="field-action-btn duplicate-field" title="Duplicar">
+              <i class="ph ph-copy"></i>
+            </button>
+            <button class="field-action-btn delete-field" title="Eliminar">
+              <i class="ph ph-trash"></i>
+            </button>
+          </div>
+        </div>
+        <div class="canvas-field-preview">
+          ${inputPreview}
+        </div>
+      </div>
+    `;
+  }
+
+  renderInputPreview(field) {
+    const placeholder = field.placeholder || '';
+    
+    switch (field.input_type) {
+      case 'text':
+        return `<input type="text" class="preview-input" placeholder="${placeholder}" disabled>`;
+      
+      case 'textarea':
+        return `<textarea class="preview-input" rows="${field.rows || 3}" placeholder="${placeholder}" disabled></textarea>`;
+      
+      case 'select':
+        const options = field.options || [];
+        return `
+          <select class="preview-input" disabled>
+            <option value="">${placeholder || 'Seleccionar...'}</option>
+            ${options.map(opt => `<option>${opt.label || opt}</option>`).join('')}
+          </select>
+        `;
+      
+      case 'number':
+        return `<input type="number" class="preview-input" placeholder="${placeholder}" disabled>`;
+      
+      case 'checkbox':
+        return `
+          <label class="preview-checkbox">
+            <input type="checkbox" disabled>
+            <span>${field.label || 'Opción'}</span>
+          </label>
+        `;
+      
+      case 'radio':
+        const radioOptions = field.options || [{ label: 'Opción 1' }, { label: 'Opción 2' }];
+        return `
+          <div class="preview-radio-group">
+            ${radioOptions.map((opt, i) => `
+              <label class="preview-radio">
+                <input type="radio" name="preview_${field.key}" disabled ${i === 0 ? 'checked' : ''}>
+                <span>${opt.label || opt}</span>
+              </label>
+            `).join('')}
+          </div>
+        `;
+      
+      case 'range':
+        return `
+          <div class="preview-range">
+            <input type="range" min="${field.min || 0}" max="${field.max || 100}" value="${field.defaultValue || 50}" disabled>
+            <span>${field.defaultValue || 50}</span>
+          </div>
+        `;
+      
+      case 'brand_selector':
+        return `<select class="preview-input preview-context" disabled><option>[ Selector de Marca ]</option></select>`;
+      
+      case 'entity_selector':
+        return `<select class="preview-input preview-context" disabled><option>[ Selector de Entidad ]</option></select>`;
+      
+      case 'audience_selector':
+        return `<select class="preview-input preview-context" disabled><option>[ Selector de Audiencia ]</option></select>`;
+      
+      default:
+        return `<input type="text" class="preview-input" placeholder="${placeholder}" disabled>`;
+    }
+  }
+
+  setupCanvasFieldListeners() {
+    const fields = this.querySelectorAll('.canvas-field');
+    
+    fields.forEach((field, index) => {
+      // Click para seleccionar
+      field.addEventListener('click', (e) => {
+        if (!e.target.closest('.field-action-btn')) {
+          this.selectField(index);
+        }
+      });
+      
+      // Drag para reordenar
+      field.addEventListener('dragstart', (e) => {
+        this.draggedFieldIndex = index;
+        e.dataTransfer.setData('text/plain', JSON.stringify({
+          type: 'reorder',
+          fromIndex: index
+        }));
+        field.classList.add('dragging');
+      });
+      
+      field.addEventListener('dragend', () => {
+        field.classList.remove('dragging');
+        this.draggedFieldIndex = null;
+      });
+      
+      field.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        if (this.draggedFieldIndex !== null && this.draggedFieldIndex !== index) {
+          field.classList.add('drag-target');
+        }
+      });
+      
+      field.addEventListener('dragleave', () => {
+        field.classList.remove('drag-target');
+      });
+      
+      field.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        field.classList.remove('drag-target');
+        
+        if (this.draggedFieldIndex !== null && this.draggedFieldIndex !== index) {
+          this.reorderField(this.draggedFieldIndex, index);
+        }
+      });
+      
+      // Botones de acción
+      const duplicateBtn = field.querySelector('.duplicate-field');
+      const deleteBtn = field.querySelector('.delete-field');
+      
+      if (duplicateBtn) {
+        duplicateBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.duplicateField(index);
+        });
+      }
+      
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.deleteField(index);
+        });
+      }
+    });
+  }
+
+  selectField(index) {
+    this.selectedFieldIndex = index;
+    
+    // Update visual selection
+    this.querySelectorAll('.canvas-field').forEach((f, i) => {
+      f.classList.toggle('selected', i === index);
+    });
+    
+    this.renderPropertiesPanel();
+  }
+
+  duplicateField(index) {
+    const original = this.inputSchema[index];
+    const duplicate = {
+      ...JSON.parse(JSON.stringify(original)),
+      key: this.generateFieldKey(original.key),
+      label: `${original.label} (copia)`
+    };
+    
+    this.inputSchema.splice(index + 1, 0, duplicate);
+    this.hasUnsavedChanges = true;
+    this.renderCanvas();
+    this.selectField(index + 1);
+    this.updateJsonPreview();
+  }
+
+  deleteField(index) {
+    this.inputSchema.splice(index, 1);
+    this.hasUnsavedChanges = true;
+    
+    if (this.selectedFieldIndex === index) {
+      this.selectedFieldIndex = null;
+      this.renderPropertiesPanel();
+    } else if (this.selectedFieldIndex > index) {
+      this.selectedFieldIndex--;
+    }
+    
+    this.renderCanvas();
+    this.updateJsonPreview();
+  }
+
+  renderPropertiesPanel() {
+    const panel = this.querySelector('#propertiesPanel');
+    if (!panel) return;
+    
+    if (this.selectedFieldIndex === null || !this.inputSchema[this.selectedFieldIndex]) {
+      panel.innerHTML = `
+        <div class="properties-empty">
+          <i class="ph ph-cursor-click"></i>
+          <p>Selecciona un campo para editar sus propiedades</p>
+        </div>
+      `;
+      return;
+    }
+    
+    const field = this.inputSchema[this.selectedFieldIndex];
+    
+    panel.innerHTML = `
+      <div class="properties-form">
+        <div class="property-group">
+          <h4>General</h4>
+          
+          <div class="property-field">
+            <label for="propKey">Key (ID)</label>
+            <input type="text" id="propKey" value="${field.key}" pattern="[a-z0-9_]+">
+            <span class="field-help">Identificador único (solo letras minúsculas, números y _)</span>
+          </div>
+          
+          <div class="property-field">
+            <label for="propLabel">Label</label>
+            <input type="text" id="propLabel" value="${field.label || ''}">
+          </div>
+          
+          <div class="property-field">
+            <label for="propPlaceholder">Placeholder</label>
+            <input type="text" id="propPlaceholder" value="${field.placeholder || ''}">
+          </div>
+          
+          <div class="property-field">
+            <label for="propDescription">Texto de ayuda</label>
+            <input type="text" id="propDescription" value="${field.description || ''}">
+          </div>
+          
+          <div class="property-toggle">
+            <label>
+              <input type="checkbox" id="propRequired" ${field.required ? 'checked' : ''}>
+              <span>Campo requerido</span>
+            </label>
+          </div>
+        </div>
+        
+        ${this.renderTypeSpecificProperties(field)}
+        
+        <div class="property-group">
+          <h4>Apariencia</h4>
+          
+          <div class="property-field">
+            <label for="propWidth">Ancho</label>
+            <select id="propWidth">
+              <option value="full" ${(field.ui?.width || 'full') === 'full' ? 'selected' : ''}>Completo</option>
+              <option value="half" ${field.ui?.width === 'half' ? 'selected' : ''}>Mitad</option>
+              <option value="third" ${field.ui?.width === 'third' ? 'selected' : ''}>Tercio</option>
+            </select>
+          </div>
+          
+          <div class="property-toggle">
+            <label>
+              <input type="checkbox" id="propHidden" ${field.ui?.hidden ? 'checked' : ''}>
+              <span>Oculto por defecto</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    this.setupPropertiesListeners();
+  }
+
+  renderTypeSpecificProperties(field) {
+    switch (field.input_type) {
+      case 'text':
+      case 'textarea':
+        return `
+          <div class="property-group">
+            <h4>Texto</h4>
+            <div class="property-field">
+              <label for="propMaxLength">Máximo caracteres</label>
+              <input type="number" id="propMaxLength" value="${field.maxLength || ''}" min="1">
+            </div>
+            ${field.input_type === 'textarea' ? `
+              <div class="property-field">
+                <label for="propRows">Filas</label>
+                <input type="number" id="propRows" value="${field.rows || 4}" min="2" max="20">
+              </div>
+            ` : ''}
+          </div>
+        `;
+      
+      case 'number':
+      case 'range':
+        return `
+          <div class="property-group">
+            <h4>Número</h4>
+            <div class="property-row">
+              <div class="property-field">
+                <label for="propMin">Mínimo</label>
+                <input type="number" id="propMin" value="${field.min ?? 0}">
+              </div>
+              <div class="property-field">
+                <label for="propMax">Máximo</label>
+                <input type="number" id="propMax" value="${field.max ?? 100}">
+              </div>
+            </div>
+            <div class="property-row">
+              <div class="property-field">
+                <label for="propStep">Incremento</label>
+                <input type="number" id="propStep" value="${field.step ?? 1}" min="0.01">
+              </div>
+              <div class="property-field">
+                <label for="propDefaultValue">Valor inicial</label>
+                <input type="number" id="propDefaultValue" value="${field.defaultValue ?? ''}">
+              </div>
+            </div>
+          </div>
+        `;
+      
+      case 'select':
+      case 'radio':
+        const options = field.options || [];
+        return `
+          <div class="property-group">
+            <h4>Opciones</h4>
+            <div class="options-editor" id="optionsEditor">
+              ${options.map((opt, i) => `
+                <div class="option-row" data-index="${i}">
+                  <input type="text" class="option-value" placeholder="Valor" value="${opt.value || opt}">
+                  <input type="text" class="option-label" placeholder="Label" value="${opt.label || opt}">
+                  <button class="btn-icon remove-option" title="Eliminar">
+                    <i class="ph ph-x"></i>
+                  </button>
+                </div>
+              `).join('')}
+            </div>
+            <button class="btn-small" id="addOptionBtn">
+              <i class="ph ph-plus"></i> Agregar opción
+            </button>
+          </div>
+        `;
+      
+      case 'entity_selector':
+        const entityTypes = field.entityTypes || ['product', 'service', 'place'];
+        return `
+          <div class="property-group">
+            <h4>Tipos de Entidad</h4>
+            <div class="entity-types-toggles">
+              <label class="property-toggle">
+                <input type="checkbox" data-type="product" ${entityTypes.includes('product') ? 'checked' : ''}>
+                <span>Productos</span>
+              </label>
+              <label class="property-toggle">
+                <input type="checkbox" data-type="service" ${entityTypes.includes('service') ? 'checked' : ''}>
+                <span>Servicios</span>
+              </label>
+              <label class="property-toggle">
+                <input type="checkbox" data-type="place" ${entityTypes.includes('place') ? 'checked' : ''}>
+                <span>Lugares</span>
+              </label>
+            </div>
+          </div>
+        `;
+      
+      default:
+        return '';
+    }
+  }
+
+  setupPropertiesListeners() {
+    const field = this.inputSchema[this.selectedFieldIndex];
+    if (!field) return;
+    
+    // General properties
+    const keyInput = this.querySelector('#propKey');
+    const labelInput = this.querySelector('#propLabel');
+    const placeholderInput = this.querySelector('#propPlaceholder');
+    const descriptionInput = this.querySelector('#propDescription');
+    const requiredCheckbox = this.querySelector('#propRequired');
+    const widthSelect = this.querySelector('#propWidth');
+    const hiddenCheckbox = this.querySelector('#propHidden');
+    
+    if (keyInput) {
+      keyInput.addEventListener('change', (e) => {
+        const newKey = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+        if (newKey && !this.inputSchema.some((f, i) => i !== this.selectedFieldIndex && f.key === newKey)) {
+          field.key = newKey;
+          this.onFieldChange();
+        } else {
+          e.target.value = field.key;
+        }
+      });
+    }
+    
+    if (labelInput) {
+      labelInput.addEventListener('input', (e) => {
+        field.label = e.target.value;
+        this.onFieldChange();
+      });
+    }
+    
+    if (placeholderInput) {
+      placeholderInput.addEventListener('input', (e) => {
+        field.placeholder = e.target.value;
+        this.onFieldChange();
+      });
+    }
+    
+    if (descriptionInput) {
+      descriptionInput.addEventListener('input', (e) => {
+        field.description = e.target.value;
+        this.onFieldChange();
+      });
+    }
+    
+    if (requiredCheckbox) {
+      requiredCheckbox.addEventListener('change', (e) => {
+        field.required = e.target.checked;
+        this.onFieldChange();
+      });
+    }
+    
+    if (widthSelect) {
+      widthSelect.addEventListener('change', (e) => {
+        if (!field.ui) field.ui = {};
+        field.ui.width = e.target.value;
+        this.onFieldChange();
+      });
+    }
+    
+    if (hiddenCheckbox) {
+      hiddenCheckbox.addEventListener('change', (e) => {
+        if (!field.ui) field.ui = {};
+        field.ui.hidden = e.target.checked;
+        this.onFieldChange();
+      });
+    }
+    
+    // Type-specific properties
+    this.setupTypeSpecificListeners(field);
+  }
+
+  setupTypeSpecificListeners(field) {
+    // Text/Textarea
+    const maxLengthInput = this.querySelector('#propMaxLength');
+    const rowsInput = this.querySelector('#propRows');
+    
+    if (maxLengthInput) {
+      maxLengthInput.addEventListener('change', (e) => {
+        field.maxLength = parseInt(e.target.value) || null;
+        this.onFieldChange();
+      });
+    }
+    
+    if (rowsInput) {
+      rowsInput.addEventListener('change', (e) => {
+        field.rows = parseInt(e.target.value) || 4;
+        this.onFieldChange();
+      });
+    }
+    
+    // Number/Range
+    const minInput = this.querySelector('#propMin');
+    const maxInput = this.querySelector('#propMax');
+    const stepInput = this.querySelector('#propStep');
+    const defaultValueInput = this.querySelector('#propDefaultValue');
+    
+    if (minInput) {
+      minInput.addEventListener('change', (e) => {
+        field.min = parseFloat(e.target.value) || 0;
+        this.onFieldChange();
+      });
+    }
+    
+    if (maxInput) {
+      maxInput.addEventListener('change', (e) => {
+        field.max = parseFloat(e.target.value) || 100;
+        this.onFieldChange();
+      });
+    }
+    
+    if (stepInput) {
+      stepInput.addEventListener('change', (e) => {
+        field.step = parseFloat(e.target.value) || 1;
+        this.onFieldChange();
+      });
+    }
+    
+    if (defaultValueInput) {
+      defaultValueInput.addEventListener('change', (e) => {
+        field.defaultValue = parseFloat(e.target.value) || null;
+        this.onFieldChange();
+      });
+    }
+    
+    // Select/Radio options
+    const addOptionBtn = this.querySelector('#addOptionBtn');
+    const optionsEditor = this.querySelector('#optionsEditor');
+    
+    if (addOptionBtn) {
+      addOptionBtn.addEventListener('click', () => {
+        if (!field.options) field.options = [];
+        field.options.push({ value: '', label: '' });
+        this.renderPropertiesPanel();
+        this.onFieldChange();
+      });
+    }
+    
+    if (optionsEditor) {
+      optionsEditor.querySelectorAll('.option-row').forEach((row, index) => {
+        const valueInput = row.querySelector('.option-value');
+        const labelInput = row.querySelector('.option-label');
+        const removeBtn = row.querySelector('.remove-option');
+        
+        if (valueInput) {
+          valueInput.addEventListener('input', (e) => {
+            if (!field.options[index]) field.options[index] = {};
+            if (typeof field.options[index] === 'string') {
+              field.options[index] = { value: e.target.value, label: field.options[index] };
+            } else {
+              field.options[index].value = e.target.value;
+            }
+            this.onFieldChange();
+          });
+        }
+        
+        if (labelInput) {
+          labelInput.addEventListener('input', (e) => {
+            if (!field.options[index]) field.options[index] = {};
+            if (typeof field.options[index] === 'string') {
+              field.options[index] = { value: field.options[index], label: e.target.value };
+            } else {
+              field.options[index].label = e.target.value;
+            }
+            this.onFieldChange();
+          });
+        }
+        
+        if (removeBtn) {
+          removeBtn.addEventListener('click', () => {
+            field.options.splice(index, 1);
+            this.renderPropertiesPanel();
+            this.onFieldChange();
+          });
+        }
+      });
+    }
+    
+    // Entity types
+    const entityTypeCheckboxes = this.querySelectorAll('.entity-types-toggles input[data-type]');
+    entityTypeCheckboxes.forEach(checkbox => {
+      checkbox.addEventListener('change', () => {
+        field.entityTypes = Array.from(this.querySelectorAll('.entity-types-toggles input[data-type]:checked'))
+          .map(cb => cb.dataset.type);
+        this.onFieldChange();
+      });
+    });
+  }
+
+  onFieldChange() {
+    this.hasUnsavedChanges = true;
+    this.renderCanvas();
+    this.updateJsonPreview();
+  }
+
+  updateJsonPreview() {
+    const preview = this.querySelector('#jsonSchemaPreview code');
+    if (!preview) return;
+    
+    const schema = {
+      fields: this.inputSchema
+    };
+    
+    preview.textContent = JSON.stringify(schema, null, 2);
+  }
+
+  async loadFlow() {
+    if (!this.supabase || !this.flowId) return;
+    
+    try {
+      // Cargar flujo principal
+      const { data: flow, error } = await this.supabase
+        .from('content_flows')
+        .select('*')
+        .eq('id', this.flowId)
+        .single();
+      
+      if (error) throw error;
+      
+      if (!flow) {
+        this.showNotification('Flujo no encontrado', 'error');
+        window.router?.navigate('/dev/flows');
+        return;
+      }
+      
+      // Verificar permisos
+      if (flow.owner_id !== this.userId) {
+        // TODO: Verificar si es colaborador
+        this.showNotification('No tienes permisos para editar este flujo', 'error');
+        window.router?.navigate('/dev/flows');
+        return;
+      }
+      
+      // Cargar datos
+      this.flowData = {
+        name: flow.name,
+        description: flow.description || '',
+        category_id: flow.category_id,
+        output_type: flow.output_type || 'text',
+        flow_category_type: flow.flow_category_type || 'manual',
+        token_cost: flow.token_cost || 1,
+        flow_image_url: flow.flow_image_url,
+        status: flow.status || 'draft',
+        version: flow.version || '1.0.0'
+      };
+      
+      // Cargar input_schema
+      if (flow.input_schema && flow.input_schema.fields) {
+        this.inputSchema = flow.input_schema.fields;
+      } else if (Array.isArray(flow.input_schema)) {
+        this.inputSchema = flow.input_schema;
+      }
+      
+      // Cargar ui_layout_config
+      if (flow.ui_layout_config && Object.keys(flow.ui_layout_config).length > 0) {
+        this.uiLayoutConfig = { ...this.uiLayoutConfig, ...flow.ui_layout_config };
+      }
+      
+      // Cargar detalles técnicos
+      const { data: techDetails } = await this.supabase
+        .from('flow_technical_details')
+        .select('*')
+        .eq('flow_id', this.flowId)
+        .single();
+      
+      if (techDetails) {
+        this.technicalDetails = {
+          webhook_url_test: techDetails.webhook_url_test || '',
+          webhook_url_prod: techDetails.webhook_url_prod || '',
+          webhook_method: techDetails.webhook_method || 'POST',
+          platform_name: techDetails.platform_name || 'n8n',
+          editor_url: techDetails.editor_url || ''
+        };
+      }
+      
+      // Actualizar UI
+      this.populateForm();
+      
+    } catch (err) {
+      console.error('Error loading flow:', err);
+      this.showNotification('Error al cargar el flujo', 'error');
+    }
+  }
+
+  populateForm() {
+    // Nombre
+    const nameInput = this.querySelector('#flowNameInput');
+    if (nameInput) nameInput.value = this.flowData.name;
+    
+    // Status badge
+    this.updateStatusBadge();
+    
+    // Settings tab
+    const descInput = this.querySelector('#flowDescription');
+    const categorySelect = this.querySelector('#flowCategory');
+    const outputTypeSelect = this.querySelector('#flowOutputType');
+    const flowTypeSelect = this.querySelector('#flowType');
+    const tokenCostInput = this.querySelector('#flowTokenCost');
+    const versionInput = this.querySelector('#flowVersion');
+    
+    if (descInput) descInput.value = this.flowData.description;
+    if (categorySelect) categorySelect.value = this.flowData.category_id || '';
+    if (outputTypeSelect) outputTypeSelect.value = this.flowData.output_type;
+    if (flowTypeSelect) flowTypeSelect.value = this.flowData.flow_category_type;
+    if (tokenCostInput) tokenCostInput.value = this.flowData.token_cost;
+    if (versionInput) versionInput.value = this.flowData.version;
+    
+    // Image preview
+    if (this.flowData.flow_image_url) {
+      this.updateImagePreview(this.flowData.flow_image_url);
+    }
+    
+    // UI Layout
+    const uiTheme = this.querySelector('#uiTheme');
+    const uiColumns = this.querySelector('#uiColumns');
+    const uiShowLabels = this.querySelector('#uiShowLabels');
+    const uiShowHelperText = this.querySelector('#uiShowHelperText');
+    const uiSubmitText = this.querySelector('#uiSubmitText');
+    const uiSubmitPosition = this.querySelector('#uiSubmitPosition');
+    
+    if (uiTheme) uiTheme.value = this.uiLayoutConfig.theme || 'default';
+    if (uiColumns) uiColumns.value = this.uiLayoutConfig.columns || '1';
+    if (uiShowLabels) uiShowLabels.checked = this.uiLayoutConfig.showLabels !== false;
+    if (uiShowHelperText) uiShowHelperText.checked = this.uiLayoutConfig.showHelperText !== false;
+    if (uiSubmitText) uiSubmitText.value = this.uiLayoutConfig.submitButtonText || 'Generar';
+    if (uiSubmitPosition) uiSubmitPosition.value = this.uiLayoutConfig.submitButtonPosition || 'right';
+    
+    // Technical details
+    const webhookTest = this.querySelector('#webhookTest');
+    const webhookProd = this.querySelector('#webhookProd');
+    const webhookMethod = this.querySelector('#webhookMethod');
+    const platformName = this.querySelector('#platformName');
+    const editorUrl = this.querySelector('#editorUrl');
+    
+    if (webhookTest) webhookTest.value = this.technicalDetails.webhook_url_test;
+    if (webhookProd) webhookProd.value = this.technicalDetails.webhook_url_prod;
+    if (webhookMethod) webhookMethod.value = this.technicalDetails.webhook_method;
+    if (platformName) platformName.value = this.technicalDetails.platform_name;
+    if (editorUrl) editorUrl.value = this.technicalDetails.editor_url;
+    
+    // Render canvas
+    this.renderCanvas();
+    this.updateJsonPreview();
+  }
+
+  updateStatusBadge() {
+    const badge = this.querySelector('#flowStatusBadge');
+    if (!badge) return;
+    
+    const statusLabels = {
+      draft: 'Borrador',
+      testing: 'En Pruebas',
+      published: 'Publicado'
+    };
+    
+    badge.className = `builder-status-badge ${this.flowData.status}`;
+    badge.textContent = statusLabels[this.flowData.status] || 'Borrador';
+  }
+
+  updateImagePreview(url) {
+    const preview = this.querySelector('#flowImagePreview');
+    const removeBtn = this.querySelector('#removeImageBtn');
+    
+    if (preview && url) {
+      preview.innerHTML = `<img src="${url}" alt="Flow image">`;
+    }
+    
+    if (removeBtn) {
+      removeBtn.style.display = url ? 'inline-flex' : 'none';
+    }
+  }
+
+  setupEventListeners() {
+    // Back button
+    const backBtn = this.querySelector('#builderBackBtn');
+    if (backBtn) {
+      backBtn.addEventListener('click', () => this.handleBack());
+    }
+    
+    // Flow name
+    const nameInput = this.querySelector('#flowNameInput');
+    if (nameInput) {
+      nameInput.addEventListener('input', (e) => {
+        this.flowData.name = e.target.value;
+        this.hasUnsavedChanges = true;
+      });
+    }
+    
+    // Tabs
+    this.querySelectorAll('.builder-tab').forEach(tab => {
+      tab.addEventListener('click', () => this.switchTab(tab.dataset.tab));
+    });
+    
+    // Save button
+    const saveBtn = this.querySelector('#saveFlowBtn');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', () => this.saveFlow());
+    }
+    
+    // Preview button
+    const previewBtn = this.querySelector('#previewFlowBtn');
+    if (previewBtn) {
+      previewBtn.addEventListener('click', () => this.showPreview());
+    }
+    
+    // Test button
+    const testBtn = this.querySelector('#testFlowBtn');
+    if (testBtn) {
+      testBtn.addEventListener('click', () => this.showTestModal());
+    }
+    
+    // More actions menu
+    const moreActionsBtn = this.querySelector('#moreActionsBtn');
+    const moreActionsDropdown = this.querySelector('#moreActionsDropdown');
+    if (moreActionsBtn && moreActionsDropdown) {
+      moreActionsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        moreActionsDropdown.style.display = moreActionsDropdown.style.display === 'none' ? 'block' : 'none';
+      });
+      
+      document.addEventListener('click', () => {
+        moreActionsDropdown.style.display = 'none';
+      });
+    }
+    
+    // Publish button
+    const publishBtn = this.querySelector('#publishFlowBtn');
+    if (publishBtn) {
+      publishBtn.addEventListener('click', () => this.publishFlow());
+    }
+    
+    // Duplicate button
+    const duplicateBtn = this.querySelector('#duplicateFlowBtn');
+    if (duplicateBtn) {
+      duplicateBtn.addEventListener('click', () => this.duplicateFlow());
+    }
+    
+    // Export button
+    const exportBtn = this.querySelector('#exportFlowBtn');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', () => this.exportFlow());
+    }
+    
+    // Delete button
+    const deleteBtn = this.querySelector('#deleteFlowBtn');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', () => this.showDeleteModal());
+    }
+    
+    // Settings form listeners
+    this.setupSettingsListeners();
+    
+    // Technical form listeners
+    this.setupTechnicalListeners();
+    
+    // Modal listeners
+    this.setupModalListeners();
+    
+    // Image upload
+    this.setupImageUpload();
+    
+    // Copy schema button
+    const copySchemaBtn = this.querySelector('#copySchemaBtn');
+    if (copySchemaBtn) {
+      copySchemaBtn.addEventListener('click', () => this.copySchema());
+    }
+  }
+
+  switchTab(tabId) {
+    // Update tab buttons
+    this.querySelectorAll('.builder-tab').forEach(tab => {
+      tab.classList.toggle('active', tab.dataset.tab === tabId);
+    });
+    
+    // Update tab content
+    this.querySelectorAll('.builder-tab-content').forEach(content => {
+      content.classList.toggle('active', content.id === `tab${tabId.charAt(0).toUpperCase() + tabId.slice(1)}`);
+    });
+  }
+
+  setupSettingsListeners() {
+    const fields = {
+      flowDescription: (v) => this.flowData.description = v,
+      flowCategory: (v) => this.flowData.category_id = v || null,
+      flowOutputType: (v) => this.flowData.output_type = v,
+      flowType: (v) => this.flowData.flow_category_type = v,
+      flowTokenCost: (v) => this.flowData.token_cost = parseInt(v) || 1,
+      flowVersion: (v) => this.flowData.version = v,
+      uiTheme: (v) => this.uiLayoutConfig.theme = v,
+      uiColumns: (v) => this.uiLayoutConfig.columns = parseInt(v) || 1,
+      uiSubmitText: (v) => this.uiLayoutConfig.submitButtonText = v,
+      uiSubmitPosition: (v) => this.uiLayoutConfig.submitButtonPosition = v
+    };
+    
+    Object.entries(fields).forEach(([id, setter]) => {
+      const el = this.querySelector(`#${id}`);
+      if (el) {
+        el.addEventListener('input', (e) => {
+          setter(e.target.value);
+          this.hasUnsavedChanges = true;
+        });
+        el.addEventListener('change', (e) => {
+          setter(e.target.value);
+          this.hasUnsavedChanges = true;
+        });
+      }
+    });
+    
+    // Checkboxes
+    const uiShowLabels = this.querySelector('#uiShowLabels');
+    const uiShowHelperText = this.querySelector('#uiShowHelperText');
+    
+    if (uiShowLabels) {
+      uiShowLabels.addEventListener('change', (e) => {
+        this.uiLayoutConfig.showLabels = e.target.checked;
+        this.hasUnsavedChanges = true;
+      });
+    }
+    
+    if (uiShowHelperText) {
+      uiShowHelperText.addEventListener('change', (e) => {
+        this.uiLayoutConfig.showHelperText = e.target.checked;
+        this.hasUnsavedChanges = true;
+      });
+    }
+  }
+
+  setupTechnicalListeners() {
+    const fields = {
+      webhookTest: (v) => this.technicalDetails.webhook_url_test = v,
+      webhookProd: (v) => this.technicalDetails.webhook_url_prod = v,
+      webhookMethod: (v) => this.technicalDetails.webhook_method = v,
+      platformName: (v) => this.technicalDetails.platform_name = v,
+      editorUrl: (v) => this.technicalDetails.editor_url = v
+    };
+    
+    Object.entries(fields).forEach(([id, setter]) => {
+      const el = this.querySelector(`#${id}`);
+      if (el) {
+        el.addEventListener('input', (e) => {
+          setter(e.target.value);
+          this.hasUnsavedChanges = true;
+        });
+      }
+    });
+  }
+
+  setupModalListeners() {
+    // Preview modal
+    const closePreview = this.querySelector('#closePreviewModal');
+    const previewModal = this.querySelector('#previewModal');
+    if (closePreview && previewModal) {
+      closePreview.addEventListener('click', () => {
+        previewModal.style.display = 'none';
+      });
+      previewModal.querySelector('.modal-overlay')?.addEventListener('click', () => {
+        previewModal.style.display = 'none';
+      });
+    }
+    
+    // Test modal
+    const closeTest = this.querySelector('#closeTestModal');
+    const closeTestBtn = this.querySelector('#closeTestBtn');
+    const testModal = this.querySelector('#testModal');
+    const runTestBtn = this.querySelector('#runTestBtn');
+    
+    if (testModal) {
+      if (closeTest) {
+        closeTest.addEventListener('click', () => {
+          testModal.style.display = 'none';
+        });
+      }
+      if (closeTestBtn) {
+        closeTestBtn.addEventListener('click', () => {
+          testModal.style.display = 'none';
+        });
+      }
+      testModal.querySelector('.modal-overlay')?.addEventListener('click', () => {
+        testModal.style.display = 'none';
+      });
+    }
+    
+    if (runTestBtn) {
+      runTestBtn.addEventListener('click', () => this.runTest());
+    }
+    
+    // Delete modal
+    const closeDelete = this.querySelector('#closeDeleteModal');
+    const cancelDelete = this.querySelector('#cancelDeleteBtn');
+    const confirmDelete = this.querySelector('#confirmDeleteBtn');
+    const deleteModal = this.querySelector('#deleteModal');
+    
+    if (deleteModal) {
+      if (closeDelete) {
+        closeDelete.addEventListener('click', () => {
+          deleteModal.style.display = 'none';
+        });
+      }
+      if (cancelDelete) {
+        cancelDelete.addEventListener('click', () => {
+          deleteModal.style.display = 'none';
+        });
+      }
+      deleteModal.querySelector('.modal-overlay')?.addEventListener('click', () => {
+        deleteModal.style.display = 'none';
+      });
+    }
+    
+    if (confirmDelete) {
+      confirmDelete.addEventListener('click', () => this.confirmDelete());
+    }
+  }
+
+  setupImageUpload() {
+    const uploadBtn = this.querySelector('#uploadImageBtn');
+    const removeBtn = this.querySelector('#removeImageBtn');
+    const fileInput = this.querySelector('#flowImageInput');
+    
+    if (uploadBtn && fileInput) {
+      uploadBtn.addEventListener('click', () => fileInput.click());
+      
+      fileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          await this.uploadImage(file);
+        }
+      });
+    }
+    
+    if (removeBtn) {
+      removeBtn.addEventListener('click', () => {
+        this.flowData.flow_image_url = null;
+        this.updateImagePreview(null);
+        const preview = this.querySelector('#flowImagePreview');
+        if (preview) {
+          preview.innerHTML = `<i class="ph ph-image"></i><span>Sin imagen</span>`;
+        }
+        this.hasUnsavedChanges = true;
+      });
+    }
+  }
+
+  async uploadImage(file) {
+    if (!this.supabase) {
+      this.showNotification('No se puede subir la imagen', 'error');
+      return;
+    }
+    
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `flow_${this.flowId || Date.now()}_${Date.now()}.${fileExt}`;
+      const filePath = `flow-images/${fileName}`;
+      
+      const { data, error } = await this.supabase.storage
+        .from('flow-assets')
+        .upload(filePath, file, { upsert: true });
+      
+      if (error) throw error;
+      
+      const { data: urlData } = this.supabase.storage
+        .from('flow-assets')
+        .getPublicUrl(filePath);
+      
+      this.flowData.flow_image_url = urlData.publicUrl;
+      this.updateImagePreview(urlData.publicUrl);
+      this.hasUnsavedChanges = true;
+      
+      this.showNotification('Imagen subida correctamente', 'success');
+    } catch (err) {
+      console.error('Error uploading image:', err);
+      this.showNotification('Error al subir la imagen', 'error');
+    }
+  }
+
+  async saveFlow() {
+    if (!this.supabase || !this.userId) {
+      this.showNotification('No se puede guardar. Inicia sesión.', 'error');
+      return;
+    }
+    
+    if (!this.flowData.name.trim()) {
+      this.showNotification('El nombre del flujo es requerido', 'error');
+      this.querySelector('#flowNameInput')?.focus();
+      return;
+    }
+    
+    const saveBtn = this.querySelector('#saveFlowBtn');
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Guardando...';
+    }
+    
+    try {
+      const flowPayload = {
+        name: this.flowData.name.trim(),
+        description: this.flowData.description,
+        category_id: this.flowData.category_id,
+        output_type: this.flowData.output_type,
+        flow_category_type: this.flowData.flow_category_type,
+        token_cost: this.flowData.token_cost,
+        flow_image_url: this.flowData.flow_image_url,
+        status: this.flowData.status,
+        version: this.flowData.version,
+        input_schema: { fields: this.inputSchema },
+        ui_layout_config: this.uiLayoutConfig,
+        webhook_url: this.technicalDetails.webhook_url_prod || this.technicalDetails.webhook_url_test
+      };
+      
+      let flowId = this.flowId;
+      
+      if (this.isEditMode && flowId) {
+        // Update existing flow
+        const { error } = await this.supabase
+          .from('content_flows')
+          .update(flowPayload)
+          .eq('id', flowId);
+        
+        if (error) throw error;
+      } else {
+        // Create new flow
+        flowPayload.owner_id = this.userId;
+        
+        const { data, error } = await this.supabase
+          .from('content_flows')
+          .insert(flowPayload)
+          .select('id')
+          .single();
+        
+        if (error) throw error;
+        
+        flowId = data.id;
+        this.flowId = flowId;
+        this.isEditMode = true;
+        
+        // Update URL without reload
+        const newUrl = `/dev/builder?id=${flowId}`;
+        window.history.replaceState({}, '', newUrl);
+      }
+      
+      // Save technical details
+      await this.saveTechnicalDetails(flowId);
+      
+      this.hasUnsavedChanges = false;
+      this.showNotification('Flujo guardado correctamente', 'success');
+      
+    } catch (err) {
+      console.error('Error saving flow:', err);
+      this.showNotification('Error al guardar el flujo', 'error');
+    } finally {
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="ph ph-floppy-disk"></i> Guardar';
+      }
+    }
+  }
+
+  async saveTechnicalDetails(flowId) {
+    if (!this.supabase || !flowId) return;
+    
+    const techPayload = {
+      flow_id: flowId,
+      webhook_url_test: this.technicalDetails.webhook_url_test,
+      webhook_url_prod: this.technicalDetails.webhook_url_prod,
+      webhook_method: this.technicalDetails.webhook_method,
+      platform_name: this.technicalDetails.platform_name,
+      editor_url: this.technicalDetails.editor_url
+    };
+    
+    // Upsert technical details
+    const { error } = await this.supabase
+      .from('flow_technical_details')
+      .upsert(techPayload, { onConflict: 'flow_id' });
+    
+    if (error) {
+      console.error('Error saving technical details:', error);
+    }
+  }
+
+  async publishFlow() {
+    if (!this.flowId) {
+      this.showNotification('Guarda el flujo primero', 'warning');
+      return;
+    }
+    
+    // Validaciones antes de publicar
+    if (this.inputSchema.length === 0) {
+      this.showNotification('Agrega al menos un campo de entrada', 'warning');
+      return;
+    }
+    
+    if (!this.technicalDetails.webhook_url_prod && !this.technicalDetails.webhook_url_test) {
+      this.showNotification('Configura al menos un webhook', 'warning');
+      this.switchTab('technical');
+      return;
+    }
+    
+    try {
+      this.flowData.status = 'published';
+      await this.saveFlow();
+      this.updateStatusBadge();
+      this.showNotification('¡Flujo publicado exitosamente!', 'success');
+    } catch (err) {
+      console.error('Error publishing flow:', err);
+      this.showNotification('Error al publicar el flujo', 'error');
+    }
+  }
+
+  async duplicateFlow() {
+    if (!this.flowId || !this.supabase) return;
+    
+    try {
+      const newFlowData = {
+        ...this.flowData,
+        name: `${this.flowData.name} (copia)`,
+        status: 'draft',
+        owner_id: this.userId
+      };
+      
+      const flowPayload = {
+        ...newFlowData,
+        input_schema: { fields: this.inputSchema },
+        ui_layout_config: this.uiLayoutConfig,
+        webhook_url: this.technicalDetails.webhook_url_prod || this.technicalDetails.webhook_url_test
+      };
+      
+      const { data, error } = await this.supabase
+        .from('content_flows')
+        .insert(flowPayload)
+        .select('id')
+        .single();
+      
+      if (error) throw error;
+      
+      this.showNotification('Flujo duplicado', 'success');
+      
+      // Navegar al nuevo flujo
+      window.router?.navigate(`/dev/builder?id=${data.id}`);
+      
+    } catch (err) {
+      console.error('Error duplicating flow:', err);
+      this.showNotification('Error al duplicar el flujo', 'error');
+    }
+  }
+
+  exportFlow() {
+    const exportData = {
+      name: this.flowData.name,
+      description: this.flowData.description,
+      output_type: this.flowData.output_type,
+      flow_category_type: this.flowData.flow_category_type,
+      token_cost: this.flowData.token_cost,
+      version: this.flowData.version,
+      input_schema: { fields: this.inputSchema },
+      ui_layout_config: this.uiLayoutConfig,
+      technical: {
+        webhook_method: this.technicalDetails.webhook_method,
+        platform_name: this.technicalDetails.platform_name
+      }
+    };
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `flow_${this.flowData.name.replace(/[^a-z0-9]/gi, '_')}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    this.showNotification('Flujo exportado', 'success');
+  }
+
+  copySchema() {
+    const schema = JSON.stringify({ fields: this.inputSchema }, null, 2);
+    navigator.clipboard.writeText(schema).then(() => {
+      this.showNotification('Schema copiado al portapapeles', 'success');
+    }).catch(() => {
+      this.showNotification('Error al copiar', 'error');
+    });
+  }
+
+  showPreview() {
+    const modal = this.querySelector('#previewModal');
+    const container = this.querySelector('#previewContainer');
+    
+    if (!modal || !container) return;
+    
+    // Generar preview del formulario
+    container.innerHTML = this.generateFormPreview();
+    modal.style.display = 'flex';
+  }
+
+  generateFormPreview() {
+    if (this.inputSchema.length === 0) {
+      return `
+        <div class="preview-empty">
+          <i class="ph ph-warning"></i>
+          <p>No hay campos definidos</p>
+        </div>
+      `;
+    }
+    
+    const columns = this.uiLayoutConfig.columns || 1;
+    const showLabels = this.uiLayoutConfig.showLabels !== false;
+    const showHelperText = this.uiLayoutConfig.showHelperText !== false;
+    
+    let fieldsHtml = this.inputSchema.map(field => {
+      const widthClass = field.ui?.width === 'half' ? 'col-half' : field.ui?.width === 'third' ? 'col-third' : 'col-full';
+      
+      let inputHtml = '';
+      switch (field.input_type) {
+        case 'text':
+          inputHtml = `<input type="text" placeholder="${field.placeholder || ''}">`;
+          break;
+        case 'textarea':
+          inputHtml = `<textarea rows="${field.rows || 4}" placeholder="${field.placeholder || ''}"></textarea>`;
+          break;
+        case 'select':
+          inputHtml = `
+            <select>
+              <option value="">${field.placeholder || 'Seleccionar...'}</option>
+              ${(field.options || []).map(opt => `<option value="${opt.value || opt}">${opt.label || opt}</option>`).join('')}
+            </select>
+          `;
+          break;
+        case 'number':
+          inputHtml = `<input type="number" min="${field.min || ''}" max="${field.max || ''}" step="${field.step || 1}" placeholder="${field.placeholder || ''}">`;
+          break;
+        case 'checkbox':
+          inputHtml = `<label class="checkbox-label"><input type="checkbox"> ${field.label}</label>`;
+          break;
+        case 'radio':
+          inputHtml = `
+            <div class="radio-group">
+              ${(field.options || []).map((opt, i) => `
+                <label class="radio-label">
+                  <input type="radio" name="${field.key}" ${i === 0 ? 'checked' : ''}>
+                  ${opt.label || opt}
+                </label>
+              `).join('')}
+            </div>
+          `;
+          break;
+        case 'range':
+          inputHtml = `
+            <div class="range-input">
+              <input type="range" min="${field.min || 0}" max="${field.max || 100}" value="${field.defaultValue || 50}">
+              <span class="range-value">${field.defaultValue || 50}</span>
+            </div>
+          `;
+          break;
+        default:
+          inputHtml = `<div class="context-selector">[${field.input_type}]</div>`;
+      }
+      
+      return `
+        <div class="preview-field ${widthClass}">
+          ${showLabels && field.input_type !== 'checkbox' ? `<label>${field.label}${field.required ? ' <span class="required">*</span>' : ''}</label>` : ''}
+          ${inputHtml}
+          ${showHelperText && field.description ? `<span class="helper-text">${field.description}</span>` : ''}
+        </div>
+      `;
+    }).join('');
+    
+    const submitPosition = this.uiLayoutConfig.submitButtonPosition || 'right';
+    const submitText = this.uiLayoutConfig.submitButtonText || 'Generar';
+    
+    return `
+      <div class="preview-form theme-${this.uiLayoutConfig.theme || 'default'}" style="--preview-columns: ${columns}">
+        <div class="preview-fields">
+          ${fieldsHtml}
+        </div>
+        <div class="preview-actions position-${submitPosition}">
+          <button class="btn-primary preview-submit">
+            <i class="ph ph-sparkle"></i>
+            ${submitText}
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  showTestModal() {
+    if (!this.technicalDetails.webhook_url_test && !this.technicalDetails.webhook_url_prod) {
+      this.showNotification('Configura un webhook primero', 'warning');
+      this.switchTab('technical');
+      return;
+    }
+    
+    const modal = this.querySelector('#testModal');
+    const container = this.querySelector('#testFormContainer');
+    const results = this.querySelector('#testResults');
+    
+    if (!modal || !container) return;
+    
+    // Generar formulario de prueba funcional
+    container.innerHTML = this.generateTestForm();
+    if (results) results.style.display = 'none';
+    
+    modal.style.display = 'flex';
+    
+    // Setup range inputs
+    container.querySelectorAll('input[type="range"]').forEach(range => {
+      const valueDisplay = range.nextElementSibling;
+      range.addEventListener('input', () => {
+        if (valueDisplay) valueDisplay.textContent = range.value;
+      });
+    });
+  }
+
+  generateTestForm() {
+    if (this.inputSchema.length === 0) {
+      return `
+        <div class="test-empty">
+          <i class="ph ph-warning"></i>
+          <p>No hay campos definidos para probar</p>
+        </div>
+      `;
+    }
+    
+    return this.inputSchema.map(field => {
+      let inputHtml = '';
+      
+      switch (field.input_type) {
+        case 'text':
+          inputHtml = `<input type="text" id="test_${field.key}" name="${field.key}" placeholder="${field.placeholder || ''}" ${field.required ? 'required' : ''}>`;
+          break;
+        case 'textarea':
+          inputHtml = `<textarea id="test_${field.key}" name="${field.key}" rows="${field.rows || 4}" placeholder="${field.placeholder || ''}" ${field.required ? 'required' : ''}></textarea>`;
+          break;
+        case 'select':
+          inputHtml = `
+            <select id="test_${field.key}" name="${field.key}" ${field.required ? 'required' : ''}>
+              <option value="">${field.placeholder || 'Seleccionar...'}</option>
+              ${(field.options || []).map(opt => `<option value="${opt.value || opt}">${opt.label || opt}</option>`).join('')}
+            </select>
+          `;
+          break;
+        case 'number':
+          inputHtml = `<input type="number" id="test_${field.key}" name="${field.key}" min="${field.min || ''}" max="${field.max || ''}" step="${field.step || 1}" value="${field.defaultValue || ''}" ${field.required ? 'required' : ''}>`;
+          break;
+        case 'checkbox':
+          inputHtml = `
+            <label class="test-checkbox">
+              <input type="checkbox" id="test_${field.key}" name="${field.key}" ${field.defaultValue ? 'checked' : ''}>
+              <span>${field.label}</span>
+            </label>
+          `;
+          break;
+        case 'radio':
+          inputHtml = `
+            <div class="test-radio-group">
+              ${(field.options || []).map((opt, i) => `
+                <label class="test-radio">
+                  <input type="radio" name="${field.key}" value="${opt.value || opt}" ${i === 0 ? 'checked' : ''}>
+                  <span>${opt.label || opt}</span>
+                </label>
+              `).join('')}
+            </div>
+          `;
+          break;
+        case 'range':
+          inputHtml = `
+            <div class="test-range">
+              <input type="range" id="test_${field.key}" name="${field.key}" min="${field.min || 0}" max="${field.max || 100}" step="${field.step || 1}" value="${field.defaultValue || 50}">
+              <span class="range-value">${field.defaultValue || 50}</span>
+            </div>
+          `;
+          break;
+        case 'brand_selector':
+        case 'entity_selector':
+        case 'audience_selector':
+          inputHtml = `<input type="text" id="test_${field.key}" name="${field.key}" placeholder="UUID de prueba..." ${field.required ? 'required' : ''}>`;
+          break;
+        default:
+          inputHtml = `<input type="text" id="test_${field.key}" name="${field.key}" placeholder="${field.placeholder || ''}" ${field.required ? 'required' : ''}>`;
+      }
+      
+      return `
+        <div class="test-field">
+          <label for="test_${field.key}">${field.label || field.key}${field.required ? ' <span class="required">*</span>' : ''}</label>
+          ${inputHtml}
+          ${field.description ? `<span class="field-help">${field.description}</span>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  async runTest() {
+    const container = this.querySelector('#testFormContainer');
+    const results = this.querySelector('#testResults');
+    const output = this.querySelector('#testResultOutput');
+    const runBtn = this.querySelector('#runTestBtn');
+    
+    if (!container) return;
+    
+    // Collect form data
+    const formData = {};
+    this.inputSchema.forEach(field => {
+      const input = container.querySelector(`[name="${field.key}"]`);
+      if (input) {
+        if (input.type === 'checkbox') {
+          formData[field.key] = input.checked;
+        } else if (input.type === 'radio') {
+          const checked = container.querySelector(`[name="${field.key}"]:checked`);
+          formData[field.key] = checked ? checked.value : null;
+        } else {
+          formData[field.key] = input.value;
+        }
+      }
+    });
+    
+    // Validate required fields
+    for (const field of this.inputSchema) {
+      if (field.required && !formData[field.key]) {
+        this.showNotification(`El campo "${field.label}" es requerido`, 'warning');
+        return;
+      }
+    }
+    
+    const webhookUrl = this.technicalDetails.webhook_url_test || this.technicalDetails.webhook_url_prod;
+    
+    if (!webhookUrl) {
+      this.showNotification('No hay webhook configurado', 'error');
+      return;
+    }
+    
+    if (runBtn) {
+      runBtn.disabled = true;
+      runBtn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Ejecutando...';
+    }
+    
+    try {
+      const response = await fetch(webhookUrl, {
+        method: this.technicalDetails.webhook_method || 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          inputs: formData,
+          test_mode: true,
+          flow_id: this.flowId,
+          timestamp: new Date().toISOString()
+        })
+      });
+      
+      let responseData;
+      const contentType = response.headers.get('content-type');
+      
+      if (contentType && contentType.includes('application/json')) {
+        responseData = await response.json();
+      } else {
+        responseData = await response.text();
+      }
+      
+      if (results && output) {
+        results.style.display = 'block';
+        output.textContent = JSON.stringify({
+          status: response.status,
+          statusText: response.statusText,
+          data: responseData
+        }, null, 2);
+      }
+      
+      if (response.ok) {
+        this.showNotification('Prueba ejecutada exitosamente', 'success');
+      } else {
+        this.showNotification(`Error: ${response.status} ${response.statusText}`, 'error');
+      }
+      
+    } catch (err) {
+      console.error('Test error:', err);
+      
+      if (results && output) {
+        results.style.display = 'block';
+        output.textContent = JSON.stringify({
+          error: err.message,
+          type: 'network_error'
+        }, null, 2);
+      }
+      
+      this.showNotification('Error de conexión', 'error');
+    } finally {
+      if (runBtn) {
+        runBtn.disabled = false;
+        runBtn.innerHTML = '<i class="ph ph-play"></i> Ejecutar';
+      }
+    }
+  }
+
+  showDeleteModal() {
+    const modal = this.querySelector('#deleteModal');
+    if (modal) {
+      modal.style.display = 'flex';
+    }
+  }
+
+  async confirmDelete() {
+    if (!this.flowId || !this.supabase) {
+      this.querySelector('#deleteModal').style.display = 'none';
+      return;
+    }
+    
+    try {
+      // Delete technical details first
+      await this.supabase
+        .from('flow_technical_details')
+        .delete()
+        .eq('flow_id', this.flowId);
+      
+      // Delete flow
+      const { error } = await this.supabase
+        .from('content_flows')
+        .delete()
+        .eq('id', this.flowId);
+      
+      if (error) throw error;
+      
+      this.showNotification('Flujo eliminado', 'success');
+      window.router?.navigate('/dev/flows');
+      
+    } catch (err) {
+      console.error('Error deleting flow:', err);
+      this.showNotification('Error al eliminar el flujo', 'error');
+      this.querySelector('#deleteModal').style.display = 'none';
+    }
+  }
+
+  handleBack() {
+    if (this.hasUnsavedChanges) {
+      if (confirm('Tienes cambios sin guardar. ¿Deseas salir?')) {
+        window.router?.navigate('/dev/flows');
+      }
+    } else {
+      window.router?.navigate('/dev/flows');
+    }
+  }
+
+  showNotification(message, type = 'info') {
+    // Reutilizar sistema de notificaciones existente o crear uno simple
+    const existing = document.querySelector('.builder-notification');
+    if (existing) existing.remove();
+    
+    const notification = document.createElement('div');
+    notification.className = `builder-notification ${type}`;
+    notification.innerHTML = `
+      <i class="ph ph-${type === 'success' ? 'check-circle' : type === 'error' ? 'x-circle' : type === 'warning' ? 'warning' : 'info'}"></i>
+      <span>${message}</span>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => notification.classList.add('show'), 10);
+    setTimeout(() => {
+      notification.classList.remove('show');
+      setTimeout(() => notification.remove(), 300);
+    }, 3000);
+  }
+}
+
+window.DevBuilderView = DevBuilderView;

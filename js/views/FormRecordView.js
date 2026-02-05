@@ -58,11 +58,15 @@ class FormRecordView extends BaseView {
       console.error('❌ No se pudo cargar FormRecord');
     }
 
+    // Setup botón de "Ir al Living"
     const goToLivingBtn = this.querySelector('#goToLivingBtn');
     if (goToLivingBtn) {
       this.addEventListener(goToLivingBtn, 'click', () => {
-        if (window.router) window.router.navigate('/home');
-        else window.location.href = '/';
+        if (window.router) {
+          window.router.navigate('/living');
+        } else {
+          window.location.href = '/living.html';
+        }
       });
     }
   }

@@ -1,6 +1,10 @@
 /**
  * AuthService - Servicio centralizado de autenticación
  * Maneja login, logout, verificación de sesión y redirecciones
+ * 
+ * Soporta arquitectura MPA + SPA:
+ * - Modo 'user': Usuario SaaS consumidor → SPA operativa
+ * - Modo 'developer': Desarrollador PaaS → Portal de desarrollo
  */
 class AuthService {
   constructor() {
@@ -8,6 +12,7 @@ class AuthService {
     this.isAuth = false;
     this.supabase = null;
     this.listeners = [];
+    this.userMode = 'user'; // 'user' | 'developer'
     this.init();
   }
 
@@ -97,12 +102,13 @@ class AuthService {
 
   /**
    * Cargar datos del usuario
+   * Incluye default_view_mode para determinar flujo MPA/SPA
    */
   async loadUserData(userId) {
     if (!this.supabase || !userId) return;
 
     try {
-      // Cargar perfil del usuario desde user_profiles
+      // Cargar perfil del usuario desde user_profiles (incluye default_view_mode)
       const { data: profile, error } = await this.supabase
         .from('user_profiles')
         .select('*')
@@ -116,8 +122,16 @@ class AuthService {
           full_name: profile.full_name,
           phone_number: profile.phone_number,
           email_verified: profile.email_verified,
-          role: profile.role || 'user'
+          role: profile.role || 'user',
+          // Campos para arquitectura MPA + SPA
+          default_view_mode: profile.default_view_mode || 'user' // 'user' | 'developer'
         };
+
+        // Actualizar modo del servicio
+        this.userMode = this.currentUser.default_view_mode;
+
+        // Guardar modo en localStorage para acceso rápido
+        localStorage.setItem('userViewMode', this.userMode);
 
         // Guardar en sessionManager si está disponible
         if (window.sessionManager) {
@@ -132,8 +146,11 @@ class AuthService {
             email: user.email,
             full_name: user.user_metadata?.full_name || user.email?.split('@')[0],
             email_verified: user.email_confirmed_at ? true : false,
-            role: 'user'
+            role: 'user',
+            default_view_mode: 'user'
           };
+          this.userMode = 'user';
+          localStorage.setItem('userViewMode', 'user');
         }
       }
     } catch (error) {
@@ -231,9 +248,14 @@ class AuthService {
 
   /**
    * Determinar ruta de redirección basado en el estado del usuario
+   * 
+   * Flujo de redirección MPA + SPA:
+   * 1. Si no completó form_verified → /form-record
+   * 2. Si default_view_mode = 'developer' → /dev/dashboard (Portal PaaS)
+   * 3. Si default_view_mode = 'user' → /hogar (Selector de organizaciones SaaS)
    */
   async determineRedirectRoute(userId) {
-    if (!this.supabase || !userId) return '/home';
+    if (!this.supabase || !userId) return '/form-record';
 
     try {
       // Verificar si completó el formulario
@@ -244,14 +266,82 @@ class AuthService {
         .single();
 
       if (!userData || userData.form_verified !== true) {
-        return '/onboarding';
+        return '/form-record';
       }
 
-      return '/home';
+      // Obtener el modo de vista preferido del usuario
+      const viewMode = this.userMode || localStorage.getItem('userViewMode') || 'user';
+
+      // Redirigir según el modo
+      if (viewMode === 'developer') {
+        return '/dev/dashboard';
+      }
+
+      // Modo usuario SaaS → selector de organizaciones
+      return '/hogar';
     } catch (error) {
       console.error('Error determinando ruta:', error);
-      return '/home';
+      return '/form-record';
     }
+  }
+
+  /**
+   * Obtener el modo de vista actual del usuario
+   * @returns {'user' | 'developer'}
+   */
+  getUserMode() {
+    return this.userMode || localStorage.getItem('userViewMode') || 'user';
+  }
+
+  /**
+   * Cambiar el modo de vista del usuario
+   * @param {'user' | 'developer'} mode - Nuevo modo
+   * @param {boolean} persist - Si debe guardarse en la base de datos
+   */
+  async setUserMode(mode, persist = false) {
+    if (mode !== 'user' && mode !== 'developer') {
+      console.error('Modo inválido:', mode);
+      return;
+    }
+
+    this.userMode = mode;
+    localStorage.setItem('userViewMode', mode);
+
+    if (this.currentUser) {
+      this.currentUser.default_view_mode = mode;
+    }
+
+    // Persistir en la base de datos si se solicita
+    if (persist && this.supabase && this.currentUser?.id) {
+      try {
+        await this.supabase
+          .from('user_profiles')
+          .update({ default_view_mode: mode })
+          .eq('id', this.currentUser.id);
+      } catch (error) {
+        console.error('Error actualizando modo de vista:', error);
+      }
+    }
+
+    // Notificar listeners del cambio de modo
+    this.notifyListeners('mode_changed', { mode });
+  }
+
+  /**
+   * Verificar si el usuario actual es desarrollador
+   * @returns {boolean}
+   */
+  isDeveloper() {
+    return this.getUserMode() === 'developer';
+  }
+
+  /**
+   * Verificar si el usuario está en una ruta de desarrollador
+   * @returns {boolean}
+   */
+  isInDevRoute() {
+    const currentPath = window.location.pathname || '/';
+    return currentPath.startsWith('/dev');
   }
 
   /**
@@ -326,7 +416,7 @@ class AuthService {
       const { data, error } = await this.supabase.auth.signInWithOAuth({
         provider: provider,
         options: {
-          redirectTo: `${window.location.origin}/home`
+          redirectTo: `${window.location.origin}/#/living`
         }
       });
 
@@ -355,7 +445,7 @@ class AuthService {
 
     try {
       const { error } = await this.supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/login`
+        redirectTo: `${window.location.origin}/#/login`
       });
 
       if (error) {

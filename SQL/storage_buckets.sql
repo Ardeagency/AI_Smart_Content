@@ -121,3 +121,21 @@ USING (
     auth.uid()::text = (storage.foldername(name))[1]
 );
 
+-- Políticas para production-outputs
+CREATE POLICY "Users can upload to production-outputs"
+ON storage.objects FOR INSERT
+WITH CHECK (
+    bucket_id = 'production-outputs'
+);
+
+CREATE POLICY "Users can view production-outputs"
+ON storage.objects FOR SELECT
+USING (
+    bucket_id = 'production-outputs'
+);
+
+CREATE POLICY "Users can delete from production-outputs"
+ON storage.objects FOR DELETE
+USING (
+    bucket_id = 'production-outputs'
+);
