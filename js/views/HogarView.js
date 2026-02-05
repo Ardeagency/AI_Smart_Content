@@ -329,32 +329,98 @@ class HogarView extends BaseView {
   }
 
   /**
-   * Oscurecer hex ~25% para gradiente de 1 color
+   * Brand Color Intelligence: hex → HSL
    */
-  darkenHex(hex, amount = 0.25) {
-    const match = hex.replace(/^#/, '').match(/.{2}/g);
-    if (!match) return hex;
-    const r = Math.max(0, Math.round(parseInt(match[0], 16) * (1 - amount)));
-    const g = Math.max(0, Math.round(parseInt(match[1], 16) * (1 - amount)));
-    const b = Math.max(0, Math.round(parseInt(match[2], 16) * (1 - amount)));
+  hexToHSL(hex) {
+    const clean = hex.replace(/^#/, '');
+    const r = parseInt(clean.slice(0, 2), 16) / 255;
+    const g = parseInt(clean.slice(2, 4), 16) / 255;
+    const b = parseInt(clean.slice(4, 6), 16) / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s = 0, l = (max + min) / 2;
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+        case g: h = ((b - r) / d + 2) / 6; break;
+        default: h = ((r - g) / d + 4) / 6;
+      }
+    }
+    return { h: h * 360, s: s * 100, l: l * 100 };
+  }
+
+  /**
+   * HSL → hex
+   */
+  hslToHex(h, s, l) {
+    s /= 100; l /= 100;
+    const a = s * Math.min(l, 1 - l);
+    const f = n => {
+      const k = (n + h / 30) % 12;
+      return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+    };
+    const r = Math.round(f(0) * 255);
+    const g = Math.round(f(8) * 255);
+    const b = Math.round(f(4) * 255);
     return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
   }
 
   /**
-   * Construir CSS linear-gradient desde brandColors (1, 2 o 3+ colores)
+   * Filtrar y puntuar colores (excluir L>85, L<18, S<15, S>90). Máx 3 colores.
+   */
+  filterAndScoreBrandColors(hexes) {
+    const MIN_L = 18, MAX_L = 85, MIN_S = 15, MAX_S = 90;
+    const idealL = 45, idealS = 50;
+    const out = [];
+    for (const hex of hexes.slice(0, 5)) {
+      const { h, s, l } = this.hexToHSL(hex);
+      if (l > MAX_L || l < MIN_L || s < MIN_S || s > MAX_S) continue;
+      const scoreL = 30 - Math.abs(l - idealL) / 2;
+      const scoreS = 40 - Math.abs(s - idealS) / 2;
+      const score = Math.max(0, scoreL + scoreS);
+      out.push({ hex, h, s, l, score });
+    }
+    return out.sort((a, b) => b.score - a.score).slice(0, 3);
+  }
+
+  /**
+   * Obtener primary y secondary. Si solo hay uno, secondary = derivado (shift hue + ajuste L/S).
+   */
+  getBrandUIPalette(brandColors) {
+    if (!brandColors || brandColors.length === 0) return null;
+    const filtered = this.filterAndScoreBrandColors(brandColors);
+    if (filtered.length === 0) {
+      const raw = brandColors[0];
+      const { h, s, l } = this.hexToHSL(raw);
+      const primary = this.hslToHex(h, Math.min(90, Math.max(20, s)), Math.min(75, Math.max(25, l)));
+      const secondary = this.hslToHex(h, Math.min(85, s + 5), Math.max(15, l - 18));
+      return { primary, secondary };
+    }
+    const primary = filtered[0].hex;
+    let secondary = null;
+    for (let i = 1; i < filtered.length; i++) {
+      const diff = Math.abs(filtered[i].h - filtered[0].h);
+      const hueDiff = Math.min(diff, 360 - diff);
+      if (hueDiff > 20) {
+        secondary = filtered[i].hex;
+        break;
+      }
+    }
+    if (!secondary) {
+      const { h, s, l } = this.hexToHSL(primary);
+      secondary = this.hslToHex(h, Math.min(90, s + 10), Math.max(18, l - 12));
+    }
+    return { primary, secondary };
+  }
+
+  /**
+   * Solo base gradient (identidad). Las capas highlight/shadow/noise van en CSS.
    */
   buildBrandGradientCss(brandColors) {
-    if (!brandColors || brandColors.length === 0) return '';
-    const c1 = brandColors[0];
-    if (brandColors.length === 1) {
-      const c2 = this.darkenHex(c1, 0.25);
-      return `linear-gradient(135deg, ${c1}, ${c2})`;
-    }
-    if (brandColors.length === 2) {
-      return `linear-gradient(135deg, ${brandColors[0]}, ${brandColors[1]})`;
-    }
-    const [a, b, c] = brandColors.slice(0, 3);
-    return `linear-gradient(135deg, ${a} 0%, ${b} 50%, ${c} 100%)`;
+    const palette = this.getBrandUIPalette(brandColors);
+    if (!palette) return '';
+    return `linear-gradient(135deg, ${palette.primary}, ${palette.secondary})`;
   }
 
   /**
