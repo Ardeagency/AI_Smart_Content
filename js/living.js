@@ -847,15 +847,21 @@ class LivingManager {
             });
 
             if (error) {
-                console.warn('⚠️ Error cargando producciones destacadas:', error);
                 this.section3Data.keyProductions = null;
+                if (!this._keyProductionsErrorLogged) {
+                    this._keyProductionsErrorLogged = true;
+                    console.warn('⚠️ Producciones destacadas no disponibles:', error.message || error.code);
+                }
                 return;
             }
 
             this.section3Data.keyProductions = data;
-        } catch (error) {
-            console.error('❌ Error en loadKeyProductions:', error);
+        } catch (err) {
             this.section3Data.keyProductions = null;
+            if (!this._keyProductionsErrorLogged) {
+                this._keyProductionsErrorLogged = true;
+                console.warn('⚠️ Producciones destacadas:', err?.message || err);
+            }
         }
     }
 
@@ -889,15 +895,21 @@ class LivingManager {
             });
 
             if (error) {
-                console.warn('⚠️ Error cargando overview del equipo:', error);
                 this.section3Data.teamOverview = null;
+                if (!this._teamOverviewErrorLogged) {
+                    this._teamOverviewErrorLogged = true;
+                    console.warn('⚠️ Overview del equipo no disponible:', error.message || error.code);
+                }
                 return;
             }
 
             this.section3Data.teamOverview = data;
-        } catch (error) {
-            console.error('❌ Error en loadTeamOverview:', error);
+        } catch (err) {
             this.section3Data.teamOverview = null;
+            if (!this._teamOverviewErrorLogged) {
+                this._teamOverviewErrorLogged = true;
+                console.warn('⚠️ Overview del equipo:', err?.message || err);
+            }
         }
     }
 

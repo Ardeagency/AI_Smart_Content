@@ -21,11 +21,14 @@ class BrandsView extends BaseView {
     this.organizationCredits = { credits_available: 100 };
     this.creditUsage = [];
     this.isActive = false;
-    this.savingFields = new Set(); // Para evitar guardados simultáneos
+    this.savingFields = new Set();
+    this._tryRenderTimeout = null;
+    this._containerWarned = {};
   }
 
   async onEnter() {
     this.isActive = true;
+    this._containerWarned = {};
     if (window.authService) {
       const isAuth = await window.authService.checkAccess(true);
       if (!isAuth && window.router) {
@@ -39,7 +42,11 @@ class BrandsView extends BaseView {
   }
 
   onLeave() {
-    // Sin limpieza - el navegador maneja todo automáticamente
+    this.isActive = false;
+    if (this._tryRenderTimeout) {
+      clearTimeout(this._tryRenderTimeout);
+      this._tryRenderTimeout = null;
+    }
   }
 
   async render() {
@@ -48,54 +55,41 @@ class BrandsView extends BaseView {
     await super.render();
     // Asegurar que renderAll se ejecute después de que el template esté completamente en el DOM
     if (this.isActive) {
-      // Función para verificar y renderizar
+      const MAX_ATTEMPTS = 15;
+
       const tryRender = (attempt = 0) => {
-        // Buscar dentro del container específico, no en todo el document
+        if (!this.isActive) return;
+
         const container = this.container || document.getElementById('app-container');
         if (!container) {
-          console.error('❌ Container no encontrado');
+          if (attempt < MAX_ATTEMPTS) {
+            this._tryRenderTimeout = setTimeout(() => tryRender(attempt + 1), 120);
+          }
           return;
         }
-        
-        // Verificar que los contenedores críticos existan dentro del container
+
         const brandColorsEl = container.querySelector('#brandColorSwatches') || document.getElementById('brandColorSwatches');
         const typographyEl = container.querySelector('#typographyPreview') || document.getElementById('typographyPreview');
         const statusEl = container.querySelector('#visualStatus') || document.getElementById('visualStatus');
-        
         const hasContainers = brandColorsEl && typographyEl && statusEl;
-        
+
         if (hasContainers) {
-          // Si los contenedores existen, renderizar
-          console.log('✅ Contenedores encontrados, renderizando Visual de marca...');
+          this._tryRenderTimeout = null;
           this.renderAll();
-        } else if (attempt >= 10) {
-          // Si hemos intentado 10 veces, renderizar de todas formas (puede haber un problema)
-          console.warn('⚠️ Contenedores no encontrados después de 10 intentos. Renderizando de todas formas...');
-          console.log('brandColorSwatches:', brandColorsEl ? '✓' : '✗');
-          console.log('typographyPreview:', typographyEl ? '✓' : '✗');
-          console.log('visualStatus:', statusEl ? '✓' : '✗');
-          if (container) {
-            const htmlPreview = container.innerHTML;
-            console.log('Container HTML length:', htmlPreview.length);
-            console.log('Container HTML preview (first 2000 chars):', htmlPreview.substring(0, 2000));
-            // Buscar si existe la card-concept en el HTML
-            const hasCardConcept = htmlPreview.includes('card-concept');
-            const hasBrandColorSwatches = htmlPreview.includes('brandColorSwatches');
-            console.log('¿Tiene card-concept?', hasCardConcept);
-            console.log('¿Tiene brandColorSwatches?', hasBrandColorSwatches);
-          }
-          this.renderAll();
-    } else {
-          // Si no existen, esperar un poco más y reintentar
-          setTimeout(() => tryRender(attempt + 1), 100);
+          return;
         }
+
+        if (attempt >= MAX_ATTEMPTS) {
+          this._tryRenderTimeout = null;
+          this.renderAll();
+          return;
+        }
+
+        this._tryRenderTimeout = setTimeout(() => tryRender(attempt + 1), 120);
       };
-      
-      // Usar requestAnimationFrame para asegurar que el DOM esté listo
+
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          tryRender();
-        });
+        requestAnimationFrame(() => tryRender());
       });
     }
   }
@@ -128,11 +122,18 @@ class BrandsView extends BaseView {
     }
   }
 
+  /**
+   * Carga datos según schema.sql:
+   * brand_containers, brands(project_id→container), brand_assets(brand_container_id),
+   * brand_entities(brand_container_id), brand_places(entity_id), audiences(brand_id),
+   * brand_colors(brand_id), brand_rules(brand_id, rule_type, rule_value),
+   * products(brand_container_id), organization_members, organization_credits, credit_usage.
+   */
   async loadData() {
     if (!this.supabase || !this.userId) return;
 
     try {
-      // Brand container
+      // brand_containers (user_id, organization_id, nombre_marca, mercado_objetivo, ...)
       const { data: container, error: containerError } = await this.supabase
         .from('brand_containers')
         .select('*')
@@ -434,18 +435,12 @@ class BrandsView extends BaseView {
 
 
   renderBrandColors() {
-    // Buscar dentro del container específico primero
-    const container = (this.container && this.container.querySelector('#brandColorSwatches')) || 
+    const container = (this.container && this.container.querySelector('#brandColorSwatches')) ||
                       document.getElementById('brandColorSwatches');
     if (!container) {
-      console.warn('⚠️ brandColorSwatches container no encontrado. Verificando DOM...');
-      // Debug: verificar qué hay en el container
-      if (this.container) {
-        const html = this.container.innerHTML;
-        console.log('Container HTML length:', html.length);
-        console.log('Container HTML preview:', html.substring(0, 1000));
-        console.log('¿Tiene brandColorSwatches?', html.includes('brandColorSwatches'));
-        console.log('¿Tiene card-concept?', html.includes('card-concept'));
+      if (!this._containerWarned.brandColorSwatches) {
+        this._containerWarned.brandColorSwatches = true;
+        console.warn('⚠️ brandColorSwatches no encontrado');
       }
       return;
     }
@@ -522,11 +517,13 @@ class BrandsView extends BaseView {
   }
 
   renderTypography() {
-    // Buscar dentro del container específico primero
-    const container = (this.container && this.container.querySelector('#typographyPreview')) || 
+    const container = (this.container && this.container.querySelector('#typographyPreview')) ||
                       document.getElementById('typographyPreview');
     if (!container) {
-      console.warn('⚠️ typographyPreview container no encontrado');
+      if (!this._containerWarned.typographyPreview) {
+        this._containerWarned.typographyPreview = true;
+        console.warn('⚠️ typographyPreview no encontrado');
+      }
       return;
     }
     
@@ -562,11 +559,13 @@ class BrandsView extends BaseView {
   }
 
   renderVisualStatus() {
-    // Buscar dentro del container específico primero
-    const container = (this.container && this.container.querySelector('#visualStatus')) || 
+    const container = (this.container && this.container.querySelector('#visualStatus')) ||
                       document.getElementById('visualStatus');
     if (!container) {
-      console.warn('⚠️ visualStatus container no encontrado');
+      if (!this._containerWarned.visualStatus) {
+        this._containerWarned.visualStatus = true;
+        console.warn('⚠️ visualStatus no encontrado');
+      }
       return;
     }
 
@@ -586,10 +585,13 @@ class BrandsView extends BaseView {
   }
 
   renderIdentityFiles() {
-    const container = (this.container && this.container.querySelector('#identityFilesContainer')) || 
+    const container = (this.container && this.container.querySelector('#identityFilesContainer')) ||
                       document.getElementById('identityFilesContainer');
     if (!container) {
-      console.warn('⚠️ identityFilesContainer no encontrado');
+      if (!this._containerWarned.identityFilesContainer) {
+        this._containerWarned.identityFilesContainer = true;
+        console.warn('⚠️ identityFilesContainer no encontrado');
+      }
       return;
     }
 
