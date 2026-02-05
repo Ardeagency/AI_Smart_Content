@@ -19,6 +19,8 @@ body {
         url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><path d="M0,400 Q300,200 600,400 T1200,400 L1200,800 L0,800 Z" fill="%23333" opacity="0.3"/></svg>');
     background-size: cover;
     background-position: center;
+    max-width: 100vw;
+    overflow-x: hidden;
 }
 
 body::before {
@@ -66,11 +68,12 @@ body::before {
     border-radius: 16px;
     padding: 40px;
     width: 100%;
-    max-width: 450px;
+    max-width: min(450px, calc(100vw - 2rem));
     box-shadow: var(--shadow-floating);
     position: relative;
     overflow: hidden;
     animation: fadeInScale 1s ease-out 0.2s both;
+    box-sizing: border-box;
 }
 
 .auth-card::before {
