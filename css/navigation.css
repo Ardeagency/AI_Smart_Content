@@ -1456,12 +1456,15 @@ body.has-header-only #app-container {
 /* === LAYOUT: CON SIDEBAR (Org y Dev) === */
 body.has-sidebar #app-container {
     margin-left: var(--nav-width, 280px);
+    max-width: calc(100vw - var(--nav-width, 280px));
     padding-top: 60px;
     transition: margin-left 0.3s ease;
+    box-sizing: border-box;
 }
 
 body.has-sidebar.sidebar-collapsed #app-container {
     margin-left: var(--nav-width-collapsed, 64px);
+    max-width: calc(100vw - var(--nav-width-collapsed, 64px));
 }
 
 /* =========================================
@@ -2050,9 +2053,10 @@ body.sidebar-collapsed .app-header.with-sidebar {
         transform: translateX(0);
     }
 
-    /* App container sin margen en móvil */
+    /* App container sin margen en móvil; ancho completo sin desborde */
     body.has-sidebar #app-container {
         margin-left: 0;
+        max-width: 100vw;
         padding-top: 60px;
     }
 

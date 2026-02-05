@@ -11,12 +11,22 @@
 #app-container {
     position: relative;
     width: 100%;
+    max-width: 100%;
     min-height: 100vh;
     background: var(--bg-primary);
     transition: opacity 0.3s ease;
     will-change: opacity, transform;
     overflow-x: hidden;
     overflow-y: auto;
+    box-sizing: border-box;
+}
+
+/* Evitar desborde a la derecha en todas las vistas: hijos directos no pueden exceder el ancho. */
+#app-container > main,
+#app-container > div {
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
 }
 
 /* Asegurar que el header dentro de app-container esté siempre visible */
