@@ -1437,3 +1437,800 @@ body.sidebar-collapsed .main-content {
     border-radius: 6px;
     margin-left: 8px;
 }
+
+/* =========================================
+   SISTEMA DE LAYOUT INTELIGENTE
+   Controla el layout según la ruta actual
+   ========================================= */
+
+/* === LAYOUT: SIN NAVEGACIÓN (Páginas públicas) === */
+body.no-nav #navigation-container {
+    display: none;
+}
+
+body.no-nav #app-container {
+    margin-left: 0;
+    padding-top: 0;
+}
+
+/* === LAYOUT: SOLO HEADER (Home/Hogar) === */
+body.has-header-only #app-container {
+    margin-left: 0;
+    padding-top: 70px;
+}
+
+/* === LAYOUT: CON SIDEBAR (Org y Dev) === */
+body.has-sidebar #app-container {
+    margin-left: var(--nav-width, 280px);
+    padding-top: 60px;
+    transition: margin-left 0.3s ease;
+}
+
+body.has-sidebar.sidebar-collapsed #app-container {
+    margin-left: var(--nav-width-collapsed, 64px);
+}
+
+/* =========================================
+   APP HEADER (Nuevo sistema)
+   ========================================= */
+
+.app-header {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 60px;
+    background: var(--nav-bg, #0E1115);
+    border-bottom: 1px solid var(--nav-border);
+    z-index: 900;
+    display: flex;
+    align-items: center;
+}
+
+/* Header solo (sin sidebar) - Home/Hogar */
+.app-header.header-only {
+    left: 0;
+}
+
+/* Header con sidebar */
+.app-header.with-sidebar {
+    left: var(--nav-width, 280px);
+    transition: left 0.3s ease;
+}
+
+body.sidebar-collapsed .app-header.with-sidebar {
+    left: var(--nav-width-collapsed, 64px);
+}
+
+.app-header .header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 20px;
+    gap: 16px;
+}
+
+.app-header .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.app-header .header-logo {
+    display: flex;
+    align-items: center;
+}
+
+.app-header .header-logo .logo-text {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary, #ecebda);
+    letter-spacing: 0.5px;
+}
+
+.app-header .header-hamburger {
+    display: none;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 20px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.app-header .header-hamburger:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+.app-header .header-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-primary, #ecebda);
+    margin: 0;
+}
+
+.app-header .header-center {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.app-header .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* User Avatar y Dropdown */
+.header-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+}
+
+.user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.user-avatar span {
+    font-size: 14px;
+    font-weight: 600;
+    color: white;
+}
+
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.user-menu-btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.user-menu-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+/* User Dropdown */
+.user-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 240px;
+    background: var(--nav-bg, #0E1115);
+    border: 1px solid var(--nav-border);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+    z-index: 1000;
+}
+
+.user-dropdown.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.user-dropdown-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--nav-border);
+}
+
+.user-dropdown-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.user-dropdown-email {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.user-dropdown-divider {
+    height: 1px;
+    background: var(--nav-border);
+    margin: 0;
+}
+
+.user-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 16px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 14px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.user-dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+}
+
+.user-dropdown-item i {
+    width: 18px;
+    font-size: 14px;
+}
+
+/* =========================================
+   SIDEBAR - IDENTIDAD Y ORGANIZACIÓN
+   ========================================= */
+
+.nav-identity-section {
+    padding: 16px;
+    border-bottom: 1px solid var(--nav-border);
+    position: relative;
+}
+
+.nav-identity-card {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--nav-border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.nav-identity-card:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-identity-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.nav-identity-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.nav-org-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nav-org-type {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.nav-org-chevron {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.nav-org-chevron:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+/* Developer Identity Card */
+.nav-identity-card.dev-identity {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.15), rgba(124, 58, 237, 0.05));
+    border-color: rgba(124, 58, 237, 0.3);
+}
+
+.nav-dev-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(124, 58, 237, 0.2);
+    border-radius: 10px;
+    color: #a78bfa;
+    font-size: 18px;
+}
+
+/* Organization Dropdown */
+.nav-org-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 16px;
+    right: 16px;
+    background: var(--nav-bg);
+    border: 1px solid var(--nav-border);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+    z-index: 100;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.nav-org-dropdown.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(8px);
+}
+
+.nav-org-dropdown-header {
+    padding: 12px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--nav-border);
+}
+
+.nav-org-dropdown-list {
+    padding: 8px;
+}
+
+.nav-org-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.nav-org-option:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-org-option.active {
+    background: rgba(124, 58, 237, 0.15);
+}
+
+.nav-org-option-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-org-option-avatar span {
+    font-size: 14px;
+    font-weight: 600;
+    color: white;
+}
+
+.nav-org-option-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.nav-org-option-name {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.nav-org-option-role {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: capitalize;
+}
+
+.nav-org-option i.fa-check {
+    color: #4ade80;
+    font-size: 14px;
+}
+
+.nav-org-divider {
+    height: 1px;
+    background: var(--nav-border);
+    margin: 8px 0;
+}
+
+.nav-org-home {
+    color: var(--text-muted);
+}
+
+.nav-org-home i {
+    width: 32px;
+    text-align: center;
+}
+
+/* =========================================
+   SIDEBAR FOOTER
+   ========================================= */
+
+.nav-footer {
+    margin-top: auto;
+    padding: 16px;
+    border-top: 1px solid var(--nav-border);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Tokens Display */
+.nav-tokens {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 10px;
+    font-size: 13px;
+}
+
+.nav-tokens i {
+    color: #fbbf24;
+    font-size: 16px;
+}
+
+.nav-tokens #navTokensValue {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.nav-tokens .nav-tokens-label {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+/* Developer Stats */
+.nav-dev-stats {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 10px;
+}
+
+.nav-dev-stat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+}
+
+.nav-dev-stat i {
+    font-size: 14px;
+}
+
+.nav-dev-stat i.fa-play {
+    color: #4ade80;
+}
+
+.nav-dev-stat i.fa-star {
+    color: #fbbf24;
+}
+
+.nav-dev-stat span {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+/* Mode Switch Button */
+.nav-mode-switch {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 12px;
+    background: rgba(124, 58, 237, 0.1);
+    border: 1px solid rgba(124, 58, 237, 0.3);
+    border-radius: 10px;
+    color: #a78bfa;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.nav-mode-switch:hover {
+    background: rgba(124, 58, 237, 0.2);
+    border-color: rgba(124, 58, 237, 0.5);
+}
+
+.nav-mode-switch i {
+    font-size: 14px;
+}
+
+/* =========================================
+   SIDEBAR MÓVIL
+   ========================================= */
+
+@media (max-width: 768px) {
+    /* Header hamburger visible */
+    .app-header .header-hamburger {
+        display: flex;
+    }
+
+    /* Header ocupa todo el ancho */
+    .app-header.with-sidebar {
+        left: 0;
+    }
+
+    /* Sidebar oculto por defecto en móvil */
+    .side-navigation {
+        transform: translateX(-100%);
+    }
+
+    .side-navigation.mobile-open {
+        transform: translateX(0);
+    }
+
+    /* App container sin margen en móvil */
+    body.has-sidebar #app-container {
+        margin-left: 0;
+        padding-top: 60px;
+    }
+
+    /* Overlay visible cuando nav está abierta */
+    .nav-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+}
+
+/* =========================================
+   OVERLAY DE NAVEGACIÓN
+   ========================================= */
+
+.nav-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 800;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.nav-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* =========================================
+   SIDEBAR NAVEGACIÓN PRINCIPAL
+   ========================================= */
+
+.side-navigation {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--nav-width, 280px);
+    height: 100vh;
+    background: var(--nav-bg, #0E1115);
+    border-right: 1px solid var(--nav-border);
+    display: flex;
+    flex-direction: column;
+    z-index: 850;
+    transition: all 0.3s ease;
+}
+
+/* =========================================
+   MENÚ DE NAVEGACIÓN
+   ========================================= */
+
+.nav-menu {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 12px;
+}
+
+.nav-item {
+    margin-bottom: 4px;
+}
+
+.side-navigation .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 400;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+}
+
+.side-navigation .nav-link:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+}
+
+.side-navigation .nav-link.active {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.side-navigation .nav-icon {
+    width: 20px;
+    font-size: 16px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.side-navigation .nav-text {
+    flex: 1;
+}
+
+.side-navigation .nav-chevron {
+    font-size: 12px;
+    color: var(--text-muted);
+    transition: transform 0.2s ease;
+}
+
+/* Submenú */
+.nav-item.has-submenu .nav-submenu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.nav-item.has-submenu.submenu-open .nav-submenu {
+    max-height: 200px;
+}
+
+.nav-item.has-submenu.submenu-open .nav-chevron {
+    transform: rotate(90deg);
+}
+
+.nav-submenu-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px 10px 48px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 13px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.nav-submenu-link:hover {
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-secondary);
+}
+
+.nav-submenu-link.active {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+}
+
+.nav-submenu-link i {
+    width: 16px;
+    font-size: 13px;
+    text-align: center;
+}
+
+/* =========================================
+   PÁGINA DE ERROR
+   ========================================= */
+
+.error-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+    text-align: center;
+}
+
+.error-content h1 {
+    font-size: 6rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.error-content p {
+    font-size: 1.25rem;
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+}
+
+.error-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.error-actions button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.error-actions .btn-primary {
+    background: var(--text-primary);
+    color: var(--nav-bg);
+}
+
+.error-actions .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(236, 235, 218, 0.2);
+}
+
+.error-actions .btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-secondary);
+}
+
+.error-actions .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--text-primary);
+}

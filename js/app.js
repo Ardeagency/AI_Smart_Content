@@ -1,6 +1,11 @@
 /**
  * App - Aplicación principal de la SPA
- * Orquesta la inicialización de todos los componentes
+ * 
+ * Arquitectura de rutas:
+ * - Públicas: /, /login, /planes (sin navegación)
+ * - Home: /home, /hogar (solo header, sin sidebar)
+ * - Organización: /org/:org_id/... (sidebar SaaS)
+ * - Desarrollador: /dev/... (sidebar PaaS)
  */
 class App {
   constructor() {
@@ -65,11 +70,6 @@ class App {
 
   /**
    * Registrar todas las rutas de la aplicación
-   * 
-   * Arquitectura MPA + SPA:
-   * - Rutas públicas (MPA): /, /login, /planes
-   * - Rutas SaaS (SPA para usuarios): /hogar, /living, /studio, /brands, etc.
-   * - Rutas PaaS (Portal de desarrolladores): /dev/*
    */
   registerRoutes() {
     if (!this.router) return;
@@ -101,20 +101,19 @@ class App {
       DevWebhooksView: typeof window.DevWebhooksView !== 'undefined'
     };
 
-    // Rutas públicas
-    // Las vistas se cargan desde los scripts en index.html
+    // ========================================
+    // RUTAS PÚBLICAS (sin navegación)
+    // ========================================
+    
     if (viewsAvailable.LandingView) {
       this.router.register('/', window.LandingView, {
         requiresAuth: false,
         redirectIfAuth: false
       });
-    }
 
-    // Redirigir /login a la landing (el modal de login está en la landing)
-    if (viewsAvailable.LandingView) {
       this.router.register('/login', window.LandingView, {
         requiresAuth: false,
-        redirectIfAuth: true // Si ya está autenticado, redirigir
+        redirectIfAuth: true
       });
     }
 
@@ -125,14 +124,147 @@ class App {
       });
     }
 
-    // Rutas protegidas - Nueva estructura
+    // ========================================
+    // RUTAS HOME/HOGAR (solo header, sin sidebar)
+    // ========================================
+    
+    if (viewsAvailable.HogarView) {
+      this.router.register('/home', window.HogarView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+
+      this.router.register('/hogar', window.HogarView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
+
+    // ========================================
+    // RUTAS DE ORGANIZACIÓN /org/:org_id/...
+    // Sidebar SaaS - Requieren contexto de organización
+    // ========================================
+
+    if (viewsAvailable.LivingView) {
+      // Living - Dashboard de organización
+      this.router.register('/org/:orgId/living', window.LivingView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
+
+    if (viewsAvailable.BrandsView) {
+      // Brand - Vista de marca de la organización
+      this.router.register('/org/:orgId/brand', window.BrandsView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+
+      // Brand con ID específico
+      this.router.register('/org/:orgId/brand/:brandId', window.BrandsView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
+
+    if (viewsAvailable.ProductsView) {
+      // Products - Lista de productos
+      this.router.register('/org/:orgId/products', window.ProductsView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+
+      // Products con marca específica
+      this.router.register('/org/:orgId/products/:brandId', window.ProductsView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+
+      // Product detail
+      this.router.register('/org/:orgId/product-detail/:brandId/:productId', window.ProductsView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
+
+    if (viewsAvailable.StudioView) {
+      // Studio - Generador de contenido
+      this.router.register('/org/:orgId/studio', window.StudioView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
+
+    if (viewsAvailable.AudiencesView) {
+      // Audiences
+      this.router.register('/org/:orgId/audiences', window.AudiencesView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+
+      this.router.register('/org/:orgId/audiences/:audienceId', window.AudiencesView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
+
+    if (viewsAvailable.CampaignsView) {
+      // Marketing/Campaigns
+      this.router.register('/org/:orgId/marketing', window.CampaignsView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+
+      this.router.register('/org/:orgId/campaigns', window.CampaignsView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+
+      this.router.register('/org/:orgId/campaigns/:campaignId', window.CampaignsView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
+
+    if (viewsAvailable.ContentView) {
+      // Content
+      this.router.register('/org/:orgId/content', window.ContentView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+
+      this.router.register('/org/:orgId/content/:contentId', window.ContentView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
+
+    if (viewsAvailable.SettingsView) {
+      // Settings de organización
+      this.router.register('/org/:orgId/settings', window.SettingsView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
+
+    // ========================================
+    // RUTAS LEGACY (compatibilidad temporal)
+    // Redirigen a rutas con org_id cuando sea posible
+    // ========================================
+
+    if (viewsAvailable.LivingView) {
+      this.router.register('/living', window.LivingView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
+
     if (viewsAvailable.BrandsView) {
       this.router.register('/brands', window.BrandsView, {
         requiresAuth: true,
         redirectIfAuth: false
       });
 
-      // Rutas dinámicas de brands (detalle)
       this.router.register('/brands/:brandId', window.BrandsView, {
         requiresAuth: true,
         redirectIfAuth: false
@@ -145,98 +277,7 @@ class App {
         redirectIfAuth: false
       });
 
-      // Rutas dinámicas de products (detalle)
       this.router.register('/products/:productId', window.ProductsView, {
-        requiresAuth: true,
-        redirectIfAuth: false
-      });
-    }
-
-    if (viewsAvailable.CampaignsView) {
-      this.router.register('/campaigns', window.CampaignsView, {
-        requiresAuth: true,
-        redirectIfAuth: false
-      });
-
-      // Rutas dinámicas de campaigns (detalle)
-      this.router.register('/campaigns/:campaignId', window.CampaignsView, {
-        requiresAuth: true,
-        redirectIfAuth: false
-      });
-    }
-
-    if (viewsAvailable.AudiencesView) {
-      this.router.register('/audiences', window.AudiencesView, {
-        requiresAuth: true,
-        redirectIfAuth: false
-      });
-
-      // Rutas dinámicas de audiences (detalle)
-      this.router.register('/audiences/:audienceId', window.AudiencesView, {
-        requiresAuth: true,
-        redirectIfAuth: false
-      });
-    }
-
-    if (viewsAvailable.CreateView) {
-      this.router.register('/create', window.CreateView, {
-        requiresAuth: true,
-        redirectIfAuth: false
-      });
-
-      this.router.register('/create/guided', window.CreateView, {
-        requiresAuth: true,
-        redirectIfAuth: false
-      });
-
-      this.router.register('/create/pro', window.CreateView, {
-        requiresAuth: true,
-        redirectIfAuth: false
-      });
-
-      this.router.register('/create/templates', window.CreateView, {
-        requiresAuth: true,
-        redirectIfAuth: false
-      });
-    }
-
-    if (viewsAvailable.ContentView) {
-      this.router.register('/content', window.ContentView, {
-        requiresAuth: true,
-        redirectIfAuth: false
-      });
-
-      // Rutas dinámicas de content (detalle)
-      this.router.register('/content/:contentId', window.ContentView, {
-        requiresAuth: true,
-        redirectIfAuth: false
-      });
-    }
-
-    if (viewsAvailable.SettingsView) {
-      this.router.register('/settings', window.SettingsView, {
-        requiresAuth: true,
-        redirectIfAuth: false
-      });
-    }
-
-    // Rutas legacy (mantener compatibilidad temporal)
-    if (viewsAvailable.FormRecordView) {
-      this.router.register('/form-record', window.FormRecordView, {
-        requiresAuth: true,
-        redirectIfAuth: false
-      });
-    }
-
-    if (viewsAvailable.HogarView) {
-      this.router.register('/hogar', window.HogarView, {
-        requiresAuth: true,
-        redirectIfAuth: false
-      });
-    }
-
-    if (viewsAvailable.LivingView) {
-      this.router.register('/living', window.LivingView, {
         requiresAuth: true,
         redirectIfAuth: false
       });
@@ -249,11 +290,58 @@ class App {
       });
     }
 
+    if (viewsAvailable.AudiencesView) {
+      this.router.register('/audiences', window.AudiencesView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
+
+    if (viewsAvailable.CampaignsView) {
+      this.router.register('/campaigns', window.CampaignsView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+
+      this.router.register('/marketing', window.CampaignsView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
+
+    if (viewsAvailable.ContentView) {
+      this.router.register('/content', window.ContentView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
+
+    if (viewsAvailable.SettingsView) {
+      this.router.register('/settings', window.SettingsView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
+
+    if (viewsAvailable.CreateView) {
+      this.router.register('/create', window.CreateView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
+
+    if (viewsAvailable.FormRecordView) {
+      this.router.register('/form-record', window.FormRecordView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
+
     // ========================================
     // RUTAS PaaS - Portal de Desarrolladores
+    // /dev/* - Sidebar de desarrollador
     // ========================================
     
-    // Dashboard de desarrollador
     if (viewsAvailable.DevDashboardView) {
       this.router.register('/dev/dashboard', window.DevDashboardView, {
         requiresAuth: true,
@@ -261,15 +349,19 @@ class App {
       });
     }
 
-    // Gestión de flujos
     if (viewsAvailable.DevFlowsView) {
       this.router.register('/dev/flows', window.DevFlowsView, {
         requiresAuth: true,
         redirectIfAuth: false
       });
+
+      // Flujo específico
+      this.router.register('/dev/flows/:flowId', window.DevFlowsView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
     }
 
-    // Logs y debug
     if (viewsAvailable.DevLogsView) {
       this.router.register('/dev/logs', window.DevLogsView, {
         requiresAuth: true,
@@ -277,28 +369,45 @@ class App {
       });
     }
 
-    // Builder de flujos (constructor visual)
     if (viewsAvailable.DevBuilderView) {
       this.router.register('/dev/builder', window.DevBuilderView, {
         requiresAuth: true,
         redirectIfAuth: false
       });
+
+      // Builder con flujo específico
+      this.router.register('/dev/builder/:flowId', window.DevBuilderView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
     }
 
-    // Test de flujos (testing de webhooks)
     if (viewsAvailable.DevTestView) {
       this.router.register('/dev/test', window.DevTestView, {
         requiresAuth: true,
         redirectIfAuth: false
       });
-      // Alias para ejecuciones
+
       this.router.register('/dev/runs', window.DevTestView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+
+      // Test con flujo específico
+      this.router.register('/dev/test/:flowId', window.DevTestView, {
         requiresAuth: true,
         redirectIfAuth: false
       });
     }
 
-    // Colaboradores (placeholder - usará DevDashboardView temporalmente)
+    if (viewsAvailable.DevWebhooksView) {
+      this.router.register('/dev/webhooks', window.DevWebhooksView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
+
+    // Colaboradores (placeholder)
     if (viewsAvailable.DevDashboardView) {
       this.router.register('/dev/collaborators', window.DevDashboardView, {
         requiresAuth: true,
@@ -306,17 +415,9 @@ class App {
       });
     }
 
-    // Marketplace (placeholder - usará DevFlowsView temporalmente)
+    // Marketplace (placeholder)
     if (viewsAvailable.DevFlowsView) {
       this.router.register('/dev/marketplace', window.DevFlowsView, {
-        requiresAuth: true,
-        redirectIfAuth: false
-      });
-    }
-
-    // Webhooks Manager (gestión de URLs y configuración técnica)
-    if (viewsAvailable.DevWebhooksView) {
-      this.router.register('/dev/webhooks', window.DevWebhooksView, {
         requiresAuth: true,
         redirectIfAuth: false
       });
@@ -330,44 +431,38 @@ class App {
       });
     }
 
-    // Ruta 404
+    // ========================================
+    // RUTA 404
+    // ========================================
+    
     const BaseView = window.BaseView || class {};
     this.router.register('/404', class extends BaseView {
       async render() {
         const container = document.getElementById('app-container');
         if (container) {
           container.innerHTML = `
-            <div style="
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              min-height: 400px;
-              padding: 2rem;
-              text-align: center;
-            ">
-              <h1 style="font-size: 4rem; color: var(--text-primary, #ecebda); margin-bottom: 1rem;">404</h1>
-              <p style="color: var(--text-secondary, #a0a0a0); margin-bottom: 2rem;">Página no encontrada</p>
-              <button onclick="window.router.navigate('/')" style="
-                padding: 0.75rem 1.5rem;
-                background: var(--primary-color, #ecebda);
-                color: var(--bg-dark, #1a1a1a);
-                border: none;
-                border-radius: 8px;
-                cursor: pointer;
-                font-weight: 600;
-              ">Ir al Inicio</button>
+            <div class="error-page">
+              <div class="error-content">
+                <h1>404</h1>
+                <p>Página no encontrada</p>
+                <div class="error-actions">
+                  <button onclick="window.router.navigate('/hogar')" class="btn-primary">
+                    <i class="fas fa-home"></i> Ir a Hogar
+                  </button>
+                  <button onclick="window.history.back()" class="btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver
+                  </button>
+                </div>
+              </div>
             </div>
           `;
         }
       }
     });
-
   }
 
   /**
    * Mostrar error de inicialización
-   * @param {Error} error - Error ocurrido
    */
   showInitError(error) {
     const container = document.getElementById('app-container');
@@ -418,7 +513,6 @@ function initializeApp() {
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initializeApp);
 } else {
-  // DOM ya está listo, inicializar inmediatamente
   initializeApp();
 }
 
@@ -426,4 +520,3 @@ if (document.readyState === 'loading') {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = App;
 }
-

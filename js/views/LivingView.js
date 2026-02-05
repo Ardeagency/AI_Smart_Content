@@ -1,89 +1,107 @@
 /**
  * LivingView - Vista del dashboard principal (Living)
  * Maneja el dashboard con información de perfil, productos y campañas
+ * 
+ * Rutas soportadas:
+ * - /org/:orgId/living - Con contexto de organización
+ * - /living - Legacy (usa organización guardada)
  */
 class LivingView extends BaseView {
   constructor() {
     super();
     this.templatePath = 'living.html';
     this.livingManager = null;
+    this.orgId = null;
   }
 
   /**
    * Hook llamado al entrar a la vista
-   * Simplificado - sin lógica compleja de reinicialización
    */
   async onEnter() {
-    // Verificar autenticación usando AuthService
+    // Verificar autenticación
     if (window.authService) {
       const isAuth = await window.authService.checkAccess(true);
       if (!isAuth) {
-        if (window.router) {
-          window.router.navigate('/login', true);
-        }
+        window.router?.navigate('/login', true);
         return;
       }
     } else {
-      // Fallback
       const isAuth = await this.checkAuthentication();
       if (!isAuth) {
-        if (window.router) {
-          window.router.navigate('/login', true);
-        }
+        window.router?.navigate('/login', true);
         return;
       }
     }
 
-    // Renderizar Navigation si no está visible
-    if (window.navigation && !window.navigation.initialized) {
-      await window.navigation.render();
+    // Obtener orgId de los parámetros de ruta o del estado
+    this.orgId = this.routeParams?.orgId || 
+                 window.appState?.get('selectedOrganizationId') ||
+                 localStorage.getItem('selectedOrganizationId');
+    
+    // Si no hay orgId, redirigir a hogar para seleccionar organización
+    if (!this.orgId) {
+      window.router?.navigate('/hogar');
+      return;
     }
+
+    // Guardar orgId para uso futuro
+    if (window.appState) {
+      window.appState.set('selectedOrganizationId', this.orgId, true);
+    }
+    localStorage.setItem('selectedOrganizationId', this.orgId);
   }
 
   /**
    * Inicializar la vista
-   * Simplificado - siempre crear nueva instancia sin limpieza
    */
   async init() {
-    // Cargar script si es necesario usando el método centralizado de BaseView
+    // Cargar script si es necesario
     if (!window.LivingManager) {
       await this.loadScript('js/living.js', 'LivingManager');
     }
 
-    // Siempre crear nueva instancia de LivingManager
+    // Crear instancia de LivingManager con el orgId
     if (window.LivingManager) {
       this.livingManager = new window.LivingManager();
+      // Pasar orgId al manager
+      this.livingManager.organizationId = this.orgId;
       await this.livingManager.init();
     } else {
-      console.error('❌ No se pudo cargar LivingManager');
+      console.error('No se pudo cargar LivingManager');
     }
 
-    // Setup links para usar router
+    // Setup links para usar router con orgId
     this.setupRouterLinks();
   }
 
   /**
-   * Configurar links para usar router
+   * Configurar links para usar router con contexto de organización
    */
   setupRouterLinks() {
+    const basePath = this.orgId ? `/org/${this.orgId}` : '';
+    
     const productsLinks = this.querySelectorAll('a[href*="products"]');
     const studioLinks = this.querySelectorAll('a[href*="studio"]');
+    const brandLinks = this.querySelectorAll('a[href*="brand"]');
 
     productsLinks.forEach(link => {
       this.addEventListener(link, 'click', (e) => {
         e.preventDefault();
-        if (window.router) {
-          window.router.navigate('/products');
-        }
+        window.router?.navigate(`${basePath}/products`);
       });
     });
 
     studioLinks.forEach(link => {
       this.addEventListener(link, 'click', (e) => {
         e.preventDefault();
-        if (window.router) {
-          window.router.navigate('/studio');
-        }
+        window.router?.navigate(`${basePath}/studio`);
+      });
+    });
+
+    brandLinks.forEach(link => {
+      this.addEventListener(link, 'click', (e) => {
+        e.preventDefault();
+        window.router?.navigate(`${basePath}/brand`);
       });
     });
   }

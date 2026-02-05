@@ -405,14 +405,14 @@ class HogarView extends BaseView {
    * Navegar a una organización (ir a living con esa organización seleccionada)
    */
   navigateToOrganization(orgId) {
-    // Guardar organización seleccionada en el estado
+    // Guardar organización seleccionada en el estado (para compatibilidad)
     if (window.appState) {
       window.appState.set('selectedOrganizationId', orgId, true);
     }
     
-    // Navegar a living
+    // Navegar a la ruta de organización
     if (window.router) {
-      window.router.navigate('/living');
+      window.router.navigate(`/org/${orgId}/living`);
     }
   }
 

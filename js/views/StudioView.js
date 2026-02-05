@@ -57,15 +57,19 @@ class StudioView extends BaseView {
       }
     }
 
-    // Asegurar navegación en modo usuario
-    if (window.navigation) {
-      if (window.navigation.currentMode !== 'user') {
-        window.navigation.switchMode('user');
-      }
-      if (!window.navigation.initialized) {
-        await window.navigation.render();
-      }
+    // Obtener orgId de los parámetros de ruta o del estado
+    this.organizationId = this.routeParams?.orgId || 
+                          window.appState?.get('selectedOrganizationId') ||
+                          localStorage.getItem('selectedOrganizationId');
+    
+    // Si no hay orgId, redirigir a hogar para seleccionar organización
+    if (!this.organizationId) {
+      window.router?.navigate('/hogar');
+      return;
     }
+
+    // Guardar orgId para uso futuro
+    localStorage.setItem('selectedOrganizationId', this.organizationId);
   }
 
   renderHTML() {

@@ -209,11 +209,23 @@ class Router {
         container.classList.add('view-enter');
       }
 
+      // Renderizar la navegación ANTES de la vista
+      // Esto actualiza el sidebar/header según la ruta
+      if (window.navigation) {
+        await window.navigation.render();
+      }
+
       // Renderizar la vista (esto llamará a init() y onEnter() internamente)
       await this.currentView.render();
       
+      // Ocultar loading inicial si existe
+      const initialLoading = document.getElementById('appInitialLoading');
+      if (initialLoading) {
+        initialLoading.classList.add('hidden');
+      }
+      
       this.updateNavigation();
-      window.dispatchEvent(new CustomEvent('routechange', { detail: { path } }));
+      window.dispatchEvent(new CustomEvent('routechange', { detail: { path, params: routeParams } }));
     } catch (error) {
       console.error('Error manejando ruta:', error);
       if (window.errorHandler) {
