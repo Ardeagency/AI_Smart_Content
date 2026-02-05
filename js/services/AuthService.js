@@ -124,7 +124,8 @@ class AuthService {
           email_verified: profile.email_verified,
           role: profile.role || 'user',
           // Campos para arquitectura MPA + SPA
-          default_view_mode: profile.default_view_mode || 'user' // 'user' | 'developer'
+          default_view_mode: profile.default_view_mode || 'user', // 'user' | 'developer'
+          is_developer: !!profile.is_developer
         };
 
         // Actualizar modo del servicio
@@ -328,11 +329,19 @@ class AuthService {
   }
 
   /**
-   * Verificar si el usuario actual es desarrollador
+   * Verificar si el usuario actual está viendo en modo desarrollador
    * @returns {boolean}
    */
   isDeveloper() {
     return this.getUserMode() === 'developer';
+  }
+
+  /**
+   * Verificar si la cuenta del usuario tiene rol de desarrollador (user_profiles.is_developer)
+   * @returns {boolean}
+   */
+  userHasDeveloperRole() {
+    return this.currentUser?.is_developer === true;
   }
 
   /**

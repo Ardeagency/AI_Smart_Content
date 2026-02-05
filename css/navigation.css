@@ -1689,6 +1689,46 @@ body.sidebar-collapsed .app-header.with-sidebar {
     font-size: 14px;
 }
 
+/* Switcher Consumidor / Desarrollador (solo para usuarios con is_developer) */
+.user-dropdown-mode-switcher {
+    padding: 12px 16px;
+}
+
+.user-dropdown-mode-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.user-dropdown-mode-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-secondary);
+    transition: color 0.2s ease;
+}
+
+.user-dropdown-mode-option:hover {
+    color: var(--text-primary);
+}
+
+.user-dropdown-mode-option input[type="radio"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent-warm, #e09145);
+    cursor: pointer;
+}
+
+.user-dropdown-mode-option input[type="radio"]:checked + span {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
 /* =========================================
    SIDEBAR - IDENTIDAD Y ORGANIZACIÓN
    ========================================= */

@@ -170,9 +170,6 @@ class Navigation {
               <span class="logo-text">AI Smart Content</span>
             </div>
           </div>
-          <div class="header-center">
-            <h1 class="header-title" id="headerTitle">Hogar</h1>
-          </div>
           <div class="header-right">
             <div class="header-user" id="headerUser">
               <div class="user-avatar" id="userAvatar">
@@ -702,27 +699,91 @@ class Navigation {
       const user = window.authService?.getCurrentUser();
       if (!user) return;
 
-      // Actualizar avatar e iniciales
+      // Actualizar avatar e iniciales (full_name puede venir de user_profiles vía currentUser)
       const initialsEl = document.getElementById('userInitials');
       const nameEl = document.getElementById('userDropdownName');
       const emailEl = document.getElementById('userDropdownEmail');
 
+      const displayName = user.full_name || user.user_metadata?.full_name || user.email || '';
       if (initialsEl) {
-        const name = user.user_metadata?.full_name || user.email || '';
-        const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
+        const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
         initialsEl.textContent = initials;
       }
 
       if (nameEl) {
-        nameEl.textContent = user.user_metadata?.full_name || 'Usuario';
+        nameEl.textContent = displayName || 'Usuario';
       }
 
       if (emailEl) {
         emailEl.textContent = user.email || '';
       }
+
+      // Si el usuario tiene rol desarrollador, mostrar switcher Consumidor / Desarrollador en el dropdown
+      if (window.authService?.userHasDeveloperRole()) {
+        this.injectDeveloperModeSwitcher();
+        this.setupDeveloperModeSwitcherListeners();
+      }
     } catch (err) {
       console.error('Error loading user info:', err);
     }
+  }
+
+  /**
+   * Inyectar en #userDropdown los checkboxes Consumidor / Desarrollador (solo para usuarios con is_developer)
+   */
+  injectDeveloperModeSwitcher() {
+    const dropdown = document.getElementById('userDropdown');
+    if (!dropdown || document.getElementById('userDropdownModeSwitcher')) return;
+
+    const currentMode = window.authService?.getUserMode() || 'user';
+    const html = `
+      <div class="user-dropdown-mode-switcher" id="userDropdownModeSwitcher">
+        <div class="user-dropdown-mode-label">Ver como</div>
+        <label class="user-dropdown-mode-option">
+          <input type="radio" name="viewMode" value="user" ${currentMode === 'user' ? 'checked' : ''} id="viewModeUser">
+          <span>Consumidor</span>
+        </label>
+        <label class="user-dropdown-mode-option">
+          <input type="radio" name="viewMode" value="developer" ${currentMode === 'developer' ? 'checked' : ''} id="viewModeDeveloper">
+          <span>Desarrollador</span>
+        </label>
+      </div>
+      <div class="user-dropdown-divider"></div>`;
+    const firstDivider = dropdown.querySelector('.user-dropdown-divider');
+    if (firstDivider) {
+      firstDivider.insertAdjacentHTML('afterend', html);
+    } else {
+      dropdown.insertAdjacentHTML('beforeend', html);
+    }
+  }
+
+  /**
+   * Configurar listeners del switcher Consumidor / Desarrollador
+   */
+  setupDeveloperModeSwitcherListeners() {
+    const userRadio = document.getElementById('viewModeUser');
+    const devRadio = document.getElementById('viewModeDeveloper');
+    if (!userRadio || !devRadio) return;
+
+    const switchMode = async (mode) => {
+      if (window.authService) {
+        await window.authService.setUserMode(mode, true);
+      } else {
+        localStorage.setItem('userViewMode', mode);
+      }
+      if (window.router) {
+        if (mode === 'user') {
+          window.router.navigate('/hogar');
+        } else {
+          window.router.navigate('/dev/dashboard');
+        }
+      } else {
+        window.location.href = mode === 'user' ? '/hogar' : '/dev/dashboard';
+      }
+    };
+
+    userRadio.addEventListener('change', () => { if (userRadio.checked) switchMode('user'); });
+    devRadio.addEventListener('change', () => { if (devRadio.checked) switchMode('developer'); });
   }
 
   /**
@@ -858,16 +919,19 @@ class Navigation {
       const user = window.authService?.getCurrentUser();
       if (!user) return;
 
-      // Cargar perfil de desarrollador
-      const { data: profile } = await window.supabase
+      // user_profiles (schema: dev_rank, dev_role; no developer_tier)
+      const { data: profile } = await supabase
         .from('user_profiles')
-        .select('developer_tier')
+        .select('dev_rank, dev_role')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (profile) {
         const tierEl = document.getElementById('navDevTier');
-        if (tierEl) tierEl.textContent = profile.developer_tier || 'Novato';
+        if (tierEl) {
+          const label = profile.dev_rank || profile.dev_role || 'Novato';
+          tierEl.textContent = typeof label === 'string' ? label : 'Novato';
+        }
       }
 
       const { count: runsCount } = await supabase
@@ -876,16 +940,17 @@ class Navigation {
         .eq('user_id', user.id);
 
       const runsEl = document.getElementById('navRunsCount');
-      if (runsEl) runsEl.textContent = runsCount || 0;
+      if (runsEl) runsEl.textContent = runsCount ?? 0;
 
-      // Cargar rating promedio de flujos
-      const { data: flows } = await window.supabase
-        .from('content_flows')
+      // content_flows no tiene columna rating; el rating está en user_flow_favorites
+      const { data: favs } = await supabase
+        .from('user_flow_favorites')
         .select('rating')
-        .eq('owner_id', user.id);
+        .eq('user_id', user.id)
+        .not('rating', 'is', null);
 
-      if (flows && flows.length > 0) {
-        const avgRating = flows.reduce((sum, f) => sum + (f.rating || 0), 0) / flows.length;
+      if (favs && favs.length > 0) {
+        const avgRating = favs.reduce((sum, f) => sum + (f.rating || 0), 0) / favs.length;
         const ratingEl = document.getElementById('navRatingValue');
         if (ratingEl) ratingEl.textContent = avgRating.toFixed(1);
       }
