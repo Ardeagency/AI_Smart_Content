@@ -1508,19 +1508,26 @@ body.sidebar-collapsed .app-header.with-sidebar {
     max-width: calc(100vw - var(--nav-width-collapsed, 64px));
 }
 
+/* #appHeader > .header-content: adaptar al ancho del header (no desbordar) */
+#appHeader > .header-content,
 .app-header .header-content {
     display: flex;
     align-items: center;
     justify-content: space-between;
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
     padding: 0 20px;
     gap: 16px;
+    box-sizing: border-box;
 }
 
 .app-header .header-left {
     display: flex;
     align-items: center;
     gap: 16px;
+    min-width: 0;
+    flex-shrink: 1;
 }
 
 .app-header .header-logo {
@@ -1572,6 +1579,8 @@ body.sidebar-collapsed .app-header.with-sidebar {
     display: flex;
     align-items: center;
     gap: 12px;
+    min-width: 0;
+    flex-shrink: 0;
 }
 
 /* User Avatar y Dropdown */
