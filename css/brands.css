@@ -22,11 +22,12 @@
 
 /* ============================================
    CONTENEDOR PRINCIPAL
+   El offset del sidebar lo aplica #app-container; este contenedor solo rellena su área.
    ============================================ */
 .brand-dashboard-container {
-    position: fixed;
+    position: absolute;
     top: 0;
-    left: var(--nav-width, 280px);
+    left: 0;
     right: 0;
     bottom: 0;
     overflow: hidden;
@@ -73,10 +74,6 @@
     will-change: opacity, transform;
 }
 
-.side-navigation.collapsed ~ * .brand-dashboard-container,
-body.sidebar-collapsed .brand-dashboard-container {
-    left: var(--nav-width-collapsed, 64px);
-}
 
 @media (max-width: 768px) {
     .brand-dashboard-container {
