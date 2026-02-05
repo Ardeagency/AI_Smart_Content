@@ -434,7 +434,7 @@ class HogarView extends BaseView {
     const planBadge = this.getPlanBadge(org.plan_type);
     const lastProductionText = org.last_production_at
       ? `Última producción: ${this.formatRelativeDate(org.last_production_at)}`
-      : 'Sin producciones aún';
+      : 'Listo para crear tu primera producción';
     const showTeam = membersCount > 1;
     const progressPct = creditsTotal > 0 ? Math.min(100, Math.round((creditsRemaining / creditsTotal) * 100)) : 100;
     const brandColors = org.brandColors || [];
@@ -457,9 +457,14 @@ class HogarView extends BaseView {
             <i class="fas fa-ellipsis-v"></i>
           </button>
         </div>
-        <!-- Body con folder tab notch | --surface-primary | padding 20-24px -->
+        <!-- Body con folder tab notch | zona segura: título siempre dentro del body -->
         <div class="org-card-body">
-          <h3 class="org-card-name" title="${this.escapeHtml(org.name)}">${this.escapeHtml(org.name)}</h3>
+          <div class="org-card-body-header">
+            <h3 class="org-card-name" title="${this.escapeHtml(org.name)}">${this.escapeHtml(org.name)}</h3>
+            <button type="button" class="org-edit-btn org-card-edit" data-org-id="${org.id}" title="Editar organización" aria-label="Editar">
+              <i class="fas fa-edit"></i>
+            </button>
+          </div>
           <div class="org-card-plan-badge ${planBadge.class}">${planBadge.label}</div>
           <div class="org-card-credits">
             <span class="org-card-credits-label">Tokens</span>
@@ -482,9 +487,6 @@ class HogarView extends BaseView {
           <div class="org-card-activity">
             ${lastProductionText}
           </div>
-          <button type="button" class="org-edit-btn org-card-edit" data-org-id="${org.id}" title="Editar organización">
-            <i class="fas fa-edit"></i>
-          </button>
         </div>
       </div>
     `;

@@ -90,10 +90,13 @@
     margin-bottom: 1.5rem;
 }
 
-/* Variables tema oscuro para card */
+/* Variables tema oscuro + tokens de radius (consistencia folder) */
 .hogar-container {
     --surface-primary: #121416;
     --surface-elevated: #16181c;
+    --radius-xl: 24px;
+    --radius-md: 16px;
+    --radius-sm: 8px;
 }
 
 /* Organizations Grid: 3-4 cols desktop, 2 tablet, 1 mobile */
@@ -124,7 +127,7 @@
 
 /* ========== Organization Card - Folder style (spec) ========== */
 .org-card.org-card-folder {
-    --org-card-radius: 24px;
+    --org-card-radius: var(--radius-xl, 24px);
     min-height: 320px;
     display: flex;
     flex-direction: column;
@@ -133,26 +136,24 @@
     transition: transform 0.25s ease, box-shadow 0.25s ease;
     border-radius: var(--org-card-radius);
     border: 1px solid rgba(255, 255, 255, 0.06);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+    /* Drop shadow para profundidad tipo carpeta */
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
 .org-card.org-card-folder:hover {
     transform: translateY(-3px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(224, 145, 69, 0.12);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(224, 145, 69, 0.12);
 }
 
-/* ----- 1. BRAND GRADIENT IDENTITY HEADER (36-42%) ----- */
+/* ----- 1. BRAND GRADIENT IDENTITY HEADER (sin gris, vivo y direccional) ----- */
 .org-card-cover {
     position: relative;
     flex: 0 0 40%;
     min-height: 120px;
     max-height: 160px;
     border-radius: var(--org-card-radius) var(--org-card-radius) 0 0;
-    /* Fallback cuando no hay branding */
-    background: linear-gradient(145deg, #1e1a16 0%, #151310 40%, #0d1114 100%);
-    background-image:
-        radial-gradient(ellipse 90% 80% at 50% 0%, rgba(224, 145, 69, 0.22) 0%, transparent 55%),
-        linear-gradient(160deg, #252019 0%, #16181c 100%);
+    /* Fallback: solo colores cálidos, sin gris neutro */
+    background: linear-gradient(135deg, #2a2018 0%, #1c1612 50%, #181410 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -160,23 +161,23 @@
     transition: transform 0.35s ease, filter 0.3s ease;
 }
 
-/* Branded: gradient desde --org-cover-gradient (inline style) */
+/* Branded: solo gradient de marca (sin overlay gris) */
 .org-card-cover.org-card-cover--branded {
     background: var(--org-cover-gradient);
     background-size: 100% 100%;
 }
 
-/* Layer 2: radial highlight (profundidad) */
+/* Layer 2: radial highlight BLANCO muy sutil (nunca gris) */
 .org-card-cover::after {
     content: '';
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255, 255, 255, 0.12) 0%, transparent 55%);
+    background: radial-gradient(ellipse 70% 50% at 50% 10%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
 }
 
 .org-card-cover--branded::after {
-    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255, 255, 255, 0.15) 0%, transparent 50%);
+    background: radial-gradient(ellipse 70% 50% at 50% 10%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
 }
 
 /* Layer 3: noise texture muy leve */
@@ -233,7 +234,7 @@
     box-shadow: 0 6px 20px rgba(224, 145, 69, 0.4);
 }
 
-/* Kebab: glass / frosted */
+/* Kebab: glass opacity 0.35, backdrop blur (accesibilidad) */
 .org-card-kebab {
     position: absolute;
     top: 12px;
@@ -243,10 +244,10 @@
     height: 36px;
     border-radius: 50%;
     border: none;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.35);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    color: rgba(255, 255, 255, 0.95);
+    color: rgba(255, 255, 255, 0.98);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -255,21 +256,23 @@
 }
 
 .org-card-kebab:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.45);
     color: #fff;
 }
 
-/* ----- 2. BODY con folder tab notch | overlap -16px ----- */
+/* ----- 2. BODY con folder tab notch | overlap 12-16px, sombra interna ----- */
 .org-card-body {
     position: relative;
     flex: 1;
-    margin-top: -16px;
-    padding: 20px 22px 22px;
+    margin-top: -14px;
+    padding: 24px 22px 22px;
     background: var(--surface-primary, #121416);
     border-radius: var(--org-card-radius);
-    /* Folder tab notch: recorte superior izquierdo */
-    clip-path: polygon(0 16px, 20px 16px, 20px 0, 100% 0, 100% 100%, 0 100%);
-    -webkit-clip-path: polygon(0 16px, 20px 16px, 20px 0, 100% 0, 100% 100%, 0 100%);
+    /* Notch con radio coherente (radius-sm) */
+    clip-path: polygon(0 14px, 14px 14px, 14px 0, 100% 0, 100% 100%, 0 100%);
+    -webkit-clip-path: polygon(0 14px, 14px 14px, 14px 0, 100% 0, 100% 100%, 0 100%);
+    /* Inner shadow en notch para profundidad */
+    box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.25);
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -281,27 +284,37 @@
     position: absolute;
     top: 0;
     left: 0;
-    right: 0;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     background: var(--surface-primary, #121416);
-    border-radius: 0 0 6px 0;
+    border-radius: 0 0 var(--radius-sm, 8px) 0;
     pointer-events: none;
+    box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* ----- 3. CONTENIDO (jerarquía UX) ----- */
+.org-card-body-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 2px;
+}
+
 .org-card-name {
-    font-size: 1.25rem;
+    flex: 1;
+    min-width: 0;
+    font-size: 1.2rem;
     font-weight: 700;
-    line-height: 1.2;
+    line-height: 1.25;
     color: var(--text-primary, #ecebda);
-    margin: 0 0 4px 0;
+    margin: 0;
     letter-spacing: -0.02em;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-/* Plan Badge: pill 4px 10px, border-radius 999px */
+/* Plan Badge: pill con background y border leve (Starter no plano) */
 .org-card-plan-badge {
     display: inline-block;
     padding: 4px 10px;
@@ -314,38 +327,43 @@
 }
 
 .org-card-plan-badge.plan-starter {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.06);
     color: var(--text-secondary, #a0a0a0);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .org-card-plan-badge.plan-pro {
     background: rgba(224, 145, 69, 0.2);
     color: var(--accent-warm, #e09145);
+    border: 1px solid rgba(224, 145, 69, 0.25);
 }
 
 .org-card-plan-badge.plan-enterprise {
     background: linear-gradient(135deg, rgba(224, 145, 69, 0.25), rgba(236, 235, 218, 0.12));
     color: var(--primary-color, #ecebda);
+    border: 1px solid rgba(236, 235, 218, 0.15);
 }
 
-/* Credits: label 12px 0.6, value 18px 600 */
+/* Credits: label pequeño, value dominante pero no hero | Value → 8px → Progress → 16px → Next */
 .org-card-credits {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    margin-top: 4px;
+    gap: 2px;
+    margin-top: 2px;
 }
 
 .org-card-credits-label {
-    font-size: 12px;
-    opacity: 0.6;
+    font-size: 11px;
+    opacity: 0.65;
     color: var(--text-secondary, #a0a0a0);
+    letter-spacing: 0.02em;
 }
 
 .org-card-credits-value {
-    font-size: 18px;
+    font-size: 15px;
     font-weight: 600;
     color: var(--text-primary, #ecebda);
+    letter-spacing: -0.01em;
 }
 
 .org-card-credits-value.credits-low {
@@ -357,7 +375,8 @@
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.08);
     overflow: hidden;
-    margin-top: 4px;
+    margin-top: 8px;
+    margin-bottom: 4px;
 }
 
 .org-card-credits-bar-fill {
@@ -421,15 +440,13 @@
     padding-top: 4px;
 }
 
-/* Edit button: esquina body */
+/* Edit: dentro del body header row, alineado con título, tamaño pequeño */
 .org-card-edit,
-.org-edit-btn {
-    position: absolute;
-    top: 18px;
-    right: 18px;
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
+.org-card-body .org-edit-btn {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-sm, 8px);
     border: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(255, 255, 255, 0.04);
     color: var(--text-secondary, #a0a0a0);
@@ -437,11 +454,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 0.75rem;
     transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
 
 .org-card-edit:hover,
-.org-edit-btn:hover {
+.org-card-body .org-edit-btn:hover {
     background: rgba(255, 255, 255, 0.08);
     color: var(--text-primary, #ecebda);
     border-color: rgba(255, 255, 255, 0.12);
