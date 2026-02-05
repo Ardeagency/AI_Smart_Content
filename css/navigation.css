@@ -1542,6 +1542,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     letter-spacing: 0.5px;
 }
 
+/* Oculto por defecto (solo header sin sidebar, ej. Hogar) */
 .app-header .header-hamburger {
     display: none;
     width: 40px;
@@ -1555,6 +1556,11 @@ body.sidebar-collapsed .app-header.with-sidebar {
     cursor: pointer;
     border-radius: 8px;
     transition: all 0.2s ease;
+}
+
+/* Visible cuando hay sidebar (desktop y móvil) para colapsar/abrir */
+.app-header.with-sidebar .header-hamburger {
+    display: flex;
 }
 
 .app-header .header-hamburger:hover {
