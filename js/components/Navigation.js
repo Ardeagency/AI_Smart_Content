@@ -718,8 +718,8 @@ class Navigation {
         emailEl.textContent = user.email || '';
       }
 
-      // Si el usuario tiene rol desarrollador, mostrar switcher Consumidor / Desarrollador en el dropdown
-      if (window.authService?.userHasDeveloperRole()) {
+      // Si el usuario es desarrollador o tiene vista por defecto desarrollador, mostrar switcher en el dropdown
+      if (window.authService?.shouldShowDeveloperSwitcher()) {
         this.injectDeveloperModeSwitcher();
         this.setupDeveloperModeSwitcherListeners();
       }

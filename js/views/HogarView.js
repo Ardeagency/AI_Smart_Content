@@ -295,11 +295,17 @@ class HogarView extends BaseView {
       const card = gridEl.querySelector(`[data-org-id="${org.id}"]`);
       if (card) {
         card.addEventListener('click', (e) => {
-          // No navegar si se hace clic en el botón de favorito o editar
-          if (!e.target.closest('.org-favorite-btn') && !e.target.closest('.org-edit-btn')) {
+          // No navegar si se hace clic en menú, editar o métricas
+          if (!e.target.closest('.org-favorite-btn') && !e.target.closest('.org-edit-btn') && !e.target.closest('.org-card-metrics')) {
             this.navigateToOrganization(org.id);
           }
         });
+
+        // Botón menú (tres puntos)
+        const menuBtn = card.querySelector('.org-card-menu-btn');
+        if (menuBtn) {
+          menuBtn.addEventListener('click', (e) => e.stopPropagation());
+        }
 
         // Botón de editar
         const editBtn = card.querySelector('.org-edit-btn');
@@ -314,79 +320,69 @@ class HogarView extends BaseView {
   }
 
   /**
-   * Renderizar card de organización
+   * Formatear fecha relativa (ej. "hace 5 días")
+   */
+  formatRelativeDate(createdAt) {
+    if (!createdAt) return '';
+    const date = new Date(createdAt);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return 'Hoy';
+    if (diffDays === 1) return 'Ayer';
+    if (diffDays < 7) return `Hace ${diffDays} días`;
+    if (diffDays < 30) return `Hace ${Math.floor(diffDays / 7)} semana${Math.floor(diffDays / 7) !== 1 ? 's' : ''}`;
+    if (diffDays < 365) return `Hace ${Math.floor(diffDays / 30)} mes${Math.floor(diffDays / 30) !== 1 ? 'es' : ''}`;
+    return `Hace ${Math.floor(diffDays / 365)} año${Math.floor(diffDays / 365) !== 1 ? 's' : ''}`;
+  }
+
+  /**
+   * Renderizar card de organización (estilo referencia: banner, meta, título, tags, pie)
    */
   renderOrganizationCard(org) {
     const stats = org.stats || {};
     const logoInitial = org.name ? org.name.charAt(0).toUpperCase() : 'O';
-    
+    const relativeDate = this.formatRelativeDate(org.created_at);
+    const membersCount = stats.members_count || 0;
+
     return `
-      <div class="org-card" data-org-id="${org.id}">
-        <div class="org-card-header">
-          <div class="org-logo">
-            ${logoInitial}
+      <div class="org-card org-card-modern" data-org-id="${org.id}">
+        <div class="org-card-banner">
+          <div class="org-card-banner-inner">
+            <span class="org-card-banner-initial">${logoInitial}</span>
           </div>
-          <button class="org-favorite-btn" data-org-id="${org.id}" title="Marcar como favorito">
-            <i class="far fa-star"></i>
+          <button class="org-card-menu-btn org-favorite-btn" data-org-id="${org.id}" title="Opciones" aria-label="Opciones">
+            <i class="fas fa-ellipsis-v"></i>
           </button>
         </div>
-        
-        <div class="org-card-body">
-          <h3 class="org-name">${this.escapeHtml(org.name)}</h3>
-          <div class="org-role-badge ${org.role}">
-            ${org.role === 'owner' ? 'Propietario' : 'Colaborador'}
+        <div class="org-card-content">
+          <div class="org-card-meta">
+            ${relativeDate ? `<span>${relativeDate}</span>` : ''}
+            ${relativeDate ? '<span class="org-card-meta-dot">·</span>' : ''}
+            <span class="org-card-status">Activa</span>
           </div>
-        </div>
-        
-        <div class="org-card-stats">
-          <div class="org-stat-item">
-            <div class="org-stat-icon">
-              <i class="fas fa-coins"></i>
-            </div>
-            <div class="org-stat-content">
-              <div class="org-stat-value">${stats.credits_available || 0}</div>
-              <div class="org-stat-label">Tokens</div>
-            </div>
+          <h3 class="org-card-title">${this.escapeHtml(org.name)}</h3>
+          <p class="org-card-desc">Gestiona marcas, productos y contenido con IA</p>
+          <div class="org-card-tags">
+            <span class="org-card-tag org-role-badge ${org.role}">
+              ${org.role === 'owner' ? 'Propietario' : 'Colaborador'}
+            </span>
           </div>
-          
-          <div class="org-stat-item">
-            <div class="org-stat-icon">
-              <i class="fas fa-tags"></i>
+          <div class="org-card-bottom">
+            <div class="org-card-collaborators">
+              <div class="org-card-avatars">
+                <span class="org-card-avatar org-card-avatar-placeholder"><i class="fas fa-users"></i></span>
+                <span class="org-card-avatar-count">${membersCount}</span>
+              </div>
+              <span class="org-card-collaborators-label">${membersCount} colaborador${membersCount !== 1 ? 'es' : ''}</span>
             </div>
-            <div class="org-stat-content">
-              <div class="org-stat-value">${stats.brands_count || 0}</div>
-              <div class="org-stat-label">Marcas</div>
+            <div class="org-card-metrics">
+              <span class="org-card-metric" title="Tokens"><i class="fas fa-coins"></i> ${stats.credits_available ?? 0}</span>
+              <span class="org-card-metric" title="Marcas"><i class="fas fa-tags"></i> ${stats.brands_count ?? 0}</span>
+              <span class="org-card-metric" title="Productos"><i class="fas fa-box"></i> ${stats.products_count ?? 0}</span>
+              <span class="org-card-metric" title="Campañas"><i class="fas fa-bullhorn"></i> ${stats.campaigns_count ?? 0}</span>
             </div>
-          </div>
-          
-          <div class="org-stat-item">
-            <div class="org-stat-icon">
-              <i class="fas fa-box"></i>
-            </div>
-            <div class="org-stat-content">
-              <div class="org-stat-value">${stats.products_count || 0}</div>
-              <div class="org-stat-label">Productos</div>
-            </div>
-          </div>
-          
-          <div class="org-stat-item">
-            <div class="org-stat-icon">
-              <i class="fas fa-bullhorn"></i>
-            </div>
-            <div class="org-stat-content">
-              <div class="org-stat-value">${stats.campaigns_count || 0}</div>
-              <div class="org-stat-label">Campañas</div>
-            </div>
-          </div>
-        </div>
-        
-        <div class="org-card-footer">
-          <div class="org-members">
-            <i class="fas fa-users"></i>
-            <span>${stats.members_count || 0} colaborador${stats.members_count !== 1 ? 'es' : ''}</span>
-          </div>
-          <div class="org-actions">
-            <button class="btn btn-secondary btn-sm org-edit-btn" data-org-id="${org.id}">
+            <button class="org-edit-btn org-card-edit" data-org-id="${org.id}" title="Editar">
               <i class="fas fa-edit"></i>
             </button>
           </div>

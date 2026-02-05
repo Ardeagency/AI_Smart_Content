@@ -345,6 +345,17 @@ class AuthService {
   }
 
   /**
+   * Verificar si se debe mostrar el switcher Consumidor/Desarrollador en el dropdown.
+   * Se muestra si is_developer = true O si default_view_mode = 'developer' (tiene acceso a vista desarrollador).
+   * @returns {boolean}
+   */
+  shouldShowDeveloperSwitcher() {
+    const u = this.currentUser;
+    if (!u) return false;
+    return u.is_developer === true || u.default_view_mode === 'developer';
+  }
+
+  /**
    * Verificar si el usuario está en una ruta de desarrollador
    * @returns {boolean}
    */
