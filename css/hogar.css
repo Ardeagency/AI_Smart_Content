@@ -90,90 +90,111 @@
     margin-bottom: 1.5rem;
 }
 
-/* Organizations Grid */
+/* Variables tema oscuro para card */
+.hogar-container {
+    --surface-primary: #121416;
+    --surface-elevated: #16181c;
+}
+
+/* Organizations Grid: 3-4 cols desktop, 2 tablet, 1 mobile */
 .organizations-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 1.5rem;
     margin-top: 2rem;
 }
 
-/* Organization Card - Estilo referencia (tema oscuro) */
-.org-card.org-card-modern {
-    background: #121416;
-    border-radius: 16px;
-    overflow: hidden;
-    cursor: pointer;
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-    border: 1px solid #1B1D1F;
+@media (min-width: 600px) and (max-width: 899px) {
+    .organizations-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 900px) {
+    .organizations-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 1200px) {
+    .organizations-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* ========== Organization Card - Folder style (spec) ========== */
+.org-card.org-card-folder {
+    --org-card-radius: 24px;
+    min-height: 320px;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    overflow: visible;
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    border-radius: var(--org-card-radius);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
 }
 
-.org-card.org-card-modern:hover {
-    transform: translateY(-4px);
-    border-color: rgba(224, 145, 69, 0.4);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(224, 145, 69, 0.15);
+.org-card.org-card-folder:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(224, 145, 69, 0.12);
 }
 
-/* Banner superior con borde inferior curvo */
-.org-card-banner {
+/* ----- 1. COVER (35-45% card) | border-radius top 24px, bottom 0 ----- */
+.org-card-cover {
     position: relative;
-    height: 88px;
-    background: linear-gradient(135deg, #2a1f18 0%, #1a1512 50%, #0f1419 100%);
-    background-image: 
-        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(224, 145, 69, 0.25) 0%, transparent 50%),
-        linear-gradient(180deg, #252019 0%, #16181c 100%);
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding-top: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.org-card-banner::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    right: 0;
-    height: 24px;
-    background: #121416;
-    border-radius: 50% 50% 0 0 / 100% 100% 0 0;
-    transform: scaleY(0.5);
-}
-
-.org-card-banner-inner {
+    flex: 0 0 40%;
+    min-height: 120px;
+    max-height: 160px;
+    border-radius: var(--org-card-radius) var(--org-card-radius) 0 0;
+    background: linear-gradient(145deg, #1e1a16 0%, #151310 40%, #0d1114 100%);
+    background-image:
+        radial-gradient(ellipse 90% 80% at 50% 0%, rgba(224, 145, 69, 0.22) 0%, transparent 55%),
+        linear-gradient(160deg, #252019 0%, #16181c 100%);
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
+    transition: transform 0.35s ease;
 }
 
-.org-card-banner-initial {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, var(--accent-warm, #e09145), #c97b38);
+.org-card.org-card-folder:hover .org-card-cover {
+    transform: scale(1.02);
+}
+
+.org-card-cover-inner {
+    position: absolute;
+    inset: 0;
+    opacity: 0.4;
+    background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.08) 0%, transparent 40%);
+}
+
+.org-card-cover-initial {
+    position: relative;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--accent-warm, #e09145), #b86a2e);
     color: #fff;
-    font-size: 1.35rem;
+    font-size: 1.4rem;
     font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 12px rgba(224, 145, 69, 0.35);
+    box-shadow: 0 6px 20px rgba(224, 145, 69, 0.4);
 }
 
-.org-card-menu-btn {
+.org-card-kebab {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
+    top: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
     border: none;
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--text-secondary, #a0a0a0);
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.85);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -181,111 +202,133 @@
     transition: background 0.2s, color 0.2s;
 }
 
-.org-card-menu-btn:hover {
-    background: rgba(255, 255, 255, 0.12);
-    color: var(--text-primary, #ecebda);
+.org-card-kebab:hover {
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
 }
 
-.org-favorite-btn.active {
-    color: var(--accent-warm, #e09145);
-}
-
-/* Contenido bajo el banner */
-.org-card-content {
-    padding: 1.25rem 1.25rem 1.25rem;
+/* ----- 2. BODY con folder tab notch | clip-path ----- */
+.org-card-body {
+    position: relative;
+    flex: 1;
+    margin-top: -1px;
+    padding: 20px 22px 22px;
+    background: var(--surface-primary, #121416);
+    border-radius: var(--org-card-radius);
+    /* Folder tab notch: recorte superior izquierdo */
+    clip-path: polygon(0 16px, 20px 16px, 20px 0, 100% 0, 100% 100%, 0 100%);
+    -webkit-clip-path: polygon(0 16px, 20px 16px, 20px 0, 100% 0, 100% 100%, 0 100%);
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    flex: 1;
+    gap: 12px;
+    min-height: 0;
 }
 
-.org-card-meta {
-    font-size: 0.75rem;
-    color: var(--text-muted, #6b7280);
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
+.org-card-body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 16px;
+    background: var(--surface-primary, #121416);
+    border-radius: 0 0 6px 0;
+    pointer-events: none;
 }
 
-.org-card-meta-dot {
-    opacity: 0.7;
-}
-
-.org-card-status {
-    color: var(--text-secondary, #a0a0a0);
-}
-
-.org-card-title {
+/* ----- 3. CONTENIDO (jerarquía UX) ----- */
+.org-card-name {
     font-size: 1.25rem;
     font-weight: 700;
+    line-height: 1.2;
     color: var(--text-primary, #ecebda);
-    margin: 0;
-    line-height: 1.3;
+    margin: 0 0 4px 0;
     letter-spacing: -0.02em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.org-card-desc {
-    font-size: 0.8125rem;
-    color: var(--text-secondary, #a0a0a0);
-    margin: 0;
-    line-height: 1.4;
-}
-
-.org-card-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 0.25rem;
-}
-
-.org-card-tag,
-.org-role-badge {
+/* Plan Badge: pill 4px 10px, border-radius 999px */
+.org-card-plan-badge {
     display: inline-block;
-    padding: 0.25rem 0.65rem;
+    padding: 4px 10px;
     border-radius: 999px;
     font-size: 0.7rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.04em;
+    align-self: flex-start;
 }
 
-.org-role-badge.owner {
+.org-card-plan-badge.plan-starter {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary, #a0a0a0);
+}
+
+.org-card-plan-badge.plan-pro {
     background: rgba(224, 145, 69, 0.2);
     color: var(--accent-warm, #e09145);
 }
 
-.org-role-badge.admin,
-.org-role-badge.member {
-    background: rgba(236, 235, 218, 0.1);
+.org-card-plan-badge.plan-enterprise {
+    background: linear-gradient(135deg, rgba(224, 145, 69, 0.25), rgba(236, 235, 218, 0.12));
+    color: var(--primary-color, #ecebda);
+}
+
+/* Credits: label 12px 0.6, value 18px 600 */
+.org-card-credits {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.org-card-credits-label {
+    font-size: 12px;
+    opacity: 0.6;
     color: var(--text-secondary, #a0a0a0);
 }
 
-/* Pie: colaboradores + métricas + editar */
-.org-card-bottom {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-    flex-wrap: wrap;
+.org-card-credits-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary, #ecebda);
 }
 
-.org-card-collaborators {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    min-width: 0;
+.org-card-credits-value.credits-low {
+    color: var(--accent-warm, #e09145);
 }
 
-.org-card-avatars {
-    display: flex;
-    align-items: center;
-    position: relative;
+.org-card-credits-bar {
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    margin-top: 4px;
 }
 
-.org-card-avatar-placeholder {
+.org-card-credits-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent-warm, #e09145), #c97b38);
+    transition: width 0.3s ease;
+}
+
+/* Team: solo si > 1 | avatar stack */
+.org-card-team {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.org-card-team-avatars {
+    display: flex;
+    align-items: center;
+}
+
+.org-card-team-avatar {
     width: 28px;
     height: 28px;
     border-radius: 50%;
@@ -297,13 +340,13 @@
     font-size: 0.7rem;
 }
 
-.org-card-avatar-count {
-    margin-left: -6px;
-    width: 20px;
-    height: 20px;
+.org-card-team-more {
+    margin-left: -8px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
-    background: #1B1D1F;
-    border: 1px solid #121416;
+    background: var(--surface-elevated, #16181c);
+    border: 1px solid var(--surface-primary, #121416);
     color: var(--text-secondary);
     font-size: 0.65rem;
     font-weight: 600;
@@ -312,41 +355,31 @@
     justify-content: center;
 }
 
-.org-card-collaborators-label {
-    font-size: 0.75rem;
+.org-card-team-label {
+    font-size: 12px;
     color: var(--text-secondary, #a0a0a0);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
-.org-card-metrics {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+/* Last production: 12-13px, opacity 0.6 */
+.org-card-activity {
+    font-size: 12px;
+    opacity: 0.6;
+    color: var(--text-secondary, #a0a0a0);
+    margin-top: auto;
+    padding-top: 4px;
 }
 
-.org-card-metric {
-    font-size: 0.7rem;
-    color: var(--text-muted, #6b7280);
-    display: inline-flex;
-    align-items: center;
-    gap: 0.2rem;
-}
-
-.org-card-metric i {
-    font-size: 0.65rem;
-    color: var(--accent-warm, #e09145);
-    opacity: 0.9;
-}
-
+/* Edit button: esquina body */
 .org-card-edit,
 .org-edit-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    border: 1px solid #1B1D1F;
-    background: transparent;
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
     color: var(--text-secondary, #a0a0a0);
     cursor: pointer;
     display: flex;
@@ -357,9 +390,13 @@
 
 .org-card-edit:hover,
 .org-edit-btn:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.08);
     color: var(--text-primary, #ecebda);
-    border-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.org-favorite-btn.active {
+    color: var(--accent-warm, #e09145);
 }
 
 .btn-sm {
@@ -511,12 +548,19 @@
         gap: 1rem;
     }
 
-    .org-card-bottom {
-        flex-direction: column;
-        align-items: flex-start;
+    .org-card.org-card-folder {
+        min-height: 280px;
     }
 
-    .org-card-metrics {
-        flex-wrap: wrap;
+    .org-card-cover {
+        min-height: 100px;
+    }
+
+    .org-card-body {
+        padding: 16px 18px 18px;
+    }
+
+    .org-card-name {
+        font-size: 1.125rem;
     }
 }

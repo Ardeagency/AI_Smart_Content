@@ -295,16 +295,14 @@ class HogarView extends BaseView {
       const card = gridEl.querySelector(`[data-org-id="${org.id}"]`);
       if (card) {
         card.addEventListener('click', (e) => {
-          // No navegar si se hace clic en menú, editar o métricas
-          if (!e.target.closest('.org-favorite-btn') && !e.target.closest('.org-edit-btn') && !e.target.closest('.org-card-metrics')) {
+          if (!e.target.closest('.org-favorite-btn') && !e.target.closest('.org-edit-btn') && !e.target.closest('.org-card-kebab')) {
             this.navigateToOrganization(org.id);
           }
         });
 
-        // Botón menú (tres puntos)
-        const menuBtn = card.querySelector('.org-card-menu-btn');
-        if (menuBtn) {
-          menuBtn.addEventListener('click', (e) => e.stopPropagation());
+        const kebabBtn = card.querySelector('.org-card-kebab');
+        if (kebabBtn) {
+          kebabBtn.addEventListener('click', (e) => e.stopPropagation());
         }
 
         // Botón de editar
@@ -320,7 +318,7 @@ class HogarView extends BaseView {
   }
 
   /**
-   * Formatear fecha relativa (ej. "hace 5 días")
+   * Formatear fecha relativa (ej. "hace 5 días", "2 days ago")
    */
   formatRelativeDate(createdAt) {
     if (!createdAt) return '';
@@ -337,55 +335,71 @@ class HogarView extends BaseView {
   }
 
   /**
-   * Renderizar card de organización (estilo referencia: banner, meta, título, tags, pie)
+   * Mapear plan a etiqueta y clase para badge (Starter → neutral, Pro → brand, Enterprise → premium)
+   */
+  getPlanBadge(planType) {
+    const p = (planType || 'starter').toLowerCase();
+    if (p === 'pro' || p === 'basico') return { label: p === 'pro' ? 'Pro' : 'Starter', class: 'plan-pro' };
+    if (p === 'enterprise' || p === 'empresas') return { label: 'Enterprise', class: 'plan-enterprise' };
+    return { label: 'Starter', class: 'plan-starter' };
+  }
+
+  /**
+   * Renderizar card de organización (spec: folder cover + notch, jerarquía UX, tema oscuro)
    */
   renderOrganizationCard(org) {
     const stats = org.stats || {};
     const logoInitial = org.name ? org.name.charAt(0).toUpperCase() : 'O';
-    const relativeDate = this.formatRelativeDate(org.created_at);
     const membersCount = stats.members_count || 0;
+    const creditsRemaining = stats.credits_available ?? 0;
+    const creditsTotal = stats.credits_total ?? 0;
+    const creditsThreshold = 100;
+    const creditsLow = creditsTotal > 0 && creditsRemaining < creditsThreshold;
+    const planBadge = this.getPlanBadge(org.plan_type);
+    const lastProductionText = org.last_production_at
+      ? `Última producción: ${this.formatRelativeDate(org.last_production_at)}`
+      : 'Sin producciones aún';
+    const showTeam = membersCount > 1;
+    const progressPct = creditsTotal > 0 ? Math.min(100, Math.round((creditsRemaining / creditsTotal) * 100)) : 100;
 
     return `
-      <div class="org-card org-card-modern" data-org-id="${org.id}">
-        <div class="org-card-banner">
-          <div class="org-card-banner-inner">
-            <span class="org-card-banner-initial">${logoInitial}</span>
-          </div>
-          <button class="org-card-menu-btn org-favorite-btn" data-org-id="${org.id}" title="Opciones" aria-label="Opciones">
+      <div class="org-card org-card-folder" data-org-id="${org.id}" title="Entrar a ${this.escapeHtml(org.name)}">
+        <!-- Cover 35-45% | border-radius top 24px, bottom 0 | kebab -->
+        <div class="org-card-cover">
+          <div class="org-card-cover-inner"></div>
+          <span class="org-card-cover-initial" aria-hidden="true">${logoInitial}</span>
+          <button type="button" class="org-card-kebab org-favorite-btn" data-org-id="${org.id}" title="Opciones" aria-label="Opciones">
             <i class="fas fa-ellipsis-v"></i>
           </button>
         </div>
-        <div class="org-card-content">
-          <div class="org-card-meta">
-            ${relativeDate ? `<span>${relativeDate}</span>` : ''}
-            ${relativeDate ? '<span class="org-card-meta-dot">·</span>' : ''}
-            <span class="org-card-status">Activa</span>
-          </div>
-          <h3 class="org-card-title">${this.escapeHtml(org.name)}</h3>
-          <p class="org-card-desc">Gestiona marcas, productos y contenido con IA</p>
-          <div class="org-card-tags">
-            <span class="org-card-tag org-role-badge ${org.role}">
-              ${org.role === 'owner' ? 'Propietario' : 'Colaborador'}
-            </span>
-          </div>
-          <div class="org-card-bottom">
-            <div class="org-card-collaborators">
-              <div class="org-card-avatars">
-                <span class="org-card-avatar org-card-avatar-placeholder"><i class="fas fa-users"></i></span>
-                <span class="org-card-avatar-count">${membersCount}</span>
-              </div>
-              <span class="org-card-collaborators-label">${membersCount} colaborador${membersCount !== 1 ? 'es' : ''}</span>
+        <!-- Body con folder tab notch | --surface-primary | padding 20-24px -->
+        <div class="org-card-body">
+          <h3 class="org-card-name" title="${this.escapeHtml(org.name)}">${this.escapeHtml(org.name)}</h3>
+          <div class="org-card-plan-badge ${planBadge.class}">${planBadge.label}</div>
+          <div class="org-card-credits">
+            <span class="org-card-credits-label">Tokens</span>
+            <span class="org-card-credits-value ${creditsLow ? 'credits-low' : ''}">${creditsRemaining} disponibles</span>
+            ${creditsTotal > 0 ? `
+            <div class="org-card-credits-bar" role="presentation">
+              <div class="org-card-credits-bar-fill" style="width: ${progressPct}%"></div>
             </div>
-            <div class="org-card-metrics">
-              <span class="org-card-metric" title="Tokens"><i class="fas fa-coins"></i> ${stats.credits_available ?? 0}</span>
-              <span class="org-card-metric" title="Marcas"><i class="fas fa-tags"></i> ${stats.brands_count ?? 0}</span>
-              <span class="org-card-metric" title="Productos"><i class="fas fa-box"></i> ${stats.products_count ?? 0}</span>
-              <span class="org-card-metric" title="Campañas"><i class="fas fa-bullhorn"></i> ${stats.campaigns_count ?? 0}</span>
-            </div>
-            <button class="org-edit-btn org-card-edit" data-org-id="${org.id}" title="Editar">
-              <i class="fas fa-edit"></i>
-            </button>
+            ` : ''}
           </div>
+          ${showTeam ? `
+          <div class="org-card-team">
+            <div class="org-card-team-avatars">
+              <span class="org-card-team-avatar" title="Equipo"><i class="fas fa-users"></i></span>
+              <span class="org-card-team-more">+${membersCount - 1}</span>
+            </div>
+            <span class="org-card-team-label">${membersCount} colaboradores</span>
+          </div>
+          ` : ''}
+          <div class="org-card-activity">
+            ${lastProductionText}
+          </div>
+          <button type="button" class="org-edit-btn org-card-edit" data-org-id="${org.id}" title="Editar organización">
+            <i class="fas fa-edit"></i>
+          </button>
         </div>
       </div>
     `;
