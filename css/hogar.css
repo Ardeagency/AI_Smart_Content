@@ -42,24 +42,37 @@
     color: var(--text-secondary, #a0a0a0);
 }
 
+/* Footer con botón Nueva Organización */
+.hogar-footer {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    justify-content: flex-start;
+}
+
 .btn-create-org {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    background: var(--primary-color, #ecebda);
-    color: var(--bg-dark, #1a1a1a);
+    justify-content: center;
+    gap: 0.4rem;
+    width: 160px;
+    height: 36px;
+    padding: 0 0.75rem;
+    background: var(--accent-warm, #e09145);
+    color: #fff;
     border: none;
     border-radius: 8px;
+    font-size: 0.8125rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background 0.2s ease, transform 0.15s ease;
 }
 
 .btn-create-org:hover {
-    background: var(--accent-warm, #e09145);
-    color: var(--text-primary, #ecebda);
-    transform: translateY(-2px);
+    background: var(--accent-yellow-hover, #f0a055);
+    color: #fff;
+    transform: translateY(-1px);
 }
 
 /* Empty State */
@@ -148,7 +161,7 @@
 /* ----- 1. VOLUMETRIC / GLASS GRADIENT (fintech / iOS premium) ----- */
 /* Luz: superior derecha | Sombra: inferior izquierda | Sin gris, solo negro transparente */
 
-/* Header: gradient se extiende debajo del notch (FIX 2) + fade inferior (FIX 6) */
+/* Header: gradient continúa detrás del notch + fade inferior suave (sin corte duro) */
 .org-card-cover {
     --cover-highlight-x: 75%;
     --cover-highlight-y: 25%;
@@ -156,12 +169,12 @@
     flex: 0 0 40%;
     min-height: 120px;
     max-height: 160px;
-    padding-bottom: 16px;
-    margin-bottom: -16px;
+    padding-bottom: 22px;
+    margin-bottom: -22px;
     border-radius: var(--org-card-radius) var(--org-card-radius) 0 0;
     background:
-        linear-gradient(180deg, transparent 0%, transparent 55%, rgba(0, 0, 0, 0.15) 100%),
-        radial-gradient(ellipse 100% 80% at var(--cover-highlight-x) var(--cover-highlight-y), rgba(255, 255, 255, 0.14) 0%, transparent 72%),
+        linear-gradient(180deg, transparent 0%, transparent 45%, rgba(0, 0, 0, 0.1) 80%, rgba(0, 0, 0, 0.22) 100%),
+        radial-gradient(ellipse 110% 90% at var(--cover-highlight-x) var(--cover-highlight-y), rgba(255, 255, 255, 0.16) 0%, transparent 65%),
         linear-gradient(45deg, rgba(0, 0, 0, 0.3) 0%, transparent 50%),
         linear-gradient(135deg, #2a2018 0%, #1c1612 100%);
     background-size: 100% 100%;
@@ -175,8 +188,8 @@
 
 .org-card-cover.org-card-cover--branded {
     background:
-        linear-gradient(180deg, transparent 0%, transparent 55%, rgba(0, 0, 0, 0.15) 100%),
-        radial-gradient(ellipse 100% 80% at var(--cover-highlight-x) var(--cover-highlight-y), rgba(255, 255, 255, 0.16) 0%, transparent 72%),
+        linear-gradient(180deg, transparent 0%, transparent 45%, rgba(0, 0, 0, 0.1) 80%, rgba(0, 0, 0, 0.22) 100%),
+        radial-gradient(ellipse 110% 90% at var(--cover-highlight-x) var(--cover-highlight-y), rgba(255, 255, 255, 0.18) 0%, transparent 65%),
         linear-gradient(45deg, rgba(0, 0, 0, 0.35) 0%, transparent 50%),
         var(--org-cover-gradient);
     background-size: 100% 100%;
@@ -264,44 +277,64 @@
     border-color: rgba(255, 255, 255, 0.15);
 }
 
-/* ----- 2. BODY = superficie debajo | notch = pliegue (FIX 1, 3, 4, 5) ----- */
+/* ----- 2. BODY = superficie debajo del header | notch = pliegue con luz ----- */
+/* Notch inset desde el borde (no pegado): --notch-margin 18px */
 .org-card-body {
-    --notch-w: 20px;
-    --notch-r: 21px;
+    --notch-margin: 18px;
+    --notch-w: 22px;
+    --notch-r: 22px;
     position: relative;
     flex: 1;
-    margin-top: -12px;
-    padding: 28px 22px 22px;
-    padding-left: calc(var(--notch-w) + 10px);
-    background: var(--surface-primary, #121416);
+    margin-top: -14px;
+    padding: 30px 22px 22px;
+    padding-left: calc(var(--notch-margin) + var(--notch-w) + 12px);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.028) 0%, transparent 14px),
+        var(--surface-primary, #121416);
     border-radius: var(--org-card-radius);
-    clip-path: polygon(0 var(--notch-w), var(--notch-w) var(--notch-w), var(--notch-w) 0, 100% 0, 100% 100%, 0 100%);
-    -webkit-clip-path: polygon(0 var(--notch-w), var(--notch-w) var(--notch-w), var(--notch-w) 0, 100% 0, 100% 100%, 0 100%);
-    /* FIX 1: Transition shadow + leve reflexión en borde superior (no negro puro) */
+    clip-path: polygon(
+        0 100%,
+        0 var(--notch-w),
+        var(--notch-margin) var(--notch-w),
+        calc(var(--notch-margin) + var(--notch-w)) var(--notch-w),
+        calc(var(--notch-margin) + var(--notch-w)) 0,
+        100% 0,
+        100% 100%
+    );
+    -webkit-clip-path: polygon(
+        0 100%,
+        0 var(--notch-w),
+        var(--notch-margin) var(--notch-w),
+        calc(var(--notch-margin) + var(--notch-w)) var(--notch-w),
+        calc(var(--notch-margin) + var(--notch-w)) 0,
+        100% 0,
+        100% 100%
+    );
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.03),
-        inset 0 10px 12px -6px rgba(0, 0, 0, 0.35),
-        inset 2px 0 6px rgba(0, 0, 0, 0.25);
+        inset 0 2px 0 rgba(255, 255, 255, 0.05),
+        inset 0 14px 18px -6px rgba(0, 0, 0, 0.42),
+        inset 2px 0 8px rgba(0, 0, 0, 0.28);
     display: flex;
     flex-direction: column;
     gap: 12px;
     min-height: 0;
 }
 
-/* Notch fill: radio 20–22px (FIX 3), sombra recorte + micro highlight en borde (FIX 4) */
+/* Notch: inset 18px del borde, radio 22px, luz en el pliegue */
 .org-card-body::before {
     content: '';
     position: absolute;
     top: 0;
-    left: 0;
+    left: var(--notch-margin);
     width: var(--notch-w);
     height: var(--notch-w);
     background: var(--surface-primary, #121416);
     border-radius: 0 0 var(--notch-r) 0;
     pointer-events: none;
     box-shadow:
-        inset 2px 2px 6px rgba(0, 0, 0, 0.35),
-        1px 1px 0 rgba(255, 255, 255, 0.04);
+        inset 2px 2px 8px rgba(0, 0, 0, 0.4),
+        0 1px 0 rgba(255, 255, 255, 0.07),
+        1px 0 0 rgba(255, 255, 255, 0.06);
 }
 
 /* ----- 3. CONTENIDO (jerarquía UX) ----- */

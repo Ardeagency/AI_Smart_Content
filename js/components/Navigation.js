@@ -167,7 +167,7 @@ class Navigation {
         <div class="header-content">
           <div class="header-left">
             <div class="header-logo">
-              <span class="logo-text">AI Smart Content</span>
+              <span class="logo-text">AI SMART CONTENT</span>
             </div>
           </div>
           <div class="header-right">
