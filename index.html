@@ -16,26 +16,26 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- Application CSS -->
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/app.css">
-    <link rel="stylesheet" href="css/landing.css">
-    <link rel="stylesheet" href="css/login.css">
-    <link rel="stylesheet" href="css/planes.css">
-    <link rel="stylesheet" href="css/navigation.css">
-    <link rel="stylesheet" href="css/hogar.css">
-    <link rel="stylesheet" href="css/brands.css">
-    <link rel="stylesheet" href="css/campaigns.css">
-    <link rel="stylesheet" href="css/audiences.css">
-    <link rel="stylesheet" href="css/create.css">
-    <link rel="stylesheet" href="css/content.css">
-    <link rel="stylesheet" href="css/settings.css">
-    <link rel="stylesheet" href="css/living.css">
-    <link rel="stylesheet" href="css/studio.css">
-    <link rel="stylesheet" href="css/products.css">
-    <link rel="stylesheet" href="css/product-detail.css">
-    <link rel="stylesheet" href="css/form-record.css">
-    <link rel="stylesheet" href="css/developer.css">
+    <!-- Application CSS (rutas absolutas para que funcionen en /org/xxx/...) -->
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/app.css">
+    <link rel="stylesheet" href="/css/landing.css">
+    <link rel="stylesheet" href="/css/login.css">
+    <link rel="stylesheet" href="/css/planes.css">
+    <link rel="stylesheet" href="/css/navigation.css">
+    <link rel="stylesheet" href="/css/hogar.css">
+    <link rel="stylesheet" href="/css/brands.css">
+    <link rel="stylesheet" href="/css/campaigns.css">
+    <link rel="stylesheet" href="/css/audiences.css">
+    <link rel="stylesheet" href="/css/create.css">
+    <link rel="stylesheet" href="/css/content.css">
+    <link rel="stylesheet" href="/css/settings.css">
+    <link rel="stylesheet" href="/css/living.css">
+    <link rel="stylesheet" href="/css/studio.css">
+    <link rel="stylesheet" href="/css/products.css">
+    <link rel="stylesheet" href="/css/product-detail.css">
+    <link rel="stylesheet" href="/css/form-record.css">
+    <link rel="stylesheet" href="/css/developer.css">
     
     <style>
         /* Estilos base para la SPA */
@@ -122,49 +122,49 @@
     <!-- External Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <!-- Core Scripts (orden importante) -->
-    <script src="js/app-loader.js"></script>
-    <script src="js/views/BaseView.js"></script>
-    <script src="js/router.js"></script>
+    <!-- Core Scripts (rutas absolutas para que funcionen en /org/xxx/...) -->
+    <script src="/js/app-loader.js"></script>
+    <script src="/js/views/BaseView.js"></script>
+    <script src="/js/router.js"></script>
     
     <!-- Services (cargar antes de las vistas) -->
-    <script src="js/services/SupabaseService.js"></script>
-    <script src="js/services/AuthService.js"></script>
-    <script src="js/services/AppState.js"></script>
-    <script src="js/utils/Performance.js"></script>
-    <script src="js/utils/ErrorHandler.js"></script>
-    <script src="js/session-utils.js"></script>
+    <script src="/js/services/SupabaseService.js"></script>
+    <script src="/js/services/AuthService.js"></script>
+    <script src="/js/services/AppState.js"></script>
+    <script src="/js/utils/Performance.js"></script>
+    <script src="/js/utils/ErrorHandler.js"></script>
+    <script src="/js/session-utils.js"></script>
     
     <!-- Views (cargar antes de app.js para que estén disponibles) -->
-    <script src="js/views/LandingView.js"></script>
-    <script src="js/views/PlanesView.js"></script>
-    <script src="js/views/FormRecordView.js"></script>
-    <script src="js/views/HogarView.js"></script>
-    <script src="js/views/BrandsView.js"></script>
-    <script src="js/views/CampaignsView.js"></script>
-    <script src="js/views/AudiencesView.js"></script>
-    <script src="js/views/CreateView.js"></script>
-    <script src="js/views/ContentView.js"></script>
-    <script src="js/views/SettingsView.js"></script>
-    <script src="js/views/LivingView.js"></script>
-    <script src="js/views/StudioView.js"></script>
-    <script src="js/views/ProductsView.js"></script>
+    <script src="/js/views/LandingView.js"></script>
+    <script src="/js/views/PlanesView.js"></script>
+    <script src="/js/views/FormRecordView.js"></script>
+    <script src="/js/views/HogarView.js"></script>
+    <script src="/js/views/BrandsView.js"></script>
+    <script src="/js/views/CampaignsView.js"></script>
+    <script src="/js/views/AudiencesView.js"></script>
+    <script src="/js/views/CreateView.js"></script>
+    <script src="/js/views/ContentView.js"></script>
+    <script src="/js/views/SettingsView.js"></script>
+    <script src="/js/views/LivingView.js"></script>
+    <script src="/js/views/StudioView.js"></script>
+    <script src="/js/views/ProductsView.js"></script>
     
     <!-- Developer Portal Views (PaaS) -->
-    <script src="js/views/DevDashboardView.js"></script>
-    <script src="js/views/DevFlowsView.js"></script>
-    <script src="js/views/DevLogsView.js"></script>
-    <script src="js/views/DevBuilderView.js"></script>
-    <script src="js/views/DevTestView.js"></script>
-    <script src="js/views/DevWebhooksView.js"></script>
+    <script src="/js/views/DevDashboardView.js"></script>
+    <script src="/js/views/DevFlowsView.js"></script>
+    <script src="/js/views/DevLogsView.js"></script>
+    <script src="/js/views/DevBuilderView.js"></script>
+    <script src="/js/views/DevTestView.js"></script>
+    <script src="/js/views/DevWebhooksView.js"></script>
     
     <!-- Components -->
-    <script src="js/components/Navigation.js"></script>
+    <script src="/js/components/Navigation.js"></script>
     
     <!-- Managers (cargar después de las vistas) -->
-    <script src="js/products.js"></script>
+    <script src="/js/products.js"></script>
     
-    <script src="js/app.js"></script>
+    <script src="/js/app.js"></script>
 
 </body>
 </html>

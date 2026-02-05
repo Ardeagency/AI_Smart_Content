@@ -288,35 +288,6 @@ CREATE TABLE public.flow_collaborators (
   CONSTRAINT collab_dev_fkey FOREIGN KEY (developer_id) REFERENCES public.users(id),
   CONSTRAINT collab_inviter_fkey FOREIGN KEY (invited_by) REFERENCES public.users(id)
 );
-CREATE TABLE public.flow_inputs (
-  id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  flow_id uuid,
-  input_key text NOT NULL,
-  label text NOT NULL,
-  input_type text NOT NULL,
-  required boolean DEFAULT false,
-  options jsonb,
-  order_index integer,
-  CONSTRAINT flow_inputs_pkey PRIMARY KEY (id),
-  CONSTRAINT flow_inputs_flow_id_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id)
-);
-CREATE TABLE public.flow_outputs (
-  id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  run_id uuid,
-  output_type text NOT NULL,
-  metadata jsonb,
-  created_at timestamp with time zone DEFAULT now(),
-  storage_path text,
-  prompt_used text,
-  generated_copy text,
-  generated_hashtags jsonb,
-  creative_rationale text,
-  technical_params jsonb,
-  text_content text,
-  storage_object_id uuid,
-  CONSTRAINT flow_outputs_pkey PRIMARY KEY (id),
-  CONSTRAINT flow_outputs_run_id_fkey FOREIGN KEY (run_id) REFERENCES public.flow_runs(id)
-);
 CREATE TABLE public.flow_runs (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   flow_id uuid,
@@ -326,7 +297,6 @@ CREATE TABLE public.flow_runs (
   created_at timestamp with time zone DEFAULT now(),
   entity_id uuid,
   audience_id uuid,
-  inputs_used jsonb DEFAULT '{}'::jsonb,
   tokens_consumed integer DEFAULT 0,
   webhook_response_code integer,
   payment_status USER-DEFINED DEFAULT 'pending'::payment_status_type,
@@ -379,6 +349,7 @@ CREATE TABLE public.organizations (
   owner_user_id uuid,
   name text NOT NULL,
   created_at timestamp with time zone DEFAULT now(),
+  deleted_at timestamp with time zone,
   CONSTRAINT organizations_pkey PRIMARY KEY (id),
   CONSTRAINT organizations_owner_user_id_fkey FOREIGN KEY (owner_user_id) REFERENCES public.users(id)
 );
@@ -413,6 +384,32 @@ CREATE TABLE public.products (
   CONSTRAINT products_pkey PRIMARY KEY (id),
   CONSTRAINT products_project_id_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id),
   CONSTRAINT products_entity_id_fkey FOREIGN KEY (entity_id) REFERENCES public.brand_entities(id)
+);
+CREATE TABLE public.runs_inputs (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  run_id uuid NOT NULL,
+  input_data jsonb NOT NULL DEFAULT '{}'::jsonb,
+  metadata jsonb DEFAULT '{}'::jsonb,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT runs_inputs_pkey PRIMARY KEY (id),
+  CONSTRAINT runs_inputs_run_fkey FOREIGN KEY (run_id) REFERENCES public.flow_runs(id)
+);
+CREATE TABLE public.runs_outputs (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  run_id uuid,
+  output_type text NOT NULL,
+  metadata jsonb,
+  created_at timestamp with time zone DEFAULT now(),
+  storage_path text,
+  prompt_used text,
+  generated_copy text,
+  generated_hashtags jsonb,
+  creative_rationale text,
+  technical_params jsonb,
+  text_content text,
+  storage_object_id uuid,
+  CONSTRAINT runs_outputs_pkey PRIMARY KEY (id),
+  CONSTRAINT flow_outputs_run_id_fkey FOREIGN KEY (run_id) REFERENCES public.flow_runs(id)
 );
 CREATE TABLE public.services (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -491,6 +488,13 @@ CREATE TABLE public.user_profiles (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   default_view_mode text DEFAULT 'user'::text CHECK (default_view_mode = ANY (ARRAY['user'::text, 'developer'::text])),
+  is_developer boolean DEFAULT false,
+  dev_role USER-DEFINED DEFAULT 'contributor'::developer_role_type,
+  dev_rank USER-DEFINED DEFAULT 'novice'::developer_rank_type,
+  avatar_url text,
+  bio text,
+  social_links jsonb DEFAULT '{}'::jsonb,
+  specialties ARRAY DEFAULT '{}'::text[],
   CONSTRAINT user_profiles_pkey PRIMARY KEY (id),
   CONSTRAINT user_profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
 );

@@ -8,7 +8,7 @@
 -- flow_collaborators, flow_technical_details, etc.
 --
 -- Tablas usadas (según schema.sql):
---   flow_runs, flow_outputs, brands, brand_containers, brand_entities,
+--   flow_runs, runs_outputs, brands, brand_containers, brand_entities,
 --   campaigns, organizations, organization_members, users
 -- ============================================
 
@@ -32,7 +32,7 @@ BEGIN
     )
     INTO v_last_activity
     FROM flow_runs fr
-    LEFT JOIN flow_outputs fo ON fo.run_id = fr.id
+    LEFT JOIN runs_outputs fo ON fo.run_id = fr.id
     WHERE fr.brand_id = p_brand_id;
 
     -- Si no hay actividad, retornar inactive
@@ -89,7 +89,7 @@ BEGIN
     )
     INTO v_result
     FROM flow_runs fr
-    INNER JOIN flow_outputs fo ON fo.run_id = fr.id
+    INNER JOIN runs_outputs fo ON fo.run_id = fr.id
     INNER JOIN brand_entities be ON be.id = fr.entity_id
     WHERE be.brand_container_id = p_brand_container_id
         AND fr.entity_id IS NOT NULL
@@ -121,7 +121,7 @@ DECLARE
 BEGIN
     -- Contar total de outputs
     SELECT COUNT(*) INTO v_total
-    FROM flow_outputs fo
+    FROM runs_outputs fo
     INNER JOIN flow_runs fr ON fr.id = fo.run_id
     WHERE fr.brand_id = p_brand_id;
 
@@ -150,7 +150,7 @@ BEGIN
         SELECT 
             fo.output_type,
             COUNT(*) as format_count
-        FROM flow_outputs fo
+        FROM runs_outputs fo
         INNER JOIN flow_runs fr ON fr.id = fo.run_id
         WHERE fr.brand_id = p_brand_id
         GROUP BY fo.output_type
@@ -194,10 +194,13 @@ BEGIN
                     )
                     ORDER BY d.activity_date
                 )
-                FROM generate_series(v_start_date, CURRENT_DATE, '1 day'::INTERVAL)::DATE AS d(activity_date)
+                FROM (
+                    SELECT CAST(gs AS DATE) AS activity_date
+                    FROM generate_series(v_start_date, CURRENT_DATE, CAST('1 day' AS INTERVAL)) AS gs
+                ) d
                 LEFT JOIN (
                     SELECT DATE(fr.created_at) AS activity_date,
-                           COUNT(*)::INTEGER AS run_count
+                           CAST(COUNT(*) AS INTEGER) AS run_count
                     FROM flow_runs fr
                     WHERE fr.brand_id = p_brand_id
                       AND DATE(fr.created_at) >= v_start_date
@@ -253,7 +256,7 @@ BEGIN
         COUNT(DISTINCT fo.id),
         MAX(fo.created_at)
     INTO v_output_count, v_last_output
-    FROM flow_outputs fo
+    FROM runs_outputs fo
     INNER JOIN flow_runs fr ON fr.id = fo.run_id
     INNER JOIN campaigns c ON c.brand_id = fr.brand_id
     WHERE c.id = v_campaign_id;
@@ -307,7 +310,7 @@ BEGIN
             fo.created_at DESC
     )
     INTO v_result
-    FROM flow_outputs fo
+    FROM runs_outputs fo
     INNER JOIN flow_runs fr ON fr.id = fo.run_id
     WHERE fr.brand_id = p_brand_id
     ORDER BY 
@@ -343,7 +346,7 @@ BEGIN
     -- Contar total de outputs
     SELECT COUNT(*)
     INTO v_total_outputs
-    FROM flow_outputs fo
+    FROM runs_outputs fo
     INNER JOIN flow_runs fr ON fr.id = fo.run_id
     WHERE fr.brand_id = p_brand_id;
 
@@ -389,7 +392,7 @@ BEGIN
     FROM organization_members om
     INNER JOIN users u ON u.id = om.user_id
     LEFT JOIN flow_runs fr ON fr.user_id = u.id
-    LEFT JOIN flow_outputs fo ON fo.run_id = fr.id
+    LEFT JOIN runs_outputs fo ON fo.run_id = fr.id
     WHERE om.organization_id = p_organization_id
     GROUP BY u.id, u.full_name, u.email;
 
@@ -425,7 +428,7 @@ BEGIN
         FROM organization_members om
         INNER JOIN users u ON u.id = om.user_id
         LEFT JOIN flow_runs fr ON fr.user_id = u.id
-        LEFT JOIN flow_outputs fo ON fo.run_id = fr.id
+        LEFT JOIN runs_outputs fo ON fo.run_id = fr.id
         WHERE om.organization_id = p_organization_id
         GROUP BY u.id, u.full_name, u.email
         HAVING COUNT(DISTINCT fo.id) > 0
@@ -465,7 +468,7 @@ BEGIN
     FROM organization_members om
     INNER JOIN users u ON u.id = om.user_id
     INNER JOIN flow_runs fr ON fr.user_id = u.id
-    INNER JOIN flow_outputs fo ON fo.run_id = fr.id
+    INNER JOIN runs_outputs fo ON fo.run_id = fr.id
     WHERE om.organization_id = p_organization_id
     GROUP BY u.id, u.full_name, u.email;
 

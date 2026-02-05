@@ -465,14 +465,14 @@ class LivingManager {
             }
 
             const { data, error } = await this.supabase
-                .from('flow_outputs')
+                .from('runs_outputs')
                 .select('*')
                 .in('run_id', runIds)
                 .order('created_at', { ascending: false });
 
             if (error) {
                 if (error.status === 400 || error.code === '400') {
-                    console.warn('⚠️ Error 400 cargando flow_outputs:', error.message);
+                    console.warn('⚠️ Error 400 cargando runs_outputs:', error.message);
                     console.warn('⚠️ runIds:', runIds);
                 }
                 throw error;
@@ -607,7 +607,7 @@ class LivingManager {
 
     async loadLatestGeneratedContent() {
         // Función RPC eliminada para evitar errores 400
-        // Usar flow_outputs directamente en su lugar
+        // Usar runs_outputs directamente (schema real: runs_outputs)
         // Validar cliente de Supabase antes de hacer consulta
         if (!this.supabase || !this.isValidSupabaseClient(this.supabase)) {
             this.latestGeneratedContent = [];
@@ -633,8 +633,7 @@ class LivingManager {
                 return;
             }
 
-            // Cargar contenido desde flow_outputs usando método seguro (sin joins complejos)
-            // Esto evita errores 400 de consultas complejas
+            // Cargar contenido desde runs_outputs (schema real) usando método seguro (sin joins complejos)
             // Paso 1: Obtener flow_runs por brand_id
             const { data: runs, error: runsError } = await this.supabase
                 .from('flow_runs')
@@ -656,7 +655,7 @@ class LivingManager {
                     return;
                 }
 
-            // Paso 2: Obtener flow_outputs usando los run_ids
+            // Paso 2: Obtener runs_outputs usando los run_ids
             const runIds = runs.map(r => r.id).filter(id => id !== null && id !== undefined);
             
             if (runIds.length === 0) {
@@ -672,7 +671,7 @@ class LivingManager {
             });
 
             if (validRunIds.length === 0) {
-                console.warn('⚠️ No hay run_ids válidos (UUIDs) para cargar flow_outputs');
+                console.warn('⚠️ No hay run_ids válidos (UUIDs) para cargar runs_outputs');
                 this.latestGeneratedContent = [];
                 return;
             }
@@ -680,7 +679,7 @@ class LivingManager {
             // Seleccionar campos específicos incluyendo prompt_used y otros campos de texto
             // Esto asegura que prompt_used se traiga correctamente
             const { data: outputs, error: outputsError } = await this.supabase
-                .from('flow_outputs')
+                .from('runs_outputs')
                 .select('id, run_id, output_type, storage_path, storage_object_id, prompt_used, generated_copy, text_content, metadata, created_at, generated_hashtags, creative_rationale')
                 .in('run_id', validRunIds)
                 .order('created_at', { ascending: false })
@@ -688,7 +687,7 @@ class LivingManager {
 
             if (outputsError) {
                 if (outputsError.status === 400 || outputsError.code === '400') {
-                    console.warn('⚠️ Error 400 cargando flow_outputs:', outputsError.message);
+                    console.warn('⚠️ Error 400 cargando runs_outputs:', outputsError.message);
                     console.warn('⚠️ runIds usados:', validRunIds);
                 }
                 this.latestGeneratedContent = [];
@@ -944,7 +943,7 @@ class LivingManager {
         heroGrid.innerHTML = automatedContent.map((item, index) => {
             const imageUrl = item.image_url || item.url || item.storage_url || item.file_url;
             
-            // Buscar prompt en múltiples campos posibles según el schema de flow_outputs
+            // Buscar prompt en múltiples campos posibles según el schema de runs_outputs
             // El schema tiene: prompt_used, generated_copy, text_content, metadata
             let prompt = item.prompt_used || 
                         item.prompt || 
