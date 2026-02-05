@@ -437,15 +437,10 @@ class HogarView extends BaseView {
       const card = gridEl.querySelector(`[data-org-id="${org.id}"]`);
       if (card) {
         card.addEventListener('click', (e) => {
-          if (!e.target.closest('.org-favorite-btn') && !e.target.closest('.org-edit-btn') && !e.target.closest('.org-card-kebab')) {
+          if (!e.target.closest('.org-edit-btn')) {
             this.navigateToOrganization(org.id);
           }
         });
-
-        const kebabBtn = card.querySelector('.org-card-kebab');
-        if (kebabBtn) {
-          kebabBtn.addEventListener('click', (e) => e.stopPropagation());
-        }
 
         // Botón de editar
         const editBtn = card.querySelector('.org-edit-btn');
@@ -519,9 +514,6 @@ class HogarView extends BaseView {
         <div class="org-card-cover org-card-cover--identity ${hasBranding ? 'org-card-cover--branded' : ''}" ${hasBranding && gradientCss ? `style="--org-cover-gradient: ${gradientCss}"` : ''}>
           <div class="org-card-cover-inner" aria-hidden="true"></div>
           ${!hasBranding ? `<span class="org-card-cover-initial" aria-hidden="true">${logoInitial}</span>` : ''}
-          <button type="button" class="org-card-kebab org-favorite-btn" data-org-id="${org.id}" title="Opciones" aria-label="Opciones">
-            <i class="fas fa-ellipsis-v"></i>
-          </button>
         </div>
         <!-- Body: contenido de la org -->
         <div class="org-card-body">
