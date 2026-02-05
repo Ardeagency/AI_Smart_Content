@@ -8,7 +8,46 @@
   # Directorio donde están las Netlify Functions
   directory = "netlify/functions"
 
-# Redirects para SPA - Todas las rutas van a index.html
+# Excluir archivos estáticos del redirect SPA
+# Netlify procesa los redirects en orden, el primero que coincide gana
+
+# Archivos JS - servir directamente
+[[redirects]]
+  from = "/js/*"
+  to = "/js/:splat"
+  status = 200
+
+# Archivos CSS - servir directamente
+[[redirects]]
+  from = "/css/*"
+  to = "/css/:splat"
+  status = 200
+
+# Templates HTML - servir directamente
+[[redirects]]
+  from = "/templates/*"
+  to = "/templates/:splat"
+  status = 200
+
+# Recursos/imágenes - servir directamente
+[[redirects]]
+  from = "/recursos/*"
+  to = "/recursos/:splat"
+  status = 200
+
+# SQL files - servir directamente
+[[redirects]]
+  from = "/SQL/*"
+  to = "/SQL/:splat"
+  status = 200
+
+# Netlify Functions - no redirigir
+[[redirects]]
+  from = "/.netlify/*"
+  to = "/.netlify/:splat"
+  status = 200
+
+# SPA Fallback - todas las demás rutas van a index.html
 [[redirects]]
   from = "/*"
   to = "/index.html"
