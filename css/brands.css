@@ -83,6 +83,9 @@
 
 /* ============================================
    FONDO CON GRADIENTE
+   Cuando hay colores de marca (brand_colors), BrandsView aplica el mismo
+   degradado inteligente que HogarView (organización) vía inline style.
+   Sin colores, se usa este degradado estático (fallback).
    ============================================ */
 .brand-dashboard-background {
     position: absolute;
@@ -93,6 +96,7 @@
 .background-gradient {
     position: absolute;
     inset: 0;
+    /* Fallback cuando no hay colores de marca; JS sobrescribe con degradado dinámico si hay brand_colors */
     background: 
         radial-gradient(ellipse 150% 100% at 10% 60%, var(--brand-warm-1) 0%, transparent 50%),
         radial-gradient(ellipse 120% 80% at 60% 20%, var(--brand-warm-2) 0%, transparent 45%),

@@ -442,12 +442,11 @@ class HogarView extends BaseView {
           }
         });
 
-        // Botón de editar
-        const editBtn = card.querySelector('.org-edit-btn');
-        if (editBtn) {
-          editBtn.addEventListener('click', (e) => {
+        const configBtn = card.querySelector('.org-card-config-btn');
+        if (configBtn) {
+          configBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            this.editOrganization(org.id);
+            if (window.router) window.router.navigate(`/org/${org.id}/settings`);
           });
         }
       }
@@ -493,57 +492,40 @@ class HogarView extends BaseView {
     const creditsThreshold = 100;
     const creditsLow = creditsTotal > 0 && creditsRemaining < creditsThreshold;
     const planBadge = this.getPlanBadge(org.plan_type);
-    const lastProductionText = org.last_production_at
-      ? `Última producción: ${this.formatRelativeDate(org.last_production_at)}`
-      : 'Listo para crear tu primera producción';
-    const showTeam = membersCount > 1;
-    const progressPct = creditsTotal > 0 ? Math.min(100, Math.round((creditsRemaining / creditsTotal) * 100)) : 100;
     const brandColors = org.brandColors || [];
     const hasBranding = brandColors.length > 0;
     const gradientCss = hasBranding ? this.buildBrandGradientCss(brandColors) : '';
-    const noProductions = !org.last_production_at;
 
-    const cardStateAttrs = [
-      creditsLow ? 'data-credits-low' : '',
-      noProductions ? 'data-no-productions' : ''
-    ].filter(Boolean).join(' ');
+    const cardStateAttrs = creditsLow ? ' data-credits-low' : '';
 
     return `
-      <div class="org-card org-card-folder" data-org-id="${org.id}" title="Entrar a ${this.escapeHtml(org.name)}" ${cardStateAttrs}>
-        <!-- Brand Gradient Identity Header (36-42%) | fallback: avatar solo si no hay branding -->
+      <div class="org-card org-card-folder" data-org-id="${org.id}" title="Entrar a ${this.escapeHtml(org.name)}"${cardStateAttrs}>
+        <!-- Panel izquierdo: brand + miembros + créditos (total / usado) -->
         <div class="org-card-cover org-card-cover--identity ${hasBranding ? 'org-card-cover--branded' : ''}" ${hasBranding && gradientCss ? `style="--org-cover-gradient: ${gradientCss}"` : ''}>
           <div class="org-card-cover-inner" aria-hidden="true"></div>
+          <div class="org-card-cover-content">
+            <div class="org-card-cover-members" title="Miembros de la organización">
+              <i class="fas fa-users"></i>
+              <span>${membersCount} ${membersCount === 1 ? 'miembro' : 'miembros'}</span>
+            </div>
+            <div class="org-card-cover-credits">
+              <span class="org-card-cover-credits-value ${creditsLow ? 'credits-low' : ''}">${creditsRemaining}</span>
+              <span class="org-card-cover-credits-sep">/</span>
+              <span class="org-card-cover-credits-total">${creditsTotal || 0}</span>
+              <span class="org-card-cover-credits-label">tokens</span>
+            </div>
+          </div>
           ${!hasBranding ? `<span class="org-card-cover-initial" aria-hidden="true">${logoInitial}</span>` : ''}
         </div>
-        <!-- Body: contenido de la org -->
+        <!-- Panel derecho: nombre, plan, configuración -->
         <div class="org-card-body">
-          <div class="org-card-body-header">
-            <h3 class="org-card-name" title="${this.escapeHtml(org.name)}">${this.escapeHtml(org.name)}</h3>
-            <button type="button" class="org-edit-btn org-card-edit" data-org-id="${org.id}" title="Editar organización" aria-label="Editar">
-              <i class="fas fa-edit"></i>
+          <h3 class="org-card-name" title="${this.escapeHtml(org.name)}">${this.escapeHtml(org.name)}</h3>
+          <div class="org-card-body-meta">
+            <span class="org-card-plan-badge ${planBadge.class}">${planBadge.label}</span>
+            <button type="button" class="org-card-config-btn" data-org-id="${org.id}" title="Configuración" aria-label="Configuración">
+              <i class="fas fa-cog"></i>
+              <span>Configuración</span>
             </button>
-          </div>
-          <div class="org-card-plan-badge ${planBadge.class}">${planBadge.label}</div>
-          <div class="org-card-credits">
-            <span class="org-card-credits-label">Tokens</span>
-            <span class="org-card-credits-value ${creditsLow ? 'credits-low' : ''}">${creditsRemaining} disponibles</span>
-            ${creditsTotal > 0 ? `
-            <div class="org-card-credits-bar" role="presentation">
-              <div class="org-card-credits-bar-fill" style="width: ${progressPct}%"></div>
-            </div>
-            ` : ''}
-          </div>
-          ${showTeam ? `
-          <div class="org-card-team">
-            <div class="org-card-team-avatars">
-              <span class="org-card-team-avatar" title="Equipo"><i class="fas fa-users"></i></span>
-              <span class="org-card-team-more">+${membersCount - 1}</span>
-            </div>
-            <span class="org-card-team-label">${membersCount} colaboradores</span>
-          </div>
-          ` : ''}
-          <div class="org-card-activity">
-            ${lastProductionText}
           </div>
         </div>
       </div>

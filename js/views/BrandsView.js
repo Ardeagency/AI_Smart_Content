@@ -346,11 +346,133 @@ class BrandsView extends BaseView {
   }
 
   // ============================================
+  // DEGRADADO INTELIGENTE (misma lógica que HogarView / organización)
+  // Usa brand_colors para construir un degradado primary → secondary.
+  // ============================================
+
+  /** Devuelve array de hex válidos desde this.brandColors (máx 3, sin duplicados). */
+  getBrandColorsHexArray() {
+    const colors = this.brandColors || [];
+    const seen = new Set();
+    const hexes = [];
+    for (const row of colors) {
+      const raw = (row.hex_value || '').trim();
+      const clean = raw.replace(/^#/, '');
+      if (!clean || !/^[0-9A-Fa-f]{6}$/.test(clean)) continue;
+      const normalized = `#${clean}`;
+      if (!seen.has(normalized)) {
+        seen.add(normalized);
+        hexes.push(normalized);
+        if (hexes.length >= 3) break;
+      }
+    }
+    return hexes;
+  }
+
+  hexToHSL(hex) {
+    const clean = hex.replace(/^#/, '');
+    const r = parseInt(clean.slice(0, 2), 16) / 255;
+    const g = parseInt(clean.slice(2, 4), 16) / 255;
+    const b = parseInt(clean.slice(4, 6), 16) / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s = 0, l = (max + min) / 2;
+    if (max !== min) {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+        case g: h = ((b - r) / d + 2) / 6; break;
+        default: h = ((r - g) / d + 4) / 6;
+      }
+    }
+    return { h: h * 360, s: s * 100, l: l * 100 };
+  }
+
+  hslToHex(h, s, l) {
+    s /= 100; l /= 100;
+    const a = s * Math.min(l, 1 - l);
+    const f = n => {
+      const k = (n + h / 30) % 12;
+      return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+    };
+    const r = Math.round(f(0) * 255);
+    const g = Math.round(f(8) * 255);
+    const b = Math.round(f(4) * 255);
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  }
+
+  filterAndScoreBrandColors(hexes) {
+    const MIN_L = 18, MAX_L = 85, MIN_S = 15, MAX_S = 90;
+    const idealL = 45, idealS = 50;
+    const out = [];
+    for (const hex of hexes.slice(0, 5)) {
+      const { h, s, l } = this.hexToHSL(hex);
+      if (l > MAX_L || l < MIN_L || s < MIN_S || s > MAX_S) continue;
+      const scoreL = 30 - Math.abs(l - idealL) / 2;
+      const scoreS = 40 - Math.abs(s - idealS) / 2;
+      const score = Math.max(0, scoreL + scoreS);
+      out.push({ hex, h, s, l, score });
+    }
+    return out.sort((a, b) => b.score - a.score).slice(0, 3);
+  }
+
+  getBrandUIPalette(brandColors) {
+    if (!brandColors || brandColors.length === 0) return null;
+    const filtered = this.filterAndScoreBrandColors(brandColors);
+    if (filtered.length === 0) {
+      const raw = brandColors[0];
+      const { h, s, l } = this.hexToHSL(raw);
+      const primary = this.hslToHex(h, Math.min(90, Math.max(20, s)), Math.min(75, Math.max(25, l)));
+      const secondary = this.hslToHex(h, Math.min(85, s + 5), Math.max(15, l - 18));
+      return { primary, secondary };
+    }
+    const primary = filtered[0].hex;
+    let secondary = null;
+    for (let i = 1; i < filtered.length; i++) {
+      const diff = Math.abs(filtered[i].h - filtered[0].h);
+      const hueDiff = Math.min(diff, 360 - diff);
+      if (hueDiff > 20) {
+        secondary = filtered[i].hex;
+        break;
+      }
+    }
+    if (!secondary) {
+      const { h, s, l } = this.hexToHSL(primary);
+      secondary = this.hslToHex(h, Math.min(90, s + 10), Math.max(18, l - 12));
+    }
+    return { primary, secondary };
+  }
+
+  buildBrandGradientCss(brandColors) {
+    const palette = this.getBrandUIPalette(brandColors);
+    if (!palette) return '';
+    return `linear-gradient(135deg, ${palette.primary}, ${palette.secondary})`;
+  }
+
+  /** Aplica el degradado de colores de marca al fondo de la página Brands (mismo sistema que org en Hogar). */
+  applyBrandBackgroundGradient() {
+    const container = this.container || document.getElementById('app-container');
+    if (!container) return;
+    const gradientEl = container.querySelector('.background-gradient');
+    if (!gradientEl) return;
+    const hexes = this.getBrandColorsHexArray();
+    const gradientCss = hexes.length ? this.buildBrandGradientCss(hexes) : '';
+    if (gradientCss) {
+      gradientEl.style.background = gradientCss;
+      gradientEl.setAttribute('data-brand-gradient', 'true');
+    } else {
+      gradientEl.style.background = '';
+      gradientEl.removeAttribute('data-brand-gradient');
+    }
+  }
+
+  // ============================================
   // RENDERIZADO SIMPLIFICADO
   // ============================================
 
   renderAll() {
     if (!this.isActive) return;
+    this.applyBrandBackgroundGradient();
     this.renderBrandName();
     this.renderLinks();
     this.renderMarket();
@@ -421,6 +543,7 @@ class BrandsView extends BaseView {
   }
 
   renderCards() {
+    this.applyBrandBackgroundGradient();
     // Visual de marca - Brand Colors
     this.renderBrandColors();
     
