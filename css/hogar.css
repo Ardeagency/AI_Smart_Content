@@ -141,13 +141,14 @@
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(224, 145, 69, 0.12);
 }
 
-/* ----- 1. COVER (35-45% card) | border-radius top 24px, bottom 0 ----- */
+/* ----- 1. BRAND GRADIENT IDENTITY HEADER (36-42%) ----- */
 .org-card-cover {
     position: relative;
     flex: 0 0 40%;
     min-height: 120px;
     max-height: 160px;
     border-radius: var(--org-card-radius) var(--org-card-radius) 0 0;
+    /* Fallback cuando no hay branding */
     background: linear-gradient(145deg, #1e1a16 0%, #151310 40%, #0d1114 100%);
     background-image:
         radial-gradient(ellipse 90% 80% at 50% 0%, rgba(224, 145, 69, 0.22) 0%, transparent 55%),
@@ -156,22 +157,69 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    transition: transform 0.35s ease;
+    transition: transform 0.35s ease, filter 0.3s ease;
+}
+
+/* Branded: gradient desde --org-cover-gradient (inline style) */
+.org-card-cover.org-card-cover--branded {
+    background: var(--org-cover-gradient);
+    background-size: 100% 100%;
+}
+
+/* Layer 2: radial highlight (profundidad) */
+.org-card-cover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255, 255, 255, 0.12) 0%, transparent 55%);
+}
+
+.org-card-cover--branded::after {
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255, 255, 255, 0.15) 0%, transparent 50%);
+}
+
+/* Layer 3: noise texture muy leve */
+.org-card-cover::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 .org-card.org-card-folder:hover .org-card-cover {
     transform: scale(1.02);
+    filter: brightness(1.03);
+}
+
+/* Sin producciones: gradient más contenido */
+.org-card[data-no-productions] .org-card-cover--branded {
+    filter: saturate(0.85);
+}
+
+.org-card[data-no-productions] .org-card-cover--branded::after {
+    opacity: 0.7;
+}
+
+/* Créditos bajos: overlay warning leve */
+.org-card[data-credits-low] .org-card-cover::after {
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
+                linear-gradient(180deg, transparent 0%, rgba(224, 100, 50, 0.08) 100%);
 }
 
 .org-card-cover-inner {
     position: absolute;
     inset: 0;
-    opacity: 0.4;
-    background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.08) 0%, transparent 40%);
+    opacity: 0.35;
+    background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.08) 0%, transparent 45%);
 }
 
+/* Avatar inicial solo en fallback (sin branding) */
 .org-card-cover-initial {
     position: relative;
+    z-index: 1;
     width: 52px;
     height: 52px;
     border-radius: 14px;
@@ -185,16 +233,20 @@
     box-shadow: 0 6px 20px rgba(224, 145, 69, 0.4);
 }
 
+/* Kebab: glass / frosted */
 .org-card-kebab {
     position: absolute;
     top: 12px;
     right: 12px;
+    z-index: 2;
     width: 36px;
     height: 36px;
     border-radius: 50%;
     border: none;
-    background: rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: rgba(255, 255, 255, 0.95);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -203,15 +255,15 @@
 }
 
 .org-card-kebab:hover {
-    background: rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.3);
     color: #fff;
 }
 
-/* ----- 2. BODY con folder tab notch | clip-path ----- */
+/* ----- 2. BODY con folder tab notch | overlap -16px ----- */
 .org-card-body {
     position: relative;
     flex: 1;
-    margin-top: -1px;
+    margin-top: -16px;
     padding: 20px 22px 22px;
     background: var(--surface-primary, #121416);
     border-radius: var(--org-card-radius);
@@ -554,6 +606,10 @@
 
     .org-card-cover {
         min-height: 100px;
+    }
+
+    .org-card-cover::after {
+        opacity: 0.7;
     }
 
     .org-card-body {

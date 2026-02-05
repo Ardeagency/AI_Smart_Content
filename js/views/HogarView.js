@@ -247,6 +247,9 @@ class HogarView extends BaseView {
             ? membersResult.value.count
             : 0
         };
+
+        // Brand Gradient Identity: colores desde brand_colors de las marcas de la org
+        org.brandColors = await this.getOrganizationBrandColors(org.id);
       } catch (error) {
         console.error(`Error cargando stats para org ${org.id}:`, error);
         org.stats = {
@@ -257,6 +260,7 @@ class HogarView extends BaseView {
           campaigns_count: 0,
           members_count: 0
         };
+        org.brandColors = [];
       }
     }
   }
@@ -279,6 +283,78 @@ class HogarView extends BaseView {
       console.error('Error obteniendo brand containers:', error);
       return [];
     }
+  }
+
+  /**
+   * Cargar colores de marca de la organización (desde brand_colors vía brands → brand_containers)
+   * Devuelve array de hex hasta 3 colores para el Brand Gradient Identity Header.
+   */
+  async getOrganizationBrandColors(organizationId) {
+    if (!this.supabase) return [];
+    const brandContainerIds = await this.getBrandContainerIds(organizationId);
+    if (brandContainerIds.length === 0) return [];
+
+    try {
+      const { data: brands } = await this.supabase
+        .from('brands')
+        .select('id')
+        .in('project_id', brandContainerIds);
+      const brandIds = brands ? brands.map(b => b.id) : [];
+      if (brandIds.length === 0) return [];
+
+      const { data: colors } = await this.supabase
+        .from('brand_colors')
+        .select('hex_value')
+        .in('brand_id', brandIds);
+
+      if (!colors || colors.length === 0) return [];
+      const seen = new Set();
+      const hexes = [];
+      for (const row of colors) {
+        const raw = (row.hex_value || '').trim();
+        const clean = raw.replace(/^#/, '');
+        if (!clean || !/^[0-9A-Fa-f]{6}$/.test(clean)) continue;
+        const normalized = `#${clean}`;
+        if (!seen.has(normalized)) {
+          seen.add(normalized);
+          hexes.push(normalized);
+          if (hexes.length >= 3) break;
+        }
+      }
+      return hexes;
+    } catch (error) {
+      console.error('Error cargando brand colors:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Oscurecer hex ~25% para gradiente de 1 color
+   */
+  darkenHex(hex, amount = 0.25) {
+    const match = hex.replace(/^#/, '').match(/.{2}/g);
+    if (!match) return hex;
+    const r = Math.max(0, Math.round(parseInt(match[0], 16) * (1 - amount)));
+    const g = Math.max(0, Math.round(parseInt(match[1], 16) * (1 - amount)));
+    const b = Math.max(0, Math.round(parseInt(match[2], 16) * (1 - amount)));
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  }
+
+  /**
+   * Construir CSS linear-gradient desde brandColors (1, 2 o 3+ colores)
+   */
+  buildBrandGradientCss(brandColors) {
+    if (!brandColors || brandColors.length === 0) return '';
+    const c1 = brandColors[0];
+    if (brandColors.length === 1) {
+      const c2 = this.darkenHex(c1, 0.25);
+      return `linear-gradient(135deg, ${c1}, ${c2})`;
+    }
+    if (brandColors.length === 2) {
+      return `linear-gradient(135deg, ${brandColors[0]}, ${brandColors[1]})`;
+    }
+    const [a, b, c] = brandColors.slice(0, 3);
+    return `linear-gradient(135deg, ${a} 0%, ${b} 50%, ${c} 100%)`;
   }
 
   /**
@@ -345,7 +421,7 @@ class HogarView extends BaseView {
   }
 
   /**
-   * Renderizar card de organización (spec: folder cover + notch, jerarquía UX, tema oscuro)
+   * Renderizar card de organización (Brand Gradient Identity Header + folder body)
    */
   renderOrganizationCard(org) {
     const stats = org.stats || {};
@@ -361,13 +437,22 @@ class HogarView extends BaseView {
       : 'Sin producciones aún';
     const showTeam = membersCount > 1;
     const progressPct = creditsTotal > 0 ? Math.min(100, Math.round((creditsRemaining / creditsTotal) * 100)) : 100;
+    const brandColors = org.brandColors || [];
+    const hasBranding = brandColors.length > 0;
+    const gradientCss = hasBranding ? this.buildBrandGradientCss(brandColors) : '';
+    const noProductions = !org.last_production_at;
+
+    const cardStateAttrs = [
+      creditsLow ? 'data-credits-low' : '',
+      noProductions ? 'data-no-productions' : ''
+    ].filter(Boolean).join(' ');
 
     return `
-      <div class="org-card org-card-folder" data-org-id="${org.id}" title="Entrar a ${this.escapeHtml(org.name)}">
-        <!-- Cover 35-45% | border-radius top 24px, bottom 0 | kebab -->
-        <div class="org-card-cover">
-          <div class="org-card-cover-inner"></div>
-          <span class="org-card-cover-initial" aria-hidden="true">${logoInitial}</span>
+      <div class="org-card org-card-folder" data-org-id="${org.id}" title="Entrar a ${this.escapeHtml(org.name)}" ${cardStateAttrs}>
+        <!-- Brand Gradient Identity Header (36-42%) | fallback: avatar solo si no hay branding -->
+        <div class="org-card-cover org-card-cover--identity ${hasBranding ? 'org-card-cover--branded' : ''}" ${hasBranding && gradientCss ? `style="--org-cover-gradient: ${gradientCss}"` : ''}>
+          <div class="org-card-cover-inner" aria-hidden="true"></div>
+          ${!hasBranding ? `<span class="org-card-cover-initial" aria-hidden="true">${logoInitial}</span>` : ''}
           <button type="button" class="org-card-kebab org-favorite-btn" data-org-id="${org.id}" title="Opciones" aria-label="Opciones">
             <i class="fas fa-ellipsis-v"></i>
           </button>
