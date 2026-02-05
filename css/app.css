@@ -27,6 +27,22 @@
     max-width: 100%;
     overflow-x: hidden;
     box-sizing: border-box;
+    min-width: 0; /* permitir que flex/grid se encojan */
+}
+
+/* Contenedores anidados (main > div > section, div > div > div, etc.) se adaptan al ancho. */
+#app-container main section,
+#app-container main div,
+#app-container > div section,
+#app-container > div div {
+    max-width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+}
+
+#app-container main > div,
+#app-container > div > div {
+    overflow-x: hidden;
 }
 
 /* Asegurar que el header dentro de app-container esté siempre visible */
