@@ -1547,17 +1547,13 @@ body.sidebar-collapsed .builder-header {
 }
 
 /* Main Builder Container */
+/* El offset del sidebar lo aplica #app-container. */
 .builder-main {
   display: grid;
   grid-template-columns: 260px 1fr 280px;
   margin-top: 56px;
-  margin-left: var(--nav-width, 250px);
+  margin-left: 0;
   min-height: calc(100vh - 56px);
-  transition: margin-left 0.3s ease;
-}
-
-body.sidebar-collapsed .builder-main {
-  margin-left: var(--nav-width-collapsed, 60px);
 }
 
 @media (max-width: 1200px) {
@@ -3945,17 +3941,13 @@ body.sidebar-collapsed .dev-test-container {
    Gestión de Webhooks
    ========================================== */
 
+/* El offset del sidebar lo aplica #app-container. */
 .dev-webhooks-container {
   min-height: 100vh;
   padding: 24px;
   padding-top: calc(48px + 24px);
-  margin-left: var(--nav-width, 250px);
-  transition: margin-left 0.3s ease;
+  margin-left: 0;
   background: var(--bg-primary);
-}
-
-body.sidebar-collapsed .dev-webhooks-container {
-  margin-left: var(--nav-width-collapsed, 60px);
 }
 
 @media (max-width: 768px) {

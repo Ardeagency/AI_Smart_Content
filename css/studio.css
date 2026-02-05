@@ -819,11 +819,11 @@ body {
    Layout Principal
    ======================================= */
 
+/* El offset del sidebar lo aplica body.has-sidebar #app-container; .main-content no añade margin. */
 .main-content {
-    margin-left: 250px; /* Ancho del sidebar de navegación */
+    margin-left: 0;
     padding-top: 0;
     min-height: 100vh;
-    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     background-color: #000000;
     margin-top: 0;
     height: 100vh;
@@ -838,13 +838,8 @@ body {
     max-height: none !important;
 }
 
-.side-navigation.collapsed ~ .main-content,
-body.sidebar-collapsed .main-content {
-    margin-left: 60px;
-}
-
 .main-content.nav-open {
-    margin-left: 280px;
+    margin-left: 0;
 }
 
 .studio-layout {
@@ -4662,23 +4657,17 @@ nav.studio-sidebar {
    basados en input_schema de los flujos
    ============================================ */
 
-/* Contenedor principal del Studio */
+/* Contenedor principal del Studio; el offset lo aplica #app-container. */
 .studio-main {
     min-height: calc(100vh - 48px);
     padding: 24px;
     padding-top: calc(48px + 24px);
-    margin-left: var(--nav-width, 250px);
-    transition: margin-left 0.3s ease;
+    margin-left: 0;
     background: #0E1012;
-}
-
-body.sidebar-collapsed .studio-main {
-    margin-left: var(--nav-width-collapsed, 60px);
 }
 
 @media (max-width: 768px) {
     .studio-main {
-        margin-left: 0;
         padding: 16px;
         padding-top: calc(48px + 16px);
     }

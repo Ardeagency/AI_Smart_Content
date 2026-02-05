@@ -18,10 +18,11 @@
 /* ============================================
    CONTENEDOR PRINCIPAL
    ============================================ */
+/* Rellena #app-container; el offset del sidebar lo aplica body.has-sidebar #app-container. */
 .product-detail-container {
-    position: fixed;
+    position: absolute;
     top: 0;
-    left: var(--nav-width, 280px);
+    left: 0;
     right: 0;
     bottom: 0;
     overflow: hidden;
@@ -32,13 +33,7 @@
         var(--product-warm-4) 75%,
         var(--product-warm-5) 100%
     );
-    transition: left 0.3s ease;
     padding-top: 48px;
-}
-
-.side-navigation.collapsed ~ * .product-detail-container,
-body.sidebar-collapsed .product-detail-container {
-    left: var(--nav-width-collapsed, 64px);
 }
 
 /* ============================================

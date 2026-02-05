@@ -19,14 +19,6 @@
     overflow-y: auto;
 }
 
-/* Evitar doble desplazamiento: el offset del sidebar ya lo aplica body.has-sidebar #app-container.
-   Los hijos directos no deben sumar otro padding/margin de 280px. */
-#app-container > main,
-#app-container > div {
-    padding-left: 0 !important;
-    margin-left: 0 !important;
-}
-
 /* Asegurar que el header dentro de app-container esté siempre visible */
 #app-container .main-header {
     position: fixed !important;

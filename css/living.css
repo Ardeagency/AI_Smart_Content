@@ -58,9 +58,10 @@
     position: relative;
 }
 
+/* Con sidebar colapsado, #app-container ya tiene el offset; no duplicar. */
 .side-navigation.collapsed ~ * .living-container,
 body.sidebar-collapsed .living-container {
-    margin-left: var(--nav-width-collapsed, 64px);
+    margin-left: 0;
 }
 
 @media (max-width: 768px) {

@@ -1,22 +1,14 @@
 /* Content View Styles */
-.content-container,
+/* El offset del sidebar lo aplica #app-container. */
+.content-container#contentListContainer,
 .content-detail-container {
     min-height: calc(100vh - 48px);
     padding: 2rem;
     max-width: 1400px;
     margin: 0 auto;
-    margin-left: var(--nav-width, 250px);
-    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-left: 0;
     background: #0E1012;
     padding-top: calc(48px + 2rem);
-}
-
-/* Cuando el sidebar está colapsado */
-.side-navigation.collapsed ~ * .content-container,
-body.sidebar-collapsed .content-container,
-.side-navigation.collapsed ~ * .content-detail-container,
-body.sidebar-collapsed .content-detail-container {
-    margin-left: var(--nav-width-collapsed, 60px);
 }
 
 /* En móvil, el sidebar se oculta y el contenido ocupa todo el ancho */
