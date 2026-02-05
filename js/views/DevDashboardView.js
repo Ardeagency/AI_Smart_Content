@@ -123,12 +123,7 @@ class DevDashboardView extends BaseView {
               </h2>
               <a href="/dev/flows" class="dev-section-link">Ver todos →</a>
             </div>
-            <div class="dev-flows-list" id="devFlowsList">
-              <div class="dev-loading">
-                <i class="fas fa-spinner fa-spin"></i>
-                <span>Cargando flujos...</span>
-              </div>
-            </div>
+            <div class="dev-flows-list" id="devFlowsList"></div>
           </section>
 
           <!-- Columna derecha: Logs recientes -->
@@ -169,14 +164,7 @@ class DevDashboardView extends BaseView {
                   <th>Fecha</th>
                 </tr>
               </thead>
-              <tbody id="devRunsTableBody">
-                <tr>
-                  <td colspan="5" class="dev-table-loading">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    Cargando ejecuciones...
-                  </td>
-                </tr>
-              </tbody>
+              <tbody id="devRunsTableBody"></tbody>
             </table>
           </div>
         </section>

@@ -129,14 +129,7 @@ class DevLogsView extends BaseView {
                 <th class="col-actions">Acciones</th>
               </tr>
             </thead>
-            <tbody id="logsTableBody">
-              <tr>
-                <td colspan="6" class="dev-table-loading">
-                  <i class="fas fa-spinner fa-spin"></i>
-                  Cargando logs...
-                </td>
-              </tr>
-            </tbody>
+            <tbody id="logsTableBody"></tbody>
           </table>
         </div>
 

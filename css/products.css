@@ -247,18 +247,10 @@
     flex-direction: column;
 }
 
-.loading-state,
 .empty-state {
     text-align: center;
     padding: 4rem 2rem;
     color: var(--text-secondary);
-}
-
-.loading-state i {
-    font-size: 3rem;
-    color: var(--primary-color);
-    margin-bottom: 1rem;
-    animation: spin 1s linear infinite;
 }
 
 @keyframes spin {

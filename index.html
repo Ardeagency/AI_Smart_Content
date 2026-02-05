@@ -72,70 +72,6 @@
             z-index: 1;
         }
 
-        /* Loading inicial de la aplicación */
-        .app-initial-loading {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--bg-primary);
-            z-index: 10000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 24px;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
-        }
-
-        .app-initial-loading.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
-
-        .app-loading-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .app-loading-logo {
-            font-size: 4rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            letter-spacing: 8px;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-                transform: scale(1);
-            }
-            50% {
-                opacity: 0.7;
-                transform: scale(0.95);
-            }
-        }
-
-        .app-loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--border-color);
-            border-top-color: var(--accent-yellow);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
         /* Animación para cambio de vistas */
         .view-enter {
             animation: fadeIn 0.3s ease;
@@ -167,28 +103,12 @@
             }
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .app-loading-logo {
-                font-size: 2.5rem;
-                letter-spacing: 4px;
-            }
-            
-            .app-loading-spinner {
-                width: 32px;
-                height: 32px;
-                border-width: 2px;
-            }
-        }
     </style>
 </head>
 <body>
-    <!-- Loading Screen Inicial -->
-    <div class="app-initial-loading" id="appInitialLoading">
-        <div class="app-loading-content">
-            <div class="app-loading-logo">AI SMART CONTENT</div>
-            <div class="app-loading-spinner"></div>
-        </div>
+    <!-- Spinner global único (mostrar/ocultar vía window.appLoader.showSpinner() / hideSpinner()) -->
+    <div class="global-spinner-overlay hidden" id="globalSpinner" aria-hidden="true">
+        <div class="global-spinner-circle"></div>
     </div>
 
     <!-- Navigation Container (Persistente) -->
@@ -197,30 +117,7 @@
 
     <!-- App Container (Dinámico) -->
     <!-- Las vistas se cargarán aquí dinámicamente -->
-    <div id="app-container">
-            <div class="view-loading" style="
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 2rem;
-        ">
-            <div class="loading-spinner" style="
-                width: 40px;
-                height: 40px;
-                border: 3px solid var(--border-color);
-                border-top-color: var(--accent-yellow);
-                border-radius: 50%;
-                animation: spin 0.8s linear infinite;
-            "></div>
-            <p style="
-                margin-top: 1rem;
-                color: var(--text-secondary);
-                font-size: 0.875rem;
-            ">Cargando aplicación...</p>
-        </div>
-    </div>
+    <div id="app-container"></div>
 
     <!-- External Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -269,33 +166,6 @@
     
     <script src="js/app.js"></script>
 
-    <script>
-        // Ocultar loading screen inicial cuando la app esté lista
-        window.addEventListener('load', function() {
-            // Esperar un poco para que la app se inicialice
-            setTimeout(function() {
-                const loadingScreen = document.getElementById('appInitialLoading');
-                if (loadingScreen) {
-                    loadingScreen.classList.add('hidden');
-                    setTimeout(function() {
-                        if (loadingScreen.parentNode) {
-                        loadingScreen.style.display = 'none';
-                        }
-                    }, 500);
-                }
-            }, 800);
-        });
-
-        // También ocultar si la app ya está lista
-        if (document.readyState === 'complete') {
-            setTimeout(function() {
-                const loadingScreen = document.getElementById('appInitialLoading');
-                if (loadingScreen) {
-                    loadingScreen.classList.add('hidden');
-                }
-            }, 500);
-        }
-    </script>
 </body>
 </html>
 

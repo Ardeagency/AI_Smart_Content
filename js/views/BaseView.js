@@ -90,8 +90,6 @@ class BaseView {
 
     // Eliminada verificación de inicialización - siempre renderizar desde cero
 
-    this.showLoading();
-
     try {
       let html;
       if (typeof this.renderHTML === 'function' && this.renderHTML !== BaseView.prototype.renderHTML) {
@@ -112,7 +110,6 @@ class BaseView {
       await this.init();
       await this.updateHeader();
       this.initialized = true;
-      this.hideLoading();
     } catch (error) {
       console.error('Error renderizando vista:', error);
       if (window.errorHandler) {
@@ -283,45 +280,6 @@ class BaseView {
       element.addEventListener(event, handler);
       this.eventListeners.push({ element, event, handler });
     }
-  }
-
-  /**
-   * Mostrar loading state
-   */
-  showLoading() {
-    if (this.container) {
-      this.container.innerHTML = `
-        <div class="view-loading" style="
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          min-height: 400px;
-          padding: 2rem;
-        ">
-          <div class="loading-spinner" style="
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(236, 235, 218, 0.2);
-            border-top-color: var(--accent-warm, #e09145);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-          "></div>
-          <p style="
-            margin-top: 1rem;
-            color: var(--text-secondary, #a0a0a0);
-            font-size: 0.875rem;
-          ">Cargando...</p>
-        </div>
-      `;
-    }
-  }
-
-  /**
-   * Ocultar loading state
-   */
-  hideLoading() {
-    // El contenido ya está renderizado, no hay que hacer nada
   }
 
   /**

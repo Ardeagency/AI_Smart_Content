@@ -140,13 +140,7 @@ class DevBuilderView extends BaseView {
           <div class="builder-sidebar-header">
             <h3><i class="ph ph-puzzle-piece"></i> Componentes</h3>
           </div>
-          <div class="builder-components-list" id="componentsList">
-            <!-- Se llenan dinámicamente -->
-            <div class="components-loading">
-              <i class="ph ph-spinner ph-spin"></i>
-              Cargando componentes...
-            </div>
-          </div>
+          <div class="builder-components-list" id="componentsList"></div>
         </aside>
 
         <!-- Panel central: Canvas de construcción -->

@@ -94,12 +94,7 @@ class DevFlowsView extends BaseView {
         </div>
 
         <!-- Grid de flujos -->
-        <div class="dev-flows-grid" id="devFlowsGrid">
-          <div class="dev-loading">
-            <i class="fas fa-spinner fa-spin"></i>
-            <span>Cargando flujos...</span>
-          </div>
-        </div>
+        <div class="dev-flows-grid" id="devFlowsGrid"></div>
 
         <!-- Estado vacío (se mostrará si no hay flujos) -->
         <div class="dev-flows-empty" id="devFlowsEmpty" style="display: none;">

@@ -358,22 +358,6 @@
                 }
             }
         });
-
-        // Ocultar loading screen
-        hideLoadingScreen();
     });
-
-    // Función para ocultar el loading screen
-    function hideLoadingScreen() {
-        const loadingScreen = document.getElementById('loadingScreen');
-        if (loadingScreen) {
-            loadingScreen.classList.add('hidden');
-            setTimeout(() => {
-                if (loadingScreen.parentNode) {
-                    loadingScreen.parentNode.removeChild(loadingScreen);
-                }
-            }, 500);
-        }
-    }
 })();
 

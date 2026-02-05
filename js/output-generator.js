@@ -16,9 +16,6 @@ class OutputGenerator {
      */
     async generateContent() {
         try {
-            // Mostrar estado de carga en el output container
-            this.showLoadingState();
-            
             // Recolectar todos los datos
             console.log('📦 Recolectando datos del sidebar...');
             const allData = await this.dataCollector.collectAllSidebarData();
@@ -27,7 +24,6 @@ class OutputGenerator {
             const validation = this.dataCollector.validateRequiredData(allData);
             if (!validation.valid) {
                 this.showNotification(validation.message || 'Faltan datos requeridos. Por favor completa la información necesaria.', 'error');
-                this.hideLoadingState();
                 return;
             }
             
@@ -36,9 +32,6 @@ class OutputGenerator {
             const result = await this.webhookManager.sendDataToWebhook(allData);
             
             console.log('✅ Respuesta del webhook recibida:', result);
-            
-            // Ocultar estado de carga
-            this.hideLoadingState();
             
             // Procesar la respuesta del webhook si existe
             if (result && result.success) {
@@ -96,8 +89,6 @@ class OutputGenerator {
             }
             
         } catch (error) {
-            // Ocultar estado de carga en caso de error
-            this.hideLoadingState();
             console.error('Error generando contenido:', error);
             this.showNotification('Error al procesar: ' + error.message, 'error');
         }
@@ -369,8 +360,6 @@ class OutputGenerator {
                 return;
             }
 
-            // Mostrar estado de carga
-            this.showLoadingState();
             this.showNotification('Reajustando guion...', 'info');
 
             // Recolectar todos los datos originales
@@ -387,8 +376,6 @@ class OutputGenerator {
 
             // Enviar al mismo webhook
             const result = await this.webhookManager.sendDataToWebhook(dataConIndicaciones);
-            
-            this.hideLoadingState();
 
             // Procesar la respuesta
             if (result && result.success) {
@@ -404,7 +391,6 @@ class OutputGenerator {
             }
 
         } catch (error) {
-            this.hideLoadingState();
             console.error('Error reajustando guion:', error);
             this.showNotification('Error al procesar: ' + error.message, 'error');
         }
@@ -424,8 +410,6 @@ class OutputGenerator {
                 return;
             }
 
-            // Mostrar estado de carga
-            this.showLoadingState();
             this.showNotification('Generando escenas...', 'info');
 
             // Recolectar todos los datos originales
@@ -445,8 +429,6 @@ class OutputGenerator {
 
             // Enviar al webhook de escenas
             const result = await this.webhookManager.sendDataToWebhookEscenas(dataParaEscenas);
-            
-            this.hideLoadingState();
 
             // Procesar la respuesta (puede ser diferente formato)
             if (result && result.success) {
@@ -460,7 +442,6 @@ class OutputGenerator {
             }
 
         } catch (error) {
-            this.hideLoadingState();
             console.error('Error generando escenas:', error);
             this.showNotification('Error al procesar: ' + error.message, 'error');
         }

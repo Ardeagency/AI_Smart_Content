@@ -272,12 +272,7 @@ class DevTestView extends BaseView {
                 <i class="ph ph-arrows-clockwise"></i>
               </button>
             </div>
-            <div class="history-list" id="historyList">
-              <div class="history-loading">
-                <i class="ph ph-spinner ph-spin"></i>
-                <span>Cargando...</span>
-              </div>
-            </div>
+            <div class="history-list" id="historyList"></div>
           </aside>
         </div>
       </div>

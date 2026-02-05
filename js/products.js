@@ -103,16 +103,15 @@ if (typeof window.ProductsManager === 'undefined') {
         await this.waitForDOMReady();
         
         // Esperar específicamente a que los elementos necesarios estén disponibles
-        const requiredElements = ['productsGallery', 'productsGrid', 'loadingState', 'emptyState'];
+        const requiredElements = ['productsGallery', 'productsGrid', 'emptyState'];
         await this.waitForElements(requiredElements, 20); // 20 intentos = 2 segundos máximo
         
         // Verificar que los elementos estén disponibles
         const productsGallery = document.getElementById('productsGallery');
         const productsGrid = document.getElementById('productsGrid');
-        const loadingState = document.getElementById('loadingState');
         const emptyState = document.getElementById('emptyState');
         
-        if (!productsGallery || !productsGrid || !loadingState || !emptyState) {
+        if (!productsGallery || !productsGrid || !emptyState) {
             console.error('❌ Elementos del DOM no disponibles después de espera - los productos pueden no renderizarse');
             // Continuar de todos modos, loadProducts() manejará el error
         }
@@ -502,7 +501,6 @@ if (typeof window.ProductsManager === 'undefined') {
 
         // Validar UUID
         if (!this.isValidUUID(this.brandContainerId)) {
-            loadingState.style.display = 'none';
             emptyState.style.display = 'block';
             this.products = [];
             return;
@@ -527,7 +525,6 @@ if (typeof window.ProductsManager === 'undefined') {
             }
 
             if (!products || products.length === 0) {
-                loadingState.style.display = 'none';
                 emptyState.style.display = 'block';
                 this.products = [];
                 return;
@@ -594,7 +591,6 @@ if (typeof window.ProductsManager === 'undefined') {
 
         } catch (error) {
             console.error('❌ Error completo cargando productos:', error);
-            if (loadingState) loadingState.style.display = 'none';
             if (emptyState) emptyState.style.display = 'block';
             if (productsGrid) productsGrid.style.display = 'none';
         }
@@ -602,31 +598,27 @@ if (typeof window.ProductsManager === 'undefined') {
 
     async renderProducts() {
         // Buscar elementos directamente sin espera (ya deberían estar disponibles)
-        let loadingState = document.getElementById('loadingState');
         let emptyState = document.getElementById('emptyState');
         let productsGrid = document.getElementById('productsGrid');
 
-        if (!loadingState || !emptyState || !productsGrid) {
+        if (!emptyState || !productsGrid) {
             // Intentar buscar en el container de la vista si existe
             const viewContainer = document.getElementById('app-container');
             if (viewContainer) {
-                loadingState = loadingState || viewContainer.querySelector('#loadingState');
                 emptyState = emptyState || viewContainer.querySelector('#emptyState');
                 productsGrid = productsGrid || viewContainer.querySelector('#productsGrid');
             }
         }
 
-        if (!loadingState || !emptyState || !productsGrid) {
+        if (!emptyState || !productsGrid) {
             // Intentar buscar en productsGallery
             const productsGallery = document.getElementById('productsGallery');
             if (productsGallery) {
-                loadingState = loadingState || productsGallery.querySelector('#loadingState');
                 emptyState = emptyState || productsGallery.querySelector('#emptyState');
                 productsGrid = productsGrid || productsGallery.querySelector('#productsGrid');
             }
         }
 
-        // loadingState es opcional, pero productsGrid y emptyState son críticos
         if (!productsGrid || !emptyState) {
             console.error('❌ Elementos críticos del DOM no encontrados para renderizar productos');
             
@@ -640,18 +632,11 @@ if (typeof window.ProductsManager === 'undefined') {
             return;
         }
         }
-        
-        // Si loadingState no está disponible, crear uno temporal o usar null
-        if (!loadingState) {
-            loadingState = { style: { display: 'none' } }; // Objeto dummy para evitar errores
-        }
 
-        this.renderProductsWithElements(loadingState, emptyState, productsGrid);
+        this.renderProductsWithElements(emptyState, productsGrid);
     }
 
-    renderProductsWithElements(loadingState, emptyState, productsGrid) {
-        loadingState.style.display = 'none';
-
+    renderProductsWithElements(emptyState, productsGrid) {
         if (!this.products || this.products.length === 0) {
             emptyState.style.display = 'block';
             productsGrid.style.display = 'none';

@@ -392,36 +392,6 @@ body {
     text-align: center;
 }
 
-/* Estado de carga */
-.loading-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    padding: 48px;
-    color: rgba(255, 255, 255, 0.6);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-.loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid rgba(255, 255, 255, 0.1);
-    border-top-color: rgba(255, 255, 255, 0.6);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-.loading-state p {
-    margin: 0;
-    font-size: 0.875rem;
-}
-
 /* Output Cards */
 .output-card {
     width: 100%;

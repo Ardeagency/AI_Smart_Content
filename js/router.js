@@ -218,12 +218,6 @@ class Router {
       // Renderizar la vista (esto llamará a init() y onEnter() internamente)
       await this.currentView.render();
       
-      // Ocultar loading inicial si existe
-      const initialLoading = document.getElementById('appInitialLoading');
-      if (initialLoading) {
-        initialLoading.classList.add('hidden');
-      }
-      
       this.updateNavigation();
       window.dispatchEvent(new CustomEvent('routechange', { detail: { path, params: routeParams } }));
     } catch (error) {
