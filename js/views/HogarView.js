@@ -1,6 +1,6 @@
 /**
  * HogarView - Vista principal de organizaciones
- * Muestra todas las organizaciones del usuario en formato de cards
+ * Carga organizaciones y colores de marca (brand_colors) para degradados. Contenedores a rehacer desde cero.
  */
 class HogarView extends BaseView {
   constructor() {
@@ -153,115 +153,27 @@ class HogarView extends BaseView {
 
       this.organizations = Array.from(orgsMap.values());
 
-      // Cargar estadísticas para cada organización
-      await this.loadOrganizationStats();
+      // Solo colores de marca para degradados (sistema brand_colors intacto)
+      for (const org of this.organizations) {
+        try {
+          org.brandColors = await this.getOrganizationBrandColors(org.id);
+        } catch (error) {
+          console.error(`Error cargando brand colors para org ${org.id}:`, error);
+          org.brandColors = [];
+        }
+      }
 
-      // Renderizar
       if (this.organizations.length === 0) {
         if (emptyEl) emptyEl.style.display = 'flex';
         if (gridEl) gridEl.style.display = 'none';
       } else {
         if (emptyEl) emptyEl.style.display = 'none';
         if (gridEl) gridEl.style.display = 'grid';
-        this.renderOrganizations();
+        gridEl.innerHTML = '';
       }
     } catch (error) {
       console.error('Error cargando organizaciones:', error);
       this.showError('Error cargando organizaciones. Por favor, recarga la página.');
-    }
-  }
-
-  /**
-   * Cargar estadísticas de cada organización
-   */
-  async loadOrganizationStats() {
-    if (!this.supabase) return;
-
-    for (const org of this.organizations) {
-      try {
-        // Obtener brand_container_ids primero
-        const brandContainerIds = await this.getBrandContainerIds(org.id);
-        
-        // Cargar estadísticas en paralelo
-        const [
-          creditsResult,
-          brandsResult,
-          productsResult,
-          campaignsResult,
-          membersResult
-        ] = await Promise.allSettled([
-          // Créditos disponibles
-          this.supabase
-            .from('organization_credits')
-            .select('credits_available, credits_total')
-            .eq('organization_id', org.id)
-            .maybeSingle(),
-          
-          // Marcas (brand_containers)
-          this.supabase
-            .from('brand_containers')
-            .select('id', { count: 'exact', head: true })
-            .eq('organization_id', org.id),
-          
-          // Productos (solo si hay brand containers)
-          brandContainerIds.length > 0
-            ? this.supabase
-                .from('products')
-                .select('id', { count: 'exact', head: true })
-                .in('brand_container_id', brandContainerIds)
-            : Promise.resolve({ count: 0 }),
-          
-          // Campañas (solo si hay brand containers)
-          brandContainerIds.length > 0
-            ? this.supabase
-                .from('campaigns')
-                .select('id', { count: 'exact', head: true })
-                .in('brand_container_id', brandContainerIds)
-            : Promise.resolve({ count: 0 }),
-          
-          // Colaboradores
-          this.supabase
-            .from('organization_members')
-            .select('id', { count: 'exact', head: true })
-            .eq('organization_id', org.id)
-        ]);
-
-        // Procesar resultados
-        org.stats = {
-          credits_available: creditsResult.status === 'fulfilled' && creditsResult.value.data
-            ? creditsResult.value.data.credits_available || 0
-            : 0,
-          credits_total: creditsResult.status === 'fulfilled' && creditsResult.value.data
-            ? creditsResult.value.data.credits_total || 0
-            : 0,
-          brands_count: brandsResult.status === 'fulfilled' && brandsResult.value.count !== null
-            ? brandsResult.value.count
-            : 0,
-          products_count: productsResult.status === 'fulfilled' && productsResult.value.count !== null
-            ? productsResult.value.count
-            : 0,
-          campaigns_count: campaignsResult.status === 'fulfilled' && campaignsResult.value.count !== null
-            ? campaignsResult.value.count
-            : 0,
-          members_count: membersResult.status === 'fulfilled' && membersResult.value.count !== null
-            ? membersResult.value.count
-            : 0
-        };
-
-        // Brand Gradient Identity: colores desde brand_colors de las marcas de la org
-        org.brandColors = await this.getOrganizationBrandColors(org.id);
-      } catch (error) {
-        console.error(`Error cargando stats para org ${org.id}:`, error);
-        org.stats = {
-          credits_available: 0,
-          credits_total: 0,
-          brands_count: 0,
-          products_count: 0,
-          campaigns_count: 0,
-          members_count: 0
-        };
-        org.brandColors = [];
-      }
     }
   }
 
@@ -421,115 +333,6 @@ class HogarView extends BaseView {
     const palette = this.getBrandUIPalette(brandColors);
     if (!palette) return '';
     return `linear-gradient(135deg, ${palette.primary}, ${palette.secondary})`;
-  }
-
-  /**
-   * Renderizar organizaciones en el grid
-   */
-  renderOrganizations() {
-    const gridEl = this.querySelector('#organizationsGrid');
-    if (!gridEl) return;
-
-    gridEl.innerHTML = this.organizations.map(org => this.renderOrganizationCard(org)).join('');
-    
-    // Agregar event listeners a las cards
-    this.organizations.forEach(org => {
-      const card = gridEl.querySelector(`[data-org-id="${org.id}"]`);
-      if (card) {
-        card.addEventListener('click', (e) => {
-          if (!e.target.closest('.org-edit-btn')) {
-            this.navigateToOrganization(org.id);
-          }
-        });
-
-        const configBtn = card.querySelector('.org-card-config-btn');
-        if (configBtn) {
-          configBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (window.router) window.router.navigate(`/org/${org.id}/settings`);
-          });
-        }
-      }
-    });
-  }
-
-  /**
-   * Formatear fecha relativa (ej. "hace 5 días", "2 days ago")
-   */
-  formatRelativeDate(createdAt) {
-    if (!createdAt) return '';
-    const date = new Date(createdAt);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    if (diffDays === 0) return 'Hoy';
-    if (diffDays === 1) return 'Ayer';
-    if (diffDays < 7) return `Hace ${diffDays} días`;
-    if (diffDays < 30) return `Hace ${Math.floor(diffDays / 7)} semana${Math.floor(diffDays / 7) !== 1 ? 's' : ''}`;
-    if (diffDays < 365) return `Hace ${Math.floor(diffDays / 30)} mes${Math.floor(diffDays / 30) !== 1 ? 'es' : ''}`;
-    return `Hace ${Math.floor(diffDays / 365)} año${Math.floor(diffDays / 365) !== 1 ? 's' : ''}`;
-  }
-
-  /**
-   * Mapear plan a etiqueta y clase para badge (Starter → neutral, Pro → brand, Enterprise → premium)
-   */
-  getPlanBadge(planType) {
-    const p = (planType || 'starter').toLowerCase();
-    if (p === 'pro' || p === 'basico') return { label: p === 'pro' ? 'Pro' : 'Starter', class: 'plan-pro' };
-    if (p === 'enterprise' || p === 'empresas') return { label: 'Enterprise', class: 'plan-enterprise' };
-    return { label: 'Starter', class: 'plan-starter' };
-  }
-
-  /**
-   * Renderizar card de organización (Brand Gradient Identity Header + folder body)
-   */
-  renderOrganizationCard(org) {
-    const stats = org.stats || {};
-    const logoInitial = org.name ? org.name.charAt(0).toUpperCase() : 'O';
-    const membersCount = stats.members_count || 0;
-    const creditsRemaining = stats.credits_available ?? 0;
-    const creditsTotal = stats.credits_total ?? 0;
-    const creditsThreshold = 100;
-    const creditsLow = creditsTotal > 0 && creditsRemaining < creditsThreshold;
-    const planBadge = this.getPlanBadge(org.plan_type);
-    const brandColors = org.brandColors || [];
-    const hasBranding = brandColors.length > 0;
-    const gradientCss = hasBranding ? this.buildBrandGradientCss(brandColors) : '';
-
-    const cardStateAttrs = creditsLow ? ' data-credits-low' : '';
-
-    return `
-      <div class="org-card org-card-folder" data-org-id="${org.id}" title="Entrar a ${this.escapeHtml(org.name)}"${cardStateAttrs}>
-        <!-- Panel izquierdo: brand + miembros + créditos (total / usado) -->
-        <div class="org-card-cover org-card-cover--identity ${hasBranding ? 'org-card-cover--branded' : ''}" ${hasBranding && gradientCss ? `style="--org-cover-gradient: ${gradientCss}"` : ''}>
-          <div class="org-card-cover-inner" aria-hidden="true"></div>
-          <div class="org-card-cover-content">
-            <div class="org-card-cover-members" title="Miembros de la organización">
-              <i class="fas fa-users"></i>
-              <span>${membersCount} ${membersCount === 1 ? 'miembro' : 'miembros'}</span>
-            </div>
-            <div class="org-card-cover-credits">
-              <span class="org-card-cover-credits-value ${creditsLow ? 'credits-low' : ''}">${creditsRemaining}</span>
-              <span class="org-card-cover-credits-sep">/</span>
-              <span class="org-card-cover-credits-total">${creditsTotal || 0}</span>
-              <span class="org-card-cover-credits-label">tokens</span>
-            </div>
-          </div>
-          ${!hasBranding ? `<span class="org-card-cover-initial" aria-hidden="true">${logoInitial}</span>` : ''}
-        </div>
-        <!-- Panel derecho: nombre, plan, configuración -->
-        <div class="org-card-body">
-          <h3 class="org-card-name" title="${this.escapeHtml(org.name)}">${this.escapeHtml(org.name)}</h3>
-          <div class="org-card-body-meta">
-            <span class="org-card-plan-badge ${planBadge.class}">${planBadge.label}</span>
-            <button type="button" class="org-card-config-btn" data-org-id="${org.id}" title="Configuración" aria-label="Configuración">
-              <i class="fas fa-cog"></i>
-              <span>Configuración</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
   }
 
   /**

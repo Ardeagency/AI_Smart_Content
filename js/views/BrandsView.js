@@ -592,19 +592,14 @@ class BrandsView extends BaseView {
             <div class="color-swatch-role">${role}</div>
           </div>
           <div class="color-swatch-actions" style="position: absolute; top: 0; right: 0; display: none; gap: 0.25rem; padding: 0.25rem;">
-            <button class="color-edit-btn" style="background: rgba(0,0,0,0.5); border: none; color: white; padding: 0.25rem; border-radius: 4px; cursor: pointer; font-size: 0.7rem;">✎</button>
-            <button class="color-delete-btn" style="background: rgba(220,38,38,0.7); border: none; color: white; padding: 0.25rem; border-radius: 4px; cursor: pointer; font-size: 0.7rem;">×</button>
+            <button class="color-delete-btn" style="background: rgba(220,38,38,0.7); border: none; color: white; padding: 0.25rem; border-radius: 4px; cursor: pointer; font-size: 0.7rem;" title="Eliminar">×</button>
           </div>
         </div>
       `;
-    }).join('') + `
-      <div class="color-swatch-add" style="width: 40px; height: 40px; border: 2px dashed rgba(255,255,255,0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: rgba(255,255,255,0.5); font-size: 1.5rem;" title="Agregar color">+</div>
-    `;
+    }).join('');
 
-    // Event listeners para editar/eliminar colores
     container.querySelectorAll('.color-swatch').forEach(swatch => {
       const colorId = swatch.getAttribute('data-color-id');
-      const color = colors.find(c => c.id === colorId);
       
       swatch.addEventListener('mouseenter', () => {
         const actions = swatch.querySelector('.color-swatch-actions');
@@ -616,32 +611,14 @@ class BrandsView extends BaseView {
         if (actions) actions.style.display = 'none';
       });
 
-      const editBtn = swatch.querySelector('.color-edit-btn');
-      if (editBtn) {
-        editBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          this.editColor(color);
-        });
-      }
-
       const deleteBtn = swatch.querySelector('.color-delete-btn');
       if (deleteBtn) {
         deleteBtn.addEventListener('click', (e) => {
           e.stopPropagation();
-          if (confirm('¿Eliminar este color?')) {
-            this.deleteColor(colorId);
-          }
+          this.deleteColor(colorId);
         });
       }
     });
-
-    // Event listener para agregar color
-    const addBtn = container.querySelector('.color-swatch-add');
-    if (addBtn) {
-      addBtn.addEventListener('click', () => {
-        this.addColor();
-      });
-    }
   }
 
   renderTypography() {
@@ -1639,42 +1616,6 @@ class BrandsView extends BaseView {
     }
   }
 
-  async saveColor(colorId, colorRole, hexValue) {
-    if (!this.supabase || !this.brandData) return;
-
-    try {
-      if (colorId) {
-        // Actualizar color existente
-        const { error } = await this.supabase
-          .from('brand_colors')
-          .update({ color_role: colorRole, hex_value: hexValue })
-          .eq('id', colorId);
-
-        if (error) throw error;
-        console.log(`✅ Color actualizado`);
-      } else {
-        // Crear nuevo color
-        const { error } = await this.supabase
-          .from('brand_colors')
-          .insert({
-            brand_id: this.brandData.id,
-            color_role: colorRole,
-            hex_value: hexValue
-          });
-
-        if (error) throw error;
-        console.log(`✅ Color creado`);
-      }
-
-      // Recargar colores
-      await this.loadData();
-      this.renderCards();
-    } catch (error) {
-      console.error(`❌ Error al guardar color:`, error);
-      alert(`Error al guardar color. Por favor, intenta de nuevo.`);
-    }
-  }
-
   async deleteColor(colorId) {
     if (!this.supabase) return;
 
@@ -1979,28 +1920,6 @@ class BrandsView extends BaseView {
     if (element) {
       this.makeEditableMultiSelect(element, fieldName, [], table, onSave);
     }
-  }
-
-  addColor() {
-    const hex = prompt('Ingresa el código hexadecimal del color (ej: #FF5733):', '#000000');
-    if (!hex) return;
-
-    const role = prompt('Ingresa el rol del color (ej: Primary, Secondary, Accent):', 'Primary');
-    if (!role) return;
-
-    this.saveColor(null, role, hex);
-  }
-
-  editColor(color) {
-    if (!color) return;
-
-    const newHex = prompt('Ingresa el nuevo código hexadecimal:', color.hex_value || '#000000');
-    if (!newHex) return;
-
-    const newRole = prompt('Ingresa el nuevo rol del color:', color.color_role || 'Color');
-    if (!newRole) return;
-
-    this.saveColor(color.id, newRole, newHex);
   }
 
   setupFileUpload() {
