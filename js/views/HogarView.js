@@ -523,7 +523,7 @@ class HogarView extends BaseView {
             <i class="fas fa-ellipsis-v"></i>
           </button>
         </div>
-        <!-- Body con folder tab notch | zona segura: título siempre dentro del body -->
+        <!-- Body: contenido de la org -->
         <div class="org-card-body">
           <div class="org-card-body-header">
             <h3 class="org-card-name" title="${this.escapeHtml(org.name)}">${this.escapeHtml(org.name)}</h3>
