@@ -208,10 +208,9 @@ class Router {
         await window.navigation.render();
       }
 
-      // Renderizar la vista (esto llamará a init() y onEnter() internamente)
       await this.currentView.render();
-      
-      this.updateNavigation();
+
+      // Un solo lugar actualiza la nav: Navigation (vía routechange)
       window.dispatchEvent(new CustomEvent('routechange', { detail: { path, params: routeParams } }));
     } catch (error) {
       console.error('Error manejando ruta:', error);
@@ -303,34 +302,6 @@ class Router {
    */
   requiresDevMode(path) {
     return path.startsWith('/dev');
-  }
-
-  /**
-   * Actualizar links activos en navegación
-   */
-  updateNavigation() {
-    const navLinks = document.querySelectorAll('.nav-link');
-    const currentPath = window.location.pathname || '/';
-    
-    navLinks.forEach(link => {
-      link.classList.remove('active');
-      const href = link.getAttribute('href');
-      
-      // Comparar href con pathname actual
-      if (href) {
-        // Normalizar href (puede ser '#/ruta', '/ruta', o 'ruta.html')
-        let linkPath = href.replace('#', '').replace('.html', '');
-        if (!linkPath.startsWith('/')) {
-          linkPath = '/' + linkPath;
-        }
-        
-        // Comparar paths
-        if (linkPath === currentPath || 
-            (linkPath === '/' && currentPath === '/')) {
-          link.classList.add('active');
-        }
-      }
-    });
   }
 
   getCurrentRoute() {

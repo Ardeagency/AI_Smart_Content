@@ -99,11 +99,11 @@ class Navigation {
       this.container.innerHTML = this.getUserNavigationHTML();
     }
 
-    // Inicializar eventos y estado
     this.initializeSidebar();
     this.setupEventListeners();
     this.setupSubmenus();
     this.updateActiveLink();
+    this.updateHeaderTitle();
     this.updateBodyLayout(config);
 
     // Cargar información del usuario
@@ -135,11 +135,34 @@ class Navigation {
   }
 
   /**
+   * Dropdown de usuario (único fragmento reutilizable)
+   * @param {string} settingsHref - URL de configuración (/settings o /org/:id/settings)
+   */
+  getUserDropdownHTML(settingsHref = '/settings') {
+    return `
+      <div class="user-dropdown" id="userDropdown">
+        <div class="user-dropdown-header">
+          <div class="user-dropdown-name" id="userDropdownName">Usuario</div>
+          <div class="user-dropdown-email" id="userDropdownEmail">usuario@email.com</div>
+        </div>
+        <div class="user-dropdown-divider"></div>
+        <a href="${settingsHref}" class="user-dropdown-item">
+          <i class="fas fa-cog"></i>
+          <span>Configuración</span>
+        </a>
+        <button class="user-dropdown-item" id="logoutBtn">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Cerrar sesión</span>
+        </button>
+      </div>`;
+  }
+
+  /**
    * HTML para Home - Solo header sin sidebar
    */
   getHomeHeaderHTML() {
+    const settingsHref = this.currentOrgId ? `/org/${this.currentOrgId}/settings` : '/settings';
     return `
-      <!-- Header para Home/Hogar -->
       <header class="app-header header-only" id="appHeader">
         <div class="header-content">
           <div class="header-left">
@@ -161,25 +184,8 @@ class Navigation {
             </div>
           </div>
         </div>
-        
-        <!-- Dropdown de usuario -->
-        <div class="user-dropdown" id="userDropdown">
-          <div class="user-dropdown-header">
-            <div class="user-dropdown-name" id="userDropdownName">Usuario</div>
-            <div class="user-dropdown-email" id="userDropdownEmail">usuario@email.com</div>
-          </div>
-          <div class="user-dropdown-divider"></div>
-          <a href="${this.currentOrgId ? `/org/${this.currentOrgId}/settings` : '/settings'}" class="user-dropdown-item">
-            <i class="fas fa-cog"></i>
-            <span>Configuración</span>
-          </a>
-          <button class="user-dropdown-item" id="logoutBtn">
-            <i class="fas fa-sign-out-alt"></i>
-            <span>Cerrar sesión</span>
-          </button>
-        </div>
-      </header>
-    `;
+        ${this.getUserDropdownHTML(settingsHref)}
+      </header>`;
   }
 
   /**
@@ -212,23 +218,7 @@ class Navigation {
             </div>
           </div>
         </div>
-        
-        <!-- Dropdown de usuario -->
-        <div class="user-dropdown" id="userDropdown">
-          <div class="user-dropdown-header">
-            <div class="user-dropdown-name" id="userDropdownName">Usuario</div>
-            <div class="user-dropdown-email" id="userDropdownEmail">usuario@email.com</div>
-          </div>
-          <div class="user-dropdown-divider"></div>
-          <a href="${this.currentOrgId ? `/org/${this.currentOrgId}/settings` : '/settings'}" class="user-dropdown-item">
-            <i class="fas fa-cog"></i>
-            <span>Configuración</span>
-          </a>
-          <button class="user-dropdown-item" id="logoutBtn">
-            <i class="fas fa-sign-out-alt"></i>
-            <span>Cerrar sesión</span>
-          </button>
-        </div>
+        ${this.getUserDropdownHTML(this.currentOrgId ? `/org/${this.currentOrgId}/settings` : '/settings')}
       </header>
 
       <!-- Navegación lateral - Modo Usuario SaaS -->
@@ -365,23 +355,7 @@ class Navigation {
             </div>
           </div>
         </div>
-        
-        <!-- Dropdown de usuario -->
-        <div class="user-dropdown" id="userDropdown">
-          <div class="user-dropdown-header">
-            <div class="user-dropdown-name" id="userDropdownName">Usuario</div>
-            <div class="user-dropdown-email" id="userDropdownEmail">usuario@email.com</div>
-          </div>
-          <div class="user-dropdown-divider"></div>
-          <a href="/settings" class="user-dropdown-item">
-            <i class="fas fa-cog"></i>
-            <span>Configuración</span>
-          </a>
-          <button class="user-dropdown-item" id="logoutBtn">
-            <i class="fas fa-sign-out-alt"></i>
-            <span>Cerrar sesión</span>
-          </button>
-        </div>
+        ${this.getUserDropdownHTML('/settings')}
       </header>
 
       <!-- Navegación lateral - Modo Desarrollador PaaS -->
@@ -650,13 +624,16 @@ class Navigation {
   }
 
   /**
-   * Actualizar título del header
+   * Actualizar título del header según la ruta actual
    */
   updateHeaderTitle() {
     const titleEl = document.getElementById('headerTitle');
     if (!titleEl) return;
 
     const path = window.location.pathname;
+    // Normalizar: quitar prefijo /org/:id para comparar segmento de vista
+    const pathWithoutOrg = path.replace(/^\/org\/[^/]+/, '') || '/';
+
     const titles = {
       '/hogar': 'Hogar',
       '/home': 'Hogar',
@@ -667,17 +644,22 @@ class Navigation {
       '/studio': 'Studio',
       '/audiences': 'Audiencias',
       '/marketing': 'Marketing',
+      '/campaigns': 'Campañas',
+      '/content': 'Contenido',
+      '/settings': 'Configuración',
       '/dev/dashboard': 'Dashboard',
       '/dev/flows': 'Mis Flujos',
       '/dev/builder': 'Builder',
       '/dev/test': 'Test de Flujos',
       '/dev/logs': 'Logs',
-      '/dev/webhooks': 'Webhooks'
+      '/dev/webhooks': 'Webhooks',
+      '/dev/collaborators': 'Colaboradores',
+      '/dev/marketplace': 'Marketplace',
+      '/dev/docs': 'Documentación'
     };
 
-    // Buscar título coincidente
     for (const [route, title] of Object.entries(titles)) {
-      if (path.includes(route.replace('/dev/', '/dev/').replace('/org/', ''))) {
+      if (pathWithoutOrg === route || pathWithoutOrg.startsWith(route + '/')) {
         titleEl.textContent = title;
         return;
       }
@@ -744,13 +726,24 @@ class Navigation {
   }
 
   /**
+   * Obtener cliente Supabase (supabaseService o fallback global)
+   */
+  async getSupabase() {
+    if (window.supabaseService && typeof window.supabaseService.getClient === 'function') {
+      return await window.supabaseService.getClient();
+    }
+    return window.supabase || null;
+  }
+
+  /**
    * Cargar información de la organización actual
    */
   async loadOrganizationInfo() {
-    if (!window.supabase || !this.currentOrgId) return;
+    const supabase = await this.getSupabase();
+    if (!supabase || !this.currentOrgId) return;
 
     try {
-      const { data: org } = await window.supabase
+      const { data: org } = await supabase
         .from('organizations')
         .select('name, plan_type')
         .eq('id', this.currentOrgId)
@@ -764,8 +757,7 @@ class Navigation {
         if (typeEl) typeEl.textContent = org.plan_type || 'Personal';
       }
 
-      // Cargar tokens
-      const { data: credits } = await window.supabase
+      const { data: credits } = await supabase
         .from('organization_credits')
         .select('credits_available')
         .eq('organization_id', this.currentOrgId)
@@ -792,13 +784,14 @@ class Navigation {
    * Cargar lista de organizaciones del usuario
    */
   async loadOrganizationsList() {
-    if (!window.supabase) return;
+    const supabase = await this.getSupabase();
+    if (!supabase) return;
 
     try {
       const user = window.authService?.getCurrentUser();
       if (!user) return;
 
-      const { data: memberships } = await window.supabase
+      const { data: memberships } = await supabase
         .from('organization_members')
         .select(`
           organization_id,
@@ -877,8 +870,7 @@ class Navigation {
         if (tierEl) tierEl.textContent = profile.developer_tier || 'Novato';
       }
 
-      // Cargar estadísticas
-      const { count: runsCount } = await window.supabase
+      const { count: runsCount } = await supabase
         .from('flow_runs')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id);
@@ -909,8 +901,9 @@ class Navigation {
     try {
       if (window.authService) {
         await window.authService.logout();
-      } else if (window.supabase) {
-        await window.supabase.auth.signOut();
+      } else {
+        const supabase = await this.getSupabase();
+        if (supabase) await supabase.auth.signOut();
       }
       
       localStorage.removeItem('userViewMode');

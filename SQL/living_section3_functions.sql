@@ -292,32 +292,42 @@ AS $$
 DECLARE
     v_result JSONB;
 BEGIN
+    -- Subconsulta ordenada y limitada; luego agregar a JSONB (evita errores GROUP BY / agregados)
     SELECT jsonb_agg(
         jsonb_build_object(
-            'output_id', fo.id,
-            'run_id', fo.run_id,
-            'output_type', fo.output_type,
-            'storage_path', fo.storage_path,
-            'created_at', fo.created_at,
-            'prompt_used', fo.prompt_used,
-            'status', COALESCE((fo.metadata->>'status')::TEXT, 'draft'),
-            'download_count', COALESCE((fo.metadata->>'download_count')::INTEGER, 0),
-            'is_final', COALESCE((fo.metadata->>'status')::TEXT = 'final', false)
+            'output_id', row.id,
+            'run_id', row.run_id,
+            'output_type', row.output_type,
+            'storage_path', row.storage_path,
+            'created_at', row.created_at,
+            'prompt_used', row.prompt_used,
+            'status', COALESCE(row.meta_status, 'draft'),
+            'download_count', COALESCE(row.meta_download_count, 0),
+            'is_final', COALESCE(row.meta_status = 'final', false)
         )
-        ORDER BY 
-            COALESCE((fo.metadata->>'download_count')::INTEGER, 0) DESC,
-            CASE WHEN (fo.metadata->>'status')::TEXT = 'final' THEN 1 ELSE 2 END,
-            fo.created_at DESC
+        ORDER BY row.ord_created_at DESC
     )
     INTO v_result
-    FROM runs_outputs fo
-    INNER JOIN flow_runs fr ON fr.id = fo.run_id
-    WHERE fr.brand_id = p_brand_id
-    ORDER BY 
-        COALESCE((fo.metadata->>'download_count')::INTEGER, 0) DESC,
-        CASE WHEN (fo.metadata->>'status')::TEXT = 'final' THEN 1 ELSE 2 END,
-        fo.created_at DESC
-    LIMIT p_limit;
+    FROM (
+        SELECT
+            fo.id,
+            fo.run_id,
+            fo.output_type,
+            fo.storage_path,
+            fo.created_at,
+            fo.prompt_used,
+            (fo.metadata->>'status') AS meta_status,
+            CAST(fo.metadata->>'download_count' AS INTEGER) AS meta_download_count,
+            fo.created_at AS ord_created_at
+        FROM runs_outputs fo
+        INNER JOIN flow_runs fr ON fr.id = fo.run_id
+        WHERE fr.brand_id = p_brand_id
+        ORDER BY
+            CAST(fo.metadata->>'download_count' AS INTEGER) DESC NULLS LAST,
+            CASE WHEN (fo.metadata->>'status') = 'final' THEN 1 ELSE 2 END,
+            fo.created_at DESC
+        LIMIT p_limit
+    ) row;
 
     RETURN COALESCE(v_result, jsonb_build_array());
 END;
@@ -451,26 +461,37 @@ AS $$
 DECLARE
     v_result JSONB;
 BEGIN
+    -- Evitar agregados anidados: subconsulta por usuario con su jsonb, luego un solo jsonb_agg
     SELECT jsonb_agg(
         jsonb_build_object(
-            'user_id', u.id,
-            'user_name', COALESCE(u.full_name, u.email),
-            'specialization', jsonb_agg(
-                jsonb_build_object(
-                    'output_type', fo.output_type,
-                    'count', COUNT(*)
-                )
-                ORDER BY COUNT(*) DESC
-            )
+            'user_id', sub.user_id,
+            'user_name', sub.user_name,
+            'specialization', sub.spec
         )
     )
     INTO v_result
-    FROM organization_members om
-    INNER JOIN users u ON u.id = om.user_id
-    INNER JOIN flow_runs fr ON fr.user_id = u.id
-    INNER JOIN runs_outputs fo ON fo.run_id = fr.id
-    WHERE om.organization_id = p_organization_id
-    GROUP BY u.id, u.full_name, u.email;
+    FROM (
+        SELECT
+            u.id AS user_id,
+            COALESCE(u.full_name, u.email) AS user_name,
+            (
+                SELECT jsonb_agg(
+                    jsonb_build_object('output_type', spec_row.output_type, 'count', spec_row.cnt)
+                    ORDER BY spec_row.cnt DESC
+                )
+                FROM (
+                    SELECT fo.output_type, COUNT(*)::INTEGER AS cnt
+                    FROM flow_runs fr2
+                    INNER JOIN runs_outputs fo ON fo.run_id = fr2.id
+                    WHERE fr2.user_id = u.id
+                    GROUP BY fo.output_type
+                ) spec_row
+            ) AS spec
+        FROM organization_members om
+        INNER JOIN users u ON u.id = om.user_id
+        WHERE om.organization_id = p_organization_id
+    ) sub
+    WHERE sub.spec IS NOT NULL;
 
     RETURN COALESCE(v_result, jsonb_build_array());
 END;
@@ -487,27 +508,37 @@ AS $$
 DECLARE
     v_result JSONB;
 BEGIN
+    -- Evitar agregados anidados: subconsulta por usuario con su jsonb de flows, luego un solo jsonb_agg
     SELECT jsonb_agg(
         jsonb_build_object(
-            'user_id', u.id,
-            'user_name', COALESCE(u.full_name, u.email),
-            'flows', jsonb_agg(
-                jsonb_build_object(
-                    'flow_id', cf.id,
-                    'flow_name', cf.name,
-                    'usage_count', COUNT(*)
-                )
-                ORDER BY COUNT(*) DESC
-            )
+            'user_id', sub.user_id,
+            'user_name', sub.user_name,
+            'flows', sub.flows_json
         )
     )
     INTO v_result
-    FROM organization_members om
-    INNER JOIN users u ON u.id = om.user_id
-    INNER JOIN flow_runs fr ON fr.user_id = u.id
-    INNER JOIN content_flows cf ON cf.id = fr.flow_id
-    WHERE om.organization_id = p_organization_id
-    GROUP BY u.id, u.full_name, u.email;
+    FROM (
+        SELECT
+            u.id AS user_id,
+            COALESCE(u.full_name, u.email) AS user_name,
+            (
+                SELECT jsonb_agg(
+                    jsonb_build_object('flow_id', fl.row_flow_id, 'flow_name', fl.row_flow_name, 'usage_count', fl.row_cnt)
+                    ORDER BY fl.row_cnt DESC
+                )
+                FROM (
+                    SELECT cf.id AS row_flow_id, cf.name AS row_flow_name, COUNT(*)::INTEGER AS row_cnt
+                    FROM flow_runs fr2
+                    INNER JOIN content_flows cf ON cf.id = fr2.flow_id
+                    WHERE fr2.user_id = u.id
+                    GROUP BY cf.id, cf.name
+                ) fl
+            ) AS flows_json
+        FROM organization_members om
+        INNER JOIN users u ON u.id = om.user_id
+        WHERE om.organization_id = p_organization_id
+    ) sub
+    WHERE sub.flows_json IS NOT NULL;
 
     RETURN COALESCE(v_result, jsonb_build_array());
 END;
