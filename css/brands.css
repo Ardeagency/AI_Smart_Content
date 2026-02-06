@@ -665,6 +665,134 @@ h1.brand-name-large[contenteditable="true"]:hover,
     transform: scale(1.1);
 }
 
+/* ============================================
+   EDITOR DE COLOR (modal: rueda tono + SL + hex + formato)
+   ============================================ */
+.color-editor-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+}
+
+.color-editor-panel {
+    background: var(--bg-card, #1e1e1e);
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.color-editor-wheel-wrap {
+    position: relative;
+}
+
+.color-editor-hue-ring {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+    position: relative;
+    cursor: crosshair;
+}
+
+.color-editor-sl-area {
+    position: absolute;
+    inset: 12px;
+    border-radius: 50%;
+    cursor: crosshair;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.color-editor-sl-handle {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+}
+
+.color-editor-hue-handle {
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    margin-left: -6px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+}
+
+.color-editor-current {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    flex-shrink: 0;
+}
+
+.color-editor-hex-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.color-editor-hex-input {
+    width: 100px;
+    padding: 0.4rem 0.5rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-primary, #f2f3f5);
+}
+
+.color-editor-format {
+    padding: 0.4rem 0.5rem;
+    font-size: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-primary, #f2f3f5);
+    cursor: pointer;
+}
+
+.color-editor-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.color-editor-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    border-radius: 6px;
+    cursor: pointer;
+    border: none;
+}
+
+.color-editor-btn-apply {
+    background: var(--accent-warm, #e09145);
+    color: #fff;
+}
+
+.color-editor-btn-cancel {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary, #f2f3f5);
+}
+
 /* Typography Preview */
 .typography-preview {
     display: flex;
