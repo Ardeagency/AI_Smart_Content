@@ -89,7 +89,12 @@ class App {
       DevLogsView: typeof window.DevLogsView !== 'undefined',
       DevBuilderView: typeof window.DevBuilderView !== 'undefined',
       DevTestView: typeof window.DevTestView !== 'undefined',
-      DevWebhooksView: typeof window.DevWebhooksView !== 'undefined'
+      DevWebhooksView: typeof window.DevWebhooksView !== 'undefined',
+      DevLeadTeamView: typeof window.DevLeadTeamView !== 'undefined',
+      DevLeadCategoriesView: typeof window.DevLeadCategoriesView !== 'undefined',
+      DevLeadInputSchemasView: typeof window.DevLeadInputSchemasView !== 'undefined',
+      DevLeadVectorsView: typeof window.DevLeadVectorsView !== 'undefined',
+      DevLeadReferencesView: typeof window.DevLeadReferencesView !== 'undefined'
     };
 
     // ========================================
@@ -181,6 +186,14 @@ class App {
     if (viewsAvailable.StudioView) {
       // Studio - Generador de contenido
       this.router.register('/org/:orgId/studio', window.StudioView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
+
+    if (viewsAvailable.FlowCatalogView) {
+      // Catálogo de flujos (dentro de org)
+      this.router.register('/org/:orgId/studio/catalog', window.FlowCatalogView, {
         requiresAuth: true,
         redirectIfAuth: false
       });
@@ -403,6 +416,23 @@ class App {
         requiresAuth: true,
         redirectIfAuth: false
       });
+    }
+
+    // Rutas Lead (solo dev_role === 'lead'; la vista redirige si no es lead)
+    if (viewsAvailable.DevLeadTeamView) {
+      this.router.register('/dev/lead/team', window.DevLeadTeamView, { requiresAuth: true, redirectIfAuth: false });
+    }
+    if (viewsAvailable.DevLeadCategoriesView) {
+      this.router.register('/dev/lead/categories', window.DevLeadCategoriesView, { requiresAuth: true, redirectIfAuth: false });
+    }
+    if (viewsAvailable.DevLeadInputSchemasView) {
+      this.router.register('/dev/lead/input-schemas', window.DevLeadInputSchemasView, { requiresAuth: true, redirectIfAuth: false });
+    }
+    if (viewsAvailable.DevLeadVectorsView) {
+      this.router.register('/dev/lead/ai-vectors', window.DevLeadVectorsView, { requiresAuth: true, redirectIfAuth: false });
+    }
+    if (viewsAvailable.DevLeadReferencesView) {
+      this.router.register('/dev/lead/references', window.DevLeadReferencesView, { requiresAuth: true, redirectIfAuth: false });
     }
 
     // ========================================
