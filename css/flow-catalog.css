@@ -363,10 +363,6 @@
   color: var(--text-primary, #ecebda);
 }
 
-.flow-catalog-card-media {
-  position: relative;
-}
-
 .flow-catalog-card-subtitle {
   font-size: 0.75rem;
   color: var(--text-muted, #6b6b6b);
@@ -447,6 +443,7 @@
 }
 
 .flow-catalog-card-media {
+  position: relative;
   aspect-ratio: 16/10;
   background: rgba(0, 0, 0, 0.2);
   display: flex;
