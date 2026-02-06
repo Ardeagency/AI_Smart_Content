@@ -2930,12 +2930,41 @@ body.sidebar-collapsed .builder-header {
   word-break: break-all;
 }
 
-.dev-lead-vectors .dev-lead-header {
+.dev-lead-vectors .dev-lead-header,
+.dev-lead-references .dev-lead-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
+}
+
+/* Referencias visuales: preview */
+.dev-lead-td-preview {
+  width: 56px;
+  padding: 8px !important;
+  vertical-align: middle;
+}
+
+.dev-lead-ref-thumb {
+  display: block;
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 6px;
+  background: var(--bg-primary);
+}
+
+.dev-lead-ref-no-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: var(--bg-primary);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 1.25rem;
 }
 
 /* Modal Lead */
