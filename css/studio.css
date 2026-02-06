@@ -1,10 +1,9 @@
 /**
- * Studio - Panel central + Sidebar editor creativo
+ * Studio - Panel central + footer créditos + Sidebar flujos y input_schema
  */
 @import url('base.css');
 @import url('navigation.css');
 
-/* Layout: centro + sidebar derecha */
 .studio-layout {
   position: absolute;
   top: 0;
@@ -22,97 +21,79 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  padding: 2rem 2rem 1.5rem;
+  padding: 2rem 2rem 1rem;
 }
 
-.studio-prompt-wrap {
+.studio-canvas-empty {
   flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem 0;
+  min-height: 120px;
 }
 
-.studio-prompt {
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(2rem, 5vw, 3.5rem);
-  font-weight: 400;
-  color: var(--text-primary, #ecebda);
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-  margin: 0;
-}
-
-.studio-cursor {
-  opacity: 0.9;
-  animation: studio-blink 1s step-end infinite;
-}
-
-@keyframes studio-blink {
-  50% { opacity: 0; }
-}
-
-.studio-center-footer {
+/* ========== Footer (créditos + Producir) ========== */
+.studio-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding-top: 0.5rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.studio-center-icons {
+.studio-footer-credits {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
-.studio-icon-btn {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.5);
-  cursor: pointer;
-  border-radius: 8px;
-  transition: color 0.2s ease, background 0.2s ease;
-}
-
-.studio-icon-btn:hover {
-  color: rgba(255, 255, 255, 0.9);
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.studio-icon-btn i {
-  font-size: 1.1rem;
-}
-
-.studio-submit-btn {
-  width: 48px;
-  height: 48px;
+.studio-credits-icon {
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  border: none;
-  background: var(--accent-warm, #e09145);
-  color: #fff;
-  cursor: pointer;
+  background: rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  color: rgba(255, 255, 255, 0.6);
 }
 
-.studio-submit-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 20px rgba(224, 145, 69, 0.4);
+.studio-credits-icon i {
+  font-size: 0.9rem;
 }
 
-.studio-submit-btn i {
-  font-size: 1.35rem;
+.studio-credits-text {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
 }
 
-/* ========== Sidebar editor creativo (derecha) ========== */
+.studio-credits-cost {
+  font-size: 0.8rem;
+  color: var(--accent-warm, #e09145);
+  margin-left: 0.25rem;
+}
+
+.studio-btn-producir {
+  padding: 0.6rem 1.25rem;
+  border-radius: 8px;
+  border: none;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.studio-btn-producir:hover:not(:disabled) {
+  background: #2a2a2a;
+}
+
+.studio-btn-producir:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ========== Sidebar ========== */
 .studio-sidebar-creative {
   width: 320px;
   min-width: 320px;
@@ -139,6 +120,7 @@
   border: none;
   cursor: pointer;
   padding: 0;
+  color: inherit;
 }
 
 .studio-tab-past {
@@ -168,16 +150,25 @@
   font-size: 0.7rem;
 }
 
-.studio-sidebar-cards {
+.studio-sidebar-content {
   flex: 1;
   overflow-y: auto;
   padding: 1rem 1.25rem;
+}
+
+.studio-flows-list {
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
 
-.studio-card {
+.studio-empty-flows {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+}
+
+.studio-card-flow {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
@@ -189,13 +180,9 @@
   transition: background 0.2s ease, border-color 0.2s ease;
 }
 
-.studio-card:hover {
+.studio-card-flow:hover {
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 255, 255, 0.1);
-}
-
-.studio-card-large {
-  padding: 1.25rem;
 }
 
 .studio-card-icon {
@@ -218,7 +205,12 @@
   line-height: 1.4;
   color: var(--text-primary, #ecebda);
   margin: 0;
-  flex: 1;
+}
+
+.studio-card-desc {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
 }
 
 .studio-card-tag {
@@ -228,10 +220,80 @@
   color: #f87171;
 }
 
-.studio-cards-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+/* Formulario dinámico (input_schema) */
+.studio-flow-form-wrap {
+  padding-top: 0;
+}
+
+.studio-back-flows {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.studio-back-flows:hover {
+  color: #7dd3fc;
+}
+
+.studio-form-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #ecebda);
+  margin: 0 0 1rem 0;
+}
+
+.studio-form-empty {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+}
+
+.studio-flow-form {
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
+}
+
+.studio-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.studio-field label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.studio-field input,
+.studio-field textarea,
+.studio-field select {
+  padding: 0.5rem 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary, #ecebda);
+  font-size: 0.875rem;
+  font-family: inherit;
+}
+
+.studio-field input::placeholder,
+.studio-field textarea::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.studio-field textarea {
+  resize: vertical;
+  min-height: 72px;
 }
 
 @media (max-width: 900px) {
@@ -242,12 +304,8 @@
   .studio-sidebar-creative {
     width: 100%;
     min-width: 0;
-    max-height: 40vh;
+    max-height: 45vh;
     border-left: none;
     border-top: 1px solid rgba(255, 255, 255, 0.06);
-  }
-
-  .studio-cards-row {
-    grid-template-columns: 1fr;
   }
 }
