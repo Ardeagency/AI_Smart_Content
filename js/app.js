@@ -94,7 +94,8 @@ class App {
       DevLeadCategoriesView: typeof window.DevLeadCategoriesView !== 'undefined',
       DevLeadInputSchemasView: typeof window.DevLeadInputSchemasView !== 'undefined',
       DevLeadVectorsView: typeof window.DevLeadVectorsView !== 'undefined',
-      DevLeadReferencesView: typeof window.DevLeadReferencesView !== 'undefined'
+      DevLeadReferencesView: typeof window.DevLeadReferencesView !== 'undefined',
+      DevLeadAllFlowsView: typeof window.DevLeadAllFlowsView !== 'undefined'
     };
 
     // ========================================
@@ -433,6 +434,9 @@ class App {
     }
     if (viewsAvailable.DevLeadReferencesView) {
       this.router.register('/dev/lead/references', window.DevLeadReferencesView, { requiresAuth: true, redirectIfAuth: false });
+    }
+    if (viewsAvailable.DevLeadAllFlowsView) {
+      this.router.register('/dev/lead/flows', window.DevLeadAllFlowsView, { requiresAuth: true, redirectIfAuth: false });
     }
 
     // ========================================

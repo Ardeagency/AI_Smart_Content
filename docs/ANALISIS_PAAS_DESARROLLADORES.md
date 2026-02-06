@@ -14,6 +14,7 @@
 | `/dev/test/:flowId` | DevTestView | Test con flujo preseleccionado |
 | `/dev/logs` | DevLogsView | Logs y debug de flujos |
 | `/dev/webhooks` | DevWebhooksView | Gestión de webhooks |
+| `/dev/lead/flows` | DevLeadAllFlowsView | Todos los flujos (Lead: ver/editar/eliminar todos) |
 | `/dev/lead/team` | DevLeadTeamView | Equipo (solo Lead) |
 | `/dev/lead/categories` | DevLeadCategoriesView | Categorías (solo Lead) |
 | `/dev/lead/input-schemas` | DevLeadInputSchemasView | Input Schemas (solo Lead) |

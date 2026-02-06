@@ -431,6 +431,10 @@ class Navigation {
               <i class="fas fa-chevron-right nav-chevron"></i>
             </button>
             <div class="nav-submenu">
+              <a href="/dev/lead/flows" class="nav-submenu-link" data-route="/dev/lead/flows">
+                <i class="fas fa-project-diagram"></i>
+                <span>Todos los flujos</span>
+              </a>
               <a href="/dev/lead/team" class="nav-submenu-link" data-route="/dev/lead/team">
                 <i class="fas fa-user-friends"></i>
                 <span>Equipo</span>
@@ -657,6 +661,7 @@ class Navigation {
       '/dev/test': 'Test de Flujos',
       '/dev/logs': 'Logs',
       '/dev/webhooks': 'Webhooks',
+      '/dev/lead/flows': 'Todos los flujos',
       '/dev/lead/team': 'Equipo',
       '/dev/lead/categories': 'Categorías',
       '/dev/lead/input-schemas': 'Input Schemas',

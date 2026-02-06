@@ -2931,12 +2931,41 @@ body.sidebar-collapsed .builder-header {
 }
 
 .dev-lead-vectors .dev-lead-header,
-.dev-lead-references .dev-lead-header {
+.dev-lead-references .dev-lead-header,
+.dev-lead-all-flows .dev-lead-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
+}
+
+.dev-lead-flow-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.dev-lead-status {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.dev-lead-status-draft { background: rgba(148, 163, 184, 0.2); color: #94a3b8; }
+.dev-lead-status-testing { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+.dev-lead-status-published { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+.dev-lead-status-archived { background: rgba(100, 116, 139, 0.2); color: #94a3b8; }
+
+.dev-lead-modal .btn-danger {
+  background: var(--dev-error);
+  color: white;
+  border: none;
+}
+
+.dev-lead-modal .btn-danger:hover {
+  background: #dc2626;
 }
 
 /* Referencias visuales: preview */
