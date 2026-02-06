@@ -141,202 +141,123 @@
     }
 }
 
-/* ========== Organization Card - Tal cual imagen: izq gradiente (clic → Living), der datos + 3 iconos ========== */
-.org-card.org-card-trading {
-    --org-card-radius: 14px;
+/* ========== Organization Card - Estilo Wallet/Bank (imagen): pill, naranja/degradado marca, emboss, clic → living ========== */
+.org-card.org-card-wallet {
+    --org-card-radius: 28px;
     display: flex;
     flex-direction: row;
     min-height: 160px;
+    max-width: 100%;
     overflow: hidden;
     border-radius: var(--org-card-radius);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
-    background: #0d0e10;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background: #fff;
 }
 
-/* ----- Panel izquierdo: degradado marca (brand_colors), logo 2 círculos, % grande, valor pequeño. Clic → Living ----- */
-.org-card-cover.org-card-cover--to-living {
+.org-card.org-card-wallet:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* Panel izquierdo (~45%): naranja o degradado de marca (brand_colors), label + círculo + letra emboss */
+.org-card-left {
     position: relative;
-    flex: 0 0 42%;
-    min-width: 140px;
+    flex: 0 0 45%;
+    min-width: 0;
+    padding: 20px;
     border-radius: var(--org-card-radius) 0 0 var(--org-card-radius);
-    background: linear-gradient(180deg, #1a1512 0%, #251a14 50%, #1c1612 100%);
+    background: #e85c2a;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 14px 12px 14px 14px;
+    justify-content: space-between;
     overflow: hidden;
-    cursor: pointer;
-    transition: filter 0.2s ease;
 }
 
-.org-card-cover.org-card-cover--branded {
+.org-card-left.org-card-left--branded {
     background: var(--org-cover-gradient);
 }
 
-.org-card-cover-streak {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background: linear-gradient(165deg, transparent 0%, transparent 35%, rgba(255, 255, 255, 0.12) 50%, transparent 70%);
-    border-radius: inherit;
-}
-
-.org-card-cover:hover {
-    filter: brightness(1.06);
-}
-
-.org-card-cover-logo {
-    position: relative;
-    display: flex;
-    align-items: center;
-    margin-bottom: auto;
-    padding-top: 2px;
-}
-
-.org-card-logo-circle {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.org-card-label {
     font-size: 0.75rem;
-    font-weight: 700;
-    color: #fff;
-}
-
-.org-card-logo-circle--first {
-    background: #000;
-    color: #fff;
-    z-index: 1;
-}
-
-.org-card-logo-circle--second {
-    background: #fff;
-    color: #000;
-    margin-left: -10px;
-    z-index: 2;
-}
-
-.org-card-cover-main {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    margin-top: 8px;
-}
-
-.org-card-cover-percent {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #fff;
-    letter-spacing: -0.02em;
-}
-
-.org-card-cover-value {
-    font-size: 0.8rem;
+    font-weight: 500;
     color: rgba(255, 255, 255, 0.9);
+    letter-spacing: 0.02em;
 }
 
-/* ----- Panel derecho: fondo oscuro, nombre grande, subtítulo gris, tags, 3 iconos abajo ----- */
-.org-card-body {
+.org-card-glow {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.25);
+    pointer-events: none;
+}
+
+.org-card-emboss {
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1;
+    color: rgba(0, 0, 0, 0.15);
+    text-shadow:
+        1px 1px 0 rgba(255, 255, 255, 0.35),
+        -1px -1px 0 rgba(0, 0, 0, 0.2),
+        0 2px 4px rgba(0, 0, 0, 0.15);
+    letter-spacing: -0.02em;
+    align-self: flex-start;
+    margin-top: auto;
+}
+
+/* Panel derecho (~55%): fondo charcoal, “Entrar” + título + subtítulo */
+.org-card-right {
     flex: 1;
     min-width: 0;
-    padding: 14px 16px 12px;
-    background: #0d0e10;
+    padding: 20px 24px;
+    background: #2c2a28;
     border-radius: 0 var(--org-card-radius) var(--org-card-radius) 0;
     display: flex;
     flex-direction: column;
+    justify-content: center;
     gap: 6px;
 }
 
-.org-card-body-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 8px;
+.org-card-cta {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.75);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
 }
 
-.org-card-name {
-    font-size: 1.25rem;
+.org-card-title {
+    font-size: 1.15rem;
     font-weight: 700;
+    line-height: 1.3;
     color: #fff;
     margin: 0;
-    line-height: 1.25;
-    letter-spacing: -0.02em;
-    flex: 1;
-    min-width: 0;
+    letter-spacing: -0.01em;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
-}
-
-.org-card-tags {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-}
-
-.org-card-tag {
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-size: 0.7rem;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    background: transparent;
+    text-overflow: ellipsis;
 }
 
 .org-card-subtitle {
     font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.5);
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.6);
     margin: 0;
-    line-height: 1.3;
-}
-
-.org-card-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: auto;
-    padding-top: 8px;
-}
-
-.org-card-action-btn {
-    width: 32px;
-    height: 32px;
-    border: none;
-    border-radius: 6px;
-    background: transparent;
-    color: rgba(255, 255, 255, 0.75);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color 0.2s, background 0.2s;
-}
-
-.org-card-action-btn:hover {
-    color: #fff;
-    background: rgba(255, 255, 255, 0.08);
-}
-
-.org-card-action-btn i {
-    font-size: 0.85rem;
-}
-
-.org-card-btn-settings {
-    border-radius: 999px;
-    padding: 0 12px;
-    width: auto;
-    background: rgba(255, 255, 255, 0.08);
-}
-
-.org-card-btn-settings:hover {
-    background: rgba(255, 255, 255, 0.12);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .btn-sm {
@@ -483,19 +404,23 @@
         font-size: 1.5rem;
     }
 
-    .org-card.org-card-trading {
+    .org-card.org-card-wallet {
         flex-direction: column;
         min-height: 0;
     }
 
-    .org-card-cover.org-card-cover--to-living {
+    .org-card-left {
         flex: 0 0 auto;
         min-height: 100px;
-        width: 100%;
         border-radius: var(--org-card-radius) var(--org-card-radius) 0 0;
     }
 
-    .org-card-body {
+    .org-card-right {
         border-radius: 0 0 var(--org-card-radius) var(--org-card-radius);
+        padding: 16px 20px;
+    }
+
+    .org-card-emboss {
+        font-size: 2.75rem;
     }
 }
