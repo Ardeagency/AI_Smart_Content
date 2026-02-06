@@ -68,7 +68,8 @@ class FlowCatalogView extends BaseView {
 
   async init() {
     await this.initSupabase();
-    await Promise.all([this.loadCategories(), this.loadFlows()]);
+    await this.loadCategories();
+    await this.loadFlows();
     this.renderFilters();
     this.renderMasonry();
     this.bindToolbar();
@@ -96,7 +97,7 @@ class FlowCatalogView extends BaseView {
       const { data, error } = await this.supabase
         .from('content_categories')
         .select('id, name, description, order_index')
-        .order('order_index', { ascending: true, nullsFirst: false })
+        .order('order_index', { ascending: true })
         .order('name');
       if (!error && data) {
         this.categories = data;
@@ -112,13 +113,15 @@ class FlowCatalogView extends BaseView {
   async loadFlows() {
     if (!this.supabase) return;
     try {
+      // Consulta sin join anidado para evitar 400 en algunos entornos Supabase
       const { data, error } = await this.supabase
         .from('content_flows')
-        .select('id, name, description, token_cost, output_type, flow_image_url, category_id, content_categories(id, name, description)')
+        .select('id, name, description, token_cost, output_type, flow_image_url, category_id')
         .eq('is_active', true)
         .order('name');
       if (!error && data) {
         this.flows = data;
+        this.enrichFlowsWithCategories();
       } else {
         this.flows = [];
       }
@@ -126,6 +129,15 @@ class FlowCatalogView extends BaseView {
       console.error('FlowCatalog loadFlows:', e);
       this.flows = [];
     }
+  }
+
+  enrichFlowsWithCategories() {
+    this.flows.forEach(f => {
+      const cat = f.category_id && this.categories.length
+        ? this.categories.find(c => c.id === f.category_id)
+        : null;
+      f.content_categories = cat ? { id: cat.id, name: cat.name, description: cat.description } : null;
+    });
   }
 
   getFilteredFlows() {

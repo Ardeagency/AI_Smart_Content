@@ -387,24 +387,35 @@ AS $$
 DECLARE
     v_result JSONB;
 BEGIN
+    -- Usar CTE para evitar "aggregate function calls cannot be nested" (ORDER BY con agregado dentro de jsonb_agg)
+    WITH ranked AS (
+        SELECT
+            u.id AS user_id,
+            COALESCE(u.full_name, u.email) AS user_name,
+            u.email AS user_email,
+            COUNT(DISTINCT fo.id) AS total_productions,
+            COUNT(DISTINCT fr.id) AS total_runs,
+            MAX(GREATEST(fr.created_at, fo.created_at)) AS last_activity
+        FROM organization_members om
+        INNER JOIN users u ON u.id = om.user_id
+        LEFT JOIN flow_runs fr ON fr.user_id = u.id
+        LEFT JOIN runs_outputs fo ON fo.run_id = fr.id
+        WHERE om.organization_id = p_organization_id
+        GROUP BY u.id, u.full_name, u.email
+    )
     SELECT jsonb_agg(
         jsonb_build_object(
-            'user_id', u.id,
-            'user_name', COALESCE(u.full_name, u.email),
-            'user_email', u.email,
-            'total_productions', COUNT(DISTINCT fo.id),
-            'total_runs', COUNT(DISTINCT fr.id),
-            'last_activity', MAX(GREATEST(fr.created_at, fo.created_at))
+            'user_id', ranked.user_id,
+            'user_name', ranked.user_name,
+            'user_email', ranked.user_email,
+            'total_productions', ranked.total_productions,
+            'total_runs', ranked.total_runs,
+            'last_activity', ranked.last_activity
         )
-        ORDER BY COUNT(DISTINCT fo.id) DESC
+        ORDER BY ranked.total_productions DESC
     )
     INTO v_result
-    FROM organization_members om
-    INNER JOIN users u ON u.id = om.user_id
-    LEFT JOIN flow_runs fr ON fr.user_id = u.id
-    LEFT JOIN runs_outputs fo ON fo.run_id = fr.id
-    WHERE om.organization_id = p_organization_id
-    GROUP BY u.id, u.full_name, u.email;
+    FROM ranked;
 
     RETURN COALESCE(v_result, jsonb_build_array());
 END;
