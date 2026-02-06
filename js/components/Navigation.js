@@ -601,24 +601,35 @@ class Navigation {
   }
 
   /**
-   * Actualizar enlace activo
+   * Actualizar enlace activo.
+   * Solo se marca activo el enlace con la ruta más específica (más larga) que coincida,
+   * para evitar que /studio y /studio/catalog queden ambos activos.
    */
   updateActiveLink() {
     const currentPath = window.location.pathname;
-    
-    document.querySelectorAll('.nav-link, .nav-submenu-link').forEach(link => {
-      link.classList.remove('active');
+    const links = document.querySelectorAll('.nav-link[data-route], .nav-submenu-link[data-route]');
+
+    links.forEach(link => link.classList.remove('active'));
+
+    let bestMatch = null;
+    let bestLength = 0;
+    links.forEach(link => {
       const route = link.dataset.route;
-      if (route && currentPath.startsWith(route)) {
-        link.classList.add('active');
-        
-        // Abrir submenú padre si existe
-        const parent = link.closest('.has-submenu');
-        if (parent) {
-          parent.classList.add('submenu-open');
-        }
+      if (!route || !currentPath.startsWith(route)) return;
+      // Exigir que tras la ruta venga fin de path o /
+      const after = currentPath.slice(route.length);
+      if (after !== '' && after !== '/' && !after.startsWith('/')) return;
+      if (route.length > bestLength) {
+        bestLength = route.length;
+        bestMatch = link;
       }
     });
+
+    if (bestMatch) {
+      bestMatch.classList.add('active');
+      const parent = bestMatch.closest('.has-submenu');
+      if (parent) parent.classList.add('submenu-open');
+    }
   }
 
   /**
