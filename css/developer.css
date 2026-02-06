@@ -63,6 +63,31 @@
 }
 
 /* ==========================================
+   Tema Living/Brands en TODAS las páginas de desarrollador
+   Redefinir variables dentro de cada vista para que cards, bordes y fondos
+   sean los mismos que Living/Brands (sin gris azulado).
+   ========================================== */
+/* Contenedores de vistas dev: tema Living/Brands aplicado por herencia */
+.dev-dashboard-container,
+.dev-flows-container,
+.dev-logs-container,
+.dev-test-container,
+.dev-webhooks-container,
+.dev-lead-container,
+.builder-main,
+.builder-header,
+.builder-footer,
+.builder-sidebar,
+.builder-canvas-wrapper {
+  --bg-primary: var(--living-bg-deep, #0A0C0F);
+  --bg-secondary: var(--living-bg-surface, #0E1012);
+  --bg-card: var(--living-bg-card, rgba(21, 23, 28, 0.6));
+  --bg-hover: rgba(21, 23, 28, 0.9);
+  --border-color: rgba(255, 255, 255, 0.06);
+}
+
+
+/* ==========================================
    Dashboard de desarrollador
    ========================================== */
 .dev-dashboard-container,
