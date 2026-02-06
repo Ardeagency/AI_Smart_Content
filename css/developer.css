@@ -1547,14 +1547,14 @@ body.sidebar-collapsed .builder-header {
 }
 
 /* Main Builder Container */
-/* Sin margin superior; scroll propio en cada bloque (componentes, canvas, propiedades). */
+/* Sin margin ni padding superior; scroll propio en cada bloque. */
 .builder-main {
   display: grid;
   grid-template-columns: 260px 1fr 280px;
   grid-template-rows: 1fr;
   margin: 0;
-  padding-top: 56px;
-  height: calc(100vh - 56px);
+  padding: 0;
+  height: 100vh;
   min-height: 0;
   overflow: hidden;
 }
