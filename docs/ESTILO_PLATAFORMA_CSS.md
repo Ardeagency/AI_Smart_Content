@@ -14,7 +14,7 @@ Todas las vistas deben usar el **mismo tema**: fondo oscuro (Living/Brands), nar
 
 | CSS | Cambios aplicados |
 |-----|-------------------|
-| **product-detail.css** | Fondo `--living-bg-deep`; cards con `--living-bg-card` y borde sutil; eliminado gradiente propio. |
+| **product-detail.css** | Eliminado; el detalle de producto se hará desde cero. |
 | **audiences.css** | Contenedor `--living-bg-deep`; secciones `--living-bg-card` y borde. |
 | **campaigns.css** | Contenedor `--living-bg-deep`; tabs con borde plataforma. |
 | **content.css** | Contenedor `--living-bg-deep`; filtros `--living-bg-surface`; preview `--living-bg-card`. |
@@ -36,5 +36,5 @@ Todas las vistas deben usar el **mismo tema**: fondo oscuro (Living/Brands), nar
 
 - Fondos con `#121416`, `#1B1D1F`, `#2a2a2a` u otros grises sueltos.
 - Bordes con `rgba(236, 235, 218, 0.1)` o tonos amarillos/grises de texto.
-- Gradientes o paletas propias por vista (ej. antiguo product-detail).
+- Gradientes o paletas propias por vista.
 - Color de acento morado o verde lima en la UI principal.
