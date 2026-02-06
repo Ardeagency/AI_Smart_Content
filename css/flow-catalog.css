@@ -1,11 +1,334 @@
 /**
- * Flow Catalog - Contenedor en blanco
+ * Flow Catalog - Feed inteligente (Netflix/Spotify style)
+ * Hero carousel + categorías + filas horizontales + flow cards
  */
 .flow-catalog {
-  min-height: 60vh;
+  min-height: 100vh;
   width: 100%;
+  padding-bottom: 3rem;
+  background: var(--bg-primary, #0e0f12);
 }
 
-.flow-catalog--blank {
-  /* Hoja en blanco: sin contenido adicional */
+.flow-catalog-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  gap: 1rem;
+  color: var(--text-muted, #6b6b6b);
+}
+.flow-catalog-loading .fa-spin { font-size: 2rem; color: var(--accent-warm, #e09145); }
+
+/* ---------- HERO CAROUSEL ---------- */
+.flow-catalog-hero-section {
+  position: relative;
+  width: 100%;
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+.flow-catalog-hero-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  gap: 0;
+  padding: 0 3rem;
+}
+.flow-catalog-hero-track::-webkit-scrollbar { height: 6px; }
+.flow-catalog-hero-track::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+
+.flow-hero-slide {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  min-height: 320px;
+}
+.flow-hero-slide-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: center;
+  min-height: 320px;
+  padding: 2rem 2.5rem;
+  background: linear-gradient(135deg, rgba(224, 145, 69, 0.08) 0%, rgba(0,0,0,0.5) 50%);
+  border-radius: 16px;
+  margin: 0 0.5rem;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+@media (max-width: 768px) {
+  .flow-hero-slide-inner { grid-template-columns: 1fr; padding: 1.5rem; }
+  .flow-hero-slide-media { order: -1; }
+}
+.flow-hero-slide-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary, #ecebda);
+  margin: 0 0 0.5rem 0;
+  line-height: 1.3;
+}
+.flow-hero-slide-sub {
+  font-size: 0.95rem;
+  color: var(--text-secondary, #a0a0a0);
+  margin: 0 0 0.75rem 0;
+}
+.flow-hero-slide-desc {
+  font-size: 0.9rem;
+  color: var(--text-muted, #6b6b6b);
+  margin: 0 0 1.25rem 0;
+  line-height: 1.45;
+}
+.flow-hero-slide-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--bg-primary, #1a1a1a);
+  background: var(--accent-warm, #e09145);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.flow-hero-slide-cta:hover {
+  background: var(--accent-warm-hover, #e8a055);
+  transform: translateY(-1px);
+}
+.flow-hero-slide-media {
+  border-radius: 12px;
+  overflow: hidden;
+  aspect-ratio: 16/10;
+  background: rgba(0,0,0,0.3);
+}
+.flow-hero-slide-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.flow-hero-slide-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.25);
+  font-size: 3rem;
+}
+.flow-hero-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: var(--text-muted);
+}
+
+.flow-catalog-hero-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.6);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  transition: background 0.2s, transform 0.2s;
+}
+.flow-catalog-hero-nav:hover {
+  background: rgba(224, 145, 69, 0.4);
+  transform: translateY(-50%) scale(1.05);
+}
+.flow-catalog-hero-prev { left: 0.5rem; }
+.flow-catalog-hero-next { right: 0.5rem; }
+
+/* ---------- ROW SECTIONS ---------- */
+.flow-catalog-row-section {
+  padding: 0 2rem 2rem;
+}
+.flow-catalog-row-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-primary, #ecebda);
+  margin: 0 0 1rem 0;
+}
+.flow-catalog-row-scroll {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+.flow-catalog-row-scroll::-webkit-scrollbar { height: 6px; }
+.flow-catalog-row-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+
+/* ---------- CATEGORIES STRIP ---------- */
+.flow-catalog-categories-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+.flow-catalog-category-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary, #a0a0a0);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 999px;
+  text-decoration: none;
+  transition: color 0.2s, background 0.2s, border-color 0.2s;
+  white-space: nowrap;
+}
+.flow-catalog-category-chip:hover {
+  color: var(--text-primary, #ecebda);
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.18);
+}
+.flow-catalog-category-chip.active {
+  color: var(--bg-primary, #1a1a1a);
+  background: var(--accent-warm, #e09145);
+  border-color: var(--accent-warm, #e09145);
+}
+.flow-catalog-sub-chip {
+  cursor: pointer;
+  font-family: inherit;
+}
+.flow-catalog-subcategories-strip .flow-catalog-category-chip.active {
+  background: rgba(224, 145, 69, 0.25);
+  border-color: rgba(224, 145, 69, 0.5);
+  color: var(--accent-warm, #e09145);
+}
+
+/* ---------- FLOW CARD ---------- */
+.flow-card {
+  flex: 0 0 200px;
+  width: 200px;
+  scroll-snap-align: start;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  display: block;
+  text-align: left;
+}
+.flow-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  border-color: rgba(255,255,255,0.15);
+}
+.flow-card:focus {
+  outline: 2px solid var(--accent-warm, #e09145);
+  outline-offset: 2px;
+}
+.flow-card-media {
+  position: relative;
+  aspect-ratio: 16/10;
+  background: rgba(0,0,0,0.2);
+}
+.flow-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.flow-card-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.25);
+  font-size: 2rem;
+}
+.flow-card-badges {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  pointer-events: none;
+}
+.flow-card-badge {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-radius: 6px;
+  background: rgba(0,0,0,0.6);
+  color: var(--text-primary, #ecebda);
+}
+.flow-card-badge--new {
+  background: rgba(76, 175, 80, 0.9);
+  color: #fff;
+}
+.flow-card-badge--trending {
+  background: var(--accent-warm, #e09145);
+  color: var(--bg-primary, #1a1a1a);
+}
+.flow-card-badge--auto {
+  background: rgba(255,255,255,0.2);
+}
+.flow-card-body {
+  padding: 1rem;
+}
+.flow-card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary, #ecebda);
+  margin: 0 0 0.25rem 0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.flow-card-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-muted, #6b6b6b);
+  margin: 0 0 0.5rem 0;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.flow-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.7rem;
+  color: var(--text-muted, #6b6b6b);
+}
+.flow-card-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.flow-card-cost {
+  margin-left: auto;
+  color: var(--accent-warm, #e09145);
+  font-weight: 500;
+}
+
+/* ---------- GALLERY BY SUBCATEGORY (category view) ---------- */
+.flow-catalog-gallery-by-sub {
+  padding: 0 2rem 2rem;
+}
+.flow-catalog-sub-row .flow-catalog-row-scroll {
+  margin-bottom: 1.5rem;
 }

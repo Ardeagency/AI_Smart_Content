@@ -176,12 +176,6 @@ class App {
         requiresAuth: true,
         redirectIfAuth: false
       });
-
-      // Product detail
-      this.router.register('/org/:orgId/product-detail/:brandId/:productId', window.ProductsView, {
-        requiresAuth: true,
-        redirectIfAuth: false
-      });
     }
 
     if (viewsAvailable.StudioView) {
@@ -193,7 +187,11 @@ class App {
     }
 
     if (viewsAvailable.FlowCatalogView) {
-      // Catálogo de flujos (dentro de org)
+      // Catálogo de flujos (dentro de org) - view por categoría debe ir antes para que el router matchee :categoryId
+      this.router.register('/org/:orgId/studio/catalog/:categoryId', window.FlowCatalogView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
       this.router.register('/org/:orgId/studio/catalog', window.FlowCatalogView, {
         requiresAuth: true,
         redirectIfAuth: false
@@ -296,6 +294,10 @@ class App {
     }
 
     if (viewsAvailable.FlowCatalogView) {
+      this.router.register('/studio/catalog/:categoryId', window.FlowCatalogView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
       this.router.register('/studio/catalog', window.FlowCatalogView, {
         requiresAuth: true,
         redirectIfAuth: false
