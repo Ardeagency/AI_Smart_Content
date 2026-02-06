@@ -17,9 +17,12 @@
   --dev-error: #ef4444;
   --dev-critical: #dc2626;
   --dev-info: #3b82f6;
-  /* Superficies del tema oscuro de la plataforma */
-  --dev-bg-card: var(--bg-card);
+  /* Widgets/cards: mismos colores que Living y Brands (no gris azulado) */
+  --dev-bg-card: var(--living-bg-card, rgba(21, 23, 28, 0.6));
+  --dev-bg-card-hover: var(--living-bg-card-hover, rgba(21, 23, 28, 0.8));
   --dev-border: rgba(224, 145, 69, 0.2);
+  /* Borde sutil para cards, como en Living (no el border-color azulado de base) */
+  --dev-card-border: rgba(255, 255, 255, 0.06);
 }
 
 /* ==========================================
@@ -68,7 +71,7 @@
   padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
-  background: var(--bg-primary);
+  background: var(--living-bg-deep, #0A0C0F);
   min-height: 100vh;
 }
 
@@ -128,13 +131,14 @@
   gap: 16px;
   padding: 20px;
   background: var(--dev-bg-card);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--dev-card-border);
   border-radius: 12px;
   transition: all 0.2s ease;
 }
 
 .dev-stat-card:hover {
-  border-color: var(--dev-primary);
+  background: var(--dev-bg-card-hover);
+  border-color: rgba(224, 145, 69, 0.3);
   transform: translateY(-2px);
 }
 
@@ -196,7 +200,7 @@
    ========================================== */
 .dev-section {
   background: var(--dev-bg-card);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--dev-card-border);
   border-radius: 12px;
   overflow: hidden;
 }
@@ -206,7 +210,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 20px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--dev-card-border);
 }
 
 .dev-section-title {
@@ -247,7 +251,7 @@
   align-items: center;
   gap: 12px;
   padding: 14px 20px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--dev-card-border);
   cursor: pointer;
   transition: background 0.2s;
 }
@@ -439,7 +443,7 @@
 .dev-runs-table td {
   padding: 12px 16px;
   text-align: left;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--dev-card-border);
 }
 
 .dev-runs-table th {
@@ -448,7 +452,7 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--text-secondary);
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.15);
 }
 
 .dev-runs-table td {
@@ -614,7 +618,7 @@
 
 .dev-flow-card {
   background: var(--dev-bg-card);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--dev-card-border);
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
@@ -622,15 +626,16 @@
 }
 
 .dev-flow-card:hover {
-  border-color: var(--dev-primary);
+  background: var(--dev-bg-card-hover);
+  border-color: rgba(224, 145, 69, 0.3);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(224, 145, 69, 0.15);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
 .dev-flow-card-header {
   position: relative;
   height: 140px;
-  background: var(--bg-secondary);
+  background: var(--living-bg-surface, #0E1012);
 }
 
 .dev-flow-card-image {
@@ -702,8 +707,8 @@
   display: flex;
   gap: 16px;
   padding: 12px 16px;
-  border-top: 1px solid var(--border-color);
-  background: rgba(0, 0, 0, 0.1);
+  border-top: 1px solid var(--dev-card-border);
+  background: rgba(0, 0, 0, 0.08);
 }
 
 .dev-flow-stat {
@@ -722,7 +727,7 @@
   display: flex;
   gap: 8px;
   padding: 12px 16px;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--dev-card-border);
 }
 
 .dev-flow-action-btn {
@@ -808,7 +813,7 @@
 .dev-logs-table td {
   padding: 12px 16px;
   text-align: left;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--dev-card-border);
 }
 
 .dev-logs-table th {
@@ -3047,7 +3052,7 @@ body.sidebar-collapsed .builder-header {
 .dev-test-container {
   min-height: 100vh;
   padding: 24px;
-  background: var(--bg-primary);
+  background: var(--living-bg-deep, #0A0C0F);
 }
 
 @media (max-width: 768px) {
@@ -3583,8 +3588,8 @@ body.sidebar-collapsed .builder-header {
 }
 
 .config-section {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--dev-bg-card);
+  border: 1px solid var(--dev-card-border);
   border-radius: 12px;
   padding: 16px;
 }
@@ -4218,8 +4223,8 @@ body.sidebar-collapsed .builder-header {
 .test-history-panel {
   display: flex;
   flex-direction: column;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--dev-bg-card);
+  border: 1px solid var(--dev-card-border);
   border-radius: 12px;
   overflow: hidden;
 }
@@ -4681,7 +4686,7 @@ body.sidebar-collapsed .builder-header {
   padding: 24px;
   padding-top: calc(48px + 24px);
   margin-left: 0;
-  background: var(--bg-primary);
+  background: var(--living-bg-deep, #0A0C0F);
 }
 
 @media (max-width: 768px) {
@@ -4888,8 +4893,8 @@ body.sidebar-collapsed .builder-header {
 
 /* Table */
 .webhooks-table-container {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--dev-bg-card);
+  border: 1px solid var(--dev-card-border);
   border-radius: 12px;
   overflow: hidden;
 }
