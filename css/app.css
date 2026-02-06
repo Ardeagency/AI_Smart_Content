@@ -21,6 +21,13 @@
     box-sizing: border-box;
 }
 
+/* Builder: scroll por bloques, no en todo el container */
+#app-container:has(main.builder-main) {
+    overflow: hidden;
+    height: 100vh;
+    min-height: 100vh;
+}
+
 /* Evitar desborde a la derecha en todas las vistas: hijos directos no pueden exceder el ancho. */
 #app-container > main,
 #app-container > div {

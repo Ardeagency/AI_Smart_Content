@@ -1547,13 +1547,16 @@ body.sidebar-collapsed .builder-header {
 }
 
 /* Main Builder Container */
-/* El offset del sidebar lo aplica #app-container. */
+/* Sin margin superior; scroll propio en cada bloque (componentes, canvas, propiedades). */
 .builder-main {
   display: grid;
   grid-template-columns: 260px 1fr 280px;
-  margin-top: 56px;
-  margin-left: 0;
-  min-height: calc(100vh - 56px);
+  grid-template-rows: 1fr;
+  margin: 0;
+  padding-top: 56px;
+  height: calc(100vh - 56px);
+  min-height: 0;
+  overflow: hidden;
 }
 
 @media (max-width: 1200px) {
@@ -1583,12 +1586,14 @@ body.sidebar-collapsed .builder-header {
   }
 }
 
-/* Sidebar del Builder */
+/* Sidebar del Builder: scroll propio */
 .builder-sidebar {
   background: var(--bg-secondary);
   border-right: 1px solid var(--border-color);
+  min-height: 0;
   overflow-y: auto;
-  height: calc(100vh - 56px);
+  display: flex;
+  flex-direction: column;
 }
 
 .builder-sidebar:last-child {
@@ -1709,12 +1714,13 @@ body.sidebar-collapsed .builder-header {
   text-overflow: ellipsis;
 }
 
-/* Canvas Wrapper */
+/* Canvas Wrapper: scroll propio del panel central */
 .builder-canvas-wrapper {
   display: flex;
   flex-direction: column;
   background: var(--bg-primary);
-  overflow: hidden;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 /* Tabs del Builder */
