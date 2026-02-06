@@ -572,24 +572,25 @@ class BrandsView extends BaseView {
       }
       return;
     }
-    
-    const colors = (this.brandColors || []).slice(0, 6); // Máx 6 colores
-    
-    if (colors.length === 0) {
-      container.innerHTML = '<div style="color: var(--text-muted, #6B7280); font-size: 0.75rem; padding: 0.5rem 0;">No colors defined</div>';
-      return;
-    }
 
-    container.innerHTML = colors.map(color => {
+    const MAX_COLORS = 4;
+    const colors = (this.brandColors || []).slice(0, MAX_COLORS);
+
+    const swatchesHtml = colors.map(color => {
       const hex = color.hex_value || color.hex_code || color.color_value || color.hex || '#000000';
       const colorId = color.id;
-      
       return `
         <div class="color-swatch" style="background: ${hex};" data-color-id="${colorId}">
           <button type="button" class="color-delete-btn" title="Eliminar" aria-label="Eliminar color">×</button>
         </div>
       `;
     }).join('');
+
+    const addBtnHtml = colors.length < MAX_COLORS
+      ? `<button type="button" class="color-swatch-add-btn" title="Agregar color" aria-label="Agregar color"><span>+</span></button>`
+      : '';
+
+    container.innerHTML = swatchesHtml + addBtnHtml;
 
     container.querySelectorAll('.color-swatch').forEach(swatch => {
       const colorId = swatch.getAttribute('data-color-id');
@@ -606,17 +607,25 @@ class BrandsView extends BaseView {
         if (color) this.openColorEditor(color);
       });
     });
+
+    const addBtn = container.querySelector('.color-swatch-add-btn');
+    if (addBtn) {
+      addBtn.addEventListener('click', () => this.openColorEditor(null));
+    }
   }
 
   /**
    * Abre el editor de color (rueda de tono + saturación/luminosidad + hex + formato).
-   * Al aplicar guarda en brand_colors y actualiza la UI.
+   * Si color es null, modo "agregar"; si es objeto, modo "editar". Límite 4 colores.
    */
   openColorEditor(color) {
-    const hex = (color.hex_value || color.hex_code || color.hex || '#000000').replace(/^#/, '');
+    const isNew = !color || !color.id;
+    const hex = color
+      ? (color.hex_value || color.hex_code || color.hex || '#000000').replace(/^#/, '')
+      : '6E3DE9';
     const initialHex = `#${hex.padStart(6, '0').slice(0, 6)}`;
     let { h, s, l } = this.hexToHSL(initialHex);
-    let colorId = color.id;
+    const colorId = isNew ? null : color.id;
     const container = this.container || document.getElementById('app-container');
     if (!container) return;
 
@@ -641,7 +650,8 @@ class BrandsView extends BaseView {
 
     const applyColor = async () => {
       const hexToSave = this.hslToHex(h, s, l);
-      await this.updateColor(colorId, hexToSave);
+      if (isNew) await this.createColor(hexToSave);
+      else await this.updateColor(colorId, hexToSave);
       closeEditor();
     };
 
@@ -826,6 +836,30 @@ class BrandsView extends BaseView {
     } catch (error) {
       console.error('❌ Error al actualizar color:', error);
       alert('Error al actualizar el color. Por favor, intenta de nuevo.');
+    }
+  }
+
+  async createColor(hexValue) {
+    if (!this.supabase || !this.brandData) return;
+    const hex = (hexValue || '').replace(/^#/, '').trim();
+    if (!/^[0-9A-Fa-f]{6}$/.test(hex)) return;
+    const currentCount = (this.brandColors || []).length;
+    if (currentCount >= 4) return;
+    try {
+      const { error } = await this.supabase
+        .from('brand_colors')
+        .insert({
+          brand_id: this.brandData.id,
+          color_role: 'Color',
+          hex_value: `#${hex}`
+        });
+      if (error) throw error;
+      await this.loadData();
+      this.renderCards();
+      this.applyBrandBackgroundGradient();
+    } catch (error) {
+      console.error('❌ Error al crear color:', error);
+      alert('Error al agregar el color. Por favor, intenta de nuevo.');
     }
   }
 

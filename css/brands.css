@@ -665,6 +665,33 @@ h1.brand-name-large[contenteditable="true"]:hover,
     transform: scale(1.1);
 }
 
+/* Botón agregar color (máx 4 colores) */
+.color-swatch-add-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px dashed rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+
+.color-swatch-add-btn:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.color-swatch-add-btn span {
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
 /* ============================================
    EDITOR DE COLOR (modal: rueda tono + SL + hex + formato)
    ============================================ */
