@@ -285,17 +285,10 @@ body.sidebar-collapsed #app-container .main-header,
     background: var(--bg-hover);
 }
 
-.header-user-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    overflow: hidden;
+/* Avatar del header quitado: no combina con la plataforma; solo se muestra el botón menú */
+.header-user-avatar,
+.user-avatar {
+    display: none !important;
 }
 
 .header-user-initials {
@@ -1589,35 +1582,12 @@ body.sidebar-collapsed .app-header.with-sidebar {
     flex-shrink: 0;
 }
 
-/* User Avatar y Dropdown */
+/* Usuario en header: solo botón menú (avatar quitado por diseño) */
 .header-user {
     display: flex;
     align-items: center;
     gap: 8px;
     position: relative;
-}
-
-.user-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-}
-
-.user-avatar span {
-    font-size: 14px;
-    font-weight: 600;
-    color: white;
-}
-
-.user-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
 }
 
 .user-menu-btn {

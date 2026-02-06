@@ -172,10 +172,7 @@ class Navigation {
           </div>
           <div class="header-right">
             <div class="header-user" id="headerUser">
-              <div class="user-avatar" id="userAvatar">
-                <span id="userInitials">AA</span>
-              </div>
-              <button class="user-menu-btn" id="userMenuBtn">
+              <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
                 <i class="fas fa-chevron-down"></i>
               </button>
             </div>
@@ -206,10 +203,7 @@ class Navigation {
           </div>
           <div class="header-right">
             <div class="header-user" id="headerUser">
-              <div class="user-avatar" id="userAvatar">
-                <span id="userInitials">AA</span>
-              </div>
-              <button class="user-menu-btn" id="userMenuBtn">
+              <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
                 <i class="fas fa-chevron-down"></i>
               </button>
             </div>
@@ -345,10 +339,7 @@ class Navigation {
           </div>
           <div class="header-right">
             <div class="header-user" id="headerUser">
-              <div class="user-avatar" id="userAvatar">
-                <span id="userInitials">AA</span>
-              </div>
-              <button class="user-menu-btn" id="userMenuBtn">
+              <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
                 <i class="fas fa-chevron-down"></i>
               </button>
             </div>
@@ -726,17 +717,11 @@ class Navigation {
       const user = window.authService?.getCurrentUser();
       if (!user) return;
 
-      // Actualizar avatar e iniciales (full_name puede venir de user_profiles vía currentUser)
-      const initialsEl = document.getElementById('userInitials');
+      // Actualizar nombre y email en el dropdown (avatar ya no se muestra en header)
       const nameEl = document.getElementById('userDropdownName');
       const emailEl = document.getElementById('userDropdownEmail');
 
       const displayName = user.full_name || user.user_metadata?.full_name || user.email || '';
-      if (initialsEl) {
-        const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
-        initialsEl.textContent = initials;
-      }
-
       if (nameEl) {
         nameEl.textContent = displayName || 'Usuario';
       }

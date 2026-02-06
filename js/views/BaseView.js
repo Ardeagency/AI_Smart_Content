@@ -364,12 +364,9 @@ class BaseView {
                 </div>
             </div>
             
-            <!-- ZONA DERECHA: USUARIO -->
+            <!-- ZONA DERECHA: USUARIO (solo botón menú, sin avatar) -->
             <div class="header-right">
                 <div class="header-user" id="headerUser">
-                    <div class="header-user-avatar" id="headerUserAvatar">
-                        <span class="header-user-initials" id="headerUserInitials">U</span>
-                    </div>
                     <button class="header-user-chevron" id="headerUserChevron" aria-label="Menú de usuario">
                         <i class="fas fa-chevron-down"></i>
                     </button>
@@ -538,12 +535,9 @@ class BaseView {
     // Actualizar zona izquierda con nuevo formato
     this.updateHeaderContext(section, null, null);
 
-    // Actualizar zona derecha con nuevo formato de usuario
+    // Actualizar zona derecha con nuevo formato de usuario (solo botón, sin avatar)
     headerRight.innerHTML = `
       <div class="header-user" id="headerUser">
-        <div class="header-user-avatar" id="headerUserAvatar">
-          <span class="header-user-initials" id="headerUserInitials">U</span>
-        </div>
         <button class="header-user-chevron" id="headerUserChevron" aria-label="Menú de usuario">
           <i class="fas fa-chevron-down"></i>
         </button>
