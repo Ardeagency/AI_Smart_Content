@@ -445,7 +445,7 @@ class Navigation {
               </a>
               <a href="/dev/lead/ai-vectors" class="nav-submenu-link" data-route="/dev/lead/ai-vectors">
                 <i class="fas fa-brain"></i>
-                <span>AI Global Vectors</span>
+                <span>Base de conocimientos IA</span>
               </a>
               <a href="/dev/lead/references" class="nav-submenu-link" data-route="/dev/lead/references">
                 <i class="fas fa-images"></i>
@@ -660,7 +660,7 @@ class Navigation {
       '/dev/lead/team': 'Equipo',
       '/dev/lead/categories': 'Categorías',
       '/dev/lead/input-schemas': 'Input Schemas',
-      '/dev/lead/ai-vectors': 'AI Global Vectors',
+      '/dev/lead/ai-vectors': 'Base de conocimientos IA',
       '/dev/lead/references': 'Referencias visuales'
     };
 

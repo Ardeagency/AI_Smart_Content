@@ -17,7 +17,7 @@
 | `/dev/lead/team` | DevLeadTeamView | Equipo (solo Lead) |
 | `/dev/lead/categories` | DevLeadCategoriesView | Categorías (solo Lead) |
 | `/dev/lead/input-schemas` | DevLeadInputSchemasView | Input Schemas (solo Lead) |
-| `/dev/lead/ai-vectors` | DevLeadVectorsView | AI Global Vectors (solo Lead) |
+| `/dev/lead/ai-vectors` | DevLeadVectorsView | Base de conocimientos IA (solo Lead) |
 | `/dev/lead/references` | DevLeadReferencesView | Referencias visuales (solo Lead) |
 
 **Rol Lead:** Solo `user_profiles.dev_role = 'lead'` ve el menú Lead y accede a estas rutas. El enum `developer_role_type` debe incluir `'lead'`.
