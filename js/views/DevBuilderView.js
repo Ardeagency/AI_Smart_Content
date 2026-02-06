@@ -563,6 +563,8 @@ class DevBuilderView extends BaseView {
     this.updateJsonPreview();
     this.renderFooter();
     this.applyFlowTypeUI();
+    // Aplicar layout de la pestaña activa al cargar (oculta Componentes/Propiedades si está en Configuración)
+    this.applyTabLayout('settings');
   }
 
   async initSupabase() {
