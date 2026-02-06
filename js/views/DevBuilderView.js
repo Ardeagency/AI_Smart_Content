@@ -140,8 +140,8 @@ class DevBuilderView extends BaseView {
 
       <!-- Main Builder Container -->
       <main class="builder-main">
-        <!-- Panel izquierdo: Componentes -->
-        <aside class="builder-sidebar builder-components">
+        <!-- Panel izquierdo: Componentes (oculto por defecto; solo visible en pestaña Inputs) -->
+        <aside class="builder-sidebar builder-components" style="display: none;">
           <div class="builder-sidebar-header">
             <h3><i class="ph ph-puzzle-piece"></i> Componentes</h3>
           </div>
@@ -414,8 +414,8 @@ class DevBuilderView extends BaseView {
           </div>
         </div>
 
-        <!-- Panel derecho: Propiedades del campo seleccionado -->
-        <aside class="builder-sidebar builder-properties">
+        <!-- Panel derecho: Propiedades (oculto por defecto; solo visible en pestaña Inputs) -->
+        <aside class="builder-sidebar builder-properties" style="display: none;">
           <div class="builder-sidebar-header">
             <h3><i class="ph ph-sliders-horizontal"></i> Propiedades</h3>
           </div>
