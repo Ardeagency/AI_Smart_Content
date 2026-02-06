@@ -4,19 +4,22 @@
  */
 
 /* ==========================================
-   Variables específicas del portal dev
+   Variables portal dev - Mismo tema que Living/Brands
+   Tema oscuro + naranja como color principal (NO morado)
    ========================================== */
 :root {
-  --dev-primary: #7c3aed;
-  --dev-primary-light: #8b5cf6;
-  --dev-primary-dark: #6d28d9;
+  /* Naranja: color principal de la plataforma (igual que hogar, living, brands) */
+  --dev-primary: var(--accent-warm, #e09145);
+  --dev-primary-light: var(--accent-yellow-hover, #f0a055);
+  --dev-primary-dark: #c87a3a;
   --dev-success: #10b981;
   --dev-warning: #f59e0b;
   --dev-error: #ef4444;
   --dev-critical: #dc2626;
   --dev-info: #3b82f6;
-  --dev-bg-card: rgba(30, 30, 35, 0.8);
-  --dev-border: rgba(124, 58, 237, 0.2);
+  /* Superficies del tema oscuro de la plataforma */
+  --dev-bg-card: var(--bg-card);
+  --dev-border: rgba(224, 145, 69, 0.2);
 }
 
 /* ==========================================
@@ -140,6 +143,8 @@
   padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
+  background: var(--bg-primary);
+  min-height: 100vh;
 }
 
 /* Header común */
@@ -212,7 +217,7 @@
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: rgba(124, 58, 237, 0.15);
+  background: rgba(224, 145, 69, 0.15);
   color: var(--dev-primary);
   display: flex;
   align-items: center;
@@ -327,7 +332,7 @@
 }
 
 .dev-flow-item:hover {
-  background: rgba(124, 58, 237, 0.05);
+  background: rgba(224, 145, 69, 0.05);
 }
 
 .dev-flow-icon {
@@ -694,7 +699,7 @@
 .dev-flow-card:hover {
   border-color: var(--dev-primary);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.15);
+  box-shadow: 0 8px 24px rgba(224, 145, 69, 0.15);
 }
 
 .dev-flow-card-header {
@@ -1106,7 +1111,7 @@
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  background: rgba(124, 58, 237, 0.1);
+  background: rgba(224, 145, 69, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2117,12 +2122,12 @@ body.sidebar-collapsed .builder-header {
 
 .builder-canvas.drag-active {
   border-color: var(--dev-primary);
-  background: rgba(124, 58, 237, 0.05);
+  background: rgba(224, 145, 69, 0.05);
 }
 
 .builder-canvas.drag-over {
   border-style: solid;
-  background: rgba(124, 58, 237, 0.1);
+  background: rgba(224, 145, 69, 0.1);
 }
 
 .canvas-empty-state {
@@ -2170,7 +2175,7 @@ body.sidebar-collapsed .builder-header {
 
 .canvas-field.selected {
   border-color: var(--dev-primary);
-  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+  box-shadow: 0 0 0 2px rgba(224, 145, 69, 0.2);
 }
 
 .canvas-field.dragging {
@@ -2215,7 +2220,7 @@ body.sidebar-collapsed .builder-header {
 .field-type {
   font-size: 0.6875rem;
   padding: 2px 6px;
-  background: rgba(124, 58, 237, 0.15);
+  background: rgba(224, 145, 69, 0.15);
   color: var(--dev-primary-light);
   border-radius: 4px;
 }
@@ -3393,8 +3398,8 @@ body.sidebar-collapsed .builder-header {
 .dev-lead-modal .modal-content {
   position: relative;
   z-index: 1;
-  background: #2a2a36;
-  border: 1px solid #454555;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   max-width: 440px;
   width: 100%;
@@ -3408,21 +3413,21 @@ body.sidebar-collapsed .builder-header {
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  border-bottom: 1px solid #454555;
-  background: #252530;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
 }
 
 .dev-lead-modal .modal-header h3 {
   margin: 0;
   font-size: 1.125rem;
   font-weight: 600;
-  color: #ececec;
+  color: var(--text-primary);
 }
 
 .dev-lead-modal .modal-close {
   background: none;
   border: none;
-  color: #a0a0b0;
+  color: var(--text-secondary);
   font-size: 1.5rem;
   cursor: pointer;
   padding: 0 4px;
@@ -3430,12 +3435,12 @@ body.sidebar-collapsed .builder-header {
 }
 
 .dev-lead-modal .modal-close:hover {
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .dev-lead-modal .modal-body {
   padding: 20px;
-  background: #2a2a36;
+  background: var(--bg-card);
 }
 
 .dev-lead-modal .modal-footer {
@@ -3443,8 +3448,8 @@ body.sidebar-collapsed .builder-header {
   justify-content: flex-end;
   gap: 12px;
   padding: 16px 20px;
-  border-top: 1px solid #454555;
-  background: #252530;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-secondary);
 }
 
 .dev-lead-modal .form-group {
@@ -3460,7 +3465,7 @@ body.sidebar-collapsed .builder-header {
   margin-bottom: 6px;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #e0e0e8;
+  color: var(--text-primary);
 }
 
 .dev-lead-modal .form-group input,
@@ -3468,17 +3473,17 @@ body.sidebar-collapsed .builder-header {
 .dev-lead-modal .form-group select {
   width: 100%;
   padding: 10px 12px;
-  background: #1c1c26;
-  border: 1px solid #454555;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
-  color: #ececec;
+  color: var(--text-primary);
   font-size: 0.875rem;
   box-sizing: border-box;
 }
 
 .dev-lead-modal .form-group input::placeholder,
 .dev-lead-modal .form-group textarea::placeholder {
-  color: #707080;
+  color: var(--text-muted);
 }
 
 .dev-lead-modal .form-group textarea {
@@ -3490,13 +3495,13 @@ body.sidebar-collapsed .builder-header {
   display: block;
   margin-top: 4px;
   font-size: 0.75rem;
-  color: #808090;
+  color: var(--text-muted);
 }
 
 .dev-lead-modal .modal-footer .btn-secondary {
-  background: #3a3a48;
-  border: 1px solid #555565;
-  color: #e0e0e8;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
   padding: 8px 16px;
   border-radius: 6px;
   cursor: pointer;
@@ -3504,8 +3509,8 @@ body.sidebar-collapsed .builder-header {
 }
 
 .dev-lead-modal .modal-footer .btn-secondary:hover {
-  background: #454555;
-  color: #fff;
+  background: var(--border-color);
+  color: var(--text-primary);
 }
 
 .dev-lead-modal .modal-footer .btn-primary {
@@ -3543,7 +3548,7 @@ body.sidebar-collapsed .builder-header {
   gap: 8px;
   cursor: pointer;
   font-size: 0.875rem;
-  color: #e0e0e8;
+  color: var(--text-primary);
 }
 
 .dev-lead-modal .toggle-label input[type="checkbox"] {
@@ -4370,7 +4375,7 @@ body.sidebar-collapsed .builder-header {
 }
 
 .history-item.running .history-status {
-  background: rgba(124, 58, 237, 0.15);
+  background: rgba(224, 145, 69, 0.15);
   color: var(--dev-primary);
 }
 
@@ -4837,7 +4842,7 @@ body.sidebar-collapsed .builder-header {
 }
 
 .stat-icon.total {
-  background: rgba(124, 58, 237, 0.15);
+  background: rgba(224, 145, 69, 0.15);
   color: var(--dev-primary);
 }
 
