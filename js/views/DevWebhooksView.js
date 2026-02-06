@@ -34,15 +34,17 @@ class DevWebhooksView extends BaseView {
 
   async onEnter() {
     if (window.authService) {
-      const isAuth = await window.authService.isAuthenticated();
+      const isAuth = await window.authService.checkAccess(true);
       if (!isAuth) {
-        window.router?.navigate('/login');
+        if (window.router) window.router.navigate('/login', true);
         return;
       }
     }
-    
-    if (window.navigation) {
-      window.navigation.switchMode('developer');
+    // Asegurar navegación en modo desarrollador (sin redirigir)
+    if (window.navigation && (!window.navigation.initialized || window.navigation.currentMode !== 'developer')) {
+      window.navigation.currentMode = 'developer';
+      window.navigation.initialized = false;
+      await window.navigation.render();
     }
   }
 
