@@ -28,12 +28,8 @@
 - Ambas rutas usan **DevTestView**.
 - **Recomendación:** Dejar una sola ruta canónica (por ejemplo `/dev/test`) y redirigir `/dev/runs` → `/dev/test`, o eliminar `/dev/runs` del router y del menú si no se enlaza en ningún sitio.
 
-### 2.2 Placeholders: Colaboradores, Marketplace, Documentación
-- **Problema:** El sidebar muestra "Colaboradores", "Marketplace" y "Documentación", pero al hacer clic el usuario ve Dashboard o Mis Flujos. Genera confusión.
-- **Opciones:**
-  - **A)** Ocultar estos 3 ítems del menú hasta tener vistas propias.
-  - **B)** Mantener las rutas pero mostrar una página "Próximamente" única (vista mínima con mensaje y enlace a Dashboard).
-  - **C)** Eliminar rutas y enlaces; añadirlos cuando existan las funcionalidades.
+### 2.2 ~~Placeholders: Colaboradores, Marketplace, Documentación~~ (hecho)
+- Eliminadas rutas y enlaces del menú: Colaboradores, Marketplace, Documentación (los flujos no se venden).
 
 ### 2.3 Código duplicado en vistas PaaS
 - **onEnter:** Parte de las vistas usa `authService.checkAccess(true)` + forzar `navigation.render()` en modo developer; otras usan `authService.isAuthenticated()` + `navigation.switchMode('developer')`. Conviene unificar:
@@ -72,7 +68,7 @@
 | Alta | Corregir el bug de redirección en DevBuilderView, DevTestView y DevWebhooksView (no usar `switchMode` en `onEnter`; alinear con el patrón de Dashboard/Flows/Logs). |
 | Alta | Unificar autenticación en todas las vistas PaaS (`checkAccess(true)` y mismo manejo de redirección a login). |
 | Media | Unificar `/dev/test` y `/dev/runs` (una ruta canónica o redirección). |
-| Media | Ocultar o reemplazar los ítems Colaboradores, Marketplace y Documentación hasta tener vistas reales o página "Próximamente". |
+| ~~Media~~ | ~~Ocultar Colaboradores, Marketplace, Documentación~~ → Eliminados. |
 | Baja | Poner `templatePath = null` (o eliminar) en DevDashboardView, DevFlowsView y DevLogsView. |
 
 Este documento refleja el estado del análisis en la fecha indicada. Tras aplicar las correcciones, conviene actualizar el doc o marcar las acciones realizadas.

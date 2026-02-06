@@ -1,0 +1,140 @@
+/**
+ * Catálogo de flujos - Agrupado por tipo (video, imagen, texto, etc.)
+ */
+.flow-catalog {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.flow-catalog-header {
+  margin-bottom: 2rem;
+}
+
+.flow-catalog-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--text-primary, #ecebda);
+  margin: 0 0 0.5rem 0;
+}
+
+.flow-catalog-subtitle {
+  font-size: 0.95rem;
+  color: var(--text-secondary, #a0a0a0);
+  margin: 0;
+}
+
+.flow-catalog-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.flow-catalog-section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary, #ecebda);
+  margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.flow-catalog-section-title i {
+  color: var(--accent-warm, #e09145);
+}
+
+.flow-catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.flow-catalog-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.flow-catalog-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+}
+
+.flow-catalog-card-media {
+  aspect-ratio: 16/10;
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flow-catalog-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.flow-catalog-card-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 2rem;
+}
+
+.flow-catalog-card-body {
+  padding: 1rem;
+}
+
+.flow-catalog-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #ecebda);
+  margin: 0 0 0.35rem 0;
+  line-height: 1.3;
+}
+
+.flow-catalog-card-desc {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #a0a0a0);
+  margin: 0 0 0.5rem 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.flow-catalog-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+}
+
+.flow-catalog-card-cat {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.flow-catalog-card-cost {
+  color: var(--accent-warm, #e09145);
+  font-weight: 500;
+}
+
+.flow-catalog-empty {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-secondary, #a0a0a0);
+}
+
+.flow-catalog-empty p {
+  margin: 0;
+}

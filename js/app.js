@@ -81,6 +81,7 @@ class App {
       HogarView: typeof window.HogarView !== 'undefined',
       LivingView: typeof window.LivingView !== 'undefined',
       StudioView: typeof window.StudioView !== 'undefined',
+      FlowCatalogView: typeof window.FlowCatalogView !== 'undefined',
       
       // Vistas PaaS (desarrolladores)
       DevDashboardView: typeof window.DevDashboardView !== 'undefined',
@@ -280,6 +281,13 @@ class App {
       });
     }
 
+    if (viewsAvailable.FlowCatalogView) {
+      this.router.register('/studio/catalog', window.FlowCatalogView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
+
     if (viewsAvailable.AudiencesView) {
       this.router.register('/audiences', window.AudiencesView, {
         requiresAuth: true,
@@ -392,30 +400,6 @@ class App {
 
     if (viewsAvailable.DevWebhooksView) {
       this.router.register('/dev/webhooks', window.DevWebhooksView, {
-        requiresAuth: true,
-        redirectIfAuth: false
-      });
-    }
-
-    // Colaboradores (placeholder)
-    if (viewsAvailable.DevDashboardView) {
-      this.router.register('/dev/collaborators', window.DevDashboardView, {
-        requiresAuth: true,
-        redirectIfAuth: false
-      });
-    }
-
-    // Marketplace (placeholder)
-    if (viewsAvailable.DevFlowsView) {
-      this.router.register('/dev/marketplace', window.DevFlowsView, {
-        requiresAuth: true,
-        redirectIfAuth: false
-      });
-    }
-
-    // Documentación (placeholder)
-    if (viewsAvailable.DevDashboardView) {
-      this.router.register('/dev/docs', window.DevDashboardView, {
         requiresAuth: true,
         redirectIfAuth: false
       });

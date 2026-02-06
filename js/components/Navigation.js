@@ -288,6 +288,14 @@ class Navigation {
             </a>
           </div>
 
+          <!-- Catálogo de flujos -->
+          <div class="nav-item">
+            <a href="${basePath}/studio/catalog" class="nav-link" data-route="${basePath}/studio/catalog" data-tooltip="Catálogo de flujos">
+              <i class="fas fa-th-large nav-icon"></i>
+              <span class="nav-text">Catálogo de flujos</span>
+            </a>
+          </div>
+
           <!-- Audiencias -->
           <div class="nav-item">
             <a href="${basePath}/audiences" class="nav-link" data-route="${basePath}/audiences" data-tooltip="Audiencias">
@@ -413,30 +421,6 @@ class Navigation {
                 <span>Webhooks</span>
               </a>
             </div>
-          </div>
-
-          <!-- Colaboradores -->
-          <div class="nav-item">
-            <a href="/dev/collaborators" class="nav-link" data-route="/dev/collaborators" data-tooltip="Colaboradores">
-              <i class="fas fa-user-friends nav-icon"></i>
-              <span class="nav-text">Colaboradores</span>
-            </a>
-          </div>
-
-          <!-- Marketplace -->
-          <div class="nav-item">
-            <a href="/dev/marketplace" class="nav-link" data-route="/dev/marketplace" data-tooltip="Marketplace">
-              <i class="fas fa-store nav-icon"></i>
-              <span class="nav-text">Marketplace</span>
-            </a>
-          </div>
-
-          <!-- Documentación -->
-          <div class="nav-item">
-            <a href="/dev/docs" class="nav-link" data-route="/dev/docs" data-tooltip="Documentación">
-              <i class="fas fa-book nav-icon"></i>
-              <span class="nav-text">Documentación</span>
-            </a>
           </div>
         </div>
 
@@ -629,6 +613,7 @@ class Navigation {
       '/brand': 'Marca',
       '/brands': 'Marca',
       '/products': 'Productos',
+      '/studio/catalog': 'Catálogo de flujos',
       '/studio': 'Studio',
       '/audiences': 'Audiencias',
       '/marketing': 'Marketing',
@@ -640,10 +625,7 @@ class Navigation {
       '/dev/builder': 'Builder',
       '/dev/test': 'Test de Flujos',
       '/dev/logs': 'Logs',
-      '/dev/webhooks': 'Webhooks',
-      '/dev/collaborators': 'Colaboradores',
-      '/dev/marketplace': 'Marketplace',
-      '/dev/docs': 'Documentación'
+      '/dev/webhooks': 'Webhooks'
     };
 
     for (const [route, title] of Object.entries(titles)) {

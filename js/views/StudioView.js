@@ -76,8 +76,28 @@ class StudioView extends BaseView {
     await this.initSupabase();
     await this.loadCredits();
     await this.loadFlows();
-    this.updateCreditsDisplay();
-    this.renderFlowsList();
+
+    const preselectedId = (window.appState && window.appState.get('selectedFlowId')) || localStorage.getItem('selectedFlowId');
+    if (preselectedId) {
+      const flow = this.flows.find(f => f.id === preselectedId);
+      if (flow) {
+        this.selectedFlow = flow;
+        this.updateCreditsDisplay();
+        this.renderFlowForm(flow);
+        const listEl = document.getElementById('studioFlowsList');
+        const formWrap = document.getElementById('studioFlowFormWrap');
+        if (listEl) listEl.style.display = 'none';
+        if (formWrap) formWrap.style.display = 'block';
+        const btn = document.getElementById('studioProducirBtn');
+        if (btn) btn.disabled = !flow.webhook_url;
+      }
+      if (window.appState) window.appState.set('selectedFlowId', null, true);
+      localStorage.removeItem('selectedFlowId');
+    } else {
+      this.updateCreditsDisplay();
+      this.renderFlowsList();
+    }
+
     this.setupEventListeners();
   }
 
