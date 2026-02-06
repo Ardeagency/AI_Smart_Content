@@ -1578,6 +1578,223 @@ body.sidebar-collapsed .builder-header {
   min-height: 0;
 }
 
+/* Solo la pestaña Inputs muestra componentes y propiedades; el resto usa una columna */
+.builder-main:not(.builder-tab-inputs-active) {
+  grid-template-columns: 1fr;
+}
+
+.builder-main.builder-tab-inputs-active {
+  grid-template-columns: 260px 1fr 280px;
+}
+
+/* Modo Sistema: flujo automatizado (sin componentes ni webhook) */
+.builder-main.builder-mode-automated.builder-tab-inputs-active {
+  grid-template-columns: 1fr 280px;
+}
+
+.builder-sidebar.builder-sidebar-hidden {
+  display: none !important;
+}
+
+/* Configuración / Técnico: formulario ancho completo */
+.builder-config-fullwidth {
+  max-width: 720px;
+}
+
+.flow-url-readonly {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.flow-url-readonly .flow-url-text {
+  flex: 1;
+  word-break: break-all;
+}
+
+.field-help.block {
+  display: block;
+  margin-top: 8px;
+}
+
+/* Ficha del Flujo */
+.builder-ficha-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.ficha-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.ficha-image {
+  aspect-ratio: 16/9;
+  background: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--text-muted);
+}
+
+.ficha-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ficha-body {
+  padding: 20px;
+}
+
+.ficha-title {
+  margin: 0 0 12px 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.ficha-description {
+  margin: 0 0 16px 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.ficha-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.ficha-stats {
+  display: flex;
+  gap: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.ficha-stats .ficha-stat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ficha-stats .ficha-stat i {
+  color: var(--dev-primary);
+}
+
+.ficha-sidebar {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  height: fit-content;
+}
+
+.ficha-sidebar h4 {
+  margin: 0 0 12px 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ficha-inputs-preview {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.ficha-inputs-empty {
+  margin: 0;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .builder-ficha-wrapper {
+    grid-template-columns: 1fr;
+  }
+}
+
+.canvas-automated-state {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.canvas-automated-state i {
+  font-size: 3.5rem;
+  color: var(--dev-primary);
+  margin-bottom: 16px;
+}
+
+.canvas-automated-state h4 {
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+  font-size: 1.125rem;
+}
+
+.canvas-automated-state p {
+  color: var(--text-muted);
+  margin: 0;
+  max-width: 420px;
+  line-height: 1.5;
+}
+
+.technical-automated-block .automated-execution-info {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.technical-automated-block .automated-execution-info p {
+  margin: 0 0 8px 0;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+.technical-automated-block .automated-execution-info p:last-child {
+  margin-bottom: 0;
+}
+
+.technical-automated-block .field-help {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.settings-catalog-visibility .field-help {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
 /* Footer Builder: ciclo de vida del flujo */
 .builder-footer {
   flex: 0 0 auto;
@@ -1675,13 +1892,13 @@ body.sidebar-collapsed .builder-header {
 }
 
 @media (max-width: 1200px) {
-  .builder-main {
+  .builder-main.builder-tab-inputs-active {
     grid-template-columns: 220px 1fr 240px;
   }
 }
 
 @media (max-width: 992px) {
-  .builder-main {
+  .builder-main.builder-tab-inputs-active {
     grid-template-columns: 200px 1fr;
   }
   
@@ -1691,7 +1908,7 @@ body.sidebar-collapsed .builder-header {
 }
 
 @media (max-width: 768px) {
-  .builder-main {
+  .builder-main.builder-tab-inputs-active {
     grid-template-columns: 1fr;
     margin-left: 0;
   }

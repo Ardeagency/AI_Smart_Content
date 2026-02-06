@@ -140,7 +140,8 @@ class StudioView extends BaseView {
       const { data, error } = await this.supabase
         .from('content_flows')
         .select('id, name, description, token_cost, input_schema, webhook_url, output_type')
-        .eq('is_active', true);
+        .eq('is_active', true)
+        .eq('flow_category_type', 'manual');
       if (!error && data) {
         this.flows = data;
       } else {

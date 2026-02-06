@@ -150,44 +150,74 @@ class DevBuilderView extends BaseView {
 
         <!-- Panel central: Canvas de construcción -->
         <div class="builder-canvas-wrapper">
-          <!-- Tabs de navegación -->
+          <!-- Tabs: 1 Configuración, 2 Técnico, 3 Inputs, 4 Ficha del Flujo -->
           <div class="builder-tabs">
-            <button class="builder-tab active" data-tab="inputs">
-              <i class="ph ph-textbox"></i> Inputs
-            </button>
-            <button class="builder-tab" data-tab="settings">
+            <button class="builder-tab active" data-tab="settings">
               <i class="ph ph-gear"></i> Configuración
             </button>
             <button class="builder-tab" data-tab="technical">
               <i class="ph ph-code"></i> Técnico
             </button>
+            <button class="builder-tab" data-tab="inputs">
+              <i class="ph ph-textbox"></i> Inputs
+            </button>
+            <button class="builder-tab" data-tab="ficha">
+              <i class="ph ph-cardholder"></i> Ficha del Flujo
+            </button>
           </div>
 
-          <!-- Tab: Inputs (Canvas) -->
-          <div class="builder-tab-content active" id="tabInputs">
-            <div class="builder-canvas" id="builderCanvas">
-              <div class="canvas-empty-state" id="canvasEmptyState">
-                <i class="ph ph-plus-circle"></i>
-                <h4>Arrastra componentes aquí</h4>
-                <p>Construye el formulario de entrada de tu flujo</p>
-              </div>
-              <div class="canvas-fields" id="canvasFields">
-                <!-- Los campos se agregan aquí -->
-              </div>
-            </div>
-          </div>
-
-          <!-- Tab: Configuración General -->
-          <div class="builder-tab-content" id="tabSettings">
-            <div class="builder-settings-form">
+          <!-- Tab 1: Configuración (lo primero que ve el desarrollador; sin componentes ni propiedades) -->
+          <div class="builder-tab-content active" id="tabSettings">
+            <div class="builder-settings-form builder-config-fullwidth">
               <div class="settings-section">
-                <h4><i class="ph ph-info"></i> Información Básica</h4>
-                
+                <h4><i class="ph ph-identification-card"></i> Identidad del flujo</h4>
+                <div class="settings-field">
+                  <label for="flowNameConfig">Nombre público del flujo *</label>
+                  <input type="text" id="flowNameConfig" placeholder="Ej: Generador de Reels Virales" maxlength="100">
+                </div>
+                <div class="settings-field">
+                  <label for="flowTechnicalName">Nombre técnico</label>
+                  <input type="text" id="flowTechnicalName" placeholder="Ej: reels_viral_generator (solo referencia interna)">
+                  <span class="field-help">Referencia para desarrolladores y n8n. No se muestra a usuarios.</span>
+                </div>
+                <div class="settings-field">
+                  <label>URL del flujo</label>
+                  <div class="flow-url-readonly" id="flowUrlReadonly">
+                    <span class="flow-url-text" id="flowUrlText">— Guarda el flujo para ver la URL</span>
+                    <button type="button" class="btn-small" id="copyFlowUrlBtn" style="display: none;"><i class="ph ph-copy"></i> Copiar</button>
+                  </div>
+                </div>
+              </div>
+              <div class="settings-section">
+                <h4><i class="ph ph-info"></i> Descripción e imagen</h4>
                 <div class="settings-field">
                   <label for="flowDescription">Descripción</label>
                   <textarea id="flowDescription" placeholder="Describe qué hace este flujo..." rows="3"></textarea>
                 </div>
-
+                <div class="flow-image-upload" id="flowImageUpload">
+                  <div class="image-preview" id="flowImagePreview">
+                    <i class="ph ph-image"></i>
+                    <span>Sin imagen</span>
+                  </div>
+                  <div class="image-actions">
+                    <button class="btn-small" id="uploadImageBtn"><i class="ph ph-upload"></i> Subir imagen</button>
+                    <button class="btn-small secondary" id="removeImageBtn" style="display: none;"><i class="ph ph-trash"></i> Eliminar</button>
+                  </div>
+                  <input type="file" id="flowImageInput" accept="image/*" style="display: none;">
+                </div>
+              </div>
+              <div class="settings-section">
+                <h4><i class="ph ph-sliders"></i> Versión, créditos y categoría</h4>
+                <div class="settings-row">
+                  <div class="settings-field">
+                    <label for="flowVersion">Versión</label>
+                    <input type="text" id="flowVersion" value="1.0.0" placeholder="1.0.0">
+                  </div>
+                  <div class="settings-field" id="settingsTokenCostWrap">
+                    <label for="flowTokenCost">Créditos (por ejecución)</label>
+                    <input type="number" id="flowTokenCost" min="0" max="100" value="1">
+                  </div>
+                </div>
                 <div class="settings-row">
                   <div class="settings-field">
                     <label for="flowCategory">Categoría</label>
@@ -196,7 +226,7 @@ class DevBuilderView extends BaseView {
                     </select>
                   </div>
                   <div class="settings-field">
-                    <label for="flowOutputType">Tipo de Output</label>
+                    <label for="flowOutputType">Tipo de output</label>
                     <select id="flowOutputType">
                       <option value="text">Texto</option>
                       <option value="image">Imagen</option>
@@ -207,49 +237,25 @@ class DevBuilderView extends BaseView {
                     </select>
                   </div>
                 </div>
-
                 <div class="settings-row">
                   <div class="settings-field">
-                    <label for="flowType">Tipo de Flujo</label>
+                    <label for="flowType">Tipo de flujo</label>
                     <select id="flowType">
                       <option value="manual">Manual</option>
-                      <option value="automated">Automatizado</option>
+                      <option value="automated">Automatizado (sistema)</option>
                     </select>
                   </div>
-                  <div class="settings-field">
-                    <label for="flowTokenCost">Costo (tokens)</label>
-                    <input type="number" id="flowTokenCost" min="1" max="100" value="1">
+                  <div class="settings-toggles settings-catalog-visibility" id="settingsCatalogVisibility">
+                    <label class="toggle-field">
+                      <input type="checkbox" id="uiHiddenFromCatalog">
+                      <span>Oculto del catálogo</span>
+                    </label>
                   </div>
                 </div>
-
-                <div class="settings-field">
-                  <label for="flowVersion">Versión</label>
-                  <input type="text" id="flowVersion" value="1.0.0" placeholder="1.0.0">
-                </div>
+                <span class="field-help block">Los flujos automatizados no aparecen en la librería de usuarios.</span>
               </div>
-
               <div class="settings-section">
-                <h4><i class="ph ph-image"></i> Imagen del Flujo</h4>
-                <div class="flow-image-upload" id="flowImageUpload">
-                  <div class="image-preview" id="flowImagePreview">
-                    <i class="ph ph-image"></i>
-                    <span>Sin imagen</span>
-                  </div>
-                  <div class="image-actions">
-                    <button class="btn-small" id="uploadImageBtn">
-                      <i class="ph ph-upload"></i> Subir imagen
-                    </button>
-                    <button class="btn-small secondary" id="removeImageBtn" style="display: none;">
-                      <i class="ph ph-trash"></i> Eliminar
-                    </button>
-                  </div>
-                  <input type="file" id="flowImageInput" accept="image/*" style="display: none;">
-                </div>
-              </div>
-
-              <div class="settings-section">
-                <h4><i class="ph ph-layout"></i> Configuración de UI</h4>
-                
+                <h4><i class="ph ph-layout"></i> Apariencia del formulario (inputs)</h4>
                 <div class="settings-row">
                   <div class="settings-field">
                     <label for="uiTheme">Tema</label>
@@ -263,13 +269,12 @@ class DevBuilderView extends BaseView {
                   <div class="settings-field">
                     <label for="uiColumns">Columnas</label>
                     <select id="uiColumns">
-                      <option value="1">1 columna</option>
-                      <option value="2">2 columnas</option>
-                      <option value="3">3 columnas</option>
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="3">3</option>
                     </select>
                   </div>
                 </div>
-
                 <div class="settings-toggles">
                   <label class="toggle-field">
                     <input type="checkbox" id="uiShowLabels" checked>
@@ -280,7 +285,6 @@ class DevBuilderView extends BaseView {
                     <span>Mostrar texto de ayuda</span>
                   </label>
                 </div>
-
                 <div class="settings-row">
                   <div class="settings-field">
                     <label for="uiSubmitText">Texto del botón</label>
@@ -299,24 +303,21 @@ class DevBuilderView extends BaseView {
             </div>
           </div>
 
-          <!-- Tab: Detalles Técnicos -->
+          <!-- Tab 2: Técnico (webhooks, editor, plataforma; sin componentes ni propiedades) -->
           <div class="builder-tab-content" id="tabTechnical">
-            <div class="builder-settings-form">
-              <div class="settings-section">
+            <div class="builder-settings-form builder-config-fullwidth">
+              <div class="settings-section" id="technicalWebhookSection">
                 <h4><i class="ph ph-webhooks-logo"></i> Webhooks</h4>
-                
                 <div class="settings-field">
                   <label for="webhookTest">URL de Prueba (Test)</label>
                   <input type="url" id="webhookTest" placeholder="https://tu-n8n.com/webhook-test/...">
                   <span class="field-help">URL del webhook en modo prueba</span>
                 </div>
-
                 <div class="settings-field">
                   <label for="webhookProd">URL de Producción</label>
                   <input type="url" id="webhookProd" placeholder="https://tu-n8n.com/webhook/...">
-                  <span class="field-help">URL del webhook en producción (usado por usuarios finales)</span>
+                  <span class="field-help">URL usada por usuarios finales</span>
                 </div>
-
                 <div class="settings-row">
                   <div class="settings-field">
                     <label for="webhookMethod">Método HTTP</label>
@@ -330,30 +331,85 @@ class DevBuilderView extends BaseView {
                     <label for="platformName">Plataforma</label>
                     <select id="platformName">
                       <option value="n8n">n8n</option>
-                      <option value="make">Make (Integromat)</option>
+                      <option value="make">Make</option>
                       <option value="zapier">Zapier</option>
                       <option value="custom">Custom</option>
                     </select>
                   </div>
                 </div>
-
                 <div class="settings-field">
                   <label for="editorUrl">URL del Editor</label>
                   <input type="url" id="editorUrl" placeholder="https://tu-n8n.com/workflow/123">
-                  <span class="field-help">Link directo para editar el flujo en la plataforma</span>
+                  <span class="field-help">Link para editar el flujo en la plataforma</span>
                 </div>
               </div>
-
+              <div class="settings-section technical-automated-block" id="technicalAutomatedBlock" style="display: none;">
+                <h4><i class="ph ph-clock-countdown"></i> Tipo de ejecución</h4>
+                <div class="automated-execution-info">
+                  <p><strong>CRON JOB / PROGRAMADO</strong></p>
+                  <p>Estado: Activo en n8n</p>
+                  <p class="field-help">Este flujo no usa webhook; se dispara por el sistema.</p>
+                </div>
+              </div>
               <div class="settings-section">
                 <h4><i class="ph ph-code"></i> Schema JSON</h4>
-                <p class="section-description">Vista del input_schema generado automáticamente</p>
+                <p class="section-description">Estructura de datos que recibe tu webhook</p>
                 <div class="json-preview" id="jsonSchemaPreview">
                   <pre><code>{ "fields": [] }</code></pre>
                 </div>
-                <button class="btn-small" id="copySchemaBtn">
-                  <i class="ph ph-copy"></i> Copiar JSON
-                </button>
+                <button class="btn-small" id="copySchemaBtn"><i class="ph ph-copy"></i> Copiar JSON</button>
               </div>
+            </div>
+          </div>
+
+          <!-- Tab 3: Inputs (único con componentes y propiedades) -->
+          <div class="builder-tab-content" id="tabInputs">
+            <div class="builder-canvas" id="builderCanvas">
+              <div class="canvas-empty-state" id="canvasEmptyState">
+                <i class="ph ph-plus-circle"></i>
+                <h4>Arrastra componentes aquí</h4>
+                <p>Construye el formulario de entrada de tu flujo</p>
+              </div>
+              <div class="canvas-empty-state canvas-automated-state" id="canvasAutomatedState" style="display: none;">
+                <i class="ph ph-robot"></i>
+                <h4>Flujo automatizado</h4>
+                <p>Este flujo se ejecuta automáticamente por el sistema (Cron/Trigger). No requiere intervención del usuario final, por lo que no tiene formulario de entrada.</p>
+              </div>
+              <div class="canvas-fields" id="canvasFields">
+                <!-- Los campos se agregan aquí -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 4: Ficha del Flujo (vista oficial: imagen, nombre, descripción, inputs preview, métricas si publicado) -->
+          <div class="builder-tab-content" id="tabFicha">
+            <div class="builder-ficha-wrapper" id="builderFichaWrapper">
+              <div class="ficha-card" id="fichaCard">
+                <div class="ficha-image" id="fichaImage">
+                  <i class="ph ph-image"></i>
+                  <span>Sin imagen</span>
+                </div>
+                <div class="ficha-body">
+                  <h2 class="ficha-title" id="fichaTitle">Nombre del flujo</h2>
+                  <p class="ficha-description" id="fichaDescription">Descripción del flujo.</p>
+                  <div class="ficha-meta" id="fichaMeta">
+                    <span class="ficha-version" id="fichaVersion">v1.0.0</span>
+                    <span class="ficha-credits" id="fichaCredits">— créditos</span>
+                    <span class="ficha-output" id="fichaOutput">—</span>
+                  </div>
+                  <div class="ficha-stats" id="fichaStats" style="display: none;">
+                    <span class="ficha-stat"><i class="ph ph-heart"></i> <strong id="fichaLikes">0</strong> likes</span>
+                    <span class="ficha-stat"><i class="ph ph-bookmark-simple"></i> <strong id="fichaSaves">0</strong> guardados</span>
+                    <span class="ficha-stat"><i class="ph ph-play"></i> <strong id="fichaRuns">0</strong> ejecuciones</span>
+                  </div>
+                </div>
+              </div>
+              <aside class="ficha-sidebar">
+                <h4><i class="ph ph-textbox"></i> Inputs (vista consumidor)</h4>
+                <div class="ficha-inputs-preview" id="fichaInputsPreview">
+                  <p class="ficha-inputs-empty">Sin campos de entrada o flujo automatizado.</p>
+                </div>
+              </aside>
             </div>
           </div>
         </div>
@@ -506,6 +562,7 @@ class DevBuilderView extends BaseView {
     this.renderCanvas();
     this.updateJsonPreview();
     this.renderFooter();
+    this.applyFlowTypeUI();
   }
 
   async initSupabase() {
@@ -521,11 +578,19 @@ class DevBuilderView extends BaseView {
 
   checkUrlParams() {
     const urlParams = new URLSearchParams(window.location.search);
-    const flowId = urlParams.get('id');
+    // Aceptar flowId de ruta (/dev/builder/:flowId) o query id / flow (Mis Flujos y Lead usan ?flow=)
+    const flowId = this.routeParams?.flowId || urlParams.get('id') || urlParams.get('flow');
     
     if (flowId && flowId !== 'new') {
       this.flowId = flowId;
       this.isEditMode = true;
+      // Normalizar URL a ?id= para consistencia cuando se usó ?flow=
+      if (urlParams.get('flow') && !urlParams.get('id')) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('flow');
+        url.searchParams.set('id', flowId);
+        window.history.replaceState({}, '', url.pathname + url.search);
+      }
     }
   }
 
@@ -1619,8 +1684,9 @@ class DevBuilderView extends BaseView {
         };
       }
       
-      // Actualizar UI
+      // Actualizar UI y adaptar por tipo (manual vs automated)
       this.populateForm();
+      this.applyFlowTypeUI();
       
     } catch (err) {
       console.error('Error loading flow:', err);
@@ -1629,14 +1695,27 @@ class DevBuilderView extends BaseView {
   }
 
   populateForm() {
-    // Nombre
+    // Nombre (header y pestaña Configuración)
     const nameInput = this.querySelector('#flowNameInput');
+    const nameConfig = this.querySelector('#flowNameConfig');
     if (nameInput) nameInput.value = this.flowData.name;
+    if (nameConfig) nameConfig.value = this.flowData.name;
+
+    // URL del flujo (solo lectura)
+    const flowUrlText = this.querySelector('#flowUrlText');
+    const copyFlowUrlBtn = this.querySelector('#copyFlowUrlBtn');
+    const flowUrl = this.getFlowPublicUrl();
+    if (flowUrlText) flowUrlText.textContent = flowUrl || '— Guarda el flujo para ver la URL';
+    if (copyFlowUrlBtn) copyFlowUrlBtn.style.display = flowUrl ? 'inline-flex' : 'none';
+
+    // Nombre técnico (ui_layout_config.technical_name)
+    const technicalName = this.querySelector('#flowTechnicalName');
+    if (technicalName) technicalName.value = this.uiLayoutConfig.technical_name || '';
     
     // Status badge
     this.updateStatusBadge();
     
-    // Settings tab
+    // Configuración
     const descInput = this.querySelector('#flowDescription');
     const categorySelect = this.querySelector('#flowCategory');
     const outputTypeSelect = this.querySelector('#flowOutputType');
@@ -1648,7 +1727,7 @@ class DevBuilderView extends BaseView {
     if (categorySelect) categorySelect.value = this.flowData.category_id || '';
     if (outputTypeSelect) outputTypeSelect.value = this.flowData.output_type;
     if (flowTypeSelect) flowTypeSelect.value = this.flowData.flow_category_type;
-    if (tokenCostInput) tokenCostInput.value = this.flowData.token_cost;
+    if (tokenCostInput) tokenCostInput.value = this.flowData.token_cost ?? 1;
     if (versionInput) versionInput.value = this.flowData.version;
     
     // Image preview
@@ -1671,6 +1750,9 @@ class DevBuilderView extends BaseView {
     if (uiSubmitText) uiSubmitText.value = this.uiLayoutConfig.submitButtonText || 'Generar';
     if (uiSubmitPosition) uiSubmitPosition.value = this.uiLayoutConfig.submitButtonPosition || 'right';
     
+    const uiHiddenFromCatalog = this.querySelector('#uiHiddenFromCatalog');
+    if (uiHiddenFromCatalog) uiHiddenFromCatalog.checked = !!this.uiLayoutConfig.hidden_from_catalog;
+    
     // Technical details
     const webhookTest = this.querySelector('#webhookTest');
     const webhookProd = this.querySelector('#webhookProd');
@@ -1687,6 +1769,140 @@ class DevBuilderView extends BaseView {
     // Render canvas
     this.renderCanvas();
     this.updateJsonPreview();
+  }
+
+  getFlowPublicUrl() {
+    if (!this.flowId) return null;
+    const origin = window.location.origin || '';
+    const pathname = (window.location.pathname || '').replace(/\/$/, '') || '';
+    return `${origin}${pathname}/#/studio?flow=${this.flowId}`;
+  }
+
+  /**
+   * Aplica el layout según la pestaña activa: solo Inputs muestra componentes y propiedades.
+   */
+  applyTabLayout(tabId) {
+    const main = this.querySelector('.builder-main');
+    const componentsSidebar = this.querySelector('.builder-sidebar.builder-components');
+    const propertiesSidebar = this.querySelector('.builder-sidebar.builder-properties');
+    if (!main) return;
+    const isInputs = tabId === 'inputs';
+    main.classList.toggle('builder-tab-inputs-active', isInputs);
+    if (componentsSidebar) componentsSidebar.style.display = (isInputs && !this.isAutomatedFlow) ? '' : 'none';
+    if (propertiesSidebar) propertiesSidebar.style.display = isInputs ? '' : 'none';
+    if (tabId === 'ficha') this.renderFicha();
+  }
+
+  /**
+   * Actualiza la vista "Ficha del Flujo" (tarjeta oficial + preview inputs + métricas si publicado).
+   */
+  renderFicha() {
+    const title = this.querySelector('#fichaTitle');
+    const desc = this.querySelector('#fichaDescription');
+    const imgWrap = this.querySelector('#fichaImage');
+    const version = this.querySelector('#fichaVersion');
+    const credits = this.querySelector('#fichaCredits');
+    const output = this.querySelector('#fichaOutput');
+    const stats = this.querySelector('#fichaStats');
+    const likesEl = this.querySelector('#fichaLikes');
+    const savesEl = this.querySelector('#fichaSaves');
+    const runsEl = this.querySelector('#fichaRuns');
+    const inputsPreview = this.querySelector('#fichaInputsPreview');
+
+    if (title) title.textContent = this.flowData.name || 'Sin nombre';
+    if (desc) desc.textContent = this.flowData.description || 'Sin descripción.';
+    if (version) version.textContent = 'v' + (this.flowData.version || '1.0.0');
+    if (credits) credits.textContent = (this.flowData.token_cost ?? 0) + ' créditos por ejecución';
+    if (output) output.textContent = this.flowData.output_type || '—';
+
+    if (imgWrap) {
+      if (this.flowData.flow_image_url) {
+        imgWrap.innerHTML = `<img src="${this.flowData.flow_image_url}" alt="">`;
+      } else {
+        imgWrap.innerHTML = '<i class="ph ph-image"></i><span>Sin imagen</span>';
+      }
+    }
+
+    const isPublished = this.flowData.status === 'published';
+    if (stats) stats.style.display = isPublished ? 'flex' : 'none';
+    if (isPublished && likesEl) likesEl.textContent = this.flowData.likes_count ?? 0;
+    if (isPublished && savesEl) savesEl.textContent = this.flowData.saves_count ?? 0;
+    if (isPublished && runsEl) runsEl.textContent = this.flowData.run_count ?? 0;
+
+    if (inputsPreview) {
+      if (this.isAutomatedFlow || this.inputSchema.length === 0) {
+        inputsPreview.innerHTML = '<p class="ficha-inputs-empty">Sin campos de entrada o flujo automatizado.</p>';
+      } else {
+        inputsPreview.innerHTML = this.generateFormPreview();
+      }
+    }
+  }
+
+  /**
+   * Adapta la interfaz según flow_category_type (manual vs automated).
+   * Modo Sistema: oculta componentes, muestra mensaje en canvas, webhooks → CRON, token cost 0, oculto catálogo.
+   */
+  applyFlowTypeUI() {
+    const isAutomated = this.flowData.flow_category_type === 'automated';
+    this.isAutomatedFlow = isAutomated;
+
+    const main = this.querySelector('.builder-main');
+    const componentsSidebar = this.querySelector('.builder-sidebar.builder-components');
+    const canvasEmpty = this.querySelector('#canvasEmptyState');
+    const canvasAutomated = this.querySelector('#canvasAutomatedState');
+    const canvasFields = this.querySelector('#canvasFields');
+    const technicalWebhook = this.querySelector('#technicalWebhookSection');
+    const technicalAutomated = this.querySelector('#technicalAutomatedBlock');
+    const tokenCostInput = this.querySelector('#flowTokenCost');
+    const hiddenFromCatalog = this.querySelector('#uiHiddenFromCatalog');
+    const testFlowBtn = this.querySelector('#testFlowBtn');
+    const btnTestRun = this.querySelector('#btnTestRun');
+
+    if (isAutomated) {
+      this.flowData.token_cost = 0;
+      if (this.uiLayoutConfig.hidden_from_catalog === undefined) {
+        this.uiLayoutConfig.hidden_from_catalog = true;
+      }
+      if (main) main.classList.add('builder-mode-automated');
+      if (componentsSidebar) componentsSidebar.classList.add('builder-sidebar-hidden');
+      if (canvasEmpty) canvasEmpty.style.display = 'none';
+      if (canvasFields) canvasFields.style.display = 'none';
+      if (canvasAutomated) canvasAutomated.style.display = 'flex';
+      if (technicalWebhook) technicalWebhook.style.display = 'none';
+      if (technicalAutomated) technicalAutomated.style.display = 'block';
+      if (tokenCostInput) {
+        tokenCostInput.value = 0;
+        tokenCostInput.min = 0;
+        tokenCostInput.max = 0;
+        tokenCostInput.disabled = true;
+      }
+      if (hiddenFromCatalog) {
+        hiddenFromCatalog.checked = true;
+        hiddenFromCatalog.disabled = true;
+      }
+      if (testFlowBtn) testFlowBtn.style.display = 'none';
+      if (btnTestRun) btnTestRun.style.display = 'none';
+    } else {
+      if (main) main.classList.remove('builder-mode-automated');
+      if (componentsSidebar) componentsSidebar.classList.remove('builder-sidebar-hidden');
+      if (canvasEmpty) canvasEmpty.style.display = 'flex';
+      if (canvasAutomated) canvasAutomated.style.display = 'none';
+      if (canvasFields) canvasFields.style.display = (this.inputSchema.length > 0) ? 'block' : 'none';
+      if (technicalWebhook) technicalWebhook.style.display = 'block';
+      if (technicalAutomated) technicalAutomated.style.display = 'none';
+      if (tokenCostInput) {
+        tokenCostInput.min = 0;
+        tokenCostInput.max = 100;
+        tokenCostInput.disabled = false;
+        tokenCostInput.value = this.flowData.token_cost ?? 1;
+      }
+      if (hiddenFromCatalog) {
+        hiddenFromCatalog.disabled = false;
+        hiddenFromCatalog.checked = !!this.uiLayoutConfig.hidden_from_catalog;
+      }
+      if (testFlowBtn) testFlowBtn.style.display = '';
+      if (btnTestRun) btnTestRun.style.display = '';
+    }
   }
 
   updateStatusBadge() {
@@ -1750,7 +1966,7 @@ class DevBuilderView extends BaseView {
         messageEl.classList.add('has-changes');
       }
       show(buttons.saveDraft);
-      show(buttons.testRun);
+      if (!this.isAutomatedFlow) show(buttons.testRun);
       if (isLead) {
         show(buttons.publish);
       } else {
@@ -1764,20 +1980,20 @@ class DevBuilderView extends BaseView {
       } else {
         messageEl.textContent = 'Esperando aprobación...';
         messageEl.classList.add('waiting');
-        show(buttons.testRun);
+        if (!this.isAutomatedFlow) show(buttons.testRun);
       }
     } else if (status === 'published') {
       messageEl.textContent = 'Estás editando un flujo en vivo. Los cambios afectarán a los clientes.';
       messageEl.classList.add('published-warning');
       show(buttons.updateFlow);
-      show(buttons.testRun);
+      if (!this.isAutomatedFlow) show(buttons.testRun);
       if (isLead) {
         show(buttons.unpublish);
       }
     } else {
       messageEl.textContent = '';
       show(buttons.saveDraft);
-      show(buttons.testRun);
+      if (!this.isAutomatedFlow) show(buttons.testRun);
     }
   }
 
@@ -1801,13 +2017,31 @@ class DevBuilderView extends BaseView {
       backBtn.addEventListener('click', () => this.handleBack());
     }
     
-    // Flow name
+    // Nombre (header y Configuración sincronizados)
     const nameInput = this.querySelector('#flowNameInput');
+    const nameConfig = this.querySelector('#flowNameConfig');
+    const syncName = (source, value) => {
+      this.flowData.name = value;
+      if (nameInput && source !== nameInput) nameInput.value = value;
+      if (nameConfig && source !== nameConfig) nameConfig.value = value;
+      this.hasUnsavedChanges = true;
+      this.renderFooter();
+    };
     if (nameInput) {
-      nameInput.addEventListener('input', (e) => {
-        this.flowData.name = e.target.value;
-        this.hasUnsavedChanges = true;
-        this.renderFooter();
+      nameInput.addEventListener('input', (e) => syncName(nameInput, e.target.value));
+    }
+    if (nameConfig) {
+      nameConfig.addEventListener('input', (e) => syncName(nameConfig, e.target.value));
+    }
+
+    // URL del flujo: copiar
+    const copyFlowUrlBtn = this.querySelector('#copyFlowUrlBtn');
+    if (copyFlowUrlBtn) {
+      copyFlowUrlBtn.addEventListener('click', () => {
+        const url = this.getFlowPublicUrl();
+        if (url) {
+          navigator.clipboard.writeText(url).then(() => this.showNotification('URL copiada', 'success')).catch(() => {});
+        }
       });
     }
     
@@ -1923,10 +2157,13 @@ class DevBuilderView extends BaseView {
       tab.classList.toggle('active', tab.dataset.tab === tabId);
     });
     
-    // Update tab content
+    // Update tab content (tabFicha → id="tabFicha")
+    const tabContentId = tabId === 'ficha' ? 'tabFicha' : `tab${tabId.charAt(0).toUpperCase() + tabId.slice(1)}`;
     this.querySelectorAll('.builder-tab-content').forEach(content => {
-      content.classList.toggle('active', content.id === `tab${tabId.charAt(0).toUpperCase() + tabId.slice(1)}`);
+      content.classList.toggle('active', content.id === tabContentId);
     });
+
+    this.applyTabLayout(tabId);
   }
 
   setupSettingsListeners() {
@@ -1934,8 +2171,7 @@ class DevBuilderView extends BaseView {
       flowDescription: (v) => this.flowData.description = v,
       flowCategory: (v) => this.flowData.category_id = v || null,
       flowOutputType: (v) => this.flowData.output_type = v,
-      flowType: (v) => this.flowData.flow_category_type = v,
-      flowTokenCost: (v) => this.flowData.token_cost = parseInt(v) || 1,
+      flowTokenCost: (v) => this.flowData.token_cost = parseInt(v, 10) >= 0 ? parseInt(v, 10) : 1,
       flowVersion: (v) => this.flowData.version = v,
       uiTheme: (v) => this.uiLayoutConfig.theme = v,
       uiColumns: (v) => this.uiLayoutConfig.columns = parseInt(v) || 1,
@@ -1956,10 +2192,28 @@ class DevBuilderView extends BaseView {
         });
       }
     });
+
+    // Tipo de flujo: solo Lead puede cambiar a "automated"
+    const flowTypeSelect = this.querySelector('#flowType');
+    if (flowTypeSelect) {
+      flowTypeSelect.addEventListener('change', (e) => {
+        const v = e.target.value;
+        if (v === 'automated' && !this.isLead()) {
+          e.target.value = this.flowData.flow_category_type || 'manual';
+          this.showNotification('Solo los Lead pueden crear o convertir flujos en automatizados.', 'warning');
+          return;
+        }
+        this.flowData.flow_category_type = v;
+        this.hasUnsavedChanges = true;
+        this.applyFlowTypeUI();
+        this.renderFooter();
+      });
+    }
     
     // Checkboxes
     const uiShowLabels = this.querySelector('#uiShowLabels');
     const uiShowHelperText = this.querySelector('#uiShowHelperText');
+    const uiHiddenFromCatalog = this.querySelector('#uiHiddenFromCatalog');
     
     if (uiShowLabels) {
       uiShowLabels.addEventListener('change', (e) => {
@@ -1971,6 +2225,21 @@ class DevBuilderView extends BaseView {
     if (uiShowHelperText) {
       uiShowHelperText.addEventListener('change', (e) => {
         this.uiLayoutConfig.showHelperText = e.target.checked;
+        this.hasUnsavedChanges = true;
+      });
+    }
+
+    if (uiHiddenFromCatalog) {
+      uiHiddenFromCatalog.addEventListener('change', (e) => {
+        this.uiLayoutConfig.hidden_from_catalog = e.target.checked;
+        this.hasUnsavedChanges = true;
+      });
+    }
+
+    const flowTechnicalName = this.querySelector('#flowTechnicalName');
+    if (flowTechnicalName) {
+      flowTechnicalName.addEventListener('input', (e) => {
+        this.uiLayoutConfig.technical_name = e.target.value || '';
         this.hasUnsavedChanges = true;
       });
     }

@@ -178,6 +178,7 @@ class FlowCatalogView extends BaseView {
         .from('content_flows')
         .select('id, name, description, token_cost, output_type, flow_image_url, category_id, subcategory_id, flow_category_type, likes_count, saves_count, run_count, created_at')
         .eq('is_active', true)
+        .eq('flow_category_type', 'manual')
         .order('name');
       this.flows = !error && data ? data : [];
     } catch (e) {
