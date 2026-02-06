@@ -14,11 +14,15 @@
 | `/dev/test/:flowId` | DevTestView | Test con flujo preseleccionado |
 | `/dev/logs` | DevLogsView | Logs y debug de flujos |
 | `/dev/webhooks` | DevWebhooksView | Gestión de webhooks |
-| `/dev/collaborators` | **Placeholder** → DevDashboardView | Menú existe; muestra Dashboard |
-| `/dev/marketplace` | **Placeholder** → DevFlowsView | Menú existe; muestra Mis Flujos |
-| `/dev/docs` | **Placeholder** → DevDashboardView | Menú existe; muestra Dashboard |
+| `/dev/lead/team` | DevLeadTeamView | Equipo (solo Lead) |
+| `/dev/lead/categories` | DevLeadCategoriesView | Categorías (solo Lead) |
+| `/dev/lead/input-schemas` | DevLeadInputSchemasView | Input Schemas (solo Lead) |
+| `/dev/lead/ai-vectors` | DevLeadVectorsView | AI Global Vectors (solo Lead) |
+| `/dev/lead/references` | DevLeadReferencesView | Referencias visuales (solo Lead) |
 
-**Total:** 6 vistas reales + 3 rutas placeholder que reutilizan Dashboard/Flows.
+**Rol Lead:** Solo `user_profiles.dev_role = 'lead'` ve el menú Lead y accede a estas rutas. El enum `developer_role_type` debe incluir `'lead'`.
+
+**Total:** 6 vistas PaaS + 5 vistas Lead.
 
 ---
 

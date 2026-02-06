@@ -422,6 +422,37 @@ class Navigation {
               </a>
             </div>
           </div>
+
+          <!-- Lead (solo visible para dev_role === 'lead') -->
+          <div class="nav-item has-submenu nav-lead-only" id="navLeadSection" style="display: none;">
+            <button class="nav-link nav-submenu-toggle" data-tooltip="Lead">
+              <i class="fas fa-shield-alt nav-icon"></i>
+              <span class="nav-text">Lead</span>
+              <i class="fas fa-chevron-right nav-chevron"></i>
+            </button>
+            <div class="nav-submenu">
+              <a href="/dev/lead/team" class="nav-submenu-link" data-route="/dev/lead/team">
+                <i class="fas fa-user-friends"></i>
+                <span>Equipo</span>
+              </a>
+              <a href="/dev/lead/categories" class="nav-submenu-link" data-route="/dev/lead/categories">
+                <i class="fas fa-tags"></i>
+                <span>Categorías</span>
+              </a>
+              <a href="/dev/lead/input-schemas" class="nav-submenu-link" data-route="/dev/lead/input-schemas">
+                <i class="fas fa-puzzle-piece"></i>
+                <span>Input Schemas</span>
+              </a>
+              <a href="/dev/lead/ai-vectors" class="nav-submenu-link" data-route="/dev/lead/ai-vectors">
+                <i class="fas fa-brain"></i>
+                <span>AI Global Vectors</span>
+              </a>
+              <a href="/dev/lead/references" class="nav-submenu-link" data-route="/dev/lead/references">
+                <i class="fas fa-images"></i>
+                <span>Referencias visuales</span>
+              </a>
+            </div>
+          </div>
         </div>
 
         <!-- Footer del sidebar -->
@@ -625,7 +656,12 @@ class Navigation {
       '/dev/builder': 'Builder',
       '/dev/test': 'Test de Flujos',
       '/dev/logs': 'Logs',
-      '/dev/webhooks': 'Webhooks'
+      '/dev/webhooks': 'Webhooks',
+      '/dev/lead/team': 'Equipo',
+      '/dev/lead/categories': 'Categorías',
+      '/dev/lead/input-schemas': 'Input Schemas',
+      '/dev/lead/ai-vectors': 'AI Global Vectors',
+      '/dev/lead/references': 'Referencias visuales'
     };
 
     for (const [route, title] of Object.entries(titles)) {
@@ -917,6 +953,10 @@ class Navigation {
         if (tierEl) {
           const label = profile.dev_rank || profile.dev_role || 'Novato';
           tierEl.textContent = typeof label === 'string' ? label : 'Novato';
+        }
+        const leadSection = document.getElementById('navLeadSection');
+        if (leadSection && profile.dev_role === 'lead') {
+          leadSection.style.display = '';
         }
       }
 

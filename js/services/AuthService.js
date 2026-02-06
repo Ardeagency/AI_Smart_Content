@@ -125,7 +125,9 @@ class AuthService {
           role: profile.role || 'user',
           // Campos para arquitectura MPA + SPA
           default_view_mode: profile.default_view_mode || 'user', // 'user' | 'developer'
-          is_developer: !!profile.is_developer
+          is_developer: !!profile.is_developer,
+          dev_role: profile.dev_role || 'contributor', // 'contributor' | 'lead'
+          dev_rank: profile.dev_rank || 'novice'
         };
 
         // Actualizar modo del servicio
@@ -342,6 +344,15 @@ class AuthService {
    */
   userHasDeveloperRole() {
     return this.currentUser?.is_developer === true;
+  }
+
+  /**
+   * Verificar si el usuario es desarrollador Lead (control total de BD y sección Equipo/Categorías/etc.)
+   * Solo dev_role === 'lead' tiene acceso a /dev/lead/*
+   * @returns {boolean}
+   */
+  isLead() {
+    return this.currentUser?.dev_role === 'lead';
   }
 
   /**

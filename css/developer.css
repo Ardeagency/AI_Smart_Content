@@ -2753,6 +2753,50 @@ body.sidebar-collapsed .builder-header {
   }
 }
 
+/* Lead-only views (dev_role === 'lead') */
+.dev-lead-container {
+  min-height: 100vh;
+  padding: 24px;
+  background: var(--bg-primary);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.dev-lead-header {
+  margin-bottom: 24px;
+}
+
+.dev-lead-header .dev-header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+}
+
+.dev-lead-header .dev-header-title i {
+  color: var(--dev-primary);
+}
+
+.dev-lead-header .dev-header-subtitle {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.dev-lead-content {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.dev-lead-placeholder {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
 /* Header */
 .dev-test-header {
   display: flex;
