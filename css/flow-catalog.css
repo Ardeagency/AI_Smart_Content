@@ -1,14 +1,16 @@
 /**
- * Catálogo de flujos - Agrupado por tipo (video, imagen, texto, etc.)
+ * Catálogo de flujos - Biblioteca tipo galería masonry
+ * Navegación: búsqueda + filtro por categoría (content_categories)
  */
 .flow-catalog {
-  padding: 2rem;
-  max-width: 1200px;
+  padding: 1.5rem 2rem 3rem;
+  max-width: 1400px;
   margin: 0 auto;
+  min-height: 60vh;
 }
 
 .flow-catalog-header {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .flow-catalog-title {
@@ -24,45 +26,146 @@
   margin: 0;
 }
 
-.flow-catalog-sections {
-  display: flex;
-  flex-direction: column;
-  gap: 2.5rem;
+/* Toolbar: búsqueda + chips de categoría */
+.flow-catalog-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-primary, #1a1a1a);
+  padding: 0.75rem 0 1rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.flow-catalog-section-title {
-  font-size: 1.1rem;
-  font-weight: 600;
+.flow-catalog-search-wrap {
+  position: relative;
+  max-width: 420px;
+  margin-bottom: 1rem;
+}
+
+.flow-catalog-search-icon {
+  position: absolute;
+  left: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted, #6b6b6b);
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+
+.flow-catalog-search {
+  width: 100%;
+  padding: 0.65rem 1rem 0.65rem 2.5rem;
+  font-size: 0.95rem;
   color: var(--text-primary, #ecebda);
-  margin: 0 0 1rem 0;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.flow-catalog-search::placeholder {
+  color: var(--text-muted, #6b6b6b);
+}
+
+.flow-catalog-search:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.flow-catalog-search:focus {
+  border-color: var(--accent-warm, #e09145);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Chips de categoría */
+.flow-catalog-filters {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 0.5rem;
+  align-items: center;
 }
 
-.flow-catalog-section-title i {
-  color: var(--accent-warm, #e09145);
+.flow-catalog-chip {
+  padding: 0.4rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary, #a0a0a0);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  white-space: nowrap;
 }
 
-.flow-catalog-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 1rem;
+.flow-catalog-chip:hover {
+  color: var(--text-primary, #ecebda);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.flow-catalog-chip--active {
+  color: var(--bg-primary, #1a1a1a);
+  background: var(--accent-warm, #e09145);
+  border-color: var(--accent-warm, #e09145);
+}
+
+.flow-catalog-chip--active:hover {
+  background: var(--accent-warm-hover, #e8a055);
+  border-color: var(--accent-warm-hover, #e8a055);
+  color: var(--bg-primary, #1a1a1a);
+}
+
+/* Galería masonry (columnas CSS) */
+.flow-catalog-masonry {
+  column-count: 1;
+  column-gap: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .flow-catalog-masonry {
+    column-count: 2;
+  }
+}
+
+@media (min-width: 960px) {
+  .flow-catalog-masonry {
+    column-count: 3;
+  }
+}
+
+@media (min-width: 1280px) {
+  .flow-catalog-masonry {
+    column-count: 4;
+    column-gap: 1.5rem;
+  }
 }
 
 .flow-catalog-card {
+  break-inside: avoid;
+  margin-bottom: 1.25rem;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  display: inline-block;
+  width: 100%;
+  vertical-align: top;
 }
 
 .flow-catalog-card:hover {
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 255, 255, 0.12);
   transform: translateY(-2px);
+}
+
+.flow-catalog-card:focus {
+  outline: 2px solid var(--accent-warm, #e09145);
+  outline-offset: 2px;
 }
 
 .flow-catalog-card-media {
@@ -105,9 +208,9 @@
   font-size: 0.8rem;
   color: var(--text-secondary, #a0a0a0);
   margin: 0 0 0.5rem 0;
-  line-height: 1.4;
+  line-height: 1.45;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -118,6 +221,7 @@
   gap: 0.5rem;
   flex-wrap: wrap;
   font-size: 0.75rem;
+  margin-top: 0.5rem;
 }
 
 .flow-catalog-card-cat {
@@ -129,12 +233,25 @@
   font-weight: 500;
 }
 
+/* Estado vacío */
 .flow-catalog-empty {
   text-align: center;
-  padding: 3rem;
+  padding: 3rem 2rem;
   color: var(--text-secondary, #a0a0a0);
 }
 
+.flow-catalog-empty i {
+  font-size: 2.5rem;
+  color: rgba(255, 255, 255, 0.2);
+  margin-bottom: 1rem;
+  display: block;
+}
+
 .flow-catalog-empty p {
-  margin: 0;
+  margin: 0 0 0.25rem 0;
+}
+
+.flow-catalog-empty-hint {
+  font-size: 0.85rem;
+  color: var(--text-muted, #6b6b6b);
 }
