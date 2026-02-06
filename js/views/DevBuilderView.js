@@ -12,11 +12,12 @@ class DevBuilderView extends BaseView {
     this.flowId = null; // null = nuevo flujo, UUID = editando
     this.isEditMode = false;
     
-    // Estado del flujo
+    // Estado del flujo (alineado con content_flows en schema)
     this.flowData = {
       name: '',
       description: '',
       category_id: null,
+      subcategory_id: null,
       output_type: 'text',
       flow_category_type: 'manual',
       token_cost: 1,
@@ -105,6 +106,10 @@ class DevBuilderView extends BaseView {
           <button class="btn-builder-secondary" id="testFlowBtn">
             <i class="ph ph-play"></i>
             Probar
+          </button>
+          <button class="btn-builder-secondary" id="viewJsonSchemaBtn">
+            <i class="ph ph-brackets-curly"></i>
+            Ver JSON Schema
           </button>
           <button class="btn-builder-primary" id="saveFlowBtn">
             <i class="ph ph-floppy-disk"></i>
@@ -367,6 +372,37 @@ class DevBuilderView extends BaseView {
         </aside>
       </main>
 
+      <!-- Footer: ciclo de vida del flujo -->
+      <footer class="builder-footer" id="builderFooter">
+        <div class="builder-footer-message" id="builderFooterMessage"></div>
+        <div class="builder-footer-actions" id="builderFooterActions">
+          <button type="button" class="btn-builder-footer btn-save-draft" id="btnSaveDraft" style="display: none;">
+            <i class="ph ph-floppy-disk"></i> Guardar flujo
+          </button>
+          <button type="button" class="btn-builder-footer btn-update-flow" id="btnUpdateFlow" style="display: none;">
+            <i class="ph ph-pencil-simple"></i> Actualizar flujo
+          </button>
+          <button type="button" class="btn-builder-footer btn-primary-footer" id="btnPublish" style="display: none;">
+            <i class="ph ph-rocket-launch"></i> Publicar
+          </button>
+          <button type="button" class="btn-builder-footer btn-request-review" id="btnRequestReview" style="display: none;">
+            <i class="ph ph-hand-waving"></i> Solicitar revisión
+          </button>
+          <button type="button" class="btn-builder-footer btn-approve-publish" id="btnApprovePublish" style="display: none;">
+            <i class="ph ph-check-circle"></i> Aprobar y publicar
+          </button>
+          <button type="button" class="btn-builder-footer btn-reject" id="btnReject" style="display: none;">
+            <i class="ph ph-x-circle"></i> Rechazar
+          </button>
+          <button type="button" class="btn-builder-footer btn-unpublish" id="btnUnpublish" style="display: none;">
+            <i class="ph ph-arrow-counter-clockwise"></i> Despublicar
+          </button>
+          <button type="button" class="btn-builder-footer btn-test-run" id="btnTestRun" style="display: none;">
+            <i class="ph ph-play"></i> Probar (Test Run)
+          </button>
+        </div>
+      </footer>
+
       <!-- Modal: Preview -->
       <div class="modal builder-modal" id="previewModal" style="display: none;">
         <div class="modal-overlay"></div>
@@ -431,6 +467,27 @@ class DevBuilderView extends BaseView {
           </div>
         </div>
       </div>
+
+      <!-- Modal: Ver JSON Schema -->
+      <div class="modal builder-modal" id="jsonSchemaModal" style="display: none;">
+        <div class="modal-overlay"></div>
+        <div class="modal-content modal-lg">
+          <div class="modal-header">
+            <h3><i class="ph ph-brackets-curly"></i> JSON Schema (input para n8n)</h3>
+            <button class="modal-close" id="closeJsonSchemaModal">&times;</button>
+          </div>
+          <div class="modal-body builder-json-modal-body">
+            <pre class="builder-json-schema-pre" id="jsonSchemaModalPre"><code id="jsonSchemaModalCode">{ "fields": [] }</code></pre>
+            <p class="builder-json-hint">Estructura que recibirá tu webhook. Asegúrate de que las <code>key</code> de cada campo coincidan con lo que espera n8n.</p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-builder-secondary" id="copyJsonSchemaModalBtn">
+              <i class="ph ph-copy"></i> Copiar
+            </button>
+            <button class="btn-builder-primary" id="closeJsonSchemaModalBtn">Cerrar</button>
+          </div>
+        </div>
+      </div>
     `;
   }
 
@@ -445,8 +502,10 @@ class DevBuilderView extends BaseView {
     }
     
     this.setupEventListeners();
+    this.setupFooterListeners();
     this.renderCanvas();
     this.updateJsonPreview();
+    this.renderFooter();
   }
 
   async initSupabase() {
@@ -1476,6 +1535,7 @@ class DevBuilderView extends BaseView {
     this.hasUnsavedChanges = true;
     this.renderCanvas();
     this.updateJsonPreview();
+    this.renderFooter();
   }
 
   updateJsonPreview() {
@@ -1526,7 +1586,8 @@ class DevBuilderView extends BaseView {
         token_cost: flow.token_cost || 1,
         flow_image_url: flow.flow_image_url,
         status: flow.status || 'draft',
-        version: flow.version || '1.0.0'
+        version: flow.version || '1.0.0',
+        owner_id: flow.owner_id
       };
       
       // Cargar input_schema
@@ -1634,12 +1695,90 @@ class DevBuilderView extends BaseView {
     
     const statusLabels = {
       draft: 'Borrador',
+      checking: 'En Revisión',
       testing: 'En Pruebas',
       published: 'Publicado'
     };
     
     badge.className = `builder-status-badge ${this.flowData.status}`;
     badge.textContent = statusLabels[this.flowData.status] || 'Borrador';
+  }
+
+  isLead() {
+    return window.authService?.isLead?.() === true;
+  }
+
+  isFlowOwner() {
+    return this.userId && this.flowData.owner_id === this.userId;
+  }
+
+  get flowOwnerId() {
+    return this.flowData.owner_id;
+  }
+
+  renderFooter() {
+    const messageEl = this.querySelector('#builderFooterMessage');
+    const actionsEl = this.querySelector('#builderFooterActions');
+    if (!messageEl || !actionsEl) return;
+
+    const status = this.flowData.status || 'draft';
+    const isLead = this.isLead();
+    const isOwner = this.flowData.owner_id ? this.flowData.owner_id === this.userId : this.isEditMode;
+    const buttons = {
+      saveDraft: this.querySelector('#btnSaveDraft'),
+      updateFlow: this.querySelector('#btnUpdateFlow'),
+      publish: this.querySelector('#btnPublish'),
+      requestReview: this.querySelector('#btnRequestReview'),
+      approvePublish: this.querySelector('#btnApprovePublish'),
+      reject: this.querySelector('#btnReject'),
+      unpublish: this.querySelector('#btnUnpublish'),
+      testRun: this.querySelector('#btnTestRun')
+    };
+
+    const hideAll = () => {
+      Object.values(buttons).forEach(b => { if (b) b.style.display = 'none'; });
+    };
+    const show = (btn) => { if (btn) btn.style.display = 'inline-flex'; };
+
+    messageEl.textContent = '';
+    messageEl.className = 'builder-footer-message';
+    hideAll();
+
+    if (status === 'draft') {
+      if (this.hasUnsavedChanges) {
+        messageEl.textContent = 'Tienes cambios sin guardar.';
+        messageEl.classList.add('has-changes');
+      }
+      show(buttons.saveDraft);
+      show(buttons.testRun);
+      if (isLead) {
+        show(buttons.publish);
+      } else {
+        show(buttons.requestReview);
+      }
+    } else if (status === 'checking') {
+      if (isLead) {
+        messageEl.textContent = 'Flujo en revisión. Puedes aprobar o rechazar.';
+        show(buttons.approvePublish);
+        show(buttons.reject);
+      } else {
+        messageEl.textContent = 'Esperando aprobación...';
+        messageEl.classList.add('waiting');
+        show(buttons.testRun);
+      }
+    } else if (status === 'published') {
+      messageEl.textContent = 'Estás editando un flujo en vivo. Los cambios afectarán a los clientes.';
+      messageEl.classList.add('published-warning');
+      show(buttons.updateFlow);
+      show(buttons.testRun);
+      if (isLead) {
+        show(buttons.unpublish);
+      }
+    } else {
+      messageEl.textContent = '';
+      show(buttons.saveDraft);
+      show(buttons.testRun);
+    }
   }
 
   updateImagePreview(url) {
@@ -1668,6 +1807,7 @@ class DevBuilderView extends BaseView {
       nameInput.addEventListener('input', (e) => {
         this.flowData.name = e.target.value;
         this.hasUnsavedChanges = true;
+        this.renderFooter();
       });
     }
     
@@ -1692,6 +1832,12 @@ class DevBuilderView extends BaseView {
     const testBtn = this.querySelector('#testFlowBtn');
     if (testBtn) {
       testBtn.addEventListener('click', () => this.showTestModal());
+    }
+
+    // Ver JSON Schema
+    const viewJsonSchemaBtn = this.querySelector('#viewJsonSchemaBtn');
+    if (viewJsonSchemaBtn) {
+      viewJsonSchemaBtn.addEventListener('click', () => this.showJsonSchemaModal());
     }
     
     // More actions menu
@@ -1749,6 +1895,26 @@ class DevBuilderView extends BaseView {
     if (copySchemaBtn) {
       copySchemaBtn.addEventListener('click', () => this.copySchema());
     }
+  }
+
+  setupFooterListeners() {
+    const saveDraft = this.querySelector('#btnSaveDraft');
+    const updateFlow = this.querySelector('#btnUpdateFlow');
+    const publish = this.querySelector('#btnPublish');
+    const requestReview = this.querySelector('#btnRequestReview');
+    const approvePublish = this.querySelector('#btnApprovePublish');
+    const reject = this.querySelector('#btnReject');
+    const unpublish = this.querySelector('#btnUnpublish');
+    const testRun = this.querySelector('#btnTestRun');
+
+    if (saveDraft) saveDraft.addEventListener('click', () => this.saveFlow());
+    if (updateFlow) updateFlow.addEventListener('click', () => this.saveFlow());
+    if (publish) publish.addEventListener('click', () => this.publishFlow());
+    if (requestReview) requestReview.addEventListener('click', () => this.requestReview());
+    if (approvePublish) approvePublish.addEventListener('click', () => this.approveAndPublish());
+    if (reject) reject.addEventListener('click', () => this.rejectFlow());
+    if (unpublish) unpublish.addEventListener('click', () => this.unpublishFlow());
+    if (testRun) testRun.addEventListener('click', () => this.showTestModal());
   }
 
   switchTab(tabId) {
@@ -1894,6 +2060,26 @@ class DevBuilderView extends BaseView {
     if (confirmDelete) {
       confirmDelete.addEventListener('click', () => this.confirmDelete());
     }
+
+    // JSON Schema modal
+    const jsonSchemaModal = this.querySelector('#jsonSchemaModal');
+    const closeJsonSchemaModal = this.querySelector('#closeJsonSchemaModal');
+    const closeJsonSchemaModalBtn = this.querySelector('#closeJsonSchemaModalBtn');
+    const copyJsonSchemaModalBtn = this.querySelector('#copyJsonSchemaModalBtn');
+    if (jsonSchemaModal) {
+      if (closeJsonSchemaModal) {
+        closeJsonSchemaModal.addEventListener('click', () => { jsonSchemaModal.style.display = 'none'; });
+      }
+      if (closeJsonSchemaModalBtn) {
+        closeJsonSchemaModalBtn.addEventListener('click', () => { jsonSchemaModal.style.display = 'none'; });
+      }
+      jsonSchemaModal.querySelector('.modal-overlay')?.addEventListener('click', () => {
+        jsonSchemaModal.style.display = 'none';
+      });
+    }
+    if (copyJsonSchemaModalBtn) {
+      copyJsonSchemaModalBtn.addEventListener('click', () => this.copySchema());
+    }
   }
 
   setupImageUpload() {
@@ -1980,6 +2166,7 @@ class DevBuilderView extends BaseView {
         name: this.flowData.name.trim(),
         description: this.flowData.description,
         category_id: this.flowData.category_id,
+        subcategory_id: this.flowData.subcategory_id || null,
         output_type: this.flowData.output_type,
         flow_category_type: this.flowData.flow_category_type,
         token_cost: this.flowData.token_cost,
@@ -2016,6 +2203,7 @@ class DevBuilderView extends BaseView {
         flowId = data.id;
         this.flowId = flowId;
         this.isEditMode = true;
+        this.flowData.owner_id = this.userId;
         
         // Update URL without reload
         const newUrl = `/dev/builder?id=${flowId}`;
@@ -2026,6 +2214,8 @@ class DevBuilderView extends BaseView {
       await this.saveTechnicalDetails(flowId);
       
       this.hasUnsavedChanges = false;
+      this.updateStatusBadge();
+      this.renderFooter();
       this.showNotification('Flujo guardado correctamente', 'success');
       
     } catch (err) {
@@ -2066,27 +2256,121 @@ class DevBuilderView extends BaseView {
       this.showNotification('Guarda el flujo primero', 'warning');
       return;
     }
-    
-    // Validaciones antes de publicar
+    if (!this.isLead()) {
+      this.showNotification('Solo un Lead puede publicar directamente', 'warning');
+      return;
+    }
     if (this.inputSchema.length === 0) {
       this.showNotification('Agrega al menos un campo de entrada', 'warning');
       return;
     }
-    
     if (!this.technicalDetails.webhook_url_prod && !this.technicalDetails.webhook_url_test) {
       this.showNotification('Configura al menos un webhook', 'warning');
       this.switchTab('technical');
       return;
     }
-    
     try {
       this.flowData.status = 'published';
       await this.saveFlow();
       this.updateStatusBadge();
+      this.renderFooter();
       this.showNotification('¡Flujo publicado exitosamente!', 'success');
     } catch (err) {
       console.error('Error publishing flow:', err);
       this.showNotification('Error al publicar el flujo', 'error');
+    }
+  }
+
+  async requestReview() {
+    if (!this.flowId || !this.supabase) return;
+    if (this.flowData.status !== 'draft') return;
+    if (!this.flowData.name.trim()) {
+      this.showNotification('Guarda el flujo antes de solicitar revisión', 'warning');
+      return;
+    }
+    try {
+      const { error } = await this.supabase
+        .from('content_flows')
+        .update({ status: 'checking' })
+        .eq('id', this.flowId);
+      if (error) throw error;
+      this.flowData.status = 'checking';
+      this.updateStatusBadge();
+      this.renderFooter();
+      this.showNotification('Revisión solicitada. Un Lead aprobará el flujo.', 'success');
+    } catch (err) {
+      console.error('Error requesting review:', err);
+      this.showNotification('Error al solicitar revisión', 'error');
+    }
+  }
+
+  async approveAndPublish() {
+    if (!this.flowId || !this.supabase || !this.isLead()) return;
+    try {
+      if (!this.technicalDetails.webhook_url_prod && this.technicalDetails.webhook_url_test) {
+        this.technicalDetails.webhook_url_prod = this.technicalDetails.webhook_url_test;
+        await this.saveTechnicalDetails(this.flowId);
+      }
+      const { error } = await this.supabase
+        .from('content_flows')
+        .update({ status: 'published' })
+        .eq('id', this.flowId);
+      if (error) throw error;
+      this.flowData.status = 'published';
+      this.updateStatusBadge();
+      this.renderFooter();
+      this.showNotification('Flujo aprobado y publicado', 'success');
+    } catch (err) {
+      console.error('Error approving flow:', err);
+      this.showNotification('Error al aprobar y publicar', 'error');
+    }
+  }
+
+  async rejectFlow() {
+    if (!this.flowId || !this.supabase || !this.isLead()) return;
+    const note = window.prompt('Motivo del rechazo (opcional):') || '';
+    try {
+      const { error } = await this.supabase
+        .from('content_flows')
+        .update({ status: 'draft' })
+        .eq('id', this.flowId);
+      if (error) throw error;
+      this.flowData.status = 'draft';
+      this.updateStatusBadge();
+      this.renderFooter();
+      this.showNotification('Flujo rechazado. Vuelve a borrador.', 'info');
+      if (note && window.authService?.supabase) {
+        // Opcional: crear notificación para el autor
+        await window.authService.supabase.from('developer_notifications').insert({
+          recipient_user_id: this.flowData.owner_id,
+          flow_id: this.flowId,
+          severity: 'info',
+          title: 'Flujo rechazado',
+          message: note || 'Tu flujo fue rechazado y está en borrador.'
+        });
+      }
+    } catch (err) {
+      console.error('Error rejecting flow:', err);
+      this.showNotification('Error al rechazar', 'error');
+    }
+  }
+
+  async unpublishFlow() {
+    if (!this.flowId || !this.supabase || !this.isLead()) return;
+    if (!confirm('¿Despublicar este flujo? Dejará de estar visible para los clientes.')) return;
+    try {
+      const { error } = await this.supabase
+        .from('content_flows')
+        .update({ status: 'draft' })
+        .eq('id', this.flowId);
+      if (error) throw error;
+      this.flowData.status = 'draft';
+      this.updateStatusBadge();
+      this.renderFooter();
+      this.showNotification('Flujo despublicado', 'info');
+    } catch (err) {
+      console.error('Error unpublishing flow:', err);
+      this.showNotification('Error al despublicar', 'error');
     }
   }
 
@@ -2152,6 +2436,15 @@ class DevBuilderView extends BaseView {
     URL.revokeObjectURL(url);
     
     this.showNotification('Flujo exportado', 'success');
+  }
+
+  showJsonSchemaModal() {
+    const modal = this.querySelector('#jsonSchemaModal');
+    const codeEl = this.querySelector('#jsonSchemaModalCode');
+    if (!modal || !codeEl) return;
+    const schema = { fields: this.inputSchema };
+    codeEl.textContent = JSON.stringify(schema, null, 2);
+    modal.style.display = 'flex';
   }
 
   copySchema() {

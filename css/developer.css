@@ -1405,6 +1405,11 @@ body.sidebar-collapsed .builder-header {
   color: #22c55e;
 }
 
+.builder-status-badge.checking {
+  background: rgba(245, 158, 11, 0.2);
+  color: var(--dev-warning);
+}
+
 .builder-header-right {
   display: flex;
   align-items: center;
@@ -1554,9 +1559,119 @@ body.sidebar-collapsed .builder-header {
   grid-template-rows: 1fr;
   margin: 0;
   padding: 0;
-  height: 100vh;
+  flex: 1 1 0;
   min-height: 0;
+  height: auto;
   overflow: hidden;
+}
+
+/* Cuando hay footer, el contenedor es flex para que main ceda espacio */
+#app-container:has(.builder-footer) {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#app-container:has(.builder-footer) .builder-main {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+/* Footer Builder: ciclo de vida del flujo */
+.builder-footer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 20px;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  min-height: 52px;
+}
+
+.builder-footer-message {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.builder-footer-message.has-changes {
+  color: var(--dev-warning);
+}
+
+.builder-footer-message.waiting {
+  color: var(--dev-info);
+}
+
+.builder-footer-message.published-warning {
+  color: var(--dev-warning);
+  font-weight: 500;
+}
+
+.builder-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-builder-footer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+}
+
+.btn-builder-footer:hover {
+  background: var(--bg-hover);
+  border-color: var(--dev-primary);
+  color: var(--dev-primary-light);
+}
+
+.btn-builder-footer.btn-save-draft,
+.btn-builder-footer.btn-update-flow {
+  background: var(--bg-primary);
+}
+
+.btn-builder-footer.btn-primary-footer,
+.btn-builder-footer.btn-approve-publish {
+  background: var(--dev-primary);
+  border-color: var(--dev-primary);
+  color: white;
+}
+
+.btn-builder-footer.btn-primary-footer:hover,
+.btn-builder-footer.btn-approve-publish:hover {
+  background: var(--dev-primary-dark);
+  border-color: var(--dev-primary-dark);
+  color: white;
+}
+
+.btn-builder-footer.btn-reject {
+  border-color: var(--dev-error);
+  color: var(--dev-error);
+}
+
+.btn-builder-footer.btn-reject:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.btn-builder-footer.btn-unpublish {
+  border-color: var(--dev-warning);
+  color: var(--dev-warning);
+}
+
+.btn-builder-footer.btn-unpublish:hover {
+  background: rgba(245, 158, 11, 0.1);
 }
 
 @media (max-width: 1200px) {
@@ -2356,6 +2471,47 @@ body.sidebar-collapsed .builder-header {
 
 .builder-modal .modal-header h3 i {
   color: var(--dev-primary);
+}
+
+/* Modal Ver JSON Schema */
+.builder-json-modal-body {
+  max-height: 60vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.builder-json-schema-pre {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  margin: 0 0 12px 0;
+  padding: 16px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+  white-space: pre;
+}
+
+.builder-json-schema-pre code {
+  font-family: inherit;
+}
+
+.builder-json-hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.builder-json-hint code {
+  background: var(--bg-secondary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
 }
 
 /* Preview Container */
