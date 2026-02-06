@@ -3091,6 +3091,34 @@ body.sidebar-collapsed .builder-header {
   min-height: 60px;
 }
 
+.dev-lead-modal-wide .modal-content {
+  max-width: 560px;
+}
+
+.dev-lead-modal .form-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.dev-lead-modal .form-row .form-group {
+  flex: 1;
+  min-width: 120px;
+}
+
+.dev-lead-modal .toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+.dev-lead-modal .toggle-label input[type="checkbox"] {
+  width: auto;
+}
+
 /* Header */
 .dev-test-header {
   display: flex;
