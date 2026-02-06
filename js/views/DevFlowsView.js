@@ -186,15 +186,14 @@ class DevFlowsView extends BaseView {
           version,
           flow_image_url,
           created_at,
-          updated_at,
           content_categories (name)
         `)
         .eq('owner_id', this.userId)
-        .order('updated_at', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      this.flows = flows || [];
+      this.flows = Array.isArray(flows) ? flows : [];
       this.applyFilters();
     } catch (error) {
       console.error('Error cargando flujos:', error);
