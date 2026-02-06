@@ -153,13 +153,25 @@ class HogarView extends BaseView {
 
       this.organizations = Array.from(orgsMap.values());
 
-      // Solo colores de marca para degradados (sistema brand_colors intacto)
       for (const org of this.organizations) {
         try {
           org.brandColors = await this.getOrganizationBrandColors(org.id);
+          const [creditsRes, membersRes, brandsRes] = await Promise.all([
+            this.supabase.from('organization_credits').select('credits_available, credits_total').eq('organization_id', org.id).maybeSingle(),
+            this.supabase.from('organization_members').select('id', { count: 'exact', head: true }).eq('organization_id', org.id),
+            this.supabase.from('brand_containers').select('id', { count: 'exact', head: true }).eq('organization_id', org.id)
+          ]);
+          const credits = creditsRes.data;
+          org.stats = {
+            credits_available: credits?.credits_available ?? 0,
+            credits_total: credits?.credits_total ?? 0,
+            members_count: membersRes.count ?? 0,
+            brands_count: brandsRes.count ?? 0
+          };
         } catch (error) {
-          console.error(`Error cargando brand colors para org ${org.id}:`, error);
+          console.error(`Error cargando datos org ${org.id}:`, error);
           org.brandColors = [];
+          org.stats = { credits_available: 0, credits_total: 0, members_count: 0, brands_count: 0 };
         }
       }
 
@@ -169,7 +181,7 @@ class HogarView extends BaseView {
       } else {
         if (emptyEl) emptyEl.style.display = 'none';
         if (gridEl) gridEl.style.display = 'grid';
-        gridEl.innerHTML = '';
+        this.renderOrganizations();
       }
     } catch (error) {
       console.error('Error cargando organizaciones:', error);
@@ -339,17 +351,100 @@ class HogarView extends BaseView {
    * Navegar a una organización (ir a living con esa organización seleccionada)
    */
   navigateToOrganization(orgId) {
-    // Guardar organización seleccionada en el estado (para compatibilidad)
     if (window.appState) {
       window.appState.set('selectedOrganizationId', orgId, true);
     }
-    
-    // Navegar a la ruta de organización
     if (window.router) {
       window.router.navigate(`/org/${orgId}/living`);
     }
   }
 
+  /**
+   * Renderizar cards de organizaciones (estilo imagen: izquierda gradiente → clic a Living)
+   */
+  renderOrganizations() {
+    const gridEl = this.querySelector('#organizationsGrid');
+    if (!gridEl) return;
+    gridEl.innerHTML = this.organizations.map(org => this.renderOrganizationCard(org)).join('');
+
+    this.organizations.forEach(org => {
+      const card = gridEl.querySelector(`[data-org-id="${org.id}"]`);
+      const leftPanel = card?.querySelector('.org-card-cover');
+      if (leftPanel) {
+        leftPanel.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.navigateToOrganization(org.id);
+        });
+        leftPanel.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.stopPropagation();
+            this.navigateToOrganization(org.id);
+          }
+        });
+      }
+      const btnSettings = card?.querySelector('.org-card-btn-settings');
+      if (btnSettings) {
+        btnSettings.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (window.router) window.router.navigate(`/org/${org.id}/settings`);
+        });
+      }
+    });
+  }
+
+  /**
+   * Card tal cual imagen: izq gradiente + logo 2 círculos + % + valor (clic → Living); der nombre + subtítulo + tags + 3 iconos
+   */
+  renderOrganizationCard(org) {
+    const stats = org.stats || {};
+    const creditsTotal = stats.credits_total || 0;
+    const creditsAvail = stats.credits_available ?? 0;
+    const pct = creditsTotal > 0 ? ((creditsAvail / creditsTotal) * 100).toFixed(2).replace('.', ',') : '100';
+    const valueLabel = creditsTotal > 0 ? `${creditsAvail.toLocaleString('es')} tokens` : '—';
+    const name = (org.name || '').trim() || 'Organización';
+    const initial1 = name.charAt(0).toUpperCase();
+    const initial2 = name.charAt(1) ? name.charAt(1).toUpperCase() : initial1;
+    const brandColors = org.brandColors || [];
+    const hasBranding = brandColors.length > 0;
+    const gradientCss = hasBranding ? this.buildBrandGradientCss(brandColors) : '';
+
+    const subtitle = `${stats.brands_count ?? 0} marcas · ${stats.members_count ?? 0} miembros`;
+    const tag1 = creditsTotal > 0 ? `${creditsAvail.toLocaleString('es')} / ${creditsTotal.toLocaleString('es')}` : '—';
+    const tag2 = (org.plan_type || 'Starter').toString().toUpperCase();
+
+    return `
+    <div class="org-card org-card-trading" data-org-id="${org.id}">
+      <div class="org-card-cover org-card-cover--to-living ${hasBranding ? 'org-card-cover--branded' : ''}" ${hasBranding && gradientCss ? `style="--org-cover-gradient: ${gradientCss}"` : ''} role="button" tabindex="0" aria-label="Entrar a ${this.escapeHtml(name)}">
+        <div class="org-card-cover-streak" aria-hidden="true"></div>
+        <div class="org-card-cover-logo">
+          <span class="org-card-logo-circle org-card-logo-circle--first">${this.escapeHtml(initial1)}</span>
+          <span class="org-card-logo-circle org-card-logo-circle--second">${this.escapeHtml(initial2)}</span>
+        </div>
+        <div class="org-card-cover-main">
+          <span class="org-card-cover-percent">${pct} %</span>
+          <span class="org-card-cover-value">${valueLabel}</span>
+        </div>
+      </div>
+      <div class="org-card-body">
+        <div class="org-card-body-top">
+          <h3 class="org-card-name">${this.escapeHtml(name)}</h3>
+          <div class="org-card-tags">
+            <span class="org-card-tag">${this.escapeHtml(tag1)}</span>
+            <span class="org-card-tag">${tag2}</span>
+          </div>
+        </div>
+        <p class="org-card-subtitle">${this.escapeHtml(subtitle)}</p>
+        <div class="org-card-actions">
+          <button type="button" class="org-card-action-btn" aria-label="Añadir"><i class="fas fa-plus"></i></button>
+          <button type="button" class="org-card-action-btn" aria-label="Menú"><i class="fas fa-th"></i></button>
+          <button type="button" class="org-card-action-btn org-card-btn-settings" aria-label="Ir a Living"><i class="fas fa-chart-line"></i></button>
+        </div>
+      </div>
+    </div>`;
+  }
 
   /**
    * Configurar event listeners
