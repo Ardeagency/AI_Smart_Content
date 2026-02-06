@@ -222,9 +222,19 @@ CREATE TABLE public.content_flows (
   likes_count integer DEFAULT 0,
   saves_count integer DEFAULT 0,
   run_count integer DEFAULT 0,
+  subcategory_id uuid,
   CONSTRAINT content_flows_pkey PRIMARY KEY (id),
   CONSTRAINT content_flows_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.content_categories(id),
-  CONSTRAINT fk_flow_owner FOREIGN KEY (owner_id) REFERENCES public.users(id)
+  CONSTRAINT fk_flow_owner FOREIGN KEY (owner_id) REFERENCES public.users(id),
+  CONSTRAINT content_flows_subcategory_id_fkey FOREIGN KEY (subcategory_id) REFERENCES public.content_subcategories(id)
+);
+CREATE TABLE public.content_subcategories (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  name text NOT NULL,
+  description text,
+  order_index integer,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT content_subcategories_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.credit_usage (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
