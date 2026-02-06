@@ -1,15 +1,253 @@
 /**
- * Studio - Hoja en blanco (contenido por definir)
+ * Studio - Panel central + Sidebar editor creativo
  */
 @import url('base.css');
 @import url('navigation.css');
 
-.studio-blank {
+/* Layout: centro + sidebar derecha */
+.studio-layout {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
+  display: flex;
   background: var(--bg-dark, #17181D);
-  overflow: auto;
+  overflow: hidden;
+}
+
+/* ========== Panel central ========== */
+.studio-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 2rem 2rem 1.5rem;
+}
+
+.studio-prompt-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 0;
+}
+
+.studio-prompt {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 400;
+  color: var(--text-primary, #ecebda);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.studio-cursor {
+  opacity: 0.9;
+  animation: studio-blink 1s step-end infinite;
+}
+
+@keyframes studio-blink {
+  50% { opacity: 0; }
+}
+
+.studio-center-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 0.5rem;
+}
+
+.studio-center-icons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.studio-icon-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.studio-icon-btn:hover {
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.studio-icon-btn i {
+  font-size: 1.1rem;
+}
+
+.studio-submit-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent-warm, #e09145);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.studio-submit-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(224, 145, 69, 0.4);
+}
+
+.studio-submit-btn i {
+  font-size: 1.35rem;
+}
+
+/* ========== Sidebar editor creativo (derecha) ========== */
+.studio-sidebar-creative {
+  width: 320px;
+  min-width: 320px;
+  background: rgba(23, 24, 29, 0.95);
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.studio-sidebar-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.studio-tab {
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.studio-tab-past {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.studio-tab-future {
+  color: #7dd3fc;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(125, 211, 252, 0.15);
+  transition: background 0.2s ease;
+}
+
+.studio-tab-future:hover {
+  background: rgba(125, 211, 252, 0.25);
+}
+
+.studio-tab-future.active {
+  background: rgba(125, 211, 252, 0.2);
+}
+
+.studio-tab-future i {
+  font-size: 0.7rem;
+}
+
+.studio-sidebar-cards {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.studio-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.studio-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.studio-card-large {
+  padding: 1.25rem;
+}
+
+.studio-card-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.studio-card-icon i {
+  font-size: 0.9rem;
+}
+
+.studio-card-text {
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--text-primary, #ecebda);
+  margin: 0;
+  flex: 1;
+}
+
+.studio-card-tag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #f87171;
+}
+
+.studio-cards-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .studio-layout {
+    flex-direction: column;
+  }
+
+  .studio-sidebar-creative {
+    width: 100%;
+    min-width: 0;
+    max-height: 40vh;
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .studio-cards-row {
+    grid-template-columns: 1fr;
+  }
 }
