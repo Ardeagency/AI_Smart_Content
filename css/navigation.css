@@ -1824,22 +1824,28 @@ body.sidebar-collapsed .app-header.with-sidebar {
     color: var(--text-primary);
 }
 
-/* Developer Identity Card */
+/* Developer Identity Card - Idéntico al consumidor (Living/Brands): misma card, mismo icono naranja */
 .nav-identity-card.dev-identity {
-    background: linear-gradient(135deg, rgba(124, 58, 237, 0.15), rgba(124, 58, 237, 0.05));
-    border-color: rgba(124, 58, 237, 0.3);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.nav-identity-card.dev-identity:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.08);
 }
 
 .nav-dev-icon {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(124, 58, 237, 0.2);
-    border-radius: 10px;
-    color: #a78bfa;
-    font-size: 18px;
+    background: rgba(224, 145, 69, 0.1);
+    border-radius: 6px;
+    color: var(--accent-yellow);
+    font-size: 16px;
+    flex-shrink: 0;
 }
 
 /* Organization Dropdown */
@@ -1902,8 +1908,9 @@ body.sidebar-collapsed .app-header.with-sidebar {
 .nav-org-option-avatar {
     width: 32px;
     height: 32px;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 6px;
+    background: rgba(224, 145, 69, 0.15);
+    color: var(--accent-yellow);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1912,7 +1919,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
 .nav-org-option-avatar span {
     font-size: 14px;
     font-weight: 600;
-    color: white;
+    color: var(--accent-yellow);
 }
 
 .nav-org-option-info {
@@ -2014,20 +2021,18 @@ body.sidebar-collapsed .app-header.with-sidebar {
     font-size: 14px;
 }
 
-.nav-dev-stat i.fa-play {
-    color: #4ade80;
-}
-
-.nav-dev-stat i.fa-star {
-    color: #fbbf24;
+.nav-dev-stat i {
+    font-size: 14px;
+    color: var(--accent-yellow);
 }
 
 .nav-dev-stat span {
-    font-weight: 500;
+    font-weight: 600;
     color: var(--text-primary);
+    font-size: 13px;
 }
 
-/* Mode Switch Button */
+/* Mode Switch Button - Mismo estilo que nav-tokens (card sutil, acento naranja al hover) */
 .nav-mode-switch {
     display: flex;
     align-items: center;
@@ -2035,10 +2040,10 @@ body.sidebar-collapsed .app-header.with-sidebar {
     gap: 8px;
     width: 100%;
     padding: 10px 12px;
-    background: rgba(124, 58, 237, 0.1);
-    border: 1px solid rgba(124, 58, 237, 0.3);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--nav-border);
     border-radius: 10px;
-    color: #a78bfa;
+    color: var(--text-secondary);
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
@@ -2046,12 +2051,18 @@ body.sidebar-collapsed .app-header.with-sidebar {
 }
 
 .nav-mode-switch:hover {
-    background: rgba(124, 58, 237, 0.2);
-    border-color: rgba(124, 58, 237, 0.5);
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(224, 145, 69, 0.3);
+    color: var(--accent-yellow);
 }
 
 .nav-mode-switch i {
     font-size: 14px;
+    color: var(--text-muted);
+}
+
+.nav-mode-switch:hover i {
+    color: var(--accent-yellow);
 }
 
 /* =========================================

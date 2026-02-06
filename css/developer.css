@@ -24,114 +24,39 @@
 
 /* ==========================================
    Navegación modo desarrollador
+   Idéntica a Living/Brands: mismos fondos, bordes, cards, tipografía.
+   Sin overrides; el sidebar usa las mismas variables que el consumidor.
    ========================================== */
 .nav-mode-developer {
-  border-right-color: var(--dev-primary);
+  /* Mismo borde que sidebar consumidor */
+  border-right: 1px solid var(--nav-border);
 }
 
 .nav-mode-developer .nav-identity-section {
-  border-bottom-color: var(--dev-border);
+  border-bottom: 1px solid var(--nav-separator);
 }
 
-.nav-dev-identity .nav-identity-card {
-  background: linear-gradient(135deg, var(--dev-primary-dark) 0%, var(--dev-primary) 100%);
-}
-
-.nav-dev-badge {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-}
-
-.nav-dev-rank {
-  color: var(--dev-primary-light);
-  font-weight: 600;
-}
-
-.nav-dev-stats {
-  display: flex;
-  gap: 16px;
-  padding: 12px 16px;
-  background: var(--dev-bg-card);
-  border-radius: 8px;
-  margin: 8px 12px;
-}
-
-.nav-dev-stat {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-}
-
-.nav-dev-stat i {
-  color: var(--dev-primary-light);
-}
-
-/* ==========================================
-   Botón cambio de modo
-   ========================================== */
-.nav-mode-switch {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  margin: 8px 12px;
-  background: transparent;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.nav-mode-switch:hover {
-  background: var(--bg-secondary);
-  border-color: var(--dev-primary);
-  color: var(--dev-primary);
-}
-
-/* Indicador de créditos */
+/* Cards y stats del footer: mismo estilo que nav-tokens (definido en navigation.css) */
 .nav-credits-indicator {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
-  margin: 8px 12px;
-  background: var(--dev-bg-card);
-  border-radius: 8px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
   color: var(--text-primary);
-  font-size: 0.875rem;
+  font-size: 13px;
 }
 
 .nav-credits-indicator i {
   color: var(--accent-yellow);
+  font-size: 16px;
 }
 
 .nav-credits-label {
-  color: var(--text-secondary);
+  color: var(--text-muted);
+  font-size: 12px;
   margin-left: 4px;
-}
-
-/* ==========================================
-   Separador del nav
-   ========================================== */
-.nav-separator {
-  height: 1px;
-  background: var(--border-color);
-  margin: 16px 12px;
-}
-
-.nav-footer {
-  margin-top: auto;
-  padding-bottom: 16px;
 }
 
 /* ==========================================
