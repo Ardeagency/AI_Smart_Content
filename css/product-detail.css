@@ -1,22 +1,11 @@
 /**
  * Product Detail View Styles
- * Vista de detalle de producto con degradado oscuro
+ * Mismo diseño que Living/Brands: tema oscuro, naranja acento, mismas superficies
  * Estructura: Dos columnas independientes con scroll separado
  */
 
 /* ============================================
-   VARIABLES
-   ============================================ */
-:root {
-    --product-warm-1: #8B4332;
-    --product-warm-2: #5C2D22;
-    --product-warm-3: #3D1F17;
-    --product-warm-4: #2A1510;
-    --product-warm-5: #1A0D0A;
-}
-
-/* ============================================
-   CONTENEDOR PRINCIPAL
+   CONTENEDOR PRINCIPAL - Tema Living/Brands
    ============================================ */
 /* Rellena #app-container; el offset del sidebar lo aplica body.has-sidebar #app-container. */
 .product-detail-container {
@@ -26,13 +15,7 @@
     right: 0;
     bottom: 0;
     overflow: hidden;
-    background: linear-gradient(135deg, 
-        var(--product-warm-5) 0%,
-        var(--product-warm-4) 25%,
-        var(--product-warm-3) 50%,
-        var(--product-warm-4) 75%,
-        var(--product-warm-5) 100%
-    );
+    background: var(--living-bg-deep, #0A0C0F);
     padding-top: 48px;
 }
 
@@ -361,7 +344,7 @@
 }
 
 .editable-select option {
-    background: #1a1a1a;
+    background: var(--living-bg-surface, #0E1012);
     color: var(--text-primary, #ecebda);
 }
 

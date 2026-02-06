@@ -33,6 +33,8 @@
     /* Overlay y modales */
     --bg-overlay: rgba(14, 15, 18, 0.9);
     --bg-black: #000000;
+    /* Compatibilidad: mismo tono que living-bg-deep para vistas que usan --bg-dark */
+    --bg-dark: #0A0C0F;
     
     /* ============================================
        BLANCO FUNCIONAL (no protagonista)

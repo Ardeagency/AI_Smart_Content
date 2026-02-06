@@ -1,10 +1,10 @@
-/* Organization View Styles */
+/* Organization View Styles - Tema Living/Brands */
 .organization-container {
     min-height: 100vh;
     padding: 2rem;
     max-width: 1400px;
     margin: 0 auto;
-    background: #0E1012;
+    background: var(--living-bg-deep, #0A0C0F);
 }
 
 .organization-header {
@@ -20,7 +20,7 @@
 .organization-tabs {
     display: flex;
     gap: 1rem;
-    border-bottom: 1px solid rgba(236, 235, 218, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     margin-bottom: 2rem;
     flex-wrap: wrap;
 }

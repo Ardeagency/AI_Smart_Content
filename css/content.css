@@ -1,4 +1,4 @@
-/* Content View Styles */
+/* Content View Styles - Tema Living/Brands */
 /* El offset del sidebar lo aplica #app-container. */
 .content-container#contentListContainer,
 .content-detail-container {
@@ -7,7 +7,7 @@
     max-width: 1400px;
     margin: 0 auto;
     margin-left: 0;
-    background: #0E1012;
+    background: var(--living-bg-deep, #0A0C0F);
     padding-top: calc(48px + 2rem);
 }
 
@@ -46,8 +46,8 @@
 
 .filter-select {
     padding: 0.75rem;
-    background: var(--bg-secondary, #2a2a2a);
-    border: 1px solid rgba(236, 235, 218, 0.2);
+    background: var(--living-bg-surface, #0E1012);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 8px;
     color: var(--text-primary, #ecebda);
     font-size: 0.875rem;
@@ -66,10 +66,10 @@
 }
 
 .content-preview {
-    background: #121416;
+    background: var(--living-bg-card, rgba(21, 23, 28, 0.6));
     padding: 2rem;
     border-radius: 12px;
-    border: 1px solid #1B1D1F;
+    border: 1px solid rgba(255, 255, 255, 0.06);
     min-height: 400px;
 }
 

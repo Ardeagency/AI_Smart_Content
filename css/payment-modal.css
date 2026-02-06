@@ -30,8 +30,8 @@
 }
 
 .payment-modal {
-    background: linear-gradient(135deg, var(--bg-card), #0f0f0f) !important;
-    border: 2px solid rgba(210, 254, 63, 0.3) !important;
+    background: var(--living-bg-card, rgba(21, 23, 28, 0.95)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
     border-radius: 24px !important;
     width: 90% !important;
     max-width: 520px !important;

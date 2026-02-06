@@ -11,7 +11,7 @@
   right: 0;
   bottom: 0;
   display: flex;
-  background: var(--bg-dark, #17181D);
+  background: var(--living-bg-deep, #0A0C0F);
   overflow: hidden;
 }
 
@@ -76,7 +76,7 @@
   padding: 0.6rem 1.25rem;
   border-radius: 8px;
   border: none;
-  background: #1a1a1a;
+  background: var(--accent-warm, #e09145);
   color: #fff;
   font-size: 0.9rem;
   font-weight: 500;
@@ -85,7 +85,7 @@
 }
 
 .studio-btn-producir:hover:not(:disabled) {
-  background: #2a2a2a;
+  background: var(--accent-yellow-hover, #f0a055);
 }
 
 .studio-btn-producir:disabled {

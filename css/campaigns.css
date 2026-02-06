@@ -1,4 +1,4 @@
-/* Campaigns View Styles */
+/* Campaigns View Styles - Tema Living/Brands */
 /* El offset del sidebar lo aplica #app-container. */
 .campaigns-container,
 .campaign-detail-container {
@@ -7,7 +7,7 @@
     max-width: 1400px;
     margin: 0 auto;
     margin-left: 0;
-    background: #0E1012;
+    background: var(--living-bg-deep, #0A0C0F);
     padding-top: calc(48px + 2rem);
 }
 
@@ -47,7 +47,7 @@
 .campaign-detail-tabs {
     display: flex;
     gap: 1rem;
-    border-bottom: 1px solid rgba(236, 235, 218, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     margin-bottom: 2rem;
     flex-wrap: wrap;
 }

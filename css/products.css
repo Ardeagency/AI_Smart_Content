@@ -90,7 +90,7 @@
     padding-left: 3rem;
     padding-right: 2rem;
     padding-bottom: 0;
-    background: #0E1012;
+    background: var(--living-bg-deep, #0A0C0F);
     box-sizing: border-box;
 }
 
