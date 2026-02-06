@@ -2744,21 +2744,12 @@ body.sidebar-collapsed .builder-header {
 .dev-test-container {
   min-height: 100vh;
   padding: 24px;
-  padding-top: calc(48px + 24px);
-  margin-left: var(--nav-width, 250px);
-  transition: margin-left 0.3s ease;
   background: var(--bg-primary);
-}
-
-body.sidebar-collapsed .dev-test-container {
-  margin-left: var(--nav-width-collapsed, 60px);
 }
 
 @media (max-width: 768px) {
   .dev-test-container {
-    margin-left: 0;
     padding: 16px;
-    padding-top: calc(48px + 16px);
   }
 }
 
