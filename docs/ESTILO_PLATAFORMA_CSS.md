@@ -14,7 +14,7 @@ Todas las vistas deben usar el **mismo tema**: fondo oscuro (Living/Brands), nar
 
 | CSS | Cambios aplicados |
 |-----|-------------------|
-| **product-detail.css** | Nuevo product view: tema Living/Brands, dos columnas (galería + info), breadcrumbs, CTA naranja. |
+| **product-detail.css** | Ficha técnica del producto para IA: tema Living/Brands, galería + datos (descripción, beneficios, diferenciación, modo de uso, ingredientes, etc.). Sin carrito. |
 | **audiences.css** | Contenedor `--living-bg-deep`; secciones `--living-bg-card` y borde. |
 | **campaigns.css** | Contenedor `--living-bg-deep`; tabs con borde plataforma. |
 | **content.css** | Contenedor `--living-bg-deep`; filtros `--living-bg-surface`; preview `--living-bg-card`. |

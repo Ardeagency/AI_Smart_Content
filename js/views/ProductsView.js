@@ -178,7 +178,22 @@ class ProductsView extends BaseView {
   }
 
   /**
-   * Generar HTML del detalle (referencia e-commerce: galería + info + CTA)
+   * Etiqueta legible para tipo_producto (ficha técnica)
+   */
+  getTipoProductoLabel(tipo) {
+    const map = {
+      todos: 'Todos', bebida: 'Bebidas', bebida_alcoholica: 'Bebidas Alcohólicas',
+      agua: 'Agua', energetica: 'Bebidas Energéticas', alimento: 'Alimentos', snack: 'Snacks',
+      suplemento_alimenticio: 'Suplementos', cosmetico: 'Cosméticos', skincare: 'Skincare',
+      maquillaje: 'Maquillaje', perfume: 'Perfumes', cuidado_cabello: 'Cuidado del Cabello',
+      app: 'Apps/Software', electronico: 'Electrónicos', smartphone: 'Smartphones',
+      ropa: 'Ropa', calzado: 'Calzado', accesorio_moda: 'Accesorios de Moda', otro: 'Otros'
+    };
+    return map[tipo] || tipo || '—';
+  }
+
+  /**
+   * Generar HTML del detalle: ficha técnica para IA (datos para crear contenido)
    */
   getProductDetailHTML(product, images, brandName, backUrl) {
     const mainImage = images.length > 0 ? images[0].image_url : '';
@@ -188,12 +203,27 @@ class ProductsView extends BaseView {
     const desc = (product.descripcion_producto || '').trim();
     const variantes = (product.variantes_producto || '').trim();
     const shortId = product.id ? product.id.slice(0, 8) : '';
+    const tipoLabel = this.getTipoProductoLabel(product.tipo_producto || '');
 
     const thumbsHtml = thumbnails.map((img, i) => `
       <div class="product-view-thumb ${i === 0 ? 'active' : ''}" data-index="${i}" role="button" tabindex="0">
         <img src="${img.image_url}" alt="Miniatura ${i + 1}" loading="lazy">
       </div>
     `).join('');
+
+    const benefit1 = (product.beneficio_1 || '').trim();
+    const benefit2 = (product.beneficio_2 || '').trim();
+    const benefit3 = (product.beneficio_3 || '').trim();
+    const diferenciacion = (product.diferenciacion || '').trim();
+    const modoUso = (product.modo_uso || '').trim();
+    const ingredientes = (product.ingredientes || '').trim();
+
+    const section = (title, content) => content ? `
+      <div class="product-view-sheet-section">
+        <h3 class="product-view-sheet-title">${this.escapeHtml(title)}</h3>
+        <div class="product-view-sheet-value">${this.escapeHtml(content)}</div>
+      </div>
+    ` : '';
 
     return `
       <div class="product-view">
@@ -205,8 +235,9 @@ class ProductsView extends BaseView {
           <span>/</span>
           <span>${this.escapeHtml(brandName)}</span>
           <span>/</span>
-          <span>${this.escapeHtml(product.nombre_producto || 'Detalle')}</span>
+          <span>${this.escapeHtml(product.nombre_producto || 'Ficha técnica')}</span>
         </nav>
+        <p class="product-view-subtitle">Datos para que los modelos de IA generen contenido de este producto.</p>
         <div class="product-view-grid">
           <div class="product-view-gallery">
             <div class="product-view-main-wrap">
@@ -223,25 +254,31 @@ class ProductsView extends BaseView {
               ${shortId ? `<span class="product-view-product-id">${this.escapeHtml(shortId)}</span>` : ''}
             </div>
             <h1 class="product-view-title">${this.escapeHtml(product.nombre_producto || 'Sin nombre')}</h1>
-            <div class="product-view-rating">
-              <span class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></span>
-              <span>Sin valoraciones</span>
+            <div class="product-view-sheet">
+              <div class="product-view-sheet-row">
+                <span class="product-view-sheet-label">Tipo de producto</span>
+                <span class="product-view-sheet-value">${this.escapeHtml(tipoLabel)}</span>
+              </div>
+              ${price != null ? `
+              <div class="product-view-sheet-row">
+                <span class="product-view-sheet-label">Precio</span>
+                <span class="product-view-sheet-value">${this.formatPrice(price)} ${this.escapeHtml(moneda)}</span>
+              </div>
+              ` : ''}
+              ${variantes ? `
+              <div class="product-view-sheet-row">
+                <span class="product-view-sheet-label">Variantes</span>
+                <span class="product-view-sheet-value">${this.escapeHtml(variantes)}</span>
+              </div>
+              ` : ''}
             </div>
-            ${price != null ? `<div class="product-view-price">${this.formatPrice(price)}<span class="currency">${this.escapeHtml(moneda)}</span></div>` : ''}
-            ${variantes ? `<div class="product-view-option"><span class="product-view-option-label">Variantes</span><span class="product-view-option-value">${this.escapeHtml(variantes)}</span></div>` : ''}
-            <div class="product-view-actions">
-              <button type="button" class="product-view-cta" id="productViewAddToCart">
-                <i class="fas fa-shopping-cart"></i> Añadir al carrito
-              </button>
-              <button type="button" class="product-view-fav" id="productViewFav" title="Favoritos" aria-label="Añadir a favoritos">
-                <i class="fas fa-heart"></i>
-              </button>
-            </div>
-            <div class="product-view-shipping">
-              <i class="fas fa-truck"></i>
-              <span>Envío según disponibilidad</span>
-            </div>
-            ${desc ? `<div class="product-view-description">${this.escapeHtml(desc)}</div>` : ''}
+            ${section('Descripción', desc)}
+            ${section('Beneficio 1', benefit1)}
+            ${section('Beneficio 2', benefit2)}
+            ${section('Beneficio 3', benefit3)}
+            ${section('Diferenciación', diferenciacion)}
+            ${section('Modo de uso', modoUso)}
+            ${section('Ingredientes', ingredientes)}
           </div>
         </div>
       </div>
@@ -286,7 +323,7 @@ class ProductsView extends BaseView {
   }
 
   /**
-   * Inicializar solo la pantalla de detalle (galería, volver, CTA)
+   * Inicializar solo la pantalla de detalle (galería, volver)
    */
   initProductDetail() {
     const container = this.container || document.getElementById('app-container');
@@ -296,8 +333,6 @@ class ProductsView extends BaseView {
     const thumbsWrap = container.querySelector('#productViewThumbnails');
     const thumbs = thumbsWrap ? thumbsWrap.querySelectorAll('.product-view-thumb') : [];
     const backBtn = container.querySelector('.back-to-products-btn');
-    const addToCart = container.querySelector('#productViewAddToCart');
-    const favBtn = container.querySelector('#productViewFav');
 
     if (backBtn) {
       backBtn.addEventListener('click', (e) => {
@@ -324,19 +359,6 @@ class ProductsView extends BaseView {
         }
       });
     });
-
-    if (addToCart) {
-      addToCart.addEventListener('click', () => {
-        this.showNotification('Añadido al carrito (demo)', 'success');
-      });
-    }
-    if (favBtn) {
-      favBtn.addEventListener('click', () => {
-        favBtn.classList.toggle('active');
-        const added = favBtn.classList.contains('active');
-        this.showNotification(added ? 'Añadido a favoritos' : 'Quitado de favoritos', 'info');
-      });
-    }
   }
 
   /**
