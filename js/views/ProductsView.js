@@ -178,32 +178,32 @@ class ProductsView extends BaseView {
   }
 
   /**
-   * Etiqueta legible para tipo_producto (ficha técnica)
+   * Opciones para tipo_producto (select editable)
    */
-  getTipoProductoLabel(tipo) {
-    const map = {
-      todos: 'Todos', bebida: 'Bebidas', bebida_alcoholica: 'Bebidas Alcohólicas',
-      agua: 'Agua', energetica: 'Bebidas Energéticas', alimento: 'Alimentos', snack: 'Snacks',
-      suplemento_alimenticio: 'Suplementos', cosmetico: 'Cosméticos', skincare: 'Skincare',
-      maquillaje: 'Maquillaje', perfume: 'Perfumes', cuidado_cabello: 'Cuidado del Cabello',
-      app: 'Apps/Software', electronico: 'Electrónicos', smartphone: 'Smartphones',
-      ropa: 'Ropa', calzado: 'Calzado', accesorio_moda: 'Accesorios de Moda', otro: 'Otros'
-    };
-    return map[tipo] || tipo || '—';
+  getTipoProductoOptions() {
+    return [
+      { value: 'bebida', label: 'Bebidas' }, { value: 'bebida_alcoholica', label: 'Bebidas Alcohólicas' },
+      { value: 'agua', label: 'Agua' }, { value: 'energetica', label: 'Bebidas Energéticas' },
+      { value: 'alimento', label: 'Alimentos' }, { value: 'snack', label: 'Snacks' },
+      { value: 'suplemento_alimenticio', label: 'Suplementos' }, { value: 'cosmetico', label: 'Cosméticos' },
+      { value: 'skincare', label: 'Skincare' }, { value: 'maquillaje', label: 'Maquillaje' },
+      { value: 'perfume', label: 'Perfumes' }, { value: 'cuidado_cabello', label: 'Cuidado del Cabello' },
+      { value: 'app', label: 'Apps/Software' }, { value: 'electronico', label: 'Electrónicos' },
+      { value: 'smartphone', label: 'Smartphones' }, { value: 'ropa', label: 'Ropa' },
+      { value: 'calzado', label: 'Calzado' }, { value: 'accesorio_moda', label: 'Accesorios de Moda' },
+      { value: 'otro', label: 'Otros' }
+    ];
   }
 
   /**
-   * Generar HTML del detalle: ficha técnica para IA (datos para crear contenido)
+   * Generar HTML del detalle: ficha técnica con todos los campos editables
    */
   getProductDetailHTML(product, images, brandName, backUrl) {
     const mainImage = images.length > 0 ? images[0].image_url : '';
     const thumbnails = images.slice(0, 8);
-    const price = product.precio_producto != null ? Number(product.precio_producto) : null;
+    const precio = product.precio_producto != null ? String(product.precio_producto) : '';
     const moneda = product.moneda || 'USD';
-    const desc = (product.descripcion_producto || '').trim();
-    const variantes = (product.variantes_producto || '').trim();
-    const shortId = product.id ? product.id.slice(0, 8) : '';
-    const tipoLabel = this.getTipoProductoLabel(product.tipo_producto || '');
+    const tipoProducto = product.tipo_producto || 'otro';
 
     const thumbsHtml = thumbnails.map((img, i) => `
       <div class="product-view-thumb ${i === 0 ? 'active' : ''}" data-index="${i}" role="button" tabindex="0">
@@ -211,19 +211,30 @@ class ProductsView extends BaseView {
       </div>
     `).join('');
 
-    const benefit1 = (product.beneficio_1 || '').trim();
-    const benefit2 = (product.beneficio_2 || '').trim();
-    const benefit3 = (product.beneficio_3 || '').trim();
-    const diferenciacion = (product.diferenciacion || '').trim();
-    const modoUso = (product.modo_uso || '').trim();
-    const ingredientes = (product.ingredientes || '').trim();
+    const tipoOpts = this.getTipoProductoOptions();
+    const tipoOptionsHtml = tipoOpts.map(o => `<option value="${this.escapeHtml(o.value)}" ${o.value === tipoProducto ? 'selected' : ''}>${this.escapeHtml(o.label)}</option>`).join('');
+    const monedas = [{ v: 'USD', l: 'USD' }, { v: 'EUR', l: 'EUR' }, { v: 'MXN', l: 'MXN' }, { v: 'COP', l: 'COP' }, { v: 'ARS', l: 'ARS' }, { v: 'CLP', l: 'CLP' }];
+    const monedaOptionsHtml = monedas.map(m => `<option value="${m.v}" ${moneda === m.v ? 'selected' : ''}>${m.l}</option>`).join('');
 
-    const section = (title, content) => content ? `
+    const v = (key) => (product[key] ?? '');
+    const rowInput = (label, field, value, type = 'text', placeholder = '') => `
+      <div class="product-view-sheet-row">
+        <span class="product-view-sheet-label">${this.escapeHtml(label)}</span>
+        <input type="${type}" class="product-view-input product-view-input-inline" data-field="${field}" value="${this.escapeHtml(String(value ?? ''))}" ${placeholder ? ` placeholder="${this.escapeHtml(placeholder)}"` : ''} ${type === 'number' ? ' step="any"' : ''}>
+      </div>
+    `;
+    const rowSelect = (label, field, optionsHtml) => `
+      <div class="product-view-sheet-row">
+        <span class="product-view-sheet-label">${this.escapeHtml(label)}</span>
+        <select class="product-view-select product-view-input-inline" data-field="${field}">${optionsHtml}</select>
+      </div>
+    `;
+    const sectionTextarea = (title, field, value) => `
       <div class="product-view-sheet-section">
         <h3 class="product-view-sheet-title">${this.escapeHtml(title)}</h3>
-        <div class="product-view-sheet-value">${this.escapeHtml(content)}</div>
+        <textarea class="product-view-textarea product-view-editable" data-field="${field}" rows="3" placeholder="Opcional">${this.escapeHtml(String(value ?? ''))}</textarea>
       </div>
-    ` : '';
+    `;
 
     return `
       <div class="product-view">
@@ -233,11 +244,8 @@ class ProductsView extends BaseView {
         <nav class="product-view-breadcrumbs" aria-label="Navegación">
           <a href="${backUrl}" data-router-link>Productos</a>
           <span>/</span>
-          <span>${this.escapeHtml(brandName)}</span>
-          <span>/</span>
           <span>${this.escapeHtml(product.nombre_producto || 'Ficha técnica')}</span>
         </nav>
-        <p class="product-view-subtitle">Datos para que los modelos de IA generen contenido de este producto.</p>
         <div class="product-view-grid">
           <div class="product-view-gallery">
             <div class="product-view-main-wrap">
@@ -249,40 +257,50 @@ class ProductsView extends BaseView {
             ${thumbnails.length > 0 ? `<div class="product-view-thumbnails" id="productViewThumbnails">${thumbsHtml}</div>` : ''}
           </div>
           <div class="product-view-info">
-            <div class="product-view-brand-row">
-              <span class="product-view-brand-name">${this.escapeHtml(brandName)}</span>
-              ${shortId ? `<span class="product-view-product-id">${this.escapeHtml(shortId)}</span>` : ''}
+            <div class="product-view-sheet-row product-view-title-row">
+              <label class="product-view-sheet-label">Nombre del producto</label>
+              <input type="text" class="product-view-input product-view-title-input" data-field="nombre_producto" value="${this.escapeHtml(product.nombre_producto || '')}" placeholder="Nombre del producto">
             </div>
-            <h1 class="product-view-title">${this.escapeHtml(product.nombre_producto || 'Sin nombre')}</h1>
             <div class="product-view-sheet">
-              <div class="product-view-sheet-row">
-                <span class="product-view-sheet-label">Tipo de producto</span>
-                <span class="product-view-sheet-value">${this.escapeHtml(tipoLabel)}</span>
-              </div>
-              ${price != null ? `
-              <div class="product-view-sheet-row">
-                <span class="product-view-sheet-label">Precio</span>
-                <span class="product-view-sheet-value">${this.formatPrice(price)} ${this.escapeHtml(moneda)}</span>
-              </div>
-              ` : ''}
-              ${variantes ? `
-              <div class="product-view-sheet-row">
-                <span class="product-view-sheet-label">Variantes</span>
-                <span class="product-view-sheet-value">${this.escapeHtml(variantes)}</span>
-              </div>
-              ` : ''}
+              ${rowSelect('Tipo de producto', 'tipo_producto', tipoOptionsHtml)}
+              ${rowInput('Precio', 'precio_producto', precio, 'number', '0')}
+              ${rowSelect('Moneda', 'moneda', monedaOptionsHtml)}
+              ${rowInput('Variantes', 'variantes_producto', v('variantes_producto'), 'text', 'Ej. color, talla')}
             </div>
-            ${section('Descripción', desc)}
-            ${section('Beneficio 1', benefit1)}
-            ${section('Beneficio 2', benefit2)}
-            ${section('Beneficio 3', benefit3)}
-            ${section('Diferenciación', diferenciacion)}
-            ${section('Modo de uso', modoUso)}
-            ${section('Ingredientes', ingredientes)}
+            ${sectionTextarea('Descripción', 'descripcion_producto', v('descripcion_producto'))}
+            ${sectionTextarea('Beneficio 1', 'beneficio_1', v('beneficio_1'))}
+            ${sectionTextarea('Beneficio 2', 'beneficio_2', v('beneficio_2'))}
+            ${sectionTextarea('Beneficio 3', 'beneficio_3', v('beneficio_3'))}
+            ${sectionTextarea('Diferenciación', 'diferenciacion', v('diferenciacion'))}
+            ${sectionTextarea('Modo de uso', 'modo_uso', v('modo_uso'))}
+            ${sectionTextarea('Ingredientes', 'ingredientes', v('ingredientes'))}
           </div>
         </div>
       </div>
     `;
+  }
+
+  /**
+   * Guardar un campo del producto en Supabase
+   */
+  async saveProductField(fieldName, value) {
+    if (!this.supabase || !this.productId) return;
+    const payload = { updated_at: new Date().toISOString() };
+    if (fieldName === 'precio_producto') {
+      const num = value === '' ? null : parseFloat(value);
+      payload[fieldName] = isNaN(num) ? null : num;
+    } else {
+      payload[fieldName] = value === '' ? null : value;
+    }
+    try {
+      const { error } = await this.supabase.from('products').update(payload).eq('id', this.productId);
+      if (error) throw error;
+      if (this.productData) this.productData[fieldName] = payload[fieldName];
+      this.showNotification('Guardado', 'success');
+    } catch (err) {
+      console.error('Error guardando:', err);
+      this.showNotification('Error al guardar', 'error');
+    }
   }
 
   escapeHtml(text) {
@@ -323,7 +341,7 @@ class ProductsView extends BaseView {
   }
 
   /**
-   * Inicializar solo la pantalla de detalle (galería, volver)
+   * Inicializar pantalla de detalle: galería, volver y campos editables (guardar al salir del campo)
    */
   initProductDetail() {
     const container = this.container || document.getElementById('app-container');
@@ -358,6 +376,25 @@ class ProductsView extends BaseView {
           thumb.click();
         }
       });
+    });
+
+    // Campos editables: guardar al perder foco (blur) o al cambiar (select)
+    container.querySelectorAll('[data-field]').forEach(el => {
+      const fieldName = el.getAttribute('data-field');
+      const initialValue = el.value !== undefined ? el.value : el.textContent;
+
+      const saveIfChanged = () => {
+        const current = el.value !== undefined ? el.value : el.textContent;
+        if (current !== initialValue) {
+          this.saveProductField(fieldName, current);
+        }
+      };
+
+      if (el.tagName === 'SELECT') {
+        el.addEventListener('change', () => this.saveProductField(fieldName, el.value));
+      } else {
+        el.addEventListener('blur', saveIfChanged);
+      }
     });
   }
 
