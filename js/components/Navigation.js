@@ -44,7 +44,7 @@ class Navigation {
     const orgMatch = path.match(/^\/org\/([^\/]+)/);
     if (orgMatch) {
       const orgId = orgMatch[1];
-      const brandMatch = path.match(/^\/org\/[^\/]+\/(?:brand|products)\/([^\/]+)/);
+      const brandMatch = path.match(/^\/org\/[^\/]+\/(?:brand|products|product-detail)\/([^\/]+)/);
       const brandId = brandMatch ? brandMatch[1] : null;
       return { mode: 'user', showSidebar: true, showHeader: true, orgId, brandId };
     }

@@ -714,10 +714,18 @@ if (typeof window.ProductsManager === 'undefined') {
             </div>
         `;
 
-        // Event listener para click en la card - navegar al detalle (respetar contexto org si aplica)
+        // Event listener para click en la card - navegar al detalle (respetar contexto org)
         card.addEventListener('click', (e) => {
             e.stopPropagation();
-            // Detalle de producto eliminado; se hará desde cero. Por ahora no navegar.
+            const path = window.location.pathname || '';
+            const orgMatch = path.match(/^\/org\/([^/]+)/);
+            if (orgMatch && window.router) {
+                const orgId = orgMatch[1];
+                const brandId = product.brand_container_id || '';
+                window.router.navigate(`/org/${orgId}/product-detail/${brandId}/${product.id}`);
+            } else if (window.router) {
+                window.router.navigate(`/products/${product.id}`);
+            }
         });
 
         return card;

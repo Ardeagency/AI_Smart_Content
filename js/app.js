@@ -165,6 +165,12 @@ class App {
     }
 
     if (viewsAvailable.ProductsView) {
+      // Product detail (antes que products/:brandId para que no se confunda el param)
+      this.router.register('/org/:orgId/product-detail/:brandId/:productId', window.ProductsView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+
       // Products - Lista de productos
       this.router.register('/org/:orgId/products', window.ProductsView, {
         requiresAuth: true,
