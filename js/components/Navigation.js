@@ -650,6 +650,7 @@ class Navigation {
       '/brand': 'Marca',
       '/brands': 'Marca',
       '/products': 'Productos',
+      '/product-detail': 'Productos',
       '/studio/catalog': 'Catálogo de flujos',
       '/studio': 'Studio',
       '/audiences': 'Audiencias',

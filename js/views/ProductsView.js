@@ -316,6 +316,16 @@ class ProductsView extends BaseView {
   }
 
   /**
+   * Actualizar header: en detalle de producto solo "Productos", sin nombre de marca ni ID
+   */
+  async updateHeader() {
+    await super.updateHeader();
+    if (this.productId) {
+      this.updateHeaderContext('Productos', null);
+    }
+  }
+
+  /**
    * Inicializar la vista (lista o detalle)
    */
   async init() {

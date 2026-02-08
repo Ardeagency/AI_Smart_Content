@@ -1,7 +1,7 @@
 /**
- * Product Detail View - Ficha técnica para IA
- * Tema Living/Brands. Dos columnas: galería (izq) + datos del producto para que los modelos generen contenido (der).
- * No es e-commerce: sin carrito ni valoraciones; solo datos del schema (descripción, beneficios, diferenciación, etc.).
+ * Product Detail View - Ficha técnica
+ * Tema Living/Brands. Dos columnas: galería (izq) + datos editables del producto (der).
+ * Sin carrito ni valoraciones; solo campos del schema (descripción, beneficios, diferenciación, etc.).
  */
 
 /* ============================================
