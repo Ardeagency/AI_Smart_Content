@@ -43,6 +43,7 @@
     max-height: none !important;
 }
 
+/* #app-container > main > div (living): sin padding superior ni inferior */
 .living-container {
     padding: 0;
     margin: 0;
@@ -50,8 +51,6 @@
     height: auto;
     background: var(--living-bg-deep);
     max-width: 100%;
-    padding-top: calc(60px + 2rem); /* Header fijo (60px) + separación; #app-container no aplica padding en esta vista */
-    padding-bottom: 4rem;
     overflow-x: hidden;
     overflow-y: visible;
     position: relative;
@@ -67,7 +66,6 @@ body.sidebar-collapsed .living-container {
 @media (max-width: 768px) {
     .living-container {
         margin-left: 0;
-        padding-top: calc(60px + 1rem);
     }
 }
 
@@ -76,7 +74,7 @@ body.sidebar-collapsed .living-container {
    Jerarquía: Protagonista absoluto, mesa de edición, daily output
    ============================================ */
 .living-hero-section {
-    padding: 4rem 4rem 5rem;
+    padding: 60px 4rem 5rem; /* 60px arriba para header fijo; contenedor sin padding */
     max-width: 1800px;
     margin: 0 auto;
     /* Aire alrededor, no full-width */
