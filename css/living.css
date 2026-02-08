@@ -50,7 +50,7 @@
     height: auto;
     background: var(--living-bg-deep);
     max-width: 100%;
-    padding-top: 2rem;
+    padding-top: calc(60px + 2rem); /* Header fijo (60px) + separación; #app-container no aplica padding en esta vista */
     padding-bottom: 4rem;
     overflow-x: hidden;
     overflow-y: visible;
@@ -67,7 +67,7 @@ body.sidebar-collapsed .living-container {
 @media (max-width: 768px) {
     .living-container {
         margin-left: 0;
-        padding-top: 1rem;
+        padding-top: calc(60px + 1rem);
     }
 }
 

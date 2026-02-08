@@ -1467,6 +1467,13 @@ body.has-sidebar.sidebar-collapsed #app-container {
     max-width: calc(100vw - var(--nav-width-collapsed, 64px));
 }
 
+/* Sin padding superior en Products (#app-container > div) y Living (#app-container > main); lo aplican sus contenedores internos */
+body.has-sidebar #app-container:has(> div.product-view),
+body.has-sidebar #app-container:has(> div.main-content > div.products-container),
+body.has-sidebar #app-container:has(> main.living-main-content) {
+    padding-top: 0;
+}
+
 /* =========================================
    APP HEADER (Nuevo sistema)
    ========================================= */
@@ -2065,6 +2072,13 @@ body.sidebar-collapsed .app-header.with-sidebar {
         margin-left: 0;
         max-width: 100vw;
         padding-top: 60px;
+    }
+
+    /* Misma excepción en móvil: sin padding superior en Products y Living */
+    body.has-sidebar #app-container:has(> div.product-view),
+    body.has-sidebar #app-container:has(> div.main-content > div.products-container),
+    body.has-sidebar #app-container:has(> main.living-main-content) {
+        padding-top: 0;
     }
 
     /* Overlay visible cuando nav está abierta */
