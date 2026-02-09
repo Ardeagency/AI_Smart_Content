@@ -187,22 +187,22 @@ class DevLeadVectorsView extends BaseView {
       .list(prefix || '', opts);
 
     if (error) throw error;
-    const items = data || [];
+    const items = Array.isArray(data) ? data : [];
     const files = [];
     const folderNames = new Set();
 
     for (const item of items) {
-      const name = item.name || '';
+      const name = (item && item.name != null) ? String(item.name) : '';
       const fullPath = prefix ? prefix + name : name;
       if (name.includes('/')) {
         const firstSegment = name.split('/')[0];
-        folderNames.add(firstSegment);
+        if (firstSegment) folderNames.add(firstSegment);
       } else {
         files.push({
           name: name,
           path: fullPath,
-          size: item.metadata?.size ?? 0,
-          updatedAt: item.updated_at || null
+          size: (item.metadata && item.metadata.size != null) ? Number(item.metadata.size) : 0,
+          updatedAt: item && item.updated_at ? item.updated_at : null
         });
       }
     }
@@ -225,87 +225,107 @@ class DevLeadVectorsView extends BaseView {
       const { folders, files } = await this.listStorage(this.currentPrefix);
       this.storageFiles = files;
 
-      if (breadcrumb) {
-        const parts = this.currentPrefix ? this.currentPrefix.replace(/\/$/, '').split('/') : [];
-        let html = '<span class="dev-lead-breadcrumb-item" data-prefix="">bucket</span>';
-        let acc = '';
-        parts.forEach(p => {
-          acc += (acc ? '/' : '') + p;
-          html += ` <span class="dev-lead-breadcrumb-sep">/</span> <span class="dev-lead-breadcrumb-item" data-prefix="${acc}/">${this.escapeHtml(p)}</span>`;
-        });
-        breadcrumb.innerHTML = html;
-        breadcrumb.querySelectorAll('.dev-lead-breadcrumb-item').forEach(el => {
-          el.addEventListener('click', () => {
-            this.currentPrefix = el.getAttribute('data-prefix') || '';
-            this.loadFiles();
-          });
-        });
-      }
-
-      const rows = [];
-
-      folders.forEach(f => {
-        rows.push(`
-          <tr class="dev-lead-file-row folder" data-path="${this.escapeHtml(f.path)}">
-            <td><i class="fas fa-folder"></i> <span class="dev-lead-path">${this.escapeHtml(f.name)}</span></td>
-            <td>—</td>
-            <td>—</td>
-            <td class="dev-lead-actions"></td>
-          </tr>`);
-      });
-
-      files.forEach(f => {
-        const sizeStr = f.size ? this.formatBytes(f.size) : '—';
-        const dateStr = f.updatedAt ? new Date(f.updatedAt).toLocaleString('es', { dateStyle: 'short', timeStyle: 'short' }) : '—';
-        rows.push(`
-          <tr class="dev-lead-file-row file" data-path="${this.escapeHtml(f.path)}">
-            <td><i class="fas fa-file"></i> <code class="dev-lead-path">${this.escapeHtml(f.path)}</code></td>
-            <td>${sizeStr}</td>
-            <td>${dateStr}</td>
-            <td class="dev-lead-actions">
-              <button type="button" class="btn-icon replace-file" title="Reemplazar" data-path="${this.escapeHtml(f.path)}"><i class="fas fa-edit"></i></button>
-              <button type="button" class="btn-icon vectorize-file" title="Vectorizar" data-path="${this.escapeHtml(f.path)}"><i class="fas fa-brain"></i></button>
-              <button type="button" class="btn-icon delete-file" title="Eliminar" data-path="${this.escapeHtml(f.path)}"><i class="fas fa-trash"></i></button>
-            </td>
-          </tr>`);
-      });
-
-      tbody.innerHTML = rows.join('');
+      this.renderBreadcrumb(breadcrumb);
+      this.renderFilesTable(tbody, folders, files);
 
       if (empty) {
         if (folders.length === 0 && files.length === 0) {
           empty.style.display = 'block';
-          empty.querySelector('p').textContent = this.currentPrefix ? 'No hay archivos en esta carpeta.' : 'No hay archivos en el bucket.';
+          const p = empty.querySelector('p');
+          if (p) p.textContent = this.currentPrefix ? 'No hay archivos en esta carpeta.' : 'No hay archivos en el bucket.';
         } else {
           empty.style.display = 'none';
         }
       }
-
-      // Clicks: carpeta = navegar; acciones = handlers
-      tbody.querySelectorAll('.dev-lead-file-row.folder').forEach(row => {
-        row.addEventListener('click', (e) => {
-          if (e.target.closest('.dev-lead-actions')) return;
-          this.currentPrefix = row.getAttribute('data-path') || '';
-          this.loadFiles();
-        });
-      });
-      tbody.querySelectorAll('.replace-file').forEach(btn => {
-        btn.addEventListener('click', (e) => { e.stopPropagation(); this.openUploadModal(btn.getAttribute('data-path')); });
-      });
-      tbody.querySelectorAll('.vectorize-file').forEach(btn => {
-        btn.addEventListener('click', (e) => { e.stopPropagation(); this.vectorizeFile(btn.getAttribute('data-path')); });
-      });
-      tbody.querySelectorAll('.delete-file').forEach(btn => {
-        btn.addEventListener('click', (e) => { e.stopPropagation(); this.deleteFile(btn.getAttribute('data-path')); });
-      });
     } catch (err) {
       console.error('Error listando bucket ai-knowledge:', err);
       tbody.innerHTML = '';
       if (empty) {
         empty.style.display = 'block';
-        empty.querySelector('p').textContent = 'Error: ' + (err.message || '');
+        const p = empty.querySelector('p');
+        if (p) p.textContent = 'Error: ' + (err && err.message ? err.message : '');
       }
     }
+  }
+
+  renderBreadcrumb(container) {
+    if (!container) return;
+    container.innerHTML = '';
+    const parts = this.currentPrefix ? this.currentPrefix.replace(/\/$/, '').split('/').filter(Boolean) : [];
+    const span = (text, prefix) => {
+      const s = document.createElement('span');
+      s.className = 'dev-lead-breadcrumb-item';
+      s.setAttribute('data-prefix', prefix);
+      s.textContent = text;
+      s.addEventListener('click', () => {
+        this.currentPrefix = s.getAttribute('data-prefix') || '';
+        this.loadFiles();
+      });
+      return s;
+    };
+    container.appendChild(span('bucket', ''));
+    let acc = '';
+    parts.forEach(p => {
+      const sep = document.createElement('span');
+      sep.className = 'dev-lead-breadcrumb-sep';
+      sep.textContent = ' / ';
+      container.appendChild(sep);
+      acc += (acc ? '/' : '') + p;
+      container.appendChild(span(p, acc + '/'));
+    });
+  }
+
+  renderFilesTable(tbody, folders, files) {
+    tbody.innerHTML = '';
+    const pathStr = (v) => (v != null && typeof v === 'string') ? v : '';
+
+    folders.forEach(f => {
+      const tr = document.createElement('tr');
+      tr.className = 'dev-lead-file-row folder';
+      tr.setAttribute('data-path', pathStr(f.path));
+      const name = pathStr(f.name);
+      tr.innerHTML = '<td><i class="fas fa-folder"></i> <span class="dev-lead-path"></span></td><td>—</td><td>—</td><td class="dev-lead-actions"></td>';
+      tr.querySelector('.dev-lead-path').textContent = name;
+      tr.addEventListener('click', (e) => {
+        if (e.target.closest('.dev-lead-actions')) return;
+        this.currentPrefix = tr.getAttribute('data-path') || '';
+        this.loadFiles();
+      });
+      tbody.appendChild(tr);
+    });
+
+    files.forEach(f => {
+      const tr = document.createElement('tr');
+      tr.className = 'dev-lead-file-row file';
+      tr.setAttribute('data-path', pathStr(f.path));
+      const sizeStr = f.size ? this.formatBytes(Number(f.size)) : '—';
+      const dateStr = f.updatedAt ? new Date(f.updatedAt).toLocaleString('es', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+      tr.innerHTML = '<td><i class="fas fa-file"></i> <code class="dev-lead-path"></code></td><td></td><td></td><td class="dev-lead-actions"></td>';
+      tr.querySelectorAll('td')[0].querySelector('.dev-lead-path').textContent = pathStr(f.path);
+      tr.querySelectorAll('td')[1].textContent = sizeStr;
+      tr.querySelectorAll('td')[2].textContent = dateStr;
+
+      const actions = tr.querySelector('.dev-lead-actions');
+      const path = pathStr(f.path);
+
+      const addAction = (cls, title, iconClass, handler) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn-icon ' + cls;
+        btn.title = title;
+        btn.setAttribute('data-path', path);
+        const icon = document.createElement('i');
+        icon.className = 'fas ' + iconClass;
+        btn.appendChild(icon);
+        btn.addEventListener('click', (e) => { e.stopPropagation(); handler(path); });
+        actions.appendChild(btn);
+      };
+      addAction('replace-file', 'Reemplazar', 'fa-edit', (p) => this.openUploadModal(p));
+      addAction('vectorize-file', 'Vectorizar', 'fa-brain', (p) => this.vectorizeFile(p));
+      addAction('delete-file', 'Eliminar', 'fa-trash', (p) => this.deleteFile(p));
+
+      tbody.appendChild(tr);
+    });
   }
 
   formatBytes(n) {
@@ -446,34 +466,64 @@ class DevLeadVectorsView extends BaseView {
     const empty = document.getElementById('vectorsEmpty');
     if (!tbody) return;
 
-    if (filesByPath.length === 0) {
-      tbody.innerHTML = '';
+    tbody.innerHTML = '';
+
+    if (!filesByPath || filesByPath.length === 0) {
       if (empty) {
         empty.style.display = 'block';
-        empty.querySelector('p').textContent = 'No hay vectores para el bucket ai-knowledge.';
+        const p = empty.querySelector('p');
+        if (p) p.textContent = 'No hay vectores para el bucket ai-knowledge.';
       }
       return;
     }
 
     if (empty) empty.style.display = 'none';
-    tbody.innerHTML = filesByPath.map(f => {
+
+    const pathStr = (v) => (v != null && typeof v === 'string') ? v : '';
+    filesByPath.forEach(f => {
+      const tr = document.createElement('tr');
+      tr.setAttribute('data-path', pathStr(f.source_path));
       const dateStr = f.created_at
         ? new Date(f.created_at).toLocaleString('es', { dateStyle: 'short', timeStyle: 'short' })
         : '-';
-      return `
-        <tr data-path="${this.escapeHtml(f.source_path)}">
-          <td><code class="dev-lead-path">${this.escapeHtml(f.source_path)}</code></td>
-          <td>${this.escapeHtml(f.source_type)}</td>
-          <td>${f.chunks}</td>
-          <td>${dateStr}</td>
-          <td class="dev-lead-actions">
-            <button type="button" class="btn-icon delete-vectors" title="Eliminar vectores de este archivo" data-path="${this.escapeHtml(f.source_path)}"><i class="fas fa-trash"></i></button>
-          </td>
-        </tr>`;
-    }).join('');
+      const path = pathStr(f.source_path);
+      const type = pathStr(f.source_type) || '-';
+      const chunks = Number(f.chunks) || 0;
 
-    tbody.querySelectorAll('.delete-vectors').forEach(btn => {
-      btn.addEventListener('click', () => this.deleteVectorsByPath(btn.getAttribute('data-path')));
+      const tdPath = document.createElement('td');
+      const code = document.createElement('code');
+      code.className = 'dev-lead-path';
+      code.textContent = path;
+      tdPath.appendChild(code);
+      tr.appendChild(tdPath);
+
+      const tdType = document.createElement('td');
+      tdType.textContent = type;
+      tr.appendChild(tdType);
+
+      const tdChunks = document.createElement('td');
+      tdChunks.textContent = String(chunks);
+      tr.appendChild(tdChunks);
+
+      const tdDate = document.createElement('td');
+      tdDate.textContent = dateStr;
+      tr.appendChild(tdDate);
+
+      const tdActions = document.createElement('td');
+      tdActions.className = 'dev-lead-actions';
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn-icon delete-vectors';
+      btn.title = 'Eliminar vectores de este archivo';
+      btn.setAttribute('data-path', path);
+      const icon = document.createElement('i');
+      icon.className = 'fas fa-trash';
+      btn.appendChild(icon);
+      btn.addEventListener('click', () => this.deleteVectorsByPath(path));
+      tdActions.appendChild(btn);
+      tr.appendChild(tdActions);
+
+      tbody.appendChild(tr);
     });
   }
 
