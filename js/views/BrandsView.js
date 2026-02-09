@@ -1292,25 +1292,6 @@ class BrandsView extends BaseView {
   setupInfoPanelEditables(container) {
     if (!container) return;
 
-    // Logo: input siempre clickeable (por encima del placeholder/imagen)
-    const logoWrap = container.querySelector('.info-logo-container');
-    if (logoWrap) {
-      const logoInput = logoWrap.querySelector('input[type="file"]');
-      if (logoInput) {
-        logoInput.removeEventListener('change', logoInput._logoChange);
-        logoInput._logoChange = (e) => {
-          if (e.target.files && e.target.files[0]) this.uploadLogo(e.target.files[0]);
-        };
-        logoInput.addEventListener('change', logoInput._logoChange);
-      }
-
-    // Hacer editables todos los campos después de renderizar
-    this.setupInfoPanelEditables(container);
-  }
-
-  setupInfoPanelEditables(container) {
-    if (!container) return;
-
     // Logo upload
     const logoInput = container.querySelector('.info-logo-container input[type="file"]');
     if (logoInput) {
