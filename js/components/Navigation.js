@@ -535,14 +535,15 @@ class Navigation {
       logoutBtn.addEventListener('click', () => this.handleLogout());
     }
 
-    // Org dropdown
-    const orgChevron = document.getElementById('navOrgChevron');
+    // Org dropdown: clic en toda la casilla (incl. chevron) abre/cierra la lista
+    const orgIdentityCard = document.getElementById('navIdentityCard');
     const orgDropdown = document.getElementById('navOrgDropdown');
-    if (orgChevron && orgDropdown) {
-      orgChevron.addEventListener('click', (e) => {
+    if (orgIdentityCard && orgDropdown) {
+      orgIdentityCard.addEventListener('click', (e) => {
         e.stopPropagation();
         orgDropdown.classList.toggle('active');
       });
+      orgIdentityCard.style.cursor = 'pointer';
     }
 
     // Un solo listener en document para cerrar todos los dropdowns (evita duplicados al re-render)
@@ -821,44 +822,62 @@ class Navigation {
   }
 
   /**
-   * Cargar información de la organización actual
+   * Cargar información de la organización actual (nombre real y plan del owner)
    */
   async loadOrganizationInfo() {
     const supabase = await this.getSupabase();
-    if (!supabase || !this.currentOrgId) return;
+    if (!supabase) return;
 
     try {
-      const { data: org } = await supabase
-        .from('organizations')
-        .select('name, plan_type')
-        .eq('id', this.currentOrgId)
-        .single();
+      const nameEl = document.getElementById('navOrgName');
+      const typeEl = document.getElementById('navOrgType');
 
-      if (org) {
-        const nameEl = document.getElementById('navOrgName');
-        const typeEl = document.getElementById('navOrgType');
-        
-        if (nameEl) nameEl.textContent = org.name;
-        if (typeEl) typeEl.textContent = org.plan_type || 'Personal';
+      if (this.currentOrgId) {
+        const { data: org } = await supabase
+          .from('organizations')
+          .select('name, owner_user_id')
+          .eq('id', this.currentOrgId)
+          .single();
+
+        if (org) {
+          if (nameEl) nameEl.textContent = org.name;
+          let planLabel = 'Personal';
+          if (org.owner_user_id) {
+            const { data: owner } = await supabase
+              .from('users')
+              .select('plan_type')
+              .eq('id', org.owner_user_id)
+              .maybeSingle();
+            if (owner && owner.plan_type) {
+              const raw = String(owner.plan_type).replace(/_/g, ' ');
+              planLabel = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
+            }
+          }
+          if (typeEl) typeEl.textContent = planLabel;
+        }
+      } else {
+        if (nameEl) nameEl.textContent = 'Seleccionar organización';
+        if (typeEl) typeEl.textContent = '';
       }
 
-      const { data: credits } = await supabase
-        .from('organization_credits')
-        .select('credits_available')
-        .eq('organization_id', this.currentOrgId)
-        .single();
+      if (this.currentOrgId) {
+        const { data: credits } = await supabase
+          .from('organization_credits')
+          .select('credits_available')
+          .eq('organization_id', this.currentOrgId)
+          .single();
 
-      if (credits) {
-        const tokensEl = document.getElementById('navTokensValue');
-        if (tokensEl) {
-          const formatted = credits.credits_available >= 1000 
-            ? `${(credits.credits_available / 1000).toFixed(1)}K`
-            : credits.credits_available;
-          tokensEl.textContent = formatted;
+        if (credits) {
+          const tokensEl = document.getElementById('navTokensValue');
+          if (tokensEl) {
+            const formatted = credits.credits_available >= 1000
+              ? `${(credits.credits_available / 1000).toFixed(1)}K`
+              : credits.credits_available;
+            tokensEl.textContent = formatted;
+          }
         }
       }
 
-      // Cargar lista de organizaciones para dropdown
       await this.loadOrganizationsList();
     } catch (err) {
       console.error('Error loading organization info:', err);
@@ -866,7 +885,7 @@ class Navigation {
   }
 
   /**
-   * Cargar lista de organizaciones del usuario
+   * Cargar lista de organizaciones del usuario (miembros + owner) y opciones Hogar / Crear nueva
    */
   async loadOrganizationsList() {
     const supabase = await this.getSupabase();
@@ -883,49 +902,88 @@ class Navigation {
           role,
           organizations (
             id,
-            name,
-            plan_type
+            name
           )
         `)
         .eq('user_id', user.id);
 
+      const { data: ownedOrgs } = await supabase
+        .from('organizations')
+        .select('id, name')
+        .eq('owner_user_id', user.id);
+
+      const orgsMap = new Map();
+      (memberships || []).forEach(m => {
+        if (m.organizations && m.organization_id) {
+          orgsMap.set(m.organization_id, {
+            id: m.organization_id,
+            name: m.organizations.name,
+            role: m.role
+          });
+        }
+      });
+      (ownedOrgs || []).forEach(o => {
+        if (!orgsMap.has(o.id)) orgsMap.set(o.id, { id: o.id, name: o.name, role: 'owner' });
+      });
+
       const listEl = document.getElementById('navOrgDropdownList');
-      if (!listEl || !memberships) return;
+      if (!listEl) return;
 
-      listEl.innerHTML = memberships.map(m => `
-        <div class="nav-org-option ${m.organization_id === this.currentOrgId ? 'active' : ''}" 
-             data-org-id="${m.organization_id}">
-          <div class="nav-org-option-avatar">
-            <span>${m.organizations.name.charAt(0).toUpperCase()}</span>
-          </div>
+      const escape = (t) => {
+        const d = document.createElement('div');
+        d.textContent = t;
+        return d.innerHTML;
+      };
+
+      const optionsHtml = Array.from(orgsMap.values()).map(org => {
+        const name = escape(org.name || '');
+        const initial = (org.name || 'O').charAt(0).toUpperCase();
+        const isActive = org.id === this.currentOrgId;
+        return `
+        <div class="nav-org-option ${isActive ? 'active' : ''}" data-org-id="${escape(org.id)}">
+          <div class="nav-org-option-avatar"><span>${initial}</span></div>
           <div class="nav-org-option-info">
-            <span class="nav-org-option-name">${m.organizations.name}</span>
-            <span class="nav-org-option-role">${m.role}</span>
+            <span class="nav-org-option-name">${name}</span>
+            <span class="nav-org-option-role">${org.role}</span>
           </div>
-          ${m.organization_id === this.currentOrgId ? '<i class="fas fa-check"></i>' : ''}
-        </div>
-      `).join('');
+          ${isActive ? '<i class="fas fa-check"></i>' : ''}
+        </div>`;
+      }).join('');
 
-      // Event listeners para cambiar organización
-      listEl.querySelectorAll('.nav-org-option').forEach(option => {
-        option.addEventListener('click', () => {
+      listEl.innerHTML = optionsHtml;
+
+      listEl.querySelectorAll('.nav-org-option[data-org-id]').forEach(option => {
+        option.addEventListener('click', (e) => {
+          e.stopPropagation();
           const orgId = option.dataset.orgId;
-          if (orgId !== this.currentOrgId) {
+          if (orgId && orgId !== this.currentOrgId) {
+            document.getElementById('navOrgDropdown')?.classList.remove('active');
             window.router?.navigate(`/org/${orgId}/living`);
           }
         });
       });
 
-      // Agregar opción de ir a Hogar
       listEl.insertAdjacentHTML('beforeend', `
         <div class="nav-org-divider"></div>
         <div class="nav-org-option nav-org-home" data-action="home">
           <i class="fas fa-home"></i>
           <span>Volver a Hogar</span>
         </div>
+        <div class="nav-org-option nav-org-create" data-action="create-org">
+          <i class="fas fa-plus"></i>
+          <span>Crear nueva organización</span>
+        </div>
       `);
 
-      listEl.querySelector('.nav-org-home')?.addEventListener('click', () => {
+      listEl.querySelector('.nav-org-home')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.getElementById('navOrgDropdown')?.classList.remove('active');
+        window.router?.navigate('/hogar');
+      });
+
+      listEl.querySelector('.nav-org-create')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.getElementById('navOrgDropdown')?.classList.remove('active');
         window.router?.navigate('/hogar');
       });
     } catch (err) {
