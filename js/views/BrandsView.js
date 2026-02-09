@@ -1360,9 +1360,9 @@ class BrandsView extends BaseView {
 
     // Objetivos y Palabras a evitar: siempre formato tags + input (estado 2 único)
     const onRefreshPanel = () => {
-      const infoCard = document.querySelector('.card-info.expanded');
-      if (infoCard) {
-        const content = infoCard.querySelector('.card-content-expanded');
+            const infoCard = document.querySelector('.card-info.expanded');
+            if (infoCard) {
+              const content = infoCard.querySelector('.card-content-expanded');
         if (content) this.renderInfoPanelContent(content);
       }
     };
@@ -1401,7 +1401,7 @@ class BrandsView extends BaseView {
     
     return `
       <div class="info-logo-container">
-        ${isValidLogoUrl
+        ${isValidLogoUrl 
           ? `<img src="${this.escapeHtml(logoUrl)}" alt="" class="info-logo-preview" onerror="this.style.display='none';var p=this.nextElementSibling;if(p)p.classList.add('visible');">`
           : ''
         }

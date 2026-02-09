@@ -243,6 +243,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    font-size: 0.9375rem;
 }
 
 .brand-link-icon {
@@ -256,31 +257,35 @@ h1.brand-name-large[contenteditable="true"]:hover,
     flex-shrink: 0;
 }
 
+/* Mismo estilo que el título: sin fondo, sin bordes; mostrar toda la URL */
 .brand-link-input {
     flex: 1;
-    min-width: 0;
-    padding: 0.35rem 0.5rem;
-    font-size: 0.8125rem;
+    min-width: 14rem;
+    max-width: 100%;
+    padding: 0.25rem 0;
+    font-size: inherit;
+    font-family: inherit;
+    font-weight: inherit;
     color: var(--brand-text-light);
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 6px;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0;
     outline: none;
-    transition: border-color 0.2s, background 0.2s;
+    box-shadow: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+    text-overflow: unset;
 }
 
 .brand-link-input::placeholder {
     color: var(--brand-text-muted);
 }
 
-.brand-link-input:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.15);
-}
-
+.brand-link-input:hover,
 .brand-link-input:focus {
-    border-color: rgba(212, 184, 150, 0.5);
-    background: rgba(255, 255, 255, 0.08);
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none;
 }
 
 /* Mercado objetivo debajo */
