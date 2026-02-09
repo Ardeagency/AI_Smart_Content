@@ -3421,16 +3421,22 @@ body.sidebar-collapsed .builder-header {
   bottom: 0;
   pointer-events: auto;
 }
-/* Contenido centrado al 100% en viewport (left/top 50% + translate) */
+/* Contenido centrado; tamaño razonable (no ocupa toda la pantalla) */
 #modals-portal .modal .modal-content {
   position: fixed !important;
   left: 50% !important;
   top: 50% !important;
   transform: translate(-50%, -50%) !important;
   z-index: 1;
-  max-width: calc(100vw - 40px);
-  max-height: calc(100vh - 40px);
+  width: 100%;
+  max-width: min(640px, calc(100vw - 40px));
+  max-height: min(85vh, calc(100vh - 40px));
   margin: 0 !important;
+  overflow-y: auto;
+}
+/* Modales wide en portal: un poco más de ancho pero sin llenar pantalla */
+#modals-portal .modal.dev-lead-modal-wide .modal-content {
+  max-width: min(720px, calc(100vw - 40px));
 }
 
 .dev-lead-modal {
