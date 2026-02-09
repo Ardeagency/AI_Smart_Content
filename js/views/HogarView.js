@@ -173,14 +173,26 @@ class HogarView extends BaseView {
         if (r.nombre_marca) marcasByOrg[r.organization_id].push(r.nombre_marca);
       });
 
-      // Miembros por organización (count)
+      // Miembros por organización: user_id (ordenados, para avatares máx 4)
       const { data: membersRows } = await this.supabase
         .from('organization_members')
-        .select('organization_id')
-        .in('organization_id', orgIds);
-      const membersCountByOrg = {};
-      orgIds.forEach(id => { membersCountByOrg[id] = 0; });
-      (membersRows || []).forEach(r => { membersCountByOrg[r.organization_id] = (membersCountByOrg[r.organization_id] || 0) + 1; });
+        .select('organization_id, user_id')
+        .in('organization_id', orgIds)
+        .order('created_at', { ascending: true });
+      const membersByOrg = {};
+      orgIds.forEach(id => { membersByOrg[id] = []; });
+      (membersRows || []).forEach(r => {
+        if (r.user_id) membersByOrg[r.organization_id].push(r.user_id);
+      });
+      const allMemberIds = [...new Set((membersRows || []).map(m => m.user_id).filter(Boolean))];
+      let avatarByUser = {};
+      if (allMemberIds.length > 0) {
+        const { data: profiles } = await this.supabase
+          .from('user_profiles')
+          .select('id, avatar_url, full_name')
+          .in('id', allMemberIds);
+        (profiles || []).forEach(p => { avatarByUser[p.id] = { avatar_url: p.avatar_url || '', full_name: p.full_name || '' }; });
+      }
 
       // Plan y costo: owner_user_id → users.plan_type y subscriptions (price, currency)
       const ownerIds = [...new Set(this.organizations.map(o => o.owner_user_id).filter(Boolean))];
@@ -215,7 +227,9 @@ class HogarView extends BaseView {
         org.credits_available = cred ? cred.credits_available : 0;
         org.credits_total = cred ? cred.credits_total : 0;
         org.marcaNames = marcasByOrg[org.id] || [];
-        org.membersCount = membersCountByOrg[org.id] || 0;
+        const memberIds = membersByOrg[org.id] || [];
+        org.membersCount = memberIds.length;
+        org.memberAvatars = memberIds.slice(0, 4).map(uid => avatarByUser[uid] || { avatar_url: '', full_name: '' });
         const ownerId = org.owner_user_id;
         org.planType = ownerId ? (planByUser[ownerId] || '—') : '—';
         const cost = ownerId ? costByUser[ownerId] : null;
@@ -386,16 +400,24 @@ class HogarView extends BaseView {
   }
 
   /**
-   * Solo base gradient (identidad). Las capas highlight/shadow/noise van en CSS.
+   * Gradiente para header de card: máximo 2 colores, oscurecidos para contraste.
    */
-  buildBrandGradientCss(brandColors) {
+  buildBrandGradientHeaderCss(brandColors) {
     const palette = this.getBrandUIPalette(brandColors);
     if (!palette) return '';
-    return `linear-gradient(135deg, ${palette.primary}, ${palette.secondary})`;
+    const primary = this.darkenHex(palette.primary, 0.75);
+    const secondary = this.darkenHex(palette.secondary, 0.7);
+    return `linear-gradient(135deg, ${primary}, ${secondary})`;
+  }
+
+  darkenHex(hex, factor) {
+    const { h, s, l } = this.hexToHSL(hex);
+    const newL = Math.max(15, Math.min(45, l * factor));
+    return this.hslToHex(h, s, newL);
   }
 
   /**
-   * Renderizar cards de organizaciones (estilo referencia: oscura, lista de datos, franja inferior con degradado dinámico)
+   * Renderizar cards de organizaciones (premium: header 30% gradiente marca, content 70%, créditos + avatares, config solo en hover)
    */
   renderOrganizations() {
     const gridEl = this.querySelector('#organizationsGrid');
@@ -406,19 +428,19 @@ class HogarView extends BaseView {
       if (!card) return;
       const go = () => this.navigateToOrganization(org.id);
       card.addEventListener('click', (e) => {
-        if (e.target.closest('.org-card-config-btn')) return;
+        if (e.target.closest('.org-card-config-icon')) return;
         go();
       });
       card.addEventListener('keydown', (e) => {
-        if (e.target.closest('.org-card-config-btn')) return;
+        if (e.target.closest('.org-card-config-icon')) return;
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           go();
         }
       });
-      const configBtn = card.querySelector('.org-card-config-btn');
-      if (configBtn) {
-        configBtn.addEventListener('click', (e) => {
+      const configIcon = card.querySelector('.org-card-config-icon');
+      if (configIcon) {
+        configIcon.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
           if (window.router) {
@@ -432,38 +454,46 @@ class HogarView extends BaseView {
   }
 
   /**
-   * Card minimalista: icono + nombre, datos (créditos, plan, marca, miembros), botón Configuración, franja inferior con degradado (nombre marca).
+   * Card premium: header 30% (gradiente marca + nombre marca), content 70% (org name, plan, créditos, avatares), config icon solo hover.
    */
   renderOrgCard(org) {
     const brandColors = org.brandColors || [];
     const hasBranding = brandColors.length > 0;
-    const gradientCss = hasBranding ? this.buildBrandGradientCss(brandColors) : 'linear-gradient(135deg, var(--hogar-accent, #D4754E), var(--hogar-accent-hover, #C86B45))';
+    const headerGradient = hasBranding
+      ? this.buildBrandGradientHeaderCss(brandColors)
+      : 'linear-gradient(135deg, rgba(212,117,78,0.6), rgba(200,107,69,0.5))';
     const name = this.escapeHtml(org.name || '');
+    const planRaw = String(org.planType || '—').replace(/_/g, ' ');
+    const planLabel = planRaw === '—' ? '—' : this.escapeHtml(planRaw.charAt(0).toUpperCase() + planRaw.slice(1).toLowerCase() + ' plan');
     const credits = org.credits_available != null ? `${org.credits_available}` : '0';
-    const plan = this.escapeHtml(String(org.planType || '—'));
-    const cost = this.escapeHtml(String(org.planCost || '—'));
-    const marcaText = (org.marcaNames && org.marcaNames.length) ? org.marcaNames.join(', ') : '—';
-    const marcaEscaped = this.escapeHtml(marcaText);
-    const miembros = org.membersCount != null ? String(org.membersCount) : '0';
-    const stripLabel = (org.marcaNames && org.marcaNames[0]) ? this.escapeHtml(org.marcaNames[0]) : 'Entrar';
+    const brandName = (org.marcaNames && org.marcaNames[0]) ? this.escapeHtml(org.marcaNames[0]) : '';
+    const avatars = (org.memberAvatars || []).slice(0, 4);
+    const avatarsHtml = avatars.map(a => {
+      const url = (a.avatar_url || '').trim();
+      const initial = (a.full_name || '?').charAt(0).toUpperCase();
+      const title = this.escapeHtml(a.full_name || '');
+      if (url) {
+        return `<span class="org-card-avatar"><img src="${this.escapeHtml(url)}" alt="${title}" loading="lazy" onerror="this.parentElement.classList.add('no-image')"><span class="org-card-avatar-initial">${initial}</span></span>`;
+      }
+      return `<span class="org-card-avatar no-image"><span class="org-card-avatar-initial">${initial}</span></span>`;
+    }).join('');
     return `
-      <div class="org-card org-card-ref" data-org-id="${org.id}" role="button" tabindex="0" title="Entrar a ${name}">
-        <div class="org-card-body">
-          <div class="org-card-head">
-            <span class="org-card-icon" aria-hidden="true"><i class="fas fa-cog"></i></span>
-            <h3 class="org-card-title">${name}</h3>
-          </div>
-          <ul class="org-card-list">
-            <li><i class="fas fa-coins" aria-hidden="true"></i><span>${credits}</span></li>
-            <li><i class="fas fa-tag" aria-hidden="true"></i><span>${plan} · ${cost}</span></li>
-            <li><i class="fas fa-gem" aria-hidden="true"></i><span>${marcaEscaped}</span></li>
-            <li><i class="fas fa-users" aria-hidden="true"></i><span>${miembros}</span></li>
-          </ul>
-          <div class="org-card-actions">
-            <a href="/org/${this.escapeHtml(org.id)}/settings" class="org-card-config-btn" data-router-link data-org-id="${this.escapeHtml(org.id)}">Configuración</a>
+      <div class="org-card org-card-premium" data-org-id="${org.id}" role="button" tabindex="0" title="Entrar a ${name}">
+        <button type="button" class="org-card-config-icon" aria-label="Configuración" title="Configuración"><i class="fas fa-cog"></i></button>
+        <div class="org-card-header" style="--org-header-gradient: ${headerGradient}">
+          ${brandName ? `<span class="org-card-brand-name">${brandName}</span>` : ''}
+        </div>
+        <div class="org-card-content">
+          <h3 class="org-card-org-name">${name}</h3>
+          <p class="org-card-plan">${planLabel}</p>
+          <div class="org-card-bottom">
+            <div class="org-card-credits">
+              <span class="org-card-credits-num">${credits}</span>
+              <span class="org-card-credits-label">Credits available</span>
+            </div>
+            <div class="org-card-avatars">${avatarsHtml}</div>
           </div>
         </div>
-        <div class="org-card-strip" style="--org-bottom-gradient: ${gradientCss}">${stripLabel}</div>
       </div>
     `;
   }
