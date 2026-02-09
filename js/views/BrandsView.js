@@ -1332,31 +1332,6 @@ class BrandsView extends BaseView {
             }
           }
         });
-      } else if (labelText === 'Tono de voz') {
-        // Dropdown para tono de voz
-        field.classList.add('info-editable');
-        field.style.cursor = 'pointer';
-        field.addEventListener('click', () => {
-          const options = [
-            { value: 'formal', label: 'Formal' },
-            { value: 'informal', label: 'Informal' },
-            { value: 'profesional', label: 'Profesional' },
-            { value: 'amigable', label: 'Amigable' },
-            { value: 'técnico', label: 'Técnico' },
-            { value: 'creativo', label: 'Creativo' },
-            { value: 'empático', label: 'Empático' },
-            { value: 'directo', label: 'Directo' }
-          ];
-          this.makeEditableSelect(field, 'tono_voz', options, 'brand', () => {
-            const infoCard = document.querySelector('.card-info.expanded');
-            if (infoCard) {
-              const content = infoCard.querySelector('.card-content-expanded');
-              if (content) {
-                this.renderInfoPanelContent(content);
-              }
-            }
-          });
-        });
       } else if (labelText === 'Palabras a usar') {
         field.classList.add('info-editable');
         this.makeEditableText(field, 'palabras_usar', 'brand', () => {
@@ -1395,6 +1370,22 @@ class BrandsView extends BaseView {
       if (!fieldName) return;
       this.makeEditableMultiSelect(wrap, fieldName, [], 'brand', onRefreshPanel);
     });
+
+    // Tono de voz: siempre dropdown (estado 2 único)
+    const tonoVozWrap = container.querySelector('.info-field-value[data-select="tono_voz"]');
+    if (tonoVozWrap) {
+      const tonoOptions = [
+        { value: 'formal', label: 'Formal' },
+        { value: 'informal', label: 'Informal' },
+        { value: 'profesional', label: 'Profesional' },
+        { value: 'amigable', label: 'Amigable' },
+        { value: 'técnico', label: 'Técnico' },
+        { value: 'creativo', label: 'Creativo' },
+        { value: 'empático', label: 'Empático' },
+        { value: 'directo', label: 'Directo' }
+      ];
+      this.makeEditableSelect(tonoVozWrap, 'tono_voz', tonoOptions, 'brand', onRefreshPanel);
+    }
   }
 
   renderIdentitySection(brandContainer, brand) {
@@ -1440,12 +1431,9 @@ class BrandsView extends BaseView {
     if (!brand) {
       return '<p class="info-empty">No hay información de lenguaje disponible.</p>';
     }
-    const tonoVoz = brand.tono_voz || '';
     const palabrasUsar = brand.palabras_usar || '';
     let html = '';
-    if (tonoVoz) {
-      html += `<div class="info-field"><div class="info-field-label">Tono de voz</div><div class="info-field-value">${this.escapeHtml(String(tonoVoz))}</div></div>`;
-    }
+    html += `<div class="info-field"><div class="info-field-label">Tono de voz</div><div class="info-field-value" data-select="tono_voz"></div></div>`;
     if (palabrasUsar) {
       html += `<div class="info-field"><div class="info-field-label">Palabras a usar</div><div class="info-field-value">${this.escapeHtml(palabrasUsar)}</div></div>`;
     }
