@@ -179,15 +179,14 @@ class DevBuilderView extends DevBaseView {
                   <textarea id="flowDescription" placeholder="Describe qué hace este flujo..." rows="3"></textarea>
                 </div>
                 <div class="flow-image-upload" id="flowImageUpload">
-                  <div class="image-preview" id="flowImagePreview">
+                  <div class="image-preview image-preview--upload" id="flowImagePreview" title="Subir portada">
                     <i class="ph ph-image"></i>
-                    <span>Sin imagen</span>
+                    <span>Subir portada</span>
                   </div>
                   <div class="image-actions">
-                    <button class="btn-small" id="uploadImageBtn"><i class="ph ph-upload"></i> Subir imagen</button>
                     <button class="btn-small secondary" id="removeImageBtn" style="display: none;"><i class="ph ph-trash"></i> Eliminar</button>
                   </div>
-                  <input type="file" id="flowImageInput" accept="image/*" style="display: none;">
+                  <input type="file" id="flowImageInput" accept="image/*,video/*" style="display: none;">
                 </div>
               </div>
               <div class="settings-section">
@@ -1803,7 +1802,13 @@ class DevBuilderView extends DevBaseView {
 
     if (imgWrap) {
       if (this.flowData.flow_image_url) {
-        imgWrap.innerHTML = `<img src="${this.flowData.flow_image_url}" alt="">`;
+        const url = this.flowData.flow_image_url;
+        const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(url) || url.includes('video');
+        if (isVideo) {
+          imgWrap.innerHTML = `<video src="${url}" alt="" muted playsinline></video>`;
+        } else {
+          imgWrap.innerHTML = `<img src="${url}" alt="">`;
+        }
       } else {
         imgWrap.innerHTML = '<i class="ph ph-image"></i><span>Sin imagen</span>';
       }
@@ -1987,8 +1992,17 @@ class DevBuilderView extends DevBaseView {
     const preview = this.querySelector('#flowImagePreview');
     const removeBtn = this.querySelector('#removeImageBtn');
     
-    if (preview && url) {
-      preview.innerHTML = `<img src="${url}" alt="Flow image">`;
+    if (preview) {
+      if (url) {
+        const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(url) || url.includes('video');
+        if (isVideo) {
+          preview.innerHTML = `<video src="${url}" alt="Portada del flujo" muted playsinline></video>`;
+        } else {
+          preview.innerHTML = `<img src="${url}" alt="Portada del flujo">`;
+        }
+      } else {
+        preview.innerHTML = '<i class="ph ph-image"></i><span>Subir portada</span>';
+      }
     }
     
     if (removeBtn) {
@@ -2338,29 +2352,29 @@ class DevBuilderView extends DevBaseView {
   }
 
   setupImageUpload() {
-    const uploadBtn = this.querySelector('#uploadImageBtn');
+    const preview = this.querySelector('#flowImagePreview');
     const removeBtn = this.querySelector('#removeImageBtn');
     const fileInput = this.querySelector('#flowImageInput');
     
-    if (uploadBtn && fileInput) {
-      uploadBtn.addEventListener('click', () => fileInput.click());
+    if (preview && fileInput) {
+      preview.addEventListener('click', (e) => {
+        if (!e.target.closest('#removeImageBtn')) fileInput.click();
+      });
       
       fileInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (file) {
           await this.uploadImage(file);
         }
+        e.target.value = '';
       });
     }
     
     if (removeBtn) {
-      removeBtn.addEventListener('click', () => {
+      removeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         this.flowData.flow_image_url = null;
         this.updateImagePreview(null);
-        const preview = this.querySelector('#flowImagePreview');
-        if (preview) {
-          preview.innerHTML = `<i class="ph ph-image"></i><span>Sin imagen</span>`;
-        }
         this.hasUnsavedChanges = true;
       });
     }
@@ -2368,33 +2382,35 @@ class DevBuilderView extends DevBaseView {
 
   async uploadImage(file) {
     if (!this.supabase) {
-      this.showNotification('No se puede subir la imagen', 'error');
+      this.showNotification('No se puede subir la portada', 'error');
       return;
     }
     
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `flow_${this.flowId || Date.now()}_${Date.now()}.${fileExt}`;
-      const filePath = `flow-images/${fileName}`;
+      const fileExt = file.name.split('.').pop().toLowerCase();
+      const flowSlug = this.flowId || `temp_${this.userId}`;
+      const fileName = `${Date.now()}_${Math.random().toString(36).slice(2, 9)}.${fileExt}`;
+      const filePath = `${flowSlug}/${fileName}`;
+      const bucket = 'images_flows';
       
-      const { data, error } = await this.supabase.storage
-        .from('production-inputs')
+      const { error } = await this.supabase.storage
+        .from(bucket)
         .upload(filePath, file, { upsert: true });
       
       if (error) throw error;
       
       const { data: urlData } = this.supabase.storage
-        .from('production-inputs')
+        .from(bucket)
         .getPublicUrl(filePath);
       
       this.flowData.flow_image_url = urlData.publicUrl;
       this.updateImagePreview(urlData.publicUrl);
       this.hasUnsavedChanges = true;
       
-      this.showNotification('Imagen subida correctamente', 'success');
+      this.showNotification('Portada subida correctamente', 'success');
     } catch (err) {
-      console.error('Error uploading image:', err);
-      this.showNotification('Error al subir la imagen', 'error');
+      console.error('Error subiendo portada:', err);
+      this.showNotification('Error al subir la portada', 'error');
     }
   }
 

@@ -85,6 +85,17 @@ VALUES (
 )
 ON CONFLICT (id) DO NOTHING;
 
+-- Portadas de flujos (content_flows.flow_image_url) – público para lectura
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+    'images_flows',
+    'images_flows',
+    true,
+    52428800, -- 50 MB
+    ARRAY['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/quicktime']
+)
+ON CONFLICT (id) DO NOTHING;
+
 -- ============================================
 -- POLÍTICAS DE STORAGE (ajustar según auth.uid() o organization)
 -- ============================================
@@ -186,6 +197,29 @@ USING (bucket_id = 'production-inputs');
 CREATE POLICY "Users can delete from production-inputs"
 ON storage.objects FOR DELETE
 USING (bucket_id = 'production-inputs');
+
+-- images_flows: portadas de content_flows (path: {flow_id}/{file} o temp_{user_id}/{file})
+CREATE POLICY "Users can upload to images_flows"
+ON storage.objects FOR INSERT TO authenticated
+WITH CHECK (
+    bucket_id = 'images_flows' AND (
+        EXISTS (SELECT 1 FROM public.content_flows cf WHERE cf.id::text = (storage.foldername(name))[1] AND cf.owner_id = auth.uid())
+        OR (storage.foldername(name))[1] = 'temp_' || auth.uid()::text
+    )
+);
+
+CREATE POLICY "Users can view images_flows"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'images_flows');
+
+CREATE POLICY "Users can delete from images_flows"
+ON storage.objects FOR DELETE TO authenticated
+USING (
+    bucket_id = 'images_flows' AND (
+        EXISTS (SELECT 1 FROM public.content_flows cf WHERE cf.id::text = (storage.foldername(name))[1] AND cf.owner_id = auth.uid())
+        OR (storage.foldername(name))[1] = 'temp_' || auth.uid()::text
+    )
+);
 
 -- ai-knowledge: archivos para base de conocimientos IA (gestión Lead en /dev/lead/ai-vectors)
 CREATE POLICY "Users can upload to ai-knowledge"
