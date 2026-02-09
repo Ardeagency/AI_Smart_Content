@@ -1883,18 +1883,19 @@ class BrandsView extends BaseView {
     if (!this.supabase || !this.brandContainerData) return;
 
     try {
-      const fileExt = file.name.split('.').pop();
+      const fileExt = (file.name.split('.').pop() || 'png').toLowerCase();
       const fileName = `logo_${this.brandContainerData.id}_${Date.now()}.${fileExt}`;
-      const filePath = `brands/${this.brandContainerData.id}/${fileName}`;
+      const filePath = `${this.brandContainerData.id}/${fileName}`;
+      const bucket = 'brand-logos';
 
       const { error: uploadError } = await this.supabase.storage
-        .from('brand-core')
-        .upload(filePath, file);
+        .from(bucket)
+        .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = this.supabase.storage
-        .from('brand-core')
+        .from(bucket)
         .getPublicUrl(filePath);
 
       await this.saveContainerField('logo_url', publicUrl);
