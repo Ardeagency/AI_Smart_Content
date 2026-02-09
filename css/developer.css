@@ -3385,6 +3385,10 @@ body.sidebar-collapsed .builder-header {
   background: rgba(0, 0, 0, 0.75);
 }
 
+.dev-lead-modal.is-open {
+  display: flex !important;
+}
+
 .dev-lead-modal .modal-overlay {
   position: fixed;
   inset: 0;

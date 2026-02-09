@@ -52,6 +52,10 @@ class DevLeadVectorsView extends DevBaseView {
             <div class="dev-lead-empty" id="filesEmpty" style="display:none;">
               <i class="fas fa-folder-open"></i>
               <p id="filesEmptyText">No hay archivos.</p>
+              <p class="dev-lead-empty-hint" id="filesEmptyHint">Usa el botón «Subir archivo» del encabezado para añadir archivos al bucket.</p>
+              <button type="button" class="btn btn-primary" id="uploadFromEmptyBtn" style="margin-top: 12px;">
+                <i class="fas fa-upload"></i> Subir primer archivo
+              </button>
             </div>
           </div>
         </section>
@@ -89,6 +93,7 @@ class DevLeadVectorsView extends DevBaseView {
 
     document.getElementById('refreshBtn')?.addEventListener('click', () => this.loadFiles());
     document.getElementById('uploadBtn')?.addEventListener('click', () => this.openUpload());
+    document.getElementById('uploadFromEmptyBtn')?.addEventListener('click', () => this.openUpload());
     document.getElementById('uploadClose')?.addEventListener('click', () => this.closeUpload());
     document.getElementById('uploadCancel')?.addEventListener('click', () => this.closeUpload());
     document.getElementById('uploadConfirm')?.addEventListener('click', () => this.doUpload());
@@ -139,14 +144,6 @@ class DevLeadVectorsView extends DevBaseView {
     return { folders: folderList, files };
   }
 
-  esc(s) {
-    if (s == null) return '';
-    const t = String(s);
-    const div = document.createElement('div');
-    div.textContent = t;
-    return div.innerHTML;
-  }
-
   formatBytes(n) {
     if (!n || n < 1024) return n ? n + ' B' : '—';
     if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
@@ -154,11 +151,24 @@ class DevLeadVectorsView extends DevBaseView {
   }
 
   async loadFiles() {
+    const table = document.getElementById('filesTable');
     const tbody = document.getElementById('filesBody');
     const empty = document.getElementById('filesEmpty');
     const emptyText = document.getElementById('filesEmptyText');
     const breadcrumb = document.getElementById('breadcrumb');
     if (!tbody) return;
+
+    // Estado de carga: mostrar mensaje y ocultar tabla para evitar tabla vacía + empty a la vez
+    const emptyHint = document.getElementById('filesEmptyHint');
+    const uploadFromEmptyBtn = document.getElementById('uploadFromEmptyBtn');
+    if (empty) {
+      empty.style.display = 'flex';
+      if (emptyText) emptyText.textContent = 'Cargando…';
+      if (emptyHint) emptyHint.style.display = 'none';
+      if (uploadFromEmptyBtn) uploadFromEmptyBtn.style.display = 'none';
+    }
+    if (table) table.style.display = 'none';
+    tbody.innerHTML = '';
 
     try {
       const { folders, files } = await this.listStorage(this.currentPrefix);
@@ -188,6 +198,7 @@ class DevLeadVectorsView extends DevBaseView {
       tbody.innerHTML = rows.join('');
 
       if (folders.length || files.length) {
+        if (table) table.style.display = '';
         if (empty) empty.style.display = 'none';
         tbody.querySelectorAll('.dev-lead-file-row.folder').forEach(row => {
           row.addEventListener('click', (e) => {
@@ -197,17 +208,23 @@ class DevLeadVectorsView extends DevBaseView {
           });
         });
       } else {
+        if (table) table.style.display = 'none';
         if (empty) {
-          empty.style.display = 'block';
+          empty.style.display = 'flex';
           if (emptyText) emptyText.textContent = this.currentPrefix ? 'No hay archivos en esta carpeta.' : 'No hay archivos en el bucket.';
+          if (emptyHint) emptyHint.style.display = 'block';
+          if (uploadFromEmptyBtn) uploadFromEmptyBtn.style.display = 'inline-flex';
         }
       }
     } catch (err) {
       console.error('Error listando bucket:', err);
       tbody.innerHTML = '';
+      if (table) table.style.display = 'none';
       if (empty) {
-        empty.style.display = 'block';
+        empty.style.display = 'flex';
         if (emptyText) emptyText.textContent = 'Error: ' + (err && err.message ? err.message : '');
+        if (emptyHint) emptyHint.style.display = 'none';
+        if (uploadFromEmptyBtn) uploadFromEmptyBtn.style.display = 'none';
       }
     }
   }
@@ -228,12 +245,18 @@ class DevLeadVectorsView extends DevBaseView {
       pathInput.readOnly = false;
     }
     fileInput.value = '';
-    if (modal) modal.style.display = 'flex';
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.add('is-open');
+    }
   }
 
   closeUpload() {
     const modal = document.getElementById('uploadModal');
-    if (modal) modal.style.display = 'none';
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.remove('is-open');
+    }
     this._replacePath = null;
   }
 

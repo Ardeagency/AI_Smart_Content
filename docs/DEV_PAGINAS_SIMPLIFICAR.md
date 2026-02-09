@@ -134,4 +134,44 @@ No es obligatorio dividir ya, pero al “simplificar” conviene tenerlas como o
 4. **Notificaciones:** unificar en un solo punto y reemplazar usos en vistas dev.
 5. **Refactors mayores:** si se quiere seguir simplificando, dividir DevBuilderView, DevTestView y DevWebhooksView en módulos o sub-vistas.
 
-Con esto quedan identificadas **todas las páginas** que conviene simplificar y los **tipos de duplicación y código residual** que pueden estar contribuyendo a errores en la plataforma.
+---
+
+## 5. Perfil de desarrollador Lead (sidebar e identidad)
+
+El **perfil del desarrollador** (incluido el lead) **no es una página propia** bajo `/dev`, sino la **tarjeta de identidad** en el sidebar y la visibilidad del menú **Lead**.
+
+### 5.1 Dónde se muestra
+
+| Ubicación | Archivo | Qué muestra |
+|-----------|---------|-------------|
+| **Sidebar modo developer** | `js/components/Navigation.js` | Tarjeta superior: icono/avatar (`#navDevIcon`), nombre (`#navDevName`), rol y rank (`#navDevTier`). Rellenada por `loadDeveloperInfo()`. |
+| **Sección Lead** | Mismo | Bloque `#navLeadSection` (submenú Lead con Todos los flujos, Equipo, Categorías, etc.). Solo visible si `profile.dev_role === 'lead'`. |
+| **Header** | Mismo | Menú usuario (chevron) con Configuración y Cerrar sesión; Configuración lleva a `/settings` (donde está la pestaña perfil). |
+
+### 5.2 Datos del perfil
+
+- **Origen:** tabla `user_profiles` (Supabase).
+- **Campos usados en el sidebar:** `full_name`, `email`, `dev_rank`, `dev_role`, `avatar_url`.
+- **Carga:** `Navigation.loadDeveloperInfo()` (llamado tras `render()` cuando `config.mode === 'developer'`).
+
+### 5.3 Código implicado
+
+- **HTML del sidebar dev:** `getDeveloperNavigationHTML()` (líneas ~352-468): define `navIdentityCard` con clase `dev-identity`, `navDevIcon`, `navDevName`, `navDevTier`, y el bloque `navLeadSection` con `style="display: none;"`.
+- **Rellenar datos:** `loadDeveloperInfo()` (líneas ~997-1055): consulta `user_profiles`, escribe nombre/tier, pone avatar en `navDevIcon` vía `innerHTML`, muestra `navLeadSection` si `dev_role === 'lead'`, y actualiza `navRunsCount` y `navRatingValue`.
+
+### 5.4 Posibles mejoras y riesgos
+
+| Punto | Detalle | Recomendación |
+|-------|---------|----------------|
+| **avatar_url sin escapar** | `iconWrap.innerHTML = \`<img ... src="${profile.avatar_url}" ...>\``. Si `avatar_url` pudiera contener comillas o script, hay riesgo de XSS. | Escapar `profile.avatar_url` (p. ej. con un helper `escapeAttr()` o usar `setAttribute` en un elemento creado por DOM). |
+| **Tarjeta no clickable en modo dev** | En modo usuario, la tarjeta de identidad abre el dropdown de organizaciones. En modo developer no existe `navOrgDropdown`, así que la tarjeta no hace nada al clicar. | Opcional: hacer que el clic en la tarjeta dev lleve a `/settings?tab=profile` para editar perfil (misma UX que “ir a configuración”). |
+| **Formato role/rank** | `role` y `rank` se formatean con `replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())` en línea. | Opcional: extraer a una función `formatDevTier(profile)` para reutilizar y simplificar `loadDeveloperInfo`. |
+| **Vista Equipo (Lead)** | `DevLeadTeamView` es un placeholder (“En construcción”). Es la única “página” Lead que no tiene funcionalidad real. | Cuando se implemente Equipo, reutilizar el mismo patrón de datos (user_profiles / dev_role) que usa el sidebar. |
+
+### 5.5 Resumen
+
+- El perfil del desarrollador lead se muestra en la **tarjeta de identidad del sidebar** y en la **visibilidad del menú Lead**.
+- No hay ruta `/dev/profile`; la edición de perfil es `/settings` (y pestaña `profile` desde el header).
+- Para mejorar: escapar `avatar_url`, opcionalmente hacer la tarjeta clickable a configuración/perfil, y extraer el formateo de tier a una función si se reutiliza.
+
+Con esto quedan identificadas **todas las páginas** que conviene simplificar, los **tipos de duplicación y código residual** que pueden estar contribuyendo a errores en la plataforma, y el **perfil de desarrollador lead** (sidebar e identidad) con puntos a mejorar.
