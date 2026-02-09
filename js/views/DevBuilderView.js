@@ -2385,6 +2385,16 @@ class DevBuilderView extends DevBaseView {
       this.showNotification('No se puede subir la portada', 'error');
       return;
     }
+
+    const MAX_SIZE_MB = 50;
+    const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+    if (file.size > MAX_SIZE_BYTES) {
+      this.showNotification(
+        `El archivo es demasiado grande. Tamaño máximo: ${MAX_SIZE_MB} MB. Tu archivo: ${(file.size / 1024 / 1024).toFixed(1)} MB`,
+        'error'
+      );
+      return;
+    }
     
     try {
       const fileExt = file.name.split('.').pop().toLowerCase();
@@ -2410,7 +2420,10 @@ class DevBuilderView extends DevBaseView {
       this.showNotification('Portada subida correctamente', 'success');
     } catch (err) {
       console.error('Error subiendo portada:', err);
-      this.showNotification('Error al subir la portada', 'error');
+      const msg = err?.message?.includes('maximum allowed size')
+        ? `Archivo demasiado grande. Máximo ${MAX_SIZE_MB} MB. Comprime la imagen o elige otra.`
+        : (err?.message || 'Error al subir la portada');
+      this.showNotification(msg, 'error');
     }
   }
 
