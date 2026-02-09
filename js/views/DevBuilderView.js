@@ -165,9 +165,9 @@ class DevBuilderView extends DevBaseView {
                   <span class="field-help">Referencia para desarrolladores y n8n. No se muestra a usuarios.</span>
                 </div>
                 <div class="settings-field">
-                  <label>URL del flujo</label>
-                  <div class="flow-url-readonly" id="flowUrlReadonly">
-                    <span class="flow-url-text" id="flowUrlText">— Guarda el flujo para ver la URL</span>
+                  <label for="flowUrlInput">URL del flujo</label>
+                  <div class="flow-url-field" id="flowUrlWrap">
+                    <input type="text" class="flow-url-input" id="flowUrlInput" placeholder="— Guarda el flujo para ver la URL">
                     <button type="button" class="btn-small" id="copyFlowUrlBtn" style="display: none;"><i class="ph ph-copy"></i> Copiar</button>
                   </div>
                 </div>
@@ -1686,11 +1686,14 @@ class DevBuilderView extends DevBaseView {
     if (nameInput) nameInput.value = this.flowData.name;
     if (nameConfig) nameConfig.value = this.flowData.name;
 
-    // URL del flujo (solo lectura)
-    const flowUrlText = this.querySelector('#flowUrlText');
+    // URL del flujo (editable para copiar/pegar o ajustar)
+    const flowUrlInput = this.querySelector('#flowUrlInput');
     const copyFlowUrlBtn = this.querySelector('#copyFlowUrlBtn');
     const flowUrl = this.getFlowPublicUrl();
-    if (flowUrlText) flowUrlText.textContent = flowUrl || '— Guarda el flujo para ver la URL';
+    if (flowUrlInput) {
+      flowUrlInput.value = flowUrl || '';
+      flowUrlInput.placeholder = '— Guarda el flujo para ver la URL';
+    }
     if (copyFlowUrlBtn) copyFlowUrlBtn.style.display = flowUrl ? 'inline-flex' : 'none';
 
     // Nombre técnico (ui_layout_config.technical_name)
@@ -2038,7 +2041,8 @@ class DevBuilderView extends DevBaseView {
     const copyFlowUrlBtn = this.querySelector('#copyFlowUrlBtn');
     if (copyFlowUrlBtn) {
       copyFlowUrlBtn.addEventListener('click', () => {
-        const url = this.getFlowPublicUrl();
+        const urlEl = this.querySelector('#flowUrlInput');
+        const url = urlEl?.value?.trim() || this.getFlowPublicUrl();
         if (url) {
           navigator.clipboard.writeText(url).then(() => this.showNotification('URL copiada', 'success')).catch(() => {});
         }

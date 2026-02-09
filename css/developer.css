@@ -1563,21 +1563,29 @@ body.sidebar-collapsed .builder-header {
   max-width: 720px;
 }
 
-.flow-url-readonly {
+.flow-url-field {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.flow-url-input {
+  flex: 1;
+  min-width: 0;
   padding: 10px 12px;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 0.875rem;
-  color: var(--text-secondary);
-}
-
-.flow-url-readonly .flow-url-text {
-  flex: 1;
+  color: var(--text-primary);
   word-break: break-all;
+}
+.flow-url-input::placeholder {
+  color: var(--text-muted);
+}
+.flow-url-input:focus {
+  outline: none;
+  border-color: var(--primary);
 }
 
 .field-help.block {
