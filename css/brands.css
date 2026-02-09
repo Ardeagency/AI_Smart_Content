@@ -1075,8 +1075,9 @@ h1.brand-name-large[contenteditable="true"]:hover,
     margin-bottom: 2.5rem;
 }
 
-/* Contenedor de logo - centrado y circular */
+/* Contenedor de logo - centrado, circular, input encima para subir */
 .card-content-expanded .info-logo-container {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1086,6 +1087,40 @@ h1.brand-name-large[contenteditable="true"]:hover,
     border-radius: 50%;
     overflow: hidden;
     background: transparent;
+}
+
+.card-content-expanded .info-logo-container .info-logo-input {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.card-content-expanded .info-logo-container .info-logo-preview,
+.card-content-expanded .info-logo-container .info-logo-placeholder {
+    pointer-events: none;
+}
+
+.card-content-expanded .info-logo-container .info-logo-placeholder {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    color: var(--text-muted, #6B7280);
+    font-size: 3rem;
+}
+
+.card-content-expanded .info-logo-container .info-logo-placeholder.visible {
+    display: flex;
 }
 
 /* Grid de secciones (Esencia y Lenguaje) */
@@ -1130,18 +1165,6 @@ h1.brand-name-large[contenteditable="true"]:hover,
     border-radius: 50%;
 }
 
-.card-content-expanded .info-logo-container .info-logo-placeholder {
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px dashed rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-muted, #6B7280);
-    font-size: 3rem;
-}
 
 /* Campos de información */
 .card-content-expanded .info-field {
@@ -1223,160 +1246,6 @@ h1.brand-name-large[contenteditable="true"]:hover,
     font-size: 0.875rem;
     font-style: italic;
     margin: 0;
-}
-
-/* ============================================
-   TARJETAS DE ENTIDADES, LUGARES Y AUDIENCIAS
-   ============================================ */
-
-/* Tarjeta de entidad (Identidad Estructural) */
-.card-content-expanded .info-entity-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    padding: 1.25rem;
-    margin-bottom: 1.25rem;
-    transition: none !important;
-}
-
-.card-content-expanded .info-entity-card:last-child {
-    margin-bottom: 0;
-}
-
-.card-content-expanded .info-entity-card:hover {
-    background: rgba(255, 255, 255, 0.03) !important;
-    border-color: rgba(255, 255, 255, 0.08) !important;
-}
-
-.card-content-expanded .info-entity-header {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.card-content-expanded .info-entity-type {
-    font-size: 0.7rem;
-    color: var(--brand-text-gold, #D4B896);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    font-weight: 600;
-}
-
-.card-content-expanded .info-entity-name {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--text-primary, #F2F3F5);
-    margin: 0;
-    line-height: 1.3;
-}
-
-/* Tarjeta de lugar (Identidad Territorial) */
-.card-content-expanded .info-place-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    padding: 1.25rem;
-    margin-bottom: 1.25rem;
-    transition: none !important;
-}
-
-.card-content-expanded .info-place-card:last-child {
-    margin-bottom: 0;
-}
-
-.card-content-expanded .info-place-card:hover {
-    background: rgba(255, 255, 255, 0.03) !important;
-    border-color: rgba(255, 255, 255, 0.08) !important;
-}
-
-.card-content-expanded .info-place-header {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.card-content-expanded .info-place-type {
-    font-size: 0.7rem;
-    color: var(--brand-text-gold, #D4B896);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    font-weight: 600;
-}
-
-.card-content-expanded .info-place-name {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--text-primary, #F2F3F5);
-    margin: 0;
-    line-height: 1.3;
-}
-
-.card-content-expanded .info-place-hours,
-.card-content-expanded .info-place-contact {
-    font-size: 0.8125rem;
-    color: var(--text-primary, #F2F3F5);
-    background: rgba(0, 0, 0, 0.2);
-    padding: 0.75rem;
-    border-radius: 6px;
-    margin: 0;
-    font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
-    white-space: pre-wrap;
-    overflow-x: auto;
-}
-
-/* Tarjeta de audiencia (Identidad Humana) */
-.card-content-expanded .info-audience-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    padding: 1.25rem;
-    margin-bottom: 1.25rem;
-    transition: none !important;
-}
-
-.card-content-expanded .info-audience-card:last-child {
-    margin-bottom: 0;
-}
-
-.card-content-expanded .info-audience-card:hover {
-    background: rgba(255, 255, 255, 0.03) !important;
-    border-color: rgba(255, 255, 255, 0.08) !important;
-}
-
-.card-content-expanded .info-audience-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 1rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.card-content-expanded .info-audience-name {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--text-primary, #F2F3F5);
-    margin: 0;
-    line-height: 1.3;
-    flex: 1;
-}
-
-.card-content-expanded .info-audience-level {
-    font-size: 0.7rem;
-    color: var(--text-muted, #6B7280);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    font-weight: 500;
-    padding: 0.25rem 0.5rem;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 4px;
 }
 
 /* ============================================

@@ -1277,30 +1277,6 @@ class BrandsView extends BaseView {
         </section>
       </div>
 
-      <!-- IDENTIDAD ESTRUCTURAL -->
-      <section class="info-section">
-        <h3 class="info-section-title">Identidad Estructural</h3>
-        <div class="info-section-content">
-          ${this.renderStructuralIdentitySection()}
-        </div>
-      </section>
-
-      <!-- IDENTIDAD TERRITORIAL -->
-      <section class="info-section">
-        <h3 class="info-section-title">Identidad Territorial</h3>
-        <div class="info-section-content">
-          ${this.renderTerritorialIdentitySection()}
-        </div>
-      </section>
-
-      <!-- IDENTIDAD HUMANA -->
-      <section class="info-section">
-        <h3 class="info-section-title">Identidad Humana</h3>
-        <div class="info-section-content">
-          ${this.renderHumanIdentitySection()}
-        </div>
-      </section>
-
       <!-- REGLAS CREATIVAS -->
       <section class="info-section">
         <h3 class="info-section-title">Reglas Creativas</h3>
@@ -1309,6 +1285,24 @@ class BrandsView extends BaseView {
         </div>
       </section>
     `;
+
+    this.setupInfoPanelEditables(container);
+  }
+
+  setupInfoPanelEditables(container) {
+    if (!container) return;
+
+    // Logo: input siempre clickeable (por encima del placeholder/imagen)
+    const logoWrap = container.querySelector('.info-logo-container');
+    if (logoWrap) {
+      const logoInput = logoWrap.querySelector('input[type="file"]');
+      if (logoInput) {
+        logoInput.removeEventListener('change', logoInput._logoChange);
+        logoInput._logoChange = (e) => {
+          if (e.target.files && e.target.files[0]) this.uploadLogo(e.target.files[0]);
+        };
+        logoInput.addEventListener('change', logoInput._logoChange);
+      }
 
     // Hacer editables todos los campos después de renderizar
     this.setupInfoPanelEditables(container);
@@ -1407,30 +1401,27 @@ class BrandsView extends BaseView {
       }
     });
 
-    // Objetivos y palabras a evitar (multi-select)
+    // Objetivos y Palabras a evitar (un solo formato: lista editable)
     container.querySelectorAll('.info-list').forEach(list => {
       const label = list.closest('.info-field')?.querySelector('.info-field-label');
       if (!label) return;
-
       const labelText = label.textContent.trim();
-      if (labelText === 'Objetivos' || labelText === 'Palabras a evitar') {
-        const fieldName = labelText === 'Objetivos' ? 'objetivos_marca' : 'palabras_evitar';
-        const parent = list.parentElement;
-        parent.style.cursor = 'pointer';
-        parent.addEventListener('click', () => {
-          const currentValues = Array.from(list.querySelectorAll('li')).map(li => li.textContent.trim());
-          this.makeEditableMultiSelect(parent, fieldName, currentValues, 'brand', () => {
-            // Recargar panel
-            const infoCard = document.querySelector('.card-info.expanded');
-            if (infoCard) {
-              const content = infoCard.querySelector('.card-content-expanded');
-              if (content) {
-                this.renderInfoPanelContent(content);
-              }
-            }
-          });
+      if (labelText !== 'Objetivos' && labelText !== 'Palabras a evitar') return;
+      const fieldName = labelText === 'Objetivos' ? 'objetivos_marca' : 'palabras_evitar';
+      const parent = list.parentElement;
+      parent.style.cursor = 'pointer';
+      parent.addEventListener('click', () => {
+        const currentValues = Array.from(list.querySelectorAll('li'))
+          .map(li => li.textContent.trim())
+          .filter(v => v && v !== '—');
+        this.makeEditableMultiSelect(parent, fieldName, currentValues, 'brand', () => {
+          const infoCard = document.querySelector('.card-info.expanded');
+          if (infoCard) {
+            const content = infoCard.querySelector('.card-content-expanded');
+            if (content) this.renderInfoPanelContent(content);
+          }
         });
-      }
+      });
     });
   }
 
@@ -1445,12 +1436,13 @@ class BrandsView extends BaseView {
        logoUrl.startsWith('/'));
     
     return `
-      <div class="info-logo-container" style="position: relative;">
-        ${isValidLogoUrl 
-          ? `<img src="${this.escapeHtml(logoUrl)}" alt="${this.escapeHtml(nombreMarca)}" class="info-logo-preview" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'info-logo-placeholder\\'><i class=\\'fas fa-image\\'></i></div>'; console.warn('⚠️ Error cargando logo:', '${this.escapeHtml(logoUrl)}');">`
-          : '<div class="info-logo-placeholder"><i class="fas fa-image"></i></div>'
+      <div class="info-logo-container">
+        ${isValidLogoUrl
+          ? `<img src="${this.escapeHtml(logoUrl)}" alt="" class="info-logo-preview" onerror="this.style.display='none';var p=this.nextElementSibling;if(p)p.classList.add('visible');">`
+          : ''
         }
-        <input type="file" accept="image/*" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;" title="Click para cambiar logo">
+        <div class="info-logo-placeholder ${isValidLogoUrl ? '' : 'visible'}"><i class="fas fa-image"></i></div>
+        <input type="file" accept="image/*" class="info-logo-input" title="Subir logo">
       </div>
     `;
   }
@@ -1459,44 +1451,22 @@ class BrandsView extends BaseView {
     if (!brand) {
       return '<p class="info-empty">No hay información de esencia disponible.</p>';
     }
-    
     const quienesSomos = brand.quienes_somos || '';
     const personalidad = brand.personalidad_marca || '';
-    const objetivos = brand.objetivos_marca || [];
-    
+    const objetivos = Array.isArray(brand.objetivos_marca) ? brand.objetivos_marca : [];
+    const listItems = objetivos.filter(o => o != null && String(o).trim() !== '').map(obj => `<li>${this.escapeHtml(String(obj).trim())}</li>`);
     let html = '';
-    
     if (quienesSomos) {
-      html += `
-        <div class="info-field">
-          <div class="info-field-label">Quiénes somos</div>
-          <div class="info-field-value">${this.escapeHtml(quienesSomos)}</div>
-        </div>
-      `;
+      html += `<div class="info-field"><div class="info-field-label">Quiénes somos</div><div class="info-field-value">${this.escapeHtml(quienesSomos)}</div></div>`;
     }
-    
     if (personalidad) {
-      html += `
-        <div class="info-field">
-          <div class="info-field-label">Personalidad</div>
-          <div class="info-field-value">${this.escapeHtml(personalidad)}</div>
-        </div>
-      `;
+      html += `<div class="info-field"><div class="info-field-label">Personalidad</div><div class="info-field-value">${this.escapeHtml(personalidad)}</div></div>`;
     }
-    
-    if (objetivos && Array.isArray(objetivos) && objetivos.length > 0) {
-      html += `
-        <div class="info-field">
-          <div class="info-field-label">Objetivos</div>
-          <div class="info-field-value">
-            <ul class="info-list">
-              ${objetivos.map(obj => `<li>${this.escapeHtml(String(obj))}</li>`).join('')}
-            </ul>
-          </div>
-        </div>
-      `;
-    }
-    
+    html += `
+      <div class="info-field">
+        <div class="info-field-label">Objetivos</div>
+        <div class="info-field-value"><ul class="info-list">${listItems.join('')}</ul></div>
+      </div>`;
     return html || '<p class="info-empty">No hay información de esencia disponible.</p>';
   }
 
@@ -1504,44 +1474,22 @@ class BrandsView extends BaseView {
     if (!brand) {
       return '<p class="info-empty">No hay información de lenguaje disponible.</p>';
     }
-    
     const tonoVoz = brand.tono_voz || '';
     const palabrasUsar = brand.palabras_usar || '';
-    const palabrasEvitar = brand.palabras_evitar || [];
-    
+    const palabrasEvitar = Array.isArray(brand.palabras_evitar) ? brand.palabras_evitar : [];
+    const avoidItems = palabrasEvitar.filter(p => p != null && String(p).trim() !== '').map(pal => `<li>${this.escapeHtml(String(pal).trim())}</li>`);
     let html = '';
-    
     if (tonoVoz) {
-      html += `
-        <div class="info-field">
-          <div class="info-field-label">Tono de voz</div>
-          <div class="info-field-value">${this.escapeHtml(String(tonoVoz))}</div>
-        </div>
-      `;
+      html += `<div class="info-field"><div class="info-field-label">Tono de voz</div><div class="info-field-value">${this.escapeHtml(String(tonoVoz))}</div></div>`;
     }
-    
     if (palabrasUsar) {
-      html += `
-        <div class="info-field">
-          <div class="info-field-label">Palabras a usar</div>
-          <div class="info-field-value">${this.escapeHtml(palabrasUsar)}</div>
-        </div>
-      `;
+      html += `<div class="info-field"><div class="info-field-label">Palabras a usar</div><div class="info-field-value">${this.escapeHtml(palabrasUsar)}</div></div>`;
     }
-    
-    if (palabrasEvitar && Array.isArray(palabrasEvitar) && palabrasEvitar.length > 0) {
-      html += `
-        <div class="info-field">
-          <div class="info-field-label">Palabras a evitar</div>
-          <div class="info-field-value">
-            <ul class="info-list">
-              ${palabrasEvitar.map(pal => `<li>${this.escapeHtml(String(pal))}</li>`).join('')}
-            </ul>
-          </div>
-        </div>
-      `;
-    }
-    
+    html += `
+      <div class="info-field">
+        <div class="info-field-label">Palabras a evitar</div>
+        <div class="info-field-value"><ul class="info-list">${avoidItems.join('')}</ul></div>
+      </div>`;
     return html || '<p class="info-empty">No hay información de lenguaje disponible.</p>';
   }
 
@@ -1585,191 +1533,6 @@ class BrandsView extends BaseView {
     });
     
     return html || '<p class="info-empty">No hay reglas creativas definidas.</p>';
-  }
-
-  renderStructuralIdentitySection() {
-    if (!this.brandEntities || this.brandEntities.length === 0) {
-      return '<p class="info-empty">No hay entidades definidas. Define qué vende o qué ofrece tu marca.</p>';
-    }
-
-    let html = '';
-    
-    this.brandEntities.forEach(entity => {
-      const entityType = entity.entity_type || 'entidad';
-      const name = entity.name || 'Sin nombre';
-      const description = entity.description || '';
-      const coreBenefits = entity.core_benefits || [];
-      const differentiation = entity.differentiation || '';
-      const usageContext = entity.usage_context || '';
-      const price = entity.price;
-      const currency = entity.currency || 'USD';
-
-      html += `
-        <div class="info-entity-card">
-          <div class="info-entity-header">
-            <span class="info-entity-type">${this.escapeHtml(entityType)}</span>
-            <h4 class="info-entity-name">${this.escapeHtml(name)}</h4>
-          </div>
-          
-          ${description ? `
-            <div class="info-field">
-              <div class="info-field-label">Descripción</div>
-              <div class="info-field-value">${this.escapeHtml(description)}</div>
-            </div>
-          ` : ''}
-          
-          ${coreBenefits && Array.isArray(coreBenefits) && coreBenefits.length > 0 ? `
-            <div class="info-field">
-              <div class="info-field-label">Beneficios clave</div>
-              <div class="info-field-value">
-                <ul class="info-list">
-                  ${coreBenefits.map(benefit => `<li>${this.escapeHtml(String(benefit))}</li>`).join('')}
-                </ul>
-              </div>
-            </div>
-          ` : ''}
-          
-          ${differentiation ? `
-            <div class="info-field">
-              <div class="info-field-label">Diferenciación</div>
-              <div class="info-field-value">${this.escapeHtml(differentiation)}</div>
-            </div>
-          ` : ''}
-          
-          ${usageContext ? `
-            <div class="info-field">
-              <div class="info-field-label">Contexto de uso</div>
-              <div class="info-field-value">${this.escapeHtml(usageContext)}</div>
-            </div>
-          ` : ''}
-          
-          ${price !== null && price !== undefined ? `
-            <div class="info-field">
-              <div class="info-field-label">Precio</div>
-              <div class="info-field-value">${this.escapeHtml(currency)} ${this.escapeHtml(String(price))}</div>
-            </div>
-          ` : ''}
-        </div>
-      `;
-    });
-
-    return html;
-  }
-
-  renderTerritorialIdentitySection() {
-    if (!this.brandPlaces || this.brandPlaces.length === 0) {
-      return '<p class="info-empty">No hay lugares definidos. Define dónde existe físicamente tu marca.</p>';
-    }
-
-    // Agrupar places por entity_id para mostrar contexto
-    const placesByEntity = {};
-    this.brandPlaces.forEach(place => {
-      const entityId = place.entity_id;
-      if (!placesByEntity[entityId]) {
-        placesByEntity[entityId] = [];
-      }
-      placesByEntity[entityId].push(place);
-    });
-
-    // Obtener nombres de entidades para contexto
-    const entityMap = {};
-    this.brandEntities.forEach(entity => {
-      entityMap[entity.id] = entity.name;
-    });
-
-    let html = '';
-    
-    Object.keys(placesByEntity).forEach(entityId => {
-      const places = placesByEntity[entityId];
-      const entityName = entityMap[entityId] || 'Entidad';
-      
-      places.forEach(place => {
-        const placeType = place.place_type || 'lugar';
-        const address = place.address || '';
-        const city = place.city || '';
-        const country = place.country || '';
-        const openingHours = place.opening_hours || {};
-        const contactInfo = place.contact_info || {};
-
-        html += `
-          <div class="info-place-card">
-            <div class="info-place-header">
-              <span class="info-place-type">${this.escapeHtml(placeType)}</span>
-              <h4 class="info-place-name">${this.escapeHtml(entityName)}</h4>
-            </div>
-            
-            ${address || city || country ? `
-              <div class="info-field">
-                <div class="info-field-label">Ubicación</div>
-                <div class="info-field-value">
-                  ${[address, city, country].filter(Boolean).map(loc => this.escapeHtml(loc)).join(', ')}
-                </div>
-              </div>
-            ` : ''}
-            
-            ${Object.keys(openingHours).length > 0 ? `
-              <div class="info-field">
-                <div class="info-field-label">Horarios</div>
-                <div class="info-field-value">
-                  <pre class="info-place-hours">${this.escapeHtml(JSON.stringify(openingHours, null, 2))}</pre>
-                </div>
-              </div>
-            ` : ''}
-            
-            ${Object.keys(contactInfo).length > 0 ? `
-              <div class="info-field">
-                <div class="info-field-label">Contacto</div>
-                <div class="info-field-value">
-                  <pre class="info-place-contact">${this.escapeHtml(JSON.stringify(contactInfo, null, 2))}</pre>
-                </div>
-              </div>
-            ` : ''}
-          </div>
-        `;
-      });
-    });
-
-    return html;
-  }
-
-  renderHumanIdentitySection() {
-    if (!this.brandAudiences || this.brandAudiences.length === 0) {
-      return '<p class="info-empty">No hay audiencias asociadas. Las audiencias se definen en la sección Audiences.</p>';
-    }
-
-    let html = '';
-    
-    this.brandAudiences.forEach(audience => {
-      const name = audience.name || 'Sin nombre';
-      const description = audience.description || '';
-      const languageStyle = audience.language_style || '';
-      const awarenessLevel = audience.awareness_level || '';
-
-      html += `
-        <div class="info-audience-card">
-          <div class="info-audience-header">
-            <h4 class="info-audience-name">${this.escapeHtml(name)}</h4>
-            ${awarenessLevel ? `<span class="info-audience-level">${this.escapeHtml(awarenessLevel)}</span>` : ''}
-          </div>
-          
-          ${description ? `
-            <div class="info-field">
-              <div class="info-field-label">Descripción</div>
-              <div class="info-field-value">${this.escapeHtml(description)}</div>
-            </div>
-          ` : ''}
-          
-          ${languageStyle ? `
-            <div class="info-field">
-              <div class="info-field-label">Lenguaje predominante</div>
-              <div class="info-field-value">${this.escapeHtml(languageStyle)}</div>
-            </div>
-          ` : ''}
-        </div>
-      `;
-    });
-
-    return html;
   }
 
   // ============================================
@@ -1880,8 +1643,14 @@ class BrandsView extends BaseView {
   }
 
   async uploadLogo(file) {
-    if (!this.supabase || !this.brandContainerData) return;
-
+    if (!file || !this.brandContainerData) return;
+    if (!this.supabase && window.supabaseService) {
+      this.supabase = await window.supabaseService.getClient();
+    }
+    if (!this.supabase) {
+      alert('No se pudo conectar. Intenta de nuevo.');
+      return;
+    }
     try {
       const fileExt = (file.name.split('.').pop() || 'png').toLowerCase();
       const fileName = `logo_${this.brandContainerData.id}_${Date.now()}.${fileExt}`;
