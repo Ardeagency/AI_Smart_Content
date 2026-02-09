@@ -162,15 +162,17 @@ class HogarView extends BaseView {
       const creditsByOrg = {};
       (creditsRows || []).forEach(r => { creditsByOrg[r.organization_id] = r; });
 
-      // Marcas por organización (brand_containers.nombre_marca)
+      // Marcas por organización (brand_containers: nombre_marca, logo_url — primera marca para logo flotante)
       const { data: containersRows } = await this.supabase
         .from('brand_containers')
-        .select('organization_id, nombre_marca')
+        .select('organization_id, nombre_marca, logo_url')
         .in('organization_id', orgIds);
       const marcasByOrg = {};
+      const firstBrandByOrg = {};
       (containersRows || []).forEach(r => {
         if (!marcasByOrg[r.organization_id]) marcasByOrg[r.organization_id] = [];
         if (r.nombre_marca) marcasByOrg[r.organization_id].push(r.nombre_marca);
+        if (!firstBrandByOrg[r.organization_id]) firstBrandByOrg[r.organization_id] = { nombre_marca: r.nombre_marca, logo_url: r.logo_url || '' };
       });
 
       // Miembros por organización: user_id (ordenados, para avatares máx 4)
@@ -227,6 +229,8 @@ class HogarView extends BaseView {
         org.credits_available = cred ? cred.credits_available : 0;
         org.credits_total = cred ? cred.credits_total : 0;
         org.marcaNames = marcasByOrg[org.id] || [];
+        const firstBrand = firstBrandByOrg[org.id];
+        org.firstBrandLogo = firstBrand ? (firstBrand.logo_url || '') : '';
         const memberIds = membersByOrg[org.id] || [];
         org.membersCount = memberIds.length;
         org.memberAvatars = memberIds.slice(0, 4).map(uid => avatarByUser[uid] || { avatar_url: '', full_name: '' });
@@ -454,19 +458,23 @@ class HogarView extends BaseView {
   }
 
   /**
-   * Card premium: header 30% (gradiente marca + nombre marca), content 70% (org name, plan, créditos, avatares), config icon solo hover.
+   * Card blueprint: hero (gradiente marca), overlay fade, logo flotante marca, info org, métricas.
    */
   renderOrgCard(org) {
     const brandColors = org.brandColors || [];
     const hasBranding = brandColors.length > 0;
-    const headerGradient = hasBranding
+    const heroGradient = hasBranding
       ? this.buildBrandGradientHeaderCss(brandColors)
-      : 'linear-gradient(135deg, rgba(212,117,78,0.6), rgba(200,107,69,0.5))';
+      : 'linear-gradient(130deg, #072b3f, #0d5f86)';
     const name = this.escapeHtml(org.name || '');
     const planRaw = String(org.planType || '—').replace(/_/g, ' ');
     const planLabel = planRaw === '—' ? '—' : this.escapeHtml(planRaw.charAt(0).toUpperCase() + planRaw.slice(1).toLowerCase() + ' plan');
     const credits = org.credits_available != null ? `${org.credits_available}` : '0';
-    const brandName = (org.marcaNames && org.marcaNames[0]) ? this.escapeHtml(org.marcaNames[0]) : '';
+    const logoUrl = (org.firstBrandLogo || '').trim();
+    const brandInitial = (org.marcaNames && org.marcaNames[0]) ? org.marcaNames[0].charAt(0).toUpperCase() : 'O';
+    const logoHtml = logoUrl
+      ? `<img src="${this.escapeHtml(logoUrl)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling&&this.nextElementSibling.classList.add('visible')"><span class="org-card-logo-initial">${brandInitial}</span>`
+      : `<span class="org-card-logo-initial visible">${brandInitial}</span>`;
     const avatars = (org.memberAvatars || []).slice(0, 4);
     const avatarsHtml = avatars.map(a => {
       const url = (a.avatar_url || '').trim();
@@ -480,13 +488,13 @@ class HogarView extends BaseView {
     return `
       <div class="org-card org-card-premium" data-org-id="${org.id}" role="button" tabindex="0" title="Entrar a ${name}">
         <button type="button" class="org-card-config-icon" aria-label="Configuración" title="Configuración"><i class="fas fa-cog"></i></button>
-        <div class="org-card-header" style="--org-header-gradient: ${headerGradient}">
-          ${brandName ? `<span class="org-card-brand-name">${brandName}</span>` : ''}
-        </div>
+        <div class="org-card-hero" style="--org-hero-gradient: ${heroGradient}"></div>
+        <div class="org-card-overlay"></div>
         <div class="org-card-content">
+          <div class="org-card-logo">${logoHtml}</div>
           <h3 class="org-card-org-name">${name}</h3>
           <p class="org-card-plan">${planLabel}</p>
-          <div class="org-card-bottom">
+          <div class="org-card-metrics">
             <div class="org-card-credits">
               <span class="org-card-credits-num">${credits}</span>
               <span class="org-card-credits-label">Credits available</span>
