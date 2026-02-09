@@ -89,26 +89,41 @@ ON CONFLICT (id) DO NOTHING;
 -- POLÍTICAS DE STORAGE (ajustar según auth.uid() o organization)
 -- ============================================
 
--- brand-logos: usuario sube/ve/borra con user_id en path
-CREATE POLICY "Users can upload own brand logos"
-ON storage.objects FOR INSERT
+-- brand-logos: path = {brand_container_id}/{filename}; solo dueño del brand_container (brand_containers.user_id)
+-- Ver también SQL/storage-policies-brand-logos.sql para aplicar solo estas políticas.
+CREATE POLICY "brand_logos_insert"
+ON storage.objects FOR INSERT TO authenticated
 WITH CHECK (
     bucket_id = 'brand-logos' AND
-    auth.uid()::text = (storage.foldername(name))[1]
+    EXISTS (
+        SELECT 1 FROM public.brand_containers bc
+        WHERE bc.id::text = (storage.foldername(name))[1] AND bc.user_id = auth.uid()
+    )
 );
 
-CREATE POLICY "Users can view own brand logos"
-ON storage.objects FOR SELECT
+CREATE POLICY "brand_logos_select"
+ON storage.objects FOR SELECT TO authenticated
 USING (
     bucket_id = 'brand-logos' AND
-    auth.uid()::text = (storage.foldername(name))[1]
+    EXISTS (
+        SELECT 1 FROM public.brand_containers bc
+        WHERE bc.id::text = (storage.foldername(name))[1] AND bc.user_id = auth.uid()
+    )
 );
 
-CREATE POLICY "Users can delete own brand logos"
-ON storage.objects FOR DELETE
+CREATE POLICY "brand_logos_update"
+ON storage.objects FOR UPDATE TO authenticated
+USING (bucket_id = 'brand-logos' AND EXISTS (SELECT 1 FROM public.brand_containers bc WHERE bc.id::text = (storage.foldername(name))[1] AND bc.user_id = auth.uid()))
+WITH CHECK (bucket_id = 'brand-logos' AND EXISTS (SELECT 1 FROM public.brand_containers bc WHERE bc.id::text = (storage.foldername(name))[1] AND bc.user_id = auth.uid()));
+
+CREATE POLICY "brand_logos_delete"
+ON storage.objects FOR DELETE TO authenticated
 USING (
     bucket_id = 'brand-logos' AND
-    auth.uid()::text = (storage.foldername(name))[1]
+    EXISTS (
+        SELECT 1 FROM public.brand_containers bc
+        WHERE bc.id::text = (storage.foldername(name))[1] AND bc.user_id = auth.uid()
+    )
 );
 
 -- brand-core: archivos de marca por usuario/org

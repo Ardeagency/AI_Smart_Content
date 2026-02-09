@@ -1611,6 +1611,12 @@ class BrandsView extends BaseView {
       alert('No se pudo conectar. Intenta de nuevo.');
       return;
     }
+    const container = this.container || document.getElementById('app-container');
+    const logoWrap = container?.querySelector('.info-logo-container');
+    if (logoWrap) {
+      logoWrap.style.pointerEvents = 'none';
+      logoWrap.style.opacity = '0.7';
+    }
     try {
       const fileExt = (file.name.split('.').pop() || 'png').toLowerCase();
       const fileName = `logo_${this.brandContainerData.id}_${Date.now()}.${fileExt}`;
@@ -1628,12 +1634,27 @@ class BrandsView extends BaseView {
         .getPublicUrl(filePath);
 
       await this.saveContainerField('logo_url', publicUrl);
+      this.brandContainerData.logo_url = publicUrl;
       await this.loadData();
       this.renderAll();
+      // Actualizar el panel INFO si está abierto para que se vea el nuevo logo
+      const container = this.container || document.getElementById('app-container');
+      const infoCard = container?.querySelector('.card-info.expanded');
+      if (infoCard) {
+        const content = infoCard.querySelector('.card-content-expanded');
+        if (content) this.renderInfoPanelContent(content);
+      }
+      const logoInput = container?.querySelector('.info-logo-container input[type="file"]');
+      if (logoInput) logoInput.value = '';
       console.log(`✅ Logo subido correctamente`);
     } catch (error) {
       console.error(`❌ Error al subir logo:`, error);
       alert(`Error al subir logo. Por favor, intenta de nuevo.`);
+    } finally {
+      if (logoWrap) {
+        logoWrap.style.pointerEvents = '';
+        logoWrap.style.opacity = '';
+      }
     }
   }
 
