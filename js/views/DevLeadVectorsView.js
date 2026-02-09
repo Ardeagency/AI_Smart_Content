@@ -8,6 +8,7 @@ class DevLeadVectorsView extends DevBaseView {
     this.supabase = null;
     this.bucketName = 'ai-knowledge';
     this.currentPrefix = '';
+    this._loadingFiles = false;
   }
 
   async onEnter() {
@@ -16,7 +17,12 @@ class DevLeadVectorsView extends DevBaseView {
 
   async getSupabase() {
     if (this.supabase) return this.supabase;
-    this.supabase = await this.getSupabaseClient();
+    const timeoutMs = 12000;
+    const clientPromise = this.getSupabaseClient();
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Tiempo de espera agotado al conectar.')), timeoutMs)
+    );
+    this.supabase = await Promise.race([clientPromise, timeoutPromise]);
     return this.supabase;
   }
 
@@ -26,11 +32,11 @@ class DevLeadVectorsView extends DevBaseView {
         <header class="dev-lead-header">
           <div class="dev-header-content">
             <h1 class="dev-header-title"><i class="fas fa-brain"></i> Base de conocimientos IA</h1>
-            <p class="dev-header-subtitle">Archivos del bucket ai-knowledge</p>
+            <p class="dev-header-subtitle">Archivos del bucket ai-knowledge que alimentan las inteligencias artificiales.</p>
           </div>
-          <div class="dev-lead-toolbar">
-            <button type="button" class="btn btn-secondary" id="refreshBtn"><i class="fas fa-sync-alt"></i> Actualizar</button>
-            <button type="button" class="btn btn-primary" id="uploadBtn"><i class="fas fa-upload"></i> Subir archivo</button>
+          <div class="dev-lead-toolbar" id="headerToolbar">
+            <button type="button" class="btn btn-secondary" id="refreshBtn" title="Refrescar lista"><i class="fas fa-sync-alt"></i> Actualizar</button>
+            <button type="button" class="btn btn-primary" id="uploadBtn" title="Subir archivo al bucket"><i class="fas fa-upload"></i> Subir archivo</button>
           </div>
         </header>
         <section class="dev-lead-content">
@@ -51,10 +57,10 @@ class DevLeadVectorsView extends DevBaseView {
             </table>
             <div class="dev-lead-empty" id="filesEmpty" style="display:none;">
               <i class="fas fa-folder-open"></i>
-              <p id="filesEmptyText">No hay archivos.</p>
-              <p class="dev-lead-empty-hint" id="filesEmptyHint">Usa el botón «Subir archivo» del encabezado para añadir archivos al bucket.</p>
-              <button type="button" class="btn btn-primary" id="uploadFromEmptyBtn" style="margin-top: 12px;">
-                <i class="fas fa-upload"></i> Subir primer archivo
+              <p id="filesEmptyText">No hay archivos en el bucket.</p>
+              <p class="dev-lead-empty-hint" id="filesEmptyHint">Sube archivos para que se procesen y alimenten los vectores de IA.</p>
+              <button type="button" class="btn btn-primary" id="uploadFromEmptyBtn" style="margin-top: 16px;" title="Abrir modal para subir archivo">
+                <i class="fas fa-upload"></i> Subir archivo
               </button>
             </div>
           </div>
@@ -86,11 +92,7 @@ class DevLeadVectorsView extends DevBaseView {
   }
 
   async init() {
-    await this.getSupabase();
-    if (!this.supabase) return;
-
-    await this.loadFiles();
-
+    // Siempre enganchar listeners primero para que la página responda aunque falle la carga
     document.getElementById('refreshBtn')?.addEventListener('click', () => this.loadFiles());
     document.getElementById('uploadBtn')?.addEventListener('click', () => this.openUpload());
     document.getElementById('uploadFromEmptyBtn')?.addEventListener('click', () => this.openUpload());
@@ -99,7 +101,8 @@ class DevLeadVectorsView extends DevBaseView {
     document.getElementById('uploadConfirm')?.addEventListener('click', () => this.doUpload());
     document.querySelector('#uploadModal .modal-overlay')?.addEventListener('click', () => this.closeUpload());
 
-    document.getElementById('filesBody')?.addEventListener('click', (e) => {
+    const filesBody = document.getElementById('filesBody');
+    filesBody?.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-action][data-path]');
       if (!btn) return;
       e.preventDefault();
@@ -109,12 +112,42 @@ class DevLeadVectorsView extends DevBaseView {
     });
 
     document.getElementById('breadcrumb')?.addEventListener('click', (e) => {
-      const t = e.target;
-      if (t.getAttribute('data-prefix') !== null) {
-        this.currentPrefix = t.getAttribute('data-prefix') || '';
+      const span = e.target && e.target.closest ? e.target.closest('[data-prefix]') : null;
+      if (span) {
+        this.currentPrefix = span.getAttribute('data-prefix') || '';
         this.loadFiles();
       }
     });
+
+    try {
+      await this.getSupabase();
+      if (!this.supabase) {
+        this.showLoadError('No se pudo conectar. Comprueba la configuración.');
+        return;
+      }
+      await this.loadFiles();
+    } catch (err) {
+      console.error('Base de conocimientos IA init:', err);
+      this.showLoadError(err && err.message ? err.message : 'Error al cargar.');
+    }
+  }
+
+  /** Mostrar error en el área de contenido sin tirar la página */
+  showLoadError(message) {
+    const table = document.getElementById('filesTable');
+    const tbody = document.getElementById('filesBody');
+    const empty = document.getElementById('filesEmpty');
+    const emptyText = document.getElementById('filesEmptyText');
+    const emptyHint = document.getElementById('filesEmptyHint');
+    const uploadFromEmptyBtn = document.getElementById('uploadFromEmptyBtn');
+    if (table) table.style.display = 'none';
+    if (tbody) tbody.innerHTML = '';
+    if (empty) {
+      empty.style.display = 'flex';
+      if (emptyText) emptyText.textContent = message;
+      if (emptyHint) emptyHint.style.display = 'none';
+      if (uploadFromEmptyBtn) uploadFromEmptyBtn.style.display = 'inline-flex';
+    }
   }
 
   async listStorage(prefix) {
@@ -151,16 +184,23 @@ class DevLeadVectorsView extends DevBaseView {
   }
 
   async loadFiles() {
+    if (this._loadingFiles) return;
+    this._loadingFiles = true;
+
     const table = document.getElementById('filesTable');
     const tbody = document.getElementById('filesBody');
     const empty = document.getElementById('filesEmpty');
     const emptyText = document.getElementById('filesEmptyText');
     const breadcrumb = document.getElementById('breadcrumb');
-    if (!tbody) return;
-
-    // Estado de carga: mostrar mensaje y ocultar tabla para evitar tabla vacía + empty a la vez
     const emptyHint = document.getElementById('filesEmptyHint');
     const uploadFromEmptyBtn = document.getElementById('uploadFromEmptyBtn');
+
+    if (!tbody) {
+      this._loadingFiles = false;
+      return;
+    }
+
+    // Estado de carga: mostrar mensaje y ocultar tabla para evitar tabla vacía + empty a la vez
     if (empty) {
       empty.style.display = 'flex';
       if (emptyText) emptyText.textContent = 'Cargando…';
@@ -218,7 +258,7 @@ class DevLeadVectorsView extends DevBaseView {
       }
     } catch (err) {
       console.error('Error listando bucket:', err);
-      tbody.innerHTML = '';
+      if (tbody) tbody.innerHTML = '';
       if (table) table.style.display = 'none';
       if (empty) {
         empty.style.display = 'flex';
@@ -226,6 +266,8 @@ class DevLeadVectorsView extends DevBaseView {
         if (emptyHint) emptyHint.style.display = 'none';
         if (uploadFromEmptyBtn) uploadFromEmptyBtn.style.display = 'none';
       }
+    } finally {
+      this._loadingFiles = false;
     }
   }
 
@@ -235,20 +277,19 @@ class DevLeadVectorsView extends DevBaseView {
     const title = document.getElementById('uploadTitle');
     const pathInput = document.getElementById('uploadPath');
     const fileInput = document.getElementById('uploadInput');
-    if (replacePath) {
-      title.textContent = 'Reemplazar archivo';
-      pathInput.value = replacePath.includes('/') ? replacePath.replace(/\/[^/]+$/, '') + '/' : '';
-      pathInput.readOnly = true;
-    } else {
-      title.textContent = 'Subir archivo';
-      pathInput.value = this.currentPrefix || '';
-      pathInput.readOnly = false;
+    if (!modal) return;
+    if (title) {
+      title.textContent = replacePath ? 'Reemplazar archivo' : 'Subir archivo';
     }
-    fileInput.value = '';
-    if (modal) {
-      modal.style.display = 'flex';
-      modal.classList.add('is-open');
+    if (pathInput) {
+      pathInput.value = replacePath
+        ? (replacePath.includes('/') ? replacePath.replace(/\/[^/]+$/, '') + '/' : '')
+        : (this.currentPrefix || '');
+      pathInput.readOnly = !!replacePath;
     }
+    if (fileInput) fileInput.value = '';
+    modal.style.display = 'flex';
+    modal.classList.add('is-open');
   }
 
   closeUpload() {

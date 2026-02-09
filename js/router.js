@@ -89,7 +89,11 @@ class Router {
       if (path === '' || path === '/index.html') {
         path = '/';
       }
-      
+      // Quitar barra final para que /dev/lead/flows/ coincida con /dev/lead/flows
+      if (path.length > 1 && path.endsWith('/')) {
+        path = path.slice(0, -1);
+      }
+
       // Buscar ruta exacta primero
       let route = this.routes[path];
       let routeParams = {};

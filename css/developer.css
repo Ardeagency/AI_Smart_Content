@@ -3316,6 +3316,26 @@ body.sidebar-collapsed .builder-header {
   flex-wrap: wrap;
 }
 
+/* Base de conocimientos IA: toolbar siempre visible y botones clicables */
+.dev-lead-vectors .dev-lead-header .dev-lead-toolbar {
+  display: flex;
+  flex-shrink: 0;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+.dev-lead-vectors .dev-lead-header .dev-lead-toolbar .btn {
+  white-space: nowrap;
+  pointer-events: auto;
+}
+.dev-lead-vectors .dev-lead-empty #uploadFromEmptyBtn {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
 .dev-lead-flow-desc {
   font-size: 0.75rem;
   color: var(--text-muted);
