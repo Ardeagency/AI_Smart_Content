@@ -350,16 +350,16 @@ class Navigation {
 
       <!-- Navegación lateral - Modo Desarrollador PaaS -->
       <nav class="side-navigation nav-mode-developer" id="sideNavigation">
-        <!-- Capa superior: Identidad de desarrollador -->
+        <!-- Capa superior: Perfil desarrollador (nombre, rol y rank) -->
         <div class="nav-identity-section">
           <div class="nav-identity-card dev-identity" id="navIdentityCard">
             <div class="nav-identity-content">
-              <div class="nav-dev-icon">
+              <div class="nav-dev-icon" id="navDevIcon">
                 <i class="fas fa-code"></i>
               </div>
               <div class="nav-identity-info">
                 <div class="nav-org-name" id="navDevName">Developer Portal</div>
-                <div class="nav-org-type" id="navDevTier">Novato</div>
+                <div class="nav-org-type" id="navDevTier">—</div>
               </div>
             </div>
           </div>
@@ -992,32 +992,43 @@ class Navigation {
   }
 
   /**
-   * Cargar información del desarrollador
+   * Cargar información del desarrollador: perfil (nombre), rol y rank
    */
   async loadDeveloperInfo() {
-    if (!window.supabase) return;
+    const supabase = await this.getSupabase();
+    if (!supabase) return;
 
     try {
       const user = window.authService?.getCurrentUser();
       if (!user) return;
 
-      // user_profiles (schema: dev_rank, dev_role; no developer_tier)
       const { data: profile } = await supabase
         .from('user_profiles')
-        .select('dev_rank, dev_role')
+        .select('full_name, email, dev_rank, dev_role, avatar_url')
         .eq('id', user.id)
         .maybeSingle();
 
-      if (profile) {
-        const tierEl = document.getElementById('navDevTier');
-        if (tierEl) {
-          const label = profile.dev_rank || profile.dev_role || 'Novato';
-          tierEl.textContent = typeof label === 'string' ? label : 'Novato';
-        }
-        const leadSection = document.getElementById('navLeadSection');
-        if (leadSection && profile.dev_role === 'lead') {
-          leadSection.style.display = '';
-        }
+      const iconWrap = document.getElementById('navDevIcon');
+      if (iconWrap && profile?.avatar_url) {
+        iconWrap.innerHTML = `<img class="nav-dev-avatar" src="${profile.avatar_url}" alt="" />`;
+      }
+
+      const nameEl = document.getElementById('navDevName');
+      const tierEl = document.getElementById('navDevTier');
+      if (nameEl) {
+        const name = profile?.full_name?.trim() || profile?.email?.trim() || user.email || 'Developer Portal';
+        nameEl.textContent = name;
+      }
+      if (tierEl && profile) {
+        const role = profile.dev_role ? String(profile.dev_role).replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '';
+        const rank = profile.dev_rank ? String(profile.dev_rank).replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '';
+        const parts = [role, rank].filter(Boolean);
+        tierEl.textContent = parts.length ? parts.join(' · ') : '—';
+      }
+
+      const leadSection = document.getElementById('navLeadSection');
+      if (leadSection && profile?.dev_role === 'lead') {
+        leadSection.style.display = '';
       }
 
       const { count: runsCount } = await supabase
@@ -1028,7 +1039,6 @@ class Navigation {
       const runsEl = document.getElementById('navRunsCount');
       if (runsEl) runsEl.textContent = runsCount ?? 0;
 
-      // content_flows no tiene columna rating; el rating está en user_flow_favorites
       const { data: favs } = await supabase
         .from('user_flow_favorites')
         .select('rating')

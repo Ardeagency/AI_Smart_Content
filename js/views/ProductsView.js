@@ -131,7 +131,7 @@ class ProductsView extends BaseView {
       this.initialized = true;
       return;
     }
-
+    
     await super.render();
   }
 
@@ -140,11 +140,11 @@ class ProductsView extends BaseView {
    */
   async loadProductForDetail(productId) {
     if (!this.supabase || !productId) return null;
-    const { data, error } = await this.supabase
-      .from('products')
-      .select('*')
+      const { data, error } = await this.supabase
+        .from('products')
+        .select('*')
       .eq('id', productId)
-      .single();
+        .single();
     if (error) return null;
     return data;
   }
@@ -154,11 +154,11 @@ class ProductsView extends BaseView {
    */
   async loadProductImagesForDetail(productId) {
     if (!this.supabase || !productId) return [];
-    const { data, error } = await this.supabase
-      .from('product_images')
+      const { data, error } = await this.supabase
+        .from('product_images')
       .select('id, image_url, image_type, image_order')
       .eq('product_id', productId)
-      .order('image_order', { ascending: true });
+        .order('image_order', { ascending: true });
     if (error) return [];
     return data || [];
   }
@@ -168,8 +168,8 @@ class ProductsView extends BaseView {
    */
   async loadBrandName(brandContainerId) {
     if (!this.supabase || !brandContainerId) return '';
-    const { data, error } = await this.supabase
-      .from('brand_containers')
+      const { data, error } = await this.supabase
+        .from('brand_containers')
       .select('nombre_marca, logo_url')
       .eq('id', brandContainerId)
       .single();
