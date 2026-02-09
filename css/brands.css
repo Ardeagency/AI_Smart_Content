@@ -115,81 +115,47 @@
 }
 
 /* ============================================
-   SKELETON - Mientras cargan datos (sin "BRAND" ni fondo naranja)
+   INICIO FLUIDO - Fondo neutro + animaciones suaves al pintar
    ============================================ */
-.brand-dashboard-container.brands-loading .background-gradient {
-    background: linear-gradient(145deg, #2d2a28 0%, #1f1d1b 50%, #252220 100%) !important;
+.background-gradient {
+    transition: background 0.7s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.brand-dashboard-container.brands-loading .brand-corner-bottom-left,
-.brand-dashboard-container.brands-loading .brand-cards-zone {
+/* Fondo neutro hasta que JS aplique el gradiente de marca */
+.brand-dashboard-container .background-gradient {
+    background: linear-gradient(145deg, #2d2a28 0%, #1f1d1b 50%, #252220 100%);
+}
+.brand-dashboard-container .background-gradient[data-brand-gradient="true"] {
+    /* JS aplica inline style; la transición suaviza el cambio */
+}
+
+/* Entrada suave del contenido al pintar */
+.brand-dashboard-container .brand-corner-bottom-left,
+.brand-dashboard-container .brand-cards-zone {
     opacity: 0;
-    pointer-events: none;
-    visibility: hidden;
+    transform: translateY(8px);
+    transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.brand-dashboard-container.brands-loading .brands-skeleton {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    position: absolute;
-    inset: 0;
-    z-index: 5;
-    padding: calc(48px + 1.5rem) 2rem 2rem;
-    box-sizing: border-box;
+.brand-dashboard-container.brands-ready .brand-corner-bottom-left,
+.brand-dashboard-container.brands-ready .brand-cards-zone {
+    opacity: 1;
+    transform: translateY(0);
 }
-.brand-dashboard-container:not(.brands-loading) .brands-skeleton {
-    display: none !important;
+.brand-dashboard-container.brands-ready .brand-cards-zone .brand-card {
+    animation: brands-card-fade-in 0.5s cubic-bezier(0.4, 0, 0.2, 1) backwards;
 }
-
-.brands-skeleton-corner {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    align-self: flex-start;
-}
-.brands-skeleton-line {
-    height: 2.5rem;
-    border-radius: 6px;
-    background: linear-gradient(
-        90deg,
-        rgba(255,255,255,0.06) 0%,
-        rgba(255,255,255,0.12) 50%,
-        rgba(255,255,255,0.06) 100%
-    );
-    background-size: 200% 100%;
-    animation: brands-skeleton-shimmer 1.2s ease-in-out infinite;
-}
-.brands-skeleton-name {
-    width: min(280px, 60vw);
-    height: 4rem;
-}
-.brands-skeleton-market {
-    width: min(180px, 40vw);
-}
-.brands-skeleton-cards {
-    display: flex;
-    gap: 1rem;
-    align-self: flex-end;
-    flex-wrap: wrap;
-}
-.brands-skeleton-card {
-    width: 160px;
-    height: 120px;
-    border-radius: 12px;
-    background: linear-gradient(
-        90deg,
-        rgba(255,255,255,0.05) 0%,
-        rgba(255,255,255,0.1) 50%,
-        rgba(255,255,255,0.05) 100%
-    );
-    background-size: 200% 100%;
-    animation: brands-skeleton-shimmer 1.2s ease-in-out infinite;
-}
-.brands-skeleton-card:nth-child(2) { animation-delay: 0.15s; }
-.brands-skeleton-card:nth-child(3) { animation-delay: 0.3s; }
-
-@keyframes brands-skeleton-shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+.brand-dashboard-container.brands-ready .brand-cards-zone .brand-card:nth-child(1) { animation-delay: 0.05s; }
+.brand-dashboard-container.brands-ready .brand-cards-zone .brand-card:nth-child(2) { animation-delay: 0.12s; }
+.brand-dashboard-container.brands-ready .brand-cards-zone .brand-card:nth-child(3) { animation-delay: 0.19s; }
+@keyframes brands-card-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* ============================================

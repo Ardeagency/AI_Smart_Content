@@ -1,25 +1,12 @@
-<!-- Brands Dashboard - Diseño Premium. brands-loading = skeleton hasta que loadData() termine. -->
-<div class="brand-dashboard-container brands-loading" id="brandsListContainer">
+<!-- Brands Dashboard - Diseño Premium. Inicio fluido con animaciones suaves. -->
+<div class="brand-dashboard-container" id="brandsListContainer">
     
-    <!-- Fondo (neutro en loading; JS aplica gradiente de marca cuando hay datos) -->
+    <!-- Fondo: neutro por defecto; JS aplica gradiente de marca con transición -->
     <div class="brand-dashboard-background">
         <div class="background-gradient"></div>
     </div>
     
-    <!-- Skeleton: visible solo con .brands-loading -->
-    <div class="brands-skeleton" id="brandsSkeleton" aria-hidden="true">
-        <div class="brands-skeleton-corner">
-            <div class="brands-skeleton-line brands-skeleton-name"></div>
-            <div class="brands-skeleton-line brands-skeleton-market"></div>
-        </div>
-        <div class="brands-skeleton-cards">
-            <div class="brands-skeleton-card"></div>
-            <div class="brands-skeleton-card"></div>
-            <div class="brands-skeleton-card"></div>
-        </div>
-    </div>
-    
-    <!-- Footer: MARCA + Mercado (oculto en loading) -->
+    <!-- Footer: MARCA + Mercado -->
     <div class="brand-corner-bottom-left">
         <div class="brand-main-info">
             <div class="brand-name-row">
