@@ -474,7 +474,6 @@ class BrandsView extends BaseView {
     if (!this.isActive) return;
     this.applyBrandBackgroundGradient();
     this.renderBrandName();
-    this.renderLinks();
     this.renderMarket();
     this.renderCards();
   }
