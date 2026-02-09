@@ -1113,13 +1113,21 @@ h1.brand-name-large[contenteditable="true"]:hover,
     margin-bottom: 2.5rem;
 }
 
-/* Contenedor de logo - centrado, circular, input encima para subir */
-.card-content-expanded .info-logo-container {
+/* Fila: logo + redes/web (junto al logo) */
+.card-content-expanded .info-identity-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+/* Contenedor de logo - circular, input encima para subir */
+.card-content-expanded .info-identity-row .info-logo-container {
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto;
+    margin: 0;
     width: 150px;
     height: 150px;
     border-radius: 50%;
@@ -1159,6 +1167,55 @@ h1.brand-name-large[contenteditable="true"]:hover,
 
 .card-content-expanded .info-logo-container .info-logo-placeholder.visible {
     display: flex;
+}
+
+/* Redes y web dentro de INFO (junto al logo) */
+.card-content-expanded .info-links-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+    min-width: 200px;
+}
+
+.card-content-expanded .info-links-list .brand-link-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.875rem;
+}
+
+.card-content-expanded .info-links-list .brand-link-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted, #6B7280);
+    font-size: 0.875rem;
+    flex-shrink: 0;
+}
+
+.card-content-expanded .info-links-list .brand-link-input {
+    flex: 1;
+    min-width: 10rem;
+    padding: 0.2rem 0;
+    font-size: inherit;
+    font-family: inherit;
+    color: var(--text-primary, #F2F3F5);
+    background: transparent !important;
+    border: none !important;
+    outline: none;
+    box-shadow: none;
+    overflow-x: auto;
+    text-overflow: unset;
+}
+
+.card-content-expanded .info-links-list .brand-link-input::placeholder {
+    color: var(--text-muted, #6B7280);
 }
 
 /* Grid de secciones (Esencia y Lenguaje) */

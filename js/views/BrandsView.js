@@ -489,8 +489,7 @@ class BrandsView extends BaseView {
     }
   }
 
-  renderLinks() {
-    const container = document.getElementById('brandLinksContainer');
+  renderLinksInto(container) {
     if (!container) return;
 
     const items = [
@@ -1303,6 +1302,12 @@ class BrandsView extends BaseView {
       });
     }
 
+    // Redes y web (dentro de INFO, junto al logo)
+    const linksContainer = container.querySelector('#brandLinksContainer');
+    if (linksContainer) {
+      this.renderLinksInto(linksContainer);
+    }
+
     // Esencia - hacer editables los campos usando makeEditableText() unificado
     container.querySelectorAll('.info-field-value').forEach(field => {
       const label = field.previousElementSibling;
@@ -1400,13 +1405,16 @@ class BrandsView extends BaseView {
        logoUrl.startsWith('/'));
     
     return `
-      <div class="info-logo-container">
-        ${isValidLogoUrl 
-          ? `<img src="${this.escapeHtml(logoUrl)}" alt="" class="info-logo-preview" onerror="this.style.display='none';var p=this.nextElementSibling;if(p)p.classList.add('visible');">`
-          : ''
-        }
-        <div class="info-logo-placeholder ${isValidLogoUrl ? '' : 'visible'}"><i class="fas fa-image"></i></div>
-        <input type="file" accept="image/*" class="info-logo-input" title="Subir logo">
+      <div class="info-identity-row">
+        <div class="info-logo-container">
+          ${isValidLogoUrl
+            ? `<img src="${this.escapeHtml(logoUrl)}" alt="" class="info-logo-preview" onerror="this.style.display='none';var p=this.nextElementSibling;if(p)p.classList.add('visible');">`
+            : ''
+          }
+          <div class="info-logo-placeholder ${isValidLogoUrl ? '' : 'visible'}"><i class="fas fa-image"></i></div>
+          <input type="file" accept="image/*" class="info-logo-input" title="Subir logo">
+        </div>
+        <ul class="info-links-list" id="brandLinksContainer" aria-label="Redes y web"></ul>
       </div>
     `;
   }
