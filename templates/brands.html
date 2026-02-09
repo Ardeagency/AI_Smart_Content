@@ -1,21 +1,32 @@
-<!-- Brands Dashboard - Diseño Premium -->
-<div class="brand-dashboard-container" id="brandsListContainer">
+<!-- Brands Dashboard - Diseño Premium. brands-loading = skeleton hasta que loadData() termine. -->
+<div class="brand-dashboard-container brands-loading" id="brandsListContainer">
     
-    <!-- Fondo -->
+    <!-- Fondo (neutro en loading; JS aplica gradiente de marca cuando hay datos) -->
     <div class="brand-dashboard-background">
         <div class="background-gradient"></div>
-                </div>
+    </div>
     
-    <!-- Footer: MARCA + URLs + Mercado -->
+    <!-- Skeleton: visible solo con .brands-loading -->
+    <div class="brands-skeleton" id="brandsSkeleton" aria-hidden="true">
+        <div class="brands-skeleton-corner">
+            <div class="brands-skeleton-line brands-skeleton-name"></div>
+            <div class="brands-skeleton-line brands-skeleton-market"></div>
+        </div>
+        <div class="brands-skeleton-cards">
+            <div class="brands-skeleton-card"></div>
+            <div class="brands-skeleton-card"></div>
+            <div class="brands-skeleton-card"></div>
+        </div>
+    </div>
+    
+    <!-- Footer: MARCA + Mercado (oculto en loading) -->
     <div class="brand-corner-bottom-left">
-        <!-- Solo nombre de marca y mercado -->
         <div class="brand-main-info">
             <div class="brand-name-row">
-                <h1 class="brand-name-large" id="brandNameLarge">BRAND</h1>
+                <h1 class="brand-name-large" id="brandNameLarge"></h1>
                 <div class="brand-status-indicator"><span class="status-dot"></span></div>
             </div>
         </div>
-        <!-- Mercado objetivo debajo -->
         <div class="brand-market-row">
             <span class="market-label" id="brandMarketLabel"></span>
         </div>

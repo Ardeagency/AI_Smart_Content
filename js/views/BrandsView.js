@@ -24,6 +24,7 @@ class BrandsView extends BaseView {
     this.savingFields = new Set();
     this._tryRenderTimeout = null;
     this._containerWarned = {};
+    this._dataLoaded = false;
   }
 
   async onEnter() {
@@ -77,7 +78,13 @@ class BrandsView extends BaseView {
 
       if (hasContainers) {
         this._tryRenderTimeout = null;
-        this.renderAll();
+        (async () => {
+          await this.ensureDataLoaded();
+          if (!this.isActive) return;
+          const root = container.querySelector('#brandsListContainer');
+          if (root) root.classList.remove('brands-loading');
+          this.renderAll();
+        })();
         return;
       }
 
@@ -135,7 +142,10 @@ class BrandsView extends BaseView {
    * products(brand_container_id), organization_members, organization_credits, credit_usage.
    */
   async loadData() {
-    if (!this.supabase || !this.userId) return;
+    if (!this.supabase || !this.userId) {
+      this._dataLoaded = true;
+      return;
+    }
 
     try {
       // brand_containers (user_id, organization_id, nombre_marca, mercado_objetivo, ...)
@@ -342,7 +352,15 @@ class BrandsView extends BaseView {
       }
     } catch (error) {
       console.error('❌ Error crítico cargando datos:', error);
+    } finally {
+      this._dataLoaded = true;
     }
+  }
+
+  /** Asegura que loadData() se ha ejecutado al menos una vez antes de mostrar contenido real. */
+  async ensureDataLoaded() {
+    if (this._dataLoaded) return;
+    await this.loadData();
   }
 
   // ============================================
@@ -481,7 +499,8 @@ class BrandsView extends BaseView {
   renderBrandName() {
     const el = document.getElementById('brandNameLarge');
     if (el) {
-      el.textContent = (this.brandContainerData?.nombre_marca || 'BRAND').toUpperCase();
+      const name = (this.brandContainerData?.nombre_marca || '').trim();
+      el.textContent = name ? name.toUpperCase() : '';
       this.makeEditableText(el, 'nombre_marca', 'container', () => {
         this.renderBrandName();
       });
