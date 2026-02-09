@@ -186,3 +186,21 @@ USING (bucket_id = 'production-inputs');
 CREATE POLICY "Users can delete from production-inputs"
 ON storage.objects FOR DELETE
 USING (bucket_id = 'production-inputs');
+
+-- ai-knowledge: archivos para base de conocimientos IA (gestión Lead en /dev/lead/ai-vectors)
+CREATE POLICY "Users can upload to ai-knowledge"
+ON storage.objects FOR INSERT
+WITH CHECK (bucket_id = 'ai-knowledge');
+
+CREATE POLICY "Users can view ai-knowledge"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'ai-knowledge');
+
+CREATE POLICY "Users can update ai-knowledge"
+ON storage.objects FOR UPDATE
+USING (bucket_id = 'ai-knowledge')
+WITH CHECK (bucket_id = 'ai-knowledge');
+
+CREATE POLICY "Users can delete from ai-knowledge"
+ON storage.objects FOR DELETE
+USING (bucket_id = 'ai-knowledge');

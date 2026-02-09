@@ -3168,6 +3168,49 @@ body.sidebar-collapsed .builder-header {
   margin-bottom: 16px;
 }
 
+.dev-lead-toolbar-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dev-lead-breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.dev-lead-breadcrumb-item {
+  cursor: pointer;
+  color: var(--dev-primary);
+  text-decoration: none;
+}
+
+.dev-lead-breadcrumb-item:hover {
+  text-decoration: underline;
+}
+
+.dev-lead-breadcrumb-sep {
+  color: var(--text-muted);
+  user-select: none;
+}
+
+.dev-lead-panel {
+  margin-top: 8px;
+}
+
+.dev-lead-file-row.folder {
+  cursor: pointer;
+}
+
+.dev-lead-file-row.folder td:first-child {
+  color: var(--dev-primary);
+}
+
 .dev-lead-table-wrap {
   position: relative;
   overflow-x: auto;
