@@ -1845,6 +1845,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
 }
 
 .nav-org-dropdown.active {
+    display: block;
     opacity: 1;
     visibility: visible;
     transform: translateY(8px);
