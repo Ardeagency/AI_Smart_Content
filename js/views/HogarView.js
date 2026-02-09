@@ -152,8 +152,58 @@ class HogarView extends BaseView {
       }
 
       this.organizations = Array.from(orgsMap.values());
+      const orgIds = this.organizations.map(o => o.id);
 
-      // Solo colores de marca para degradados (sistema brand_colors intacto)
+      // Créditos por organización (organization_credits)
+      const { data: creditsRows } = await this.supabase
+        .from('organization_credits')
+        .select('organization_id, credits_available, credits_total')
+        .in('organization_id', orgIds);
+      const creditsByOrg = {};
+      (creditsRows || []).forEach(r => { creditsByOrg[r.organization_id] = r; });
+
+      // Marcas por organización (brand_containers.nombre_marca)
+      const { data: containersRows } = await this.supabase
+        .from('brand_containers')
+        .select('organization_id, nombre_marca')
+        .in('organization_id', orgIds);
+      const marcasByOrg = {};
+      (containersRows || []).forEach(r => {
+        if (!marcasByOrg[r.organization_id]) marcasByOrg[r.organization_id] = [];
+        if (r.nombre_marca) marcasByOrg[r.organization_id].push(r.nombre_marca);
+      });
+
+      // Miembros por organización (count)
+      const { data: membersRows } = await this.supabase
+        .from('organization_members')
+        .select('organization_id')
+        .in('organization_id', orgIds);
+      const membersCountByOrg = {};
+      orgIds.forEach(id => { membersCountByOrg[id] = 0; });
+      (membersRows || []).forEach(r => { membersCountByOrg[r.organization_id] = (membersCountByOrg[r.organization_id] || 0) + 1; });
+
+      // Plan y costo: owner_user_id → users.plan_type y subscriptions (price, currency)
+      const ownerIds = [...new Set(this.organizations.map(o => o.owner_user_id).filter(Boolean))];
+      let planByUser = {};
+      let costByUser = {};
+      if (ownerIds.length > 0) {
+        const { data: usersRows } = await this.supabase
+          .from('users')
+          .select('id, plan_type')
+          .in('id', ownerIds);
+        (usersRows || []).forEach(u => { planByUser[u.id] = u.plan_type || '—'; });
+
+        const { data: subRows } = await this.supabase
+          .from('subscriptions')
+          .select('user_id, price, currency')
+          .in('user_id', ownerIds)
+          .order('created_at', { ascending: false });
+        (subRows || []).forEach(s => {
+          if (costByUser[s.user_id] == null) costByUser[s.user_id] = { price: s.price, currency: s.currency || 'USD' };
+        });
+      }
+
+      // Colores de marca para degradado inferior y enriquecer org
       for (const org of this.organizations) {
         try {
           org.brandColors = await this.getOrganizationBrandColors(org.id);
@@ -161,6 +211,15 @@ class HogarView extends BaseView {
           console.error(`Error cargando brand colors para org ${org.id}:`, error);
           org.brandColors = [];
         }
+        const cred = creditsByOrg[org.id];
+        org.credits_available = cred ? cred.credits_available : 0;
+        org.credits_total = cred ? cred.credits_total : 0;
+        org.marcaNames = marcasByOrg[org.id] || [];
+        org.membersCount = membersCountByOrg[org.id] || 0;
+        const ownerId = org.owner_user_id;
+        org.planType = ownerId ? (planByUser[ownerId] || '—') : '—';
+        const cost = ownerId ? costByUser[ownerId] : null;
+        org.planCost = cost ? `${cost.currency} ${Number(cost.price)}` : '—';
       }
 
       if (this.organizations.length === 0) {
@@ -336,7 +395,7 @@ class HogarView extends BaseView {
   }
 
   /**
-   * Renderizar cards de organizaciones (estilo Wallet/Bank, clic → living)
+   * Renderizar cards de organizaciones (estilo referencia: oscura, lista de datos, franja inferior con degradado dinámico)
    */
   renderOrganizations() {
     const gridEl = this.querySelector('#organizationsGrid');
@@ -344,13 +403,28 @@ class HogarView extends BaseView {
     gridEl.innerHTML = this.organizations.map(org => this.renderOrgCard(org)).join('');
     this.organizations.forEach(org => {
       const card = gridEl.querySelector(`[data-org-id="${org.id}"]`);
-      if (card) {
-        const go = () => this.navigateToOrganization(org.id);
-        card.addEventListener('click', go);
-        card.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            go();
+      if (!card) return;
+      const go = () => this.navigateToOrganization(org.id);
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.org-card-config-btn')) return;
+        go();
+      });
+      card.addEventListener('keydown', (e) => {
+        if (e.target.closest('.org-card-config-btn')) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          go();
+        }
+      });
+      const configBtn = card.querySelector('.org-card-config-btn');
+      if (configBtn) {
+        configBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (window.router) {
+            window.router.navigate(`/org/${org.id}/settings`);
+          } else {
+            window.location.href = `/org/${org.id}/settings`;
           }
         });
       }
@@ -358,26 +432,38 @@ class HogarView extends BaseView {
   }
 
   /**
-   * Card estilo imagen: izquierda naranja/degradado marca + emboss, derecha oscura. Clic lleva a living.
+   * Card minimalista: icono + nombre, datos (créditos, plan, marca, miembros), botón Configuración, franja inferior con degradado (nombre marca).
    */
   renderOrgCard(org) {
     const brandColors = org.brandColors || [];
     const hasBranding = brandColors.length > 0;
-    const gradientCss = hasBranding ? this.buildBrandGradientCss(brandColors) : '';
-    const initial = org.name ? org.name.charAt(0).toUpperCase() : 'O';
-    const name = this.escapeHtml(org.name);
+    const gradientCss = hasBranding ? this.buildBrandGradientCss(brandColors) : 'linear-gradient(135deg, var(--hogar-accent, #D4754E), var(--hogar-accent-hover, #C86B45))';
+    const name = this.escapeHtml(org.name || '');
+    const credits = org.credits_available != null ? `${org.credits_available}` : '0';
+    const plan = this.escapeHtml(String(org.planType || '—'));
+    const cost = this.escapeHtml(String(org.planCost || '—'));
+    const marcaText = (org.marcaNames && org.marcaNames.length) ? org.marcaNames.join(', ') : '—';
+    const marcaEscaped = this.escapeHtml(marcaText);
+    const miembros = org.membersCount != null ? String(org.membersCount) : '0';
+    const stripLabel = (org.marcaNames && org.marcaNames[0]) ? this.escapeHtml(org.marcaNames[0]) : 'Entrar';
     return `
-      <div class="org-card org-card-wallet" data-org-id="${org.id}" role="button" tabindex="0" title="Entrar a ${name}">
-        <div class="org-card-left ${hasBranding ? 'org-card-left--branded' : ''}" ${hasBranding && gradientCss ? `style="--org-cover-gradient: ${gradientCss}"` : ''}>
-          <span class="org-card-label">Organización</span>
-          <span class="org-card-glow" aria-hidden="true"></span>
-          <span class="org-card-emboss" aria-hidden="true">${initial}</span>
+      <div class="org-card org-card-ref" data-org-id="${org.id}" role="button" tabindex="0" title="Entrar a ${name}">
+        <div class="org-card-body">
+          <div class="org-card-head">
+            <span class="org-card-icon" aria-hidden="true"><i class="fas fa-cog"></i></span>
+            <h3 class="org-card-title">${name}</h3>
+          </div>
+          <ul class="org-card-list">
+            <li><i class="fas fa-coins" aria-hidden="true"></i><span>${credits}</span></li>
+            <li><i class="fas fa-tag" aria-hidden="true"></i><span>${plan} · ${cost}</span></li>
+            <li><i class="fas fa-gem" aria-hidden="true"></i><span>${marcaEscaped}</span></li>
+            <li><i class="fas fa-users" aria-hidden="true"></i><span>${miembros}</span></li>
+          </ul>
+          <div class="org-card-actions">
+            <a href="/org/${this.escapeHtml(org.id)}/settings" class="org-card-config-btn" data-router-link data-org-id="${this.escapeHtml(org.id)}">Configuración</a>
+          </div>
         </div>
-        <div class="org-card-right">
-          <span class="org-card-cta">Entrar</span>
-          <h3 class="org-card-title">${name}</h3>
-          <p class="org-card-subtitle">Gestiona tus marcas y contenido desde un solo lugar</p>
-        </div>
+        <div class="org-card-strip" style="--org-bottom-gradient: ${gradientCss}">${stripLabel}</div>
       </div>
     `;
   }
