@@ -133,23 +133,24 @@
 }
 
 /* ============================================
-   FOOTER - MARCA + INFO (esquina inferior)
+   HEADER MARCA - Arriba a la izquierda (jerarquía: nombre domina)
    ============================================ */
 .brand-corner-bottom-left {
     position: absolute;
-    bottom: 2rem;
-    left: 2.5rem;
+    top: calc(48px + 1.25rem);
+    left: 2rem;
+    bottom: auto;
     z-index: 10;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.35rem;
 }
 
-/* Fila principal: MARCA + URLs */
+/* Fila principal: nombre de marca grande + URLs compactas */
 .brand-main-info {
     display: flex;
-    align-items: center;
-    gap: 1.5rem;
+    align-items: flex-start;
+    gap: 1.25rem;
 }
 
 .brand-name-row {
@@ -188,7 +189,7 @@
 #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:hover,
 #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:active,
 #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:focus {
-    font-size: 4.5rem !important;
+    font-size: 5.5rem !important;
     line-height: 1 !important;
     letter-spacing: -0.02em !important;
 }
@@ -229,31 +230,31 @@ h1.brand-name-large[contenteditable="true"]:hover,
     background: #4ADE80;
 }
 
-/* Lista de URLs editables (icono + input por red) */
+/* Lista de URLs editables: compacta, más pequeña que el nombre de marca */
 .brand-links-list {
     list-style: none;
     margin: 0;
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.2rem;
 }
 
 .brand-link-row {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9375rem;
+    gap: 0.4rem;
+    font-size: 0.8125rem;
 }
 
 .brand-link-icon {
-    width: 28px;
-    height: 28px;
+    width: 22px;
+    height: 22px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--brand-text-muted);
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     flex-shrink: 0;
 }
 
@@ -288,13 +289,13 @@ h1.brand-name-large[contenteditable="true"]:hover,
     box-shadow: none;
 }
 
-/* Mercado objetivo debajo */
+/* Mercado objetivo debajo del header marca */
 .brand-market-row {
-    margin-top: 0.25rem;
+    margin-top: 0.15rem;
 }
 
 .market-label {
-    font-size: 0.75rem;
+    font-size: 0.6875rem;
     color: var(--brand-text-muted);
 }
 
@@ -1030,13 +1031,13 @@ h1.brand-name-large[contenteditable="true"]:hover,
         width: 340px;
     }
     .brand-name-large {
-        font-size: 4rem !important;
+        font-size: 5rem !important;
     }
     #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large,
     #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:hover,
     #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:active,
     #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:focus {
-        font-size: 4rem !important;
+        font-size: 5rem !important;
     }
 }
 
@@ -1045,18 +1046,18 @@ h1.brand-name-large[contenteditable="true"]:hover,
         width: 300px;
     }
     .brand-name-large {
-        font-size: 3.5rem !important;
+        font-size: 4rem !important;
     }
     #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large,
     #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:hover,
     #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:active,
     #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:focus {
-        font-size: 3.5rem !important;
+        font-size: 4rem !important;
     }
     .brand-main-info {
         flex-direction: column;
         align-items: flex-start;
-        gap: 0.75rem;
+        gap: 0.5rem;
     }
 }
 
