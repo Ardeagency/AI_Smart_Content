@@ -1,23 +1,47 @@
-/* Hogar View Styles */
+/**
+ * Hogar (Home) - Selector de organizaciones
+ * Mismo estilo visual que el resto de la web: Living/Brands (fondo oscuro, acentos cálidos, superficies card)
+ */
+
+/* Variables locales por si living no cargó; normalmente se usan las de living.css */
 .hogar-container {
-    min-height: calc(100vh - 48px);
-    padding: 2rem;
-    max-width: 1400px;
-    margin: 0 auto;
-    background: #0E1012;
-    padding-top: calc(48px + 2rem);
-    display: flex;
-    flex-direction: column;
+    --hogar-bg: var(--living-bg-deep, #0A0C0F);
+    --hogar-surface: var(--living-bg-surface, #0E1012);
+    --hogar-card: var(--living-bg-card, rgba(21, 23, 28, 0.6));
+    --hogar-card-border: rgba(255, 255, 255, 0.06);
+    --hogar-text: var(--living-text-light, #E8DDD4);
+    --hogar-text-muted: var(--living-text-muted, rgba(232, 221, 212, 0.4));
+    --hogar-accent: var(--living-warm-1, #D4754E);
+    --hogar-accent-hover: var(--living-warm-2, #C86B45);
+    --hogar-radius: 12px;
+    --hogar-radius-card: 16px;
 }
 
-/* En móvil */
+/* ============================================
+   CONTENEDOR PRINCIPAL
+   ============================================ */
+.hogar-container {
+    min-height: calc(100vh - 70px);
+    padding: 2rem;
+    padding-top: calc(70px + 2rem); /* header-only: 70px + aire */
+    max-width: 1400px;
+    margin: 0 auto;
+    background: var(--hogar-bg);
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
 @media (max-width: 768px) {
     .hogar-container {
-        padding: 1rem;
-        padding-top: calc(48px + 1rem);
+        padding: 1.5rem;
+        padding-top: calc(70px + 1rem);
     }
 }
 
+/* ============================================
+   HEADER
+   ============================================ */
 .hogar-header {
     display: flex;
     justify-content: space-between;
@@ -33,23 +57,26 @@
 }
 
 .hogar-title {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--text-primary, #ecebda);
-    margin-bottom: 0.5rem;
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--hogar-text);
+    margin-bottom: 0.35rem;
+    letter-spacing: -0.02em;
 }
 
 .hogar-subtitle {
-    font-size: 1rem;
-    color: var(--text-secondary, #a0a0a0);
+    font-size: 0.9375rem;
+    color: var(--hogar-text-muted);
 }
 
-/* Footer con botón Nueva Organización (alineado a la derecha) */
+/* ============================================
+   FOOTER Y BOTÓN NUEVA ORGANIZACIÓN
+   ============================================ */
 .hogar-footer {
     margin-top: auto;
     padding-top: 1.5rem;
     padding-bottom: 0.5rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-top: 1px solid var(--hogar-card-border);
     display: flex;
     justify-content: flex-end;
 }
@@ -58,69 +85,80 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.4rem;
-    width: 160px;
-    height: 36px;
-    padding: 0 0.75rem;
-    background: var(--accent-warm, #e09145);
+    gap: 0.5rem;
+    min-width: 160px;
+    height: 40px;
+    padding: 0 1rem;
+    background: var(--hogar-accent);
     color: #fff;
     border: none;
-    border-radius: 8px;
-    font-size: 0.8125rem;
+    border-radius: var(--hogar-radius);
+    font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
     transition: background 0.2s ease, transform 0.15s ease;
 }
 
 .btn-create-org:hover {
-    background: var(--accent-yellow-hover, #f0a055);
+    background: var(--hogar-accent-hover);
     color: #fff;
     transform: translateY(-1px);
 }
 
-/* Empty State */
+/* ============================================
+   EMPTY STATE
+   ============================================ */
 .hogar-empty {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 400px;
+    min-height: 360px;
     text-align: center;
     padding: 2rem;
 }
 
-.empty-icon {
-    font-size: 4rem;
-    color: var(--text-secondary, #a0a0a0);
+.hogar-empty .empty-icon {
+    font-size: 3.5rem;
+    color: var(--hogar-text-muted);
     margin-bottom: 1rem;
 }
 
 .hogar-empty h2 {
-    font-size: 1.5rem;
-    color: var(--text-primary, #ecebda);
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--hogar-text);
     margin-bottom: 0.5rem;
 }
 
 .hogar-empty p {
-    color: var(--text-secondary, #a0a0a0);
+    color: var(--hogar-text-muted);
     margin-bottom: 1.5rem;
+    font-size: 0.9375rem;
 }
 
-/* Variables tema oscuro + tokens de radius */
-.hogar-container {
-    --surface-primary: #121416;
-    --surface-elevated: #16181c;
-    --radius-xl: 24px;
-    --radius-md: 16px;
-    --radius-sm: 8px;
+.hogar-empty .btn-primary {
+    background: var(--hogar-accent);
+    color: #fff;
+    border: none;
+    padding: 0.65rem 1.25rem;
+    border-radius: var(--hogar-radius);
+    font-weight: 600;
 }
 
-/* Organizations Grid: 3-4 cols desktop, 2 tablet, 1 mobile */
+.hogar-empty .btn-primary:hover {
+    background: var(--hogar-accent-hover);
+    color: #fff;
+}
+
+/* ============================================
+   GRID DE ORGANIZACIONES
+   ============================================ */
 .organizations-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 1.5rem;
-    margin-top: 2rem;
+    margin-top: 0.5rem;
 }
 
 @media (min-width: 600px) and (max-width: 899px) {
@@ -141,35 +179,37 @@
     }
 }
 
-/* ========== Organization Card - Estilo Wallet/Bank (imagen): pill, naranja/degradado marca, emboss, clic → living ========== */
+/* ============================================
+   CARD DE ORGANIZACIÓN (estilo Living/Brands)
+   ============================================ */
 .org-card.org-card-wallet {
-    --org-card-radius: 28px;
+    --org-card-radius: var(--hogar-radius-card);
     display: flex;
     flex-direction: row;
-    min-height: 160px;
+    min-height: 140px;
     max-width: 100%;
     overflow: hidden;
     border-radius: var(--org-card-radius);
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+    border: 1px solid var(--hogar-card-border);
+    background: var(--hogar-card);
     cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    background: #fff;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .org-card.org-card-wallet:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Panel izquierdo (~45%): naranja o degradado de marca (brand_colors), label + círculo + letra emboss */
+/* Panel izquierdo: acento cálido o degradado de marca */
 .org-card-left {
     position: relative;
-    flex: 0 0 45%;
+    flex: 0 0 42%;
     min-width: 0;
-    padding: 20px;
+    padding: 1.25rem;
     border-radius: var(--org-card-radius) 0 0 var(--org-card-radius);
-    background: #e85c2a;
+    background: linear-gradient(145deg, var(--hogar-accent) 0%, var(--hogar-accent-hover) 100%);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -181,63 +221,61 @@
 }
 
 .org-card-label {
-    font-size: 0.75rem;
-    font-weight: 500;
+    font-size: 0.7rem;
+    font-weight: 600;
     color: rgba(255, 255, 255, 0.9);
-    letter-spacing: 0.02em;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 
 .org-card-glow {
     position: absolute;
-    top: 12px;
-    right: 16px;
-    width: 48px;
-    height: 48px;
+    top: 10px;
+    right: 12px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.2);
     pointer-events: none;
 }
 
 .org-card-emboss {
-    font-size: 3.5rem;
+    font-size: 2.75rem;
     font-weight: 800;
     line-height: 1;
-    color: rgba(0, 0, 0, 0.15);
-    text-shadow:
-        1px 1px 0 rgba(255, 255, 255, 0.35),
-        -1px -1px 0 rgba(0, 0, 0, 0.2),
-        0 2px 4px rgba(0, 0, 0, 0.15);
+    color: rgba(0, 0, 0, 0.12);
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.2);
     letter-spacing: -0.02em;
     align-self: flex-start;
     margin-top: auto;
 }
 
-/* Panel derecho (~55%): fondo charcoal, “Entrar” + título + subtítulo */
+/* Panel derecho: superficie oscura coherente con la web */
 .org-card-right {
     flex: 1;
     min-width: 0;
-    padding: 20px 24px;
-    background: #2c2a28;
+    padding: 1.25rem 1.25rem;
+    background: var(--hogar-surface);
     border-radius: 0 var(--org-card-radius) var(--org-card-radius) 0;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 6px;
+    gap: 0.35rem;
 }
 
 .org-card-cta {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.75);
-    letter-spacing: 0.03em;
+    color: var(--hogar-text-muted);
+    letter-spacing: 0.05em;
     text-transform: uppercase;
 }
 
 .org-card-title {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
     font-weight: 700;
     line-height: 1.3;
-    color: #fff;
+    color: var(--hogar-text);
     margin: 0;
     letter-spacing: -0.01em;
     display: -webkit-box;
@@ -249,9 +287,9 @@
 }
 
 .org-card-subtitle {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     line-height: 1.4;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--hogar-text-muted);
     margin: 0;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -260,19 +298,16 @@
     overflow: hidden;
 }
 
-.btn-sm {
-    padding: 0.5rem;
-    font-size: 0.875rem;
-}
-
-/* Modal */
-.modal-overlay {
+/* ============================================
+   MODAL (mismo lenguaje visual)
+   ============================================ */
+.hogar-container .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.75);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -280,87 +315,91 @@
     padding: 1rem;
 }
 
-.modal-content {
-    background: #121416;
-    border-radius: 12px;
+.hogar-container .modal-content {
+    background: var(--hogar-surface);
+    border: 1px solid var(--hogar-card-border);
+    border-radius: var(--hogar-radius-card);
     width: 100%;
-    max-width: 500px;
+    max-width: 440px;
     max-height: 90vh;
     overflow-y: auto;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
-.modal-header {
+.hogar-container .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.5rem;
-    border-bottom: 1px solid rgba(236, 235, 218, 0.1);
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--hogar-card-border);
 }
 
-.modal-header h2 {
-    font-size: 1.5rem;
+.hogar-container .modal-header h2 {
+    font-size: 1.25rem;
     font-weight: 600;
-    color: var(--text-primary, #ecebda);
+    color: var(--hogar-text);
 }
 
-.modal-close {
+.hogar-container .modal-close {
     background: transparent;
     border: none;
-    color: var(--text-secondary, #a0a0a0);
+    color: var(--hogar-text-muted);
     font-size: 1.25rem;
     cursor: pointer;
     padding: 0.25rem;
     transition: color 0.2s ease;
 }
 
-.modal-close:hover {
-    color: var(--text-primary, #ecebda);
+.hogar-container .modal-close:hover {
+    color: var(--hogar-text);
 }
 
-.modal-body {
+.hogar-container .modal-body {
     padding: 1.5rem;
 }
 
-.form-group {
-    margin-bottom: 1.5rem;
+.hogar-container .form-group {
+    margin-bottom: 1.25rem;
 }
 
-.form-group label {
+.hogar-container .form-group label {
     display: block;
     margin-bottom: 0.5rem;
-    color: var(--text-primary, #ecebda);
+    color: var(--hogar-text);
     font-weight: 500;
     font-size: 0.875rem;
 }
 
-.form-group input {
+.hogar-container .form-group input {
     width: 100%;
-    padding: 0.75rem;
-    background: #121416;
-    border: 1px solid #1B1D1F;
-    border-radius: 8px;
-    color: var(--text-primary, #ecebda);
+    padding: 0.75rem 1rem;
+    background: var(--hogar-bg);
+    border: 1px solid var(--hogar-card-border);
+    border-radius: var(--hogar-radius);
+    color: var(--hogar-text);
     font-size: 1rem;
     transition: border-color 0.2s ease;
 }
 
-.form-group input:focus {
+.hogar-container .form-group input:focus {
     outline: none;
+    border-color: var(--hogar-accent);
 }
 
-.form-actions {
+.hogar-container .form-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 2rem;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
 }
 
-.btn {
-    padding: 0.75rem 1.5rem;
+/* Botones dentro de hogar (modal y empty) */
+.hogar-container .btn {
+    padding: 0.65rem 1.25rem;
     border: none;
-    border-radius: 8px;
+    border-radius: var(--hogar-radius);
     font-weight: 600;
+    font-size: 0.875rem;
     cursor: pointer;
     transition: all 0.2s ease;
     display: inline-flex;
@@ -368,33 +407,37 @@
     gap: 0.5rem;
 }
 
-.btn-primary {
-    background: var(--primary-color, #ecebda);
-    color: var(--bg-dark, #1a1a1a);
+.hogar-container .btn-primary {
+    background: var(--hogar-accent);
+    color: #fff;
 }
 
-.btn-primary:hover {
-    background: var(--accent-warm, #e09145);
-    color: var(--text-primary, #ecebda);
+.hogar-container .btn-primary:hover {
+    background: var(--hogar-accent-hover);
+    color: #fff;
 }
 
-.btn-secondary {
+.hogar-container .btn-secondary {
     background: transparent;
-    color: var(--text-secondary, #a0a0a0);
-    border: 1px solid #1B1D1F;
+    color: var(--hogar-text-muted);
+    border: 1px solid var(--hogar-card-border);
 }
 
-.btn-secondary:hover {
-    background: rgba(236, 235, 218, 0.1);
-    color: var(--text-primary, #ecebda);
+.hogar-container .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--hogar-text);
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Responsive */
+.btn-sm {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
 @media (max-width: 768px) {
-    .hogar-container {
-        padding: 1rem;
-    }
-
     .hogar-header {
         flex-direction: column;
         align-items: flex-start;
@@ -411,16 +454,16 @@
 
     .org-card-left {
         flex: 0 0 auto;
-        min-height: 100px;
+        min-height: 88px;
         border-radius: var(--org-card-radius) var(--org-card-radius) 0 0;
     }
 
     .org-card-right {
         border-radius: 0 0 var(--org-card-radius) var(--org-card-radius);
-        padding: 16px 20px;
+        padding: 1rem 1.25rem;
     }
 
     .org-card-emboss {
-        font-size: 2.75rem;
+        font-size: 2.25rem;
     }
 }
