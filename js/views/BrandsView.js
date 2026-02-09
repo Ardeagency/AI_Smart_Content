@@ -1382,27 +1382,18 @@ class BrandsView extends BaseView {
       }
     });
 
-    // Objetivos y Palabras a evitar (un solo formato: lista editable)
-    container.querySelectorAll('.info-list').forEach(list => {
-      const label = list.closest('.info-field')?.querySelector('.info-field-label');
-      if (!label) return;
-      const labelText = label.textContent.trim();
-      if (labelText !== 'Objetivos' && labelText !== 'Palabras a evitar') return;
-      const fieldName = labelText === 'Objetivos' ? 'objetivos_marca' : 'palabras_evitar';
-      const parent = list.parentElement;
-      parent.style.cursor = 'pointer';
-      parent.addEventListener('click', () => {
-        const currentValues = Array.from(list.querySelectorAll('li'))
-          .map(li => li.textContent.trim())
-          .filter(v => v && v !== '—');
-        this.makeEditableMultiSelect(parent, fieldName, currentValues, 'brand', () => {
-          const infoCard = document.querySelector('.card-info.expanded');
-          if (infoCard) {
-            const content = infoCard.querySelector('.card-content-expanded');
-            if (content) this.renderInfoPanelContent(content);
-          }
-        });
-      });
+    // Objetivos y Palabras a evitar: siempre formato tags + input (estado 2 único)
+    const onRefreshPanel = () => {
+      const infoCard = document.querySelector('.card-info.expanded');
+      if (infoCard) {
+        const content = infoCard.querySelector('.card-content-expanded');
+        if (content) this.renderInfoPanelContent(content);
+      }
+    };
+    container.querySelectorAll('.info-field-value[data-multiselect]').forEach(wrap => {
+      const fieldName = wrap.getAttribute('data-multiselect');
+      if (!fieldName) return;
+      this.makeEditableMultiSelect(wrap, fieldName, [], 'brand', onRefreshPanel);
     });
   }
 
@@ -1434,8 +1425,6 @@ class BrandsView extends BaseView {
     }
     const quienesSomos = brand.quienes_somos || '';
     const personalidad = brand.personalidad_marca || '';
-    const objetivos = Array.isArray(brand.objetivos_marca) ? brand.objetivos_marca : [];
-    const listItems = objetivos.filter(o => o != null && String(o).trim() !== '').map(obj => `<li>${this.escapeHtml(String(obj).trim())}</li>`);
     let html = '';
     if (quienesSomos) {
       html += `<div class="info-field"><div class="info-field-label">Quiénes somos</div><div class="info-field-value">${this.escapeHtml(quienesSomos)}</div></div>`;
@@ -1443,11 +1432,7 @@ class BrandsView extends BaseView {
     if (personalidad) {
       html += `<div class="info-field"><div class="info-field-label">Personalidad</div><div class="info-field-value">${this.escapeHtml(personalidad)}</div></div>`;
     }
-    html += `
-      <div class="info-field">
-        <div class="info-field-label">Objetivos</div>
-        <div class="info-field-value"><ul class="info-list">${listItems.join('')}</ul></div>
-      </div>`;
+    html += `<div class="info-field"><div class="info-field-label">Objetivos</div><div class="info-field-value" data-multiselect="objetivos_marca" data-field="objetivos_marca"></div></div>`;
     return html || '<p class="info-empty">No hay información de esencia disponible.</p>';
   }
 
@@ -1457,8 +1442,6 @@ class BrandsView extends BaseView {
     }
     const tonoVoz = brand.tono_voz || '';
     const palabrasUsar = brand.palabras_usar || '';
-    const palabrasEvitar = Array.isArray(brand.palabras_evitar) ? brand.palabras_evitar : [];
-    const avoidItems = palabrasEvitar.filter(p => p != null && String(p).trim() !== '').map(pal => `<li>${this.escapeHtml(String(pal).trim())}</li>`);
     let html = '';
     if (tonoVoz) {
       html += `<div class="info-field"><div class="info-field-label">Tono de voz</div><div class="info-field-value">${this.escapeHtml(String(tonoVoz))}</div></div>`;
@@ -1466,11 +1449,7 @@ class BrandsView extends BaseView {
     if (palabrasUsar) {
       html += `<div class="info-field"><div class="info-field-label">Palabras a usar</div><div class="info-field-value">${this.escapeHtml(palabrasUsar)}</div></div>`;
     }
-    html += `
-      <div class="info-field">
-        <div class="info-field-label">Palabras a evitar</div>
-        <div class="info-field-value"><ul class="info-list">${avoidItems.join('')}</ul></div>
-      </div>`;
+    html += `<div class="info-field"><div class="info-field-label">Palabras a evitar</div><div class="info-field-value" data-multiselect="palabras_evitar" data-field="palabras_evitar"></div></div>`;
     return html || '<p class="info-empty">No hay información de lenguaje disponible.</p>';
   }
 
