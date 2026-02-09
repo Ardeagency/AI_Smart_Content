@@ -24,6 +24,7 @@ class BrandsView extends BaseView {
     this.savingFields = new Set();
     this._tryRenderTimeout = null;
     this._containerWarned = {};
+    this._dataLoaded = false;
   }
 
   async onEnter() {
@@ -80,6 +81,13 @@ class BrandsView extends BaseView {
         this.renderAll();
         const root = container.querySelector('#brandsListContainer');
         if (root) root.classList.add('brands-ready');
+        // Solo el fondo espera datos; luego crossfade skeleton → gradiente
+        (async () => {
+          await this.ensureDataLoaded();
+          if (!this.isActive) return;
+          this.applyBrandBackgroundGradient();
+          if (root) root.classList.add('brands-background-ready');
+        })();
         return;
       }
 
@@ -137,7 +145,10 @@ class BrandsView extends BaseView {
    * products(brand_container_id), organization_members, organization_credits, credit_usage.
    */
   async loadData() {
-    if (!this.supabase || !this.userId) return;
+    if (!this.supabase || !this.userId) {
+      this._dataLoaded = true;
+      return;
+    }
 
     try {
       // brand_containers (user_id, organization_id, nombre_marca, mercado_objetivo, ...)
@@ -344,7 +355,14 @@ class BrandsView extends BaseView {
       }
     } catch (error) {
       console.error('❌ Error crítico cargando datos:', error);
+    } finally {
+      this._dataLoaded = true;
     }
+  }
+
+  async ensureDataLoaded() {
+    if (this._dataLoaded) return;
+    await this.loadData();
   }
 
   // ============================================
@@ -451,7 +469,7 @@ class BrandsView extends BaseView {
     return `linear-gradient(135deg, ${palette.primary}, ${palette.secondary})`;
   }
 
-  /** Aplica el degradado de colores de marca al fondo de la página Brands (mismo sistema que org en Hogar). */
+  /** Aplica el degradado de colores de marca al fondo (skeleton hace crossfade a esta capa). Sin colores usa neutro. */
   applyBrandBackgroundGradient() {
     const container = this.container || document.getElementById('app-container');
     if (!container) return;
@@ -459,11 +477,12 @@ class BrandsView extends BaseView {
     if (!gradientEl) return;
     const hexes = this.getBrandColorsHexArray();
     const gradientCss = hexes.length ? this.buildBrandGradientCss(hexes) : '';
+    const neutralBg = 'linear-gradient(145deg, #2d2a28 0%, #1f1d1b 50%, #252220 100%)';
     if (gradientCss) {
       gradientEl.style.background = gradientCss;
       gradientEl.setAttribute('data-brand-gradient', 'true');
     } else {
-      gradientEl.style.background = '';
+      gradientEl.style.background = neutralBg;
       gradientEl.removeAttribute('data-brand-gradient');
     }
   }

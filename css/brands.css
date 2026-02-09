@@ -115,17 +115,28 @@
 }
 
 /* ============================================
-   INICIO FLUIDO - Fondo neutro + animaciones suaves al pintar
+   FONDO: solo el fondo usa skeleton; transición fluida por crossfade
    ============================================ */
+.background-skeleton {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: linear-gradient(145deg, #2d2a28 0%, #1f1d1b 48%, #252220 100%);
+    transition: opacity 1.15s cubic-bezier(0.33, 0, 0.2, 1);
+}
 .background-gradient {
-    transition: background 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 1.15s cubic-bezier(0.33, 0, 0.2, 1);
 }
-/* Fondo neutro hasta que JS aplique el gradiente de marca */
-.brand-dashboard-container .background-gradient {
-    background: linear-gradient(145deg, #2d2a28 0%, #1f1d1b 50%, #252220 100%);
+.brand-dashboard-container.brands-background-ready .background-skeleton {
+    opacity: 0;
+    pointer-events: none;
 }
-.brand-dashboard-container .background-gradient[data-brand-gradient="true"] {
-    /* JS aplica inline style; la transición suaviza el cambio */
+.brand-dashboard-container.brands-background-ready .background-gradient {
+    opacity: 1;
 }
 
 /* Entrada suave del contenido al pintar */

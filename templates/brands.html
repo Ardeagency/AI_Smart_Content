@@ -1,9 +1,10 @@
 <!-- Brands Dashboard - Diseño Premium. Inicio fluido con animaciones suaves. -->
 <div class="brand-dashboard-container" id="brandsListContainer">
     
-    <!-- Fondo: neutro por defecto; JS aplica gradiente de marca con transición -->
+    <!-- Fondo: skeleton visible hasta que carguen datos; luego crossfade al gradiente de marca -->
     <div class="brand-dashboard-background">
-        <div class="background-gradient"></div>
+        <div class="background-skeleton" id="backgroundSkeleton" aria-hidden="true"></div>
+        <div class="background-gradient" id="backgroundGradient"></div>
     </div>
     
     <!-- Footer: MARCA + Mercado -->
