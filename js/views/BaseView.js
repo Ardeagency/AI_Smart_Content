@@ -105,6 +105,7 @@ class BaseView {
       }
       
       this.container.innerHTML = html;
+      this.moveModalsToPortal();
       this.updateLinksForRouter();
       await this.onEnter();
       await this.init();
@@ -125,6 +126,20 @@ class BaseView {
         </div>
       `;
     }
+  }
+
+  /**
+   * Mueve todos los modales de la vista al #modals-portal (fuera de #app-container)
+   * para que no scrollen con el contenido y queden centrados en pantalla.
+   */
+  moveModalsToPortal() {
+    const portal = document.getElementById('modals-portal');
+    if (!portal) return;
+    portal.innerHTML = '';
+    const modals = this.container.querySelectorAll('.modal');
+    modals.forEach((modal) => {
+      portal.appendChild(modal);
+    });
   }
 
   /**

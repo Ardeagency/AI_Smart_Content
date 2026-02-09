@@ -1091,7 +1091,7 @@
 }
 
 /* ==========================================
-   Modal común
+   Modal común (viven en #modals-portal, fuera de #app-container)
    ========================================== */
 .modal {
   position: fixed;
@@ -1103,8 +1103,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
+  z-index: 2001;
   padding: 20px;
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 
 .modal-content {
@@ -3394,6 +3396,16 @@ body.sidebar-collapsed .builder-header {
 
 /* Modal Lead */
 /* Modales Lead: fondo sólido y contraste para que se vean bien */
+/* Modales en portal: fijos al viewport, centrados; no scrollan con #app-container */
+#modals-portal .modal {
+  position: fixed !important;
+  inset: 0 !important;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+}
+
 .dev-lead-modal {
   display: none;
   align-items: center;

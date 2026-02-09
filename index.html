@@ -73,6 +73,17 @@
             z-index: 1;
         }
 
+        /* Portal de modales: fuera del scroll, fijo en viewport, centrados */
+        #modals-portal {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            pointer-events: none;
+        }
+        #modals-portal > .modal {
+            pointer-events: auto;
+        }
+
         /* Animación para cambio de vistas */
         .view-enter {
             animation: fadeIn 0.3s ease;
@@ -119,6 +130,9 @@
     <!-- App Container (Dinámico) -->
     <!-- Las vistas se cargarán aquí dinámicamente -->
     <div id="app-container"></div>
+
+    <!-- Portal de modales: fuera del scroll, centrados en pantalla -->
+    <div id="modals-portal" aria-hidden="true"></div>
 
     <!-- External Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
