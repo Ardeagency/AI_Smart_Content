@@ -289,10 +289,10 @@ class DevLeadCategoriesView extends DevBaseView {
     const closeBtn = document.getElementById('categoryModalClose');
     const cancelBtn = document.getElementById('categoryModalCancel');
     const saveBtn = document.getElementById('categoryModalSave');
-    if (closeBtn) closeBtn.addEventListener('click', () => { if (modal) modal.style.display = 'none'; });
-    if (cancelBtn) cancelBtn.addEventListener('click', () => { if (modal) modal.style.display = 'none'; });
+    if (closeBtn) closeBtn.addEventListener('click', () => { if (modal) { modal.style.display = 'none'; modal.classList.remove('is-open'); } });
+    if (cancelBtn) cancelBtn.addEventListener('click', () => { if (modal) { modal.style.display = 'none'; modal.classList.remove('is-open'); } });
     if (modal && modal.querySelector('.modal-overlay')) {
-      modal.querySelector('.modal-overlay').addEventListener('click', () => { modal.style.display = 'none'; });
+      modal.querySelector('.modal-overlay').addEventListener('click', () => { if (modal) { modal.style.display = 'none'; modal.classList.remove('is-open'); } });
     }
     if (saveBtn) saveBtn.addEventListener('click', () => this.saveCategory());
   }
@@ -304,10 +304,10 @@ class DevLeadCategoriesView extends DevBaseView {
     const closeBtn = document.getElementById('subcategoryModalClose');
     const cancelBtn = document.getElementById('subcategoryModalCancel');
     const saveBtn = document.getElementById('subcategoryModalSave');
-    if (closeBtn) closeBtn.addEventListener('click', () => { if (modal) modal.style.display = 'none'; });
-    if (cancelBtn) cancelBtn.addEventListener('click', () => { if (modal) modal.style.display = 'none'; });
+    if (closeBtn) closeBtn.addEventListener('click', () => { if (modal) { modal.style.display = 'none'; modal.classList.remove('is-open'); } });
+    if (cancelBtn) cancelBtn.addEventListener('click', () => { if (modal) { modal.style.display = 'none'; modal.classList.remove('is-open'); } });
     if (modal && modal.querySelector('.modal-overlay')) {
-      modal.querySelector('.modal-overlay').addEventListener('click', () => { modal.style.display = 'none'; });
+      modal.querySelector('.modal-overlay').addEventListener('click', () => { if (modal) { modal.style.display = 'none'; modal.classList.remove('is-open'); } });
     }
     if (saveBtn) saveBtn.addEventListener('click', () => this.saveSubcategory());
   }
@@ -330,7 +330,7 @@ class DevLeadCategoriesView extends DevBaseView {
     } else {
       if (titleEl) titleEl.textContent = 'Nueva categoría';
     }
-    if (modal) modal.style.display = 'flex';
+    if (modal) { modal.style.display = 'flex'; modal.classList.add('is-open'); }
   }
 
   async saveCategory() {
@@ -403,7 +403,7 @@ class DevLeadCategoriesView extends DevBaseView {
     } else {
       if (titleEl) titleEl.textContent = 'Nueva subcategoría';
     }
-    if (modal) modal.style.display = 'flex';
+    if (modal) { modal.style.display = 'flex'; modal.classList.add('is-open'); }
   }
 
   async saveSubcategory() {
@@ -436,7 +436,8 @@ class DevLeadCategoriesView extends DevBaseView {
         return;
       }
     }
-    document.getElementById('subcategoryModal').style.display = 'none';
+    const subModal = document.getElementById('subcategoryModal');
+    if (subModal) { subModal.style.display = 'none'; subModal.classList.remove('is-open'); }
     await this.loadSubcategories();
   }
 

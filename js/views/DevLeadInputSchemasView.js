@@ -177,9 +177,9 @@ class DevLeadInputSchemasView extends DevBaseView {
 
   setupModalHandlers() {
     const modal = document.getElementById('inputSchemaModal');
-    document.getElementById('inputSchemaModalClose')?.addEventListener('click', () => { if (modal) modal.style.display = 'none'; });
-    document.getElementById('inputSchemaModalCancel')?.addEventListener('click', () => { if (modal) modal.style.display = 'none'; });
-    modal?.querySelector('.modal-overlay')?.addEventListener('click', () => { if (modal) modal.style.display = 'none'; });
+    document.getElementById('inputSchemaModalClose')?.addEventListener('click', () => { if (modal) { modal.style.display = 'none'; modal.classList.remove('is-open'); } });
+    document.getElementById('inputSchemaModalCancel')?.addEventListener('click', () => { if (modal) { modal.style.display = 'none'; modal.classList.remove('is-open'); } });
+    modal?.querySelector('.modal-overlay')?.addEventListener('click', () => { if (modal) { modal.style.display = 'none'; modal.classList.remove('is-open'); } });
     document.getElementById('inputSchemaModalSave')?.addEventListener('click', () => this.saveTemplate());
   }
 
@@ -213,7 +213,8 @@ class DevLeadInputSchemasView extends DevBaseView {
     } else {
       if (titleEl) titleEl.textContent = 'Nuevo input';
     }
-    document.getElementById('inputSchemaModal').style.display = 'flex';
+    const m = document.getElementById('inputSchemaModal');
+    if (m) { m.style.display = 'flex'; m.classList.add('is-open'); }
   }
 
   parseJson(value, fieldName) {
@@ -284,7 +285,8 @@ class DevLeadInputSchemasView extends DevBaseView {
         return;
       }
     }
-    document.getElementById('inputSchemaModal').style.display = 'none';
+    const m = document.getElementById('inputSchemaModal');
+    if (m) { m.style.display = 'none'; m.classList.remove('is-open'); }
     await this.loadTemplates();
   }
 

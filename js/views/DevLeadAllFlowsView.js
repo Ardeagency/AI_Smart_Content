@@ -188,10 +188,10 @@ class DevLeadAllFlowsView extends DevBaseView {
     const closeBtn = document.getElementById('deleteFlowLeadModalClose');
     const cancelBtn = document.getElementById('deleteFlowLeadModalCancel');
     const confirmBtn = document.getElementById('deleteFlowLeadModalConfirm');
-    if (closeBtn) closeBtn.addEventListener('click', () => { if (modal) modal.style.display = 'none'; });
-    if (cancelBtn) cancelBtn.addEventListener('click', () => { if (modal) modal.style.display = 'none'; });
+    if (closeBtn) closeBtn.addEventListener('click', () => { if (modal) { modal.style.display = 'none'; modal.classList.remove('is-open'); } });
+    if (cancelBtn) cancelBtn.addEventListener('click', () => { if (modal) { modal.style.display = 'none'; modal.classList.remove('is-open'); } });
     if (modal?.querySelector('.modal-overlay')) {
-      modal.querySelector('.modal-overlay').addEventListener('click', () => { modal.style.display = 'none'; });
+      modal.querySelector('.modal-overlay').addEventListener('click', () => { if (modal) { modal.style.display = 'none'; modal.classList.remove('is-open'); } });
     }
     if (confirmBtn) confirmBtn.addEventListener('click', () => this.confirmDelete());
   }
@@ -199,12 +199,13 @@ class DevLeadAllFlowsView extends DevBaseView {
   showDeleteModal(flowId) {
     this.flowToDelete = flowId;
     const modal = document.getElementById('deleteFlowLeadModal');
-    if (modal) modal.style.display = 'flex';
+    if (modal) { modal.style.display = 'flex'; modal.classList.add('is-open'); }
   }
 
   async confirmDelete() {
     if (!this.flowToDelete || !this.supabase) {
-      document.getElementById('deleteFlowLeadModal').style.display = 'none';
+      const d = document.getElementById('deleteFlowLeadModal');
+      if (d) { d.style.display = 'none'; d.classList.remove('is-open'); }
       return;
     }
     const confirmBtn = document.getElementById('deleteFlowLeadModalConfirm');
@@ -217,7 +218,8 @@ class DevLeadAllFlowsView extends DevBaseView {
       confirmBtn.disabled = false;
       confirmBtn.innerHTML = '<i class="fas fa-trash"></i> Eliminar';
     }
-    document.getElementById('deleteFlowLeadModal').style.display = 'none';
+    const d = document.getElementById('deleteFlowLeadModal');
+    if (d) { d.style.display = 'none'; d.classList.remove('is-open'); }
     if (error) {
       alert('Error al eliminar: ' + (error.message || ''));
       return;
