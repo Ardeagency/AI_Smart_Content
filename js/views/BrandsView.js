@@ -490,36 +490,37 @@ class BrandsView extends BaseView {
   }
 
   renderLinks() {
-    const links = {
-      linkWebsite: { url: this.brandContainerData?.sitio_web, field: 'sitio_web' },
-      linkInstagram: { url: this.brandContainerData?.instagram_url, field: 'instagram_url' },
-      linkTikTok: { url: this.brandContainerData?.tiktok_url, field: 'tiktok_url' },
-      linkFacebook: { url: this.brandContainerData?.facebook_url, field: 'facebook_url' }
-    };
-    
-    Object.entries(links).forEach(([id, data]) => {
-      const el = document.getElementById(id);
-      if (el) {
-        if (data.url) {
-          el.style.display = 'flex';
-          el.href = data.url;
-          el.title = data.url;
-        } else {
-          el.style.display = 'flex';
-          el.href = '#';
-          el.title = 'Click para editar';
+    const container = document.getElementById('brandLinksContainer');
+    if (!container) return;
+
+    const items = [
+      { field: 'sitio_web', icon: 'fas fa-globe', label: 'Website' },
+      { field: 'instagram_url', icon: 'fab fa-instagram', label: 'Instagram' },
+      { field: 'tiktok_url', icon: 'fab fa-tiktok', label: 'TikTok' },
+      { field: 'facebook_url', icon: 'fab fa-facebook', label: 'Facebook' }
+    ];
+
+    container.innerHTML = '';
+    items.forEach(({ field, icon, label }) => {
+      const url = this.brandContainerData?.[field] || '';
+      const row = document.createElement('li');
+      row.className = 'brand-link-row';
+      row.innerHTML = `
+        <span class="brand-link-icon" aria-hidden="true"><i class="${icon}"></i></span>
+        <input type="url" class="brand-link-input" data-field="${field}" value="${this.escapeHtml(url)}" placeholder="${this.escapeHtml(label)} URL" autocomplete="url">
+      `;
+      const input = row.querySelector('.brand-link-input');
+      input.addEventListener('blur', () => {
+        const val = input.value.trim() || null;
+        if (val !== (this.brandContainerData?.[field] || '')) {
+          this.saveContainerField(field, val);
+          this.brandContainerData[field] = val;
         }
-        
-        // Hacer editable con doble click
-        el.addEventListener('dblclick', (e) => {
-          e.preventDefault();
-          const newUrl = prompt(`Ingresa la URL para ${data.field}:`, data.url || '');
-          if (newUrl !== null) {
-            this.saveContainerField(data.field, newUrl || null);
-            this.renderLinks();
-          }
-        });
-      }
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') input.blur();
+      });
+      container.appendChild(row);
     });
   }
 
