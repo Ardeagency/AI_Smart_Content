@@ -2,7 +2,7 @@
  * DevLeadReferencesView - Referencias visuales (solo Lead)
  * Lista y gestiona registros del bucket visual-references (tabla visual_references).
  */
-class DevLeadReferencesView extends BaseView {
+class DevLeadReferencesView extends DevBaseView {
   constructor() {
     super();
     this.supabase = null;
@@ -10,22 +10,7 @@ class DevLeadReferencesView extends BaseView {
   }
 
   async onEnter() {
-    if (window.authService) {
-      const isAuth = await window.authService.checkAccess(true);
-      if (!isAuth) {
-        if (window.router) window.router.navigate('/login', true);
-        return;
-      }
-      if (!window.authService.isLead()) {
-        if (window.router) window.router.navigate('/dev/dashboard', true);
-        return;
-      }
-    }
-    if (window.navigation && (!window.navigation.initialized || window.navigation.currentMode !== 'developer')) {
-      window.navigation.currentMode = 'developer';
-      window.navigation.initialized = false;
-      await window.navigation.render();
-    }
+    await super.onEnter({ requireLead: true });
   }
 
   async getSupabase() {
@@ -163,11 +148,5 @@ class DevLeadReferencesView extends BaseView {
     await this.loadReferences();
   }
 
-  escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
 }
 window.DevLeadReferencesView = DevLeadReferencesView;

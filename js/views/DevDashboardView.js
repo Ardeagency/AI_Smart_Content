@@ -9,10 +9,9 @@
  * - Logs recientes
  * - Gráficos de rendimiento
  */
-class DevDashboardView extends BaseView {
+class DevDashboardView extends DevBaseView {
   constructor() {
     super();
-    this.templatePath = 'dev/dashboard.html';
     this.supabase = null;
     this.userId = null;
     this.stats = null;
@@ -21,34 +20,6 @@ class DevDashboardView extends BaseView {
     this.flows = [];
   }
 
-  /**
-   * Hook llamado al entrar a la vista
-   */
-  async onEnter() {
-    // Verificar autenticación
-    if (window.authService) {
-      const isAuth = await window.authService.checkAccess(true);
-      if (!isAuth) {
-        if (window.router) {
-          window.router.navigate('/login', true);
-        }
-        return;
-      }
-    }
-
-    // Renderizar Navigation en modo desarrollador si no está visible
-    if (window.navigation) {
-      if (!window.navigation.initialized || window.navigation.currentMode !== 'developer') {
-        window.navigation.currentMode = 'developer';
-        window.navigation.initialized = false;
-        await window.navigation.render();
-      }
-    }
-  }
-
-  /**
-   * Renderizar HTML inline (sin template externo)
-   */
   renderHTML() {
     return `
       <div class="dev-dashboard-container">
@@ -577,17 +548,6 @@ class DevDashboardView extends BaseView {
     return num.toString();
   }
 
-  escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text || '';
-    return div.innerHTML;
-  }
-
-  truncateText(text, maxLength) {
-    if (!text) return '';
-    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
-  }
-
   formatTimeAgo(dateStr) {
     const date = new Date(dateStr);
     const now = new Date();
@@ -685,20 +645,6 @@ class DevDashboardView extends BaseView {
             Error cargando ejecuciones
           </td>
         </tr>
-      `;
-    }
-  }
-
-  showError(message) {
-    const container = this.container;
-    if (container) {
-      container.innerHTML = `
-        <div class="error-container">
-          <i class="fas fa-exclamation-triangle"></i>
-          <h2>Error</h2>
-          <p>${this.escapeHtml(message)}</p>
-          <button class="btn btn-primary" onclick="window.location.reload()">Recargar</button>
-        </div>
       `;
     }
   }

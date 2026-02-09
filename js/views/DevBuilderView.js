@@ -4,7 +4,7 @@
  * Permite crear y editar content_flows con input_schema y ui_layout_config
  */
 
-class DevBuilderView extends BaseView {
+class DevBuilderView extends DevBaseView {
   constructor() {
     super();
     this.supabase = null;
@@ -62,22 +62,6 @@ class DevBuilderView extends BaseView {
     
     // Unsaved changes
     this.hasUnsavedChanges = false;
-  }
-
-  async onEnter() {
-    if (window.authService) {
-      const isAuth = await window.authService.checkAccess(true);
-      if (!isAuth) {
-        if (window.router) window.router.navigate('/login', true);
-        return;
-      }
-    }
-    // Asegurar navegación en modo desarrollador (sin redirigir)
-    if (window.navigation && (!window.navigation.initialized || window.navigation.currentMode !== 'developer')) {
-      window.navigation.currentMode = 'developer';
-      window.navigation.initialized = false;
-      await window.navigation.render();
-    }
   }
 
   renderHTML() {

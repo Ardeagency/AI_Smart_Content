@@ -2,7 +2,7 @@
  * DevLeadTeamView - Equipo (solo Lead)
  * Agregar, banear y controlar usuarios del equipo.
  */
-class DevLeadTeamView extends BaseView {
+class DevLeadTeamView extends DevBaseView {
   constructor() {
     super();
     this.supabase = null;
@@ -10,22 +10,7 @@ class DevLeadTeamView extends BaseView {
   }
 
   async onEnter() {
-    if (window.authService) {
-      const isAuth = await window.authService.checkAccess(true);
-      if (!isAuth) {
-        if (window.router) window.router.navigate('/login', true);
-        return;
-      }
-      if (!window.authService.isLead()) {
-        if (window.router) window.router.navigate('/dev/dashboard', true);
-        return;
-      }
-    }
-    if (window.navigation && (!window.navigation.initialized || window.navigation.currentMode !== 'developer')) {
-      window.navigation.currentMode = 'developer';
-      window.navigation.initialized = false;
-      await window.navigation.render();
-    }
+    await super.onEnter({ requireLead: true });
   }
 
   renderHTML() {

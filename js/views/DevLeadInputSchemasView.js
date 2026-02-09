@@ -2,7 +2,7 @@
  * DevLeadInputSchemasView - Input Schemas (solo Lead)
  * CRUD sobre ui_component_templates: tipos de input del Builder.
  */
-class DevLeadInputSchemasView extends BaseView {
+class DevLeadInputSchemasView extends DevBaseView {
   constructor() {
     super();
     this.supabase = null;
@@ -10,22 +10,7 @@ class DevLeadInputSchemasView extends BaseView {
   }
 
   async onEnter() {
-    if (window.authService) {
-      const isAuth = await window.authService.checkAccess(true);
-      if (!isAuth) {
-        if (window.router) window.router.navigate('/login', true);
-        return;
-      }
-      if (!window.authService.isLead()) {
-        if (window.router) window.router.navigate('/dev/dashboard', true);
-        return;
-      }
-    }
-    if (window.navigation && (!window.navigation.initialized || window.navigation.currentMode !== 'developer')) {
-      window.navigation.currentMode = 'developer';
-      window.navigation.initialized = false;
-      await window.navigation.render();
-    }
+    await super.onEnter({ requireLead: true });
   }
 
   async getSupabase() {
@@ -313,11 +298,5 @@ class DevLeadInputSchemasView extends BaseView {
     await this.loadTemplates();
   }
 
-  escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
 }
 window.DevLeadInputSchemasView = DevLeadInputSchemasView;

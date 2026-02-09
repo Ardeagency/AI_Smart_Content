@@ -2,7 +2,7 @@
  * DevLeadAllFlowsView - Todos los flujos (solo Lead)
  * Lista TODOS los content_flows de todos los desarrolladores. Editar, eliminar, configurar.
  */
-class DevLeadAllFlowsView extends BaseView {
+class DevLeadAllFlowsView extends DevBaseView {
   constructor() {
     super();
     this.supabase = null;
@@ -11,22 +11,7 @@ class DevLeadAllFlowsView extends BaseView {
   }
 
   async onEnter() {
-    if (window.authService) {
-      const isAuth = await window.authService.checkAccess(true);
-      if (!isAuth) {
-        if (window.router) window.router.navigate('/login', true);
-        return;
-      }
-      if (!window.authService.isLead()) {
-        if (window.router) window.router.navigate('/dev/dashboard', true);
-        return;
-      }
-    }
-    if (window.navigation && (!window.navigation.initialized || window.navigation.currentMode !== 'developer')) {
-      window.navigation.currentMode = 'developer';
-      window.navigation.initialized = false;
-      await window.navigation.render();
-    }
+    await super.onEnter({ requireLead: true });
   }
 
   async getSupabase() {
@@ -246,16 +231,5 @@ class DevLeadAllFlowsView extends BaseView {
     return labels[status] || status || '-';
   }
 
-  truncate(text, max) {
-    if (!text) return '';
-    return text.length <= max ? text : text.slice(0, max) + '…';
-  }
-
-  escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
 }
 window.DevLeadAllFlowsView = DevLeadAllFlowsView;

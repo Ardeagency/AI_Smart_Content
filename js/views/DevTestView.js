@@ -10,7 +10,7 @@
  * - Ver logs en tiempo real
  */
 
-class DevTestView extends BaseView {
+class DevTestView extends DevBaseView {
   constructor() {
     super();
     this.supabase = null;
@@ -40,22 +40,6 @@ class DevTestView extends BaseView {
     this.startTime = null;
     this.elapsedTime = 0;
     this.timerInterval = null;
-  }
-
-  async onEnter() {
-    if (window.authService) {
-      const isAuth = await window.authService.checkAccess(true);
-      if (!isAuth) {
-        if (window.router) window.router.navigate('/login', true);
-        return;
-      }
-    }
-    // Asegurar navegación en modo desarrollador (sin redirigir)
-    if (window.navigation && (!window.navigation.initialized || window.navigation.currentMode !== 'developer')) {
-      window.navigation.currentMode = 'developer';
-      window.navigation.initialized = false;
-      await window.navigation.render();
-    }
   }
 
   renderHTML() {

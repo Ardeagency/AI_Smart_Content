@@ -2,7 +2,7 @@
  * DevLeadVectorsView - Base de conocimientos IA (solo Lead)
  * Solo archivos del bucket ai-knowledge: listar rutas, metadatos, subir y eliminar.
  */
-class DevLeadVectorsView extends BaseView {
+class DevLeadVectorsView extends DevBaseView {
   constructor() {
     super();
     this.supabase = null;
@@ -11,22 +11,7 @@ class DevLeadVectorsView extends BaseView {
   }
 
   async onEnter() {
-    if (window.authService) {
-      const isAuth = await window.authService.checkAccess(true);
-      if (!isAuth) {
-        if (window.router) window.router.navigate('/login', true);
-        return;
-      }
-      if (!window.authService.isLead()) {
-        if (window.router) window.router.navigate('/dev/dashboard', true);
-        return;
-      }
-    }
-    if (window.navigation && (!window.navigation.initialized || window.navigation.currentMode !== 'developer')) {
-      window.navigation.currentMode = 'developer';
-      window.navigation.initialized = false;
-      await window.navigation.render();
-    }
+    await super.onEnter({ requireLead: true });
   }
 
   async getSupabase() {
@@ -286,16 +271,5 @@ class DevLeadVectorsView extends BaseView {
     }
   }
 
-  showNotification(message, type) {
-    if (typeof super.showNotification === 'function') {
-      super.showNotification(message, type);
-      return;
-    }
-    const el = document.createElement('div');
-    el.className = 'dev-lead-notification dev-lead-notification-' + (type || 'info');
-    el.textContent = message;
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 4000);
-  }
 }
 window.DevLeadVectorsView = DevLeadVectorsView;

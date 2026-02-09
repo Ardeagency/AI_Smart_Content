@@ -8,10 +8,9 @@
  * - Filtrar por flujo específico
  * - Ver detalles de cada log
  */
-class DevLogsView extends BaseView {
+class DevLogsView extends DevBaseView {
   constructor() {
     super();
-    this.templatePath = 'dev/logs.html';
     this.supabase = null;
     this.userId = null;
     this.logs = [];
@@ -26,33 +25,6 @@ class DevLogsView extends BaseView {
     this.totalLogs = 0;
   }
 
-  /**
-   * Hook llamado al entrar a la vista
-   */
-  async onEnter() {
-    if (window.authService) {
-      const isAuth = await window.authService.checkAccess(true);
-      if (!isAuth) {
-        if (window.router) {
-          window.router.navigate('/login', true);
-        }
-        return;
-      }
-    }
-
-    // Asegurar navegación en modo desarrollador
-    if (window.navigation) {
-      if (!window.navigation.initialized || window.navigation.currentMode !== 'developer') {
-        window.navigation.currentMode = 'developer';
-        window.navigation.initialized = false;
-        await window.navigation.render();
-      }
-    }
-  }
-
-  /**
-   * Renderizar HTML inline
-   */
   renderHTML() {
     return `
       <div class="dev-logs-container">
@@ -609,17 +581,6 @@ class DevLogsView extends BaseView {
     return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
   }
 
-  escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text || '';
-    return div.innerHTML;
-  }
-
-  truncateText(text, maxLength) {
-    if (!text) return '';
-    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
-  }
-
   formatTimeAgo(dateStr) {
     const date = new Date(dateStr);
     const now = new Date();
@@ -645,20 +606,6 @@ class DevLogsView extends BaseView {
             Error cargando logs
           </td>
         </tr>
-      `;
-    }
-  }
-
-  showError(message) {
-    const container = this.container;
-    if (container) {
-      container.innerHTML = `
-        <div class="error-container">
-          <i class="fas fa-exclamation-triangle"></i>
-          <h2>Error</h2>
-          <p>${this.escapeHtml(message)}</p>
-          <button class="btn btn-primary" onclick="window.location.reload()">Recargar</button>
-        </div>
       `;
     }
   }

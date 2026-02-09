@@ -10,7 +10,7 @@
  * - Editar configuraciones técnicas
  */
 
-class DevWebhooksView extends BaseView {
+class DevWebhooksView extends DevBaseView {
   constructor() {
     super();
     this.supabase = null;
@@ -30,22 +30,6 @@ class DevWebhooksView extends BaseView {
     
     // Health check en progreso
     this.healthCheckInProgress = new Set();
-  }
-
-  async onEnter() {
-    if (window.authService) {
-      const isAuth = await window.authService.checkAccess(true);
-      if (!isAuth) {
-        if (window.router) window.router.navigate('/login', true);
-        return;
-      }
-    }
-    // Asegurar navegación en modo desarrollador (sin redirigir)
-    if (window.navigation && (!window.navigation.initialized || window.navigation.currentMode !== 'developer')) {
-      window.navigation.currentMode = 'developer';
-      window.navigation.initialized = false;
-      await window.navigation.render();
-    }
   }
 
   renderHTML() {
