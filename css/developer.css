@@ -3396,7 +3396,7 @@ body.sidebar-collapsed .builder-header {
 
 /* Modal Lead */
 /* Modales Lead: fondo sólido y contraste para que se vean bien */
-/* Modales en portal: fijos al viewport, centrados; no scrollan con #app-container */
+/* Modales en portal: fijos al viewport; no scrollan con #app-container */
 #modals-portal .modal {
   position: fixed !important;
   top: 0 !important;
@@ -3406,13 +3406,13 @@ body.sidebar-collapsed .builder-header {
   width: 100vw !important;
   height: 100vh !important;
   margin: 0 !important;
-  padding: 20px;
+  padding: 0 !important;
   overflow-y: auto;
   display: grid;
   place-items: center;
   box-sizing: border-box;
 }
-/* Overlay fijo a viewport; el contenido se centra por el grid del .modal */
+/* Overlay fijo a viewport */
 #modals-portal .modal .modal-overlay {
   position: fixed !important;
   top: 0;
@@ -3421,10 +3421,16 @@ body.sidebar-collapsed .builder-header {
   bottom: 0;
   pointer-events: auto;
 }
+/* Contenido centrado al 100% en viewport (left/top 50% + translate) */
 #modals-portal .modal .modal-content {
-  position: relative;
+  position: fixed !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
   z-index: 1;
+  max-width: calc(100vw - 40px);
   max-height: calc(100vh - 40px);
+  margin: 0 !important;
 }
 
 .dev-lead-modal {
