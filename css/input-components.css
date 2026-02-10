@@ -1,0 +1,418 @@
+/**
+ * input-components.css
+ * Estilos para renders dinámicos: DataCarousel, VisualGrid, SmartDropdown,
+ * ParameterControl, ColorPalette, MediaUpload y stubs de preview.
+ */
+
+/* Contenedor genérico */
+.input-component {
+  width: 100%;
+  margin-bottom: 0;
+}
+
+.input-field-wrap {
+  margin-bottom: 1rem;
+}
+
+.input-field-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary, #1a1a1a);
+  margin-bottom: 0.35rem;
+}
+
+.input-field-wrap .field-help {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted, #666);
+  margin-top: 0.25rem;
+}
+
+.input-field-wrap .required {
+  color: var(--dev-error, #ef4444);
+}
+
+/* ----- Preview stubs (Builder canvas / preview) ----- */
+[class$="-preview-stub"] {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-primary, #f5f5f5);
+  border: 1px dashed var(--border-color, #ddd);
+  border-radius: 6px;
+  color: var(--text-muted, #666);
+  font-size: 0.8125rem;
+}
+
+[class$="-preview-stub"] .ph {
+  font-size: 1.25rem;
+  opacity: 0.8;
+}
+
+.data-carousel-preview-stub,
+.visual-grid-preview-stub,
+.smart-dropdown-preview-stub,
+.parameter-control-preview-stub,
+.color-palette-preview-stub,
+.media-upload-preview-stub {
+  min-height: 44px;
+}
+
+/* ----- DataCarousel ----- */
+.input-data-carousel {
+  position: relative;
+}
+
+.data-carousel-track {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 8px 0;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.data-carousel-track .data-carousel-card {
+  flex: 0 0 160px;
+  scroll-snap-align: start;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--bg-card);
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.data-carousel-track .data-carousel-card.selected {
+  border-color: var(--dev-primary, #e09145);
+  box-shadow: 0 0 0 2px rgba(224, 145, 69, 0.25);
+}
+
+.data-carousel-loading {
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.data-carousel-omittable {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.data-carousel-omittable label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+/* ----- VisualGrid ----- */
+.input-visual-grid .visual-grid-inner {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 8px;
+}
+
+.input-visual-grid.visual-grid--thumbnail .visual-grid-inner {
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+}
+
+.input-visual-grid.visual-grid--emoji .visual-grid-inner {
+  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+}
+
+.visual-grid-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 8px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-card);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  font-size: 0.8125rem;
+  color: var(--text-primary);
+}
+
+.visual-grid-item:hover {
+  border-color: var(--dev-primary-light, #e8b878);
+  background: var(--bg-hover, #f9f9f9);
+}
+
+.visual-grid-item.selected {
+  border-color: var(--dev-primary);
+  background: rgba(224, 145, 69, 0.08);
+}
+
+.visual-grid-item img {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.visual-grid-emoji {
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.visual-grid-label {
+  text-align: center;
+  word-break: break-word;
+}
+
+/* ----- SmartDropdown ----- */
+.input-smart-dropdown .smart-dropdown-select {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 0.875rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.input-smart-dropdown .smart-dropdown-select option {
+  padding: 4px 0;
+}
+
+/* ----- ParameterControl ----- */
+.input-parameter-slider .parameter-slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.input-parameter-slider .parameter-range-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.input-parameter-slider .parameter-range-value {
+  flex-shrink: 0;
+  min-width: 2.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.input-parameter-number .parameter-number-input {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 0.875rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.parameter-switch-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.parameter-switch-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.parameter-switch-slider {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: var(--border-color);
+  border-radius: 24px;
+  transition: background 0.2s;
+}
+
+.parameter-switch-slider::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  transition: transform 0.2s;
+}
+
+.parameter-switch-input:checked + .parameter-switch-slider {
+  background: var(--dev-primary);
+}
+
+.parameter-switch-input:checked + .parameter-switch-slider::after {
+  transform: translateX(20px);
+}
+
+.parameter-switch-label {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+/* ----- ColorPalette ----- */
+.color-palette-inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.color-palette-swatch {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.color-palette-swatch:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.color-palette-swatch.selected {
+  border-color: var(--text-primary);
+  box-shadow: 0 0 0 2px var(--bg-primary);
+}
+
+/* ----- MediaUpload ----- */
+.media-upload-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 120px;
+  padding: 24px;
+  border: 2px dashed var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-primary);
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.media-upload-dropzone:hover,
+.media-upload-dropzone.drag-over {
+  border-color: var(--dev-primary);
+  background: rgba(224, 145, 69, 0.06);
+}
+
+.media-upload-dropzone .ph {
+  font-size: 2rem;
+  opacity: 0.8;
+}
+
+.media-upload-preview-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.media-upload-preview-list .preview-item {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+
+.media-upload-preview-list .preview-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.media-upload-preview-list .preview-item-remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+/* ----- Legacy (cuando se usa desde InputRenders) ----- */
+.input-legacy label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.35rem;
+}
+
+.input-legacy input[type="text"],
+.input-legacy input[type="number"],
+.input-legacy textarea,
+.input-legacy select {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 0.875rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.legacy-checkbox-label,
+.legacy-radio-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.legacy-radio-group-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.legacy-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.legacy-range-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.legacy-range-wrap input[type="range"] {
+  flex: 1;
+}
+
+.legacy-range-value {
+  min-width: 2.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}

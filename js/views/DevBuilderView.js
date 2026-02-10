@@ -1047,8 +1047,10 @@ class DevBuilderView extends DevBaseView {
   }
 
   renderInputPreview(field) {
+    if (window.InputRenders && window.InputRenders.getComponentType(field)) {
+      return window.InputRenders.renderField(field, { mode: 'preview' });
+    }
     const placeholder = field.placeholder || '';
-    
     switch (field.input_type) {
       case 'text':
         return `<input type="text" class="preview-input" placeholder="${placeholder}" disabled>`;
@@ -2792,53 +2794,55 @@ class DevBuilderView extends DevBaseView {
     
     let fieldsHtml = this.inputSchema.map(field => {
       const widthClass = field.ui?.width === 'half' ? 'col-half' : field.ui?.width === 'third' ? 'col-third' : 'col-full';
-      
       let inputHtml = '';
-      switch (field.input_type) {
-        case 'text':
-          inputHtml = `<input type="text" placeholder="${field.placeholder || ''}">`;
-          break;
-        case 'textarea':
-          inputHtml = `<textarea rows="${field.rows || 4}" placeholder="${field.placeholder || ''}"></textarea>`;
-          break;
-        case 'select':
-          inputHtml = `
-            <select>
-              <option value="">${field.placeholder || 'Seleccionar...'}</option>
-              ${(field.options || []).map(opt => `<option value="${opt.value || opt}">${opt.label || opt}</option>`).join('')}
-            </select>
-          `;
-          break;
-        case 'number':
-          inputHtml = `<input type="number" min="${field.min || ''}" max="${field.max || ''}" step="${field.step || 1}" placeholder="${field.placeholder || ''}">`;
-          break;
-        case 'checkbox':
-          inputHtml = `<label class="checkbox-label"><input type="checkbox"> ${field.label}</label>`;
-          break;
-        case 'radio':
-          inputHtml = `
-            <div class="radio-group">
-              ${(field.options || []).map((opt, i) => `
-                <label class="radio-label">
-                  <input type="radio" name="${field.key}" ${i === 0 ? 'checked' : ''}>
-                  ${opt.label || opt}
-                </label>
-              `).join('')}
-            </div>
-          `;
-          break;
-        case 'range':
-          inputHtml = `
-            <div class="range-input">
-              <input type="range" min="${field.min || 0}" max="${field.max || 100}" value="${field.defaultValue || 50}">
-              <span class="range-value">${field.defaultValue || 50}</span>
-            </div>
-          `;
-          break;
-        default:
-          inputHtml = `<div class="context-selector">[${field.input_type}]</div>`;
+      if (window.InputRenders && window.InputRenders.getComponentType(field)) {
+        inputHtml = window.InputRenders.renderField(field, { mode: 'preview' });
+      } else {
+        switch (field.input_type) {
+          case 'text':
+            inputHtml = `<input type="text" placeholder="${field.placeholder || ''}">`;
+            break;
+          case 'textarea':
+            inputHtml = `<textarea rows="${field.rows || 4}" placeholder="${field.placeholder || ''}"></textarea>`;
+            break;
+          case 'select':
+            inputHtml = `
+              <select>
+                <option value="">${field.placeholder || 'Seleccionar...'}</option>
+                ${(field.options || []).map(opt => `<option value="${opt.value || opt}">${opt.label || opt}</option>`).join('')}
+              </select>
+            `;
+            break;
+          case 'number':
+            inputHtml = `<input type="number" min="${field.min || ''}" max="${field.max || ''}" step="${field.step || 1}" placeholder="${field.placeholder || ''}">`;
+            break;
+          case 'checkbox':
+            inputHtml = `<label class="checkbox-label"><input type="checkbox"> ${field.label}</label>`;
+            break;
+          case 'radio':
+            inputHtml = `
+              <div class="radio-group">
+                ${(field.options || []).map((opt, i) => `
+                  <label class="radio-label">
+                    <input type="radio" name="${field.key}" ${i === 0 ? 'checked' : ''}>
+                    ${opt.label || opt}
+                  </label>
+                `).join('')}
+              </div>
+            `;
+            break;
+          case 'range':
+            inputHtml = `
+              <div class="range-input">
+                <input type="range" min="${field.min || 0}" max="${field.max || 100}" value="${field.defaultValue || 50}">
+                <span class="range-value">${field.defaultValue || 50}</span>
+              </div>
+            `;
+            break;
+          default:
+            inputHtml = `<div class="context-selector">[${field.input_type}]</div>`;
+        }
       }
-      
       return `
         <div class="preview-field ${widthClass}">
           ${showLabels && field.input_type !== 'checkbox' ? `<label>${field.label}${field.required ? ' <span class="required">*</span>' : ''}</label>` : ''}
@@ -2885,12 +2889,15 @@ class DevBuilderView extends DevBaseView {
     
     modal.style.display = 'flex';
     
-    // Setup range inputs
+    if (window.InputRenders && typeof window.InputRenders.initInputComponents === 'function') {
+      window.InputRenders.initInputComponents(container);
+    }
+    // Setup range inputs (fallback por si no usan InputRenders)
     container.querySelectorAll('input[type="range"]').forEach(range => {
       const valueDisplay = range.nextElementSibling;
-      range.addEventListener('input', () => {
-        if (valueDisplay) valueDisplay.textContent = range.value;
-      });
+      if (valueDisplay && !range.closest('.parameter-slider-wrap')) {
+        range.addEventListener('input', () => { valueDisplay.textContent = range.value; });
+      }
     });
   }
 
@@ -2903,10 +2910,15 @@ class DevBuilderView extends DevBaseView {
         </div>
       `;
     }
-    
     return this.inputSchema.map(field => {
+      if (window.InputRenders && window.InputRenders.getComponentType(field)) {
+        return `
+          <div class="test-field">
+            ${window.InputRenders.renderFieldWithWrapper(field, { mode: 'test', namePrefix: 'test_', idPrefix: 'test_', required: true })}
+          </div>
+        `;
+      }
       let inputHtml = '';
-      
       switch (field.input_type) {
         case 'text':
           inputHtml = `<input type="text" id="test_${field.key}" name="${field.key}" placeholder="${field.placeholder || ''}" ${field.required ? 'required' : ''}>`;
@@ -2961,7 +2973,6 @@ class DevBuilderView extends DevBaseView {
         default:
           inputHtml = `<input type="text" id="test_${field.key}" name="${field.key}" placeholder="${field.placeholder || ''}" ${field.required ? 'required' : ''}>`;
       }
-      
       return `
         <div class="test-field">
           <label for="test_${field.key}">${field.label || field.key}${field.required ? ' <span class="required">*</span>' : ''}</label>

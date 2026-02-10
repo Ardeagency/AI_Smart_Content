@@ -233,6 +233,9 @@ class StudioView extends BaseView {
 
     formEl.innerHTML = fields.map(f => this.renderFormField(f)).join('');
 
+    if (window.InputRenders && typeof window.InputRenders.initInputComponents === 'function') {
+      window.InputRenders.initInputComponents(formEl);
+    }
     formEl.querySelectorAll('input, textarea, select').forEach(el => {
       el.addEventListener('input', () => this.updateCreditsDisplay());
       el.addEventListener('change', () => this.updateCreditsDisplay());
@@ -240,6 +243,13 @@ class StudioView extends BaseView {
   }
 
   renderFormField(field) {
+    if (window.InputRenders && window.InputRenders.getComponentType(field)) {
+      return `
+        <div class="studio-field">
+          ${window.InputRenders.renderFieldWithWrapper(field, { mode: 'studio', idPrefix: 'studio-', required: field.required !== false })}
+        </div>
+      `;
+    }
     const name = field.name || field.key || field.id || 'field';
     const label = field.label || name;
     const type = (field.type || field.input_type || 'text').toLowerCase();
