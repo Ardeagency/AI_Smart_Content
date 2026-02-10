@@ -917,15 +917,17 @@ class DevBuilderView extends DevBaseView {
   addField(templateId, baseSchema) {
     const template = this.componentTemplates.find(t => t.id === templateId);
     const fieldName = this.generateFieldKey(template?.name || templateId);
-    
+    // Tipo canónico: la plantilla puede usar input_type, type o ui_type (para que el canvas use InputRenders correcto)
+    const canonicalType = baseSchema.input_type || baseSchema.type || baseSchema.ui_type || 'text';
     const newField = {
       key: fieldName,
       label: template?.name || 'Campo',
-      input_type: baseSchema.input_type || 'text',
+      input_type: canonicalType,
       required: false,
       placeholder: baseSchema.placeholder || '',
       description: '',
       ...baseSchema,
+      input_type: canonicalType,
       // UI config específica del campo
       ui: {
         width: 'full',

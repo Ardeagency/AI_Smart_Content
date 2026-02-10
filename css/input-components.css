@@ -1,7 +1,6 @@
 /**
  * input-components.css
- * Estilos para renders dinámicos: DataCarousel, VisualGrid, SmartDropdown,
- * ParameterControl, ColorPalette, MediaUpload y stubs de preview.
+ * UI Kit: estilos para todos los ui_type (basic, selectors, visual, media, layout).
  */
 
 /* Contenedor genérico */
@@ -356,6 +355,310 @@
   font-size: 12px;
   cursor: pointer;
   line-height: 1;
+}
+
+/* ========== UI Kit extendido ========== */
+
+/* BaseInput, TextArea, NumberInput */
+.base-input-field,
+.text-area-field,
+.number-input-field {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 0.875rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.text-area-field {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.base-input-preview-stub,
+.text-area-preview-stub,
+.number-input-preview-stub,
+.tag-input-preview-stub,
+.radio-group-preview-stub,
+.checkbox-group-preview-stub {
+  min-height: 44px;
+}
+
+/* TagInput */
+.input-tag-input .tag-input-chips-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-primary);
+}
+
+.input-tag-input .tag-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 0 1 auto;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: 0.8125rem;
+  background: var(--dev-primary-light, #e8b878);
+  color: var(--text-primary);
+  border-radius: 999px;
+}
+
+.tag-chip-remove {
+  padding: 0;
+  margin: 0;
+  width: 16px;
+  height: 16px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  opacity: 0.8;
+}
+
+.tag-chip-remove:hover {
+  opacity: 1;
+}
+
+.input-tag-input .tag-input-field {
+  flex: 1;
+  min-width: 120px;
+  padding: 4px 0;
+  border: none;
+  background: transparent;
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.input-tag-input .tag-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.tag-suggestion {
+  padding: 6px 12px;
+  font-size: 0.8125rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-card);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.tag-suggestion:hover {
+  border-color: var(--dev-primary);
+  background: rgba(224, 145, 69, 0.08);
+}
+
+/* RadioGroup segmented */
+.input-radio-group--segmented .radio-group-inner {
+  display: inline-flex;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.radio-segment {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  cursor: pointer;
+}
+
+.radio-segment input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.radio-segment span {
+  padding: 8px 14px;
+  font-size: 0.875rem;
+  border-right: 1px solid var(--border-color);
+  background: var(--bg-card);
+  transition: background 0.2s;
+}
+
+.radio-segment:last-child span {
+  border-right: none;
+}
+
+.radio-segment input:checked + span {
+  background: var(--dev-primary);
+  color: #fff;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  margin-bottom: 4px;
+}
+
+/* CheckboxGroup checklist */
+.checklist-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.checkbox-single {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+/* SectionLabel */
+.input-section-label--divider hr {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 1rem 0;
+}
+
+.section-label-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0.75rem 0 0.5rem;
+}
+
+.input-section-label--heading .section-label-text {
+  font-size: 1.125rem;
+}
+
+/* StepWizard */
+.step-wizard-track {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 1rem;
+}
+
+.step-wizard-step {
+  display: flex;
+  align-items: center;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.step-wizard-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--border-color);
+  margin-right: 6px;
+}
+
+.step-wizard-step.active .step-wizard-dot {
+  background: var(--dev-primary);
+  box-shadow: 0 0 0 2px rgba(224, 145, 69, 0.3);
+}
+
+.step-wizard-step.done .step-wizard-dot {
+  background: var(--dev-primary);
+}
+
+.step-wizard-content {
+  min-height: 60px;
+}
+
+/* TabContainer */
+.tab-container-head {
+  display: flex;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 12px;
+}
+
+.tab-trigger {
+  padding: 10px 16px;
+  font-size: 0.875rem;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  margin-bottom: -1px;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.tab-trigger:hover {
+  color: var(--text-primary);
+}
+
+.tab-trigger.active {
+  color: var(--dev-primary);
+  border-bottom-color: var(--dev-primary);
+}
+
+.tab-panel.hidden {
+  display: none;
+}
+
+/* InfoAlert */
+.input-info-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
+.input-info-alert--info {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: var(--text-primary);
+}
+
+.input-info-alert--info .ph {
+  color: #3b82f6;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.input-info-alert--alert {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: var(--text-primary);
+}
+
+.input-info-alert--alert .ph {
+  color: var(--dev-error, #ef4444);
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.info-alert-message {
+  flex: 1;
 }
 
 /* ----- Legacy (cuando se usa desde InputRenders) ----- */
