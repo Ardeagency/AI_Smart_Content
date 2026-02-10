@@ -641,156 +641,20 @@ class DevBuilderView extends DevBaseView {
   }
 
   getDefaultTemplates() {
+    if (typeof window.InputRegistry !== 'undefined' && window.InputRegistry.getDefaultTemplates) {
+      return window.InputRegistry.getDefaultTemplates();
+    }
     return [
-      {
-        id: 'text',
-        name: 'Texto Corto',
-        description: 'Campo de texto de una línea',
-        category: 'basic',
-        icon_name: 'textbox',
-        base_schema: {
-          input_type: 'text',
-          placeholder: '',
-          maxLength: 255
-        }
-      },
-      {
-        id: 'textarea',
-        name: 'Texto Largo',
-        description: 'Área de texto multilínea',
-        category: 'basic',
-        icon_name: 'article',
-        base_schema: {
-          input_type: 'textarea',
-          placeholder: '',
-          rows: 4,
-          maxLength: 2000
-        }
-      },
-      {
-        id: 'select',
-        name: 'Selector',
-        description: 'Lista desplegable de opciones',
-        category: 'basic',
-        icon_name: 'list-bullets',
-        base_schema: {
-          input_type: 'select',
-          options: []
-        }
-      },
-      {
-        id: 'number',
-        name: 'Número',
-        description: 'Campo numérico',
-        category: 'basic',
-        icon_name: 'hash',
-        base_schema: {
-          input_type: 'number',
-          min: 0,
-          max: 100,
-          step: 1
-        }
-      },
-      {
-        id: 'checkbox',
-        name: 'Checkbox',
-        description: 'Casilla de verificación',
-        category: 'basic',
-        icon_name: 'check-square',
-        base_schema: {
-          input_type: 'checkbox',
-          defaultValue: false
-        }
-      },
-      {
-        id: 'radio',
-        name: 'Radio',
-        description: 'Opciones mutuamente excluyentes',
-        category: 'basic',
-        icon_name: 'radio-button',
-        base_schema: {
-          input_type: 'radio',
-          options: []
-        }
-      },
-      {
-        id: 'range',
-        name: 'Slider',
-        description: 'Control deslizante numérico',
-        category: 'advanced',
-        icon_name: 'sliders',
-        base_schema: {
-          input_type: 'range',
-          min: 0,
-          max: 100,
-          step: 1,
-          defaultValue: 50
-        }
-      },
-      {
-        id: 'brand_selector',
-        name: 'Selector de Marca',
-        description: 'Selecciona una marca del usuario',
-        category: 'context',
-        icon_name: 'storefront',
-        base_schema: {
-          input_type: 'brand_selector',
-          includeEntities: false
-        }
-      },
-      {
-        id: 'entity_selector',
-        name: 'Selector de Entidad',
-        description: 'Selecciona producto/servicio',
-        category: 'context',
-        icon_name: 'package',
-        base_schema: {
-          input_type: 'entity_selector',
-          entityTypes: ['product', 'service', 'place']
-        }
-      },
-      {
-        id: 'audience_selector',
-        name: 'Selector de Audiencia',
-        description: 'Selecciona una audiencia definida',
-        category: 'context',
-        icon_name: 'users',
-        base_schema: {
-          input_type: 'audience_selector'
-        }
-      },
-      {
-        id: 'tone_selector',
-        name: 'Tono de Voz',
-        description: 'Selector de tono/estilo',
-        category: 'ai',
-        icon_name: 'microphone',
-        base_schema: {
-          input_type: 'select',
-          options: [
-            { value: 'profesional', label: 'Profesional' },
-            { value: 'casual', label: 'Casual' },
-            { value: 'humoristico', label: 'Humorístico' },
-            { value: 'inspirador', label: 'Inspirador' },
-            { value: 'urgente', label: 'Urgente' }
-          ]
-        }
-      },
-      {
-        id: 'length_selector',
-        name: 'Longitud',
-        description: 'Selector de longitud del contenido',
-        category: 'ai',
-        icon_name: 'text-align-left',
-        base_schema: {
-          input_type: 'select',
-          options: [
-            { value: 'corto', label: 'Corto (< 100 palabras)' },
-            { value: 'medio', label: 'Medio (100-300 palabras)' },
-            { value: 'largo', label: 'Largo (> 300 palabras)' }
-          ]
-        }
-      }
+      { id: 'text', name: 'Texto Corto', description: 'Campo de texto', category: 'basic', icon_name: 'textbox', base_schema: { input_type: 'text', placeholder: '', maxLength: 255 } },
+      { id: 'textarea', name: 'Texto Largo', description: 'Área de texto', category: 'basic', icon_name: 'article', base_schema: { input_type: 'textarea', placeholder: '', rows: 4 } },
+      { id: 'select', name: 'Selector', description: 'Lista desplegable', category: 'basic', icon_name: 'list-bullets', base_schema: { input_type: 'select', options: [] } },
+      { id: 'number', name: 'Número', description: 'Campo numérico', category: 'basic', icon_name: 'hash', base_schema: { input_type: 'number', min: 0, max: 100, step: 1 } },
+      { id: 'checkbox', name: 'Checkbox', description: 'Casilla', category: 'basic', icon_name: 'check-square', base_schema: { input_type: 'checkbox', defaultValue: false } },
+      { id: 'radio', name: 'Radio', description: 'Opciones', category: 'basic', icon_name: 'radio-button', base_schema: { input_type: 'radio', options: [] } },
+      { id: 'range', name: 'Slider', description: 'Control deslizante', category: 'advanced', icon_name: 'sliders', base_schema: { input_type: 'range', min: 0, max: 100, step: 1, defaultValue: 50 } },
+      { id: 'brand_selector', name: 'Selector de Marca', description: 'Marca del usuario', category: 'context', icon_name: 'storefront', base_schema: { input_type: 'brand_selector' } },
+      { id: 'entity_selector', name: 'Selector de Entidad', description: 'Producto/servicio', category: 'context', icon_name: 'package', base_schema: { input_type: 'entity_selector' } },
+      { id: 'audience_selector', name: 'Selector de Audiencia', description: 'Audiencia', category: 'context', icon_name: 'users', base_schema: { input_type: 'audience_selector' } }
     ];
   }
 
@@ -798,14 +662,19 @@ class DevBuilderView extends DevBaseView {
     const container = this.querySelector('#componentsList');
     if (!container) return;
     
-    // Agrupar por categoría
+    // Agrupar por categoría (taxonomía: basic, smart_text, semantic, brand, media, controls, structural)
     const groups = {
       basic: { name: 'Básicos', icon: 'shapes', items: [] },
+      smart_text: { name: 'Texto / IA', icon: 'terminal', items: [] },
+      semantic: { name: 'Semánticos', icon: 'microphone', items: [] },
+      brand: { name: 'Marca y contexto', icon: 'storefront', items: [] },
       context: { name: 'Contexto', icon: 'database', items: [] },
-      ai: { name: 'IA', icon: 'magic-wand', items: [] },
-      advanced: { name: 'Avanzados', icon: 'gear-six', items: [] }
+      media: { name: 'Media', icon: 'image', items: [] },
+      controls: { name: 'Controles', icon: 'sliders', items: [] },
+      advanced: { name: 'Avanzados', icon: 'gear-six', items: [] },
+      structural: { name: 'Estructura', icon: 'square', items: [] },
+      ai: { name: 'IA', icon: 'magic-wand', items: [] }
     };
-    
     this.componentTemplates.forEach(template => {
       const category = template.category || 'basic';
       if (groups[category]) {
@@ -917,17 +786,15 @@ class DevBuilderView extends DevBaseView {
   addField(templateId, baseSchema) {
     const template = this.componentTemplates.find(t => t.id === templateId);
     const fieldName = this.generateFieldKey(template?.name || templateId);
-    // Tipo canónico: la plantilla puede usar input_type, type o ui_type (para que el canvas use InputRenders correcto)
-    const canonicalType = baseSchema.input_type || baseSchema.type || baseSchema.ui_type || 'text';
+    
     const newField = {
       key: fieldName,
       label: template?.name || 'Campo',
-      input_type: canonicalType,
+      input_type: baseSchema.input_type || 'text',
       required: false,
       placeholder: baseSchema.placeholder || '',
       description: '',
       ...baseSchema,
-      input_type: canonicalType,
       // UI config específica del campo
       ui: {
         width: 'full',
@@ -1049,70 +916,11 @@ class DevBuilderView extends DevBaseView {
   }
 
   renderInputPreview(field) {
-    if (window.InputRenders && window.InputRenders.getComponentType(field)) {
-      return window.InputRenders.renderField(field, { mode: 'preview' });
+    if (typeof window.InputRegistry !== 'undefined' && window.InputRegistry.renderPreview) {
+      return window.InputRegistry.renderPreview(field);
     }
-    const placeholder = field.placeholder || '';
-    switch (field.input_type) {
-      case 'text':
-        return `<input type="text" class="preview-input" placeholder="${placeholder}" disabled>`;
-      
-      case 'textarea':
-        return `<textarea class="preview-input" rows="${field.rows || 3}" placeholder="${placeholder}" disabled></textarea>`;
-      
-      case 'select':
-        const options = field.options || [];
-        return `
-          <select class="preview-input" disabled>
-            <option value="">${placeholder || 'Seleccionar...'}</option>
-            ${options.map(opt => `<option>${opt.label || opt}</option>`).join('')}
-          </select>
-        `;
-      
-      case 'number':
-        return `<input type="number" class="preview-input" placeholder="${placeholder}" disabled>`;
-      
-      case 'checkbox':
-        return `
-          <label class="preview-checkbox">
-            <input type="checkbox" disabled>
-            <span>${field.label || 'Opción'}</span>
-          </label>
-        `;
-      
-      case 'radio':
-        const radioOptions = field.options || [{ label: 'Opción 1' }, { label: 'Opción 2' }];
-        return `
-          <div class="preview-radio-group">
-            ${radioOptions.map((opt, i) => `
-              <label class="preview-radio">
-                <input type="radio" name="preview_${field.key}" disabled ${i === 0 ? 'checked' : ''}>
-                <span>${opt.label || opt}</span>
-              </label>
-            `).join('')}
-          </div>
-        `;
-      
-      case 'range':
-        return `
-          <div class="preview-range">
-            <input type="range" min="${field.min || 0}" max="${field.max || 100}" value="${field.defaultValue || 50}" disabled>
-            <span>${field.defaultValue || 50}</span>
-          </div>
-        `;
-      
-      case 'brand_selector':
-        return `<select class="preview-input preview-context" disabled><option>[ Selector de Marca ]</option></select>`;
-      
-      case 'entity_selector':
-        return `<select class="preview-input preview-context" disabled><option>[ Selector de Entidad ]</option></select>`;
-      
-      case 'audience_selector':
-        return `<select class="preview-input preview-context" disabled><option>[ Selector de Audiencia ]</option></select>`;
-      
-      default:
-        return `<input type="text" class="preview-input" placeholder="${placeholder}" disabled>`;
-    }
+    const placeholder = (field.placeholder || '').replace(/"/g, '&quot;');
+    return `<input type="text" class="preview-input" placeholder="${placeholder}" disabled>`;
   }
 
   setupCanvasFieldListeners() {
@@ -1304,7 +1112,10 @@ class DevBuilderView extends DevBaseView {
   }
 
   renderTypeSpecificProperties(field) {
-    switch (field.input_type) {
+    const type = field.input_type || field.type || 'text';
+    const family = (typeof window.InputRegistry !== 'undefined' && window.InputRegistry.getPropertyFamily)
+      ? window.InputRegistry.getPropertyFamily(type) : type;
+    switch (family) {
       case 'text':
       case 'textarea':
         return `
@@ -1314,7 +1125,7 @@ class DevBuilderView extends DevBaseView {
               <label for="propMaxLength">Máximo caracteres</label>
               <input type="number" id="propMaxLength" value="${field.maxLength || ''}" min="1">
             </div>
-            ${field.input_type === 'textarea' ? `
+            ${(field.input_type || field.type) === 'textarea' ? `
               <div class="property-field">
                 <label for="propRows">Filas</label>
                 <input type="number" id="propRows" value="${field.rows || 4}" min="2" max="20">
@@ -1325,6 +1136,7 @@ class DevBuilderView extends DevBaseView {
       
       case 'number':
       case 'range':
+        // number, range y tipos numéricos del registry
         return `
           <div class="property-group">
             <h4>Número</h4>
@@ -1374,29 +1186,29 @@ class DevBuilderView extends DevBaseView {
           </div>
         `;
       
-      case 'entity_selector':
-        const entityTypes = field.entityTypes || ['product', 'service', 'place'];
-        return `
-          <div class="property-group">
-            <h4>Tipos de Entidad</h4>
-            <div class="entity-types-toggles">
-              <label class="property-toggle">
-                <input type="checkbox" data-type="product" ${entityTypes.includes('product') ? 'checked' : ''}>
-                <span>Productos</span>
-              </label>
-              <label class="property-toggle">
-                <input type="checkbox" data-type="service" ${entityTypes.includes('service') ? 'checked' : ''}>
-                <span>Servicios</span>
-              </label>
-              <label class="property-toggle">
-                <input type="checkbox" data-type="place" ${entityTypes.includes('place') ? 'checked' : ''}>
-                <span>Lugares</span>
-              </label>
-            </div>
-          </div>
-        `;
-      
       default:
+        if (type === 'entity_selector') {
+          const entityTypes = field.entityTypes || ['product', 'service', 'place'];
+          return `
+            <div class="property-group">
+              <h4>Tipos de Entidad</h4>
+              <div class="entity-types-toggles">
+                <label class="property-toggle">
+                  <input type="checkbox" data-type="product" ${entityTypes.includes('product') ? 'checked' : ''}>
+                  <span>Productos</span>
+                </label>
+                <label class="property-toggle">
+                  <input type="checkbox" data-type="service" ${entityTypes.includes('service') ? 'checked' : ''}>
+                  <span>Servicios</span>
+                </label>
+                <label class="property-toggle">
+                  <input type="checkbox" data-type="place" ${entityTypes.includes('place') ? 'checked' : ''}>
+                  <span>Lugares</span>
+                </label>
+              </div>
+            </div>
+          `;
+        }
         return '';
     }
   }
@@ -2794,62 +2606,21 @@ class DevBuilderView extends DevBaseView {
     const showLabels = this.uiLayoutConfig.showLabels !== false;
     const showHelperText = this.uiLayoutConfig.showHelperText !== false;
     
+    const Registry = window.InputRegistry;
+    const renderInput = Registry && Registry.renderFormField
+      ? (f) => Registry.renderFormField(f, { mode: 'preview', disabled: false, required: f.required })
+      : (f) => `<input type="text" name="${f.key || 'field'}" placeholder="${(f.placeholder || '')}">`;
+
     let fieldsHtml = this.inputSchema.map(field => {
       const widthClass = field.ui?.width === 'half' ? 'col-half' : field.ui?.width === 'third' ? 'col-third' : 'col-full';
-      let inputHtml = '';
-      if (window.InputRenders && window.InputRenders.getComponentType(field)) {
-        inputHtml = window.InputRenders.renderField(field, { mode: 'preview' });
-      } else {
-        switch (field.input_type) {
-          case 'text':
-            inputHtml = `<input type="text" placeholder="${field.placeholder || ''}">`;
-            break;
-          case 'textarea':
-            inputHtml = `<textarea rows="${field.rows || 4}" placeholder="${field.placeholder || ''}"></textarea>`;
-            break;
-          case 'select':
-            inputHtml = `
-              <select>
-                <option value="">${field.placeholder || 'Seleccionar...'}</option>
-                ${(field.options || []).map(opt => `<option value="${opt.value || opt}">${opt.label || opt}</option>`).join('')}
-              </select>
-            `;
-            break;
-          case 'number':
-            inputHtml = `<input type="number" min="${field.min || ''}" max="${field.max || ''}" step="${field.step || 1}" placeholder="${field.placeholder || ''}">`;
-            break;
-          case 'checkbox':
-            inputHtml = `<label class="checkbox-label"><input type="checkbox"> ${field.label}</label>`;
-            break;
-          case 'radio':
-            inputHtml = `
-              <div class="radio-group">
-                ${(field.options || []).map((opt, i) => `
-                  <label class="radio-label">
-                    <input type="radio" name="${field.key}" ${i === 0 ? 'checked' : ''}>
-                    ${opt.label || opt}
-                  </label>
-                `).join('')}
-              </div>
-            `;
-            break;
-          case 'range':
-            inputHtml = `
-              <div class="range-input">
-                <input type="range" min="${field.min || 0}" max="${field.max || 100}" value="${field.defaultValue || 50}">
-                <span class="range-value">${field.defaultValue || 50}</span>
-              </div>
-            `;
-            break;
-          default:
-            inputHtml = `<div class="context-selector">[${field.input_type}]</div>`;
-        }
-      }
+      const inputHtml = renderInput(field);
+      const isStructural = field.input_type === 'section' || field.input_type === 'divider' || field.input_type === 'description_block';
+      const showLabel = showLabels && field.input_type !== 'checkbox' && !isStructural;
       return `
         <div class="preview-field ${widthClass}">
-          ${showLabels && field.input_type !== 'checkbox' ? `<label>${field.label}${field.required ? ' <span class="required">*</span>' : ''}</label>` : ''}
+          ${showLabel ? `<label>${field.label || field.key}${field.required ? ' <span class="required">*</span>' : ''}</label>` : ''}
           ${inputHtml}
-          ${showHelperText && field.description ? `<span class="helper-text">${field.description}</span>` : ''}
+          ${showHelperText && field.description && !isStructural ? `<span class="helper-text">${field.description}</span>` : ''}
         </div>
       `;
     }).join('');
@@ -2891,15 +2662,12 @@ class DevBuilderView extends DevBaseView {
     
     modal.style.display = 'flex';
     
-    if (window.InputRenders && typeof window.InputRenders.initInputComponents === 'function') {
-      window.InputRenders.initInputComponents(container);
-    }
-    // Setup range inputs (fallback por si no usan InputRenders)
+    // Setup range inputs
     container.querySelectorAll('input[type="range"]').forEach(range => {
       const valueDisplay = range.nextElementSibling;
-      if (valueDisplay && !range.closest('.parameter-slider-wrap')) {
-        range.addEventListener('input', () => { valueDisplay.textContent = range.value; });
-      }
+      range.addEventListener('input', () => {
+        if (valueDisplay) valueDisplay.textContent = range.value;
+      });
     });
   }
 
@@ -2912,72 +2680,17 @@ class DevBuilderView extends DevBaseView {
         </div>
       `;
     }
-    return this.inputSchema.map(field => {
-      if (window.InputRenders && window.InputRenders.getComponentType(field)) {
-        return `
-          <div class="test-field">
-            ${window.InputRenders.renderFieldWithWrapper(field, { mode: 'test', namePrefix: 'test_', idPrefix: 'test_', required: true })}
-          </div>
-        `;
-      }
-      let inputHtml = '';
-      switch (field.input_type) {
-        case 'text':
-          inputHtml = `<input type="text" id="test_${field.key}" name="${field.key}" placeholder="${field.placeholder || ''}" ${field.required ? 'required' : ''}>`;
-          break;
-        case 'textarea':
-          inputHtml = `<textarea id="test_${field.key}" name="${field.key}" rows="${field.rows || 4}" placeholder="${field.placeholder || ''}" ${field.required ? 'required' : ''}></textarea>`;
-          break;
-        case 'select':
-          inputHtml = `
-            <select id="test_${field.key}" name="${field.key}" ${field.required ? 'required' : ''}>
-              <option value="">${field.placeholder || 'Seleccionar...'}</option>
-              ${(field.options || []).map(opt => `<option value="${opt.value || opt}">${opt.label || opt}</option>`).join('')}
-            </select>
-          `;
-          break;
-        case 'number':
-          inputHtml = `<input type="number" id="test_${field.key}" name="${field.key}" min="${field.min || ''}" max="${field.max || ''}" step="${field.step || 1}" value="${field.defaultValue || ''}" ${field.required ? 'required' : ''}>`;
-          break;
-        case 'checkbox':
-          inputHtml = `
-            <label class="test-checkbox">
-              <input type="checkbox" id="test_${field.key}" name="${field.key}" ${field.defaultValue ? 'checked' : ''}>
-              <span>${field.label}</span>
-            </label>
-          `;
-          break;
-        case 'radio':
-          inputHtml = `
-            <div class="test-radio-group">
-              ${(field.options || []).map((opt, i) => `
-                <label class="test-radio">
-                  <input type="radio" name="${field.key}" value="${opt.value || opt}" ${i === 0 ? 'checked' : ''}>
-                  <span>${opt.label || opt}</span>
-                </label>
-              `).join('')}
-            </div>
-          `;
-          break;
-        case 'range':
-          inputHtml = `
-            <div class="test-range">
-              <input type="range" id="test_${field.key}" name="${field.key}" min="${field.min || 0}" max="${field.max || 100}" step="${field.step || 1}" value="${field.defaultValue || 50}">
-              <span class="range-value">${field.defaultValue || 50}</span>
-            </div>
-          `;
-          break;
-        case 'brand_selector':
-        case 'entity_selector':
-        case 'audience_selector':
-          inputHtml = `<input type="text" id="test_${field.key}" name="${field.key}" placeholder="UUID de prueba..." ${field.required ? 'required' : ''}>`;
-          break;
-        default:
-          inputHtml = `<input type="text" id="test_${field.key}" name="${field.key}" placeholder="${field.placeholder || ''}" ${field.required ? 'required' : ''}>`;
-      }
+    const Registry = window.InputRegistry;
+    const renderInput = Registry && Registry.renderFormField
+      ? (f) => Registry.renderFormField(f, { mode: 'test', idPrefix: 'test_', required: f.required })
+      : (f) => `<input type="text" id="test_${f.key}" name="${f.key}" ${f.required ? 'required' : ''}>`;
+
+    return this.inputSchema.filter(f => f.input_type !== 'section' && f.input_type !== 'divider' && f.input_type !== 'description_block').map(field => {
+      const inputHtml = renderInput(field);
+      const id = 'test_' + (field.key || 'field');
       return `
         <div class="test-field">
-          <label for="test_${field.key}">${field.label || field.key}${field.required ? ' <span class="required">*</span>' : ''}</label>
+          <label for="${id}">${field.label || field.key}${field.required ? ' <span class="required">*</span>' : ''}</label>
           ${inputHtml}
           ${field.description ? `<span class="field-help">${field.description}</span>` : ''}
         </div>

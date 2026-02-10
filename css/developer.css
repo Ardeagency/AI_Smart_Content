@@ -2314,6 +2314,26 @@ body.sidebar-collapsed .builder-header {
   flex: 1;
 }
 
+.preview-structural {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: var(--bg-primary);
+  border: 1px dashed var(--border-color);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+.preview-structural .ph { font-size: 1.25rem; }
+
+.preview-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.preview-switch input[type="checkbox"] { margin: 0; }
+
 .preview-context {
   border-style: dashed;
   font-style: italic;

@@ -233,9 +233,6 @@ class StudioView extends BaseView {
 
     formEl.innerHTML = fields.map(f => this.renderFormField(f)).join('');
 
-    if (window.InputRenders && typeof window.InputRenders.initInputComponents === 'function') {
-      window.InputRenders.initInputComponents(formEl);
-    }
     formEl.querySelectorAll('input, textarea, select').forEach(el => {
       el.addEventListener('input', () => this.updateCreditsDisplay());
       el.addEventListener('change', () => this.updateCreditsDisplay());
@@ -243,19 +240,24 @@ class StudioView extends BaseView {
   }
 
   renderFormField(field) {
-    if (window.InputRenders && window.InputRenders.getComponentType(field)) {
+    const name = field.name || field.key || field.id || 'field';
+    const label = field.label || name;
+    const required = field.required !== false;
+    const isStructural = (field.type || field.input_type || '') === 'section' || (field.type || field.input_type || '') === 'divider' || (field.type || field.input_type || '') === 'description_block';
+    if (isStructural) return '';
+
+    if (typeof window.InputRegistry !== 'undefined' && window.InputRegistry.renderFormField) {
+      const fieldNorm = { ...field, key: name, required };
+      const inputHtml = window.InputRegistry.renderFormField(fieldNorm, { mode: 'studio', idPrefix: 'studio-', required });
       return `
         <div class="studio-field">
-          ${window.InputRenders.renderFieldWithWrapper(field, { mode: 'studio', idPrefix: 'studio-', required: field.required !== false })}
+          <label for="studio-${this.escapeHtml(name)}">${this.escapeHtml(label)}</label>
+          ${inputHtml}
         </div>
       `;
     }
-    const name = field.name || field.key || field.id || 'field';
-    const label = field.label || name;
     const type = (field.type || field.input_type || 'text').toLowerCase();
-    const required = field.required !== false;
     const placeholder = field.placeholder || '';
-
     if (type === 'textarea') {
       return `
         <div class="studio-field">
