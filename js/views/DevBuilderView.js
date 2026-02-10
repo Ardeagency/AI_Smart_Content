@@ -1018,6 +1018,9 @@ class DevBuilderView extends DevBaseView {
       <div class="canvas-field ${isSelected ? 'selected' : ''}" 
            data-index="${index}"
            draggable="true">
+        <button type="button" class="canvas-field-remove" title="Eliminar (Delete)" aria-label="Eliminar">
+          <i class="ph ph-x"></i>
+        </button>
         <div class="canvas-field-header">
           <div class="canvas-field-drag">
             <i class="ph ph-dots-six-vertical"></i>
@@ -1112,9 +1115,9 @@ class DevBuilderView extends DevBaseView {
     const fields = this.querySelectorAll('.canvas-field');
     
     fields.forEach((field, index) => {
-      // Click para seleccionar
+      // Click para seleccionar (no si se hace clic en acciones o en la X)
       field.addEventListener('click', (e) => {
-        if (!e.target.closest('.field-action-btn')) {
+        if (!e.target.closest('.field-action-btn') && !e.target.closest('.canvas-field-remove')) {
           this.selectField(index);
         }
       });
@@ -1155,9 +1158,10 @@ class DevBuilderView extends DevBaseView {
         }
       });
       
-      // Botones de acción
+      // Botones de acción (header y X esquina)
       const duplicateBtn = field.querySelector('.duplicate-field');
       const deleteBtn = field.querySelector('.delete-field');
+      const removeXBtn = field.querySelector('.canvas-field-remove');
       
       if (duplicateBtn) {
         duplicateBtn.addEventListener('click', (e) => {
@@ -1167,13 +1171,13 @@ class DevBuilderView extends DevBaseView {
         });
       }
       
-      if (deleteBtn) {
-        deleteBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          this.deleteField(index);
-        });
-      }
+      const doDelete = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.deleteField(index);
+      };
+      if (deleteBtn) deleteBtn.addEventListener('click', doDelete);
+      if (removeXBtn) removeXBtn.addEventListener('click', doDelete);
     });
   }
 
@@ -2135,6 +2139,21 @@ class DevBuilderView extends DevBaseView {
     if (copySchemaBtn) {
       copySchemaBtn.addEventListener('click', () => this.copySchema());
     }
+
+    // Tecla Delete/Backspace: eliminar el input seleccionado (solo en pestaña Inputs y si no estamos en un input de texto)
+    document.addEventListener('keydown', (e) => this.handleBuilderKeydown(e));
+  }
+
+  handleBuilderKeydown(e) {
+    const isInputsTab = this.querySelector('#tabInputs')?.classList?.contains('active');
+    if (!isInputsTab || this.selectedFieldIndex === null || this.inputSchema.length === 0) return;
+    const key = e.key;
+    if (key !== 'Delete' && key !== 'Backspace') return;
+    const target = document.activeElement;
+    const isTextInput = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
+    if (isTextInput) return;
+    e.preventDefault();
+    this.deleteField(this.selectedFieldIndex);
   }
 
   setupFooterListeners() {
