@@ -1261,39 +1261,21 @@
    Constructor Visual de Flujos de IA
    ========================================== */
 
-/* Header del Builder: fila 1 = acciones, fila 2 = tabs */
+/* Header del Builder */
 .builder-header {
   position: fixed;
   top: 0;
   left: var(--nav-width, 250px);
   right: 0;
-  height: var(--builder-header-height, 112px);
+  height: 56px;
   background: var(--bg-card);
   border-bottom: 1px solid var(--border-color);
   display: flex;
-  flex-direction: column;
-  padding: 0;
-  z-index: 100;
-  transition: left 0.3s ease;
-}
-
-.builder-header-row.builder-header-top {
-  display: flex;
   align-items: center;
   justify-content: space-between;
-  flex: 0 0 56px;
   padding: 0 16px;
-  min-height: 56px;
-}
-
-.builder-header .builder-tabs {
-  flex: 0 0 auto;
-  display: flex;
-  gap: 4px;
-  padding: 8px 16px 12px;
-  background: var(--bg-secondary);
-  border-top: 1px solid var(--border-color);
-  margin: 0;
+  z-index: 100;
+  transition: left 0.3s ease;
 }
 
 body.sidebar-collapsed .builder-header {
@@ -1532,14 +1514,13 @@ body.sidebar-collapsed .builder-header {
 }
 
 /* Main Builder Container */
-/* Header va en su propia fila (arriba); esta área es componentes | centro | propiedades. */
+/* Sin margin ni padding superior; scroll propio en cada bloque. */
 .builder-main {
   display: grid;
   grid-template-columns: 260px 1fr 280px;
   grid-template-rows: 1fr;
   margin: 0;
   padding: 0;
-  padding-top: var(--builder-header-height, 112px); /* espacio para header fijo (acciones + tabs) */
   flex: 1 1 0;
   min-height: 0;
   height: auto;
@@ -1552,11 +1533,6 @@ body.sidebar-collapsed .builder-header {
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
-}
-
-/* Altura del header del Builder (acciones + tabs) para padding-top del main */
-#app-container:has(.builder-header) {
-  --builder-header-height: 112px;
 }
 
 #app-container:has(.builder-footer) .builder-main {
@@ -2222,7 +2198,7 @@ body.sidebar-collapsed .builder-header {
 .canvas-field-actions {
   display: flex;
   gap: 4px;
-  opacity: 0;
+  opacity: 1;
   transition: opacity 0.2s ease;
 }
 
