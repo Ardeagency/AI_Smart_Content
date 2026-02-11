@@ -1,7 +1,6 @@
 /**
  * App CSS - Estilos específicos para la SPA
- * Depende únicamente de css/base.css (variables :root y reglas globales).
- * No redefine :root ni colores; usa solo var(--*) de base.
+ * Complementa base.css con funcionalidad de Single Page Application
  */
 
 /* ============================================
@@ -15,6 +14,8 @@
     max-width: 100%;
     min-height: 100vh;
     background: var(--bg-primary);
+    transition: opacity 0.3s ease;
+    will-change: opacity, transform;
     overflow-x: hidden;
     overflow-y: auto;
     box-sizing: border-box;
@@ -110,9 +111,9 @@
    TRANSICIONES ENTRE VISTAS
    ============================================ */
 
-/* Clase para animación de entrada (fill forwards para que no quede en opacity 0) */
+/* Clase para animación de entrada */
 .view-enter {
-    animation: fadeIn 0.3s ease forwards;
+    animation: fadeIn 0.3s ease;
 }
 
 /* Clase para animación de salida */
@@ -250,7 +251,7 @@
 .sidebar-loading {
     padding: 20px;
     text-align: center;
-    color: var(--text-muted);
+    color: rgba(236, 235, 218, 0.6);
     font-size: 0.813rem;
 }
 
@@ -268,11 +269,11 @@
     top: 20px;
     right: 20px;
     z-index: 10000;
-    padding: var(--spacing-md) var(--spacing-lg);
+    padding: 1rem 1.5rem;
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    border-radius: var(--radius-btn);
-    box-shadow: var(--shadow-card);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -357,9 +358,13 @@
 }
 
 /* ============================================
-   SCROLL PERSONALIZADO
-   (scroll-behavior: smooth está en base.css)
+   SCROLL BEHAVIOR
    ============================================ */
+
+/* Smooth scroll para navegación interna */
+html {
+    scroll-behavior: smooth;
+}
 
 /* Scroll personalizado para contenedores */
 .custom-scrollbar::-webkit-scrollbar {
@@ -381,7 +386,15 @@
     background: var(--accent-warm);
 }
 
-/* Focus visible: definido en base.css (:focus-visible con --border-width y --text-muted) */
+/* ============================================
+   FOCUS STATES
+   ============================================ */
+
+/* Mejorar accesibilidad con focus visible */
+*:focus-visible {
+    outline: 2px solid var(--accent-yellow);
+    outline-offset: 2px;
+}
 
 /* ============================================
    PRINT STYLES

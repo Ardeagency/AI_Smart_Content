@@ -1,6 +1,6 @@
 /**
  * HogarView - Vista principal de organizaciones (selector de orgs)
- * Estilos: depende únicamente de css/base.css (sección "HOGAR (HOME) VIEW"). No usar css/hogar.css.
+ * Estilos: css/hogar.css (variables --living-* con fallbacks; living.css carga después).
  * Carga organizaciones y colores de marca (brand_colors) para degradados.
  */
 class HogarView extends BaseView {
