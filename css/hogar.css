@@ -3,6 +3,13 @@
  * Usa variables de base.css (:root). Sin dependencia de living.css ni brands.css.
  */
 
+/* Forzar visibilidad: evita pantalla negra por .view-enter (opacity 0) o cascada */
+body.has-header-only #app-container,
+body.has-header-only #app-container .hogar-container {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
 /* Variables locales: referencias a base.css */
 .hogar-container {
     --hogar-bg: var(--bg-main);

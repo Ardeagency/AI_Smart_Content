@@ -14,8 +14,6 @@
     max-width: 100%;
     min-height: 100vh;
     background: var(--bg-primary);
-    transition: opacity 0.3s ease;
-    will-change: opacity, transform;
     overflow-x: hidden;
     overflow-y: auto;
     box-sizing: border-box;
@@ -111,9 +109,9 @@
    TRANSICIONES ENTRE VISTAS
    ============================================ */
 
-/* Clase para animación de entrada */
+/* Clase para animación de entrada (fill forwards para que no quede en opacity 0) */
 .view-enter {
-    animation: fadeIn 0.3s ease;
+    animation: fadeIn 0.3s ease forwards;
 }
 
 /* Clase para animación de salida */
