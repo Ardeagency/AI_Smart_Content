@@ -1,25 +1,23 @@
 # Deuda técnica: theme-global.css vs Hogar (visibilidad)
 
 ## Objetivo
-Hogar debe funcionar **con** `theme-global.css` sin depender de `living.css` ni `brands.css`. Este documento describe el análisis del fallo original y la **solución desde la raíz** aplicada en hogar.css.
+Hogar debe verse correctamente (sin pantalla negra) y no depender de `living.css` ni `brands.css`. Este documento describe el análisis del fallo y la **solución aplicada**.
 
 ---
 
-## Estado actual (resuelto desde la raíz)
+## Estado actual — RESUELTO
 
-**Hogar ya no depende de living.css ni brands.css.**
+**Hogar ya no depende de living.css ni brands.css.** Estilos en **base.css** (sección "HOGAR (HOME) VIEW"); no existe hogar.css.
 
-- **hogar.css** usa **solo variables de theme-global** (con fallbacks para cuando theme-global no esté cargado):
-  - `--hogar-bg: var(--bg-main, #0A0C0F)`
-  - `--hogar-surface: var(--bg-surface, #0E1012)`
-  - `--hogar-text: var(--text-primary, #E8DDD4)`
-  - `--hogar-accent: var(--btn-bg, #D4754E)`
-  - `--hogar-header-height: var(--header-height, 70px)`
-  - etc.
-- **.hogar-header** está protegido de reglas globales `[class*="header"]` con `min-height: unset; height: auto`.
-- No se usa parche; la compatibilidad con theme-global está integrada en hogar.css.
+### Causa de la pantalla negra (resuelta)
+1. **Animación `.view-enter`**: empieza en `opacity: 0`; el contenedor podía quedar invisible.
+2. **Dependencia de `body.has-header-only`**: la visibilidad forzada podía aplicarse tarde.
 
-**Estado:** El tema global está unificado en **base.css**. HogarView depende solo de base.css: los estilos de Hogar están en la sección "HOGAR (HOME) VIEW" de base.css; se eliminó css/hogar.css y su link. Próximos pasos: actualizar el resto de CSS y vistas; luego reducir a base.css, app.css, style.css.
+### Solución aplicada
+- **base.css**: `#app-container:has(.hogar-container)` → `opacity: 1 !important; visibility: visible !important; animation: none !important;` (visibilidad en cuanto el DOM tiene la vista Hogar; se cancela la animación). Respaldo con `body.has-header-only`.
+- **router.js**: En `/hogar` y `/home` no se añade la clase `view-enter` al contenedor, así no se ejecuta la animación.
+
+**Próximos pasos:** Actualizar el resto de CSS y vistas; luego reducir a base.css, app.css, style.css.
 
 ---
 
@@ -115,4 +113,4 @@ El parche fue eliminado. theme-global.css fue fusionado en base.css y el archivo
 | .hogar-header | Afectado por [class*="header"] 60px | min-height: unset; height: auto en hogar.css |
 | Parche | theme-global-hogar-compat-patch.css | No necesario; solución en hogar.css |
 
-**Estado:** Hogar ya no depende de living.css ni brands.css. Usa solo variables de theme-global (con fallbacks). Al reintroducir theme-global.css, Hogar no debería romperse. Siguiente: actualizar Living y Brands para el nuevo estilo propio.
+**Estado:** Hogar resuelto: visibilidad forzada con `:has(.hogar-container)` y sin animación `view-enter` en /hogar y /home. Siguiente: actualizar Living y Brands para el nuevo estilo propio.

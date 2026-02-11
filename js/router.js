@@ -202,7 +202,8 @@ class Router {
         this.currentView.routeParams = routeParams;
       }
 
-      if (container) {
+      /* No animar entrada en Hogar/Home para evitar pantalla negra (view-enter empieza en opacity 0) */
+      if (container && path !== '/hogar' && path !== '/home') {
         container.classList.add('view-enter');
       }
 

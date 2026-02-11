@@ -967,6 +967,21 @@ select:focus {
    HOGAR (HOME) VIEW — Selector de organizaciones
    HogarView depende solo de base.css; no cargar hogar.css.
    ============================================ */
+
+/* Forzar visibilidad: no depender de body.has-header-only (puede aplicarse tarde).
+   :has(.hogar-container) asegura que en cuanto el DOM tenga la vista Hogar, se fuerce visible
+   y se cancele la animación view-enter que deja opacity 0. */
+#app-container:has(.hogar-container) {
+  opacity: 1 !important;
+  visibility: visible !important;
+  animation: none !important;
+}
+
+#app-container:has(.hogar-container) .hogar-container {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
 body.has-header-only #app-container,
 body.has-header-only #app-container .hogar-container {
   opacity: 1 !important;
