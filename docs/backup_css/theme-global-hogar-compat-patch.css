@@ -1,0 +1,49 @@
+/**
+ * Parche de compatibilidad: cargar DESPUÉS de theme-global.css cuando se reintroduzca.
+ * Evita que Hogar quede en negro por cascada de variables o por opacity/visibility.
+ *
+ * Uso al reintroducir theme-global:
+ * 1) Copiar este archivo a /css/theme-global-hogar-compat.css y en index.html enlazar después de theme-global.css:
+ *    <link rel="stylesheet" href="/css/theme-global.css">
+ *    <link rel="stylesheet" href="/css/theme-global-hogar-compat.css">
+ * 2) O copiar el contenido de este archivo al final de theme-global.css.
+ */
+
+/* ============================================
+   HOGAR: valores seguros para --living-* 
+   (mismos que living.css, para no depender del orden de carga)
+   ============================================ */
+:root {
+    --living-bg-deep: #0A0C0F;
+    --living-bg-surface: #0E1012;
+    --living-text-light: #E8DDD4;
+    --living-text-muted: rgba(232, 221, 212, 0.4);
+    --living-warm-1: #D4754E;
+    --living-warm-2: #C86B45;
+}
+
+/* ============================================
+   HOGAR: forzar visibilidad cuando body tiene has-header-only
+   ============================================ */
+body.has-header-only #app-container {
+    opacity: 1 !important;
+    transition: none !important;
+}
+
+body.has-header-only .hogar-container {
+    visibility: visible !important;
+    opacity: 1 !important;
+    background: var(--hogar-bg, #0A0C0F) !important;
+    color: var(--hogar-text, #E8DDD4) !important;
+}
+
+body.has-header-only .hogar-container,
+body.has-header-only .hogar-container * {
+    visibility: visible !important;
+}
+
+/* No aplicar altura fija a .hogar-header (solo a headers de nav) */
+.hogar-header {
+    min-height: unset !important;
+    height: auto !important;
+}

@@ -1,29 +1,32 @@
 /**
  * Hogar (Home) - Selector de organizaciones
- * Mismo estilo visual que el resto de la web: Living/Brands (fondo oscuro, acentos cálidos, superficies card)
+ * Depende ÚNICAMENTE de theme-global.css (variables :root).
+ * Sin dependencia de living.css ni brands.css.
+ * Fallbacks permiten que funcione también sin theme-global (estado actual).
  */
 
-/* Variables locales por si living no cargó; normalmente se usan las de living.css */
+/* Variables locales: solo nombres de theme-global con fallback para estado sin theme-global */
 .hogar-container {
-    --hogar-bg: var(--living-bg-deep, #0A0C0F);
-    --hogar-surface: var(--living-bg-surface, #0E1012);
-    --hogar-card: var(--living-bg-card, rgba(21, 23, 28, 0.6));
-    --hogar-card-border: rgba(255, 255, 255, 0.06);
-    --hogar-text: var(--living-text-light, #E8DDD4);
-    --hogar-text-muted: var(--living-text-muted, rgba(232, 221, 212, 0.4));
-    --hogar-accent: var(--living-warm-1, #D4754E);
-    --hogar-accent-hover: var(--living-warm-2, #C86B45);
-    --hogar-radius: 12px;
-    --hogar-radius-card: 16px;
+    --hogar-bg: var(--bg-main, #0A0C0F);
+    --hogar-surface: var(--bg-surface, #0E1012);
+    --hogar-card: var(--bg-card, rgba(21, 23, 28, 0.6));
+    --hogar-card-border: var(--border-color, rgba(255, 255, 255, 0.06));
+    --hogar-text: var(--text-primary, #E8DDD4);
+    --hogar-text-muted: var(--text-muted, rgba(232, 221, 212, 0.4));
+    --hogar-accent: var(--btn-bg, #D4754E);
+    --hogar-accent-hover: var(--btn-hover, #C86B45);
+    --hogar-radius: var(--radius-btn, 12px);
+    --hogar-radius-card: var(--radius-card, 16px);
+    --hogar-header-height: var(--header-height, 70px);
 }
 
 /* ============================================
    CONTENEDOR PRINCIPAL
    ============================================ */
 .hogar-container {
-    min-height: calc(100vh - 70px);
+    min-height: calc(100vh - var(--hogar-header-height));
     padding: 2rem;
-    padding-top: calc(70px + 2rem); /* header-only: 70px + aire */
+    padding-top: calc(var(--hogar-header-height) + 2rem); /* header-only + aire */
     max-width: 1400px;
     margin: 0 auto;
     background: var(--hogar-bg);
@@ -35,12 +38,13 @@
 @media (max-width: 768px) {
     .hogar-container {
         padding: 1.5rem;
-        padding-top: calc(70px + 1rem);
+        padding-top: calc(var(--hogar-header-height) + 1rem);
     }
 }
 
 /* ============================================
-   HEADER
+   HEADER (bloque título Hogar, no el nav)
+   Evitar que reglas globales [class*="header"] en theme-global le apliquen altura fija
    ============================================ */
 .hogar-header {
     display: flex;
@@ -49,6 +53,8 @@
     margin-bottom: 2rem;
     flex-wrap: wrap;
     gap: 1rem;
+    min-height: unset;
+    height: auto;
 }
 
 .hogar-header-content {
