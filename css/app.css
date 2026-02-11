@@ -1,6 +1,7 @@
 /**
  * App CSS - Estilos específicos para la SPA
- * Complementa base.css con funcionalidad de Single Page Application
+ * Depende únicamente de css/base.css (variables :root y reglas globales).
+ * No redefine :root ni colores; usa solo var(--*) de base.
  */
 
 /* ============================================
@@ -249,7 +250,7 @@
 .sidebar-loading {
     padding: 20px;
     text-align: center;
-    color: rgba(236, 235, 218, 0.6);
+    color: var(--text-muted);
     font-size: 0.813rem;
 }
 
@@ -267,11 +268,11 @@
     top: 20px;
     right: 20px;
     z-index: 10000;
-    padding: 1rem 1.5rem;
+    padding: var(--spacing-md) var(--spacing-lg);
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: var(--radius-btn);
+    box-shadow: var(--shadow-card);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -356,13 +357,9 @@
 }
 
 /* ============================================
-   SCROLL BEHAVIOR
+   SCROLL PERSONALIZADO
+   (scroll-behavior: smooth está en base.css)
    ============================================ */
-
-/* Smooth scroll para navegación interna */
-html {
-    scroll-behavior: smooth;
-}
 
 /* Scroll personalizado para contenedores */
 .custom-scrollbar::-webkit-scrollbar {
@@ -384,15 +381,7 @@ html {
     background: var(--accent-warm);
 }
 
-/* ============================================
-   FOCUS STATES
-   ============================================ */
-
-/* Mejorar accesibilidad con focus visible */
-*:focus-visible {
-    outline: 2px solid var(--accent-yellow);
-    outline-offset: 2px;
-}
+/* Focus visible: definido en base.css (:focus-visible con --border-width y --text-muted) */
 
 /* ============================================
    PRINT STYLES
