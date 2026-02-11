@@ -1,0 +1,217 @@
+/**
+ * AI Smart Content - Tema global único
+ * Toda la plataforma usa este tema oscuro. Cargar siempre primero.
+ * Tamaños dinámicos (clamp) para adaptación a distintos tamaños de pantalla.
+ */
+
+/* ============================================
+   VARIABLES GLOBALES - TEMA OSCURO ÚNICO
+   ============================================ */
+:root {
+    /* ----- Fondo ----- */
+    /* Fondo principal de TODA la plataforma */
+    --bg-main: #050505;
+    /* Sidebars, footers, headers, cards */
+    --bg-surface: #1D1E22;
+    /* Contenedores interactivos: inputs, subir archivos, etc. */
+    --bg-interactive: #131418;
+    /* Hover / selección: aclarado ligero (sin naranja) */
+    --bg-hover: #25262B;
+    --bg-overlay: rgba(5, 5, 5, 0.92);
+
+    /* ----- Bordes ----- */
+    --border-color: #353539;
+    --border-width: 2px;
+
+    /* ----- Tipografía e iconos ----- */
+    --text-primary: #D9D9D9;
+    --text-secondary: rgba(217, 217, 217, 0.85);
+    --text-muted: rgba(217, 217, 217, 0.6);
+    --text-disabled: rgba(217, 217, 217, 0.35);
+
+    /* ----- Botones ----- */
+    --btn-bg: #72757A;
+    --btn-text: #050505;
+    --btn-hover: #84878C;
+
+    /* ----- Layout fijo ----- */
+    --header-height: 60px;
+    --footer-height: 40px;
+
+    /* ----- Radios (dinámicos) ----- */
+    --radius-btn: 5px;
+    /* Cards: mínimo según tamaño; escala con viewport */
+    --radius-card: clamp(14px, 1.2vw + 10px, 18px);
+    --radius-card-sm: clamp(12px, 1vw + 8px, 16px);
+    --radius-card-lg: clamp(16px, 1.5vw + 12px, 20px);
+    --radius-full: 9999px;
+
+    /* ----- Iconos: obligatorio 16x16px en toda la plataforma ----- */
+    --icon-size: 16px;
+    --icon-size-sm: 16px;
+    --icon-size-lg: 16px;
+
+    /* ----- Espaciado (dinámico) ----- */
+    --spacing-xs: clamp(0.2rem, 0.5vw, 0.25rem);
+    --spacing-sm: clamp(0.4rem, 1vw, 0.5rem);
+    --spacing-md: clamp(0.75rem, 1.5vw, 1rem);
+    --spacing-lg: clamp(1rem, 2vw, 1.5rem);
+    --spacing-xl: clamp(1.25rem, 2.5vw, 2rem);
+    --spacing-2xl: clamp(2rem, 3vw, 3rem);
+
+    /* ----- Sombras (sin acento naranja) ----- */
+    --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.35);
+    --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.4);
+    --shadow-floating: 0 12px 32px rgba(0, 0, 0, 0.5);
+
+    /* ----- Estados (sin naranja; éxito/error/info) ----- */
+    --success-color: rgba(16, 185, 129, 0.9);
+    --warning-color: rgba(245, 158, 11, 0.9);
+    --error-color: #ef4444;
+    --info-color: rgba(59, 130, 246, 0.9);
+
+    /* ----- Transiciones ----- */
+    --transition: all 0.2s ease;
+    --transition-fast: all 0.15s ease;
+
+    /* ----- Z-index ----- */
+    --z-base: 1;
+    --z-dropdown: 100;
+    --z-sticky: 200;
+    --z-fixed: 300;
+    --z-modal-backdrop: 400;
+    --z-modal: 500;
+    --z-popover: 600;
+    --z-tooltip: 700;
+
+    /* ===== ALIAS para compatibilidad con base.css y resto de la app ===== */
+    --bg-primary: var(--bg-main);
+    --bg-secondary: var(--bg-surface);
+    --bg-card: var(--bg-surface);
+    --bg-tertiary: var(--bg-surface);
+    --bg-dark: var(--bg-main);
+    --bg-black: #050505;
+    --border-light: #454549;
+    --border-divider: #2D2E32;
+    --primary-color: var(--text-primary);
+    --primary-light: var(--text-primary);
+    --primary-hover: var(--text-primary);
+    /* Sin acento naranja: resaltado = aclarado */
+    --accent-yellow: var(--btn-bg);
+    --accent-yellow-hover: var(--btn-hover);
+    --accent-yellow-glow: transparent;
+    --accent-warm: var(--btn-bg);
+    --accent-warm-glow: transparent;
+    --border-radius: var(--radius-card-sm);
+    --border-radius-sm: var(--radius-btn);
+    --border-radius-lg: var(--radius-card-lg);
+
+    /* ===== ALIAS living/hogar/brands (evitar dependencia de orden de carga) ===== */
+    --living-bg-deep: var(--bg-main);
+    --living-bg-surface: var(--bg-surface);
+    --living-bg-card: var(--bg-surface);
+    --living-bg-card-hover: var(--bg-hover);
+    --living-text-light: var(--text-primary);
+    --living-text-gold: var(--text-primary);
+    --living-text-muted: var(--text-muted);
+    --living-text-whisper: var(--text-muted);
+    --living-warm-1: var(--btn-bg);
+    --living-warm-2: var(--btn-hover);
+    --living-shadow-soft: var(--shadow-card);
+    --living-shadow-medium: var(--shadow-hover);
+    --living-shadow-deep: var(--shadow-floating);
+    --living-spacing-section: var(--spacing-2xl);
+    --living-spacing-card: var(--spacing-lg);
+}
+
+/* ============================================
+   APLICACIÓN GLOBAL - Bordes 2px
+   ============================================ */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/* Bordes por defecto donde aplique (inputs, cards, etc. usan variables) */
+input,
+select,
+textarea,
+button,
+[role="button"],
+.card,
+[class*="card"],
+[class*="modal"],
+[class*="sidebar"],
+[class*="header"],
+[class*="footer"],
+[class*="nav-"] {
+    border-width: var(--border-width);
+}
+
+/* ============================================
+   ICONOS - Obligatorio 16x16px en toda la plataforma
+   ============================================ */
+i[class^="fa-"],
+i[class*=" fa-"],
+.icon,
+[class*="icon"] i,
+svg.icon,
+.fas, .far, .fab, .fa-solid, .fa-regular, .fa-brands {
+    width: 16px !important;
+    height: 16px !important;
+    min-width: 16px !important;
+    min-height: 16px !important;
+    font-size: 16px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* ============================================
+   HEADER Y FOOTER - Alturas fijas
+   ============================================ */
+.app-header,
+.main-header,
+[class*="header"]:not([class*="content"]):not([class*="section"]),
+header[role="banner"] {
+    min-height: var(--header-height);
+    height: var(--header-height);
+}
+
+.nav-footer,
+[class*="footer"]:not([class*="content"]),
+footer[role="contentinfo"] {
+    min-height: var(--footer-height);
+    height: var(--footer-height);
+}
+
+/* ============================================
+   RESALTADO - Aclarado ligero (sin naranja)
+   ============================================ */
+a:hover,
+button:hover:not(:disabled),
+[role="button"]:hover:not([aria-disabled="true"]),
+.clickable:hover {
+    filter: brightness(1.08);
+}
+
+.nav-link:hover,
+.nav-link.active,
+.nav-link-sub:hover,
+.nav-link-sub.active,
+.card:hover,
+[class*="card"]:hover,
+button:focus-visible,
+[role="button"]:focus-visible,
+input:focus,
+select:focus,
+textarea:focus {
+    filter: brightness(1.06);
+}
+
+/* Quitar cualquier glow/outline naranja heredado */
+:focus-visible {
+    outline: var(--border-width) solid var(--text-muted);
+    outline-offset: 2px;
+}
