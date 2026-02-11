@@ -73,6 +73,7 @@
        COMPATIBILIDAD (mantener para transición)
        ============================================ */
     --primary-color: #F2F3F5;
+    --primary-light: rgba(255, 255, 255, 0.95);
     --primary-hover: #F2F3F5;
     --accent-warm: #e09145;
     --accent-warm-glow: rgba(224, 145, 69, 0.2);
