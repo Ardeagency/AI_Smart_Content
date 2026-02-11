@@ -1,23 +1,23 @@
 /**
  * Hogar (Home) - Selector de organizaciones
- * Depende ÚNICAMENTE de theme-global.css (variables :root).
- * Sin dependencia de living.css ni brands.css.
- * Fallbacks permiten que funcione también sin theme-global (estado actual).
+ * Usa variables de base.css (:root). Sin dependencia de living.css ni brands.css.
  */
 
-/* Variables locales: solo nombres de theme-global con fallback para estado sin theme-global */
+/* Variables locales: referencias a base.css */
 .hogar-container {
-    --hogar-bg: var(--bg-main, #0A0C0F);
-    --hogar-surface: var(--bg-surface, #0E1012);
-    --hogar-card: var(--bg-card, rgba(21, 23, 28, 0.6));
-    --hogar-card-border: var(--border-color, rgba(255, 255, 255, 0.06));
-    --hogar-text: var(--text-primary, #E8DDD4);
-    --hogar-text-muted: var(--text-muted, rgba(232, 221, 212, 0.4));
-    --hogar-accent: var(--btn-bg, #D4754E);
-    --hogar-accent-hover: var(--btn-hover, #C86B45);
-    --hogar-radius: var(--radius-btn, 12px);
-    --hogar-radius-card: var(--radius-card, 16px);
-    --hogar-header-height: var(--header-height, 70px);
+    --hogar-bg: var(--bg-main);
+    --hogar-surface: var(--bg-surface);
+    --hogar-card: var(--bg-card);
+    --hogar-card-border: var(--border-color);
+    --hogar-text: var(--text-primary);
+    --hogar-text-muted: var(--text-muted);
+    --hogar-accent: var(--btn-bg);
+    --hogar-accent-hover: var(--btn-hover);
+    --hogar-radius: var(--radius-btn);
+    --hogar-radius-card: var(--radius-card);
+    --hogar-header-height: var(--header-height);
+    background: var(--hogar-bg);
+    color: var(--hogar-text);
 }
 
 /* ============================================
@@ -44,7 +44,7 @@
 
 /* ============================================
    HEADER (bloque título Hogar, no el nav)
-   Evitar que reglas globales [class*="header"] en theme-global le apliquen altura fija
+   (base.css no aplica altura fija a .hogar-header)
    ============================================ */
 .hogar-header {
     display: flex;

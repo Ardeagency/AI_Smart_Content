@@ -1,23 +1,18 @@
 /**
  * Brands Dashboard - Diseño Premium
- * Fondo cálido + Cards con color del sistema
+ * Usa variables de base.css. Colores de acento y texto desde el tema global.
  */
 
-/* ============================================
-   VARIABLES (usando colores del sistema)
-   ============================================ */
-:root {
-    /* Fondo cálido */
-    --brand-warm-1: #D4754E;
-    --brand-warm-2: #C86B45;
-    --brand-warm-3: #B85D3A;
-    --brand-warm-4: #8B4332;
-    --brand-warm-5: #5C2D22;
-    
-    /* Texto sobre fondo cálido */
-    --brand-text-light: #E8DDD4;
-    --brand-text-gold: #D4B896;
-    --brand-text-muted: rgba(232, 221, 212, 0.5);
+/* Variables locales: alias a base.css (tema oscuro único) */
+.brand-dashboard-container {
+    --brand-warm-1: var(--btn-bg);
+    --brand-warm-2: var(--btn-hover);
+    --brand-warm-3: var(--bg-hover);
+    --brand-warm-4: var(--bg-surface);
+    --brand-warm-5: var(--bg-main);
+    --brand-text-light: var(--text-primary);
+    --brand-text-gold: var(--text-secondary);
+    --brand-text-muted: var(--text-muted);
 }
 
 /* ============================================

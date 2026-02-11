@@ -112,6 +112,7 @@
     --living-bg-surface: var(--bg-surface);
     --living-bg-card: var(--bg-surface);
     --living-bg-card-hover: var(--bg-hover);
+    --living-bg-glass: var(--bg-surface);
     --living-text-light: var(--text-primary);
     --living-text-gold: var(--text-primary);
     --living-text-muted: var(--text-muted);

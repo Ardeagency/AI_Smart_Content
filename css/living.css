@@ -1,36 +1,7 @@
 /**
  * Living - Estilo Netflix/Flix.id
- * Estructura única con featured content, categorías y grid
+ * Usa variables de base.css (:root). No redefine :root.
  */
-
-/* ============================================
-   VARIABLES
-   ============================================ */
-:root {
-    --living-warm-1: #D4754E;
-    --living-warm-2: #C86B45;
-    --living-warm-3: #B85D3A;
-    --living-warm-4: #8B4332;
-    --living-warm-5: #5C2D22;
-    
-    --living-text-light: #E8DDD4;
-    --living-text-gold: #D4B896;
-    --living-text-muted: rgba(232, 221, 212, 0.4);
-    --living-text-whisper: rgba(232, 221, 212, 0.3);
-    
-    --living-bg-deep: #0A0C0F;
-    --living-bg-surface: #0E1012;
-    --living-bg-card: rgba(21, 23, 28, 0.6);
-    --living-bg-card-hover: rgba(21, 23, 28, 0.8);
-    --living-bg-glass: rgba(21, 23, 28, 0.4);
-    
-    --living-shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.4);
-    --living-shadow-medium: 0 12px 48px rgba(0, 0, 0, 0.5);
-    --living-shadow-deep: 0 20px 64px rgba(0, 0, 0, 0.6);
-    
-    --living-spacing-section: 3rem;
-    --living-spacing-card: 1.5rem;
-}
 
 /* ============================================
    CONTENEDOR PRINCIPAL
