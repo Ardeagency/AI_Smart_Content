@@ -1,6 +1,7 @@
 /**
- * HogarView - Vista principal de organizaciones
- * Carga organizaciones y colores de marca (brand_colors) para degradados. Contenedores a rehacer desde cero.
+ * HogarView - Vista principal de organizaciones (selector de orgs)
+ * Estilos: depende únicamente de css/base.css (sección "HOGAR (HOME) VIEW"). No usar css/hogar.css.
+ * Carga organizaciones y colores de marca (brand_colors) para degradados.
  */
 class HogarView extends BaseView {
   constructor() {

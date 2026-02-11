@@ -19,7 +19,7 @@ Hogar debe funcionar **con** `theme-global.css` sin depender de `living.css` ni 
 - **.hogar-header** está protegido de reglas globales `[class*="header"]` con `min-height: unset; height: auto`.
 - No se usa parche; la compatibilidad con theme-global está integrada en hogar.css.
 
-**Estado:** El tema global está unificado en **base.css** (variables + reglas globales). Ya no existe theme-global.css; se eliminó el archivo y el link. Próximos pasos: actualizar el resto de CSS y vistas; luego reducir a base.css, app.css, style.css.
+**Estado:** El tema global está unificado en **base.css**. HogarView depende solo de base.css: los estilos de Hogar están en la sección "HOGAR (HOME) VIEW" de base.css; se eliminó css/hogar.css y su link. Próximos pasos: actualizar el resto de CSS y vistas; luego reducir a base.css, app.css, style.css.
 
 ---
 
