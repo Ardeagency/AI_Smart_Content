@@ -170,6 +170,7 @@ svg.icon,
 
 /* ============================================
    HEADER Y FOOTER - Alturas fijas
+   (excluir .hogar-header: bloque título, no nav)
    ============================================ */
 .app-header,
 .main-header,

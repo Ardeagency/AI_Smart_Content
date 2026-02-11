@@ -19,7 +19,7 @@ Hogar debe funcionar **con** `theme-global.css` sin depender de `living.css` ni 
 - **.hogar-header** está protegido de reglas globales `[class*="header"]` con `min-height: unset; height: auto`.
 - No se usa parche; la compatibilidad con theme-global está integrada en hogar.css.
 
-**Próximos pasos:** Reintroducir `theme-global.css` en la carga, comprobar Hogar, y luego actualizar Living y Brands para el nuevo estilo propio.
+**Estado:** `theme-global.css` está activo (primero en index.html). El parche fue eliminado. Próximos pasos: actualizar el resto de CSS y vistas; luego reducir a base.css, app.css, style.css y theme-global.css.
 
 ---
 
@@ -98,12 +98,12 @@ La causa más plausible es la **combinación** de:
 ### 4.4 Checklist para reintroducir theme-global.css
 - [x] Hogar usa solo variables de theme-global (con fallbacks).
 - [x] .hogar-header protegido de `[class*="header"]`.
-- [ ] Reintroducir theme-global.css en index.html (primero en la cascada).
+- [x] Reintroducir theme-global.css en index.html (primero en la cascada).
 - [ ] Probar /home con theme-global cargado.
-- [ ] Luego actualizar Living y Brands para el nuevo estilo propio.
+- [ ] Actualizar el resto de CSS y vistas; luego reducir a base.css, app.css, style.css y theme-global.css.
 
-### 4.5 Parche (no usado)
-El archivo **docs/backup_css/theme-global-hogar-compat-patch.css** existía como parche temporal. La solución se ha hecho desde la raíz en hogar.css; el parche **no es necesario** y puede ignorarse o eliminarse.
+### 4.5 Parche
+El parche **theme-global-hogar-compat-patch.css** fue eliminado. La solución está en hogar.css y en theme-global.css (exclusión de .hogar-header en la regla de headers).
 
 ---
 
