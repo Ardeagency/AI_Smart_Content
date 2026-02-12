@@ -24,20 +24,19 @@ class PlanesView extends BaseView {
    * Inicializar la vista
    */
   async init() {
-    // Setup elementos del DOM
     this.registrationForm = this.querySelector('#registrationForm');
-    const planCards = this.querySelectorAll('.plan-card-small');
+    const plansContainer = this.querySelector('#planesList');
     const passwordToggle = this.querySelector('#passwordToggle');
     const passwordInput = this.querySelector('#regPassword');
-    const emailConfirmationScreen = this.querySelector('#emailConfirmationScreen');
     const btnResendEmail = this.querySelector('#btnResendEmail');
 
-    // Setup plan selection
-    planCards.forEach(card => {
-      this.addEventListener(card, 'click', () => {
-        this.selectPlan(card);
+    // Un solo listener delegado para las cards de planes
+    if (plansContainer) {
+      this.addEventListener(plansContainer, 'click', (e) => {
+        const card = e.target.closest('.plan-card-small');
+        if (card) this.selectPlan(card);
       });
-    });
+    }
 
     // Setup password toggle
     if (passwordToggle && passwordInput) {
@@ -99,9 +98,8 @@ class PlanesView extends BaseView {
       if (btnAnnual) btnAnnual.classList.remove('active');
       if (titleEl) titleEl.textContent = 'Planes mensuales';
     }
-    // Actualizar precio del plan ya seleccionado
-    const selectedCard = this.querySelector('.plan-card-small.selected');
-    if (selectedCard) this.selectPlan(selectedCard);
+    const sel = this.querySelector('.plan-card-small.selected');
+    if (sel) this.selectPlan(sel);
   }
 
   /**

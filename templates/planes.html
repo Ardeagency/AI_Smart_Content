@@ -1,6 +1,6 @@
 <div class="planes-main">
 <div class="planes-layout">
-    <!-- Panel izquierdo: contenido centrado, título arriba, cards verticales, detalles abajo -->
+    <!-- Panel izquierdo: título, toggle, cards con detalles dentro -->
     <div class="planes-hero">
         <div class="planes-hero-background">
             <div class="planes-background-gradient"></div>
@@ -12,15 +12,7 @@
                 <button type="button" class="planes-toggle-btn" data-billing="annual" id="toggleAnnual">Anual</button>
             </div>
             <p class="planes-hero-subtitle">Elige tu plan y completa tus datos para crear tu cuenta.</p>
-            <div class="planes-plans">
-                <div class="plan-card-small" data-plan="starter" data-credits="25" data-price="15" data-price-annual="150">
-                    <h3 class="plan-card-name">Starter</h3>
-                    <div class="plan-card-price">
-                        <span class="price-monthly">$15<span>/mes</span></span>
-                        <span class="price-annual">$150<span>/año</span></span>
-                    </div>
-                    <div class="plan-card-credits">25 créditos</div>
-                </div>
+            <div class="planes-plans" id="planesList">
                 <div class="plan-card-small" data-plan="basico" data-credits="50" data-price="29" data-price-annual="290">
                     <h3 class="plan-card-name">Básico</h3>
                     <div class="plan-card-price">
@@ -28,6 +20,10 @@
                         <span class="price-annual">$290<span>/año</span></span>
                     </div>
                     <div class="plan-card-credits">50 créditos</div>
+                    <ul class="plan-card-details">
+                        <li>Uso personal y proyectos pequeños</li>
+                        <li>Soporte por email</li>
+                    </ul>
                 </div>
                 <div class="plan-card-small" data-plan="pro" data-credits="150" data-price="79" data-price-annual="790">
                     <h3 class="plan-card-name">Pro</h3>
@@ -36,14 +32,10 @@
                         <span class="price-annual">$790<span>/año</span></span>
                     </div>
                     <div class="plan-card-credits">150 créditos</div>
-                </div>
-                <div class="plan-card-small" data-plan="equipo" data-credits="300" data-price="129" data-price-annual="1290">
-                    <h3 class="plan-card-name">Equipo</h3>
-                    <div class="plan-card-price">
-                        <span class="price-monthly">$129<span>/mes</span></span>
-                        <span class="price-annual">$1290<span>/año</span></span>
-                    </div>
-                    <div class="plan-card-credits">300 créditos</div>
+                    <ul class="plan-card-details">
+                        <li>Freelancers y equipos pequeños</li>
+                        <li>Uso moderado de contenido</li>
+                    </ul>
                 </div>
                 <div class="plan-card-small" data-plan="enterprise" data-credits="500" data-price="199" data-price-annual="1990">
                     <h3 class="plan-card-name">Enterprise</h3>
@@ -52,19 +44,12 @@
                         <span class="price-annual">$1990<span>/año</span></span>
                     </div>
                     <div class="plan-card-credits">500 créditos</div>
+                    <ul class="plan-card-details">
+                        <li>Soporte prioritario</li>
+                        <li>Personalización</li>
+                    </ul>
                 </div>
             </div>
-            <section class="planes-details">
-                <h2 class="planes-details-title">Detalles de los planes</h2>
-                <ul class="planes-details-list">
-                    <li><strong>Créditos:</strong> se consumen por generación de contenido (texto, imágenes, etc.).</li>
-                    <li><strong>Starter:</strong> ideal para probar la plataforma y proyectos personales.</li>
-                    <li><strong>Básico y Pro:</strong> para freelancers y equipos pequeños con uso moderado.</li>
-                    <li><strong>Equipo:</strong> colaboración con varios usuarios y más volumen de contenido.</li>
-                    <li><strong>Enterprise:</strong> uso ilimitado, soporte prioritario y personalización.</li>
-                    <li><strong>Plan anual:</strong> 2 meses gratis al pagar el año por adelantado.</li>
-                </ul>
-            </section>
         </div>
     </div>
 
