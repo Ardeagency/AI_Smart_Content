@@ -677,31 +677,72 @@ class Navigation {
         handleContainerClick(e, toggle, parent, false);
       });
     });
+
+    /* Collapsed: hover 120ms abre flyout; leave 200ms cierra (cancelado si entra al flyout) */
+    const sidebar = document.getElementById('sideNavigation');
+    document.querySelectorAll('.nav-mode-user .nav-submenu-toggle, .nav-mode-developer .nav-submenu-toggle').forEach((toggle) => {
+      const parent = toggle.closest('.nav-item.has-submenu');
+      if (!parent) return;
+      toggle.addEventListener('mouseenter', () => {
+        if (!sidebar?.classList.contains('collapsed')) return;
+        clearTimeout(this._flyoutCloseTimer);
+        this._flyoutCloseTimer = null;
+        this._flyoutHoverTimer = setTimeout(() => this.openFlyout(parent), 120);
+      });
+      toggle.addEventListener('mouseleave', () => {
+        clearTimeout(this._flyoutHoverTimer);
+        if (this._flyoutOpen) {
+          this._flyoutCloseTimer = setTimeout(() => this.closeFlyout(), 200);
+        }
+      });
+    });
   }
 
   /**
-   * Abrir panel flyout (sidebar colapsado): título + enlaces del container.
+   * Abrir panel flyout (sidebar colapsado): Header (icono + nombre) | Body (tree) | Footer (CTA).
+   * Posiciona el flyout centrado verticalmente con el icono del container.
    */
   openFlyout(containerEl) {
     const flyout = document.getElementById('navFlyout');
     if (!flyout) return;
     const submenu = containerEl.querySelector('.nav-submenu');
     const toggle = containerEl.querySelector('.nav-submenu-toggle');
-    const title = toggle?.dataset?.tooltip || 'Menú';
+    const label = toggle?.dataset?.tooltip || 'Módulo';
+    const iconEl = toggle?.querySelector('.nav-icon');
+    const iconClass = iconEl ? (iconEl.className.baseVal || iconEl.className).replace(/\s*nav-icon\s*/, '').trim() : 'fas fa-folder';
     const links = submenu ? submenu.querySelectorAll('.nav-submenu-link') : [];
     const currentPath = window.location.pathname;
 
-    let html = `<div class="nav-flyout-title">${title}</div><div class="nav-flyout-list">`;
+    const headerHtml = `
+      <div class="nav-flyout-header">
+        <span class="nav-flyout-header-icon"><i class="${iconClass}"></i></span>
+        <span class="nav-flyout-header-label">${label}</span>
+      </div>`;
+    let bodyHtml = '<div class="nav-flyout-body"><div class="nav-flyout-list">';
     links.forEach((a) => {
       const route = a.dataset.route || '';
-      const label = (a.querySelector('span') || a).textContent.trim();
+      const itemLabel = (a.querySelector('span') || a).textContent.trim();
       const active = currentPath === route || (route && currentPath.startsWith(route + '/'));
-      html += `<a href="${route}" class="nav-flyout-link${active ? ' active' : ''}" data-route="${route}" ${active ? ' aria-current="page"' : ''}>${label}</a>`;
+      bodyHtml += `<a href="${route}" class="nav-flyout-link${active ? ' active' : ''}" data-route="${route}" ${active ? ' aria-current="page"' : ''}>${itemLabel}</a>`;
     });
-    html += '</div>';
-    flyout.innerHTML = html;
+    bodyHtml += '</div></div>';
+    const footerHtml = `
+      <div class="nav-flyout-footer">
+        <button type="button" class="nav-flyout-cta" data-action="open-module">
+          Abrir ${label} <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>`;
+
+    flyout.innerHTML = `
+      <div class="nav-flyout-bridge" aria-hidden="true"></div>
+      <div class="nav-flyout-inner">
+        ${headerHtml}
+        ${bodyHtml}
+        ${footerHtml}
+      </div>`;
     flyout.classList.add('open');
     flyout.setAttribute('aria-hidden', 'false');
+    this._flyoutContainer = containerEl;
 
     flyout.querySelectorAll('.nav-flyout-link').forEach((link) => {
       link.addEventListener('click', (e) => {
@@ -711,8 +752,40 @@ class Navigation {
         this.closeFlyout();
       });
     });
+    flyout.querySelector('.nav-flyout-cta')?.addEventListener('click', () => this.closeFlyout());
+
+    this._bindFlyoutHoverClose();
+
+    requestAnimationFrame(() => {
+      const triggerRect = toggle?.getBoundingClientRect();
+      if (triggerRect) {
+        const flyoutHeight = flyout.offsetHeight;
+        const top = Math.max(8, Math.min(triggerRect.top + triggerRect.height / 2 - flyoutHeight / 2, window.innerHeight - flyoutHeight - 8));
+        flyout.style.top = `${top}px`;
+      }
+    });
 
     this._flyoutOpen = true;
+  }
+
+  _bindFlyoutHoverClose() {
+    const flyout = document.getElementById('navFlyout');
+    if (!flyout) return;
+    if (flyout._flyoutEnter) {
+      flyout.removeEventListener('mouseenter', flyout._flyoutEnter);
+      flyout.removeEventListener('mouseleave', flyout._flyoutLeave);
+    }
+    const onEnter = () => {
+      clearTimeout(this._flyoutCloseTimer);
+      this._flyoutCloseTimer = null;
+    };
+    const onLeave = () => {
+      this._flyoutCloseTimer = setTimeout(() => this.closeFlyout(), 200);
+    };
+    flyout.addEventListener('mouseenter', onEnter);
+    flyout.addEventListener('mouseleave', onLeave);
+    flyout._flyoutEnter = onEnter;
+    flyout._flyoutLeave = onLeave;
   }
 
   closeFlyout() {
@@ -747,8 +820,7 @@ class Navigation {
         clearTimeout(hideTimeout);
         showTimeout = setTimeout(() => {
           if (!sidebar.classList.contains('collapsed')) return;
-          const isContainer = el.classList.contains('nav-submenu-toggle');
-          const text = (el.dataset.tooltip || '') + (isContainer ? ' →' : '');
+          const text = el.dataset.tooltip || '';
           tooltipEl.textContent = text;
           const rect = el.getBoundingClientRect();
           tooltipEl.style.top = `${rect.top + rect.height / 2}px`;
