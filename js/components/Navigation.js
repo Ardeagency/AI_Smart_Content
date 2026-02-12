@@ -797,7 +797,8 @@ class Navigation {
   }
 
   /**
-   * Tooltips en collapsed: delay 150ms, right center, containers con " →".
+   * Tooltips en collapsed solo para páginas y footer. No mostrar en containers:
+   * el flyout ya muestra el nombre del módulo y no debe aparecer tooltip que se atraviese.
    */
   setupCollapsedTooltips() {
     let tooltipEl = document.getElementById('navTooltip');
@@ -819,6 +820,7 @@ class Navigation {
         clearTimeout(hideTimeout);
         showTimeout = setTimeout(() => {
           if (!sidebar.classList.contains('collapsed')) return;
+          if (el.classList.contains('nav-submenu-toggle')) return;
           const text = el.dataset.tooltip || '';
           tooltipEl.textContent = text;
           const rect = el.getBoundingClientRect();
