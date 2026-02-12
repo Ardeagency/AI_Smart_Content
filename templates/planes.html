@@ -8,29 +8,42 @@
         <div class="planes-corner-bottom-left">
             <div class="planes-main-info">
                 <div class="planes-name-row">
-                    <h1 class="planes-hero-title">Comienza con nosotros</h1>
+                    <h1 class="planes-hero-title" id="planesBillingTitle">Planes mensuales</h1>
                 </div>
+            </div>
+            <div class="planes-billing-toggle" role="group" aria-label="Tipo de facturación">
+                <button type="button" class="planes-toggle-btn active" data-billing="monthly" id="toggleMonthly">Mensual</button>
+                <button type="button" class="planes-toggle-btn" data-billing="annual" id="toggleAnnual">Anual</button>
             </div>
             <p class="planes-hero-subtitle">Elige tu plan y completa tus datos para crear tu cuenta.</p>
             <div class="planes-plans">
-                <div class="plan-card-small" data-plan="basico" data-credits="50" data-price="29">
+                <div class="plan-card-small" data-plan="basico" data-credits="50" data-price="29" data-price-annual="290">
                     <div class="plan-card-header">
                         <h3 class="plan-card-name">Básico</h3>
-                        <div class="plan-card-price">$29<span>/mes</span></div>
+                        <div class="plan-card-price">
+                            <span class="price-monthly">$29<span>/mes</span></span>
+                            <span class="price-annual">$290<span>/año</span></span>
+                        </div>
                     </div>
                     <div class="plan-card-credits">50 créditos</div>
                 </div>
-                <div class="plan-card-small" data-plan="pro" data-credits="150" data-price="79">
+                <div class="plan-card-small" data-plan="pro" data-credits="150" data-price="79" data-price-annual="790">
                     <div class="plan-card-header">
                         <h3 class="plan-card-name">Pro</h3>
-                        <div class="plan-card-price">$79<span>/mes</span></div>
+                        <div class="plan-card-price">
+                            <span class="price-monthly">$79<span>/mes</span></span>
+                            <span class="price-annual">$790<span>/año</span></span>
+                        </div>
                     </div>
                     <div class="plan-card-credits">150 créditos</div>
                 </div>
-                <div class="plan-card-small" data-plan="enterprise" data-credits="500" data-price="199">
+                <div class="plan-card-small" data-plan="enterprise" data-credits="500" data-price="199" data-price-annual="1990">
                     <div class="plan-card-header">
                         <h3 class="plan-card-name">Enterprise</h3>
-                        <div class="plan-card-price">$199<span>/mes</span></div>
+                        <div class="plan-card-price">
+                            <span class="price-monthly">$199<span>/mes</span></span>
+                            <span class="price-annual">$1990<span>/año</span></span>
+                        </div>
                     </div>
                     <div class="plan-card-credits">500 créditos</div>
                 </div>

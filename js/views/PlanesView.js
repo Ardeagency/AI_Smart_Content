@@ -9,6 +9,7 @@ class PlanesView extends BaseView {
     this.selectedPlan = null;
     this.supabase = null;
     this.registrationForm = null;
+    this.billingPeriod = 'monthly'; // 'monthly' | 'annual'
   }
 
   /**
@@ -66,6 +67,41 @@ class PlanesView extends BaseView {
         await this.resendConfirmationEmail();
       });
     }
+
+    // Toggle Mensual / Anual
+    const toggleMonthly = this.querySelector('#toggleMonthly');
+    const toggleAnnual = this.querySelector('#toggleAnnual');
+    const hero = this.querySelector('.planes-hero');
+    const billingTitle = this.querySelector('#planesBillingTitle');
+    if (toggleMonthly && toggleAnnual && hero) {
+      this.addEventListener(toggleMonthly, 'click', () => {
+        this.setBillingPeriod('monthly', hero, toggleMonthly, toggleAnnual, billingTitle);
+      });
+      this.addEventListener(toggleAnnual, 'click', () => {
+        this.setBillingPeriod('annual', hero, toggleMonthly, toggleAnnual, billingTitle);
+      });
+    }
+  }
+
+  /**
+   * Cambiar periodo de facturación (mensual/anual)
+   */
+  setBillingPeriod(period, hero, btnMonthly, btnAnnual, titleEl) {
+    this.billingPeriod = period;
+    if (period === 'annual') {
+      hero.classList.add('billing-annual');
+      if (btnMonthly) btnMonthly.classList.remove('active');
+      if (btnAnnual) btnAnnual.classList.add('active');
+      if (titleEl) titleEl.textContent = 'Planes anuales';
+    } else {
+      hero.classList.remove('billing-annual');
+      if (btnMonthly) btnMonthly.classList.add('active');
+      if (btnAnnual) btnAnnual.classList.remove('active');
+      if (titleEl) titleEl.textContent = 'Planes mensuales';
+    }
+    // Actualizar precio del plan ya seleccionado
+    const selectedCard = this.querySelector('.plan-card-small.selected');
+    if (selectedCard) this.selectPlan(selectedCard);
   }
 
   /**
@@ -103,11 +139,16 @@ class PlanesView extends BaseView {
     // Seleccionar la card actual
     cardElement.classList.add('selected');
     
-    // Guardar plan seleccionado
+    // Guardar plan seleccionado (precio según periodo mensual o anual)
+    const priceKey = this.billingPeriod === 'annual' ? 'priceAnnual' : 'price';
+    const price = cardElement.dataset[priceKey] != null
+      ? parseFloat(cardElement.dataset[priceKey])
+      : parseFloat(cardElement.dataset.price);
     this.selectedPlan = {
       name: cardElement.dataset.plan,
       credits: parseInt(cardElement.dataset.credits),
-      price: parseFloat(cardElement.dataset.price)
+      price: price,
+      billing: this.billingPeriod
     };
     
     console.log('Plan seleccionado:', this.selectedPlan);

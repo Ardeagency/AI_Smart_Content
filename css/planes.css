@@ -55,28 +55,33 @@
     pointer-events: none;
 }
 
-/* Esquina inferior izquierda (como brand-corner-bottom-left) */
+/* Contenido centralizado en el hero */
 .planes-corner-bottom-left {
     position: absolute;
-    bottom: 2rem;
-    left: 2.5rem;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
     z-index: 10;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    max-width: 420px;
+    align-items: center;
+    gap: 0.75rem;
+    max-width: 480px;
+    width: calc(100% - 3rem);
+    text-align: center;
 }
 
 .planes-main-info {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     gap: 0.5rem;
 }
 
 .planes-name-row {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
 }
 
@@ -84,9 +89,40 @@
     font-size: clamp(1.75rem, 4vw, 2.25rem);
     font-weight: 700;
     color: #ffffff;
-    margin: 0 0 0.75rem 0;
+    margin: 0;
     line-height: 1.2;
     letter-spacing: -0.02em;
+}
+
+/* Toggle Mensual / Anual */
+.planes-billing-toggle {
+    display: inline-flex;
+    background: rgba(15, 46, 34, 0.9);
+    border-radius: 10px;
+    padding: 0.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    gap: 0;
+}
+
+.planes-toggle-btn {
+    padding: 0.5rem 1.25rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.8);
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.planes-toggle-btn:hover {
+    color: #ffffff;
+}
+
+.planes-toggle-btn.active {
+    background: #ffffff;
+    color: #0a1612;
 }
 
 .planes-hero-subtitle {
@@ -96,11 +132,25 @@
     line-height: 1.5;
 }
 
+/* Precios: mostrar mensual u anual según toggle */
+.plan-card-price .price-annual {
+    display: none;
+}
+
+.planes-hero.billing-annual .plan-card-price .price-monthly {
+    display: none;
+}
+
+.planes-hero.billing-annual .plan-card-price .price-annual {
+    display: inline;
+}
+
 /* Tarjetas de planes en panel izquierdo (estilo tipo step card) */
 .planes-plans {
     display: flex;
     gap: 0.75rem;
     flex-wrap: wrap;
+    justify-content: center;
 }
 
 .planes-hero .plan-card-small {
@@ -236,7 +286,8 @@
     text-overflow: ellipsis;
 }
 
-.plan-card-price span {
+.plan-card-price .price-monthly span,
+.plan-card-price .price-annual span {
     font-size: 0.7rem;
     font-weight: 400;
     margin-left: 0.2rem;
@@ -512,10 +563,8 @@
     }
 
     .planes-corner-bottom-left {
-        max-width: 100%;
-        left: 1.5rem;
-        right: 1.5rem;
-        bottom: 2rem;
+        max-width: calc(100% - 2rem);
+        width: auto;
     }
 
     .planes-form-panel {
@@ -533,9 +582,7 @@
 
 @media (max-width: 768px) {
     .planes-corner-bottom-left {
-        left: 1.25rem;
-        right: 1.25rem;
-        bottom: 1.5rem;
+        max-width: calc(100% - 1.5rem);
     }
 
     .planes-plans {
