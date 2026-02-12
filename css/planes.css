@@ -96,58 +96,67 @@
     line-height: 1.5;
 }
 
-/* Tarjetas de pasos (estilo referencia) */
-.planes-steps {
+/* Tarjetas de planes en panel izquierdo (estilo tipo step card) */
+.planes-plans {
     display: flex;
     gap: 0.75rem;
     flex-wrap: wrap;
 }
 
-.planes-step-card {
+.planes-hero .plan-card-small {
     flex: 1;
-    min-width: 120px;
+    min-width: 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
     background: rgba(15, 46, 34, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: 1rem 1.25rem;
-    position: relative;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     transition: var(--transition);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    cursor: pointer;
+    min-width: 0;
+    overflow: hidden;
 }
 
-.planes-step-card.active {
+.planes-hero .plan-card-small:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(19, 67, 48, 0.95);
+}
+
+.planes-hero .plan-card-small.selected {
     background: #ffffff;
-    color: #0a1612;
     border-color: transparent;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
-.planes-step-num {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
-    color: #fff;
-    font-size: 0.8rem;
-    font-weight: 700;
-    margin-right: 0.5rem;
+.planes-hero .plan-card-name {
+    color: rgba(255, 255, 255, 0.95);
 }
 
-.planes-step-card.active .planes-step-num {
-    background: #0a1612;
-    color: #fff;
+.planes-hero .plan-card-small.selected .plan-card-name {
+    color: #0a1612;
 }
 
-.planes-step-label {
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.9);
+.planes-hero .plan-card-price {
+    color: #ffffff;
 }
 
-.planes-step-card.active .planes-step-label {
+.planes-hero .plan-card-price span {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.planes-hero .plan-card-small.selected .plan-card-price,
+.planes-hero .plan-card-small.selected .plan-card-price span {
+    color: #0a1612;
+}
+
+.planes-hero .plan-card-credits {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.planes-hero .plan-card-small.selected .plan-card-credits {
     color: #0a1612;
 }
 
@@ -198,41 +207,7 @@
     margin: 0 0 1.75rem 0;
 }
 
-/* ============================================
-   SELECCIÓN DE PLANES
-   ============================================ */
-.plans-selection {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.65rem;
-    margin-bottom: 1.5rem;
-}
-
-.plan-card-small {
-    background: #1a1a1a;
-    border: 2px solid #2d2d2d;
-    border-radius: 12px;
-    padding: 1rem;
-    transition: var(--transition);
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-    cursor: pointer;
-    min-width: 0;
-    overflow: hidden;
-}
-
-.plan-card-small:hover {
-    border-color: #3d3d3d;
-    background: #222;
-}
-
-.plan-card-small.selected {
-    border-color: #ffffff;
-    background: #1f1f1f;
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15);
-}
-
+/* Estructura común de las tarjetas de plan (panel izquierdo) */
 .plan-card-header {
     display: flex;
     justify-content: space-between;
@@ -244,7 +219,6 @@
 .plan-card-name {
     font-size: 0.95rem;
     font-weight: 600;
-    color: #ffffff;
     margin: 0;
     flex: 1;
     min-width: 0;
@@ -256,7 +230,6 @@
 .plan-card-price {
     font-size: 1rem;
     font-weight: 700;
-    color: #ffffff;
     white-space: nowrap;
     min-width: 0;
     overflow: hidden;
@@ -266,40 +239,16 @@
 .plan-card-price span {
     font-size: 0.7rem;
     font-weight: 400;
-    color: #9ca3af;
     margin-left: 0.2rem;
 }
 
 .plan-card-credits {
     font-size: 0.8rem;
-    color: #9ca3af;
     margin-top: auto;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-}
-
-/* Separador "O" */
-.planes-divider {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin: 1.5rem 0;
-}
-
-.planes-divider::before,
-.planes-divider::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: #2d2d2d;
-}
-
-.planes-divider span {
-    font-size: 0.8rem;
-    color: #6b7280;
-    font-weight: 500;
 }
 
 /* ============================================
@@ -577,8 +526,8 @@
         padding: 2rem 1.5rem 3rem;
     }
 
-    .plans-selection {
-        grid-template-columns: repeat(3, 1fr);
+    .planes-plans {
+        flex-wrap: wrap;
     }
 }
 
@@ -589,25 +538,16 @@
         bottom: 1.5rem;
     }
 
-    .planes-steps {
+    .planes-plans {
         flex-direction: column;
     }
 
-    .planes-step-card {
+    .planes-hero .plan-card-small {
         min-width: 100%;
     }
 
     .planes-form-panel {
         padding: 1.5rem 1.25rem 2rem;
-    }
-
-    .plans-selection {
-        grid-template-columns: 1fr;
-        gap: 0.5rem;
-    }
-
-    .plan-card-small {
-        padding: 0.875rem;
     }
 }
 

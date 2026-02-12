@@ -1,5 +1,6 @@
+<div class="planes-main">
 <div class="planes-layout">
-    <!-- Panel izquierdo: mismo esquema que brands (fondo + esquina inferior) -->
+    <!-- Panel izquierdo: planes con estilo de cards -->
     <div class="planes-hero">
         <div class="planes-hero-background">
             <div class="planes-background-gradient"></div>
@@ -10,32 +11,8 @@
                     <h1 class="planes-hero-title">Comienza con nosotros</h1>
                 </div>
             </div>
-            <p class="planes-hero-subtitle">Completa estos pasos para crear tu cuenta y elegir tu plan.</p>
-            <div class="planes-steps">
-                <div class="planes-step-card active">
-                    <span class="planes-step-num">1</span>
-                    <span class="planes-step-label">Elige tu plan</span>
-                </div>
-                <div class="planes-step-card">
-                    <span class="planes-step-num">2</span>
-                    <span class="planes-step-label">Completa tus datos</span>
-                </div>
-                <div class="planes-step-card">
-                    <span class="planes-step-num">3</span>
-                    <span class="planes-step-label">Confirma tu email</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Panel derecho: formulario y planes -->
-    <div class="planes-form-panel">
-        <div class="planes-form-inner">
-            <h2 class="planes-form-title">Crear cuenta</h2>
-            <p class="planes-form-subtitle">Ingresa tus datos para crear tu cuenta.</p>
-
-            <!-- Selección de planes -->
-            <div class="plans-selection">
+            <p class="planes-hero-subtitle">Elige tu plan y completa tus datos para crear tu cuenta.</p>
+            <div class="planes-plans">
                 <div class="plan-card-small" data-plan="basico" data-credits="50" data-price="29">
                     <div class="plan-card-header">
                         <h3 class="plan-card-name">Básico</h3>
@@ -58,10 +35,14 @@
                     <div class="plan-card-credits">500 créditos</div>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <div class="planes-divider">
-                <span>O</span>
-            </div>
+    <!-- Panel derecho: solo formulario -->
+    <div class="planes-form-panel">
+        <div class="planes-form-inner">
+            <h2 class="planes-form-title">Crear cuenta</h2>
+            <p class="planes-form-subtitle">Ingresa tus datos para crear tu cuenta.</p>
 
             <!-- Formulario de registro -->
             <form class="registration-form" id="registrationForm">
@@ -102,7 +83,7 @@
 </div>
 </div>
 
-<!-- Pantalla de confirmación de email -->
+<!-- Pantalla de confirmación de email (sin cards de planes) -->
 <div class="email-confirmation-screen" id="emailConfirmationScreen" style="display: none;">
     <div class="planes-layout confirmation-layout">
         <div class="planes-hero">
@@ -115,21 +96,7 @@
                         <h1 class="planes-hero-title">Comienza con nosotros</h1>
                     </div>
                 </div>
-                <p class="planes-hero-subtitle">Completa estos pasos para crear tu cuenta.</p>
-                <div class="planes-steps">
-                    <div class="planes-step-card">
-                        <span class="planes-step-num">1</span>
-                        <span class="planes-step-label">Elige tu plan</span>
-                    </div>
-                    <div class="planes-step-card">
-                        <span class="planes-step-num">2</span>
-                        <span class="planes-step-label">Completa tus datos</span>
-                    </div>
-                    <div class="planes-step-card active">
-                        <span class="planes-step-num">3</span>
-                        <span class="planes-step-label">Confirma tu email</span>
-                    </div>
-                </div>
+                <p class="planes-hero-subtitle">Revisa tu correo para confirmar tu cuenta.</p>
             </div>
         </div>
         <div class="planes-form-panel">
