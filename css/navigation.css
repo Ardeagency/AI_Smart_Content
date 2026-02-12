@@ -470,6 +470,15 @@ body.sidebar-collapsed #app-container .main-header,
     width: var(--nav-width-collapsed);
 }
 
+/* Centrar todos los iconos en collapsed (consumidor y desarrollador) */
+.side-navigation.collapsed .nav-menu {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
 .side-navigation.collapsed .nav-text,
 .side-navigation.collapsed .nav-section-title,
 .side-navigation.collapsed .nav-profile-info,
@@ -747,6 +756,15 @@ body.sidebar-collapsed #app-container .main-header,
     padding: 12px;
 }
 
+.side-navigation.collapsed .nav-workspace-header,
+.side-navigation.collapsed .nav-identity-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
 .side-navigation.collapsed .nav-identity-card {
     padding: 0;
     width: 40px;
@@ -787,11 +805,14 @@ body.sidebar-collapsed #app-container .main-header,
     font-size: 14px;
 }
 
-/* Footer collapsed: icon stack + divider */
+/* Footer collapsed: icon stack + divider, iconos centrados */
 .side-navigation.collapsed .nav-footer {
     border-top: 1px solid var(--nav-border);
-    padding: 12px 0 16px;
+    padding: 12px 16px 16px;
     gap: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .side-navigation.collapsed .nav-footer-link,

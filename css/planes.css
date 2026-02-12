@@ -1,134 +1,192 @@
 /**
- * AI Smart Content - Suscribirse Page
- * Estilos para la página de suscripción con diseño moderno
+ * AI Smart Content - Página de Planes (Sign Up)
+ * Estilo referencia: dos columnas, panel izquierdo gradiente verde, panel derecho negro
  */
 
 @import url('base.css');
 
 /* ============================================
-   CONTAINER
+   LAYOUT PRINCIPAL
    ============================================ */
-.subscribe-container {
+.planes-main {
     min-height: 100vh;
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    padding: 0;
-    margin: 0;
+    background: #0a0a0a;
+}
+
+.planes-layout {
     display: flex;
+    min-height: 100vh;
+    width: 100%;
+}
+
+/* ============================================
+   PANEL IZQUIERDO - Hero con gradiente verde
+   ============================================ */
+.planes-hero {
+    flex: 0 0 50%;
+    min-height: 100vh;
+    background: linear-gradient(180deg, #0d1f1a 0%, #0a1612 35%, #0f2e22 70%, #134330 100%);
+    display: flex;
+    align-items: flex-end;
+    padding: 2rem 2.5rem 3rem;
     position: relative;
     overflow: hidden;
 }
 
-/* ============================================
-   MAIN CARD
-   ============================================ */
-.subscribe-card {
-    background: transparent;
-    border-radius: 0;
-    overflow: visible;
-    display: flex;
+.planes-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120%;
+    height: 40%;
+    background: radial-gradient(ellipse at center, rgba(19, 67, 48, 0.4) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.planes-hero-content {
+    position: relative;
+    z-index: 1;
     width: 100%;
-    min-height: 100vh;
-    box-shadow: none;
-    border: none;
-    position: relative;
+    max-width: 420px;
 }
 
-/* ============================================
-   FORM SECTION (LEFT)
-   ============================================ */
-.subscribe-form-section {
-    width: 500px;
-    max-width: 100%;
-    padding: 2rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    overflow-y: auto;
-    background: transparent;
-    position: relative;
-    z-index: 10;
-    box-sizing: border-box;
-}
-
-.form-header {
-    text-align: left;
-}
-
-.form-badge {
-    display: inline-block;
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--text-muted);
-    margin-bottom: 0.75rem;
-}
-
-.form-title {
-    font-size: 2rem;
+.planes-hero-title {
+    font-size: clamp(1.75rem, 4vw, 2.25rem);
     font-weight: 700;
-    color: var(--text-primary);
-    margin: 0 0 0.5rem 0;
+    color: #ffffff;
+    margin: 0 0 0.75rem 0;
     line-height: 1.2;
+    letter-spacing: -0.02em;
 }
 
-.title-dot {
-    color: var(--accent-yellow);
+.planes-hero-subtitle {
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.85);
+    margin: 0 0 2rem 0;
+    line-height: 1.5;
 }
 
-.form-subtitle {
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-    margin: 0 0 1rem 0;
+/* Tarjetas de pasos (estilo referencia) */
+.planes-steps {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
 }
 
-.login-link {
-    color: var(--accent-yellow);
-    text-decoration: none;
-    font-weight: 500;
+.planes-step-card {
+    flex: 1;
+    min-width: 120px;
+    background: rgba(15, 46, 34, 0.9);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     transition: var(--transition);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.login-link:hover {
-    color: var(--accent-yellow-hover);
-    text-decoration: underline;
+.planes-step-card.active {
+    background: #ffffff;
+    color: #0a1612;
+    border-color: transparent;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.planes-step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-right: 0.5rem;
+}
+
+.planes-step-card.active .planes-step-num {
+    background: #0a1612;
+    color: #fff;
+}
+
+.planes-step-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.planes-step-card.active .planes-step-label {
+    color: #0a1612;
 }
 
 /* ============================================
-   PLAN SELECTION CARDS
+   PANEL DERECHO - Formulario (fondo negro)
+   ============================================ */
+.planes-form-panel {
+    flex: 0 0 50%;
+    min-height: 100vh;
+    background: #000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 3rem;
+    overflow-y: auto;
+}
+
+.planes-form-inner {
+    width: 100%;
+    max-width: 420px;
+}
+
+.planes-form-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 0.35rem 0;
+    letter-spacing: -0.02em;
+}
+
+.planes-form-subtitle {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin: 0 0 1.75rem 0;
+}
+
+/* ============================================
+   SELECCIÓN DE PLANES
    ============================================ */
 .plans-selection {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: clamp(0.5rem, 2vw, 0.75rem);
-    margin: 0.5rem 0;
+    gap: 0.65rem;
+    margin-bottom: 1.5rem;
 }
 
 .plan-card-small {
-    background: var(--bg-secondary);
-    border: 2px solid var(--border-color);
-    border-radius: clamp(8px, 1.5vw, 12px);
-    padding: clamp(0.75rem, 2vw, 1rem);
-    transition: all 0.3s ease;
-    height: 100%;
+    background: #1a1a1a;
+    border: 2px solid #2d2d2d;
+    border-radius: 12px;
+    padding: 1rem;
+    transition: var(--transition);
     display: flex;
     flex-direction: column;
-    gap: clamp(0.25rem, 1vw, 0.5rem);
+    gap: 0.35rem;
     cursor: pointer;
-    position: relative;
 }
 
 .plan-card-small:hover {
-    border-color: var(--accent-yellow);
-    background: var(--bg-hover);
-    transform: translateY(-1px);
+    border-color: #3d3d3d;
+    background: #222;
 }
 
 .plan-card-small.selected {
-    border-color: var(--accent-yellow);
-    background: var(--bg-hover);
-    box-shadow: var(--shadow-yellow);
+    border-color: #ffffff;
+    background: #1f1f1f;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15);
 }
 
 .plan-card-header {
@@ -139,39 +197,65 @@
 }
 
 .plan-card-name {
-    font-size: clamp(0.85rem, 2vw, 0.95rem);
+    font-size: 0.95rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: #ffffff;
     margin: 0;
 }
 
 .plan-card-price {
-    font-size: clamp(0.9rem, 2.5vw, 1rem);
+    font-size: 1rem;
     font-weight: 700;
-    color: var(--accent-yellow);
+    color: #ffffff;
     white-space: nowrap;
 }
 
 .plan-card-price span {
-    font-size: clamp(0.6rem, 1.5vw, 0.7rem);
+    font-size: 0.7rem;
     font-weight: 400;
-    color: var(--text-muted);
-    margin-left: 0.25rem;
+    color: #9ca3af;
+    margin-left: 0.2rem;
 }
 
 .plan-card-credits {
-    font-size: clamp(0.7rem, 2vw, 0.8rem);
-    color: var(--text-secondary);
+    font-size: 0.8rem;
+    color: #9ca3af;
     margin-top: auto;
 }
 
+/* Separador "O" */
+.planes-divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.planes-divider::before,
+.planes-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #2d2d2d;
+}
+
+.planes-divider span {
+    font-size: 0.8rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
 /* ============================================
-   REGISTRATION FORM
+   FORMULARIO
    ============================================ */
 .registration-form {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.1rem;
+}
+
+.planes-form-row {
+    display: block;
 }
 
 .form-group {
@@ -181,65 +265,84 @@
 }
 
 .form-group label {
-    font-size: clamp(0.75rem, 2vw, 0.8rem);
+    font-size: 0.8rem;
     font-weight: 500;
-    color: var(--text-secondary);
+    color: #9ca3af;
 }
 
 .input-wrapper {
     position: relative;
 }
 
-/* Usar estilos base de formularios */
-.form-input {
-    padding-right: clamp(2rem, 5vw, 2.5rem);
-}
-
-/* ============================================
-   FORM ACTIONS
-   ============================================ */
-.form-actions {
-    display: flex;
-    gap: 0.75rem;
-    margin-top: 0.5rem;
-}
-
-/* Usar estilos base de botones */
-.btn-change-method {
-    flex: 1;
-    padding: clamp(0.625rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.25rem);
-    font-size: clamp(0.8rem, 2.5vw, 0.9rem);
-    background: transparent;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-sm);
-    color: var(--text-secondary);
-    font-weight: 500;
-    cursor: pointer;
+.planes-input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.75rem;
+    font-size: 0.95rem;
+    color: #ffffff;
+    background: #1a1a1a;
+    border: 1px solid #2d2d2d;
+    border-radius: 10px;
+    outline: none;
     transition: var(--transition);
+    box-sizing: border-box;
 }
 
-.btn-change-method:hover {
-    border-color: var(--border-light);
-    color: var(--text-primary);
+.planes-input::placeholder {
+    color: #6b7280;
+}
+
+.planes-input:hover {
+    border-color: #3d3d3d;
+}
+
+.planes-input:focus {
+    border-color: #4b5563;
+    box-shadow: 0 0 0 2px rgba(107, 114, 128, 0.2);
+}
+
+.registration-form .input-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    font-size: 0.9rem;
+    pointer-events: none;
+}
+
+.registration-form .input-icon.password-toggle {
+    left: auto;
+    right: 1rem;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+.planes-input-hint {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 0.2rem;
+}
+
+.form-actions {
+    margin-top: 0.25rem;
 }
 
 .btn-create-account {
-    flex: 2;
-    padding: clamp(0.625rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.25rem);
-    font-size: clamp(0.8rem, 2.5vw, 0.9rem);
-    background: var(--accent-yellow);
-    border: none;
-    border-radius: var(--border-radius-sm);
-    color: var(--bg-primary);
+    width: 100%;
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
     font-weight: 600;
+    background: #ffffff;
+    color: #000000;
+    border: none;
+    border-radius: 10px;
     cursor: pointer;
     transition: var(--transition);
 }
 
 .btn-create-account:hover {
-    background: var(--accent-yellow-hover);
+    background: #f3f4f6;
     transform: translateY(-1px);
-    box-shadow: var(--shadow-yellow);
 }
 
 .btn-create-account:active {
@@ -247,203 +350,114 @@
 }
 
 .btn-create-account:disabled {
-    opacity: 0.5;
+    opacity: 0.6;
     cursor: not-allowed;
-        transform: none;
-    }
-    
+    transform: none;
+}
+
+.planes-login-link {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin: 1.5rem 0 0 0;
+}
+
+.planes-login-link .login-link {
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.planes-login-link .login-link:hover {
+    text-decoration: underline;
+}
+
 /* ============================================
-   IMAGE SECTION (RIGHT) - Ahora abarca toda la pantalla
-   ============================================ */
-.subscribe-image-section {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: var(--bg-primary);
-    background-image: 
-        linear-gradient(rgba(14, 15, 18, 0.7), rgba(14, 15, 18, 0.8)),
-        url('/recursos/_ (4).jpeg');
-    background-size: cover;
-    background-position: center center;
-    background-repeat: no-repeat;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    z-index: 1;
-}
-
-.image-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: 
-        linear-gradient(135deg, var(--bg-hover) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, var(--bg-hover) 0%, transparent 50%);
-}
-
-.image-logo {
-    position: relative;
-    z-index: 1;
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    background: var(--bg-hover);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px dashed var(--border-color);
-    /* backdrop-filter removido para mejor rendimiento */
-}
-
-.image-logo i {
-    font-size: 3rem;
-    color: var(--accent-yellow);
-    opacity: 0.7;
-}
-
-/* Decorative line */
-.subscribe-image-section::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 2px;
-    height: 80%;
-    background: linear-gradient(to bottom, transparent, var(--border-color), transparent);
-    border-left: 1px dashed var(--border-divider);
-    }
-    
-/* ============================================
-   EMAIL CONFIRMATION SCREEN
+   PANTALLA CONFIRMACIÓN EMAIL
    ============================================ */
 .email-confirmation-screen {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: var(--bg-primary);
-    background-image: 
-        linear-gradient(rgba(14, 15, 18, 0.7), rgba(14, 15, 18, 0.8)),
-        url('/recursos/_ (4).jpeg');
-    background-size: cover;
-    background-position: center center;
-    background-repeat: no-repeat;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    inset: 0;
+    background: #0a0a0a;
     z-index: 1000;
-    padding: 2rem;
+    display: flex;
+    align-items: stretch;
+    justify-content: stretch;
+    overflow: auto;
 }
 
-.email-confirmation-screen::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: 
-        linear-gradient(135deg, var(--bg-hover) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, var(--bg-hover) 0%, transparent 50%);
-    pointer-events: none;
-    z-index: 0;
+.email-confirmation-screen .planes-layout {
+    width: 100%;
+}
+
+.email-confirmation-screen .planes-form-panel {
+    align-items: center;
+    justify-content: center;
 }
 
 .confirmation-content {
-    position: relative;
-    z-index: 1;
-    background: var(--bg-card);
-    /* backdrop-filter removido para mejor rendimiento */
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-lg);
-    padding: 3rem;
-    max-width: 500px;
     width: 100%;
+    max-width: 420px;
     text-align: center;
-    box-shadow: var(--shadow-card);
+    padding: 1rem 0;
 }
 
 .confirmation-icon {
-    font-size: 4rem;
-    color: var(--accent-yellow);
-    margin-bottom: 1.5rem;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-    50% {
-        transform: scale(1.1);
-        opacity: 0.8;
-    }
+    font-size: 3.5rem;
+    color: #22c55e;
+    margin-bottom: 1.25rem;
 }
 
 .confirmation-title {
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 1rem;
+    color: #ffffff;
+    margin: 0 0 0.75rem 0;
 }
 
 .confirmation-message {
-    font-size: 1rem;
-    color: var(--text-secondary);
-    margin-bottom: 1rem;
-    line-height: 1.6;
+    font-size: 0.95rem;
+    color: #9ca3af;
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
 }
 
 .confirmation-message strong {
-    color: var(--text-primary);
-    font-weight: 600;
+    color: #ffffff;
 }
 
 .confirmation-instructions {
-    font-size: 0.95rem;
-    color: var(--text-secondary);
-    margin-bottom: 2rem;
-    line-height: 1.6;
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin-bottom: 1.75rem;
+    line-height: 1.5;
 }
 
 .confirmation-actions {
     display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-    
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
 .btn-resend-email {
     width: 100%;
     padding: 0.875rem 1.5rem;
     font-size: 0.95rem;
+    font-weight: 600;
+    background: #ffffff;
+    color: #000000;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-}
-
-.btn-resend-email {
-    background: var(--accent-warm);
-    border: none;
-    border-radius: var(--border-radius-sm);
-    color: var(--text-primary);
-    font-weight: 600;
-    cursor: pointer;
     transition: var(--transition);
 }
 
 .btn-resend-email:hover:not(:disabled) {
-    background: #c87d3a;
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-yellow);
+    background: #f3f4f6;
 }
 
 .btn-resend-email:disabled {
@@ -453,89 +467,97 @@
 
 .btn-back-login {
     width: 100%;
-    padding: 0.875rem 1.5rem;
-    font-size: 0.95rem;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     background: transparent;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-sm);
-    color: var(--text-primary);
+    border: 1px solid #2d2d2d;
+    border-radius: 10px;
+    color: #ffffff;
     font-weight: 500;
     text-decoration: none;
     transition: var(--transition);
 }
 
 .btn-back-login:hover {
-    border-color: var(--accent-yellow);
-    color: var(--accent-yellow);
-    background: var(--bg-hover);
+    border-color: #4b5563;
+    background: #1a1a1a;
 }
 
 /* ============================================
    RESPONSIVE
    ============================================ */
-@media (max-width: 968px) {
-    .subscribe-form-section {
-        width: 100%;
-        max-width: 500px;
-        padding: 1.5rem;
-        min-height: 100vh;
-        overflow-y: auto;
-        margin: 0 auto;
+@media (max-width: 1024px) {
+    .planes-layout {
+        flex-direction: column;
     }
 
-    .subscribe-image-section {
-        position: fixed;
-        width: 100%;
-        height: 100%;
+    .planes-hero {
+        flex: none;
+        min-height: auto;
+        padding: 2.5rem 1.5rem 2rem;
+        align-items: flex-end;
+    }
+
+    .planes-hero-content {
+        max-width: 100%;
+    }
+
+    .planes-form-panel {
+        flex: none;
+        min-height: auto;
+        padding: 2rem 1.5rem 3rem;
+    }
+
+    .plans-selection {
+        grid-template-columns: repeat(3, 1fr);
     }
 }
 
 @media (max-width: 768px) {
-    .subscribe-container {
-        padding: 0;
-    }
-    
-    .plans-selection {
-        grid-template-columns: repeat(2, 1fr);
-        gap: clamp(0.5rem, 2vw, 0.75rem);
+    .planes-hero {
+        padding: 2rem 1.25rem 1.5rem;
     }
 
-    .form-actions {
+    .planes-steps {
         flex-direction: column;
-        gap: clamp(0.5rem, 2vw, 0.75rem);
     }
 
-    .btn-change-method,
-    .btn-create-account {
-        flex: 1;
-        width: 100%;
+    .planes-step-card {
+        min-width: 100%;
     }
-}
 
-@media (max-width: 480px) {
-    .subscribe-form-section {
-        padding: clamp(1rem, 4vw, 1.5rem);
-        gap: clamp(1rem, 3vw, 1.5rem);
+    .planes-form-panel {
+        padding: 1.5rem 1.25rem 2rem;
     }
 
     .plans-selection {
         grid-template-columns: 1fr;
-        gap: clamp(0.5rem, 2vw, 0.75rem);
+        gap: 0.5rem;
     }
 
-    .confirmation-content {
-        padding: 2rem 1.5rem;
+    .plan-card-small {
+        padding: 0.875rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .planes-form-inner {
+        max-width: 100%;
     }
 
-    .confirmation-icon {
-        font-size: 3rem;
+    .planes-form-title {
+        font-size: 1.5rem;
     }
 
     .confirmation-title {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
+    }
+
+    .confirmation-icon {
+        font-size: 2.75rem;
     }
 }

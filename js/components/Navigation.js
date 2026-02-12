@@ -728,7 +728,7 @@ class Navigation {
     const footerHtml = `
       <div class="nav-flyout-footer">
         <button type="button" class="nav-flyout-cta" data-action="open-module">
-          Abrir ${label} <i class="fas fa-chevron-right"></i>
+          ${label} <i class="fas fa-chevron-right"></i>
         </button>
       </div>`;
 

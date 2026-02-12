@@ -248,10 +248,10 @@ class PlanesView extends BaseView {
       confirmationEmail.textContent = email;
       emailConfirmationScreen.style.display = 'flex';
       
-      // Ocultar formulario
-      const subscribeCard = this.querySelector('.subscribe-card');
-      if (subscribeCard) {
-        subscribeCard.style.display = 'none';
+      // Ocultar formulario principal
+      const planesMain = this.querySelector('.planes-main');
+      if (planesMain) {
+        planesMain.style.display = 'none';
       }
     }
   }
