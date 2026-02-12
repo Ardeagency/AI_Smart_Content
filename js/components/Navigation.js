@@ -622,9 +622,10 @@ class Navigation {
   }
 
   /**
-   * Configurar submenús (solo 1 contenedor expandido; persistir en localStorage).
+   * Configurar submenús: usuario (1 expandido + persist) y desarrollador (1 expandido).
    */
   setupSubmenus() {
+    // Usuario: solo 1 contenedor expandido, persistir en localStorage
     document.querySelectorAll('.nav-mode-user .nav-submenu-toggle').forEach((toggle) => {
       toggle.addEventListener('click', (e) => {
         e.preventDefault();
@@ -641,6 +642,22 @@ class Navigation {
 
         const newExpanded = !isOpen ? containerId : '';
         localStorage.setItem(SIDEBAR_USER_EXPANDED_KEY, newExpanded);
+      });
+    });
+
+    // Desarrollador: Debug y Lead expandibles (solo 1 abierto a la vez)
+    document.querySelectorAll('.nav-mode-developer .nav-submenu-toggle').forEach((toggle) => {
+      toggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        const parent = toggle.closest('.nav-item.has-submenu');
+        if (!parent) return;
+        const isOpen = parent.classList.contains('submenu-open');
+
+        document.querySelectorAll('.nav-mode-developer .nav-item.has-submenu.submenu-open').forEach((item) => {
+          if (item !== parent) item.classList.remove('submenu-open');
+        });
+        parent.classList.toggle('submenu-open', !isOpen);
+        toggle.setAttribute('aria-expanded', !isOpen);
       });
     });
   }
