@@ -214,8 +214,8 @@
 }
 
 .multiselect-trigger:hover {
-    border-color: rgba(255, 255, 255, 0.15);
-    background: var(--bg-card);
+    border-color: var(--border-light);
+    background: var(--bg-hover);
 }
 
 .multiselect-trigger:focus,

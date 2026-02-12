@@ -1371,13 +1371,14 @@ h1.brand-name-large[contenteditable="true"]:hover,
     white-space: pre-wrap;
 }
 
-/* Inputs de INFO - borde fijo y contenedor estable */
+/* Inputs de INFO - contenedores interactivos #201D26 */
 .card-content-expanded .info-field-value.editable-field {
     display: block;
     padding: 0.75rem 1rem !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border: 1px solid var(--border-color) !important;
     border-radius: 8px;
-    background: transparent !important;
+    background: var(--bg-interactive) !important;
+    color: var(--text-primary) !important;
     min-height: 2.5rem;
     width: 100%;
     box-sizing: border-box;
@@ -1389,15 +1390,103 @@ h1.brand-name-large[contenteditable="true"]:hover,
 .card-content-expanded .info-field-value.editable-field[contenteditable="true"]:hover,
 .card-content-expanded .info-field-value.editable-field[contenteditable="true"]:active,
 .card-content-expanded .info-field-value.editable-field[contenteditable="true"]:focus {
-    background: transparent !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    border-color: var(--border-color) !important;
+    background: var(--bg-hover) !important;
+    border: 1px solid var(--border-color) !important;
     padding: 0.75rem 1rem !important;
     margin: 0 !important;
     width: 100% !important;
     height: auto !important;
     transform: none !important;
     box-shadow: none !important;
+}
+
+/* Select y multiselect dentro de INFO - contenedores interactivos */
+.card-content-expanded .editable-select,
+.card-content-expanded .info-field-value select {
+    width: 100% !important;
+    padding: 0.5rem 0.75rem !important;
+    background: var(--bg-interactive) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 6px !important;
+    color: var(--text-primary) !important;
+    font-size: 0.875rem !important;
+}
+
+.card-content-expanded .multiselect-trigger {
+    background: var(--bg-interactive) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+.card-content-expanded .multiselect-trigger:hover,
+.card-content-expanded .multiselect-trigger.open {
+    background: var(--bg-hover) !important;
+    border-color: var(--border-light) !important;
+    box-shadow: none !important;
+}
+
+.card-content-expanded .multiselect-dropdown {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.card-content-expanded .multiselect-option:hover {
+    background: var(--bg-hover) !important;
+}
+
+.card-content-expanded .multiselect-option.selected {
+    background: var(--bg-hover) !important;
+    color: var(--text-primary) !important;
+}
+
+.card-content-expanded .multiselect-tag {
+    background: var(--bg-hover) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color);
+}
+
+/* Tags editables (Objetivos, Palabras a evitar) */
+.card-content-expanded .editable-tag {
+    padding: 0.25rem 0.5rem;
+    background: var(--bg-hover);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.card-content-expanded .editable-tag-remove {
+    cursor: pointer;
+    margin-left: 0.25rem;
+    color: var(--icon-button);
+}
+
+.card-content-expanded .editable-tag-remove:hover {
+    color: var(--text-primary);
+}
+
+/* Input "+ Agregar" en multiselect dentro de INFO */
+.card-content-expanded .editable-tag-input {
+    padding: 0.25rem 0.5rem !important;
+    background: var(--bg-interactive) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 4px !important;
+    font-size: 0.75rem !important;
+    color: var(--text-primary) !important;
+}
+
+.card-content-expanded .editable-tag-input::placeholder {
+    color: var(--text-muted);
+}
+
+.card-content-expanded .editable-tag-input:focus {
+    outline: none;
+    border-color: var(--border-light) !important;
+    background: var(--bg-hover) !important;
 }
 
 .card-content-expanded .info-list {
@@ -1417,7 +1506,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     content: '•';
     position: absolute;
     left: 0;
-    color: var(--brand-text-gold, #D4B896);
+    color: var(--icon-button);
     font-weight: bold;
 }
 

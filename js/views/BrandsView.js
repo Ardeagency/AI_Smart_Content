@@ -1813,12 +1813,6 @@ class BrandsView extends BaseView {
     const select = document.createElement('select');
     select.className = 'editable-select';
     select.style.width = '100%';
-    select.style.padding = '0.5rem';
-    select.style.background = 'rgba(255, 255, 255, 0.05)';
-    select.style.border = '1px solid rgba(255, 255, 255, 0.1)';
-    select.style.borderRadius = '6px';
-    select.style.color = 'var(--text-primary, #F2F3F5)';
-    select.style.fontSize = '0.875rem';
 
     options.forEach(opt => {
       const option = document.createElement('option');
@@ -1891,13 +1885,8 @@ class BrandsView extends BaseView {
     // Input para agregar nuevos
     const input = document.createElement('input');
     input.type = 'text';
+    input.className = 'editable-tag-input';
     input.placeholder = '+ Agregar';
-    input.style.padding = '0.25rem 0.5rem';
-    input.style.background = 'rgba(255, 255, 255, 0.05)';
-    input.style.border = '1px solid rgba(255, 255, 255, 0.1)';
-    input.style.borderRadius = '4px';
-    input.style.fontSize = '0.75rem';
-    input.style.color = 'var(--text-primary, #F2F3F5)';
     input.style.minWidth = '80px';
     input.style.flex = '1';
 
