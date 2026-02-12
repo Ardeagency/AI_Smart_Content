@@ -208,8 +208,8 @@ class Router {
 
       // Renderizar la navegación ANTES de la vista
       // Esto actualiza el sidebar/header según la ruta
-      if (window.navigation) {
-        await window.navigation.render();
+      if (window.appNavigation && typeof window.appNavigation.render === 'function') {
+        await window.appNavigation.render();
       }
 
       await this.currentView.render();

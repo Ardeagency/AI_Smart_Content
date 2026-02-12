@@ -36,8 +36,8 @@ class HogarView extends BaseView {
     }
 
     // Renderizar Navigation si no está visible
-    if (window.navigation && !window.navigation.initialized) {
-      await window.navigation.render();
+    if (window.appNavigation && !window.appNavigation.initialized) {
+      await window.appNavigation.render();
     }
   }
 

@@ -28,10 +28,10 @@ class DevBaseView extends BaseView {
         return;
       }
     }
-    if (window.navigation && (!window.navigation.initialized || window.navigation.currentMode !== 'developer')) {
-      window.navigation.currentMode = 'developer';
-      window.navigation.initialized = false;
-      await window.navigation.render();
+    if (window.appNavigation && (!window.appNavigation.initialized || window.appNavigation.currentMode !== 'developer')) {
+      window.appNavigation.currentMode = 'developer';
+      window.appNavigation.initialized = false;
+      await window.appNavigation.render();
     }
   }
 

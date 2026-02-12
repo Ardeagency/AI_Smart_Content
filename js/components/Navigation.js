@@ -679,7 +679,6 @@ class Navigation {
     });
 
     /* Collapsed: hover 120ms abre flyout; leave 200ms cierra (cancelado si entra al flyout) */
-    const sidebar = document.getElementById('sideNavigation');
     document.querySelectorAll('.nav-mode-user .nav-submenu-toggle, .nav-mode-developer .nav-submenu-toggle').forEach((toggle) => {
       const parent = toggle.closest('.nav-item.has-submenu');
       if (!parent) return;
@@ -1349,7 +1348,7 @@ class Navigation {
 }
 
 // Crear instancia global
-window.navigation = new Navigation();
+window.appNavigation = new Navigation();
 
 // Exportar clase
 window.Navigation = Navigation;

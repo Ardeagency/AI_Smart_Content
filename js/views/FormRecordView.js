@@ -41,8 +41,8 @@ class FormRecordView extends BaseView {
    */
   async init() {
     // Renderizar Navigation si no está visible
-    if (window.navigation && !window.navigation.initialized) {
-      await window.navigation.render();
+    if (window.appNavigation && !window.appNavigation.initialized) {
+      await window.appNavigation.render();
     }
 
     // Cargar script si es necesario usando el método centralizado

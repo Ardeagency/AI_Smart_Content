@@ -37,8 +37,8 @@ class BrandsView extends BaseView {
         return;
       }
     }
-    if (window.navigation && !window.navigation.initialized) {
-      await window.navigation.render();
+    if (window.appNavigation && !window.appNavigation.initialized) {
+      await window.appNavigation.render();
     }
   }
 
