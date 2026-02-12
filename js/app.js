@@ -448,7 +448,7 @@ class App {
     }
 
     // ========================================
-    // RUTA 404
+    // RUTA 404 - En construcción
     // ========================================
     
     const BaseView = window.BaseView || class {};
@@ -459,11 +459,11 @@ class App {
           container.innerHTML = `
             <div class="error-page">
               <div class="error-content">
-                <h1>404</h1>
-                <p>Página no encontrada</p>
+                <h1>404 En Construcción</h1>
+                <p>Esta página está en construcción. En una próxima actualización será agregada.</p>
                 <div class="error-actions">
-                  <button onclick="window.router.navigate('/hogar')" class="btn-primary">
-                    <i class="fas fa-home"></i> Ir a Hogar
+                  <button onclick="window.router.navigate('/home')" class="btn-primary">
+                    <i class="fas fa-home"></i> Ir a Inicio
                   </button>
                   <button onclick="window.history.back()" class="btn-secondary">
                     <i class="fas fa-arrow-left"></i> Volver
