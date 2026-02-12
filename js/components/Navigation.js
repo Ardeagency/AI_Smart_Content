@@ -1,4 +1,83 @@
 /**
+ * Configuración del sidebar de usuario consumidor (SaaS).
+ * Render dinámico, máx. 1 nivel de nesting, workflow-based.
+ * Orden: Actividad → Foundation → Creation → Automations → Campaigns → Analytics.
+ */
+const SIDEBAR_USER_CONFIG = [
+  {
+    id: 'activity',
+    label: 'Actividad',
+    icon: 'fa-chart-line',
+    type: 'group',
+    items: [
+      { id: 'overview', label: 'Overview', route: 'living' },
+      { id: 'recent', label: 'Recent Content', route: 'living' },
+      { id: 'automations', label: 'Active Automations', route: 'living' },
+      { id: 'performance', label: 'Campaign Performance', route: 'campaigns' },
+      { id: 'notifications', label: 'Notifications', route: 'living' }
+    ]
+  },
+  {
+    id: 'foundation',
+    label: 'Foundation',
+    icon: 'fa-layer-group',
+    type: 'group',
+    items: [
+      { id: 'brand', label: 'Brand', route: 'brand' },
+      { id: 'products', label: 'Products', route: 'products' },
+      { id: 'services', label: 'Services', route: 'products' },
+      { id: 'assets', label: 'Assets & Guidelines', route: 'brand' },
+      { id: 'ai-rules', label: 'AI Rules', route: 'brand' }
+    ]
+  },
+  {
+    id: 'creation',
+    label: 'Creation',
+    icon: 'fa-wand-magic-sparkles',
+    type: 'group',
+    items: [
+      { id: 'studio', label: 'Studio', route: 'studio' },
+      { id: 'ugc', label: 'UGC Production', route: 'studio' },
+      { id: 'prompt-builder', label: 'Prompt Builder', route: 'studio' }
+    ]
+  },
+  {
+    id: 'automations',
+    label: 'Automations',
+    icon: 'fa-project-diagram',
+    type: 'group',
+    items: [
+      { id: 'flow-library', label: 'Flow Library', route: 'studio/catalog' },
+      { id: 'active-flows', label: 'Active Flows', route: 'studio' },
+      { id: 'flow-builder', label: 'Flow Builder', route: 'studio' },
+      { id: 'integrations', label: 'Integrations', route: 'studio' }
+    ]
+  },
+  {
+    id: 'campaigns',
+    label: 'Campaigns',
+    icon: 'fa-bullhorn',
+    type: 'group',
+    items: [
+      { id: 'audiences', label: 'Audiences', route: 'audiences' },
+      { id: 'campaign-manager', label: 'Campaign Manager', route: 'campaigns' },
+      { id: 'distribution', label: 'Distribution', route: 'marketing' }
+    ]
+  },
+  {
+    id: 'analytics',
+    label: 'Analytics',
+    icon: 'fa-chart-pie',
+    type: 'group',
+    items: [
+      { id: 'content-performance', label: 'Content Performance', route: 'content' },
+      { id: 'audience-insights', label: 'Audience Insights', route: 'audiences' },
+      { id: 'roi-dashboards', label: 'ROI Dashboards', route: 'campaigns' }
+    ]
+  }
+];
+
+/**
  * Navigation Component - Sistema de navegación inteligente
  * 
  * Maneja el sidebar y header según el contexto de la ruta:
@@ -183,11 +262,37 @@ class Navigation {
   }
 
   /**
-   * HTML para navegación de usuario SaaS (con sidebar)
+   * HTML para navegación de usuario SaaS (con sidebar).
+   * Render dinámico desde SIDEBAR_USER_CONFIG; máximo 1 nivel de nesting.
    */
   getUserNavigationHTML() {
     const basePath = this.currentOrgId ? `/org/${this.currentOrgId}` : '';
-    
+    const prefix = (path) => path ? `${basePath}/${path}` : basePath || '/';
+
+    const menuHTML = SIDEBAR_USER_CONFIG.map((group) => {
+      const subitems = group.items
+        .map(
+          (item) => `
+              <a href="${prefix(item.route)}" class="nav-submenu-link" data-route="${prefix(item.route)}" data-tooltip="${item.label}">
+                <span>${item.label}</span>
+              </a>`
+        )
+        .join('');
+      return `
+          <div class="nav-group">
+            <div class="nav-item has-submenu" data-group-id="${group.id}">
+              <button type="button" class="nav-link nav-submenu-toggle" data-tooltip="${group.label}" aria-expanded="false" aria-controls="nav-sub-${group.id}">
+                <i class="fas ${group.icon} nav-icon"></i>
+                <span class="nav-text">${group.label}</span>
+                <i class="fas fa-chevron-right nav-chevron" aria-hidden="true"></i>
+              </button>
+              <div class="nav-submenu" id="nav-sub-${group.id}" role="group" aria-label="${group.label}">
+                ${subitems}
+              </div>
+            </div>
+          </div>`;
+    }).join('');
+
     return `
       <!-- Overlay de navegación -->
       <div class="nav-overlay" id="navOverlay"></div>
@@ -199,7 +304,7 @@ class Navigation {
             <button class="header-hamburger" id="headerHamburger" aria-label="Menú">
               <i class="fas fa-bars"></i>
             </button>
-            <h1 class="header-title" id="headerTitle">Living</h1>
+            <h1 class="header-title" id="headerTitle">Actividad</h1>
           </div>
           <div class="header-right">
             <div class="header-user" id="headerUser">
@@ -212,9 +317,9 @@ class Navigation {
         ${this.getUserDropdownHTML(this.currentOrgId ? `/org/${this.currentOrgId}/settings` : '/settings')}
       </header>
 
-      <!-- Navegación lateral - Modo Usuario SaaS -->
-      <nav class="side-navigation nav-mode-user" id="sideNavigation">
-        <!-- Capa superior: Identidad + Organización -->
+      <!-- Navegación lateral - Modo Usuario SaaS (config-driven) -->
+      <nav class="side-navigation nav-mode-user" id="sideNavigation" aria-label="Navegación principal">
+        <!-- Level 0: Workspace context -->
         <div class="nav-identity-section">
           <div class="nav-identity-card" id="navIdentityCard">
             <div class="nav-identity-content">
@@ -227,89 +332,19 @@ class Navigation {
               </button>
             </div>
           </div>
-          
-          <!-- Dropdown de organización -->
           <div class="nav-org-dropdown" id="navOrgDropdown">
             <div class="nav-org-dropdown-header">Workspaces</div>
-            <div class="nav-org-dropdown-list" id="navOrgDropdownList">
-              <!-- Las organizaciones se cargarán dinámicamente aquí -->
-            </div>
+            <div class="nav-org-dropdown-list" id="navOrgDropdownList"></div>
           </div>
         </div>
 
-        <!-- Menú Principal - Usuario SaaS -->
+        <!-- Level 1–2: Navegación principal (grupos expandibles) -->
         <div class="nav-menu">
-          <!-- Living (Dashboard principal) -->
-          <div class="nav-item">
-            <a href="${basePath}/living" class="nav-link" data-route="${basePath}/living" data-tooltip="Living">
-              <i class="fas fa-home nav-icon"></i>
-              <span class="nav-text">Living</span>
-            </a>
-          </div>
-
-          <!-- Marca -->
-          <div class="nav-item">
-            <a href="${basePath}/brand" class="nav-link" data-route="${basePath}/brand" data-tooltip="Marca">
-              <i class="fas fa-gem nav-icon"></i>
-              <span class="nav-text">Marca</span>
-            </a>
-          </div>
-
-          <!-- Entidades (submenu) -->
-          <div class="nav-item has-submenu">
-            <button class="nav-link nav-submenu-toggle" data-tooltip="Entidades">
-              <i class="fas fa-boxes nav-icon"></i>
-              <span class="nav-text">Entidades</span>
-              <i class="fas fa-chevron-right nav-chevron"></i>
-            </button>
-            <div class="nav-submenu">
-              <a href="${basePath}/products" class="nav-submenu-link" data-route="${basePath}/products">
-                <i class="fas fa-box"></i>
-                <span>Productos</span>
-              </a>
-              <a href="${basePath}/services" class="nav-submenu-link" data-route="${basePath}/services">
-                <i class="fas fa-concierge-bell"></i>
-                <span>Servicios</span>
-              </a>
-            </div>
-          </div>
-
-          <!-- Studio -->
-          <div class="nav-item">
-            <a href="${basePath}/studio" class="nav-link" data-route="${basePath}/studio" data-tooltip="Studio">
-              <i class="fas fa-wand-magic-sparkles nav-icon"></i>
-              <span class="nav-text">Studio</span>
-            </a>
-          </div>
-
-          <!-- Catálogo de flujos -->
-          <div class="nav-item">
-            <a href="${basePath}/studio/catalog" class="nav-link" data-route="${basePath}/studio/catalog" data-tooltip="Catálogo de flujos">
-              <i class="fas fa-th-large nav-icon"></i>
-              <span class="nav-text">Catálogo de flujos</span>
-            </a>
-          </div>
-
-          <!-- Audiencias -->
-          <div class="nav-item">
-            <a href="${basePath}/audiences" class="nav-link" data-route="${basePath}/audiences" data-tooltip="Audiencias">
-              <i class="fas fa-users nav-icon"></i>
-              <span class="nav-text">Audiencias</span>
-            </a>
-          </div>
-
-          <!-- Marketing -->
-          <div class="nav-item">
-            <a href="${basePath}/marketing" class="nav-link" data-route="${basePath}/marketing" data-tooltip="Marketing">
-              <i class="fas fa-bullhorn nav-icon"></i>
-              <span class="nav-text">Marketing</span>
-            </a>
-          </div>
+          ${menuHTML}
         </div>
 
-        <!-- Footer del sidebar -->
+        <!-- Footer: usage + profile -->
         <div class="nav-footer">
-          <!-- Tokens/Créditos -->
           <div class="nav-tokens" id="navTokens">
             <i class="fas fa-coins"></i>
             <span id="navTokensValue">0</span>
@@ -647,17 +682,17 @@ class Navigation {
     const titles = {
       '/hogar': 'Hogar',
       '/home': 'Hogar',
-      '/living': 'Living',
-      '/brand': 'Marca',
-      '/brands': 'Marca',
-      '/products': 'Productos',
-      '/product-detail': 'Productos',
-      '/studio/catalog': 'Catálogo de flujos',
-      '/studio': 'Studio',
-      '/audiences': 'Audiencias',
-      '/marketing': 'Marketing',
-      '/campaigns': 'Campañas',
-      '/content': 'Contenido',
+      '/living': 'Actividad',
+      '/brand': 'Foundation',
+      '/brands': 'Foundation',
+      '/products': 'Foundation',
+      '/product-detail': 'Foundation',
+      '/studio/catalog': 'Automations',
+      '/studio': 'Creation',
+      '/audiences': 'Campaigns',
+      '/marketing': 'Campaigns',
+      '/campaigns': 'Campaigns',
+      '/content': 'Analytics',
       '/settings': 'Configuración',
       '/dev/dashboard': 'Dashboard',
       '/dev/flows': 'Mis Flujos',

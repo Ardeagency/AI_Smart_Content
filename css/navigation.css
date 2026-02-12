@@ -7,15 +7,23 @@
 
 /* Variables específicas para navegación */
 :root {
-    --nav-width: 280px;
-    --nav-width-collapsed: 64px;
+    /* Width states (spec: expanded 260px, collapsed 72px) */
+    --nav-width: 260px;
+    --nav-width-collapsed: 72px;
     --nav-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --nav-overlay: rgba(0, 0, 0, 0.8);
     --nav-bg: var(--bg-primary);
     --nav-border: var(--border-divider);
     --nav-separator: var(--border-divider);
-    --nav-item-height: 44px; /* Altura consistente para items primarios */
-    --nav-item-height-sub: 36px; /* Altura para subitems */
+    --nav-item-height: 44px;
+    --nav-item-height-sub: 36px;
+    /* Design tokens sidebar (spec) */
+    --sidebar-background: var(--bg-primary);
+    --sidebar-hover: rgba(255, 255, 255, 0.08);
+    --sidebar-active: rgba(255, 255, 255, 0.08);
+    --sidebar-icon-color: var(--text-secondary);
+    --sidebar-text-primary: var(--text-primary);
+    --sidebar-text-secondary: var(--text-secondary);
 }
 
 /* =========================================
@@ -25,9 +33,9 @@
 .main-header {
     position: fixed !important;
     top: 0 !important;
-    left: var(--nav-width, 280px);
+    left: var(--nav-width, 260px);
     right: 0;
-    max-width: calc(100vw - var(--nav-width, 280px));
+    max-width: calc(100vw - var(--nav-width, 260px));
     background: transparent !important; /* 100% transparente */
     border-bottom: none !important;
     padding: 8px 16px;
@@ -50,15 +58,15 @@
 .side-navigation.collapsed ~ * .main-header,
 body.sidebar-collapsed .main-header,
 #app-container .main-header {
-    left: var(--nav-width-collapsed, 64px);
+    left: var(--nav-width-collapsed, 72px);
 }
 
 /* Asegurar que el header dentro de app-container también respete el sidebar */
 #app-container .main-header {
     position: fixed !important;
     top: 0 !important;
-    left: var(--nav-width, 280px);
-    max-width: calc(100vw - var(--nav-width, 280px));
+    left: var(--nav-width, 260px);
+    max-width: calc(100vw - var(--nav-width, 260px));
     background: transparent !important;
     z-index: 1000 !important;
     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -67,8 +75,8 @@ body.sidebar-collapsed .main-header,
 
 body.sidebar-collapsed #app-container .main-header,
 .side-navigation.collapsed ~ #app-container .main-header {
-    left: var(--nav-width-collapsed, 64px);
-    max-width: calc(100vw - var(--nav-width-collapsed, 64px));
+    left: var(--nav-width-collapsed, 72px);
+    max-width: calc(100vw - var(--nav-width-collapsed, 72px));
 }
 
 .header-content {
@@ -789,10 +797,10 @@ body.sidebar-collapsed #app-container .main-header,
     margin-bottom: 0;
 }
 
-/* Dominio 1: Living (estado vivo, va solo) */
+/* Dominio 1: Actividad (vista operacional del workspace) */
 .nav-item:first-child {
     margin-top: 0;
-    margin-bottom: 5px; /* Espacio reducido después de Living */
+    margin-bottom: 5px; /* Espacio reducido después de Actividad */
 }
 
 /* Dominio 2: Marca (fundacional, sólida) */
@@ -1455,16 +1463,16 @@ body.has-header-only #app-container {
 
 /* === LAYOUT: CON SIDEBAR (Org y Dev) === */
 body.has-sidebar #app-container {
-    margin-left: var(--nav-width, 280px);
-    max-width: calc(100vw - var(--nav-width, 280px));
+    margin-left: var(--nav-width, 260px);
+    max-width: calc(100vw - var(--nav-width, 260px));
     padding-top: 60px;
     transition: margin-left 0.3s ease;
     box-sizing: border-box;
 }
 
 body.has-sidebar.sidebar-collapsed #app-container {
-    margin-left: var(--nav-width-collapsed, 64px);
-    max-width: calc(100vw - var(--nav-width-collapsed, 64px));
+    margin-left: var(--nav-width-collapsed, 72px);
+    max-width: calc(100vw - var(--nav-width-collapsed, 72px));
 }
 
 /* Sin padding superior en Products (#app-container > div) y Living (#app-container > main); lo aplican sus contenedores internos */
@@ -1497,15 +1505,15 @@ body.has-sidebar #app-container:has(> main.living-main-content) {
 
 /* Header con sidebar */
 .app-header.with-sidebar {
-    left: var(--nav-width, 280px);
-    max-width: calc(100vw - var(--nav-width, 280px));
+    left: var(--nav-width, 260px);
+    max-width: calc(100vw - var(--nav-width, 260px));
     transition: left 0.3s ease;
     box-sizing: border-box;
 }
 
 body.sidebar-collapsed .app-header.with-sidebar {
-    left: var(--nav-width-collapsed, 64px);
-    max-width: calc(100vw - var(--nav-width-collapsed, 64px));
+    left: var(--nav-width-collapsed, 72px);
+    max-width: calc(100vw - var(--nav-width-collapsed, 72px));
 }
 
 /* #appHeader > .header-content: adaptar al ancho del header (no desbordar) */
@@ -2123,7 +2131,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     position: fixed;
     top: 0;
     left: 0;
-    width: var(--nav-width, 280px);
+    width: var(--nav-width, 260px);
     height: 100vh;
     background: var(--nav-bg);
     border-right: 1px solid var(--nav-border);
@@ -2143,21 +2151,31 @@ body.sidebar-collapsed .app-header.with-sidebar {
     padding: 16px 12px;
 }
 
+/* Grupos: spacing vertical 16px entre módulos (spec) */
+.nav-menu .nav-group {
+    margin-bottom: 16px;
+}
+
+.nav-menu .nav-group:last-child {
+    margin-bottom: 0;
+}
+
 .nav-item {
-    margin-bottom: 4px;
+    margin-bottom: 0;
 }
 
 .side-navigation .nav-link {
     display: flex;
     align-items: center;
     gap: 12px;
+    min-height: var(--nav-item-height);
     padding: 12px 14px;
     border-radius: 10px;
-    color: var(--text-secondary);
+    color: var(--sidebar-text-secondary);
     text-decoration: none;
     font-size: 14px;
     font-weight: 400;
-    transition: all 0.2s ease;
+    transition: background 0.15s ease, color 0.15s ease;
     cursor: pointer;
     border: none;
     background: none;
@@ -2166,21 +2184,22 @@ body.sidebar-collapsed .app-header.with-sidebar {
 }
 
 .side-navigation .nav-link:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
+    background: var(--sidebar-hover);
+    color: var(--sidebar-text-primary);
 }
 
 .side-navigation .nav-link.active {
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--text-primary);
+    background: var(--sidebar-active);
+    color: var(--sidebar-text-primary);
     font-weight: 500;
 }
 
 .side-navigation .nav-icon {
     width: 20px;
-    font-size: 16px;
+    font-size: 20px;
     text-align: center;
     flex-shrink: 0;
+    color: var(--sidebar-icon-color);
 }
 
 .side-navigation .nav-text {
@@ -2193,7 +2212,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     transition: transform 0.2s ease;
 }
 
-/* Submenú */
+/* Submenú (máx. 5 subitems por módulo, spec) */
 .nav-item.has-submenu .nav-submenu {
     max-height: 0;
     overflow: hidden;
@@ -2201,7 +2220,8 @@ body.sidebar-collapsed .app-header.with-sidebar {
 }
 
 .nav-item.has-submenu.submenu-open .nav-submenu {
-    max-height: 200px;
+    max-height: 320px;
+    overflow-y: auto;
 }
 
 .nav-item.has-submenu.submenu-open .nav-chevron {
