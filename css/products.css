@@ -90,7 +90,7 @@
     padding-left: 3rem;
     padding-right: 2rem;
     padding-bottom: 0;
-    background: var(--living-bg-deep, #0A0C0F);
+    background: var(--living-bg-deep, var(--bg-primary));
     box-sizing: border-box;
 }
 
@@ -532,7 +532,7 @@
 }
 
 .image-item:hover {
-    border-color: var(--accent-warm, #e09145);
+    border-color: var(--accent-warm);
     transform: translateY(-2px);
 }
 
@@ -598,15 +598,15 @@
 }
 
 .btn-image-action.active {
-    background: var(--accent-warm, #e09145);
-    border-color: var(--accent-warm, #e09145);
+    background: var(--accent-warm);
+    border-color: var(--accent-warm);
 }
 
 .image-badge {
     position: absolute;
     top: 0.5rem;
     left: 0.5rem;
-    background: var(--accent-warm, #e09145);
+    background: var(--accent-warm);
     color: white;
     padding: 0.25rem 0.5rem;
     border-radius: 4px;
@@ -640,8 +640,8 @@
 }
 
 .btn-order:hover:not(:disabled) {
-    border-color: var(--accent-warm, #e09145);
-    color: var(--accent-warm, #e09145);
+    border-color: var(--accent-warm);
+    color: var(--accent-warm);
     background: rgba(224, 145, 69, 0.1);
 }
 
@@ -703,7 +703,7 @@
 }
 
 .upload-zone-small:hover {
-    border-color: var(--accent-warm, #e09145);
+    border-color: var(--accent-warm);
     background: rgba(224, 145, 69, 0.05);
 }
 

@@ -401,7 +401,7 @@
 
 .login-card .form-input:focus {
     outline: none;
-    border-color: var(--accent-yellow, #e09145);
+    border-color: var(--accent-yellow);
     box-shadow: 0 0 0 2px var(--accent-glow, rgba(224, 145, 69, 0.15));
 }
 
@@ -449,13 +449,13 @@
     transition: all 0.2s ease;
     border: none;
     font-family: inherit;
-    background: var(--accent-yellow, #e09145);
+    background: var(--accent-yellow);
     color: #0E0F12;
     margin-top: 0.5rem;
 }
 
 .login-card .submit-btn:hover {
-    background: var(--accent-yellow-hover, #f0a055);
+    background: var(--accent-yellow-hover);
     transform: translateY(-1px);
     box-shadow: var(--shadow-yellow, 0 0 16px rgba(224, 145, 69, 0.3));
 }

@@ -8,37 +8,38 @@
    ============================================ */
 :root {
     /* Fondos */
-    --bg-primary: #0E0F12;
-    --bg-secondary: #15171C;
-    --bg-card: #1C1F26;
-    --bg-tertiary: #1C1F26;
-    --bg-hover: #232733;
-    --bg-overlay: rgba(14, 15, 18, 0.9);
+    --bg-primary: #17141D;
+    --bg-secondary: #1C1922;
+    --bg-card: #212129;
+    --bg-tertiary: #212129;
+    --bg-hover: #313139;
+    --bg-overlay: rgba(23, 20, 29, 0.9);
     --bg-black: #000000;
-    --bg-dark: #0A0C0F;
+    --bg-dark: #0F0D12;
 
-    /* Bordes */
-    --border-color: rgba(42, 47, 58, 0.4);
-    --border-light: rgba(42, 47, 58, 0.6);
-    --border-divider: rgba(42, 47, 58, 0.3);
+    /* Bordes (card bordes) */
+    --border-color: #33333B;
+    --border-light: #3d3d45;
+    --border-divider: #2d2d34;
 
-    /* Texto */
-    --text-primary: #F2F3F5;
-    --text-secondary: rgba(242, 243, 245, 0.7);
-    --text-muted: rgba(242, 243, 245, 0.5);
-    --text-disabled: rgba(242, 243, 245, 0.3);
+    /* Texto (letras) */
+    --text-primary: #D4D1D8;
+    --text-secondary: rgba(212, 209, 216, 0.85);
+    --text-muted: rgba(212, 209, 216, 0.6);
+    --text-disabled: rgba(212, 209, 216, 0.35);
 
-    /* Acento en gris (compatibilidad con .btn-primary, etc.) */
-    --accent-yellow: #6b6e74;
-    --accent-yellow-hover: #7a7d84;
+    /* Iconos y botones */
+    --icon-button: #87868B;
+    --accent-yellow: #87868B;
+    --accent-yellow-hover: #9a99a0;
     --accent-yellow-glow: transparent;
-    --accent-warm: #6b6e74;
+    --accent-warm: #87868B;
     --accent-warm-glow: transparent;
 
     /* Aliases */
-    --primary-color: #F2F3F5;
-    --primary-light: rgba(255, 255, 255, 0.95);
-    --primary-hover: #F2F3F5;
+    --primary-color: #D4D1D8;
+    --primary-light: rgba(212, 209, 216, 0.95);
+    --primary-hover: #D4D1D8;
 
     /* Estados */
     --success-color: rgba(16, 185, 129, 0.8);
@@ -46,13 +47,14 @@
     --error-color: #ef4444;
     --info-color: rgba(59, 130, 246, 0.8);
 
-    /* Sombras (gris) */
-    --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.3);
-    --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.4);
-    --shadow-floating: 0 12px 32px rgba(0, 0, 0, 0.5);
-    --shadow-yellow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    /* Sombras (#201D26) */
+    --shadow-fill: #201D26;
+    --shadow-card: 0 4px 16px rgba(32, 29, 38, 0.5);
+    --shadow-hover: 0 8px 24px rgba(32, 29, 38, 0.6);
+    --shadow-floating: 0 12px 32px rgba(32, 29, 38, 0.7);
+    --shadow-yellow: 0 4px 16px rgba(32, 29, 38, 0.4);
     --accent-glow: transparent;
-    --grid-color: rgba(242, 243, 245, 0.02);
+    --grid-color: rgba(212, 209, 216, 0.03);
 
     /* Tokens mínimos (usados por otros CSS) */
     --transition: all 0.2s ease;

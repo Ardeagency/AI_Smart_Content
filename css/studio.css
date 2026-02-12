@@ -11,7 +11,7 @@
   right: 0;
   bottom: 0;
   display: flex;
-  background: var(--living-bg-deep, #0A0C0F);
+  background: var(--living-bg-deep, var(--bg-primary));
   overflow: hidden;
 }
 
@@ -36,7 +36,7 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 0.75rem 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--border-divider);
 }
 
 .studio-footer-credits {
@@ -50,11 +50,11 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--bg-hover);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--icon-button);
 }
 
 .studio-credits-icon i {
@@ -63,12 +63,12 @@
 
 .studio-credits-text {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-secondary);
 }
 
 .studio-credits-cost {
   font-size: 0.8rem;
-  color: var(--accent-warm, #e09145);
+  color: var(--accent-warm);
   margin-left: 0.25rem;
 }
 
@@ -76,8 +76,8 @@
   padding: 0.6rem 1.25rem;
   border-radius: 8px;
   border: none;
-  background: var(--accent-warm, #e09145);
-  color: #fff;
+  background: var(--accent-warm);
+  color: var(--bg-primary);
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
@@ -85,7 +85,7 @@
 }
 
 .studio-btn-producir:hover:not(:disabled) {
-  background: var(--accent-yellow-hover, #f0a055);
+  background: var(--accent-yellow-hover);
 }
 
 .studio-btn-producir:disabled {
@@ -97,8 +97,8 @@
 .studio-sidebar-creative {
   width: 320px;
   min-width: 320px;
-  background: rgba(23, 24, 29, 0.95);
-  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--bg-card);
+  border-left: 1px solid var(--border-divider);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -109,7 +109,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 1rem 1.25rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border-divider);
 }
 
 .studio-tab {
@@ -124,7 +124,7 @@
 }
 
 .studio-tab-past {
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--text-muted);
 }
 
 .studio-tab-future {
@@ -164,13 +164,13 @@
 
 .studio-empty-flows {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   margin: 0;
 }
 
 .studio-card-flow {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--bg-hover);
+  border: 1px solid var(--border-divider);
   border-radius: 12px;
   padding: 1rem;
   display: flex;
@@ -181,19 +181,19 @@
 }
 
 .studio-card-flow:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: var(--bg-hover);
+  border-color: var(--border-color);
 }
 
 .studio-card-icon {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--bg-hover);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--icon-button);
 }
 
 .studio-card-icon i {
@@ -203,13 +203,13 @@
 .studio-card-text {
   font-size: 0.875rem;
   line-height: 1.4;
-  color: var(--text-primary, #ecebda);
+  color: var(--text-primary);
   margin: 0;
 }
 
 .studio-card-desc {
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   margin: 0;
 }
 
@@ -233,26 +233,26 @@
   padding: 0;
   border: none;
   background: none;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   font-size: 0.8rem;
   cursor: pointer;
   transition: color 0.2s ease;
 }
 
 .studio-back-flows:hover {
-  color: #7dd3fc;
+  color: var(--icon-button);
 }
 
 .studio-form-title {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--text-primary, #ecebda);
+  color: var(--text-primary);
   margin: 0 0 1rem 0;
 }
 
 .studio-form-empty {
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--text-muted);
   margin: 0;
 }
 
@@ -278,17 +278,17 @@
 .studio-field textarea,
 .studio-field select {
   padding: 0.5rem 0.6rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-primary, #ecebda);
+  background: var(--bg-hover);
+  color: var(--text-primary);
   font-size: 0.875rem;
   font-family: inherit;
 }
 
 .studio-field input::placeholder,
 .studio-field textarea::placeholder {
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--text-muted);
 }
 
 .studio-field textarea {
@@ -306,6 +306,6 @@
     min-width: 0;
     max-height: 45vh;
     border-left: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-top: 1px solid var(--border-divider);
   }
 }

@@ -3,14 +3,14 @@
  * Mismo estilo visual que el resto de la web: Living/Brands (fondo oscuro, acentos cálidos, superficies card)
  */
 
-/* Variables locales por si living no cargó; normalmente se usan las de living.css */
+/* Variables locales: heredan de base + living */
 .hogar-container {
-    --hogar-bg: var(--living-bg-deep, #0A0C0F);
-    --hogar-surface: var(--living-bg-surface, #0E1012);
-    --hogar-card: var(--living-bg-card, rgba(21, 23, 28, 0.6));
-    --hogar-card-border: rgba(255, 255, 255, 0.06);
-    --hogar-text: var(--living-text-light, #E8DDD4);
-    --hogar-text-muted: var(--living-text-muted, rgba(232, 221, 212, 0.4));
+    --hogar-bg: var(--living-bg-deep, var(--bg-primary));
+    --hogar-surface: var(--living-bg-surface, var(--bg-secondary));
+    --hogar-card: var(--living-bg-card, var(--bg-card));
+    --hogar-card-border: var(--border-color);
+    --hogar-text: var(--living-text-light, var(--text-primary));
+    --hogar-text-muted: var(--living-text-muted, var(--text-muted));
     --hogar-accent: var(--living-warm-1, #D4754E);
     --hogar-accent-hover: var(--living-warm-2, #C86B45);
     --hogar-radius: 12px;

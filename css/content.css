@@ -7,7 +7,7 @@
     max-width: 1400px;
     margin: 0 auto;
     margin-left: 0;
-    background: var(--living-bg-deep, #0A0C0F);
+    background: var(--living-bg-deep, var(--bg-primary));
     padding-top: calc(48px + 2rem);
 }
 
@@ -35,7 +35,7 @@
 .content-detail-title {
     font-size: 2rem;
     font-weight: 700;
-    color: var(--text-primary, #ecebda);
+    color: var(--text-primary);
 }
 
 .content-filters {
@@ -49,7 +49,7 @@
     background: var(--living-bg-surface, #0E1012);
     border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 8px;
-    color: var(--text-primary, #ecebda);
+    color: var(--text-primary);
     font-size: 0.875rem;
 }
 
@@ -89,7 +89,7 @@
 .info-section h3 {
     font-size: 1.125rem;
     font-weight: 600;
-    color: var(--text-primary, #ecebda);
+    color: var(--text-primary);
     margin-bottom: 1rem;
 }
 

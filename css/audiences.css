@@ -7,7 +7,7 @@
     max-width: 1400px;
     margin: 0 auto;
     margin-left: 0;
-    background: var(--living-bg-deep, #0A0C0F);
+    background: var(--living-bg-deep, var(--bg-primary));
     padding-top: calc(48px + 2rem);
 }
 
@@ -35,7 +35,7 @@
 .audience-detail-title {
     font-size: 2rem;
     font-weight: 700;
-    color: var(--text-primary, #ecebda);
+    color: var(--text-primary);
 }
 
 .audiences-grid {
@@ -59,7 +59,7 @@
 .audience-section h2 {
     font-size: 1.25rem;
     font-weight: 600;
-    color: var(--text-primary, #ecebda);
+    color: var(--text-primary);
     margin-bottom: 1rem;
 }
 

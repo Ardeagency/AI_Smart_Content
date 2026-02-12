@@ -9,8 +9,8 @@
    ========================================== */
 :root {
   /* Naranja: color principal de la plataforma (igual que hogar, living, brands) */
-  --dev-primary: var(--accent-warm, #e09145);
-  --dev-primary-light: var(--accent-yellow-hover, #f0a055);
+  --dev-primary: var(--accent-warm);
+  --dev-primary-light: var(--accent-yellow-hover);
   --dev-primary-dark: #c87a3a;
   --dev-success: #10b981;
   --dev-warning: #f59e0b;
@@ -79,11 +79,11 @@
 .builder-footer,
 .builder-sidebar,
 .builder-canvas-wrapper {
-  --bg-primary: var(--living-bg-deep, #0A0C0F);
-  --bg-secondary: var(--living-bg-surface, #0E1012);
-  --bg-card: var(--living-bg-card, rgba(21, 23, 28, 0.6));
-  --bg-hover: rgba(21, 23, 28, 0.9);
-  --border-color: rgba(255, 255, 255, 0.06);
+  --bg-primary: var(--living-bg-deep);
+  --bg-secondary: var(--living-bg-surface);
+  --bg-card: var(--living-bg-card);
+  --bg-hover: var(--bg-hover);
+  --border-color: var(--border-color);
 }
 
 
@@ -96,7 +96,7 @@
   padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
-  background: var(--living-bg-deep, #0A0C0F);
+  background: var(--living-bg-deep, var(--bg-primary));
   min-height: 100vh;
 }
 
@@ -3156,7 +3156,7 @@ body.sidebar-collapsed .builder-header {
 .dev-test-container {
   min-height: 100vh;
   padding: 24px;
-  background: var(--living-bg-deep, #0A0C0F);
+  background: var(--living-bg-deep, var(--bg-primary));
 }
 
 @media (max-width: 768px) {
@@ -4901,7 +4901,7 @@ body.sidebar-collapsed .builder-header {
   padding: 24px;
   padding-top: calc(48px + 24px);
   margin-left: 0;
-  background: var(--living-bg-deep, #0A0C0F);
+  background: var(--living-bg-deep, var(--bg-primary));
 }
 
 @media (max-width: 768px) {

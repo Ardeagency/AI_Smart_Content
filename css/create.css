@@ -31,7 +31,7 @@
 .create-title {
     font-size: 2rem;
     font-weight: 700;
-    color: var(--text-primary, #ecebda);
+    color: var(--text-primary);
 }
 
 .create-mode-selector {
@@ -58,13 +58,13 @@
 }
 
 .mode-btn:hover {
-    color: var(--text-primary, #ecebda);
+    color: var(--text-primary);
     background: rgba(236, 235, 218, 0.1);
 }
 
 .mode-btn.active {
-    background: var(--accent-warm, #e09145);
-    color: var(--text-primary, #ecebda);
+    background: var(--accent-warm);
+    color: var(--text-primary);
 }
 
 .create-mode-content {
@@ -93,7 +93,7 @@
 .wizard-step h3 {
     font-size: 1.25rem;
     font-weight: 600;
-    color: var(--text-primary, #ecebda);
+    color: var(--text-primary);
     margin-bottom: 1rem;
 }
 
@@ -116,7 +116,7 @@
 }
 
 .editor-section label {
-    color: var(--text-primary, #ecebda);
+    color: var(--text-primary);
     font-weight: 500;
 }
 
@@ -126,7 +126,7 @@
     background: var(--bg-dark, #1a1a1a);
     border: 1px solid rgba(236, 235, 218, 0.2);
     border-radius: 8px;
-    color: var(--text-primary, #ecebda);
+    color: var(--text-primary);
     font-family: 'Courier New', monospace;
     font-size: 0.875rem;
     resize: vertical;
@@ -163,7 +163,7 @@
 .template-card h3 {
     font-size: 1.25rem;
     font-weight: 600;
-    color: var(--text-primary, #ecebda);
+    color: var(--text-primary);
     margin-bottom: 0.5rem;
 }
 

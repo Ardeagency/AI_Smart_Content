@@ -83,7 +83,7 @@ body::before {
     left: 0;
     right: 0;
     height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent-yellow, #e09145), transparent);
+    background: linear-gradient(90deg, transparent, var(--accent-yellow), transparent);
     animation: shimmer 2s infinite;
 }
 

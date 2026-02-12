@@ -13,20 +13,20 @@
     --living-warm-4: #8B4332;
     --living-warm-5: #5C2D22;
     
-    --living-text-light: #E8DDD4;
-    --living-text-gold: #D4B896;
-    --living-text-muted: rgba(232, 221, 212, 0.4);
-    --living-text-whisper: rgba(232, 221, 212, 0.3);
+    --living-text-light: var(--text-primary);
+    --living-text-gold: var(--icon-button);
+    --living-text-muted: var(--text-muted);
+    --living-text-whisper: var(--text-disabled);
     
-    --living-bg-deep: #0A0C0F;
-    --living-bg-surface: #0E1012;
-    --living-bg-card: rgba(21, 23, 28, 0.6);
-    --living-bg-card-hover: rgba(21, 23, 28, 0.8);
-    --living-bg-glass: rgba(21, 23, 28, 0.4);
+    --living-bg-deep: var(--bg-primary);
+    --living-bg-surface: var(--bg-secondary);
+    --living-bg-card: var(--bg-card);
+    --living-bg-card-hover: var(--bg-hover);
+    --living-bg-glass: var(--bg-card);
     
-    --living-shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.4);
-    --living-shadow-medium: 0 12px 48px rgba(0, 0, 0, 0.5);
-    --living-shadow-deep: 0 20px 64px rgba(0, 0, 0, 0.6);
+    --living-shadow-soft: var(--shadow-card);
+    --living-shadow-medium: var(--shadow-hover);
+    --living-shadow-deep: var(--shadow-floating);
     
     --living-spacing-section: 3rem;
     --living-spacing-card: 1.5rem;
@@ -514,7 +514,7 @@ body.sidebar-collapsed .living-container {
 
 /* Cards de destacados - Estilo similar a brands */
 .highlight-card {
-    background: #15171c !important;
+    background: var(--bg-card) !important;
     border-radius: 16px;
     padding: 1.25rem;
     display: flex;
@@ -526,14 +526,14 @@ body.sidebar-collapsed .living-container {
 }
 
 .highlight-card:hover {
-    background: #15171c !important;
+    background: var(--bg-card) !important;
     border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 .highlight-card-title {
     font-size: 1rem;
     font-weight: 600;
-    color: #D4B896; /* --brand-text-gold */
+    color: var(--living-text-gold);
     margin: 0 0 1rem 0;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -545,7 +545,7 @@ body.sidebar-collapsed .living-container {
 .highlight-card-title i {
     font-size: 0.875rem;
     opacity: 1;
-    color: #D4B896; /* --brand-text-gold */
+    color: var(--living-text-gold);
 }
 
 .highlight-card-value {
@@ -557,7 +557,7 @@ body.sidebar-collapsed .living-container {
 
 .highlight-card-label {
     font-size: 0.625rem;
-    color: #6B7280; /* --text-muted */
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     margin-top: 0.5rem;
@@ -565,7 +565,7 @@ body.sidebar-collapsed .living-container {
 
 .highlight-card-subtitle {
     font-size: 0.625rem;
-    color: #6B7280; /* --text-muted */
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     margin-top: 0.25rem;

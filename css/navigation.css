@@ -11,9 +11,9 @@
     --nav-width-collapsed: 64px;
     --nav-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --nav-overlay: rgba(0, 0, 0, 0.8);
-    --nav-bg: #0E1115; /* Panel estructurado, distinto al canvas principal */
-    --nav-border: rgba(255, 255, 255, 0.06); /* Divider vertical ultra sutil */
-    --nav-separator: rgba(255, 255, 255, 0.06);
+    --nav-bg: var(--bg-primary);
+    --nav-border: var(--border-divider);
+    --nav-separator: var(--border-divider);
     --nav-item-height: 44px; /* Altura consistente para items primarios */
     --nav-item-height-sub: 36px; /* Altura para subitems */
 }
@@ -1483,7 +1483,7 @@ body.has-sidebar #app-container:has(> main.living-main-content) {
     top: 0;
     right: 0;
     height: 60px;
-    background: var(--nav-bg, #0E1115);
+    background: var(--nav-bg);
     border-bottom: 1px solid var(--nav-border);
     z-index: 900;
     display: flex;
@@ -1623,7 +1623,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     top: calc(100% + 8px);
     right: 0;
     width: 240px;
-    background: var(--nav-bg, #0E1115);
+    background: var(--nav-bg);
     border: 1px solid var(--nav-border);
     border-radius: 12px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
@@ -1719,7 +1719,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
 .user-dropdown-mode-option input[type="radio"] {
     width: 16px;
     height: 16px;
-    accent-color: var(--accent-warm, #e09145);
+    accent-color: var(--accent-warm);
     cursor: pointer;
 }
 
@@ -2125,7 +2125,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     left: 0;
     width: var(--nav-width, 280px);
     height: 100vh;
-    background: var(--nav-bg, #0E1115);
+    background: var(--nav-bg);
     border-right: 1px solid var(--nav-border);
     display: flex;
     flex-direction: column;

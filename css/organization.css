@@ -4,7 +4,7 @@
     padding: 2rem;
     max-width: 1400px;
     margin: 0 auto;
-    background: var(--living-bg-deep, #0A0C0F);
+    background: var(--living-bg-deep, var(--bg-primary));
 }
 
 .organization-header {
@@ -14,7 +14,7 @@
 .organization-title {
     font-size: 2rem;
     font-weight: 700;
-    color: var(--text-primary, #ecebda);
+    color: var(--text-primary);
 }
 
 .organization-tabs {
@@ -37,12 +37,12 @@
 }
 
 .tab-btn:hover {
-    color: var(--text-primary, #ecebda);
+    color: var(--text-primary);
 }
 
 .tab-btn.active {
-    color: var(--accent-warm, #e09145);
-    border-bottom-color: var(--accent-warm, #e09145);
+    color: var(--accent-warm);
+    border-bottom-color: var(--accent-warm);
 }
 
 .organization-content {
