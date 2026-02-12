@@ -1,94 +1,93 @@
-# Sidebar usuario consumidor – Especificación técnica
+# Sidebar usuario consumidor – Arquitectura final
 
 **Plataforma:** AI Smart Content  
 **Alcance:** Sidebar de navegación del usuario consumidor (SaaS), no el de desarrolladores.
 
-## Objetivo
+## Estructura general
 
-- Reducir complejidad cognitiva.
-- Escalar arquitectura multi-tenant.
-- Mantener consistencia visual minimalista.
-- Render dinámico desde configuración (JSON/JS).
-- Soportar crecimiento futuro (módulos, marketplace, AI agents).
+El sidebar se divide en **2 zonas**:
 
-## Principios de diseño
+- **Zona 1** → Navegación funcional del workspace (arriba, scroll si hace falta).
+- **Zona 2** → Navegación organizacional / administrativa (footer anclado).
 
-1. **Workflow-Based Navigation:** Configuración → Creación → Automatización → Activación → Análisis.
-2. **Máximo 1 nivel de nesting:** Menu → Submenu ✓ (no Subsubmenu).
-3. **Sidebar = navegación primaria;** subnavegación en breadcrumb, tabs o panels.
-4. **Jerarquía plana:** máx. 6 módulos principales, máx. 5 subitems por módulo.
+---
 
-## Estructura del sidebar
+## Zona superior — Workspace navigation
 
-### Level 0 – Workspace context (arriba)
+### Header: Workspace Switcher
 
-- Workspace selector (organización).
+- Nombre del workspace.
 - Tipo de plan.
-- Estado del workspace.
+- Dropdown selector.
+- Siempre visible, no scrollable, contexto global.
 
-### Level 1 – Navegación principal (orden fijo)
+### Navegación principal (orden fijo)
 
-| Orden | Módulo      | Descripción breve                |
-|-------|-------------|-----------------------------------|
-| 1     | **Actividad** | Vista operacional del workspace (antes "Living") |
-| 2     | Foundation  | ADN estructural del contenido     |
-| 3     | Creation    | Producción de contenido           |
-| 4     | Automations | Orquestación de flujos IA         |
-| 5     | Campaigns   | Distribución y activación         |
-| 6     | Analytics   | Insights y métricas               |
+| Orden | Módulo     | Tipo UX        | Comportamiento |
+|-------|------------|----------------|-----------------|
+| 1     | **Actividad** | Página directa | No expandible. Dashboard operativo. Punto de entrada. |
+| 2     | **Estudio**   | Página directa | Navegación directa. Workspace creativo. |
+| 3     | **Catálogo**  | Contenedor     | Expandible. Subniveles: Posts, Reels, Stories, Ads, Templates, Videos. |
+| 4     | **Identidad** | Contenedor     | Expandible. Marca, Productos, Servicios, Audiencias, Campañas, Assets, Reglas IA. |
 
-### Level 2 – Sub navegación
+---
 
-- **Actividad:** Overview, Recent Content, Active Automations, Campaign Performance, Notifications.
-- **Foundation:** Brand, Products, Services, Assets & Guidelines, AI Rules.
-- **Creation:** Studio, UGC Production, Prompt Builder.
-- **Automations:** Flow Library, Active Flows, Flow Builder, Integrations.
-- **Campaigns:** Audiences, Campaign Manager, Distribution.
-- **Analytics:** Content Performance, Audience Insights, ROI Dashboards.
+## Zona inferior — Organization control
 
-## Configuración (config-driven)
+Anclada al footer del sidebar. No se mezcla con la navegación funcional.
 
-El menú se genera desde `SIDEBAR_USER_CONFIG` en `js/components/Navigation.js`. Cada grupo tiene:
+| Elemento                    | Tipo UX     | Descripción |
+|----------------------------|------------|-------------|
+| **Configuración**          | Página directa | Config global: usuarios, permisos, integraciones, branding, facturación. |
+| **Planes**                 | Página directa | Gestión del plan: upgrade/downgrade, comparativa, billing. |
+| **Créditos**               | Página directa | Solo compra/recarga. No muestra balance actual. |
+| **Salir de la organización** | Action item | Abre modal de confirmación; luego sale del workspace (ej. vuelve a /hogar). |
 
-- `id`, `label`, `icon` (clase Font Awesome), `type: 'group'`
-- `items[]`: `id`, `label`, `route` (sufijo respecto a `basePath`, ej. `living`, `studio/catalog`).
+---
 
-Rutas actuales se mantienen (`/living`, `/brand`, `/products`, etc.); solo cambian labels y agrupación.
+## Reglas visuales
 
-## Reglas visuales (CSS)
+- **Iconografía:** 16×16 px, stroke consistente, monocromático.
+- **Tipografía:** 13 px. Primarios peso 500, subitems 400.
+- **Altura fila:** 36 px.
+- **Spacing:** Padding horizontal 16 px, icon spacing 10 px, indent subitems 18 px.
+- **Active:** Background capsule, border-radius 8 px.
+- **Hover:** Background opacity 6–8 %, transition 120 ms.
 
-- **Width:** Expanded 260px, Collapsed 72px (solo iconos + tooltip).
-- **Spacing:** Altura ítem 44px, espacio entre grupos 16px, icono 20px, label 14px.
-- **Active:** Capsule highlight, border-radius 10px.
-- **Hover:** Background opacity 8%, transition 150ms ease.
-- **Tipografía:** Primarios 500, subitems 400.
-
-Design tokens en `css/navigation.css`:
-
-- `--sidebar-background`, `--sidebar-hover`, `--sidebar-active`
-- `--sidebar-icon-color`, `--sidebar-text-primary`, `--sidebar-text-secondary`
+---
 
 ## Comportamiento interactivo
 
-- **Un solo grupo expandido** a la vez (al abrir uno se cierran los demás).
-- **Ruta actual:** marca `active` el subitem correspondiente y abre su grupo (`submenu-open`).
-- **Tooltip** obligatorio cuando el sidebar está colapsado.
-- **Navegación:** clic en subitem usa History API (`router.navigate`); el toggle del grupo solo expande/colapsa.
+- **Expand/Collapse:** Solo 1 contenedor expandido a la vez. Estado persistido en `localStorage` (`sidebarUserExpanded`).
+- **Active state:** Enlace que coincide con la ruta actual; su contenedor (Catálogo o Identidad) se abre automáticamente.
+
+---
+
+## Estructura del componente
+
+```
+Sidebar
+ ├── WorkspaceHeader (selector de organización)
+ ├── NavigationMain (Actividad, Estudio, Catálogo, Identidad)
+ ├── Spacer (flex grow)
+ └── NavigationFooter (Configuración, Planes, Créditos, Salir)
+```
+
+---
+
+## Configuración (JSON schema)
+
+En `js/components/Navigation.js`, `SIDEBAR_USER_CONFIG`:
+
+- **main[]:** `type: 'page'` (Actividad, Estudio) o `type: 'container'` (Catálogo, Identidad) con `children[]`.
+- **footer[]:** Items con `label`, `icon`, `route` o `action: 'leaveWorkspace'`.
+
+Rutas existentes se reutilizan (`/living`, `/studio`, `/studio/catalog`, `/brand`, `/products`, `/audiences`, `/campaigns`, `/content`, `/settings`, `/planes`). Créditos puede apuntar a `/credits` cuando exista la vista.
+
+---
 
 ## Responsive
 
 - **Desktop:** Sidebar fijo.
-- **Tablet:** Sidebar overlay colapsable.
-- **Mobile:** Sidebar drawer.
-
-## Accesibilidad
-
-- Navegación por teclado.
-- ARIA en grupos (`aria-expanded`, `aria-controls`, `role="group"`).
-- Focus visible, contraste AA.
-
-## Cambio de nombre Living → Actividad
-
-- **Label en sidebar:** "Living" sustituido por "Actividad" como primer módulo.
-- **Header:** Título por defecto y para la ruta `/living` es "Actividad".
-- **URL:** Se mantiene `/living` (y `/org/:id/living`) para no romper rutas ni bookmarks.
+- **Tablet:** Sidebar overlay.
+- **Mobile:** Sidebar drawer con gesto de cierre.

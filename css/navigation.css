@@ -2145,26 +2145,114 @@ body.sidebar-collapsed .app-header.with-sidebar {
    MENÚ DE NAVEGACIÓN
    ========================================= */
 
-.nav-menu {
+/* Spacer entre navegación principal y footer (Zona 1 vs Zona 2) */
+.nav-spacer {
     flex: 1;
+    min-height: 0;
+}
+
+.nav-menu {
+    flex: 0 0 auto;
     overflow-y: auto;
-    padding: 16px 12px;
-}
-
-/* Grupos: spacing vertical 16px entre módulos (spec) */
-.nav-menu .nav-group {
-    margin-bottom: 16px;
-}
-
-.nav-menu .nav-group:last-child {
-    margin-bottom: 0;
+    padding: 16px;
 }
 
 .nav-item {
     margin-bottom: 0;
 }
 
-.side-navigation .nav-link {
+/* Reglas visuales sidebar usuario: 36px altura, 13px, 16px padding, 10px icon spacing, 8px radius */
+.nav-mode-user .nav-link,
+.nav-mode-user .nav-main-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 36px;
+    padding: 0 16px;
+    border-radius: 8px;
+    color: var(--sidebar-text-secondary);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 0.12s ease, color 0.12s ease;
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+}
+
+.nav-mode-user .nav-link:hover,
+.nav-mode-user .nav-main-link:hover {
+    background: var(--sidebar-hover);
+    color: var(--sidebar-text-primary);
+}
+
+.nav-mode-user .nav-link.active,
+.nav-mode-user .nav-main-link.active {
+    background: var(--sidebar-active);
+    color: var(--sidebar-text-primary);
+}
+
+.nav-mode-user .nav-icon {
+    width: 16px;
+    font-size: 16px;
+    text-align: center;
+    flex-shrink: 0;
+    color: var(--sidebar-icon-color);
+}
+
+.nav-mode-user .nav-text {
+    flex: 1;
+}
+
+.nav-mode-user .nav-chevron {
+    font-size: 12px;
+    color: var(--text-muted);
+    transition: transform 0.2s ease;
+}
+
+/* Submenú: indent 18px, solo texto, peso 400 */
+.nav-item.has-submenu .nav-submenu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.nav-item.has-submenu.submenu-open .nav-submenu {
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.nav-item.has-submenu.submenu-open .nav-chevron {
+    transform: rotate(90deg);
+}
+
+.nav-mode-user .nav-submenu-link {
+    display: flex;
+    align-items: center;
+    padding: 0 16px 0 34px; /* 16 + 18px indent */
+    min-height: 36px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 400;
+    border-radius: 8px;
+    transition: background 0.12s ease, color 0.12s ease;
+}
+
+.nav-mode-user .nav-submenu-link:hover {
+    background: var(--sidebar-hover);
+    color: var(--sidebar-text-secondary);
+}
+
+.nav-mode-user .nav-submenu-link.active {
+    background: var(--sidebar-active);
+    color: var(--sidebar-text-primary);
+}
+
+/* Compatibilidad: sidebar dev y otros mantienen estilos anteriores */
+.side-navigation:not(.nav-mode-user) .nav-link {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -2183,52 +2271,26 @@ body.sidebar-collapsed .app-header.with-sidebar {
     text-align: left;
 }
 
-.side-navigation .nav-link:hover {
+.side-navigation:not(.nav-mode-user) .nav-link:hover {
     background: var(--sidebar-hover);
     color: var(--sidebar-text-primary);
 }
 
-.side-navigation .nav-link.active {
+.side-navigation:not(.nav-mode-user) .nav-link.active {
     background: var(--sidebar-active);
     color: var(--sidebar-text-primary);
     font-weight: 500;
 }
 
-.side-navigation .nav-icon {
+.side-navigation:not(.nav-mode-user) .nav-icon {
     width: 20px;
-    font-size: 20px;
+    font-size: 16px;
     text-align: center;
     flex-shrink: 0;
     color: var(--sidebar-icon-color);
 }
 
-.side-navigation .nav-text {
-    flex: 1;
-}
-
-.side-navigation .nav-chevron {
-    font-size: 12px;
-    color: var(--text-muted);
-    transition: transform 0.2s ease;
-}
-
-/* Submenú (máx. 5 subitems por módulo, spec) */
-.nav-item.has-submenu .nav-submenu {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease;
-}
-
-.nav-item.has-submenu.submenu-open .nav-submenu {
-    max-height: 320px;
-    overflow-y: auto;
-}
-
-.nav-item.has-submenu.submenu-open .nav-chevron {
-    transform: rotate(90deg);
-}
-
-.nav-submenu-link {
+.side-navigation:not(.nav-mode-user) .nav-submenu-link {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -2240,20 +2302,51 @@ body.sidebar-collapsed .app-header.with-sidebar {
     transition: all 0.2s ease;
 }
 
-.nav-submenu-link:hover {
+.side-navigation:not(.nav-mode-user) .nav-submenu-link:hover,
+.side-navigation:not(.nav-mode-user) .nav-submenu-link.active {
     background: var(--bg-hover);
     color: var(--text-secondary);
 }
 
-.nav-submenu-link.active {
-    background: var(--bg-hover);
-    color: var(--text-primary);
+/* Zona 2: Footer organizacional (Configuración, Planes, Créditos, Salir) */
+.nav-mode-user .nav-footer {
+    flex-shrink: 0;
+    padding: 12px 16px 16px;
+    border-top: 1px solid var(--nav-border);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
-.nav-submenu-link i {
-    width: 16px;
+.nav-mode-user .nav-footer-link,
+.nav-mode-user .nav-footer-action {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 36px;
+    padding: 0 16px;
+    border-radius: 8px;
+    color: var(--sidebar-text-secondary);
+    text-decoration: none;
     font-size: 13px;
-    text-align: center;
+    font-weight: 500;
+    transition: background 0.12s ease, color 0.12s ease;
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+}
+
+.nav-mode-user .nav-footer-link:hover,
+.nav-mode-user .nav-footer-action:hover {
+    background: var(--sidebar-hover);
+    color: var(--sidebar-text-primary);
+}
+
+.nav-mode-user .nav-footer-link.active {
+    background: var(--sidebar-active);
+    color: var(--sidebar-text-primary);
 }
 
 /* =========================================

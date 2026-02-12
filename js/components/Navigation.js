@@ -1,81 +1,50 @@
 /**
- * Configuración del sidebar de usuario consumidor (SaaS).
- * Render dinámico, máx. 1 nivel de nesting, workflow-based.
- * Orden: Actividad → Foundation → Creation → Automations → Campaigns → Analytics.
+ * Sidebar usuario consumidor — Schema final (Zona 1: navegación workspace, Zona 2: footer organizacional).
+ * Estructura: main[] (Actividad, Estudio, Catálogo, Identidad) + footer[] (Configuración, Planes, Créditos, Salir).
  */
-const SIDEBAR_USER_CONFIG = [
-  {
-    id: 'activity',
-    label: 'Actividad',
-    icon: 'fa-chart-line',
-    type: 'group',
-    items: [
-      { id: 'overview', label: 'Overview', route: 'living' },
-      { id: 'recent', label: 'Recent Content', route: 'living' },
-      { id: 'automations', label: 'Active Automations', route: 'living' },
-      { id: 'performance', label: 'Campaign Performance', route: 'campaigns' },
-      { id: 'notifications', label: 'Notifications', route: 'living' }
-    ]
-  },
-  {
-    id: 'foundation',
-    label: 'Foundation',
-    icon: 'fa-layer-group',
-    type: 'group',
-    items: [
-      { id: 'brand', label: 'Brand', route: 'brand' },
-      { id: 'products', label: 'Products', route: 'products' },
-      { id: 'services', label: 'Services', route: 'products' },
-      { id: 'assets', label: 'Assets & Guidelines', route: 'brand' },
-      { id: 'ai-rules', label: 'AI Rules', route: 'brand' }
-    ]
-  },
-  {
-    id: 'creation',
-    label: 'Creation',
-    icon: 'fa-wand-magic-sparkles',
-    type: 'group',
-    items: [
-      { id: 'studio', label: 'Studio', route: 'studio' },
-      { id: 'ugc', label: 'UGC Production', route: 'studio' },
-      { id: 'prompt-builder', label: 'Prompt Builder', route: 'studio' }
-    ]
-  },
-  {
-    id: 'automations',
-    label: 'Automations',
-    icon: 'fa-project-diagram',
-    type: 'group',
-    items: [
-      { id: 'flow-library', label: 'Flow Library', route: 'studio/catalog' },
-      { id: 'active-flows', label: 'Active Flows', route: 'studio' },
-      { id: 'flow-builder', label: 'Flow Builder', route: 'studio' },
-      { id: 'integrations', label: 'Integrations', route: 'studio' }
-    ]
-  },
-  {
-    id: 'campaigns',
-    label: 'Campaigns',
-    icon: 'fa-bullhorn',
-    type: 'group',
-    items: [
-      { id: 'audiences', label: 'Audiences', route: 'audiences' },
-      { id: 'campaign-manager', label: 'Campaign Manager', route: 'campaigns' },
-      { id: 'distribution', label: 'Distribution', route: 'marketing' }
-    ]
-  },
-  {
-    id: 'analytics',
-    label: 'Analytics',
-    icon: 'fa-chart-pie',
-    type: 'group',
-    items: [
-      { id: 'content-performance', label: 'Content Performance', route: 'content' },
-      { id: 'audience-insights', label: 'Audience Insights', route: 'audiences' },
-      { id: 'roi-dashboards', label: 'ROI Dashboards', route: 'campaigns' }
-    ]
-  }
-];
+const SIDEBAR_USER_CONFIG = {
+  main: [
+    { type: 'page', id: 'activity', label: 'Actividad', icon: 'fa-chart-line', route: 'living' },
+    { type: 'page', id: 'studio', label: 'Estudio', icon: 'fa-wand-magic-sparkles', route: 'studio' },
+    {
+      type: 'container',
+      id: 'catalog',
+      label: 'Catálogo',
+      icon: 'fa-th-large',
+      children: [
+        { label: 'Posts', route: 'studio/catalog' },
+        { label: 'Reels', route: 'studio/catalog' },
+        { label: 'Stories', route: 'studio/catalog' },
+        { label: 'Ads', route: 'studio/catalog' },
+        { label: 'Templates', route: 'studio/catalog' },
+        { label: 'Videos', route: 'studio/catalog' }
+      ]
+    },
+    {
+      type: 'container',
+      id: 'identity',
+      label: 'Identidad',
+      icon: 'fa-layer-group',
+      children: [
+        { label: 'Marca', route: 'brand' },
+        { label: 'Productos', route: 'products' },
+        { label: 'Servicios', route: 'products' },
+        { label: 'Audiencias', route: 'audiences' },
+        { label: 'Campañas', route: 'campaigns' },
+        { label: 'Assets', route: 'content' },
+        { label: 'Reglas IA', route: 'brand' }
+      ]
+    }
+  ],
+  footer: [
+    { label: 'Configuración', icon: 'fa-cog', route: 'settings' },
+    { label: 'Planes', icon: 'fa-credit-card', route: 'planes' },
+    { label: 'Créditos', icon: 'fa-coins', route: 'credits' },
+    { label: 'Salir de la organización', icon: 'fa-sign-out-alt', action: 'leaveWorkspace' }
+  ]
+};
+
+const SIDEBAR_USER_EXPANDED_KEY = 'sidebarUserExpanded';
 
 /**
  * Navigation Component - Sistema de navegación inteligente
@@ -262,42 +231,80 @@ class Navigation {
   }
 
   /**
-   * HTML para navegación de usuario SaaS (con sidebar).
-   * Render dinámico desde SIDEBAR_USER_CONFIG; máximo 1 nivel de nesting.
+   * Resuelve la ruta completa para el sidebar usuario (con o sin org).
+   * Sin org: rutas legacy (ej. brand → /brands). Con org: /org/:id/route.
+   */
+  getUserSidebarRoute(routeSuffix) {
+    const basePath = this.currentOrgId ? `/org/${this.currentOrgId}` : '';
+    const globalRoutes = { planes: '/planes', credits: '/credits' };
+    if (globalRoutes[routeSuffix]) return globalRoutes[routeSuffix];
+    if (basePath) return `${basePath}/${routeSuffix}`;
+    const legacy = { brand: '/brands', settings: '/settings' };
+    return legacy[routeSuffix] || `/${routeSuffix}`;
+  }
+
+  /**
+   * HTML para navegación de usuario SaaS.
+   * Zona 1: WorkspaceHeader + NavigationMain (Actividad, Estudio, Catálogo, Identidad).
+   * Zona 2: NavigationFooter anclado (Configuración, Planes, Créditos, Salir).
    */
   getUserNavigationHTML() {
     const basePath = this.currentOrgId ? `/org/${this.currentOrgId}` : '';
-    const prefix = (path) => path ? `${basePath}/${path}` : basePath || '/';
+    const full = (suffix) => this.getUserSidebarRoute(suffix);
+    const expandedId = localStorage.getItem(SIDEBAR_USER_EXPANDED_KEY) || '';
 
-    const menuHTML = SIDEBAR_USER_CONFIG.map((group) => {
-      const subitems = group.items
+    const mainHTML = SIDEBAR_USER_CONFIG.main.map((item) => {
+      if (item.type === 'page') {
+        const href = full(item.route);
+        return `
+          <div class="nav-item">
+            <a href="${href}" class="nav-link nav-main-link" data-route="${href}" data-tooltip="${item.label}">
+              <i class="fas ${item.icon} nav-icon"></i>
+              <span class="nav-text">${item.label}</span>
+            </a>
+          </div>`;
+      }
+      const isOpen = expandedId === item.id;
+      const children = (item.children || [])
         .map(
-          (item) => `
-              <a href="${prefix(item.route)}" class="nav-submenu-link" data-route="${prefix(item.route)}" data-tooltip="${item.label}">
-                <span>${item.label}</span>
-              </a>`
+          (c) => `
+            <a href="${full(c.route)}" class="nav-submenu-link" data-route="${full(c.route)}" data-tooltip="${c.label}">
+              <span>${c.label}</span>
+            </a>`
         )
         .join('');
       return `
-          <div class="nav-group">
-            <div class="nav-item has-submenu" data-group-id="${group.id}">
-              <button type="button" class="nav-link nav-submenu-toggle" data-tooltip="${group.label}" aria-expanded="false" aria-controls="nav-sub-${group.id}">
-                <i class="fas ${group.icon} nav-icon"></i>
-                <span class="nav-text">${group.label}</span>
-                <i class="fas fa-chevron-right nav-chevron" aria-hidden="true"></i>
-              </button>
-              <div class="nav-submenu" id="nav-sub-${group.id}" role="group" aria-label="${group.label}">
-                ${subitems}
-              </div>
-            </div>
-          </div>`;
+        <div class="nav-item has-submenu ${isOpen ? 'submenu-open' : ''}" data-container-id="${item.id}">
+          <button type="button" class="nav-link nav-submenu-toggle" data-tooltip="${item.label}" aria-expanded="${isOpen}" aria-controls="nav-sub-${item.id}">
+            <i class="fas ${item.icon} nav-icon"></i>
+            <span class="nav-text">${item.label}</span>
+            <i class="fas fa-chevron-right nav-chevron" aria-hidden="true"></i>
+          </button>
+          <div class="nav-submenu" id="nav-sub-${item.id}" role="group" aria-label="${item.label}">
+            ${children}
+          </div>
+        </div>`;
+    }).join('');
+
+    const footerHTML = SIDEBAR_USER_CONFIG.footer.map((f) => {
+      if (f.action === 'leaveWorkspace') {
+        return `
+          <button type="button" class="nav-footer-link nav-footer-action" data-action="leaveWorkspace" data-tooltip="${f.label}">
+            <i class="fas ${f.icon} nav-icon"></i>
+            <span class="nav-text">${f.label}</span>
+          </button>`;
+      }
+      const href = full(f.route);
+      return `
+        <a href="${href}" class="nav-footer-link" data-route="${href}" data-tooltip="${f.label}">
+          <i class="fas ${f.icon} nav-icon"></i>
+          <span class="nav-text">${f.label}</span>
+        </a>`;
     }).join('');
 
     return `
-      <!-- Overlay de navegación -->
       <div class="nav-overlay" id="navOverlay"></div>
 
-      <!-- Header con hamburguesa -->
       <header class="app-header with-sidebar" id="appHeader">
         <div class="header-content">
           <div class="header-left">
@@ -314,13 +321,11 @@ class Navigation {
             </div>
           </div>
         </div>
-        ${this.getUserDropdownHTML(this.currentOrgId ? `/org/${this.currentOrgId}/settings` : '/settings')}
+        ${this.getUserDropdownHTML(this.currentOrgId ? `${basePath}/settings` : '/settings')}
       </header>
 
-      <!-- Navegación lateral - Modo Usuario SaaS (config-driven) -->
       <nav class="side-navigation nav-mode-user" id="sideNavigation" aria-label="Navegación principal">
-        <!-- Level 0: Workspace context -->
-        <div class="nav-identity-section">
+        <div class="nav-workspace-header nav-identity-section" id="navWorkspaceHeader">
           <div class="nav-identity-card" id="navIdentityCard">
             <div class="nav-identity-content">
               <div class="nav-identity-info">
@@ -338,18 +343,14 @@ class Navigation {
           </div>
         </div>
 
-        <!-- Level 1–2: Navegación principal (grupos expandibles) -->
-        <div class="nav-menu">
-          ${menuHTML}
+        <div class="nav-menu" role="navigation" aria-label="Navegación del workspace">
+          ${mainHTML}
         </div>
 
-        <!-- Footer: usage + profile -->
-        <div class="nav-footer">
-          <div class="nav-tokens" id="navTokens">
-            <i class="fas fa-coins"></i>
-            <span id="navTokensValue">0</span>
-            <span class="nav-tokens-label">tokens</span>
-          </div>
+        <div class="nav-spacer" aria-hidden="true"></div>
+
+        <div class="nav-footer" role="navigation" aria-label="Administración organizacional">
+          ${footerHTML}
         </div>
       </nav>
     `;
@@ -592,14 +593,20 @@ class Navigation {
       });
     }
 
-    // Navegación con History API
-    document.querySelectorAll('.nav-link[data-route], .nav-submenu-link[data-route]').forEach(link => {
+    // Navegación con History API (main, submenu y footer)
+    document.querySelectorAll('.nav-link[data-route], .nav-main-link[data-route], .nav-submenu-link[data-route], .nav-footer-link[data-route]').forEach((link) => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
         const route = link.dataset.route;
-        if (route && window.router) {
-          window.router.navigate(route);
-        }
+        if (route && window.router) window.router.navigate(route);
+      });
+    });
+
+    // Salir de la organización: modal de confirmación
+    document.querySelectorAll('.nav-footer-action[data-action="leaveWorkspace"]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.showLeaveWorkspaceConfirm();
       });
     });
 
@@ -615,23 +622,25 @@ class Navigation {
   }
 
   /**
-   * Configurar submenús
+   * Configurar submenús (solo 1 contenedor expandido; persistir en localStorage).
    */
   setupSubmenus() {
-    document.querySelectorAll('.nav-submenu-toggle').forEach(toggle => {
+    document.querySelectorAll('.nav-mode-user .nav-submenu-toggle').forEach((toggle) => {
       toggle.addEventListener('click', (e) => {
         e.preventDefault();
-        const parent = toggle.closest('.nav-item');
+        const parent = toggle.closest('.nav-item.has-submenu');
+        if (!parent) return;
+        const containerId = parent.dataset.containerId;
         const isOpen = parent.classList.contains('submenu-open');
-        
-        // Cerrar otros submenús
-        document.querySelectorAll('.nav-item.submenu-open').forEach(item => {
-          if (item !== parent) {
-            item.classList.remove('submenu-open');
-          }
+
+        document.querySelectorAll('.nav-mode-user .nav-item.has-submenu.submenu-open').forEach((item) => {
+          if (item !== parent) item.classList.remove('submenu-open');
         });
-        
         parent.classList.toggle('submenu-open', !isOpen);
+        toggle.setAttribute('aria-expanded', !isOpen);
+
+        const newExpanded = !isOpen ? containerId : '';
+        localStorage.setItem(SIDEBAR_USER_EXPANDED_KEY, newExpanded);
       });
     });
   }
@@ -643,7 +652,7 @@ class Navigation {
    */
   updateActiveLink() {
     const currentPath = window.location.pathname;
-    const links = document.querySelectorAll('.nav-link[data-route], .nav-submenu-link[data-route]');
+    const links = document.querySelectorAll('.nav-link[data-route], .nav-main-link[data-route], .nav-submenu-link[data-route], .nav-footer-link[data-route]');
 
     links.forEach(link => link.classList.remove('active'));
 
@@ -683,17 +692,19 @@ class Navigation {
       '/hogar': 'Hogar',
       '/home': 'Hogar',
       '/living': 'Actividad',
-      '/brand': 'Foundation',
-      '/brands': 'Foundation',
-      '/products': 'Foundation',
-      '/product-detail': 'Foundation',
-      '/studio/catalog': 'Automations',
-      '/studio': 'Creation',
-      '/audiences': 'Campaigns',
-      '/marketing': 'Campaigns',
-      '/campaigns': 'Campaigns',
-      '/content': 'Analytics',
+      '/brand': 'Identidad',
+      '/brands': 'Identidad',
+      '/products': 'Identidad',
+      '/product-detail': 'Identidad',
+      '/studio/catalog': 'Catálogo',
+      '/studio': 'Estudio',
+      '/audiences': 'Identidad',
+      '/marketing': 'Identidad',
+      '/campaigns': 'Identidad',
+      '/content': 'Identidad',
       '/settings': 'Configuración',
+      '/planes': 'Planes',
+      '/credits': 'Créditos',
       '/dev/dashboard': 'Dashboard',
       '/dev/flows': 'Mis Flujos',
       '/dev/builder': 'Builder',
@@ -755,6 +766,16 @@ class Navigation {
     sidebar?.classList.remove('mobile-open');
     overlay?.classList.remove('active');
     document.body.classList.remove('nav-open');
+  }
+
+  /**
+   * Modal de confirmación para Salir de la organización. Navega a /hogar (selector de workspace).
+   */
+  showLeaveWorkspaceConfirm() {
+    const msg = '¿Salir de la organización? Volverás al inicio para elegir otro workspace.';
+    if (!window.confirm(msg)) return;
+    this.closeMobileNav();
+    if (window.router) window.router.navigate('/hogar');
   }
 
   /**
