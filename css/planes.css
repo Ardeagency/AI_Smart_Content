@@ -218,6 +218,8 @@
     flex-direction: column;
     gap: 0.35rem;
     cursor: pointer;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .plan-card-small:hover {
@@ -236,6 +238,7 @@
     justify-content: space-between;
     align-items: flex-start;
     gap: 0.5rem;
+    min-width: 0;
 }
 
 .plan-card-name {
@@ -243,6 +246,11 @@
     font-weight: 600;
     color: #ffffff;
     margin: 0;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .plan-card-price {
@@ -250,6 +258,9 @@
     font-weight: 700;
     color: #ffffff;
     white-space: nowrap;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .plan-card-price span {
@@ -263,6 +274,10 @@
     font-size: 0.8rem;
     color: #9ca3af;
     margin-top: auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Separador "O" */
