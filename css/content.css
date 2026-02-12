@@ -46,8 +46,8 @@
 
 .filter-select {
     padding: 0.75rem;
-    background: var(--living-bg-surface, #0E1012);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: var(--living-bg-surface);
+    border: 1px solid var(--border-divider);
     border-radius: 8px;
     color: var(--text-primary);
     font-size: 0.875rem;
@@ -69,7 +69,7 @@
     background: var(--living-bg-card, rgba(21, 23, 28, 0.6));
     padding: 2rem;
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border-divider);
     min-height: 400px;
 }
 
@@ -83,7 +83,7 @@
     background: #121416;
     padding: 1.5rem;
     border-radius: 12px;
-    border: 1px solid #1B1D1F;
+    border: 1px solid var(--border-color);
 }
 
 .info-section h3 {
@@ -94,7 +94,7 @@
 }
 
 .info-section pre {
-    color: var(--text-secondary, #a0a0a0);
+    color: var(--text-secondary);
     font-size: 0.875rem;
     white-space: pre-wrap;
     word-wrap: break-word;

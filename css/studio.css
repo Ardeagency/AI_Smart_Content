@@ -128,7 +128,7 @@
 }
 
 .studio-tab-future {
-  color: #7dd3fc;
+  color: var(--info-color);
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
@@ -271,7 +271,7 @@
 .studio-field label {
   font-size: 0.8rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--text-primary);
 }
 
 .studio-field input,

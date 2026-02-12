@@ -22,7 +22,7 @@
   --dev-bg-card-hover: var(--living-bg-card-hover, rgba(21, 23, 28, 0.8));
   --dev-border: rgba(224, 145, 69, 0.2);
   /* Borde sutil para cards, como en Living (no el border-color azulado de base) */
-  --dev-card-border: rgba(255, 255, 255, 0.06);
+  --dev-card-border: var(--border-divider);
 }
 
 /* ==========================================
@@ -660,7 +660,7 @@
 .dev-flow-card-header {
   position: relative;
   height: 140px;
-  background: var(--living-bg-surface, #0E1012);
+  background: var(--living-bg-surface);
 }
 
 .dev-flow-card-image {

@@ -210,7 +210,7 @@
     padding: clamp(0.625rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.25rem);
     font-size: clamp(0.8rem, 2.5vw, 0.9rem);
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--border-color);
     border-radius: var(--border-radius-sm);
     color: var(--text-secondary);
     font-weight: 500;
@@ -219,7 +219,7 @@
 }
 
 .btn-change-method:hover {
-    border-color: rgba(255, 255, 255, 0.3);
+    border-color: var(--border-light);
     color: var(--text-primary);
 }
 
@@ -460,7 +460,7 @@
     justify-content: center;
     gap: 0.5rem;
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--border-color);
     border-radius: var(--border-radius-sm);
     color: var(--text-primary);
     font-weight: 500;

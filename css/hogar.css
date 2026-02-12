@@ -185,12 +185,12 @@
    ============================================ */
 .org-card.org-card-premium {
     --org-card-radius: 24px;
-    --org-card-bg: #0b0c0f;
+    --org-card-bg: var(--bg-primary);
     position: relative;
     overflow: hidden;
     border-radius: var(--org-card-radius);
     background: var(--org-card-bg);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border-divider);
     cursor: pointer;
     box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
     transition: transform 0.25s ease, box-shadow 0.25s ease;
@@ -271,8 +271,8 @@
     width: 72px;
     height: 72px;
     border-radius: 50%;
-    background: #0f1115;
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
     position: absolute;
     top: -36px;
     left: 24px;

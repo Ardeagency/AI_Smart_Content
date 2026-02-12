@@ -327,13 +327,13 @@
 
 .product-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    box-shadow: var(--shadow-hover);
 }
 
 .product-card-image {
     width: 100%;
     aspect-ratio: 1;
-    background: #F5F5F5;
+    background: var(--bg-hover);
     position: relative;
     overflow: hidden;
     border-radius: 16px;
@@ -360,13 +360,13 @@
     height: 100%;
     color: #9CA3AF;
     font-size: 3rem;
-    background: #F5F5F5;
+    background: var(--bg-hover);
     gap: 0.5rem;
 }
 
 .product-card-image .no-image span {
     font-size: 0.875rem;
-    color: #6B7280;
+    color: var(--text-muted);
     font-weight: 500;
 }
 
@@ -465,7 +465,7 @@
     display: flex;
     gap: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid rgba(236, 235, 218, 0.3);
+    border-top: 1px solid var(--border-color);
 }
 
 .btn-secondary {
@@ -524,8 +524,8 @@
 
 .image-item {
     position: relative;
-    background: #121416;
-    border: 1px solid #1B1D1F;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     overflow: hidden;
     transition: all 0.3s ease;
@@ -593,7 +593,7 @@
 }
 
 .btn-image-action:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: var(--border-light);
     transform: scale(1.1);
 }
 
@@ -631,7 +631,7 @@
     align-items: center;
     justify-content: center;
     background: transparent;
-    border: 1px solid #1B1D1F;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     color: var(--text-secondary);
     cursor: pointer;
@@ -642,7 +642,7 @@
 .btn-order:hover:not(:disabled) {
     border-color: var(--accent-warm);
     color: var(--accent-warm);
-    background: rgba(224, 145, 69, 0.1);
+    background: var(--bg-hover);
 }
 
 .btn-order:disabled {

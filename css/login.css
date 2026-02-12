@@ -13,7 +13,7 @@
 
 body {
     position: relative;
-    background: #0a0a0a;
+    background: var(--bg-primary);
     background-image: 
         linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.6) 100%),
         url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"><path d="M0,400 Q300,200 600,400 T1200,400 L1200,800 L0,800 Z" fill="%23333" opacity="0.3"/></svg>');

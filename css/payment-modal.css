@@ -30,8 +30,8 @@
 }
 
 .payment-modal {
-    background: var(--living-bg-card, rgba(21, 23, 28, 0.95)) !important;
-    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-divider) !important;
     border-radius: 24px !important;
     width: 90% !important;
     max-width: 520px !important;
@@ -55,7 +55,7 @@
     padding: 2rem 2rem 1rem 2rem;
     text-align: center;
     position: relative;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .payment-close {
@@ -77,7 +77,7 @@
 }
 
 .payment-close:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--bg-hover);
     color: var(--text-primary);
 }
 
@@ -187,7 +187,7 @@
     align-items: center;
     gap: 0.75rem;
     padding-bottom: 0.75rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .section-title i {
@@ -249,7 +249,7 @@
 
 .password-toggle:hover {
     color: var(--text-secondary);
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-hover);
 }
 
 .password-toggle:focus {
@@ -322,7 +322,7 @@
     gap: 1rem;
     margin-bottom: 1.25rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .wompi-logo {
@@ -441,8 +441,8 @@
    ======================== */
 
 .plan-features-summary {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--bg-hover);
+    border: 1px solid var(--border-divider);
     border-radius: 12px;
     padding: 1.25rem;
     margin-bottom: 1.5rem;
@@ -490,8 +490,8 @@
    ======================== */
 
 .payment-total {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--bg-hover);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 1.5rem;
     margin-bottom: 1.5rem;
@@ -594,7 +594,7 @@
 .cancel-button {
     background: transparent;
     color: var(--text-secondary);
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    border: 2px solid var(--border-color);
     padding: 1rem 2rem;
     border-radius: 12px;
     font-size: 1rem;
@@ -604,9 +604,9 @@
 }
 
 .cancel-button:hover {
-    border-color: rgba(255, 255, 255, 0.4);
+    border-color: var(--border-light);
     color: var(--text-primary);
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-hover);
 }
 
 /* ========================
@@ -634,7 +634,7 @@
 .checkmark {
     width: 18px;
     height: 18px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    border: 2px solid var(--border-light);
     border-radius: 4px;
     position: relative;
     transition: var(--transition);

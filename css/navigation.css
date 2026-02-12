@@ -105,7 +105,7 @@ body.sidebar-collapsed #app-container .main-header,
 
 .header-sidebar-toggle:hover {
     color: var(--text-primary);
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-hover);
 }
 
 .header-sidebar-toggle i {
@@ -143,7 +143,7 @@ body.sidebar-collapsed #app-container .main-header,
 #headerRoute {
     font-size: 0.938rem;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--text-primary);
     margin: 0;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     white-space: nowrap;
@@ -228,7 +228,7 @@ body.sidebar-collapsed #app-container .main-header,
 .header-credits-value {
     font-size: 0.813rem;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--text-primary);
     line-height: 1;
     white-space: nowrap;
 }
@@ -244,8 +244,8 @@ body.sidebar-collapsed #app-container .main-header,
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: var(--bg-hover);
+    border: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -256,14 +256,14 @@ body.sidebar-collapsed #app-container .main-header,
 }
 
 .avatar-circle:hover {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.25);
+    background: var(--bg-hover);
+    border-color: var(--border-light);
 }
 
 .avatar-initials {
     font-size: 0.75rem;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--text-primary);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     line-height: 1;
     text-transform: uppercase;
@@ -395,7 +395,7 @@ body.sidebar-collapsed #app-container .main-header,
 }
 
 .hamburger-menu:hover {
-        background: rgba(255, 255, 255, 0.1);
+        background: var(--bg-hover);
 }
 
 .hamburger-line {
@@ -501,8 +501,8 @@ body.sidebar-collapsed #app-container .main-header,
 }
 
 .nav-identity-card {
-    background: rgba(255, 255, 255, 0.03); /* Fondo ligeramente elevado */
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: var(--bg-hover); /* Fondo ligeramente elevado */
+    border: 1px solid var(--border-divider);
     border-radius: 8px;
     padding: 12px;
     cursor: pointer;
@@ -510,8 +510,8 @@ body.sidebar-collapsed #app-container .main-header,
 }
 
 .nav-identity-card:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.08);
+    background: var(--bg-hover);
+    border-color: var(--border-divider);
 }
 
 .nav-identity-content {
@@ -833,7 +833,7 @@ body.sidebar-collapsed #app-container .main-header,
     padding: 0 12px;
     height: var(--nav-item-height);
     min-height: var(--nav-item-height);
-    color: rgba(255, 255, 255, 0.85); /* Texto normal, no grita */
+    color: var(--text-primary); /* Texto normal, no grita */
     text-decoration: none;
     transition: all 0.15s ease;
     position: relative;
@@ -849,13 +849,13 @@ body.sidebar-collapsed #app-container .main-header,
 /* Hover sutil */
 .nav-link:hover {
     color: rgba(255, 255, 255, 0.95);
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--bg-hover);
 }
 
 /* Estado activo que susurra, no grita */
 .nav-link.active {
-    color: rgba(255, 255, 255, 1); /* Texto 100%, pero no más grande */
-    background: rgba(255, 255, 255, 0.05); /* Fondo apenas distinto */
+    color: var(--text-primary); /* Texto 100%, pero no más grande */
+    background: var(--bg-hover); /* Fondo apenas distinto */
     font-weight: 500; /* Ligeramente más peso, pero sutil */
 }
 
@@ -948,7 +948,7 @@ body.sidebar-collapsed #app-container .main-header,
 .nav-link-parent {
     cursor: pointer;
     font-weight: 500; /* Peso mayor que hijos, pero controlado */
-    color: rgba(255, 255, 255, 0.9); /* Ligeramente más visible que items normales */
+    color: var(--text-primary); /* Ligeramente más visible que items normales */
     position: relative;
     display: flex;
     align-items: center;
@@ -958,7 +958,7 @@ body.sidebar-collapsed #app-container .main-header,
 /* Chevron indicador de estado abierto/cerrado */
 .nav-chevron {
     font-size: 11px;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--text-muted);
     transition: transform 0.2s ease, color 0.15s ease;
     margin-left: auto;
     flex-shrink: 0;
@@ -966,25 +966,25 @@ body.sidebar-collapsed #app-container .main-header,
 
 .nav-item-has-submenu.active .nav-chevron {
     transform: rotate(90deg);
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--text-secondary);
 }
 
 /* Entidades se siente fundacional */
 .nav-item-has-submenu[data-submenu="entidades"] .nav-link-parent {
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--text-primary);
 }
 
 /* Producción se siente operativo */
 .nav-item-has-submenu[data-submenu="produccion"] .nav-link-parent {
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--text-primary);
 }
 
 /* Item padre activo cuando un subitem está activo */
 .nav-item-has-submenu.active > .nav-link-parent {
-    color: rgba(255, 255, 255, 1);
-    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    background: var(--bg-hover);
     font-weight: 500;
 }
 
@@ -1036,7 +1036,7 @@ body.sidebar-collapsed #app-container .main-header,
     font-size: 13px; /* Tamaño menor - nivel 3 */
     font-weight: 400; /* Peso menor que el padre */
     position: relative;
-    color: rgba(255, 255, 255, 0.6); /* Color 60% - más silencioso */
+    color: var(--text-muted); /* Color 60% - más silencioso */
 }
 
 /* Punto conector en la línea vertical (opcional, para mejor visualización) */
@@ -1049,19 +1049,19 @@ body.sidebar-collapsed #app-container .main-header,
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--icon-button);
     border: 1px solid rgba(255, 255, 255, 0.1);
     z-index: 2;
 }
 
 .nav-link-sub:hover {
-    color: rgba(255, 255, 255, 0.75);
-    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-secondary);
+    background: var(--bg-hover);
 }
 
 .nav-link-sub.active {
-    color: rgba(255, 255, 255, 0.9); /* No 100%, más sutil */
-    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-primary); /* No 100%, más sutil */
+    background: var(--bg-hover);
     font-weight: 400; /* Sin cambio de peso */
 }
 
@@ -1538,7 +1538,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
 .app-header .header-logo .logo-text {
     font-size: 18px;
     font-weight: 600;
-    color: var(--text-primary, #ecebda);
+    color: var(--text-primary);
     letter-spacing: 0.5px;
 }
 
@@ -1564,14 +1564,14 @@ body.sidebar-collapsed .app-header.with-sidebar {
 }
 
 .app-header .header-hamburger:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--bg-hover);
     color: var(--text-primary);
 }
 
 .app-header .header-title {
     font-size: 16px;
     font-weight: 500;
-    color: var(--text-primary, #ecebda);
+    color: var(--text-primary);
     margin: 0;
 }
 
@@ -1613,7 +1613,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
 }
 
 .user-menu-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--bg-hover);
     color: var(--text-primary);
 }
 
@@ -1679,7 +1679,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
 }
 
 .user-dropdown-item:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-hover);
     color: var(--text-primary);
 }
 
@@ -1742,7 +1742,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     display: flex;
     align-items: center;
     padding: 12px;
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--bg-hover);
     border: 1px solid var(--nav-border);
     border-radius: 12px;
     cursor: pointer;
@@ -1751,7 +1751,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
 
 .nav-identity-card:hover {
     background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.1);
+    border-color: var(--border-color);
 }
 
 .nav-identity-content {
@@ -1797,19 +1797,19 @@ body.sidebar-collapsed .app-header.with-sidebar {
 }
 
 .nav-org-chevron:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--bg-hover);
     color: var(--text-primary);
 }
 
 /* Developer Identity Card - Idéntico al consumidor (Living/Brands): misma card, mismo icono naranja */
 .nav-identity-card.dev-identity {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: var(--bg-hover);
+    border: 1px solid var(--border-divider);
 }
 
 .nav-identity-card.dev-identity:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.08);
+    background: var(--bg-hover);
+    border-color: var(--border-divider);
 }
 
 .nav-dev-icon {
@@ -1883,7 +1883,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
 }
 
 .nav-org-option:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-hover);
 }
 
 .nav-org-option.active {
@@ -1965,7 +1965,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     align-items: center;
     gap: 8px;
     padding: 10px 12px;
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--bg-hover);
     border-radius: 10px;
     font-size: 13px;
 }
@@ -1991,7 +1991,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     align-items: center;
     gap: 16px;
     padding: 10px 12px;
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--bg-hover);
     border-radius: 10px;
 }
 
@@ -2025,7 +2025,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     gap: 8px;
     width: 100%;
     padding: 10px 12px;
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--bg-hover);
     border: 1px solid var(--nav-border);
     border-radius: 10px;
     color: var(--text-secondary);
@@ -2036,7 +2036,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
 }
 
 .nav-mode-switch:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-hover);
     border-color: rgba(224, 145, 69, 0.3);
     color: var(--accent-yellow);
 }
@@ -2166,7 +2166,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
 }
 
 .side-navigation .nav-link:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-hover);
     color: var(--text-primary);
 }
 
@@ -2221,12 +2221,12 @@ body.sidebar-collapsed .app-header.with-sidebar {
 }
 
 .nav-submenu-link:hover {
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--bg-hover);
     color: var(--text-secondary);
 }
 
 .nav-submenu-link.active {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--bg-hover);
     color: var(--text-primary);
 }
 
@@ -2293,11 +2293,11 @@ body.sidebar-collapsed .app-header.with-sidebar {
 }
 
 .error-actions .btn-secondary {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--bg-hover);
     color: var(--text-secondary);
 }
 
 .error-actions .btn-secondary:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--bg-hover);
     color: var(--text-primary);
 }

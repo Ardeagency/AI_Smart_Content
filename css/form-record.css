@@ -155,8 +155,8 @@
 .form-input,
 .form-textarea,
 .form-select {
-    background: #181a1b;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
     transition: none !important;
     -webkit-transition: none !important;
     -moz-transition: none !important;
@@ -199,8 +199,8 @@
     width: 100%;
     padding: 0.75rem 1rem;
     padding-right: 40px;
-    background: #181a1b;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     color: var(--text-primary);
     font-size: 0.95rem;
@@ -215,14 +215,14 @@
 
 .multiselect-trigger:hover {
     border-color: rgba(255, 255, 255, 0.15);
-    background: #181a1b;
+    background: var(--bg-card);
 }
 
 .multiselect-trigger:focus,
 .multiselect-trigger.open {
     outline: none;
     border-color: var(--primary-color);
-    background: #181a1b;
+    background: var(--bg-card);
     box-shadow: 0 0 0 3px rgba(210, 254, 63, 0.1);
 }
 
@@ -287,8 +287,8 @@
     top: calc(100% + 4px);
     left: 0;
     right: 0;
-    background: #1a1a1a;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     max-height: 300px;
     overflow-y: auto;
@@ -332,7 +332,7 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
     background: rgba(210, 254, 63, 0.05);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--border-color);
 }
 
 /* ============================================
@@ -362,13 +362,13 @@
    UPLOAD ZONES
    ============================================ */
 .upload-zone {
-    border: 2px dashed rgba(255, 255, 255, 0.1);
+    border: 2px dashed var(--border-color);
     border-radius: 8px;
     padding: 1rem;
     text-align: center;
     cursor: pointer;
     transition: all 0.3s ease;
-    background: #181a1b;
+    background: var(--bg-card);
     min-height: auto;
 }
 

@@ -48,7 +48,7 @@
     background: transparent;
     border: none;
     border-radius: 6px;
-    color: var(--text-secondary, #a0a0a0);
+    color: var(--text-secondary);
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -123,7 +123,7 @@
 .form-textarea {
     width: 100%;
     padding: 1rem;
-    background: var(--bg-dark, #1a1a1a);
+    background: var(--bg-dark);
     border: 1px solid rgba(236, 235, 218, 0.2);
     border-radius: 8px;
     color: var(--text-primary);
@@ -168,7 +168,7 @@
 }
 
 .template-card p {
-    color: var(--text-secondary, #a0a0a0);
+    color: var(--text-secondary);
     font-size: 0.875rem;
 }
 
