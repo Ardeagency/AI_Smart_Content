@@ -47,6 +47,66 @@ const SIDEBAR_USER_CONFIG = {
 const SIDEBAR_USER_EXPANDED_KEY = 'sidebarUserExpanded';
 
 /**
+ * Sidebar desarrollador — Build, Operations, Observability, Resources, Lead (solo lead).
+ */
+const SIDEBAR_DEVELOPER_CONFIG = [
+  { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-line', route: '/dev/dashboard' },
+  {
+    type: 'container',
+    id: 'build',
+    label: 'Build',
+    icon: 'fa-wrench',
+    children: [
+      { label: 'Mis Flujos', route: '/dev/flows' },
+      { label: 'Builder', route: '/dev/builder' }
+    ]
+  },
+  {
+    type: 'container',
+    id: 'operations',
+    label: 'Operations',
+    icon: 'fa-cogs',
+    children: [
+      { label: 'Test de Flujos', route: '/dev/test' },
+      { label: 'Webhooks', route: '/dev/webhooks' }
+    ]
+  },
+  {
+    type: 'container',
+    id: 'observability',
+    label: 'Observability',
+    icon: 'fa-chart-area',
+    children: [
+      { label: 'Debug', route: '/dev/test' },
+      { label: 'Logs', route: '/dev/logs' }
+    ]
+  },
+  {
+    type: 'container',
+    id: 'resources',
+    label: 'Resources',
+    icon: 'fa-book',
+    children: [
+      { label: 'Referencias visuales', route: '/dev/lead/references' }
+    ]
+  },
+  {
+    type: 'container',
+    id: 'lead',
+    label: 'Lead',
+    icon: 'fa-shield-alt',
+    role_required: 'lead',
+    children: [
+      { label: 'Equipo', route: '/dev/lead/team' },
+      { label: 'Categorías', route: '/dev/lead/categories' },
+      { label: 'Input Schemas', route: '/dev/lead/input-schemas' },
+      { label: 'Base conocimiento IA', route: '/dev/lead/ai-vectors' },
+      { label: 'Todos los flujos', route: '/dev/lead/flows' }
+    ]
+  }
+];
+
+/**
  * Navigation Component - Sistema de navegación inteligente
  * 
  * Maneja el sidebar y header según el contexto de la ruta:
@@ -357,14 +417,49 @@ class Navigation {
   }
 
   /**
-   * HTML para navegación de desarrollador PaaS (con sidebar)
+   * HTML para navegación de desarrollador PaaS (config-driven: Dashboard, Build, Operations, Observability, Resources, Lead).
    */
   getDeveloperNavigationHTML() {
+    const mainHTML = SIDEBAR_DEVELOPER_CONFIG.map((item) => {
+      const isLead = item.role_required === 'lead';
+      const wrapClass = isLead ? 'nav-item has-submenu nav-lead-only nav-dev-lead-section' : 'nav-item has-submenu';
+      const attrs = isLead ? ` id="navLeadSection" style="display: none;"` : '';
+
+      if (item.type === 'page') {
+        return `
+          <div class="nav-item">
+            <a href="${item.route}" class="nav-link" data-route="${item.route}" data-tooltip="${item.label}">
+              <i class="fas ${item.icon} nav-icon"></i>
+              <span class="nav-text">${item.label}</span>
+            </a>
+          </div>`;
+      }
+
+      const children = (item.children || [])
+        .map(
+          (c) => `
+            <a href="${c.route}" class="nav-submenu-link" data-route="${c.route}" data-tooltip="${c.label}">
+              <span>${c.label}</span>
+            </a>`
+        )
+        .join('');
+
+      return `
+        <div class="${wrapClass}" data-container-id="${item.id}"${attrs}>
+          <button type="button" class="nav-link nav-submenu-toggle" data-tooltip="${item.label}" aria-expanded="false" aria-controls="nav-dev-sub-${item.id}">
+            <i class="fas ${item.icon} nav-icon"></i>
+            <span class="nav-text">${item.label}</span>
+            <i class="fas fa-chevron-right nav-chevron" aria-hidden="true"></i>
+          </button>
+          <div class="nav-submenu" id="nav-dev-sub-${item.id}" role="group" aria-label="${item.label}">
+            ${children}
+          </div>
+        </div>`;
+    }).join('');
+
     return `
-      <!-- Overlay de navegación -->
       <div class="nav-overlay" id="navOverlay"></div>
 
-      <!-- Header con hamburguesa -->
       <header class="app-header with-sidebar" id="appHeader">
         <div class="header-content">
           <div class="header-left">
@@ -384,9 +479,7 @@ class Navigation {
         ${this.getUserDropdownHTML('/settings')}
       </header>
 
-      <!-- Navegación lateral - Modo Desarrollador PaaS -->
-      <nav class="side-navigation nav-mode-developer" id="sideNavigation">
-        <!-- Capa superior: Perfil desarrollador (nombre, rol y rank) -->
+      <nav class="side-navigation nav-mode-developer" id="sideNavigation" aria-label="Navegación desarrollador">
         <div class="nav-identity-section">
           <div class="nav-identity-card dev-identity" id="navIdentityCard">
             <div class="nav-identity-content">
@@ -401,94 +494,11 @@ class Navigation {
           </div>
         </div>
 
-        <!-- Menú Principal - Desarrollador PaaS -->
-        <div class="nav-menu">
-          <!-- Dashboard -->
-          <div class="nav-item">
-            <a href="/dev/dashboard" class="nav-link" data-route="/dev/dashboard" data-tooltip="Dashboard">
-              <i class="fas fa-chart-line nav-icon"></i>
-              <span class="nav-text">Dashboard</span>
-            </a>
-          </div>
-
-          <!-- Mis Flujos -->
-          <div class="nav-item">
-            <a href="/dev/flows" class="nav-link" data-route="/dev/flows" data-tooltip="Mis Flujos">
-              <i class="fas fa-project-diagram nav-icon"></i>
-              <span class="nav-text">Mis Flujos</span>
-            </a>
-          </div>
-
-          <!-- Builder -->
-          <div class="nav-item">
-            <a href="/dev/builder" class="nav-link" data-route="/dev/builder" data-tooltip="Builder">
-              <i class="fas fa-wrench nav-icon"></i>
-              <span class="nav-text">Builder</span>
-            </a>
-          </div>
-
-          <!-- Debug (submenu) -->
-          <div class="nav-item has-submenu">
-            <button class="nav-link nav-submenu-toggle" data-tooltip="Debug">
-              <i class="fas fa-bug nav-icon"></i>
-              <span class="nav-text">Debug</span>
-              <i class="fas fa-chevron-right nav-chevron"></i>
-            </button>
-            <div class="nav-submenu">
-              <a href="/dev/test" class="nav-submenu-link" data-route="/dev/test">
-                <i class="fas fa-flask"></i>
-                <span>Test de Flujos</span>
-              </a>
-              <a href="/dev/logs" class="nav-submenu-link" data-route="/dev/logs">
-                <i class="fas fa-terminal"></i>
-                <span>Logs</span>
-              </a>
-              <a href="/dev/webhooks" class="nav-submenu-link" data-route="/dev/webhooks">
-                <i class="fas fa-link"></i>
-                <span>Webhooks</span>
-              </a>
-            </div>
-          </div>
-
-          <!-- Lead (solo visible para dev_role === 'lead') -->
-          <div class="nav-item has-submenu nav-lead-only" id="navLeadSection" style="display: none;">
-            <button class="nav-link nav-submenu-toggle" data-tooltip="Lead">
-              <i class="fas fa-shield-alt nav-icon"></i>
-              <span class="nav-text">Lead</span>
-              <i class="fas fa-chevron-right nav-chevron"></i>
-            </button>
-            <div class="nav-submenu">
-              <a href="/dev/lead/flows" class="nav-submenu-link" data-route="/dev/lead/flows">
-                <i class="fas fa-project-diagram"></i>
-                <span>Todos los flujos</span>
-              </a>
-              <a href="/dev/lead/team" class="nav-submenu-link" data-route="/dev/lead/team">
-                <i class="fas fa-user-friends"></i>
-                <span>Equipo</span>
-              </a>
-              <a href="/dev/lead/categories" class="nav-submenu-link" data-route="/dev/lead/categories">
-                <i class="fas fa-tags"></i>
-                <span>Categorías</span>
-              </a>
-              <a href="/dev/lead/input-schemas" class="nav-submenu-link" data-route="/dev/lead/input-schemas">
-                <i class="fas fa-puzzle-piece"></i>
-                <span>Input Schemas</span>
-              </a>
-              <a href="/dev/lead/ai-vectors" class="nav-submenu-link" data-route="/dev/lead/ai-vectors">
-                <i class="fas fa-brain"></i>
-                <span>Base de conocimientos IA</span>
-              </a>
-              <a href="/dev/lead/references" class="nav-submenu-link" data-route="/dev/lead/references">
-                <i class="fas fa-images"></i>
-                <span>Referencias visuales</span>
-              </a>
-            </div>
-          </div>
+        <div class="nav-menu" role="navigation" aria-label="Menú desarrollador">
+          ${mainHTML}
         </div>
 
-        <!-- Footer del sidebar -->
         <div class="nav-footer">
-          <!-- Stats de desarrollador -->
           <div class="nav-dev-stats" id="navDevStats">
             <div class="nav-dev-stat">
               <i class="fas fa-play"></i>

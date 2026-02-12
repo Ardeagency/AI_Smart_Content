@@ -2320,6 +2320,17 @@ body.sidebar-collapsed .app-header.with-sidebar {
     color: var(--text-secondary);
 }
 
+/* Lead: gobernanza, diferenciación visual (spacing superior, acento sutil) */
+.nav-mode-developer .nav-dev-lead-section {
+    margin-top: 20px;
+    padding-top: 12px;
+    border-top: 1px solid var(--nav-border);
+}
+
+.nav-mode-developer .nav-dev-lead-section .nav-link.nav-submenu-toggle .nav-icon {
+    color: var(--text-primary);
+}
+
 /* Zona 2: Footer organizacional (Configuración, Planes, Créditos, Salir) */
 .nav-mode-user .nav-footer {
     flex-shrink: 0;
