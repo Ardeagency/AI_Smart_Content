@@ -178,9 +178,8 @@
     box-sizing: border-box;
 }
 
-/* Formulario y form-actions no pueden superar el ancho del inner */
-.planes-form-panel .registration-form,
-.planes-form-panel .form-actions {
+/* Formulario no puede superar el ancho del inner */
+.planes-form-panel .registration-form {
     max-width: 100%;
     box-sizing: border-box;
 }
@@ -366,44 +365,39 @@
     margin-top: 0.2rem;
 }
 
-.form-actions {
-    margin-top: 0.25rem;
-}
-
-/* Botón solo dentro del panel derecho; nunca escapa al ancho completo de la pantalla */
-.planes-form-panel .form-actions {
-    width: 100%;
+/* Botón de envío: mismo contenedor que el resto del formulario, dentro del panel derecho */
+.planes-submit-wrap {
+    margin-top: 0.5rem;
     max-width: 100%;
 }
 
-.planes-form-panel .btn-create-account {
+.planes-btn-submit {
     width: 100%;
     max-width: 100%;
-    padding: 0.875rem 1.5rem;
-    font-size: 1rem;
+    padding: 0.875rem 1.25rem;
+    font-size: 0.95rem;
     font-weight: 600;
-    background: #ffffff;
-    color: #000000;
-    border: none;
+    color: #ffffff;
+    background: #1f2937;
+    border: 1px solid #374151;
     border-radius: 10px;
     cursor: pointer;
     transition: var(--transition);
     box-sizing: border-box;
 }
 
-.planes-form-panel .btn-create-account:hover {
-    background: #f3f4f6;
-    transform: translateY(-1px);
+.planes-btn-submit:hover {
+    background: #374151;
+    border-color: #4b5563;
 }
 
-.planes-form-panel .btn-create-account:active {
-    transform: translateY(0);
+.planes-btn-submit:active {
+    transform: scale(0.99);
 }
 
-.planes-form-panel .btn-create-account:disabled {
+.planes-btn-submit:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    transform: none;
 }
 
 .planes-login-link {
