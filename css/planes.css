@@ -152,10 +152,13 @@
 }
 
 /* ============================================
-   PANEL DERECHO - Formulario (fondo negro)
+   PANEL DERECHO - Formulario (fondo negro). Contenido y botón solo dentro de este panel.
    ============================================ */
 .planes-form-panel {
     flex: 0 0 50%;
+    min-width: 0;
+    width: 50%;
+    max-width: 50%;
     min-height: 100vh;
     background: #000000;
     display: flex;
@@ -163,11 +166,23 @@
     justify-content: center;
     padding: 2rem 3rem;
     overflow-y: auto;
+    overflow-x: hidden;
+    box-sizing: border-box;
 }
 
-.planes-form-inner {
+/* Ancho fijo del contenido: gana sobre #app-container > div div { max-width: 100% } de app.css */
+.planes-form-panel .planes-form-inner {
     width: 100%;
-    max-width: 420px;
+    max-width: 420px !important;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+/* Formulario y form-actions no pueden superar el ancho del inner */
+.planes-form-panel .registration-form,
+.planes-form-panel .form-actions {
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .planes-form-title {
@@ -588,8 +603,8 @@
 }
 
 @media (max-width: 480px) {
-    .planes-form-inner {
-        max-width: 100%;
+    .planes-form-panel .planes-form-inner {
+        max-width: 100% !important;
     }
 
     .planes-form-title {
