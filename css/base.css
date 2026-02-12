@@ -47,6 +47,9 @@
     --error-color: #ef4444;
     --info-color: rgba(59, 130, 246, 0.8);
 
+    /* Contenedores interactivos (botones, barras clicables, etc.) */
+    --bg-interactive: #201D26;
+
     /* Sombras (#201D26) */
     --shadow-fill: #201D26;
     --shadow-card: 0 4px 16px rgba(32, 29, 38, 0.5);

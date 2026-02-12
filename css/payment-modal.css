@@ -85,8 +85,8 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    background: rgba(210, 254, 63, 0.1);
-    border: 1px solid rgba(210, 254, 63, 0.3);
+    background: var(--bg-hover);
+    border: 1px solid var(--border-color);
     padding: 0.5rem 1rem;
     border-radius: 20px;
     font-size: 0.9rem;
@@ -109,8 +109,8 @@
 }
 
 .plan-selected.pro {
-    background: rgba(210, 254, 63, 0.1);
-    border-color: rgba(210, 254, 63, 0.3);
+    background: var(--bg-hover);
+    border-color: var(--border-color);
 }
 
 .plan-selected.pro i {
@@ -143,8 +143,8 @@
 }
 
 .price-display {
-    background: rgba(210, 254, 63, 0.05);
-    border: 1px solid rgba(210, 254, 63, 0.2);
+    background: var(--bg-hover);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 1rem;
     margin-bottom: 1rem;
@@ -309,8 +309,8 @@
    ======================== */
 
 .payment-method-fixed {
-    background: linear-gradient(135deg, rgba(210, 254, 63, 0.05), rgba(210, 254, 63, 0.02));
-    border: 2px solid rgba(210, 254, 63, 0.3);
+    background: var(--bg-hover);
+    border: 2px solid var(--border-color);
     border-radius: 16px;
     padding: 1.5rem;
     margin-bottom: 1rem;
@@ -367,7 +367,7 @@
     border-radius: 20px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    box-shadow: 0 4px 12px rgba(210, 254, 63, 0.3);
+    box-shadow: var(--shadow-card);
 }
 
 .wompi-features {
@@ -391,7 +391,7 @@
 }
 
 .wompi-note {
-    background: rgba(224, 145, 69, 0.1);
+    background: var(--bg-hover);
     border: 1px solid rgba(59, 130, 246, 0.3);
     border-radius: 8px;
     padding: 0.875rem 1rem;
@@ -555,7 +555,7 @@
 
 .pay-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 15px 35px rgba(210, 254, 63, 0.4);
+    box-shadow: var(--shadow-floating);
 }
 
 .pay-button:active {
@@ -643,7 +643,7 @@
 }
 
 .checkbox-container:hover .checkmark {
-    border-color: rgba(210, 254, 63, 0.5);
+    border-color: var(--border-light);
 }
 
 .checkbox-container input[type="checkbox"]:checked + .checkmark {

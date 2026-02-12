@@ -75,9 +75,9 @@
 .studio-btn-producir {
   padding: 0.6rem 1.25rem;
   border-radius: 8px;
-  border: none;
-  background: var(--accent-warm);
-  color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  background: var(--bg-interactive);
+  color: var(--text-primary);
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
@@ -85,7 +85,7 @@
 }
 
 .studio-btn-producir:hover:not(:disabled) {
-  background: var(--accent-yellow-hover);
+  background: var(--bg-hover);
 }
 
 .studio-btn-producir:disabled {

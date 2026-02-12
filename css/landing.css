@@ -402,7 +402,7 @@
 .login-card .form-input:focus {
     outline: none;
     border-color: var(--accent-yellow);
-    box-shadow: 0 0 0 2px var(--accent-glow, rgba(224, 145, 69, 0.15));
+    box-shadow: 0 0 0 2px var(--border-color);
 }
 
 .login-card .form-input::placeholder {
@@ -457,7 +457,7 @@
 .login-card .submit-btn:hover {
     background: var(--accent-yellow-hover);
     transform: translateY(-1px);
-    box-shadow: var(--shadow-yellow, 0 0 16px rgba(224, 145, 69, 0.3));
+    box-shadow: var(--shadow-card);
 }
 
 .submit-btn:active {

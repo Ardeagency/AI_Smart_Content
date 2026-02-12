@@ -142,7 +142,7 @@
   transition: background 0.2s, transform 0.2s;
 }
 .flow-catalog-hero-nav:hover {
-  background: rgba(224, 145, 69, 0.4);
+  background: var(--bg-hover);
   transform: translateY(-50%) scale(1.05);
 }
 .flow-catalog-hero-prev { left: 0.5rem; }

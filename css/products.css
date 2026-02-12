@@ -217,9 +217,9 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
-    background: var(--primary-color);
-    color: var(--bg-black);
-    border: none;
+    background: var(--bg-interactive);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     font-weight: 600;
     font-size: 0.875rem;
@@ -704,7 +704,7 @@
 
 .upload-zone-small:hover {
     border-color: var(--accent-warm);
-    background: rgba(224, 145, 69, 0.05);
+    background: var(--bg-hover);
 }
 
 /* ============================================

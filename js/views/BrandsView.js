@@ -1944,14 +1944,6 @@ class BrandsView extends BaseView {
       uploadBtn.className = 'file-upload-btn';
       uploadBtn.innerHTML = '<i class="fas fa-plus"></i> Subir archivo';
       uploadBtn.style.marginTop = '1rem';
-      uploadBtn.style.padding = '0.5rem 1rem';
-      uploadBtn.style.background = 'rgba(212, 184, 150, 0.2)';
-      uploadBtn.style.border = '1px solid rgba(212, 184, 150, 0.3)';
-      uploadBtn.style.borderRadius = '6px';
-      uploadBtn.style.color = 'var(--brand-text-gold, #D4B896)';
-      uploadBtn.style.cursor = 'pointer';
-      uploadBtn.style.fontSize = '0.875rem';
-      uploadBtn.style.width = '100%';
 
       const fileInput = document.createElement('input');
       fileInput.type = 'file';

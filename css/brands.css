@@ -4,20 +4,20 @@
  */
 
 /* ============================================
-   VARIABLES (usando colores del sistema)
+   VARIABLES (paleta global)
    ============================================ */
 :root {
-    /* Fondo cálido */
+    /* Fondo cálido (gradientes de marca, se mantienen) */
     --brand-warm-1: #D4754E;
     --brand-warm-2: #C86B45;
     --brand-warm-3: #B85D3A;
     --brand-warm-4: #8B4332;
     --brand-warm-5: #5C2D22;
     
-    /* Texto sobre fondo cálido */
-    --brand-text-light: #E8DDD4;
-    --brand-text-gold: #D4B896;
-    --brand-text-muted: rgba(232, 221, 212, 0.5);
+    /* Texto e iconos: paleta global */
+    --brand-text-light: var(--text-primary);
+    --brand-text-gold: var(--text-primary);
+    --brand-text-muted: var(--text-muted);
 }
 
 /* ============================================
@@ -423,7 +423,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
 }
 
 .card-arrow-sub {
-    color: var(--brand-text-gold);
+    color: var(--icon-button);
     font-size: 0.75rem;
     text-decoration: none;
     margin-top: 0.25rem;
@@ -522,24 +522,26 @@ h1.brand-name-large[contenteditable="true"]:hover,
 
 .footer-text {
     font-size: 0.75rem;
-    color: var(--text-muted, #6B7280);
+    color: var(--text-muted);
 }
 
 /* ============================================
    CARDS ESPECÍFICAS
    ============================================ */
 
-/* INFO - Solo botón */
+/* INFO - Barra interactiva (color contenedores interactivos) */
 .card-info {
     min-height: 50px;
     padding: 1rem 1.25rem;
     cursor: pointer !important;
     transition: none !important;
     overflow: hidden;
+    background: var(--bg-interactive) !important;
+    border: 1px solid var(--border-color) !important;
 }
 
 .card-info:hover {
-    background: var(--bg-card) !important;
+    background: var(--bg-hover) !important;
 }
 
 .card-info .card-header {
@@ -710,7 +712,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
 
 .visual-section-label {
     font-size: 0.75rem;
-    color: var(--text-muted, #6B7280);
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     margin-bottom: 0.75rem;
@@ -920,8 +922,9 @@ h1.brand-name-large[contenteditable="true"]:hover,
 }
 
 .color-editor-btn-apply {
-    background: var(--accent-warm);
-    color: var(--bg-primary);
+    background: var(--bg-interactive);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
 }
 
 .color-editor-btn-cancel {
@@ -1017,7 +1020,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--text-muted, #6B7280);
+    color: var(--text-muted);
     font-size: 1rem;
     flex-shrink: 0;
 }
@@ -1053,12 +1056,12 @@ h1.brand-name-large[contenteditable="true"]:hover,
 
 .identity-file-empty-text {
     font-size: 0.875rem;
-    color: var(--text-muted, #6B7280);
+    color: var(--text-muted);
 }
 
 .identity-file-empty-hint {
     font-size: 0.75rem;
-    color: var(--text-muted, #6B7280);
+    color: var(--text-muted);
     opacity: 0.7;
 }
 
@@ -1069,9 +1072,36 @@ h1.brand-name-large[contenteditable="true"]:hover,
 
 .identity-cta-link {
     font-size: 0.75rem;
-    color: var(--brand-text-gold, #D4B896);
+    color: var(--icon-button);
     text-decoration: none;
     transition: opacity 0.2s;
+}
+
+/* Botón Subir archivo (contenedor interactivo) */
+.file-upload-btn {
+    margin-top: 1rem !important;
+    padding: 0.5rem 1rem !important;
+    background: var(--bg-interactive) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 6px !important;
+    color: var(--text-primary) !important;
+    cursor: pointer !important;
+    font-size: 0.875rem !important;
+    width: 100% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+    transition: background 0.2s ease, border-color 0.2s ease !important;
+}
+
+.file-upload-btn:hover {
+    background: var(--bg-hover) !important;
+    border-color: var(--border-light) !important;
+}
+
+.file-upload-btn i {
+    color: var(--icon-button) !important;
 }
 
 .identity-cta-link:hover {
@@ -1149,7 +1179,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
 
 .card-content-expanded .info-section-title {
     font-size: 0.75rem;
-    color: var(--text-muted, #6B7280);
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     font-weight: 500;
@@ -1213,10 +1243,10 @@ h1.brand-name-large[contenteditable="true"]:hover,
     justify-content: center;
     width: 100%;
     height: 100%;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px dashed rgba(255, 255, 255, 0.2);
+    background: var(--bg-interactive);
+    border: 1px dashed var(--border-color);
     border-radius: 50%;
-    color: var(--text-muted, #6B7280);
+    color: var(--text-muted);
     font-size: 3rem;
 }
 
@@ -1249,7 +1279,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--text-muted, #6B7280);
+    color: var(--text-muted);
     font-size: 0.875rem;
     flex-shrink: 0;
 }
@@ -1270,7 +1300,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
 }
 
 .card-content-expanded .info-links-list .brand-link-input::placeholder {
-    color: var(--text-muted, #6B7280);
+    color: var(--text-muted);
 }
 
 /* Grid de secciones (Esencia y Lenguaje) */
@@ -1296,7 +1326,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
 
 .card-content-expanded .info-identity-label {
     font-size: 0.75rem;
-    color: var(--text-muted, #6B7280);
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     font-weight: 500;
@@ -1327,7 +1357,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
 
 .card-content-expanded .info-field-label {
     font-size: 0.75rem;
-    color: var(--text-muted, #6B7280);
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     font-weight: 500;
@@ -1361,7 +1391,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
 .card-content-expanded .info-field-value.editable-field[contenteditable="true"]:focus {
     background: transparent !important;
     border: 1px solid rgba(255, 255, 255, 0.12) !important;
-    border-color: rgba(255, 255, 255, 0.12) !important;
+    border-color: var(--border-color) !important;
     padding: 0.75rem 1rem !important;
     margin: 0 !important;
     width: 100% !important;
@@ -1392,7 +1422,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
 }
 
 .card-content-expanded .info-empty {
-    color: var(--text-muted, #6B7280);
+    color: var(--text-muted);
     font-size: 0.875rem;
     font-style: italic;
     margin: 0;

@@ -641,7 +641,7 @@ body.sidebar-collapsed #app-container .main-header,
 }
 
 .nav-org-option.active {
-    background: rgba(224, 145, 69, 0.08);
+    background: var(--bg-interactive);
 }
 
 .nav-org-option-content {
@@ -866,7 +866,7 @@ body.sidebar-collapsed #app-container .main-header,
     top: 0;
     bottom: 0;
     width: 2px;
-    background: rgba(224, 145, 69, 0.5); /* Marcador lateral sutil */
+    background: var(--icon-button);
     border-radius: 0 2px 2px 0;
 }
 
@@ -995,7 +995,7 @@ body.sidebar-collapsed #app-container .main-header,
     top: 0;
     bottom: 0;
     width: 2px;
-    background: rgba(224, 145, 69, 0.5);
+    background: var(--icon-button);
     border-radius: 0 2px 2px 0;
 }
 
@@ -1072,7 +1072,7 @@ body.sidebar-collapsed #app-container .main-header,
     top: 0;
     bottom: 0;
     width: 2px;
-    background: rgba(224, 145, 69, 0.4); /* Más sutil que el padre */
+    background: var(--icon-button); /* Más sutil que el padre */
     border-radius: 0 2px 2px 0;
 }
 
@@ -1087,7 +1087,7 @@ body.sidebar-collapsed #app-container .main-header,
 }
 
 .side-navigation.collapsed .nav-item-has-submenu.active .nav-link-parent {
-    background: rgba(224, 145, 69, 0.08);
+    background: var(--bg-interactive);
 }
 
 /* El aire comunica estructura - espacios reales entre dominios */
@@ -1894,7 +1894,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     width: 32px;
     height: 32px;
     border-radius: 6px;
-    background: rgba(224, 145, 69, 0.15);
+    background: var(--bg-interactive);
     color: var(--accent-yellow);
     display: flex;
     align-items: center;
@@ -2037,7 +2037,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
 
 .nav-mode-switch:hover {
     background: var(--bg-hover);
-    border-color: rgba(224, 145, 69, 0.3);
+    border-color: var(--border-color);
     color: var(--accent-yellow);
 }
 

@@ -63,8 +63,9 @@
 }
 
 .mode-btn.active {
-    background: var(--accent-warm);
+    background: var(--bg-interactive);
     color: var(--text-primary);
+    border: 1px solid var(--border-color);
 }
 
 .create-mode-content {

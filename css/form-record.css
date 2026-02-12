@@ -104,7 +104,7 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.4rem 0.8rem;
-    background: rgba(210, 254, 63, 0.1);
+    background: var(--bg-hover);
     border: 1px solid var(--border-primary);
     border-radius: 6px;
     color: var(--primary-color);
@@ -223,7 +223,7 @@
     outline: none;
     border-color: var(--primary-color);
     background: var(--bg-card);
-    box-shadow: 0 0 0 3px rgba(210, 254, 63, 0.1);
+    box-shadow: 0 0 0 3px var(--border-color);
 }
 
 .multiselect-value {
@@ -247,7 +247,7 @@
 }
 
 .multiselect-tag {
-    background: rgba(210, 254, 63, 0.2);
+    background: var(--bg-hover);
     color: var(--primary-color);
     padding: 0.2rem 0.5rem;
     border-radius: 4px;
@@ -314,7 +314,7 @@
 }
 
 .multiselect-option.selected {
-    background: rgba(210, 254, 63, 0.1);
+    background: var(--bg-hover);
     color: var(--primary-color);
     font-weight: 500;
 }
@@ -331,7 +331,7 @@
     color: var(--primary-color);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    background: rgba(210, 254, 63, 0.05);
+    background: var(--bg-hover);
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -374,7 +374,7 @@
 
 .upload-zone:hover {
     border-color: var(--primary-color);
-    background: rgba(210, 254, 63, 0.05);
+    background: var(--bg-hover);
 }
 
 .upload-zone i {
@@ -475,7 +475,7 @@
     border-color: var(--primary-color);
     color: var(--bg-black);
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(210, 254, 63, 0.3);
+    box-shadow: var(--shadow-card);
 }
 
 .btn-secondary {

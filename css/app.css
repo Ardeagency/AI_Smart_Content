@@ -392,7 +392,7 @@ html {
 
 /* Mejorar accesibilidad con focus visible */
 *:focus-visible {
-    outline: 2px solid var(--accent-yellow);
+    outline: 2px solid var(--border-light);
     outline-offset: 2px;
 }
 
