@@ -480,14 +480,61 @@ body.sidebar-collapsed #app-container .main-header,
     overflow: hidden;
 }
 
-.side-navigation.collapsed .nav-link {
+/* Carets no existen en collapsed: containers abren flyout */
+.side-navigation.collapsed .nav-chevron {
+    display: none;
+}
+
+.side-navigation.collapsed .nav-link,
+.side-navigation.collapsed .nav-submenu-toggle {
     justify-content: center;
     padding: 0;
     position: relative;
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+    border-radius: 12px;
 }
 
 .side-navigation.collapsed .nav-icon {
     margin: 0;
+}
+
+/* Vertical spacing 12px entre ítems */
+.side-navigation.collapsed .nav-menu .nav-item,
+.side-navigation.collapsed .nav-menu .nav-group {
+    margin-bottom: 12px;
+}
+
+.side-navigation.collapsed .nav-menu .nav-item:last-child,
+.side-navigation.collapsed .nav-menu .nav-group:last-child {
+    margin-bottom: 0;
+}
+
+/* Active en collapsed: barra izquierda + highlight sutil (no tarjeta gigante) */
+.side-navigation.collapsed .nav-link.active,
+.side-navigation.collapsed .nav-submenu-toggle.active {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.side-navigation.collapsed .nav-link.active::before,
+.side-navigation.collapsed .nav-submenu-toggle.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 20px;
+    background: var(--text-primary);
+    border-radius: 0 2px 2px 0;
+    opacity: 0.9;
+}
+
+/* Submenú inline no visible en collapsed (se usa flyout) */
+.side-navigation.collapsed .nav-submenu {
+    display: none !important;
 }
 
 /* =========================================
@@ -701,7 +748,19 @@ body.sidebar-collapsed #app-container .main-header,
 }
 
 .side-navigation.collapsed .nav-identity-card {
-    padding: 8px;
+    padding: 0;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.side-navigation.collapsed .nav-identity-content {
+    justify-content: center;
 }
 
 .side-navigation.collapsed .nav-identity-info,
@@ -709,42 +768,139 @@ body.sidebar-collapsed #app-container .main-header,
     display: none;
 }
 
+.nav-collapsed-only-icon {
+    display: none;
+}
+
+.side-navigation.collapsed .nav-collapsed-only-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: var(--text-primary);
+}
+
+.side-navigation.collapsed .nav-workspace-header .nav-logo-icon,
+.side-navigation.collapsed .nav-identity-section .nav-logo-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+}
+
+/* Footer collapsed: icon stack + divider */
+.side-navigation.collapsed .nav-footer {
+    border-top: 1px solid var(--nav-border);
+    padding: 12px 0 16px;
+    gap: 4px;
+}
+
+.side-navigation.collapsed .nav-footer-link,
+.side-navigation.collapsed .nav-footer-action {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 12px;
+}
+
+.side-navigation.collapsed .nav-footer .nav-icon {
+    margin: 0;
+}
+
 /* Toggle button removido del sidebar - ahora está en el header */
 
-/* Tooltips para estado colapsado */
+/* Tooltips para estado colapsado: right center, max-width 180px, delay 150ms (JS) */
 .nav-tooltip {
-    position: absolute;
-    left: calc(100% + 12px);
+    position: fixed;
+    left: 88px; /* 72px sidebar + 16px gap */
     top: 50%;
     transform: translateY(-50%);
     background: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 6px;
-    padding: 6px 10px;
-    font-size: 0.813rem;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
     color: var(--text-primary);
+    max-width: 180px;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    transition: all 0.2s ease;
-    z-index: 10000;
-    box-shadow: var(--shadow-card);
-}
-
-.nav-tooltip::before {
-    content: '';
-    position: absolute;
-    right: 100%;
-    top: 50%;
-    transform: translateY(-50%);
-    border: 6px solid transparent;
-    border-right-color: var(--bg-card);
+    transition: opacity 0.15s ease, visibility 0.15s ease;
+    z-index: 10002;
+    box-shadow: var(--shadow-floating);
 }
 
 .nav-tooltip.show {
     opacity: 1;
     visibility: visible;
+}
+
+/* Flyout panel: al hacer click en container con sidebar colapsado */
+.nav-flyout {
+    position: fixed;
+    left: 72px;
+    top: 48px;
+    bottom: 0;
+    width: 220px;
+    background: var(--bg-card);
+    border-right: 1px solid var(--nav-border);
+    border-radius: 0 12px 12px 0;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    z-index: 10001;
+    padding: 16px 0;
+    overflow-y: auto;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-8px);
+    transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+}
+
+.nav-flyout.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+}
+
+.nav-flyout-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    padding: 0 16px 8px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--nav-border);
+}
+
+.nav-flyout-list {
+    padding: 4px 0;
+}
+
+.nav-flyout-link {
+    display: block;
+    padding: 10px 16px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-radius: 8px;
+    margin: 0 8px;
+    transition: background 0.12s ease, color 0.12s ease;
+}
+
+.nav-flyout-link:hover {
+    background: var(--sidebar-hover);
+    color: var(--text-primary);
+}
+
+.nav-flyout-link.active {
+    background: var(--sidebar-active);
+    color: var(--text-primary);
+    font-weight: 500;
 }
 
 /* =========================================
@@ -885,9 +1041,6 @@ body.sidebar-collapsed #app-container .main-header,
     color: rgba(255, 255, 255, 0.95); /* Ligeramente más brillante, pero sutil */
 }
 
-.side-navigation.collapsed .nav-link.active::before {
-    width: 2px;
-}
 
 .nav-icon {
     width: 28px;

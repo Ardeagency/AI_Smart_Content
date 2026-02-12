@@ -388,6 +388,7 @@ class Navigation {
         <div class="nav-workspace-header nav-identity-section" id="navWorkspaceHeader">
           <div class="nav-identity-card" id="navIdentityCard">
             <div class="nav-identity-content">
+              <i class="fas fa-building nav-collapsed-only-icon" aria-hidden="true"></i>
               <div class="nav-identity-info">
                 <div class="nav-org-name" id="navOrgName">Mi Organización</div>
                 <div class="nav-org-type" id="navOrgType">Enterprise</div>
@@ -413,6 +414,7 @@ class Navigation {
           ${footerHTML}
         </div>
       </nav>
+      <div class="nav-flyout" id="navFlyout" aria-hidden="true"></div>
     `;
   }
 
@@ -511,6 +513,7 @@ class Navigation {
           </div>
         </div>
       </nav>
+      <div class="nav-flyout" id="navFlyout" aria-hidden="true"></div>
     `;
   }
 
@@ -629,47 +632,157 @@ class Navigation {
         this.updateHeaderTitle();
       });
     }
+
+    this.setupCollapsedTooltips();
+    this.setupFlyoutCloseListeners();
   }
 
   /**
    * Configurar submenús: usuario (1 expandido + persist) y desarrollador (1 expandido).
+   * Con sidebar colapsado: click en container abre flyout, no expande inline.
    */
   setupSubmenus() {
-    // Usuario: solo 1 contenedor expandido, persistir en localStorage
+    const sidebar = document.getElementById('sideNavigation');
+    const isCollapsed = () => sidebar && sidebar.classList.contains('collapsed');
+
+    const handleContainerClick = (e, toggle, parent, isUser) => {
+      e.preventDefault();
+      if (isCollapsed()) {
+        this.openFlyout(parent);
+        return;
+      }
+      const containerId = parent.dataset.containerId;
+      const isOpen = parent.classList.contains('submenu-open');
+      const scope = isUser ? '.nav-mode-user' : '.nav-mode-developer';
+      document.querySelectorAll(`${scope} .nav-item.has-submenu.submenu-open`).forEach((item) => {
+        if (item !== parent) item.classList.remove('submenu-open');
+      });
+      parent.classList.toggle('submenu-open', !isOpen);
+      toggle.setAttribute('aria-expanded', !isOpen);
+      if (isUser) localStorage.setItem(SIDEBAR_USER_EXPANDED_KEY, !isOpen ? containerId : '');
+    };
+
     document.querySelectorAll('.nav-mode-user .nav-submenu-toggle').forEach((toggle) => {
       toggle.addEventListener('click', (e) => {
-        e.preventDefault();
         const parent = toggle.closest('.nav-item.has-submenu');
         if (!parent) return;
-        const containerId = parent.dataset.containerId;
-        const isOpen = parent.classList.contains('submenu-open');
-
-        document.querySelectorAll('.nav-mode-user .nav-item.has-submenu.submenu-open').forEach((item) => {
-          if (item !== parent) item.classList.remove('submenu-open');
-        });
-        parent.classList.toggle('submenu-open', !isOpen);
-        toggle.setAttribute('aria-expanded', !isOpen);
-
-        const newExpanded = !isOpen ? containerId : '';
-        localStorage.setItem(SIDEBAR_USER_EXPANDED_KEY, newExpanded);
+        handleContainerClick(e, toggle, parent, true);
       });
     });
 
-    // Desarrollador: Debug y Lead expandibles (solo 1 abierto a la vez)
     document.querySelectorAll('.nav-mode-developer .nav-submenu-toggle').forEach((toggle) => {
       toggle.addEventListener('click', (e) => {
-        e.preventDefault();
         const parent = toggle.closest('.nav-item.has-submenu');
         if (!parent) return;
-        const isOpen = parent.classList.contains('submenu-open');
-
-        document.querySelectorAll('.nav-mode-developer .nav-item.has-submenu.submenu-open').forEach((item) => {
-          if (item !== parent) item.classList.remove('submenu-open');
-        });
-        parent.classList.toggle('submenu-open', !isOpen);
-        toggle.setAttribute('aria-expanded', !isOpen);
+        handleContainerClick(e, toggle, parent, false);
       });
     });
+  }
+
+  /**
+   * Abrir panel flyout (sidebar colapsado): título + enlaces del container.
+   */
+  openFlyout(containerEl) {
+    const flyout = document.getElementById('navFlyout');
+    if (!flyout) return;
+    const submenu = containerEl.querySelector('.nav-submenu');
+    const toggle = containerEl.querySelector('.nav-submenu-toggle');
+    const title = toggle?.dataset?.tooltip || 'Menú';
+    const links = submenu ? submenu.querySelectorAll('.nav-submenu-link') : [];
+    const currentPath = window.location.pathname;
+
+    let html = `<div class="nav-flyout-title">${title}</div><div class="nav-flyout-list">`;
+    links.forEach((a) => {
+      const route = a.dataset.route || '';
+      const label = (a.querySelector('span') || a).textContent.trim();
+      const active = currentPath === route || (route && currentPath.startsWith(route + '/'));
+      html += `<a href="${route}" class="nav-flyout-link${active ? ' active' : ''}" data-route="${route}" ${active ? ' aria-current="page"' : ''}>${label}</a>`;
+    });
+    html += '</div>';
+    flyout.innerHTML = html;
+    flyout.classList.add('open');
+    flyout.setAttribute('aria-hidden', 'false');
+
+    flyout.querySelectorAll('.nav-flyout-link').forEach((link) => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const route = link.dataset.route;
+        if (route && window.router) window.router.navigate(route);
+        this.closeFlyout();
+      });
+    });
+
+    this._flyoutOpen = true;
+  }
+
+  closeFlyout() {
+    const flyout = document.getElementById('navFlyout');
+    if (flyout) {
+      flyout.classList.remove('open');
+      flyout.setAttribute('aria-hidden', 'true');
+    }
+    this._flyoutOpen = false;
+  }
+
+  /**
+   * Tooltips en collapsed: delay 150ms, right center, containers con " →".
+   */
+  setupCollapsedTooltips() {
+    let tooltipEl = document.getElementById('navTooltip');
+    if (!tooltipEl) {
+      tooltipEl = document.createElement('div');
+      tooltipEl.id = 'navTooltip';
+      tooltipEl.className = 'nav-tooltip';
+      document.body.appendChild(tooltipEl);
+    }
+    const sidebar = document.getElementById('sideNavigation');
+    if (!sidebar) return;
+
+    let hideTimeout;
+    let showTimeout;
+    const delay = 150;
+
+    sidebar.querySelectorAll('[data-tooltip]').forEach((el) => {
+      el.addEventListener('mouseenter', () => {
+        clearTimeout(hideTimeout);
+        showTimeout = setTimeout(() => {
+          if (!sidebar.classList.contains('collapsed')) return;
+          const isContainer = el.classList.contains('nav-submenu-toggle');
+          const text = (el.dataset.tooltip || '') + (isContainer ? ' →' : '');
+          tooltipEl.textContent = text;
+          const rect = el.getBoundingClientRect();
+          tooltipEl.style.top = `${rect.top + rect.height / 2}px`;
+          tooltipEl.style.left = '88px';
+          tooltipEl.style.transform = 'translateY(-50%)';
+          tooltipEl.classList.add('show');
+        }, delay);
+      });
+      el.addEventListener('mouseleave', () => {
+        clearTimeout(showTimeout);
+        hideTimeout = setTimeout(() => tooltipEl.classList.remove('show'), 50);
+      });
+    });
+  }
+
+  /**
+   * Cerrar flyout: click outside, ESC, cambio de ruta.
+   */
+  setupFlyoutCloseListeners() {
+    document.addEventListener('click', (e) => {
+      const flyout = document.getElementById('navFlyout');
+      if (!flyout?.classList.contains('open')) return;
+      const sidebar = document.getElementById('sideNavigation');
+      if (sidebar?.contains(e.target) || flyout.contains(e.target)) return;
+      this.closeFlyout();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') this.closeFlyout();
+    });
+    if (!this._routeChangeCloseFlyout) {
+      this._routeChangeCloseFlyout = true;
+      window.addEventListener('routechange', () => this.closeFlyout());
+      window.addEventListener('popstate', () => this.closeFlyout());
+    }
   }
 
   /**
@@ -680,15 +793,16 @@ class Navigation {
   updateActiveLink() {
     const currentPath = window.location.pathname;
     const links = document.querySelectorAll('.nav-link[data-route], .nav-main-link[data-route], .nav-submenu-link[data-route], .nav-footer-link[data-route]');
+    const toggles = document.querySelectorAll('.nav-submenu-toggle');
 
     links.forEach(link => link.classList.remove('active'));
+    toggles.forEach(t => t.classList.remove('active'));
 
     let bestMatch = null;
     let bestLength = 0;
     links.forEach(link => {
       const route = link.dataset.route;
       if (!route || !currentPath.startsWith(route)) return;
-      // Exigir que tras la ruta venga fin de path o /
       const after = currentPath.slice(route.length);
       if (after !== '' && after !== '/' && !after.startsWith('/')) return;
       if (route.length > bestLength) {
@@ -700,7 +814,11 @@ class Navigation {
     if (bestMatch) {
       bestMatch.classList.add('active');
       const parent = bestMatch.closest('.has-submenu');
-      if (parent) parent.classList.add('submenu-open');
+      if (parent) {
+        parent.classList.add('submenu-open');
+        const toggle = parent.querySelector('.nav-submenu-toggle');
+        if (toggle) toggle.classList.add('active');
+      }
     }
   }
 
