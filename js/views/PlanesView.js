@@ -1,6 +1,6 @@
 /**
- * PlanesView - Vista de selección de planes y registro
- * Maneja la selección de planes y el registro de nuevos usuarios
+ * PlanesView - Vista de planes y registro (pública, ligera).
+ * Supabase solo se inicializa al enviar formulario o reenviar email.
  */
 class PlanesView extends BaseView {
   constructor() {
@@ -9,76 +9,55 @@ class PlanesView extends BaseView {
     this.selectedPlan = null;
     this.supabase = null;
     this.registrationForm = null;
-    this.billingPeriod = 'monthly'; // 'monthly' | 'annual'
+    this.billingPeriod = 'monthly';
   }
 
-  /**
-   * Hook llamado al entrar a la vista
-   */
   async onEnter() {
-    // Inicializar Supabase
-    await this.initSupabase();
+    // Sin trabajo en entrada; Supabase se inicializa al enviar
   }
 
-  /**
-   * Inicializar la vista
-   */
-  async init() {
-    this.registrationForm = this.querySelector('#registrationForm');
-    const plansContainer = this.querySelector('#planesList');
-    const passwordToggle = this.querySelector('#passwordToggle');
-    const passwordInput = this.querySelector('#regPassword');
-    const btnResendEmail = this.querySelector('#btnResendEmail');
+  async updateHeader() {
+    // Página pública: no tocar header ni añadir listeners globales
+  }
 
-    // Un solo listener delegado para las cards de planes
+  init() {
+    const container = this.container;
+    if (!container) return;
+
+    this.registrationForm = container.querySelector('#registrationForm');
+    const plansContainer = container.querySelector('#planesList');
+    const passwordToggle = container.querySelector('#passwordToggle');
+    const passwordInput = container.querySelector('#regPassword');
+    const btnResendEmail = container.querySelector('#btnResendEmail');
+    const toggleMonthly = container.querySelector('#toggleMonthly');
+    const toggleAnnual = container.querySelector('#toggleAnnual');
+    const hero = container.querySelector('.planes-hero');
+    const billingTitle = container.querySelector('#planesBillingTitle');
+
     if (plansContainer) {
       this.addEventListener(plansContainer, 'click', (e) => {
         const card = e.target.closest('.plan-card-small');
         if (card) this.selectPlan(card);
       });
     }
-
-    // Setup password toggle
     if (passwordToggle && passwordInput) {
-      this.addEventListener(passwordToggle, 'click', () => {
-        this.togglePasswordVisibility(passwordInput, passwordToggle);
-      });
+      this.addEventListener(passwordToggle, 'click', () => this.togglePasswordVisibility(passwordInput, passwordToggle));
     }
-
-    // Setup form submission
     if (this.registrationForm) {
-      this.addEventListener(this.registrationForm, 'submit', async (e) => {
+      this.addEventListener(this.registrationForm, 'submit', (e) => {
         e.preventDefault();
-        await this.handleSubmit();
+        this.handleSubmit();
       });
     }
-
-    // Validación de contraseña en tiempo real
     if (passwordInput) {
-      this.addEventListener(passwordInput, 'input', () => {
-        this.validatePassword(passwordInput);
-      });
+      this.addEventListener(passwordInput, 'input', () => this.validatePassword(passwordInput));
     }
-
-    // Resend email
     if (btnResendEmail) {
-      this.addEventListener(btnResendEmail, 'click', async () => {
-        await this.resendConfirmationEmail();
-      });
+      this.addEventListener(btnResendEmail, 'click', () => this.resendConfirmationEmail());
     }
-
-    // Toggle Mensual / Anual
-    const toggleMonthly = this.querySelector('#toggleMonthly');
-    const toggleAnnual = this.querySelector('#toggleAnnual');
-    const hero = this.querySelector('.planes-hero');
-    const billingTitle = this.querySelector('#planesBillingTitle');
-    if (toggleMonthly && toggleAnnual && hero) {
-      this.addEventListener(toggleMonthly, 'click', () => {
-        this.setBillingPeriod('monthly', hero, toggleMonthly, toggleAnnual, billingTitle);
-      });
-      this.addEventListener(toggleAnnual, 'click', () => {
-        this.setBillingPeriod('annual', hero, toggleMonthly, toggleAnnual, billingTitle);
-      });
+    if (toggleMonthly && toggleAnnual && hero && billingTitle) {
+      this.addEventListener(toggleMonthly, 'click', () => this.setBillingPeriod('monthly', hero, toggleMonthly, toggleAnnual, billingTitle));
+      this.addEventListener(toggleAnnual, 'click', () => this.setBillingPeriod('annual', hero, toggleMonthly, toggleAnnual, billingTitle));
     }
   }
 
@@ -98,7 +77,7 @@ class PlanesView extends BaseView {
       if (btnAnnual) btnAnnual.classList.remove('active');
       if (titleEl) titleEl.textContent = 'Planes mensuales';
     }
-    const sel = this.querySelector('.plan-card-small.selected');
+    const sel = this.container?.querySelector('.plan-card-small.selected');
     if (sel) this.selectPlan(sel);
   }
 
@@ -128,11 +107,8 @@ class PlanesView extends BaseView {
    * Seleccionar plan
    */
   selectPlan(cardElement) {
-    // Deseleccionar todas las cards
-    const allCards = this.querySelectorAll('.plan-card-small');
-    allCards.forEach(card => {
-      card.classList.remove('selected');
-    });
+    const allCards = this.container?.querySelectorAll('.plan-card-small') || [];
+    allCards.forEach(card => card.classList.remove('selected'));
     
     // Seleccionar la card actual
     cardElement.classList.add('selected');
@@ -144,12 +120,10 @@ class PlanesView extends BaseView {
       : parseFloat(cardElement.dataset.price);
     this.selectedPlan = {
       name: cardElement.dataset.plan,
-      credits: parseInt(cardElement.dataset.credits),
+      credits: parseInt(cardElement.dataset.credits, 10) || 0,
       price: price,
       billing: this.billingPeriod
     };
-    
-    console.log('Plan seleccionado:', this.selectedPlan);
   }
 
   /**
@@ -184,43 +158,27 @@ class PlanesView extends BaseView {
       this.registrationForm.reportValidity();
       return;
     }
-
-    // Validar que se haya seleccionado un plan
     if (!this.selectedPlan) {
       alert('Por favor, selecciona un plan de suscripción');
       return;
     }
 
-    const fullNameInput = this.querySelector('#regFullName');
-    const emailInput = this.querySelector('#regEmail');
-    const passwordInput = this.querySelector('#regPassword');
+    const fullNameInput = this.container?.querySelector('#regFullName');
+    const emailInput = this.container?.querySelector('#regEmail');
+    const passwordInput = this.container?.querySelector('#regPassword');
     const submitBtn = this.registrationForm.querySelector('button[type="submit"]');
-
-    if (!fullNameInput || !emailInput || !passwordInput) {
-      alert('Error: Campos no encontrados');
-      return;
-    }
+    if (!fullNameInput || !emailInput || !passwordInput) return;
 
     const fullName = fullNameInput.value.trim();
     const email = emailInput.value.trim().toLowerCase();
     const password = passwordInput.value;
-
-    // Validaciones
-    if (!fullName) {
-      alert('Por favor, ingresa tu nombre completo');
+    if (!fullName || password.length < 8) {
+      if (!fullName) alert('Por favor, ingresa tu nombre completo');
+      else alert('La contraseña debe tener al menos 8 caracteres');
       return;
     }
 
-    if (password.length < 8) {
-      alert('La contraseña debe tener al menos 8 caracteres');
-      return;
-    }
-
-    // Inicializar Supabase
-    if (!this.supabase) {
-      await this.initSupabase();
-    }
-
+    if (!this.supabase) await this.initSupabase();
     if (!this.supabase) {
       alert('Error: No se pudo conectar con el servidor. Por favor, recarga la página.');
       return;
@@ -280,37 +238,22 @@ class PlanesView extends BaseView {
    * Mostrar pantalla de confirmación de email
    */
   showEmailConfirmation(email) {
-    const emailConfirmationScreen = this.querySelector('#emailConfirmationScreen');
-    const confirmationEmail = this.querySelector('#confirmationEmail');
-    
-    if (emailConfirmationScreen && confirmationEmail) {
-      confirmationEmail.textContent = email;
-      emailConfirmationScreen.style.display = 'flex';
-      
-      // Ocultar formulario principal
-      const planesMain = this.querySelector('.planes-main');
-      if (planesMain) {
-        planesMain.style.display = 'none';
-      }
-    }
+    const screen = this.container?.querySelector('#emailConfirmationScreen');
+    const el = this.container?.querySelector('#confirmationEmail');
+    const main = this.container?.querySelector('.planes-main');
+    if (el) el.textContent = email;
+    if (screen) screen.style.display = 'flex';
+    if (main) main.style.display = 'none';
   }
 
   /**
    * Reenviar email de confirmación
    */
   async resendConfirmationEmail() {
-    const confirmationEmail = this.querySelector('#confirmationEmail');
-    const email = confirmationEmail?.textContent;
-
-    if (!email) {
-      alert('Error: No se pudo obtener el email');
-      return;
-    }
-
-    if (!this.supabase) {
-      await this.initSupabase();
-    }
-
+    const el = this.container?.querySelector('#confirmationEmail');
+    const email = el?.textContent?.trim();
+    if (!email) { alert('Error: No se pudo obtener el email'); return; }
+    if (!this.supabase) await this.initSupabase();
     if (!this.supabase) {
       alert('Error: Supabase no está disponible');
       return;

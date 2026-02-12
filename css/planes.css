@@ -315,10 +315,6 @@
     gap: 1.1rem;
 }
 
-.planes-form-row {
-    display: block;
-}
-
 .form-group {
     display: flex;
     flex-direction: column;
