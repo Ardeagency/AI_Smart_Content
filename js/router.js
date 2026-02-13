@@ -158,6 +158,16 @@ class Router {
       const container = document.getElementById('app-container');
       if (!container) return;
 
+      // Limpiar vista anterior (evita fugas de memoria y listeners duplicados)
+      if (this.currentView) {
+        if (typeof this.currentView.onLeave === 'function') {
+          await this.currentView.onLeave();
+        }
+        if (typeof this.currentView.destroy === 'function') {
+          this.currentView.destroy();
+        }
+      }
+
       // Preparar container para nueva vista
       if (container) {
         container.innerHTML = '';

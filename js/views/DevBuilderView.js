@@ -62,6 +62,9 @@ class DevBuilderView extends DevBaseView {
     
     // Unsaved changes
     this.hasUnsavedChanges = false;
+
+    // Listeners en document (se eliminan en destroy para evitar fugas)
+    this._documentListeners = [];
   }
 
   renderHTML() {
@@ -535,11 +538,25 @@ class DevBuilderView extends DevBaseView {
     this.checkUrlParams();
     await this.loadCategories();
     await this.loadComponentTemplates();
-    
+
+    // Debounce para actualizar canvas/JSON/footer al editar propiedades (evita lag al escribir)
+    var self = this;
+    this.debouncedRefreshUI = (typeof window.Performance !== 'undefined' && window.Performance.debounce)
+      ? window.Performance.debounce(function () {
+          self.renderCanvas();
+          self.updateJsonPreview();
+          self.renderFooter();
+        }, 160)
+      : function () {
+          self.renderCanvas();
+          self.updateJsonPreview();
+          self.renderFooter();
+        };
+
     if (this.flowId) {
       await this.loadFlow();
     }
-    
+
     this.setupEventListeners();
     this.setupFooterListeners();
     this.renderCanvas();
@@ -1405,9 +1422,7 @@ class DevBuilderView extends DevBaseView {
 
   onFieldChange() {
     this.hasUnsavedChanges = true;
-    this.renderCanvas();
-    this.updateJsonPreview();
-    this.renderFooter();
+    this.debouncedRefreshUI();
   }
 
   updateJsonPreview() {
@@ -1908,10 +1923,11 @@ class DevBuilderView extends DevBaseView {
         e.stopPropagation();
         moreActionsDropdown.style.display = moreActionsDropdown.style.display === 'none' ? 'block' : 'none';
       });
-      
-      document.addEventListener('click', () => {
+      var closeDropdown = function () {
         moreActionsDropdown.style.display = 'none';
-      });
+      };
+      document.addEventListener('click', closeDropdown);
+      this._documentListeners.push({ element: document, event: 'click', handler: closeDropdown });
     }
     
     // Publish button
@@ -1957,7 +1973,21 @@ class DevBuilderView extends DevBaseView {
     }
 
     // Tecla Delete/Backspace: eliminar el input seleccionado (solo en pestaña Inputs y si no estamos en un input de texto)
-    document.addEventListener('keydown', (e) => this.handleBuilderKeydown(e));
+    var keydownHandler = (e) => this.handleBuilderKeydown(e);
+    document.addEventListener('keydown', keydownHandler);
+    this._documentListeners.push({ element: document, event: 'keydown', handler: keydownHandler });
+  }
+
+  destroy() {
+    if (this._documentListeners && this._documentListeners.length) {
+      this._documentListeners.forEach(function (item) {
+        if (item.element && typeof item.element.removeEventListener === 'function') {
+          item.element.removeEventListener(item.event, item.handler);
+        }
+      });
+      this._documentListeners = [];
+    }
+    if (typeof super.destroy === 'function') super.destroy();
   }
 
   handleBuilderKeydown(e) {

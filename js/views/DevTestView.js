@@ -42,6 +42,13 @@ class DevTestView extends DevBaseView {
     this.timerInterval = null;
   }
 
+  onLeave() {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+  }
+
   renderHTML() {
     return `
       <div class="dev-test-container">

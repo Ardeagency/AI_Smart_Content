@@ -185,11 +185,24 @@ class BaseView {
   }
 
   /**
-   * Limpiar recursos - ELIMINADO
-   * El navegador maneja la limpieza automáticamente cuando se elimina el DOM
+   * Limpiar listeners registrados con addEventListener (evita fugas al salir de la vista)
    */
   cleanup() {
-    // Método vacío - sin limpieza manual
+    if (this.eventListeners && this.eventListeners.length) {
+      this.eventListeners.forEach(function (item) {
+        if (item.element && typeof item.element.removeEventListener === 'function') {
+          item.element.removeEventListener(item.event, item.handler);
+        }
+      });
+      this.eventListeners = [];
+    }
+  }
+
+  /**
+   * Destruir vista: limpiar listeners. Llamado por el router antes de cambiar de ruta.
+   */
+  destroy() {
+    this.cleanup();
   }
 
   /**
@@ -644,8 +657,8 @@ class BaseView {
       });
     }
 
-    // Cerrar al hacer click fuera
-    document.addEventListener('click', (e) => {
+    // Cerrar al hacer click fuera (registrado para limpieza en destroy)
+    const closeOnClickOutside = (e) => {
       if (!e.target.closest('.header-user')) {
         headerUserDropdown.classList.remove('open');
         const icon = headerUserChevron.querySelector('i');
@@ -654,7 +667,8 @@ class BaseView {
           icon.classList.add('fa-chevron-down');
         }
       }
-    });
+    };
+    this.addEventListener(document, 'click', closeOnClickOutside);
   }
 
   /**
