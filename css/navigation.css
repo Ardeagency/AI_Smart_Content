@@ -479,14 +479,12 @@ body.sidebar-collapsed #app-container .main-header,
     padding-right: 6px;
 }
 
+/* Quitar del flujo en colapsado para que el icono centre: nav-text tiene flex:1 y ocupaba espacio */
 .side-navigation.collapsed .nav-text,
 .side-navigation.collapsed .nav-section-title,
 .side-navigation.collapsed .nav-profile-info,
 .side-navigation.collapsed .nav-profile-chevron {
-    opacity: 0;
-    visibility: hidden;
-    width: 0;
-    overflow: hidden;
+    display: none !important;
 }
 
 /* Carets no existen en collapsed: containers abren flyout */
