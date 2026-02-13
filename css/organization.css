@@ -250,9 +250,9 @@
     font-style: italic;
 }
 
-/* Modal invitar miembro */
+/* Modal invitar miembro (oculto por defecto; .modal global en developer.css pone display:flex) */
 .org-modal {
-    display: none;
+    display: none !important;
     position: fixed;
     inset: 0;
     z-index: 2000;
@@ -263,7 +263,7 @@
 }
 
 .org-modal.modal-open {
-    display: flex;
+    display: flex !important;
 }
 
 .org-modal .modal-content {

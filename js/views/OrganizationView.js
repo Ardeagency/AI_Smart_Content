@@ -230,10 +230,11 @@ class OrganizationView extends BaseView {
       inviteBtn.addEventListener('click', () => this.openInviteModal());
     }
 
-    const inviteModal = this.querySelector('#orgInviteModal');
-    const inviteForm = this.querySelector('#orgInviteForm');
-    const inviteClose = this.querySelector('#orgInviteModalClose');
-    const inviteCancel = this.querySelector('#orgInviteCancel');
+    // Modal está en #modals-portal (movido por BaseView), no en this.container
+    const inviteModal = document.getElementById('orgInviteModal');
+    const inviteForm = document.getElementById('orgInviteForm');
+    const inviteClose = document.getElementById('orgInviteModalClose');
+    const inviteCancel = document.getElementById('orgInviteCancel');
 
     if (inviteClose) inviteClose.addEventListener('click', () => this.closeInviteModal());
     if (inviteCancel) inviteCancel.addEventListener('click', () => this.closeInviteModal());
@@ -288,8 +289,8 @@ class OrganizationView extends BaseView {
   }
 
   openInviteModal() {
-    const modal = this.querySelector('#orgInviteModal');
-    const form = this.querySelector('#orgInviteForm');
+    const modal = document.getElementById('orgInviteModal');
+    const form = document.getElementById('orgInviteForm');
     if (modal) {
       modal.classList.add('modal-open');
       modal.setAttribute('aria-hidden', 'false');
@@ -298,7 +299,7 @@ class OrganizationView extends BaseView {
   }
 
   closeInviteModal() {
-    const modal = this.querySelector('#orgInviteModal');
+    const modal = document.getElementById('orgInviteModal');
     if (modal) {
       modal.classList.remove('modal-open');
       modal.setAttribute('aria-hidden', 'true');
@@ -308,8 +309,8 @@ class OrganizationView extends BaseView {
   async submitInvite() {
     if (!this.supabase || !this.orgId || !this.canManageMembers) return;
 
-    const emailInput = this.querySelector('#inviteEmail');
-    const roleSelect = this.querySelector('#inviteRole');
+    const emailInput = document.getElementById('inviteEmail');
+    const roleSelect = document.getElementById('inviteRole');
     const email = emailInput?.value?.trim();
     const role = (roleSelect?.value || 'member').toLowerCase();
     if (!email) return;
