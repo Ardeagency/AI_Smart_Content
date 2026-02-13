@@ -37,8 +37,7 @@ const SIDEBAR_USER_CONFIG = {
     }
   ],
   footer: [
-    { label: 'Configuración', icon: 'fa-cog', route: 'settings' },
-    { label: 'Esta organización', icon: 'fa-building', route: 'organization' },
+    { label: 'Configuración', icon: 'fa-cog', route: 'organization' },
     { label: 'Planes', icon: 'fa-credit-card', route: 'planes' },
     { label: 'Créditos', icon: 'fa-coins', route: 'credits' },
     { label: 'Salir de la organización', icon: 'fa-sign-out-alt', action: 'leaveWorkspace' }
@@ -922,7 +921,7 @@ class Navigation {
       '/campaigns': 'Identidad',
       '/content': 'Identidad',
       '/settings': 'Configuración',
-      '/organization': 'Esta organización',
+      '/organization': 'Configuración',
       '/planes': 'Planes',
       '/credits': 'Créditos',
       '/dev/dashboard': 'Dashboard',
