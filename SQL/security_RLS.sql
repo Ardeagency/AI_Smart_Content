@@ -40,33 +40,31 @@ BEGIN
 END;
 $$;
 
--- Función para verificar si el usuario es dueño de un flow (evita recursión flow_collaborators ↔ content_flows)
-CREATE OR REPLACE FUNCTION public.is_flow_owner(_flow_id uuid)
+-- Función ÚNICA para acceso a un flow: dueño O colaborador O dev.
+-- Lee content_flows y flow_collaborators DENTRO de la función (como definer);
+-- así las políticas solo llaman a esta función y no se cruzan → evita recursión infinita.
+CREATE OR REPLACE FUNCTION public.can_access_flow(_flow_id uuid)
 RETURNS boolean 
 LANGUAGE plpgsql 
 SECURITY DEFINER
 SET search_path = public, extensions, temp
 AS $$
 BEGIN
-  RETURN EXISTS (
-    SELECT 1 FROM public.content_flows
-    WHERE id = _flow_id AND owner_id = auth.uid()
-  );
-END;
-$$;
-
--- Función para verificar si el usuario es colaborador de un flow (evita recursión con content_flows)
-CREATE OR REPLACE FUNCTION public.is_flow_collaborator(_flow_id uuid)
-RETURNS boolean 
-LANGUAGE plpgsql 
-SECURITY DEFINER
-SET search_path = public, extensions, temp
-AS $$
-BEGIN
-  RETURN EXISTS (
-    SELECT 1 FROM public.flow_collaborators
-    WHERE flow_id = _flow_id AND developer_id = auth.uid()
-  );
+  IF auth.uid() IS NULL THEN
+    RETURN false;
+  END IF;
+  IF public.is_developer() THEN
+    RETURN true;
+  END IF;
+  -- Dueño del flow (lectura directa; como definer no dispara RLS de content_flows)
+  IF EXISTS (SELECT 1 FROM public.content_flows WHERE id = _flow_id AND owner_id = auth.uid()) THEN
+    RETURN true;
+  END IF;
+  -- Colaborador (lectura directa; como definer no dispara RLS de flow_collaborators en este contexto)
+  IF EXISTS (SELECT 1 FROM public.flow_collaborators WHERE flow_id = _flow_id AND developer_id = auth.uid()) THEN
+    RETURN true;
+  END IF;
+  RETURN false;
 END;
 $$;
 
@@ -233,16 +231,12 @@ BEGIN
     END LOOP;
 END $$;
 
--- D. FLUJOS DE IA (Flows)
+-- D. FLUJOS DE IA (Flows) — una sola función can_access_flow evita recursión
 -- -----------------------------------------------------------
 DROP POLICY IF EXISTS "Flow Access" ON public.content_flows;
 CREATE POLICY "Flow Access" ON public.content_flows
 FOR ALL TO authenticated
-USING (
-    owner_id = auth.uid() 
-    OR public.is_flow_collaborator(id)
-    OR public.is_developer()
-);
+USING (public.can_access_flow(id));
 
 DROP POLICY IF EXISTS "Flow Runs" ON public.flow_runs;
 CREATE POLICY "Flow Runs" ON public.flow_runs
@@ -318,25 +312,20 @@ FOR ALL TO authenticated
 USING (recipient_user_id = auth.uid() OR public.is_developer());
 
 -- ------------------------------------------------------------------------------
--- J. COLABORADORES Y MÓDULOS DE FLUJOS (para evaluar políticas de content_flows)
+-- J. COLABORADORES Y MÓDULOS DE FLUJOS (usan can_access_flow, sin leer content_flows en la policy)
 -- ------------------------------------------------------------------------------
 DROP POLICY IF EXISTS "View flow collaborators" ON public.flow_collaborators;
 CREATE POLICY "View flow collaborators" ON public.flow_collaborators
 FOR SELECT TO authenticated
 USING (
     developer_id = auth.uid()
-    OR EXISTS (SELECT 1 FROM public.content_flows f WHERE f.id = flow_id AND f.owner_id = auth.uid())
-    OR public.is_developer()
+    OR public.can_access_flow(flow_id)
 );
 
 DROP POLICY IF EXISTS "Access flow modules" ON public.flow_modules;
 CREATE POLICY "Access flow modules" ON public.flow_modules
 FOR ALL TO authenticated
-USING (
-    public.is_flow_owner(content_flow_id)
-    OR public.is_flow_collaborator(content_flow_id)
-    OR public.is_developer()
-);
+USING (public.can_access_flow(content_flow_id));
 
 -- ------------------------------------------------------------------------------
 -- K. RUNS INPUTS/OUTPUTS (solo runs del usuario o dev)
