@@ -74,7 +74,7 @@ body.sidebar-collapsed .living-container {
    Jerarquía: Protagonista absoluto, mesa de edición, daily output
    ============================================ */
 .living-hero-section {
-    padding: 60px 4rem 5rem; /* 60px arriba para header fijo; contenedor sin padding */
+    padding: var(--app-header-height, 45.8px) 4rem 5rem; /* Arriba: altura header fijo; contenedor sin padding */
     max-width: 1800px;
     margin: 0 auto;
     /* Aire alrededor, no full-width */

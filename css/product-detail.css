@@ -10,7 +10,7 @@
 .product-view {
   min-height: 100vh;
   background: var(--living-bg-deep, var(--bg-primary));
-  padding: 60px 2rem 2rem; /* 60px arriba para header fijo; #app-container no aplica padding en esta vista */
+  padding: var(--app-header-height, 45.8px) 2rem 2rem; /* Arriba: altura header fijo; #app-container no aplica padding en esta vista */
   max-width: 1400px;
   margin: 0 auto;
   box-sizing: border-box;

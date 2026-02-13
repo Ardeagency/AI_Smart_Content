@@ -17,6 +17,7 @@
     --nav-separator: var(--border-divider);
     --nav-item-height: 44px;
     --nav-item-height-sub: 36px;
+    --app-header-height: 45.8px;
     /* Design tokens sidebar (spec) */
     --sidebar-background: var(--bg-primary);
     --sidebar-hover: rgba(255, 255, 255, 0.08);
@@ -1729,7 +1730,7 @@ body.has-header-only #app-container {
 body.has-sidebar #app-container {
     margin-left: var(--nav-width, 260px);
     max-width: calc(100vw - var(--nav-width, 260px));
-    padding-top: 60px;
+    padding-top: var(--app-header-height, 45.8px);
     transition: margin-left 0.3s ease;
     box-sizing: border-box;
 }
@@ -1754,7 +1755,7 @@ body.has-sidebar #app-container:has(> main.living-main-content) {
     position: fixed;
     top: 0;
     right: 0;
-    height: 60px;
+    height: var(--app-header-height, 45.8px);
     background: var(--nav-bg);
     border-bottom: 1px solid var(--nav-border);
     z-index: 900;
@@ -2360,7 +2361,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     body.has-sidebar #app-container {
         margin-left: 0;
         max-width: 100vw;
-        padding-top: 60px;
+        padding-top: var(--app-header-height, 45.8px);
     }
 
     /* Misma excepción en móvil: sin padding superior en Products y Living */
