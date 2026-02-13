@@ -9,9 +9,10 @@
 -- CREATE OR REPLACE permite re-ejecutar sin fallar.
 -- ------------------------------------------------------------------------------
 
-DROP FUNCTION IF EXISTS public.can_access_flow(uuid);
-DROP FUNCTION IF EXISTS public.is_flow_owner(uuid);
-DROP FUNCTION IF EXISTS public.is_flow_collaborator(uuid);
+-- CASCADE quita políticas que dependen de estas funciones; luego las recreamos más abajo
+DROP FUNCTION IF EXISTS public.can_access_flow(uuid) CASCADE;
+DROP FUNCTION IF EXISTS public.is_flow_owner(uuid) CASCADE;
+DROP FUNCTION IF EXISTS public.is_flow_collaborator(uuid) CASCADE;
 
 -- Función para verificar si es desarrollador (acceso total a logs/técnico)
 CREATE OR REPLACE FUNCTION public.is_developer()
