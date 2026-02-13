@@ -2601,33 +2601,29 @@ class DevBuilderView extends DevBaseView {
         </div>
       `;
     }
-    
     const columns = this.uiLayoutConfig.columns || 1;
     const showLabels = this.uiLayoutConfig.showLabels !== false;
     const showHelperText = this.uiLayoutConfig.showHelperText !== false;
-    
     const Registry = window.InputRegistry;
-    const renderInput = Registry && Registry.renderFormField
-      ? (f) => Registry.renderFormField(f, { mode: 'preview', disabled: false, required: f.required })
-      : (f) => `<input type="text" name="${f.key || 'field'}" placeholder="${(f.placeholder || '')}">`;
-
-    let fieldsHtml = this.inputSchema.map(field => {
+    const fieldsHtml = this.inputSchema.map(field => {
       const widthClass = field.ui?.width === 'half' ? 'col-half' : field.ui?.width === 'third' ? 'col-third' : 'col-full';
-      const inputHtml = renderInput(field);
-      const isStructural = field.input_type === 'section' || field.input_type === 'divider' || field.input_type === 'description_block';
-      const showLabel = showLabels && field.input_type !== 'checkbox' && !isStructural;
-      return `
-        <div class="preview-field ${widthClass}">
-          ${showLabel ? `<label>${field.label || field.key}${field.required ? ' <span class="required">*</span>' : ''}</label>` : ''}
-          ${inputHtml}
-          ${showHelperText && field.description && !isStructural ? `<span class="helper-text">${field.description}</span>` : ''}
-        </div>
-      `;
+      if (Registry && Registry.renderFormFieldWithWrapper) {
+        return Registry.renderFormFieldWithWrapper(field, {
+          idPrefix: 'preview_',
+          wrapperClass: 'preview-field ' + widthClass,
+          showLabel: showLabels,
+          showHelper: showHelperText,
+          showRequired: true,
+          required: field.required,
+          disabled: false,
+          helperClass: 'helper-text'
+        });
+      }
+      const ph = (field.placeholder || '').replace(/"/g, '&quot;');
+      return `<div class="preview-field ${widthClass}"><label>${field.label || field.key}</label><input type="text" name="${field.key || 'field'}" placeholder="${ph}"></div>`;
     }).join('');
-    
     const submitPosition = this.uiLayoutConfig.submitButtonPosition || 'right';
     const submitText = this.uiLayoutConfig.submitButtonText || 'Generar';
-    
     return `
       <div class="preview-form theme-${this.uiLayoutConfig.theme || 'default'}" style="--preview-columns: ${columns}">
         <div class="preview-fields">
@@ -2681,20 +2677,19 @@ class DevBuilderView extends DevBaseView {
       `;
     }
     const Registry = window.InputRegistry;
-    const renderInput = Registry && Registry.renderFormField
-      ? (f) => Registry.renderFormField(f, { mode: 'test', idPrefix: 'test_', required: f.required })
-      : (f) => `<input type="text" id="test_${f.key}" name="${f.key}" ${f.required ? 'required' : ''}>`;
-
-    return this.inputSchema.filter(f => f.input_type !== 'section' && f.input_type !== 'divider' && f.input_type !== 'description_block').map(field => {
-      const inputHtml = renderInput(field);
+    if (Registry && Registry.renderFormFieldWithWrapper) {
+      return this.inputSchema.map(field => Registry.renderFormFieldWithWrapper(field, {
+        idPrefix: 'test_',
+        wrapperClass: 'test-field',
+        showLabel: true,
+        showHelper: true,
+        showRequired: true,
+        required: field.required
+      })).join('');
+    }
+    return this.inputSchema.filter(f => (f.input_type || f.type) !== 'section' && (f.input_type || f.type) !== 'divider' && (f.input_type || f.type) !== 'description_block').map(field => {
       const id = 'test_' + (field.key || 'field');
-      return `
-        <div class="test-field">
-          <label for="${id}">${field.label || field.key}${field.required ? ' <span class="required">*</span>' : ''}</label>
-          ${inputHtml}
-          ${field.description ? `<span class="field-help">${field.description}</span>` : ''}
-        </div>
-      `;
+      return `<div class="test-field"><label for="${id}">${field.label || field.key}${field.required ? ' <span class="required">*</span>' : ''}</label><input type="text" id="${id}" name="${field.key}" ${field.required ? 'required' : ''}>${field.description ? `<span class="field-help">${field.description}</span>` : ''}</div>`;
     }).join('');
   }
 

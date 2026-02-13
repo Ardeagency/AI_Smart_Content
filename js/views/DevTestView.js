@@ -549,50 +549,49 @@ class DevTestView extends DevBaseView {
   }
 
   renderInputField(field) {
-    const required = field.required ? '<span class="required">*</span>' : '';
-    const description = field.description ? `<span class="field-help">${field.description}</span>` : '';
+    if (typeof window.InputRegistry !== 'undefined' && window.InputRegistry.renderFormFieldWithWrapper) {
+      return window.InputRegistry.renderFormFieldWithWrapper(field, {
+        idPrefix: 'input_',
+        wrapperClass: 'form-field',
+        showLabel: true,
+        showHelper: true,
+        showRequired: true,
+        required: field.required
+      });
+    }
     const type = field.input_type || field.type || 'text';
     const isStructural = type === 'section' || type === 'divider' || type === 'description_block';
     if (isStructural) return '';
-
+    const required = field.required ? '<span class="required">*</span>' : '';
+    const description = field.description ? `<span class="field-help">${field.description}</span>` : '';
     let inputHtml = '';
-    if (typeof window.InputRegistry !== 'undefined' && window.InputRegistry.renderFormField) {
-      inputHtml = window.InputRegistry.renderFormField(field, { mode: 'test', idPrefix: 'input_', required: field.required });
-    } else {
-      switch (type) {
-        case 'text':
-          inputHtml = `<input type="text" id="input_${field.key}" name="${field.key}" placeholder="${field.placeholder || ''}" ${field.required ? 'required' : ''}>`;
-          break;
-        case 'textarea':
-          inputHtml = `<textarea id="input_${field.key}" name="${field.key}" rows="${field.rows || 4}" placeholder="${field.placeholder || ''}" ${field.required ? 'required' : ''}></textarea>`;
-          break;
-        case 'select':
-          const options = (field.options || []).map(opt => `<option value="${opt.value || opt}">${opt.label || opt}</option>`).join('');
-          inputHtml = `<select id="input_${field.key}" name="${field.key}" ${field.required ? 'required' : ''}><option value="">${field.placeholder || 'Seleccionar...'}</option>${options}</select>`;
-          break;
-        case 'number':
-          inputHtml = `<input type="number" id="input_${field.key}" name="${field.key}" min="${field.min ?? ''}" max="${field.max ?? ''}" step="${field.step || 1}" value="${field.defaultValue ?? ''}" ${field.required ? 'required' : ''}>`;
-          break;
-        case 'checkbox':
-          return `<div class="form-field checkbox-wrapper"><label class="checkbox-field"><input type="checkbox" id="input_${field.key}" name="${field.key}" ${field.defaultValue ? 'checked' : ''}><span>${field.label}</span></label>${description}</div>`;
-        case 'radio':
-          const radioOptions = (field.options || []).map((opt, i) => `<label class="radio-option"><input type="radio" name="${field.key}" value="${opt.value || opt}" ${i === 0 ? 'checked' : ''}><span>${opt.label || opt}</span></label>`).join('');
-          inputHtml = `<div class="radio-group">${radioOptions}</div>`;
-          break;
-        case 'range':
-          inputHtml = `<div class="range-field"><input type="range" id="input_${field.key}" name="${field.key}" min="${field.min || 0}" max="${field.max || 100}" step="${field.step || 1}" value="${field.defaultValue || 50}"><span class="range-value">${field.defaultValue || 50}</span></div>`;
-          break;
-        default:
-          inputHtml = `<input type="text" id="input_${field.key}" name="${field.key}" placeholder="${field.placeholder || 'UUID (para testing)'}" ${field.required ? 'required' : ''}>`;
-      }
+    switch (type) {
+      case 'text':
+        inputHtml = `<input type="text" id="input_${field.key}" name="${field.key}" placeholder="${field.placeholder || ''}" ${field.required ? 'required' : ''}>`;
+        break;
+      case 'textarea':
+        inputHtml = `<textarea id="input_${field.key}" name="${field.key}" rows="${field.rows || 4}" placeholder="${field.placeholder || ''}" ${field.required ? 'required' : ''}></textarea>`;
+        break;
+      case 'select':
+        const options = (field.options || []).map(opt => `<option value="${opt.value || opt}">${opt.label || opt}</option>`).join('');
+        inputHtml = `<select id="input_${field.key}" name="${field.key}" ${field.required ? 'required' : ''}><option value="">${field.placeholder || 'Seleccionar...'}</option>${options}</select>`;
+        break;
+      case 'number':
+        inputHtml = `<input type="number" id="input_${field.key}" name="${field.key}" min="${field.min ?? ''}" max="${field.max ?? ''}" step="${field.step || 1}" value="${field.defaultValue ?? ''}" ${field.required ? 'required' : ''}>`;
+        break;
+      case 'checkbox':
+        return `<div class="form-field checkbox-wrapper" data-key="${field.key}"><label class="checkbox-field"><input type="checkbox" id="input_${field.key}" name="${field.key}" ${field.defaultValue ? 'checked' : ''}><span>${field.label}</span></label>${description}</div>`;
+      case 'radio':
+        const radioOptions = (field.options || []).map((opt, i) => `<label class="radio-option"><input type="radio" name="${field.key}" value="${opt.value || opt}" ${i === 0 ? 'checked' : ''}><span>${opt.label || opt}</span></label>`).join('');
+        inputHtml = `<div class="radio-group">${radioOptions}</div>`;
+        break;
+      case 'range':
+        inputHtml = `<div class="range-field"><input type="range" id="input_${field.key}" name="${field.key}" min="${field.min || 0}" max="${field.max || 100}" step="${field.step || 1}" value="${field.defaultValue || 50}"><span class="range-value">${field.defaultValue || 50}</span></div>`;
+        break;
+      default:
+        inputHtml = `<input type="text" id="input_${field.key}" name="${field.key}" placeholder="${field.placeholder || 'UUID (para testing)'}" ${field.required ? 'required' : ''}>`;
     }
-    return `
-      <div class="form-field" data-key="${field.key}">
-        <label for="input_${field.key}">${field.label || field.key} ${required}</label>
-        ${inputHtml}
-        ${description}
-      </div>
-    `;
+    return `<div class="form-field" data-key="${field.key}"><label for="input_${field.key}">${field.label || field.key} ${required}</label>${inputHtml}${description}</div>`;
   }
 
   setupInputListeners() {

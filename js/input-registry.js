@@ -255,12 +255,77 @@
     return 'generic';
   }
 
+  /** true si el tipo no genera control editable (section, divider, description_block) */
+  function isStructural(field) {
+    var t = getInputType(field);
+    return t === 'section' || t === 'divider' || t === 'description_block';
+  }
+
+  /** true si el control ya incluye su propio label (checkbox, radio, switch) */
+  function hasOwnLabel(field) {
+    var t = getInputType(field);
+    return t === 'checkbox' || t === 'radio' || t === 'switch' || t === 'boolean';
+  }
+
+  /**
+   * Envuelve el HTML del control en contenedor + label opcional + helper opcional.
+   * @param {Object} field - key, label, description, required
+   * @param {string} inputHtml - HTML del control (salida de renderFormField)
+   * @param {Object} opts - idPrefix, wrapperClass, showLabel, showHelper, showRequired
+   * @returns {string} HTML del bloque completo o '' si inputHtml vacío (estructural)
+   */
+  function wrapFormField(field, inputHtml, opts) {
+    opts = opts || {};
+    if (!inputHtml || inputHtml.trim() === '') return '';
+    var id = (opts.idPrefix || '') + (field.key || 'field');
+    var labelText = escapeHtml(field.label || field.key || '');
+    var showLabel = opts.showLabel !== false;
+    var showHelper = opts.showHelper !== false && (field.description || '').trim() !== '';
+    var showRequired = opts.showRequired === true && field.required;
+    var requiredSpan = showRequired ? ' <span class="required">*</span>' : '';
+    var helperClass = opts.helperClass || 'field-help';
+    var addOuterLabel = showLabel && !hasOwnLabel(field);
+    var helperHtml = showHelper ? '<span class="' + helperClass + '">' + escapeHtml(field.description) + '</span>' : '';
+    var wrapperClass = (opts.wrapperClass || 'form-field').trim();
+    var parts = [];
+    if (addOuterLabel) parts.push('<label for="' + escapeHtml(id) + '">' + labelText + requiredSpan + '</label>');
+    parts.push(inputHtml);
+    if (helperHtml) parts.push(helperHtml);
+    return '<div class="' + escapeHtml(wrapperClass) + '" data-key="' + escapeHtml(field.key || '') + '">' + parts.join('') + '</div>';
+  }
+
+  /**
+   * Renderiza campo completo para formulario (control + wrapper + label + helper).
+   * Una sola llamada para Studio, Test y Preview del Builder.
+   * @param {Object} field - key, label, description, required, input_type, etc.
+   * @param {Object} opts - idPrefix, namePrefix, disabled, required, wrapperClass, showLabel, showHelper, showRequired
+   * @returns {string} HTML del bloque o '' para campos estructurales
+   */
+  function renderFormFieldWithWrapper(field, opts) {
+    opts = opts || {};
+    if (isStructural(field)) return '';
+    var formOpts = { idPrefix: opts.idPrefix, namePrefix: opts.namePrefix, disabled: opts.disabled, required: opts.required };
+    var inputHtml = renderFormField(field, formOpts);
+    return wrapFormField(field, inputHtml, {
+      idPrefix: opts.idPrefix,
+      wrapperClass: opts.wrapperClass,
+      showLabel: opts.showLabel,
+      showHelper: opts.showHelper,
+      showRequired: opts.showRequired,
+      helperClass: opts.helperClass
+    });
+  }
+
   var InputRegistry = {
     getInputType: getInputType,
     getRenderer: getRenderer,
     register: register,
     renderPreview: renderPreview,
     renderFormField: renderFormField,
+    wrapFormField: wrapFormField,
+    renderFormFieldWithWrapper: renderFormFieldWithWrapper,
+    isStructural: isStructural,
+    hasOwnLabel: hasOwnLabel,
     getDefaultTemplates: getDefaultTemplates,
     getPropertyFamily: getPropertyFamily,
     escapeHtml: escapeHtml

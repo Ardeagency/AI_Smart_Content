@@ -241,58 +241,33 @@ class StudioView extends BaseView {
 
   renderFormField(field) {
     const name = field.name || field.key || field.id || 'field';
-    const label = field.label || name;
-    const required = field.required !== false;
-    const isStructural = (field.type || field.input_type || '') === 'section' || (field.type || field.input_type || '') === 'divider' || (field.type || field.input_type || '') === 'description_block';
-    if (isStructural) return '';
-
-    if (typeof window.InputRegistry !== 'undefined' && window.InputRegistry.renderFormField) {
-      const fieldNorm = { ...field, key: name, required };
-      const inputHtml = window.InputRegistry.renderFormField(fieldNorm, { mode: 'studio', idPrefix: 'studio-', required });
-      return `
-        <div class="studio-field">
-          <label for="studio-${this.escapeHtml(name)}">${this.escapeHtml(label)}</label>
-          ${inputHtml}
-        </div>
-      `;
+    const fieldNorm = { ...field, key: name, required: field.required !== false };
+    if (typeof window.InputRegistry !== 'undefined' && window.InputRegistry.renderFormFieldWithWrapper) {
+      return window.InputRegistry.renderFormFieldWithWrapper(fieldNorm, {
+        idPrefix: 'studio-',
+        wrapperClass: 'studio-field',
+        showLabel: true,
+        showHelper: true,
+        showRequired: true,
+        required: fieldNorm.required
+      });
     }
+    const label = field.label || name;
+    const required = fieldNorm.required;
     const type = (field.type || field.input_type || 'text').toLowerCase();
     const placeholder = field.placeholder || '';
     if (type === 'textarea') {
-      return `
-        <div class="studio-field">
-          <label for="studio-${name}">${this.escapeHtml(label)}</label>
-          <textarea id="studio-${name}" name="${this.escapeHtml(name)}" rows="3" placeholder="${this.escapeHtml(placeholder)}" ${required ? 'required' : ''}></textarea>
-        </div>
-      `;
+      return `<div class="studio-field"><label for="studio-${name}">${this.escapeHtml(label)}</label><textarea id="studio-${name}" name="${this.escapeHtml(name)}" rows="3" placeholder="${this.escapeHtml(placeholder)}" ${required ? 'required' : ''}></textarea></div>`;
     }
     if (type === 'number') {
-      return `
-        <div class="studio-field">
-          <label for="studio-${name}">${this.escapeHtml(label)}</label>
-          <input type="number" id="studio-${name}" name="${this.escapeHtml(name)}" placeholder="${this.escapeHtml(placeholder)}" ${required ? 'required' : ''} />
-        </div>
-      `;
+      return `<div class="studio-field"><label for="studio-${name}">${this.escapeHtml(label)}</label><input type="number" id="studio-${name}" name="${this.escapeHtml(name)}" placeholder="${this.escapeHtml(placeholder)}" ${required ? 'required' : ''} /></div>`;
     }
     if (type === 'select') {
       const options = field.options || [];
       const opts = options.map(o => `<option value="${this.escapeHtml(String(o.value ?? o))}">${this.escapeHtml(String(o.label ?? o))}</option>`).join('');
-      return `
-        <div class="studio-field">
-          <label for="studio-${name}">${this.escapeHtml(label)}</label>
-          <select id="studio-${name}" name="${this.escapeHtml(name)}" ${required ? 'required' : ''}>
-            <option value="">Seleccionar...</option>
-            ${opts}
-          </select>
-        </div>
-      `;
+      return `<div class="studio-field"><label for="studio-${name}">${this.escapeHtml(label)}</label><select id="studio-${name}" name="${this.escapeHtml(name)}" ${required ? 'required' : ''}><option value="">Seleccionar...</option>${opts}</select></div>`;
     }
-    return `
-      <div class="studio-field">
-        <label for="studio-${name}">${this.escapeHtml(label)}</label>
-        <input type="text" id="studio-${name}" name="${this.escapeHtml(name)}" placeholder="${this.escapeHtml(placeholder)}" ${required ? 'required' : ''} />
-      </div>
-    `;
+    return `<div class="studio-field"><label for="studio-${name}">${this.escapeHtml(label)}</label><input type="text" id="studio-${name}" name="${this.escapeHtml(name)}" placeholder="${this.escapeHtml(placeholder)}" ${required ? 'required' : ''} /></div>`;
   }
 
   collectFormData() {
