@@ -1,11 +1,17 @@
 -- ==============================================================================
 -- SCRIPT MAESTRO DE SEGURIDAD (RLS & PERMISOS)
+-- Idempotente: se puede ejecutar varias veces (drop + create en políticas).
 -- ==============================================================================
 
 -- ------------------------------------------------------------------------------
 -- 1. FUNCIONES HELPER SEGURAS (El núcleo de la seguridad)
 -- Usamos SECURITY DEFINER para evitar el error de "Infinite Recursion"
+-- CREATE OR REPLACE permite re-ejecutar sin fallar.
 -- ------------------------------------------------------------------------------
+
+DROP FUNCTION IF EXISTS public.can_access_flow(uuid);
+DROP FUNCTION IF EXISTS public.is_flow_owner(uuid);
+DROP FUNCTION IF EXISTS public.is_flow_collaborator(uuid);
 
 -- Función para verificar si es desarrollador (acceso total a logs/técnico)
 CREATE OR REPLACE FUNCTION public.is_developer()
@@ -212,7 +218,7 @@ USING (
 );
 
 -- Tablas hijas de marca (Productos, Colores, Fuentes, etc.)
--- Aplicamos una política eficiente de lectura
+-- Aplicamos una política eficiente de lectura (drop antes de crear para poder re-ejecutar el script)
 DO $$
 DECLARE
     brand_child_tables text[] := ARRAY[
@@ -224,6 +230,8 @@ DECLARE
 BEGIN
     FOREACH t IN ARRAY brand_child_tables LOOP
         EXECUTE format('DROP POLICY IF EXISTS "Access brand assets" ON public.%I;', t);
+        EXECUTE format('DROP POLICY IF EXISTS "Read brand assets" ON public.%I;', t);
+        EXECUTE format('DROP POLICY IF EXISTS "Modify brand assets" ON public.%I;', t);
         -- Lectura abierta para autenticados (la UI filtra por Brand ID, que ya está protegido)
         EXECUTE format('CREATE POLICY "Read brand assets" ON public.%I FOR SELECT TO authenticated USING (true);', t);
         -- Escritura/Borrado restringido a Developers o Dueños (simplificado)
