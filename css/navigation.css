@@ -7,9 +7,9 @@
 
 /* Variables específicas para navegación */
 :root {
-    /* Width states (spec: expanded 260px, collapsed 72px) */
+    /* Width states (spec: expanded 260px, collapsed 51px) */
     --nav-width: 260px;
-    --nav-width-collapsed: 72px;
+    --nav-width-collapsed: 51px;
     --nav-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --nav-overlay: rgba(0, 0, 0, 0.8);
     --nav-bg: var(--bg-primary);
@@ -475,8 +475,8 @@ body.sidebar-collapsed #app-container .main-header,
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: 6px;
+    padding-right: 6px;
 }
 
 .side-navigation.collapsed .nav-text,
@@ -808,7 +808,7 @@ body.sidebar-collapsed #app-container .main-header,
 /* Footer collapsed: icon stack + divider, iconos centrados */
 .side-navigation.collapsed .nav-footer {
     border-top: 1px solid var(--nav-border);
-    padding: 12px 16px 16px;
+    padding: 12px 6px 16px;
     gap: 4px;
     display: flex;
     flex-direction: column;
@@ -835,7 +835,7 @@ body.sidebar-collapsed #app-container .main-header,
 /* Tooltips para estado colapsado: right center, max-width 180px, delay 150ms (JS) */
 .nav-tooltip {
     position: fixed;
-    left: 88px; /* 72px sidebar + 16px gap */
+    left: 67px; /* 51px sidebar + 16px gap */
     top: 50%;
     transform: translateY(-50%);
     background: var(--bg-card);
@@ -864,7 +864,7 @@ body.sidebar-collapsed #app-container .main-header,
 /* Flyout: mini mapa del módulo — Header (icono + nombre) | Body (tree) | Footer (CTA) */
 .nav-flyout {
     position: fixed;
-    left: 84px; /* 72px sidebar + 12px safe zone */
+    left: 63px; /* 51px sidebar + 12px safe zone */
     width: 240px;
     max-height: calc(100vh - 32px);
     background: var(--bg-card);

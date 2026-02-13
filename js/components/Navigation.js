@@ -825,7 +825,7 @@ class Navigation {
           tooltipEl.textContent = text;
           const rect = el.getBoundingClientRect();
           tooltipEl.style.top = `${rect.top + rect.height / 2}px`;
-          tooltipEl.style.left = '88px';
+          tooltipEl.style.left = '67px';
           tooltipEl.style.transform = 'translateY(-50%)';
           tooltipEl.classList.add('show');
         }, delay);
