@@ -118,6 +118,13 @@ USING (
     public.is_org_member(id) -- Usa la función segura
 );
 
+-- Solo el propietario puede actualizar datos de la organización (nombre, etc.)
+DROP POLICY IF EXISTS "Owner update organization" ON public.organizations;
+CREATE POLICY "Owner update organization" ON public.organizations
+FOR UPDATE TO authenticated
+USING (owner_user_id = auth.uid())
+WITH CHECK (owner_user_id = auth.uid());
+
 DROP POLICY IF EXISTS "View organization members" ON public.organization_members;
 CREATE POLICY "View organization members" ON public.organization_members
 FOR SELECT TO authenticated
@@ -125,6 +132,52 @@ USING (
     user_id = auth.uid()
     OR
     public.is_org_member(organization_id) -- Veo a mis compañeros
+);
+
+-- Insertar miembros: solo si soy miembro y (owner o admin)
+DROP POLICY IF EXISTS "Org owner or admin insert members" ON public.organization_members;
+CREATE POLICY "Org owner or admin insert members" ON public.organization_members
+FOR INSERT TO authenticated
+WITH CHECK (
+    public.is_org_member(organization_id)
+    AND (
+        (SELECT owner_user_id FROM public.organizations WHERE id = organization_id) = auth.uid()
+        OR EXISTS (
+            SELECT 1 FROM public.organization_members om
+            WHERE om.organization_id = organization_id AND om.user_id = auth.uid() AND om.role IN ('owner', 'admin')
+        )
+    )
+);
+
+-- Actualizar miembros (roles): misma condición
+DROP POLICY IF EXISTS "Org owner or admin update members" ON public.organization_members;
+CREATE POLICY "Org owner or admin update members" ON public.organization_members
+FOR UPDATE TO authenticated
+USING (
+    public.is_org_member(organization_id)
+    AND (
+        (SELECT owner_user_id FROM public.organizations WHERE id = organization_id) = auth.uid()
+        OR EXISTS (
+            SELECT 1 FROM public.organization_members om
+            WHERE om.organization_id = organization_id AND om.user_id = auth.uid() AND om.role IN ('owner', 'admin')
+        )
+    )
+)
+WITH CHECK (true);
+
+-- Eliminar miembros: owner o admin; no se puede eliminar al owner de la org (se controla por app)
+DROP POLICY IF EXISTS "Org owner or admin delete members" ON public.organization_members;
+CREATE POLICY "Org owner or admin delete members" ON public.organization_members
+FOR DELETE TO authenticated
+USING (
+    public.is_org_member(organization_id)
+    AND (
+        (SELECT owner_user_id FROM public.organizations WHERE id = organization_id) = auth.uid()
+        OR EXISTS (
+            SELECT 1 FROM public.organization_members om
+            WHERE om.organization_id = organization_id AND om.user_id = auth.uid() AND om.role IN ('owner', 'admin')
+        )
+    )
 );
 
 -- Créditos de organización (solo miembros de la org)

@@ -38,6 +38,7 @@ const SIDEBAR_USER_CONFIG = {
   ],
   footer: [
     { label: 'Configuración', icon: 'fa-cog', route: 'settings' },
+    { label: 'Esta organización', icon: 'fa-building', route: 'organization' },
     { label: 'Planes', icon: 'fa-credit-card', route: 'planes' },
     { label: 'Créditos', icon: 'fa-coins', route: 'credits' },
     { label: 'Salir de la organización', icon: 'fa-sign-out-alt', action: 'leaveWorkspace' }
@@ -159,7 +160,7 @@ class Navigation {
     
     // Rutas legacy sin /org/ - tratar como usuario pero sin org_id
     // Esto mantiene compatibilidad temporal
-    if (['/living', '/brands', '/products', '/studio', '/audiences', '/marketing', '/campaigns', '/content', '/settings'].some(r => path.startsWith(r))) {
+    if (['/living', '/brands', '/products', '/studio', '/audiences', '/marketing', '/campaigns', '/content', '/settings', '/organization'].some(r => path.startsWith(r))) {
       return { mode: 'user', showSidebar: true, showHeader: true, orgId: null, brandId: null };
     }
     
@@ -921,6 +922,7 @@ class Navigation {
       '/campaigns': 'Identidad',
       '/content': 'Identidad',
       '/settings': 'Configuración',
+      '/organization': 'Esta organización',
       '/planes': 'Planes',
       '/credits': 'Créditos',
       '/dev/dashboard': 'Dashboard',

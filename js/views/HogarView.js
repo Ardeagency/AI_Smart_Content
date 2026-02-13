@@ -449,9 +449,9 @@ class HogarView extends BaseView {
           e.preventDefault();
           e.stopPropagation();
           if (window.router) {
-            window.router.navigate(`/org/${org.id}/settings`);
+            window.router.navigate(`/org/${org.id}/organization`);
           } else {
-            window.location.href = `/org/${org.id}/settings`;
+            window.location.href = `/org/${org.id}/organization`;
           }
         });
       }

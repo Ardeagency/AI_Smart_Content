@@ -77,6 +77,7 @@ class App {
       CreateView: typeof window.CreateView !== 'undefined',
       ContentView: typeof window.ContentView !== 'undefined',
       SettingsView: typeof window.SettingsView !== 'undefined',
+      OrganizationView: typeof window.OrganizationView !== 'undefined',
       FormRecordView: typeof window.FormRecordView !== 'undefined',
       HogarView: typeof window.HogarView !== 'undefined',
       LivingView: typeof window.LivingView !== 'undefined',
@@ -249,8 +250,16 @@ class App {
     }
 
     if (viewsAvailable.SettingsView) {
-      // Settings de organización
+      // Settings de organización (perfil usuario)
       this.router.register('/org/:orgId/settings', window.SettingsView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+    }
+
+    if (viewsAvailable.OrganizationView) {
+      // Configuración de la organización (datos administrativos del workspace)
+      this.router.register('/org/:orgId/organization', window.OrganizationView, {
         requiresAuth: true,
         redirectIfAuth: false
       });
