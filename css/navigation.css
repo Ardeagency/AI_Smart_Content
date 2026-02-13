@@ -798,48 +798,71 @@ body.sidebar-collapsed #app-container .main-header,
 }
 
 .side-navigation.collapsed .nav-workspace-header .nav-logo-icon,
-.side-navigation.collapsed .nav-identity-section .nav-logo-icon {
+.side-navigation.collapsed .nav-identity-section .nav-logo-icon,
+.side-navigation.collapsed .nav-identity-section .nav-dev-icon {
     width: 24px;
     height: 24px;
     font-size: 14px;
 }
 
-/* Footer collapsed: icon stack + divider, iconos centrados; no desbordar del rail */
+/* Footer collapsed: icon stack + divider, iconos centrados */
 .side-navigation.collapsed .nav-footer {
-    position: relative;
-    left: auto;
-    right: auto;
-    bottom: auto;
     border-top: 1px solid var(--nav-border);
     padding: 12px 6px 16px;
     gap: 4px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 100%;
-    max-width: var(--nav-width-collapsed, 51px);
-    min-width: 0;
-    overflow: hidden;
-    box-sizing: border-box;
-    flex-shrink: 0;
 }
 
 .side-navigation.collapsed .nav-footer-link,
 .side-navigation.collapsed .nav-footer-action {
     width: 40px;
     min-width: 40px;
-    max-width: 40px;
     height: 40px;
     min-height: 40px;
     padding: 0;
     justify-content: center;
     border-radius: 12px;
-    flex-shrink: 0;
-    box-sizing: border-box;
 }
 
 .side-navigation.collapsed .nav-footer .nav-icon {
     margin: 0;
+}
+
+/* Footer desarrollador colapsado: mismo rail que el menú (iconos 40×40, sin texto) */
+.side-navigation.collapsed.nav-mode-developer .nav-footer {
+    padding: 12px 6px 16px;
+    gap: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+}
+
+.side-navigation.collapsed.nav-mode-developer .nav-dev-stats {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+    background: transparent;
+    width: 100%;
+    max-width: 40px;
+}
+
+.side-navigation.collapsed.nav-mode-developer .nav-dev-stat {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 12px;
+}
+
+.side-navigation.collapsed.nav-mode-developer .nav-dev-stat span {
+    display: none;
 }
 
 /* Toggle button removido del sidebar - ahora está en el header */
@@ -2104,9 +2127,9 @@ body.sidebar-collapsed .app-header.with-sidebar {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(224, 145, 69, 0.1);
+    background: transparent;
     border-radius: 6px;
-    color: var(--accent-yellow);
+    color: var(--text-secondary);
     font-size: 16px;
     flex-shrink: 0;
     overflow: hidden;
