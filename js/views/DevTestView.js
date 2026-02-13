@@ -19,6 +19,7 @@ class DevTestView extends DevBaseView {
     // Flujos disponibles
     this.flows = [];
     this.selectedFlow = null;
+    this.selectedFlowModule = null; // Módulo actual (webhooks e input_schema viven aquí)
     this.technicalDetails = null;
     
     // Estado del test
@@ -367,8 +368,6 @@ class DevTestView extends DevBaseView {
           description,
           status,
           version,
-          input_schema,
-          webhook_url,
           flow_category_type,
           token_cost
         `)
@@ -402,6 +401,7 @@ class DevTestView extends DevBaseView {
   async selectFlow(flowId) {
     if (!flowId) {
       this.selectedFlow = null;
+      this.selectedFlowModule = null;
       this.technicalDetails = null;
       this.updateFlowInfo();
       this.hideInputsForm();
@@ -412,8 +412,8 @@ class DevTestView extends DevBaseView {
     
     if (!this.selectedFlow) return;
     
-    // Cargar detalles técnicos
-    await this.loadTechnicalDetails(flowId);
+    // Cargar módulo(s) del flujo (webhooks e input_schema están en flow_modules)
+    await this.loadFlowModuleAndTechnicalDetails(flowId);
     
     // Actualizar UI
     this.updateFlowInfo();
@@ -427,21 +427,48 @@ class DevTestView extends DevBaseView {
     await this.loadStats();
   }
 
-  async loadTechnicalDetails(flowId) {
+  /**
+   * Carga el primer módulo del flujo (webhook URLs, input_schema) y opcionalmente
+   * flow_technical_details por flow_module_id (plataforma, editor_url, health).
+   */
+  async loadFlowModuleAndTechnicalDetails(flowId) {
     if (!this.supabase) return;
     
+    this.selectedFlowModule = null;
+    this.technicalDetails = null;
+    
     try {
-      const { data, error } = await this.supabase
+      const { data: modules, error: modError } = await this.supabase
+        .from('flow_modules')
+        .select('id, name, step_order, webhook_url_test, webhook_url_prod, input_schema')
+        .eq('content_flow_id', flowId)
+        .order('step_order', { ascending: true });
+      
+      if (modError) throw modError;
+      
+      const module = (modules && modules[0]) || null;
+      this.selectedFlowModule = module;
+      
+      // input_schema y webhooks en el flujo para compatibilidad con la UI
+      if (this.selectedFlow && module) {
+        this.selectedFlow.input_schema = module.input_schema || this.selectedFlow.input_schema;
+        this.selectedFlow.webhook_url_test = module.webhook_url_test;
+        this.selectedFlow.webhook_url_prod = module.webhook_url_prod;
+      }
+      
+      if (!module) return;
+      
+      const { data: tech, error: techError } = await this.supabase
         .from('flow_technical_details')
         .select('*')
-        .eq('flow_id', flowId)
-        .single();
+        .eq('flow_module_id', module.id)
+        .maybeSingle();
       
-      if (error && error.code !== 'PGRST116') throw error;
-      
-      this.technicalDetails = data;
+      if (techError && techError.code !== 'PGRST116') throw techError;
+      this.technicalDetails = tech || null;
     } catch (err) {
-      console.error('Error loading technical details:', err);
+      console.error('Error loading flow module / technical details:', err);
+      this.selectedFlowModule = null;
       this.technicalDetails = null;
     }
   }
@@ -483,16 +510,15 @@ class DevTestView extends DevBaseView {
     const urlEl = this.querySelector('#webhookUrl');
     if (!urlEl) return;
     
+    // URLs viven en flow_modules (selectedFlow ya las tiene copiadas desde loadFlowModuleAndTechnicalDetails)
     let url = null;
-    
     if (this.environment === 'test') {
-      url = this.technicalDetails?.webhook_url_test || this.selectedFlow?.webhook_url;
+      url = this.selectedFlow?.webhook_url_test || this.selectedFlowModule?.webhook_url_test;
     } else {
-      url = this.technicalDetails?.webhook_url_prod || this.selectedFlow?.webhook_url;
+      url = this.selectedFlow?.webhook_url_prod || this.selectedFlowModule?.webhook_url_prod;
     }
     
     if (url) {
-      // Truncar URL para mostrar
       const truncated = url.length > 40 ? url.substring(0, 40) + '...' : url;
       urlEl.innerHTML = `<span title="${url}">${truncated}</span>`;
       urlEl.classList.remove('not-configured');
@@ -680,9 +706,9 @@ class DevTestView extends DevBaseView {
     // Obtener webhook URL
     let webhookUrl = null;
     if (this.environment === 'test') {
-      webhookUrl = this.technicalDetails?.webhook_url_test || this.selectedFlow.webhook_url;
+      webhookUrl = this.selectedFlow?.webhook_url_test || this.selectedFlowModule?.webhook_url_test;
     } else {
-      webhookUrl = this.technicalDetails?.webhook_url_prod || this.selectedFlow.webhook_url;
+      webhookUrl = this.selectedFlow?.webhook_url_prod || this.selectedFlowModule?.webhook_url_prod;
     }
     
     if (!webhookUrl) {
@@ -706,21 +732,29 @@ class DevTestView extends DevBaseView {
     let statusCode = null;
     
     try {
-      // Crear registro de ejecución
+      // Crear registro de ejecución (inputs van en runs_inputs)
       if (this.supabase) {
         const { data: run, error: runError } = await this.supabase
           .from('flow_runs')
           .insert({
             flow_id: this.selectedFlow.id,
             user_id: this.userId,
-            status: 'running',
-            inputs_used: inputs
+            status: 'running'
           })
           .select('id')
           .single();
         
         if (!runError && run) {
           runId = run.id;
+          if (this.selectedFlowModule?.id) {
+            await this.supabase
+              .from('runs_inputs')
+              .insert({
+                run_id: runId,
+                flow_module_id: this.selectedFlowModule.id,
+                input_data: inputs
+              });
+          }
         }
       }
       
@@ -777,13 +811,14 @@ class DevTestView extends DevBaseView {
           })
           .eq('id', runId);
         
-        // Crear log si hay error
+        // Crear log si hay error (con flow_module_id si existe)
         if (!response.ok) {
           await this.supabase
             .from('developer_logs')
             .insert({
               flow_id: this.selectedFlow.id,
               run_id: runId,
+              flow_module_id: this.selectedFlowModule?.id || null,
               environment: this.environment,
               severity: 'error',
               error_message: `HTTP ${statusCode}: ${response.statusText}`,
@@ -813,6 +848,7 @@ class DevTestView extends DevBaseView {
           .insert({
             flow_id: this.selectedFlow.id,
             run_id: runId,
+            flow_module_id: this.selectedFlowModule?.id || null,
             environment: this.environment,
             severity: 'error',
             error_message: err.message,
@@ -1011,7 +1047,6 @@ class DevTestView extends DevBaseView {
           id,
           status,
           created_at,
-          inputs_used,
           tokens_consumed,
           webhook_response_code
         `)
@@ -1125,16 +1160,26 @@ class DevTestView extends DevBaseView {
     const run = this.runHistory.find(r => r.id === runId);
     if (!run) return;
     
-    // También cargar logs de esta ejecución
+    let runInputs = {};
     let logs = [];
+    
     if (this.supabase) {
-      const { data } = await this.supabase
-        .from('developer_logs')
-        .select('*')
-        .eq('run_id', runId)
-        .order('created_at', { ascending: true });
+      const [inputsRes, logsRes] = await Promise.all([
+        this.supabase
+          .from('runs_inputs')
+          .select('input_data')
+          .eq('run_id', runId)
+          .order('created_at', { ascending: true }),
+        this.supabase
+          .from('developer_logs')
+          .select('*')
+          .eq('run_id', runId)
+          .order('created_at', { ascending: true })
+      ]);
       
-      logs = data || [];
+      const firstInput = inputsRes?.data?.[0];
+      runInputs = (firstInput && firstInput.input_data) || {};
+      logs = logsRes?.data || [];
     }
     
     const modal = this.querySelector('#runDetailModal');
@@ -1178,7 +1223,7 @@ class DevTestView extends DevBaseView {
         
         <div class="detail-section">
           <h4>Inputs Utilizados</h4>
-          <pre class="detail-json">${JSON.stringify(run.inputs_used || {}, null, 2)}</pre>
+          <pre class="detail-json">${JSON.stringify(runInputs, null, 2)}</pre>
         </div>
         
         ${logs.length > 0 ? `
@@ -1205,9 +1250,9 @@ class DevTestView extends DevBaseView {
       </div>
     `;
     
-    // Listener para re-ejecutar
+    const runWithInputs = { ...run, inputs_used: runInputs };
     body.querySelector('#rerunTestBtn')?.addEventListener('click', () => {
-      this.loadInputsFromRun(run);
+      this.loadInputsFromRun(runWithInputs);
       modal.style.display = 'none';
     });
     
@@ -1215,12 +1260,13 @@ class DevTestView extends DevBaseView {
   }
 
   loadInputsFromRun(run) {
-    if (!run.inputs_used) return;
+    const inputData = run?.inputs_used;
+    if (!inputData || typeof inputData !== 'object') return;
     
     const fields = this.selectedFlow?.input_schema?.fields || [];
     
     fields.forEach(field => {
-      const value = run.inputs_used[field.key];
+      const value = inputData[field.key];
       const el = this.querySelector(`[name="${field.key}"]`);
       
       if (!el || value === undefined) return;
@@ -1241,7 +1287,7 @@ class DevTestView extends DevBaseView {
       }
     });
     
-    this.testInputs = { ...run.inputs_used };
+    this.testInputs = { ...inputData };
     this.showNotification('Inputs cargados', 'success');
   }
 

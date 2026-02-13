@@ -95,6 +95,7 @@ class DevLogsView extends DevBaseView {
               <tr>
                 <th class="col-severity">Severidad</th>
                 <th class="col-flow">Flujo</th>
+                <th class="col-module">Módulo</th>
                 <th class="col-env">Ambiente</th>
                 <th class="col-message">Mensaje</th>
                 <th class="col-time">Tiempo</th>
@@ -254,12 +255,14 @@ class DevLogsView extends DevBaseView {
           id,
           flow_id,
           run_id,
+          flow_module_id,
           environment,
           severity,
           error_message,
           raw_details,
           created_at,
-          content_flows (name)
+          content_flows (name),
+          flow_modules (name)
         `, { count: 'exact' })
         .in('flow_id', ids);
 
@@ -323,6 +326,9 @@ class DevLogsView extends DevBaseView {
         </td>
         <td class="col-flow">
           <span class="log-flow-name">${this.escapeHtml(log.content_flows?.name || 'Unknown')}</span>
+        </td>
+        <td class="col-module">
+          <span class="log-module-name">${this.escapeHtml(log.flow_modules?.name || '—')}</span>
         </td>
         <td class="col-env">
           <span class="log-env-badge ${log.environment}">${log.environment}</span>
@@ -456,6 +462,13 @@ class DevLogsView extends DevBaseView {
           <h4>Flujo</h4>
           <p>${this.escapeHtml(log.content_flows?.name || 'Unknown')}</p>
         </div>
+
+        ${log.flow_modules?.name ? `
+          <div class="log-detail-section">
+            <h4>Módulo</h4>
+            <p>${this.escapeHtml(log.flow_modules.name)}</p>
+          </div>
+        ` : ''}
 
         <div class="log-detail-section">
           <h4>Mensaje de Error</h4>
@@ -596,12 +609,12 @@ class DevLogsView extends DevBaseView {
     return date.toLocaleDateString();
   }
 
-  showLogsError() {
+    showLogsError() {
     const tbody = document.getElementById('logsTableBody');
     if (tbody) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="6" class="dev-table-error">
+          <td colspan="7" class="dev-table-error">
             <i class="fas fa-exclamation-triangle"></i>
             Error cargando logs
           </td>

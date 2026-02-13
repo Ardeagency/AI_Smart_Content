@@ -369,28 +369,31 @@ class DevWebhooksView extends DevBaseView {
     if (!this.supabase || !this.userId) return;
     
     try {
-      // Cargar flujos con sus detalles técnicos
+      // Cargar flujos con sus módulos (URLs en flow_modules) y detalles técnicos (flow_technical_details por flow_module_id)
       const { data: flows, error } = await this.supabase
         .from('content_flows')
         .select(`
           id,
           name,
           status,
-          webhook_url,
           run_count,
-          flow_technical_details (
+          flow_modules (
             id,
-            platform_name,
-            platform_flow_id,
-            platform_flow_name,
+            name,
+            step_order,
             webhook_url_test,
             webhook_url_prod,
-            webhook_method,
-            editor_url,
-            credential_id,
-            is_healthy,
-            last_health_check,
-            avg_execution_time_ms
+            flow_technical_details (
+              id,
+              platform_name,
+              platform_flow_id,
+              platform_flow_name,
+              editor_url,
+              credential_id,
+              is_healthy,
+              last_health_check,
+              avg_execution_time_ms
+            )
           )
         `)
         .eq('owner_id', this.userId)
@@ -398,15 +401,38 @@ class DevWebhooksView extends DevBaseView {
       
       if (error) throw error;
       
-      // Normalizar datos
-      this.webhooks = (flows || []).map(flow => ({
-        flowId: flow.id,
-        flowName: flow.name,
-        flowStatus: flow.status,
-        legacyWebhook: flow.webhook_url,
-        runCount: flow.run_count || 0,
-        technical: flow.flow_technical_details?.[0] || null
-      }));
+      // Una fila por flujo (primer módulo); URLs vienen de flow_modules, resto de flow_technical_details
+      this.webhooks = (flows || []).map(flow => {
+        const module = flow.flow_modules?.[0] || null;
+        const tech = module?.flow_technical_details?.[0] || null;
+        const webhookTest = module?.webhook_url_test;
+        const webhookProd = module?.webhook_url_prod;
+        const isConfigured = !!(webhookTest || webhookProd);
+        return {
+          flowId: flow.id,
+          flowName: flow.name,
+          flowStatus: flow.status,
+          runCount: flow.run_count || 0,
+          moduleId: module?.id || null,
+          moduleName: module?.name || 'default',
+          technical: {
+            ...(tech || {}),
+            id: tech?.id,
+            flow_module_id: module?.id,
+            webhook_url_test: webhookTest,
+            webhook_url_prod: webhookProd,
+            platform_name: tech?.platform_name || 'n8n',
+            platform_flow_id: tech?.platform_flow_id,
+            platform_flow_name: tech?.platform_flow_name,
+            editor_url: tech?.editor_url,
+            credential_id: tech?.credential_id,
+            is_healthy: tech?.is_healthy,
+            last_health_check: tech?.last_health_check,
+            avg_execution_time_ms: tech?.avg_execution_time_ms
+          },
+          _isConfigured: isConfigured
+        };
+      });
       
       this.applyFilters();
       this.updateStats();
@@ -420,13 +446,12 @@ class DevWebhooksView extends DevBaseView {
   applyFilters() {
     let filtered = [...this.webhooks];
     
-    // Filtro de estado
     if (this.currentFilter === 'healthy') {
       filtered = filtered.filter(w => w.technical?.is_healthy === true);
     } else if (this.currentFilter === 'unhealthy') {
       filtered = filtered.filter(w => w.technical?.is_healthy === false);
     } else if (this.currentFilter === 'unconfigured') {
-      filtered = filtered.filter(w => !w.technical || (!w.technical.webhook_url_test && !w.technical.webhook_url_prod));
+      filtered = filtered.filter(w => !w.technical?.webhook_url_test && !w.technical?.webhook_url_prod);
     }
     
     // Filtro de plataforma
@@ -453,7 +478,7 @@ class DevWebhooksView extends DevBaseView {
     const total = this.webhooks.length;
     const healthy = this.webhooks.filter(w => w.technical?.is_healthy === true).length;
     const unhealthy = this.webhooks.filter(w => w.technical?.is_healthy === false).length;
-    const unconfigured = this.webhooks.filter(w => !w.technical || (!w.technical.webhook_url_test && !w.technical.webhook_url_prod)).length;
+    const unconfigured = this.webhooks.filter(w => !w.technical?.webhook_url_test && !w.technical?.webhook_url_prod).length;
     
     this.querySelector('#statTotal').textContent = total;
     this.querySelector('#statHealthy').textContent = healthy;
@@ -673,10 +698,10 @@ class DevWebhooksView extends DevBaseView {
     let isHealthy = true;
     let results = [];
     
-    // Probar webhook de test
+    const method = tech.webhook_method || 'POST';
     if (testUrl) {
       try {
-        const result = await this.pingWebhook(testUrl, tech.webhook_method);
+        const result = await this.pingWebhook(testUrl, method);
         results.push({ env: 'test', ...result });
         if (!result.success) isHealthy = false;
       } catch {
@@ -685,10 +710,9 @@ class DevWebhooksView extends DevBaseView {
       }
     }
     
-    // Probar webhook de prod
     if (prodUrl) {
       try {
-        const result = await this.pingWebhook(prodUrl, tech.webhook_method);
+        const result = await this.pingWebhook(prodUrl, method);
         results.push({ env: 'prod', ...result });
         if (!result.success) isHealthy = false;
       } catch {
@@ -882,6 +906,7 @@ class DevWebhooksView extends DevBaseView {
   async saveWebhook() {
     const isNew = !this.editingWebhook;
     let flowId = this.editingWebhook?.flowId;
+    const moduleId = this.editingWebhook?.moduleId;
     
     if (isNew) {
       flowId = this.querySelector('#webhookFlowSelect')?.value;
@@ -891,23 +916,20 @@ class DevWebhooksView extends DevBaseView {
       }
     }
     
-    const data = {
-      flow_id: flowId,
+    const webhookUrlTest = this.querySelector('#webhookUrlTest')?.value?.trim() || null;
+    const webhookUrlProd = this.querySelector('#webhookUrlProd')?.value?.trim() || null;
+    if (!webhookUrlTest && !webhookUrlProd) {
+      this.showNotification('Configura al menos una URL de webhook', 'warning');
+      return;
+    }
+    
+    const techData = {
       platform_name: this.querySelector('#webhookPlatform')?.value || 'n8n',
-      webhook_method: this.querySelector('#webhookMethod')?.value || 'POST',
-      webhook_url_test: this.querySelector('#webhookUrlTest')?.value || null,
-      webhook_url_prod: this.querySelector('#webhookUrlProd')?.value || null,
       platform_flow_id: this.querySelector('#webhookFlowId')?.value || null,
       platform_flow_name: this.querySelector('#webhookFlowName')?.value || null,
       editor_url: this.querySelector('#webhookEditorUrl')?.value || null,
       credential_id: this.querySelector('#webhookCredentialId')?.value || null
     };
-    
-    // Validar al menos una URL
-    if (!data.webhook_url_test && !data.webhook_url_prod) {
-      this.showNotification('Configura al menos una URL de webhook', 'warning');
-      return;
-    }
     
     const saveBtn = this.querySelector('#saveWebhookBtn');
     if (saveBtn) {
@@ -916,33 +938,64 @@ class DevWebhooksView extends DevBaseView {
     }
     
     try {
-      if (this.editingWebhook?.technical?.id) {
-        // Actualizar existente
-        const { error } = await this.supabase
-          .from('flow_technical_details')
-          .update(data)
-          .eq('id', this.editingWebhook.technical.id);
-        
-        if (error) throw error;
-      } else {
-        // Crear nuevo
-        const { error } = await this.supabase
-          .from('flow_technical_details')
-          .insert(data);
-        
-        if (error) throw error;
-      }
+      let targetModuleId = moduleId;
       
-      // También actualizar webhook_url en content_flows
-      await this.supabase
-        .from('content_flows')
-        .update({ webhook_url: data.webhook_url_prod || data.webhook_url_test })
-        .eq('id', flowId);
+      if (moduleId) {
+        await this.supabase
+          .from('flow_modules')
+          .update({
+            webhook_url_test: webhookUrlTest,
+            webhook_url_prod: webhookUrlProd
+          })
+          .eq('id', moduleId);
+        if (this.editingWebhook?.technical?.id) {
+          await this.supabase
+            .from('flow_technical_details')
+            .update(techData)
+            .eq('id', this.editingWebhook.technical.id);
+        } else {
+          await this.supabase
+            .from('flow_technical_details')
+            .insert({ ...techData, flow_module_id: moduleId });
+        }
+      } else {
+        const { data: existing } = await this.supabase
+          .from('flow_modules')
+          .select('id')
+          .eq('content_flow_id', flowId)
+          .limit(1);
+        
+        if (existing?.[0]?.id) {
+          targetModuleId = existing[0].id;
+          await this.supabase
+            .from('flow_modules')
+            .update({
+              webhook_url_test: webhookUrlTest,
+              webhook_url_prod: webhookUrlProd
+            })
+            .eq('id', targetModuleId);
+        } else {
+          const { data: inserted, error: insErr } = await this.supabase
+            .from('flow_modules')
+            .insert({
+              content_flow_id: flowId,
+              name: 'default',
+              step_order: 1,
+              webhook_url_test: webhookUrlTest,
+              webhook_url_prod: webhookUrlProd
+            })
+            .select('id')
+            .single();
+          if (insErr) throw insErr;
+          targetModuleId = inserted?.id;
+        }
+        await this.supabase
+          .from('flow_technical_details')
+          .upsert({ ...techData, flow_module_id: targetModuleId }, { onConflict: 'flow_module_id' });
+      }
       
       this.showNotification('Webhook guardado correctamente', 'success');
       this.querySelector('#webhookModal').style.display = 'none';
-      
-      // Recargar datos
       await this.loadWebhooks();
       
     } catch (err) {
@@ -1020,28 +1073,29 @@ class DevWebhooksView extends DevBaseView {
   }
 
   async confirmDelete() {
-    if (!this.editingWebhook?.technical?.id) {
+    const editing = this.editingWebhook;
+    if (!editing) {
       this.querySelector('#deleteWebhookModal').style.display = 'none';
       return;
     }
     
     try {
-      const { error } = await this.supabase
-        .from('flow_technical_details')
-        .delete()
-        .eq('id', this.editingWebhook.technical.id);
-      
-      if (error) throw error;
-      
-      // También limpiar webhook_url en content_flows
-      await this.supabase
-        .from('content_flows')
-        .update({ webhook_url: null })
-        .eq('id', this.editingWebhook.flowId);
+      if (editing.technical?.id) {
+        const { error } = await this.supabase
+          .from('flow_technical_details')
+          .delete()
+          .eq('id', editing.technical.id);
+        if (error) throw error;
+      }
+      if (editing.moduleId) {
+        await this.supabase
+          .from('flow_modules')
+          .update({ webhook_url_test: null, webhook_url_prod: null })
+          .eq('id', editing.moduleId);
+      }
       
       this.showNotification('Configuración eliminada', 'success');
       this.querySelector('#deleteWebhookModal').style.display = 'none';
-      
       await this.loadWebhooks();
       
     } catch (err) {

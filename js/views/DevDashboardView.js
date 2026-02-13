@@ -378,11 +378,13 @@ class DevDashboardView extends DevBaseView {
         .select(`
           id,
           flow_id,
+          flow_module_id,
           severity,
           error_message,
           environment,
           created_at,
-          content_flows (name)
+          content_flows (name),
+          flow_modules (name)
         `)
         .in('flow_id', ids)
         .order('created_at', { ascending: false })
@@ -423,6 +425,7 @@ class DevDashboardView extends DevBaseView {
           <div class="dev-log-message">${this.escapeHtml(this.truncateText(log.error_message, 80))}</div>
           <div class="dev-log-meta">
             <span class="dev-log-flow">${this.escapeHtml(log.content_flows?.name || 'Unknown')}</span>
+            ${log.flow_modules?.name ? `<span class="dev-log-module">${this.escapeHtml(log.flow_modules.name)}</span>` : ''}
             <span class="dev-log-env">${log.environment}</span>
             <span class="dev-log-time">${this.formatTimeAgo(log.created_at)}</span>
           </div>

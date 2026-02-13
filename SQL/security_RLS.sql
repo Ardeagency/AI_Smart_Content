@@ -135,9 +135,12 @@ USING (public.is_org_member(organization_id) OR (SELECT owner_user_id FROM publi
 
 -- B. ÁREA TÉCNICA (Solo Developers)
 -- -----------------------------------------------------------
+-- Logs: solo desarrolladores y solo de flujos a los que tienen acceso (dueño o colaborador)
 DROP POLICY IF EXISTS "Devs only logs" ON public.developer_logs;
 CREATE POLICY "Devs only logs" ON public.developer_logs 
-FOR ALL TO authenticated USING (public.is_developer());
+FOR ALL TO authenticated 
+USING (public.is_developer() AND public.can_access_flow(flow_id))
+WITH CHECK (public.is_developer() AND public.can_access_flow(flow_id));
 
 DROP POLICY IF EXISTS "Devs only stats" ON public.developer_stats;
 CREATE POLICY "Devs only stats" ON public.developer_stats 
