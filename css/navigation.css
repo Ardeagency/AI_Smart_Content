@@ -804,25 +804,38 @@ body.sidebar-collapsed #app-container .main-header,
     font-size: 14px;
 }
 
-/* Footer collapsed: icon stack + divider, iconos centrados */
+/* Footer collapsed: icon stack + divider, iconos centrados; no desbordar del rail */
 .side-navigation.collapsed .nav-footer {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
     border-top: 1px solid var(--nav-border);
     padding: 12px 6px 16px;
     gap: 4px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 100%;
+    max-width: var(--nav-width-collapsed, 51px);
+    min-width: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+    flex-shrink: 0;
 }
 
 .side-navigation.collapsed .nav-footer-link,
 .side-navigation.collapsed .nav-footer-action {
     width: 40px;
     min-width: 40px;
+    max-width: 40px;
     height: 40px;
     min-height: 40px;
     padding: 0;
     justify-content: center;
     border-radius: 12px;
+    flex-shrink: 0;
+    box-sizing: border-box;
 }
 
 .side-navigation.collapsed .nav-footer .nav-icon {
