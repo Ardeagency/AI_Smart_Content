@@ -1477,33 +1477,45 @@ class DevBuilderView extends DevBaseView {
         owner_id: flow.owner_id
       };
       
-      // Cargar input_schema
-      if (flow.input_schema && flow.input_schema.fields) {
-        this.inputSchema = flow.input_schema.fields;
-      } else if (Array.isArray(flow.input_schema)) {
-        this.inputSchema = flow.input_schema;
-      }
+      this.inputSchema = [];
       
       // Cargar ui_layout_config
       if (flow.ui_layout_config && Object.keys(flow.ui_layout_config).length > 0) {
         this.uiLayoutConfig = { ...this.uiLayoutConfig, ...flow.ui_layout_config };
       }
       
-      // Cargar detalles técnicos
-      const { data: techDetails } = await this.supabase
-        .from('flow_technical_details')
-        .select('*')
-        .eq('flow_id', this.flowId)
-        .single();
+      // Cargar detalles técnicos e input_schema: flow_technical_details por flow_module_id; webhooks e input_schema en flow_modules
+      const { data: flowModule } = await this.supabase
+        .from('flow_modules')
+        .select('id, webhook_url_test, webhook_url_prod, input_schema')
+        .eq('content_flow_id', this.flowId)
+        .limit(1)
+        .maybeSingle();
       
-      if (techDetails) {
+      if (flowModule) {
+        if (flowModule.input_schema?.fields) {
+          this.inputSchema = flowModule.input_schema.fields;
+        } else if (Array.isArray(flowModule.input_schema)) {
+          this.inputSchema = flowModule.input_schema;
+        }
+        const { data: techDetails } = await this.supabase
+          .from('flow_technical_details')
+          .select('platform_name, editor_url')
+          .eq('flow_module_id', flowModule.id)
+          .maybeSingle();
+        
         this.technicalDetails = {
-          webhook_url_test: techDetails.webhook_url_test || '',
-          webhook_url_prod: techDetails.webhook_url_prod || '',
-          webhook_method: techDetails.webhook_method || 'POST',
-          platform_name: techDetails.platform_name || 'n8n',
-          editor_url: techDetails.editor_url || ''
+          webhook_url_test: flowModule.webhook_url_test || '',
+          webhook_url_prod: flowModule.webhook_url_prod || '',
+          webhook_method: 'POST',
+          platform_name: techDetails?.platform_name || 'n8n',
+          editor_url: techDetails?.editor_url || ''
         };
+      }
+      if (this.inputSchema.length === 0 && flow.input_schema?.fields) {
+        this.inputSchema = flow.input_schema.fields;
+      } else if (this.inputSchema.length === 0 && Array.isArray(flow.input_schema)) {
+        this.inputSchema = flow.input_schema;
       }
       
       // Actualizar UI y adaptar por tipo (manual vs automated)
@@ -2328,9 +2340,7 @@ class DevBuilderView extends DevBaseView {
         flow_image_url: this.flowData.flow_image_url,
         status: this.flowData.status,
         version: this.flowData.version,
-        input_schema: { fields: this.inputSchema },
-        ui_layout_config: this.uiLayoutConfig,
-        webhook_url: this.technicalDetails.webhook_url_prod || this.technicalDetails.webhook_url_test
+        ui_layout_config: this.uiLayoutConfig
       };
       
       let flowId = this.flowId;
@@ -2387,19 +2397,52 @@ class DevBuilderView extends DevBaseView {
   async saveTechnicalDetails(flowId) {
     if (!this.supabase || !flowId) return;
     
+    // flow_technical_details usa flow_module_id (no flow_id). Necesitamos un flow_module por flow.
+    let { data: modules } = await this.supabase
+      .from('flow_modules')
+      .select('id')
+      .eq('content_flow_id', flowId)
+      .limit(1);
+    
+    let flowModuleId = modules?.[0]?.id;
+    if (!flowModuleId) {
+      const { data: inserted, error: insertErr } = await this.supabase
+        .from('flow_modules')
+        .insert({
+          content_flow_id: flowId,
+          name: 'default',
+          step_order: 1,
+          input_schema: { fields: this.inputSchema },
+          webhook_url_test: this.technicalDetails.webhook_url_test,
+          webhook_url_prod: this.technicalDetails.webhook_url_prod
+        })
+        .select('id')
+        .single();
+      if (insertErr) {
+        console.error('Error creating flow_module:', insertErr);
+        return;
+      }
+      flowModuleId = inserted.id;
+    } else {
+      await this.supabase
+        .from('flow_modules')
+        .update({
+          input_schema: { fields: this.inputSchema },
+          webhook_url_test: this.technicalDetails.webhook_url_test,
+          webhook_url_prod: this.technicalDetails.webhook_url_prod
+        })
+        .eq('id', flowModuleId);
+    }
+    
     const techPayload = {
-      flow_id: flowId,
-      webhook_url_test: this.technicalDetails.webhook_url_test,
-      webhook_url_prod: this.technicalDetails.webhook_url_prod,
-      webhook_method: this.technicalDetails.webhook_method,
+      flow_module_id: flowModuleId,
       platform_name: this.technicalDetails.platform_name,
       editor_url: this.technicalDetails.editor_url
     };
     
-    // Upsert technical details
     const { error } = await this.supabase
       .from('flow_technical_details')
-      .upsert(techPayload, { onConflict: 'flow_id' });
+      .upsert(techPayload, { onConflict: 'flow_module_id' });
     
     if (error) {
       console.error('Error saving technical details:', error);
@@ -2533,18 +2576,19 @@ class DevBuilderView extends DevBaseView {
     if (!this.flowId || !this.supabase) return;
     
     try {
-      const newFlowData = {
-        ...this.flowData,
-        name: `${this.flowData.name} (copia)`,
-        status: 'draft',
-        owner_id: this.userId
-      };
-      
       const flowPayload = {
-        ...newFlowData,
-        input_schema: { fields: this.inputSchema },
-        ui_layout_config: this.uiLayoutConfig,
-        webhook_url: this.technicalDetails.webhook_url_prod || this.technicalDetails.webhook_url_test
+        name: `${this.flowData.name} (copia)`,
+        description: this.flowData.description,
+        category_id: this.flowData.category_id,
+        subcategory_id: this.flowData.subcategory_id || null,
+        output_type: this.flowData.output_type,
+        flow_category_type: this.flowData.flow_category_type,
+        token_cost: this.flowData.token_cost,
+        flow_image_url: this.flowData.flow_image_url,
+        status: 'draft',
+        version: this.flowData.version,
+        owner_id: this.userId,
+        ui_layout_config: this.uiLayoutConfig
       };
       
       const { data, error } = await this.supabase
@@ -2555,9 +2599,9 @@ class DevBuilderView extends DevBaseView {
       
       if (error) throw error;
       
-      this.showNotification('Flujo duplicado', 'success');
+      await this.saveTechnicalDetails(data.id);
       
-      // Navegar al nuevo flujo
+      this.showNotification('Flujo duplicado', 'success');
       window.router?.navigate(`/dev/builder?id=${data.id}`);
       
     } catch (err) {
@@ -2839,13 +2883,16 @@ class DevBuilderView extends DevBaseView {
     }
     
     try {
-      // Delete technical details first
-      await this.supabase
-        .from('flow_technical_details')
-        .delete()
-        .eq('flow_id', this.flowId);
-      
-      // Delete flow
+      const { data: modules } = await this.supabase
+        .from('flow_modules')
+        .select('id')
+        .eq('content_flow_id', this.flowId);
+      if (modules?.length) {
+        for (const m of modules) {
+          await this.supabase.from('flow_technical_details').delete().eq('flow_module_id', m.id);
+        }
+        await this.supabase.from('flow_modules').delete().eq('content_flow_id', this.flowId);
+      }
       const { error } = await this.supabase
         .from('content_flows')
         .delete()
