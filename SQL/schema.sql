@@ -208,8 +208,6 @@ CREATE TABLE public.content_flows (
   output_type text NOT NULL,
   is_active boolean DEFAULT true,
   created_at timestamp with time zone DEFAULT now(),
-  webhook_url text,
-  input_schema jsonb DEFAULT '{}'::jsonb,
   flow_image_url text,
   description text,
   flow_category_type text DEFAULT 'manual'::text CHECK (flow_category_type = ANY (ARRAY['manual'::text, 'automated'::text])),
@@ -223,6 +221,8 @@ CREATE TABLE public.content_flows (
   saves_count integer DEFAULT 0,
   run_count integer DEFAULT 0,
   subcategory_id uuid,
+  slug text UNIQUE,
+  execution_mode text DEFAULT 'single_step'::text CHECK (execution_mode = ANY (ARRAY['single_step'::text, 'multi_step'::text, 'sequential'::text])),
   CONSTRAINT content_flows_pkey PRIMARY KEY (id),
   CONSTRAINT content_flows_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.content_categories(id),
   CONSTRAINT fk_flow_owner FOREIGN KEY (owner_id) REFERENCES public.users(id),
@@ -257,8 +257,10 @@ CREATE TABLE public.developer_logs (
   error_message text NOT NULL,
   raw_details jsonb DEFAULT '{}'::jsonb,
   created_at timestamp with time zone DEFAULT now(),
+  flow_module_id uuid,
   CONSTRAINT developer_logs_pkey PRIMARY KEY (id),
-  CONSTRAINT logs_flow_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id)
+  CONSTRAINT logs_flow_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id),
+  CONSTRAINT fk_logs_module FOREIGN KEY (flow_module_id) REFERENCES public.flow_modules(id)
 );
 CREATE TABLE public.developer_notifications (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -298,6 +300,19 @@ CREATE TABLE public.flow_collaborators (
   CONSTRAINT collab_dev_fkey FOREIGN KEY (developer_id) REFERENCES public.users(id),
   CONSTRAINT collab_inviter_fkey FOREIGN KEY (invited_by) REFERENCES public.users(id)
 );
+CREATE TABLE public.flow_modules (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  content_flow_id uuid NOT NULL,
+  name text NOT NULL,
+  step_order integer NOT NULL,
+  webhook_url_test text,
+  webhook_url_prod text,
+  input_schema jsonb DEFAULT '{}'::jsonb,
+  output_schema jsonb DEFAULT '{}'::jsonb,
+  is_human_approval_required boolean DEFAULT false,
+  CONSTRAINT flow_modules_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_module_parent FOREIGN KEY (content_flow_id) REFERENCES public.content_flows(id)
+);
 CREATE TABLE public.flow_runs (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   flow_id uuid,
@@ -310,6 +325,10 @@ CREATE TABLE public.flow_runs (
   tokens_consumed integer DEFAULT 0,
   webhook_response_code integer,
   payment_status USER-DEFINED DEFAULT 'pending'::payment_status_type,
+  current_module_order integer DEFAULT 1,
+  total_modules_count integer,
+  is_paused boolean DEFAULT false,
+  step_history jsonb DEFAULT '[]'::jsonb,
   CONSTRAINT flow_runs_pkey PRIMARY KEY (id),
   CONSTRAINT flow_runs_flow_id_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id),
   CONSTRAINT flow_runs_brand_id_fkey FOREIGN KEY (brand_id) REFERENCES public.brands(id),
@@ -319,13 +338,9 @@ CREATE TABLE public.flow_runs (
 );
 CREATE TABLE public.flow_technical_details (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  flow_id uuid NOT NULL UNIQUE,
   platform_name text DEFAULT 'n8n'::text,
   platform_flow_id text,
   platform_flow_name text,
-  webhook_url_test text,
-  webhook_url_prod text,
-  webhook_method text DEFAULT 'POST'::text CHECK (webhook_method = ANY (ARRAY['POST'::text, 'GET'::text, 'PUT'::text])),
   editor_url text,
   credential_id text,
   is_healthy boolean DEFAULT true,
@@ -333,8 +348,9 @@ CREATE TABLE public.flow_technical_details (
   avg_execution_time_ms integer,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  flow_module_id uuid NOT NULL UNIQUE,
   CONSTRAINT flow_technical_details_pkey PRIMARY KEY (id),
-  CONSTRAINT flow_tech_flow_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id)
+  CONSTRAINT fk_tech_module FOREIGN KEY (flow_module_id) REFERENCES public.flow_modules(id)
 );
 CREATE TABLE public.organization_credits (
   organization_id uuid NOT NULL,
@@ -401,8 +417,10 @@ CREATE TABLE public.runs_inputs (
   input_data jsonb NOT NULL DEFAULT '{}'::jsonb,
   metadata jsonb DEFAULT '{}'::jsonb,
   created_at timestamp with time zone DEFAULT now(),
+  flow_module_id uuid,
   CONSTRAINT runs_inputs_pkey PRIMARY KEY (id),
-  CONSTRAINT runs_inputs_run_fkey FOREIGN KEY (run_id) REFERENCES public.flow_runs(id)
+  CONSTRAINT runs_inputs_run_fkey FOREIGN KEY (run_id) REFERENCES public.flow_runs(id),
+  CONSTRAINT fk_inputs_module FOREIGN KEY (flow_module_id) REFERENCES public.flow_modules(id)
 );
 CREATE TABLE public.runs_outputs (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -418,8 +436,10 @@ CREATE TABLE public.runs_outputs (
   technical_params jsonb,
   text_content text,
   storage_object_id uuid,
+  flow_module_id uuid,
   CONSTRAINT runs_outputs_pkey PRIMARY KEY (id),
-  CONSTRAINT flow_outputs_run_id_fkey FOREIGN KEY (run_id) REFERENCES public.flow_runs(id)
+  CONSTRAINT flow_outputs_run_id_fkey FOREIGN KEY (run_id) REFERENCES public.flow_runs(id),
+  CONSTRAINT fk_outputs_module FOREIGN KEY (flow_module_id) REFERENCES public.flow_modules(id)
 );
 CREATE TABLE public.services (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
