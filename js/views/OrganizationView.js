@@ -13,7 +13,8 @@ class OrganizationView extends BaseView {
     this.orgId = null;
     this.org = null;
     this.members = [];
-    this.credits = { credits_available: 0, credits_total: 0 };
+    this.credits = { credits_available: 0, credits_total: 0, updated_at: null };
+    this.storage = { used_mb: 0, max_mb: 0, updated_at: null };
     this.isOwner = false;
     this.canManageMembers = false;
   }
@@ -75,7 +76,7 @@ class OrganizationView extends BaseView {
     try {
       const { data: orgData, error: orgError } = await this.supabase
         .from('organizations')
-        .select('id, name, owner_user_id, created_at')
+        .select('id, name, owner_user_id, created_at, deleted_at')
         .eq('id', this.orgId)
         .maybeSingle();
 
@@ -148,11 +149,17 @@ class OrganizationView extends BaseView {
       } catch (_) { return d; }
     };
 
+    const status = this.org.deleted_at ? 'Archivada' : 'Activa';
     this.setText('#metaId', this.org.id || '—');
+    this.setText('#metaStatus', status);
     this.setText('#metaCreated', formatDate(this.org.created_at));
     this.setText('#metaOwner', this.org.owner_user_id || '—');
     this.setText('#metaCreditsAvailable', String(this.credits.credits_available ?? '—'));
     this.setText('#metaCreditsTotal', String(this.credits.credits_total ?? '—'));
+    this.setText('#metaCreditsUpdated', formatDate(this.credits.updated_at));
+    this.setText('#metaStorageUsed', this.storage.used_mb != null ? String(this.storage.used_mb) : '—');
+    this.setText('#metaStorageMax', this.storage.max_mb != null ? String(this.storage.max_mb) : '—');
+    this.setText('#metaStorageUpdated', formatDate(this.storage.updated_at));
 
     const submitBtn = this.querySelector('#orgGeneralSubmit');
     if (submitBtn) submitBtn.disabled = !this.isOwner;
