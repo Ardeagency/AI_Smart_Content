@@ -1,19 +1,16 @@
-/* Settings View Styles - Tema Living/Brands */
-/* El offset del sidebar lo aplica #app-container. */
+/* Settings View - Mi cuenta (configuración de usuario) */
 .settings-container {
     min-height: calc(100vh - 48px);
     padding: 2rem;
-    max-width: 1200px;
+    max-width: 1000px;
     margin: 0 auto;
     margin-left: 0;
     background: var(--living-bg-deep, var(--bg-primary));
     padding-top: calc(48px + 2rem);
 }
 
-/* En móvil, el sidebar se oculta y el contenido ocupa todo el ancho */
 @media (max-width: 768px) {
     .settings-container {
-        margin-left: 0;
         padding: 1rem;
         padding-top: calc(48px + 1rem);
     }
@@ -29,81 +26,120 @@
     color: var(--text-primary);
 }
 
-.settings-content {
-    display: grid;
-    grid-template-columns: 250px 1fr;
-    gap: 2rem;
+.settings-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin-top: 0.5rem;
 }
 
+/* Tabs horizontales (mismo patrón que organización) */
 .settings-tabs {
     display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    gap: 1rem;
+    border-bottom: 1px solid var(--border-divider);
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
 }
 
-.settings-tab-content {
-    min-height: 400px;
+.settings-tab-btn {
+    padding: 0.75rem 1.25rem;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.settings-tab-btn:hover {
+    color: var(--text-primary);
+}
+
+.settings-tab-btn.active {
+    color: var(--accent-warm);
+    border-bottom-color: var(--accent-warm);
+}
+
+.settings-content {
+    min-height: 320px;
+}
+
+.settings-panel {
+    display: none;
+}
+
+.settings-panel.active {
+    display: block;
 }
 
 .settings-section {
     background: var(--living-bg-card, rgba(21, 23, 28, 0.6));
-    padding: 2rem;
+    padding: 1.5rem 2rem;
     border-radius: 12px;
     border: 1px solid var(--border-divider);
 }
 
 .settings-section h2 {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: 1.5rem;
-}
-
-.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-group label {
-    display: block;
     margin-bottom: 0.5rem;
-    color: var(--text-primary);
+}
+
+.settings-section-desc {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 1.25rem;
+}
+
+.settings-placeholder {
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.settings-hint {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: 0.35rem;
+}
+
+.settings-form .form-group {
+    margin-bottom: 1rem;
+}
+
+.settings-form .form-group label {
+    display: block;
     font-weight: 500;
-    font-size: 0.875rem;
+    color: var(--text-primary);
+    margin-bottom: 0.35rem;
+    font-size: 0.9rem;
 }
 
-/* Estilos de inputs heredan de base.css - sin duplicación */
-/* Eliminadas transiciones - usar reglas base unificadas */
-
-/* Override específico solo para settings */
-.form-input,
-.form-select {
-    background: var(--living-bg-surface);
-    border: 1px solid rgba(236, 235, 218, 0.2);
-    font-size: 1rem;
-    transition: none !important;
-    -webkit-transition: none !important;
-    -moz-transition: none !important;
-    -o-transition: none !important;
-    transform: none !important;
-    scale: 1 !important;
+.settings-form .form-input,
+.settings-form .form-select {
+    width: 100%;
+    max-width: 400px;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--border-divider);
+    border-radius: 8px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
 }
 
-.form-input:focus,
-.form-select:focus {
-    outline: none;
+.settings-form .form-input:read-only {
+    opacity: 0.85;
+    cursor: not-allowed;
+}
+
+.settings-form .btn-primary {
+    margin-top: 0.5rem;
 }
 
 @media (max-width: 768px) {
-    .settings-container {
-        padding: 1rem;
-    }
-
-    .settings-content {
-        grid-template-columns: 1fr;
-    }
-
     .settings-tabs {
-        flex-direction: row;
         overflow-x: auto;
     }
 }

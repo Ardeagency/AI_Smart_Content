@@ -254,9 +254,9 @@ class Navigation {
           <div class="user-dropdown-email" id="userDropdownEmail">usuario@email.com</div>
         </div>
         <div class="user-dropdown-divider"></div>
-        <a href="${settingsHref}" class="user-dropdown-item">
+        <a href="${settingsHref}" class="user-dropdown-item" data-route="${settingsHref}" id="userDropdownSettingsLink">
           <i class="fas fa-cog"></i>
-          <span>Configuración</span>
+          <span>Mi cuenta</span>
         </a>
         <button class="user-dropdown-item" id="logoutBtn">
           <i class="fas fa-sign-out-alt"></i>
@@ -606,12 +606,17 @@ class Navigation {
       });
     }
 
-    // Navegación con History API (main, submenu y footer)
-    document.querySelectorAll('.nav-link[data-route], .nav-main-link[data-route], .nav-submenu-link[data-route], .nav-footer-link[data-route]').forEach((link) => {
+    // Navegación con History API (main, submenu, footer y enlace "Mi cuenta" del dropdown usuario)
+    document.querySelectorAll('.nav-link[data-route], .nav-main-link[data-route], .nav-submenu-link[data-route], .nav-footer-link[data-route], #userDropdownSettingsLink, #userDropdown a[data-route]').forEach((link) => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
-        const route = link.dataset.route;
-        if (route && window.router) window.router.navigate(route);
+        const route = link.dataset.route || (link.getAttribute && link.getAttribute('href'));
+        if (route && window.router) {
+          const path = route.indexOf('/') === 0 ? route : new URL(route, window.location.origin).pathname;
+          window.router.navigate(path);
+        }
+        const ud = document.getElementById('userDropdown');
+        if (ud) ud.classList.remove('active');
       });
     });
 
