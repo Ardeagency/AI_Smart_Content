@@ -1,84 +1,38 @@
 <main class="settings-container" id="settingsPage" aria-label="Configuración de mi cuenta">
     <header class="settings-header">
         <h1 class="settings-title">Mi cuenta</h1>
-        <p class="settings-subtitle">Configuración de tu perfil, preferencias y seguridad.</p>
+        <p class="settings-subtitle">Configuración de tu perfil según tu cuenta en la plataforma.</p>
     </header>
 
-    <nav class="settings-tabs" role="tablist" aria-label="Secciones de configuración">
-        <button type="button" class="settings-tab-btn active" data-tab="profile" role="tab" aria-selected="true" id="settingsTabProfile">Perfil</button>
-        <button type="button" class="settings-tab-btn" data-tab="preferences" role="tab" aria-selected="false" id="settingsTabPreferences">Preferencias</button>
-        <button type="button" class="settings-tab-btn" data-tab="language" role="tab" aria-selected="false" id="settingsTabLanguage">Idioma</button>
-        <button type="button" class="settings-tab-btn" data-tab="exports" role="tab" aria-selected="false" id="settingsTabExports">Exportaciones</button>
-        <button type="button" class="settings-tab-btn" data-tab="security" role="tab" aria-selected="false" id="settingsTabSecurity">Seguridad</button>
-    </nav>
-
     <div class="settings-content">
-        <!-- Pestaña Perfil -->
-        <section class="settings-panel active" id="profilePanel" role="tabpanel" aria-labelledby="settingsTabProfile">
-            <div class="settings-section">
-                <h2>Datos personales</h2>
-                <p class="settings-section-desc">Nombre y datos de contacto de tu cuenta.</p>
-                <form id="settingsProfileForm" class="settings-form">
-                    <div class="form-group">
-                        <label for="profileFullName">Nombre completo</label>
-                        <input type="text" id="profileFullName" name="full_name" class="form-input" placeholder="Tu nombre" autocomplete="name">
-                    </div>
-                    <div class="form-group">
-                        <label for="profileEmail">Email</label>
-                        <input type="email" id="profileEmail" class="form-input" readonly placeholder="tu@email.com" aria-readonly="true">
-                    </div>
-                    <div class="form-group">
-                        <label for="profilePhone">Teléfono</label>
-                        <input type="tel" id="profilePhone" name="phone_number" class="form-input" placeholder="Opcional" autocomplete="tel">
-                    </div>
-                    <button type="submit" class="btn btn-primary" id="profileSubmitBtn">
-                        <i class="fas fa-save"></i> Guardar cambios
-                    </button>
-                </form>
-            </div>
-        </section>
-
-        <!-- Pestaña Preferencias -->
-        <section class="settings-panel" id="preferencesPanel" role="tabpanel" aria-labelledby="settingsTabPreferences" hidden>
-            <div class="settings-section">
-                <h2>Preferencias</h2>
-                <p class="settings-section-desc">Ajustes generales de la aplicación.</p>
-                <p class="settings-placeholder">Opciones de preferencias próximamente.</p>
-            </div>
-        </section>
-
-        <!-- Pestaña Idioma -->
-        <section class="settings-panel" id="languagePanel" role="tabpanel" aria-labelledby="settingsTabLanguage" hidden>
-            <div class="settings-section">
-                <h2>Idioma</h2>
-                <p class="settings-section-desc">Idioma de la interfaz.</p>
+        <section class="settings-section" aria-labelledby="profileHeading">
+            <h2 id="profileHeading">Datos del perfil</h2>
+            <p class="settings-section-desc">Nombre, email y datos de contacto. El email es el de tu cuenta y no se puede editar aquí.</p>
+            <form id="settingsProfileForm" class="settings-form">
                 <div class="form-group">
-                    <label for="languageSelect">Idioma</label>
-                    <select id="languageSelect" class="form-select" aria-describedby="languageSelectDesc">
-                        <option value="es">Español</option>
-                        <option value="en">English</option>
-                    </select>
-                    <span id="languageSelectDesc" class="settings-hint">Próximamente se aplicará a toda la interfaz.</span>
+                    <label for="profileFullName">Nombre completo</label>
+                    <input type="text" id="profileFullName" name="full_name" class="form-input" placeholder="Tu nombre" autocomplete="name">
                 </div>
-            </div>
-        </section>
-
-        <!-- Pestaña Exportaciones -->
-        <section class="settings-panel" id="exportsPanel" role="tabpanel" aria-labelledby="settingsTabExports" hidden>
-            <div class="settings-section">
-                <h2>Exportaciones</h2>
-                <p class="settings-section-desc">Exportar tus datos de la cuenta.</p>
-                <p class="settings-placeholder">Opciones de exportación próximamente.</p>
-            </div>
-        </section>
-
-        <!-- Pestaña Seguridad -->
-        <section class="settings-panel" id="securityPanel" role="tabpanel" aria-labelledby="settingsTabSecurity" hidden>
-            <div class="settings-section">
-                <h2>Seguridad</h2>
-                <p class="settings-section-desc">Contraseña y sesiones activas.</p>
-                <p class="settings-placeholder">Cambio de contraseña y gestión de sesiones próximamente.</p>
-            </div>
+                <div class="form-group">
+                    <label for="profileEmail">Email</label>
+                    <input type="email" id="profileEmail" class="form-input" readonly placeholder="tu@email.com" aria-readonly="true">
+                </div>
+                <div class="form-group">
+                    <label for="profilePhone">Teléfono</label>
+                    <input type="tel" id="profilePhone" name="phone_number" class="form-input" placeholder="Opcional" autocomplete="tel">
+                </div>
+                <div class="form-group">
+                    <label for="profileAvatarUrl">Foto de perfil (URL)</label>
+                    <input type="url" id="profileAvatarUrl" name="avatar_url" class="form-input" placeholder="https://..." autocomplete="url">
+                </div>
+                <div class="form-group">
+                    <label for="profileBio">Bio</label>
+                    <textarea id="profileBio" name="bio" class="form-input form-textarea" placeholder="Breve descripción (opcional)" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" id="profileSubmitBtn">
+                    <i class="fas fa-save"></i> Guardar cambios
+                </button>
+            </form>
         </section>
     </div>
 </main>

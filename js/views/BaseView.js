@@ -648,7 +648,7 @@ class BaseView {
         e.preventDefault();
         e.stopPropagation();
         if (window.router) {
-          window.router.navigate('/settings?tab=profile');
+          window.router.navigate('/settings');
         }
         headerUserDropdown.classList.remove('open');
       });

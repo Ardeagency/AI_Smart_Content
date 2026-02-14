@@ -49,48 +49,8 @@
     margin: 0;
 }
 
-/* Tabs: misma línea que organization, estilo consistente */
-.settings-tabs {
-    display: flex;
-    gap: 0;
-    border-bottom: 1px solid var(--settings-border);
-    margin-bottom: 1.75rem;
-    flex-wrap: wrap;
-}
-
-.settings-tab-btn {
-    padding: 0.75rem 1.25rem;
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
-    color: var(--settings-text-muted);
-    font-weight: 500;
-    font-size: 0.9375rem;
-    cursor: pointer;
-    transition: color 0.2s ease, border-color 0.2s ease;
-    font-family: inherit;
-}
-
-.settings-tab-btn:hover {
-    color: var(--settings-text);
-}
-
-.settings-tab-btn.active {
-    color: var(--settings-accent);
-    border-bottom-color: var(--settings-accent);
-}
-
 .settings-content {
-    min-height: 280px;
-}
-
-.settings-panel {
-    display: none;
-}
-
-.settings-panel.active {
-    display: block;
+    min-height: 200px;
 }
 
 .settings-section {
@@ -152,7 +112,8 @@
 }
 
 .settings-form .form-input:focus,
-.settings-form .form-select:focus {
+.settings-form .form-select:focus,
+.settings-form .form-textarea:focus {
     outline: none;
     border-color: var(--settings-accent);
 }
@@ -190,9 +151,3 @@
     cursor: not-allowed;
 }
 
-@media (max-width: 768px) {
-    .settings-tabs {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-}
