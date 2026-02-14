@@ -94,6 +94,14 @@ class Router {
         path = path.slice(0, -1);
       }
 
+      // Redirigir /org/:id/settings → /settings (configuración de usuario fuera de org)
+      const orgSettingsMatch = path.match(/^\/org\/[^/]+\/settings$/);
+      if (orgSettingsMatch) {
+        const query = window.location.search || '';
+        this.navigate('/settings' + query, true);
+        return;
+      }
+
       // Buscar ruta exacta primero
       let route = this.routes[path];
       let routeParams = {};

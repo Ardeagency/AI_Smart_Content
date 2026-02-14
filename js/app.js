@@ -250,8 +250,8 @@ class App {
     }
 
     if (viewsAvailable.SettingsView) {
-      // Settings de organización (perfil usuario)
-      this.router.register('/org/:orgId/settings', window.SettingsView, {
+      // Configuración de usuario (Mi cuenta): solo /settings, fuera de org
+      this.router.register('/settings', window.SettingsView, {
         requiresAuth: true,
         redirectIfAuth: false
       });

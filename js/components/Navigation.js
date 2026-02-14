@@ -142,6 +142,11 @@ class Navigation {
     if (path === '/home' || path === '/hogar') {
       return { mode: 'home', showSidebar: false, showHeader: true, orgId: null, brandId: null };
     }
+
+    // Configuración de usuario (Mi cuenta): fuera de org, mismo layout que Home (solo header, sin sidebar)
+    if (path === '/settings' || path.startsWith('/settings?')) {
+      return { mode: 'home', showSidebar: false, showHeader: true, orgId: null, brandId: null };
+    }
     
     // Rutas de desarrollador /dev/*
     if (path.startsWith('/dev')) {
@@ -158,8 +163,8 @@ class Navigation {
     }
     
     // Rutas legacy sin /org/ - tratar como usuario pero sin org_id
-    // Esto mantiene compatibilidad temporal
-    if (['/living', '/brands', '/products', '/studio', '/audiences', '/marketing', '/campaigns', '/content', '/settings', '/organization'].some(r => path.startsWith(r))) {
+    // Esto mantiene compatibilidad temporal (/settings ya tratado arriba)
+    if (['/living', '/brands', '/products', '/studio', '/audiences', '/marketing', '/campaigns', '/content', '/organization'].some(r => path.startsWith(r))) {
       return { mode: 'user', showSidebar: true, showHeader: true, orgId: null, brandId: null };
     }
     
@@ -244,7 +249,7 @@ class Navigation {
 
   /**
    * Dropdown de usuario (único fragmento reutilizable)
-   * @param {string} settingsHref - URL de configuración (/settings o /org/:id/settings)
+   * @param {string} settingsHref - URL de configuración de usuario (siempre /settings)
    */
   getUserDropdownHTML(settingsHref = '/settings') {
     return `
@@ -269,7 +274,7 @@ class Navigation {
    * HTML para Home - Solo header sin sidebar
    */
   getHomeHeaderHTML() {
-    const settingsHref = this.currentOrgId ? `/org/${this.currentOrgId}/settings` : '/settings';
+    const settingsHref = '/settings'; // Mi cuenta: siempre fuera de org
     return `
       <header class="app-header header-only" id="appHeader">
         <div class="header-content">
@@ -381,7 +386,7 @@ class Navigation {
             </div>
           </div>
         </div>
-        ${this.getUserDropdownHTML(this.currentOrgId ? `${basePath}/settings` : '/settings')}
+        ${this.getUserDropdownHTML('/settings')}
       </header>
 
       <nav class="side-navigation nav-mode-user" id="sideNavigation" aria-label="Navegación principal">

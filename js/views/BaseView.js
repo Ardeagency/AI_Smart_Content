@@ -648,10 +648,7 @@ class BaseView {
         e.preventDefault();
         e.stopPropagation();
         if (window.router) {
-          const path = window.location.pathname || '';
-          const orgMatch = path.match(/^\/org\/([^/]+)/);
-          const settingsPath = orgMatch ? `/org/${orgMatch[1]}/settings?tab=profile` : '/settings?tab=profile';
-          window.router.navigate(settingsPath);
+          window.router.navigate('/settings?tab=profile');
         }
         headerUserDropdown.classList.remove('open');
       });

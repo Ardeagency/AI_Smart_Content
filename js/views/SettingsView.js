@@ -1,7 +1,8 @@
 /**
  * SettingsView - Configuración de usuario (Mi cuenta)
- * Perfil, preferencias, idioma, exportaciones, seguridad.
- * Entrada: enlace #userDropdown > a (Mi cuenta) → #userDropdownSettingsLink → /org/:orgId/settings o /settings.
+ * Perfil, contraseña, preferencias, idioma, exportaciones, seguridad.
+ * Fuera de org: ruta única /settings. Layout tipo Home (solo header, sin sidebar).
+ * Entrada: enlace #userDropdown > a (Mi cuenta) → /settings.
  */
 const SETTINGS_TAB_IDS = ['profile', 'preferences', 'language', 'exports', 'security'];
 
@@ -11,12 +12,10 @@ class SettingsView extends BaseView {
     this.templatePath = 'settings.html';
     this.supabase = null;
     this.userId = null;
-    this.orgId = null;
   }
 
   getSettingsBasePath() {
-    const orgId = this.orgId || this.routeParams?.orgId;
-    return orgId ? `/org/${orgId}/settings` : '/settings';
+    return '/settings';
   }
 
   getTabFromURL() {
@@ -44,9 +43,6 @@ class SettingsView extends BaseView {
     if (window.appNavigation && !window.appNavigation.initialized) {
       await window.appNavigation.render();
     }
-    this.orgId = this.routeParams?.orgId || window.appState?.get('selectedOrganizationId') || localStorage.getItem('selectedOrganizationId');
-    if (this.orgId && window.appState) window.appState.set('selectedOrganizationId', this.orgId, true);
-    if (this.orgId) localStorage.setItem('selectedOrganizationId', this.orgId);
   }
 
   async render() {
