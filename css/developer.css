@@ -1824,19 +1824,12 @@ body.sidebar-collapsed .builder-header {
   color: var(--dev-primary-light);
 }
 
-.btn-builder-footer.btn-save-draft,
-.btn-builder-footer.btn-update-flow {
-  background: var(--bg-primary);
-}
-
-.btn-builder-footer.btn-primary-footer,
 .btn-builder-footer.btn-approve-publish {
   background: var(--dev-primary);
   border-color: var(--dev-primary);
   color: white;
 }
 
-.btn-builder-footer.btn-primary-footer:hover,
 .btn-builder-footer.btn-approve-publish:hover {
   background: var(--dev-primary-dark);
   border-color: var(--dev-primary-dark);

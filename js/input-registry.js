@@ -78,7 +78,10 @@
     return '<div class="preview-structural"><i class="ph ph-' + (icon || 'placeholder') + '"></i><span>' + escapeHtml(label) + '</span></div>';
   }
 
-  // --- Form (formulario real: name, id, required) ---
+  // ============================================================================
+  // FORMATOS FIJOS DEL FRONTEND (LAS "CÁSCARAS" UNIVERSALES)
+  // ============================================================================
+
   function formAttrs(f, opts) {
     var name = (opts.namePrefix || '') + (f.key || 'field');
     var id = (opts.idPrefix || '') + (f.key || 'field');
@@ -87,66 +90,111 @@
     return { name: name, id: id, disabled: dis, required: req };
   }
 
-  function formText(f, opts) {
-    var a = formAttrs(f, opts);
+  /** 1. TEXT INPUT (texto una línea o textarea / prompt_input) */
+  function renderTextInput(f, opts, isPreview) {
+    var a = isPreview ? { disabled: ' disabled', name: '', id: '', required: '' } : formAttrs(f, opts);
     var ph = escapeHtml(f.placeholder || '');
-    return '<input type="text" id="' + a.id + '" name="' + a.name + '" placeholder="' + ph + '"' + a.disabled + a.required + '>';
+    var isMulti = f.is_multiline || f.type === 'textarea' || f.type === 'prompt_input' || (f.input_type && (f.input_type === 'textarea' || f.input_type === 'prompt_input'));
+    var isMonospace = f.monospace ? 'font-family: monospace;' : '';
+
+    if (isMulti) {
+      var rows = f.rows || 4;
+      return '<textarea id="' + a.id + '" name="' + a.name + '" rows="' + rows + '" placeholder="' + ph + '" style="' + isMonospace + '" class="modern-input"' + a.disabled + a.required + '></textarea>';
+    } else {
+      var htmlType = f.html_type || 'text';
+      return '<input type="' + htmlType + '" id="' + a.id + '" name="' + a.name + '" placeholder="' + ph + '" style="' + isMonospace + '" class="modern-input"' + a.disabled + a.required + '>';
+    }
   }
-  function formTextarea(f, opts) {
-    var a = formAttrs(f, opts);
-    var ph = escapeHtml(f.placeholder || '');
-    var rows = f.rows || 4;
-    return '<textarea id="' + a.id + '" name="' + a.name + '" rows="' + rows + '" placeholder="' + ph + '"' + a.disabled + a.required + '></textarea>';
-  }
-  function formSelect(f, opts) {
-    var a = formAttrs(f, opts);
-    var ph = escapeHtml(f.placeholder || 'Seleccionar...');
-    var optsList = f.options || [];
-    var optionsHtml = '<option value="">' + ph + '</option>' + optsList.map(function (o) {
-      return '<option value="' + escapeHtml(String(optVal(o))) + '">' + escapeHtml(optLabel(o)) + '</option>';
-    }).join('');
-    return '<select id="' + a.id + '" name="' + a.name + '"' + a.disabled + a.required + '>' + optionsHtml + '</select>';
-  }
-  function formNumber(f, opts) {
-    var a = formAttrs(f, opts);
+
+  /** 2. NUMBER INPUT */
+  function renderNumberInput(f, opts, isPreview) {
+    var a = isPreview ? { disabled: ' disabled', name: '', id: '', required: '' } : formAttrs(f, opts);
     var ph = escapeHtml(f.placeholder || '');
     var min = f.min != null ? ' min="' + f.min + '"' : '';
     var max = f.max != null ? ' max="' + f.max + '"' : '';
     var step = f.step != null ? ' step="' + f.step + '"' : '';
     var val = f.defaultValue != null ? ' value="' + escapeHtml(String(f.defaultValue)) + '"' : '';
-    return '<input type="number" id="' + a.id + '" name="' + a.name + '" placeholder="' + ph + '"' + min + max + step + val + a.disabled + a.required + '>';
+    return '<input type="number" class="modern-input" id="' + a.id + '" name="' + a.name + '" placeholder="' + ph + '"' + min + max + step + val + a.disabled + a.required + '>';
+  }
+
+  /** 3. SELECT DROPDOWN */
+  function renderSelectDropdown(f, opts, isPreview) {
+    var a = isPreview ? { disabled: ' disabled', name: '', id: '', required: '' } : formAttrs(f, opts);
+    var ph = escapeHtml(f.placeholder || 'Seleccionar...');
+    var optsList = f.options || [];
+    var multiple = f.is_multiple ? ' multiple' : '';
+
+    var optionsHtml = '<option value="" disabled selected>' + ph + '</option>' + optsList.map(function (o) {
+      return '<option value="' + escapeHtml(String(optVal(o))) + '">' + escapeHtml(optLabel(o)) + '</option>';
+    }).join('');
+
+    return '<select class="modern-input" id="' + a.id + '" name="' + a.name + '"' + multiple + a.disabled + a.required + '>' + optionsHtml + '</select>';
+  }
+
+  /** 4. TOGGLE INPUT (Checkbox, Switch, Radio) */
+  function renderToggleInput(f, opts, isPreview) {
+    var a = isPreview ? { disabled: ' disabled', name: '', id: '', required: '' } : formAttrs(f, opts);
+    var displayStyle = f.display_style || 'checkbox';
+    var lb = escapeHtml(f.label || f.key || 'Opción');
+    var checked = f.defaultValue ? ' checked' : '';
+
+    if (displayStyle === 'radio') {
+      var optsList = f.options || [{ label: 'A', value: 'a' }, { label: 'B', value: 'b' }];
+      var group = optsList.map(function (o, i) {
+        return '<label class="modern-checkbox-wrapper"><input type="radio" name="' + a.name + '" value="' + escapeHtml(String(optVal(o))) + '"' + (i === 0 ? ' checked' : '') + a.disabled + '><div class="modern-checkbox-box" style="border-radius: 50%;"></div><span>' + escapeHtml(optLabel(o)) + '</span></label>';
+      }).join('');
+      return '<div class="radio-group" style="display:flex; flex-direction:column; gap:10px;">' + group + '</div>';
+    }
+
+    if (displayStyle === 'switch') {
+      return '<label class="modern-switch-wrapper"><input type="checkbox" id="' + a.id + '" name="' + a.name + '"' + checked + a.disabled + '><div class="modern-switch-track"><div class="modern-switch-thumb"></div></div><span>' + lb + '</span></label>';
+    }
+
+    return '<label class="modern-checkbox-wrapper"><input type="checkbox" id="' + a.id + '" name="' + a.name + '"' + checked + a.disabled + '><div class="modern-checkbox-box"></div><span>' + lb + '</span></label>';
+  }
+
+  // --- Form (formulario real: delega a los formatos fijos) ---
+  function isPreviewOpts(opts) {
+    return opts && (opts.mode === 'preview' || opts.preview === true);
+  }
+
+  function formText(f, opts) {
+    return renderTextInput(f, opts || {}, isPreviewOpts(opts));
+  }
+  function formTextarea(f, opts) {
+    return renderTextInput(f, opts || {}, isPreviewOpts(opts));
+  }
+  function formSelect(f, opts) {
+    return renderSelectDropdown(f, opts || {}, isPreviewOpts(opts));
+  }
+  function formNumber(f, opts) {
+    return renderNumberInput(f, opts || {}, isPreviewOpts(opts));
   }
   function formCheckbox(f, opts) {
-    var a = formAttrs(f, opts);
-    var lb = escapeHtml(f.label || f.key || '');
-    var checked = f.defaultValue ? ' checked' : '';
-    return '<label class="checkbox-label"><input type="checkbox" id="' + a.id + '" name="' + a.name + '"' + checked + a.disabled + '><span>' + lb + '</span></label>';
+    return renderToggleInput(f, opts || {}, isPreviewOpts(opts));
   }
   function formRadio(f, opts) {
-    var a = formAttrs(f, opts);
-    var optsList = f.options || [];
-    var group = optsList.map(function (o, i) {
-      return '<label class="radio-label"><input type="radio" name="' + a.name + '" value="' + escapeHtml(String(optVal(o))) + '"' + (i === 0 ? ' checked' : '') + a.disabled + '> ' + escapeHtml(optLabel(o)) + '</label>';
-    }).join('');
-    return '<div class="radio-group">' + group + '</div>';
+    var o = opts || {};
+    var f2 = { display_style: 'radio', options: f.options, key: f.key, label: f.label, required: f.required };
+    Object.keys(f).forEach(function (k) { if (f2[k] === undefined) f2[k] = f[k]; });
+    return renderToggleInput(f2, o, isPreviewOpts(o));
   }
   function formRange(f, opts) {
-    var a = formAttrs(f, opts);
+    var a = formAttrs(f, opts || {});
     var min = f.min != null ? f.min : 0;
     var max = f.max != null ? f.max : 100;
     var step = f.step != null ? f.step : 1;
     var val = f.defaultValue != null ? f.defaultValue : 50;
-    return '<div class="range-input"><input type="range" id="' + a.id + '" name="' + a.name + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + val + '"' + a.disabled + '><span class="range-value">' + val + '</span></div>';
+    return '<div class="range-input"><input type="range" class="modern-input" id="' + a.id + '" name="' + a.name + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + val + '"' + a.disabled + '><span class="range-value">' + val + '</span></div>';
   }
   function formContextPlaceholder(f, opts, label) {
-    var a = formAttrs(f, opts);
-    return '<input type="text" id="' + a.id + '" name="' + a.name + '" placeholder="' + escapeHtml(label || 'ID o valor...') + '"' + a.disabled + a.required + '>';
+    var a = formAttrs(f, opts || {});
+    return '<input type="text" class="modern-input" id="' + a.id + '" name="' + a.name + '" placeholder="' + escapeHtml(label || 'ID o valor...') + '"' + a.disabled + a.required + '>';
   }
   function formSwitch(f, opts) {
-    var a = formAttrs(f, opts);
-    var lb = escapeHtml(f.label || '');
-    var checked = f.defaultValue ? ' checked' : '';
-    return '<label class="switch-label"><input type="checkbox" id="' + a.id + '" name="' + a.name + '" class="input-switch"' + checked + a.disabled + '><span>' + lb + '</span></label>';
+    var f2 = { display_style: 'switch', label: f.label, key: f.key, defaultValue: f.defaultValue, required: f.required };
+    Object.keys(f).forEach(function (k) { if (f2[k] === undefined) f2[k] = f[k]; });
+    return renderToggleInput(f2, opts || {}, isPreviewOpts(opts));
   }
   function formStructural() {
     return '';
