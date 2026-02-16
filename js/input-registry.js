@@ -1,10 +1,67 @@
 /**
- * Input Registry - Sistema de render dinámico de inputs (UI schema-driven).
- * No hardcodear inputs: cada tipo tiene plantilla de preview y de formulario.
- * @see docs/INPUT_TAXONOMY.md
+ * Input Registry - Arquitectura por contenedores (Render Container Registry).
+ * El frontend solo conoce 8 contenedores; toda la variación es schema/config.
+ * Regla: render(container_type, config) — nunca branch por input_type semántico.
  */
 (function (global) {
   'use strict';
+
+  var CONTAINER_TYPES = [
+    'STRING_CONTAINER',
+    'SELECT_CONTAINER',
+    'MEDIA_CONTAINER',
+    'BOOLEAN_CONTAINER',
+    'NUMBER_CONTAINER',
+    'RANGE_CONTAINER',
+    'FILE_CONTAINER',
+    'STRUCTURAL_CONTAINER'
+  ];
+
+  /** Mapeo: input_type (semántica) → contenedor de render. Todo lo demás es config. */
+  var INPUT_TYPE_TO_CONTAINER = {
+    text: 'STRING_CONTAINER',
+    textarea: 'STRING_CONTAINER',
+    prompt_input: 'STRING_CONTAINER',
+    prompt_user: 'STRING_CONTAINER',
+    prompt_system: 'STRING_CONTAINER',
+    tag_input: 'STRING_CONTAINER',
+    slug_input: 'STRING_CONTAINER',
+    code_input: 'STRING_CONTAINER',
+    markdown: 'STRING_CONTAINER',
+    labels: 'STRING_CONTAINER',
+    instructions: 'STRING_CONTAINER',
+    notes: 'STRING_CONTAINER',
+    select: 'SELECT_CONTAINER',
+    multi_select: 'SELECT_CONTAINER',
+    tone_selector: 'SELECT_CONTAINER',
+    mood_selector: 'SELECT_CONTAINER',
+    length_selector: 'SELECT_CONTAINER',
+    brand_selector: 'SELECT_CONTAINER',
+    entity_selector: 'SELECT_CONTAINER',
+    audience_selector: 'SELECT_CONTAINER',
+    campaign_selector: 'SELECT_CONTAINER',
+    product_selector: 'SELECT_CONTAINER',
+    image_selector: 'MEDIA_CONTAINER',
+    gallery_picker: 'MEDIA_CONTAINER',
+    visual_reference: 'MEDIA_CONTAINER',
+    checkbox: 'BOOLEAN_CONTAINER',
+    switch: 'BOOLEAN_CONTAINER',
+    boolean: 'BOOLEAN_CONTAINER',
+    toggle: 'BOOLEAN_CONTAINER',
+    number: 'NUMBER_CONTAINER',
+    stepper: 'NUMBER_CONTAINER',
+    rating: 'NUMBER_CONTAINER',
+    range: 'RANGE_CONTAINER',
+    file: 'FILE_CONTAINER',
+    upload: 'FILE_CONTAINER',
+    section: 'STRUCTURAL_CONTAINER',
+    divider: 'STRUCTURAL_CONTAINER',
+    description_block: 'STRUCTURAL_CONTAINER',
+    accordion: 'STRUCTURAL_CONTAINER',
+    tabs: 'STRUCTURAL_CONTAINER',
+    repeater: 'STRUCTURAL_CONTAINER',
+    group: 'STRUCTURAL_CONTAINER'
+  };
 
   function escapeHtml(str) {
     if (str == null) return '';
@@ -14,7 +71,15 @@
   }
 
   function getInputType(field) {
-    return (field && (field.input_type || field.type)) ? String(field.input_type || field.type).toLowerCase() : 'text';
+    if (!field) return 'text';
+    var t = field.input_type || field.type || field.inputType || '';
+    return (typeof t === 'string' && t.length) ? t.toLowerCase() : 'text';
+  }
+
+  /** Obtiene el contenedor de render para un campo. El frontend solo conoce contenedores. */
+  function getContainerType(field) {
+    var type = getInputType(field);
+    return INPUT_TYPE_TO_CONTAINER[type] || 'STRING_CONTAINER';
   }
 
   function optVal(opt) {
@@ -200,7 +265,117 @@
     return '';
   }
 
-  // Registrar todos los tipos
+  /** Placeholder para FILE_CONTAINER (upload) */
+  function previewFile(f) {
+    return '<div class="preview-structural"><i class="ph ph-upload-simple"></i><span>' + escapeHtml(f.label || 'Subir archivo') + '</span></div>';
+  }
+  function formFile(f, opts) {
+    var a = formAttrs(f, opts || {});
+    var accept = (f.fileTypes || f.accept || '').trim() || '*';
+    return '<input type="file" class="modern-input" id="' + a.id + '" name="' + a.name + '" accept="' + escapeHtml(accept) + '"' + (f.multiUpload ? ' multiple' : '') + a.disabled + '>';
+  }
+
+  /** Etiqueta para selectores de contexto (brand, entity, audience, etc.) */
+  function getContextSelectorLabel(inputType) {
+    var labels = {
+      brand_selector: 'Selector de Marca',
+      entity_selector: 'Selector de Entidad',
+      audience_selector: 'Selector de Audiencia',
+      campaign_selector: 'Selector de Campaña',
+      product_selector: 'Selector de Producto',
+      image_selector: 'Selector de Imagen',
+      gallery_picker: 'Galería',
+      visual_reference: 'Referencia visual'
+    };
+    return labels[inputType] || 'Selector';
+  }
+  function getContextPlaceholder(inputType) {
+    var placeholders = {
+      brand_selector: 'UUID de marca...',
+      entity_selector: 'UUID de entidad...',
+      audience_selector: 'UUID de audiencia...',
+      campaign_selector: 'UUID de campaña...',
+      product_selector: 'UUID de producto...',
+      image_selector: 'URL o ID de imagen...',
+      gallery_picker: 'IDs separados por coma...',
+      visual_reference: 'URL o ID...'
+    };
+    return placeholders[inputType] || 'ID o valor...';
+  }
+
+  /** Registry de los 8 contenedores. El frontend solo conoce estos. */
+  var CONTAINER_RENDERERS = {
+    STRING_CONTAINER: {
+      preview: function (f) {
+        var multi = f.mode === 'multi_line' || f.mode === 'prompt' || f.is_multiline ||
+          (f.input_type && (f.input_type === 'textarea' || f.input_type === 'prompt_input' || f.input_type === 'prompt_user' || f.input_type === 'prompt_system'));
+        return multi ? previewTextarea(f) : previewText(f);
+      },
+      form: function (f, opts) {
+        opts = opts || {};
+        var multi = f.mode === 'multi_line' || f.mode === 'prompt' || f.is_multiline ||
+          (f.input_type && (f.input_type === 'textarea' || f.input_type === 'prompt_input' || f.input_type === 'prompt_user' || f.input_type === 'prompt_system'));
+        return multi ? formTextarea(f, opts) : formText(f, opts);
+      }
+    },
+    SELECT_CONTAINER: {
+      preview: function (f) {
+        var t = getInputType(f);
+        var isContext = ['brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector'].indexOf(t) >= 0;
+        return isContext ? previewContext(getContextSelectorLabel(t)) : previewSelect(f);
+      },
+      form: function (f, opts) {
+        var t = getInputType(f);
+        var isContext = ['brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector'].indexOf(t) >= 0;
+        return isContext ? formContextPlaceholder(f, opts || {}, getContextPlaceholder(t)) : formSelect(f, opts);
+      }
+    },
+    MEDIA_CONTAINER: {
+      preview: function (f) {
+        return previewContext(getContextSelectorLabel(getInputType(f)));
+      },
+      form: function (f, opts) {
+        return formContextPlaceholder(f, opts || {}, getContextPlaceholder(getInputType(f)));
+      }
+    },
+    BOOLEAN_CONTAINER: {
+      preview: function (f) {
+        var display = (f.display_style || f.display || getInputType(f) || 'checkbox');
+        if (display === 'radio') return previewRadio(f);
+        if (display === 'switch') return previewSwitch(f);
+        return previewCheckbox(f);
+      },
+      form: function (f, opts) {
+        var display = (f.display_style || f.display || getInputType(f) || 'checkbox');
+        if (display === 'radio') return formRadio(f, opts);
+        if (display === 'switch') return formSwitch(f, opts);
+        return formCheckbox(f, opts);
+      }
+    },
+    NUMBER_CONTAINER: {
+      preview: previewNumber,
+      form: formNumber
+    },
+    RANGE_CONTAINER: {
+      preview: previewRange,
+      form: formRange
+    },
+    FILE_CONTAINER: {
+      preview: previewFile,
+      form: formFile
+    },
+    STRUCTURAL_CONTAINER: {
+      preview: function (f) {
+        var t = getInputType(f);
+        var labels = { section: 'Sección', divider: 'Divisor', description_block: 'Texto informativo', accordion: 'Acordeón', tabs: 'Pestañas', repeater: 'Repetidor', group: 'Grupo' };
+        var icons = { section: 'square', divider: 'minus', description_block: 'info', accordion: 'caret-double-down', tabs: 'squares-four', repeater: 'repeat', group: 'stack' };
+        return previewBlock(labels[t] || f.label || 'Bloque', icons[t] || 'placeholder');
+      },
+      form: formStructural
+    }
+  };
+
+  // Registrar todos los tipos (compatibilidad: delegan en contenedores)
   function registerAll() {
     register('text', { preview: previewText, form: formText });
     register('textarea', { preview: previewTextarea, form: formTextarea });
@@ -237,34 +412,38 @@
   }
   registerAll();
 
+  /** Devuelve el renderer del contenedor asociado al tipo (compatibilidad). */
   function getRenderer(type) {
-    return INPUT_RENDERERS[type] || INPUT_RENDERERS['text'];
+    var container = INPUT_TYPE_TO_CONTAINER[typeof type === 'string' ? type.toLowerCase() : ''] || 'STRING_CONTAINER';
+    return CONTAINER_RENDERERS[container] || CONTAINER_RENDERERS.STRING_CONTAINER;
   }
 
   /**
    * Renderiza el preview del campo (canvas del Builder).
+   * Dispatch por contenedor: el frontend solo conoce contenedores, no input_type.
    * @param {Object} field - Campo con key, label, input_type, placeholder, options, etc.
    * @returns {string} HTML
    */
   function renderPreview(field) {
-    var type = getInputType(field);
-    var r = getRenderer(type);
-    return r.preview ? r.preview(field) : previewText(field);
+    var container = getContainerType(field);
+    var r = CONTAINER_RENDERERS[container];
+    if (!r || !r.preview) return previewText(field);
+    return r.preview(field);
   }
 
   /**
    * Renderiza el campo para formulario (Studio, Test, Preview).
+   * Dispatch por contenedor.
    * @param {Object} field - Campo con key, label, input_type, required, etc.
    * @param {Object} opts - { mode: 'preview'|'test'|'studio', idPrefix, namePrefix, disabled, required }
    * @returns {string} HTML del input (sin wrapper label/helper).
    */
   function renderFormField(field, opts) {
     opts = opts || {};
-    var type = getInputType(field);
-    var r = getRenderer(type);
-    var formFn = r.form;
-    if (!formFn) return formText(field, opts);
-    return formFn(field, opts);
+    var container = getContainerType(field);
+    var r = CONTAINER_RENDERERS[container];
+    if (!r || !r.form) return formText(field, opts);
+    return r.form(field, opts);
   }
 
   /**
@@ -303,16 +482,14 @@
     return 'generic';
   }
 
-  /** true si el tipo no genera control editable (section, divider, description_block) */
+  /** true si el campo es solo layout (section, divider, accordion, etc.). */
   function isStructural(field) {
-    var t = getInputType(field);
-    return t === 'section' || t === 'divider' || t === 'description_block';
+    return getContainerType(field) === 'STRUCTURAL_CONTAINER';
   }
 
-  /** true si el control ya incluye su propio label (checkbox, radio, switch) */
+  /** true si el control ya incluye su propio label (checkbox, radio, switch). */
   function hasOwnLabel(field) {
-    var t = getInputType(field);
-    return t === 'checkbox' || t === 'radio' || t === 'switch' || t === 'boolean';
+    return getContainerType(field) === 'BOOLEAN_CONTAINER';
   }
 
   /**
@@ -365,6 +542,8 @@
   }
 
   var InputRegistry = {
+    CONTAINER_TYPES: CONTAINER_TYPES,
+    getContainerType: getContainerType,
     getInputType: getInputType,
     getRenderer: getRenderer,
     register: register,
@@ -376,7 +555,8 @@
     hasOwnLabel: hasOwnLabel,
     getDefaultTemplates: getDefaultTemplates,
     getPropertyFamily: getPropertyFamily,
-    escapeHtml: escapeHtml
+    escapeHtml: escapeHtml,
+    CONTAINER_RENDERERS: CONTAINER_RENDERERS
   };
 
   global.InputRegistry = InputRegistry;

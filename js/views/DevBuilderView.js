@@ -817,12 +817,12 @@ class DevBuilderView extends DevBaseView {
     const newField = {
       key: fieldName,
       label: template?.name || 'Campo',
-      input_type: baseSchema.input_type || 'text',
       required: false,
       placeholder: baseSchema.placeholder || '',
       description: '',
       ...baseSchema,
-      // UI config específica del campo
+      // Asegurar input_type para que el canvas renderice el tipo correcto (number, select, checkbox, etc.)
+      input_type: baseSchema.input_type || baseSchema.type || 'text',
       ui: {
         width: 'full',
         hidden: false
@@ -923,7 +923,7 @@ class DevBuilderView extends DevBaseView {
           </div>
           <div class="canvas-field-info">
             <span class="field-label">${field.label || field.key}</span>
-            <span class="field-type">${field.input_type}</span>
+            <span class="field-type">${field.input_type || field.type || 'text'}</span>
             ${field.required ? '<span class="field-required">*</span>' : ''}
           </div>
           <div class="canvas-field-actions">
@@ -1529,6 +1529,8 @@ class DevBuilderView extends DevBaseView {
       } else if (this.inputSchema.length === 0 && Array.isArray(flow.input_schema)) {
         this.inputSchema = flow.input_schema;
       }
+      // Normalizar input_type en cada campo para que el canvas muestre el cascarón correcto (number, select, checkbox, etc.)
+      this.inputSchema = this.inputSchema.map(f => ({ ...f, input_type: f.input_type || f.type || 'text' }));
       
       // Actualizar UI y adaptar por tipo (manual vs automated)
       this.populateForm();

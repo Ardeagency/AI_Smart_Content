@@ -2311,47 +2311,105 @@
 
 .canvas-field-preview {
   padding: 12px;
+  min-height: 44px;
 }
 
-.preview-input {
+/* Cascarones: text, number, textarea con borde y esquinas redondeadas (design system) */
+.canvas-field-preview .preview-input,
+.canvas-field-preview input.preview-input,
+.canvas-field-preview select.preview-input,
+.canvas-field-preview textarea.preview-input {
   width: 100%;
+  min-width: 0;
   padding: 10px 12px;
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: 8px;
   color: var(--text-primary);
   font-size: 0.875rem;
   font-family: inherit;
 }
 
-.preview-input:disabled {
-  opacity: 0.7;
+.canvas-field-preview select.preview-input {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.canvas-field-preview .preview-input:disabled {
+  opacity: 0.85;
   cursor: not-allowed;
 }
 
+/* Checkbox y radio: estilo design system (cuadrado/círculo con borde, checked con color primario) */
 .preview-checkbox,
 .preview-radio {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   color: var(--text-primary);
   font-size: 0.875rem;
+}
+
+.preview-checkbox input,
+.preview-radio input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--dev-primary);
+  cursor: not-allowed;
 }
 
 .preview-radio-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
+.preview-radio-group .preview-radio {
+  margin: 0;
+}
+
+/* Range / slider: pista y pulgar visibles */
 .preview-range {
   display: flex;
   align-items: center;
   gap: 12px;
+  width: 100%;
 }
 
 .preview-range input[type="range"] {
   flex: 1;
+  min-width: 0;
+  height: 6px;
+  accent-color: var(--dev-primary);
+  cursor: not-allowed;
+}
+
+.preview-range span {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  min-width: 24px;
+}
+
+/* Switch: pista y pulgar (estilo design system) */
+.preview-switch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+.preview-switch input[type="checkbox"] {
+  margin: 0;
+  width: 36px;
+  height: 20px;
+  accent-color: var(--dev-primary);
+  cursor: not-allowed;
 }
 
 .preview-structural {
@@ -2361,18 +2419,11 @@
   padding: 12px;
   background: var(--bg-primary);
   border: 1px dashed var(--border-color);
-  border-radius: 6px;
+  border-radius: 8px;
   color: var(--text-muted);
   font-size: 0.875rem;
 }
 .preview-structural .ph { font-size: 1.25rem; }
-
-.preview-switch {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.preview-switch input[type="checkbox"] { margin: 0; }
 
 .preview-context {
   border-style: dashed;

@@ -116,12 +116,14 @@ Ejemplo `prompt_input`:
 
 ---
 
-## Frontend: Input Registry
+## Frontend: Input Registry (arquitectura por contenedores)
 
-El frontend usa un **Input Registry** que:
+El frontend usa un **Render Container Registry** que:
 
-1. Resuelve el tipo desde `field.input_type` o `field.type`.
-2. Renderiza con la plantilla correspondiente (preview en Builder, formulario en Studio/Test).
-3. No hardcodea inputs: `renderComponent(template.base_schema, instance_config)`.
+1. **Solo conoce 8 contenedores** (STRING, SELECT, MEDIA, BOOLEAN, NUMBER, RANGE, FILE, STRUCTURAL). No hace branch por `input_type` semántico.
+2. Resuelve contenedor con `getContainerType(field)` desde `field.input_type` o `field.type`.
+3. Renderiza con `renderPreview(field)` y `renderFormField(field, opts)` por contenedor; la variación es **config/schema**.
+
+Ver **docs/ARQUITECTURA_CONTENEDORES.md** para el contrato de contenedores y el mapeo input_type → contenedor.
 
 Archivo: `js/input-registry.js`.
