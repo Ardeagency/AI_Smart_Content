@@ -1279,24 +1279,29 @@ class BrandsView extends BaseView {
         </div>
       </section>
 
-      <!-- GRID: ESENCIA Y LENGUAJE -->
-      <div class="info-sections-grid">
-        <!-- ESENCIA -->
-        <section class="info-section">
-          <h3 class="info-section-title">Esencia</h3>
-          <div class="info-section-content">
-            ${this.renderEssenceSection(brand)}
-          </div>
-        </section>
+      <!-- ESENCIA (schema: objetivos_marca, nicho_mercado, arquetipo_personalidad, enfoque_marca) -->
+      <section class="info-section">
+        <h3 class="info-section-title">Esencia</h3>
+        <div class="info-section-content">
+          ${this.renderEssenceSection(brand)}
+        </div>
+      </section>
 
-        <!-- LENGUAJE -->
-        <section class="info-section">
-          <h3 class="info-section-title">Lenguaje</h3>
-          <div class="info-section-content">
-            ${this.renderLanguageSection(brand)}
-          </div>
-        </section>
-      </div>
+      <!-- LENGUAJE (schema: tono_voz, palabras_clave, palabras_prohibidas, tono_comunicacion, estilo_escritura) -->
+      <section class="info-section">
+        <h3 class="info-section-title">Lenguaje</h3>
+        <div class="info-section-content">
+          ${this.renderLanguageSection(brand)}
+        </div>
+      </section>
+
+      <!-- ESTILO VISUAL (schema: estilo_visual, estilo_publicidad, transmitir_visualmente, evitar_visualmente) -->
+      <section class="info-section">
+        <h3 class="info-section-title">Estilo visual</h3>
+        <div class="info-section-content">
+          ${this.renderVisualStyleSection(brand)}
+        </div>
+      </section>
 
       <!-- REGLAS CREATIVAS -->
       <section class="info-section">
@@ -1329,45 +1334,18 @@ class BrandsView extends BaseView {
       this.renderLinksInto(linksContainer);
     }
 
-    // Esencia - hacer editables los campos usando makeEditableText() unificado
+    // Campos de texto editables (schema: solo palabras_clave como texto que se convierte a array)
     container.querySelectorAll('.info-field-value').forEach(field => {
       const label = field.previousElementSibling;
       if (!label || !label.classList.contains('info-field-label')) return;
-
       const labelText = label.textContent.trim();
-
-      // Mapear labels a field names y usar makeEditableText() unificado
-      if (labelText === 'Quiénes somos') {
-        field.classList.add('info-editable');
-        this.makeEditableText(field, 'quienes_somos', 'brand', () => {
-          const infoCard = document.querySelector('.card-info.expanded');
-          if (infoCard) {
-            const content = infoCard.querySelector('.card-content-expanded');
-            if (content) {
-              this.renderInfoPanelContent(content);
-            }
-          }
-        });
-      } else if (labelText === 'Personalidad') {
-        field.classList.add('info-editable');
-        this.makeEditableText(field, 'personalidad_marca', 'brand', () => {
-          const infoCard = document.querySelector('.card-info.expanded');
-          if (infoCard) {
-            const content = infoCard.querySelector('.card-content-expanded');
-            if (content) {
-              this.renderInfoPanelContent(content);
-            }
-          }
-        });
-      } else if (labelText === 'Palabras a usar') {
+      if (labelText === 'Palabras a usar') {
         field.classList.add('info-editable');
         this.makeEditableText(field, 'palabras_clave', 'brand', () => {
           const infoCard = document.querySelector('.card-info.expanded');
           if (infoCard) {
             const content = infoCard.querySelector('.card-content-expanded');
-            if (content) {
-              this.renderInfoPanelContent(content);
-            }
+            if (content) this.renderInfoPanelContent(content);
           }
         });
       }
@@ -1383,8 +1361,8 @@ class BrandsView extends BaseView {
     };
     container.querySelectorAll('.info-field-value[data-multiselect]').forEach(wrap => {
       const fieldName = wrap.getAttribute('data-multiselect');
+      const schemaField = wrap.getAttribute('data-field') || (fieldName === 'palabras_evitar' ? 'palabras_prohibidas' : fieldName);
       if (!fieldName) return;
-      const schemaField = fieldName === 'palabras_evitar' ? 'palabras_prohibidas' : fieldName;
       this.makeEditableMultiSelect(wrap, schemaField, [], 'brand', onRefreshPanel);
     });
 
@@ -1434,11 +1412,12 @@ class BrandsView extends BaseView {
     if (!brand) {
       return '<p class="info-empty">No hay información de esencia disponible.</p>';
     }
-    const objetivos = brand.objetivos_marca;
-    const objetivosArr = Array.isArray(objetivos) ? objetivos : (objetivos && typeof objetivos === 'object' ? Object.values(objetivos).filter(Boolean) : []);
     let html = '';
     html += `<div class="info-field"><div class="info-field-label">Objetivos</div><div class="info-field-value" data-multiselect="objetivos_marca" data-field="objetivos_marca"></div></div>`;
-    return html || '<p class="info-empty">No hay información de esencia disponible.</p>';
+    html += `<div class="info-field"><div class="info-field-label">Nicho de mercado</div><div class="info-field-value" data-multiselect="nicho_mercado" data-field="nicho_mercado"></div></div>`;
+    html += `<div class="info-field"><div class="info-field-label">Arquetipo / personalidad</div><div class="info-field-value" data-multiselect="arquetipo_personalidad" data-field="arquetipo_personalidad"></div></div>`;
+    html += `<div class="info-field"><div class="info-field-label">Enfoque de marca</div><div class="info-field-value" data-multiselect="enfoque_marca" data-field="enfoque_marca"></div></div>`;
+    return html;
   }
 
   renderLanguageSection(brand) {
@@ -1451,7 +1430,24 @@ class BrandsView extends BaseView {
     html += `<div class="info-field"><div class="info-field-label">Tono de voz</div><div class="info-field-value" data-select="tono_voz"></div></div>`;
     html += `<div class="info-field"><div class="info-field-label">Palabras a usar</div><div class="info-field-value">${this.escapeHtml(palabrasClaveStr)}</div></div>`;
     html += `<div class="info-field"><div class="info-field-label">Palabras a evitar</div><div class="info-field-value" data-multiselect="palabras_evitar" data-field="palabras_prohibidas"></div></div>`;
-    return html || '<p class="info-empty">No hay información de lenguaje disponible.</p>';
+    html += `<div class="info-field"><div class="info-field-label">Tono de comunicación</div><div class="info-field-value" data-multiselect="tono_comunicacion" data-field="tono_comunicacion"></div></div>`;
+    html += `<div class="info-field"><div class="info-field-label">Estilo de escritura</div><div class="info-field-value" data-multiselect="estilo_escritura" data-field="estilo_escritura"></div></div>`;
+    return html;
+  }
+
+  /**
+   * Sección Estilo visual (schema: estilo_visual, estilo_publicidad, transmitir_visualmente, evitar_visualmente)
+   */
+  renderVisualStyleSection(brand) {
+    if (!brand) {
+      return '<p class="info-empty">No hay información de estilo visual.</p>';
+    }
+    let html = '';
+    html += `<div class="info-field"><div class="info-field-label">Estilo visual</div><div class="info-field-value" data-multiselect="estilo_visual" data-field="estilo_visual"></div></div>`;
+    html += `<div class="info-field"><div class="info-field-label">Estilo publicidad</div><div class="info-field-value" data-multiselect="estilo_publicidad" data-field="estilo_publicidad"></div></div>`;
+    html += `<div class="info-field"><div class="info-field-label">Transmitir visualmente</div><div class="info-field-value" data-multiselect="transmitir_visualmente" data-field="transmitir_visualmente"></div></div>`;
+    html += `<div class="info-field"><div class="info-field-label">Evitar visualmente</div><div class="info-field-value" data-multiselect="evitar_visualmente" data-field="evitar_visualmente"></div></div>`;
+    return html;
   }
 
   renderCreativeRulesSection(brand, rulesByType) {
@@ -1551,12 +1547,14 @@ class BrandsView extends BaseView {
 
     this.savingFields.add(saveKey);
 
+    const brandArrayFields = ['objetivos_marca', 'nicho_mercado', 'arquetipo_personalidad', 'enfoque_marca', 'estilo_visual', 'estilo_publicidad', 'transmitir_visualmente', 'evitar_visualmente', 'tono_comunicacion', 'estilo_escritura', 'palabras_clave', 'palabras_prohibidas'];
     let payloadValue = value;
     if (fieldName === 'palabras_clave' && typeof value === 'string') {
       payloadValue = value.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
     }
-    if (payloadValue === '' || (Array.isArray(payloadValue) && payloadValue.length === 0)) {
-      payloadValue = null;
+    const isEmpty = payloadValue === '' || (Array.isArray(payloadValue) && payloadValue.length === 0);
+    if (isEmpty) {
+      payloadValue = brandArrayFields.includes(fieldName) ? [] : null;
     }
 
     try {
