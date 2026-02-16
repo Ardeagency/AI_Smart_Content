@@ -75,7 +75,7 @@
 .dev-webhooks-container,
 .dev-lead-container,
 .builder-main,
-.builder-header,
+.builder-app-header,
 .builder-footer,
 .builder-sidebar,
 .builder-canvas-wrapper {
@@ -1261,39 +1261,25 @@
    Constructor Visual de Flujos de IA
    ========================================== */
 
-/* Header del Builder */
-.builder-header {
-  position: fixed;
-  top: 0;
-  left: var(--nav-width, 250px);
-  right: 0;
-  height: 56px;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border-color);
+/* Header único del Builder (tabs como header de app-container) */
+.builder-app-header {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
+  min-height: 56px;
   padding: 0 16px;
-  z-index: 100;
-  transition: left 0.3s ease;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
 }
 
-body.sidebar-collapsed .builder-header {
-  left: var(--nav-width-collapsed, 60px);
-}
-
-@media (max-width: 768px) {
-  .builder-header {
-    left: 0;
-    padding: 0 12px;
-  }
-}
-
-.builder-header-left {
+.builder-app-header-left {
   display: flex;
   align-items: center;
   gap: 16px;
-  flex: 1;
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 .builder-back-btn {
@@ -1372,10 +1358,11 @@ body.sidebar-collapsed .builder-header {
   color: var(--dev-warning);
 }
 
-.builder-header-right {
+.builder-app-header-right {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex: 0 0 auto;
 }
 
 /* Botones del Builder */
@@ -2108,14 +2095,19 @@ body.sidebar-collapsed .builder-header {
   overflow-y: auto;
 }
 
-/* Tabs del Builder */
+/* Tabs del Builder (dentro del header único) */
 .builder-tabs {
-  flex: 0 0 auto;
+  flex: 1 1 auto;
   display: flex;
+  align-items: center;
   gap: 4px;
-  padding: 12px 16px;
-  background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border-color);
+  padding: 0 12px;
+  min-width: 0;
+}
+
+.builder-app-header .builder-tabs {
+  border-bottom: none;
+  background: transparent;
 }
 
 .builder-tab {
@@ -3167,7 +3159,12 @@ body.sidebar-collapsed .builder-header {
 
 /* Responsive Builder */
 @media (max-width: 768px) {
-  .builder-header-left {
+  .builder-app-header {
+    flex-wrap: wrap;
+    padding: 8px 12px;
+  }
+
+  .builder-app-header-left {
     gap: 8px;
   }
   
@@ -3187,7 +3184,7 @@ body.sidebar-collapsed .builder-header {
     font-size: 0.875rem;
   }
   
-  .builder-header-right {
+  .builder-app-header-right {
     gap: 4px;
   }
   

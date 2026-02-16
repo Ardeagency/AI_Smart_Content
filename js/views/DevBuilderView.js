@@ -70,62 +70,6 @@ class DevBuilderView extends DevBaseView {
 
   renderHTML() {
     return `
-      <!-- Header del Builder -->
-      <header class="builder-header">
-        <div class="builder-header-left">
-          <button class="builder-back-btn" id="builderBackBtn">
-            <i class="ph ph-arrow-left"></i>
-            <span>Mis Flujos</span>
-          </button>
-          <div class="builder-title-section">
-            <input type="text" 
-                   class="builder-name-input" 
-                   id="flowNameInput" 
-                   placeholder="Nombre del flujo..."
-                   maxlength="100">
-            <span class="builder-status-badge draft" id="flowStatusBadge">Borrador</span>
-          </div>
-        </div>
-        <div class="builder-header-right">
-          <button class="btn-builder-secondary" id="previewFlowBtn">
-            <i class="ph ph-eye"></i>
-            Preview
-          </button>
-          <button class="btn-builder-secondary" id="testFlowBtn">
-            <i class="ph ph-play"></i>
-            Probar
-          </button>
-          <button class="btn-builder-secondary" id="viewJsonSchemaBtn">
-            <i class="ph ph-brackets-curly"></i>
-            Ver JSON Schema
-          </button>
-          <button class="btn-builder-primary" id="saveFlowBtn">
-            <i class="ph ph-floppy-disk"></i>
-            Guardar
-          </button>
-          <div class="builder-more-menu">
-            <button class="btn-builder-icon" id="moreActionsBtn">
-              <i class="ph ph-dots-three-vertical"></i>
-            </button>
-            <div class="builder-dropdown" id="moreActionsDropdown" style="display: none;">
-              <button class="dropdown-item" id="publishFlowBtn">
-                <i class="ph ph-rocket-launch"></i> Publicar
-              </button>
-              <button class="dropdown-item" id="duplicateFlowBtn">
-                <i class="ph ph-copy"></i> Duplicar
-              </button>
-              <button class="dropdown-item" id="exportFlowBtn">
-                <i class="ph ph-export"></i> Exportar JSON
-              </button>
-              <hr>
-              <button class="dropdown-item danger" id="deleteFlowBtn">
-                <i class="ph ph-trash"></i> Eliminar
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
       <!-- Main Builder Container -->
       <main class="builder-main">
         <!-- Panel izquierdo: Componentes (oculto por defecto; solo visible en pestaña Inputs) -->
@@ -140,23 +84,77 @@ class DevBuilderView extends DevBaseView {
           <div class="builder-components-list" id="componentsList"></div>
         </aside>
 
-        <!-- Panel central: Canvas de construcción -->
+        <!-- Panel central: header único (tabs) + contenido -->
         <div class="builder-canvas-wrapper">
-          <!-- Tabs: 1 Configuración, 2 Técnico, 3 Inputs, 4 Ficha del Flujo -->
-          <div class="builder-tabs">
-            <button class="builder-tab active" data-tab="settings">
-              <i class="ph ph-gear"></i> Configuración
-            </button>
-            <button class="builder-tab" data-tab="technical">
-              <i class="ph ph-code"></i> Técnico
-            </button>
-            <button class="builder-tab" data-tab="inputs">
-              <i class="ph ph-textbox"></i> Inputs
-            </button>
-            <button class="builder-tab" data-tab="ficha">
-              <i class="ph ph-cardholder"></i> Ficha del Flujo
-            </button>
-          </div>
+          <!-- Header único del app-container: navegación + nombre + acciones -->
+          <header class="builder-app-header" id="builderAppHeader">
+            <div class="builder-app-header-left">
+              <button class="builder-back-btn" id="builderBackBtn">
+                <i class="ph ph-arrow-left"></i>
+                <span>Mis Flujos</span>
+              </button>
+              <div class="builder-title-section">
+                <input type="text"
+                       class="builder-name-input"
+                       id="flowNameInput"
+                       placeholder="Nombre del flujo..."
+                       maxlength="100">
+                <span class="builder-status-badge draft" id="flowStatusBadge">Borrador</span>
+              </div>
+            </div>
+            <nav class="builder-tabs" role="tablist">
+              <button class="builder-tab active" data-tab="settings">
+                <i class="ph ph-gear"></i> Configuración
+              </button>
+              <button class="builder-tab" data-tab="technical">
+                <i class="ph ph-code"></i> Técnico
+              </button>
+              <button class="builder-tab" data-tab="inputs">
+                <i class="ph ph-textbox"></i> Inputs
+              </button>
+              <button class="builder-tab" data-tab="ficha">
+                <i class="ph ph-cardholder"></i> Ficha del Flujo
+              </button>
+            </nav>
+            <div class="builder-app-header-right">
+              <button class="btn-builder-secondary" id="previewFlowBtn">
+                <i class="ph ph-eye"></i>
+                Preview
+              </button>
+              <button class="btn-builder-secondary" id="testFlowBtn">
+                <i class="ph ph-play"></i>
+                Probar
+              </button>
+              <button class="btn-builder-secondary" id="viewJsonSchemaBtn">
+                <i class="ph ph-brackets-curly"></i>
+                Ver JSON Schema
+              </button>
+              <button class="btn-builder-primary" id="saveFlowBtn">
+                <i class="ph ph-floppy-disk"></i>
+                Guardar
+              </button>
+              <div class="builder-more-menu">
+                <button class="btn-builder-icon" id="moreActionsBtn">
+                  <i class="ph ph-dots-three-vertical"></i>
+                </button>
+                <div class="builder-dropdown" id="moreActionsDropdown" style="display: none;">
+                  <button class="dropdown-item" id="publishFlowBtn">
+                    <i class="ph ph-rocket-launch"></i> Publicar
+                  </button>
+                  <button class="dropdown-item" id="duplicateFlowBtn">
+                    <i class="ph ph-copy"></i> Duplicar
+                  </button>
+                  <button class="dropdown-item" id="exportFlowBtn">
+                    <i class="ph ph-export"></i> Exportar JSON
+                  </button>
+                  <hr>
+                  <button class="dropdown-item danger" id="deleteFlowBtn">
+                    <i class="ph ph-trash"></i> Eliminar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </header>
 
           <!-- Tab 1: Configuración (lo primero que ve el desarrollador; sin componentes ni propiedades) -->
           <div class="builder-tab-content active" id="tabSettings">
