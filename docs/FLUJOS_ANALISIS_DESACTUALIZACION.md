@@ -25,14 +25,17 @@
 
 ## 2. DevBuilderView.js — **Parcialmente actualizado**
 
+La pestaña **Técnico** configura **flow_modules** (módulos del flujo), no `content_flows`. Los webhooks y `input_schema` viven en cada módulo. **flow_technical_details** se enlaza a cada módulo por `flow_module_id` (no a `content_flows`).
+
 | Aspecto | Estado actual | Debería ser |
 |--------|----------------|-------------|
+| Técnico | Configura primer módulo (flow_modules): webhooks, input_schema; flow_technical_details por flow_module_id | OK. UI y comentarios aclarados. |
 | Carga de flujo | Usa `flow_modules` con `limit(1)` y guarda en un solo módulo | OK para single-step. Para multi-step faltaría UI de varios módulos. |
 | Campos de content_flows | `loadFlow()` no asigna `subcategory_id` ni `execution_mode` | Incluir en `flowData` y en payload de guardado. |
 | Payload guardado | Incluye `subcategory_id` pero no `execution_mode` | Schema tiene `execution_mode`; añadir (default `single_step`). |
 | UI | Un solo bloque "Técnico" / un módulo | Opcional: pestaña o sección "Módulos" para flujos multi-step. |
 
-**Conclusión**: Funciona para flujos de un solo módulo. Falta alinear `loadFlow` con `subcategory_id`/`execution_mode` y, a medio plazo, soporte explícito para múltiples módulos.
+**Conclusión**: Funciona para flujos de un solo módulo. Técnico = flow_modules + flow_technical_details por módulo. Falta alinear `loadFlow` con `subcategory_id`/`execution_mode` y, a medio plazo, soporte explícito para múltiples módulos.
 
 ---
 

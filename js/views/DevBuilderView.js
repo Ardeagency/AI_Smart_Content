@@ -41,6 +41,7 @@ class DevBuilderView extends DevBaseView {
     };
     
     // Detalles técnicos
+    // Configuración del módulo actual (flow_modules: webhooks, input_schema). flow_technical_details (plataforma, editor_url) se enlaza por flow_module_id.
     this.technicalDetails = {
       webhook_url_test: '',
       webhook_url_prod: '',
@@ -55,6 +56,8 @@ class DevBuilderView extends DevBaseView {
     // Categorías disponibles
     this.categories = [];
     
+    // ID del flow_module que se está editando en Técnico (flow_technical_details se enlaza a este id)
+    this.currentFlowModuleId = null;
     // Campo siendo editado
     this.selectedFieldIndex = null;
     
@@ -240,20 +243,24 @@ class DevBuilderView extends DevBaseView {
             </div>
           </div>
 
-          <!-- Tab 2: Técnico (webhooks, editor, plataforma; sin componentes ni propiedades) -->
+          <!-- Tab 2: Técnico = configuración de flow_modules (módulos del flujo). flow_technical_details se enlaza a cada módulo por flow_module_id -->
           <div class="builder-tab-content" id="tabTechnical">
             <div class="builder-settings-form builder-config-fullwidth">
+              <div class="settings-section" id="technicalIntroSection">
+                <h4><i class="ph ph-stack"></i> Módulos del flujo (flow_modules)</h4>
+                <p class="section-description">El flujo principal puede tener uno o más <strong>módulos</strong>. Aquí configuras el módulo: webhooks e input_schema. Los detalles de plataforma (n8n, editor) se guardan en <code>flow_technical_details</code> enlazado a este módulo.</p>
+              </div>
               <div class="settings-section" id="technicalWebhookSection">
-                <h4><i class="ph ph-webhooks-logo"></i> Webhooks</h4>
+                <h4><i class="ph ph-webhooks-logo"></i> Módulo: Webhooks y esquema</h4>
                 <div class="settings-field">
                   <label for="webhookTest">URL de Prueba (Test)</label>
                   <input type="url" id="webhookTest" placeholder="https://tu-n8n.com/webhook-test/...">
-                  <span class="field-help">URL del webhook en modo prueba</span>
+                  <span class="field-help">Webhook del módulo en modo prueba</span>
                 </div>
                 <div class="settings-field">
                   <label for="webhookProd">URL de Producción</label>
                   <input type="url" id="webhookProd" placeholder="https://tu-n8n.com/webhook/...">
-                  <span class="field-help">URL usada por usuarios finales</span>
+                  <span class="field-help">Webhook del módulo para usuarios finales</span>
                 </div>
                 <div class="settings-row">
                   <div class="settings-field">
@@ -277,7 +284,7 @@ class DevBuilderView extends DevBaseView {
                 <div class="settings-field">
                   <label for="editorUrl">URL del Editor</label>
                   <input type="url" id="editorUrl" placeholder="https://tu-n8n.com/workflow/123">
-                  <span class="field-help">Link para editar el flujo en la plataforma</span>
+                  <span class="field-help">Link para editar este módulo en la plataforma (guardado en flow_technical_details por flow_module_id)</span>
                 </div>
               </div>
               <div class="settings-section technical-automated-block" id="technicalAutomatedBlock" style="display: none;">
@@ -289,8 +296,8 @@ class DevBuilderView extends DevBaseView {
                 </div>
               </div>
               <div class="settings-section">
-                <h4><i class="ph ph-code"></i> Schema JSON</h4>
-                <p class="section-description">Estructura de datos que recibe tu webhook</p>
+                <h4><i class="ph ph-code"></i> Schema JSON del módulo (input_schema)</h4>
+                <p class="section-description">Estructura de datos que recibe el webhook de este módulo (flow_modules.input_schema)</p>
                 <div class="json-preview" id="jsonSchemaPreview">
                   <pre><code>{ "fields": [] }</code></pre>
                 </div>
@@ -1805,20 +1812,23 @@ class DevBuilderView extends DevBaseView {
         this.uiLayoutConfig = { ...this.uiLayoutConfig, ...flow.ui_layout_config };
       }
       
-      // Cargar detalles técnicos e input_schema: flow_technical_details por flow_module_id; webhooks e input_schema en flow_modules
+      // Técnico = flow_modules (módulos del flujo). flow_technical_details está enlazado a cada módulo por flow_module_id, NO a content_flows.
       const { data: flowModule } = await this.supabase
         .from('flow_modules')
-        .select('id, webhook_url_test, webhook_url_prod, input_schema')
+        .select('id, name, step_order, webhook_url_test, webhook_url_prod, input_schema')
         .eq('content_flow_id', this.flowId)
+        .order('step_order', { ascending: true })
         .limit(1)
         .maybeSingle();
       
       if (flowModule) {
+        this.currentFlowModuleId = flowModule.id;
         if (flowModule.input_schema?.fields) {
           this.inputSchema = flowModule.input_schema.fields;
         } else if (Array.isArray(flowModule.input_schema)) {
           this.inputSchema = flowModule.input_schema;
         }
+        // flow_technical_details: 1:1 con flow_modules (fk flow_module_id)
         const { data: techDetails } = await this.supabase
           .from('flow_technical_details')
           .select('platform_name, editor_url')
@@ -2698,23 +2708,32 @@ class DevBuilderView extends DevBaseView {
     }
   }
 
+  /**
+   * Guarda la configuración del módulo (flow_modules) y los detalles técnicos (flow_technical_details).
+   * - flow_modules: módulos del flujo principal (content_flow_id); aquí van webhook_*, input_schema, name, step_order.
+   * - flow_technical_details: enlazado a cada flow_module por flow_module_id (NO a content_flows).
+   */
   async saveTechnicalDetails(flowId) {
     if (!this.supabase || !flowId) return;
     
-    // flow_technical_details usa flow_module_id (no flow_id). Necesitamos un flow_module por flow.
-    let { data: modules } = await this.supabase
-      .from('flow_modules')
-      .select('id')
-      .eq('content_flow_id', flowId)
-      .limit(1);
+    let flowModuleId = this.currentFlowModuleId;
+    if (!flowModuleId) {
+      const { data: existing } = await this.supabase
+        .from('flow_modules')
+        .select('id')
+        .eq('content_flow_id', flowId)
+        .order('step_order', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      flowModuleId = existing?.id;
+    }
     
-    let flowModuleId = modules?.[0]?.id;
     if (!flowModuleId) {
       const { data: inserted, error: insertErr } = await this.supabase
         .from('flow_modules')
         .insert({
           content_flow_id: flowId,
-          name: 'default',
+          name: 'Módulo principal',
           step_order: 1,
           input_schema: { fields: this.inputSchema },
           webhook_url_test: this.technicalDetails.webhook_url_test,
@@ -2727,6 +2746,7 @@ class DevBuilderView extends DevBaseView {
         return;
       }
       flowModuleId = inserted.id;
+      this.currentFlowModuleId = flowModuleId;
     } else {
       await this.supabase
         .from('flow_modules')
@@ -2738,6 +2758,7 @@ class DevBuilderView extends DevBaseView {
         .eq('id', flowModuleId);
     }
     
+    // flow_technical_details: 1:1 con flow_modules (constraint flow_module_id UNIQUE)
     const techPayload = {
       flow_module_id: flowModuleId,
       platform_name: this.technicalDetails.platform_name,
@@ -2749,7 +2770,7 @@ class DevBuilderView extends DevBaseView {
       .upsert(techPayload, { onConflict: 'flow_module_id' });
     
     if (error) {
-      console.error('Error saving technical details:', error);
+      console.error('Error saving flow_technical_details:', error);
     }
   }
 
