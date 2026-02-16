@@ -128,10 +128,15 @@ class DevBuilderView extends DevBaseView {
 
       <!-- Main Builder Container -->
       <main class="builder-main">
-        <!-- Panel izquierdo: Componentes (oculto por defecto; solo visible en pestaña Inputs) -->
-        <aside class="builder-sidebar builder-components" style="display: none;">
-          <div class="builder-sidebar-header">
-            <h3><i class="ph ph-puzzle-piece"></i> Componentes</h3>
+        <!-- Panel izquierdo: Toolbox de componentes (estilo ugc-generation; solo visible en pestaña Inputs) -->
+        <aside class="builder-sidebar builder-components builder-toolbox-theme" style="display: none;">
+          <div class="builder-toolbox-header">
+            <h2 class="builder-toolbox-title">ugc-generation</h2>
+            <div class="builder-toolbox-search-wrap">
+              <i class="ph ph-magnifying-glass builder-toolbox-search-icon"></i>
+              <input type="text" class="builder-toolbox-search" id="builderComponentSearch" placeholder="Search" aria-label="Buscar componentes">
+            </div>
+            <h3 class="builder-toolbox-label">Toolbox</h3>
           </div>
           <div class="builder-components-list" id="componentsList"></div>
         </aside>
@@ -679,65 +684,85 @@ class DevBuilderView extends DevBaseView {
   renderComponentsList() {
     const container = this.querySelector('#componentsList');
     if (!container) return;
-    
-    // Agrupar por categoría (taxonomía: basic, smart_text, semantic, brand, media, controls, structural)
-    const groups = {
-      basic: { name: 'Básicos', icon: 'shapes', items: [] },
-      smart_text: { name: 'Texto / IA', icon: 'terminal', items: [] },
-      semantic: { name: 'Semánticos', icon: 'microphone', items: [] },
-      brand: { name: 'Marca y contexto', icon: 'storefront', items: [] },
-      context: { name: 'Contexto', icon: 'database', items: [] },
-      media: { name: 'Media', icon: 'image', items: [] },
-      controls: { name: 'Controles', icon: 'sliders', items: [] },
-      advanced: { name: 'Avanzados', icon: 'gear-six', items: [] },
-      structural: { name: 'Estructura', icon: 'square', items: [] },
-      ai: { name: 'IA', icon: 'magic-wand', items: [] }
+
+    // Categorías al estilo Toolbox: Editing (inputs/editables) y Matte (futuro)
+    const editingCategories = ['basic', 'smart_text', 'semantic', 'context', 'advanced', 'controls', 'media', 'brand', 'structural', 'ai'];
+    const editingItems = this.componentTemplates.filter(t => editingCategories.includes(t.category || 'basic'));
+    const matteItems = this.componentTemplates.filter(t => (t.category || '') === 'matte'); // por si se añade después
+
+    const escapeAttr = (str) => String(str || '').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+    const renderItem = (template) => {
+      const schemaStr = escapeAttr(JSON.stringify(template.base_schema));
+      return `
+        <div class="component-toolbox-item" 
+             draggable="true" 
+             data-template-id="${template.id}"
+             data-template="${schemaStr}"
+             data-search-text="${escapeAttr((template.name + ' ' + (template.description || '')).toLowerCase())}">
+          <i class="ph ph-${template.icon_name || 'textbox'} component-toolbox-icon"></i>
+          <span class="component-toolbox-name">${this.escapeHtml(template.name)}</span>
+        </div>
+      `;
     };
-    this.componentTemplates.forEach(template => {
-      const category = template.category || 'basic';
-      if (groups[category]) {
-        groups[category].items.push(template);
-      } else {
-        groups.basic.items.push(template);
-      }
-    });
-    
+
     let html = '';
-    
-    Object.entries(groups).forEach(([key, group]) => {
-      if (group.items.length === 0) return;
-      
+    html += `
+      <div class="component-group component-group-editing has-visible" data-group="editing">
+        <div class="component-group-header">Editing</div>
+        <div class="component-group-grid">
+          ${editingItems.map(renderItem).join('')}
+        </div>
+      </div>
+    `;
+    if (matteItems.length > 0) {
       html += `
-        <div class="component-group">
-          <div class="component-group-header">
-            <i class="ph ph-${group.icon}"></i>
-            <span>${group.name}</span>
-          </div>
-          <div class="component-group-items">
-            ${group.items.map(template => `
-              <div class="component-item" 
-                   draggable="true" 
-                   data-template-id="${template.id}"
-                   data-template='${JSON.stringify(template.base_schema)}'>
-                <i class="ph ph-${template.icon_name || 'textbox'}"></i>
-                <div class="component-info">
-                  <span class="component-name">${template.name}</span>
-                  <span class="component-desc">${template.description || ''}</span>
-                </div>
-              </div>
-            `).join('')}
+        <div class="component-group component-group-matte has-visible" data-group="matte">
+          <div class="component-group-header">Matte</div>
+          <div class="component-group-grid">
+            ${matteItems.map(renderItem).join('')}
           </div>
         </div>
       `;
-    });
-    
+    } else {
+      html += `
+        <div class="component-group component-group-matte" data-group="matte">
+          <div class="component-group-header">Matte</div>
+          <div class="component-group-grid component-group-grid--empty">
+            <span class="component-group-empty">Próximamente</span>
+          </div>
+        </div>
+      `;
+    }
+
     container.innerHTML = html;
+    this.setupToolboxSearch();
     this.setupDragAndDrop();
   }
 
+  setupToolboxSearch() {
+    const searchEl = this.querySelector('#builderComponentSearch');
+    const listEl = this.querySelector('#componentsList');
+    if (!searchEl || !listEl) return;
+    const filter = () => {
+      const q = (searchEl.value || '').trim().toLowerCase();
+      listEl.querySelectorAll('.component-toolbox-item').forEach(item => {
+        const text = item.getAttribute('data-search-text') || '';
+        const group = item.closest('.component-group');
+        const match = !q || text.includes(q);
+        item.classList.toggle('hidden', !match);
+        if (group) {
+          const visible = group.querySelectorAll('.component-toolbox-item:not(.hidden)').length;
+          group.classList.toggle('has-visible', visible > 0);
+        }
+      });
+    };
+    searchEl.removeEventListener('input', filter);
+    searchEl.addEventListener('input', filter);
+  }
+
   setupDragAndDrop() {
-    // Componentes arrastrables
-    const components = this.querySelectorAll('.component-item');
+    // Componentes arrastrables (grid Toolbox: .component-toolbox-item)
+    const components = this.querySelectorAll('.component-toolbox-item');
     components.forEach(comp => {
       comp.addEventListener('dragstart', (e) => this.handleComponentDragStart(e));
       comp.addEventListener('dragend', (e) => this.handleDragEnd(e));
@@ -753,21 +778,27 @@ class DevBuilderView extends DevBaseView {
   }
 
   handleComponentDragStart(e) {
-    const templateId = e.target.dataset.templateId;
-    const templateData = e.target.dataset.template;
+    const item = e.target.closest('.component-toolbox-item');
+    if (!item) return;
+    const templateId = item.dataset.templateId;
+    let templateData = {};
+    try {
+      const raw = (item.getAttribute('data-template') || '').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+      if (raw) templateData = JSON.parse(raw);
+    } catch (_) {}
     
     e.dataTransfer.setData('text/plain', JSON.stringify({
       type: 'new_component',
       templateId,
-      templateData: JSON.parse(templateData)
+      templateData: templateData
     }));
     
-    e.target.classList.add('dragging');
+    item.classList.add('dragging');
     this.querySelector('#builderCanvas')?.classList.add('drag-active');
   }
 
   handleDragEnd(e) {
-    e.target.classList.remove('dragging');
+    this.querySelectorAll('.component-toolbox-item').forEach(el => el.classList.remove('dragging'));
     this.querySelector('#builderCanvas')?.classList.remove('drag-active', 'drag-over');
   }
 
