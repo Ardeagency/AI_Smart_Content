@@ -1353,10 +1353,33 @@ class DevBuilderView extends DevBaseView {
         `;
       }
       
-      default:
+      default: {
+        const contextSelectorTypes = ['brand_selector', 'audience_selector', 'campaign_selector', 'product_selector', 'entity_selector'];
+        const isContextSelector = contextSelectorTypes.indexOf(type) >= 0;
+        const isMediaSelector = type === 'image_selector' || type === 'gallery_picker';
+        let html = '';
+        if (isContextSelector) {
+          const currentContext = field.context_selector_type || type;
+          html += `
+            <div class="property-group">
+              <h4>Selector de contexto</h4>
+              <div class="property-field">
+                <label for="propContextSelectorType">Qué selecciona</label>
+                <select id="propContextSelectorType">
+                  <option value="brand_selector" ${currentContext === 'brand_selector' ? 'selected' : ''}>Marca</option>
+                  <option value="audience_selector" ${currentContext === 'audience_selector' ? 'selected' : ''}>Audiencia</option>
+                  <option value="campaign_selector" ${currentContext === 'campaign_selector' ? 'selected' : ''}>Campaña</option>
+                  <option value="product_selector" ${currentContext === 'product_selector' ? 'selected' : ''}>Producto</option>
+                  <option value="entity_selector" ${currentContext === 'entity_selector' ? 'selected' : ''}>Entidad (producto/servicio/lugar)</option>
+                </select>
+                <span class="field-help">Define si el dropdown carga marcas, audiencias, campañas, productos o entidades.</span>
+              </div>
+            </div>
+          `;
+        }
         if (type === 'entity_selector') {
           const entityTypes = field.entityTypes || ['product', 'service', 'place'];
-          return `
+          html += `
             <div class="property-group">
               <h4>Tipos de Entidad</h4>
               <div class="entity-types-toggles">
@@ -1376,7 +1399,34 @@ class DevBuilderView extends DevBaseView {
             </div>
           `;
         }
-        return '';
+        if (isMediaSelector) {
+          const mediaSources = [
+            { value: 'products', label: 'Productos' },
+            { value: 'entities', label: 'Entidades (producto/servicio/lugar)' },
+            { value: 'visual_reference', label: 'Referencia visual' },
+            { value: 'brand', label: 'Marca' },
+            { value: 'audience', label: 'Audiencia' },
+            { value: 'campaign', label: 'Campaña' },
+            { value: 'other', label: 'Otro' }
+          ];
+          const currentMedia = field.media_source || 'other';
+          html += `
+            <div class="property-group">
+              <h4>Selector de imagen / Carrusel</h4>
+              <div class="property-field">
+                <label for="propMediaSource">Función / Origen de imágenes</label>
+                <select id="propMediaSource">
+                  ${mediaSources.map(function (o) {
+                    return '<option value="' + o.value + '"' + (currentMedia === o.value ? ' selected' : '') + '>' + escapeProp(o.label) + '</option>';
+                  }).join('')}
+                </select>
+                <span class="field-help">Según la función se cargarán las imágenes: productos, entidades, referencias, marca, audiencia, campaña.</span>
+              </div>
+            </div>
+          `;
+        }
+        return html;
+      }
     }
   }
 
@@ -1671,6 +1721,22 @@ class DevBuilderView extends DevBaseView {
         this.onFieldChange();
       });
     });
+    
+    const contextSelectorTypeSelect = this.querySelector('#propContextSelectorType');
+    if (contextSelectorTypeSelect) {
+      contextSelectorTypeSelect.addEventListener('change', (e) => {
+        field.context_selector_type = e.target.value;
+        this.onFieldChange();
+      });
+    }
+    
+    const mediaSourceSelect = this.querySelector('#propMediaSource');
+    if (mediaSourceSelect) {
+      mediaSourceSelect.addEventListener('change', (e) => {
+        field.media_source = e.target.value;
+        this.onFieldChange();
+      });
+    }
   }
 
   onFieldChange() {

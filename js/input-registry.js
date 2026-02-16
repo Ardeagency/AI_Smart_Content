@@ -302,6 +302,31 @@
     };
     return placeholders[inputType] || 'ID o valor...';
   }
+  /** Etiqueta y placeholder para selector de imagen según función (media_source) */
+  function getMediaSourceLabel(mediaSource) {
+    var labels = {
+      products: 'Selector de Productos',
+      entities: 'Selector de Entidades',
+      visual_reference: 'Referencia visual',
+      brand: 'Selector de Marca',
+      audience: 'Selector de Audiencia',
+      campaign: 'Selector de Campaña',
+      other: 'Selector de imagen'
+    };
+    return labels[mediaSource] || 'Selector de imagen';
+  }
+  function getMediaSourcePlaceholder(mediaSource) {
+    var placeholders = {
+      products: 'Selecciona producto(s)...',
+      entities: 'Selecciona entidad(es)...',
+      visual_reference: 'URL o referencia...',
+      brand: 'Selecciona marca...',
+      audience: 'Selecciona audiencia...',
+      campaign: 'Selecciona campaña...',
+      other: 'URL o ID de imagen...'
+    };
+    return placeholders[mediaSource] || 'ID o valor...';
+  }
 
   /** Registry de los 8 contenedores. El frontend solo conoce estos. */
   var CONTAINER_RENDERERS = {
@@ -320,22 +345,24 @@
     },
     SELECT_CONTAINER: {
       preview: function (f) {
-        var t = getInputType(f);
-        var isContext = ['brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector'].indexOf(t) >= 0;
+        var t = f.context_selector_type || getInputType(f);
+        var isContext = ['brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector'].indexOf(getInputType(f)) >= 0 || !!f.context_selector_type;
         return isContext ? previewContext(getContextSelectorLabel(t)) : previewSelect(f);
       },
       form: function (f, opts) {
-        var t = getInputType(f);
-        var isContext = ['brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector'].indexOf(t) >= 0;
+        var t = f.context_selector_type || getInputType(f);
+        var isContext = ['brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector'].indexOf(getInputType(f)) >= 0 || !!f.context_selector_type;
         return isContext ? formContextPlaceholder(f, opts || {}, getContextPlaceholder(t)) : formSelect(f, opts);
       }
     },
     MEDIA_CONTAINER: {
       preview: function (f) {
-        return previewContext(getContextSelectorLabel(getInputType(f)));
+        var label = f.media_source ? getMediaSourceLabel(f.media_source) : getContextSelectorLabel(getInputType(f));
+        return previewContext(label);
       },
       form: function (f, opts) {
-        return formContextPlaceholder(f, opts || {}, getContextPlaceholder(getInputType(f)));
+        var placeholder = f.media_source ? getMediaSourcePlaceholder(f.media_source) : getContextPlaceholder(getInputType(f));
+        return formContextPlaceholder(f, opts || {}, placeholder);
       }
     },
     BOOLEAN_CONTAINER: {
