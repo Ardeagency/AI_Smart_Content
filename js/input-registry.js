@@ -98,7 +98,7 @@
     var isMonospace = f.monospace ? 'font-family: monospace;' : '';
 
     if (isMulti) {
-      var rows = f.rows || 4;
+    var rows = f.rows || 4;
       return '<textarea id="' + a.id + '" name="' + a.name + '" rows="' + rows + '" placeholder="' + ph + '" style="' + isMonospace + '" class="modern-input"' + a.disabled + a.required + '></textarea>';
     } else {
       var htmlType = f.html_type || 'text';

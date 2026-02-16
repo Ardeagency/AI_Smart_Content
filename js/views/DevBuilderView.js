@@ -70,6 +70,24 @@ class DevBuilderView extends DevBaseView {
 
   renderHTML() {
     return `
+      <!-- Header del Builder = pestañas (Configuración, Técnico, Inputs, Ficha) -->
+      <header class="builder-tabs-header" id="builderTabsHeader">
+        <div class="builder-tabs">
+          <button class="builder-tab active" data-tab="settings">
+            <i class="ph ph-gear"></i> Configuración
+          </button>
+          <button class="builder-tab" data-tab="technical">
+            <i class="ph ph-code"></i> Técnico
+          </button>
+          <button class="builder-tab" data-tab="inputs">
+            <i class="ph ph-textbox"></i> Inputs
+          </button>
+          <button class="builder-tab" data-tab="ficha">
+            <i class="ph ph-cardholder"></i> Ficha del Flujo
+          </button>
+        </div>
+      </header>
+
       <!-- Main Builder Container -->
       <main class="builder-main">
         <!-- Panel izquierdo: Componentes (oculto por defecto; solo visible en pestaña Inputs) -->
@@ -84,84 +102,17 @@ class DevBuilderView extends DevBaseView {
           <div class="builder-components-list" id="componentsList"></div>
         </aside>
 
-        <!-- Panel central: header único (tabs) + contenido -->
+        <!-- Panel central: contenido de pestañas -->
         <div class="builder-canvas-wrapper">
-          <!-- Header único del app-container: navegación + nombre + acciones -->
-          <header class="builder-app-header" id="builderAppHeader">
-            <div class="builder-app-header-left">
-              <button class="builder-back-btn" id="builderBackBtn">
-                <i class="ph ph-arrow-left"></i>
-                <span>Mis Flujos</span>
-              </button>
-              <div class="builder-title-section">
-                <input type="text"
-                       class="builder-name-input"
-                       id="flowNameInput"
-                       placeholder="Nombre del flujo..."
-                       maxlength="100">
-                <span class="builder-status-badge draft" id="flowStatusBadge">Borrador</span>
-              </div>
-            </div>
-            <nav class="builder-tabs" role="tablist">
-              <button class="builder-tab active" data-tab="settings">
-                <i class="ph ph-gear"></i> Configuración
-              </button>
-              <button class="builder-tab" data-tab="technical">
-                <i class="ph ph-code"></i> Técnico
-              </button>
-              <button class="builder-tab" data-tab="inputs">
-                <i class="ph ph-textbox"></i> Inputs
-              </button>
-              <button class="builder-tab" data-tab="ficha">
-                <i class="ph ph-cardholder"></i> Ficha del Flujo
-              </button>
-            </nav>
-            <div class="builder-app-header-right">
-              <button class="btn-builder-secondary" id="previewFlowBtn">
-                <i class="ph ph-eye"></i>
-                Preview
-              </button>
-              <button class="btn-builder-secondary" id="testFlowBtn">
-                <i class="ph ph-play"></i>
-                Probar
-              </button>
-              <button class="btn-builder-secondary" id="viewJsonSchemaBtn">
-                <i class="ph ph-brackets-curly"></i>
-                Ver JSON Schema
-              </button>
-              <button class="btn-builder-primary" id="saveFlowBtn">
-                <i class="ph ph-floppy-disk"></i>
-                Guardar
-              </button>
-              <div class="builder-more-menu">
-                <button class="btn-builder-icon" id="moreActionsBtn">
-                  <i class="ph ph-dots-three-vertical"></i>
-                </button>
-                <div class="builder-dropdown" id="moreActionsDropdown" style="display: none;">
-                  <button class="dropdown-item" id="publishFlowBtn">
-                    <i class="ph ph-rocket-launch"></i> Publicar
-                  </button>
-                  <button class="dropdown-item" id="duplicateFlowBtn">
-                    <i class="ph ph-copy"></i> Duplicar
-                  </button>
-                  <button class="dropdown-item" id="exportFlowBtn">
-                    <i class="ph ph-export"></i> Exportar JSON
-                  </button>
-                  <hr>
-                  <button class="dropdown-item danger" id="deleteFlowBtn">
-                    <i class="ph ph-trash"></i> Eliminar
-                  </button>
-                </div>
-              </div>
-            </div>
-          </header>
-
           <!-- Tab 1: Configuración (lo primero que ve el desarrollador; sin componentes ni propiedades) -->
           <div class="builder-tab-content active" id="tabSettings">
             <div class="builder-settings-form builder-config-fullwidth">
               <div class="settings-section">
                 <h4><i class="ph ph-identification-card"></i> Identidad del flujo</h4>
-                <p class="field-help block" style="margin-bottom: 12px;">El nombre del flujo se edita en la barra superior.</p>
+                <div class="settings-field">
+                  <label for="flowNameConfig">Nombre público del flujo *</label>
+                  <input type="text" id="flowNameConfig" placeholder="Ej: Generador de Reels Virales" maxlength="100">
+                </div>
                 <div class="settings-field">
                   <label for="flowTechnicalName">Nombre técnico</label>
                   <input type="text" id="flowTechnicalName" placeholder="Ej: reels_viral_generator (solo referencia interna)">
@@ -414,10 +365,32 @@ class DevBuilderView extends DevBaseView {
         </aside>
       </main>
 
-      <!-- Footer: mensaje de estado y acciones contextuales (Guardar/Probar/Publicar están en el header) -->
+      <!-- Footer: mensaje + estado + todas las acciones -->
       <footer class="builder-footer" id="builderFooter">
         <div class="builder-footer-message" id="builderFooterMessage"></div>
+        <span class="builder-status-badge draft" id="flowStatusBadge">Borrador</span>
         <div class="builder-footer-actions" id="builderFooterActions">
+          <button type="button" class="btn-builder-footer btn-back" id="builderBackBtn">
+            <i class="ph ph-arrow-left"></i> Mis Flujos
+          </button>
+          <button type="button" class="btn-builder-footer btn-save-draft" id="btnSaveDraft" style="display: none;">
+            <i class="ph ph-floppy-disk"></i> Guardar flujo
+          </button>
+          <button type="button" class="btn-builder-footer btn-update-flow" id="btnUpdateFlow" style="display: none;">
+            <i class="ph ph-pencil-simple"></i> Actualizar flujo
+          </button>
+          <button type="button" class="btn-builder-footer" id="previewFlowBtn">
+            <i class="ph ph-eye"></i> Preview
+          </button>
+          <button type="button" class="btn-builder-footer" id="testFlowBtn">
+            <i class="ph ph-play"></i> Probar
+          </button>
+          <button type="button" class="btn-builder-footer" id="viewJsonSchemaBtn">
+            <i class="ph ph-brackets-curly"></i> Ver JSON Schema
+          </button>
+          <button type="button" class="btn-builder-footer btn-primary-footer" id="btnPublish" style="display: none;">
+            <i class="ph ph-rocket-launch"></i> Publicar
+          </button>
           <button type="button" class="btn-builder-footer btn-request-review" id="btnRequestReview" style="display: none;">
             <i class="ph ph-hand-waving"></i> Solicitar revisión
           </button>
@@ -430,6 +403,21 @@ class DevBuilderView extends DevBaseView {
           <button type="button" class="btn-builder-footer btn-unpublish" id="btnUnpublish" style="display: none;">
             <i class="ph ph-arrow-counter-clockwise"></i> Despublicar
           </button>
+          <button type="button" class="btn-builder-footer btn-test-run" id="btnTestRun" style="display: none;">
+            <i class="ph ph-play"></i> Probar (Test Run)
+          </button>
+          <div class="builder-footer-more">
+            <button type="button" class="btn-builder-footer btn-icon" id="moreActionsBtn" title="Más acciones">
+              <i class="ph ph-dots-three-vertical"></i>
+            </button>
+            <div class="builder-dropdown builder-dropdown-footer" id="moreActionsDropdown" style="display: none;">
+              <button type="button" class="dropdown-item" id="publishFlowBtn"><i class="ph ph-rocket-launch"></i> Publicar</button>
+              <button type="button" class="dropdown-item" id="duplicateFlowBtn"><i class="ph ph-copy"></i> Duplicar</button>
+              <button type="button" class="dropdown-item" id="exportFlowBtn"><i class="ph ph-export"></i> Exportar JSON</button>
+              <hr>
+              <button type="button" class="dropdown-item danger" id="deleteFlowBtn"><i class="ph ph-trash"></i> Eliminar</button>
+            </div>
+          </div>
         </div>
       </footer>
 
@@ -1553,8 +1541,8 @@ class DevBuilderView extends DevBaseView {
   }
 
   populateForm() {
-    const nameInput = this.querySelector('#flowNameInput');
-    if (nameInput) nameInput.value = this.flowData.name;
+    const nameConfig = this.querySelector('#flowNameConfig');
+    if (nameConfig) nameConfig.value = this.flowData.name;
 
     // URL del flujo (editable para copiar/pegar o ajustar)
     const flowUrlInput = this.querySelector('#flowUrlInput');
@@ -1720,6 +1708,7 @@ class DevBuilderView extends DevBaseView {
     const tokenCostInput = this.querySelector('#flowTokenCost');
     const hiddenFromCatalog = this.querySelector('#uiHiddenFromCatalog');
     const testFlowBtn = this.querySelector('#testFlowBtn');
+    const btnTestRun = this.querySelector('#btnTestRun');
 
     if (isAutomated) {
       this.flowData.token_cost = 0;
@@ -1744,6 +1733,7 @@ class DevBuilderView extends DevBaseView {
         hiddenFromCatalog.disabled = true;
       }
       if (testFlowBtn) testFlowBtn.style.display = 'none';
+      if (btnTestRun) btnTestRun.style.display = 'none';
     } else {
       if (main) main.classList.remove('builder-mode-automated');
       if (componentsSidebar) componentsSidebar.classList.remove('builder-sidebar-hidden');
@@ -1763,6 +1753,7 @@ class DevBuilderView extends DevBaseView {
         hiddenFromCatalog.checked = !!this.uiLayoutConfig.hidden_from_catalog;
       }
       if (testFlowBtn) testFlowBtn.style.display = '';
+      if (btnTestRun) btnTestRun.style.display = '';
     }
   }
 
@@ -1801,10 +1792,14 @@ class DevBuilderView extends DevBaseView {
     const status = this.flowData.status || 'draft';
     const isLead = this.isLead();
     const buttons = {
+      saveDraft: this.querySelector('#btnSaveDraft'),
+      updateFlow: this.querySelector('#btnUpdateFlow'),
+      publish: this.querySelector('#btnPublish'),
       requestReview: this.querySelector('#btnRequestReview'),
       approvePublish: this.querySelector('#btnApprovePublish'),
       reject: this.querySelector('#btnReject'),
-      unpublish: this.querySelector('#btnUnpublish')
+      unpublish: this.querySelector('#btnUnpublish'),
+      testRun: this.querySelector('#btnTestRun')
     };
 
     const hideAll = () => {
@@ -1818,10 +1813,13 @@ class DevBuilderView extends DevBaseView {
 
     if (status === 'draft') {
       if (this.hasUnsavedChanges) {
-        messageEl.textContent = 'Tienes cambios sin guardar. Guarda desde la barra superior.';
+        messageEl.textContent = 'Tienes cambios sin guardar.';
         messageEl.classList.add('has-changes');
       }
-      if (!isLead) show(buttons.requestReview);
+      show(buttons.saveDraft);
+      if (!this.isAutomatedFlow) show(buttons.testRun);
+      if (isLead) show(buttons.publish);
+      else show(buttons.requestReview);
     } else if (status === 'checking') {
       if (isLead) {
         messageEl.textContent = 'Flujo en revisión. Puedes aprobar o rechazar.';
@@ -1830,11 +1828,18 @@ class DevBuilderView extends DevBaseView {
       } else {
         messageEl.textContent = 'Esperando aprobación...';
         messageEl.classList.add('waiting');
+        if (!this.isAutomatedFlow) show(buttons.testRun);
       }
     } else if (status === 'published') {
       messageEl.textContent = 'Estás editando un flujo en vivo. Los cambios afectarán a los clientes.';
       messageEl.classList.add('published-warning');
+      show(buttons.updateFlow);
+      if (!this.isAutomatedFlow) show(buttons.testRun);
       if (isLead) show(buttons.unpublish);
+    } else {
+      messageEl.textContent = '';
+      show(buttons.saveDraft);
+      if (!this.isAutomatedFlow) show(buttons.testRun);
     }
   }
 
@@ -1867,10 +1872,10 @@ class DevBuilderView extends DevBaseView {
       backBtn.addEventListener('click', () => this.handleBack());
     }
     
-    // Nombre del flujo (solo en header)
-    const nameInput = this.querySelector('#flowNameInput');
-    if (nameInput) {
-      nameInput.addEventListener('input', (e) => {
+    // Nombre del flujo (Configuración)
+    const nameConfig = this.querySelector('#flowNameConfig');
+    if (nameConfig) {
+      nameConfig.addEventListener('input', (e) => {
         this.flowData.name = e.target.value;
         this.hasUnsavedChanges = true;
         this.renderFooter();
@@ -1894,13 +1899,7 @@ class DevBuilderView extends DevBaseView {
       tab.addEventListener('click', () => this.switchTab(tab.dataset.tab));
     });
     
-    // Save button
-    const saveBtn = this.querySelector('#saveFlowBtn');
-    if (saveBtn) {
-      saveBtn.addEventListener('click', () => this.saveFlow());
-    }
-    
-    // Preview button
+    // Preview button (footer)
     const previewBtn = this.querySelector('#previewFlowBtn');
     if (previewBtn) {
       previewBtn.addEventListener('click', () => this.showPreview());
@@ -2006,15 +2005,23 @@ class DevBuilderView extends DevBaseView {
   }
 
   setupFooterListeners() {
+    const saveDraft = this.querySelector('#btnSaveDraft');
+    const updateFlow = this.querySelector('#btnUpdateFlow');
+    const publish = this.querySelector('#btnPublish');
     const requestReview = this.querySelector('#btnRequestReview');
     const approvePublish = this.querySelector('#btnApprovePublish');
     const reject = this.querySelector('#btnReject');
     const unpublish = this.querySelector('#btnUnpublish');
+    const testRun = this.querySelector('#btnTestRun');
 
+    if (saveDraft) saveDraft.addEventListener('click', () => this.saveFlow());
+    if (updateFlow) updateFlow.addEventListener('click', () => this.saveFlow());
+    if (publish) publish.addEventListener('click', () => this.publishFlow());
     if (requestReview) requestReview.addEventListener('click', () => this.requestReview());
     if (approvePublish) approvePublish.addEventListener('click', () => this.approveAndPublish());
     if (reject) reject.addEventListener('click', () => this.rejectFlow());
     if (unpublish) unpublish.addEventListener('click', () => this.unpublishFlow());
+    if (testRun) testRun.addEventListener('click', () => this.showTestModal());
   }
 
   switchTab(tabId) {
@@ -2301,11 +2308,11 @@ class DevBuilderView extends DevBaseView {
     
     if (!this.flowData.name.trim()) {
       this.showNotification('El nombre del flujo es requerido', 'error');
-      this.querySelector('#flowNameInput')?.focus();
+      this.querySelector('#flowNameConfig')?.focus();
       return;
     }
     
-    const saveBtn = this.querySelector('#saveFlowBtn');
+    const saveBtn = this.querySelector('#btnSaveDraft') || this.querySelector('#btnUpdateFlow');
     if (saveBtn) {
       saveBtn.disabled = true;
       saveBtn.innerHTML = '<i class="ph ph-spinner ph-spin"></i> Guardando...';
@@ -2373,7 +2380,9 @@ class DevBuilderView extends DevBaseView {
     } finally {
       if (saveBtn) {
         saveBtn.disabled = false;
-        saveBtn.innerHTML = '<i class="ph ph-floppy-disk"></i> Guardar';
+        saveBtn.innerHTML = saveBtn.id === 'btnUpdateFlow'
+          ? '<i class="ph ph-pencil-simple"></i> Actualizar flujo'
+          : '<i class="ph ph-floppy-disk"></i> Guardar flujo';
       }
     }
   }

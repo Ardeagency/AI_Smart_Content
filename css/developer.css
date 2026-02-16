@@ -75,7 +75,7 @@
 .dev-webhooks-container,
 .dev-lead-container,
 .builder-main,
-.builder-app-header,
+.builder-header,
 .builder-footer,
 .builder-sidebar,
 .builder-canvas-wrapper {
@@ -1261,73 +1261,16 @@
    Constructor Visual de Flujos de IA
    ========================================== */
 
-/* Header único del Builder (tabs como header de app-container) */
-.builder-app-header {
+/* Header del Builder = pestañas (arriba del todo) */
+.builder-tabs-header {
   flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  min-height: 56px;
-  padding: 0 16px;
   background: var(--bg-card);
   border-bottom: 1px solid var(--border-color);
+  z-index: 10;
 }
 
-.builder-app-header-left {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex: 0 1 auto;
-  min-width: 0;
-}
-
-.builder-back-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  background: transparent;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.builder-back-btn:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
-}
-
-.builder-title-section {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-}
-
-.builder-name-input {
-  flex: 1;
-  max-width: 400px;
-  padding: 8px 12px;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  color: var(--text-primary);
-  font-size: 1rem;
-  font-weight: 600;
-  transition: all 0.2s ease;
-}
-
-.builder-name-input:focus {
-  outline: none;
-}
-
-.builder-name-input::placeholder {
-  color: var(--text-muted);
-  font-weight: 400;
+.builder-tabs-header .builder-tabs {
+  border-bottom: none;
 }
 
 .builder-status-badge {
@@ -1356,13 +1299,6 @@
 .builder-status-badge.checking {
   background: rgba(245, 158, 11, 0.2);
   color: var(--dev-warning);
-}
-
-.builder-app-header-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 0 0 auto;
 }
 
 /* Botones del Builder */
@@ -1752,7 +1688,7 @@
   color: var(--text-muted);
 }
 
-/* Footer Builder: ciclo de vida del flujo */
+/* Footer Builder: mensaje, estado y acciones */
 .builder-footer {
   flex: 0 0 auto;
   display: flex;
@@ -1763,6 +1699,43 @@
   background: var(--bg-secondary);
   border-top: 1px solid var(--border-color);
   min-height: 52px;
+  flex-wrap: wrap;
+}
+
+.builder-footer .builder-status-badge {
+  margin-left: 4px;
+}
+
+.builder-footer-more {
+  position: relative;
+}
+
+.builder-dropdown-footer {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 4px;
+}
+
+.btn-builder-footer.btn-back {
+  margin-right: 8px;
+}
+
+.btn-builder-footer.btn-save-draft,
+.btn-builder-footer.btn-update-flow {
+  background: var(--bg-primary);
+}
+
+.btn-builder-footer.btn-primary-footer {
+  background: var(--dev-primary);
+  border-color: var(--dev-primary);
+  color: white;
+}
+
+.btn-builder-footer.btn-primary-footer:hover {
+  background: var(--dev-primary-dark);
+  border-color: var(--dev-primary-dark);
+  color: white;
 }
 
 .builder-footer-message {
@@ -2095,19 +2068,14 @@
   overflow-y: auto;
 }
 
-/* Tabs del Builder (dentro del header único) */
+/* Tabs del Builder */
 .builder-tabs {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   display: flex;
-  align-items: center;
   gap: 4px;
-  padding: 0 12px;
-  min-width: 0;
-}
-
-.builder-app-header .builder-tabs {
-  border-bottom: none;
-  background: transparent;
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .builder-tab {
@@ -3159,12 +3127,7 @@
 
 /* Responsive Builder */
 @media (max-width: 768px) {
-  .builder-app-header {
-    flex-wrap: wrap;
-    padding: 8px 12px;
-  }
-
-  .builder-app-header-left {
+  .builder-header-left {
     gap: 8px;
   }
   
@@ -3184,7 +3147,7 @@
     font-size: 0.875rem;
   }
   
-  .builder-app-header-right {
+  .builder-header-right {
     gap: 4px;
   }
   
