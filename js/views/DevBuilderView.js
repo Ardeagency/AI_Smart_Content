@@ -1076,6 +1076,8 @@ class DevBuilderView extends DevBaseView {
     }
     
     const field = this.inputSchema[this.selectedFieldIndex];
+    const dataType = field.data_type || this.inferDataType(field);
+    const defaultValueBlock = this.renderDefaultValueBlock(field, dataType);
     
     panel.innerHTML = `
       <div class="properties-form">
@@ -1090,18 +1092,32 @@ class DevBuilderView extends DevBaseView {
           
           <div class="property-field">
             <label for="propLabel">Label</label>
-            <input type="text" id="propLabel" value="${field.label || ''}">
+            <input type="text" id="propLabel" value="${(field.label || '').replace(/"/g, '&quot;')}">
           </div>
           
           <div class="property-field">
             <label for="propPlaceholder">Placeholder</label>
-            <input type="text" id="propPlaceholder" value="${field.placeholder || ''}">
+            <input type="text" id="propPlaceholder" value="${(field.placeholder || '').replace(/"/g, '&quot;')}">
           </div>
           
           <div class="property-field">
             <label for="propDescription">Texto de ayuda</label>
-            <input type="text" id="propDescription" value="${field.description || ''}">
+            <input type="text" id="propDescription" value="${(field.description || '').replace(/"/g, '&quot;')}">
           </div>
+          
+          <div class="property-field">
+            <label for="propDataType">Tipo de dato</label>
+            <select id="propDataType">
+              <option value="string" ${dataType === 'string' ? 'selected' : ''}>String</option>
+              <option value="number" ${dataType === 'number' ? 'selected' : ''}>Number</option>
+              <option value="boolean" ${dataType === 'boolean' ? 'selected' : ''}>Boolean</option>
+              <option value="array" ${dataType === 'array' ? 'selected' : ''}>Array</option>
+              <option value="object" ${dataType === 'object' ? 'selected' : ''}>Object (JSON)</option>
+            </select>
+            <span class="field-help">Tipo del valor (string, number, boolean, array, object)</span>
+          </div>
+          
+          ${defaultValueBlock}
           
           <div class="property-toggle">
             <label>
@@ -1132,10 +1148,107 @@ class DevBuilderView extends DevBaseView {
             </label>
           </div>
         </div>
+        
+        <div class="property-group">
+          <h4>Variables / Config (JSON)</h4>
+          <div class="property-field">
+            <label for="propExtraConfig">Configuración extra (objeto JSON)</label>
+            <textarea id="propExtraConfig" class="property-json-editor" rows="4" placeholder='{ "key": "value" }'></textarea>
+            <span class="field-help">Objeto JSON opcional (variables, flags, config). Se guarda en el campo.</span>
+          </div>
+        </div>
       </div>
     `;
     
     this.setupPropertiesListeners();
+    this.syncDefaultValueAndExtraConfigToDom(field, dataType);
+  }
+
+  inferDataType(field) {
+    const t = (field.input_type || field.type || '').toLowerCase();
+    if (['number', 'range', 'stepper', 'rating'].indexOf(t) >= 0) return 'number';
+    if (['checkbox', 'switch', 'boolean', 'toggle'].indexOf(t) >= 0) return 'boolean';
+    if (['select', 'multi_select', 'tone_selector', 'mood_selector', 'length_selector', 'radio'].indexOf(t) >= 0) return 'string';
+    if (['tag_input', 'gallery_picker'].indexOf(t) >= 0) return 'array';
+    if (['brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector', 'image_selector'].indexOf(t) >= 0) return 'object';
+    return field.data_type || 'string';
+  }
+
+  renderDefaultValueBlock(field, dataType) {
+    const type = field.input_type || field.type;
+    const isNumberFamily = ['number', 'range', 'stepper', 'rating'].indexOf((type || '').toLowerCase()) >= 0;
+    const isBooleanFamily = ['checkbox', 'switch', 'boolean', 'toggle'].indexOf((type || '').toLowerCase()) >= 0;
+    if (isNumberFamily) {
+      return ''; // min/max/step/defaultValue se editan en tipo Número
+    }
+    if (isBooleanFamily) {
+      const checked = field.defaultValue === true;
+      return `
+        <div class="property-field">
+          <label>Valor por defecto</label>
+          <div class="property-toggle">
+            <label>
+              <input type="checkbox" id="propDefaultValueBool" ${checked ? 'checked' : ''}>
+              <span>Activado por defecto</span>
+            </label>
+          </div>
+        </div>
+      `;
+    }
+    if (dataType === 'array') {
+      return `
+        <div class="property-field">
+          <label for="propDefaultValueJson">Valor por defecto (array JSON)</label>
+          <textarea id="propDefaultValueJson" class="property-json-editor" rows="3" placeholder='["item1", "item2"]'></textarea>
+        </div>
+      `;
+    }
+    if (dataType === 'object') {
+      return `
+        <div class="property-field">
+          <label for="propDefaultValueJson">Valor por defecto (objeto JSON)</label>
+          <textarea id="propDefaultValueJson" class="property-json-editor" rows="3" placeholder='{ "id": "", "name": "" }'></textarea>
+        </div>
+      `;
+    }
+    const strVal = (typeof field.defaultValue === 'string') ? field.defaultValue : '';
+    return `
+      <div class="property-field">
+        <label for="propDefaultValueStr">Valor por defecto</label>
+        <input type="text" id="propDefaultValueStr" value="${strVal.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')}">
+      </div>
+    `;
+  }
+
+  syncDefaultValueAndExtraConfigToDom(field, dataType) {
+    const type = (field.input_type || field.type || '').toLowerCase();
+    const isArrayOrObject = dataType === 'array' || dataType === 'object';
+    if (isArrayOrObject) {
+      const jsonEl = this.querySelector('#propDefaultValueJson');
+      if (jsonEl) {
+        try {
+          const val = field.defaultValue;
+          jsonEl.value = (dataType === 'array' && Array.isArray(val)) || (dataType === 'object' && val && typeof val === 'object' && !Array.isArray(val))
+            ? JSON.stringify(val, null, 2) : (dataType === 'array' ? '[]' : '{}');
+        } catch (_) {
+          jsonEl.value = dataType === 'array' ? '[]' : '{}';
+        }
+      }
+    }
+    const extraEl = this.querySelector('#propExtraConfig');
+    if (extraEl && field.extra_config) {
+      try {
+        extraEl.value = typeof field.extra_config === 'object' ? JSON.stringify(field.extra_config, null, 2) : (field.extra_config || '{}');
+      } catch (_) {
+        extraEl.value = '{}';
+      }
+    } else if (extraEl && field.config && typeof field.config === 'object') {
+      try {
+        extraEl.value = JSON.stringify(field.config, null, 2);
+      } catch (_) {
+        extraEl.value = '{}';
+      }
+    }
   }
 
   renderTypeSpecificProperties(field) {
@@ -1306,6 +1419,84 @@ class DevBuilderView extends DevBaseView {
         if (!field.ui) field.ui = {};
         field.ui.hidden = e.target.checked;
         this.onFieldChange();
+      });
+    }
+    
+    const dataTypeSelect = this.querySelector('#propDataType');
+    if (dataTypeSelect) {
+      dataTypeSelect.addEventListener('change', (e) => {
+        field.data_type = e.target.value;
+        this.renderPropertiesPanel();
+        this.onFieldChange();
+      });
+    }
+    
+    const defaultValueStr = this.querySelector('#propDefaultValueStr');
+    if (defaultValueStr) {
+      defaultValueStr.addEventListener('input', (e) => {
+        field.defaultValue = e.target.value;
+        this.onFieldChange();
+      });
+    }
+    
+    const defaultValueBool = this.querySelector('#propDefaultValueBool');
+    if (defaultValueBool) {
+      defaultValueBool.addEventListener('change', (e) => {
+        field.defaultValue = e.target.checked;
+        this.onFieldChange();
+      });
+    }
+    
+    const defaultValueJson = this.querySelector('#propDefaultValueJson');
+    if (defaultValueJson) {
+      defaultValueJson.addEventListener('blur', (e) => {
+        const raw = (e.target.value || '').trim();
+        if (!raw) {
+          field.defaultValue = (field.data_type === 'array') ? [] : {};
+          this.onFieldChange();
+          return;
+        }
+        try {
+          const parsed = JSON.parse(raw);
+          if (field.data_type === 'array' && !Array.isArray(parsed)) {
+            e.target.value = JSON.stringify(field.defaultValue, null, 2);
+            return;
+          }
+          if (field.data_type === 'object' && (typeof parsed !== 'object' || Array.isArray(parsed))) {
+            e.target.value = JSON.stringify(field.defaultValue || {}, null, 2);
+            return;
+          }
+          field.defaultValue = parsed;
+          e.target.value = JSON.stringify(parsed, null, 2);
+          this.onFieldChange();
+        } catch (err) {
+          this.showNotification('JSON inválido en valor por defecto', 'error');
+        }
+      });
+    }
+    
+    const extraConfigEl = this.querySelector('#propExtraConfig');
+    if (extraConfigEl) {
+      extraConfigEl.addEventListener('blur', (e) => {
+        const raw = (e.target.value || '').trim();
+        if (!raw) {
+          delete field.extra_config;
+          delete field.config;
+          this.onFieldChange();
+          return;
+        }
+        try {
+          const parsed = JSON.parse(raw);
+          if (typeof parsed !== 'object' || Array.isArray(parsed)) {
+            this.showNotification('La config extra debe ser un objeto JSON', 'error');
+            return;
+          }
+          field.extra_config = parsed;
+          e.target.value = JSON.stringify(parsed, null, 2);
+          this.onFieldChange();
+        } catch (err) {
+          this.showNotification('JSON inválido en configuración extra', 'error');
+        }
       });
     }
     

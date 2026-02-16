@@ -2715,7 +2715,8 @@
 }
 
 .property-field input,
-.property-field select {
+.property-field select,
+.property-field textarea {
   width: 100%;
   padding: 8px 10px;
   background: var(--bg-primary);
@@ -2727,8 +2728,17 @@
 }
 
 .property-field input:focus,
-.property-field select:focus {
+.property-field select:focus,
+.property-field textarea:focus {
   outline: none;
+}
+
+.property-json-editor {
+  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, monospace;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  resize: vertical;
+  min-height: 60px;
 }
 
 .property-row {
