@@ -552,10 +552,8 @@ class BrandsView extends BaseView {
       html += `
         <li class="brand-link-row" data-link-id="${this.escapeHtml(link.id)}">
           <span class="brand-link-icon" aria-hidden="true"><i class="${p.icon}"></i></span>
-          <a href="${this.escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="brand-link-url" title="${this.escapeHtml(url)}">${this.escapeHtml(url)}</a>
-          <input type="url" class="brand-link-input brand-link-edit" value="${this.escapeHtml(url)}" placeholder="URL" style="display:none;">
+          <input type="text" class="brand-link-input brand-link-url-input" value="${this.escapeHtml(url)}" placeholder="https://..." data-link-id="${this.escapeHtml(link.id)}" aria-label="URL ${this.escapeHtml(p.label)}">
           <span class="brand-link-platform-tag">${this.escapeHtml(p.label)}</span>
-          <button type="button" class="brand-link-btn-edit" title="Editar"><i class="fas fa-pen"></i></button>
           <button type="button" class="brand-link-btn-delete" title="Eliminar"><i class="fas fa-times"></i></button>
         </li>`;
     });
@@ -574,29 +572,17 @@ class BrandsView extends BaseView {
     links.forEach(link => {
       const row = container.querySelector(`[data-link-id="${link.id}"]`);
       if (!row) return;
-      const editBtn = row.querySelector('.brand-link-btn-edit');
+      const input = row.querySelector('.brand-link-url-input');
       const deleteBtn = row.querySelector('.brand-link-btn-delete');
-      const linkDisplay = row.querySelector('.brand-link-url');
-      const input = row.querySelector('.brand-link-input');
-      const toggleEdit = () => {
-        const isEditing = input.style.display !== 'none';
-        if (isEditing) {
+      if (input) {
+        input.addEventListener('blur', () => {
           const val = input.value.trim();
-          if (val !== link.url) this.updateSocialLink(link.id, val);
-          input.style.display = 'none';
-          linkDisplay.style.display = '';
-          linkDisplay.href = val || '#';
-          linkDisplay.textContent = val || '—';
-        } else {
-          input.value = link.url || '';
-          input.style.display = '';
-          linkDisplay.style.display = 'none';
-          input.focus();
-        }
-      };
-      if (editBtn) editBtn.addEventListener('click', toggleEdit);
-      input.addEventListener('blur', toggleEdit);
-      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') toggleEdit(); });
+          if (val !== (link.url || '').trim()) this.updateSocialLink(link.id, val);
+        });
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') input.blur();
+        });
+      }
       if (deleteBtn) deleteBtn.addEventListener('click', () => this.deleteSocialLink(link.id));
     });
 

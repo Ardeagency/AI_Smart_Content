@@ -199,20 +199,21 @@ CREATE TABLE public.campaign_entities (
 CREATE TABLE public.campaigns (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   brand_container_id uuid NOT NULL,
-  oferta_desc text,
-  audiencia_desc text NOT NULL,
-  intenciones text,
-  objetivo_principal text NOT NULL,
   cta text NOT NULL,
   cta_url text NOT NULL,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   audience_id uuid,
-  brand_id uuid,
+  nombre_campana text DEFAULT 'Campaña Estratégica'::text,
+  descripcion_interna text,
+  contexto_temporal ARRAY DEFAULT '{}'::text[],
+  objetivos_estrategicos ARRAY DEFAULT '{}'::text[],
+  angulos_venta ARRAY DEFAULT '{}'::text[],
+  oferta_principal ARRAY DEFAULT '{}'::text[],
+  tono_modificador ARRAY DEFAULT '{}'::text[],
   CONSTRAINT campaigns_pkey PRIMARY KEY (id),
   CONSTRAINT campaigns_project_id_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id),
-  CONSTRAINT campaigns_audience_id_fkey FOREIGN KEY (audience_id) REFERENCES public.audiences(id),
-  CONSTRAINT campaigns_brand_id_fkey FOREIGN KEY (brand_id) REFERENCES public.brands(id)
+  CONSTRAINT campaigns_audience_id_fkey FOREIGN KEY (audience_id) REFERENCES public.audiences(id)
 );
 CREATE TABLE public.content_categories (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),

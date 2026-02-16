@@ -1321,18 +1321,21 @@ h1.brand-name-large[contenteditable="true"]:hover,
     font-size: 0.875rem;
 }
 
-.brand-social-links-list .brand-link-url {
+/* URL como input editable (no enlace ni redirección) */
+.brand-social-links-list .brand-link-url-input {
     flex: 1;
     min-width: 0;
-    color: var(--brand-text-gold, var(--text-primary));
-    text-decoration: none;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    padding: 0.25rem 0.4rem;
+    font-size: inherit;
+    color: var(--text-primary);
+    background: rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 4px;
+    outline: none;
 }
 
-.brand-social-links-list .brand-link-url:hover {
-    text-decoration: underline;
+.brand-social-links-list .brand-link-url-input:focus {
+    border-color: rgba(255,255,255,0.3);
 }
 
 .brand-social-links-list .brand-link-platform-tag {
@@ -1344,14 +1347,6 @@ h1.brand-name-large[contenteditable="true"]:hover,
     flex-shrink: 0;
 }
 
-.brand-social-links-list .brand-link-input.brand-link-edit {
-    flex: 1;
-    min-width: 8rem;
-    padding: 0.2rem 0.4rem;
-    font-size: inherit;
-}
-
-.brand-social-links-list .brand-link-btn-edit,
 .brand-social-links-list .brand-link-btn-delete {
     background: none;
     border: none;
@@ -1361,7 +1356,6 @@ h1.brand-name-large[contenteditable="true"]:hover,
     font-size: 0.8rem;
 }
 
-.brand-social-links-list .brand-link-btn-edit:hover,
 .brand-social-links-list .brand-link-btn-delete:hover {
     color: var(--text-primary);
 }
