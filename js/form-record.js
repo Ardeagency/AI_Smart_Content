@@ -962,9 +962,6 @@ class FormRecord {
         const projectData = {
             user_id: this.userId,
             nombre_marca: this.formData.nombre_marca || '',
-            sitio_web: this.formData.sitio_web || null,
-            instagram_url: this.formData.instagram_url || null,
-            tiktok_url: this.formData.tiktok_url || null,
             logo_url: this.formData.logo_url || null,
             mercado_objetivo: mercadoObjetivo,
             idiomas_contenido: idiomasContenido
@@ -1012,7 +1009,31 @@ class FormRecord {
             projectId = project.id;
         }
 
-        // 2. Subir logo si existe
+        // 2. Redes sociales en brand_social_links (reemplazar website, instagram, tiktok, facebook desde formulario)
+        const formPlatforms = [
+            { key: 'sitio_web', platform: 'website' },
+            { key: 'instagram_url', platform: 'instagram' },
+            { key: 'tiktok_url', platform: 'tiktok' },
+            { key: 'facebook_url', platform: 'facebook' }
+        ];
+        await this.supabase
+            .from('brand_social_links')
+            .delete()
+            .eq('brand_container_id', projectId)
+            .in('platform', formPlatforms.map(p => p.platform));
+        const toInsert = formPlatforms
+            .filter(p => (this.formData[p.key] || '').trim())
+            .map(p => ({
+                brand_container_id: projectId,
+                platform: p.platform,
+                url: (this.formData[p.key] || '').trim(),
+                is_primary: false
+            }));
+        if (toInsert.length > 0) {
+            await this.supabase.from('brand_social_links').insert(toInsert);
+        }
+
+        // 3. Subir logo si existe
         if (this.formData.logo_file && this.formData.logo_file.length > 0) {
             try {
             const logoFile = this.formData.logo_file[0];

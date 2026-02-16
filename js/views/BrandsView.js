@@ -17,6 +17,7 @@ class BrandsView extends BaseView {
     this.brandEntities = [];
     this.brandPlaces = [];
     this.brandAudiences = [];
+    this.brandSocialLinks = [];
     this.organizationMembers = [];
     this.organizationCredits = { credits_available: 100 };
     this.creditUsage = [];
@@ -207,6 +208,20 @@ class BrandsView extends BaseView {
           this.brandAssets = [];
         } else {
           this.brandAssets = assets || [];
+        }
+
+        // Redes sociales (brand_social_links: múltiples enlaces por plataforma)
+        const { data: socialLinks, error: socialError } = await this.supabase
+          .from('brand_social_links')
+          .select('*')
+          .eq('brand_container_id', container.id)
+          .order('platform', { ascending: true })
+          .order('created_at', { ascending: true });
+        if (socialError) {
+          console.warn('⚠️ Error cargando redes sociales:', socialError);
+          this.brandSocialLinks = [];
+        } else {
+          this.brandSocialLinks = socialLinks || [];
         }
 
         // Brand Entities (identidad estructural)
@@ -510,38 +525,149 @@ class BrandsView extends BaseView {
     }
   }
 
+  /** Plataformas permitidas para brand_social_links (múltiples enlaces por plataforma) */
+  static getSocialPlatforms() {
+    return [
+      { value: 'website', icon: 'fas fa-globe', label: 'Website' },
+      { value: 'instagram', icon: 'fab fa-instagram', label: 'Instagram' },
+      { value: 'tiktok', icon: 'fab fa-tiktok', label: 'TikTok' },
+      { value: 'facebook', icon: 'fab fa-facebook', label: 'Facebook' },
+      { value: 'linkedin', icon: 'fab fa-linkedin', label: 'LinkedIn' },
+      { value: 'youtube', icon: 'fab fa-youtube', label: 'YouTube' },
+      { value: 'twitter', icon: 'fab fa-twitter', label: 'Twitter/X' },
+      { value: 'pinterest', icon: 'fab fa-pinterest', label: 'Pinterest' }
+    ];
+  }
+
   renderLinksInto(container) {
     if (!container) return;
+    const links = this.brandSocialLinks || [];
+    const platforms = BrandsView.getSocialPlatforms();
+    const platformByValue = Object.fromEntries(platforms.map(p => [p.value, p]));
 
-    const items = [
-      { field: 'sitio_web', icon: 'fas fa-globe', label: 'Website' },
-      { field: 'instagram_url', icon: 'fab fa-instagram', label: 'Instagram' },
-      { field: 'tiktok_url', icon: 'fab fa-tiktok', label: 'TikTok' },
-      { field: 'facebook_url', icon: 'fab fa-facebook', label: 'Facebook' }
-    ];
-
-    container.innerHTML = '';
-    items.forEach(({ field, icon, label }) => {
-      const url = this.brandContainerData?.[field] || '';
-      const row = document.createElement('li');
-      row.className = 'brand-link-row';
-      row.innerHTML = `
-        <span class="brand-link-icon" aria-hidden="true"><i class="${icon}"></i></span>
-        <input type="url" class="brand-link-input" data-field="${field}" value="${this.escapeHtml(url)}" placeholder="${this.escapeHtml(label)} URL" autocomplete="url">
-      `;
-      const input = row.querySelector('.brand-link-input');
-      input.addEventListener('blur', () => {
-        const val = input.value.trim() || null;
-        if (val !== (this.brandContainerData?.[field] || '')) {
-          this.saveContainerField(field, val);
-          this.brandContainerData[field] = val;
-        }
-      });
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') input.blur();
-      });
-      container.appendChild(row);
+    let html = '';
+    links.forEach(link => {
+      const p = platformByValue[link.platform] || { icon: 'fas fa-link', label: link.platform };
+      const url = (link.url || '').trim();
+      html += `
+        <li class="brand-link-row" data-link-id="${this.escapeHtml(link.id)}">
+          <span class="brand-link-icon" aria-hidden="true"><i class="${p.icon}"></i></span>
+          <a href="${this.escapeHtml(url)}" target="_blank" rel="noopener noreferrer" class="brand-link-url" title="${this.escapeHtml(url)}">${this.escapeHtml(url)}</a>
+          <input type="url" class="brand-link-input brand-link-edit" value="${this.escapeHtml(url)}" placeholder="URL" style="display:none;">
+          <span class="brand-link-platform-tag">${this.escapeHtml(p.label)}</span>
+          <button type="button" class="brand-link-btn-edit" title="Editar"><i class="fas fa-pen"></i></button>
+          <button type="button" class="brand-link-btn-delete" title="Eliminar"><i class="fas fa-times"></i></button>
+        </li>`;
     });
+    html += `<li class="brand-social-add">
+      <label class="sr-only" for="brandSocialPlatform">Añadir red social</label>
+      <select id="brandSocialPlatform" class="brand-social-platform-select" aria-label="Plataforma">
+        <option value="">Plataforma...</option>
+        ${platforms.map(p => `<option value="${this.escapeHtml(p.value)}">${this.escapeHtml(p.label)}</option>`).join('')}
+      </select>
+      <input type="url" id="brandSocialUrl" class="brand-social-url-input" placeholder="https://..." aria-label="URL">
+      <button type="button" id="brandSocialAddBtn" class="brand-link-btn-add"><i class="fas fa-plus"></i> Añadir</button>
+    </li>`;
+
+    container.innerHTML = html;
+
+    links.forEach(link => {
+      const row = container.querySelector(`[data-link-id="${link.id}"]`);
+      if (!row) return;
+      const editBtn = row.querySelector('.brand-link-btn-edit');
+      const deleteBtn = row.querySelector('.brand-link-btn-delete');
+      const linkDisplay = row.querySelector('.brand-link-url');
+      const input = row.querySelector('.brand-link-input');
+      const toggleEdit = () => {
+        const isEditing = input.style.display !== 'none';
+        if (isEditing) {
+          const val = input.value.trim();
+          if (val !== link.url) this.updateSocialLink(link.id, val);
+          input.style.display = 'none';
+          linkDisplay.style.display = '';
+          linkDisplay.href = val || '#';
+          linkDisplay.textContent = val || '—';
+        } else {
+          input.value = link.url || '';
+          input.style.display = '';
+          linkDisplay.style.display = 'none';
+          input.focus();
+        }
+      };
+      if (editBtn) editBtn.addEventListener('click', toggleEdit);
+      input.addEventListener('blur', toggleEdit);
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') toggleEdit(); });
+      if (deleteBtn) deleteBtn.addEventListener('click', () => this.deleteSocialLink(link.id));
+    });
+
+    const addPlatform = container.querySelector('#brandSocialPlatform');
+    const addUrl = container.querySelector('#brandSocialUrl');
+    const addBtn = container.querySelector('#brandSocialAddBtn');
+    if (addBtn && addPlatform && addUrl) {
+      addBtn.addEventListener('click', () => {
+        const platform = (addPlatform.value || '').trim();
+        const url = (addUrl.value || '').trim();
+        if (!platform || !url) return;
+        this.addSocialLink(platform, url).then(() => {
+          addUrl.value = '';
+          addPlatform.value = '';
+        });
+      });
+      addUrl.addEventListener('keydown', (e) => { if (e.key === 'Enter') addBtn.click(); });
+    }
+  }
+
+  async addSocialLink(platform, url) {
+    if (!this.supabase || !this.brandContainerData) return;
+    try {
+      const { data, error } = await this.supabase
+        .from('brand_social_links')
+        .insert({
+          brand_container_id: this.brandContainerData.id,
+          platform: platform.toLowerCase(),
+          url: url.trim(),
+          is_primary: false
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      this.brandSocialLinks = [...(this.brandSocialLinks || []), data];
+      const container = document.getElementById('brandLinksContainer');
+      if (container) this.renderLinksInto(container);
+    } catch (e) {
+      console.error('Error añadiendo enlace:', e);
+      alert(e?.message || 'No se pudo añadir el enlace.');
+    }
+  }
+
+  async updateSocialLink(id, url) {
+    if (!this.supabase) return;
+    try {
+      const { error } = await this.supabase
+        .from('brand_social_links')
+        .update({ url: url.trim(), updated_at: new Date().toISOString() })
+        .eq('id', id);
+      if (error) throw error;
+      const link = this.brandSocialLinks.find(l => l.id === id);
+      if (link) link.url = url.trim();
+    } catch (e) {
+      console.error('Error actualizando enlace:', e);
+      alert(e?.message || 'No se pudo actualizar.');
+    }
+  }
+
+  async deleteSocialLink(id) {
+    if (!this.supabase) return;
+    try {
+      const { error } = await this.supabase.from('brand_social_links').delete().eq('id', id);
+      if (error) throw error;
+      this.brandSocialLinks = (this.brandSocialLinks || []).filter(l => l.id !== id);
+      const container = document.getElementById('brandLinksContainer');
+      if (container) this.renderLinksInto(container);
+    } catch (e) {
+      console.error('Error eliminando enlace:', e);
+      alert(e?.message || 'No se pudo eliminar.');
+    }
   }
 
   renderMarket() {

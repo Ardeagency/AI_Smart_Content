@@ -91,7 +91,7 @@ DECLARE
     tables text[] := ARRAY[
         'ai_brand_vectors', 'ai_global_vectors', 'audiences', 'brand_assets',
         'brand_colors', 'brand_entities', 'brand_fonts', 'brand_places',
-        'brand_profiles', 'brand_rules', 'brands', 'brand_containers',
+        'brand_profiles', 'brand_rules', 'brands', 'brand_containers', 'brand_social_links',
         'campaign_entities', 'campaigns', 'content_categories', 'content_flows',
         'content_subcategories', 'credit_usage', 'developer_logs',
         'developer_notifications', 'developer_stats', 'flow_collaborators',
@@ -176,6 +176,22 @@ CREATE POLICY "Access own brands" ON public.brand_containers
 FOR ALL TO authenticated
 USING (
     user_id = (select auth.uid()) OR (organization_id IS NOT NULL AND public.is_org_member(organization_id)) OR public.is_developer()
+);
+
+CREATE POLICY "Access social links by container" ON public.brand_social_links
+FOR ALL TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM public.brand_containers bc
+        WHERE bc.id = brand_social_links.brand_container_id
+          AND (bc.user_id = (select auth.uid()) OR (bc.organization_id IS NOT NULL AND public.is_org_member(bc.organization_id)) OR public.is_developer())
+    )
+) WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM public.brand_containers bc
+        WHERE bc.id = brand_social_links.brand_container_id
+          AND (bc.user_id = (select auth.uid()) OR (bc.organization_id IS NOT NULL AND public.is_org_member(bc.organization_id)) OR public.is_developer())
+    )
 );
 
 CREATE POLICY "Access brands by container" ON public.brands

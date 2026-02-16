@@ -32,17 +32,17 @@ CREATE TABLE public.audiences (
   brand_id uuid NOT NULL,
   name text NOT NULL,
   description text,
-  demographics jsonb,
-  psychographics jsonb,
-  pains jsonb,
-  desires jsonb,
-  objections jsonb,
   awareness_level text,
-  language_style text,
-  triggers jsonb,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   entity_id uuid,
+  datos_demograficos ARRAY DEFAULT '{}'::text[],
+  datos_psicograficos ARRAY DEFAULT '{}'::text[],
+  dolores ARRAY DEFAULT '{}'::text[],
+  deseos ARRAY DEFAULT '{}'::text[],
+  objeciones ARRAY DEFAULT '{}'::text[],
+  gatillos_compra ARRAY DEFAULT '{}'::text[],
+  estilo_lenguaje ARRAY DEFAULT '{}'::text[],
   CONSTRAINT audiences_pkey PRIMARY KEY (id),
   CONSTRAINT audiences_brand_id_fkey FOREIGN KEY (brand_id) REFERENCES public.brands(id),
   CONSTRAINT audiences_entity_id_fkey FOREIGN KEY (entity_id) REFERENCES public.brand_entities(id)
@@ -74,11 +74,11 @@ CREATE TABLE public.brand_containers (
   user_id uuid NOT NULL,
   nombre_marca text NOT NULL,
   logo_url text,
-  idiomas_contenido jsonb DEFAULT '[]'::jsonb,
-  mercado_objetivo jsonb DEFAULT '[]'::jsonb,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   organization_id uuid,
+  idiomas_contenido ARRAY DEFAULT '{}'::text[],
+  mercado_objetivo ARRAY DEFAULT '{}'::text[],
   CONSTRAINT brand_containers_pkey PRIMARY KEY (id),
   CONSTRAINT brand_containers_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id),
   CONSTRAINT brand_containers_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
@@ -89,9 +89,6 @@ CREATE TABLE public.brand_entities (
   entity_type text NOT NULL,
   name text NOT NULL,
   description text,
-  core_benefits jsonb DEFAULT '[]'::jsonb,
-  differentiation text,
-  usage_context text,
   price numeric,
   currency text DEFAULT 'USD'::text,
   metadata jsonb DEFAULT '{}'::jsonb,
@@ -125,8 +122,19 @@ CREATE TABLE public.brand_places (
   opening_hours jsonb,
   contact_info jsonb,
   created_at timestamp with time zone DEFAULT now(),
+  brand_container_id uuid,
+  nombre_lugar text,
+  descripcion_lugar text,
+  url_lugar text,
+  beneficios_principales ARRAY DEFAULT '{}'::text[],
+  diferenciadores ARRAY DEFAULT '{}'::text[],
+  casos_de_uso ARRAY DEFAULT '{}'::text[],
+  caracteristicas_visuales ARRAY DEFAULT '{}'::text[],
+  ambiente_y_vibra ARRAY DEFAULT '{}'::text[],
+  amenidades ARRAY DEFAULT '{}'::text[],
   CONSTRAINT brand_places_pkey PRIMARY KEY (id),
-  CONSTRAINT brand_places_entity_fkey FOREIGN KEY (entity_id) REFERENCES public.brand_entities(id)
+  CONSTRAINT brand_places_entity_fkey FOREIGN KEY (entity_id) REFERENCES public.brand_entities(id),
+  CONSTRAINT brand_places_project_id_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id)
 );
 CREATE TABLE public.brand_profiles (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -161,10 +169,8 @@ CREATE TABLE public.brand_social_links (
 CREATE TABLE public.brands (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   project_id uuid NOT NULL UNIQUE,
-  tono_voz USER-DEFINED NOT NULL,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
-  objetivos_marca jsonb DEFAULT '[]'::jsonb,
   nicho_mercado ARRAY DEFAULT '{}'::text[],
   arquetipo_personalidad ARRAY DEFAULT '{}'::text[],
   enfoque_marca ARRAY DEFAULT '{}'::text[],
@@ -176,6 +182,7 @@ CREATE TABLE public.brands (
   estilo_escritura ARRAY DEFAULT '{}'::text[],
   palabras_clave ARRAY DEFAULT '{}'::text[],
   palabras_prohibidas ARRAY DEFAULT '{}'::text[],
+  objetivos_marca ARRAY DEFAULT '{}'::text[],
   CONSTRAINT brands_pkey PRIMARY KEY (id),
   CONSTRAINT brands_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.brand_containers(id)
 );
@@ -258,7 +265,8 @@ CREATE TABLE public.credit_usage (
   created_at timestamp with time zone DEFAULT now(),
   organization_id uuid,
   CONSTRAINT credit_usage_pkey PRIMARY KEY (id),
-  CONSTRAINT credit_usage_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id)
+  CONSTRAINT credit_usage_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id),
+  CONSTRAINT credit_usage_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
 );
 CREATE TABLE public.developer_logs (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -296,7 +304,8 @@ CREATE TABLE public.developer_stats (
   current_rank USER-DEFINED DEFAULT 'novice'::developer_rank_type,
   last_promotion_at timestamp with time zone,
   updated_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT developer_stats_pkey PRIMARY KEY (user_id)
+  CONSTRAINT developer_stats_pkey PRIMARY KEY (user_id),
+  CONSTRAINT developer_stats_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
 );
 CREATE TABLE public.flow_collaborators (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -470,12 +479,16 @@ CREATE TABLE public.services (
   nombre_servicio text NOT NULL,
   descripcion_servicio text,
   duracion_estimada text,
-  entregables jsonb DEFAULT '[]'::jsonb,
-  metodologia text,
   precio_base numeric,
   moneda text DEFAULT 'USD'::text,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  beneficios_principales ARRAY DEFAULT '{}'::text[],
+  diferenciadores ARRAY DEFAULT '{}'::text[],
+  casos_de_uso ARRAY DEFAULT '{}'::text[],
+  entregables ARRAY DEFAULT '{}'::text[],
+  metodologia_pasos ARRAY DEFAULT '{}'::text[],
+  url_servicio text,
   CONSTRAINT services_pkey PRIMARY KEY (id),
   CONSTRAINT services_project_id_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id),
   CONSTRAINT services_entity_id_fkey FOREIGN KEY (entity_id) REFERENCES public.brand_entities(id)
@@ -490,7 +503,6 @@ CREATE TABLE public.storage_usage (
 );
 CREATE TABLE public.subscriptions (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  user_id uuid NOT NULL,
   plan_type USER-DEFINED NOT NULL,
   status USER-DEFINED DEFAULT 'pending'::subscription_status_enum,
   credits_included integer NOT NULL,
@@ -500,8 +512,9 @@ CREATE TABLE public.subscriptions (
   expires_at timestamp with time zone,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  organization_id uuid NOT NULL,
   CONSTRAINT subscriptions_pkey PRIMARY KEY (id),
-  CONSTRAINT subscriptions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
+  CONSTRAINT subscriptions_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id)
 );
 CREATE TABLE public.ui_component_templates (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -526,7 +539,8 @@ CREATE TABLE public.user_flow_favorites (
   last_used_at timestamp with time zone DEFAULT now(),
   created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT user_flow_favorites_pkey PRIMARY KEY (id),
-  CONSTRAINT favorites_flow_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id)
+  CONSTRAINT favorites_flow_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id),
+  CONSTRAINT user_flow_favorites_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
 );
 CREATE TABLE public.visual_references (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),

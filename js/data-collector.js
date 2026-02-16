@@ -214,7 +214,24 @@ class DataCollector {
                 console.error('❌ Error obteniendo brand:', brandError);
             }
 
-            // Combinar datos del proyecto y brand (schema optimizado: palabras_clave, palabras_prohibidas, objetivos_marca)
+            const { data: socialLinks = [], error: linksError } = await this.supabase
+                .from('brand_social_links')
+                .select('platform, url')
+                .eq('brand_container_id', projectId)
+                .order('platform', { ascending: true });
+
+            if (linksError) {
+                console.error('❌ Error obteniendo redes sociales:', linksError);
+            }
+
+            const links = socialLinks || [];
+            const byPlatform = {};
+            links.forEach(l => {
+                const p = l.platform || 'other';
+                if (!byPlatform[p]) byPlatform[p] = [];
+                byPlatform[p].push(l.url);
+            });
+
             const palabrasClave = brand?.palabras_clave;
             const palabrasUsarStr = Array.isArray(palabrasClave) ? palabrasClave.join(', ') : (palabrasClave || '');
             return {
@@ -226,7 +243,12 @@ class DataCollector {
                 tono_voz: brand?.tono_voz || null,
                 palabras_usar: palabrasUsarStr || null,
                 palabras_evitar: brand?.palabras_prohibidas || [],
-                objetivos_marca: brand?.objetivos_marca || []
+                objetivos_marca: brand?.objetivos_marca || [],
+                social_links: links,
+                sitio_web: (byPlatform.website && byPlatform.website[0]) || null,
+                instagram_url: (byPlatform.instagram && byPlatform.instagram[0]) || null,
+                tiktok_url: (byPlatform.tiktok && byPlatform.tiktok[0]) || null,
+                facebook_url: (byPlatform.facebook && byPlatform.facebook[0]) || null
             };
         } catch (error) {
             console.error('❌ Error en getMarcaInfo:', error);
