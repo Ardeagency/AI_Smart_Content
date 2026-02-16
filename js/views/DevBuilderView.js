@@ -1249,12 +1249,20 @@ class DevBuilderView extends DevBaseView {
         extraEl.value = '{}';
       }
     }
+    const optionsArrayEl = this.querySelector('#propOptionsArray');
+    if (optionsArrayEl && field.options) {
+      optionsArrayEl.value = field.options.map(function (o) {
+        if (o == null) return '';
+        return (o.label !== undefined && o.label !== null ? o.label : (o.value !== undefined && o.value !== null ? o.value : o));
+      }).join('\n');
+    }
   }
 
   renderTypeSpecificProperties(field) {
     const type = field.input_type || field.type || 'text';
     const family = (typeof window.InputRegistry !== 'undefined' && window.InputRegistry.getPropertyFamily)
       ? window.InputRegistry.getPropertyFamily(type) : type;
+    const escapeProp = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'));
     switch (family) {
       case 'text':
       case 'textarea':
@@ -1304,16 +1312,34 @@ class DevBuilderView extends DevBaseView {
         `;
       
       case 'select':
-      case 'radio':
+      case 'radio': {
         const options = field.options || [];
+        const isSelect = (field.input_type || field.type || '').toLowerCase() === 'select' || (field.input_type || field.type || '').toLowerCase() === 'multi_select';
         return `
           <div class="property-group">
-            <h4>Opciones</h4>
+            <h4>Lista desplegable</h4>
+            ${isSelect ? `
+            <div class="property-toggle" style="margin-bottom: 12px;">
+              <label>
+                <input type="checkbox" id="propMultiselect" ${field.is_multiple ? 'checked' : ''}>
+                <span>Multiselección</span>
+              </label>
+              <span class="field-help block">Permite elegir varias opciones a la vez.</span>
+            </div>
+            ` : ''}
+            <div class="property-field">
+              <label for="propOptionsArray">Opciones como array (una por línea)</label>
+              <textarea id="propOptionsArray" class="property-json-editor options-array-textarea" rows="5" placeholder="Una opción por línea, ej.:&#10;opcion 1&#10;opcion 2&#10;opcion 3"></textarea>
+              <span class="field-help">Escribe o pega una opción por línea. Se usa como valor y etiqueta. También puedes editar fila por fila abajo.</span>
+            </div>
+            <div class="property-field">
+              <label>Opciones (valor / etiqueta)</label>
+            </div>
             <div class="options-editor" id="optionsEditor">
               ${options.map((opt, i) => `
                 <div class="option-row" data-index="${i}">
-                  <input type="text" class="option-value" placeholder="Valor" value="${opt.value || opt}">
-                  <input type="text" class="option-label" placeholder="Label" value="${opt.label || opt}">
+                  <input type="text" class="option-value" placeholder="Valor" value="${escapeProp(opt.value !== undefined ? opt.value : opt)}">
+                  <input type="text" class="option-label" placeholder="Label" value="${escapeProp(opt.label !== undefined ? opt.label : opt)}">
                   <button class="btn-icon remove-option" title="Eliminar">
                     <i class="ph ph-x"></i>
                   </button>
@@ -1325,6 +1351,7 @@ class DevBuilderView extends DevBaseView {
             </button>
           </div>
         `;
+      }
       
       default:
         if (type === 'entity_selector') {
@@ -1553,6 +1580,31 @@ class DevBuilderView extends DevBaseView {
     if (defaultValueInput) {
       defaultValueInput.addEventListener('change', (e) => {
         field.defaultValue = parseFloat(e.target.value) || null;
+        this.onFieldChange();
+      });
+    }
+    
+    const multiselectCheckbox = this.querySelector('#propMultiselect');
+    if (multiselectCheckbox) {
+      multiselectCheckbox.addEventListener('change', (e) => {
+        field.is_multiple = e.target.checked;
+        this.onFieldChange();
+      });
+    }
+    
+    const optionsArrayTa = this.querySelector('#propOptionsArray');
+    if (optionsArrayTa) {
+      optionsArrayTa.addEventListener('blur', (e) => {
+        const text = (e.target.value || '').trim();
+        if (!text) {
+          field.options = [];
+          this.renderPropertiesPanel();
+          this.onFieldChange();
+          return;
+        }
+        const lines = text.split(/\r?\n/).map(function (line) { return line.trim(); }).filter(Boolean);
+        field.options = lines.map(function (line) { return { value: line, label: line }; });
+        this.renderPropertiesPanel();
         this.onFieldChange();
       });
     }

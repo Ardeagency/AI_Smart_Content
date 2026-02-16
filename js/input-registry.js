@@ -478,7 +478,7 @@
     var t = (type || '').toLowerCase();
     if (['text', 'textarea', 'prompt_input', 'tag_input', 'slug_input'].indexOf(t) >= 0) return 'text';
     if (['number', 'range'].indexOf(t) >= 0) return 'number';
-    if (['select', 'radio', 'tone_selector', 'mood_selector', 'length_selector'].indexOf(t) >= 0) return 'select';
+    if (['select', 'multi_select', 'radio', 'tone_selector', 'mood_selector', 'length_selector'].indexOf(t) >= 0) return 'select';
     return 'generic';
   }
 
