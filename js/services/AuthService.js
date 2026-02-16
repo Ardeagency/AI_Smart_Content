@@ -108,9 +108,9 @@ class AuthService {
     if (!this.supabase || !userId) return;
 
     try {
-      // Cargar perfil del usuario desde user_profiles (incluye default_view_mode)
+      // Cargar perfil del usuario desde profiles (tabla unificada)
       const { data: profile, error } = await this.supabase
-        .from('user_profiles')
+        .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
@@ -120,8 +120,6 @@ class AuthService {
           id: profile.id,
           email: profile.email,
           full_name: profile.full_name,
-          phone_number: profile.phone_number,
-          email_verified: profile.email_verified,
           role: profile.role || 'user',
           // Campos para arquitectura MPA + SPA
           default_view_mode: profile.default_view_mode || 'user', // 'user' | 'developer'
@@ -261,9 +259,9 @@ class AuthService {
     if (!this.supabase || !userId) return '/form-record';
 
     try {
-      // Verificar si completó el formulario
+      // Verificar si completó el formulario (desde profiles)
       const { data: userData } = await this.supabase
-        .from('users')
+        .from('profiles')
         .select('form_verified')
         .eq('id', userId)
         .single();
@@ -318,7 +316,7 @@ class AuthService {
     if (persist && this.supabase && this.currentUser?.id) {
       try {
         await this.supabase
-          .from('user_profiles')
+          .from('profiles')
           .update({ default_view_mode: mode })
           .eq('id', this.currentUser.id);
       } catch (error) {
@@ -339,7 +337,7 @@ class AuthService {
   }
 
   /**
-   * Verificar si la cuenta del usuario tiene rol de desarrollador (user_profiles.is_developer)
+   * Verificar si la cuenta del usuario tiene rol de desarrollador (profiles.is_developer)
    * @returns {boolean}
    */
   userHasDeveloperRole() {

@@ -21,7 +21,7 @@
 | `/dev/lead/ai-vectors` | DevLeadVectorsView | Base de conocimientos IA (solo Lead) |
 | `/dev/lead/references` | DevLeadReferencesView | Referencias visuales (solo Lead) |
 
-**Rol Lead:** Solo `user_profiles.dev_role = 'lead'` ve el menú Lead y accede a estas rutas. El enum `developer_role_type` debe incluir `'lead'`.
+**Rol Lead:** Solo `profiles.dev_role = 'lead'` ve el menú Lead y accede a estas rutas. El enum `developer_role_type` debe incluir `'lead'`.
 
 **Total:** 6 vistas PaaS + 5 vistas Lead.
 

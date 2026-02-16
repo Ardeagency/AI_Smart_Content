@@ -191,7 +191,7 @@ No es social. No es gamificado. Es operativo y profesional.
 
 **Fuentes:**
 - `organization_members`
-- `users`
+- `profiles`
 - `flow_runs`
 - `flow_outputs`
 

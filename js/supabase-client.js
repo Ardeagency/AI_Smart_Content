@@ -69,7 +69,7 @@ async function initSupabase() {
             }
 
             // Verificar conexión
-            const { data, error } = await supabaseClient.from('users').select('count').limit(1);
+            const { data, error } = await supabaseClient.from('profiles').select('count').limit(1);
             
             if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned (es normal)
                 console.error('❌ Error connecting to Supabase:', error);

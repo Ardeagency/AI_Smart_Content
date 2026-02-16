@@ -72,8 +72,8 @@
         
         try {
             const { data, error } = await supabase
-                .from('user_profiles')
-                .select('id, email, phone_number, email_verified')
+                .from('profiles')
+                .select('id, email')
                 .eq('id', userId)
                 .single();
             
@@ -255,35 +255,31 @@
                         return;
                     }
 
-                    // Obtener perfil del usuario desde user_profiles
+                    // Obtener perfil del usuario desde tabla unificada profiles
                     let profileData = null;
                     const { data: fetchedProfile, error: profileError } = await supabase
-                        .from('user_profiles')
-                        .select('id, full_name, email, phone_number, email_verified')
+                        .from('profiles')
+                        .select('id, full_name, email, role')
                         .eq('id', authData.user.id)
                         .single();
 
                     if (profileError) {
                         console.error('Error obteniendo perfil:', profileError);
                         
-                        // Si el error es porque la tabla no existe o falta la columna
                         if (profileError.code === 'PGRST204' || profileError.code === '42P01') {
-                            alert('⚠️ La tabla user_profiles no está configurada correctamente en Supabase.\n\nPor favor ejecuta el SQL de SETUP_INSTRUCCIONES.md en Supabase SQL Editor.');
+                            alert('⚠️ La tabla profiles no está configurada correctamente en Supabase.\n\nPor favor ejecuta el SQL de SETUP_INSTRUCCIONES.md en Supabase SQL Editor.');
                             await supabase.auth.signOut();
                             return;
                         }
                         
-                        // Si el perfil no existe, intentar crearlo
                         if (profileError.code === 'PGRST116') {
                             console.log('Perfil no existe, intentando crear...');
                             const { data: newProfile, error: createError } = await supabase
-                                .from('user_profiles')
+                                .from('profiles')
                                 .insert({
                                     id: authData.user.id,
                                     full_name: authData.user.user_metadata?.full_name || authData.user.email?.split('@')[0],
-                                    email: authData.user.email || email.toLowerCase().trim(),
-                                    phone_number: authData.user.phone || null,
-                                    email_verified: authData.user.email_confirmed_at ? true : false
+                                    email: authData.user.email || email.toLowerCase().trim()
                                 })
                                 .select()
                                 .single();
@@ -292,7 +288,7 @@
                                 profileData = newProfile;
                             } else {
                                 console.error('Error creando perfil:', createError);
-                                alert('⚠️ No se pudo crear el perfil. Verifica que la tabla user_profiles exista en Supabase.');
+                                alert('⚠️ No se pudo crear el perfil. Verifica que la tabla profiles exista en Supabase.');
                                 await supabase.auth.signOut();
                                 return;
                             }
@@ -317,12 +313,12 @@
                         userId: profileData.id,
                         email: profileData.email,
                         full_name: profileData.full_name,
-                        email_verified: profileData.email_verified
+                        email_verified: !!authData.user.email_confirmed_at
                     };
                     saveUserSession(userData, rememberMe);
 
-                    // Verificar si el email está verificado
-                    const emailNotVerified = !profileData.email_verified && !authData.user.email_confirmed_at;
+                    // Verificar si el email está verificado (desde auth)
+                    const emailNotVerified = !authData.user.email_confirmed_at;
                     if (emailNotVerified) {
                         showEmailNotVerifiedNotification();
                         if (loginModal) loginModal.classList.remove('active');

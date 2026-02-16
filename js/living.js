@@ -231,14 +231,14 @@ class LivingManager {
             }
 
             const { data, error } = await this.supabase
-                .from('users')
+                .from('profiles')
                 .select('*')
                 .eq('id', this.userId)
                 .maybeSingle();
 
             if (error) {
                 if (error.status === 400 || error.code === '400') {
-                    console.warn('⚠️ Error 400 cargando users:', error.message);
+                    console.warn('⚠️ Error 400 cargando profiles:', error.message);
                     this.userData = null;
                     return;
                 }

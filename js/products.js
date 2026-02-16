@@ -216,7 +216,7 @@ if (typeof window.ProductsManager === 'undefined') {
         try {
             // Cargar datos del usuario
             const { data: userData, error: userError } = await this.supabase
-                .from('users')
+                .from('profiles')
                 .select('*')
                 .eq('id', this.userId)
                 .single();

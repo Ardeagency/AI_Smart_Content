@@ -4,7 +4,7 @@ Este documento relaciona cada página/vista de la plataforma con las tablas de S
 
 ## Resumen de hallazgos
 
-- **Hogar** (`/hogar`): organizaciones, miembros, créditos de org, marcas, usuarios, suscripciones → necesita políticas para `organizations`, `organization_members`, `organization_credits`, `brand_containers`, `brands`, `users`, `user_profiles`, `subscriptions`.
+- **Hogar** (`/hogar`): organizaciones, miembros, créditos de org, marcas, suscripciones → necesita políticas para `organizations`, `organization_members`, `organization_credits`, `brand_containers`, `brands`, `profiles`, `subscriptions`.
 - **Otras páginas** usan más tablas que no tenían RLS o políticas definidas (ver tabla abajo).
 
 ## Tablas con RLS activado pero sin política (acceso denegado)
@@ -28,8 +28,7 @@ Este documento relaciona cada página/vista de la plataforma con las tablas de S
 | `organization_credits` | HogarView, Navigation, StudioView, BrandsView | Solo miembros de la org pueden leer/actualizar. |
 | `product_images` | ProductsView, products.js, form-record | Acceso vía producto → brand_container (owner/org/dev). |
 | `subscriptions` | HogarView | Solo el propio usuario (`user_id = auth.uid()`). |
-| `user_profiles` | HogarView, Navigation, AuthService, BaseView, landing | Solo propio perfil (`id = auth.uid()`). |
-| `users` | HogarView, Navigation, AuthService, login, form-record, products, living | Solo propio usuario (`id = auth.uid()`). |
+| `profiles` | HogarView, Navigation, AuthService, BaseView, landing, login, form-record, products, living | Solo propio perfil (`id = auth.uid()`). Tabla unificada de usuarios. |
 
 ## Mapa página → tablas
 
@@ -40,25 +39,25 @@ Este documento relaciona cada página/vista de la plataforma con las tablas de S
 | **Products** | products, product_images, brand_containers |
 | **Campaigns** | campaigns |
 | **Studio** | organization_credits, content_flows |
-| **Living** | users, brand_containers, products, flow_runs, runs_outputs, credit_usage, brands |
+| **Living** | profiles, brand_containers, products, flow_runs, runs_outputs, credit_usage, brands |
 | **Content / Catálogo** | content_categories, content_subcategories, content_flows, user_flow_favorites, flow_runs |
 | **Create** | (depende del flujo) |
-| **Form Record** | users, brand_containers, brands, brand_assets, brand_core (storage), products, product_images, campaigns |
-| **Settings** | user_profiles |
+| **Form Record** | profiles, brand_containers, brands, brand_assets, brand_core (storage), products, product_images, campaigns |
+| **Settings** | profiles |
 | **Dev Dashboard** | developer_stats, content_flows, flow_runs, developer_logs |
 | **Dev Flows / Builder / Test / Webhooks** | content_flows, flow_technical_details, flow_modules, flow_runs, developer_logs, developer_notifications, ui_component_templates |
-| **Dev Lead (Categories, Schemas, References, etc.)** | content_categories, content_subcategories, content_flows, ui_component_templates, visual_references, users |
-| **Login / Auth** | users, user_profiles, brand_containers |
-| **Navigation** | organizations, users, organization_credits, organization_members, user_profiles, flow_runs, user_flow_favorites |
+| **Dev Lead (Categories, Schemas, References, etc.)** | content_categories, content_subcategories, content_flows, ui_component_templates, visual_references, profiles |
+| **Login / Auth** | profiles, brand_containers |
+| **Navigation** | organizations, profiles, organization_credits, organization_members, flow_runs, user_flow_favorites |
 
 ## Tablas de esquema que deben tener RLS
 
-Todas las tablas de datos de negocio que usa la app deben tener RLS activado y al menos una política que permita el acceso necesario. Las funciones helper `is_developer()` y `is_org_member()` usan `SECURITY DEFINER` y leen `user_profiles` y `organization_members`; es correcto que esas tablas tengan sus propias políticas (cada uno su fila / org), y las funciones siguen funcionando porque se ejecutan con privilegios del definer.
+Todas las tablas de datos de negocio que usa la app deben tener RLS activado y al menos una política que permita el acceso necesario. Las funciones helper `is_developer()` y `is_org_member()` usan `SECURITY DEFINER` y leen `profiles` y `organization_members`; es correcto que esas tablas tengan sus propias políticas (cada uno su fila / org), y las funciones siguen funcionando porque se ejecutan con privilegios del definer.
 
 ## Recomendación
 
 - Aplicar el script actualizado `SQL/security_RLS.sql` que incluye:
-  1. Activar RLS en: `brands`, `brand_assets`, `campaigns`, `credit_usage`, `organization_credits`, `product_images`, `subscriptions`, `user_profiles`, `users`.
+  1. Activar RLS en: `brands`, `brand_assets`, `campaigns`, `credit_usage`, `organization_credits`, `product_images`, `subscriptions`, `profiles`.
   2. Políticas para todas las tablas anteriores.
   3. Políticas para tablas que ya tenían RLS pero sin política: `storage_usage`, `developer_notifications`, `flow_collaborators`, `flow_modules`, `runs_inputs`, `runs_outputs`, `ai_brand_vectors` (si se usan en backend).
 

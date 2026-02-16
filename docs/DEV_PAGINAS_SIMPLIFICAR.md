@@ -150,14 +150,14 @@ El **perfil del desarrollador** (incluido el lead) **no es una página propia** 
 
 ### 5.2 Datos del perfil
 
-- **Origen:** tabla `user_profiles` (Supabase).
+- **Origen:** tabla `profiles` (Supabase).
 - **Campos usados en el sidebar:** `full_name`, `email`, `dev_rank`, `dev_role`, `avatar_url`.
 - **Carga:** `Navigation.loadDeveloperInfo()` (llamado tras `render()` cuando `config.mode === 'developer'`).
 
 ### 5.3 Código implicado
 
 - **HTML del sidebar dev:** `getDeveloperNavigationHTML()` (líneas ~352-468): define `navIdentityCard` con clase `dev-identity`, `navDevIcon`, `navDevName`, `navDevTier`, y el bloque `navLeadSection` con `style="display: none;"`.
-- **Rellenar datos:** `loadDeveloperInfo()` (líneas ~997-1055): consulta `user_profiles`, escribe nombre/tier, pone avatar en `navDevIcon` vía `innerHTML`, muestra `navLeadSection` si `dev_role === 'lead'`, y actualiza `navRunsCount` y `navRatingValue`.
+- **Rellenar datos:** `loadDeveloperInfo()` (líneas ~997-1055): consulta `profiles`, escribe nombre/tier, muestra iniciales en `navDevIcon`, muestra `navLeadSection` si `dev_role === 'lead'`, y actualiza `navRunsCount` y `navRatingValue`.
 
 ### 5.4 Posibles mejoras y riesgos
 
@@ -166,7 +166,7 @@ El **perfil del desarrollador** (incluido el lead) **no es una página propia** 
 | **avatar_url sin escapar** | `iconWrap.innerHTML = \`<img ... src="${profile.avatar_url}" ...>\``. Si `avatar_url` pudiera contener comillas o script, hay riesgo de XSS. | Escapar `profile.avatar_url` (p. ej. con un helper `escapeAttr()` o usar `setAttribute` en un elemento creado por DOM). |
 | **Tarjeta no clickable en modo dev** | En modo usuario, la tarjeta de identidad abre el dropdown de organizaciones. En modo developer no existe `navOrgDropdown`, así que la tarjeta no hace nada al clicar. | Opcional: hacer que el clic en la tarjeta dev lleve a `/settings?tab=profile` para editar perfil (misma UX que “ir a configuración”). |
 | **Formato role/rank** | `role` y `rank` se formatean con `replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())` en línea. | Opcional: extraer a una función `formatDevTier(profile)` para reutilizar y simplificar `loadDeveloperInfo`. |
-| **Vista Equipo (Lead)** | `DevLeadTeamView` es un placeholder (“En construcción”). Es la única “página” Lead que no tiene funcionalidad real. | Cuando se implemente Equipo, reutilizar el mismo patrón de datos (user_profiles / dev_role) que usa el sidebar. |
+| **Vista Equipo (Lead)** | `DevLeadTeamView` es un placeholder (“En construcción”). Es la única “página” Lead que no tiene funcionalidad real. | Cuando se implemente Equipo, reutilizar el mismo patrón de datos (profiles / dev_role) que usa el sidebar. |
 
 ### 5.5 Resumen
 

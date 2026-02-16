@@ -179,8 +179,7 @@ class PlanesManager {
             // 2. Verificar si hay sesión activa
             let session = authData.session;
             
-            // 3. Crear usuario en public.users usando función SECURITY DEFINER
-            // Esto evita problemas de RLS cuando no hay sesión activa
+            // 3. Crear perfil en public.profiles usando función SECURITY DEFINER (RPC create_user_profile)
             const { error: createUserError } = await this.supabase.rpc('create_user_profile', {
                 p_user_id: authData.user.id,
                 p_email: email,
@@ -190,10 +189,10 @@ class PlanesManager {
             });
 
             if (createUserError) {
-                console.error('❌ Error creando usuario en public.users:', createUserError);
+                console.error('❌ Error creando perfil en public.profiles:', createUserError);
                 throw new Error(`Error al crear el perfil: ${createUserError.message}`);
             }
-            console.log('✅ Usuario creado en public.users');
+            console.log('✅ Perfil creado en public.profiles');
 
             // 4. Crear suscripción en public.subscriptions usando función SECURITY DEFINER
             const { data: subscriptionId, error: subscriptionError } = await this.supabase.rpc('create_user_subscription', {

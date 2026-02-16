@@ -1129,7 +1129,7 @@ class Navigation {
           let planLabel = 'Personal';
           if (org.owner_user_id) {
             const { data: owner } = await supabase
-              .from('users')
+              .from('profiles')
               .select('plan_type')
               .eq('id', org.owner_user_id)
               .maybeSingle();
@@ -1288,14 +1288,15 @@ class Navigation {
       if (!user) return;
 
       const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('full_name, email, dev_rank, dev_role, avatar_url')
+        .from('profiles')
+        .select('full_name, email, dev_rank, dev_role')
         .eq('id', user.id)
         .maybeSingle();
 
       const iconWrap = document.getElementById('navDevIcon');
-      if (iconWrap && profile?.avatar_url) {
-        iconWrap.innerHTML = `<img class="nav-dev-avatar" src="${profile.avatar_url}" alt="" />`;
+      if (iconWrap && profile?.full_name) {
+        const initials = (profile.full_name || profile.email || 'D').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        iconWrap.innerHTML = `<span class="nav-dev-initials">${initials}</span>`;
       }
 
       const nameEl = document.getElementById('navDevName');

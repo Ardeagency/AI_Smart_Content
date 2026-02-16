@@ -73,19 +73,15 @@ CREATE TABLE public.brand_containers (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   user_id uuid NOT NULL,
   nombre_marca text NOT NULL,
-  sitio_web text,
-  instagram_url text,
-  tiktok_url text,
   logo_url text,
   idiomas_contenido jsonb DEFAULT '[]'::jsonb,
   mercado_objetivo jsonb DEFAULT '[]'::jsonb,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
-  facebook_url text CHECK (facebook_url IS NULL OR facebook_url ~* '^https?://(www\.)?(facebook|fb)\.com/.*$'::text),
   organization_id uuid,
   CONSTRAINT brand_containers_pkey PRIMARY KEY (id),
-  CONSTRAINT projects_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
-  CONSTRAINT brand_containers_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id)
+  CONSTRAINT brand_containers_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id),
+  CONSTRAINT brand_containers_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
 );
 CREATE TABLE public.brand_entities (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -150,6 +146,17 @@ CREATE TABLE public.brand_rules (
   created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT brand_rules_pkey PRIMARY KEY (id),
   CONSTRAINT brand_rules_brand_id_fkey FOREIGN KEY (brand_id) REFERENCES public.brands(id)
+);
+CREATE TABLE public.brand_social_links (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  brand_container_id uuid NOT NULL,
+  platform text NOT NULL,
+  url text NOT NULL,
+  is_primary boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT brand_social_links_pkey PRIMARY KEY (id),
+  CONSTRAINT brand_social_links_container_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id)
 );
 CREATE TABLE public.brands (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -225,8 +232,8 @@ CREATE TABLE public.content_flows (
   execution_mode text DEFAULT 'single_step'::text CHECK (execution_mode = ANY (ARRAY['single_step'::text, 'multi_step'::text, 'sequential'::text])),
   CONSTRAINT content_flows_pkey PRIMARY KEY (id),
   CONSTRAINT content_flows_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.content_categories(id),
-  CONSTRAINT fk_flow_owner FOREIGN KEY (owner_id) REFERENCES public.users(id),
-  CONSTRAINT content_flows_subcategory_id_fkey FOREIGN KEY (subcategory_id) REFERENCES public.content_subcategories(id)
+  CONSTRAINT content_flows_subcategory_id_fkey FOREIGN KEY (subcategory_id) REFERENCES public.content_subcategories(id),
+  CONSTRAINT fk_flow_owner FOREIGN KEY (owner_id) REFERENCES public.profiles(id)
 );
 CREATE TABLE public.content_subcategories (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -245,7 +252,6 @@ CREATE TABLE public.credit_usage (
   created_at timestamp with time zone DEFAULT now(),
   organization_id uuid,
   CONSTRAINT credit_usage_pkey PRIMARY KEY (id),
-  CONSTRAINT credit_usage_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
   CONSTRAINT credit_usage_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id)
 );
 CREATE TABLE public.developer_logs (
@@ -273,7 +279,6 @@ CREATE TABLE public.developer_notifications (
   read_at timestamp with time zone,
   created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT developer_notifications_pkey PRIMARY KEY (id),
-  CONSTRAINT notif_recipient_fkey FOREIGN KEY (recipient_user_id) REFERENCES public.users(id),
   CONSTRAINT notif_flow_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id)
 );
 CREATE TABLE public.developer_stats (
@@ -285,8 +290,7 @@ CREATE TABLE public.developer_stats (
   current_rank USER-DEFINED DEFAULT 'novice'::developer_rank_type,
   last_promotion_at timestamp with time zone,
   updated_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT developer_stats_pkey PRIMARY KEY (user_id),
-  CONSTRAINT stats_user_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+  CONSTRAINT developer_stats_pkey PRIMARY KEY (user_id)
 );
 CREATE TABLE public.flow_collaborators (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -296,9 +300,7 @@ CREATE TABLE public.flow_collaborators (
   invited_by uuid,
   created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT flow_collaborators_pkey PRIMARY KEY (id),
-  CONSTRAINT collab_flow_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id),
-  CONSTRAINT collab_dev_fkey FOREIGN KEY (developer_id) REFERENCES public.users(id),
-  CONSTRAINT collab_inviter_fkey FOREIGN KEY (invited_by) REFERENCES public.users(id)
+  CONSTRAINT collab_flow_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id)
 );
 CREATE TABLE public.flow_modules (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -332,7 +334,6 @@ CREATE TABLE public.flow_runs (
   CONSTRAINT flow_runs_pkey PRIMARY KEY (id),
   CONSTRAINT flow_runs_flow_id_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id),
   CONSTRAINT flow_runs_brand_id_fkey FOREIGN KEY (brand_id) REFERENCES public.brands(id),
-  CONSTRAINT flow_runs_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
   CONSTRAINT flow_runs_entity_id_fkey FOREIGN KEY (entity_id) REFERENCES public.brand_entities(id),
   CONSTRAINT flow_runs_audience_id_fkey FOREIGN KEY (audience_id) REFERENCES public.audiences(id)
 );
@@ -368,7 +369,7 @@ CREATE TABLE public.organization_members (
   created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT organization_members_pkey PRIMARY KEY (id),
   CONSTRAINT organization_members_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id),
-  CONSTRAINT organization_members_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+  CONSTRAINT organization_members_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
 );
 CREATE TABLE public.organizations (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -376,8 +377,7 @@ CREATE TABLE public.organizations (
   name text NOT NULL,
   created_at timestamp with time zone DEFAULT now(),
   deleted_at timestamp with time zone,
-  CONSTRAINT organizations_pkey PRIMARY KEY (id),
-  CONSTRAINT organizations_owner_user_id_fkey FOREIGN KEY (owner_user_id) REFERENCES public.users(id)
+  CONSTRAINT organizations_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.product_images (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -410,6 +410,22 @@ CREATE TABLE public.products (
   CONSTRAINT products_pkey PRIMARY KEY (id),
   CONSTRAINT products_project_id_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id),
   CONSTRAINT products_entity_id_fkey FOREIGN KEY (entity_id) REFERENCES public.brand_entities(id)
+);
+CREATE TABLE public.profiles (
+  id uuid NOT NULL,
+  email text NOT NULL UNIQUE,
+  full_name text,
+  role text NOT NULL DEFAULT 'user'::text CHECK (role = ANY (ARRAY['admin'::text, 'dev'::text, 'user'::text])),
+  is_developer boolean DEFAULT false,
+  dev_role text,
+  dev_rank text,
+  default_view_mode text DEFAULT 'user'::text CHECK (default_view_mode = ANY (ARRAY['user'::text, 'developer'::text])),
+  plan_type text DEFAULT 'basico'::text,
+  form_verified boolean NOT NULL DEFAULT false,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT profiles_pkey PRIMARY KEY (id),
+  CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.runs_inputs (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -479,7 +495,7 @@ CREATE TABLE public.subscriptions (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT subscriptions_pkey PRIMARY KEY (id),
-  CONSTRAINT subscriptions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+  CONSTRAINT subscriptions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
 );
 CREATE TABLE public.ui_component_templates (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -504,43 +520,7 @@ CREATE TABLE public.user_flow_favorites (
   last_used_at timestamp with time zone DEFAULT now(),
   created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT user_flow_favorites_pkey PRIMARY KEY (id),
-  CONSTRAINT favorites_user_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
   CONSTRAINT favorites_flow_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id)
-);
-CREATE TABLE public.user_profiles (
-  id uuid NOT NULL,
-  email text NOT NULL UNIQUE,
-  full_name text,
-  phone_number text,
-  role text NOT NULL DEFAULT 'user'::text,
-  email_verified boolean NOT NULL DEFAULT false,
-  is_active boolean NOT NULL DEFAULT true,
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone DEFAULT now(),
-  default_view_mode text DEFAULT 'user'::text CHECK (default_view_mode = ANY (ARRAY['user'::text, 'developer'::text])),
-  is_developer boolean DEFAULT false,
-  dev_role USER-DEFINED DEFAULT 'contributor'::developer_role_type,
-  dev_rank USER-DEFINED DEFAULT 'novice'::developer_rank_type,
-  avatar_url text,
-  bio text,
-  social_links jsonb DEFAULT '{}'::jsonb,
-  specialties ARRAY DEFAULT '{}'::text[],
-  CONSTRAINT user_profiles_pkey PRIMARY KEY (id),
-  CONSTRAINT user_profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
-);
-CREATE TABLE public.users (
-  id uuid NOT NULL,
-  email text NOT NULL UNIQUE,
-  full_name text,
-  created_at timestamp with time zone DEFAULT now(),
-  updated_at timestamp with time zone DEFAULT now(),
-  plan_type USER-DEFINED DEFAULT 'basico'::plan_tipo_enum,
-  credits_available integer DEFAULT 0 CHECK (credits_available >= 0),
-  credits_total integer DEFAULT 0,
-  form_verified boolean NOT NULL DEFAULT false,
-  lifetime_credits_used integer DEFAULT 0,
-  CONSTRAINT users_pkey PRIMARY KEY (id),
-  CONSTRAINT users_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.visual_references (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),

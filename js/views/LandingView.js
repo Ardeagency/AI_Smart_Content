@@ -353,8 +353,8 @@ class LandingView extends BaseView {
     
     try {
       const { data, error } = await supabase
-        .from('user_profiles')
-        .select('id, email, phone_number, email_verified')
+        .from('profiles')
+        .select('id, email')
         .eq('id', userId)
         .single();
       

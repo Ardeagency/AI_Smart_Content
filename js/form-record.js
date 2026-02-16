@@ -58,7 +58,7 @@ class FormRecord {
                 }
 
                     this.userId = user.id;
-                // Verificar y crear usuario en public.users si no existe
+                // Verificar y crear perfil en public.profiles si no existe
                 await this.ensureUserExists(user);
                 return;
             }
@@ -91,7 +91,7 @@ class FormRecord {
             await this.ensureUserExists(user);
         } else {
             this.userId = session.user.id;
-            // Verificar y crear usuario en public.users si no existe
+            // Verificar y crear perfil en public.profiles si no existe
             await this.ensureUserExists(session.user);
         }
     }
@@ -870,37 +870,33 @@ class FormRecord {
     }
 
     async ensureUserExists(authUser) {
-        // Verificar si el usuario existe en public.users
-        const { data: existingUser, error: checkError } = await this.supabase
-            .from('users')
+        // Verificar si el perfil existe en public.profiles (tabla unificada)
+        const { data: existingProfile, error: checkError } = await this.supabase
+            .from('profiles')
             .select('id')
             .eq('id', authUser.id)
             .maybeSingle();
 
         if (checkError && checkError.code !== 'PGRST116') {
-            console.warn('Error verificando usuario:', checkError);
+            console.warn('Error verificando perfil:', checkError);
         }
 
-        // Si no existe, crearlo
-        if (!existingUser) {
-            console.log('⚠️ Usuario no existe en public.users, creándolo...');
+        if (!existingProfile) {
+            console.log('⚠️ Perfil no existe en public.profiles, creándolo...');
             const { error: createError } = await this.supabase
-                .from('users')
+                .from('profiles')
                 .insert({
                     id: authUser.id,
-                    email: authUser.email,
+                    email: authUser.email || '',
                     full_name: authUser.user_metadata?.full_name || authUser.email,
                     plan_type: authUser.user_metadata?.plan_type || 'basico',
-                    credits_available: 0,
-                    credits_total: 0,
                     form_verified: false
                 });
 
             if (createError) {
-                console.error('Error creando usuario en public.users:', createError);
-                // No lanzar error, solo loguearlo - puede que el trigger lo haya creado
+                console.error('Error creando perfil en public.profiles:', createError);
             } else {
-                console.log('✅ Usuario creado en public.users');
+                console.log('✅ Perfil creado en public.profiles');
             }
         }
     }
@@ -914,34 +910,32 @@ class FormRecord {
             throw new Error(errorMsg);
         }
 
-        // Verificar que el usuario existe en public.users antes de continuar
-        const { data: userCheck, error: userCheckError } = await this.supabase
-            .from('users')
+        // Verificar que el perfil existe en public.profiles antes de continuar
+        const { data: profileCheck, error: profileCheckError } = await this.supabase
+            .from('profiles')
             .select('id')
             .eq('id', this.userId)
             .maybeSingle();
 
-        if (userCheckError && userCheckError.code !== 'PGRST116') {
-            throw new Error(`Error verificando usuario: ${userCheckError.message}`);
+        if (profileCheckError && profileCheckError.code !== 'PGRST116') {
+            throw new Error(`Error verificando perfil: ${profileCheckError.message}`);
         }
 
-        if (!userCheck) {
-            // Intentar obtener el usuario de auth y crearlo
+        if (!profileCheck) {
             const { data: { user: authUser } } = await this.supabase.auth.getUser();
             if (authUser) {
                 await this.ensureUserExists(authUser);
-                // Verificar nuevamente
-                const { data: userCheck2 } = await this.supabase
-                    .from('users')
+                const { data: profileCheck2 } = await this.supabase
+                    .from('profiles')
                     .select('id')
                     .eq('id', this.userId)
                     .maybeSingle();
                 
-                if (!userCheck2) {
-                    throw new Error('No se pudo crear el usuario en public.users. Por favor, contacta al administrador.');
+                if (!profileCheck2) {
+                    throw new Error('No se pudo crear el perfil en public.profiles. Por favor, contacta al administrador.');
                 }
             } else {
-                throw new Error('Usuario no encontrado en public.users. Por favor, inicia sesión nuevamente.');
+                throw new Error('Usuario no encontrado en public.profiles. Por favor, inicia sesión nuevamente.');
             }
         }
 
@@ -1332,9 +1326,9 @@ class FormRecord {
             }
         }
 
-        // Marcar el usuario como form_verified = true
+        // Marcar el perfil como form_verified = true (tabla unificada profiles)
         const { error: updateError } = await this.supabase
-            .from('users')
+            .from('profiles')
             .update({ form_verified: true })
             .eq('id', this.userId);
 

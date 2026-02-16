@@ -1,6 +1,6 @@
 /**
  * SettingsView - Configuración de usuario (Mi cuenta)
- * Solo perfil: datos de user_profiles (full_name, email, phone_number, avatar_url, bio).
+ * Datos desde tabla unificada profiles (full_name, email).
  * Fuera de org: ruta /settings. Layout tipo Home (solo header, sin sidebar).
  */
 class SettingsView extends BaseView {
@@ -50,8 +50,8 @@ class SettingsView extends BaseView {
     if (!this.supabase || !this.userId) return;
     try {
       const { data: profile } = await this.supabase
-        .from('user_profiles')
-        .select('id, full_name, email, phone_number, avatar_url, bio')
+        .from('profiles')
+        .select('id, full_name, email')
         .eq('id', this.userId)
         .maybeSingle();
 
@@ -61,9 +61,12 @@ class SettingsView extends BaseView {
       };
       set('profileFullName', profile?.full_name);
       set('profileEmail', profile?.email);
-      set('profilePhone', profile?.phone_number);
-      set('profileAvatarUrl', profile?.avatar_url);
-      set('profileBio', profile?.bio);
+      const phoneEl = this.querySelector('#profilePhone');
+      if (phoneEl) phoneEl.closest('.form-group')?.classList.add('d-none');
+      const avatarEl = this.querySelector('#profileAvatarUrl');
+      if (avatarEl) avatarEl.closest('.form-group')?.classList.add('d-none');
+      const bioEl = this.querySelector('#profileBio');
+      if (bioEl) bioEl.closest('.form-group')?.classList.add('d-none');
     } catch (error) {
       console.error('Error cargando perfil:', error);
     }
@@ -81,19 +84,13 @@ class SettingsView extends BaseView {
   async saveProfile() {
     if (!this.supabase || !this.userId) return;
     const fullName = this.querySelector('#profileFullName')?.value?.trim() ?? '';
-    const phone = this.querySelector('#profilePhone')?.value?.trim() ?? '';
-    const avatarUrl = this.querySelector('#profileAvatarUrl')?.value?.trim() ?? '';
-    const bio = this.querySelector('#profileBio')?.value?.trim() ?? '';
     const btn = this.querySelector('#profileSubmitBtn');
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...'; }
     try {
       const { error } = await this.supabase
-        .from('user_profiles')
+        .from('profiles')
         .update({
           full_name: fullName || null,
-          phone_number: phone || null,
-          avatar_url: avatarUrl || null,
-          bio: bio || null,
           updated_at: new Date().toISOString()
         })
         .eq('id', this.userId);

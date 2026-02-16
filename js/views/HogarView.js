@@ -191,22 +191,22 @@ class HogarView extends BaseView {
       let avatarByUser = {};
       if (allMemberIds.length > 0) {
         const { data: profiles } = await this.supabase
-          .from('user_profiles')
-          .select('id, avatar_url, full_name')
+          .from('profiles')
+          .select('id, full_name')
           .in('id', allMemberIds);
-        (profiles || []).forEach(p => { avatarByUser[p.id] = { avatar_url: p.avatar_url || '', full_name: p.full_name || '' }; });
+        (profiles || []).forEach(p => { avatarByUser[p.id] = { avatar_url: '', full_name: p.full_name || '' }; });
       }
 
-      // Plan y costo: owner_user_id → users.plan_type y subscriptions (price, currency)
+      // Plan y costo: owner_user_id → profiles.plan_type y subscriptions (price, currency)
       const ownerIds = [...new Set(this.organizations.map(o => o.owner_user_id).filter(Boolean))];
       let planByUser = {};
       let costByUser = {};
       if (ownerIds.length > 0) {
-        const { data: usersRows } = await this.supabase
-          .from('users')
+        const { data: profileRows } = await this.supabase
+          .from('profiles')
           .select('id, plan_type')
           .in('id', ownerIds);
-        (usersRows || []).forEach(u => { planByUser[u.id] = u.plan_type || '—'; });
+        (profileRows || []).forEach(u => { planByUser[u.id] = u.plan_type || '—'; });
 
         const { data: subRows } = await this.supabase
           .from('subscriptions')

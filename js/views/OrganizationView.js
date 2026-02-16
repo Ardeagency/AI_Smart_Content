@@ -114,7 +114,7 @@ class OrganizationView extends BaseView {
       let profilesMap = {};
       if (userIds.length > 0) {
         const { data: profiles } = await this.supabase
-          .from('user_profiles')
+          .from('profiles')
           .select('id, full_name, email')
           .in('id', userIds);
         if (profiles) {
@@ -324,7 +324,7 @@ class OrganizationView extends BaseView {
 
     try {
       const { data: profile, error: profileError } = await this.supabase
-        .from('user_profiles')
+        .from('profiles')
         .select('id')
         .eq('email', email)
         .maybeSingle();

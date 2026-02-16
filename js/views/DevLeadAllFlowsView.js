@@ -113,12 +113,12 @@ class DevLeadAllFlowsView extends DevBaseView {
     const ownerIds = [...new Set(this.flows.map(f => f.owner_id).filter(Boolean))];
     this.ownersMap = {};
     if (ownerIds.length > 0) {
-      const { data: users } = await this.supabase
-        .from('users')
+      const { data: profileList } = await this.supabase
+        .from('profiles')
         .select('id, full_name, email')
         .in('id', ownerIds);
-      if (users) {
-        users.forEach(u => {
+      if (profileList) {
+        profileList.forEach(u => {
           this.ownersMap[u.id] = { full_name: u.full_name, email: u.email };
         });
       }

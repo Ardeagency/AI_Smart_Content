@@ -401,9 +401,9 @@ class AuthManager {
                 return 'form-record.html';
             }
 
-            // Verificar si el usuario completó el formulario
+            // Verificar si el usuario completó el formulario (tabla unificada profiles)
             const { data: userData } = await this.supabase
-                .from('users')
+                .from('profiles')
                 .select('form_verified')
                 .eq('id', userId)
                 .single();

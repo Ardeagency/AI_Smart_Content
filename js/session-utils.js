@@ -87,20 +87,18 @@ class SessionManager {
         return null;
       }
 
-      // Consultar user_profiles directamente (usar maybeSingle para evitar 400 si no existe)
+      // Consultar tabla unificada profiles
       const { data, error } = await supabaseClient
-        .from('user_profiles')
-        .select('id, email, phone_number, email_verified')
+        .from('profiles')
+        .select('id, email, role')
         .eq('id', session.userId)
         .maybeSingle();
 
       if (error) {
         console.error('checkUserStatus: Error de Supabase:', error);
-        // Si el error es que no se encontró el registro, retornar null
         if (error.code === 'PGRST116') {
           return null;
         }
-        // Para otros errores, también retornar null
         return null;
       }
 
@@ -109,7 +107,7 @@ class SessionManager {
         return null;
       }
 
-      console.log('checkUserStatus: Usuario encontrado:', { role: data.role, is_active: data.is_active });
+      console.log('checkUserStatus: Usuario encontrado:', { role: data.role });
       return data;
     } catch (error) {
       console.error('checkUserStatus: Error exception:', error);
