@@ -1071,16 +1071,18 @@ class FormRecord {
         }
 
         // 3. Crear o actualizar brand (lineamientos de marca)
-        const palabrasEvitar = Array.isArray(this.formData.palabras_evitar) 
-            ? this.formData.palabras_evitar 
+        const palabrasEvitar = Array.isArray(this.formData.palabras_evitar)
+            ? this.formData.palabras_evitar
             : (this.formData.palabras_evitar ? [this.formData.palabras_evitar] : []);
-
+        const palabrasClave = (this.formData.palabras_usar || '')
+            ? this.formData.palabras_usar.split(/[\n,]+/).map(s => s.trim()).filter(Boolean)
+            : [];
         const brandData = {
             project_id: projectId,
             tono_voz: this.formData.tono_voz || 'amigable',
-            palabras_usar: this.formData.palabras_usar || null,
-            palabras_evitar: palabrasEvitar,
-            reglas_creativas: this.formData.reglas_creativas || null
+            palabras_clave: palabrasClave.length ? palabrasClave : [],
+            palabras_prohibidas: palabrasEvitar,
+            objetivos_marca: Array.isArray(this.formData.objetivos_marca) ? this.formData.objetivos_marca : []
         };
 
         const { data: existingBrand, error: checkBrandError } = await this.supabase
@@ -1171,20 +1173,31 @@ class FormRecord {
         }
 
         // 5. Crear producto
+        const beneficios = [
+            this.formData.beneficio_1,
+            this.formData.beneficio_2,
+            this.formData.beneficio_3
+        ].filter(Boolean);
+        const diferenciadores = (this.formData.diferenciacion || '').trim()
+            ? [(this.formData.diferenciacion || '').trim()]
+            : [];
+        const casosUso = (this.formData.modo_uso || '').trim() ? [(this.formData.modo_uso || '').trim()] : [];
+        const materiales = (this.formData.ingredientes || '').trim() ? [(this.formData.ingredientes || '').trim()] : [];
+        const variantes = (this.formData.variantes_producto || '').trim()
+            ? (this.formData.variantes_producto || '').split(/[\n,]+/).map(s => s.trim()).filter(Boolean)
+            : [];
         const productData = {
             brand_container_id: projectId,
             tipo_producto: this.formData.tipo_producto || 'otro',
             nombre_producto: this.formData.nombre_producto || '',
             descripcion_producto: this.formData.descripcion_producto || '',
-            beneficio_1: this.formData.beneficio_1 || null,
-            beneficio_2: this.formData.beneficio_2 || null,
-            beneficio_3: this.formData.beneficio_3 || null,
-            diferenciacion: this.formData.diferenciacion || null,
-            modo_uso: this.formData.modo_uso || null,
-            ingredientes: this.formData.ingredientes || null,
+            beneficios_principales: beneficios,
+            diferenciadores,
+            casos_de_uso: casosUso,
+            materiales_composicion: materiales,
+            variantes,
             precio_producto: this.formData.precio_producto ? parseFloat(this.formData.precio_producto) : null,
-            moneda: this.formData.moneda || 'USD',
-            variantes_producto: this.formData.variantes_producto || null
+            moneda: this.formData.moneda || 'USD'
         };
 
         const { data: existingProduct, error: checkProductError } = await this.supabase

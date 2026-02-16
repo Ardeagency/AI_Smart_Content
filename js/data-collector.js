@@ -214,24 +214,18 @@ class DataCollector {
                 console.error('❌ Error obteniendo brand:', brandError);
             }
 
-            // Combinar datos del proyecto y brand
+            // Combinar datos del proyecto y brand (schema optimizado: palabras_clave, palabras_prohibidas, objetivos_marca)
+            const palabrasClave = brand?.palabras_clave;
+            const palabrasUsarStr = Array.isArray(palabrasClave) ? palabrasClave.join(', ') : (palabrasClave || '');
             return {
                 id: project.id,
                 nombre_marca: project.nombre_marca,
                 logo_url: project.logo_url,
-                sitio_web: project.sitio_web,
-                instagram_url: project.instagram_url,
-                tiktok_url: project.tiktok_url,
-                facebook_url: project.facebook_url,
                 idiomas_contenido: project.idiomas_contenido,
                 mercado_objetivo: project.mercado_objetivo,
-                // Datos de la tabla brands
                 tono_voz: brand?.tono_voz || null,
-                palabras_usar: brand?.palabras_usar || null,
-                palabras_evitar: brand?.palabras_evitar || [],
-                reglas_creativas: brand?.reglas_creativas || null,
-                personalidad_marca: brand?.personalidad_marca || null,
-                quienes_somos: brand?.quienes_somos || null,
+                palabras_usar: palabrasUsarStr || null,
+                palabras_evitar: brand?.palabras_prohibidas || [],
                 objetivos_marca: brand?.objetivos_marca || []
             };
         } catch (error) {
@@ -286,11 +280,11 @@ class DataCollector {
                 console.error('❌ Error obteniendo imágenes del producto:', imagesError);
             }
 
-            // Combinar beneficios en un array
-            const benefits = [];
-            if (product.beneficio_1) benefits.push(product.beneficio_1);
-            if (product.beneficio_2) benefits.push(product.beneficio_2);
-            if (product.beneficio_3) benefits.push(product.beneficio_3);
+            const beneficios = product.beneficios_principales || [];
+            const diferenciadores = product.diferenciadores || [];
+            const casosUso = product.casos_de_uso || [];
+            const materiales = product.materiales_composicion || [];
+            const variantes = product.variantes || [];
 
             return {
                 id: product.id,
@@ -298,13 +292,13 @@ class DataCollector {
                 tipo_producto: product.tipo_producto,
                 nombre_producto: product.nombre_producto,
                 descripcion_producto: product.descripcion_producto,
-                beneficios: benefits,
-                diferenciacion: product.diferenciacion,
-                modo_uso: product.modo_uso,
-                ingredientes: product.ingredientes,
+                beneficios,
+                diferenciacion: diferenciadores[0] || null,
+                modo_uso: casosUso[0] || null,
+                ingredientes: materiales[0] || null,
                 precio_producto: product.precio_producto,
                 moneda: product.moneda || 'USD',
-                variantes_producto: product.variantes_producto,
+                variantes_producto: Array.isArray(variantes) ? variantes.join(', ') : variantes,
                 imagenes: (images || []).map(img => ({
                     id: img.id,
                     image_url: img.image_url,

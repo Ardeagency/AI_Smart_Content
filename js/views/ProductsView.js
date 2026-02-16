@@ -217,6 +217,10 @@ class ProductsView extends BaseView {
     const monedaOptionsHtml = monedas.map(m => `<option value="${m.v}" ${moneda === m.v ? 'selected' : ''}>${m.l}</option>`).join('');
 
     const v = (key) => (product[key] ?? '');
+    const vArr = (key) => {
+      const arr = product[key];
+      return Array.isArray(arr) ? arr.join('\n') : (arr || '');
+    };
     const rowInput = (label, field, value, type = 'text', placeholder = '') => `
       <div class="product-view-sheet-row">
         <span class="product-view-sheet-label">${this.escapeHtml(label)}</span>
@@ -265,15 +269,14 @@ class ProductsView extends BaseView {
               ${rowSelect('Tipo de producto', 'tipo_producto', tipoOptionsHtml)}
               ${rowInput('Precio', 'precio_producto', precio, 'number', '0')}
               ${rowSelect('Moneda', 'moneda', monedaOptionsHtml)}
-              ${rowInput('Variantes', 'variantes_producto', v('variantes_producto'), 'text', 'Ej. color, talla')}
+              ${rowInput('URL producto', 'url_producto', v('url_producto'), 'url', 'https://')}
             </div>
             ${sectionTextarea('Descripción', 'descripcion_producto', v('descripcion_producto'))}
-            ${sectionTextarea('Beneficio 1', 'beneficio_1', v('beneficio_1'))}
-            ${sectionTextarea('Beneficio 2', 'beneficio_2', v('beneficio_2'))}
-            ${sectionTextarea('Beneficio 3', 'beneficio_3', v('beneficio_3'))}
-            ${sectionTextarea('Diferenciación', 'diferenciacion', v('diferenciacion'))}
-            ${sectionTextarea('Modo de uso', 'modo_uso', v('modo_uso'))}
-            ${sectionTextarea('Ingredientes', 'ingredientes', v('ingredientes'))}
+            ${sectionTextarea('Beneficios principales (uno por línea)', 'beneficios_principales', vArr('beneficios_principales'))}
+            ${sectionTextarea('Diferenciadores (uno por línea)', 'diferenciadores', vArr('diferenciadores'))}
+            ${sectionTextarea('Variantes (uno por línea)', 'variantes', vArr('variantes'))}
+            ${sectionTextarea('Casos de uso', 'casos_de_uso', vArr('casos_de_uso'))}
+            ${sectionTextarea('Materiales / composición', 'materiales_composicion', vArr('materiales_composicion'))}
           </div>
         </div>
       </div>
@@ -286,7 +289,11 @@ class ProductsView extends BaseView {
   async saveProductField(fieldName, value) {
     if (!this.supabase || !this.productId) return;
     const payload = { updated_at: new Date().toISOString() };
-    if (fieldName === 'precio_producto') {
+    const arrayFields = ['beneficios_principales', 'diferenciadores', 'variantes', 'casos_de_uso', 'materiales_composicion', 'caracteristicas_visuales'];
+    if (arrayFields.includes(fieldName)) {
+      const arr = typeof value === 'string' ? value.split(/\n/).map(s => s.trim()).filter(Boolean) : (Array.isArray(value) ? value : []);
+      payload[fieldName] = arr.length ? arr : [];
+    } else if (fieldName === 'precio_producto') {
       const num = value === '' ? null : parseFloat(value);
       payload[fieldName] = isNaN(num) ? null : num;
     } else {

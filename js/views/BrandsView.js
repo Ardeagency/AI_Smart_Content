@@ -286,7 +286,7 @@ class BrandsView extends BaseView {
             const [membersResult, creditsResult, usageResult] = await Promise.allSettled([
               this.supabase
                 .from('organization_members')
-                .select('*, users(id, full_name, email)')
+                .select('*, profiles(id, full_name, email)')
                 .eq('organization_id', container.organization_id)
                 .limit(5),
               this.supabase
@@ -317,7 +317,7 @@ class BrandsView extends BaseView {
         .select('*')
                   .eq('organization_id', container.organization_id)
                   .limit(5);
-                this.organizationMembers = (membersSimple || []).map(m => ({ ...m, users: null }));
+                this.organizationMembers = (membersSimple || []).map(m => ({ ...m, profiles: null }));
               } catch (fallbackError) {
                 console.warn('⚠️ Error en fallback miembros:', fallbackError);
                 this.organizationMembers = [];
@@ -1361,18 +1361,7 @@ class BrandsView extends BaseView {
         });
       } else if (labelText === 'Palabras a usar') {
         field.classList.add('info-editable');
-        this.makeEditableText(field, 'palabras_usar', 'brand', () => {
-          const infoCard = document.querySelector('.card-info.expanded');
-          if (infoCard) {
-            const content = infoCard.querySelector('.card-content-expanded');
-            if (content) {
-              this.renderInfoPanelContent(content);
-            }
-          }
-        });
-      } else if (labelText === 'Reglas generales') {
-        field.classList.add('info-editable');
-        this.makeEditableText(field, 'reglas_creativas', 'brand', () => {
+        this.makeEditableText(field, 'palabras_clave', 'brand', () => {
           const infoCard = document.querySelector('.card-info.expanded');
           if (infoCard) {
             const content = infoCard.querySelector('.card-content-expanded');
@@ -1395,7 +1384,8 @@ class BrandsView extends BaseView {
     container.querySelectorAll('.info-field-value[data-multiselect]').forEach(wrap => {
       const fieldName = wrap.getAttribute('data-multiselect');
       if (!fieldName) return;
-      this.makeEditableMultiSelect(wrap, fieldName, [], 'brand', onRefreshPanel);
+      const schemaField = fieldName === 'palabras_evitar' ? 'palabras_prohibidas' : fieldName;
+      this.makeEditableMultiSelect(wrap, schemaField, [], 'brand', onRefreshPanel);
     });
 
     // Tono de voz: siempre dropdown (estado 2 único)
@@ -1444,15 +1434,9 @@ class BrandsView extends BaseView {
     if (!brand) {
       return '<p class="info-empty">No hay información de esencia disponible.</p>';
     }
-    const quienesSomos = brand.quienes_somos || '';
-    const personalidad = brand.personalidad_marca || '';
+    const objetivos = brand.objetivos_marca;
+    const objetivosArr = Array.isArray(objetivos) ? objetivos : (objetivos && typeof objetivos === 'object' ? Object.values(objetivos).filter(Boolean) : []);
     let html = '';
-    if (quienesSomos) {
-      html += `<div class="info-field"><div class="info-field-label">Quiénes somos</div><div class="info-field-value">${this.escapeHtml(quienesSomos)}</div></div>`;
-    }
-    if (personalidad) {
-      html += `<div class="info-field"><div class="info-field-label">Personalidad</div><div class="info-field-value">${this.escapeHtml(personalidad)}</div></div>`;
-    }
     html += `<div class="info-field"><div class="info-field-label">Objetivos</div><div class="info-field-value" data-multiselect="objetivos_marca" data-field="objetivos_marca"></div></div>`;
     return html || '<p class="info-empty">No hay información de esencia disponible.</p>';
   }
@@ -1461,35 +1445,21 @@ class BrandsView extends BaseView {
     if (!brand) {
       return '<p class="info-empty">No hay información de lenguaje disponible.</p>';
     }
-    const palabrasUsar = brand.palabras_usar || '';
+    const palabrasClave = brand.palabras_clave;
+    const palabrasClaveStr = Array.isArray(palabrasClave) ? palabrasClave.join(', ') : (palabrasClave || '');
     let html = '';
     html += `<div class="info-field"><div class="info-field-label">Tono de voz</div><div class="info-field-value" data-select="tono_voz"></div></div>`;
-    if (palabrasUsar) {
-      html += `<div class="info-field"><div class="info-field-label">Palabras a usar</div><div class="info-field-value">${this.escapeHtml(palabrasUsar)}</div></div>`;
-    }
-    html += `<div class="info-field"><div class="info-field-label">Palabras a evitar</div><div class="info-field-value" data-multiselect="palabras_evitar" data-field="palabras_evitar"></div></div>`;
+    html += `<div class="info-field"><div class="info-field-label">Palabras a usar</div><div class="info-field-value">${this.escapeHtml(palabrasClaveStr)}</div></div>`;
+    html += `<div class="info-field"><div class="info-field-label">Palabras a evitar</div><div class="info-field-value" data-multiselect="palabras_evitar" data-field="palabras_prohibidas"></div></div>`;
     return html || '<p class="info-empty">No hay información de lenguaje disponible.</p>';
   }
 
   renderCreativeRulesSection(brand, rulesByType) {
-    const reglasCreativas = brand?.reglas_creativas || '';
-    const hasRules = Object.keys(rulesByType).length > 0 || reglasCreativas;
-    
+    const hasRules = Object.keys(rulesByType).length > 0;
     if (!hasRules) {
       return '<p class="info-empty">No hay reglas creativas definidas.</p>';
     }
-    
     let html = '';
-    
-    if (reglasCreativas) {
-      html += `
-        <div class="info-field">
-          <div class="info-field-label">Reglas generales</div>
-          <div class="info-field-value">${this.escapeHtml(reglasCreativas)}</div>
-        </div>
-      `;
-    }
-    
     // Renderizar reglas desde brand_rules
     Object.entries(rulesByType).forEach(([type, rules]) => {
       if (type === 'typography') return; // Ya se muestra en Visual de marca
@@ -1581,15 +1551,23 @@ class BrandsView extends BaseView {
 
     this.savingFields.add(saveKey);
 
+    let payloadValue = value;
+    if (fieldName === 'palabras_clave' && typeof value === 'string') {
+      payloadValue = value.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+    }
+    if (payloadValue === '' || (Array.isArray(payloadValue) && payloadValue.length === 0)) {
+      payloadValue = null;
+    }
+
     try {
       const { error } = await this.supabase
         .from('brands')
-        .update({ [fieldName]: value || null, updated_at: new Date().toISOString() })
+        .update({ [fieldName]: payloadValue, updated_at: new Date().toISOString() })
         .eq('id', this.brandData.id);
 
       if (error) throw error;
 
-      this.brandData[fieldName] = value || null;
+      this.brandData[fieldName] = payloadValue;
       console.log(`✅ ${fieldName} actualizado correctamente`);
     } catch (error) {
       console.error(`❌ Error al guardar ${fieldName}:`, error);

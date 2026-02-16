@@ -496,7 +496,7 @@ if (typeof window.ProductsManager === 'undefined') {
             // products.brand_container_id -> brand_containers.id
             const { data: products, error: productsError } = await this.supabase
                 .from('products')
-                .select('id, brand_container_id, tipo_producto, nombre_producto, descripcion_producto, beneficio_1, beneficio_2, beneficio_3, diferenciacion, modo_uso, ingredientes, precio_producto, moneda, variantes_producto, created_at, updated_at, entity_id')
+                .select('*')
                 .eq('brand_container_id', this.brandContainerId)
                 .order('created_at', { ascending: false });
 
@@ -804,20 +804,23 @@ if (typeof window.ProductsManager === 'undefined') {
             return;
         }
 
+        const toArray = (elId) => {
+            const el = document.getElementById(elId);
+            return el ? el.value.split(/\n/).map(s => s.trim()).filter(Boolean) : [];
+        };
         const formData = {
             brand_container_id: this.brandContainerId,
             tipo_producto: document.getElementById('new_tipo_producto').value,
             nombre_producto: document.getElementById('new_nombre_producto').value.trim(),
             descripcion_producto: document.getElementById('new_descripcion_producto').value.trim(),
-            beneficio_1: document.getElementById('new_beneficio_1').value.trim() || null,
-            beneficio_2: document.getElementById('new_beneficio_2').value.trim() || null,
-            beneficio_3: document.getElementById('new_beneficio_3').value.trim() || null,
-            diferenciacion: document.getElementById('new_diferenciacion').value.trim() || null,
-            modo_uso: document.getElementById('new_modo_uso').value.trim() || null,
-            ingredientes: document.getElementById('new_ingredientes').value.trim() || null,
+            beneficios_principales: toArray('new_beneficios_principales'),
+            diferenciadores: toArray('new_diferenciadores'),
+            casos_de_uso: toArray('new_casos_de_uso'),
+            materiales_composicion: toArray('new_materiales_composicion'),
+            variantes: toArray('new_variantes'),
             precio_producto: document.getElementById('new_precio_producto').value ? parseFloat(document.getElementById('new_precio_producto').value) : null,
             moneda: document.getElementById('new_moneda').value,
-            variantes_producto: document.getElementById('new_variantes_producto').value.trim() || null
+            url_producto: document.getElementById('new_url_producto')?.value?.trim() || null
         };
 
         saveBtn.disabled = true;
@@ -917,36 +920,23 @@ if (typeof window.ProductsManager === 'undefined') {
                 </div>
 
                 <div class="form-group">
-                    <label>Beneficio 1</label>
-                    <input type="text" class="form-input" id="${prefix}beneficio_1" name="beneficio_1" 
-                           value="${product?.beneficio_1 || ''}">
+                    <label>Beneficios principales (uno por línea)</label>
+                    <textarea class="form-textarea" id="${prefix}beneficios_principales" name="beneficios_principales" rows="3">${Array.isArray(product?.beneficios_principales) ? product.beneficios_principales.join('\n') : (product?.beneficios_principales || '')}</textarea>
                 </div>
 
                 <div class="form-group">
-                    <label>Beneficio 2</label>
-                    <input type="text" class="form-input" id="${prefix}beneficio_2" name="beneficio_2" 
-                           value="${product?.beneficio_2 || ''}">
+                    <label>Diferenciadores (uno por línea)</label>
+                    <textarea class="form-textarea" id="${prefix}diferenciadores" name="diferenciadores" rows="2">${Array.isArray(product?.diferenciadores) ? product.diferenciadores.join('\n') : (product?.diferenciadores || '')}</textarea>
                 </div>
 
                 <div class="form-group">
-                    <label>Beneficio 3</label>
-                    <input type="text" class="form-input" id="${prefix}beneficio_3" name="beneficio_3" 
-                           value="${product?.beneficio_3 || ''}">
+                    <label>Casos de uso</label>
+                    <textarea class="form-textarea" id="${prefix}casos_de_uso" name="casos_de_uso" rows="2">${Array.isArray(product?.casos_de_uso) ? product.casos_de_uso.join('\n') : (product?.casos_de_uso || '')}</textarea>
                 </div>
 
                 <div class="form-group">
-                    <label>Diferenciación</label>
-                    <textarea class="form-textarea" id="${prefix}diferenciacion" name="diferenciacion">${product?.diferenciacion || ''}</textarea>
-                </div>
-
-                <div class="form-group">
-                    <label>Modo de uso</label>
-                    <textarea class="form-textarea" id="${prefix}modo_uso" name="modo_uso">${product?.modo_uso || ''}</textarea>
-                </div>
-
-                <div class="form-group">
-                    <label>Ingredientes</label>
-                    <textarea class="form-textarea" id="${prefix}ingredientes" name="ingredientes">${product?.ingredientes || ''}</textarea>
+                    <label>Materiales / composición</label>
+                    <textarea class="form-textarea" id="${prefix}materiales_composicion" name="materiales_composicion" rows="2">${Array.isArray(product?.materiales_composicion) ? product.materiales_composicion.join('\n') : (product?.materiales_composicion || '')}</textarea>
                 </div>
 
                 <div class="form-group">
@@ -965,8 +955,14 @@ if (typeof window.ProductsManager === 'undefined') {
                 </div>
 
                 <div class="form-group">
-                    <label>Variantes</label>
-                    <textarea class="form-textarea" id="${prefix}variantes_producto" name="variantes_producto">${product?.variantes_producto || ''}</textarea>
+                    <label>Variantes (uno por línea)</label>
+                    <textarea class="form-textarea" id="${prefix}variantes" name="variantes" rows="2">${Array.isArray(product?.variantes) ? product.variantes.join('\n') : (product?.variantes || '')}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>URL del producto</label>
+                    <input type="url" class="form-input" id="${prefix}url_producto" name="url_producto" 
+                           value="${product?.url_producto || ''}" placeholder="https://">
                 </div>
 
                 ${product ? this.renderProductImages(product.images || []) : `
@@ -1349,20 +1345,23 @@ if (typeof window.ProductsManager === 'undefined') {
             return;
         }
 
+        const toArray = (elId) => {
+            const el = document.getElementById(elId);
+            return el ? el.value.split(/\n/).map(s => s.trim()).filter(Boolean) : [];
+        };
         const formData = {
             brand_container_id: this.brandContainerId,
             tipo_producto: document.getElementById('tipo_producto').value,
             nombre_producto: document.getElementById('nombre_producto').value.trim(),
             descripcion_producto: document.getElementById('descripcion_producto').value.trim(),
-            beneficio_1: document.getElementById('beneficio_1').value.trim() || null,
-            beneficio_2: document.getElementById('beneficio_2').value.trim() || null,
-            beneficio_3: document.getElementById('beneficio_3').value.trim() || null,
-            diferenciacion: document.getElementById('diferenciacion').value.trim() || null,
-            modo_uso: document.getElementById('modo_uso').value.trim() || null,
-            ingredientes: document.getElementById('ingredientes').value.trim() || null,
+            beneficios_principales: toArray('beneficios_principales'),
+            diferenciadores: toArray('diferenciadores'),
+            casos_de_uso: toArray('casos_de_uso'),
+            materiales_composicion: toArray('materiales_composicion'),
+            variantes: toArray('variantes'),
             precio_producto: document.getElementById('precio_producto').value ? parseFloat(document.getElementById('precio_producto').value) : null,
             moneda: document.getElementById('moneda').value,
-            variantes_producto: document.getElementById('variantes_producto').value.trim() || null
+            url_producto: document.getElementById('url_producto')?.value?.trim() || null
         };
 
         saveBtn.disabled = true;
