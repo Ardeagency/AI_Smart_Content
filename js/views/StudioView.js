@@ -134,16 +134,28 @@ class StudioView extends BaseView {
     }
   }
 
+  /**
+   * Carga flujos manuales con su primer módulo (input_schema y webhooks viven en flow_modules).
+   * Schema actual: content_flows no tiene input_schema ni webhook_url; flow_modules sí.
+   */
   async loadFlows() {
     if (!this.supabase) return;
     try {
       const { data, error } = await this.supabase
         .from('content_flows')
-        .select('id, name, description, token_cost, input_schema, webhook_url, output_type')
+        .select(`
+          id,
+          name,
+          description,
+          token_cost,
+          output_type,
+          execution_mode,
+          flow_modules ( step_order, input_schema, webhook_url_test, webhook_url_prod )
+        `)
         .eq('is_active', true)
         .eq('flow_category_type', 'manual');
       if (!error && data) {
-        this.flows = data;
+        this.flows = data.map(f => this.normalizeFlowFromModules(f));
       } else {
         this.flows = [];
       }
@@ -151,6 +163,27 @@ class StudioView extends BaseView {
       console.error('Studio loadFlows:', e);
       this.flows = [];
     }
+  }
+
+  /**
+   * Normaliza un flujo con flow_modules al formato que espera la UI (input_schema, webhook_url).
+   * Usa el primer módulo por step_order; para producción usa webhook_url_prod y fallback a test.
+   */
+  normalizeFlowFromModules(flow) {
+    const modules = (flow.flow_modules || []).slice().sort((a, b) => (a.step_order ?? 0) - (b.step_order ?? 0));
+    const first = modules[0];
+    return {
+      id: flow.id,
+      name: flow.name,
+      description: flow.description,
+      token_cost: flow.token_cost,
+      output_type: flow.output_type,
+      execution_mode: flow.execution_mode || 'single_step',
+      input_schema: first?.input_schema ?? {},
+      webhook_url: first?.webhook_url_prod || first?.webhook_url_test || null,
+      webhook_url_test: first?.webhook_url_test,
+      webhook_url_prod: first?.webhook_url_prod
+    };
   }
 
   updateCreditsDisplay() {

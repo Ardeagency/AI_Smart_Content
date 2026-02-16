@@ -12,7 +12,7 @@ class DevBuilderView extends DevBaseView {
     this.flowId = null; // null = nuevo flujo, UUID = editando
     this.isEditMode = false;
     
-    // Estado del flujo (alineado con content_flows en schema)
+    // Estado del flujo (alineado con content_flows en schema: execution_mode, subcategory_id)
     this.flowData = {
       name: '',
       description: '',
@@ -23,7 +23,8 @@ class DevBuilderView extends DevBaseView {
       token_cost: 1,
       flow_image_url: null,
       status: 'draft',
-      version: '1.0.0'
+      version: '1.0.0',
+      execution_mode: 'single_step'
     };
     
     // Schema de inputs (array de campos)
@@ -1463,18 +1464,20 @@ class DevBuilderView extends DevBaseView {
         return;
       }
       
-      // Cargar datos
+      // Cargar datos (alineado con content_flows: subcategory_id, execution_mode)
       this.flowData = {
         name: flow.name,
         description: flow.description || '',
         category_id: flow.category_id,
+        subcategory_id: flow.subcategory_id || null,
         output_type: flow.output_type || 'text',
         flow_category_type: flow.flow_category_type || 'manual',
         token_cost: flow.token_cost || 1,
         flow_image_url: flow.flow_image_url,
         status: flow.status || 'draft',
         version: flow.version || '1.0.0',
-        owner_id: flow.owner_id
+        owner_id: flow.owner_id,
+        execution_mode: flow.execution_mode || 'single_step'
       };
       
       this.inputSchema = [];
@@ -2340,6 +2343,7 @@ class DevBuilderView extends DevBaseView {
         flow_image_url: this.flowData.flow_image_url,
         status: this.flowData.status,
         version: this.flowData.version,
+        execution_mode: this.flowData.execution_mode || 'single_step',
         ui_layout_config: this.uiLayoutConfig
       };
       
@@ -2587,6 +2591,7 @@ class DevBuilderView extends DevBaseView {
         flow_image_url: this.flowData.flow_image_url,
         status: 'draft',
         version: this.flowData.version,
+        execution_mode: this.flowData.execution_mode || 'single_step',
         owner_id: this.userId,
         ui_layout_config: this.uiLayoutConfig
       };
