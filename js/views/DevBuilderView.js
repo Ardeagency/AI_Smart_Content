@@ -1315,22 +1315,46 @@ class DevBuilderView extends DevBaseView {
     const escapeProp = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'));
     switch (family) {
       case 'text':
-      case 'textarea':
+      case 'textarea': {
+        const it = (field.input_type || field.type || 'text').toLowerCase();
+        const isLong = it === 'textarea' || it === 'prompt_input' || it === 'prompt_system';
+        const currentStringType = field.html_type === 'url' ? 'website' : (it === 'prompt_input' ? 'prompt' : (it === 'prompt_system' ? 'system_prompt' : (it === 'textarea' ? 'textarea' : 'text')));
         return `
           <div class="property-group">
-            <h4>Texto</h4>
+            <h4>Texto / String</h4>
             <div class="property-field">
-              <label for="propMaxLength">Máximo caracteres</label>
-              <input type="number" id="propMaxLength" value="${field.maxLength || ''}" min="1">
+              <label for="propStringMode">Modo de texto</label>
+              <select id="propStringMode">
+                <option value="short" ${!isLong ? 'selected' : ''}>Texto corto</option>
+                <option value="long" ${isLong ? 'selected' : ''}>Texto largo</option>
+              </select>
+              <span class="field-help">Una línea o varias (área de texto).</span>
             </div>
-            ${(field.input_type || field.type) === 'textarea' ? `
+            <div class="property-field">
+              <label for="propStringDataType">Tipo de texto</label>
+              <select id="propStringDataType">
+                <option value="text" ${currentStringType === 'text' ? 'selected' : ''}>Texto</option>
+                <option value="textarea" ${currentStringType === 'textarea' ? 'selected' : ''}>Textarea</option>
+                <option value="website" ${currentStringType === 'website' ? 'selected' : ''}>Website</option>
+                <option value="prompt" ${currentStringType === 'prompt' ? 'selected' : ''}>Prompt</option>
+                <option value="system_prompt" ${currentStringType === 'system_prompt' ? 'selected' : ''}>System prompt</option>
+              </select>
+              <span class="field-help">Website = URL; Prompt = entrada para IA; System prompt = prompt de sistema.</span>
+            </div>
+            <div class="property-field">
+              <label for="propMaxLength">Límite de caracteres</label>
+              <input type="number" id="propMaxLength" value="${field.maxLength != null ? field.maxLength : ''}" min="1" placeholder="Sin límite">
+              <span class="field-help">Opcional. Dejar vacío para sin límite.</span>
+            </div>
+            ${isLong ? `
               <div class="property-field">
                 <label for="propRows">Filas</label>
-                <input type="number" id="propRows" value="${field.rows || 4}" min="2" max="20">
+                <input type="number" id="propRows" value="${field.rows != null ? field.rows : 4}" min="2" max="20">
               </div>
             ` : ''}
           </div>
         `;
+      }
       
       case 'number':
       case 'range':
@@ -1632,20 +1656,76 @@ class DevBuilderView extends DevBaseView {
   }
 
   setupTypeSpecificListeners(field) {
-    // Text/Textarea
+    // Text/Textarea: modo corto/largo, tipo de dato, límite, filas
+    const stringModeSelect = this.querySelector('#propStringMode');
+    const stringDataTypeSelect = this.querySelector('#propStringDataType');
     const maxLengthInput = this.querySelector('#propMaxLength');
     const rowsInput = this.querySelector('#propRows');
     
+    if (stringModeSelect) {
+      stringModeSelect.addEventListener('change', (e) => {
+        const isLong = e.target.value === 'long';
+        const tipo = stringDataTypeSelect ? stringDataTypeSelect.value : 'text';
+        if (isLong) {
+          if (tipo === 'prompt') field.input_type = 'prompt_input';
+          else if (tipo === 'system_prompt') field.input_type = 'prompt_system';
+          else field.input_type = 'textarea';
+          if (field.rows == null) field.rows = 4;
+        } else {
+          if (tipo === 'website') {
+            field.input_type = 'text';
+            field.html_type = 'url';
+          } else field.input_type = 'text';
+          field.html_type = field.html_type === 'url' ? 'url' : undefined;
+          delete field.rows;
+        }
+        this.renderCanvas();
+        this.renderPropertiesPanel();
+        this.onFieldChange();
+      });
+    }
+    
+    if (stringDataTypeSelect) {
+      stringDataTypeSelect.addEventListener('change', (e) => {
+        const v = e.target.value;
+        if (v === 'website') {
+          field.input_type = 'text';
+          field.html_type = 'url';
+          field.rows = undefined;
+        } else if (v === 'prompt') {
+          field.input_type = 'prompt_input';
+          field.html_type = undefined;
+          if (field.rows == null) field.rows = 4;
+        } else if (v === 'system_prompt') {
+          field.input_type = 'prompt_system';
+          field.html_type = undefined;
+          if (field.rows == null) field.rows = 4;
+        } else if (v === 'textarea') {
+          field.input_type = 'textarea';
+          field.html_type = undefined;
+          if (field.rows == null) field.rows = 4;
+        } else {
+          field.input_type = 'text';
+          field.html_type = undefined;
+          field.rows = undefined;
+        }
+        this.renderCanvas();
+        this.renderPropertiesPanel();
+        this.onFieldChange();
+      });
+    }
+    
     if (maxLengthInput) {
       maxLengthInput.addEventListener('change', (e) => {
-        field.maxLength = parseInt(e.target.value) || null;
+        const val = e.target.value.trim();
+        field.maxLength = val === '' ? undefined : parseInt(val, 10) || undefined;
         this.onFieldChange();
       });
     }
     
     if (rowsInput) {
       rowsInput.addEventListener('change', (e) => {
-        field.rows = parseInt(e.target.value) || 4;
+        field.rows = parseInt(e.target.value, 10) || 4;
         this.onFieldChange();
       });
     }
