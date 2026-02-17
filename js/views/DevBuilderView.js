@@ -93,7 +93,7 @@ class DevBuilderView extends DevBaseView {
           </button>
           <button class="builder-tab" data-tab="ficha">
             <i class="ph ph-cardholder"></i> Ficha del Flujo
-          </button>
+              </button>
         </div>
       </header>
 
@@ -253,18 +253,18 @@ class DevBuilderView extends DevBaseView {
           <div class="builder-tab-content builder-tab-technical" id="tabTechnical">
             <div class="technical-tab-layout">
               <div class="technical-tab-main">
-                <div class="builder-settings-form builder-config-fullwidth">
+            <div class="builder-settings-form builder-config-fullwidth">
                   <div class="settings-section technical-section-mode" id="technicalWebhookSection">
                     <h4 class="technical-section-title"><i class="ph ph-play-circle"></i> Modo de ejecución del flujo</h4>
-                    <div class="settings-field">
+                <div class="settings-field">
                       <label for="executionMode">Modo</label>
                       <select id="executionMode">
                         <option value="single_step">Un solo módulo</option>
                         <option value="multi_step">Varios módulos (lineal)</option>
                         <option value="sequential">Secuencial con decisiones</option>
                       </select>
-                    </div>
-                  </div>
+                </div>
+                </div>
                   <div class="settings-section technical-section-modules">
                     <h4 class="technical-section-title"><i class="ph ph-stack"></i> Módulos del flujo</h4>
                     <div id="technicalModulesList" class="technical-modules-list"></div>
@@ -297,12 +297,12 @@ class DevBuilderView extends DevBaseView {
                 <button type="button" class="btn-icon btn-ghost" id="technicalDetailsPanelClose" title="Cerrar"><i class="ph ph-x"></i></button>
               </div>
               <div class="builder-panel-right-body">
-                <div class="settings-field">
+                  <div class="settings-field">
                   <label for="techDetailsModuleSelect">Módulo</label>
                   <select id="techDetailsModuleSelect">
                     <option value="">— Seleccionar módulo —</option>
-                  </select>
-                </div>
+                    </select>
+                  </div>
                 <div id="techDetailsFormWrap" class="tech-details-form" style="display: none;">
                   <div class="settings-field">
                     <label for="techDetailsPlatformName">Plataforma</label>
@@ -316,36 +316,36 @@ class DevBuilderView extends DevBaseView {
                   <div class="settings-field">
                     <label for="techDetailsPlatformFlowId">ID del flujo en la plataforma</label>
                     <input type="text" id="techDetailsPlatformFlowId" placeholder="ej. workflow id en n8n">
-                  </div>
-                  <div class="settings-field">
+                </div>
+                <div class="settings-field">
                     <label for="techDetailsPlatformFlowName">Nombre del flujo en la plataforma</label>
                     <input type="text" id="techDetailsPlatformFlowName" placeholder="Nombre en n8n/Make">
-                  </div>
+                </div>
                   <div class="settings-field">
                     <label for="techDetailsEditorUrl">URL del Editor</label>
                     <input type="url" id="techDetailsEditorUrl" placeholder="https://tu-n8n.com/workflow/123">
-                  </div>
+              </div>
                   <div class="settings-field">
                     <label for="techDetailsCredentialId">Credential ID</label>
                     <input type="text" id="techDetailsCredentialId" placeholder="Opcional">
-                  </div>
+                </div>
                   <div class="settings-field">
                     <label class="checkbox-label">
                       <input type="checkbox" id="techDetailsIsHealthy" checked>
                       <span>Estado saludable (is_healthy)</span>
                     </label>
-                  </div>
+              </div>
                   <div class="settings-field">
                     <label for="techDetailsAvgExecutionTimeMs">Tiempo medio ejecución (ms)</label>
                     <input type="number" id="techDetailsAvgExecutionTimeMs" min="0" placeholder="Opcional">
-                  </div>
+                </div>
                   <div class="settings-field">
                     <label>Última comprobación de salud</label>
                     <input type="text" id="techDetailsLastHealthCheck" readonly placeholder="—">
                   </div>
                 </div>
               </div>
-            </div>
+              </div>
             </div>
           </div>
 
@@ -691,6 +691,7 @@ class DevBuilderView extends DevBaseView {
       { id: 'text', name: 'Texto Corto', description: 'Campo de texto', category: 'basic', icon_name: 'textbox', base_schema: { input_type: 'text', placeholder: '', maxLength: 255 } },
       { id: 'textarea', name: 'Texto Largo', description: 'Área de texto', category: 'basic', icon_name: 'article', base_schema: { input_type: 'textarea', placeholder: '', rows: 4 } },
       { id: 'select', name: 'Selector', description: 'Lista desplegable', category: 'basic', icon_name: 'list-bullets', base_schema: { input_type: 'select', options: [] } },
+      { id: 'dropdown', name: 'Dropdown', description: 'Menú desplegable', category: 'basic', icon_name: 'caret-down', base_schema: { input_type: 'dropdown', options: [{ value: 'opcion1', label: 'Opción 1' }, { value: 'opcion2', label: 'Opción 2' }] } },
       { id: 'number', name: 'Número', description: 'Campo numérico', category: 'basic', icon_name: 'hash', base_schema: { input_type: 'number', min: 0, max: 100, step: 1 } },
       { id: 'checkbox', name: 'Checkbox', description: 'Casilla', category: 'basic', icon_name: 'check-square', base_schema: { input_type: 'checkbox', defaultValue: false } },
       { id: 'radio', name: 'Radio', description: 'Opciones', category: 'basic', icon_name: 'radio-button', base_schema: { input_type: 'radio', options: [] } },
@@ -704,7 +705,7 @@ class DevBuilderView extends DevBaseView {
   renderComponentsList() {
     const container = this.querySelector('#componentsList');
     if (!container) return;
-
+    
     // Agrupar por categoría (taxonomía: basic, smart_text, semantic, brand, media, controls, structural)
     const groups = {
       basic: { name: 'Básicos', icon: 'shapes', items: [] },
@@ -729,12 +730,12 @@ class DevBuilderView extends DevBaseView {
 
     const escapeAttr = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'));
     const escapeHtml = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'));
-
+    
     let html = '';
-
+    
     Object.entries(groups).forEach(([key, group]) => {
       if (group.items.length === 0) return;
-
+      
       html += `
         <div class="component-group" data-group-key="${escapeAttr(key)}">
           <div class="component-group-header">
@@ -746,21 +747,21 @@ class DevBuilderView extends DevBaseView {
               const iconName = template.icon_name || 'textbox';
               const templateJson = JSON.stringify(template.base_schema).replace(/'/g, '&#39;');
               return `
-              <div class="component-item"
-                   draggable="true"
+              <div class="component-item" 
+                   draggable="true" 
                    data-template-id="${escapeAttr(template.id)}"
                    data-template="${escapeAttr(templateJson)}"
                    data-search="${escapeAttr(searchText)}">
                 <i class="ph ph-${escapeHtml(iconName)}"></i>
                 <span class="component-name">${escapeHtml(template.name)}</span>
-              </div>
+                </div>
             `;
             }).join('')}
           </div>
         </div>
       `;
     });
-
+    
     container.innerHTML = html;
     this.setupComponentsSearch();
     this.setupDragAndDrop();
@@ -813,13 +814,13 @@ class DevBuilderView extends DevBaseView {
     const templateId = item.dataset.templateId;
     const templateData = item.dataset.template;
     if (!templateId || !templateData) return;
-
+    
     e.dataTransfer.setData('text/plain', JSON.stringify({
       type: 'new_component',
       templateId,
       templateData: JSON.parse(templateData)
     }));
-
+    
     item.classList.add('dragging');
     this.querySelector('#builderCanvas')?.classList.add('drag-active');
   }
@@ -996,6 +997,16 @@ class DevBuilderView extends DevBaseView {
     if (typeof window.InputRegistry !== 'undefined' && window.InputRegistry.renderPreview) {
       return window.InputRegistry.renderPreview(field);
     }
+    const type = (field.input_type || field.type || 'text').toLowerCase();
+    if (type === 'dropdown' || type === 'select' || type === 'multi_select') {
+      const opts = field.options || [];
+      const ph = (field.placeholder || 'Seleccionar...').replace(/"/g, '&quot;');
+      const options = opts.map(o => {
+        const label = o && (o.label !== undefined ? o.label : o.value !== undefined ? o.value : o);
+        return `<option>${(label != null ? String(label) : '').replace(/</g, '&lt;')}</option>`;
+      }).join('');
+      return `<div class="input-dropdown-wrap"><select class="preview-input input-dropdown-select" disabled><option value="">${ph}</option>${options}</select></div>`;
+    }
     const placeholder = (field.placeholder || '').replace(/"/g, '&quot;');
     return `<input type="text" class="preview-input" placeholder="${placeholder}" disabled>`;
   }
@@ -1143,6 +1154,21 @@ class DevBuilderView extends DevBaseView {
           <div class="property-field">
             <label for="propLabel">Label</label>
             <input type="text" id="propLabel" value="${(field.label || '').replace(/"/g, '&quot;')}">
+          </div>
+          
+          <div class="property-field">
+            <label for="propInputType">Tipo de control</label>
+            <select id="propInputType">
+              <option value="text" ${(field.input_type || field.type || 'text') === 'text' ? 'selected' : ''}>Texto corto</option>
+              <option value="textarea" ${(field.input_type || field.type) === 'textarea' ? 'selected' : ''}>Texto largo</option>
+              <option value="dropdown" ${(field.input_type || field.type) === 'dropdown' ? 'selected' : ''}>Dropdown</option>
+              <option value="select" ${(field.input_type || field.type) === 'select' ? 'selected' : ''}>Selector (select)</option>
+              <option value="number" ${(field.input_type || field.type) === 'number' ? 'selected' : ''}>Número</option>
+              <option value="checkbox" ${(field.input_type || field.type) === 'checkbox' ? 'selected' : ''}>Checkbox</option>
+              <option value="radio" ${(field.input_type || field.type) === 'radio' ? 'selected' : ''}>Radio</option>
+              <option value="range" ${(field.input_type || field.type) === 'range' ? 'selected' : ''}>Slider</option>
+            </select>
+            <span class="field-help">Define si el campo es texto, dropdown, número, etc. Cambia el aspecto en el canvas y las opciones de abajo.</span>
           </div>
           
           <div class="property-field">
@@ -1309,9 +1335,10 @@ class DevBuilderView extends DevBaseView {
   }
 
   renderTypeSpecificProperties(field) {
-    const type = field.input_type || field.type || 'text';
-    const family = (typeof window.InputRegistry !== 'undefined' && window.InputRegistry.getPropertyFamily)
+    const type = (field.input_type || field.type || 'text').toLowerCase();
+    let family = (typeof window.InputRegistry !== 'undefined' && window.InputRegistry.getPropertyFamily)
       ? window.InputRegistry.getPropertyFamily(type) : type;
+    if (type === 'dropdown' || type === 'select' || type === 'multi_select') family = 'select';
     const escapeProp = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'));
     switch (family) {
       case 'text':
@@ -1534,6 +1561,23 @@ class DevBuilderView extends DevBaseView {
     if (labelInput) {
       labelInput.addEventListener('input', (e) => {
         field.label = e.target.value;
+        this.onFieldChange();
+      });
+    }
+    
+    const inputTypeSelect = this.querySelector('#propInputType');
+    if (inputTypeSelect) {
+      inputTypeSelect.addEventListener('change', (e) => {
+        const newType = e.target.value;
+        field.input_type = newType;
+        if (field.type !== undefined) field.type = newType;
+        if (newType === 'dropdown' || newType === 'select') {
+          if (!Array.isArray(field.options) || field.options.length === 0) {
+            field.options = [{ value: 'opcion1', label: 'Opción 1' }, { value: 'opcion2', label: 'Opción 2' }];
+          }
+        }
+        this.renderPropertiesPanel();
+        this.renderCanvas();
         this.onFieldChange();
       });
     }
@@ -2623,8 +2667,8 @@ class DevBuilderView extends DevBaseView {
     if (nameConfig) {
       nameConfig.addEventListener('input', (e) => {
         this.flowData.name = e.target.value;
-        this.hasUnsavedChanges = true;
-        this.renderFooter();
+      this.hasUnsavedChanges = true;
+      this.renderFooter();
       });
     }
 
@@ -3215,7 +3259,7 @@ class DevBuilderView extends DevBaseView {
       const mod = mods[i];
       const key = mod.id || `idx_${i}`;
       const td = this.flowTechnicalDetailsByModule[key] || {};
-      const techPayload = {
+    const techPayload = {
         flow_module_id: mod.id,
         platform_name: td.platform_name || 'n8n',
         platform_flow_id: td.platform_flow_id || null,
@@ -3226,8 +3270,8 @@ class DevBuilderView extends DevBaseView {
         avg_execution_time_ms: td.avg_execution_time_ms !== '' && td.avg_execution_time_ms != null ? parseInt(td.avg_execution_time_ms, 10) : null
       };
       const { error: techErr } = await this.supabase
-        .from('flow_technical_details')
-        .upsert(techPayload, { onConflict: 'flow_module_id' });
+      .from('flow_technical_details')
+      .upsert(techPayload, { onConflict: 'flow_module_id' });
       if (techErr) console.error('Error upserting flow_technical_details:', techErr);
     }
   }
