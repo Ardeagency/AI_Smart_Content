@@ -117,7 +117,8 @@
     var opts = f.options || [];
     var ph = escapeHtml(f.placeholder || 'Seleccionar...');
     var list = opts.map(function (o) { return '<option>' + escapeHtml(optLabel(o)) + '</option>'; }).join('');
-    return '<select class="preview-input" disabled><option value="">' + ph + '</option>' + list + '</select>';
+    var sel = '<select class="preview-input input-dropdown-select" disabled><option value="">' + ph + '</option>' + list + '</select>';
+    return '<div class="input-dropdown-wrap">' + sel + '</div>';
   }
   function previewNumber(f) {
     var ph = escapeHtml(f.placeholder || '');
@@ -242,7 +243,8 @@
       return '<option value="' + escapeHtml(String(optVal(o))) + '">' + escapeHtml(optLabel(o)) + '</option>';
     }).join('');
 
-    return '<select class="modern-input" id="' + a.id + '" name="' + a.name + '"' + multiple + a.disabled + a.required + '>' + optionsHtml + '</select>';
+    var selectHtml = '<select class="modern-input input-dropdown-select" id="' + a.id + '" name="' + a.name + '"' + multiple + a.disabled + a.required + '>' + optionsHtml + '</select>';
+    return '<div class="input-dropdown-wrap">' + selectHtml + '</div>';
   }
 
   /** 4. TOGGLE INPUT (Checkbox, Switch, Radio) */

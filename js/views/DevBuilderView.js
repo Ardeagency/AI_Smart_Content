@@ -1388,10 +1388,12 @@ class DevBuilderView extends DevBaseView {
       case 'select':
       case 'radio': {
         const options = field.options || [];
-        const isSelect = (field.input_type || field.type || '').toLowerCase() === 'select' || (field.input_type || field.type || '').toLowerCase() === 'multi_select';
+        const isSelect = (field.input_type || field.type || '').toLowerCase() === 'select' || (field.input_type || field.type || '').toLowerCase() === 'dropdown' || (field.input_type || field.type || '').toLowerCase() === 'multi_select';
+        const isDropdown = (field.input_type || field.type || '').toLowerCase() === 'dropdown' || (field.input_type || field.type || '').toLowerCase() === 'select';
+        const optVal = (o) => (o && (o.value !== undefined ? o.value : o.label !== undefined ? o.label : o));
         return `
           <div class="property-group">
-            <h4>Lista desplegable</h4>
+            <h4>${isDropdown ? 'Dropdown' : 'Lista desplegable'}</h4>
             ${isSelect ? `
             <div class="property-toggle" style="margin-bottom: 12px;">
               <label>
@@ -1402,26 +1404,26 @@ class DevBuilderView extends DevBaseView {
             </div>
             ` : ''}
             <div class="property-field">
-              <label for="propOptionsArray">Opciones como array (una por línea)</label>
-              <textarea id="propOptionsArray" class="property-json-editor options-array-textarea" rows="5" placeholder="Una opción por línea, ej.:&#10;opcion 1&#10;opcion 2&#10;opcion 3"></textarea>
-              <span class="field-help">Escribe o pega una opción por línea. Se usa como valor y etiqueta. También puedes editar fila por fila abajo.</span>
+              <label>Opciones</label>
+              <span class="field-help block">Cada opción aparecerá en el dropdown. Escribe el texto (ej. rubia) y usa "+ Opciones" para añadir más.</span>
             </div>
-            <div class="property-field">
-              <label>Opciones (valor / etiqueta)</label>
-            </div>
-            <div class="options-editor" id="optionsEditor">
-              ${options.map((opt, i) => `
-                <div class="option-row" data-index="${i}">
-                  <input type="text" class="option-value" placeholder="Valor" value="${escapeProp(opt.value !== undefined ? opt.value : opt)}">
-                  <input type="text" class="option-label" placeholder="Label" value="${escapeProp(opt.label !== undefined ? opt.label : opt)}">
-                  <button class="btn-icon remove-option" title="Eliminar">
-                    <i class="ph ph-x"></i>
-                  </button>
+            <div class="options-editor options-editor--dropdown" id="optionsEditor">
+              ${options.length === 0 ? `
+                <div class="option-row" data-index="0">
+                  <input type="text" class="option-single" placeholder="ej. rubia" data-index="0">
+                  <button type="button" class="btn-icon remove-option" title="Eliminar"><i class="ph ph-x"></i></button>
                 </div>
-              `).join('')}
+              ` : options.map((opt, i) => {
+                const str = escapeProp(optVal(opt) != null ? String(optVal(opt)) : '');
+                return `
+                <div class="option-row" data-index="${i}">
+                  <input type="text" class="option-single" placeholder="ej. rubia" data-index="${i}" value="${str}">
+                  <button type="button" class="btn-icon remove-option" title="Eliminar"><i class="ph ph-x"></i></button>
+                </div>
+              `; }).join('')}
             </div>
-            <button class="btn-small" id="addOptionBtn">
-              <i class="ph ph-plus"></i> Agregar opción
+            <button type="button" class="btn-small btn-add-options" id="addOptionBtn">
+              <i class="ph ph-plus"></i> Opciones
             </button>
           </div>
         `;
@@ -1772,24 +1774,7 @@ class DevBuilderView extends DevBaseView {
       });
     }
     
-    const optionsArrayTa = this.querySelector('#propOptionsArray');
-    if (optionsArrayTa) {
-      optionsArrayTa.addEventListener('blur', (e) => {
-        const text = (e.target.value || '').trim();
-        if (!text) {
-          field.options = [];
-          this.renderPropertiesPanel();
-          this.onFieldChange();
-          return;
-        }
-        const lines = text.split(/\r?\n/).map(function (line) { return line.trim(); }).filter(Boolean);
-        field.options = lines.map(function (line) { return { value: line, label: line }; });
-        this.renderPropertiesPanel();
-        this.onFieldChange();
-      });
-    }
-    
-    // Select/Radio options
+    // Select/Dropdown/Radio: opciones (un input por opción o valor/etiqueta)
     const addOptionBtn = this.querySelector('#addOptionBtn');
     const optionsEditor = this.querySelector('#optionsEditor');
     
@@ -1798,16 +1783,30 @@ class DevBuilderView extends DevBaseView {
         if (!field.options) field.options = [];
         field.options.push({ value: '', label: '' });
         this.renderPropertiesPanel();
+        this.setupTypeSpecificListeners(field);
+        this.renderCanvas();
         this.onFieldChange();
       });
     }
     
     if (optionsEditor) {
-      optionsEditor.querySelectorAll('.option-row').forEach((row, index) => {
+      optionsEditor.querySelectorAll('.option-row').forEach((row) => {
+        const index = parseInt(row.getAttribute('data-index'), 10);
+        const singleInput = row.querySelector('.option-single');
         const valueInput = row.querySelector('.option-value');
         const labelInput = row.querySelector('.option-label');
         const removeBtn = row.querySelector('.remove-option');
         
+        if (singleInput) {
+          singleInput.addEventListener('input', (e) => {
+            const text = e.target.value;
+            while (field.options.length <= index) field.options.push({ value: '', label: '' });
+            field.options[index].value = text;
+            field.options[index].label = text;
+            this.renderCanvas();
+            this.onFieldChange();
+          });
+        }
         if (valueInput) {
           valueInput.addEventListener('input', (e) => {
             if (!field.options[index]) field.options[index] = {};
@@ -1819,7 +1818,6 @@ class DevBuilderView extends DevBaseView {
             this.onFieldChange();
           });
         }
-        
         if (labelInput) {
           labelInput.addEventListener('input', (e) => {
             if (!field.options[index]) field.options[index] = {};
@@ -1831,11 +1829,12 @@ class DevBuilderView extends DevBaseView {
             this.onFieldChange();
           });
         }
-        
         if (removeBtn) {
           removeBtn.addEventListener('click', () => {
             field.options.splice(index, 1);
             this.renderPropertiesPanel();
+            this.setupTypeSpecificListeners(field);
+            this.renderCanvas();
             this.onFieldChange();
           });
         }
