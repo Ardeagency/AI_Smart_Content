@@ -1118,6 +1118,45 @@ class DevBuilderView extends DevBaseView {
       };
       if (deleteBtn) deleteBtn.addEventListener('click', doDelete);
       if (removeXBtn) removeXBtn.addEventListener('click', doDelete);
+      
+      // Sincronizar cambios en el preview (slider, texto, dropdown, etc.) con el campo para que el valor "quede"
+      const schemaField = this.inputSchema[index];
+      if (schemaField && preview) {
+        const sync = () => { this.onFieldChange(); if (this.selectedFieldIndex === index) this.renderPropertiesPanel(); };
+        preview.querySelectorAll('input, select, textarea').forEach((el) => {
+          const tag = el.tagName.toLowerCase();
+          const type = (el.type || '').toLowerCase();
+          if (type === 'range') {
+            el.addEventListener('input', () => {
+              schemaField.defaultValue = parseFloat(el.value);
+              const span = el.nextElementSibling || preview.querySelector('.range-value');
+              if (span) span.textContent = el.value;
+              sync();
+            });
+          } else if (type === 'number') {
+            el.addEventListener('input', () => {
+              const n = parseFloat(el.value);
+              schemaField.defaultValue = isNaN(n) ? undefined : n;
+              sync();
+            });
+          } else if (type === 'checkbox') {
+            el.addEventListener('change', () => {
+              schemaField.defaultValue = el.checked;
+              sync();
+            });
+          } else if (tag === 'select') {
+            el.addEventListener('change', () => {
+              schemaField.defaultValue = el.value === '' ? undefined : el.value;
+              sync();
+            });
+          } else {
+            el.addEventListener('input', () => {
+              schemaField.defaultValue = el.value;
+              sync();
+            });
+          }
+        });
+      }
     });
   }
 
@@ -1186,9 +1225,8 @@ class DevBuilderView extends DevBaseView {
           <h4>General</h4>
           
           <div class="property-field">
-            <label for="propKey">Key (ID)</label>
+            <label for="propKey">Key</label>
             <input type="text" id="propKey" value="${field.key}" pattern="[a-z0-9_]+">
-            <span class="field-help">Identificador único (solo letras minúsculas, números y _)</span>
           </div>
           
           <div class="property-field">
@@ -1230,7 +1268,6 @@ class DevBuilderView extends DevBaseView {
               <option value="array" ${dataType === 'array' ? 'selected' : ''}>Array</option>
               <option value="object" ${dataType === 'object' ? 'selected' : ''}>Object (JSON)</option>
             </select>
-            <span class="field-help">Tipo del valor (string, number, boolean, array, object)</span>
           </div>
           
           ${defaultValueBlock}
@@ -1265,14 +1302,6 @@ class DevBuilderView extends DevBaseView {
           </div>
         </div>
         
-        <div class="property-group">
-          <h4>Variables / Config (JSON)</h4>
-          <div class="property-field">
-            <label for="propExtraConfig">Configuración extra (objeto JSON)</label>
-            <textarea id="propExtraConfig" class="property-json-editor" rows="4" placeholder='{ "key": "value" }'></textarea>
-            <span class="field-help">Objeto JSON opcional (variables, flags, config). Se guarda en el campo.</span>
-          </div>
-        </div>
       </div>
     `;
     
@@ -1291,12 +1320,15 @@ class DevBuilderView extends DevBaseView {
   }
 
   renderDefaultValueBlock(field, dataType) {
-    const type = field.input_type || field.type;
-    const isNumberFamily = ['number', 'range', 'stepper', 'rating'].indexOf((type || '').toLowerCase()) >= 0;
-    const isBooleanFamily = ['checkbox', 'switch', 'boolean', 'toggle'].indexOf((type || '').toLowerCase()) >= 0;
-    if (isNumberFamily) {
-      return ''; // min/max/step/defaultValue se editan en tipo Número
-    }
+    const type = (field.input_type || field.type || '').toLowerCase();
+    const isNumberFamily = ['number', 'range', 'stepper', 'stepper_num', 'num_stepper', 'rating', 'slider'].indexOf(type) >= 0;
+    const isBooleanFamily = ['checkbox', 'switch', 'boolean', 'toggle', 'toggle_switch'].indexOf(type) >= 0;
+    const hasOptions = ['dropdown', 'select', 'radio', 'tone_selector', 'mood_selector', 'length_selector'].indexOf(type) >= 0;
+    const opts = field.options || [];
+    const escapeVal = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'));
+    const optVal = (o) => (o && (o.value !== undefined ? o.value : o.label !== undefined ? o.label : o));
+    const optLabel = (o) => (o && (o.label !== undefined ? o.label : o.value !== undefined ? o.value : o));
+    if (isNumberFamily) return '';
     if (isBooleanFamily) {
       const checked = field.defaultValue === true;
       return `
@@ -1311,10 +1343,24 @@ class DevBuilderView extends DevBaseView {
         </div>
       `;
     }
+    if (hasOptions && opts.length > 0 && (dataType === 'string' || !dataType)) {
+      const current = field.defaultValue != null ? String(field.defaultValue) : '';
+      const optionsHtml = '<option value="">— Ninguno —</option>' + opts.map((o) => {
+        const v = optVal(o) != null ? String(optVal(o)) : '';
+        const lbl = optLabel(o) != null ? String(optLabel(o)) : v;
+        return `<option value="${escapeVal(v)}" ${current === v ? 'selected' : ''}>${escapeVal(lbl)}</option>`;
+      }).join('');
+      return `
+        <div class="property-field">
+          <label for="propDefaultValueSelect">Valor por defecto</label>
+          <select id="propDefaultValueSelect">${optionsHtml}</select>
+        </div>
+      `;
+    }
     if (dataType === 'array') {
       return `
         <div class="property-field">
-          <label for="propDefaultValueJson">Valor por defecto (array JSON)</label>
+          <label for="propDefaultValueJson">Valor por defecto (array)</label>
           <textarea id="propDefaultValueJson" class="property-json-editor" rows="3" placeholder='["item1", "item2"]'></textarea>
         </div>
       `;
@@ -1322,7 +1368,7 @@ class DevBuilderView extends DevBaseView {
     if (dataType === 'object') {
       return `
         <div class="property-field">
-          <label for="propDefaultValueJson">Valor por defecto (objeto JSON)</label>
+          <label for="propDefaultValueJson">Valor por defecto (objeto)</label>
           <textarea id="propDefaultValueJson" class="property-json-editor" rows="3" placeholder='{ "id": "", "name": "" }'></textarea>
         </div>
       `;
@@ -1331,7 +1377,7 @@ class DevBuilderView extends DevBaseView {
     return `
       <div class="property-field">
         <label for="propDefaultValueStr">Valor por defecto</label>
-        <input type="text" id="propDefaultValueStr" value="${strVal.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')}">
+        <input type="text" id="propDefaultValueStr" value="${escapeVal(strVal)}">
       </div>
     `;
   }
@@ -1351,19 +1397,10 @@ class DevBuilderView extends DevBaseView {
         }
       }
     }
-    const extraEl = this.querySelector('#propExtraConfig');
-    if (extraEl && field.extra_config) {
-      try {
-        extraEl.value = typeof field.extra_config === 'object' ? JSON.stringify(field.extra_config, null, 2) : (field.extra_config || '{}');
-      } catch (_) {
-        extraEl.value = '{}';
-      }
-    } else if (extraEl && field.config && typeof field.config === 'object') {
-      try {
-        extraEl.value = JSON.stringify(field.config, null, 2);
-      } catch (_) {
-        extraEl.value = '{}';
-      }
+    const defaultValueSelectEl = this.querySelector('#propDefaultValueSelect');
+    if (defaultValueSelectEl) {
+      const v = field.defaultValue != null ? String(field.defaultValue) : '';
+      defaultValueSelectEl.value = v;
     }
     const optionsArrayEl = this.querySelector('#propOptionsArray');
     if (optionsArrayEl && field.options) {
@@ -1395,7 +1432,6 @@ class DevBuilderView extends DevBaseView {
                 <option value="short" ${!isLong ? 'selected' : ''}>Texto corto</option>
                 <option value="long" ${isLong ? 'selected' : ''}>Texto largo</option>
               </select>
-              <span class="field-help">Una línea o varias (área de texto).</span>
             </div>
             <div class="property-field">
               <label for="propStringDataType">Tipo de texto</label>
@@ -1454,7 +1490,6 @@ class DevBuilderView extends DevBaseView {
         return `
           <div class="property-group">
             <h4>Num Stepper</h4>
-            <span class="field-help block">Valor numérico con botones subir/bajar (ej. 59).</span>
             <div class="property-row">
               <div class="property-field">
                 <label for="propStepperMin">Mínimo</label>
@@ -1494,7 +1529,6 @@ class DevBuilderView extends DevBaseView {
                 <span>Marcado por defecto</span>
               </label>
             </div>
-            <span class="field-help">Estado inicial: unchecked, hover, checked, disabled.</span>
           </div>
         `;
 
@@ -1527,7 +1561,6 @@ class DevBuilderView extends DevBaseView {
                 <option value="num" ${sliderMode === 'num' ? 'selected' : ''}>Numérico</option>
                 <option value="string" ${sliderMode === 'string' ? 'selected' : ''}>String (etiquetas por opción)</option>
               </select>
-              <span class="field-help">Num = min/max/step; String = opciones con valor y etiqueta.</span>
             </div>
             <div class="property-toggle" style="margin-bottom: 12px;">
               <label>
@@ -1569,8 +1602,7 @@ class DevBuilderView extends DevBaseView {
             </div>
             ` : `
             <div class="property-field">
-              <label>Opciones (valor + etiqueta para slider string)</label>
-              <span class="field-help block">Cada opción = posición en el slider (ej. 0=Bajo, 50=Medio, 100=Alto).</span>
+              <label>Opciones (slider string)</label>
             </div>
             <div class="options-editor options-editor--dropdown" id="optionsEditorSlider">
               ${(field.options || []).length === 0 ? `
@@ -1615,12 +1647,10 @@ class DevBuilderView extends DevBaseView {
                 <input type="checkbox" id="propMultiselect" ${field.is_multiple ? 'checked' : ''}>
                 <span>Multiselección</span>
               </label>
-              <span class="field-help block">Permite elegir varias opciones a la vez.</span>
             </div>
             ` : ''}
             <div class="property-field">
               <label>Opciones</label>
-              <span class="field-help block">Cada opción aparecerá en el dropdown. Escribe el texto (ej. rubia) y usa "+ Opciones" para añadir más.</span>
             </div>
             <div class="options-editor options-editor--dropdown" id="optionsEditor">
               ${options.length === 0 ? `
@@ -1663,7 +1693,6 @@ class DevBuilderView extends DevBaseView {
                   <option value="product_selector" ${currentContext === 'product_selector' ? 'selected' : ''}>Producto</option>
                   <option value="entity_selector" ${currentContext === 'entity_selector' ? 'selected' : ''}>Entidad (producto/servicio/lugar)</option>
                 </select>
-                <span class="field-help">Define si el dropdown carga marcas, audiencias, campañas, productos o entidades.</span>
               </div>
             </div>
           `;
@@ -1711,7 +1740,6 @@ class DevBuilderView extends DevBaseView {
                     return '<option value="' + o.value + '"' + (currentMedia === o.value ? ' selected' : '') + '>' + escapeProp(o.label) + '</option>';
                   }).join('')}
                 </select>
-                <span class="field-help">Según la función se cargarán las imágenes: productos, entidades, referencias, marca, audiencia, campaña.</span>
               </div>
             </div>
           `;
@@ -1845,6 +1873,14 @@ class DevBuilderView extends DevBaseView {
         this.onFieldChange();
       });
     }
+    const defaultValueSelect = this.querySelector('#propDefaultValueSelect');
+    if (defaultValueSelect) {
+      defaultValueSelect.addEventListener('change', (e) => {
+        const v = e.target.value;
+        field.defaultValue = v === '' ? undefined : v;
+        this.onFieldChange();
+      });
+    }
     
     const defaultValueBool = this.querySelector('#propDefaultValueBool');
     if (defaultValueBool) {
@@ -1878,31 +1914,6 @@ class DevBuilderView extends DevBaseView {
           this.onFieldChange();
         } catch (err) {
           this.showNotification('JSON inválido en valor por defecto', 'error');
-        }
-      });
-    }
-    
-    const extraConfigEl = this.querySelector('#propExtraConfig');
-    if (extraConfigEl) {
-      extraConfigEl.addEventListener('blur', (e) => {
-        const raw = (e.target.value || '').trim();
-        if (!raw) {
-          delete field.extra_config;
-          delete field.config;
-          this.onFieldChange();
-          return;
-        }
-        try {
-          const parsed = JSON.parse(raw);
-          if (typeof parsed !== 'object' || Array.isArray(parsed)) {
-            this.showNotification('La config extra debe ser un objeto JSON', 'error');
-            return;
-          }
-          field.extra_config = parsed;
-          e.target.value = JSON.stringify(parsed, null, 2);
-          this.onFieldChange();
-        } catch (err) {
-          this.showNotification('JSON inválido en configuración extra', 'error');
         }
       });
     }
