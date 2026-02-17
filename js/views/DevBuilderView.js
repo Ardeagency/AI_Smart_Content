@@ -58,6 +58,8 @@ class DevBuilderView extends DevBaseView {
     
     // ID del flow_module que se está editando en Técnico (flow_technical_details se enlaza a este id)
     this.currentFlowModuleId = null;
+    // Lista de módulos del grafo de ejecución (flow_modules). Cada uno: id?, name, step_order, execution_type, webhook_url_test, webhook_url_prod, is_human_approval_required, next_module_id
+    this.flowModules = [];
     // Campo siendo editado
     this.selectedFieldIndex = null;
     
@@ -73,14 +75,14 @@ class DevBuilderView extends DevBaseView {
 
   renderHTML() {
     return `
-      <!-- Header del Builder = pestañas (Configuración, Técnico, Inputs, Ficha) -->
+      <!-- Header del Builder = pestañas (Configuración, Módulos, Inputs, Ficha) -->
       <header class="builder-tabs-header" id="builderTabsHeader">
         <div class="builder-tabs">
           <button class="builder-tab active" data-tab="settings">
             <i class="ph ph-gear"></i> Configuración
           </button>
           <button class="builder-tab" data-tab="technical">
-            <i class="ph ph-code"></i> Técnico
+            <i class="ph ph-stack"></i> Módulos
           </button>
           <button class="builder-tab" data-tab="inputs">
             <i class="ph ph-textbox"></i> Inputs
@@ -243,26 +245,21 @@ class DevBuilderView extends DevBaseView {
             </div>
           </div>
 
-          <!-- Tab 2: Técnico = configuración de flow_modules (módulos del flujo). flow_technical_details se enlaza a cada módulo por flow_module_id -->
+          <!-- Tab 2: Módulos = grafo de ejecución (flow_modules). Sin descripción; lista de módulos con configuración técnica. -->
           <div class="builder-tab-content" id="tabTechnical">
             <div class="builder-settings-form builder-config-fullwidth">
-              <div class="settings-section" id="technicalIntroSection">
-                <h4><i class="ph ph-stack"></i> Módulos del flujo (flow_modules)</h4>
-                <p class="section-description">El flujo principal puede tener uno o más <strong>módulos</strong>. Aquí configuras el módulo: webhooks e input_schema. Los detalles de plataforma (n8n, editor) se guardan en <code>flow_technical_details</code> enlazado a este módulo.</p>
-              </div>
               <div class="settings-section" id="technicalWebhookSection">
-                <h4><i class="ph ph-webhooks-logo"></i> Módulo: Webhooks y esquema</h4>
                 <div class="settings-field">
-                  <label for="webhookTest">URL de Prueba (Test)</label>
-                  <input type="url" id="webhookTest" placeholder="https://tu-n8n.com/webhook-test/...">
-                  <span class="field-help">Webhook del módulo en modo prueba</span>
+                  <label for="executionMode">Modo de ejecución del flujo</label>
+                  <select id="executionMode">
+                    <option value="single_step">Un solo módulo</option>
+                    <option value="multi_step">Varios módulos (lineal)</option>
+                    <option value="sequential">Secuencial con decisiones</option>
+                  </select>
                 </div>
-                <div class="settings-field">
-                  <label for="webhookProd">URL de Producción</label>
-                  <input type="url" id="webhookProd" placeholder="https://tu-n8n.com/webhook/...">
-                  <span class="field-help">Webhook del módulo para usuarios finales</span>
-                </div>
-                <div class="settings-row">
+                <div id="technicalModulesList" class="technical-modules-list"></div>
+                <button type="button" class="btn-small" id="technicalAddModuleBtn"><i class="ph ph-plus"></i> Agregar un nuevo módulo</button>
+                <div class="settings-row" id="technicalFirstModuleExtra">
                   <div class="settings-field">
                     <label for="webhookMethod">Método HTTP</label>
                     <select id="webhookMethod">
@@ -281,10 +278,9 @@ class DevBuilderView extends DevBaseView {
                     </select>
                   </div>
                 </div>
-                <div class="settings-field">
+                <div class="settings-field" id="technicalEditorUrlWrap">
                   <label for="editorUrl">URL del Editor</label>
                   <input type="url" id="editorUrl" placeholder="https://tu-n8n.com/workflow/123">
-                  <span class="field-help">Link para editar este módulo en la plataforma (guardado en flow_technical_details por flow_module_id)</span>
                 </div>
               </div>
               <div class="settings-section technical-automated-block" id="technicalAutomatedBlock" style="display: none;">
@@ -296,8 +292,7 @@ class DevBuilderView extends DevBaseView {
                 </div>
               </div>
               <div class="settings-section">
-                <h4><i class="ph ph-code"></i> Schema JSON del módulo (input_schema)</h4>
-                <p class="section-description">Estructura de datos que recibe el webhook de este módulo (flow_modules.input_schema)</p>
+                <h4><i class="ph ph-code"></i> Schema JSON (input_schema)</h4>
                 <div class="json-preview" id="jsonSchemaPreview">
                   <pre><code>{ "fields": [] }</code></pre>
                 </div>
@@ -1812,36 +1807,47 @@ class DevBuilderView extends DevBaseView {
         this.uiLayoutConfig = { ...this.uiLayoutConfig, ...flow.ui_layout_config };
       }
       
-      // Técnico = flow_modules (módulos del flujo). flow_technical_details está enlazado a cada módulo por flow_module_id, NO a content_flows.
-      const { data: flowModule } = await this.supabase
+      // Grafo de ejecución: todos los módulos (flow_modules). flow_technical_details por flow_module_id.
+      const { data: modulesList } = await this.supabase
         .from('flow_modules')
-        .select('id, name, step_order, webhook_url_test, webhook_url_prod, input_schema')
+        .select('id, name, step_order, execution_type, webhook_url_test, webhook_url_prod, input_schema, output_schema, is_human_approval_required, next_module_id, routing_rules')
         .eq('content_flow_id', this.flowId)
-        .order('step_order', { ascending: true })
-        .limit(1)
-        .maybeSingle();
+        .order('step_order', { ascending: true });
       
-      if (flowModule) {
-        this.currentFlowModuleId = flowModule.id;
-        if (flowModule.input_schema?.fields) {
-          this.inputSchema = flowModule.input_schema.fields;
-        } else if (Array.isArray(flowModule.input_schema)) {
-          this.inputSchema = flowModule.input_schema;
+      if (modulesList && modulesList.length > 0) {
+        this.flowModules = modulesList.map(m => ({
+          id: m.id,
+          name: m.name || '',
+          step_order: m.step_order,
+          execution_type: m.execution_type || 'webhook',
+          webhook_url_test: m.webhook_url_test || '',
+          webhook_url_prod: m.webhook_url_prod || '',
+          is_human_approval_required: !!m.is_human_approval_required,
+          next_module_id: m.next_module_id || null,
+          output_schema: m.output_schema ?? null,
+          routing_rules: m.routing_rules ?? null
+        }));
+        this.currentFlowModuleId = this.flowModules[0].id;
+        const first = modulesList[0];
+        if (first.input_schema?.fields) {
+          this.inputSchema = first.input_schema.fields;
+        } else if (Array.isArray(first.input_schema)) {
+          this.inputSchema = first.input_schema;
         }
-        // flow_technical_details: 1:1 con flow_modules (fk flow_module_id)
         const { data: techDetails } = await this.supabase
           .from('flow_technical_details')
           .select('platform_name, editor_url')
-          .eq('flow_module_id', flowModule.id)
+          .eq('flow_module_id', first.id)
           .maybeSingle();
-        
         this.technicalDetails = {
-          webhook_url_test: flowModule.webhook_url_test || '',
-          webhook_url_prod: flowModule.webhook_url_prod || '',
+          webhook_url_test: first.webhook_url_test || '',
+          webhook_url_prod: first.webhook_url_prod || '',
           webhook_method: 'POST',
           platform_name: techDetails?.platform_name || 'n8n',
           editor_url: techDetails?.editor_url || ''
         };
+      } else {
+        this.flowModules = [{ name: 'Módulo 1', step_order: 1, execution_type: 'webhook', webhook_url_test: '', webhook_url_prod: '', is_human_approval_required: false, next_module_id: null, output_schema: null, routing_rules: null }];
       }
       if (this.inputSchema.length === 0 && flow.input_schema?.fields) {
         this.inputSchema = flow.input_schema.fields;
@@ -1920,22 +1926,162 @@ class DevBuilderView extends DevBaseView {
     const uiHiddenFromCatalog = this.querySelector('#uiHiddenFromCatalog');
     if (uiHiddenFromCatalog) uiHiddenFromCatalog.checked = !!this.uiLayoutConfig.hidden_from_catalog;
     
-    // Technical details
-    const webhookTest = this.querySelector('#webhookTest');
-    const webhookProd = this.querySelector('#webhookProd');
+    // Técnico: modo de ejecución y lista de módulos
+    const executionMode = this.querySelector('#executionMode');
+    if (executionMode) executionMode.value = this.flowData.execution_mode || 'single_step';
+    this.renderTechnicalModulesList();
+    
     const webhookMethod = this.querySelector('#webhookMethod');
     const platformName = this.querySelector('#platformName');
     const editorUrl = this.querySelector('#editorUrl');
-    
-    if (webhookTest) webhookTest.value = this.technicalDetails.webhook_url_test;
-    if (webhookProd) webhookProd.value = this.technicalDetails.webhook_url_prod;
     if (webhookMethod) webhookMethod.value = this.technicalDetails.webhook_method;
     if (platformName) platformName.value = this.technicalDetails.platform_name;
     if (editorUrl) editorUrl.value = this.technicalDetails.editor_url;
     
+    this.setupTechnicalModulesListeners();
+    
     // Render canvas
     this.renderCanvas();
     this.updateJsonPreview();
+  }
+
+  renderTechnicalModulesList() {
+    const listEl = this.querySelector('#technicalModulesList');
+    if (!listEl) return;
+    const executionTypes = [
+      { value: 'webhook', label: 'Webhook' },
+      { value: 'python', label: 'Python' },
+      { value: 'make', label: 'Make' },
+      { value: 'internal', label: 'Internal' },
+      { value: 'ai_direct', label: 'AI direct' },
+      { value: 'aggregator', label: 'Aggregator' }
+    ];
+    const mods = this.flowModules.length ? this.flowModules : [{ name: 'Módulo 1', step_order: 1, execution_type: 'webhook', webhook_url_test: '', webhook_url_prod: '', is_human_approval_required: false, next_module_id: null, output_schema: null, routing_rules: null }];
+    if (this.flowModules.length === 0) this.flowModules = mods;
+    listEl.innerHTML = mods.map((m, i) => {
+      const nextOpts = mods.filter((o, j) => j !== i && o.id).map(o => `<option value="${o.id}" ${m.next_module_id === o.id ? 'selected' : ''}>${this.escapeHtml(o.name || 'Módulo')}</option>`).join('');
+      const outputSchemaStr = m.output_schema != null ? (typeof m.output_schema === 'string' ? m.output_schema : JSON.stringify(m.output_schema, null, 2)) : '';
+      const routingRulesStr = m.routing_rules != null ? (typeof m.routing_rules === 'string' ? m.routing_rules : JSON.stringify(m.routing_rules, null, 2)) : '';
+      return `
+        <div class="technical-module-card" data-module-index="${i}">
+          <div class="technical-module-header">
+            <span class="technical-module-order">${i + 1}</span>
+            <input type="text" class="technical-module-name" data-field="name" value="${this.escapeHtml(m.name || '')}" placeholder="Nombre del módulo">
+            ${mods.length > 1 ? `<button type="button" class="btn-icon technical-module-remove" title="Quitar módulo"><i class="ph ph-trash"></i></button>` : ''}
+          </div>
+          <div class="technical-module-fields">
+            <h5 class="technical-module-subtitle">Configuración técnica del módulo</h5>
+            <div class="settings-row">
+              <div class="settings-field">
+                <label>Tipo ejecución</label>
+                <select class="technical-module-execution" data-field="execution_type">
+                  ${executionTypes.map(et => `<option value="${et.value}" ${(m.execution_type || 'webhook') === et.value ? 'selected' : ''}>${et.label}</option>`).join('')}
+                </select>
+              </div>
+              <div class="settings-field">
+                <label>URL Test</label>
+                <input type="url" class="technical-module-webhook-test" data-field="webhook_url_test" value="${this.escapeHtml(m.webhook_url_test || '')}" placeholder="https://...">
+              </div>
+            </div>
+            <div class="settings-field">
+              <label>URL Producción</label>
+              <input type="url" class="technical-module-webhook-prod" data-field="webhook_url_prod" value="${this.escapeHtml(m.webhook_url_prod || '')}" placeholder="https://...">
+            </div>
+            <div class="settings-row">
+              <label class="technical-module-approval">
+                <input type="checkbox" class="technical-module-human-approval" data-field="is_human_approval_required" ${m.is_human_approval_required ? 'checked' : ''}>
+                <span>Requiere aprobación humana</span>
+              </label>
+            </div>
+            <div class="settings-field">
+              <label>Siguiente módulo</label>
+              <select class="technical-module-next" data-field="next_module_id">
+                <option value="">— Ninguno —</option>
+                ${nextOpts}
+              </select>
+            </div>
+            <div class="settings-field">
+              <label>output_schema (JSON)</label>
+              <textarea class="technical-module-output-schema property-json-editor" data-field="output_schema" rows="2" placeholder="{}">${this.escapeHtml(outputSchemaStr)}</textarea>
+            </div>
+            <div class="settings-field">
+              <label>routing_rules (JSON)</label>
+              <textarea class="technical-module-routing-rules property-json-editor" data-field="routing_rules" rows="2" placeholder='{"conditions":[],"default":null}'>${this.escapeHtml(routingRulesStr)}</textarea>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  setupTechnicalModulesListeners() {
+    const executionMode = this.querySelector('#executionMode');
+    if (executionMode) {
+      executionMode.removeEventListener('change', this._boundExecutionModeChange);
+      this._boundExecutionModeChange = () => {
+        this.flowData.execution_mode = executionMode.value;
+        this.onFieldChange();
+      };
+      executionMode.addEventListener('change', this._boundExecutionModeChange);
+    }
+    const addBtn = this.querySelector('#technicalAddModuleBtn');
+    if (addBtn) {
+      addBtn.onclick = () => {
+        const nextOrder = this.flowModules.length + 1;
+        this.flowModules.push({ name: 'Módulo ' + nextOrder, step_order: nextOrder, execution_type: 'webhook', webhook_url_test: '', webhook_url_prod: '', is_human_approval_required: false, next_module_id: null, output_schema: null, routing_rules: null });
+        this.renderTechnicalModulesList();
+        this.setupTechnicalModulesListeners();
+        this.onFieldChange();
+      };
+    }
+    const listEl = this.querySelector('#technicalModulesList');
+    if (listEl) {
+      listEl.querySelectorAll('.technical-module-card').forEach(card => {
+        const idx = parseInt(card.dataset.moduleIndex, 10);
+        if (isNaN(idx)) return;
+        card.querySelectorAll('[data-field]').forEach(el => {
+          el.addEventListener('input', () => this.syncModuleField(idx, el.dataset.field, el.type === 'checkbox' ? el.checked : el.value));
+          el.addEventListener('change', () => this.syncModuleField(idx, el.dataset.field, el.type === 'checkbox' ? el.checked : el.value));
+        });
+        const removeBtn = card.querySelector('.technical-module-remove');
+        if (removeBtn) {
+          removeBtn.onclick = () => {
+            this.flowModules.splice(idx, 1);
+            this.flowModules.forEach((m, i) => { m.step_order = i + 1; });
+            this.renderTechnicalModulesList();
+            this.setupTechnicalModulesListeners();
+            if (this.flowModules[0]) {
+              this.technicalDetails.webhook_url_test = this.flowModules[0].webhook_url_test;
+              this.technicalDetails.webhook_url_prod = this.flowModules[0].webhook_url_prod;
+            }
+            this.onFieldChange();
+          };
+        }
+      });
+    }
+    // webhookMethod, platformName, editorUrl se enlazan en setupTechnicalListeners()
+  }
+
+  syncModuleField(index, field, value) {
+    if (!this.flowModules[index]) return;
+    if (field === 'is_human_approval_required') this.flowModules[index][field] = !!value;
+    else if (field === 'next_module_id') this.flowModules[index][field] = value || null;
+    else if (field === 'output_schema' || field === 'routing_rules') {
+      const str = (value || '').trim();
+      if (!str) this.flowModules[index][field] = null;
+      else {
+        try {
+          this.flowModules[index][field] = JSON.parse(str);
+        } catch (_) {
+          this.flowModules[index][field] = value;
+        }
+      }
+    } else this.flowModules[index][field] = value;
+    if (index === 0) {
+      this.technicalDetails.webhook_url_test = this.flowModules[0].webhook_url_test;
+      this.technicalDetails.webhook_url_prod = this.flowModules[0].webhook_url_prod;
+    }
+    this.onFieldChange();
   }
 
   getFlowPublicUrl() {
@@ -2441,20 +2587,15 @@ class DevBuilderView extends DevBaseView {
 
   setupTechnicalListeners() {
     const fields = {
-      webhookTest: (v) => this.technicalDetails.webhook_url_test = v,
-      webhookProd: (v) => this.technicalDetails.webhook_url_prod = v,
-      webhookMethod: (v) => this.technicalDetails.webhook_method = v,
-      platformName: (v) => this.technicalDetails.platform_name = v,
-      editorUrl: (v) => this.technicalDetails.editor_url = v
+      webhookMethod: (v) => { this.technicalDetails.webhook_method = v; this.onFieldChange(); },
+      platformName: (v) => { this.technicalDetails.platform_name = v; this.onFieldChange(); },
+      editorUrl: (v) => { this.technicalDetails.editor_url = v; this.onFieldChange(); }
     };
-    
     Object.entries(fields).forEach(([id, setter]) => {
       const el = this.querySelector(`#${id}`);
       if (el) {
-        el.addEventListener('input', (e) => {
-          setter(e.target.value);
-          this.hasUnsavedChanges = true;
-        });
+        el.addEventListener('input', (e) => setter(e.target.value));
+        el.addEventListener('change', (e) => setter(e.target.value));
       }
     });
   }
@@ -2709,35 +2850,48 @@ class DevBuilderView extends DevBaseView {
   }
 
   /**
-   * Guarda la configuración del módulo (flow_modules) y los detalles técnicos (flow_technical_details).
-   * - flow_modules: módulos del flujo principal (content_flow_id); aquí van webhook_*, input_schema, name, step_order.
-   * - flow_technical_details: enlazado a cada flow_module por flow_module_id (NO a content_flows).
+   * Guarda el grafo de ejecución: flow_modules (módulos) y flow_technical_details por flow_module_id.
+   * content_flows.execution_mode ya se guarda en saveFlow().
    */
   async saveTechnicalDetails(flowId) {
     if (!this.supabase || !flowId) return;
     
-    let flowModuleId = this.currentFlowModuleId;
-    if (!flowModuleId) {
-      const { data: existing } = await this.supabase
-        .from('flow_modules')
-        .select('id')
-        .eq('content_flow_id', flowId)
-        .order('step_order', { ascending: true })
-        .limit(1)
-        .maybeSingle();
-      flowModuleId = existing?.id;
+    const mods = this.flowModules.length ? this.flowModules : [{ name: 'Módulo 1', step_order: 1, execution_type: 'webhook', webhook_url_test: '', webhook_url_prod: '', is_human_approval_required: false, next_module_id: null, output_schema: null, routing_rules: null }];
+    if (mods.length !== this.flowModules.length) this.flowModules = mods;
+    
+    const keepIds = mods.map(m => m.id).filter(Boolean);
+    if (keepIds.length > 0) {
+      const { data: existing } = await this.supabase.from('flow_modules').select('id').eq('content_flow_id', flowId);
+      const toDelete = (existing || []).filter(r => !keepIds.includes(r.id)).map(r => r.id);
+      for (const id of toDelete) {
+        await this.supabase.from('flow_technical_details').delete().eq('flow_module_id', id);
+        await this.supabase.from('flow_modules').delete().eq('id', id);
+      }
+    } else {
+      const { data: existingMods } = await this.supabase.from('flow_modules').select('id').eq('content_flow_id', flowId);
+      for (const row of existingMods || []) {
+        await this.supabase.from('flow_technical_details').delete().eq('flow_module_id', row.id);
+      }
+      await this.supabase.from('flow_modules').delete().eq('content_flow_id', flowId);
     }
     
-    if (!flowModuleId) {
+    // 1) Insertar módulos nuevos para obtener ids
+    for (let i = 0; i < mods.length; i++) {
+      if (mods[i].id) continue;
       const { data: inserted, error: insertErr } = await this.supabase
         .from('flow_modules')
         .insert({
           content_flow_id: flowId,
-          name: 'Módulo principal',
-          step_order: 1,
-          input_schema: { fields: this.inputSchema },
-          webhook_url_test: this.technicalDetails.webhook_url_test,
-          webhook_url_prod: this.technicalDetails.webhook_url_prod
+          name: mods[i].name || 'Módulo ' + (i + 1),
+          step_order: i + 1,
+          execution_type: mods[i].execution_type || 'webhook',
+          webhook_url_test: mods[i].webhook_url_test || null,
+          webhook_url_prod: mods[i].webhook_url_prod || null,
+          input_schema: i === 0 ? { fields: this.inputSchema } : {},
+          is_human_approval_required: !!mods[i].is_human_approval_required,
+          next_module_id: null,
+          output_schema: (mods[i].output_schema != null && typeof mods[i].output_schema === 'object') ? mods[i].output_schema : null,
+          routing_rules: (mods[i].routing_rules != null && typeof mods[i].routing_rules === 'object') ? mods[i].routing_rules : null
         })
         .select('id')
         .single();
@@ -2745,33 +2899,41 @@ class DevBuilderView extends DevBaseView {
         console.error('Error creating flow_module:', insertErr);
         return;
       }
-      flowModuleId = inserted.id;
-      this.currentFlowModuleId = flowModuleId;
-    } else {
-      await this.supabase
-        .from('flow_modules')
-        .update({
-          input_schema: { fields: this.inputSchema },
-          webhook_url_test: this.technicalDetails.webhook_url_test,
-          webhook_url_prod: this.technicalDetails.webhook_url_prod
-        })
-        .eq('id', flowModuleId);
+      mods[i].id = inserted.id;
     }
     
-    // flow_technical_details: 1:1 con flow_modules (constraint flow_module_id UNIQUE)
-    const techPayload = {
-      flow_module_id: flowModuleId,
-      platform_name: this.technicalDetails.platform_name,
-      editor_url: this.technicalDetails.editor_url
-    };
+    // 2) Actualizar todos los módulos (name, step_order, execution_type, webhooks, input_schema primer módulo, next_module_id, output_schema, routing_rules)
+    for (let i = 0; i < mods.length; i++) {
+      const payload = {
+        name: mods[i].name || 'Módulo ' + (i + 1),
+        step_order: i + 1,
+        execution_type: mods[i].execution_type || 'webhook',
+        webhook_url_test: mods[i].webhook_url_test || null,
+        webhook_url_prod: mods[i].webhook_url_prod || null,
+        is_human_approval_required: !!mods[i].is_human_approval_required,
+        next_module_id: mods[i].next_module_id || null,
+        output_schema: (mods[i].output_schema != null && typeof mods[i].output_schema === 'object') ? mods[i].output_schema : null,
+        routing_rules: (mods[i].routing_rules != null && typeof mods[i].routing_rules === 'object') ? mods[i].routing_rules : null
+      };
+      if (i === 0) payload.input_schema = { fields: this.inputSchema };
+      const { error } = await this.supabase
+        .from('flow_modules')
+        .update(payload)
+        .eq('id', mods[i].id);
+      if (error) console.error('Error updating flow_module:', error);
+    }
     
-    const { error } = await this.supabase
+    this.currentFlowModuleId = mods[0]?.id || null;
+    
+    // 3) flow_technical_details: primer módulo (plataforma, editor_url)
+    const techPayload = {
+      flow_module_id: mods[0].id,
+      platform_name: this.technicalDetails.platform_name || 'n8n',
+      editor_url: this.technicalDetails.editor_url || null
+    };
+    await this.supabase
       .from('flow_technical_details')
       .upsert(techPayload, { onConflict: 'flow_module_id' });
-    
-    if (error) {
-      console.error('Error saving flow_technical_details:', error);
-    }
   }
 
   async publishFlow() {

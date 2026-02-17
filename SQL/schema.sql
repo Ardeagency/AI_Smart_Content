@@ -323,13 +323,17 @@ CREATE TABLE public.flow_modules (
   content_flow_id uuid NOT NULL,
   name text NOT NULL,
   step_order integer NOT NULL,
+  execution_type text DEFAULT 'webhook'::text CHECK (execution_type = ANY (ARRAY['webhook'::text, 'python'::text, 'make'::text, 'internal'::text, 'ai_direct'::text, 'aggregator'::text])),
   webhook_url_test text,
   webhook_url_prod text,
   input_schema jsonb DEFAULT '{}'::jsonb,
   output_schema jsonb DEFAULT '{}'::jsonb,
   is_human_approval_required boolean DEFAULT false,
+  next_module_id uuid,
+  routing_rules jsonb,
   CONSTRAINT flow_modules_pkey PRIMARY KEY (id),
-  CONSTRAINT fk_module_parent FOREIGN KEY (content_flow_id) REFERENCES public.content_flows(id)
+  CONSTRAINT fk_module_parent FOREIGN KEY (content_flow_id) REFERENCES public.content_flows(id),
+  CONSTRAINT fk_module_next FOREIGN KEY (next_module_id) REFERENCES public.flow_modules(id)
 );
 CREATE TABLE public.flow_runs (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
