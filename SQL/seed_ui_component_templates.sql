@@ -9,6 +9,7 @@ SELECT * FROM (VALUES
   ('prompt_input', 'Prompt para IA', 'smart_text', 'terminal', '{"input_type":"prompt_input","type":"prompt_input","data_type":"string","placeholder":"Describe el contenido...","rows":6}'::jsonb, '{}'::jsonb, true, 25),
   ('tag_input', 'Tags / palabras clave', 'smart_text', 'tag', '{"input_type":"tag_input","type":"tag_input","data_type":"array","placeholder":"Añade tags..."}'::jsonb, '{}'::jsonb, true, 26),
   ('select', 'Lista desplegable', 'basic', 'list-bullets', '{"input_type":"select","type":"select","data_type":"string","options":[]}'::jsonb, '{}'::jsonb, true, 30),
+  ('dropdown', 'Dropdown', 'basic', 'caret-down', '{"input_type":"dropdown","type":"dropdown","data_type":"string","options":[{"value":"opcion1","label":"Opción 1"},{"value":"opcion2","label":"Opción 2"}]}'::jsonb, '{}'::jsonb, true, 32),
   ('number', 'Número', 'basic', 'hash', '{"input_type":"number","type":"number","data_type":"number","min":0,"max":100,"step":1}'::jsonb, '{}'::jsonb, true, 40),
   ('checkbox', 'Casilla de verificación', 'basic', 'check-square', '{"input_type":"checkbox","type":"checkbox","data_type":"boolean","defaultValue":false}'::jsonb, '{}'::jsonb, true, 50),
   ('radio', 'Opciones (una elegida)', 'basic', 'radio-button', '{"input_type":"radio","type":"radio","data_type":"string","options":[]}'::jsonb, '{}'::jsonb, true, 60),

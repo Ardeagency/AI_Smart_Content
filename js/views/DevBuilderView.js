@@ -657,10 +657,29 @@ class DevBuilderView extends DevBaseView {
     });
   }
 
+  /**
+   * Normaliza una plantilla (de BD o fallback) para que tenga forma consistente y base_schema
+   * con input_type/type correctos (canvas y propiedades usan esto).
+   */
+  normalizeComponentTemplate(row) {
+    const base = { ...row };
+    const schema = base.base_schema && typeof base.base_schema === 'object' ? { ...base.base_schema } : {};
+    const nameKey = (base.name || '').toLowerCase().replace(/\s+/g, '_');
+    // Asegurar input_type y type desde base_schema o inferir desde name (evitar que "dropdown" quede como text)
+    const inferredType = nameKey === 'dropdown' ? 'dropdown' : (schema.input_type || schema.type || nameKey || 'text');
+    schema.input_type = schema.input_type || schema.type || inferredType;
+    schema.type = schema.type || schema.input_type;
+    if ((schema.input_type === 'dropdown' || schema.input_type === 'select') && !Array.isArray(schema.options)) {
+      schema.options = schema.options || [{ value: 'opcion1', label: 'Opción 1' }, { value: 'opcion2', label: 'Opción 2' }];
+    }
+    base.base_schema = schema;
+    base.default_ui_config = base.default_ui_config && typeof base.default_ui_config === 'object' ? base.default_ui_config : {};
+    return base;
+  }
+
   async loadComponentTemplates() {
     if (!this.supabase) {
-      // Usar templates por defecto si no hay BD
-      this.componentTemplates = this.getDefaultTemplates();
+      this.componentTemplates = this.getDefaultTemplates().map(t => this.normalizeComponentTemplate(t));
       this.renderComponentsList();
       return;
     }
@@ -668,17 +687,18 @@ class DevBuilderView extends DevBaseView {
     try {
       const { data, error } = await this.supabase
         .from('ui_component_templates')
-        .select('*')
+        .select('id, name, description, category, icon_name, base_schema, default_ui_config, is_active, order_index')
         .eq('is_active', true)
         .order('order_index', { ascending: true });
       
       if (error) throw error;
       
-      this.componentTemplates = data && data.length > 0 ? data : this.getDefaultTemplates();
+      const fromDb = data && data.length > 0 ? data.map(row => this.normalizeComponentTemplate(row)) : [];
+      this.componentTemplates = fromDb.length > 0 ? fromDb : this.getDefaultTemplates().map(t => this.normalizeComponentTemplate(t));
       this.renderComponentsList();
     } catch (err) {
       console.error('Error loading component templates:', err);
-      this.componentTemplates = this.getDefaultTemplates();
+      this.componentTemplates = this.getDefaultTemplates().map(t => this.normalizeComponentTemplate(t));
       this.renderComponentsList();
     }
   }
@@ -861,22 +881,29 @@ class DevBuilderView extends DevBaseView {
     }
   }
 
-  addField(templateId, baseSchema) {
-    const template = this.componentTemplates.find(t => t.id === templateId);
+  addField(templateId, templateDataFromDrag) {
+    const template = this.componentTemplates.find(t => String(t.id) === String(templateId));
+    // Usar siempre el template actual (BD o fallback): base_schema y default_ui_config son la fuente de verdad
+    const baseSchema = template?.base_schema && typeof template.base_schema === 'object'
+      ? { ...template.base_schema }
+      : (templateDataFromDrag && typeof templateDataFromDrag === 'object' ? { ...templateDataFromDrag } : {});
+    const defaultUi = template?.default_ui_config && typeof template.default_ui_config === 'object' ? { ...template.default_ui_config } : {};
     const fieldName = this.generateFieldKey(template?.name || templateId);
     
     const newField = {
       key: fieldName,
       label: template?.name || 'Campo',
-      required: false,
-      placeholder: baseSchema.placeholder || '',
-      description: '',
+      required: Boolean(baseSchema.required),
+      placeholder: baseSchema.placeholder ?? '',
+      description: baseSchema.description ?? '',
       ...baseSchema,
-      // Asegurar input_type para que el canvas renderice el tipo correcto (number, select, checkbox, etc.)
       input_type: baseSchema.input_type || baseSchema.type || 'text',
       ui: {
         width: 'full',
-        hidden: false
+        hidden: false,
+        ...defaultUi,
+        width: defaultUi.width != null ? defaultUi.width : 'full',
+        hidden: defaultUi.hidden != null ? defaultUi.hidden : false
       }
     };
     
@@ -885,7 +912,6 @@ class DevBuilderView extends DevBaseView {
     this.renderCanvas();
     this.updateJsonPreview();
     
-    // Seleccionar el nuevo campo
     this.selectField(this.inputSchema.length - 1);
   }
 
