@@ -2559,8 +2559,8 @@
   justify-content: center;
   font-size: 0.625rem;
 }
-.preview-stepper-btn:first-child { border-radius: 0 8px 0 0; border-bottom: 0; }
-.preview-stepper-btn:last-child { border-radius: 0 0 8px 0; }
+.preview-stepper-btn:first-child { border-radius: 0 8px 0 0; border-bottom: 0; color: var(--dev-success, #22c55e); }
+.preview-stepper-btn:last-child { border-radius: 0 0 8px 0; color: var(--dev-error, #ef4444); }
 
 /* Selection checkboxes preview */
 .preview-selection-checkboxes {
@@ -2698,8 +2698,10 @@
   background: var(--bg-hover);
   color: var(--text-primary);
 }
-.input-stepper-btn:first-child { border-radius: 0 8px 0 0; border-bottom: 0; }
-.input-stepper-btn:last-child { border-radius: 0 0 8px 0; }
+.input-stepper-btn:first-child { border-radius: 0 8px 0 0; border-bottom: 0; color: var(--dev-success, #22c55e); }
+.input-stepper-btn:last-child { border-radius: 0 0 8px 0; color: var(--dev-error, #ef4444); }
+.input-stepper-btn:hover:first-child { color: var(--dev-success, #16a34a); }
+.input-stepper-btn:hover:last-child { color: var(--dev-error, #dc2626); }
 .input-stepper-unit {
   margin-left: 8px;
   font-size: 0.875rem;

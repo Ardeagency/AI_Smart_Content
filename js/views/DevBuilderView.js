@@ -1282,10 +1282,10 @@ class DevBuilderView extends DevBaseView {
 
   inferDataType(field) {
     const t = (field.input_type || field.type || '').toLowerCase();
-    if (['number', 'range', 'stepper', 'rating'].indexOf(t) >= 0) return 'number';
-    if (['checkbox', 'switch', 'boolean', 'toggle'].indexOf(t) >= 0) return 'boolean';
+    if (['number', 'range', 'stepper', 'stepper_num', 'num_stepper', 'rating', 'slider'].indexOf(t) >= 0) return 'number';
+    if (['checkbox', 'switch', 'boolean', 'toggle', 'toggle_switch'].indexOf(t) >= 0) return 'boolean';
     if (['select', 'multi_select', 'tone_selector', 'mood_selector', 'length_selector', 'radio'].indexOf(t) >= 0) return 'string';
-    if (['tag_input', 'gallery_picker'].indexOf(t) >= 0) return 'array';
+    if (['tag_input', 'gallery_picker', 'selection_checkboxes'].indexOf(t) >= 0) return 'array';
     if (['brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector', 'image_selector'].indexOf(t) >= 0) return 'object';
     return field.data_type || 'string';
   }
@@ -1424,8 +1424,6 @@ class DevBuilderView extends DevBaseView {
       }
       
       case 'number':
-      case 'range':
-        // number, range y tipos numéricos del registry
         return `
           <div class="property-group">
             <h4>Número</h4>
@@ -1451,16 +1449,166 @@ class DevBuilderView extends DevBaseView {
             </div>
           </div>
         `;
+
+      case 'stepper':
+        return `
+          <div class="property-group">
+            <h4>Num Stepper</h4>
+            <span class="field-help block">Valor numérico con botones subir/bajar (ej. 59).</span>
+            <div class="property-row">
+              <div class="property-field">
+                <label for="propStepperMin">Mínimo</label>
+                <input type="number" id="propStepperMin" value="${field.min ?? 0}">
+              </div>
+              <div class="property-field">
+                <label for="propStepperMax">Máximo</label>
+                <input type="number" id="propStepperMax" value="${field.max ?? 999}">
+              </div>
+            </div>
+            <div class="property-row">
+              <div class="property-field">
+                <label for="propStepperStep">Incremento</label>
+                <input type="number" id="propStepperStep" value="${field.step ?? 1}" min="0.01">
+              </div>
+              <div class="property-field">
+                <label for="propStepperDefault">Valor inicial</label>
+                <input type="number" id="propStepperDefault" value="${field.defaultValue ?? 0}">
+              </div>
+            </div>
+            <div class="property-field">
+              <label for="propStepperUnit">Unidad (opcional)</label>
+              <input type="text" id="propStepperUnit" value="${escapeProp(field.unit || '')}" placeholder="ej. px, %, kg">
+              <span class="field-help">Sufijo mostrado junto al valor (px, %, etc.).</span>
+            </div>
+          </div>
+        `;
+
+      case 'checkbox':
+        const checkboxChecked = field.defaultValue === true || field.defaultValue === 'true';
+        return `
+          <div class="property-group">
+            <h4>Checkbox</h4>
+            <div class="property-toggle">
+              <label>
+                <input type="checkbox" id="propCheckboxDefault" ${checkboxChecked ? 'checked' : ''}>
+                <span>Marcado por defecto</span>
+              </label>
+            </div>
+            <span class="field-help">Estado inicial: unchecked, hover, checked, disabled.</span>
+          </div>
+        `;
+
+      case 'switch':
+        const switchChecked = field.defaultValue === true || field.defaultValue === 'true';
+        return `
+          <div class="property-group">
+            <h4>Toggle / Switch</h4>
+            <div class="property-toggle">
+              <label>
+                <input type="checkbox" id="propSwitchDefault" ${switchChecked ? 'checked' : ''}>
+                <span>Activado por defecto (on)</span>
+              </label>
+            </div>
+            <span class="field-help">Estado inicial del interruptor.</span>
+          </div>
+        `;
+
+      case 'range': {
+        const sliderMode = field.slider_mode || field.sliderMode || 'num';
+        const isDouble = field.is_double_slider || field.isDoubleSlider || false;
+        const valueStart = field.value_start ?? field.min ?? 0;
+        const valueEnd = field.value_end ?? field.max ?? 100;
+        return `
+          <div class="property-group">
+            <h4>Sliders</h4>
+            <div class="property-field">
+              <label for="propSliderMode">Tipo de valor</label>
+              <select id="propSliderMode">
+                <option value="num" ${sliderMode === 'num' ? 'selected' : ''}>Numérico</option>
+                <option value="string" ${sliderMode === 'string' ? 'selected' : ''}>String (etiquetas por opción)</option>
+              </select>
+              <span class="field-help">Num = min/max/step; String = opciones con valor y etiqueta.</span>
+            </div>
+            <div class="property-toggle" style="margin-bottom: 12px;">
+              <label>
+                <input type="checkbox" id="propDoubleSlider" ${isDouble ? 'checked' : ''}>
+                <span>Double slider (rango entre dos valores)</span>
+              </label>
+            </div>
+            ${sliderMode === 'num' ? `
+            <div class="property-row">
+              <div class="property-field">
+                <label for="propSliderMin">Mínimo</label>
+                <input type="number" id="propSliderMin" value="${field.min ?? 0}">
+              </div>
+              <div class="property-field">
+                <label for="propSliderMax">Máximo</label>
+                <input type="number" id="propSliderMax" value="${field.max ?? 100}">
+              </div>
+            </div>
+            <div class="property-row">
+              <div class="property-field">
+                <label for="propSliderStep">Paso</label>
+                <input type="number" id="propSliderStep" value="${field.step ?? 1}" min="0.01">
+              </div>
+              ${!isDouble ? `
+              <div class="property-field">
+                <label for="propSliderDefault">Valor por defecto</label>
+                <input type="number" id="propSliderDefault" value="${field.defaultValue ?? 50}">
+              </div>
+              ` : `
+              <div class="property-field">
+                <label for="propSliderValueStart">Valor inicio (rango)</label>
+                <input type="number" id="propSliderValueStart" value="${valueStart}">
+              </div>
+              <div class="property-field">
+                <label for="propSliderValueEnd">Valor fin (rango)</label>
+                <input type="number" id="propSliderValueEnd" value="${valueEnd}">
+              </div>
+              `}
+            </div>
+            ` : `
+            <div class="property-field">
+              <label>Opciones (valor + etiqueta para slider string)</label>
+              <span class="field-help block">Cada opción = posición en el slider (ej. 0=Bajo, 50=Medio, 100=Alto).</span>
+            </div>
+            <div class="options-editor options-editor--dropdown" id="optionsEditorSlider">
+              ${(field.options || []).length === 0 ? `
+                <div class="option-row" data-index="0">
+                  <input type="text" class="option-single" placeholder="ej. Bajo" data-index="0">
+                  <button type="button" class="btn-icon remove-option" title="Eliminar"><i class="ph ph-x"></i></button>
+                </div>
+              ` : (field.options || []).map((opt, i) => {
+                const v = opt && (opt.value !== undefined ? opt.value : opt.label !== undefined ? opt.label : opt);
+                const str = (v != null ? String(v) : '');
+                return `
+                <div class="option-row" data-index="${i}">
+                  <input type="text" class="option-single" placeholder="etiqueta" data-index="${i}" value="${escapeProp(str)}">
+                  <button type="button" class="btn-icon remove-option" title="Eliminar"><i class="ph ph-x"></i></button>
+                </div>
+              `; }).join('')}
+            </div>
+            <button type="button" class="btn-small btn-add-options" id="addOptionBtnSlider">
+              <i class="ph ph-plus"></i> Opciones
+            </button>
+            `}
+          </div>
+        `;
+      }
       
       case 'select':
       case 'radio': {
         const options = field.options || [];
-        const isSelect = (field.input_type || field.type || '').toLowerCase() === 'select' || (field.input_type || field.type || '').toLowerCase() === 'dropdown' || (field.input_type || field.type || '').toLowerCase() === 'multi_select';
-        const isDropdown = (field.input_type || field.type || '').toLowerCase() === 'dropdown' || (field.input_type || field.type || '').toLowerCase() === 'select';
+        const it = (field.input_type || field.type || '').toLowerCase();
+        const isSelect = it === 'select' || it === 'dropdown' || it === 'multi_select';
+        const isDropdown = it === 'dropdown' || it === 'select';
+        const isRadio = it === 'radio';
+        const isSelectionCheckboxes = it === 'selection_checkboxes';
+        const title = isSelectionCheckboxes ? 'Checkboxes (opciones)' : (isRadio ? 'Radio Buttons' : (isDropdown ? 'Dropdown' : 'Lista desplegable'));
         const optVal = (o) => (o && (o.value !== undefined ? o.value : o.label !== undefined ? o.label : o));
         return `
           <div class="property-group">
-            <h4>${isDropdown ? 'Dropdown' : 'Lista desplegable'}</h4>
+            <h4>${title}</h4>
             ${isSelect ? `
             <div class="property-toggle" style="margin-bottom: 12px;">
               <label>
@@ -1615,6 +1763,28 @@ class DevBuilderView extends DevBaseView {
           if (!Array.isArray(field.options) || field.options.length === 0) {
             field.options = [{ value: 'opcion1', label: 'Opción 1' }, { value: 'opcion2', label: 'Opción 2' }];
           }
+        }
+        if (newType === 'stepper_num' || newType === 'num_stepper') {
+          if (field.min == null) field.min = 0;
+          if (field.max == null) field.max = 999;
+          if (field.step == null) field.step = 1;
+          if (field.defaultValue == null) field.defaultValue = 0;
+        }
+        if (newType === 'selection_checkboxes') {
+          if (!Array.isArray(field.options) || field.options.length === 0) {
+            field.options = [{ value: '1', label: 'Opción 1' }, { value: '2', label: 'Opción 2' }];
+          }
+          field.display_style = 'selection_checkboxes';
+        }
+        if (newType === 'range') {
+          if (field.min == null) field.min = 0;
+          if (field.max == null) field.max = 100;
+          if (field.step == null) field.step = 1;
+          if (field.defaultValue == null) field.defaultValue = 50;
+        }
+        if (newType === 'toggle_switch' || newType === 'switch') {
+          field.display_style = 'switch';
+          if (field.defaultValue == null) field.defaultValue = false;
         }
         this.renderPropertiesPanel();
         this.renderCanvas();
@@ -1847,6 +2017,118 @@ class DevBuilderView extends DevBaseView {
       defaultValueInput.addEventListener('change', (e) => {
         field.defaultValue = parseFloat(e.target.value) || null;
         this.onFieldChange();
+      });
+    }
+    
+    // Stepper (num_stepper / stepper_num)
+    const propStepperMin = this.querySelector('#propStepperMin');
+    const propStepperMax = this.querySelector('#propStepperMax');
+    const propStepperStep = this.querySelector('#propStepperStep');
+    const propStepperDefault = this.querySelector('#propStepperDefault');
+    const propStepperUnit = this.querySelector('#propStepperUnit');
+    if (propStepperMin) propStepperMin.addEventListener('change', (e) => { field.min = parseFloat(e.target.value) || 0; this.onFieldChange(); });
+    if (propStepperMax) propStepperMax.addEventListener('change', (e) => { field.max = parseFloat(e.target.value) || 999; this.onFieldChange(); });
+    if (propStepperStep) propStepperStep.addEventListener('change', (e) => { field.step = parseFloat(e.target.value) || 1; this.onFieldChange(); });
+    if (propStepperDefault) propStepperDefault.addEventListener('change', (e) => { field.defaultValue = parseFloat(e.target.value) || 0; this.onFieldChange(); });
+    if (propStepperUnit) propStepperUnit.addEventListener('input', (e) => { field.unit = e.target.value.trim() || undefined; this.onFieldChange(); });
+    
+    // Checkbox: valor por defecto
+    const propCheckboxDefault = this.querySelector('#propCheckboxDefault');
+    if (propCheckboxDefault) {
+      propCheckboxDefault.addEventListener('change', (e) => {
+        field.defaultValue = e.target.checked;
+        this.onFieldChange();
+      });
+    }
+    
+    // Toggle / Switch: valor por defecto
+    const propSwitchDefault = this.querySelector('#propSwitchDefault');
+    if (propSwitchDefault) {
+      propSwitchDefault.addEventListener('change', (e) => {
+        field.defaultValue = e.target.checked;
+        this.onFieldChange();
+      });
+    }
+    
+    // Sliders: modo, double, min, max, step, valor(es), opciones (string)
+    const propSliderMode = this.querySelector('#propSliderMode');
+    const propDoubleSlider = this.querySelector('#propDoubleSlider');
+    const propSliderMin = this.querySelector('#propSliderMin');
+    const propSliderMax = this.querySelector('#propSliderMax');
+    const propSliderStep = this.querySelector('#propSliderStep');
+    const propSliderDefault = this.querySelector('#propSliderDefault');
+    const propSliderValueStart = this.querySelector('#propSliderValueStart');
+    const propSliderValueEnd = this.querySelector('#propSliderValueEnd');
+    if (propSliderMode) {
+      propSliderMode.addEventListener('change', (e) => {
+        field.slider_mode = e.target.value;
+        if (e.target.value === 'string' && (!Array.isArray(field.options) || field.options.length === 0)) {
+          field.options = [{ value: 'bajo', label: 'Bajo' }, { value: 'medio', label: 'Medio' }, { value: 'alto', label: 'Alto' }];
+        }
+        this.renderPropertiesPanel();
+        this.setupTypeSpecificListeners(field);
+        this.onFieldChange();
+      });
+    }
+    if (propDoubleSlider) {
+      propDoubleSlider.addEventListener('change', (e) => {
+        field.is_double_slider = e.target.checked;
+        if (e.target.checked) {
+          field.value_start = field.min ?? 0;
+          field.value_end = field.max ?? 100;
+        } else {
+          delete field.value_start;
+          delete field.value_end;
+        }
+        this.renderPropertiesPanel();
+        this.setupTypeSpecificListeners(field);
+        this.onFieldChange();
+      });
+    }
+    if (propSliderMin) propSliderMin.addEventListener('change', (e) => { field.min = parseFloat(e.target.value) || 0; this.onFieldChange(); });
+    if (propSliderMax) propSliderMax.addEventListener('change', (e) => { field.max = parseFloat(e.target.value) || 100; this.onFieldChange(); });
+    if (propSliderStep) propSliderStep.addEventListener('change', (e) => { field.step = parseFloat(e.target.value) || 1; this.onFieldChange(); });
+    if (propSliderDefault) propSliderDefault.addEventListener('change', (e) => { field.defaultValue = parseFloat(e.target.value) ?? 50; this.onFieldChange(); });
+    if (propSliderValueStart) propSliderValueStart.addEventListener('change', (e) => { field.value_start = parseFloat(e.target.value) ?? field.min; this.onFieldChange(); });
+    if (propSliderValueEnd) propSliderValueEnd.addEventListener('change', (e) => { field.value_end = parseFloat(e.target.value) ?? field.max; this.onFieldChange(); });
+    
+    // Slider string: editor de opciones (mismo patrón que optionsEditor)
+    const addOptionBtnSlider = this.querySelector('#addOptionBtnSlider');
+    const optionsEditorSlider = this.querySelector('#optionsEditorSlider');
+    if (addOptionBtnSlider) {
+      addOptionBtnSlider.addEventListener('click', () => {
+        if (!field.options) field.options = [];
+        field.options.push({ value: '', label: '' });
+        this.renderPropertiesPanel();
+        this.setupTypeSpecificListeners(field);
+        this.renderCanvas();
+        this.onFieldChange();
+      });
+    }
+    if (optionsEditorSlider) {
+      optionsEditorSlider.querySelectorAll('.option-row').forEach((row) => {
+        const index = parseInt(row.getAttribute('data-index'), 10);
+        const singleInput = row.querySelector('.option-single');
+        const removeBtn = row.querySelector('.remove-option');
+        if (singleInput) {
+          singleInput.addEventListener('input', (e) => {
+            const text = e.target.value;
+            while (field.options.length <= index) field.options.push({ value: '', label: '' });
+            field.options[index].value = text;
+            field.options[index].label = text;
+            this.renderCanvas();
+            this.onFieldChange();
+          });
+        }
+        if (removeBtn) {
+          removeBtn.addEventListener('click', () => {
+            field.options.splice(index, 1);
+            this.renderPropertiesPanel();
+            this.setupTypeSpecificListeners(field);
+            this.renderCanvas();
+            this.onFieldChange();
+          });
+        }
       });
     }
     

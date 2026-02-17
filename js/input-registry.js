@@ -58,8 +58,10 @@
     number: 'NUMBER_CONTAINER',
     stepper: 'NUMBER_CONTAINER',
     stepper_num: 'NUMBER_CONTAINER',
+    num_stepper: 'NUMBER_CONTAINER',
     rating: 'NUMBER_CONTAINER',
     range: 'RANGE_CONTAINER',
+    slider: 'RANGE_CONTAINER',
     file: 'FILE_CONTAINER',
     upload: 'FILE_CONTAINER',
     section: 'STRUCTURAL_CONTAINER',
@@ -599,8 +601,10 @@
     register('flags', { preview: previewFlags, form: formFlags });
     register('tags', { preview: previewTags, form: formTags });
     register('stepper_num', { preview: previewStepper, form: formStepper });
+    register('num_stepper', { preview: previewStepper, form: formStepper });
     register('selection_checkboxes', { preview: previewSelectionCheckboxes, form: formSelectionCheckboxes });
     register('toggle_switch', { preview: previewSwitch, form: formSwitch });
+    register('slider', { preview: previewRange, form: formRange });
 
     register('section', { preview: function () { return previewBlock('Sección', 'square'); }, form: formStructural });
     register('divider', { preview: function () { return previewBlock('Divisor', 'minus'); }, form: formStructural });
@@ -681,7 +685,11 @@
   function getPropertyFamily(type) {
     var t = (type || '').toLowerCase();
     if (['text', 'textarea', 'prompt_input', 'tag_input', 'tags', 'slug_input'].indexOf(t) >= 0) return 'text';
-    if (['number', 'range', 'stepper_num', 'stepper'].indexOf(t) >= 0) return 'number';
+    if (['number'].indexOf(t) >= 0) return 'number';
+    if (['range', 'slider'].indexOf(t) >= 0) return 'range';
+    if (['stepper_num', 'stepper', 'num_stepper'].indexOf(t) >= 0) return 'stepper';
+    if (['checkbox'].indexOf(t) >= 0) return 'checkbox';
+    if (['switch', 'toggle_switch', 'toggle'].indexOf(t) >= 0) return 'switch';
     if (['select', 'dropdown', 'multi_select', 'radio', 'choice_chips', 'multi_select_chips', 'flags', 'tone_selector', 'mood_selector', 'length_selector', 'selection_checkboxes'].indexOf(t) >= 0) return 'select';
     return 'generic';
   }
