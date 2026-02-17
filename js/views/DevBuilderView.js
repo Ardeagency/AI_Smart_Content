@@ -40,8 +40,9 @@ class DevBuilderView extends DevBaseView {
       submitButtonPosition: 'right'
     };
     
-    // Detalles técnicos
-    // Configuración del módulo actual (flow_modules: webhooks, input_schema). flow_technical_details (plataforma, editor_url) se enlaza por flow_module_id.
+    // Detalles técnicos por módulo (flow_technical_details). Clave = flow_module_id.
+    this.flowTechnicalDetailsByModule = {};
+    // Compat: webhooks del primer módulo para validaciones/publicar (se sincronizan desde flowModules[0])
     this.technicalDetails = {
       webhook_url_test: '',
       webhook_url_prod: '',
@@ -49,6 +50,9 @@ class DevBuilderView extends DevBaseView {
       platform_name: 'n8n',
       editor_url: ''
     };
+    
+    // Panel derecho Detalles técnicos: key del módulo seleccionado (uuid o 'idx_0', 'idx_1'...)
+    this.technicalDetailsPanelModuleKey = null;
     
     // Templates de componentes disponibles
     this.componentTemplates = [];
@@ -245,7 +249,7 @@ class DevBuilderView extends DevBaseView {
             </div>
           </div>
 
-          <!-- Tab 2: Módulos = grafo de ejecución (flow_modules). Sin descripción; lista de módulos con configuración técnica. -->
+          <!-- Tab 2: Módulos = datos de flow_modules por módulo. Abajo: Nuevo módulo + Detalles técnicos (panel derecho). -->
           <div class="builder-tab-content" id="tabTechnical">
             <div class="builder-settings-form builder-config-fullwidth">
               <div class="settings-section" id="technicalWebhookSection">
@@ -258,29 +262,9 @@ class DevBuilderView extends DevBaseView {
                   </select>
                 </div>
                 <div id="technicalModulesList" class="technical-modules-list"></div>
-                <button type="button" class="btn-small" id="technicalAddModuleBtn"><i class="ph ph-plus"></i> Agregar un nuevo módulo</button>
-                <div class="settings-row" id="technicalFirstModuleExtra">
-                  <div class="settings-field">
-                    <label for="webhookMethod">Método HTTP</label>
-                    <select id="webhookMethod">
-                      <option value="POST">POST</option>
-                      <option value="GET">GET</option>
-                      <option value="PUT">PUT</option>
-                    </select>
-                  </div>
-                  <div class="settings-field">
-                    <label for="platformName">Plataforma</label>
-                    <select id="platformName">
-                      <option value="n8n">n8n</option>
-                      <option value="make">Make</option>
-                      <option value="zapier">Zapier</option>
-                      <option value="custom">Custom</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="settings-field" id="technicalEditorUrlWrap">
-                  <label for="editorUrl">URL del Editor</label>
-                  <input type="url" id="editorUrl" placeholder="https://tu-n8n.com/workflow/123">
+                <div class="technical-modules-actions">
+                  <button type="button" class="btn-small" id="technicalAddModuleBtn"><i class="ph ph-plus"></i> Nuevo módulo</button>
+                  <button type="button" class="btn-small btn-ghost" id="technicalDetailsPanelBtn" title="Detalles técnicos"><i class="ph ph-wrench"></i> Detalles técnicos</button>
                 </div>
               </div>
               <div class="settings-section technical-automated-block" id="technicalAutomatedBlock" style="display: none;">
@@ -297,6 +281,62 @@ class DevBuilderView extends DevBaseView {
                   <pre><code>{ "fields": [] }</code></pre>
                 </div>
                 <button class="btn-small" id="copySchemaBtn"><i class="ph ph-copy"></i> Copiar JSON</button>
+              </div>
+            </div>
+            <!-- Panel derecho: Detalles técnicos (flow_technical_details) por módulo -->
+            <div class="builder-panel-right" id="technicalDetailsPanel">
+              <div class="builder-panel-right-header">
+                <h4><i class="ph ph-wrench"></i> Detalles técnicos</h4>
+                <button type="button" class="btn-icon btn-ghost" id="technicalDetailsPanelClose" title="Cerrar"><i class="ph ph-x"></i></button>
+              </div>
+              <div class="builder-panel-right-body">
+                <div class="settings-field">
+                  <label for="techDetailsModuleSelect">Módulo</label>
+                  <select id="techDetailsModuleSelect">
+                    <option value="">— Seleccionar módulo —</option>
+                  </select>
+                </div>
+                <div id="techDetailsFormWrap" class="tech-details-form" style="display: none;">
+                  <div class="settings-field">
+                    <label for="techDetailsPlatformName">Plataforma</label>
+                    <select id="techDetailsPlatformName">
+                      <option value="n8n">n8n</option>
+                      <option value="make">Make</option>
+                      <option value="zapier">Zapier</option>
+                      <option value="custom">Custom</option>
+                    </select>
+                  </div>
+                  <div class="settings-field">
+                    <label for="techDetailsPlatformFlowId">ID del flujo en la plataforma</label>
+                    <input type="text" id="techDetailsPlatformFlowId" placeholder="ej. workflow id en n8n">
+                  </div>
+                  <div class="settings-field">
+                    <label for="techDetailsPlatformFlowName">Nombre del flujo en la plataforma</label>
+                    <input type="text" id="techDetailsPlatformFlowName" placeholder="Nombre en n8n/Make">
+                  </div>
+                  <div class="settings-field">
+                    <label for="techDetailsEditorUrl">URL del Editor</label>
+                    <input type="url" id="techDetailsEditorUrl" placeholder="https://tu-n8n.com/workflow/123">
+                  </div>
+                  <div class="settings-field">
+                    <label for="techDetailsCredentialId">Credential ID</label>
+                    <input type="text" id="techDetailsCredentialId" placeholder="Opcional">
+                  </div>
+                  <div class="settings-field">
+                    <label class="checkbox-label">
+                      <input type="checkbox" id="techDetailsIsHealthy" checked>
+                      <span>Estado saludable (is_healthy)</span>
+                    </label>
+                  </div>
+                  <div class="settings-field">
+                    <label for="techDetailsAvgExecutionTimeMs">Tiempo medio ejecución (ms)</label>
+                    <input type="number" id="techDetailsAvgExecutionTimeMs" min="0" placeholder="Opcional">
+                  </div>
+                  <div class="settings-field">
+                    <label>Última comprobación de salud</label>
+                    <input type="text" id="techDetailsLastHealthCheck" readonly placeholder="—">
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1834,20 +1874,34 @@ class DevBuilderView extends DevBaseView {
         } else if (Array.isArray(first.input_schema)) {
           this.inputSchema = first.input_schema;
         }
-        const { data: techDetails } = await this.supabase
+        const moduleIds = modulesList.map(m => m.id);
+        const { data: techDetailsList } = await this.supabase
           .from('flow_technical_details')
-          .select('platform_name, editor_url')
-          .eq('flow_module_id', first.id)
-          .maybeSingle();
+          .select('id, flow_module_id, platform_name, platform_flow_id, platform_flow_name, editor_url, credential_id, is_healthy, last_health_check, avg_execution_time_ms')
+          .in('flow_module_id', moduleIds);
+        this.flowTechnicalDetailsByModule = {};
+        (techDetailsList || []).forEach(t => {
+          this.flowTechnicalDetailsByModule[t.flow_module_id] = {
+            id: t.id,
+            platform_name: t.platform_name || 'n8n',
+            platform_flow_id: t.platform_flow_id || '',
+            platform_flow_name: t.platform_flow_name || '',
+            editor_url: t.editor_url || '',
+            credential_id: t.credential_id || '',
+            is_healthy: t.is_healthy !== false,
+            last_health_check: t.last_health_check,
+            avg_execution_time_ms: t.avg_execution_time_ms != null ? t.avg_execution_time_ms : ''
+          };
+        });
         this.technicalDetails = {
           webhook_url_test: first.webhook_url_test || '',
           webhook_url_prod: first.webhook_url_prod || '',
           webhook_method: 'POST',
-          platform_name: techDetails?.platform_name || 'n8n',
-          editor_url: techDetails?.editor_url || ''
+          platform_name: this.flowTechnicalDetailsByModule[first.id]?.platform_name || 'n8n',
+          editor_url: this.flowTechnicalDetailsByModule[first.id]?.editor_url || ''
         };
       } else {
-        this.flowModules = [{ name: 'Módulo 1', step_order: 1, execution_type: 'webhook', webhook_url_test: '', webhook_url_prod: '', is_human_approval_required: false, next_module_id: null, output_schema: null, routing_rules: null }];
+        this.flowModules = [{ name: 'Módulo 1', step_order: 1, execution_type: 'webhook', webhook_url_test: '', webhook_url_prod: '', is_human_approval_required: false, next_module_id: null, output_schema: null, routing_rules: null, input_schema: null }];
       }
       if (this.inputSchema.length === 0 && flow.input_schema?.fields) {
         this.inputSchema = flow.input_schema.fields;
@@ -1931,13 +1985,6 @@ class DevBuilderView extends DevBaseView {
     if (executionMode) executionMode.value = this.flowData.execution_mode || 'single_step';
     this.renderTechnicalModulesList();
     
-    const webhookMethod = this.querySelector('#webhookMethod');
-    const platformName = this.querySelector('#platformName');
-    const editorUrl = this.querySelector('#editorUrl');
-    if (webhookMethod) webhookMethod.value = this.technicalDetails.webhook_method;
-    if (platformName) platformName.value = this.technicalDetails.platform_name;
-    if (editorUrl) editorUrl.value = this.technicalDetails.editor_url;
-    
     this.setupTechnicalModulesListeners();
     
     // Render canvas
@@ -1956,7 +2003,7 @@ class DevBuilderView extends DevBaseView {
       { value: 'ai_direct', label: 'AI direct' },
       { value: 'aggregator', label: 'Aggregator' }
     ];
-    const mods = this.flowModules.length ? this.flowModules : [{ name: 'Módulo 1', step_order: 1, execution_type: 'webhook', webhook_url_test: '', webhook_url_prod: '', is_human_approval_required: false, next_module_id: null, output_schema: null, routing_rules: null }];
+    const mods = this.flowModules.length ? this.flowModules : [{ name: 'Módulo 1', step_order: 1, execution_type: 'webhook', webhook_url_test: '', webhook_url_prod: '', is_human_approval_required: false, next_module_id: null, output_schema: null, routing_rules: null, input_schema: null }];
     if (this.flowModules.length === 0) this.flowModules = mods;
     listEl.innerHTML = mods.map((m, i) => {
       const nextOpts = mods.filter((o, j) => j !== i && o.id).map(o => `<option value="${o.id}" ${m.next_module_id === o.id ? 'selected' : ''}>${this.escapeHtml(o.name || 'Módulo')}</option>`).join('');
@@ -2001,6 +2048,10 @@ class DevBuilderView extends DevBaseView {
               </select>
             </div>
             <div class="settings-field">
+              <label>input_schema (JSON)</label>
+              ${i === 0 ? '<p class="field-help"><i class="ph ph-info"></i> Definido en la pestaña Inputs.</p>' : `<textarea class="technical-module-input-schema property-json-editor" data-field="input_schema" rows="2" placeholder="{}">${this.escapeHtml((m.input_schema != null && typeof m.input_schema === 'object') ? JSON.stringify(m.input_schema, null, 2) : (m.input_schema && typeof m.input_schema === 'string' ? m.input_schema : ''))}</textarea>`}
+            </div>
+            <div class="settings-field">
               <label>output_schema (JSON)</label>
               <textarea class="technical-module-output-schema property-json-editor" data-field="output_schema" rows="2" placeholder="{}">${this.escapeHtml(outputSchemaStr)}</textarea>
             </div>
@@ -2008,6 +2059,9 @@ class DevBuilderView extends DevBaseView {
               <label>routing_rules (JSON)</label>
               <textarea class="technical-module-routing-rules property-json-editor" data-field="routing_rules" rows="2" placeholder='{"conditions":[],"default":null}'>${this.escapeHtml(routingRulesStr)}</textarea>
             </div>
+          </div>
+          <div class="technical-module-footer">
+            <button type="button" class="btn-icon btn-ghost technical-module-details-btn" data-module-index="${i}" title="Detalles técnicos de este módulo"><i class="ph ph-wrench"></i></button>
           </div>
         </div>
       `;
@@ -2057,18 +2111,156 @@ class DevBuilderView extends DevBaseView {
             this.onFieldChange();
           };
         }
+        const detailsBtn = card.querySelector('.technical-module-details-btn');
+        if (detailsBtn) {
+          detailsBtn.onclick = () => {
+            const mod = this.flowModules[idx];
+            const key = mod?.id || `idx_${idx}`;
+            this.openTechnicalDetailsPanel(key);
+          };
+        }
       });
     }
-    // webhookMethod, platformName, editorUrl se enlazan en setupTechnicalListeners()
+    this.setupTechnicalDetailsPanel();
+  }
+
+  setupTechnicalDetailsPanel() {
+    const panel = this.querySelector('#technicalDetailsPanel');
+    const openBtn = this.querySelector('#technicalDetailsPanelBtn');
+    const closeBtn = this.querySelector('#technicalDetailsPanelClose');
+    const moduleSelect = this.querySelector('#techDetailsModuleSelect');
+    const formWrap = this.querySelector('#techDetailsFormWrap');
+    if (!panel) return;
+    if (openBtn) {
+      openBtn.onclick = () => {
+        this.fillTechDetailsModuleSelect();
+        panel.classList.add('is-open');
+        if (!this.technicalDetailsPanelModuleKey && this.flowModules.length > 0) {
+          const first = this.flowModules[0];
+          this.technicalDetailsPanelModuleKey = first.id || 'idx_0';
+          if (moduleSelect) moduleSelect.value = this.technicalDetailsPanelModuleKey;
+          this.fillTechDetailsForm(this.technicalDetailsPanelModuleKey);
+        }
+        if (formWrap) formWrap.style.display = this.technicalDetailsPanelModuleKey ? '' : 'none';
+      };
+    }
+    if (closeBtn) closeBtn.onclick = () => this.closeTechnicalDetailsPanel();
+    if (moduleSelect) {
+      moduleSelect.onchange = () => {
+        const key = moduleSelect.value || null;
+        this.syncTechDetailsFromForm();
+        this.technicalDetailsPanelModuleKey = key;
+        if (key) {
+          this.fillTechDetailsForm(key);
+          if (formWrap) formWrap.style.display = '';
+        } else {
+          if (formWrap) formWrap.style.display = 'none';
+        }
+      };
+    }
+    const fieldIds = ['techDetailsPlatformName', 'techDetailsPlatformFlowId', 'techDetailsPlatformFlowName', 'techDetailsEditorUrl', 'techDetailsCredentialId', 'techDetailsIsHealthy', 'techDetailsAvgExecutionTimeMs'];
+    fieldIds.forEach(id => {
+      const el = this.querySelector(`#${id}`);
+      if (el) {
+        el.addEventListener('input', () => this.syncTechDetailsFromForm());
+        el.addEventListener('change', () => this.syncTechDetailsFromForm());
+      }
+    });
+  }
+
+  openTechnicalDetailsPanel(moduleKey) {
+    const panel = this.querySelector('#technicalDetailsPanel');
+    if (!panel) return;
+    this.fillTechDetailsModuleSelect();
+    this.technicalDetailsPanelModuleKey = moduleKey;
+    const moduleSelect = this.querySelector('#techDetailsModuleSelect');
+    if (moduleSelect) moduleSelect.value = moduleKey || '';
+    this.fillTechDetailsForm(moduleKey);
+    const formWrap = this.querySelector('#techDetailsFormWrap');
+    if (formWrap) formWrap.style.display = moduleKey ? '' : 'none';
+    panel.classList.add('is-open');
+  }
+
+  closeTechnicalDetailsPanel() {
+    const panel = this.querySelector('#technicalDetailsPanel');
+    if (panel) panel.classList.remove('is-open');
+    this.syncTechDetailsFromForm();
+  }
+
+  fillTechDetailsModuleSelect() {
+    const sel = this.querySelector('#techDetailsModuleSelect');
+    if (!sel) return;
+    const opts = this.flowModules.map((m, i) => ({
+      value: m.id || `idx_${i}`,
+      label: m.name || 'Módulo ' + (i + 1)
+    }));
+    sel.innerHTML = '<option value="">— Seleccionar módulo —</option>' + opts.map(o => `<option value="${this.escapeHtml(o.value)}">${this.escapeHtml(o.label)}</option>`).join('');
+    if (this.technicalDetailsPanelModuleKey) sel.value = this.technicalDetailsPanelModuleKey;
+  }
+
+  getTechDetailsDefault() {
+    return {
+      platform_name: 'n8n',
+      platform_flow_id: '',
+      platform_flow_name: '',
+      editor_url: '',
+      credential_id: '',
+      is_healthy: true,
+      last_health_check: null,
+      avg_execution_time_ms: ''
+    };
+  }
+
+  fillTechDetailsForm(moduleKey) {
+    if (!moduleKey) return;
+    if (!this.flowTechnicalDetailsByModule[moduleKey]) {
+      this.flowTechnicalDetailsByModule[moduleKey] = { ...this.getTechDetailsDefault() };
+    }
+    const t = this.flowTechnicalDetailsByModule[moduleKey];
+    const set = (id, value) => { const el = this.querySelector(`#${id}`); if (el) el.value = value ?? ''; };
+    const setCheck = (id, value) => { const el = this.querySelector(`#${id}`); if (el) el.checked = !!value; };
+    set('techDetailsPlatformName', t.platform_name);
+    set('techDetailsPlatformFlowId', t.platform_flow_id);
+    set('techDetailsPlatformFlowName', t.platform_flow_name);
+    set('techDetailsEditorUrl', t.editor_url);
+    set('techDetailsCredentialId', t.credential_id);
+    setCheck('techDetailsIsHealthy', t.is_healthy);
+    set('techDetailsAvgExecutionTimeMs', t.avg_execution_time_ms === '' || t.avg_execution_time_ms == null ? '' : t.avg_execution_time_ms);
+    const lastCheck = this.querySelector('#techDetailsLastHealthCheck');
+    if (lastCheck) lastCheck.value = t.last_health_check ? new Date(t.last_health_check).toLocaleString() : '—';
+  }
+
+  syncTechDetailsFromForm() {
+    if (!this.technicalDetailsPanelModuleKey) return;
+    if (!this.flowTechnicalDetailsByModule[this.technicalDetailsPanelModuleKey]) {
+      this.flowTechnicalDetailsByModule[this.technicalDetailsPanelModuleKey] = this.getTechDetailsDefault();
+    }
+    const t = this.flowTechnicalDetailsByModule[this.technicalDetailsPanelModuleKey];
+    const get = (id) => { const el = this.querySelector(`#${id}`); return el ? el.value : ''; };
+    const getCheck = (id) => { const el = this.querySelector(`#${id}`); return el ? el.checked : false; };
+    t.platform_name = get('techDetailsPlatformName') || 'n8n';
+    t.platform_flow_id = get('techDetailsPlatformFlowId') || '';
+    t.platform_flow_name = get('techDetailsPlatformFlowName') || '';
+    t.editor_url = get('techDetailsEditorUrl') || '';
+    t.credential_id = get('techDetailsCredentialId') || '';
+    t.is_healthy = getCheck('techDetailsIsHealthy');
+    const avg = get('techDetailsAvgExecutionTimeMs');
+    t.avg_execution_time_ms = avg === '' ? '' : parseInt(avg, 10);
+    const firstKey = this.flowModules[0]?.id || 'idx_0';
+    if (this.technicalDetailsPanelModuleKey === firstKey) {
+      this.technicalDetails.platform_name = t.platform_name || 'n8n';
+      this.technicalDetails.editor_url = t.editor_url || '';
+    }
+    this.onFieldChange();
   }
 
   syncModuleField(index, field, value) {
     if (!this.flowModules[index]) return;
     if (field === 'is_human_approval_required') this.flowModules[index][field] = !!value;
     else if (field === 'next_module_id') this.flowModules[index][field] = value || null;
-    else if (field === 'output_schema' || field === 'routing_rules') {
+    else if (field === 'output_schema' || field === 'routing_rules' || field === 'input_schema') {
       const str = (value || '').trim();
-      if (!str) this.flowModules[index][field] = null;
+      if (!str) this.flowModules[index][field] = (field === 'input_schema' && index === 0) ? this.flowModules[index][field] : null;
       else {
         try {
           this.flowModules[index][field] = JSON.parse(str);
@@ -2856,7 +3048,7 @@ class DevBuilderView extends DevBaseView {
   async saveTechnicalDetails(flowId) {
     if (!this.supabase || !flowId) return;
     
-    const mods = this.flowModules.length ? this.flowModules : [{ name: 'Módulo 1', step_order: 1, execution_type: 'webhook', webhook_url_test: '', webhook_url_prod: '', is_human_approval_required: false, next_module_id: null, output_schema: null, routing_rules: null }];
+    const mods = this.flowModules.length ? this.flowModules : [{ name: 'Módulo 1', step_order: 1, execution_type: 'webhook', webhook_url_test: '', webhook_url_prod: '', is_human_approval_required: false, next_module_id: null, output_schema: null, routing_rules: null, input_schema: null }];
     if (mods.length !== this.flowModules.length) this.flowModules = mods;
     
     const keepIds = mods.map(m => m.id).filter(Boolean);
@@ -2887,7 +3079,7 @@ class DevBuilderView extends DevBaseView {
           execution_type: mods[i].execution_type || 'webhook',
           webhook_url_test: mods[i].webhook_url_test || null,
           webhook_url_prod: mods[i].webhook_url_prod || null,
-          input_schema: i === 0 ? { fields: this.inputSchema } : {},
+          input_schema: i === 0 ? { fields: this.inputSchema } : ((mods[i].input_schema != null && typeof mods[i].input_schema === 'object') ? mods[i].input_schema : {}),
           is_human_approval_required: !!mods[i].is_human_approval_required,
           next_module_id: null,
           output_schema: (mods[i].output_schema != null && typeof mods[i].output_schema === 'object') ? mods[i].output_schema : null,
@@ -2900,6 +3092,11 @@ class DevBuilderView extends DevBaseView {
         return;
       }
       mods[i].id = inserted.id;
+      const idxKey = `idx_${i}`;
+      if (this.flowTechnicalDetailsByModule[idxKey]) {
+        this.flowTechnicalDetailsByModule[inserted.id] = this.flowTechnicalDetailsByModule[idxKey];
+        delete this.flowTechnicalDetailsByModule[idxKey];
+      }
     }
     
     // 2) Actualizar todos los módulos (name, step_order, execution_type, webhooks, input_schema primer módulo, next_module_id, output_schema, routing_rules)
@@ -2916,6 +3113,7 @@ class DevBuilderView extends DevBaseView {
         routing_rules: (mods[i].routing_rules != null && typeof mods[i].routing_rules === 'object') ? mods[i].routing_rules : null
       };
       if (i === 0) payload.input_schema = { fields: this.inputSchema };
+      else if (mods[i].input_schema != null && typeof mods[i].input_schema === 'object') payload.input_schema = mods[i].input_schema;
       const { error } = await this.supabase
         .from('flow_modules')
         .update(payload)
@@ -2925,15 +3123,26 @@ class DevBuilderView extends DevBaseView {
     
     this.currentFlowModuleId = mods[0]?.id || null;
     
-    // 3) flow_technical_details: primer módulo (plataforma, editor_url)
-    const techPayload = {
-      flow_module_id: mods[0].id,
-      platform_name: this.technicalDetails.platform_name || 'n8n',
-      editor_url: this.technicalDetails.editor_url || null
-    };
-    await this.supabase
-      .from('flow_technical_details')
-      .upsert(techPayload, { onConflict: 'flow_module_id' });
+    // 3) flow_technical_details: uno por módulo
+    for (let i = 0; i < mods.length; i++) {
+      const mod = mods[i];
+      const key = mod.id || `idx_${i}`;
+      const td = this.flowTechnicalDetailsByModule[key] || {};
+      const techPayload = {
+        flow_module_id: mod.id,
+        platform_name: td.platform_name || 'n8n',
+        platform_flow_id: td.platform_flow_id || null,
+        platform_flow_name: td.platform_flow_name || null,
+        editor_url: td.editor_url || null,
+        credential_id: td.credential_id || null,
+        is_healthy: td.is_healthy !== false,
+        avg_execution_time_ms: td.avg_execution_time_ms !== '' && td.avg_execution_time_ms != null ? parseInt(td.avg_execution_time_ms, 10) : null
+      };
+      const { error: techErr } = await this.supabase
+        .from('flow_technical_details')
+        .upsert(techPayload, { onConflict: 'flow_module_id' });
+      if (techErr) console.error('Error upserting flow_technical_details:', techErr);
+    }
   }
 
   async publishFlow() {
