@@ -979,8 +979,17 @@ class DevBuilderView extends DevBaseView {
     if (emptyState) emptyState.style.display = 'none';
     
     canvas.innerHTML = this.inputSchema.map((field, index) => this.renderCanvasField(field, index)).join('');
-    
+    this.enableCanvasPreviewInputs(canvas);
     this.setupCanvasFieldListeners();
+  }
+
+  /** Habilita interacción en los controles del canvas (escribir en string, elegir en dropdown, etc.) */
+  enableCanvasPreviewInputs(container) {
+    if (!container) return;
+    container.querySelectorAll('.canvas-field-preview input, .canvas-field-preview select, .canvas-field-preview textarea').forEach(el => {
+      el.removeAttribute('disabled');
+      el.style.cursor = el.tagName === 'SELECT' ? 'pointer' : 'text';
+    });
   }
 
   renderCanvasField(field, index) {
@@ -1041,9 +1050,14 @@ class DevBuilderView extends DevBaseView {
     const fields = this.querySelectorAll('.canvas-field');
     
     fields.forEach((field, index) => {
-      // Click para seleccionar (no si se hace clic en acciones o en la X)
+      // Evitar que el clic en el preview (inputs/select) propague y quite foco; solo seleccionar si se clic en header
+      const preview = field.querySelector('.canvas-field-preview');
+      if (preview) {
+        preview.addEventListener('click', (e) => e.stopPropagation());
+      }
+      // Click en el campo (header, bordes) para seleccionar
       field.addEventListener('click', (e) => {
-        if (!e.target.closest('.field-action-btn') && !e.target.closest('.canvas-field-remove')) {
+        if (!e.target.closest('.field-action-btn') && !e.target.closest('.canvas-field-remove') && !e.target.closest('.canvas-field-preview')) {
           this.selectField(index);
         }
       });
