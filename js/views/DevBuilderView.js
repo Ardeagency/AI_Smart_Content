@@ -249,42 +249,49 @@ class DevBuilderView extends DevBaseView {
             </div>
           </div>
 
-          <!-- Tab 2: Módulos = datos de flow_modules por módulo. Abajo: Nuevo módulo + Detalles técnicos (panel derecho). -->
-          <div class="builder-tab-content" id="tabTechnical">
-            <div class="builder-settings-form builder-config-fullwidth">
-              <div class="settings-section" id="technicalWebhookSection">
-                <div class="settings-field">
-                  <label for="executionMode">Modo de ejecución del flujo</label>
-                  <select id="executionMode">
-                    <option value="single_step">Un solo módulo</option>
-                    <option value="multi_step">Varios módulos (lineal)</option>
-                    <option value="sequential">Secuencial con decisiones</option>
-                  </select>
-                </div>
-                <div id="technicalModulesList" class="technical-modules-list"></div>
-                <div class="technical-modules-actions">
-                  <button type="button" class="btn-small" id="technicalAddModuleBtn"><i class="ph ph-plus"></i> Nuevo módulo</button>
-                  <button type="button" class="btn-small btn-ghost" id="technicalDetailsPanelBtn" title="Detalles técnicos"><i class="ph ph-wrench"></i> Detalles técnicos</button>
+          <!-- Tab 2: Módulos. Layout: contenido principal + panel derecho dentro del tab (respeta header/footer). -->
+          <div class="builder-tab-content builder-tab-technical" id="tabTechnical">
+            <div class="technical-tab-layout">
+              <div class="technical-tab-main">
+                <div class="builder-settings-form builder-config-fullwidth">
+                  <div class="settings-section technical-section-mode" id="technicalWebhookSection">
+                    <h4 class="technical-section-title"><i class="ph ph-play-circle"></i> Modo de ejecución del flujo</h4>
+                    <div class="settings-field">
+                      <label for="executionMode">Modo</label>
+                      <select id="executionMode">
+                        <option value="single_step">Un solo módulo</option>
+                        <option value="multi_step">Varios módulos (lineal)</option>
+                        <option value="sequential">Secuencial con decisiones</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="settings-section technical-section-modules">
+                    <h4 class="technical-section-title"><i class="ph ph-stack"></i> Módulos del flujo</h4>
+                    <div id="technicalModulesList" class="technical-modules-list"></div>
+                    <div class="technical-modules-actions">
+                      <button type="button" class="btn-small btn-primary-modules" id="technicalAddModuleBtn"><i class="ph ph-plus"></i> Nuevo módulo</button>
+                      <button type="button" class="btn-small btn-ghost" id="technicalDetailsPanelBtn" title="Abrir detalles técnicos del módulo seleccionado"><i class="ph ph-wrench"></i> Detalles técnicos</button>
+                    </div>
+                  </div>
+                  <div class="settings-section technical-automated-block" id="technicalAutomatedBlock" style="display: none;">
+                    <h4><i class="ph ph-clock-countdown"></i> Tipo de ejecución</h4>
+                    <div class="automated-execution-info">
+                      <p><strong>CRON JOB / PROGRAMADO</strong></p>
+                      <p>Estado: Activo en n8n</p>
+                      <p class="field-help">Este flujo no usa webhook; se dispara por el sistema.</p>
+                    </div>
+                  </div>
+                  <div class="settings-section">
+                    <h4><i class="ph ph-code"></i> Schema JSON (input_schema)</h4>
+                    <div class="json-preview" id="jsonSchemaPreview">
+                      <pre><code>{ "fields": [] }</code></pre>
+                    </div>
+                    <button class="btn-small" id="copySchemaBtn"><i class="ph ph-copy"></i> Copiar JSON</button>
+                  </div>
                 </div>
               </div>
-              <div class="settings-section technical-automated-block" id="technicalAutomatedBlock" style="display: none;">
-                <h4><i class="ph ph-clock-countdown"></i> Tipo de ejecución</h4>
-                <div class="automated-execution-info">
-                  <p><strong>CRON JOB / PROGRAMADO</strong></p>
-                  <p>Estado: Activo en n8n</p>
-                  <p class="field-help">Este flujo no usa webhook; se dispara por el sistema.</p>
-                </div>
-              </div>
-              <div class="settings-section">
-                <h4><i class="ph ph-code"></i> Schema JSON (input_schema)</h4>
-                <div class="json-preview" id="jsonSchemaPreview">
-                  <pre><code>{ "fields": [] }</code></pre>
-                </div>
-                <button class="btn-small" id="copySchemaBtn"><i class="ph ph-copy"></i> Copiar JSON</button>
-              </div>
-            </div>
-            <!-- Panel derecho: Detalles técnicos (flow_technical_details) por módulo -->
-            <div class="builder-panel-right" id="technicalDetailsPanel">
+              <!-- Panel derecho: dentro del tab, debajo del header y respetando footer -->
+              <div class="builder-panel-right" id="technicalDetailsPanel">
               <div class="builder-panel-right-header">
                 <h4><i class="ph ph-wrench"></i> Detalles técnicos</h4>
                 <button type="button" class="btn-icon btn-ghost" id="technicalDetailsPanelClose" title="Cerrar"><i class="ph ph-x"></i></button>
@@ -338,6 +345,7 @@ class DevBuilderView extends DevBaseView {
                   </div>
                 </div>
               </div>
+            </div>
             </div>
           </div>
 
