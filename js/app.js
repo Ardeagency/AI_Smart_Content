@@ -2,7 +2,7 @@
  * App - Aplicación principal de la SPA
  * 
  * Arquitectura de rutas:
- * - Públicas: /, /login, /planes (sin navegación)
+ * - Públicas: /, /login, /signin, /planes (sin navegación)
  * - Home: /home, /hogar (solo header, sin sidebar)
  * - Organización: /org/:org_id/... (sidebar SaaS)
  * - Desarrollador: /dev/... (sidebar PaaS)
@@ -68,6 +68,7 @@ class App {
       // Vistas públicas
       LandingView: typeof window.LandingView !== 'undefined',
       PlanesView: typeof window.PlanesView !== 'undefined',
+      SignInView: typeof window.SignInView !== 'undefined',
       
       // Vistas SaaS (usuarios consumidores)
       BrandsView: typeof window.BrandsView !== 'undefined',
@@ -108,8 +109,14 @@ class App {
         requiresAuth: false,
         redirectIfAuth: false
       });
+    }
 
-      this.router.register('/login', window.LandingView, {
+    if (viewsAvailable.SignInView) {
+      this.router.register('/login', window.SignInView, {
+        requiresAuth: false,
+        redirectIfAuth: true
+      });
+      this.router.register('/signin', window.SignInView, {
         requiresAuth: false,
         redirectIfAuth: true
       });

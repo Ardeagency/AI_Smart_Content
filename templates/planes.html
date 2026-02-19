@@ -1,5 +1,5 @@
 <div class="planes-main">
-<div class="planes-layout">
+<div class="planes-layout planes-layout-single">
     <div class="planes-hero">
         <div class="planes-hero-background"><div class="planes-background-gradient"></div></div>
         <div class="planes-hero-content">
@@ -8,7 +8,7 @@
                 <button type="button" class="planes-toggle-btn active" data-billing="monthly" id="toggleMonthly">Mensual</button>
                 <button type="button" class="planes-toggle-btn" data-billing="annual" id="toggleAnnual">Anual</button>
             </div>
-            <p class="planes-hero-subtitle">Elige tu plan y completa tus datos para crear tu cuenta.</p>
+            <p class="planes-hero-subtitle">Elige tu plan.</p>
             <div class="planes-plans" id="planesList">
                 <div class="plan-card-small" data-plan="basico" data-credits="50" data-price="29" data-price-annual="290">
                     <h3 class="plan-card-name">Básico</h3>
@@ -47,81 +47,10 @@
                     </ul>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div class="planes-form-panel">
-        <div class="planes-form-inner">
-            <h2 class="planes-form-title">Crear cuenta</h2>
-            <p class="planes-form-subtitle">Ingresa tus datos para crear tu cuenta.</p>
-            <form class="registration-form" id="registrationForm">
-                <div class="form-group">
-                    <label for="regFullName">Nombre completo</label>
-                        <div class="input-wrapper">
-                            <input type="text" id="regFullName" name="fullName" class="form-input planes-input" placeholder="ej. Juan Pérez" autocomplete="name" required>
-                            <i class="fas fa-user input-icon"></i>
-                        </div>
-                </div>
-                <div class="form-group">
-                    <label for="regEmail">Correo electrónico</label>
-                    <div class="input-wrapper">
-                        <input type="email" id="regEmail" name="email" class="form-input planes-input" placeholder="ej. juan@email.com" autocomplete="email" required>
-                        <i class="fas fa-envelope input-icon"></i>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="regPassword">Contraseña</label>
-                    <div class="input-wrapper">
-                        <input type="password" id="regPassword" name="password" class="form-input planes-input" placeholder="Introduce tu contraseña" autocomplete="new-password" required>
-                        <i class="fas fa-eye input-icon password-toggle" id="passwordToggle"></i>
-                    </div>
-                    <span class="planes-input-hint">Mínimo 8 caracteres.</span>
-                </div>
-                <div class="planes-submit-wrap">
-                    <button type="submit" class="planes-btn-submit">Crear cuenta</button>
-                </div>
-            </form>
-
-            <p class="planes-login-link">
-                ¿Ya tienes una cuenta? <a href="/login" class="login-link">Iniciar sesión</a>
+            <p class="planes-cta-login">
+                <a href="/login" class="planes-link-login">Iniciar sesión o registrarse</a>
             </p>
         </div>
     </div>
 </div>
-</div>
-
-<div class="email-confirmation-screen" id="emailConfirmationScreen" style="display:none;">
-    <div class="planes-layout confirmation-layout">
-        <div class="planes-hero">
-            <div class="planes-hero-background"><div class="planes-background-gradient"></div></div>
-            <div class="planes-hero-content">
-                <h1 class="planes-hero-title">Planes mensuales</h1>
-                <p class="planes-hero-subtitle">Revisa tu correo para confirmar tu cuenta.</p>
-            </div>
-        </div>
-        <div class="planes-form-panel">
-            <div class="confirmation-content">
-                <div class="confirmation-icon">
-                    <i class="fas fa-envelope-circle-check"></i>
-                </div>
-                <h2 class="confirmation-title">Confirma tu correo electrónico</h2>
-                <p class="confirmation-message">
-                    Hemos enviado un enlace de confirmación a <strong id="confirmationEmail"></strong>
-                </p>
-                <p class="confirmation-instructions">
-                    Revisa tu bandeja de entrada y haz clic en el enlace para confirmar tu cuenta.
-                </p>
-                <div class="confirmation-actions">
-                    <button type="button" class="btn-resend-email" id="btnResendEmail">
-                        <i class="fas fa-paper-plane"></i>
-                        Reenviar correo
-                    </button>
-                    <a href="/login" class="btn-back-login">
-                        <i class="fas fa-arrow-left"></i>
-                        Volver al inicio de sesión
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>

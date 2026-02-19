@@ -1,0 +1,39 @@
+<div class="signin-container">
+    <div class="form-org-bg-grid" aria-hidden="true"></div>
+    <div class="form-main-content">
+        <div class="form-org-card signin-card">
+            <!-- Logo / Marca -->
+            <div class="signin-brand">
+                <div class="signin-brand-icon" aria-hidden="true"></div>
+                <span class="signin-brand-name">AI SMART CONTENT</span>
+            </div>
+
+            <form id="form_signin" novalidate>
+                <!-- Estado: Iniciar sesión -->
+                <div class="auth-state active" data-state="signin">
+                    <input type="email" class="form-input" id="signinEmail" name="email" placeholder="Email" autocomplete="email" required>
+                    <div class="signin-password-wrap">
+                        <input type="password" class="form-input" id="signinPassword" name="password" placeholder="Password" autocomplete="current-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="btnSignIn">Login</button>
+                    <a href="#" class="signin-forgot" id="linkForgotPassword">¿Olvidaste tu contraseña?</a>
+                </div>
+
+                <!-- Estado: Registrarse -->
+                <div class="auth-state" data-state="signup">
+                    <input type="text" class="form-input" id="signupFullName" name="fullName" placeholder="Nombre completo" autocomplete="name" required>
+                    <input type="email" class="form-input" id="signupEmail" name="email" placeholder="Email" autocomplete="email" required>
+                    <input type="password" class="form-input" id="signupPassword" name="password" placeholder="Password" autocomplete="new-password" required minlength="8">
+                    <input type="password" class="form-input" id="signupPasswordConfirm" name="passwordConfirm" placeholder="Confirmar contraseña" autocomplete="new-password" required minlength="8">
+                    <button type="submit" class="btn btn-primary" id="btnSignUp">Registrarse</button>
+                </div>
+            </form>
+
+            <!-- Toggle entre Sign In / Sign Up -->
+            <div class="signin-toggle">
+                <span class="signin-toggle-text" id="toggleSignInText">¿No tienes cuenta? </span>
+                <button type="button" class="signin-toggle-link" id="btnToggleAuth" aria-live="polite">Regístrate</button>
+            </div>
+        </div>
+    </div>
+</div>

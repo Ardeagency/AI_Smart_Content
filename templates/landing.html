@@ -25,77 +25,7 @@
 <!-- Centered Content -->
 <div class="landing-content">
     <div class="header-actions">
-        <button class="auth-btn login" id="loginBtn">Login</button>
-        <a href="/planes" class="auth-btn register">Registrar</a>
-    </div>
-</div>
-
-<!-- Notificación para email no verificado -->
-<div class="notification-message" id="emailNotVerifiedNotification">
-    <div class="notification-icon warning">
-        <i class="fas fa-envelope-circle-check"></i>
-    </div>
-    <h2 class="notification-title">Verificación de Email Requerida</h2>
-    <p class="notification-text">
-        Tu cuenta de correo electrónico aún no ha sido verificada. Por favor, revisa tu bandeja de entrada y haz clic en el enlace de verificación que enviamos a tu correo.<br><br>
-        Si no recibiste el email, verifica tu carpeta de spam o solicita un nuevo enlace de verificación.
-    </p>
-    <button type="button" class="notification-btn" id="closeEmailNotification">Entendido</button>
-</div>
-
-<!-- Notificación para usuario sin permisos -->
-<div class="notification-message" id="userNotApprovedNotification">
-    <div class="notification-icon info">
-        <i class="fas fa-user-clock"></i>
-    </div>
-    <h2 class="notification-title">Acceso Pendiente de Aprobación</h2>
-    <p class="notification-text">
-        Tu cuenta está activa, pero aún no tienes permisos para acceder a la plataforma.<br><br>
-        Un administrador debe aprobar tu solicitud para que puedas utilizar todos los servicios. Te notificaremos por correo electrónico una vez que tu acceso sea concedido.
-    </p>
-    <button type="button" class="notification-btn" id="closeUserNotification">Entendido</button>
-</div>
-
-<!-- Login Modal -->
-<div class="login-modal" id="loginModal">
-    <div class="login-card">
-        <div class="login-header">
-            <h2>Iniciar Sesión</h2>
-            <button class="close-btn" id="closeLoginModal">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <form class="login-form" id="loginForm">
-            <div class="form-group">
-                <label for="username">Email</label>
-                <input 
-                    type="email" 
-                    id="username" 
-                    name="username" 
-                    class="form-input" 
-                    placeholder="Ingresa tu email"
-                    required
-                    autocomplete="email"
-                >
-            </div>
-            <div class="form-group">
-                <label for="password">Contraseña</label>
-                <div class="password-input-wrapper">
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        class="form-input" 
-                        placeholder="Ingresa tu contraseña"
-                        required
-                        autocomplete="current-password"
-                    >
-                    <button type="button" class="password-toggle-btn" id="toggleLoginPassword" aria-label="Mostrar contraseña">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                </div>
-            </div>
-            <button type="submit" class="submit-btn">Iniciar Sesión</button>
-        </form>
+        <a href="/login" class="auth-btn login">Login</a>
+        <a href="/planes" class="auth-btn register">Planes</a>
     </div>
 </div>

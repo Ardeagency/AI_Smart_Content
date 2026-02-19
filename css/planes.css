@@ -19,6 +19,26 @@
     width: 100%;
 }
 
+/* Una sola columna (solo planes, sin formulario de registro) */
+.planes-layout-single .planes-hero {
+    flex: 1 1 100%;
+}
+
+.planes-cta-login {
+    margin: 1.25rem 0 0;
+}
+
+.planes-cta-login .planes-link-login {
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.planes-cta-login .planes-link-login:hover {
+    text-decoration: underline;
+}
+
 /* ============================================
    PANEL IZQUIERDO - Hero (estructura como brands: fondo + esquina)
    ============================================ */
