@@ -454,7 +454,7 @@ class AuthService {
 
     try {
       const { error } = await this.supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/#/login`
+        redirectTo: `${window.location.origin}/cambiar-contrasena`
       });
 
       if (error) {

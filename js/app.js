@@ -69,6 +69,7 @@ class App {
       LandingView: typeof window.LandingView !== 'undefined',
       PlanesView: typeof window.PlanesView !== 'undefined',
       SignInView: typeof window.SignInView !== 'undefined',
+      CambiarContrasenaView: typeof window.CambiarContrasenaView !== 'undefined',
       
       // Vistas SaaS (usuarios consumidores)
       BrandsView: typeof window.BrandsView !== 'undefined',
@@ -124,6 +125,13 @@ class App {
 
     if (viewsAvailable.PlanesView) {
       this.router.register('/planes', window.PlanesView, {
+        requiresAuth: false,
+        redirectIfAuth: false
+      });
+    }
+
+    if (viewsAvailable.CambiarContrasenaView) {
+      this.router.register('/cambiar-contrasena', window.CambiarContrasenaView, {
         requiresAuth: false,
         redirectIfAuth: false
       });

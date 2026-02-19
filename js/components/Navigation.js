@@ -113,7 +113,7 @@ const SIDEBAR_DEVELOPER_CONFIG = [
  * - /home, /hogar: Solo header (sin sidebar)
  * - /org/:org_id/...: Sidebar de organización (SaaS)
  * - /dev/...: Sidebar de desarrollador (PaaS)
- * - Rutas públicas (/, /login, /signin, /planes): Sin navegación
+ * - Rutas públicas (/, /login, /signin, /planes, /cambiar-contrasena): Sin navegación
  */
 class Navigation {
   constructor() {
@@ -134,7 +134,7 @@ class Navigation {
     const path = window.location.pathname || '/';
     
     // Rutas públicas - sin navegación
-    if (path === '/' || path === '/login' || path === '/signin' || path === '/planes' || path === '/index.html') {
+    if (path === '/' || path === '/login' || path === '/signin' || path === '/planes' || path === '/cambiar-contrasena' || path === '/index.html') {
       return { mode: null, showSidebar: false, showHeader: false, orgId: null, brandId: null };
     }
     

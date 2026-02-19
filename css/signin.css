@@ -105,6 +105,29 @@
     letter-spacing: -0.02em;
 }
 
+/* Banner de contraseña actualizada */
+.signin-success-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    border-radius: var(--border-radius);
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.signin-success-banner[hidden] {
+    display: none !important;
+}
+
+.signin-success-banner-icon {
+    color: var(--success-color);
+    font-weight: 700;
+}
+
 /* Formulario: ancho completo */
 .signin-container #form_signin {
     display: flex;
@@ -253,6 +276,89 @@
     width: 20px;
     height: 20px;
     flex-shrink: 0;
+}
+
+/* Bloque Recuperar contraseña */
+.signin-recover {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    text-align: center;
+}
+
+.signin-recover[hidden] {
+    display: none !important;
+}
+
+.signin-recover-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 0.25rem 0;
+}
+
+.signin-recover-desc {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 0 0 0.5rem 0;
+    line-height: 1.45;
+}
+
+.signin-recover-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    width: 100%;
+}
+
+.signin-recover-success {
+    padding: 0.75rem;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: var(--border-radius);
+}
+
+.signin-recover-success[hidden] {
+    display: none !important;
+}
+
+.signin-recover-success-text {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.45;
+}
+
+.signin-recover-back {
+    font-size: 0.9rem;
+    color: rgba(59, 130, 246, 0.95);
+    text-decoration: none;
+    margin-top: 0.25rem;
+    transition: var(--transition);
+}
+
+.signin-recover-back:hover {
+    color: rgba(59, 130, 246, 1);
+    text-decoration: underline;
+}
+
+/* Vista Cambiar contraseña (reutiliza estilos signin) */
+.cambiar-contrasena-loading {
+    text-align: center;
+    padding: 1rem 0;
+}
+
+.cambiar-contrasena-invalid .btn,
+.cambiar-contrasena-form-wrap .form-input {
+    margin-top: 0.25rem;
+}
+
+.cambiar-contrasena-form-wrap form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    width: 100%;
 }
 
 /* Toggle entre Iniciar sesión / Registrarse */

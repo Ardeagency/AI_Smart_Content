@@ -12,10 +12,21 @@ class SignInView extends BaseView {
     this.btnToggle = null;
     this.toggleText = null;
     this.currentState = 'signin'; // 'signin' | 'signup'
+    this.signinMain = null;
+    this.signinRecover = null;
   }
 
   async onEnter() {
     // Sin redirección automática: siempre se muestra la página de login/registro
+    // Mostrar banner si vienen de "cambiar contraseña" exitoso
+    const params = new URLSearchParams(window.location.search || '');
+    if (params.get('password_changed') === '1') {
+      const banner = document.getElementById('signinPasswordChangedBanner');
+      if (banner) banner.hidden = false;
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    }
   }
 
   async init() {
@@ -46,11 +57,24 @@ class SignInView extends BaseView {
       }
     });
 
-    // Olvidaste tu contraseña
+    // Olvidaste tu contraseña → mostrar bloque recuperar
+    this.signinMain = this.querySelector('#signinMain');
+    this.signinRecover = this.querySelector('#signinRecover');
     if (linkForgot) {
       this.addEventListener(linkForgot, 'click', (e) => {
         e.preventDefault();
-        this.handleForgotPassword();
+        this.showRecoverState();
+      });
+    }
+    const btnSendRecover = this.querySelector('#btnSendRecover');
+    const linkRecoverBack = this.querySelector('#linkRecoverBack');
+    if (btnSendRecover) {
+      this.addEventListener(btnSendRecover, 'click', () => this.handleSendRecoverLink());
+    }
+    if (linkRecoverBack) {
+      this.addEventListener(linkRecoverBack, 'click', (e) => {
+        e.preventDefault();
+        this.hideRecoverState();
       });
     }
 
@@ -202,23 +226,65 @@ class SignInView extends BaseView {
     }
   }
 
-  handleForgotPassword() {
-    const email = this.querySelector('#signinEmail')?.value?.trim();
-    const promptEmail = email || window.prompt('Introduce tu email para restablecer la contraseña:');
-    if (!promptEmail?.trim()) return;
+  showRecoverState() {
+    if (this.signinMain) this.signinMain.style.display = 'none';
+    if (this.signinRecover) {
+      this.signinRecover.removeAttribute('hidden');
+      this.signinRecover.setAttribute('aria-hidden', 'false');
+    }
+    const form = this.querySelector('#recoverForm');
+    const success = this.querySelector('#recoverSuccess');
+    if (form) form.hidden = false;
+    if (success) success.hidden = true;
+    const emailInput = this.querySelector('#recoverEmail');
+    if (emailInput) {
+      emailInput.value = this.querySelector('#signinEmail')?.value?.trim() || '';
+      emailInput.focus();
+    }
+  }
+
+  hideRecoverState() {
+    if (this.signinMain) this.signinMain.style.display = '';
+    if (this.signinRecover) {
+      this.signinRecover.setAttribute('hidden', '');
+      this.signinRecover.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  async handleSendRecoverLink() {
+    const emailInput = this.querySelector('#recoverEmail');
+    const email = emailInput?.value?.trim();
+    if (!email) {
+      if (emailInput) emailInput.focus();
+      return;
+    }
 
     if (!window.authService) {
       alert('Servicio no disponible.');
       return;
     }
 
-    window.authService.resetPassword(promptEmail.trim()).then((result) => {
-      if (result.success) {
-        alert('Revisa tu correo: te hemos enviado un enlace para restablecer la contraseña.');
-      } else {
-        alert(result.error || 'Error al enviar el email.');
-      }
-    });
+    const btn = this.querySelector('#btnSendRecover');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Enviando...';
+    }
+
+    const result = await window.authService.resetPassword(email);
+
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Enviar enlace';
+    }
+
+    if (result.success) {
+      const form = this.querySelector('#recoverForm');
+      const success = this.querySelector('#recoverSuccess');
+      if (form) form.hidden = true;
+      if (success) success.hidden = false;
+    } else {
+      alert(result.error || 'Error al enviar el correo. Intenta de nuevo.');
+    }
   }
 
   async getSupabaseClient() {

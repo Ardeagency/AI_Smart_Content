@@ -8,6 +8,14 @@
                 <span class="signin-brand-name">AI SMART CONTENT</span>
             </div>
 
+            <!-- Mensaje de contraseña actualizada -->
+            <div class="signin-success-banner" id="signinPasswordChangedBanner" hidden>
+                <span class="signin-success-banner-icon" aria-hidden="true">✓</span>
+                <span>Contraseña actualizada. Inicia sesión con tu nueva contraseña.</span>
+            </div>
+
+            <!-- Bloque principal: login / registro -->
+            <div class="signin-main" id="signinMain">
             <form id="form_signin" novalidate>
                 <!-- Estado: Iniciar sesión -->
                 <div class="auth-state active" data-state="signin">
@@ -46,6 +54,21 @@
             <div class="signin-toggle">
                 <span class="signin-toggle-text" id="toggleSignInText">¿No tienes cuenta? </span>
                 <button type="button" class="signin-toggle-link" id="btnToggleAuth" aria-live="polite">Regístrate</button>
+            </div>
+            </div>
+
+            <!-- Bloque Recuperar contraseña (oculto por defecto) -->
+            <div class="signin-recover" id="signinRecover" aria-hidden="true" hidden>
+                <h2 class="signin-recover-title">Recuperar contraseña</h2>
+                <p class="signin-recover-desc">Te enviaremos un enlace a tu correo para restablecer la contraseña. Debes hacer clic en el enlace para verificar que eres tú.</p>
+                <div class="signin-recover-form" id="recoverForm">
+                    <input type="email" class="form-input" id="recoverEmail" placeholder="Correo electrónico" autocomplete="email" required>
+                    <button type="button" class="btn btn-primary" id="btnSendRecover">Enviar enlace</button>
+                </div>
+                <div class="signin-recover-success" id="recoverSuccess" hidden>
+                    <p class="signin-recover-success-text">Si existe una cuenta con ese correo, recibirás un enlace en unos minutos. Revisa también la carpeta de spam.</p>
+                </div>
+                <a href="/login" class="signin-recover-back" id="linkRecoverBack">Volver al inicio de sesión</a>
             </div>
         </div>
     </div>
