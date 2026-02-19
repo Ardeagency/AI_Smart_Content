@@ -15,14 +15,7 @@ class SignInView extends BaseView {
   }
 
   async onEnter() {
-    // Si ya está autenticado, el router puede redirigir (redirectIfAuth: true)
-    if (window.authService && (await window.authService.checkSession())) {
-      const route = await window.authService.determineRedirectRoute(window.authService.currentUser?.id);
-      if (window.router && route) {
-        window.router.navigate(route, true);
-        return;
-      }
-    }
+    // Sin redirección automática: siempre se muestra la página de login/registro
   }
 
   async init() {

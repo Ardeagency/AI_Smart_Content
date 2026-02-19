@@ -114,11 +114,11 @@ class App {
     if (viewsAvailable.SignInView) {
       this.router.register('/login', window.SignInView, {
         requiresAuth: false,
-        redirectIfAuth: true
+        redirectIfAuth: false
       });
       this.router.register('/signin', window.SignInView, {
         requiresAuth: false,
-        redirectIfAuth: true
+        redirectIfAuth: false
       });
     }
 
