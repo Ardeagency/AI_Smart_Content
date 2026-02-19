@@ -990,149 +990,121 @@ class LivingManager {
     }
 
     async renderHistorySection() {
-        const videosContainer = document.getElementById('livingHistoryVideos');
-        const imagesContainer = document.getElementById('livingHistoryImages');
-        
-        if (!videosContainer || !imagesContainer) return;
-        
-        // Producciones de flujos que el usuario haya usado
-        // Excluir las que ya están en hero (latestGeneratedContent)
-        const automatedIds = new Set((this.latestGeneratedContent || []).map(item => item.id || item.run_id));
-        
-        const historyItems = this.flowRuns
-            .filter(run => !automatedIds.has(run.id))
-            .map(run => {
-                const output = this.flowOutputs.find(o => o.run_id === run.id);
-                const fileUrl = output?.file_url || output?.storage_path || null;
-                
-                // Detectar tipo de contenido
-                let contentType = 'text';
-                if (fileUrl) {
-                    const url = fileUrl.toLowerCase();
-                    if (url.includes('.mp4') || url.includes('.mov') || url.includes('.webm') || 
-                        url.includes('video') || url.includes('reel') || url.includes('clip')) {
-                        contentType = 'video';
-                    } else if (url.includes('.jpg') || url.includes('.jpeg') || url.includes('.png') || 
-                               url.includes('.webp') || url.includes('image') || url.includes('img')) {
-                        contentType = 'image';
-                    }
-                } else if (output?.output_type) {
-                    const type = output.output_type.toLowerCase();
-                    if (type.includes('video') || type.includes('reel') || type.includes('clip')) {
-                        contentType = 'video';
-                    } else if (type.includes('image') || type.includes('img') || type.includes('still')) {
-                        contentType = 'image';
-                    }
+        const container = document.getElementById('livingHistoryContent');
+        if (!container) return;
+
+        // Todo el contenido producido: flow runs + contenido generado (sin excluir)
+        const fromRuns = (this.flowRuns || []).map(run => {
+            const output = this.flowOutputs.find(o => o.run_id === run.id);
+            const fileUrl = output?.file_url || output?.storage_path || null;
+            let contentType = 'text';
+            if (fileUrl) {
+                const url = (fileUrl + '').toLowerCase();
+                if (url.includes('.mp4') || url.includes('.mov') || url.includes('.webm') || url.includes('video') || url.includes('reel') || url.includes('clip')) {
+                    contentType = 'video';
+                } else if (url.includes('.jpg') || url.includes('.jpeg') || url.includes('.png') || url.includes('.webp') || url.includes('image') || url.includes('img')) {
+                    contentType = 'image';
                 }
-                
-                // Buscar prompt en múltiples campos posibles
-                let prompt = output?.prompt_used || 
-                            output?.prompt || 
-                            output?.generated_copy || 
-                            output?.text_content || 
-                            '';
-                
-                // Si no hay prompt directo, buscar en metadata
-                if (!prompt && output?.metadata) {
-                    if (typeof output.metadata === 'string') {
-                        try {
-                            const metadata = JSON.parse(output.metadata);
-                            prompt = metadata.prompt || metadata.prompt_used || metadata.generated_prompt || '';
-                        } catch (e) {
-                            // metadata no es JSON válido, ignorar
-                        }
-                    } else if (typeof output.metadata === 'object') {
-                        prompt = output.metadata.prompt || 
-                                output.metadata.prompt_used || 
-                                output.metadata.generated_prompt || 
-                                '';
-                    }
-                }
-                
-                // Fallback a run.status si no hay prompt
-                if (!prompt) {
-                    prompt = run.status || '';
-                }
-                
-                return {
-                    contentType,
-                    fileUrl,
-                    prompt: prompt,
-                    run: run,
-                    output: output,
-                    created_at: run.created_at || output?.created_at
-                };
+            } else if (output?.output_type) {
+                const type = (output.output_type + '').toLowerCase();
+                if (type.includes('video') || type.includes('reel') || type.includes('clip')) contentType = 'video';
+                else if (type.includes('image') || type.includes('img') || type.includes('still')) contentType = 'image';
+            }
+            let prompt = output?.prompt_used || output?.prompt || output?.generated_copy || output?.text_content || '';
+            if (!prompt && output?.metadata) {
+                try {
+                    const meta = typeof output.metadata === 'string' ? JSON.parse(output.metadata) : output.metadata;
+                    prompt = meta?.prompt || meta?.prompt_used || meta?.generated_prompt || '';
+                } catch (_) {}
+            }
+            if (!prompt) prompt = run.status || '';
+            return {
+                contentType,
+                fileUrl,
+                prompt,
+                run,
+                output,
+                created_at: run.created_at || output?.created_at,
+                _outputId: output?.id
+            };
+        });
+
+        const fromGenerated = (this.latestGeneratedContent || []).map(item => {
+            const fileUrl = item.image_url || item.url || item.storage_url || item.file_url || null;
+            let resolvedUrl = fileUrl;
+            if (!resolvedUrl && item.storage_path && typeof item.storage_path === 'string' && item.storage_path.trim() !== '') {
+                resolvedUrl = this.getPublicUrlFromStorage('production-outputs', item.storage_path);
+            }
+            if (!resolvedUrl && item.storage_object_id && typeof item.storage_object_id === 'string' && (item.storage_object_id.includes('/') || item.storage_object_id.includes('.'))) {
+                resolvedUrl = this.getPublicUrlFromStorage('production-outputs', item.storage_object_id);
+            }
+            let prompt = item.prompt_used || item.prompt || item.generated_copy || item.text_content || '';
+            if (!prompt && item.metadata) {
+                try {
+                    const meta = typeof item.metadata === 'string' ? JSON.parse(item.metadata) : item.metadata;
+                    prompt = meta?.prompt || meta?.prompt_used || meta?.generated_prompt || '';
+                } catch (_) {}
+            }
+            const outputType = (item.output_type || '').toLowerCase();
+            let contentType = 'image';
+            if (outputType.includes('video') || outputType.includes('reel') || outputType.includes('clip')) contentType = 'video';
+            else if (outputType.includes('image') || outputType.includes('img') || resolvedUrl) contentType = 'image';
+            else contentType = 'text';
+            return {
+                contentType,
+                fileUrl: resolvedUrl,
+                prompt,
+                run: { id: item.run_id },
+                output: item,
+                created_at: item.created_at,
+                _outputId: item.id
+            };
+        });
+
+        const seenIds = new Set();
+        const allItems = [...fromRuns, ...fromGenerated]
+            .filter(it => {
+                const id = it._outputId || it.run?.id + '-' + (it.output?.id || it.created_at);
+                if (seenIds.has(id)) return false;
+                seenIds.add(id);
+                return true;
             })
-            .sort((a, b) => {
-                // Ordenar por fecha más reciente primero
-                const dateA = new Date(a.created_at || 0);
-                const dateB = new Date(b.created_at || 0);
-                return dateB - dateA;
-            });
-        
-        // Separar videos e imágenes/texto
-        const videos = historyItems.filter(item => item.contentType === 'video');
-        const images = historyItems.filter(item => item.contentType === 'image');
-        const texts = historyItems.filter(item => item.contentType === 'text');
-        
-        // Si no hay ningún contenido, mostrar estado vacío solo en imágenes
-        if (videos.length === 0 && images.length === 0 && texts.length === 0) {
-            videosContainer.innerHTML = '';
-            imagesContainer.innerHTML = this.renderEmptyState();
-            this.setupEmptyStateCta(imagesContainer);
+            .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+        if (allItems.length === 0) {
+            container.innerHTML = this.renderEmptyState();
+            this.setupEmptyStateCta(container);
             return;
         }
-        
-        // Renderizar videos (scroll horizontal)
-        if (videos.length === 0) {
-            videosContainer.innerHTML = '';
-        } else {
-            videosContainer.innerHTML = videos.map((item, index) => {
+
+        container.innerHTML = allItems.map((item, index) => {
+            if (item.contentType === 'video') {
                 let thumbnailUrl = item.fileUrl;
                 if (thumbnailUrl && !thumbnailUrl.startsWith('http') && item.output) {
-                    // Validar que storage_path sea válido antes de usarlo
-                    const storagePath = item.output.storage_path || item.output.storage_object_id;
-                    if (storagePath && typeof storagePath === 'string' && storagePath.trim() !== '') {
-                        const publicUrl = this.getPublicUrlFromStorage('production-outputs', storagePath);
-                        if (publicUrl) {
-                            thumbnailUrl = publicUrl;
-                        }
+                    const sp = item.output.storage_path || item.output.storage_object_id;
+                    if (sp && typeof sp === 'string' && sp.trim() !== '') {
+                        const u = this.getPublicUrlFromStorage('production-outputs', sp);
+                        if (u) thumbnailUrl = u;
                     }
                 }
-                
-                return this.renderVideoCard(thumbnailUrl, item.run, item.output, item.prompt, index);
-            }).join('');
-            
-            this.setupHistoryCardListeners(videosContainer, 'video');
-        }
-        
-        // Renderizar imágenes y textos (masonry)
-        const allVisualItems = [...images, ...texts];
-        if (allVisualItems.length === 0) {
-            imagesContainer.innerHTML = this.renderEmptyState();
-            this.setupEmptyStateCta(imagesContainer);
-        } else {
-            imagesContainer.innerHTML = allVisualItems.map((item, index) => {
-                if (item.contentType === 'text') {
-                    return this.renderTextCard(item.run, item.output, index);
-                } else {
-                    let imageUrl = item.fileUrl;
-                    if (imageUrl && !imageUrl.startsWith('http') && item.output) {
-                        // Validar que storage_path sea válido antes de usarlo
-                        const storagePath = item.output.storage_path || item.output.storage_object_id;
-                        if (storagePath && typeof storagePath === 'string' && storagePath.trim() !== '') {
-                            const publicUrl = this.getPublicUrlFromStorage('production-outputs', storagePath);
-                            if (publicUrl) {
-                                imageUrl = publicUrl;
-                            }
-                        }
-                    }
-                    return this.renderHistoryImageCard(imageUrl, item.run, item.output, item.prompt, index);
+                const card = this.renderVideoCard(thumbnailUrl, item.run, item.output, item.prompt, index);
+                return `<div class="living-masonry-item living-masonry-item-video">${card}</div>`;
+            }
+            if (item.contentType === 'text') {
+                return this.renderTextCard(item.run, item.output, index);
+            }
+            let imageUrl = item.fileUrl;
+            if (imageUrl && !imageUrl.startsWith('http') && item.output) {
+                const sp = item.output.storage_path || item.output.storage_object_id;
+                if (sp && typeof sp === 'string' && sp.trim() !== '') {
+                    const u = this.getPublicUrlFromStorage('production-outputs', sp);
+                    if (u) imageUrl = u;
                 }
-            }).join('');
-            
-            this.setupHistoryCardListeners(imagesContainer, 'image');
-        }
+            }
+            return this.renderHistoryImageCard(imageUrl, item.run, item.output, item.prompt, index);
+        }).join('');
+
+        this.setupHistoryCardListeners(container);
     }
     
     renderVideoCard(thumbnailUrl, run, output, prompt, index) {
@@ -1240,7 +1212,10 @@ class LivingManager {
     }
 
     setupHistoryCardListeners(container, type) {
-        const cards = container.querySelectorAll(`.history-${type}-card, .history-text-card`);
+        const selector = type
+            ? `.history-${type}-card, .history-text-card`
+            : '.history-video-card, .history-image-card, .history-text-card';
+        const cards = container.querySelectorAll(selector);
         cards.forEach(card => {
             // Prevenir clicks en botones de acción
             const actions = card.querySelectorAll('.history-video-card-download, .history-image-card-action');

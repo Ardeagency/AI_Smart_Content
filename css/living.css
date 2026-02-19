@@ -142,39 +142,19 @@ body.sidebar-collapsed .living-container {
     min-height: 400px;
 }
 
-/* Bloque A: Historial de Video - Strip editorial */
-.living-history-videos-block {
+/* Historial general: un solo masonry con todo el contenido producido */
+.living-history-content {
     width: 100%;
 }
 
-.living-history-videos-strip {
-    display: flex;
-    gap: 1.5rem;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 1rem 0 2rem;
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+/* Card de video dentro del masonry */
+.living-masonry-item-video .history-video-card {
+    width: 100%;
+    min-width: 0;
+    height: 240px;
 }
 
-.living-history-videos-strip::-webkit-scrollbar {
-    height: 8px;
-}
-
-.living-history-videos-strip::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.living-history-videos-strip::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 4px;
-}
-
-/* Card de video - Strip editorial */
 .history-video-card {
-    flex: 0 0 auto;
     position: relative;
     cursor: pointer;
     background: var(--bg-card);
@@ -182,9 +162,6 @@ body.sidebar-collapsed .living-container {
     overflow: hidden;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    /* Altura consistente, ancho variable según ratio */
-    height: 240px;
-    min-width: 180px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -282,11 +259,6 @@ body.sidebar-collapsed .living-container {
 
 .history-video-card:hover .history-video-card-duration {
     opacity: 1;
-}
-
-/* Bloque B: Historial de Imágenes - Masonry real */
-.living-history-images-block {
-    width: 100%;
 }
 
 .living-history-masonry {
