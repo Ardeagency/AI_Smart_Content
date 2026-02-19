@@ -1,34 +1,24 @@
     <div class="form-record-container">
+        <div class="form-org-bg-grid" aria-hidden="true"></div>
         <div class="form-main-content">
-            <form id="form_org">
-                <!-- Paso 1: Nombre de la organización -->
-                <div class="form-step active" data-step="1">
-                    <div class="step-header">
+            <div class="form-org-card">
+                <form id="form_org">
+                    <!-- Paso 1 -->
+                    <div class="form-step active" data-step="1">
                         <h2 class="step-title">Nombre de la organización</h2>
-                    </div>
-                    <div class="form-group">
-                        <label>Nombre de la organización <span class="required">*</span></label>
-                        <input type="text" class="form-input" id="nombre_organizacion" name="nombre_organizacion" placeholder="Ej: Mi Empresa" maxlength="200" required>
-                    </div>
-                    <div class="form-actions-inline">
+                        <input type="text" class="form-input" id="nombre_organizacion" name="nombre_organizacion" placeholder="Nombre de la organización" maxlength="200" required>
                         <button type="button" class="btn btn-primary" id="btnNext">Continuar</button>
                     </div>
-                </div>
-
-                <!-- Paso 2: URL de la organización -->
-                <div class="form-step" data-step="2">
-                    <div class="step-header">
+                    <!-- Paso 2 -->
+                    <div class="form-step" data-step="2">
                         <h2 class="step-title">URL de la organización</h2>
-                    </div>
-                    <div class="form-group">
-                        <label>URL de la web oficial <span class="required">*</span></label>
                         <input type="url" class="form-input" id="url_web" name="url_web" placeholder="https://tu-sitio.com" required>
+                        <div class="form-actions-two">
+                            <button type="button" class="btn btn-secondary" id="btnBack">Atrás</button>
+                            <button type="submit" class="btn btn-primary" id="btnSubmit">Guardar</button>
+                        </div>
                     </div>
-                    <div class="form-actions-inline form-actions-two">
-                        <button type="button" class="btn btn-secondary" id="btnBack">Atrás</button>
-                        <button type="submit" class="btn btn-primary" id="btnSubmit">Guardar</button>
-                    </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>

@@ -135,7 +135,7 @@ class FormRecord {
         this.formData.url_web = (url?.value || '').trim();
     }
 
-    async handleSubmit() {
+    handleSubmit() {
         this.collectFormData();
         if (!this.formData.nombre_organizacion) {
             alert('Por favor escribe el nombre de la organización.');
@@ -145,136 +145,7 @@ class FormRecord {
             alert('Por favor escribe la URL de la web oficial.');
             return;
         }
-
-        const btn = document.getElementById('btnSubmit');
-        if (btn) {
-            btn.disabled = true;
-            btn.textContent = 'Guardando...';
-        }
-
-        try {
-            if (!this.supabase || !this.userId) await this.ensureSupabase();
-            if (!this.supabase || !this.userId) {
-                throw new Error('No se pudo inicializar Supabase o no hay usuario autenticado');
-            }
-            await this.saveToSupabase();
-            if (window.router?.navigate) {
-                window.router.navigate('/living');
-            } else {
-                window.location.href = 'living.html';
-            }
-        } catch (err) {
-            console.error('Error guardando:', err);
-            alert(err.message || 'Error al guardar. Intenta de nuevo.');
-        } finally {
-            if (btn) {
-                btn.disabled = false;
-                btn.textContent = 'Guardar';
-            }
-        }
-    }
-
-    async saveToSupabase() {
-        if (!this.supabase || !this.userId) {
-            throw new Error('Supabase no está inicializado o no hay usuario autenticado');
-        }
-
-        const nombreOrg = this.formData.nombre_organizacion || '';
-        const urlWeb = this.formData.url_web || '';
-
-        const { data: profileCheck } = await this.supabase
-            .from('profiles')
-            .select('id')
-            .eq('id', this.userId)
-            .maybeSingle();
-
-        if (!profileCheck) {
-            const { data: { user: authUser } } = await this.supabase.auth.getUser();
-            if (authUser) await this.ensureUserExists(authUser);
-            else throw new Error('Usuario no encontrado. Inicia sesión nuevamente.');
-        }
-
-        const { data: members } = await this.supabase
-            .from('organization_members')
-            .select('organization_id')
-            .eq('user_id', this.userId)
-            .limit(1);
-
-        let organizationId, brandContainerId;
-
-        if (members?.length > 0) {
-            organizationId = members[0].organization_id;
-            await this.supabase.from('organizations').update({ name: nombreOrg }).eq('id', organizationId);
-
-            const { data: containers } = await this.supabase
-                .from('brand_containers')
-                .select('id')
-                .eq('organization_id', organizationId)
-                .eq('user_id', this.userId)
-                .limit(1);
-
-            if (containers?.length > 0) {
-                brandContainerId = containers[0].id;
-            } else {
-                const { data: newContainer, error: containerError } = await this.supabase
-                    .from('brand_containers')
-                    .insert({
-                        organization_id: organizationId,
-                        user_id: this.userId,
-                        nombre_marca: nombreOrg
-                    })
-                    .select('id')
-                    .single();
-                if (containerError) throw new Error(`Error al crear marca: ${containerError.message}`);
-                brandContainerId = newContainer.id;
-            }
-        } else {
-            const { data: newOrg, error: orgError } = await this.supabase
-                .from('organizations')
-                .insert({ name: nombreOrg, owner_user_id: this.userId })
-                .select('id')
-                .single();
-            if (orgError) throw new Error(`Error al crear organización: ${orgError.message}`);
-            organizationId = newOrg.id;
-
-            await this.supabase.from('organization_credits').insert({
-                organization_id: organizationId,
-                credits_available: 0,
-                credits_total: 0
-            });
-            await this.supabase.from('organization_members').insert({
-                organization_id: organizationId,
-                user_id: this.userId,
-                role: 'owner'
-            });
-
-            const { data: newContainer, error: containerError } = await this.supabase
-                .from('brand_containers')
-                .insert({
-                    organization_id: organizationId,
-                    user_id: this.userId,
-                    nombre_marca: nombreOrg
-                })
-                .select('id')
-                .single();
-            if (containerError) throw new Error(`Error al crear marca: ${containerError.message}`);
-            brandContainerId = newContainer.id;
-        }
-
-        if (brandContainerId && urlWeb) {
-            await this.supabase
-                .from('brand_social_links')
-                .delete()
-                .eq('brand_container_id', brandContainerId)
-                .eq('platform', 'website');
-            await this.supabase.from('brand_social_links').insert({
-                brand_container_id: brandContainerId,
-                platform: 'website',
-                url: urlWeb,
-                is_primary: false
-            });
-        }
-
+        // Al finalizar no se ejecuta ninguna acción (sin guardado ni redirección)
     }
 }
 
