@@ -425,7 +425,7 @@ class AuthService {
       const { data, error } = await this.supabase.auth.signInWithOAuth({
         provider: provider,
         options: {
-          redirectTo: `${window.location.origin}/#/living`
+          redirectTo: `${window.location.origin}/hogar`
         }
       });
 

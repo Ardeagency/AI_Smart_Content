@@ -53,6 +53,24 @@ class SignInView extends BaseView {
         this.handleForgotPassword();
       });
     }
+
+    // Iniciar sesión / Registrarse con Google
+    const btnGoogle = this.querySelector('#btnGoogle');
+    if (btnGoogle) {
+      this.addEventListener(btnGoogle, 'click', () => this.handleGoogleLogin());
+    }
+  }
+
+  async handleGoogleLogin() {
+    if (!window.authService) {
+      alert('Servicio de autenticación no disponible.');
+      return;
+    }
+    const result = await window.authService.socialLogin('google');
+    if (!result.success) {
+      alert(result.error || 'Error al conectar con Google.');
+    }
+    // Si success, el navegador redirige a Google y luego a redirectTo
   }
 
   toggleState() {
