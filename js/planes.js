@@ -213,9 +213,9 @@ class PlanesManager {
                 console.log('📧 Email requiere confirmación, mostrando pantalla de confirmación...');
                 this.showEmailConfirmationScreen(email);
             } else {
-                // Si hay sesión activa, redirigir al formulario
-                console.log('✅ Sesión activa, redirigiendo a form_org');
-                window.location.href = '/form_org';
+                // Si hay sesión activa, redirigir al hogar
+                console.log('✅ Sesión activa, redirigiendo a hogar');
+                window.location.href = '/hogar';
             }
 
         } catch (error) {

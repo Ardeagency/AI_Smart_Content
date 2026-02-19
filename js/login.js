@@ -266,9 +266,9 @@ class AuthManager {
                 // El trigger handle_new_user() creará automáticamente el registro en public.users
                 this.showNotification('¡Cuenta creada exitosamente! Redirigiendo...', 'success');
                 
-                // Redirigir al formulario de registro de datos
+                // Redirigir al hogar
                 setTimeout(() => {
-                    window.location.href = '/form_org';
+                    window.location.href = '/hogar';
                 }, 1500);
             }
         } catch (error) {
@@ -381,43 +381,15 @@ class AuthManager {
     }
 
     /**
-     * Determinar URL de redirección basado en el estado del usuario
+     * Determinar URL de redirección tras login (usuario autenticado).
      */
     async determineRedirectUrl(userId) {
-        if (!this.supabase || !userId) {
-            return '/form_org';
-        }
-
+        if (!this.supabase || !userId) return '/hogar';
         try {
-            // Verificar si el usuario tiene proyectos
-            const { data: projects, error } = await this.supabase
-                .from('brand_containers')
-                .select('id')
-                .eq('user_id', userId)
-                .limit(1);
-
-            if (error) {
-                console.error('Error checking projects:', error);
-                return '/form_org';
-            }
-
-            // Verificar si el usuario completó el formulario (tabla unificada profiles)
-            const { data: userData } = await this.supabase
-                .from('profiles')
-                .select('form_verified')
-                .eq('id', userId)
-                .single();
-
-            // Si no completó el formulario, siempre redirigir al formulario
-            if (!userData || userData.form_verified !== true) {
-                return '/form_org';
-            }
-
-            // Si completó el formulario, ir al living
-            return 'living.html';
+            return '/hogar';
         } catch (error) {
             console.error('Error determining redirect:', error);
-            return '/form_org';
+            return '/hogar';
         }
     }
 

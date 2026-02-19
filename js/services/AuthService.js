@@ -248,41 +248,21 @@ class AuthService {
   }
 
   /**
-   * Determinar ruta de redirección basado en el estado del usuario
-   * 
-   * Flujo de redirección MPA + SPA:
-   * 1. Si no completó form_verified → /form_org
-   * 2. Si default_view_mode = 'developer' → /dev/dashboard (Portal PaaS)
-   * 3. Si default_view_mode = 'user' → /hogar (Selector de organizaciones SaaS)
+   * Determinar ruta de redirección para usuario autenticado.
+   * Según modo: developer → /dev/dashboard, user → /hogar.
    */
   async determineRedirectRoute(userId) {
-    if (!this.supabase || !userId) return '/form_org';
+    if (!this.supabase || !userId) return '/hogar';
 
     try {
-      // Verificar si completó el formulario (desde profiles)
-      const { data: userData } = await this.supabase
-        .from('profiles')
-        .select('form_verified')
-        .eq('id', userId)
-        .single();
-
-      if (!userData || userData.form_verified !== true) {
-        return '/form_org';
-      }
-
-      // Obtener el modo de vista preferido del usuario
       const viewMode = this.userMode || localStorage.getItem('userViewMode') || 'user';
-
-      // Redirigir según el modo
       if (viewMode === 'developer') {
         return '/dev/dashboard';
       }
-
-      // Modo usuario SaaS → selector de organizaciones
       return '/hogar';
     } catch (error) {
       console.error('Error determinando ruta:', error);
-      return '/form_org';
+      return '/hogar';
     }
   }
 

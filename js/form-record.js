@@ -275,11 +275,6 @@ class FormRecord {
             });
         }
 
-        const { error: updateError } = await this.supabase
-            .from('profiles')
-            .update({ form_verified: true })
-            .eq('id', this.userId);
-        if (updateError) throw new Error(`Error al marcar formulario como completado: ${updateError.message}`);
     }
 }
 

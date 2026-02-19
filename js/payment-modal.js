@@ -1280,9 +1280,9 @@ class PaymentModal {
         // Force close ALL modals and overlays immediately
         this.forceCloseAllModals();
         
-        // Redirigir directamente a onboarding
+        // Redirigir al hogar
         setTimeout(() => {
-            window.location.href = '/form_org';
+            window.location.href = '/hogar';
         }, 100);
     }
 
@@ -1446,8 +1446,8 @@ class PaymentModal {
                 sessionStorage.setItem('selectedPlan', JSON.stringify(this.selectedPlan));
             }
             
-            // Redirect to onboarding page
-            window.location.href = '/form_org';
+            // Redirect to hogar
+            window.location.href = '/hogar';
         }, 3500);
     }
 
