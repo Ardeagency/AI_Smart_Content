@@ -8,11 +8,14 @@ class FormRecord {
         this.formData = {};
         this.supabase = options.supabase || null;
         this.userId = null;
+        this.currentStep = 1;
+        this.totalSteps = 2;
     }
 
     async init() {
         await this.ensureSupabase();
         this.setupEventListeners();
+        this.showStep(1);
     }
 
     /** Obtener Supabase igual que el resto de la app (appLoader, supabaseService, window.supabase). */
@@ -93,12 +96,36 @@ class FormRecord {
     }
 
     setupEventListeners() {
-        const form = document.getElementById('recordForm');
+        const form = document.getElementById('form_org');
         if (!form) return;
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             this.handleSubmit();
         });
+        const btnNext = document.getElementById('btnNext');
+        if (btnNext) btnNext.addEventListener('click', () => this.nextStep());
+        const btnBack = document.getElementById('btnBack');
+        if (btnBack) btnBack.addEventListener('click', () => this.prevStep());
+    }
+
+    showStep(step) {
+        this.currentStep = step;
+        document.querySelectorAll('#form_org .form-step').forEach(el => {
+            el.classList.toggle('active', parseInt(el.getAttribute('data-step'), 10) === step);
+        });
+    }
+
+    nextStep() {
+        const nombre = document.getElementById('nombre_organizacion');
+        if (!nombre || !(nombre.value || '').trim()) {
+            alert('Por favor escribe el nombre de la organización.');
+            return;
+        }
+        this.showStep(2);
+    }
+
+    prevStep() {
+        this.showStep(1);
     }
 
     collectFormData() {

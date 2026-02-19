@@ -109,9 +109,23 @@
     color: var(--text-muted);
 }
 
-/* Botón: coherente con la plataforma (hover sin transform exagerado) */
+/* Botones: coherentes con la plataforma */
 .form-record-container .form-actions-inline {
     margin-top: var(--spacing-lg);
+}
+
+.form-record-container .form-actions-inline.form-actions-two {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+}
+
+.form-record-container .form-actions-inline.form-actions-two .btn-secondary {
+    order: 1;
+}
+
+.form-record-container .form-actions-inline.form-actions-two .btn-primary {
+    order: 2;
 }
 
 .form-record-container .form-actions-inline .btn {
@@ -139,6 +153,18 @@
 .form-record-container .form-actions-inline .btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+}
+
+.form-record-container .form-actions-inline .btn-secondary {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.form-record-container .form-actions-inline .btn-secondary:hover:not(:disabled) {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    border-color: var(--border-light);
 }
 
 @media (max-width: 768px) {
