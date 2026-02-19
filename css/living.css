@@ -127,23 +127,14 @@ body.sidebar-collapsed .living-container {
 }
 
 /* ============================================
-   SECCIONES 2 Y 3: Grid de 2 columnas - Contenedores separados
-   Jerarquía: Flujo continuo (izq) + Soporte estratégico (der)
+   HISTORIAL (única sección a ancho completo)
    ============================================ */
-.living-sections-wrapper {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 3rem; /* Más separación entre secciones */
-    padding: 0 0 var(--living-spacing-section) 4rem; /* Padding solo a la izquierda y abajo */
-    max-width: none; /* Sin límite de ancho para que llegue a la derecha */
-    margin: 0; /* Sin margin auto para que no se centre */
-    width: 100%; /* Ocupa todo el ancho disponible */
+.living-container > .living-history-section {
+    padding: var(--app-header-height, 45.8px) 4rem var(--living-spacing-section);
+    max-width: none;
+    width: 100%;
 }
 
-/* ============================================
-   SECCIÓN 2: HISTORIAL DE PRODUCCIONES
-   Archivo operativo - Productora/Estudio/Archivo creativo
-   ============================================ */
 .living-history-section {
     display: flex;
     flex-direction: column;
@@ -571,12 +562,7 @@ body.sidebar-collapsed .living-container {
     margin-top: 0.25rem;
 }
 
-/* Responsive para grid de 2 columnas */
 @media (max-width: 1024px) {
-    .living-sections-wrapper {
-        grid-template-columns: 1fr;
-    }
-    
     .living-history-masonry {
         column-count: 2;
     }
@@ -587,9 +573,8 @@ body.sidebar-collapsed .living-container {
 }
 
 @media (max-width: 768px) {
-    .living-hero-section,
-    .living-sections-wrapper {
-        padding: 0 2rem var(--living-spacing-section);
+    .living-container > .living-history-section {
+        padding: var(--app-header-height, 45.8px) 2rem var(--living-spacing-section);
     }
     
     .living-hero-grid .featured-card {

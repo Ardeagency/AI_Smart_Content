@@ -91,14 +91,7 @@ class LivingManager {
             // Cargar contenido generado después de obtener brand_id
             await this.loadLatestGeneratedContent();
 
-            // Cargar datos de la Sección 3: Tráfico y Control de Producción
-            if (this.brandId) {
-                await Promise.allSettled([
-                    this.loadSection3Data()
-                ]);
-            }
-
-            // Renderizar todo
+            // Renderizar solo Historial (sin sección 3 ni hero)
             await this.renderAll();
             
             this.initialized = true;
@@ -914,13 +907,8 @@ class LivingManager {
     }
 
     async renderAll() {
-        // Mover el modal fuera de #app-container al body
         this.moveModalToBody();
-        
-        // Renderizar las 3 secciones
-        await this.renderHeroSection();
         await this.renderHistorySection();
-        await this.renderHighlightsSection();
     }
     
     moveModalToBody() {
