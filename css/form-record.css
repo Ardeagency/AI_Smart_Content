@@ -49,24 +49,35 @@
     min-height: 0;
     position: relative;
     z-index: 1;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-/* Tarjeta centrada del formulario */
+/* Contenedor central: ancho fijo máximo, centrado, sin estirar */
 .form-org-card {
     width: 100%;
-    max-width: 400px;
+    max-width: 380px;
+    margin: 0 auto;
+    flex-shrink: 0;
+    box-sizing: border-box;
 }
 
 .form-org-card #form_org {
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .form-record-container .form-step {
     display: none;
     flex-direction: column;
     gap: 1.25rem;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .form-record-container .form-step.active {
@@ -88,11 +99,12 @@
     text-align: center;
 }
 
-/* Inputs: rectángulos oscuros, bordes redondeados, borde gris claro */
+/* Inputs: dentro del contenedor, no estiran más allá de la tarjeta */
 .form-record-container .form-input,
 .form-record-container input[type="text"],
 .form-record-container input[type="url"] {
     width: 100%;
+    max-width: 100%;
     padding: 0.85rem 1rem;
     background: #1e1e24;
     border: 1px solid #3d3d45;
@@ -121,9 +133,10 @@
     box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.06);
 }
 
-/* Botón principal: mismo estilo oscuro, ancho completo */
+/* Botones: ancho del contenedor, no de toda la pantalla */
 .form-record-container .btn {
     width: 100%;
+    max-width: 100%;
     padding: 0.85rem 1rem;
     border-radius: 12px;
     font-weight: 600;
