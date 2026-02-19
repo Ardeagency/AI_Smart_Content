@@ -507,10 +507,16 @@ class HogarView extends BaseView {
    * Configurar event listeners
    */
   setupEventListeners() {
-    // Botón crear organización
+    // Botón nueva organización → redirige a form_org (formulario de registro)
     const createBtn = this.querySelector('#createOrgBtn');
     if (createBtn) {
-      createBtn.addEventListener('click', () => this.showCreateModal());
+      createBtn.addEventListener('click', () => {
+        if (window.router) {
+          window.router.navigate('/form_org');
+        } else {
+          window.location.href = '/form_org';
+        }
+      });
     }
 
     // Modal de organización
