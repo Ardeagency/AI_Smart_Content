@@ -1,12 +1,10 @@
 /**
  * AI Smart Content - Form Record
- * Formulario optimizado y simplificado para registro de datos
+ * Formulario simplificado: nombre de la organización y URL web oficial
  */
 
 class FormRecord {
     constructor() {
-        this.currentStep = 1;
-        this.totalSteps = 10;
         this.formData = {};
         this.supabase = null;
         this.userId = null;
@@ -15,19 +13,14 @@ class FormRecord {
 
     async init() {
         this.setupEventListeners();
-        this.setupCharCounters();
-        this.setupFileUploads();
-        this.setupCustomMultiselects();
-        
-        // Inicializar Supabase
         await this.initSupabase();
     }
 
     async initSupabase() {
-            if (typeof waitForSupabase === 'function') {
+        if (typeof waitForSupabase === 'function') {
             this.supabase = await waitForSupabase(15000);
-            } else if (window.supabaseClient) {
-                this.supabase = window.supabaseClient;
+        } else if (window.supabaseClient) {
+            this.supabase = window.supabaseClient;
         } else if (typeof initSupabase === 'function') {
             this.supabase = await initSupabase();
         }
@@ -36,29 +29,22 @@ class FormRecord {
             throw new Error('No se pudo inicializar Supabase. Por favor, recarga la página.');
         }
 
-        // Esperar un momento para que la sesión se sincronice después de la redirección
         await new Promise(resolve => setTimeout(resolve, 500));
 
-        // Obtener sesión actual
         const { data: { session }, error: sessionError } = await this.supabase.auth.getSession();
-        
+
         if (sessionError) {
             console.error('Error obteniendo sesión:', sessionError);
-            // Si el error es de sesión faltante, intentar obtener usuario directamente
             if (sessionError.message && sessionError.message.includes('session')) {
                 const { data: { user }, error: userError } = await this.supabase.auth.getUser();
-                
                 if (userError) {
                     console.error('Error obteniendo usuario:', userError);
                     throw new Error(`Error de autenticación: ${userError.message}`);
                 }
-
                 if (!user) {
                     throw new Error('No hay usuario autenticado. Por favor, inicia sesión nuevamente.');
                 }
-
-                    this.userId = user.id;
-                // Verificar y crear perfil en public.profiles si no existe
+                this.userId = user.id;
                 await this.ensureUserExists(user);
                 return;
             }
@@ -66,12 +52,9 @@ class FormRecord {
         }
 
         if (!session || !session.user) {
-            // Si no hay sesión, intentar obtener usuario directamente
             const { data: { user }, error: userError } = await this.supabase.auth.getUser();
-            
             if (userError) {
                 console.error('Error obteniendo usuario:', userError);
-                // Si no hay usuario, redirigir al login
                 if (userError.message && userError.message.includes('session')) {
                     console.warn('⚠️ No hay sesión activa. Redirigiendo al login...');
                     window.location.href = 'login.html';
@@ -79,751 +62,51 @@ class FormRecord {
                 }
                 throw new Error(`Error de autenticación: ${userError.message}`);
             }
-
             if (!user) {
                 console.warn('⚠️ No hay usuario autenticado. Redirigiendo al login...');
                 window.location.href = 'login.html';
                 return;
             }
-
             this.userId = user.id;
-            // Verificar y crear usuario en public.users si no existe
             await this.ensureUserExists(user);
         } else {
             this.userId = session.user.id;
-            // Verificar y crear perfil en public.profiles si no existe
             await this.ensureUserExists(session.user);
         }
     }
 
     setupEventListeners() {
-        // Navigation buttons
-        document.getElementById('btnNext').addEventListener('click', () => this.nextStep());
-        document.getElementById('btnBack').addEventListener('click', () => this.prevStep());
+        const form = document.getElementById('recordForm');
+        if (!form) return;
 
-        // Tono de voz select (single select)
-        const tonoVozSelect = document.getElementById('tono_voz');
-        if (tonoVozSelect) {
-            tonoVozSelect.addEventListener('change', () => {
-                this.formData.tono_voz = tonoVozSelect.value;
-            });
-        }
-
-        // Custom multiselects are handled in setupCustomMultiselects
-
-        // Form validation on input
-        document.querySelectorAll('.form-input, .form-textarea').forEach(input => {
-            input.addEventListener('input', () => {
-                if (input.hasAttribute('required')) {
-                    this.validateField(input);
-                }
-            });
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleSubmit();
         });
     }
 
-    setupCharCounters() {
-        const counters = {
-            'palabras_usar': 'palabras_usar_count',
-            'palabras_evitar': 'palabras_evitar_count',
-            'reglas_creativas': 'reglas_creativas_count',
-            'descripcion_producto': 'descripcion_producto_count',
-            'diferenciacion': 'diferenciacion_count',
-            'modo_uso': 'modo_uso_count',
-            'ingredientes': 'ingredientes_count',
-            'variantes_producto': 'variantes_producto_count',
-            'oferta_desc': 'oferta_desc_count',
-            'audiencia_desc': 'audiencia_desc_count',
-            'intenciones': 'intenciones_count',
-            'objetivo_principal': 'objetivo_principal_count'
-        };
-
-        Object.entries(counters).forEach(([inputId, counterId]) => {
-            const input = document.getElementById(inputId);
-            const counter = document.getElementById(counterId);
-            if (input && counter) {
-                input.addEventListener('input', () => {
-                    counter.textContent = input.value.length;
-                });
-            }
-        });
+    collectFormData() {
+        const nombre = document.getElementById('nombre_organizacion');
+        const url = document.getElementById('url_web');
+        this.formData.nombre_organizacion = (nombre && nombre.value) ? nombre.value.trim() : '';
+        this.formData.url_web = (url && url.value) ? url.value.trim() : '';
     }
 
-    setupFileUploads() {
-        // Logo upload (single file only)
-        const logoUpload = document.getElementById('logoUpload');
-        const logoInput = document.getElementById('logo_file');
-        if (logoUpload && logoInput) {
-            logoUpload.addEventListener('click', () => logoInput.click());
-            logoInput.addEventListener('change', (e) => {
-                // Ensure only one file
-                if (e.target.files.length > 1) {
-                    alert('Solo se puede subir un logo a la vez');
-                    e.target.value = '';
-                    return;
-                }
-                this.handleFileUpload(e, 'logo', 'logoPreview');
-            });
-        }
+    async handleSubmit() {
+        this.collectFormData();
 
-        // Brand files upload
-        const brandFilesUpload = document.getElementById('brandFilesUpload');
-        const brandFilesInput = document.getElementById('brand_files');
-        if (brandFilesUpload && brandFilesInput) {
-            brandFilesUpload.addEventListener('click', () => brandFilesInput.click());
-            brandFilesInput.addEventListener('change', (e) => this.handleMultipleFiles(e, 'brandFiles'));
-        }
-
-        // Product images
-        for (let i = 1; i <= 4; i++) {
-            const input = document.getElementById(`imagen_producto_${i}`);
-            const preview = document.getElementById(`preview${i}`);
-            if (input && preview) {
-                const uploadZone = input.closest('.upload-zone');
-                if (uploadZone) {
-                    uploadZone.addEventListener('click', () => input.click());
-                    input.addEventListener('change', (e) => this.handleFileUpload(e, `productImage${i}`, `preview${i}`));
-                }
-            }
-        }
-    }
-
-    handleFileUpload(event, fieldName, previewId) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        if (file.size > 5 * 1024 * 1024) {
-            alert('El archivo es demasiado grande. Máximo 5MB.');
-            event.target.value = '';
+        if (!this.formData.nombre_organizacion) {
+            alert('Por favor escribe el nombre de la organización.');
             return;
         }
 
-        // Guardar referencia al input original
-        const originalInput = event.target;
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const preview = document.getElementById(previewId);
-            if (preview) {
-                // Check if this is logo preview (has inner div) or product image preview (direct)
-                const innerDiv = preview.querySelector('div');
-                const isLogoPreview = innerDiv !== null;
-                
-                if (isLogoPreview) {
-                    // Logo preview structure
-                    const img = preview.querySelector('img');
-                    if (img) {
-                        img.src = e.target.result;
-                    } else {
-                        const newImg = document.createElement('img');
-                        newImg.src = e.target.result;
-                        newImg.alt = 'Preview';
-                        newImg.style.maxWidth = '100px';
-                        newImg.style.maxHeight = '100px';
-                        newImg.style.borderRadius = '8px';
-                        innerDiv.prepend(newImg);
-                    }
-                    preview.style.display = 'block';
-                } else {
-                    // Product image preview structure (direct in preview div)
-                    // NO limpiar el preview completamente, solo actualizar contenido visual
-                    const existingImg = preview.querySelector('img');
-                    const existingBtn = preview.querySelector('button');
-                    
-                    // Crear o actualizar imagen
-                    let img;
-                    if (existingImg) {
-                        img = existingImg;
-                        img.src = e.target.result;
-                    } else {
-                        preview.innerHTML = ''; // Solo limpiar si no hay contenido previo
-                        img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.alt = 'Preview';
-                    img.style.cssText = 'max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 0.5rem; display: block;';
-                        preview.appendChild(img);
-                    }
-                    
-                    // Crear o actualizar botón de eliminar
-                    let removeBtn = existingBtn;
-                    if (!removeBtn) {
-                        removeBtn = document.createElement('button');
-                    removeBtn.type = 'button';
-                    removeBtn.className = 'btn btn-secondary';
-                    removeBtn.style.cssText = 'margin-top: 0.5rem; padding: 0.5rem 1rem; font-size: 0.85rem;';
-                    removeBtn.innerHTML = '<i class="fas fa-times"></i> Eliminar';
-                        preview.appendChild(removeBtn);
-                    }
-                    
-                    // Store reference to input and fieldName for removal
-                    const input = originalInput;
-                    const fieldNameRef = fieldName;
-                    removeBtn.onclick = () => {
-                        // Limpiar input usando DataTransfer
-                        const dataTransfer = new DataTransfer();
-                        input.files = dataTransfer.files;
-                        preview.innerHTML = '';
-                        preview.style.display = 'none';
-                        delete this.formData[fieldNameRef];
-                        if (fieldName === 'logo') {
-                            delete this.formData.logo_file;
-                        } else if (fieldName.startsWith('productImage')) {
-                            const index = parseInt(fieldName.replace('productImage', '')) - 1;
-                            if (this.formData.product_images) {
-                                this.formData.product_images[index] = null;
-                            }
-                        }
-                    };
-                    
-                    preview.style.display = 'block';
-                }
-            }
-            
-            // Store file in formData for Supabase upload
-            // Esto es lo más importante - asegurar que el archivo se guarde
-            console.log(`📁 Guardando archivo en formData: ${fieldName}`, file.name, file.size);
-            
-            if (fieldName === 'logo') {
-                this.formData.logo_file = [file];
-                console.log('✅ Logo guardado en formData.logo_file');
-            } else if (fieldName.startsWith('productImage')) {
-                if (!this.formData.product_images) {
-                    this.formData.product_images = [];
-                }
-                const index = parseInt(fieldName.replace('productImage', '')) - 1;
-                this.formData.product_images[index] = file;
-                console.log(`✅ Imagen de producto guardada en formData.product_images[${index}]`);
-            }
-            
-            this.formData[fieldName] = file;
-            console.log(`✅ Archivo guardado en formData[${fieldName}]`);
-        };
-        reader.readAsDataURL(file);
-    }
-
-    handleMultipleFiles(event, fieldName) {
-        const files = Array.from(event.target.files);
-        const list = document.getElementById('brandFilesList');
-        if (!list) return;
-
-        // Guardar referencia al input original
-        const originalInput = event.target;
-
-        // Limpiar lista visual pero mantener el input
-        list.innerHTML = '';
-        
-        files.forEach((file, index) => {
-            const fileItem = document.createElement('div');
-            fileItem.className = 'brand-file-item';
-            fileItem.dataset.fileIndex = index;
-            fileItem.style.cssText = 'padding: 0.75rem; background: var(--bg-secondary); border-radius: 8px; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;';
-            
-            const fileNameSpan = document.createElement('span');
-            fileNameSpan.style.color = 'var(--text-primary)';
-            fileNameSpan.textContent = file.name;
-            
-            const removeBtn = document.createElement('button');
-            removeBtn.type = 'button';
-            removeBtn.className = 'btn btn-secondary';
-            removeBtn.style.cssText = 'padding: 0.25rem 0.75rem; font-size: 0.85rem;';
-            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
-            
-            // Función para eliminar archivo específico
-            removeBtn.onclick = () => {
-                // Remover del DOM
-                fileItem.remove();
-                
-                // Remover del array de archivos
-                if (fieldName === 'archivos_identidad' || fieldName === 'brandFiles') {
-                    const currentFiles = this.formData.archivos_identidad || [];
-                    const fileIndex = parseInt(fileItem.dataset.fileIndex);
-                    const newFiles = currentFiles.filter((_, i) => i !== fileIndex);
-                    this.formData.archivos_identidad = newFiles;
-                    
-                    // Actualizar el input file usando DataTransfer
-                    const dataTransfer = new DataTransfer();
-                    newFiles.forEach(f => dataTransfer.items.add(f));
-                    originalInput.files = dataTransfer.files;
-                    
-                    console.log(`🗑️ Archivo ${file.name} eliminado. Archivos restantes: ${newFiles.length}`);
-                } else {
-                    if (this.formData[fieldName]) {
-                        const currentFiles = this.formData[fieldName];
-                        const fileIndex = parseInt(fileItem.dataset.fileIndex);
-                        const newFiles = currentFiles.filter((_, i) => i !== fileIndex);
-                        this.formData[fieldName] = newFiles;
-                        
-                        // Actualizar el input file usando DataTransfer
-                        const dataTransfer = new DataTransfer();
-                        newFiles.forEach(f => dataTransfer.items.add(f));
-                        originalInput.files = dataTransfer.files;
-                    }
-                }
-                
-                // Si no quedan archivos, limpiar la lista
-                if (list.children.length === 0) {
-                    list.innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-inbox"></i>
-                            <p>No hay archivos adjuntados</p>
-                        </div>
-                    `;
-                }
-            };
-            
-            fileItem.appendChild(fileNameSpan);
-            fileItem.appendChild(removeBtn);
-            list.appendChild(fileItem);
-        });
-
-        // Store files for Supabase upload
-        console.log(`📁 Guardando ${files.length} archivo(s) en formData: ${fieldName}`);
-        
-        if (fieldName === 'archivos_identidad' || fieldName === 'brandFiles') {
-            this.formData.archivos_identidad = files;
-            console.log('✅ Archivos de identidad guardados en formData.archivos_identidad');
-        } else {
-            if (!this.formData[fieldName]) {
-                this.formData[fieldName] = [];
-            }
-            this.formData[fieldName] = files;
-            console.log(`✅ Archivos guardados en formData[${fieldName}]`);
-        }
-    }
-
-    setupCustomMultiselects() {
-        // Setup mercado objetivo with auto-select callback
-        this.initCustomMultiselect('mercado_objetivo', 'mercado_objetivo', () => {
-            // Auto-select languages when markets change
-            const mercadoValues = this.getMultiselectValues('mercado_objetivo');
-            if (mercadoValues.length > 0) {
-                this.autoSelectLanguagesFromMarkets(mercadoValues);
-            }
-        });
-        
-        // Setup idiomas contenido
-        this.initCustomMultiselect('idiomas_contenido', 'idiomas_contenido');
-
-        // Setup palabras a evitar
-        this.initCustomMultiselect('palabras_evitar', 'palabras_evitar');
-    }
-
-    initCustomMultiselect(wrapperId, hiddenInputId, onChangeCallback = null) {
-        const wrapper = document.getElementById(wrapperId + '_wrapper');
-        const trigger = document.getElementById(wrapperId + '_trigger');
-        const valueDisplay = document.getElementById(wrapperId + '_value');
-        const dropdown = document.getElementById(wrapperId + '_dropdown');
-        const hiddenInput = document.getElementById(hiddenInputId);
-        const options = dropdown.querySelectorAll('.multiselect-option');
-
-        if (!wrapper || !trigger || !valueDisplay || !dropdown || !hiddenInput) return;
-
-        let selectedValues = [];
-        const optionLabels = {};
-
-        // Store option labels
-        options.forEach(option => {
-            const value = option.dataset.value;
-            optionLabels[value] = option.textContent.trim();
-        });
-
-        // Toggle dropdown
-        trigger.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const isOpen = dropdown.classList.contains('open');
-            this.closeAllMultiselects();
-            if (!isOpen) {
-                dropdown.classList.add('open');
-                trigger.classList.add('open');
-            }
-        });
-
-        // Handle option clicks
-        options.forEach(option => {
-            option.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const value = option.dataset.value;
-                const index = selectedValues.indexOf(value);
-                
-                if (index > -1) {
-                    selectedValues.splice(index, 1);
-                    option.classList.remove('selected');
-                } else {
-                    selectedValues.push(value);
-                    option.classList.add('selected');
-                }
-
-                this.updateMultiselectDisplay(wrapperId, selectedValues, optionLabels);
-                hiddenInput.value = JSON.stringify(selectedValues);
-                
-                if (onChangeCallback) {
-                    onChangeCallback();
-                }
-            });
-        });
-
-        // Close on outside click
-        document.addEventListener('click', (e) => {
-            if (!wrapper.contains(e.target)) {
-                dropdown.classList.remove('open');
-                trigger.classList.remove('open');
-            }
-        });
-
-        // Initialize display
-        this.updateMultiselectDisplay(wrapperId, selectedValues, optionLabels);
-    }
-
-    updateMultiselectDisplay(wrapperId, selectedValues, optionLabels) {
-        const valueDisplay = document.getElementById(wrapperId + '_value');
-        const trigger = document.getElementById(wrapperId + '_trigger');
-        if (!valueDisplay || !trigger) return;
-
-        if (selectedValues.length === 0) {
-            valueDisplay.textContent = 'Seleccionar...';
-            valueDisplay.classList.remove('has-selection');
-            trigger.querySelector('.multiselect-tags')?.remove();
-        } else {
-            valueDisplay.classList.add('has-selection');
-            
-            // Remove existing tags
-            const existingTags = trigger.querySelector('.multiselect-tags');
-            if (existingTags) existingTags.remove();
-
-            // Create tags container
-            const tagsContainer = document.createElement('div');
-            tagsContainer.className = 'multiselect-tags';
-
-            selectedValues.forEach(value => {
-                const tag = document.createElement('div');
-                tag.className = 'multiselect-tag';
-                tag.innerHTML = `
-                    <span>${optionLabels[value] || value}</span>
-                    <span class="multiselect-tag-remove" data-value="${value}">×</span>
-                `;
-                tagsContainer.appendChild(tag);
-
-                // Remove tag on click
-                tag.querySelector('.multiselect-tag-remove').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const index = selectedValues.indexOf(value);
-                    if (index > -1) {
-                        selectedValues.splice(index, 1);
-                        const option = document.querySelector(`[data-value="${value}"]`);
-                        if (option) option.classList.remove('selected');
-                        this.updateMultiselectDisplay(wrapperId, selectedValues, optionLabels);
-                        const hiddenInput = document.getElementById(wrapperId.replace('_wrapper', ''));
-                        if (hiddenInput) hiddenInput.value = JSON.stringify(selectedValues);
-                    }
-                });
-            });
-
-            valueDisplay.textContent = '';
-            valueDisplay.appendChild(tagsContainer);
-        }
-    }
-
-    closeAllMultiselects() {
-        document.querySelectorAll('.multiselect-dropdown').forEach(dropdown => {
-            dropdown.classList.remove('open');
-        });
-        document.querySelectorAll('.multiselect-trigger').forEach(trigger => {
-            trigger.classList.remove('open');
-        });
-    }
-
-    getMultiselectValues(wrapperId) {
-        const hiddenInput = document.getElementById(wrapperId);
-        if (!hiddenInput || !hiddenInput.value) return [];
-        try {
-            return JSON.parse(hiddenInput.value);
-        } catch {
-            return [];
-        }
-    }
-
-    autoSelectLanguagesFromMarkets(mercadoValues) {
-        const languageMap = {
-            'mexico': 'español', 'colombia': 'español', 'argentina': 'español', 'chile': 'español',
-            'peru': 'español', 'venezuela': 'español', 'ecuador': 'español', 'guatemala': 'español',
-            'cuba': 'español', 'bolivia': 'español', 'republica_dominicana': 'español', 'honduras': 'español',
-            'paraguay': 'español', 'nicaragua': 'español', 'el_salvador': 'español', 'costa_rica': 'español',
-            'panama': 'español', 'uruguay': 'español', 'spain': 'español', 'latam': 'español',
-            'usa': 'ingles', 'canada': 'ingles', 'uk': 'ingles', 'australia': 'ingles',
-            'new_zealand': 'ingles', 'ireland': 'ingles', 'south_africa': 'ingles',
-            'brazil': 'portugues', 'portugal': 'portugues',
-            'france': 'frances', 'belgium': 'frances', 'switzerland': 'frances',
-            'italy': 'italiano', 'germany': 'aleman', 'netherlands': 'holandes',
-            'poland': 'polaco', 'russia': 'ruso', 'china': 'chino', 'japan': 'japones',
-            'south_korea': 'coreano', 'india': 'hindi'
-        };
-
-        const suggestedLanguages = new Set();
-        mercadoValues.forEach(market => {
-            if (languageMap[market]) {
-                suggestedLanguages.add(languageMap[market]);
-            }
-        });
-
-        if (suggestedLanguages.size > 0) {
-            const currentSelected = this.getMultiselectValues('idiomas_contenido');
-            const newSelected = [...new Set([...currentSelected, ...Array.from(suggestedLanguages)])];
-            
-            // Update hidden input
-            const hiddenInput = document.getElementById('idiomas_contenido');
-            if (hiddenInput) {
-                hiddenInput.value = JSON.stringify(newSelected);
-            }
-
-            // Update UI
-            const dropdown = document.getElementById('idiomas_contenido_dropdown');
-            if (dropdown) {
-                suggestedLanguages.forEach(lang => {
-                    const option = dropdown.querySelector(`[data-value="${lang}"]`);
-                    if (option && !option.classList.contains('selected')) {
-                        option.classList.add('selected');
-                    }
-                });
-                
-                // Get option labels and update display
-                const optionLabels = {};
-                dropdown.querySelectorAll('.multiselect-option').forEach(opt => {
-                    optionLabels[opt.dataset.value] = opt.textContent.trim();
-                });
-                this.updateMultiselectDisplay('idiomas_contenido', newSelected, optionLabels);
-            }
-        }
-    }
-
-
-    validateField(field) {
-        const value = field.value.trim();
-        if (field.hasAttribute('required') && !value) {
-            field.style.borderColor = 'var(--error-color)';
-            return false;
-        }
-        field.style.borderColor = 'var(--border-color)';
-        return true;
-    }
-
-    validateStep(step) {
-        const stepElement = document.querySelector(`[data-step="${step}"]`);
-        if (!stepElement) return true;
-
-        const requiredFields = stepElement.querySelectorAll('[required]');
-        let isValid = true;
-
-        requiredFields.forEach(field => {
-            if (!this.validateField(field)) {
-                isValid = false;
-            }
-        });
-
-        // Special validations
-        if (step === 2) {
-            const mercadoValues = this.getMultiselectValues('mercado_objetivo');
-            const idiomasValues = this.getMultiselectValues('idiomas_contenido');
-            
-            if (!mercadoValues || mercadoValues.length === 0) {
-                alert('Por favor selecciona al menos un mercado objetivo');
-                isValid = false;
-            }
-            if (!idiomasValues || idiomasValues.length === 0) {
-                alert('Por favor selecciona al menos un idioma');
-                isValid = false;
-            }
-        }
-
-        if (step === 3) {
-            const tono = document.getElementById('tono_voz');
-            if (!tono || !tono.value) {
-                alert('Por favor selecciona un tono de voz');
-                isValid = false;
-            }
-        }
-
-        if (step === 5) {
-            const tipo = document.getElementById('tipo_producto');
-            if (!tipo || !tipo.value) {
-                alert('Por favor selecciona un tipo de producto');
-                isValid = false;
-            }
-        }
-
-        if (step === 8) {
-            const images = [1, 2, 3, 4].filter(i => {
-                const input = document.getElementById(`imagen_producto_${i}`);
-                return input && input.files.length > 0;
-            });
-            if (images.length < 2) {
-                alert('Por favor sube al menos 2 imágenes del producto');
-                isValid = false;
-            }
-        }
-
-        return isValid;
-    }
-
-    collectStepData(step) {
-        const stepElement = document.querySelector(`[data-step="${step}"]`);
-        if (!stepElement) return;
-
-        stepElement.querySelectorAll('input, textarea, select').forEach(field => {
-            if (field.type === 'file') return;
-            
-            if (field.type === 'hidden' && (field.id === 'mercado_objetivo' || field.id === 'idiomas_contenido' || field.id === 'palabras_evitar')) {
-                try {
-                    const value = field.value ? JSON.parse(field.value) : [];
-                    this.formData[field.id] = Array.isArray(value) ? value : [];
-                } catch (e) {
-                    this.formData[field.id] = [];
-                }
-            } else if (field.multiple && field.tagName === 'SELECT') {
-                this.formData[field.id] = Array.from(field.selectedOptions)
-                    .filter(opt => opt.value !== '')
-                    .map(opt => opt.value);
-            } else if (field.tagName === 'SELECT' && !field.multiple) {
-                this.formData[field.id] = field.value;
-            } else if (field.type === 'hidden') {
-                try {
-                    this.formData[field.id] = JSON.parse(field.value);
-                } catch {
-                    this.formData[field.id] = field.value;
-                }
-            } else {
-                const value = field.value.trim();
-                if (value) {
-                    this.formData[field.id] = value;
-                }
-            }
-        });
-
-        // Obtener valores de multiselects directamente
-        if (step === 2) {
-            const mercadoValues = this.getMultiselectValues('mercado_objetivo');
-            const idiomasValues = this.getMultiselectValues('idiomas_contenido');
-            if (mercadoValues && mercadoValues.length > 0) {
-                this.formData.mercado_objetivo = mercadoValues;
-            }
-            if (idiomasValues && idiomasValues.length > 0) {
-                this.formData.idiomas_contenido = idiomasValues;
-            }
-        }
-
-        if (step === 3) {
-            const palabrasEvitar = this.getMultiselectValues('palabras_evitar');
-            if (palabrasEvitar && palabrasEvitar.length > 0) {
-                this.formData.palabras_evitar = palabrasEvitar;
-            }
-            const tonoVoz = document.getElementById('tono_voz');
-            if (tonoVoz && tonoVoz.value) {
-                this.formData.tono_voz = tonoVoz.value;
-            }
-        }
-    }
-
-    async nextStep() {
-        if (!this.validateStep(this.currentStep)) {
-            return;
-        }
-
-        this.collectStepData(this.currentStep);
-
-        if (this.currentStep < this.totalSteps - 1) {
-            this.currentStep++;
-            this.showStep(this.currentStep);
-        } else if (this.currentStep === this.totalSteps - 1) {
-            // Último paso antes de finalizar - guardar inmediatamente
-            await this.completeForm();
-        }
-    }
-
-    prevStep() {
-        if (this.currentStep > 1) {
-            this.currentStep--;
-            this.showStep(this.currentStep);
-        }
-    }
-
-    showStep(step) {
-        // Hide all steps
-        document.querySelectorAll('.form-step').forEach(s => {
-            s.classList.remove('active');
-        });
-
-        // Show current step
-        const stepElement = document.querySelector(`[data-step="${step}"]`);
-        if (stepElement) {
-            stepElement.classList.add('active');
-        }
-
-        // Update navigation buttons
-        const btnBack = document.getElementById('btnBack');
-        const btnNext = document.getElementById('btnNext');
-
-        // Ocultar botón "Atrás" en el paso 1
-        if (step === 1) {
-            btnBack.classList.add('hidden');
-            btnBack.disabled = true;
-        } else {
-            btnBack.classList.remove('hidden');
-            btnBack.disabled = false;
-        }
-        
-        if (step === this.totalSteps) {
-            btnNext.style.display = 'none';
-            btnBack.classList.add('hidden');
-        } else {
-            btnNext.style.display = 'inline-flex';
-            btnNext.textContent = step === this.totalSteps - 1 ? 'Finalizar y Guardar' : 'Continuar';
-        }
-    }
-
-
-    async completeForm() {
-        const btnNext = document.getElementById('btnNext');
-        
-        // Recopilar todos los datos
-        for (let i = 1; i <= this.totalSteps; i++) {
-            this.collectStepData(i);
-        }
-
-        // Validar campos requeridos
-        const requiredFields = {
-            'nombre_marca': 'Nombre de la marca',
-            'mercado_objetivo': 'Mercados objetivo',
-            'idiomas_contenido': 'Idiomas de contenido',
-            'tono_voz': 'Tono de voz',
-            'tipo_producto': 'Tipo de producto',
-            'nombre_producto': 'Nombre del producto',
-            'descripcion_producto': 'Descripción del producto',
-            'beneficio_1': 'Primer beneficio',
-            'audiencia_desc': 'Descripción de audiencia',
-            'objetivo_principal': 'Objetivo principal',
-            'cta': 'Call to Action',
-            'cta_url': 'URL del CTA'
-        };
-
-        const missingFields = [];
-        for (const [field, label] of Object.entries(requiredFields)) {
-            const value = this.formData[field];
-            if (!value || (Array.isArray(value) && value.length === 0) || (typeof value === 'string' && value.trim() === '')) {
-                missingFields.push(label);
-            }
-        }
-
-        if (missingFields.length > 0) {
-            alert(`Por favor completa los siguientes campos requeridos:\n\n${missingFields.join('\n')}`);
-            return false;
-        }
-
-        // Estado de carga
-        if (btnNext) {
-            btnNext.disabled = true;
-            btnNext.textContent = 'Guardando...';
+        const btnSubmit = document.getElementById('btnSubmit');
+        if (btnSubmit) {
+            btnSubmit.disabled = true;
+            btnSubmit.textContent = 'Guardando...';
         }
 
         try {
-            // Verificar Supabase
             if (!this.supabase || !this.userId) {
                 await this.initSupabase();
                 if (!this.supabase || !this.userId) {
@@ -831,46 +114,26 @@ class FormRecord {
                 }
             }
 
-            // Guardar en Supabase
             await this.saveToSupabase();
-            
-            // Solo avanzar si el guardado fue exitoso
-            this.currentStep = this.totalSteps;
-            this.showStep(this.totalSteps);
-            
-            return true;
-        } catch (error) {
-            console.error('❌ Error al guardar:', error);
-            console.error('Detalles del error:', {
-                message: error.message,
-                code: error.code,
-                details: error.details,
-                hint: error.hint
-            });
-            
-            let errorMessage = `Error al guardar los datos:\n\n${error.message || 'Error desconocido'}`;
-            if (error.details) {
-                errorMessage += `\n\nDetalles: ${error.details}`;
+
+            // Redirigir al Living
+            if (window.router && typeof window.router.navigate === 'function') {
+                window.router.navigate('/living');
+            } else {
+                window.location.href = 'living.html';
             }
-            if (error.hint) {
-                errorMessage += `\n\nSugerencia: ${error.hint}`;
+        } catch (err) {
+            console.error('Error guardando:', err);
+            alert(err.message || 'Error al guardar. Intenta de nuevo.');
+        } finally {
+            if (btnSubmit) {
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = 'Guardar';
             }
-            errorMessage += `\n\nPor favor, revisa la consola para más detalles e intenta nuevamente.`;
-            
-            alert(errorMessage);
-            
-            // NO avanzar - reactivar botón
-            if (btnNext) {
-                btnNext.disabled = false;
-                btnNext.textContent = 'Finalizar y Guardar';
-            }
-            
-            return false;
         }
     }
 
     async ensureUserExists(authUser) {
-        // Verificar si el perfil existe en public.profiles (tabla unificada)
         const { data: existingProfile, error: checkError } = await this.supabase
             .from('profiles')
             .select('id')
@@ -882,7 +145,6 @@ class FormRecord {
         }
 
         if (!existingProfile) {
-            console.log('⚠️ Perfil no existe en public.profiles, creándolo...');
             const { error: createError } = await this.supabase
                 .from('profiles')
                 .insert({
@@ -892,475 +154,140 @@ class FormRecord {
                     plan_type: authUser.user_metadata?.plan_type || 'basico',
                     form_verified: false
                 });
-
             if (createError) {
-                console.error('Error creando perfil en public.profiles:', createError);
-            } else {
-                console.log('✅ Perfil creado en public.profiles');
+                console.error('Error creando perfil:', createError);
             }
         }
     }
 
     async saveToSupabase() {
         if (!this.supabase || !this.userId) {
-            const errorMsg = 'Supabase no está inicializado o no hay usuario autenticado';
-            console.error('❌ Error:', errorMsg);
-            console.log('Supabase disponible:', !!this.supabase);
-            console.log('UserId disponible:', !!this.userId);
-            throw new Error(errorMsg);
+            throw new Error('Supabase no está inicializado o no hay usuario autenticado');
         }
 
-        // Verificar que el perfil existe en public.profiles antes de continuar
-        const { data: profileCheck, error: profileCheckError } = await this.supabase
+        const { data: profileCheck } = await this.supabase
             .from('profiles')
             .select('id')
             .eq('id', this.userId)
             .maybeSingle();
 
-        if (profileCheckError && profileCheckError.code !== 'PGRST116') {
-            throw new Error(`Error verificando perfil: ${profileCheckError.message}`);
-        }
-
         if (!profileCheck) {
             const { data: { user: authUser } } = await this.supabase.auth.getUser();
             if (authUser) {
                 await this.ensureUserExists(authUser);
-                const { data: profileCheck2 } = await this.supabase
-                    .from('profiles')
-                    .select('id')
-                    .eq('id', this.userId)
-                    .maybeSingle();
-                
-                if (!profileCheck2) {
-                    throw new Error('No se pudo crear el perfil en public.profiles. Por favor, contacta al administrador.');
-                }
             } else {
-                throw new Error('Usuario no encontrado en public.profiles. Por favor, inicia sesión nuevamente.');
+                throw new Error('Usuario no encontrado. Inicia sesión nuevamente.');
             }
         }
 
-        // Log de datos antes de guardar para debugging
-        console.log('📋 Datos a guardar:', {
-            nombre_marca: this.formData.nombre_marca,
-            mercado_objetivo: this.formData.mercado_objetivo,
-            idiomas_contenido: this.formData.idiomas_contenido,
-            tono_voz: this.formData.tono_voz,
-            tipo_producto: this.formData.tipo_producto
-        });
+        const nombreOrg = this.formData.nombre_organizacion || '';
+        const urlWeb = this.formData.url_web || '';
 
-
-        // 1. Crear o actualizar proyecto
-        // Asegurar que los arrays JSONB se envíen correctamente
-        const mercadoObjetivo = Array.isArray(this.formData.mercado_objetivo) 
-            ? this.formData.mercado_objetivo 
-            : (this.formData.mercado_objetivo ? [this.formData.mercado_objetivo] : []);
-        
-        const idiomasContenido = Array.isArray(this.formData.idiomas_contenido) 
-            ? this.formData.idiomas_contenido 
-            : (this.formData.idiomas_contenido ? [this.formData.idiomas_contenido] : []);
-
-        const projectData = {
-            user_id: this.userId,
-            nombre_marca: this.formData.nombre_marca || '',
-            logo_url: this.formData.logo_url || null,
-            mercado_objetivo: mercadoObjetivo,
-            idiomas_contenido: idiomasContenido
-        };
-        
-        // Verificar si ya existe un proyecto para este usuario
-        const { data: existingProject, error: checkError } = await this.supabase
-            .from('brand_containers')
-            .select('id')
+        // ¿El usuario ya tiene alguna organización?
+        const { data: members } = await this.supabase
+            .from('organization_members')
+            .select('organization_id')
             .eq('user_id', this.userId)
-            .maybeSingle(); // Usar maybeSingle para evitar error si no existe
+            .limit(1);
 
-        if (checkError && checkError.code !== 'PGRST116') {
-            throw new Error(`Error al verificar proyecto: ${checkError.message}`);
-        }
+        let organizationId;
+        let brandContainerId;
 
-        let projectId;
-        
-        if (existingProject) {
-            const { data: project, error: projectError } = await this.supabase
+        if (members && members.length > 0) {
+            organizationId = members[0].organization_id;
+
+            // Actualizar nombre de la organización
+            await this.supabase
+                .from('organizations')
+                .update({ name: nombreOrg })
+                .eq('id', organizationId);
+
+            // Obtener o crear brand_container para esta org
+            const { data: containers } = await this.supabase
                 .from('brand_containers')
-                .update(projectData)
-                .eq('id', existingProject.id)
-                .select()
-                .single();
+                .select('id')
+                .eq('organization_id', organizationId)
+                .eq('user_id', this.userId)
+                .limit(1);
 
-            if (projectError) {
-                console.error('Error al actualizar proyecto:', projectError);
-                console.error('Datos enviados:', JSON.stringify(projectData, null, 2));
-                throw new Error(`Error al actualizar proyecto: ${projectError.message} (Código: ${projectError.code || 'N/A'})`);
-            }
-            projectId = project.id;
-        } else {
-            const { data: project, error: projectError } = await this.supabase
-                .from('brand_containers')
-                .insert(projectData)
-                .select()
-                .single();
-
-            if (projectError) {
-                console.error('Error al crear proyecto:', projectError);
-                console.error('Datos enviados:', JSON.stringify(projectData, null, 2));
-                throw new Error(`Error al crear proyecto: ${projectError.message} (Código: ${projectError.code || 'N/A'})`);
-            }
-            projectId = project.id;
-        }
-
-        // 2. Redes sociales en brand_social_links (reemplazar website, instagram, tiktok, facebook desde formulario)
-        const formPlatforms = [
-            { key: 'sitio_web', platform: 'website' },
-            { key: 'instagram_url', platform: 'instagram' },
-            { key: 'tiktok_url', platform: 'tiktok' },
-            { key: 'facebook_url', platform: 'facebook' }
-        ];
-        await this.supabase
-            .from('brand_social_links')
-            .delete()
-            .eq('brand_container_id', projectId)
-            .in('platform', formPlatforms.map(p => p.platform));
-        const toInsert = formPlatforms
-            .filter(p => (this.formData[p.key] || '').trim())
-            .map(p => ({
-                brand_container_id: projectId,
-                platform: p.platform,
-                url: (this.formData[p.key] || '').trim(),
-                is_primary: false
-            }));
-        if (toInsert.length > 0) {
-            await this.supabase.from('brand_social_links').insert(toInsert);
-        }
-
-        // 3. Subir logo si existe
-        if (this.formData.logo_file && this.formData.logo_file.length > 0) {
-            try {
-            const logoFile = this.formData.logo_file[0];
-            const fileExt = logoFile.name.split('.').pop();
-                // La ruta debe incluir user_id como primera carpeta para que las políticas RLS funcionen
-                const fileName = `${this.userId}/${projectId}/logo.${fileExt}`;
-
-                console.log('📤 Subiendo logo:', fileName);
-
-                // Intentar eliminar el logo anterior si existe
-                try {
-                    await this.supabase.storage
-                        .from('brand-logos')
-                        .remove([fileName]);
-                } catch (removeError) {
-                    // Ignorar error si el archivo no existe
-                    console.log('Logo anterior no encontrado, continuando...');
-                }
-
-            const { data: uploadData, error: uploadError } = await this.supabase.storage
-                .from('brand-logos')
-                    .upload(fileName, logoFile, {
-                        upsert: true,
-                        contentType: logoFile.type,
-                        cacheControl: '3600'
-                    });
-
-                if (uploadError) {
-                    console.error('❌ Error al subir logo:', uploadError);
-                    throw new Error(`Error al subir logo: ${uploadError.message}`);
-                }
-
-                console.log('✅ Logo subido exitosamente');
-
-                const { data: { publicUrl } } = this.supabase.storage
-                    .from('brand-logos')
-                    .getPublicUrl(fileName);
-
-                console.log('🔗 URL pública del logo:', publicUrl);
-
-                const { error: updateError } = await this.supabase
+            if (containers && containers.length > 0) {
+                brandContainerId = containers[0].id;
+            } else {
+                const { data: newContainer, error: containerError } = await this.supabase
                     .from('brand_containers')
-                    .update({ logo_url: publicUrl })
-                    .eq('id', projectId);
-
-                if (updateError) {
-                    console.error('❌ Error al actualizar logo_url en projects:', updateError);
-                    throw new Error(`Error al actualizar logo: ${updateError.message}`);
-                }
-
-                console.log('✅ Logo URL guardado en projects');
-            } catch (logoError) {
-                console.error('❌ Error al procesar logo:', logoError);
-                throw logoError; // Lanzar error para que se muestre al usuario
-            }
-        }
-
-        // 3. Crear o actualizar brand (lineamientos de marca)
-        const palabrasEvitar = Array.isArray(this.formData.palabras_evitar)
-            ? this.formData.palabras_evitar
-            : (this.formData.palabras_evitar ? [this.formData.palabras_evitar] : []);
-        const palabrasClave = (this.formData.palabras_usar || '')
-            ? this.formData.palabras_usar.split(/[\n,]+/).map(s => s.trim()).filter(Boolean)
-            : [];
-        const brandData = {
-            project_id: projectId,
-            tono_voz: this.formData.tono_voz || 'amigable',
-            palabras_clave: palabrasClave.length ? palabrasClave : [],
-            palabras_prohibidas: palabrasEvitar,
-            objetivos_marca: Array.isArray(this.formData.objetivos_marca) ? this.formData.objetivos_marca : []
-        };
-
-        const { data: existingBrand, error: checkBrandError } = await this.supabase
-            .from('brands')
-            .select('id')
-            .eq('project_id', projectId)
-            .maybeSingle();
-
-        if (checkBrandError && checkBrandError.code !== 'PGRST116') {
-            throw new Error(`Error al verificar brand: ${checkBrandError.message}`);
-        }
-
-        if (existingBrand) {
-            const { error: brandError } = await this.supabase
-                .from('brands')
-                .update(brandData)
-                .eq('id', existingBrand.id);
-
-            if (brandError) {
-                throw new Error(`Error al actualizar brand: ${brandError.message}`);
+                    .insert({
+                        organization_id: organizationId,
+                        user_id: this.userId,
+                        nombre_marca: nombreOrg
+                    })
+                    .select('id')
+                    .single();
+                if (containerError) throw new Error(`Error al crear marca: ${containerError.message}`);
+                brandContainerId = newContainer.id;
             }
         } else {
-            const { error: brandError } = await this.supabase
-                .from('brands')
-                .insert(brandData);
-
-            if (brandError) {
-                throw new Error(`Error al crear brand: ${brandError.message}`);
-            }
-        }
-
-        // 4. Subir archivos de identidad si existen
-        if (this.formData.archivos_identidad && this.formData.archivos_identidad.length > 0) {
-            console.log(`📤 Subiendo ${this.formData.archivos_identidad.length} archivo(s) de identidad...`);
-            
-            const uploadPromises = this.formData.archivos_identidad.map(async (file) => {
-                try {
-                const fileExt = file.name.split('.').pop();
-                    // La ruta debe incluir user_id como primera carpeta para que las políticas RLS funcionen
-                    const fileName = `${this.userId}/${projectId}/${Date.now()}_${file.name}`;
-
-                    console.log('📤 Subiendo archivo:', file.name, 'a', fileName);
-
-                const { data: uploadData, error: uploadError } = await this.supabase.storage
-                    .from('brand-core')
-                        .upload(fileName, file, {
-                            contentType: file.type,
-                            cacheControl: '3600'
-                        });
-
-                    if (uploadError) {
-                        console.error('❌ Error al subir archivo:', file.name, uploadError);
-                        throw new Error(`Error al subir ${file.name}: ${uploadError.message}`);
-                    }
-
-                    console.log('✅ Archivo subido:', file.name);
-
-                    const { data: { publicUrl } } = this.supabase.storage
-                        .from('brand-core')
-                        .getPublicUrl(fileName);
-
-                    console.log('🔗 URL pública:', publicUrl);
-
-                    const { error: insertError } = await this.supabase
-                        .from('brand_assets')
-                        .insert({
-                            brand_container_id: projectId,
-                            file_name: file.name,
-                            file_url: publicUrl,
-                            file_type: file.type,
-                            file_size: file.size
-                        });
-
-                    if (insertError) {
-                        console.error('❌ Error al insertar registro de archivo:', insertError);
-                        throw new Error(`Error al guardar registro de ${file.name}: ${insertError.message}`);
-                    }
-
-                    console.log('✅ Registro de archivo guardado en brand_files');
-                } catch (fileError) {
-                    console.error('❌ Error al procesar archivo:', file.name, fileError);
-                    throw fileError; // Lanzar error para que se muestre al usuario
-                }
-            });
-
-            await Promise.all(uploadPromises);
-            console.log('✅ Todos los archivos de identidad subidos exitosamente');
-        }
-
-        // 5. Crear producto
-        const beneficios = [
-            this.formData.beneficio_1,
-            this.formData.beneficio_2,
-            this.formData.beneficio_3
-        ].filter(Boolean);
-        const diferenciadores = (this.formData.diferenciacion || '').trim()
-            ? [(this.formData.diferenciacion || '').trim()]
-            : [];
-        const casosUso = (this.formData.modo_uso || '').trim() ? [(this.formData.modo_uso || '').trim()] : [];
-        const materiales = (this.formData.ingredientes || '').trim() ? [(this.formData.ingredientes || '').trim()] : [];
-        const variantes = (this.formData.variantes_producto || '').trim()
-            ? (this.formData.variantes_producto || '').split(/[\n,]+/).map(s => s.trim()).filter(Boolean)
-            : [];
-        const productData = {
-            brand_container_id: projectId,
-            tipo_producto: this.formData.tipo_producto || 'otro',
-            nombre_producto: this.formData.nombre_producto || '',
-            descripcion_producto: this.formData.descripcion_producto || '',
-            beneficios_principales: beneficios,
-            diferenciadores,
-            casos_de_uso: casosUso,
-            materiales_composicion: materiales,
-            variantes,
-            precio_producto: this.formData.precio_producto ? parseFloat(this.formData.precio_producto) : null,
-            moneda: this.formData.moneda || 'USD'
-        };
-
-        const { data: existingProduct, error: checkProductError } = await this.supabase
-            .from('products')
-            .select('id')
-            .eq('brand_container_id', projectId)
-            .maybeSingle();
-
-        if (checkProductError && checkProductError.code !== 'PGRST116') {
-            throw new Error(`Error al verificar producto: ${checkProductError.message}`);
-        }
-
-        let productId;
-
-        if (existingProduct) {
-            const { data: product, error: productError } = await this.supabase
-                .from('products')
-                .update(productData)
-                .eq('id', existingProduct.id)
-                .select()
+            // Crear organización nueva
+            const { data: newOrg, error: orgError } = await this.supabase
+                .from('organizations')
+                .insert({
+                    name: nombreOrg,
+                    owner_user_id: this.userId
+                })
+                .select('id')
                 .single();
 
-            if (productError) {
-                throw new Error(`Error al actualizar producto: ${productError.message}`);
-            }
-            productId = product.id;
-        } else {
-            const { data: product, error: productError } = await this.supabase
-                .from('products')
-                .insert(productData)
-                .select()
+            if (orgError) throw new Error(`Error al crear organización: ${orgError.message}`);
+            organizationId = newOrg.id;
+
+            await this.supabase
+                .from('organization_credits')
+                .insert({
+                    organization_id: organizationId,
+                    credits_available: 0,
+                    credits_total: 0
+                });
+
+            await this.supabase
+                .from('organization_members')
+                .insert({
+                    organization_id: organizationId,
+                    user_id: this.userId,
+                    role: 'owner'
+                });
+
+            const { data: newContainer, error: containerError } = await this.supabase
+                .from('brand_containers')
+                .insert({
+                    organization_id: organizationId,
+                    user_id: this.userId,
+                    nombre_marca: nombreOrg
+                })
+                .select('id')
                 .single();
 
-            if (productError) {
-                throw new Error(`Error al crear producto: ${productError.message}`);
-            }
-            productId = product.id;
+            if (containerError) throw new Error(`Error al crear marca: ${containerError.message}`);
+            brandContainerId = newContainer.id;
         }
 
-        // 6. Subir imágenes del producto
-        if (this.formData.product_images && this.formData.product_images.length > 0) {
-            // Filtrar archivos nulos
-            const validImages = this.formData.product_images.filter(img => img !== null && img !== undefined);
-            
-            if (validImages.length > 0) {
-                console.log(`📤 Subiendo ${validImages.length} imagen(es) de producto...`);
-                
-            const imageUploadPromises = validImages.map(async (file, index) => {
-                    try {
-                const fileExt = file.name.split('.').pop();
-                        // La ruta debe incluir user_id como primera carpeta para que las políticas RLS funcionen
-                        const fileName = `${this.userId}/${productId}/${index + 1}_${Date.now()}.${fileExt}`;
+        // Guardar URL web en brand_social_links (solo si hay URL)
+        if (brandContainerId && urlWeb) {
+            await this.supabase
+                .from('brand_social_links')
+                .delete()
+                .eq('brand_container_id', brandContainerId)
+                .eq('platform', 'website');
 
-                        console.log('📤 Subiendo imagen:', file.name, 'a', fileName);
-
-                const { data: uploadData, error: uploadError } = await this.supabase.storage
-                    .from('product-images')
-                            .upload(fileName, file, {
-                                contentType: file.type,
-                                cacheControl: '3600'
-                            });
-
-                        if (uploadError) {
-                            console.error('❌ Error al subir imagen del producto:', file.name, uploadError);
-                            throw new Error(`Error al subir imagen ${file.name}: ${uploadError.message}`);
-                        }
-
-                        console.log('✅ Imagen subida:', file.name);
-
-                    const { data: { publicUrl } } = this.supabase.storage
-                        .from('product-images')
-                        .getPublicUrl(fileName);
-
-                        console.log('🔗 URL pública:', publicUrl);
-
-                        const { error: insertError } = await this.supabase
-                        .from('product_images')
-                        .insert({
-                            product_id: productId,
-                            image_url: publicUrl,
-                            image_type: ['principal', 'secundaria', 'detalle', 'contexto'][index] || 'secundaria',
-                            image_order: index
-                        });
-
-                        if (insertError) {
-                            console.error('❌ Error al insertar registro de imagen:', insertError);
-                            throw new Error(`Error al guardar registro de imagen ${file.name}: ${insertError.message}`);
-                        }
-
-                        console.log('✅ Registro de imagen guardado en product_images');
-                    } catch (imageError) {
-                        console.error('❌ Error al procesar imagen del producto:', imageError);
-                        throw imageError; // Lanzar error para que se muestre al usuario
-                }
-            });
-
-            await Promise.all(imageUploadPromises);
-                console.log('✅ Todas las imágenes de producto subidas exitosamente');
-            }
+            await this.supabase
+                .from('brand_social_links')
+                .insert({
+                    brand_container_id: brandContainerId,
+                    platform: 'website',
+                    url: urlWeb,
+                    is_primary: false
+                });
         }
 
-        // 7. Crear campaña
-        const campaignData = {
-            brand_container_id: projectId,
-            oferta_desc: this.formData.oferta_desc || null,
-            audiencia_desc: this.formData.audiencia_desc || '',
-            intenciones: this.formData.intenciones || null,
-            objetivo_principal: this.formData.objetivo_principal || '',
-            cta: this.formData.cta || 'Ver más',
-            cta_url: this.formData.cta_url || '#'
-        };
-
-        const { data: existingCampaign, error: checkCampaignError } = await this.supabase
-            .from('campaigns')
-            .select('id')
-            .eq('brand_container_id', projectId)
-            .maybeSingle();
-
-        if (checkCampaignError && checkCampaignError.code !== 'PGRST116') {
-            throw new Error(`Error al verificar campaña: ${checkCampaignError.message}`);
-        }
-
-        if (existingCampaign) {
-            const { error: campaignError } = await this.supabase
-                .from('campaigns')
-                .update(campaignData)
-                .eq('id', existingCampaign.id);
-
-            if (campaignError) {
-                throw new Error(`Error al actualizar campaña: ${campaignError.message}`);
-            }
-        } else {
-            const { error: campaignError } = await this.supabase
-                .from('campaigns')
-                .insert(campaignData);
-
-            if (campaignError) {
-                throw new Error(`Error al crear campaña: ${campaignError.message}`);
-            }
-        }
-
-        // Marcar el perfil como form_verified = true (tabla unificada profiles)
+        // Marcar formulario como completado
         const { error: updateError } = await this.supabase
             .from('profiles')
             .update({ form_verified: true })
@@ -1372,30 +299,8 @@ class FormRecord {
     }
 }
 
-// Global function for removing logo
-function removeLogo() {
-    const logoInput = document.getElementById('logo_file');
-    const logoPreview = document.getElementById('logoPreview');
-    if (logoInput) logoInput.value = '';
-    if (logoPreview) {
-        logoPreview.style.display = 'none';
-        logoPreview.querySelector('img').src = '';
-    }
-}
-
-// Initialize form when DOM is ready
 let formRecordInstance;
 document.addEventListener('DOMContentLoaded', () => {
     formRecordInstance = new FormRecord();
     window.formRecordInstance = formRecordInstance;
 });
-
-// Remove logo function
-FormRecord.prototype.removeLogo = function() {
-    const logoInput = document.getElementById('logo_file');
-    const logoPreview = document.getElementById('logoPreview');
-    if (logoInput) logoInput.value = '';
-    if (logoPreview) logoPreview.style.display = 'none';
-    delete this.formData.logo;
-};
-

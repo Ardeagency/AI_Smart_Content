@@ -21,44 +21,6 @@
 }
 
 /* ============================================
-   VIDEO BACKGROUND
-   ============================================ */
-.video-background {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-    overflow: hidden;
-    background: var(--bg-dark);
-}
-
-.video-background video {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    min-width: 100%;
-    min-height: 100%;
-    width: auto;
-    height: auto;
-    object-fit: cover;
-}
-
-.video-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1;
-}
-
-/* Header removido */
-
-/* ============================================
    MAIN CONTENT
    ============================================ */
 .form-main-content {
@@ -70,7 +32,6 @@
     overflow: hidden;
     min-height: 0;
     position: relative;
-    z-index: 10;
 }
 
 .form-step {
@@ -429,8 +390,17 @@
     color: var(--text-muted);
 }
 
+/* Botón de envío dentro del formulario */
+.form-actions-inline {
+    margin-top: 1.5rem;
+}
+
+.form-actions-inline .btn {
+    min-width: 140px;
+}
+
 /* ============================================
-   FORM ACTIONS
+   FORM ACTIONS (navegación por pasos - legacy)
    ============================================ */
 .form-actions {
     position: fixed;

@@ -50,24 +50,12 @@ class FormRecordView extends BaseView {
       await this.loadScript('js/form-record.js', 'FormRecord');
     }
 
-    // Inicializar FormRecord
+    // Inicializar FormRecord (formulario: nombre organización + URL web)
     if (window.FormRecord) {
       this.formRecord = new window.FormRecord();
       await this.formRecord.init();
     } else {
       console.error('❌ No se pudo cargar FormRecord');
-    }
-
-    // Setup botón de "Ir al Living"
-    const goToLivingBtn = this.querySelector('#goToLivingBtn');
-    if (goToLivingBtn) {
-      this.addEventListener(goToLivingBtn, 'click', () => {
-        if (window.router) {
-          window.router.navigate('/living');
-        } else {
-          window.location.href = '/living.html';
-        }
-      });
     }
   }
 
