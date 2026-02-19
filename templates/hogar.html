@@ -4,9 +4,16 @@
 -->
 <div class="hogar-container">
     <div class="hogar-header">
-        <div class="hogar-header-content">
+        <div class="hogar-header-content hogar-header-centered">
+            <div class="hogar-title-decoration">++ &nbsp; ++ &nbsp; ++ &nbsp; ++</div>
             <h1 class="hogar-title">Mis Organizaciones</h1>
             <p class="hogar-subtitle">Gestiona tus organizaciones y accede a todas tus marcas</p>
+        </div>
+        <div class="hogar-header-actions">
+            <button class="btn btn-create-org" id="createOrgBtn" type="button">
+                <i class="fas fa-plus"></i>
+                Nueva Organización
+            </button>
         </div>
     </div>
 
@@ -23,15 +30,8 @@
         </button>
     </div>
 
-    <!-- Contenedor organizaciones (vacío, listo para rehacer desde cero) -->
+    <!-- Contenedor organizaciones -->
     <div class="organizations-grid" id="organizationsGrid" style="display: none;"></div>
-
-    <footer class="hogar-footer">
-        <button class="btn btn-create-org" id="createOrgBtn" type="button">
-            <i class="fas fa-plus"></i>
-            Nueva Organización
-        </button>
-    </footer>
 </div>
 
 <!-- Modal para crear/editar organización -->

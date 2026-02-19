@@ -18,7 +18,7 @@
 }
 
 /* ============================================
-   CONTENEDOR PRINCIPAL
+   CONTENEDOR PRINCIPAL — Centrado
    ============================================ */
 .hogar-container {
     min-height: calc(100vh - 70px);
@@ -29,6 +29,7 @@
     background: var(--hogar-bg);
     display: flex;
     flex-direction: column;
+    align-items: center;
     box-sizing: border-box;
 }
 
@@ -40,45 +41,51 @@
 }
 
 /* ============================================
-   HEADER
+   HEADER — Centrado, estilo imagen (FUNCTIONALITY IN CARDS)
    ============================================ */
 .hogar-header {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
     margin-bottom: 2rem;
-    flex-wrap: wrap;
-    gap: 1rem;
+    width: 100%;
+    text-align: center;
 }
 
 .hogar-header-content {
-    flex: 1;
-    min-width: 250px;
+    width: 100%;
+}
+
+.hogar-header-centered {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.hogar-header-actions {
+    margin-top: 1rem;
+}
+
+.hogar-title-decoration {
+    font-size: 0.9rem;
+    letter-spacing: 0.2em;
+    color: var(--hogar-text-muted);
+    margin-bottom: 0.5rem;
 }
 
 .hogar-title {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     font-weight: 600;
     color: var(--hogar-text);
-    margin-bottom: 0.35rem;
-    letter-spacing: -0.02em;
+    margin: 0 0 0.35rem 0;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
 }
 
 .hogar-subtitle {
     font-size: 0.9375rem;
     color: var(--hogar-text-muted);
-}
-
-/* ============================================
-   FOOTER Y BOTÓN NUEVA ORGANIZACIÓN
-   ============================================ */
-.hogar-footer {
-    margin-top: auto;
-    padding-top: 1.5rem;
-    padding-bottom: 0.5rem;
-    border-top: 1px solid var(--hogar-card-border);
-    display: flex;
-    justify-content: flex-end;
+    margin: 0;
 }
 
 .btn-create-org {
@@ -152,258 +159,183 @@
 }
 
 /* ============================================
-   GRID DE ORGANIZACIONES
+   GRID DE ORGANIZACIONES — Centrado, fila como en imagen
    ============================================ */
 .organizations-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 1.5rem;
     margin-top: 0.5rem;
+    width: 100%;
+    max-width: 960px;
+    justify-content: center;
 }
 
 @media (min-width: 600px) and (max-width: 899px) {
     .organizations-grid {
         grid-template-columns: repeat(2, 1fr);
+        max-width: 640px;
     }
 }
 
 @media (min-width: 900px) {
     .organizations-grid {
         grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-@media (min-width: 1200px) {
-    .organizations-grid {
-        grid-template-columns: repeat(4, 1fr);
+        max-width: 960px;
     }
 }
 
 /* ============================================
-   CARD DE ORGANIZACIÓN — Blueprint AI Smart Content
-   Hero (gradiente marca) → Overlay fade → Logo flotante → Info org → Métricas
+   CARD DE ORGANIZACIÓN — Estilo FUNCTIONALITY IN CARDS (imagen)
+   Fondo gris oscuro, iconos estrella/ellipsis, icono tipo, nombre, separador, créditos, tags
    ============================================ */
 .org-card.org-card-premium {
-    --org-card-radius: 24px;
-    --org-card-bg: var(--bg-primary);
+    --org-card-radius: 16px;
+    --org-card-bg: rgba(38, 40, 46, 0.8);
     position: relative;
     overflow: hidden;
     border-radius: var(--org-card-radius);
     background: var(--org-card-bg);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--hogar-card-border);
     cursor: pointer;
-    box-shadow: var(--shadow-floating);
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    padding: 1.25rem;
+    transition: transform 0.2s ease, background 0.2s ease;
 }
 
 .org-card.org-card-premium:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-floating);
-}
-
-.org-card.org-card-premium:hover .org-card-hero {
-    filter: brightness(1.06);
+    transform: translateY(-2px);
+    background: rgba(45, 47, 54, 0.9);
 }
 
 .org-card.org-card-premium:hover .org-card-config-icon {
     opacity: 1;
 }
 
-.org-card.org-card-premium:active {
-    box-shadow: 0 0 0 1px var(--border-divider);
-}
-
-/* Icono configuración: visible solo en hover */
+/* Iconos esquinas: estrella (favorito) + menú (config) */
+.org-card-fav-icon,
 .org-card-config-icon {
     position: absolute;
-    top: 12px;
-    right: 12px;
-    z-index: 3;
-    width: 32px;
-    height: 32px;
+    top: 1rem;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0;
     border: none;
-    border-radius: 8px;
-    background: var(--bg-interactive);
-    color: var(--text-primary);
-    font-size: 0.875rem;
+    background: transparent;
+    color: var(--hogar-text-muted);
+    font-size: 0.9rem;
     cursor: pointer;
-    opacity: 0;
-    transition: opacity 0.2s ease, background 0.2s ease;
+    transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.org-card-fav-icon {
+    left: 1rem;
+    pointer-events: none; /* decorativo como en imagen */
+}
+
+.org-card-config-icon {
+    right: 1rem;
+    opacity: 0.7;
 }
 
 .org-card-config-icon:hover {
-    background: var(--bg-hover);
+    color: var(--hogar-text);
+    opacity: 1;
 }
 
-/* HERO — Gradiente atmosférico marca */
-.org-card-hero {
-    height: 150px;
-    background:
-        radial-gradient(circle at 30% 30%, rgba(212, 209, 216, 0.08), transparent 60%),
-        var(--org-hero-gradient);
-    transition: filter 0.25s ease;
-}
-
-/* FADE OVERLAY — Transición a contenido */
-.org-card-overlay {
-    position: absolute;
-    top: 110px;
-    left: 0;
-    right: 0;
-    height: 180px;
-    background: linear-gradient(to bottom, transparent, var(--org-card-bg) 40%);
-    pointer-events: none;
-}
-
-/* CONTENT — Logo flotante + info + métricas */
-.org-card-content {
-    padding: 70px 24px 24px;
-    position: relative;
-    background: var(--org-card-bg);
-}
-
-/* LOGO flotante marca — Parcialmente sobre overlay */
-.org-card-logo {
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    background: var(--bg-card);
-    border: 2px solid var(--border-color);
-    position: absolute;
-    top: -36px;
-    left: 24px;
+/* Icono tipo (logo/org) en cuadrado redondeado */
+.org-card-icon-wrap {
+    width: 64px;
+    height: 64px;
+    margin: 0.5rem auto 1rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.08);
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
 }
 
-.org-card-logo img {
+.org-card-icon-wrap img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    display: block;
 }
 
-.org-card-logo-initial {
+.org-card-icon-wrap .org-card-logo-initial {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--hogar-text);
     display: none;
-    position: absolute;
-    inset: 0;
+}
+
+.org-card-icon-wrap .org-card-logo-initial.visible {
+    display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 700;
-    font-size: 24px;
-    color: var(--text-primary);
+    width: 100%;
+    height: 100%;
 }
 
-.org-card-logo-initial.visible {
-    display: flex;
-}
-
-/* Títulos */
+/* Nombre de la organización (como "filename" en imagen) */
 .org-card-org-name {
-    font-size: 22px;
-    font-weight: 600;
-    color: #fff;
-    margin: 0 0 6px 0;
-    line-height: 1.3;
-    letter-spacing: -0.01em;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--hogar-text);
+    margin: 0 0 0.75rem 0;
+    line-height: 1.35;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    text-align: center;
 }
 
-.org-card-plan {
-    font-size: 13px;
-    font-weight: 400;
-    color: rgba(255, 255, 255, 0.6);
-    margin: 0 0 28px 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+/* Separador */
+.org-card-separator {
+    height: 1px;
+    background: var(--hogar-card-border);
+    margin: 0 0 0.75rem 0;
 }
 
-/* MÉTRICAS — Créditos + Avatares */
-.org-card-metrics {
+/* Fila inferior: Créditos (izq) + Tags (der) */
+.org-card-footer {
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
-}
-
-.org-card-credits {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.org-card-credits-num {
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--text-primary);
-    line-height: 1.2;
-}
-
-.org-card-credits-label {
-    font-size: 12px;
-    color: var(--text-muted);
-}
-
-.org-card-avatars {
-    display: flex;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
 }
 
-.org-card-avatar {
-    width: 28px;
-    height: 28px;
-    flex-shrink: 0;
-    border-radius: 50%;
-    overflow: hidden;
-    margin-left: -8px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    background: rgba(255, 255, 255, 0.12);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.2s ease;
+.org-card-credits-wrap {
+    font-size: 0.8rem;
+    color: var(--hogar-text-muted);
 }
 
-.org-card-avatar:first-child {
-    margin-left: 0;
-}
-
-.org-card.org-card-premium:hover .org-card-avatar {
-    transform: translateY(-1px);
-}
-
-.org-card-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-.org-card-avatar.no-image img {
-    display: none;
-}
-
-.org-card-avatar-initial {
-    display: none;
-    font-size: 11px;
+.org-card-credits-wrap .org-card-credits-num {
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--hogar-text);
 }
 
-.org-card-avatar.no-image .org-card-avatar-initial {
+.org-card-tags {
     display: flex;
+    gap: 0.35rem;
+    align-items: center;
+}
+
+.org-card-tag {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 100%;
-    height: 100%;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 0.4rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--hogar-text);
+    font-size: 0.75rem;
+    font-weight: 600;
 }
 
 /* ============================================
@@ -548,24 +480,12 @@
    RESPONSIVE
    ============================================ */
 @media (max-width: 768px) {
-    .hogar-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
     .hogar-title {
-        font-size: 1.5rem;
-    }
-
-    .org-card-content {
-        padding: 70px 20px 20px;
+        font-size: 1.25rem;
+        letter-spacing: 0.08em;
     }
 
     .org-card-org-name {
-        font-size: 20px;
-    }
-
-    .org-card-credits-num {
-        font-size: 24px;
+        font-size: 0.9rem;
     }
 }

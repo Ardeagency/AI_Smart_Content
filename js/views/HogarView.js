@@ -459,49 +459,29 @@ class HogarView extends BaseView {
   }
 
   /**
-   * Card blueprint: hero (gradiente marca), overlay fade, logo flotante marca, info org, métricas.
+   * Card estilo FUNCTIONALITY IN CARDS: estrella, menú, icono tipo, nombre, separador, créditos, tags.
    */
   renderOrgCard(org) {
-    const brandColors = org.brandColors || [];
-    const hasBranding = brandColors.length > 0;
-    const heroGradient = hasBranding
-      ? this.buildBrandGradientHeaderCss(brandColors)
-      : 'linear-gradient(130deg, #072b3f, #0d5f86)';
     const name = this.escapeHtml(org.name || '');
-    const planRaw = String(org.planType || '—').replace(/_/g, ' ');
-    const planLabel = planRaw === '—' ? '—' : this.escapeHtml(planRaw.charAt(0).toUpperCase() + planRaw.slice(1).toLowerCase() + ' plan');
     const credits = org.credits_available != null ? `${org.credits_available}` : '0';
     const logoUrl = (org.firstBrandLogo || '').trim();
     const brandInitial = (org.marcaNames && org.marcaNames[0]) ? org.marcaNames[0].charAt(0).toUpperCase() : 'O';
     const logoHtml = logoUrl
       ? `<img src="${this.escapeHtml(logoUrl)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling&&this.nextElementSibling.classList.add('visible')"><span class="org-card-logo-initial">${brandInitial}</span>`
       : `<span class="org-card-logo-initial visible">${brandInitial}</span>`;
-    const avatars = (org.memberAvatars || []).slice(0, 4);
-    const avatarsHtml = avatars.map(a => {
-      const url = (a.avatar_url || '').trim();
-      const initial = (a.full_name || '?').charAt(0).toUpperCase();
-      const title = this.escapeHtml(a.full_name || '');
-      if (url) {
-        return `<span class="org-card-avatar"><img src="${this.escapeHtml(url)}" alt="${title}" loading="lazy" onerror="this.parentElement.classList.add('no-image')"><span class="org-card-avatar-initial">${initial}</span></span>`;
-      }
-      return `<span class="org-card-avatar no-image"><span class="org-card-avatar-initial">${initial}</span></span>`;
-    }).join('');
+    const planRaw = String(org.planType || '').replace(/_/g, '');
+    const planInitial = planRaw ? planRaw.charAt(0).toUpperCase() : 'A';
+    const tagHtml = `<span class="org-card-tag">${planInitial}</span>`;
     return `
       <div class="org-card org-card-premium" data-org-id="${org.id}" role="button" tabindex="0" title="Entrar a ${name}">
-        <button type="button" class="org-card-config-icon" aria-label="Configuración" title="Configuración"><i class="fas fa-cog"></i></button>
-        <div class="org-card-hero" style="--org-hero-gradient: ${heroGradient}"></div>
-        <div class="org-card-overlay"></div>
-        <div class="org-card-content">
-          <div class="org-card-logo">${logoHtml}</div>
-          <h3 class="org-card-org-name">${name}</h3>
-          <p class="org-card-plan">${planLabel}</p>
-          <div class="org-card-metrics">
-            <div class="org-card-credits">
-              <span class="org-card-credits-num">${credits}</span>
-              <span class="org-card-credits-label">Credits available</span>
-            </div>
-            <div class="org-card-avatars">${avatarsHtml}</div>
-          </div>
+        <span class="org-card-fav-icon" aria-hidden="true"><i class="far fa-star"></i></span>
+        <button type="button" class="org-card-config-icon" aria-label="Configuración" title="Configuración"><i class="fas fa-ellipsis-v"></i></button>
+        <div class="org-card-icon-wrap">${logoHtml}</div>
+        <h3 class="org-card-org-name">${name}</h3>
+        <div class="org-card-separator"></div>
+        <div class="org-card-footer">
+          <div class="org-card-credits-wrap">Créditos: <span class="org-card-credits-num">${credits}</span></div>
+          <div class="org-card-tags">${tagHtml}</div>
         </div>
       </div>
     `;
