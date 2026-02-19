@@ -299,6 +299,9 @@ class FormRecord {
     }
 }
 
+// Registrar la clase globalmente para que FormRecordView la detecte tras loadScript
+window.FormRecord = FormRecord;
+
 let formRecordInstance;
 document.addEventListener('DOMContentLoaded', () => {
     formRecordInstance = new FormRecord();
