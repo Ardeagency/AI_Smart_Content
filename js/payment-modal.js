@@ -1282,7 +1282,7 @@ class PaymentModal {
         
         // Redirigir directamente a onboarding
         setTimeout(() => {
-            window.location.href = 'form-record.html';
+            window.location.href = '/form_org';
         }, 100);
     }
 
@@ -1447,7 +1447,7 @@ class PaymentModal {
             }
             
             // Redirect to onboarding page
-            window.location.href = 'form-record.html';
+            window.location.href = '/form_org';
         }, 3500);
     }
 

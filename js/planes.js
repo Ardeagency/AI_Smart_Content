@@ -214,8 +214,8 @@ class PlanesManager {
                 this.showEmailConfirmationScreen(email);
             } else {
                 // Si hay sesión activa, redirigir al formulario
-                console.log('✅ Sesión activa, redirigiendo a form-record.html');
-                window.location.href = 'form-record.html';
+                console.log('✅ Sesión activa, redirigiendo a form_org');
+                window.location.href = '/form_org';
             }
 
         } catch (error) {

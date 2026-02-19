@@ -268,7 +268,7 @@ class AuthManager {
                 
                 // Redirigir al formulario de registro de datos
                 setTimeout(() => {
-                    window.location.href = 'form-record.html';
+                    window.location.href = '/form_org';
                 }, 1500);
             }
         } catch (error) {
@@ -385,7 +385,7 @@ class AuthManager {
      */
     async determineRedirectUrl(userId) {
         if (!this.supabase || !userId) {
-            return 'form-record.html';
+            return '/form_org';
         }
 
         try {
@@ -398,7 +398,7 @@ class AuthManager {
 
             if (error) {
                 console.error('Error checking projects:', error);
-                return 'form-record.html';
+                return '/form_org';
             }
 
             // Verificar si el usuario completó el formulario (tabla unificada profiles)
@@ -410,14 +410,14 @@ class AuthManager {
 
             // Si no completó el formulario, siempre redirigir al formulario
             if (!userData || userData.form_verified !== true) {
-                return 'form-record.html';
+                return '/form_org';
             }
 
             // Si completó el formulario, ir al living
             return 'living.html';
         } catch (error) {
             console.error('Error determining redirect:', error);
-            return 'form-record.html';
+            return '/form_org';
         }
     }
 

@@ -360,7 +360,7 @@ class App {
     }
 
     if (viewsAvailable.FormRecordView) {
-      this.router.register('/form-record', window.FormRecordView, {
+      this.router.register('/form_org', window.FormRecordView, {
         requiresAuth: true,
         redirectIfAuth: false
       });
