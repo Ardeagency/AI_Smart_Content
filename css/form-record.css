@@ -98,10 +98,11 @@
     text-align: center;
 }
 
-/* Inputs: dentro del contenedor, no estiran más allá de la tarjeta */
+/* Inputs y select: mismo estilo oscuro */
 .form-record-container .form-input,
 .form-record-container input[type="text"],
-.form-record-container input[type="url"] {
+.form-record-container input[type="url"],
+.form-record-container select.form-select {
     width: 100%;
     max-width: 100%;
     padding: 0.85rem 1rem;
@@ -118,6 +119,19 @@
     box-sizing: border-box;
 }
 
+.form-record-container select.form-select {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='rgba(255,255,255,0.6)' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    padding-right: 2.5rem;
+}
+
+.form-record-container select.form-select option {
+    background: #1e1e24;
+    color: #fff;
+}
+
 .form-record-container .form-input::placeholder,
 .form-record-container input[type="text"]::placeholder,
 .form-record-container input[type="url"]::placeholder {
@@ -126,10 +140,32 @@
 
 .form-record-container .form-input:focus,
 .form-record-container input[type="text"]:focus,
-.form-record-container input[type="url"]:focus {
+.form-record-container input[type="url"]:focus,
+.form-record-container select.form-select:focus {
     outline: none;
     border-color: #5b5b66;
     box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.06);
+}
+
+/* Bloque "Datos de tarjeta — por ahora desactivado" */
+.form-record-container .form-step-disabled {
+    padding: 1.25rem;
+    background: rgba(30, 30, 36, 0.6);
+    border: 1px dashed #3d3d45;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.form-record-container .form-step-disabled p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.95rem;
+}
+
+.form-record-container .form-step-disabled-sub {
+    margin-top: 0.5rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
 }
 
 /* Botones: ancho del contenedor, no de toda la pantalla */

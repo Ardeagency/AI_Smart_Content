@@ -3,18 +3,41 @@
         <div class="form-main-content">
             <div class="form-org-card">
                 <form id="form_org">
-                    <!-- Paso 1 -->
+                    <!-- Paso 1: Plan de la organización -->
                     <div class="form-step active" data-step="1">
+                        <h2 class="step-title">Plan de la organización</h2>
+                        <select class="form-input form-select" id="plan_organizacion" name="plan_organizacion" required>
+                            <option value="">Seleccionar plan...</option>
+                            <option value="basico">Básico — $29/mes</option>
+                            <option value="pro">Pro — $79/mes</option>
+                            <option value="enterprise">Enterprise — $199/mes</option>
+                        </select>
+                        <button type="button" class="btn btn-primary btn-next">Continuar</button>
+                    </div>
+                    <!-- Paso 2: Datos de tarjeta (desactivado) -->
+                    <div class="form-step" data-step="2">
+                        <h2 class="step-title">Datos de tarjeta</h2>
+                        <div class="form-step-disabled">
+                            <p>Pago con tarjeta — <strong>por ahora desactivado</strong>.</p>
+                            <p class="form-step-disabled-sub">Podrás configurar el pago más adelante.</p>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-next">Continuar</button>
+                    </div>
+                    <!-- Paso 3: Nombre de la organización -->
+                    <div class="form-step" data-step="3">
                         <h2 class="step-title">Nombre de la organización</h2>
                         <input type="text" class="form-input" id="nombre_organizacion" name="nombre_organizacion" placeholder="Nombre de la organización" maxlength="200" required>
-                        <button type="button" class="btn btn-primary" id="btnNext">Continuar</button>
+                        <div class="form-actions-two">
+                            <button type="button" class="btn btn-secondary btn-back">Atrás</button>
+                            <button type="button" class="btn btn-primary btn-next">Continuar</button>
+                        </div>
                     </div>
-                    <!-- Paso 2 -->
-                    <div class="form-step" data-step="2">
+                    <!-- Paso 4: URL de la web -->
+                    <div class="form-step" data-step="4">
                         <h2 class="step-title">URL de la organización</h2>
                         <input type="url" class="form-input" id="url_web" name="url_web" placeholder="https://tu-sitio.com" required>
                         <div class="form-actions-two">
-                            <button type="button" class="btn btn-secondary" id="btnBack">Atrás</button>
+                            <button type="button" class="btn btn-secondary btn-back">Atrás</button>
                             <button type="submit" class="btn btn-primary" id="btnSubmit">Guardar</button>
                         </div>
                     </div>

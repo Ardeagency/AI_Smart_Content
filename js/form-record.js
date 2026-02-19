@@ -1,6 +1,5 @@
 /**
- * Form Record - Formulario de registro: nombre de la organización y URL web oficial.
- * Solo dos campos. Supabase se obtiene por appLoader/supabaseService (misma fuente que el resto de la app).
+ * Form Record - Formulario form_org: Plan → Tarjeta (desactivado) → Nombre organización → URL web.
  */
 
 class FormRecord {
@@ -9,7 +8,7 @@ class FormRecord {
         this.supabase = options.supabase || null;
         this.userId = null;
         this.currentStep = 1;
-        this.totalSteps = 2;
+        this.totalSteps = 4;
     }
 
     async init() {
@@ -18,13 +17,11 @@ class FormRecord {
         this.showStep(1);
     }
 
-    /** Obtener Supabase igual que el resto de la app (appLoader, supabaseService, window.supabase). */
     async ensureSupabase() {
         if (this.supabase && typeof this.supabase.from === 'function') {
             await this.setUserId();
             return;
         }
-
         if (window.supabaseService && typeof window.supabaseService.getClient === 'function') {
             this.supabase = await window.supabaseService.getClient();
         }
@@ -34,17 +31,14 @@ class FormRecord {
         if (!this.supabase && window.supabase && typeof window.supabase.from === 'function') {
             this.supabase = window.supabase;
         }
-
         if (!this.supabase) {
             throw new Error('No se pudo inicializar Supabase. Por favor, recarga la página.');
         }
-
         await this.setUserId();
     }
 
     async setUserId() {
         const { data: { session }, error: sessionError } = await this.supabase.auth.getSession();
-
         if (sessionError && sessionError.message && sessionError.message.includes('session')) {
             const { data: { user }, error: userError } = await this.supabase.auth.getUser();
             if (userError || !user) {
@@ -58,13 +52,11 @@ class FormRecord {
             await this.ensureUserExists(user);
             return;
         }
-
         if (session?.user) {
             this.userId = session.user.id;
             await this.ensureUserExists(session.user);
             return;
         }
-
         const { data: { user }, error: userError } = await this.supabase.auth.getUser();
         if (userError || !user) {
             if (userError?.message?.includes('session')) {
@@ -83,7 +75,6 @@ class FormRecord {
             .select('id')
             .eq('id', authUser.id)
             .maybeSingle();
-
         if (!existing) {
             await this.supabase.from('profiles').insert({
                 id: authUser.id,
@@ -102,10 +93,15 @@ class FormRecord {
             e.preventDefault();
             this.handleSubmit();
         });
-        const btnNext = document.getElementById('btnNext');
-        if (btnNext) btnNext.addEventListener('click', () => this.nextStep());
-        const btnBack = document.getElementById('btnBack');
-        if (btnBack) btnBack.addEventListener('click', () => this.prevStep());
+        form.addEventListener('click', (e) => {
+            if (e.target.closest('.btn-next')) {
+                e.preventDefault();
+                this.nextStep();
+            } else if (e.target.closest('.btn-back')) {
+                e.preventDefault();
+                this.prevStep();
+            }
+        });
     }
 
     showStep(step) {
@@ -116,27 +112,46 @@ class FormRecord {
     }
 
     nextStep() {
-        const nombre = document.getElementById('nombre_organizacion');
-        if (!nombre || !(nombre.value || '').trim()) {
-            alert('Por favor escribe el nombre de la organización.');
-            return;
+        if (this.currentStep === 1) {
+            const plan = document.getElementById('plan_organizacion');
+            if (!plan || !(plan.value || '').trim()) {
+                alert('Por favor selecciona un plan.');
+                return;
+            }
         }
-        this.showStep(2);
+        if (this.currentStep === 3) {
+            const nombre = document.getElementById('nombre_organizacion');
+            if (!nombre || !(nombre.value || '').trim()) {
+                alert('Por favor escribe el nombre de la organización.');
+                return;
+            }
+        }
+        if (this.currentStep < this.totalSteps) {
+            this.showStep(this.currentStep + 1);
+        }
     }
 
     prevStep() {
-        this.showStep(1);
+        if (this.currentStep > 1) {
+            this.showStep(this.currentStep - 1);
+        }
     }
 
     collectFormData() {
+        const plan = document.getElementById('plan_organizacion');
         const nombre = document.getElementById('nombre_organizacion');
         const url = document.getElementById('url_web');
+        this.formData.plan_organizacion = (plan?.value || '').trim();
         this.formData.nombre_organizacion = (nombre?.value || '').trim();
         this.formData.url_web = (url?.value || '').trim();
     }
 
     handleSubmit() {
         this.collectFormData();
+        if (!this.formData.plan_organizacion) {
+            alert('Por favor selecciona un plan.');
+            return;
+        }
         if (!this.formData.nombre_organizacion) {
             alert('Por favor escribe el nombre de la organización.');
             return;
