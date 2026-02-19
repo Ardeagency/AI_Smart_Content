@@ -3,8 +3,8 @@
  * Maneja el dashboard con información de perfil, productos y campañas
  * 
  * Rutas soportadas:
- * - /org/:orgId/living - Con contexto de organización
- * - /living - Legacy (usa organización guardada)
+ * - /org/:orgId/historial - Con contexto de organización
+ * - /historial - Legacy (usa organización guardada)
  */
 class LivingView extends BaseView {
   constructor() {

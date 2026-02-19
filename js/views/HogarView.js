@@ -498,7 +498,7 @@ class HogarView extends BaseView {
     
     // Navegar a la ruta de organización
     if (window.router) {
-      window.router.navigate(`/org/${orgId}/living`);
+      window.router.navigate(`/org/${orgId}/historial`);
     }
   }
 

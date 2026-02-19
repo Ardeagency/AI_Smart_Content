@@ -420,14 +420,14 @@ class ProductsView extends BaseView {
    */
   setupRouterLinks() {
     const basePath = (this.routeParams && this.routeParams.orgId) ? `/org/${this.routeParams.orgId}` : '';
-    const livingLinks = this.querySelectorAll('a[href*="living"]');
+    const historialLinks = this.querySelectorAll('a[href*="historial"], a[href*="living"]');
     const studioLinks = this.querySelectorAll('a[href*="studio"]');
 
-    livingLinks.forEach(link => {
+    historialLinks.forEach(link => {
       this.addEventListener(link, 'click', (e) => {
         e.preventDefault();
         if (window.router) {
-          window.router.navigate(basePath ? `${basePath}/living` : '/living');
+          window.router.navigate(basePath ? `${basePath}/historial` : '/historial');
         }
       });
     });

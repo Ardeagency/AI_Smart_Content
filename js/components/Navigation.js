@@ -1,10 +1,10 @@
 /**
  * Sidebar usuario consumidor — Schema final (Zona 1: navegación workspace, Zona 2: footer organizacional).
- * Estructura: main[] (Actividad, Estudio, Catálogo, Identidad) + footer[] (Configuración, Planes, Créditos, Salir).
+ * Estructura: main[] (Historial, Estudio, Catálogo, Identidad) + footer[] (Configuración, Planes, Créditos, Salir).
  */
 const SIDEBAR_USER_CONFIG = {
   main: [
-    { type: 'page', id: 'activity', label: 'Actividad', icon: 'fa-chart-line', route: 'living' },
+    { type: 'page', id: 'activity', label: 'Historial', icon: 'fa-chart-line', route: 'historial' },
     { type: 'page', id: 'studio', label: 'Estudio', icon: 'fa-wand-magic-sparkles', route: 'studio' },
     {
       type: 'container',
@@ -164,7 +164,7 @@ class Navigation {
     
     // Rutas legacy sin /org/ - tratar como usuario pero sin org_id
     // Esto mantiene compatibilidad temporal (/settings ya tratado arriba)
-    if (['/living', '/brands', '/products', '/studio', '/audiences', '/marketing', '/campaigns', '/content', '/organization'].some(r => path.startsWith(r))) {
+    if (['/historial', '/living', '/brands', '/products', '/studio', '/audiences', '/marketing', '/campaigns', '/content', '/organization'].some(r => path.startsWith(r))) {
       return { mode: 'user', showSidebar: true, showHeader: true, orgId: null, brandId: null };
     }
     
@@ -919,7 +919,8 @@ class Navigation {
     const titles = {
       '/hogar': 'Hogar',
       '/home': 'Hogar',
-      '/living': 'Actividad',
+      '/historial': 'Historial',
+      '/living': 'Historial',
       '/brand': 'Identidad',
       '/brands': 'Identidad',
       '/products': 'Identidad',
@@ -1243,7 +1244,7 @@ class Navigation {
           const orgId = option.dataset.orgId;
           if (orgId && orgId !== this.currentOrgId) {
             document.getElementById('navOrgDropdown')?.classList.remove('active');
-            window.router?.navigate(`/org/${orgId}/living`);
+            window.router?.navigate(`/org/${orgId}/historial`);
           }
         });
       });

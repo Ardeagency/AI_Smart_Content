@@ -159,7 +159,12 @@ class App {
     // ========================================
 
     if (viewsAvailable.LivingView) {
-      // Living - Dashboard de organización
+      // Historial - Dashboard de organización
+      this.router.register('/org/:orgId/historial', window.LivingView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+      // Compatibilidad: ruta antigua "living" sigue funcionando
       this.router.register('/org/:orgId/living', window.LivingView, {
         requiresAuth: true,
         redirectIfAuth: false
@@ -286,6 +291,11 @@ class App {
     // ========================================
 
     if (viewsAvailable.LivingView) {
+      this.router.register('/historial', window.LivingView, {
+        requiresAuth: true,
+        redirectIfAuth: false
+      });
+      // Compatibilidad: rutas antiguas "living" siguen funcionando
       this.router.register('/living', window.LivingView, {
         requiresAuth: true,
         redirectIfAuth: false
