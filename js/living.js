@@ -403,7 +403,7 @@ class LivingManager {
 
             let query = this.supabase
                 .from('flow_runs')
-                .select('*')
+                .select('*, content_flows(name)')
                 .order('created_at', { ascending: false })
                 .limit(100);
 
@@ -414,14 +414,16 @@ class LivingManager {
                 query = query.eq('user_id', this.userId);
             }
 
-            const { data, error } = await query;
+            let { data, error } = await query;
 
             if (error) {
-                // Si es un error 400, loguear pero no lanzar error
-                if (error.status === 400 || error.code === '400' || error.code === 'PGRST301') {
-                    console.warn('⚠️ Error 400 en loadFlowRuns:', error.message);
-                    console.warn('⚠️ Parámetros:', { brandId: this.brandId, userId: this.userId });
-                    this.flowRuns = [];
+                const isBadRequest = error.status === 400 || error.code === '400' || error.code === 'PGRST301' || error.code === 'PGRST116';
+                if (isBadRequest) {
+                    query = this.supabase.from('flow_runs').select('*').order('created_at', { ascending: false }).limit(100);
+                    if (hasValidBrandId) query = query.eq('brand_id', this.brandId);
+                    else query = query.eq('user_id', this.userId);
+                    const res = await query;
+                    this.flowRuns = (res.error) ? [] : (res.data || []);
                     return;
                 }
                 throw error;
@@ -1107,9 +1109,19 @@ class LivingManager {
         this.setupHistoryCardListeners(container);
     }
     
+    getFlowName(run) {
+        if (!run) return 'Producción';
+        const flow = run.content_flows;
+        if (flow && typeof flow === 'object' && flow.name) return flow.name;
+        if (run.flow_name) return run.flow_name;
+        return 'Producción';
+    }
+
     renderVideoCard(thumbnailUrl, run, output, prompt, index) {
         const finalUrl = thumbnailUrl && thumbnailUrl.startsWith('http') ? thumbnailUrl : null;
         const productionId = run?.id || output?.id;
+        const flowName = this.getFlowName(run);
+        const promptSafe = (prompt || '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         const cardData = JSON.stringify({
             imageUrl: finalUrl,
             prompt: prompt || '',
@@ -1124,12 +1136,15 @@ class LivingManager {
                         <i class="fas fa-video" style="font-size: 2rem; color: var(--living-text-muted);"></i>
                     </div>`
                 }
-                <i class="fas fa-video history-video-card-video-icon"></i>
-                <button class="history-video-card-download" title="Descargar" data-image-url="${this.escapeHtml(finalUrl || '')}">
-                    <i class="fas fa-download"></i>
-                </button>
-                <div class="history-video-card-duration">--:--</div>
-                <div class="history-video-card-overlay"></div>
+                <div class="history-card-actions">
+                    <button class="history-card-download" title="Descargar" data-image-url="${this.escapeHtml(finalUrl || '')}">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button class="history-card-copy-prompt" title="Copiar prompt" data-prompt="${this.escapeHtml(promptSafe)}">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <div class="history-card-flow-name">${this.escapeHtml(flowName)}</div>
             </div>
         `;
     }
@@ -1137,6 +1152,8 @@ class LivingManager {
     renderHistoryImageCard(imageUrl, run, output, prompt, index) {
         const finalUrl = imageUrl && imageUrl.startsWith('http') ? imageUrl : null;
         const productionId = run?.id || output?.id;
+        const flowName = this.getFlowName(run);
+        const promptSafe = (prompt || '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         const cardData = JSON.stringify({
             imageUrl: finalUrl,
             prompt: prompt || '',
@@ -1152,14 +1169,15 @@ class LivingManager {
                             <i class="fas fa-image" style="font-size: 2rem;"></i>
                         </div>`
                     }
-                    <div class="history-image-card-overlay">
-                        <button class="history-image-card-action" title="Descargar" data-image-url="${this.escapeHtml(finalUrl || '')}">
+                    <div class="history-card-actions">
+                        <button class="history-card-download" title="Descargar" data-image-url="${this.escapeHtml(finalUrl || '')}">
                             <i class="fas fa-download"></i>
                         </button>
-                        <button class="history-image-card-action" title="Ver detalles">
-                            <i class="fas fa-eye"></i>
+                        <button class="history-card-copy-prompt" title="Copiar prompt" data-prompt="${this.escapeHtml(promptSafe)}">
+                            <i class="fas fa-copy"></i>
                         </button>
                     </div>
+                    <div class="history-card-flow-name">${this.escapeHtml(flowName)}</div>
                 </div>
             </div>
         `;
@@ -1217,23 +1235,29 @@ class LivingManager {
             : '.history-video-card, .history-image-card, .history-text-card';
         const cards = container.querySelectorAll(selector);
         cards.forEach(card => {
-            // Prevenir clicks en botones de acción
-            const actions = card.querySelectorAll('.history-video-card-download, .history-image-card-action');
-            actions.forEach(action => {
-                action.addEventListener('click', (e) => {
+            const downloadBtns = card.querySelectorAll('.history-card-download');
+            downloadBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    if (action.dataset.imageUrl) {
-                        this.downloadImage(action.dataset.imageUrl);
+                    if (btn.dataset.imageUrl) this.downloadImage(btn.dataset.imageUrl);
+                });
+            });
+            const copyBtns = card.querySelectorAll('.history-card-copy-prompt');
+            copyBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const raw = (btn.dataset.prompt || '').replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+                    if (raw && navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(raw).then(() => {
+                            if (typeof window.showToast === 'function') window.showToast('Prompt copiado');
+                            else btn.classList.add('history-copy-ok');
+                        }).catch(() => {});
                     }
                 });
             });
             
-            // Click en la card abre vista de visualización editorial
             card.addEventListener('click', (e) => {
-                // No abrir si se clickeó un botón de acción
-                if (e.target.closest('.history-video-card-download, .history-image-card-action')) {
-                    return;
-                }
+                if (e.target.closest('.history-card-download, .history-card-copy-prompt')) return;
                 
                 const cardData = card.dataset.cardInfo;
                 if (cardData) {
