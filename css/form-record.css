@@ -53,10 +53,10 @@
     box-sizing: border-box;
 }
 
-/* Contenedor central: ancho fijo máximo, centrado, sin estirar */
+/* Contenedor central: ancho fijo (como lexaboard), no 100%. Centrado. */
 .form-org-card {
-    width: 100%;
-    max-width: 380px;
+    width: 360px;
+    max-width: calc(100vw - 2rem);
     margin: 0 auto;
     flex-shrink: 0;
     box-sizing: border-box;
@@ -67,7 +67,6 @@
     flex-direction: column;
     gap: 1.25rem;
     width: 100%;
-    max-width: 100%;
     box-sizing: border-box;
 }
 
