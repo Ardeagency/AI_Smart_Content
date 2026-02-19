@@ -452,7 +452,8 @@ class AuthService {
       return { success: false, error: 'Supabase no está disponible' };
     }
 
-    const redirectTo = `${window.location.origin}/cambiar-contrasena`;
+    // URL exacta que debe estar en Supabase Redirect URLs (sin slash final, sin params)
+    const redirectTo = 'https://aismartcontent.io/cambiar-contrasena';
 
     try {
       const { error } = await this.supabase.auth.resetPasswordForEmail(email, {
