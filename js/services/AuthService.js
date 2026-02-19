@@ -452,12 +452,9 @@ class AuthService {
       return { success: false, error: 'Supabase no está disponible' };
     }
 
-    // URL exacta que debe estar en Supabase Redirect URLs (sin slash final, sin params)
-    const redirectTo = 'https://aismartcontent.io/cambiar-contrasena';
-
     try {
       const { error } = await this.supabase.auth.resetPasswordForEmail(email, {
-        redirectTo
+        redirectTo: 'https://aismartcontent.io/cambiar-contrasena'
       });
 
       if (error) {
@@ -466,7 +463,7 @@ class AuthService {
         if (isServerError) {
           return {
             success: false,
-            error: 'Error del servidor. Añade esta URL en Supabase (Authentication → URL Configuration → Redirect URLs): ' + redirectTo
+            error: 'Error del servidor. Añade esta URL en Supabase (Authentication → URL Configuration → Redirect URLs): https://aismartcontent.io/cambiar-contrasena'
           };
         }
         return { success: false, error: msg };
@@ -479,7 +476,7 @@ class AuthService {
       if (is500) {
         return {
           success: false,
-          error: 'Error del servidor. Añade esta URL en Supabase (Authentication → URL Configuration → Redirect URLs): ' + redirectTo
+          error: 'Error del servidor. Añade esta URL en Supabase (Authentication → URL Configuration → Redirect URLs): https://aismartcontent.io/cambiar-contrasena'
         };
       }
       return { success: false, error: err?.message || 'Error al enviar el correo. Intenta de nuevo.' };
