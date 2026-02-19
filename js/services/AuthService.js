@@ -452,19 +452,36 @@ class AuthService {
       return { success: false, error: 'Supabase no está disponible' };
     }
 
+    const redirectTo = `${window.location.origin}/cambiar-contrasena`;
+
     try {
       const { error } = await this.supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/cambiar-contrasena`
+        redirectTo
       });
 
       if (error) {
-        return { success: false, error: error.message };
+        const msg = error.message || '';
+        const isServerError = (error.status === 500) || /500|internal server error/i.test(msg);
+        if (isServerError) {
+          return {
+            success: false,
+            error: 'Error del servidor. Añade esta URL en Supabase (Authentication → URL Configuration → Redirect URLs): ' + redirectTo
+          };
+        }
+        return { success: false, error: msg };
       }
 
       return { success: true };
-    } catch (error) {
-      console.error('Error en reset password:', error);
-      return { success: false, error: 'Error al enviar el email' };
+    } catch (err) {
+      console.error('Error en reset password:', err);
+      const is500 = (err?.status === 500) || (err?.message && String(err.message).includes('500'));
+      if (is500) {
+        return {
+          success: false,
+          error: 'Error del servidor. Añade esta URL en Supabase (Authentication → URL Configuration → Redirect URLs): ' + redirectTo
+        };
+      }
+      return { success: false, error: err?.message || 'Error al enviar el correo. Intenta de nuevo.' };
     }
   }
 }
