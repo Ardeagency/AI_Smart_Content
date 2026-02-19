@@ -1,16 +1,14 @@
 /**
- * AI Smart Content - Form Record Page
- * Estilos para el formulario de registro con diseño moderno
+ * Form Record - Estilos alineados con base.css y el resto de la plataforma.
+ * Solo variables y tokens de base.css. Formulario: nombre organización + URL web.
  */
 
 @import url('base.css');
 
-/* ============================================
-   CONTAINER
-   ============================================ */
+/* Container: mismo fondo y tipografía que la app */
 .form-record-container {
     min-height: 100vh;
-    background: var(--bg-dark);
+    background: var(--bg-primary);
     color: var(--text-primary);
     padding: 0;
     margin: 0;
@@ -20,532 +18,140 @@
     overflow: hidden;
 }
 
-/* ============================================
-   MAIN CONTENT
-   ============================================ */
 .form-main-content {
     flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1.5rem 2rem;
+    padding: var(--spacing-lg) var(--spacing-xl);
     overflow: hidden;
     min-height: 0;
     position: relative;
 }
 
-.form-step {
+.form-record-container .form-step {
     display: none;
     width: 100%;
-    max-width: 900px;
+    max-width: 480px;
     margin: 0 auto;
 }
 
-.form-step.active {
+.form-record-container .form-step.active {
     display: block;
-    animation: fadeIn 0.3s ease;
+    animation: formRecordFadeIn 0.3s ease;
 }
 
-@keyframes fadeIn {
+@keyframes formRecordFadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
-.step-header {
+.form-record-container .step-header {
     text-align: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--spacing-lg);
 }
 
-.step-subtitle {
-    display: none;
-}
-
-.step-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.4rem 0.8rem;
-    background: var(--bg-hover);
-    border: 1px solid var(--border-primary);
-    border-radius: 6px;
-    color: var(--primary-color);
-    font-size: 0.75rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.step-title {
-    font-size: 1.75rem;
+.form-record-container .step-title {
+    font-size: 1.5rem;
     font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: 0.5rem;
+    margin: 0;
 }
 
-.step-subtitle {
-    font-size: 0.95rem;
-    color: var(--text-secondary);
-    line-height: 1.6;
+/* Form groups e inputs: mismos tokens que base y otras vistas */
+.form-record-container .form-group {
+    margin-bottom: var(--spacing-md);
 }
 
-/* ============================================
-   FORM ELEMENTS
-   ============================================ */
-.form-group {
-    margin-bottom: 1rem;
-}
-
-.form-group label {
+.form-record-container .form-group label {
     display: block;
-    margin-bottom: 0.4rem;
+    margin-bottom: var(--spacing-sm);
     color: var(--text-primary);
     font-weight: 500;
-    font-size: 0.85rem;
-}
-
-.form-group label .required {
-    color: var(--error-color);
-    margin-left: 0.25rem;
-}
-
-/* Estilos de inputs heredan de base.css - sin duplicación */
-/* Eliminadas transiciones - usar reglas base unificadas */
-
-/* Override específico solo para background oscuro en form-record */
-.form-input,
-.form-textarea,
-.form-select {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    transition: none !important;
-    -webkit-transition: none !important;
-    -moz-transition: none !important;
-    -o-transition: none !important;
-    animation: none !important;
-    transform: none !important;
-    scale: 1 !important;
-}
-
-.form-input:focus,
-.form-textarea:focus,
-.form-select:focus {
-    outline: none;
-}
-
-.form-textarea {
-    resize: vertical;
-    min-height: 70px;
-}
-
-.form-select:not([multiple]) {
-    cursor: pointer;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23D2FE3F' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-    background-position: right 12px center;
-    background-repeat: no-repeat;
-    background-size: 16px;
-    padding-right: 40px;
-}
-
-/* ============================================
-   CUSTOM MULTISELECT
-   ============================================ */
-.custom-multiselect {
-    position: relative;
-    width: 100%;
-}
-
-.multiselect-trigger {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    padding-right: 40px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    color: var(--text-primary);
-    font-size: 0.95rem;
-    height: 44px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    transition: all 0.3s ease;
-    box-sizing: border-box;
-}
-
-.multiselect-trigger:hover {
-    border-color: var(--border-light);
-    background: var(--bg-hover);
-}
-
-.multiselect-trigger:focus,
-.multiselect-trigger.open {
-    outline: none;
-    border-color: var(--primary-color);
-    background: var(--bg-card);
-    box-shadow: 0 0 0 3px var(--border-color);
-}
-
-.multiselect-value {
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: var(--text-secondary);
-}
-
-.multiselect-value.has-selection {
-    color: var(--text-primary);
-}
-
-.multiselect-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    flex: 1;
-    min-width: 0;
-}
-
-.multiselect-tag {
-    background: var(--bg-hover);
-    color: var(--primary-color);
-    padding: 0.2rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-}
-
-.multiselect-tag-remove {
-    cursor: pointer;
-    font-weight: bold;
-    opacity: 0.7;
-}
-
-.multiselect-tag-remove:hover {
-    opacity: 1;
-}
-
-.multiselect-arrow {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    transition: transform 0.2s ease;
-    pointer-events: none;
-    color: var(--text-muted);
-}
-
-.multiselect-trigger.open .multiselect-arrow {
-    transform: translateY(-50%) rotate(180deg);
-}
-
-.multiselect-dropdown {
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
-    right: 0;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    max-height: 300px;
-    overflow-y: auto;
-    z-index: 1000;
-    display: none;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-}
-
-.multiselect-dropdown.open {
-    display: block;
-}
-
-.multiselect-option {
-    padding: 0.75rem 1rem;
-    cursor: pointer;
-    transition: background 0.15s ease;
-    color: var(--text-primary);
     font-size: 0.9rem;
 }
 
-.multiselect-option:hover {
-    background: rgba(255, 255, 255, 0.05);
+.form-record-container .form-group label .required {
+    color: var(--error-color);
+    margin-left: 0.15rem;
 }
 
-.multiselect-option.selected {
-    background: var(--bg-hover);
-    color: var(--primary-color);
-    font-weight: 500;
-}
-
-.multiselect-option.selected::before {
-    content: '✓ ';
-    margin-right: 0.5rem;
-}
-
-.multiselect-optgroup {
-    padding: 0.6rem 1rem;
-    font-weight: 600;
-    font-size: 0.75rem;
-    color: var(--primary-color);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    background: var(--bg-hover);
-    border-bottom: 1px solid var(--border-color);
-}
-
-/* ============================================
-   FORM ROWS & GRIDS
-   ============================================ */
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-}
-
-.options-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 0.75rem;
-    margin-top: 0.5rem;
-}
-
-.multi-select-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 0.75rem;
-    margin-top: 0.5rem;
-}
-
-/* ============================================
-   UPLOAD ZONES
-   ============================================ */
-.upload-zone {
-    border: 2px dashed var(--border-color);
-    border-radius: 8px;
-    padding: 1rem;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
+/* Inputs de texto y URL: borde visible, contraste claro con el fondo */
+.form-record-container .form-group input.form-input,
+.form-record-container .form-group input[type="text"],
+.form-record-container .form-group input[type="url"] {
+    width: 100%;
+    padding: 0.7rem 0.9rem;
     background: var(--bg-card);
-    min-height: auto;
-}
-
-.upload-zone:hover {
-    border-color: var(--primary-color);
-    background: var(--bg-hover);
-}
-
-.upload-zone i {
-    font-size: 1.25rem;
-    color: var(--primary-color);
-    margin-bottom: 0.5rem;
-}
-
-.upload-zone p {
-    color: var(--text-secondary);
-    margin: 0.25rem 0;
-    font-size: 0.85rem;
-}
-
-.upload-zone.small {
-    padding: 0.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-}
-
-.upload-zone.small i {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    color: var(--text-primary);
     font-size: 1rem;
-    margin-bottom: 0;
+    font-family: inherit;
+    line-height: 1.4;
+    transition: var(--transition-fast);
+    -webkit-appearance: none;
+    appearance: none;
+    box-sizing: border-box;
 }
 
-.upload-zone.small p {
-    margin: 0;
-    font-size: 0.8rem;
+.form-record-container .form-group input.form-input:focus,
+.form-record-container .form-group input[type="text"]:focus,
+.form-record-container .form-group input[type="url"]:focus {
+    outline: none;
+    border-color: var(--border-light);
+    background: var(--bg-card);
 }
 
-.upload-preview {
-    margin-top: 0.75rem;
-    display: none;
-}
-
-.upload-preview img {
-    max-width: 150px;
-    max-height: 150px;
-    border-radius: 8px;
-    margin-bottom: 0.5rem;
-}
-
-/* ============================================
-   CHAR COUNTER
-   ============================================ */
-.char-counter {
-    text-align: right;
-    margin-top: 0.25rem;
-    font-size: 0.75rem;
+.form-record-container .form-group input.form-input::placeholder,
+.form-record-container .form-group input[type="text"]::placeholder,
+.form-record-container .form-group input[type="url"]::placeholder {
     color: var(--text-muted);
 }
 
-/* Botón de envío dentro del formulario */
-.form-actions-inline {
-    margin-top: 1.5rem;
+/* Botón: coherente con la plataforma (hover sin transform exagerado) */
+.form-record-container .form-actions-inline {
+    margin-top: var(--spacing-lg);
 }
 
-.form-actions-inline .btn {
+.form-record-container .form-actions-inline .btn {
+    padding: 0.65rem 1.5rem;
+    border-radius: var(--border-radius-sm);
+    font-weight: 600;
+    font-size: 0.9375rem;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    border: 1px solid var(--border-color);
+    background: var(--bg-interactive);
+    color: var(--text-primary);
+    font-family: inherit;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     min-width: 140px;
 }
 
-/* ============================================
-   FORM ACTIONS (navegación por pasos - legacy)
-   ============================================ */
-.form-actions {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: transparent;
-    padding: 0.75rem 2rem;
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    z-index: 100;
+.form-record-container .form-actions-inline .btn:hover:not(:disabled) {
+    background: var(--bg-hover);
+    border-color: var(--border-light);
 }
 
-.form-actions .btn-secondary.hidden {
-    display: none;
-}
-
-.btn {
-    padding: 0.875rem 2.5rem;
-    border-radius: 4px;
-    font-weight: 600;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-family: 'Inter', sans-serif;
-    text-decoration: none;
-}
-
-.btn-primary {
-    background: var(--text-primary);
-    border: 1px solid var(--text-primary);
-    color: var(--bg-black);
-}
-
-.btn-primary:hover:not(:disabled) {
-    background: var(--primary-color);
-    border-color: var(--primary-color);
-    color: var(--bg-black);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-card);
-}
-
-.btn-secondary {
-    background: transparent;
-    color: var(--text-primary);
-    border: 1px solid var(--text-primary);
-}
-
-.btn-secondary:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: var(--primary-color);
-    color: var(--primary-color);
-}
-
-.btn:disabled {
-    opacity: 0.5;
+.form-record-container .form-actions-inline .btn:disabled {
+    opacity: 0.6;
     cursor: not-allowed;
-    transform: none;
-}
-
-/* ============================================
-   SUCCESS SCREEN
-   ============================================ */
-.success-screen {
-    text-align: center;
-    padding: 2rem;
-}
-
-.success-icon {
-    font-size: 3rem;
-    color: var(--success-color);
-    margin-bottom: 1.5rem;
-}
-
-.success-title {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-bottom: 1rem;
-}
-
-.success-subtitle {
-    font-size: 1rem;
-    color: var(--text-secondary);
-    margin-bottom: 2rem;
-}
-
-/* ============================================
-   RESPONSIVE
-   ============================================ */
-@media (max-width: 968px) {
-    .form-main-content {
-        padding: 1.5rem;
-        overflow-y: auto;
-    }
-
-    .form-step {
-        max-width: 100%;
-    }
-
-    .form-actions {
-        position: relative;
-        padding: 1rem;
-    }
 }
 
 @media (max-width: 768px) {
-    .form-header {
-        padding: 1rem;
-    }
-
-    .form-logo span {
-        font-size: 1.25rem;
-    }
-
     .form-main-content {
-        padding: 1rem;
+        padding: var(--spacing-md);
         align-items: flex-start;
     }
 
-    .step-title {
-        font-size: 1.5rem;
+    .form-record-container .step-title {
+        font-size: 1.25rem;
     }
 
-    .form-row {
-        grid-template-columns: 1fr;
-    }
-
-    .options-grid,
-    .multi-select-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .form-actions {
-        flex-direction: column;
-    }
-
-    .btn {
+    .form-record-container .form-actions-inline .btn {
         width: 100%;
-        justify-content: center;
     }
 }
-

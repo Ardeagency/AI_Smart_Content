@@ -114,6 +114,10 @@ class FormRecord {
             alert('Por favor escribe el nombre de la organización.');
             return;
         }
+        if (!this.formData.url_web) {
+            alert('Por favor escribe la URL de la web oficial.');
+            return;
+        }
 
         const btn = document.getElementById('btnSubmit');
         if (btn) {
