@@ -1575,19 +1575,55 @@ class LivingManager {
         });
     }
     
-    downloadImage(imageUrl) {
+    /**
+     * Obtiene la extensión para el nombre de descarga según la URL o tipo de contenido.
+     * @param {string} url - URL del recurso
+     * @returns {string} - Extensión con punto (ej: .jpg, .png, .mp4)
+     */
+    getDownloadExtension(url) {
+        if (!url || typeof url !== 'string') return '.jpg';
+        const path = url.split('?')[0].toLowerCase();
+        const match = path.match(/\.(jpg|jpeg|png|gif|webp|mp4|mov|webm|avi|mkv|pdf|svg|heic)(\?|$)/i);
+        if (match) return '.' + match[1].toLowerCase().replace('jpeg', 'jpg');
+        if (path.includes('video') || path.includes('reel') || path.includes('clip')) return '.mp4';
+        return '.jpg';
+    }
+
+    /**
+     * Descarga el archivo localmente (imagen o video). No abre en pestaña; fuerza descarga.
+     * Soporta jpg, png, webp, gif, mp4, mov, webm, etc.
+     */
+    async downloadImage(imageUrl) {
+        if (!imageUrl || !imageUrl.startsWith('http')) return;
+        const ext = this.getDownloadExtension(imageUrl);
+        const filename = `production-${Date.now()}${ext}`;
         try {
+            const response = await fetch(imageUrl, { mode: 'cors' });
+            if (!response.ok) throw new Error(response.statusText);
+            const blob = await response.blob();
+            const blobUrl = URL.createObjectURL(blob);
             const link = document.createElement('a');
-            link.href = imageUrl;
-            link.download = `production-${Date.now()}.jpg`;
-            link.target = '_blank';
+            link.href = blobUrl;
+            link.download = filename;
+            link.style.display = 'none';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            URL.revokeObjectURL(blobUrl);
         } catch (error) {
-            console.error('Error descargando imagen:', error);
-            // Fallback: abrir en nueva pestaña
-            window.open(imageUrl, '_blank');
+            console.warn('Descarga por fetch fallida, intentando enlace directo:', error?.message);
+            try {
+                const link = document.createElement('a');
+                link.href = imageUrl;
+                link.download = filename;
+                link.rel = 'noopener noreferrer';
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (e) {
+                console.error('Error descargando:', e);
+            }
         }
     }
     
