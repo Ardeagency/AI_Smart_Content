@@ -19,18 +19,9 @@
                         <img id="livingViewerImage" src="" alt="" />
                     </div>
                 </div>
-                <!-- Columna derecha: estructura referencia (header | scroll | footer) -->
+                <!-- Columna derecha: scroll + cerrar -->
                 <div class="living-viewer-right">
                     <header class="living-viewer-right-header">
-                        <div class="living-viewer-author">
-                            <figure class="living-viewer-avatar-wrap">
-                                <div class="living-viewer-avatar" id="livingViewerAvatar"></div>
-                            </figure>
-                            <div class="living-viewer-author-info">
-                                <h2 class="living-viewer-author-name" id="livingViewerAuthorName">Producción</h2>
-                                <p class="living-viewer-author-role">Author</p>
-                            </div>
-                        </div>
                         <button type="button" class="living-viewer-close" id="livingViewerClose" aria-label="Cerrar">
                             <i class="fas fa-times"></i>
                         </button>
@@ -50,7 +41,7 @@
                                     </div>
                                     <div class="living-viewer-section-body">
                                         <div class="living-viewer-prompt-text" id="livingViewerPrompt"></div>
-                                        <button type="button" class="living-viewer-see-all" data-section="prompt">See all <i class="fas fa-chevron-down"></i></button>
+                                        <button type="button" class="living-viewer-see-all" data-section="prompt" data-expanded="false"><span class="living-viewer-see-all-text">Ver todo</span> <i class="fas fa-chevron-down living-viewer-see-all-icon"></i></button>
                                     </div>
                                 </section>
                                 <section class="living-viewer-section">
@@ -61,7 +52,7 @@
                                         </div>
                                     </div>
                                     <div class="living-viewer-section-body living-viewer-info-rows" id="livingViewerMetadata"></div>
-                                    <button type="button" class="living-viewer-see-all living-viewer-show-less" data-section="info">Show less <i class="fas fa-chevron-up"></i></button>
+                                    <button type="button" class="living-viewer-see-all living-viewer-show-less" data-section="info" data-expanded="false"><span class="living-viewer-see-all-text">Ver todo</span> <i class="fas fa-chevron-down living-viewer-see-all-icon"></i></button>
                                 </section>
                             </div>
                         </div>

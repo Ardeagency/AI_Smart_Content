@@ -1632,8 +1632,6 @@ class LivingManager {
         const image = document.getElementById('livingViewerImage');
         const promptEl = document.getElementById('livingViewerPrompt');
         const metadataEl = document.getElementById('livingViewerMetadata');
-        const authorNameEl = document.getElementById('livingViewerAuthorName');
-        const copyPromptBtn = document.getElementById('livingViewerCopyPrompt');
         const closeBtn = document.getElementById('livingViewerClose');
         const backdrop = document.getElementById('livingViewerBackdrop');
         
@@ -1660,8 +1658,6 @@ class LivingManager {
         
         const promptText = data.prompt || 'Sin prompt disponible';
         promptEl.textContent = promptText;
-        
-        if (authorNameEl) authorNameEl.textContent = this.getFlowName(run);
         
         // runs_outputs: model, output_type, metadata, technical_params, created_at; opcionales: generated_copy, creative_rationale, generated_hashtags, text_content
         const modelName = (output.metadata && typeof output.metadata === 'object' && output.metadata.model)
@@ -1719,6 +1715,8 @@ class LivingManager {
             });
         }
         
+        this.setupViewerSeeAllButtons(modal);
+        
         const handleEsc = (e) => {
             if (e.key === 'Escape') {
                 closeModal();
@@ -1726,6 +1724,35 @@ class LivingManager {
             }
         };
         document.addEventListener('keydown', handleEsc);
+    }
+    
+    setupViewerSeeAllButtons(modal) {
+        if (!modal) return;
+        const buttons = modal.querySelectorAll('.living-viewer-see-all');
+        buttons.forEach(btn => {
+            const section = btn.getAttribute('data-section');
+            const textEl = btn.querySelector('.living-viewer-see-all-text');
+            const iconEl = btn.querySelector('.living-viewer-see-all-icon');
+            let expanded = btn.getAttribute('data-expanded') === 'true';
+            const content = section === 'prompt'
+                ? modal.querySelector('.living-viewer-prompt-text')
+                : modal.querySelector('.living-viewer-info-rows');
+            const updateLabel = () => {
+                if (textEl) textEl.textContent = expanded ? 'Ver menos' : 'Ver todo';
+                if (iconEl) {
+                    iconEl.classList.remove('fa-chevron-down', 'fa-chevron-up');
+                    iconEl.classList.add(expanded ? 'fa-chevron-up' : 'fa-chevron-down');
+                }
+                btn.setAttribute('data-expanded', expanded ? 'true' : 'false');
+                if (content) content.classList.toggle('expanded', expanded);
+            };
+            updateLabel();
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                expanded = !expanded;
+                updateLabel();
+            });
+        });
     }
 
     setupCategoryFilters() {
