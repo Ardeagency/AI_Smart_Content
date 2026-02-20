@@ -420,23 +420,14 @@ class DevBuilderView extends DevBaseView {
         <div class="builder-footer-message" id="builderFooterMessage"></div>
         <span class="builder-status-badge draft" id="flowStatusBadge">Borrador</span>
         <div class="builder-footer-actions" id="builderFooterActions">
-          <button type="button" class="btn-builder-footer btn-back" id="builderBackBtn">
-            <i class="ph ph-arrow-left"></i> Mis Flujos
-          </button>
           <button type="button" class="btn-builder-footer btn-save-draft" id="btnSaveDraft" style="display: none;">
             <i class="ph ph-floppy-disk"></i> Guardar flujo
           </button>
           <button type="button" class="btn-builder-footer btn-update-flow" id="btnUpdateFlow" style="display: none;">
             <i class="ph ph-pencil-simple"></i> Actualizar flujo
           </button>
-          <button type="button" class="btn-builder-footer" id="previewFlowBtn">
-            <i class="ph ph-eye"></i> Preview
-          </button>
           <button type="button" class="btn-builder-footer" id="testFlowBtn">
             <i class="ph ph-play"></i> Probar
-          </button>
-          <button type="button" class="btn-builder-footer" id="viewJsonSchemaBtn">
-            <i class="ph ph-brackets-curly"></i> Ver JSON Schema
           </button>
           <button type="button" class="btn-builder-footer btn-primary-footer" id="btnPublish" style="display: none;">
             <i class="ph ph-rocket-launch"></i> Publicar
@@ -453,39 +444,8 @@ class DevBuilderView extends DevBaseView {
           <button type="button" class="btn-builder-footer btn-unpublish" id="btnUnpublish" style="display: none;">
             <i class="ph ph-arrow-counter-clockwise"></i> Despublicar
           </button>
-          <button type="button" class="btn-builder-footer btn-test-run" id="btnTestRun" style="display: none;">
-            <i class="ph ph-play"></i> Probar (Test Run)
-          </button>
-          <div class="builder-footer-more">
-            <button type="button" class="btn-builder-footer btn-icon" id="moreActionsBtn" title="Más acciones">
-              <i class="ph ph-dots-three-vertical"></i>
-            </button>
-            <div class="builder-dropdown builder-dropdown-footer" id="moreActionsDropdown" style="display: none;">
-              <button type="button" class="dropdown-item" id="publishFlowBtn"><i class="ph ph-rocket-launch"></i> Publicar</button>
-              <button type="button" class="dropdown-item" id="duplicateFlowBtn"><i class="ph ph-copy"></i> Duplicar</button>
-              <button type="button" class="dropdown-item" id="exportFlowBtn"><i class="ph ph-export"></i> Exportar JSON</button>
-              <hr>
-              <button type="button" class="dropdown-item danger" id="deleteFlowBtn"><i class="ph ph-trash"></i> Eliminar</button>
-            </div>
-          </div>
         </div>
       </footer>
-
-      <!-- Modal: Preview -->
-      <div class="modal builder-modal" id="previewModal" style="display: none;">
-        <div class="modal-overlay"></div>
-        <div class="modal-content modal-lg">
-          <div class="modal-header">
-            <h3><i class="ph ph-eye"></i> Preview del Flujo</h3>
-            <button class="modal-close" id="closePreviewModal">&times;</button>
-          </div>
-          <div class="modal-body">
-            <div class="preview-container" id="previewContainer">
-              <!-- Preview del formulario -->
-            </div>
-          </div>
-        </div>
-      </div>
 
       <!-- Modal: Test -->
       <div class="modal builder-modal" id="testModal" style="display: none;">
@@ -536,26 +496,6 @@ class DevBuilderView extends DevBaseView {
         </div>
       </div>
 
-      <!-- Modal: Ver JSON Schema -->
-      <div class="modal builder-modal" id="jsonSchemaModal" style="display: none;">
-        <div class="modal-overlay"></div>
-        <div class="modal-content modal-lg">
-          <div class="modal-header">
-            <h3><i class="ph ph-brackets-curly"></i> JSON Schema (input para n8n)</h3>
-            <button class="modal-close" id="closeJsonSchemaModal">&times;</button>
-          </div>
-          <div class="modal-body builder-json-modal-body">
-            <pre class="builder-json-schema-pre" id="jsonSchemaModalPre"><code id="jsonSchemaModalCode">{ "fields": [] }</code></pre>
-            <p class="builder-json-hint">Estructura que recibirá tu webhook. Asegúrate de que las <code>key</code> de cada campo coincidan con lo que espera n8n.</p>
-          </div>
-          <div class="modal-footer">
-            <button class="btn-builder-secondary" id="copyJsonSchemaModalBtn">
-              <i class="ph ph-copy"></i> Copiar
-            </button>
-            <button class="btn-builder-primary" id="closeJsonSchemaModalBtn">Cerrar</button>
-          </div>
-        </div>
-      </div>
     `;
   }
 
@@ -2831,7 +2771,6 @@ class DevBuilderView extends DevBaseView {
     const tokenCostInput = this.querySelector('#flowTokenCost');
     const hiddenFromCatalog = this.querySelector('#uiHiddenFromCatalog');
     const testFlowBtn = this.querySelector('#testFlowBtn');
-    const btnTestRun = this.querySelector('#btnTestRun');
 
     if (isAutomated) {
       this.flowData.token_cost = 0;
@@ -2856,7 +2795,6 @@ class DevBuilderView extends DevBaseView {
         hiddenFromCatalog.disabled = true;
       }
       if (testFlowBtn) testFlowBtn.style.display = 'none';
-      if (btnTestRun) btnTestRun.style.display = 'none';
     } else {
       if (main) main.classList.remove('builder-mode-automated');
       if (componentsSidebar) componentsSidebar.classList.remove('builder-sidebar-hidden');
@@ -2876,7 +2814,6 @@ class DevBuilderView extends DevBaseView {
         hiddenFromCatalog.checked = !!this.uiLayoutConfig.hidden_from_catalog;
       }
       if (testFlowBtn) testFlowBtn.style.display = '';
-      if (btnTestRun) btnTestRun.style.display = '';
     }
   }
 
@@ -2921,8 +2858,7 @@ class DevBuilderView extends DevBaseView {
       requestReview: this.querySelector('#btnRequestReview'),
       approvePublish: this.querySelector('#btnApprovePublish'),
       reject: this.querySelector('#btnReject'),
-      unpublish: this.querySelector('#btnUnpublish'),
-      testRun: this.querySelector('#btnTestRun')
+      unpublish: this.querySelector('#btnUnpublish')
     };
 
     const hideAll = () => {
@@ -2940,7 +2876,6 @@ class DevBuilderView extends DevBaseView {
         messageEl.classList.add('has-changes');
       }
       show(buttons.saveDraft);
-      if (!this.isAutomatedFlow) show(buttons.testRun);
       if (isLead) show(buttons.publish);
       else show(buttons.requestReview);
     } else if (status === 'checking') {
@@ -2951,18 +2886,15 @@ class DevBuilderView extends DevBaseView {
       } else {
         messageEl.textContent = 'Esperando aprobación...';
         messageEl.classList.add('waiting');
-        if (!this.isAutomatedFlow) show(buttons.testRun);
       }
     } else if (status === 'published') {
       messageEl.textContent = 'Estás editando un flujo en vivo. Los cambios afectarán a los clientes.';
       messageEl.classList.add('published-warning');
       show(buttons.updateFlow);
-      if (!this.isAutomatedFlow) show(buttons.testRun);
       if (isLead) show(buttons.unpublish);
     } else {
       messageEl.textContent = '';
       show(buttons.saveDraft);
-      if (!this.isAutomatedFlow) show(buttons.testRun);
     }
   }
 
@@ -2989,12 +2921,6 @@ class DevBuilderView extends DevBaseView {
   }
 
   setupEventListeners() {
-    // Back button
-    const backBtn = this.querySelector('#builderBackBtn');
-    if (backBtn) {
-      backBtn.addEventListener('click', () => this.handleBack());
-    }
-    
     // Nombre del flujo (Configuración)
     const nameConfig = this.querySelector('#flowNameConfig');
     if (nameConfig) {
@@ -3022,63 +2948,12 @@ class DevBuilderView extends DevBaseView {
       tab.addEventListener('click', () => this.switchTab(tab.dataset.tab));
     });
     
-    // Preview button (footer)
-    const previewBtn = this.querySelector('#previewFlowBtn');
-    if (previewBtn) {
-      previewBtn.addEventListener('click', () => this.showPreview());
-    }
-    
     // Test button
     const testBtn = this.querySelector('#testFlowBtn');
     if (testBtn) {
       testBtn.addEventListener('click', () => this.showTestModal());
     }
 
-    // Ver JSON Schema
-    const viewJsonSchemaBtn = this.querySelector('#viewJsonSchemaBtn');
-    if (viewJsonSchemaBtn) {
-      viewJsonSchemaBtn.addEventListener('click', () => this.showJsonSchemaModal());
-    }
-    
-    // More actions menu
-    const moreActionsBtn = this.querySelector('#moreActionsBtn');
-    const moreActionsDropdown = this.querySelector('#moreActionsDropdown');
-    if (moreActionsBtn && moreActionsDropdown) {
-      moreActionsBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        moreActionsDropdown.style.display = moreActionsDropdown.style.display === 'none' ? 'block' : 'none';
-      });
-      var closeDropdown = function () {
-        moreActionsDropdown.style.display = 'none';
-      };
-      document.addEventListener('click', closeDropdown);
-      this._documentListeners.push({ element: document, event: 'click', handler: closeDropdown });
-    }
-    
-    // Publish button
-    const publishBtn = this.querySelector('#publishFlowBtn');
-    if (publishBtn) {
-      publishBtn.addEventListener('click', () => this.publishFlow());
-    }
-    
-    // Duplicate button
-    const duplicateBtn = this.querySelector('#duplicateFlowBtn');
-    if (duplicateBtn) {
-      duplicateBtn.addEventListener('click', () => this.duplicateFlow());
-    }
-    
-    // Export button
-    const exportBtn = this.querySelector('#exportFlowBtn');
-    if (exportBtn) {
-      exportBtn.addEventListener('click', () => this.exportFlow());
-    }
-    
-    // Delete button
-    const deleteBtn = this.querySelector('#deleteFlowBtn');
-    if (deleteBtn) {
-      deleteBtn.addEventListener('click', () => this.showDeleteModal());
-    }
-    
     // Settings form listeners
     this.setupSettingsListeners();
     
@@ -3135,7 +3010,6 @@ class DevBuilderView extends DevBaseView {
     const approvePublish = this.querySelector('#btnApprovePublish');
     const reject = this.querySelector('#btnReject');
     const unpublish = this.querySelector('#btnUnpublish');
-    const testRun = this.querySelector('#btnTestRun');
 
     if (saveDraft) saveDraft.addEventListener('click', () => this.saveFlow());
     if (updateFlow) updateFlow.addEventListener('click', () => this.saveFlow());
@@ -3144,7 +3018,6 @@ class DevBuilderView extends DevBaseView {
     if (approvePublish) approvePublish.addEventListener('click', () => this.approveAndPublish());
     if (reject) reject.addEventListener('click', () => this.rejectFlow());
     if (unpublish) unpublish.addEventListener('click', () => this.unpublishFlow());
-    if (testRun) testRun.addEventListener('click', () => this.showTestModal());
   }
 
   switchTab(tabId) {
@@ -3257,18 +3130,6 @@ class DevBuilderView extends DevBaseView {
   }
 
   setupModalListeners() {
-    // Preview modal
-    const closePreview = this.querySelector('#closePreviewModal');
-    const previewModal = this.querySelector('#previewModal');
-    if (closePreview && previewModal) {
-      closePreview.addEventListener('click', () => {
-        previewModal.style.display = 'none';
-      });
-      previewModal.querySelector('.modal-overlay')?.addEventListener('click', () => {
-        previewModal.style.display = 'none';
-      });
-    }
-    
     // Test modal
     const closeTest = this.querySelector('#closeTestModal');
     const closeTestBtn = this.querySelector('#closeTestBtn');
@@ -3319,26 +3180,6 @@ class DevBuilderView extends DevBaseView {
     
     if (confirmDelete) {
       confirmDelete.addEventListener('click', () => this.confirmDelete());
-    }
-
-    // JSON Schema modal
-    const jsonSchemaModal = this.querySelector('#jsonSchemaModal');
-    const closeJsonSchemaModal = this.querySelector('#closeJsonSchemaModal');
-    const closeJsonSchemaModalBtn = this.querySelector('#closeJsonSchemaModalBtn');
-    const copyJsonSchemaModalBtn = this.querySelector('#copyJsonSchemaModalBtn');
-    if (jsonSchemaModal) {
-      if (closeJsonSchemaModal) {
-        closeJsonSchemaModal.addEventListener('click', () => { jsonSchemaModal.style.display = 'none'; });
-      }
-      if (closeJsonSchemaModalBtn) {
-        closeJsonSchemaModalBtn.addEventListener('click', () => { jsonSchemaModal.style.display = 'none'; });
-      }
-      jsonSchemaModal.querySelector('.modal-overlay')?.addEventListener('click', () => {
-        jsonSchemaModal.style.display = 'none';
-      });
-    }
-    if (copyJsonSchemaModalBtn) {
-      copyJsonSchemaModalBtn.addEventListener('click', () => this.copySchema());
     }
   }
 
@@ -3798,15 +3639,6 @@ class DevBuilderView extends DevBaseView {
     this.showNotification('Flujo exportado', 'success');
   }
 
-  showJsonSchemaModal() {
-    const modal = this.querySelector('#jsonSchemaModal');
-    const codeEl = this.querySelector('#jsonSchemaModalCode');
-    if (!modal || !codeEl) return;
-    const schema = { fields: this.inputSchema };
-    codeEl.textContent = JSON.stringify(schema, null, 2);
-    modal.style.display = 'flex';
-  }
-
   copySchema() {
     const schema = JSON.stringify({ fields: this.inputSchema }, null, 2);
     navigator.clipboard.writeText(schema).then(() => {
@@ -3814,17 +3646,6 @@ class DevBuilderView extends DevBaseView {
     }).catch(() => {
       this.showNotification('Error al copiar', 'error');
     });
-  }
-
-  showPreview() {
-    const modal = this.querySelector('#previewModal');
-    const container = this.querySelector('#previewContainer');
-    
-    if (!modal || !container) return;
-    
-    // Generar preview del formulario
-    container.innerHTML = this.generateFormPreview();
-    modal.style.display = 'flex';
   }
 
   generateFormPreview() {
@@ -4068,16 +3889,6 @@ class DevBuilderView extends DevBaseView {
       console.error('Error deleting flow:', err);
       this.showNotification('Error al eliminar el flujo', 'error');
       this.querySelector('#deleteModal').style.display = 'none';
-    }
-  }
-
-  handleBack() {
-    if (this.hasUnsavedChanges) {
-      if (confirm('Tienes cambios sin guardar. ¿Deseas salir?')) {
-        window.router?.navigate('/dev/flows');
-      }
-    } else {
-      window.router?.navigate('/dev/flows');
     }
   }
 
