@@ -538,73 +538,20 @@ body.sidebar-collapsed .living-container {
     padding: 0 1rem;
 }
 
-/* Estado vacío - Alineado al formato del historial (base.css) */
+/* Estado vacío - Mensaje único central */
 .living-history-empty {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
     justify-content: center;
-    gap: var(--spacing-xl);
-    padding: var(--spacing-2xl) var(--spacing-lg);
-    min-height: 280px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-divider);
-    border-radius: var(--border-radius);
+    padding: var(--spacing-2xl);
+    min-height: 200px;
 }
 
-.living-history-empty-illustration {
-    width: 80px;
-    height: 80px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--bg-tertiary);
-    border-radius: var(--border-radius);
-    color: var(--text-muted);
-    font-size: 2rem;
-    opacity: 0.7;
-}
-
-.living-history-empty-text {
-    flex: 1;
-    min-width: 0;
-    max-width: 480px;
-    text-align: left;
-}
-
-.living-history-empty-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0 0 var(--spacing-sm);
-}
-
-.living-history-empty-description {
-    font-size: 0.875rem;
-    color: var(--text-muted);
-    line-height: 1.5;
+.living-history-empty-message {
     margin: 0;
-}
-
-.living-history-empty-cta {
-    padding: var(--spacing-sm) var(--spacing-lg);
-    background: var(--bg-interactive);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-sm);
-    color: var(--text-primary);
-    font-size: 0.875rem;
+    font-size: 1rem;
     font-weight: 500;
-    cursor: pointer;
-    transition: var(--transition-fast);
-    text-decoration: none;
-    display: inline-block;
-    flex-shrink: 0;
-}
-
-.living-history-empty-cta:hover {
-    background: var(--bg-hover);
-    border-color: var(--border-light);
+    color: var(--text-muted);
 }
 
 /* Sección 3: Destacados / Control (Derecha) */
@@ -713,14 +660,7 @@ body.sidebar-collapsed .living-container {
         gap: 2rem;
     }
     
-    .living-history-empty {
-        flex-direction: column;
-        text-align: center;
     }
-    .living-history-empty-text {
-        text-align: center;
-    }
-}
 
 /* Card de producción - para Hero (scroll horizontal) */
 .living-hero-grid .featured-card {

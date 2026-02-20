@@ -1094,7 +1094,6 @@ class LivingManager {
 
         if (allItems.length === 0) {
             container.innerHTML = this.renderEmptyState();
-            this.setupEmptyStateCta(container);
             return;
         }
         
@@ -1387,18 +1386,7 @@ class LivingManager {
     renderEmptyState() {
         return `
             <div class="living-history-empty">
-                <div class="living-history-empty-illustration">
-                    <i class="fas fa-layer-group" aria-hidden="true"></i>
-                </div>
-                <div class="living-history-empty-text">
-                    <h3 class="living-history-empty-title">Aún no hay historial</h3>
-                    <p class="living-history-empty-description">
-                        Cuando ejecutes flujos y generes contenido, aquí quedará registrado todo tu trabajo creativo.
-                    </p>
-                </div>
-                <a href="#" class="living-history-empty-cta" data-living-empty-cta="studio">
-                    Ir a Producción
-                </a>
+                <p class="living-history-empty-message">No hay producción</p>
             </div>
         `;
     }
