@@ -226,7 +226,8 @@ class FlowCatalogView extends BaseView {
         .from('content_flows')
         .select('id, name, description, token_cost, output_type, flow_image_url, category_id, subcategory_id, flow_category_type, likes_count, saves_count, run_count, created_at, status')
         .eq('is_active', true)
-        .eq('flow_category_type', 'manual');
+        .eq('flow_category_type', 'manual')
+        .eq('show_in_catalog', true);
       if (this.selectedCategoryId) {
         q = q.eq('category_id', this.selectedCategoryId);
       }

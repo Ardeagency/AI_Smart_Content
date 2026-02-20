@@ -12,7 +12,7 @@ class DevBuilderView extends DevBaseView {
     this.flowId = null; // null = nuevo flujo, UUID = editando
     this.isEditMode = false;
     
-    // Estado del flujo (alineado con content_flows en schema: execution_mode, subcategory_id)
+    // Estado del flujo (alineado con content_flows en schema: execution_mode, subcategory_id, show_in_catalog)
     this.flowData = {
       name: '',
       description: '',
@@ -24,7 +24,8 @@ class DevBuilderView extends DevBaseView {
       flow_image_url: null,
       status: 'draft',
       version: '1.0.0',
-      execution_mode: 'single_step'
+      execution_mode: 'single_step',
+      show_in_catalog: false
     };
     
     // Schema de inputs (array de campos)
@@ -193,8 +194,8 @@ class DevBuilderView extends DevBaseView {
                   </div>
                   <div class="settings-toggles settings-catalog-visibility" id="settingsCatalogVisibility">
                     <label class="toggle-field">
-                      <input type="checkbox" id="uiHiddenFromCatalog">
-                      <span>Oculto del catálogo</span>
+                      <input type="checkbox" id="uiShowInCatalog">
+                      <span>Mostrar en catálogo</span>
                     </label>
                   </div>
                 </div>
@@ -2228,7 +2229,10 @@ class DevBuilderView extends DevBaseView {
         return;
       }
       
-      // Cargar datos (alineado con content_flows: subcategory_id, execution_mode)
+      // Cargar datos (alineado con content_flows: subcategory_id, execution_mode, show_in_catalog)
+      const showInCatalog = flow.show_in_catalog !== undefined
+        ? !!flow.show_in_catalog
+        : !(flow.ui_layout_config && flow.ui_layout_config.hidden_from_catalog);
       this.flowData = {
         name: flow.name,
         description: flow.description || '',
@@ -2241,7 +2245,8 @@ class DevBuilderView extends DevBaseView {
         status: flow.status || 'draft',
         version: flow.version || '1.0.0',
         owner_id: flow.owner_id,
-        execution_mode: flow.execution_mode || 'single_step'
+        execution_mode: flow.execution_mode || 'single_step',
+        show_in_catalog: showInCatalog
       };
       
       this.inputSchema = [];
@@ -2381,8 +2386,8 @@ class DevBuilderView extends DevBaseView {
     if (uiSubmitText) uiSubmitText.value = this.uiLayoutConfig.submitButtonText || 'Generar';
     if (uiSubmitPosition) uiSubmitPosition.value = this.uiLayoutConfig.submitButtonPosition || 'right';
     
-    const uiHiddenFromCatalog = this.querySelector('#uiHiddenFromCatalog');
-    if (uiHiddenFromCatalog) uiHiddenFromCatalog.checked = !!this.uiLayoutConfig.hidden_from_catalog;
+    const uiShowInCatalog = this.querySelector('#uiShowInCatalog');
+    if (uiShowInCatalog) uiShowInCatalog.checked = !!this.flowData.show_in_catalog;
     
     // Técnico: modo de ejecución y lista de módulos
     const executionMode = this.querySelector('#executionMode');
@@ -2769,14 +2774,12 @@ class DevBuilderView extends DevBaseView {
     const technicalWebhook = this.querySelector('#technicalWebhookSection');
     const technicalAutomated = this.querySelector('#technicalAutomatedBlock');
     const tokenCostInput = this.querySelector('#flowTokenCost');
-    const hiddenFromCatalog = this.querySelector('#uiHiddenFromCatalog');
+    const uiShowInCatalog = this.querySelector('#uiShowInCatalog');
     const testFlowBtn = this.querySelector('#testFlowBtn');
 
     if (isAutomated) {
       this.flowData.token_cost = 0;
-      if (this.uiLayoutConfig.hidden_from_catalog === undefined) {
-        this.uiLayoutConfig.hidden_from_catalog = true;
-      }
+      this.flowData.show_in_catalog = false;
       if (main) main.classList.add('builder-mode-automated');
       if (componentsSidebar) componentsSidebar.classList.add('builder-sidebar-hidden');
       if (canvasEmpty) canvasEmpty.style.display = 'none';
@@ -2790,9 +2793,9 @@ class DevBuilderView extends DevBaseView {
         tokenCostInput.max = 0;
         tokenCostInput.disabled = true;
       }
-      if (hiddenFromCatalog) {
-        hiddenFromCatalog.checked = true;
-        hiddenFromCatalog.disabled = true;
+      if (uiShowInCatalog) {
+        uiShowInCatalog.checked = false;
+        uiShowInCatalog.disabled = true;
       }
       if (testFlowBtn) testFlowBtn.style.display = 'none';
     } else {
@@ -2809,9 +2812,9 @@ class DevBuilderView extends DevBaseView {
         tokenCostInput.disabled = false;
         tokenCostInput.value = this.flowData.token_cost ?? 1;
       }
-      if (hiddenFromCatalog) {
-        hiddenFromCatalog.disabled = false;
-        hiddenFromCatalog.checked = !!this.uiLayoutConfig.hidden_from_catalog;
+      if (uiShowInCatalog) {
+        uiShowInCatalog.disabled = false;
+        uiShowInCatalog.checked = !!this.flowData.show_in_catalog;
       }
       if (testFlowBtn) testFlowBtn.style.display = '';
     }
@@ -3082,7 +3085,6 @@ class DevBuilderView extends DevBaseView {
     // Checkboxes
     const uiShowLabels = this.querySelector('#uiShowLabels');
     const uiShowHelperText = this.querySelector('#uiShowHelperText');
-    const uiHiddenFromCatalog = this.querySelector('#uiHiddenFromCatalog');
     
     if (uiShowLabels) {
       uiShowLabels.addEventListener('change', (e) => {
@@ -3098,9 +3100,10 @@ class DevBuilderView extends DevBaseView {
       });
     }
 
-    if (uiHiddenFromCatalog) {
-      uiHiddenFromCatalog.addEventListener('change', (e) => {
-        this.uiLayoutConfig.hidden_from_catalog = e.target.checked;
+    const uiShowInCatalog = this.querySelector('#uiShowInCatalog');
+    if (uiShowInCatalog) {
+      uiShowInCatalog.addEventListener('change', (e) => {
+        this.flowData.show_in_catalog = e.target.checked;
         this.hasUnsavedChanges = true;
       });
     }
@@ -3290,6 +3293,7 @@ class DevBuilderView extends DevBaseView {
         status: this.flowData.status,
         version: this.flowData.version,
         execution_mode: this.flowData.execution_mode || 'single_step',
+        show_in_catalog: !!this.flowData.show_in_catalog,
         ui_layout_config: this.uiLayoutConfig
       };
       
@@ -3589,6 +3593,7 @@ class DevBuilderView extends DevBaseView {
         status: 'draft',
         version: this.flowData.version,
         execution_mode: this.flowData.execution_mode || 'single_step',
+        show_in_catalog: !!this.flowData.show_in_catalog,
         owner_id: this.userId,
         ui_layout_config: this.uiLayoutConfig
       };
