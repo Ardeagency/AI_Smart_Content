@@ -1388,12 +1388,14 @@ class LivingManager {
         return `
             <div class="living-history-empty">
                 <div class="living-history-empty-illustration">
-                    <i class="fas fa-layer-group" style="font-size: 3rem; color: var(--living-text-muted); opacity: 0.3;"></i>
+                    <i class="fas fa-layer-group" aria-hidden="true"></i>
                 </div>
-                <h3 class="living-history-empty-title">Aún no hay historial</h3>
-                <p class="living-history-empty-description">
-                    Cuando ejecutes flujos y generes contenido, aquí quedará registrado todo tu trabajo creativo.
-                </p>
+                <div class="living-history-empty-text">
+                    <h3 class="living-history-empty-title">Aún no hay historial</h3>
+                    <p class="living-history-empty-description">
+                        Cuando ejecutes flujos y generes contenido, aquí quedará registrado todo tu trabajo creativo.
+                    </p>
+                </div>
                 <a href="#" class="living-history-empty-cta" data-living-empty-cta="studio">
                     Ir a Producción
                 </a>
