@@ -19,47 +19,65 @@
                         <img id="livingViewerImage" src="" alt="" />
                     </div>
                 </div>
-                <!-- Columna derecha: autor, prompt, información, acciones -->
+                <!-- Columna derecha: estructura referencia (header | scroll | footer) -->
                 <div class="living-viewer-right">
-                    <button class="living-viewer-close" id="livingViewerClose" aria-label="Cerrar">
-                        <i class="fas fa-times"></i>
-                    </button>
-                    <div class="living-viewer-author">
-                        <div class="living-viewer-avatar" id="livingViewerAvatar"></div>
-                        <div class="living-viewer-author-info">
-                            <span class="living-viewer-author-name" id="livingViewerAuthorName">Producción</span>
-                            <span class="living-viewer-author-role">Author</span>
+                    <header class="living-viewer-right-header">
+                        <div class="living-viewer-author">
+                            <figure class="living-viewer-avatar-wrap">
+                                <div class="living-viewer-avatar" id="livingViewerAvatar"></div>
+                            </figure>
+                            <div class="living-viewer-author-info">
+                                <h2 class="living-viewer-author-name" id="livingViewerAuthorName">Producción</h2>
+                                <p class="living-viewer-author-role">Author</p>
+                            </div>
                         </div>
-                    </div>
-                    <div class="living-viewer-block">
-                        <div class="living-viewer-block-head">
-                            <h3 class="living-viewer-block-title">PROMPT</h3>
-                            <button type="button" class="living-viewer-copy-prompt" id="livingViewerCopyPrompt" title="Copiar prompt">
-                                <i class="fas fa-copy"></i> Copy
-                            </button>
-                        </div>
-                        <div class="living-viewer-prompt-text" id="livingViewerPrompt"></div>
-                        <button type="button" class="living-viewer-see-all" data-section="prompt">See all <i class="fas fa-chevron-down"></i></button>
-                    </div>
-                    <div class="living-viewer-block">
-                        <h3 class="living-viewer-block-title">INFORMATION</h3>
-                        <div class="living-viewer-metadata-content" id="livingViewerMetadata"></div>
-                        <button type="button" class="living-viewer-see-all" data-section="info">See all <i class="fas fa-chevron-down"></i></button>
-                    </div>
-                    <div class="living-viewer-actions">
-                        <button type="button" class="living-viewer-animate" id="livingViewerAnimate">
-                            <i class="fas fa-video"></i> Animate
+                        <button type="button" class="living-viewer-close" id="livingViewerClose" aria-label="Cerrar">
+                            <i class="fas fa-times"></i>
                         </button>
-                        <div class="living-viewer-actions-row">
-                            <button type="button" class="living-viewer-action-btn" title="Abrir en"><i class="fas fa-external-link-alt"></i> Open in</button>
-                            <button type="button" class="living-viewer-action-btn" title="Reference"><i class="fas fa-link"></i> Reference</button>
-                            <button type="button" class="living-viewer-download living-viewer-action-btn" id="livingViewerDownload" title="Descargar">
-                                <i class="fas fa-download"></i> Download
-                            </button>
-                            <button type="button" class="living-viewer-action-btn" title="Me gusta"><i class="fas fa-heart"></i></button>
-                            <button type="button" class="living-viewer-action-btn" title="Compartir"><i class="fas fa-share-alt"></i></button>
-                            <button type="button" class="living-viewer-action-btn" title="Más opciones"><i class="fas fa-ellipsis-v"></i></button>
+                    </header>
+                    <div class="living-viewer-right-body">
+                        <div class="living-viewer-right-scroll">
+                            <div class="living-viewer-right-inner">
+                                <section class="living-viewer-section">
+                                    <div class="living-viewer-section-header">
+                                        <div class="living-viewer-section-header-left">
+                                            <i class="fas fa-sliders living-viewer-section-icon"></i>
+                                            <p class="living-viewer-block-title">Prompt</p>
+                                        </div>
+                                        <div class="living-viewer-section-header-right">
+                                            <button type="button" class="living-viewer-copy-prompt" id="livingViewerCopyPrompt" title="Copiar prompt">Copy</button>
+                                        </div>
+                                    </div>
+                                    <div class="living-viewer-section-body">
+                                        <div class="living-viewer-prompt-text" id="livingViewerPrompt"></div>
+                                        <button type="button" class="living-viewer-see-all" data-section="prompt">See all <i class="fas fa-chevron-down"></i></button>
+                                    </div>
+                                </section>
+                                <section class="living-viewer-section">
+                                    <div class="living-viewer-section-header">
+                                        <div class="living-viewer-section-header-left">
+                                            <i class="fas fa-info-circle living-viewer-section-icon"></i>
+                                            <p class="living-viewer-block-title">Information</p>
+                                        </div>
+                                    </div>
+                                    <div class="living-viewer-section-body living-viewer-info-rows" id="livingViewerMetadata"></div>
+                                    <button type="button" class="living-viewer-see-all living-viewer-show-less" data-section="info">Show less <i class="fas fa-chevron-up"></i></button>
+                                </section>
+                            </div>
                         </div>
+                        <footer class="living-viewer-right-footer">
+                            <button type="button" class="living-viewer-animate" id="livingViewerAnimate">
+                                <i class="fas fa-video"></i> Animate
+                            </button>
+                            <div class="living-viewer-actions-grid">
+                                <button type="button" class="living-viewer-action-btn" title="Abrir en"><i class="fas fa-external-link-alt"></i> Open in</button>
+                                <button type="button" class="living-viewer-action-btn" title="Reference"><i class="fas fa-link"></i> Reference</button>
+                                <button type="button" class="living-viewer-download living-viewer-action-btn" id="livingViewerDownload" title="Descargar"><i class="fas fa-download"></i> Download</button>
+                                <button type="button" class="living-viewer-action-btn" title="Me gusta"><i class="fas fa-heart"></i></button>
+                                <button type="button" class="living-viewer-action-btn" title="Compartir"><i class="fas fa-share-alt"></i></button>
+                                <button type="button" class="living-viewer-action-btn" title="Más opciones"><i class="fas fa-ellipsis-v"></i></button>
+                            </div>
+                        </footer>
                     </div>
                 </div>
             </div>

@@ -1679,11 +1679,11 @@ class LivingManager {
         
         const productionImageUrl = (data.imageUrl && typeof data.imageUrl === 'string' && data.imageUrl.startsWith('http')) ? data.imageUrl : '';
         const rows = [];
-        rows.push(`<div class="info-row"><span class="info-label">Model</span><span>${this.escapeHtml(modelName)}</span></div>`);
-        if (outputType) rows.push(`<div class="info-row"><span class="info-label">Type</span><span>${this.escapeHtml(outputType)}</span></div>`);
-        rows.push(`<div class="info-row info-row-images"><span class="info-label">Images</span>${productionImageUrl ? `<img class="info-thumb info-thumb-production" src="${this.escapeHtml(productionImageUrl)}" alt="Producción" loading="lazy" />` : '<span>—</span>'}</div>`);
-        if (quality) rows.push(`<div class="info-row"><span class="info-label">Quality</span><span>${this.escapeHtml(String(quality))}</span></div>`);
-        if (creationDate) rows.push(`<div class="info-row"><span class="info-label">Date</span><span>${this.escapeHtml(creationDate)}</span></div>`);
+        rows.push(`<div class="info-row"><span class="info-label">Model</span><span class="info-value">${this.escapeHtml(modelName)}</span></div>`);
+        if (outputType) rows.push(`<div class="info-row"><span class="info-label">Type</span><span class="info-value">${this.escapeHtml(outputType)}</span></div>`);
+        rows.push(`<div class="info-row info-row-images"><span class="info-label">Images</span>${productionImageUrl ? `<img class="info-thumb info-thumb-production" src="${this.escapeHtml(productionImageUrl)}" alt="Producción" loading="lazy" />` : '<span class="info-value">—</span>'}</div>`);
+        if (quality) rows.push(`<div class="info-row"><span class="info-label">Quality</span><span class="info-value">${this.escapeHtml(String(quality))}</span></div>`);
+        if (creationDate) rows.push(`<div class="info-row"><span class="info-label">Created</span><span class="info-value">${this.escapeHtml(creationDate)}</span></div>`);
         if (output.generated_copy && output.generated_copy.trim()) rows.push(`<div class="info-row info-row-copy"><span class="info-label">Copy</span><span class="info-value">${this.escapeHtml(output.generated_copy.trim())}</span></div>`);
         if (output.creative_rationale && output.creative_rationale.trim()) rows.push(`<div class="info-row"><span class="info-label">Rationale</span><span class="info-value">${this.escapeHtml(output.creative_rationale.trim())}</span></div>`);
         if (output.text_content && output.text_content.trim()) rows.push(`<div class="info-row"><span class="info-label">Text</span><span class="info-value">${this.escapeHtml(output.text_content.trim())}</span></div>`);
