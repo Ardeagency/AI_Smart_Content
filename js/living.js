@@ -909,20 +909,7 @@ class LivingManager {
     }
 
     async renderAll() {
-        this.moveModalToBody();
         await this.renderHistorySection();
-    }
-    
-    moveModalToBody() {
-        const modal = document.getElementById('livingViewerModal');
-        if (!modal) return;
-        
-        // Verificar si el modal está dentro de #app-container
-        const appContainer = document.getElementById('app-container');
-        if (appContainer && appContainer.contains(modal)) {
-            // Mover el modal al body
-            document.body.appendChild(modal);
-        }
     }
 
     async renderHeroSection() {
