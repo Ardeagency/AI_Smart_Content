@@ -994,23 +994,23 @@ class LivingManager {
 
         // Todo el contenido producido: flow runs + contenido generado (sin excluir)
         const fromRuns = (this.flowRuns || []).map(run => {
-            const output = this.flowOutputs.find(o => o.run_id === run.id);
-            const fileUrl = output?.file_url || output?.storage_path || null;
-            let contentType = 'text';
-            if (fileUrl) {
+                const output = this.flowOutputs.find(o => o.run_id === run.id);
+                const fileUrl = output?.file_url || output?.storage_path || null;
+                let contentType = 'text';
+                if (fileUrl) {
                 const url = (fileUrl + '').toLowerCase();
                 if (url.includes('.mp4') || url.includes('.mov') || url.includes('.webm') || url.includes('video') || url.includes('reel') || url.includes('clip')) {
-                    contentType = 'video';
+                        contentType = 'video';
                 } else if (url.includes('.jpg') || url.includes('.jpeg') || url.includes('.png') || url.includes('.webp') || url.includes('image') || url.includes('img')) {
-                    contentType = 'image';
-                }
-            } else if (output?.output_type) {
+                        contentType = 'image';
+                    }
+                } else if (output?.output_type) {
                 const type = (output.output_type + '').toLowerCase();
                 if (type.includes('video') || type.includes('reel') || type.includes('clip')) contentType = 'video';
                 else if (type.includes('image') || type.includes('img') || type.includes('still')) contentType = 'image';
             }
             let prompt = output?.prompt_used || output?.prompt || output?.generated_copy || output?.text_content || '';
-            if (!prompt && output?.metadata) {
+                if (!prompt && output?.metadata) {
                 try {
                     const meta = typeof output.metadata === 'string' ? JSON.parse(output.metadata) : output.metadata;
                     prompt = meta?.prompt || meta?.prompt_used || meta?.generated_prompt || '';
@@ -1049,8 +1049,8 @@ class LivingManager {
             if (outputType.includes('video') || outputType.includes('reel') || outputType.includes('clip')) contentType = 'video';
             else if (outputType.includes('image') || outputType.includes('img') || resolvedUrl) contentType = 'image';
             else contentType = 'text';
-            return {
-                contentType,
+                return {
+                    contentType,
                 fileUrl: resolvedUrl,
                 prompt,
                 run: { id: item.run_id },
@@ -1097,7 +1097,7 @@ class LivingManager {
             this.setupEmptyStateCta(container);
             return;
         }
-
+        
         container.innerHTML = allItems.map((item, index) => {
             if (item.contentType === 'video') {
                 let thumbnailUrl = item.fileUrl;
@@ -1123,8 +1123,8 @@ class LivingManager {
                 }
             }
             return this.renderHistoryImageCard(imageUrl, item.run, item.output, item.prompt, index);
-        }).join('');
-
+            }).join('');
+            
         this.setupHistoryCardListeners(container);
         this.setupHistoryFilters();
     }
@@ -1214,7 +1214,7 @@ class LivingManager {
             if (this.filterDateFrom == null || (this.filterDateFrom != null && this.filterDateTo != null)) {
                 this.filterDateFrom = new Date(date);
                 this.filterDateTo = null;
-            } else {
+        } else {
                 if (date < this.filterDateFrom) {
                     this.filterDateTo = new Date(this.filterDateFrom);
                     this.filterDateFrom = new Date(date);
@@ -1298,7 +1298,7 @@ class LivingManager {
         if (run.flow_name) return run.flow_name;
         return 'Producción';
     }
-
+    
     renderVideoCard(thumbnailUrl, run, output, prompt, index) {
         const finalUrl = thumbnailUrl && thumbnailUrl.startsWith('http') ? thumbnailUrl : null;
         const productionId = run?.id || output?.id;
@@ -1320,8 +1320,8 @@ class LivingManager {
                 }
                 <div class="history-card-actions">
                     <button class="history-card-download" title="Descargar" data-image-url="${this.escapeHtml(finalUrl || '')}">
-                        <i class="fas fa-download"></i>
-                    </button>
+                    <i class="fas fa-download"></i>
+                </button>
                     <button class="history-card-copy-prompt" title="Copiar prompt" data-prompt="${this.escapeHtml(promptSafe)}">
                         <i class="fas fa-copy"></i>
                     </button>
@@ -1888,7 +1888,7 @@ class LivingManager {
         const finalCopyBtn = document.getElementById('livingViewerCopyPrompt');
         if (finalCopyBtn && promptText) {
             finalCopyBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
+                    e.stopPropagation();
                 if (navigator.clipboard && navigator.clipboard.writeText) {
                     navigator.clipboard.writeText(promptText).then(() => {
                         if (typeof window.showToast === 'function') window.showToast('Prompt copiado');
