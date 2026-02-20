@@ -138,8 +138,213 @@ body.sidebar-collapsed .living-container {
 .living-history-section {
     display: flex;
     flex-direction: column;
-    gap: 4rem;
+    gap: var(--spacing-lg);
     min-height: 400px;
+}
+
+/* Header de filtros (fecha, tipo, flujo) */
+.living-history-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+}
+
+.living-filter {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.living-filter-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.living-filter-select {
+    min-width: 160px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.living-filter-select:hover,
+.living-filter-select:focus {
+    border-color: var(--border-light);
+    outline: none;
+}
+
+/* Date range trigger (estilo referencia: input + icono calendario) */
+.living-filter-date {
+    position: relative;
+}
+
+.living-date-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 200px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.living-date-trigger:hover {
+    border-color: var(--border-light);
+}
+
+.living-date-value {
+    color: var(--text-muted);
+}
+
+.living-date-value.has-range {
+    color: var(--text-primary);
+}
+
+.living-date-icon {
+    font-size: 0.875rem;
+    color: var(--icon-button);
+    margin-left: var(--spacing-sm);
+}
+
+/* Dropdown calendario (referencia: fondo claro, mes/año, chevrons, semana, grid) */
+.living-date-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: var(--spacing-xs);
+    padding: var(--spacing-md);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-floating);
+    z-index: var(--z-dropdown);
+    min-width: 280px;
+    display: none;
+}
+
+.living-date-dropdown.is-open {
+    display: block;
+}
+
+.living-date-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-md);
+}
+
+.living-date-nav-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    color: var(--icon-button);
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.living-date-nav-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.living-date-month-year {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.living-date-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    margin-bottom: var(--spacing-sm);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    text-align: center;
+}
+
+.living-date-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    font-size: 0.8125rem;
+}
+
+.living-date-cell {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    color: var(--text-primary);
+}
+
+.living-date-cell:hover:not(.other-month) {
+    background: var(--bg-hover);
+}
+
+.living-date-cell.other-month {
+    color: var(--text-disabled);
+}
+
+.living-date-cell.today {
+    background: var(--border-color);
+    color: var(--text-primary);
+}
+
+.living-date-cell.range-start,
+.living-date-cell.range-end {
+    background: var(--info-color);
+    color: #fff;
+}
+
+.living-date-cell.in-range {
+    background: rgba(59, 130, 246, 0.25);
+    color: var(--text-primary);
+}
+
+.living-date-actions {
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid var(--border-divider);
+}
+
+.living-date-clear {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: transparent;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.living-date-clear:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
 }
 
 /* Historial general: un solo masonry con todo el contenido producido */

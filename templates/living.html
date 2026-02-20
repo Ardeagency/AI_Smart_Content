@@ -2,6 +2,45 @@
     <main class="main-content living-main-content">
         <div class="living-container">
             <section class="living-history-section">
+                <!-- Header de filtros -->
+                <header class="living-history-filters">
+                    <div class="living-filter living-filter-date">
+                        <label class="living-filter-label">Fecha</label>
+                        <div class="living-date-trigger" id="livingDateTrigger" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                            <span class="living-date-value" id="livingDateValue">Seleccionar</span>
+                            <i class="fas fa-calendar-alt living-date-icon" aria-hidden="true"></i>
+                        </div>
+                        <div class="living-date-dropdown" id="livingDateDropdown" aria-hidden="true">
+                            <div class="living-date-nav">
+                                <button type="button" class="living-date-nav-btn" id="livingDatePrev" aria-label="Mes anterior"><i class="fas fa-chevron-left"></i></button>
+                                <span class="living-date-month-year" id="livingDateMonthYear">Noviembre 2022</span>
+                                <button type="button" class="living-date-nav-btn" id="livingDateNext" aria-label="Mes siguiente"><i class="fas fa-chevron-right"></i></button>
+                            </div>
+                            <div class="living-date-weekdays">
+                                <span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span>
+                            </div>
+                            <div class="living-date-grid" id="livingDateGrid"></div>
+                            <div class="living-date-actions">
+                                <button type="button" class="living-date-clear" id="livingDateClear">Limpiar</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="living-filter living-filter-type">
+                        <label class="living-filter-label">Tipo de contenido</label>
+                        <select class="living-filter-select" id="livingFilterType">
+                            <option value="">Todos</option>
+                            <option value="image">Imagen</option>
+                            <option value="video">Video</option>
+                            <option value="text">Texto</option>
+                        </select>
+                    </div>
+                    <div class="living-filter living-filter-flow">
+                        <label class="living-filter-label">Flujo</label>
+                        <select class="living-filter-select" id="livingFilterFlow">
+                            <option value="">Todos los flujos</option>
+                        </select>
+                    </div>
+                </header>
                 <div class="living-history-content living-history-masonry" id="livingHistoryContent">
                 </div>
             </section>

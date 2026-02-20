@@ -19,6 +19,16 @@ class LivingManager {
         this.latestGeneratedContent = [];
         this.eventListenersSetup = false;
         this.initialized = false;
+        // Filtros del historial
+        this.filterDateFrom = null;
+        this.filterDateTo = null;
+        this.filterContentType = '';
+        this.filterFlowName = '';
+        this._calendarMonth = null;
+        this._calendarYear = null;
+        this._dateRangeStart = null;
+        this._dateRangeEnd = null;
+        this._historyFiltersSetup = false;
         
         // Datos de la Sección 3: Tráfico y Control de Producción
         this.section3Data = {
@@ -1051,7 +1061,7 @@ class LivingManager {
         });
 
         const seenIds = new Set();
-        const allItems = [...fromRuns, ...fromGenerated]
+        let allItems = [...fromRuns, ...fromGenerated]
             .filter(it => {
                 const id = it._outputId || it.run?.id + '-' + (it.output?.id || it.created_at);
                 if (seenIds.has(id)) return false;
@@ -1059,6 +1069,28 @@ class LivingManager {
                 return true;
             })
             .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+        // Aplicar filtros
+        if (this.filterDateFrom != null) {
+            const from = new Date(this.filterDateFrom);
+            from.setHours(0, 0, 0, 0);
+            allItems = allItems.filter(it => {
+                const d = new Date(it.created_at || 0);
+                d.setHours(0, 0, 0, 0);
+                return d >= from;
+            });
+        }
+        if (this.filterDateTo != null) {
+            const to = new Date(this.filterDateTo);
+            to.setHours(23, 59, 59, 999);
+            allItems = allItems.filter(it => new Date(it.created_at || 0) <= to);
+        }
+        if (this.filterContentType) {
+            allItems = allItems.filter(it => (it.contentType || '') === this.filterContentType);
+        }
+        if (this.filterFlowName) {
+            allItems = allItems.filter(it => this.getFlowName(it.run) === this.filterFlowName);
+        }
 
         if (allItems.length === 0) {
             container.innerHTML = this.renderEmptyState();
@@ -1094,6 +1126,169 @@ class LivingManager {
         }).join('');
 
         this.setupHistoryCardListeners(container);
+        this.setupHistoryFilters();
+    }
+    
+    setupHistoryFilters() {
+        this.populateFlowFilter();
+        if (this._historyFiltersSetup) return;
+        this._historyFiltersSetup = true;
+
+        const typeSelect = document.getElementById('livingFilterType');
+        const flowSelect = document.getElementById('livingFilterFlow');
+        if (typeSelect) typeSelect.addEventListener('change', () => {
+            this.filterContentType = (typeSelect.value || '').trim();
+            this.renderHistorySection();
+        });
+        if (flowSelect) flowSelect.addEventListener('change', () => {
+            this.filterFlowName = (flowSelect.value || '').trim();
+            this.renderHistorySection();
+        });
+
+        const trigger = document.getElementById('livingDateTrigger');
+        const dropdown = document.getElementById('livingDateDropdown');
+        const valueEl = document.getElementById('livingDateValue');
+        const prevBtn = document.getElementById('livingDatePrev');
+        const nextBtn = document.getElementById('livingDateNext');
+        const gridEl = document.getElementById('livingDateGrid');
+        const monthYearEl = document.getElementById('livingDateMonthYear');
+        const clearBtn = document.getElementById('livingDateClear');
+
+        const now = new Date();
+        if (this._calendarMonth == null) this._calendarMonth = now.getMonth();
+        if (this._calendarYear == null) this._calendarYear = now.getFullYear();
+
+        const formatDateRange = () => {
+            if (!this.filterDateFrom && !this.filterDateTo) return 'Seleccionar';
+            const fmt = d => d ? d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
+            if (this.filterDateFrom && this.filterDateTo) return `${fmt(this.filterDateFrom)} - ${fmt(this.filterDateTo)}`;
+            return fmt(this.filterDateFrom || this.filterDateTo);
+        };
+
+        const renderCalendar = () => {
+            if (!gridEl || !monthYearEl) return;
+            const monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+            monthYearEl.textContent = `${monthNames[this._calendarMonth]} ${this._calendarYear}`;
+            const first = new Date(this._calendarYear, this._calendarMonth, 1);
+            const startPad = (first.getDay() + 6) % 7; // Lunes = 0
+            const daysInMonth = new Date(this._calendarYear, this._calendarMonth + 1, 0).getDate();
+            const prevMonthDays = new Date(this._calendarYear, this._calendarMonth, 0).getDate();
+            let html = '';
+            for (let i = 0; i < startPad; i++) {
+                const d = prevMonthDays - startPad + 1 + i;
+                html += `<span class="living-date-cell other-month" data-day="${d}" data-other="1">${d}</span>`;
+            }
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            for (let d = 1; d <= daysInMonth; d++) {
+                const date = new Date(this._calendarYear, this._calendarMonth, d);
+                const ts = date.getTime();
+                const isToday = date.getTime() === today.getTime();
+                let cls = 'living-date-cell';
+                if (isToday) cls += ' today';
+                const from = this.filterDateFrom ? new Date(this.filterDateFrom).setHours(0, 0, 0, 0) : null;
+                const to = this.filterDateTo ? new Date(this.filterDateTo).setHours(0, 0, 0, 0) : null;
+                if (from !== null && to !== null && ts >= from && ts <= to) {
+                    if (ts === from) cls += ' range-start';
+                    else if (ts === to) cls += ' range-end';
+                    else cls += ' in-range';
+                }
+                html += `<span class="${cls}" data-day="${d}" data-year="${this._calendarYear}" data-month="${this._calendarMonth}">${d}</span>`;
+            }
+            const totalCells = startPad + daysInMonth;
+            const remainder = totalCells % 7;
+            const nextFill = remainder ? 7 - remainder : 0;
+            for (let n = 1; n <= nextFill; n++) {
+                html += `<span class="living-date-cell other-month" data-day="${n}" data-other="1">${n}</span>`;
+            }
+            gridEl.innerHTML = html;
+        };
+
+        const onGridClick = (e) => {
+            const cell = e.target.closest('.living-date-cell');
+            if (!cell || cell.classList.contains('other-month')) return;
+            const day = parseInt(cell.getAttribute('data-day'), 10);
+            const month = parseInt(cell.getAttribute('data-month'), 10);
+            const year = parseInt(cell.getAttribute('data-year'), 10);
+            const date = new Date(year, month, day);
+            if (this.filterDateFrom == null || (this.filterDateFrom != null && this.filterDateTo != null)) {
+                this.filterDateFrom = new Date(date);
+                this.filterDateTo = null;
+            } else {
+                if (date < this.filterDateFrom) {
+                    this.filterDateTo = new Date(this.filterDateFrom);
+                    this.filterDateFrom = new Date(date);
+                } else {
+                    this.filterDateTo = new Date(date);
+                }
+            }
+            if (valueEl) valueEl.textContent = formatDateRange();
+            valueEl?.classList.toggle('has-range', !!(this.filterDateFrom || this.filterDateTo));
+            renderCalendar();
+            this.renderHistorySection();
+        };
+        gridEl?.addEventListener('click', onGridClick);
+
+        const openDropdown = () => {
+            dropdown?.classList.add('is-open');
+            dropdown?.setAttribute('aria-hidden', 'false');
+            trigger?.setAttribute('aria-expanded', 'true');
+            renderCalendar();
+        };
+        const closeDropdown = () => {
+            dropdown?.classList.remove('is-open');
+            dropdown?.setAttribute('aria-hidden', 'true');
+            trigger?.setAttribute('aria-expanded', 'false');
+        };
+
+        trigger?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (dropdown?.classList.contains('is-open')) closeDropdown();
+            else openDropdown();
+        });
+        prevBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this._calendarMonth--;
+            if (this._calendarMonth < 0) { this._calendarMonth = 11; this._calendarYear--; }
+            renderCalendar();
+        });
+        nextBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this._calendarMonth++;
+            if (this._calendarMonth > 11) { this._calendarMonth = 0; this._calendarYear++; }
+            renderCalendar();
+        });
+        clearBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.filterDateFrom = null;
+            this.filterDateTo = null;
+            if (valueEl) valueEl.textContent = 'Seleccionar';
+            valueEl?.classList.remove('has-range');
+            renderCalendar();
+            this.renderHistorySection();
+            closeDropdown();
+        });
+        document.addEventListener('click', (e) => {
+            if (dropdown?.classList.contains('is-open') && !dropdown.contains(e.target) && trigger && !trigger.contains(e.target))
+                closeDropdown();
+        });
+
+        if (valueEl) valueEl.textContent = formatDateRange();
+        valueEl?.classList.toggle('has-range', !!(this.filterDateFrom || this.filterDateTo));
+    }
+
+    populateFlowFilter() {
+        const flowSelect = document.getElementById('livingFilterFlow');
+        if (!flowSelect) return;
+        const names = [];
+        const set = new Set();
+        (this.flowRuns || []).forEach(run => {
+            const name = this.getFlowName(run);
+            if (name && !set.has(name)) { set.add(name); names.push(name); }
+        });
+        const current = flowSelect.value;
+        flowSelect.innerHTML = '<option value="">Todos los flujos</option>' + names.map(n => `<option value="${this.escapeHtml(n)}">${this.escapeHtml(n)}</option>`).join('');
+        if (set.has(current)) flowSelect.value = current;
     }
     
     getFlowName(run) {
