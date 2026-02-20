@@ -1074,36 +1074,6 @@ body.sidebar-collapsed .living-container {
     user-select: none;
 }
 
-.living-viewer-tools {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: center;
-}
-
-.living-viewer-tool-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 14px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    color: rgba(255, 255, 255, 0.85);
-    font-size: 0.8125rem;
-    cursor: pointer;
-    transition: background 0.2s ease;
-}
-
-.living-viewer-tool-pill:hover {
-    background: rgba(255, 255, 255, 0.12);
-}
-
-.living-viewer-tool-pill i {
-    font-size: 0.75rem;
-    opacity: 0.9;
-}
-
 /* Columna derecha: panel de información */
 .living-viewer-right {
     position: relative;
@@ -1276,6 +1246,17 @@ body.sidebar-collapsed .living-container {
     height: 28px;
     border-radius: 4px;
     object-fit: cover;
+    object-position: center;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.living-viewer-metadata-content .info-thumb-production {
+    flex-shrink: 0;
+}
+
+.living-viewer-metadata-content .info-value {
+    word-break: break-word;
+    max-width: 100%;
 }
 
 /* Acciones: Animate (principal) + fila de botones */

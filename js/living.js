@@ -1665,21 +1665,33 @@ class LivingManager {
         
         if (authorNameEl) authorNameEl.textContent = this.getFlowName(run);
         
-        const modelName = (output.metadata && typeof output.metadata === 'object' && output.metadata.model) 
-            ? output.metadata.model 
-            : (run.content_flows && run.content_flows.name) || 'Nano Banana Pro';
-        const thumbUrl = data.imageUrl && data.imageUrl.startsWith('http') ? data.imageUrl : '';
-        const quality = (output.metadata && output.metadata.quality) || (output.technical_params && output.technical_params.quality) || '4k';
+        // runs_outputs: model, output_type, metadata, technical_params, created_at; opcionales: generated_copy, creative_rationale, generated_hashtags, text_content
+        const modelName = (output.metadata && typeof output.metadata === 'object' && output.metadata.model)
+            ? output.metadata.model
+            : this.getFlowName(run);
+        const outputType = output.output_type || '';
+        const technicalParams = output.technical_params && typeof output.technical_params === 'object' ? output.technical_params : {};
+        const meta = output.metadata && typeof output.metadata === 'object' ? output.metadata : {};
+        const quality = technicalParams.quality || meta.quality || '';
         let creationDate = null;
         if (output.created_at) creationDate = new Date(output.created_at).toLocaleString('es-ES');
         else if (item.item && item.item.created_at) creationDate = new Date(item.item.created_at).toLocaleString('es-ES');
         
-        metadataEl.innerHTML = `
-            <div class="info-row"><span class="info-label">Model</span><span>${this.escapeHtml(modelName)}</span></div>
-            <div class="info-row"><span class="info-label">Images</span>${thumbUrl ? `<img class="info-thumb" src="${this.escapeHtml(thumbUrl)}" alt="" />` : '<span>—</span>'}</div>
-            <div class="info-row"><span class="info-label">Quality</span><span>${this.escapeHtml(quality)}</span></div>
-            ${creationDate ? `<div class="info-row"><span class="info-label">Date</span><span>${this.escapeHtml(creationDate)}</span></div>` : ''}
-        `;
+        const productionImageUrl = (data.imageUrl && typeof data.imageUrl === 'string' && data.imageUrl.startsWith('http')) ? data.imageUrl : '';
+        const rows = [];
+        rows.push(`<div class="info-row"><span class="info-label">Model</span><span>${this.escapeHtml(modelName)}</span></div>`);
+        if (outputType) rows.push(`<div class="info-row"><span class="info-label">Type</span><span>${this.escapeHtml(outputType)}</span></div>`);
+        rows.push(`<div class="info-row info-row-images"><span class="info-label">Images</span>${productionImageUrl ? `<img class="info-thumb info-thumb-production" src="${this.escapeHtml(productionImageUrl)}" alt="Producción" loading="lazy" />` : '<span>—</span>'}</div>`);
+        if (quality) rows.push(`<div class="info-row"><span class="info-label">Quality</span><span>${this.escapeHtml(String(quality))}</span></div>`);
+        if (creationDate) rows.push(`<div class="info-row"><span class="info-label">Date</span><span>${this.escapeHtml(creationDate)}</span></div>`);
+        if (output.generated_copy && output.generated_copy.trim()) rows.push(`<div class="info-row info-row-copy"><span class="info-label">Copy</span><span class="info-value">${this.escapeHtml(output.generated_copy.trim())}</span></div>`);
+        if (output.creative_rationale && output.creative_rationale.trim()) rows.push(`<div class="info-row"><span class="info-label">Rationale</span><span class="info-value">${this.escapeHtml(output.creative_rationale.trim())}</span></div>`);
+        if (output.text_content && output.text_content.trim()) rows.push(`<div class="info-row"><span class="info-label">Text</span><span class="info-value">${this.escapeHtml(output.text_content.trim())}</span></div>`);
+        if (output.generated_hashtags && (Array.isArray(output.generated_hashtags) ? output.generated_hashtags.length : typeof output.generated_hashtags === 'object')) {
+            const tags = Array.isArray(output.generated_hashtags) ? output.generated_hashtags : (output.generated_hashtags.tags || output.generated_hashtags.values || []);
+            if (tags.length) rows.push(`<div class="info-row"><span class="info-label">Hashtags</span><span class="info-value">${this.escapeHtml(tags.join(' '))}</span></div>`);
+        }
+        metadataEl.innerHTML = rows.join('');
         
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
