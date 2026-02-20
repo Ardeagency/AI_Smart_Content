@@ -1636,7 +1636,6 @@ class LivingManager {
         const copyPromptBtn = document.getElementById('livingViewerCopyPrompt');
         const closeBtn = document.getElementById('livingViewerClose');
         const backdrop = document.getElementById('livingViewerBackdrop');
-        const downloadBtn = document.getElementById('livingViewerDownload');
         
         if (!modal || !image || !promptEl || !metadataEl) {
             console.error('❌ Elementos del modal no encontrados');
@@ -1657,7 +1656,6 @@ class LivingManager {
             image.alt = 'Sin imagen disponible';
         }
         
-        if (downloadBtn) downloadBtn.dataset.imageUrl = data.imageUrl || '';
         this.setupImageZoom(image);
         
         const promptText = data.prompt || 'Sin prompt disponible';
@@ -1705,21 +1703,9 @@ class LivingManager {
         closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
         const newBackdrop = backdrop.cloneNode(true);
         backdrop.parentNode.replaceChild(newBackdrop, backdrop);
-        const newDownloadBtn = downloadBtn ? downloadBtn.cloneNode(true) : null;
-        if (downloadBtn && newDownloadBtn) downloadBtn.parentNode.replaceChild(newDownloadBtn, downloadBtn);
         
         document.getElementById('livingViewerClose').addEventListener('click', closeModal);
         document.getElementById('livingViewerBackdrop').addEventListener('click', closeModal);
-        
-        const finalDownloadBtn = document.getElementById('livingViewerDownload');
-        if (finalDownloadBtn) {
-            finalDownloadBtn.dataset.imageUrl = data.imageUrl || '';
-            finalDownloadBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const url = finalDownloadBtn.dataset.imageUrl;
-                if (url && url.startsWith('http')) this.downloadImage(url);
-            });
-        }
         
         const finalCopyBtn = document.getElementById('livingViewerCopyPrompt');
         if (finalCopyBtn && promptText) {

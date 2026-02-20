@@ -1165,15 +1165,16 @@ body.sidebar-collapsed .living-container {
     background: rgba(255, 255, 255, 0.08);
 }
 
-/* Cuerpo: área scroll + footer fijo */
+/* Cuerpo: solo área scroll */
 .living-viewer-right-body {
-    display: grid;
-    grid-template-rows: 1fr auto;
     min-height: 0;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .living-viewer-right-scroll {
+    flex: 1;
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
@@ -1323,95 +1324,6 @@ body.sidebar-collapsed .living-container {
     background: rgba(0, 0, 0, 0.3);
 }
 
-/* Footer: Animate + grid de botones */
-.living-viewer-right-footer {
-    padding: 0 0.75rem 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    flex-shrink: 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-    background: #0f1113;
-}
-
-.living-viewer-animate {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    width: 100%;
-    height: 48px;
-    padding: 0 1.5rem;
-    background: linear-gradient(180deg, #EFFE17 0%, #c4d310 100%);
-    color: #0f1115;
-    border: none;
-    border-radius: 12px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: inset 0 -3px rgba(0, 0, 0, 0.2);
-    transition: opacity 0.2s ease;
-}
-
-.living-viewer-animate:hover {
-    opacity: 0.9;
-}
-
-.living-viewer-animate:active {
-    opacity: 0.8;
-}
-
-.living-viewer-actions-grid {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 0.5rem;
-}
-
-.living-viewer-actions-grid .living-viewer-action-btn {
-    height: 48px;
-    padding: 0 0.75rem;
-    justify-content: center;
-}
-
-.living-viewer-actions-grid .living-viewer-action-btn:nth-child(1),
-.living-viewer-actions-grid .living-viewer-action-btn:nth-child(2),
-.living-viewer-actions-grid .living-viewer-action-btn:nth-child(3) {
-    grid-column: span 2;
-}
-
-.living-viewer-actions-grid .living-viewer-action-btn .fa,
-.living-viewer-actions-grid .living-viewer-action-btn i {
-    font-size: 1.25rem;
-}
-
-.living-viewer-actions-grid .living-viewer-action-btn:nth-child(4),
-.living-viewer-actions-grid .living-viewer-action-btn:nth-child(5),
-.living-viewer-actions-grid .living-viewer-action-btn:nth-child(6) {
-    grid-column: span 1;
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-}
-
-.living-viewer-action-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 10px;
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 0.8125rem;
-    cursor: pointer;
-    transition: background 0.2s ease;
-}
-
-.living-viewer-action-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.living-viewer-download.living-viewer-action-btn {
-    padding: 0 0.75rem;
-}
 
 @media (max-width: 900px) {
     .living-viewer-content {
