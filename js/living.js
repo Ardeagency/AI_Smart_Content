@@ -1632,6 +1632,8 @@ class LivingManager {
         const image = document.getElementById('livingViewerImage');
         const promptEl = document.getElementById('livingViewerPrompt');
         const metadataEl = document.getElementById('livingViewerMetadata');
+        const authorNameEl = document.getElementById('livingViewerAuthorName');
+        const copyPromptBtn = document.getElementById('livingViewerCopyPrompt');
         const closeBtn = document.getElementById('livingViewerClose');
         const backdrop = document.getElementById('livingViewerBackdrop');
         const downloadBtn = document.getElementById('livingViewerDownload');
@@ -1641,11 +1643,13 @@ class LivingManager {
             return;
         }
 
-        // Cargar imagen
+        const item = data.item || {};
+        const output = item.output || {};
+        const run = item.run || {};
+
         if (data.imageUrl) {
             image.src = data.imageUrl;
             image.alt = data.prompt || 'Producción';
-            // Resetear zoom al cargar nueva imagen
             image.style.transform = 'scale(1)';
             image.style.transformOrigin = 'center center';
         } else {
@@ -1653,77 +1657,70 @@ class LivingManager {
             image.alt = 'Sin imagen disponible';
         }
         
-        // Guardar URL de imagen para descarga
-        if (downloadBtn) {
-            downloadBtn.dataset.imageUrl = data.imageUrl || '';
-        }
-        
-        // Configurar zoom en la imagen
+        if (downloadBtn) downloadBtn.dataset.imageUrl = data.imageUrl || '';
         this.setupImageZoom(image);
         
-        // Cargar prompt
-        promptEl.textContent = data.prompt || 'Sin prompt disponible';
+        const promptText = data.prompt || 'Sin prompt disponible';
+        promptEl.textContent = promptText;
         
-        // Cargar metadatos
-        const item = data.item || {};
-        const output = item.output || {};
-        const run = item.run || {};
-        const itemData = item.item || {};
+        if (authorNameEl) authorNameEl.textContent = this.getFlowName(run);
         
-        const metadataItems = [];
-        
-        // Solo mostrar la fecha sin label
+        const modelName = (output.metadata && typeof output.metadata === 'object' && output.metadata.model) 
+            ? output.metadata.model 
+            : (run.content_flows && run.content_flows.name) || 'Nano Banana Pro';
+        const thumbUrl = data.imageUrl && data.imageUrl.startsWith('http') ? data.imageUrl : '';
+        const quality = (output.metadata && output.metadata.quality) || (output.technical_params && output.technical_params.quality) || '4k';
         let creationDate = null;
-        if (output.created_at) {
-            creationDate = new Date(output.created_at).toLocaleString('es-ES');
-        } else if (itemData.created_at) {
-            creationDate = new Date(itemData.created_at).toLocaleString('es-ES');
-        }
+        if (output.created_at) creationDate = new Date(output.created_at).toLocaleString('es-ES');
+        else if (item.item && item.item.created_at) creationDate = new Date(item.item.created_at).toLocaleString('es-ES');
         
-        // Solo mostrar la fecha, sin otros metadatos
-        metadataEl.innerHTML = creationDate
-            ? `<div style="color: var(--living-text-muted); font-size: 13px;">${this.escapeHtml(creationDate)}</div>`
-            : '<div style="color: var(--living-text-muted); font-size: 13px;">Fecha no disponible</div>';
+        metadataEl.innerHTML = `
+            <div class="info-row"><span class="info-label">Model</span><span>${this.escapeHtml(modelName)}</span></div>
+            <div class="info-row"><span class="info-label">Images</span>${thumbUrl ? `<img class="info-thumb" src="${this.escapeHtml(thumbUrl)}" alt="" />` : '<span>—</span>'}</div>
+            <div class="info-row"><span class="info-label">Quality</span><span>${this.escapeHtml(quality)}</span></div>
+            ${creationDate ? `<div class="info-row"><span class="info-label">Date</span><span>${this.escapeHtml(creationDate)}</span></div>` : ''}
+        `;
         
-        // Mostrar modal
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
         
-        // Cerrar modal - remover listeners anteriores para evitar duplicados
         const closeModal = () => {
             modal.classList.remove('active');
             document.body.style.overflow = '';
         };
         
-        // Remover listeners anteriores
         const newCloseBtn = closeBtn.cloneNode(true);
         closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
         const newBackdrop = backdrop.cloneNode(true);
         backdrop.parentNode.replaceChild(newBackdrop, backdrop);
         const newDownloadBtn = downloadBtn ? downloadBtn.cloneNode(true) : null;
-        if (downloadBtn && newDownloadBtn) {
-            downloadBtn.parentNode.replaceChild(newDownloadBtn, downloadBtn);
-        }
+        if (downloadBtn && newDownloadBtn) downloadBtn.parentNode.replaceChild(newDownloadBtn, downloadBtn);
         
-        // Agregar nuevos listeners
         document.getElementById('livingViewerClose').addEventListener('click', closeModal);
         document.getElementById('livingViewerBackdrop').addEventListener('click', closeModal);
         
-        // Listener para botón de descarga
-        if (newDownloadBtn) {
-            const finalDownloadBtn = document.getElementById('livingViewerDownload');
-            if (finalDownloadBtn) {
-                finalDownloadBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const imageUrl = finalDownloadBtn.dataset.imageUrl;
-                    if (imageUrl && imageUrl.startsWith('http')) {
-                        this.downloadImage(imageUrl);
-                    }
-                });
-            }
+        const finalDownloadBtn = document.getElementById('livingViewerDownload');
+        if (finalDownloadBtn) {
+            finalDownloadBtn.dataset.imageUrl = data.imageUrl || '';
+            finalDownloadBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const url = finalDownloadBtn.dataset.imageUrl;
+                if (url && url.startsWith('http')) this.downloadImage(url);
+            });
         }
         
-        // Cerrar con ESC
+        const finalCopyBtn = document.getElementById('livingViewerCopyPrompt');
+        if (finalCopyBtn && promptText) {
+            finalCopyBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(promptText).then(() => {
+                        if (typeof window.showToast === 'function') window.showToast('Prompt copiado');
+                    }).catch(() => {});
+                }
+            });
+        }
+        
         const handleEsc = (e) => {
             if (e.key === 'Escape') {
                 closeModal();

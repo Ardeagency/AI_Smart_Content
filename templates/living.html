@@ -8,29 +8,66 @@
         </div>
     </main>
 
-    <!-- Modal de Visualización - Editorial Card -->
+    <!-- Modal de previsualización (estilo referencia: dos columnas, herramientas, autor, prompt, información, acciones) -->
     <div class="living-viewer-modal" id="livingViewerModal">
         <div class="living-viewer-backdrop" id="livingViewerBackdrop"></div>
         <div class="living-viewer-container">
-            <button class="living-viewer-close" id="livingViewerClose">
-                <i class="fas fa-times"></i>
-            </button>
             <div class="living-viewer-content">
-                <div class="living-viewer-visual">
-                    <img id="livingViewerImage" src="" alt="" />
-                </div>
-                <div class="living-viewer-editorial">
-                    <div class="living-viewer-prompt">
-                        <label class="living-viewer-label">Prompt</label>
-                        <div class="living-viewer-prompt-text" id="livingViewerPrompt"></div>
+                <!-- Columna izquierda: imagen + barra de herramientas -->
+                <div class="living-viewer-left">
+                    <div class="living-viewer-visual">
+                        <img id="livingViewerImage" src="" alt="" />
                     </div>
-                    <div class="living-viewer-metadata">
+                    <div class="living-viewer-tools">
+                        <button type="button" class="living-viewer-tool-pill"><i class="fas fa-list"></i> Overview</button>
+                        <button type="button" class="living-viewer-tool-pill"><i class="fas fa-expand"></i> Upscale</button>
+                        <button type="button" class="living-viewer-tool-pill"><i class="fas fa-wand-magic-sparkles"></i> Enhancer</button>
+                        <button type="button" class="living-viewer-tool-pill"><i class="fas fa-lightbulb"></i> Relight</button>
+                        <button type="button" class="living-viewer-tool-pill"><i class="fas fa-paintbrush"></i> Inpaint</button>
+                        <button type="button" class="living-viewer-tool-pill"><i class="fas fa-sliders"></i> Angles</button>
+                    </div>
+                </div>
+                <!-- Columna derecha: autor, prompt, información, acciones -->
+                <div class="living-viewer-right">
+                    <button class="living-viewer-close" id="livingViewerClose" aria-label="Cerrar">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <div class="living-viewer-author">
+                        <div class="living-viewer-avatar" id="livingViewerAvatar"></div>
+                        <div class="living-viewer-author-info">
+                            <span class="living-viewer-author-name" id="livingViewerAuthorName">Producción</span>
+                            <span class="living-viewer-author-role">Author</span>
+                        </div>
+                    </div>
+                    <div class="living-viewer-block">
+                        <div class="living-viewer-block-head">
+                            <h3 class="living-viewer-block-title">PROMPT</h3>
+                            <button type="button" class="living-viewer-copy-prompt" id="livingViewerCopyPrompt" title="Copiar prompt">
+                                <i class="fas fa-copy"></i> Copy
+                            </button>
+                        </div>
+                        <div class="living-viewer-prompt-text" id="livingViewerPrompt"></div>
+                        <button type="button" class="living-viewer-see-all" data-section="prompt">See all <i class="fas fa-chevron-down"></i></button>
+                    </div>
+                    <div class="living-viewer-block">
+                        <h3 class="living-viewer-block-title">INFORMATION</h3>
                         <div class="living-viewer-metadata-content" id="livingViewerMetadata"></div>
+                        <button type="button" class="living-viewer-see-all" data-section="info">See all <i class="fas fa-chevron-down"></i></button>
                     </div>
                     <div class="living-viewer-actions">
-                        <button class="living-viewer-download" id="livingViewerDownload" title="Descargar producción">
-                            <i class="fas fa-download"></i>
+                        <button type="button" class="living-viewer-animate" id="livingViewerAnimate">
+                            <i class="fas fa-video"></i> Animate
                         </button>
+                        <div class="living-viewer-actions-row">
+                            <button type="button" class="living-viewer-action-btn" title="Abrir en"><i class="fas fa-external-link-alt"></i> Open in</button>
+                            <button type="button" class="living-viewer-action-btn" title="Reference"><i class="fas fa-link"></i> Reference</button>
+                            <button type="button" class="living-viewer-download living-viewer-action-btn" id="livingViewerDownload" title="Descargar">
+                                <i class="fas fa-download"></i> Download
+                            </button>
+                            <button type="button" class="living-viewer-action-btn" title="Me gusta"><i class="fas fa-heart"></i></button>
+                            <button type="button" class="living-viewer-action-btn" title="Compartir"><i class="fas fa-share-alt"></i></button>
+                            <button type="button" class="living-viewer-action-btn" title="Más opciones"><i class="fas fa-ellipsis-v"></i></button>
+                        </div>
                     </div>
                 </div>
             </div>
