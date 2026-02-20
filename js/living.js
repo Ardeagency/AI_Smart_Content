@@ -1230,6 +1230,11 @@ class LivingManager {
         gridEl?.addEventListener('click', onGridClick);
 
         const openDropdown = () => {
+            if (trigger && dropdown) {
+                const rect = trigger.getBoundingClientRect();
+                dropdown.style.left = rect.left + 'px';
+                dropdown.style.top = (rect.bottom + 4) + 'px';
+            }
             dropdown?.classList.add('is-open');
             dropdown?.setAttribute('aria-hidden', 'false');
             trigger?.setAttribute('aria-expanded', 'true');
@@ -1239,6 +1244,7 @@ class LivingManager {
             dropdown?.classList.remove('is-open');
             dropdown?.setAttribute('aria-hidden', 'true');
             trigger?.setAttribute('aria-expanded', 'false');
+            if (dropdown) dropdown.style.left = dropdown.style.top = '';
         };
 
         trigger?.addEventListener('click', (e) => {

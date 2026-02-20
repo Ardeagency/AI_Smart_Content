@@ -219,7 +219,7 @@ body.sidebar-collapsed .living-container {
     margin-left: var(--spacing-sm);
 }
 
-/* Dropdown calendario (referencia: fondo claro, mes/año, chevrons, semana, grid) */
+/* Dropdown calendario: fuera del flujo cuando está abierto para no ser recortado por ancestros */
 .living-date-dropdown {
     position: absolute;
     top: 100%;
@@ -231,13 +231,18 @@ body.sidebar-collapsed .living-container {
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-floating);
     z-index: var(--z-dropdown);
-    min-width: 320px;
     width: 320px;
+    min-width: 320px;
+    max-width: 320px;
+    box-sizing: border-box;
     display: none;
 }
 
 .living-date-dropdown.is-open {
     display: block;
+    position: fixed;
+    /* left y top se asignan por JS desde el trigger para que no lo recorte ningún contenedor */
+    z-index: calc(var(--z-modal, 500) - 1);
 }
 
 .living-date-nav {
@@ -274,7 +279,7 @@ body.sidebar-collapsed .living-container {
 
 .living-date-weekdays {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: 2px;
     margin-bottom: var(--spacing-sm);
     font-size: 0.6875rem;
@@ -282,17 +287,21 @@ body.sidebar-collapsed .living-container {
     color: var(--text-muted);
     text-transform: uppercase;
     text-align: center;
+    min-width: 0;
 }
 
 .living-date-grid {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: 2px;
     font-size: 0.8125rem;
+    min-width: 0;
 }
 
 .living-date-cell {
     aspect-ratio: 1;
+    min-width: 0;
+    min-height: 0;
     display: flex;
     align-items: center;
     justify-content: center;
