@@ -66,6 +66,8 @@
     upload: 'FILE_CONTAINER',
     section: 'STRUCTURAL_CONTAINER',
     divider: 'STRUCTURAL_CONTAINER',
+    heading: 'STRUCTURAL_CONTAINER',
+    description: 'STRUCTURAL_CONTAINER',
     description_block: 'STRUCTURAL_CONTAINER',
     accordion: 'STRUCTURAL_CONTAINER',
     tabs: 'STRUCTURAL_CONTAINER',
@@ -82,6 +84,8 @@
 
   function getInputType(field) {
     if (!field) return 'text';
+    var ct = (field.container_type || '').toLowerCase();
+    if (ct && ['section', 'divider', 'heading', 'description'].indexOf(ct) >= 0) return ct;
     var t = field.input_type || field.type || field.inputType || '';
     return (typeof t === 'string' && t.length) ? t.toLowerCase() : 'text';
   }
@@ -314,7 +318,32 @@
     Object.keys(f).forEach(function (k) { if (f2[k] === undefined) f2[k] = f[k]; });
     return renderToggleInput(f2, opts || {}, isPreviewOpts(opts));
   }
-  function formStructural() {
+  /** Renderiza bloque estructural en formulario consumidor: section, divider, heading, description */
+  function formStructural(f) {
+    var t = getInputType(f);
+    var title = escapeHtml(f.title || f.label || '');
+    var sectionDesc = escapeHtml(f.section_description || f.description || '');
+    var text = escapeHtml(f.text || f.label || '');
+    var level = Math.min(6, Math.max(1, parseInt(f.level, 10) || 2));
+    var alignment = (f.alignment || 'left').toLowerCase();
+    var alignClass = alignment !== 'left' ? ' structural-align-' + alignment : '';
+    if (t === 'section') {
+      var collapsible = f.collapsible ? ' structural-section-collapsible' : '';
+      return '<div class="form-structural form-section' + collapsible + alignClass + '" data-key="' + escapeHtml(f.key || '') + '">' +
+        (title ? '<div class="form-section-header"><span class="form-section-title">' + title + '</span></div>' : '') +
+        (sectionDesc ? '<p class="form-section-description">' + sectionDesc + '</p>' : '') +
+        '</div>';
+    }
+    if (t === 'divider') {
+      var spacing = (f.spacing || 'medium').toLowerCase();
+      return '<hr class="form-structural form-divider form-divider-' + spacing + '" data-key="' + escapeHtml(f.key || '') + '">';
+    }
+    if (t === 'heading') {
+      return '<h' + level + ' class="form-structural form-heading' + alignClass + '" data-key="' + escapeHtml(f.key || '') + '">' + (text || 'Título') + '</h' + level + '>';
+    }
+    if (t === 'description') {
+      return '<p class="form-structural form-description' + alignClass + '" data-key="' + escapeHtml(f.key || '') + '">' + (text || '') + '</p>';
+    }
     return '';
   }
 
@@ -557,8 +586,8 @@
     STRUCTURAL_CONTAINER: {
       preview: function (f) {
         var t = getInputType(f);
-        var labels = { section: 'Sección', divider: 'Divisor', description_block: 'Texto informativo', accordion: 'Acordeón', tabs: 'Pestañas', repeater: 'Repetidor', group: 'Grupo' };
-        var icons = { section: 'square', divider: 'minus', description_block: 'info', accordion: 'caret-double-down', tabs: 'squares-four', repeater: 'repeat', group: 'stack' };
+        var labels = { section: 'Sección', divider: 'Divisor', heading: 'Título', description: 'Texto informativo', description_block: 'Texto informativo', accordion: 'Acordeón', tabs: 'Pestañas', repeater: 'Repetidor', group: 'Grupo' };
+        var icons = { section: 'square', divider: 'minus', heading: 'type', description: 'align-left', description_block: 'info', accordion: 'caret-double-down', tabs: 'squares-four', repeater: 'repeat', group: 'stack' };
         return previewBlock(labels[t] || f.label || 'Bloque', icons[t] || 'placeholder');
       },
       form: formStructural
@@ -608,6 +637,8 @@
 
     register('section', { preview: function () { return previewBlock('Sección', 'square'); }, form: formStructural });
     register('divider', { preview: function () { return previewBlock('Divisor', 'minus'); }, form: formStructural });
+    register('heading', { preview: function () { return previewBlock('Título', 'type'); }, form: formStructural });
+    register('description', { preview: function () { return previewBlock('Texto informativo', 'align-left'); }, form: formStructural });
     register('description_block', { preview: function () { return previewBlock('Texto informativo', 'info'); }, form: formStructural });
   }
   registerAll();
@@ -678,7 +709,9 @@
       { id: 'product_selector', name: 'Selector de Producto', description: 'Producto (único o múltiple)', category: 'brand', icon_name: 'shopping-bag', base_schema: { input_type: 'product_selector', type: 'product_selector', data_type: 'object' } },
       { id: 'tag_input', name: 'Tags (texto)', description: 'Etiquetas como texto', category: 'smart_text', icon_name: 'tag', base_schema: { input_type: 'tag_input', type: 'tag_input', data_type: 'array', placeholder: 'Añade tags...' } },
       { id: 'section', name: 'Sección', description: 'Agrupador visual', category: 'structural', icon_name: 'square', base_schema: { input_type: 'section', type: 'section' } },
-      { id: 'divider', name: 'Divisor', description: 'Línea separadora', category: 'structural', icon_name: 'minus', base_schema: { input_type: 'divider', type: 'divider' } }
+      { id: 'divider', name: 'Divisor', description: 'Línea separadora', category: 'structural', icon_name: 'minus', base_schema: { input_type: 'divider', type: 'divider' } },
+      { id: 'heading', name: 'Título', description: 'Título visual', category: 'structural', icon_name: 'type', base_schema: { input_type: 'heading', type: 'heading', text: 'Título', level: 2 } },
+      { id: 'description', name: 'Texto informativo', description: 'Bloque de texto', category: 'structural', icon_name: 'align-left', base_schema: { input_type: 'description', type: 'description', text: '' } }
     ];
   }
 
@@ -714,6 +747,7 @@
   function wrapFormField(field, inputHtml, opts) {
     opts = opts || {};
     if (!inputHtml || inputHtml.trim() === '') return '';
+    if (isStructural(field)) return inputHtml;
     var id = (opts.idPrefix || '') + (field.key || 'field');
     var labelText = escapeHtml(field.label || field.key || '');
     var showLabel = opts.showLabel !== false;

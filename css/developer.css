@@ -6047,6 +6047,20 @@
   margin: 0 0 16px 0;
 }
 
+/* Bloques estructurales del Builder (formulario consumidor / test) */
+.form-structural.form-section .form-section-header { margin-bottom: 8px; }
+.form-structural.form-section .form-section-title { font-size: 1rem; font-weight: 600; color: var(--text-primary); }
+.form-structural.form-section .form-section-description { font-size: 0.875rem; color: var(--text-secondary); margin: 0 0 12px 0; }
+.form-structural.form-divider { border: none; border-top: 1px solid var(--border-color); margin: 16px 0; }
+.form-structural.form-divider.form-divider-small { margin: 8px 0; }
+.form-structural.form-divider.form-divider-large { margin: 24px 0; }
+.form-structural.form-heading { font-weight: 600; color: var(--text-primary); margin: 12px 0 8px 0; }
+.form-structural.form-heading.structural-align-center { text-align: center; }
+.form-structural.form-heading.structural-align-right { text-align: right; }
+.form-structural.form-description { font-size: 0.875rem; color: var(--text-secondary); margin: 0 0 12px 0; line-height: 1.5; }
+.form-structural.form-description.structural-align-center { text-align: center; }
+.form-structural.form-description.structural-align-right { text-align: right; }
+
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;

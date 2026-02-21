@@ -212,8 +212,8 @@ CREATE TABLE public.campaigns (
   oferta_principal ARRAY DEFAULT '{}'::text[],
   tono_modificador ARRAY DEFAULT '{}'::text[],
   CONSTRAINT campaigns_pkey PRIMARY KEY (id),
-  CONSTRAINT campaigns_project_id_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id),
-  CONSTRAINT campaigns_audience_id_fkey FOREIGN KEY (audience_id) REFERENCES public.audiences(id)
+  CONSTRAINT campaigns_audience_id_fkey FOREIGN KEY (audience_id) REFERENCES public.audiences(id),
+  CONSTRAINT campaigns_project_id_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id)
 );
 CREATE TABLE public.content_categories (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -244,6 +244,8 @@ CREATE TABLE public.content_flows (
   subcategory_id uuid,
   slug text UNIQUE,
   execution_mode text DEFAULT 'single_step'::text CHECK (execution_mode = ANY (ARRAY['single_step'::text, 'multi_step'::text, 'sequential'::text])),
+  execution_strategy text DEFAULT 'linear'::text CHECK (execution_strategy = ANY (ARRAY['linear'::text, 'conditional'::text, 'parallel'::text])),
+  show_in_catalog boolean DEFAULT false,
   CONSTRAINT content_flows_pkey PRIMARY KEY (id),
   CONSTRAINT content_flows_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.content_categories(id),
   CONSTRAINT content_flows_subcategory_id_fkey FOREIGN KEY (subcategory_id) REFERENCES public.content_subcategories(id),
@@ -280,8 +282,8 @@ CREATE TABLE public.developer_logs (
   created_at timestamp with time zone DEFAULT now(),
   flow_module_id uuid,
   CONSTRAINT developer_logs_pkey PRIMARY KEY (id),
-  CONSTRAINT logs_flow_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id),
-  CONSTRAINT fk_logs_module FOREIGN KEY (flow_module_id) REFERENCES public.flow_modules(id)
+  CONSTRAINT fk_logs_module FOREIGN KEY (flow_module_id) REFERENCES public.flow_modules(id),
+  CONSTRAINT logs_flow_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id)
 );
 CREATE TABLE public.developer_notifications (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -323,17 +325,17 @@ CREATE TABLE public.flow_modules (
   content_flow_id uuid NOT NULL,
   name text NOT NULL,
   step_order integer NOT NULL,
-  execution_type text DEFAULT 'webhook'::text CHECK (execution_type = ANY (ARRAY['webhook'::text, 'python'::text, 'make'::text, 'internal'::text, 'ai_direct'::text, 'aggregator'::text])),
   webhook_url_test text,
   webhook_url_prod text,
   input_schema jsonb DEFAULT '{}'::jsonb,
   output_schema jsonb DEFAULT '{}'::jsonb,
   is_human_approval_required boolean DEFAULT false,
+  execution_type text DEFAULT 'webhook'::text CHECK (execution_type = ANY (ARRAY['webhook'::text, 'python'::text, 'make'::text, 'internal'::text, 'ai_direct'::text, 'aggregator'::text])),
   next_module_id uuid,
   routing_rules jsonb,
   CONSTRAINT flow_modules_pkey PRIMARY KEY (id),
   CONSTRAINT fk_module_parent FOREIGN KEY (content_flow_id) REFERENCES public.content_flows(id),
-  CONSTRAINT fk_module_next FOREIGN KEY (next_module_id) REFERENCES public.flow_modules(id)
+  CONSTRAINT flow_modules_next_module_id_fkey FOREIGN KEY (next_module_id) REFERENCES public.flow_modules(id)
 );
 CREATE TABLE public.flow_runs (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -352,10 +354,10 @@ CREATE TABLE public.flow_runs (
   is_paused boolean DEFAULT false,
   step_history jsonb DEFAULT '[]'::jsonb,
   CONSTRAINT flow_runs_pkey PRIMARY KEY (id),
-  CONSTRAINT flow_runs_flow_id_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id),
+  CONSTRAINT flow_runs_audience_id_fkey FOREIGN KEY (audience_id) REFERENCES public.audiences(id),
   CONSTRAINT flow_runs_brand_id_fkey FOREIGN KEY (brand_id) REFERENCES public.brands(id),
   CONSTRAINT flow_runs_entity_id_fkey FOREIGN KEY (entity_id) REFERENCES public.brand_entities(id),
-  CONSTRAINT flow_runs_audience_id_fkey FOREIGN KEY (audience_id) REFERENCES public.audiences(id)
+  CONSTRAINT flow_runs_flow_id_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id)
 );
 CREATE TABLE public.flow_technical_details (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -428,8 +430,8 @@ CREATE TABLE public.products (
   variantes ARRAY DEFAULT '{}'::text[],
   url_producto text,
   CONSTRAINT products_pkey PRIMARY KEY (id),
-  CONSTRAINT products_project_id_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id),
-  CONSTRAINT products_entity_id_fkey FOREIGN KEY (entity_id) REFERENCES public.brand_entities(id)
+  CONSTRAINT products_entity_id_fkey FOREIGN KEY (entity_id) REFERENCES public.brand_entities(id),
+  CONSTRAINT products_project_id_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id)
 );
 CREATE TABLE public.profiles (
   id uuid NOT NULL,
@@ -455,8 +457,8 @@ CREATE TABLE public.runs_inputs (
   created_at timestamp with time zone DEFAULT now(),
   flow_module_id uuid,
   CONSTRAINT runs_inputs_pkey PRIMARY KEY (id),
-  CONSTRAINT runs_inputs_run_fkey FOREIGN KEY (run_id) REFERENCES public.flow_runs(id),
-  CONSTRAINT fk_inputs_module FOREIGN KEY (flow_module_id) REFERENCES public.flow_modules(id)
+  CONSTRAINT fk_inputs_module FOREIGN KEY (flow_module_id) REFERENCES public.flow_modules(id),
+  CONSTRAINT runs_inputs_run_fkey FOREIGN KEY (run_id) REFERENCES public.flow_runs(id)
 );
 CREATE TABLE public.runs_outputs (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -474,8 +476,8 @@ CREATE TABLE public.runs_outputs (
   storage_object_id uuid,
   flow_module_id uuid,
   CONSTRAINT runs_outputs_pkey PRIMARY KEY (id),
-  CONSTRAINT flow_outputs_run_id_fkey FOREIGN KEY (run_id) REFERENCES public.flow_runs(id),
-  CONSTRAINT fk_outputs_module FOREIGN KEY (flow_module_id) REFERENCES public.flow_modules(id)
+  CONSTRAINT fk_outputs_module FOREIGN KEY (flow_module_id) REFERENCES public.flow_modules(id),
+  CONSTRAINT flow_outputs_run_id_fkey FOREIGN KEY (run_id) REFERENCES public.flow_runs(id)
 );
 CREATE TABLE public.services (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -495,8 +497,8 @@ CREATE TABLE public.services (
   metodologia_pasos ARRAY DEFAULT '{}'::text[],
   url_servicio text,
   CONSTRAINT services_pkey PRIMARY KEY (id),
-  CONSTRAINT services_project_id_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id),
-  CONSTRAINT services_entity_id_fkey FOREIGN KEY (entity_id) REFERENCES public.brand_entities(id)
+  CONSTRAINT services_entity_id_fkey FOREIGN KEY (entity_id) REFERENCES public.brand_entities(id),
+  CONSTRAINT services_project_id_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id)
 );
 CREATE TABLE public.storage_usage (
   organization_id uuid NOT NULL,

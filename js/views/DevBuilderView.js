@@ -606,13 +606,21 @@ class DevBuilderView extends DevBaseView {
     const base = { ...row };
     const schema = base.base_schema && typeof base.base_schema === 'object' ? { ...base.base_schema } : {};
     const nameKey = (base.name || '').toLowerCase().replace(/\s+/g, '_');
-    // Asegurar input_type y type desde base_schema o inferir desde name (evitar que "dropdown" quede como text)
-    const inferredType = nameKey === 'dropdown' ? 'dropdown' : (schema.input_type || schema.type || nameKey || 'text');
-    schema.input_type = schema.input_type || schema.type || inferredType;
-    schema.type = schema.type || schema.input_type;
+    // Plantillas BD pueden traer container_type (SECTION, DIVIDER, HEADING, DESCRIPTION) sin input_type
+    const containerType = (schema.container_type || '').toLowerCase();
+    if (containerType && ['section', 'divider', 'heading', 'description'].indexOf(containerType) >= 0) {
+      schema.input_type = containerType;
+      schema.type = containerType;
+      schema.is_structural = true;
+    } else {
+      const inferredType = nameKey === 'dropdown' ? 'dropdown' : (schema.input_type || schema.type || nameKey || 'text');
+      schema.input_type = schema.input_type || schema.type || inferredType;
+      schema.type = schema.type || schema.input_type;
+    }
     if ((schema.input_type === 'dropdown' || schema.input_type === 'select') && !Array.isArray(schema.options)) {
       schema.options = schema.options || [{ value: 'opcion1', label: 'Opción 1' }, { value: 'opcion2', label: 'Opción 2' }];
     }
+    base.id = base.id || base.name || nameKey;
     base.base_schema = schema;
     base.default_ui_config = base.default_ui_config && typeof base.default_ui_config === 'object' ? base.default_ui_config : {};
     return base;
@@ -1142,6 +1150,132 @@ class DevBuilderView extends DevBaseView {
     this.updateJsonPreview();
   }
 
+  isStructuralField(field) {
+    const t = (field.input_type || field.type || field.container_type || '').toLowerCase();
+    return ['section', 'divider', 'heading', 'description', 'description_block'].indexOf(t) >= 0;
+  }
+
+  renderStructuralPropertiesPanel(field, panel) {
+    const t = (field.input_type || field.type || 'section').toLowerCase();
+    const esc = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'));
+    let content = `
+      <div class="properties-form properties-form-structural">
+        <div class="property-group">
+          <h4>Identificación</h4>
+          <div class="property-field">
+            <label for="propKey">Key (referencia)</label>
+            <input type="text" id="propKey" value="${esc(field.key)}" pattern="[a-z0-9_]*">
+            <span class="field-help">Opcional. No se envía al backend.</span>
+          </div>
+        </div>`;
+    if (t === 'section') {
+      content += `
+        <div class="property-group">
+          <h4>Sección</h4>
+          <div class="property-field">
+            <label for="propStructuralTitle">Título</label>
+            <input type="text" id="propStructuralTitle" value="${esc(field.title || field.label)}">
+          </div>
+          <div class="property-field">
+            <label for="propStructuralDesc">Descripción (subtítulo)</label>
+            <input type="text" id="propStructuralDesc" value="${esc(field.section_description)}">
+          </div>
+          <div class="property-toggle">
+            <label><input type="checkbox" id="propStructuralCollapsible" ${field.collapsible ? 'checked' : ''}><span>Colapsable</span></label>
+          </div>
+        </div>`;
+    } else if (t === 'divider') {
+      content += `
+        <div class="property-group">
+          <h4>Divisor</h4>
+          <div class="property-field">
+            <label for="propStructuralSpacing">Espaciado</label>
+            <select id="propStructuralSpacing">
+              <option value="small" ${(field.spacing || 'medium') === 'small' ? 'selected' : ''}>Pequeño</option>
+              <option value="medium" ${(field.spacing || 'medium') === 'medium' ? 'selected' : ''}>Medio</option>
+              <option value="large" ${(field.spacing || '') === 'large' ? 'selected' : ''}>Grande</option>
+            </select>
+          </div>
+        </div>`;
+    } else if (t === 'heading') {
+      content += `
+        <div class="property-group">
+          <h4>Título</h4>
+          <div class="property-field">
+            <label for="propStructuralText">Texto</label>
+            <input type="text" id="propStructuralText" value="${esc(field.text || field.label)}">
+          </div>
+          <div class="property-field">
+            <label for="propStructuralLevel">Nivel (1-6)</label>
+            <select id="propStructuralLevel">
+              ${[1, 2, 3, 4, 5, 6].map(n => `<option value="${n}" ${(field.level != null ? Number(field.level) : 2) === n ? 'selected' : ''}>H${n}</option>`).join('')}
+            </select>
+          </div>
+          <div class="property-field">
+            <label for="propStructuralAlignment">Alineación</label>
+            <select id="propStructuralAlignment">
+              <option value="left" ${(field.alignment || 'left') === 'left' ? 'selected' : ''}>Izquierda</option>
+              <option value="center" ${field.alignment === 'center' ? 'selected' : ''}>Centro</option>
+              <option value="right" ${field.alignment === 'right' ? 'selected' : ''}>Derecha</option>
+            </select>
+          </div>
+        </div>`;
+    } else if (t === 'description' || t === 'description_block') {
+      content += `
+        <div class="property-group">
+          <h4>Texto informativo</h4>
+          <div class="property-field">
+            <label for="propStructuralText">Texto</label>
+            <textarea id="propStructuralText" rows="3">${esc(field.text || field.label)}</textarea>
+          </div>
+          <div class="property-field">
+            <label for="propStructuralAlignment">Alineación</label>
+            <select id="propStructuralAlignment">
+              <option value="left" ${(field.alignment || 'left') === 'left' ? 'selected' : ''}>Izquierda</option>
+              <option value="center" ${field.alignment === 'center' ? 'selected' : ''}>Centro</option>
+              <option value="right" ${field.alignment === 'right' ? 'selected' : ''}>Derecha</option>
+            </select>
+          </div>
+        </div>`;
+    }
+    content += '</div>';
+    panel.innerHTML = content;
+    this.setupStructuralPropertiesListeners(field, t);
+  }
+
+  setupStructuralPropertiesListeners(field, structuralType) {
+    const sync = () => {
+      this.hasUnsavedChanges = true;
+      this.renderCanvas();
+      this.updateJsonPreview();
+    };
+    const keyEl = this.querySelector('#propKey');
+    if (keyEl) keyEl.addEventListener('input', () => { field.key = keyEl.value.trim() || field.key; sync(); });
+    if (structuralType === 'section') {
+      const titleEl = this.querySelector('#propStructuralTitle');
+      const descEl = this.querySelector('#propStructuralDesc');
+      const collEl = this.querySelector('#propStructuralCollapsible');
+      if (titleEl) titleEl.addEventListener('input', () => { field.title = titleEl.value; field.label = titleEl.value; sync(); });
+      if (descEl) descEl.addEventListener('input', () => { field.section_description = descEl.value; sync(); });
+      if (collEl) collEl.addEventListener('change', () => { field.collapsible = collEl.checked; sync(); });
+    } else if (structuralType === 'divider') {
+      const spacingEl = this.querySelector('#propStructuralSpacing');
+      if (spacingEl) spacingEl.addEventListener('change', () => { field.spacing = spacingEl.value; sync(); });
+    } else if (structuralType === 'heading') {
+      const textEl = this.querySelector('#propStructuralText');
+      const levelEl = this.querySelector('#propStructuralLevel');
+      const alignEl = this.querySelector('#propStructuralAlignment');
+      if (textEl) textEl.addEventListener('input', () => { field.text = textEl.value; field.label = textEl.value; sync(); });
+      if (levelEl) levelEl.addEventListener('change', () => { field.level = Number(levelEl.value); sync(); });
+      if (alignEl) alignEl.addEventListener('change', () => { field.alignment = alignEl.value; sync(); });
+    } else if (structuralType === 'description' || structuralType === 'description_block') {
+      const textEl = this.querySelector('#propStructuralText');
+      const alignEl = this.querySelector('#propStructuralAlignment');
+      if (textEl) textEl.addEventListener('input', () => { field.text = textEl.value; field.label = textEl.value; sync(); });
+      if (alignEl) alignEl.addEventListener('change', () => { field.alignment = alignEl.value; sync(); });
+    }
+  }
+
   renderPropertiesPanel() {
     const panel = this.querySelector('#propertiesPanel');
     if (!panel) return;
@@ -1157,6 +1291,10 @@ class DevBuilderView extends DevBaseView {
     }
     
     const field = this.inputSchema[this.selectedFieldIndex];
+    if (this.isStructuralField(field)) {
+      this.renderStructuralPropertiesPanel(field, panel);
+      return;
+    }
     const dataType = field.data_type || this.inferDataType(field);
     const defaultValueBlock = this.renderDefaultValueBlock(field, dataType);
     
@@ -3748,7 +3886,10 @@ class DevBuilderView extends DevBaseView {
         required: field.required
       })).join('');
     }
-    return this.inputSchema.filter(f => (f.input_type || f.type) !== 'section' && (f.input_type || f.type) !== 'divider' && (f.input_type || f.type) !== 'description_block').map(field => {
+    return this.inputSchema.filter(f => {
+      const t = (f.input_type || f.type || '').toLowerCase();
+      return ['section', 'divider', 'heading', 'description', 'description_block'].indexOf(t) < 0;
+    }).map(field => {
       const id = 'test_' + (field.key || 'field');
       return `<div class="test-field"><label for="${id}">${field.label || field.key}${field.required ? ' <span class="required">*</span>' : ''}</label><input type="text" id="${id}" name="${field.key}" ${field.required ? 'required' : ''}>${field.description ? `<span class="field-help">${field.description}</span>` : ''}</div>`;
     }).join('');
