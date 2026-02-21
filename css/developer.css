@@ -6060,6 +6060,10 @@
 .form-structural.form-description { font-size: 0.875rem; color: var(--text-secondary); margin: 0 0 12px 0; line-height: 1.5; }
 .form-structural.form-description.structural-align-center { text-align: center; }
 .form-structural.form-description.structural-align-right { text-align: right; }
+.form-structural.form-section.form-section-collapsible summary.form-section-header { cursor: pointer; list-style: none; }
+.form-structural.form-section.form-section-collapsible summary.form-section-header::-webkit-details-marker { display: none; }
+.form-structural.form-section.form-section-collapsible summary.form-section-header::before { content: '▾'; margin-right: 6px; opacity: 0.7; }
+.form-structural.form-section.form-section-collapsible[open] summary.form-section-header::before { content: '▴'; }
 
 .form-row {
   display: grid;
