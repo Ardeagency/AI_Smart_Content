@@ -210,14 +210,14 @@
   color: var(--accent-warm);
 }
 
-/* ---------- FLOW CARD ---------- */
+/* ---------- FLOW CARD (estilo catálogo: imagen + overlay inferior) ---------- */
 .flow-card {
   flex: 0 0 200px;
   width: 200px;
   scroll-snap-align: start;
   background: var(--bg-hover);
-  border: 1px solid var(--border-divider);
-  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
   overflow: hidden;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
@@ -227,7 +227,7 @@
 .flow-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-hover);
-  border-color: var(--border-color);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 .flow-card:focus {
   outline: 2px solid var(--accent-warm);
@@ -235,8 +235,8 @@
 }
 .flow-card-media {
   position: relative;
-  aspect-ratio: 16/10;
-  background: rgba(0,0,0,0.2);
+  aspect-ratio: 4/5;
+  background: rgba(0, 0, 0, 0.35);
 }
 .flow-card-img {
   width: 100%;
@@ -250,7 +250,8 @@
   align-items: center;
   justify-content: center;
   color: var(--text-muted);
-  font-size: 2rem;
+  font-size: 2.5rem;
+  background: linear-gradient(145deg, var(--bg-hover) 0%, rgba(0, 0, 0, 0.4) 100%);
 }
 .flow-card-badges {
   position: absolute;
@@ -261,6 +262,7 @@
   flex-wrap: wrap;
   gap: 0.35rem;
   pointer-events: none;
+  z-index: 1;
 }
 .flow-card-badge {
   padding: 0.2rem 0.5rem;
@@ -269,7 +271,7 @@
   text-transform: uppercase;
   letter-spacing: 0.03em;
   border-radius: 6px;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   color: var(--text-primary);
 }
 .flow-card-badge--new {
@@ -283,10 +285,81 @@
 .flow-card-badge--auto {
   background: var(--icon-button);
 }
+
+/* Overlay inferior (título, descripción, tags, métricas) */
+.flow-card-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 1rem 0.75rem;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.6) 60%, transparent 100%);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.flow-card--catalog .flow-card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.flow-card-desc {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.flow-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+.flow-card-tag {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  white-space: nowrap;
+}
+.flow-card-metrics {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.95);
+  margin-top: 0.15rem;
+}
+.flow-card-metric {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.flow-card-metric i {
+  opacity: 0.9;
+  font-size: 0.65rem;
+}
+
+/* Compatibilidad con cards que aún usen body (hero u otros) */
 .flow-card-body {
   padding: 1rem;
 }
-.flow-card-title {
+.flow-card:not(.flow-card--catalog) .flow-card-title {
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--text-primary);

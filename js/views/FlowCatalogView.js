@@ -422,6 +422,12 @@ class FlowCatalogView extends BaseView {
     return 'fa-align-left';
   }
 
+  getOutputTypeLabel(type) {
+    const t = (type || 'text').toLowerCase();
+    const labels = { text: 'Texto', image: 'Imagen', video: 'Video', audio: 'Audio', document: 'Documento', mixed: 'Mixto' };
+    return labels[t] || t;
+  }
+
   escapeHtml(text) {
     if (text == null) return '';
     const div = document.createElement('div');
@@ -431,7 +437,9 @@ class FlowCatalogView extends BaseView {
 
   renderFlowCard(flow, options = {}) {
     const name = this.escapeHtml(flow.name);
-    const humanTitle = flow.description ? this.escapeHtml(flow.description.slice(0, 60)) + (flow.description.length > 60 ? '…' : '') : name;
+    const description = flow.description
+      ? this.escapeHtml(flow.description.slice(0, 80)) + (flow.description.length > 80 ? '…' : '')
+      : '';
     const cost = flow.token_cost ?? 1;
     const likes = flow.likes_count || 0;
     const saves = flow.saves_count || 0;
@@ -443,20 +451,26 @@ class FlowCatalogView extends BaseView {
     const img = flow.flow_image_url
       ? `<img src="${this.escapeHtml(flow.flow_image_url)}" alt="${name}" class="flow-card-img" loading="lazy">`
       : `<div class="flow-card-placeholder"><i class="fas ${this.getOutputTypeIcon(flow.output_type)}"></i></div>`;
+    const tags = [];
+    if (flow._categoryName) tags.push(this.escapeHtml(flow._categoryName));
+    if (flow._subcategoryName) tags.push(this.escapeHtml(flow._subcategoryName));
+    tags.push(this.getOutputTypeLabel(flow.output_type));
+    const tagsHtml = tags.map(t => `<span class="flow-card-tag">${t}</span>`).join('');
     return `
-      <article class="flow-card" data-flow-id="${flow.id}" role="button" tabindex="0">
+      <article class="flow-card flow-card--catalog" data-flow-id="${flow.id}" role="button" tabindex="0">
         <div class="flow-card-media">
           ${img}
           <div class="flow-card-badges">${badges.join('')}</div>
-        </div>
-        <div class="flow-card-body">
-          <h3 class="flow-card-title">${this.escapeHtml(humanTitle)}</h3>
-          <p class="flow-card-subtitle">${name}</p>
-          <div class="flow-card-meta">
-            <span title="Ejecuciones"><i class="fas fa-play"></i> ${runs}</span>
-            <span title="Likes"><i class="fas fa-heart"></i> ${likes}</span>
-            <span title="Guardados"><i class="fas fa-bookmark"></i> ${saves}</span>
-            <span class="flow-card-cost">${cost} crédito(s)</span>
+          <div class="flow-card-overlay">
+            <h3 class="flow-card-title">${name}</h3>
+            ${description ? `<p class="flow-card-desc">${description}</p>` : ''}
+            <div class="flow-card-tags">${tagsHtml}</div>
+            <div class="flow-card-metrics">
+              <span class="flow-card-metric" title="Costo en créditos"><i class="fas fa-coins"></i> ${cost}</span>
+              <span class="flow-card-metric" title="Likes"><i class="fas fa-heart"></i> ${likes}</span>
+              <span class="flow-card-metric" title="Ejecuciones"><i class="fas fa-play"></i> ${runs}</span>
+              <span class="flow-card-metric" title="Guardados"><i class="fas fa-bookmark"></i> ${saves}</span>
+            </div>
           </div>
         </div>
       </article>
@@ -598,9 +612,9 @@ class FlowCatalogView extends BaseView {
       gallery.innerHTML = '';
       return;
     }
-    gallery.innerHTML = rows.map(({ subcategoryName, flows }) => `
-      <section class="flow-catalog-sub-row flow-catalog-row-section" data-subcategory-id="${this.escapeHtml(flows[0]?.subcategory_id || '')}">
-        <h2 class="flow-catalog-row-title">${this.escapeHtml(subcategoryName)}</h2>
+    gallery.innerHTML = rows.map(({ sub, flows }) => `
+      <section class="flow-catalog-sub-row flow-catalog-row-section" data-subcategory-id="${this.escapeHtml(sub?.id || '')}">
+        <h2 class="flow-catalog-row-title">${this.escapeHtml(sub?.name || '')}</h2>
         <div class="flow-catalog-row-scroll">${flows.map(f => this.renderFlowCard(f)).join('')}</div>
       </section>
     `).join('');
