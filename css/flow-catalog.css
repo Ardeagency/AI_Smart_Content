@@ -336,23 +336,75 @@
   border-radius: 6px;
   white-space: nowrap;
 }
-.flow-card-metrics {
+
+/* Pie: costo a la izquierda, reacciones (producciones + like + guardar) a la derecha */
+.flow-card-footer {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
   flex-wrap: wrap;
-  gap: 0.6rem;
+}
+.flow-card-cost {
   font-size: 0.7rem;
   color: rgba(255, 255, 255, 0.95);
-  margin-top: 0.15rem;
-}
-.flow-card-metric {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
 }
-.flow-card-metric i {
+.flow-card-cost i {
   opacity: 0.9;
   font-size: 0.65rem;
+}
+.flow-card-reactions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.95);
+}
+.flow-card-metric--readonly {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  pointer-events: none;
+}
+.flow-card-metric--readonly i {
+  opacity: 0.9;
+  font-size: 0.65rem;
+}
+.flow-card-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0;
+  margin: 0;
+  font: inherit;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.9);
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color 0.2s ease, transform 0.15s ease;
+}
+.flow-card-action:hover {
+  color: #fff;
+}
+.flow-card-action i {
+  font-size: 0.65rem;
+}
+.flow-card-action--like.is-active,
+.flow-card-action--like:hover {
+  color: #f87171;
+}
+.flow-card-action--save.is-active,
+.flow-card-action--save:hover {
+  color: var(--accent-warm);
+}
+.flow-card-action-count {
+  font-variant-numeric: tabular-nums;
 }
 
 /* Compatibilidad con cards que aún usen body (hero u otros) */

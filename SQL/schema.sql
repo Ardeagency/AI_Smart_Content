@@ -549,6 +549,16 @@ CREATE TABLE public.user_flow_favorites (
   CONSTRAINT favorites_flow_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id),
   CONSTRAINT user_flow_favorites_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
 );
+CREATE TABLE public.user_flow_likes (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid NOT NULL,
+  flow_id uuid NOT NULL,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT user_flow_likes_pkey PRIMARY KEY (id),
+  CONSTRAINT user_flow_likes_user_flow_unique UNIQUE (user_id, flow_id),
+  CONSTRAINT user_flow_likes_flow_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id) ON DELETE CASCADE,
+  CONSTRAINT user_flow_likes_user_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE
+);
 CREATE TABLE public.visual_references (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   image_url text,
