@@ -99,7 +99,7 @@ DECLARE
         'organization_credits', 'organization_members', 'organizations',
         'product_images', 'products', 'runs_inputs', 'runs_outputs',
         'services', 'storage_usage', 'subscriptions',
-        'ui_component_templates', 'user_flow_favorites', 'user_flow_likes', 'profiles',
+        'ui_component_templates', 'user_flow_favorites', 'profiles',
         'visual_references'
     ];
     t text;
@@ -289,15 +289,6 @@ FOR ALL TO authenticated USING (EXISTS (SELECT 1 FROM public.flow_runs fr WHERE 
 
 CREATE POLICY "Access runs outputs" ON public.runs_outputs
 FOR ALL TO authenticated USING (run_id IS NULL OR EXISTS (SELECT 1 FROM public.flow_runs fr WHERE fr.id = run_id AND (fr.user_id = (select auth.uid()) OR public.is_developer())));
-
--- K2. FAVORITOS Y LIKES DE FLUJOS (catálogo consumidor)
-CREATE POLICY "Own flow favorites" ON public.user_flow_favorites
-FOR ALL TO authenticated USING (user_id = (select auth.uid()))
-WITH CHECK (user_id = (select auth.uid()));
-
-CREATE POLICY "Own flow likes" ON public.user_flow_likes
-FOR ALL TO authenticated USING (user_id = (select auth.uid()))
-WITH CHECK (user_id = (select auth.uid()));
 
 -- L. VECTORES DE MARCA
 CREATE POLICY "Read brand vectors" ON public.ai_brand_vectors
