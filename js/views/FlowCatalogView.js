@@ -456,13 +456,6 @@ class FlowCatalogView extends BaseView {
     return labels[t] || t;
   }
 
-  escapeHtml(text) {
-    if (text == null) return '';
-    const div = document.createElement('div');
-    div.textContent = String(text);
-    return div.innerHTML;
-  }
-
   isFlowSaved(flowId) {
     return this.favorites.some(f => f.flow_id === flowId);
   }

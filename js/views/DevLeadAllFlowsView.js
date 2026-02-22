@@ -140,7 +140,7 @@ class DevLeadAllFlowsView extends DevBaseView {
 
     tbody.innerHTML = flows.map(f => {
       const owner = f.owner_id ? (this.ownersMap[f.owner_id]?.full_name || this.ownersMap[f.owner_id]?.email || f.owner_id?.slice(0, 8) + '…') : 'Sin propietario';
-      const statusLabel = this.getStatusLabel(f.status);
+      const statusLabel = this.getFlowStatusLabel(f.status);
       const dateStr = f.created_at ? new Date(f.created_at).toLocaleString('es', { dateStyle: 'short', timeStyle: 'short' }) : '-';
       return `
         <tr data-id="${f.id}">
@@ -226,11 +226,6 @@ class DevLeadAllFlowsView extends DevBaseView {
     }
     this.flows = this.flows.filter(f => f.id !== this.flowToDelete);
     this.renderTable(this.flows);
-  }
-
-  getStatusLabel(status) {
-    const labels = { draft: 'Borrador', testing: 'En Pruebas', published: 'Publicado', archived: 'Archivado' };
-    return labels[status] || status || '-';
   }
 
 }

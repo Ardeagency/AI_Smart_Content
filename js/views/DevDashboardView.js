@@ -335,7 +335,7 @@ class DevDashboardView extends DevBaseView {
         <div class="dev-flow-info">
           <div class="dev-flow-name">${this.escapeHtml(flow.name)}</div>
           <div class="dev-flow-meta">
-            <span class="dev-flow-status status-${flow.status}">${this.getStatusLabel(flow.status)}</span>
+            <span class="dev-flow-status status-${flow.status}">${this.getFlowStatusLabel(flow.status)}</span>
             <span class="dev-flow-runs"><i class="fas fa-play"></i> ${this.formatNumber(flow.run_count || 0)}</span>
           </div>
         </div>
@@ -564,16 +564,6 @@ class DevDashboardView extends DevBaseView {
     if (diffHours < 24) return `${diffHours}h`;
     if (diffDays < 7) return `${diffDays}d`;
     return date.toLocaleDateString();
-  }
-
-  getStatusLabel(status) {
-    const labels = {
-      'draft': 'Borrador',
-      'testing': 'Pruebas',
-      'published': 'Publicado',
-      'archived': 'Archivado'
-    };
-    return labels[status] || status;
   }
 
   getSeverityIcon(severity) {

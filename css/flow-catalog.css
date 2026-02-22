@@ -458,49 +458,6 @@
   color: var(--bg-primary);
 }
 
-/* Compatibilidad con cards que aún usen body (hero u otros) */
-.flow-card-body {
-  padding: 1rem;
-}
-.flow-card:not(.flow-card--catalog) .flow-card-title {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0 0 0.25rem 0;
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.flow-card-subtitle {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  margin: 0 0 0.5rem 0;
-  line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.flow-card-meta {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  font-size: 0.7rem;
-  color: var(--text-muted);
-}
-.flow-card-meta span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-.flow-card-cost {
-  margin-left: auto;
-  color: var(--accent-warm);
-  font-weight: 500;
-}
-
 /* ---------- Drawer expanded view ---------- */
 .flow-catalog-drawer {
   position: fixed;

@@ -27,6 +27,18 @@ class BaseView {
   }
 
   /**
+   * Escapar HTML para evitar XSS. Uso compartido en todas las vistas.
+   * @param {string} text
+   * @returns {string}
+   */
+  escapeHtml(text) {
+    if (text == null) return '';
+    const div = document.createElement('div');
+    div.textContent = String(text);
+    return div.innerHTML;
+  }
+
+  /**
    * Cargar template HTML desde la carpeta templates/ (DEPRECATED - usar renderHTML)
    * @returns {Promise<string>} HTML del template
    * @deprecated Usar renderHTML() en su lugar para SPA real

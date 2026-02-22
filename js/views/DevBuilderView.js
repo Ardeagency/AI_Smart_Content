@@ -698,17 +698,14 @@ class DevBuilderView extends DevBaseView {
     });
 
     const escapeAttr = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'));
-    const escapeHtml = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'));
-    
+
     let html = '';
-    
     Object.entries(groups).forEach(([key, group]) => {
       if (group.items.length === 0) return;
-      
       html += `
         <div class="component-group" data-group-key="${escapeAttr(key)}">
           <div class="component-group-header">
-            <span>${escapeHtml(group.name)}</span>
+            <span>${this.escapeHtml(group.name)}</span>
           </div>
           <div class="component-group-items component-group-grid">
             ${group.items.map(template => {
@@ -721,8 +718,8 @@ class DevBuilderView extends DevBaseView {
                    data-template-id="${escapeAttr(template.id)}"
                    data-template="${escapeAttr(templateJson)}"
                    data-search="${escapeAttr(searchText)}">
-                <i class="ph ph-${escapeHtml(iconName)}"></i>
-                <span class="component-name">${escapeHtml(template.name)}</span>
+                <i class="ph ph-${this.escapeHtml(iconName)}"></i>
+                <span class="component-name">${this.escapeHtml(template.name)}</span>
                 </div>
             `;
             }).join('')}
