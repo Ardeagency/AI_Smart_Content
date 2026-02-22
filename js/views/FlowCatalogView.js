@@ -448,39 +448,28 @@ class FlowCatalogView extends BaseView {
     const img = flow.flow_image_url
       ? `<img src="${this.escapeHtml(flow.flow_image_url)}" alt="${name}" class="flow-card-img" loading="lazy">`
       : `<div class="flow-card-placeholder"><i class="fas ${this.getOutputTypeIcon(flow.output_type)}"></i></div>`;
-    const subcategoryTags = [];
-    if (flow._categoryName) subcategoryTags.push(this.escapeHtml(flow._categoryName));
-    if (flow._subcategoryName) subcategoryTags.push(this.escapeHtml(flow._subcategoryName));
-    const subcategoriesHtml = subcategoryTags.length
-      ? `<div class="flow-card-subcategories">${subcategoryTags.map(t => `<span class="flow-card-tag">${t}</span>`).join('')}</div>`
-      : '';
     const outputTypeLabel = this.getOutputTypeLabel(flow.output_type);
     const outputTypeIcon = this.getOutputTypeIcon(flow.output_type);
+    const subtitle = [flow._subcategoryName, flow._categoryName].filter(Boolean).map(s => this.escapeHtml(s)).join(' · ') || this.escapeHtml(outputTypeLabel);
     return `
       <article class="flow-card flow-card--catalog" data-flow-id="${flow.id}" role="button" tabindex="0">
         <div class="flow-card-media">
           <div class="flow-card-media-inner">${img}</div>
           <div class="flow-card-badges">${badges.join('')}</div>
-          <div class="flow-card-overlay flow-card-overlay--default">
-            <h3 class="flow-card-title">${name}</h3>
-          </div>
-          <div class="flow-card-overlay flow-card-overlay--hover" aria-hidden="true">
-            <h3 class="flow-card-title">${name}</h3>
-            ${subcategoriesHtml}
-            <div class="flow-card-metrics">
-              <span class="flow-card-metric" title="Likes"><i class="fas fa-heart"></i> ${likes}</span>
-              <span class="flow-card-metric" title="Ejecuciones"><i class="fas fa-play"></i> ${runs}</span>
-              <span class="flow-card-metric" title="Guardados"><i class="fas fa-bookmark"></i> ${saves}</span>
-            </div>
-            <div class="flow-card-output-type" title="Tipo de salida">
-              <i class="fas ${outputTypeIcon}"></i>
-              <span>${this.escapeHtml(outputTypeLabel)}</span>
-            </div>
-          </div>
         </div>
-        <div class="flow-card-footer">
-          <span class="flow-card-cost-pill"><i class="fas fa-coins"></i> ${cost}</span>
-          <span class="flow-card-cta">Iniciar</span>
+        <div class="flow-card-content">
+          <h3 class="flow-card-title">${name}</h3>
+          ${subtitle ? `<p class="flow-card-subtitle"><i class="fas fa-tag"></i><span>${subtitle}</span></p>` : ''}
+          <div class="flow-card-metrics">
+            <span class="flow-card-metric"><i class="fas fa-heart"></i> ${likes}</span>
+            <span class="flow-card-metric"><i class="fas fa-play"></i> ${runs}</span>
+            <span class="flow-card-metric"><i class="fas fa-bookmark"></i> ${saves}</span>
+            <span class="flow-card-metric"><i class="fas ${outputTypeIcon}"></i> ${this.escapeHtml(outputTypeLabel)}</span>
+          </div>
+          <div class="flow-card-actions">
+            <span class="flow-card-cost-pill"><i class="fas fa-coins"></i> ${cost}</span>
+            <span class="flow-card-cta">Iniciar</span>
+          </div>
         </div>
       </article>
     `;
