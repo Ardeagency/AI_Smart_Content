@@ -1,0 +1,379 @@
+/**
+ * FlowCard - Estilos premium (foto-first, overlay con gradiente).
+ * Referencia: card minimalista, bordes 28–32px, sombra suave, overlay inferior.
+ */
+
+/* ---- Contenedor principal ---- */
+.fc {
+  --fc-radius: 28px;
+  --fc-width: 340px;
+  --fc-height: 520px;
+  --fc-overlay-height: 40%;
+  --fc-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  --fc-shadow-hover: 0 16px 48px rgba(0, 0, 0, 0.45);
+
+  position: relative;
+  width: 100%;
+  max-width: var(--fc-width);
+  height: var(--fc-height);
+  min-height: 420px;
+  border-radius: var(--fc-radius);
+  overflow: hidden;
+  background: var(--bg-card, #212129);
+  box-shadow: var(--fc-shadow);
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  outline: none;
+}
+
+.fc:focus-visible {
+  box-shadow: 0 0 0 2px var(--accent-warm, #87868B);
+}
+
+.fc:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--fc-shadow-hover);
+}
+
+/* ---- Hero (zona superior ~60–70%) ---- */
+.fc__hero {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 65%;
+  min-height: 280px;
+}
+
+.fc__media {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--fc-radius) var(--fc-radius) 0 0;
+  overflow: hidden;
+}
+
+.fc__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.fc:hover .fc__img {
+  transform: scale(1.03);
+}
+
+.fc__placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--bg-hover, #313139);
+  color: var(--text-muted, rgba(212, 209, 216, 0.6));
+  font-size: 0.875rem;
+}
+
+.fc__placeholder-icon {
+  font-size: 2.5rem;
+  opacity: 0.5;
+}
+
+.fc__placeholder-name {
+  max-width: 80%;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- Badges (esquina superior izquierda) ---- */
+.fc__badges {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  z-index: 2;
+}
+
+.fc__badge {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.fc__badge--new {
+  background: rgba(16, 185, 129, 0.25);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.fc__badge--trending {
+  background: rgba(245, 158, 11, 0.25);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.fc__badge--draft {
+  background: rgba(212, 209, 216, 0.2);
+  color: var(--text-secondary, rgba(212, 209, 216, 0.85));
+}
+
+/* ---- Token pill (esquina superior derecha) ---- */
+.fc__token-pill {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  color: var(--text-primary, #D4D1D8);
+  z-index: 2;
+}
+
+/* ---- Overlay inferior con gradiente ---- */
+.fc__overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--fc-overlay-height);
+  min-height: 180px;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.88) 0%,
+    rgba(0, 0, 0, 0.75) 25%,
+    rgba(0, 0, 0, 0.4) 60%,
+    transparent 100%
+  );
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 20px 16px 16px;
+  z-index: 1;
+  transition: background 0.2s ease;
+}
+
+.fc:hover .fc__overlay {
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.92) 0%,
+    rgba(0, 0, 0, 0.78) 25%,
+    rgba(0, 0, 0, 0.45) 60%,
+    transparent 100%
+  );
+}
+
+.fc__content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ---- Título ---- */
+.fc__title {
+  font-size: clamp(1.15rem, 2.2vw, 1.5rem);
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ---- Descripción ---- */
+.fc__desc {
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ---- Chips (atributos) ---- */
+.fc__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.fc__chip {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.75);
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ---- Stats (social proof) ---- */
+.fc__stats {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 6px;
+  min-height: 20px;
+}
+
+.fc__stat {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.2s ease;
+}
+
+.fc:hover .fc__stat {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.fc__stat-icon {
+  font-size: 0.7rem;
+  opacity: 0.85;
+}
+
+.fc__stat--new {
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+}
+
+/* ---- CTA row ---- */
+.fc__cta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.fc__cta-tokens {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.65);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.fc__cta-tokens-icon {
+  font-size: 0.65rem;
+  opacity: 0.8;
+}
+
+.fc__cta-btn {
+  padding: 10px 20px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--bg-primary, #17141D);
+  background: #fff;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.fc__cta-btn:hover {
+  background: rgba(255, 255, 255, 0.95);
+  transform: scale(1.02);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.fc__cta-btn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* ---- Like / Save (discretos) ---- */
+.fc__actions {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  gap: 8px;
+  z-index: 2;
+}
+
+.fc__action-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: transform 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+
+.fc__action-btn:hover {
+  color: #fff;
+  background: rgba(0, 0, 0, 0.5);
+  transform: scale(1.05);
+}
+
+.fc__action-btn.is-active {
+  color: #fff;
+  background: rgba(239, 68, 68, 0.4);
+}
+
+.fc__action-btn--save.is-active {
+  background: rgba(59, 130, 246, 0.4);
+}
+
+.fc__action-btn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* ---- Variant myFlows: meta tiny ---- */
+.fc__meta-tiny {
+  position: absolute;
+  bottom: 8px;
+  left: 16px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  display: flex;
+  gap: 8px;
+  z-index: 2;
+}
+
+.fc__meta-status {
+  text-transform: capitalize;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 400px) {
+  .fc {
+    --fc-height: 480px;
+    min-height: 380px;
+  }
+  .fc__overlay {
+    min-height: 160px;
+    padding: 14px 12px 12px;
+  }
+  .fc__title {
+    font-size: 1.1rem;
+  }
+  .fc__cta-btn {
+    padding: 8px 16px;
+    font-size: 0.875rem;
+  }
+}
