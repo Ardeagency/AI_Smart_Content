@@ -210,14 +210,14 @@
   color: var(--accent-warm);
 }
 
-/* ---------- FLOW CARD (catálogo: minimalista por defecto, hover con detalles) ---------- */
+/* ---------- FLOW CARD (catálogo: minimalista estilo referencia) ---------- */
 .flow-card {
   flex: 0 0 200px;
   width: 200px;
   scroll-snap-align: start;
   background: var(--bg-hover);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
   overflow: hidden;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
@@ -227,7 +227,7 @@
 .flow-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-hover);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 .flow-card:focus {
   outline: 2px solid var(--accent-warm);
@@ -236,7 +236,7 @@
 .flow-card-media {
   position: relative;
   aspect-ratio: 4/5;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.2);
 }
 .flow-card-media-inner {
   position: absolute;
@@ -260,31 +260,30 @@
   justify-content: center;
   color: var(--text-muted);
   font-size: 2.5rem;
-  background: linear-gradient(145deg, var(--bg-hover) 0%, rgba(0, 0, 0, 0.4) 100%);
+  background: linear-gradient(145deg, var(--bg-hover) 0%, rgba(0, 0, 0, 0.3) 100%);
 }
 .flow-card-badges {
   position: absolute;
   top: 0.5rem;
   left: 0.5rem;
-  right: 0.5rem;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: 0.25rem;
   pointer-events: none;
   z-index: 2;
 }
 .flow-card-badge {
-  padding: 0.2rem 0.5rem;
-  font-size: 0.6rem;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.55rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
-  border-radius: 6px;
-  background: rgba(0, 0, 0, 0.6);
-  color: var(--text-primary);
+  letter-spacing: 0.04em;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
 }
 .flow-card-badge--new {
-  background: rgba(76, 175, 80, 0.9);
+  background: rgba(76, 175, 80, 0.95);
   color: #fff;
 }
 .flow-card-badge--trending {
@@ -293,24 +292,25 @@
 }
 .flow-card-badge--auto {
   background: var(--icon-button);
+  color: #fff;
 }
 
-/* Overlay por defecto: solo nombre del flujo */
+/* Overlay por defecto: solo título, gradiente muy suave (imagen protagonista) */
 .flow-card-overlay {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  padding: 1rem 0.75rem;
+  padding: 0.75rem 0.85rem;
   color: #fff;
   z-index: 1;
   transition: opacity 0.25s ease;
 }
 .flow-card-overlay--default {
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 50%, transparent 100%);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.65) 0%, rgba(0, 0, 0, 0.2) 45%, transparent 100%);
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  justify-content: flex-end;
 }
 .flow-card-overlay--hover {
   opacity: 0;
@@ -320,7 +320,7 @@
   gap: 0.5rem;
   justify-content: flex-end;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.5) 45%, transparent 100%);
-  padding: 1rem 0.75rem;
+  padding: 0.85rem;
 }
 .flow-card:hover .flow-card-overlay--hover {
   opacity: 1;
@@ -331,15 +331,63 @@
   pointer-events: none;
 }
 .flow-card--catalog .flow-card-title {
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #fff;
   margin: 0;
-  line-height: 1.25;
+  line-height: 1.2;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* Pie de tarjeta: coste + CTA (estilo referencia) */
+.flow-card-footer {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 0.4rem 0.5rem;
+  background: var(--bg-primary);
+  border-top: 1px solid var(--border-divider);
+}
+.flow-card-cost-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.75);
+  border-radius: 10px;
+  min-width: 3rem;
+}
+.flow-card-cost-pill i {
+  font-size: 0.7rem;
+  opacity: 0.9;
+}
+.flow-card-cta {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--bg-hover);
+  border-radius: 10px;
+  margin-left: 0.35rem;
+  border: 1px solid var(--border-color);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.flow-card:hover .flow-card-cta {
+  background: var(--accent-warm);
+  color: var(--bg-primary);
+  border-color: var(--accent-warm);
 }
 .flow-card-subcategories {
   display: flex;

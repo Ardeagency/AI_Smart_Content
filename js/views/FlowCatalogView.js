@@ -478,6 +478,10 @@ class FlowCatalogView extends BaseView {
             </div>
           </div>
         </div>
+        <div class="flow-card-footer">
+          <span class="flow-card-cost-pill"><i class="fas fa-coins"></i> ${cost}</span>
+          <span class="flow-card-cta">Iniciar</span>
+        </div>
       </article>
     `;
   }
