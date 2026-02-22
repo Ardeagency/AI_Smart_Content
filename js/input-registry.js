@@ -17,8 +17,19 @@
     'STRUCTURAL_CONTAINER'
   ];
 
-  /** Mapeo: input_type (semántica) → contenedor de render. Todo lo demás es config. */
+  /** Mapeo: input_type (semántica) → contenedor de render. Tipos canónicos + legacy para compat. */
   var INPUT_TYPE_TO_CONTAINER = {
+    /* Canónicos Builder V1 */
+    string: 'STRING_CONTAINER',
+    select: 'SELECT_CONTAINER',
+    number: 'NUMBER_CONTAINER',
+    boolean: 'BOOLEAN_CONTAINER',
+    radio_group: 'BOOLEAN_CONTAINER',
+    checkbox_group: 'BOOLEAN_CONTAINER',
+    range: 'RANGE_CONTAINER',
+    media_selector: 'MEDIA_CONTAINER',
+    file_upload: 'FILE_CONTAINER',
+    /* Legacy STRING */
     text: 'STRING_CONTAINER',
     textarea: 'STRING_CONTAINER',
     prompt_input: 'STRING_CONTAINER',
@@ -32,7 +43,7 @@
     labels: 'STRING_CONTAINER',
     instructions: 'STRING_CONTAINER',
     notes: 'STRING_CONTAINER',
-    select: 'SELECT_CONTAINER',
+    /* Legacy SELECT */
     dropdown: 'SELECT_CONTAINER',
     multi_select: 'SELECT_CONTAINER',
     choice_chips: 'SELECT_CONTAINER',
@@ -49,21 +60,20 @@
     image_selector: 'MEDIA_CONTAINER',
     gallery_picker: 'MEDIA_CONTAINER',
     visual_reference: 'MEDIA_CONTAINER',
+    /* Legacy BOOLEAN / NUMBER */
     checkbox: 'BOOLEAN_CONTAINER',
     switch: 'BOOLEAN_CONTAINER',
     toggle_switch: 'BOOLEAN_CONTAINER',
-    boolean: 'BOOLEAN_CONTAINER',
     toggle: 'BOOLEAN_CONTAINER',
     selection_checkboxes: 'BOOLEAN_CONTAINER',
-    number: 'NUMBER_CONTAINER',
     stepper: 'NUMBER_CONTAINER',
     stepper_num: 'NUMBER_CONTAINER',
     num_stepper: 'NUMBER_CONTAINER',
     rating: 'NUMBER_CONTAINER',
-    range: 'RANGE_CONTAINER',
     slider: 'RANGE_CONTAINER',
     file: 'FILE_CONTAINER',
     upload: 'FILE_CONTAINER',
+    /* Estructurales */
     section: 'STRUCTURAL_CONTAINER',
     divider: 'STRUCTURAL_CONTAINER',
     heading: 'STRUCTURAL_CONTAINER',
@@ -497,66 +507,115 @@
     return placeholders[mediaSource] || 'ID o valor...';
   }
 
-  /** Registry de los 8 contenedores. El frontend solo conoce estos. */
+  /** Resuelve modo efectivo para STRING canónico: single_line | multiline | prompt | tags | code */
+  function effectiveStringMode(f) {
+    var it = getInputType(f);
+    if (it === 'string') return (f.mode || 'single_line').toLowerCase();
+    if (it === 'tags' || it === 'tag_input') return 'tags';
+    if (it === 'textarea' || it === 'prompt_input' || it === 'prompt_user' || it === 'prompt_system') return 'multiline';
+    return 'single_line';
+  }
+
+  /** Resuelve estilo de SELECT canónico: dropdown | chips; y si es múltiple. */
+  function effectiveSelectStyle(f) {
+    var it = getInputType(f);
+    if (it === 'select') {
+      var variant = (f.ui_variant || 'dropdown').toLowerCase();
+      var multi = (f.selection_mode || 'single').toLowerCase() === 'multiple';
+      if (variant === 'chips') return multi ? 'multi_select_chips' : 'choice_chips';
+      return multi ? 'multi_select' : 'dropdown';
+    }
+    return null;
+  }
+
+  /** Registry de los 8 contenedores. El frontend solo conoce estos. Tipos canónicos usan mode/ui_variant. */
   var CONTAINER_RENDERERS = {
     STRING_CONTAINER: {
       preview: function (f) {
         var it = getInputType(f);
         if (it === 'tags') return previewTags(f);
-        var multi = f.mode === 'multi_line' || f.mode === 'prompt' || f.is_multiline ||
-          (f.input_type && (f.input_type === 'textarea' || f.input_type === 'prompt_input' || f.input_type === 'prompt_user' || f.input_type === 'prompt_system'));
-        return multi ? previewTextarea(f) : previewText(f);
+        var mode = effectiveStringMode(f);
+        if (mode === 'tags') return previewTags(f);
+        if (mode === 'multiline' || mode === 'prompt') {
+          if (mode === 'prompt') f.rows = f.rows || 6;
+          return previewTextarea(f);
+        }
+        if (mode === 'code') { f.monospace = true; return previewTextarea(f); }
+        return previewText(f);
       },
       form: function (f, opts) {
         opts = opts || {};
         if (getInputType(f) === 'tags') return formTags(f, opts);
-        var multi = f.mode === 'multi_line' || f.mode === 'prompt' || f.is_multiline ||
-          (f.input_type && (f.input_type === 'textarea' || f.input_type === 'prompt_input' || f.input_type === 'prompt_user' || f.input_type === 'prompt_system'));
-        return multi ? formTextarea(f, opts) : formText(f, opts);
+        var mode = effectiveStringMode(f);
+        if (mode === 'tags') return formTags(f, opts);
+        var multi = mode === 'multiline' || mode === 'prompt' || mode === 'code';
+        if (multi) {
+          if (mode === 'prompt') f.rows = f.rows || 6;
+          if (mode === 'code') f.monospace = true;
+          return formTextarea(f, opts);
+        }
+        return formText(f, opts);
       }
     },
     SELECT_CONTAINER: {
       preview: function (f) {
-        var t = f.context_selector_type || getInputType(f);
-        var isContext = ['brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector'].indexOf(getInputType(f)) >= 0 || !!f.context_selector_type;
-        if (isContext) return previewContext(getContextSelectorLabel(t));
-        if (t === 'flags') return previewFlags(f);
-        var style = f.select_style || (t === 'choice_chips' ? 'choice_chips' : (t === 'multi_select_chips' ? 'multi_select_chips' : 'dropdown'));
+        var it = getInputType(f);
+        var isContext = ['brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector'].indexOf(it) >= 0 || !!f.context_selector_type;
+        if (isContext) return previewContext(getContextSelectorLabel(f.context_selector_type || it));
+        if (it === 'flags') return previewFlags(f);
+        var style = effectiveSelectStyle(f);
         if (style === 'choice_chips') return previewChoiceChips(f);
-        if (style === 'multi_select_chips' || f.is_multiple) return previewMultiSelectChips(f);
+        if (style === 'multi_select_chips') return previewMultiSelectChips(f);
+        var legacyStyle = f.select_style || (it === 'choice_chips' ? 'choice_chips' : (it === 'multi_select_chips' ? 'multi_select_chips' : 'dropdown'));
+        if (legacyStyle === 'choice_chips') return previewChoiceChips(f);
+        if (legacyStyle === 'multi_select_chips' || f.is_multiple) return previewMultiSelectChips(f);
         return previewSelect(f);
       },
       form: function (f, opts) {
-        var t = f.context_selector_type || getInputType(f);
-        var isContext = ['brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector'].indexOf(getInputType(f)) >= 0 || !!f.context_selector_type;
-        if (isContext) return formContextPlaceholder(f, opts || {}, getContextPlaceholder(t));
-        if (t === 'flags') return formFlags(f, opts);
-        var style = f.select_style || (t === 'choice_chips' ? 'choice_chips' : (t === 'multi_select_chips' ? 'multi_select_chips' : 'dropdown'));
+        var it = getInputType(f);
+        var isContext = ['brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector'].indexOf(it) >= 0 || !!f.context_selector_type;
+        if (isContext) return formContextPlaceholder(f, opts || {}, getContextPlaceholder(it));
+        if (it === 'flags') return formFlags(f, opts);
+        var style = effectiveSelectStyle(f);
         if (style === 'choice_chips') return formChoiceChips(f, opts);
-        if (style === 'multi_select_chips' || f.is_multiple) return formMultiSelectChips(f, opts);
+        if (style === 'multi_select_chips') return formMultiSelectChips(f, opts);
+        if (style === 'multi_select') { f.is_multiple = true; return formSelect(f, opts); }
+        var legacyStyle = f.select_style || (it === 'choice_chips' ? 'choice_chips' : (it === 'multi_select_chips' ? 'multi_select_chips' : 'dropdown'));
+        if (legacyStyle === 'choice_chips') return formChoiceChips(f, opts);
+        if (legacyStyle === 'multi_select_chips' || f.is_multiple) return formMultiSelectChips(f, opts);
         return formSelect(f, opts);
       }
     },
     MEDIA_CONTAINER: {
       preview: function (f) {
-        var label = f.media_source ? getMediaSourceLabel(f.media_source) : getContextSelectorLabel(getInputType(f));
+        var it = getInputType(f);
+        var label = f.media_source ? getMediaSourceLabel(f.media_source) : (it === 'media_selector' ? 'Selector de medio' : getContextSelectorLabel(it));
         return previewContext(label);
       },
       form: function (f, opts) {
-        var placeholder = f.media_source ? getMediaSourcePlaceholder(f.media_source) : getContextPlaceholder(getInputType(f));
+        var it = getInputType(f);
+        var placeholder = f.media_source ? getMediaSourcePlaceholder(f.media_source) : (it === 'media_selector' ? 'URL o ID de imagen...' : getContextPlaceholder(it));
         return formContextPlaceholder(f, opts || {}, placeholder);
       }
     },
     BOOLEAN_CONTAINER: {
       preview: function (f) {
-        var display = (f.display_style || f.display || getInputType(f) || 'checkbox');
+        var it = getInputType(f);
+        if (it === 'radio_group') return previewRadio(f);
+        if (it === 'checkbox_group') return previewSelectionCheckboxes(f);
+        var display = f.ui_variant || f.display_style || f.display || (it === 'boolean' ? 'checkbox' : it) || 'checkbox';
+        if (it === 'boolean' && (display === 'switch' || display === 'toggle_switch')) return previewSwitch(f);
         if (display === 'radio') return previewRadio(f);
         if (display === 'switch' || display === 'toggle_switch') return previewSwitch(f);
         if (display === 'selection_checkboxes') return previewSelectionCheckboxes(f);
         return previewCheckbox(f);
       },
       form: function (f, opts) {
-        var display = (f.display_style || f.display || getInputType(f) || 'checkbox');
+        var it = getInputType(f);
+        if (it === 'radio_group') return formRadio(f, opts);
+        if (it === 'checkbox_group') return formSelectionCheckboxes(f, opts);
+        var display = f.ui_variant || f.display_style || f.display || (it === 'boolean' ? 'checkbox' : it) || 'checkbox';
+        if (it === 'boolean' && (display === 'switch' || display === 'toggle_switch')) return formSwitch(f, opts);
         if (display === 'radio') return formRadio(f, opts);
         if (display === 'switch' || display === 'toggle_switch') return formSwitch(f, opts);
         if (display === 'selection_checkboxes') return formSelectionCheckboxes(f, opts);
@@ -566,12 +625,14 @@
     NUMBER_CONTAINER: {
       preview: function (f) {
         var it = getInputType(f);
-        if (it === 'stepper_num' || it === 'stepper' || f.display_style === 'stepper') return previewStepper(f);
+        var useStepper = (it === 'number' && (f.ui_variant || 'input').toLowerCase() === 'stepper') || it === 'stepper_num' || it === 'stepper' || f.display_style === 'stepper';
+        if (useStepper) return previewStepper(f);
         return previewNumber(f);
       },
       form: function (f, opts) {
         var it = getInputType(f);
-        if (it === 'stepper_num' || it === 'stepper' || f.display_style === 'stepper') return formStepper(f, opts);
+        var useStepper = (it === 'number' && (f.ui_variant || 'input').toLowerCase() === 'stepper') || it === 'stepper_num' || it === 'stepper' || f.display_style === 'stepper';
+        if (useStepper) return formStepper(f, opts);
         return formNumber(f, opts);
       }
     },
@@ -678,52 +739,46 @@
   }
 
   /**
-   * Plantillas por defecto para el Builder cuando no hay BD.
-   * Cada una tiene id, name, description, category, icon_name, base_schema.
+   * Plantillas canónicas Builder V1 (mínima y completa).
+   * Variantes (text/textarea, dropdown/chips, etc.) se configuran por mode / ui_variant en propiedades.
    */
   function getDefaultTemplates() {
     return [
-      { id: 'text', name: 'Texto Corto', description: 'Campo de texto de una línea', category: 'basic', icon_name: 'textbox', base_schema: { input_type: 'text', type: 'text', data_type: 'string', placeholder: '', maxLength: 255 } },
-      { id: 'textarea', name: 'Texto Largo', description: 'Área de texto multilínea', category: 'basic', icon_name: 'article', base_schema: { input_type: 'textarea', type: 'textarea', data_type: 'string', placeholder: '', rows: 4, maxLength: 2000 } },
-      { id: 'prompt_input', name: 'Prompt IA', description: 'Prompt para generación con IA', category: 'smart_text', icon_name: 'terminal', base_schema: { input_type: 'prompt_input', type: 'prompt_input', data_type: 'string', placeholder: 'Describe el contenido...', rows: 6 } },
-      { id: 'select', name: 'Lista Desplegable', description: 'Selector desplegable (dropdown)', category: 'basic', icon_name: 'list-bullets', base_schema: { input_type: 'select', type: 'select', data_type: 'string', options: [] } },
-      { id: 'dropdown', name: 'Dropdown', description: 'Menú desplegable clásico', category: 'basic', icon_name: 'caret-down', base_schema: { input_type: 'dropdown', type: 'dropdown', data_type: 'string', select_style: 'dropdown', options: [{ value: 'opcion1', label: 'Opción 1' }, { value: 'opcion2', label: 'Opción 2' }] } },
-      { id: 'choice_chips', name: 'Choice Chips', description: 'Opciones en pastillas (una sola)', category: 'basic', icon_name: 'squares-four', base_schema: { input_type: 'choice_chips', type: 'choice_chips', data_type: 'string', select_style: 'choice_chips', options: [{ value: 'a', label: 'Opción A' }, { value: 'b', label: 'Opción B' }, { value: 'c', label: 'Opción C' }] } },
-      { id: 'multi_select_chips', name: 'Multi-select Chips', description: 'Pastillas con múltiple selección', category: 'basic', icon_name: 'check-square', base_schema: { input_type: 'multi_select_chips', type: 'multi_select_chips', data_type: 'array', select_style: 'multi_select_chips', options: [{ value: 'x', label: 'X' }, { value: 'y', label: 'Y' }, { value: 'z', label: 'Z' }] } },
-      { id: 'number', name: 'Número', description: 'Campo numérico', category: 'basic', icon_name: 'hash', base_schema: { input_type: 'number', type: 'number', data_type: 'number', min: 0, max: 100, step: 1 } },
-      { id: 'stepper_num', name: 'Stepper', description: 'Número con botones subir/bajar', category: 'controls', icon_name: 'caret-up-down', base_schema: { input_type: 'stepper_num', type: 'stepper_num', data_type: 'number', min: 0, max: 999, step: 1, defaultValue: 0, unit: '' } },
-      { id: 'checkbox', name: 'Checkbox', description: 'Casilla de verificación', category: 'basic', icon_name: 'check-square', base_schema: { input_type: 'checkbox', type: 'checkbox', data_type: 'boolean', defaultValue: false } },
-      { id: 'radio', name: 'Radio', description: 'Opciones mutuamente excluyentes', category: 'basic', icon_name: 'radio-button', base_schema: { input_type: 'radio', type: 'radio', data_type: 'string', options: [] } },
-      { id: 'selection_checkboxes', name: 'Selection Checkboxes', description: 'Lista de casillas por opción', category: 'basic', icon_name: 'list-checks', base_schema: { input_type: 'selection_checkboxes', type: 'selection_checkboxes', data_type: 'array', display_style: 'selection_checkboxes', options: [{ value: '1', label: 'Opción 1' }, { value: '2', label: 'Opción 2' }] } },
-      { id: 'range', name: 'Slider', description: 'Control deslizante', category: 'controls', icon_name: 'sliders', base_schema: { input_type: 'range', type: 'range', data_type: 'number', min: 0, max: 100, step: 1, defaultValue: 50 } },
-      { id: 'switch', name: 'Switch', description: 'Interruptor on/off', category: 'controls', icon_name: 'toggle-left', base_schema: { input_type: 'switch', type: 'switch', data_type: 'boolean', defaultValue: false } },
-      { id: 'toggle_switch', name: 'Toggle Switch', description: 'Interruptor tipo toggle', category: 'controls', icon_name: 'toggle-right', base_schema: { input_type: 'toggle_switch', type: 'toggle_switch', data_type: 'boolean', display_style: 'switch', defaultValue: false } },
-      { id: 'tags', name: 'Tags', description: 'Etiquetas añadibles/eliminables', category: 'basic', icon_name: 'tag', base_schema: { input_type: 'tags', type: 'tags', data_type: 'array', placeholder: 'Añade tags...', defaultValue: [] } },
-      { id: 'flags', name: 'Flags', description: 'Selector tipo banderas (locale/país)', category: 'basic', icon_name: 'flag', base_schema: { input_type: 'flags', type: 'flags', data_type: 'string', options: [{ value: 'es', label: 'ES' }, { value: 'en', label: 'EN' }, { value: 'fr', label: 'FR' }] } },
-      { id: 'brand_selector', name: 'Selector de Marca', description: 'Selecciona una marca', category: 'brand', icon_name: 'storefront', base_schema: { input_type: 'brand_selector', type: 'brand_selector', data_type: 'object' } },
-      { id: 'entity_selector', name: 'Selector de Entidad', description: 'Producto/servicio', category: 'brand', icon_name: 'package', base_schema: { input_type: 'entity_selector', type: 'entity_selector', data_type: 'object', entityTypes: ['product', 'service'] } },
-      { id: 'audience_selector', name: 'Selector de Audiencia', description: 'Audiencia definida', category: 'brand', icon_name: 'users', base_schema: { input_type: 'audience_selector', type: 'audience_selector', data_type: 'object' } },
-      { id: 'tone_selector', name: 'Tono de Voz', description: 'Tono/estilo del contenido', category: 'semantic', icon_name: 'microphone', base_schema: { input_type: 'tone_selector', type: 'tone_selector', data_type: 'string', options: [{ value: 'profesional', label: 'Profesional' }, { value: 'casual', label: 'Casual' }, { value: 'inspirador', label: 'Inspirador' }] } },
-      { id: 'length_selector', name: 'Longitud', description: 'Longitud del contenido', category: 'semantic', icon_name: 'text-align-left', base_schema: { input_type: 'length_selector', type: 'length_selector', data_type: 'string', options: [{ value: 'corto', label: 'Corto' }, { value: 'medio', label: 'Medio' }, { value: 'largo', label: 'Largo' }] } },
-      { id: 'image_selector', name: 'Selector de Imagen', description: 'Imagen de referencia', category: 'media', icon_name: 'image', base_schema: { input_type: 'image_selector', type: 'image_selector', data_type: 'object' } },
-      { id: 'product_selector', name: 'Selector de Producto', description: 'Producto (único o múltiple)', category: 'brand', icon_name: 'shopping-bag', base_schema: { input_type: 'product_selector', type: 'product_selector', data_type: 'object' } },
-      { id: 'tag_input', name: 'Tags (texto)', description: 'Etiquetas como texto', category: 'smart_text', icon_name: 'tag', base_schema: { input_type: 'tag_input', type: 'tag_input', data_type: 'array', placeholder: 'Añade tags...' } },
+      { id: 'string', name: 'Texto', description: 'Texto (una línea, multilínea, prompt o tags según modo)', category: 'inputs', icon_name: 'textbox', base_schema: { input_type: 'string', type: 'string', data_type: 'string', mode: 'single_line', placeholder: '', maxLength: 255 } },
+      { id: 'select', name: 'Selector', description: 'Lista desplegable o chips (single/multiple)', category: 'inputs', icon_name: 'list-bullets', base_schema: { input_type: 'select', type: 'select', data_type: 'string', ui_variant: 'dropdown', selection_mode: 'single', data_source: 'static', options: [{ value: 'opcion1', label: 'Opción 1' }, { value: 'opcion2', label: 'Opción 2' }] } },
+      { id: 'number', name: 'Número', description: 'Campo numérico o stepper', category: 'inputs', icon_name: 'hash', base_schema: { input_type: 'number', type: 'number', data_type: 'number', ui_variant: 'input', min: 0, max: 100, step: 1 } },
+      { id: 'boolean', name: 'Sí/No', description: 'Checkbox o switch', category: 'inputs', icon_name: 'check-square', base_schema: { input_type: 'boolean', type: 'boolean', data_type: 'boolean', ui_variant: 'checkbox', defaultValue: false } },
+      { id: 'radio_group', name: 'Opción única', description: 'Radio: una opción de la lista', category: 'inputs', icon_name: 'radio-button', base_schema: { input_type: 'radio_group', type: 'radio_group', data_type: 'string', options: [{ value: 'a', label: 'Opción A' }, { value: 'b', label: 'Opción B' }] } },
+      { id: 'checkbox_group', name: 'Opciones múltiples', description: 'Varias casillas por opción', category: 'inputs', icon_name: 'list-checks', base_schema: { input_type: 'checkbox_group', type: 'checkbox_group', data_type: 'array', options: [{ value: '1', label: 'Opción 1' }, { value: '2', label: 'Opción 2' }] } },
+      { id: 'range', name: 'Slider', description: 'Control deslizante min/max/step', category: 'inputs', icon_name: 'sliders', base_schema: { input_type: 'range', type: 'range', data_type: 'number', min: 0, max: 100, step: 1, defaultValue: 50 } },
+      { id: 'media_selector', name: 'Selector de medio', description: 'Imagen o galería', category: 'inputs', icon_name: 'image', base_schema: { input_type: 'media_selector', type: 'media_selector', data_type: 'object' } },
+      { id: 'file_upload', name: 'Subir archivo', description: 'Upload / import', category: 'inputs', icon_name: 'upload-simple', base_schema: { input_type: 'file_upload', type: 'file_upload', data_type: 'object' } },
       { id: 'section', name: 'Sección', description: 'Agrupador visual', category: 'structural', icon_name: 'square', base_schema: { input_type: 'section', type: 'section' } },
       { id: 'divider', name: 'Divisor', description: 'Línea separadora', category: 'structural', icon_name: 'minus', base_schema: { input_type: 'divider', type: 'divider' } },
       { id: 'heading', name: 'Título', description: 'Título visual', category: 'structural', icon_name: 'type', base_schema: { input_type: 'heading', type: 'heading', text: 'Título', level: 2 } },
-      { id: 'description', name: 'Texto informativo', description: 'Bloque de texto', category: 'structural', icon_name: 'align-left', base_schema: { input_type: 'description', type: 'description', text: '' } }
+      { id: 'description', name: 'Texto informativo', description: 'Bloque de texto (no guarda data)', category: 'structural', icon_name: 'align-left', base_schema: { input_type: 'description', type: 'description', text: '' } }
     ];
   }
 
   function getPropertyFamily(type) {
     var t = (type || '').toLowerCase();
+    /* Canónicos */
+    if (t === 'string') return 'text';
+    if (t === 'select') return 'select';
+    if (t === 'number') return 'number';
+    if (t === 'boolean') return 'boolean';
+    if (t === 'radio_group') return 'radio_group';
+    if (t === 'checkbox_group') return 'checkbox_group';
+    if (t === 'range') return 'range';
+    if (t === 'media_selector') return 'media';
+    if (t === 'file_upload') return 'file';
+    /* Legacy */
     if (['text', 'textarea', 'prompt_input', 'tag_input', 'tags', 'slug_input'].indexOf(t) >= 0) return 'text';
-    if (['number'].indexOf(t) >= 0) return 'number';
-    if (['range', 'slider'].indexOf(t) >= 0) return 'range';
     if (['stepper_num', 'stepper', 'num_stepper'].indexOf(t) >= 0) return 'stepper';
     if (['checkbox'].indexOf(t) >= 0) return 'checkbox';
     if (['switch', 'toggle_switch', 'toggle'].indexOf(t) >= 0) return 'switch';
-    if (['select', 'dropdown', 'multi_select', 'radio', 'choice_chips', 'multi_select_chips', 'flags', 'tone_selector', 'mood_selector', 'length_selector', 'selection_checkboxes'].indexOf(t) >= 0) return 'select';
+    if (['dropdown', 'multi_select', 'radio', 'choice_chips', 'multi_select_chips', 'flags', 'tone_selector', 'mood_selector', 'length_selector', 'selection_checkboxes'].indexOf(t) >= 0) return 'select';
+    if (['slider'].indexOf(t) >= 0) return 'range';
     return 'generic';
   }
 
