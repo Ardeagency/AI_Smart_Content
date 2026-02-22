@@ -122,14 +122,6 @@ class FlowCatalogView extends BaseView {
           <div class="flow-catalog-gallery-by-sub" id="galleryBySub"></div>
           `}
         </div>
-        <!-- Drawer expanded view (click en card) -->
-        <div class="flow-catalog-drawer" id="flowCatalogDrawer" aria-hidden="true">
-          <div class="flow-catalog-drawer-backdrop" id="flowCatalogDrawerBackdrop"></div>
-          <div class="flow-catalog-drawer-panel" id="flowCatalogDrawerPanel">
-            <button type="button" class="flow-catalog-drawer-close" id="flowCatalogDrawerClose" aria-label="Cerrar"><i class="fas fa-times"></i></button>
-            <div class="flow-catalog-drawer-content" id="flowCatalogDrawerContent"></div>
-          </div>
-        </div>
       </div>
     `;
   }
@@ -175,8 +167,6 @@ class FlowCatalogView extends BaseView {
     }
     this.bindHeroNav();
     this.bindCategoryClicks();
-    this.bindCardInteractions();
-    this.bindDrawer();
   }
 
   showContentError() {
@@ -234,8 +224,9 @@ class FlowCatalogView extends BaseView {
     try {
       let q = this.supabase
         .from('content_flows')
-        .select('id, name, description, token_cost, output_type, flow_image_url, category_id, subcategory_id, flow_category_type, execution_mode, execution_strategy, likes_count, saves_count, run_count, created_at, status, version, ui_layout_config')
+        .select('id, name, description, token_cost, output_type, flow_image_url, category_id, subcategory_id, flow_category_type, likes_count, saves_count, run_count, created_at, status')
         .eq('is_active', true)
+        .eq('flow_category_type', 'manual')
         .eq('show_in_catalog', true);
       if (this.selectedCategoryId) {
         q = q.eq('category_id', this.selectedCategoryId);
@@ -408,7 +399,7 @@ class FlowCatalogView extends BaseView {
   isNew(flow) {
     if (!flow.created_at) return false;
     const days = (Date.now() - new Date(flow.created_at).getTime()) / (1000 * 60 * 60 * 24);
-    return days <= 7;
+    return days <= 30;
   }
 
   isTrending(flow) {
@@ -419,25 +410,6 @@ class FlowCatalogView extends BaseView {
     );
     const top = sorted.slice(0, Math.max(5, Math.ceil(published.length * 0.2)));
     return top.some(f => f.id === flow.id);
-  }
-
-  /** Un solo badge por card: NUEVO (< 7 días) > TRENDING > DRAFT */
-  getCardBadge(flow) {
-    if (this.isNew(flow)) return { class: 'flow-card-badge--new', text: 'Nuevo' };
-    if (this.isTrending(flow)) return { class: 'flow-card-badge--trending', text: 'Trending' };
-    if ((flow.status || '').toLowerCase() === 'draft') return { class: 'flow-card-badge--draft', text: 'Borrador' };
-    return null;
-  }
-
-  getExecutionModeLabel(mode) {
-    const m = (mode || '').toLowerCase();
-    if (m === 'multi_step' || m === 'sequential') return 'Multi-paso';
-    return 'Un paso';
-  }
-
-  getFlowCategoryTypeLabel(type) {
-    const t = (type || 'manual').toLowerCase();
-    return t === 'automated' ? 'Automático' : 'Manual';
   }
 
   getOutputTypeIcon(type) {
@@ -456,65 +428,50 @@ class FlowCatalogView extends BaseView {
     return labels[t] || t;
   }
 
-  isFlowSaved(flowId) {
-    return this.favorites.some(f => f.flow_id === flowId);
-  }
-
-  isFlowLiked(flowId) {
-    return this.favorites.some(f => f.flow_id === flowId && f.rating != null && f.rating >= 4);
+  escapeHtml(text) {
+    if (text == null) return '';
+    const div = document.createElement('div');
+    div.textContent = String(text);
+    return div.innerHTML;
   }
 
   renderFlowCard(flow, options = {}) {
     const name = this.escapeHtml(flow.name);
-    const desc = flow.description
-      ? this.escapeHtml(flow.description.slice(0, 85)) + (flow.description.length > 85 ? '…' : '')
-      : '';
     const cost = flow.token_cost ?? 1;
     const likes = flow.likes_count || 0;
     const saves = flow.saves_count || 0;
     const runs = flow.run_count || 0;
-    const showStats = runs > 0 || likes > 0 || saves > 0;
-    const badge = this.getCardBadge(flow);
-    const badgeHtml = badge
-      ? `<span class="flow-card-badge ${badge.class}">${this.escapeHtml(badge.text)}</span>`
-      : '';
+    const badges = [];
+    if (this.isNew(flow)) badges.push('<span class="flow-card-badge flow-card-badge--new">Nuevo</span>');
+    if (this.isTrending(flow)) badges.push('<span class="flow-card-badge flow-card-badge--trending">Trending</span>');
+    if ((flow.flow_category_type || 'manual') === 'automated') badges.push('<span class="flow-card-badge flow-card-badge--auto">Automated</span>');
     const img = flow.flow_image_url
       ? `<img src="${this.escapeHtml(flow.flow_image_url)}" alt="${name}" class="flow-card-img" loading="lazy">`
-      : `<div class="flow-card-placeholder"><i class="fas ${this.getOutputTypeIcon(flow.output_type)}"></i><span class="flow-card-placeholder-name">${name}</span></div>`;
+      : `<div class="flow-card-placeholder"><i class="fas ${this.getOutputTypeIcon(flow.output_type)}"></i></div>`;
+    const subcategoryLabels = [];
+    if (flow._categoryName) subcategoryLabels.push(this.escapeHtml(flow._categoryName));
+    if (flow._subcategoryName) subcategoryLabels.push(this.escapeHtml(flow._subcategoryName));
     const outputTypeLabel = this.getOutputTypeLabel(flow.output_type);
-    const executionLabel = this.getExecutionModeLabel(flow.execution_mode);
-    const categoryTypeLabel = this.getFlowCategoryTypeLabel(flow.flow_category_type);
-    const isSaved = this.isFlowSaved(flow.id);
-    const isLiked = this.isFlowLiked(flow.id);
-    const chips = [
-      outputTypeLabel,
-      executionLabel,
-      categoryTypeLabel
-    ].map(l => `<span class="flow-card-chip">${this.escapeHtml(l)}</span>`).join('');
+    const tagsHtml = subcategoryLabels.map(t => `<span class="flow-card-tag">${t}</span>`).join('');
     return `
       <article class="flow-card flow-card--catalog" data-flow-id="${flow.id}" role="button" tabindex="0">
-        <div class="flow-card-hero">
-          <div class="flow-card-media-inner">${img}</div>
-          <div class="flow-card-badges">${badgeHtml}</div>
-        </div>
-        <div class="flow-card-overlay">
-          <h3 class="flow-card-title">${name}</h3>
-          ${desc ? `<p class="flow-card-desc">${desc}</p>` : ''}
-          <div class="flow-card-chips">${chips}</div>
-          <div class="flow-card-stats">
-            ${showStats ? `
-            <span class="flow-card-stat"><i class="fas fa-play"></i> ${runs}</span>
-            <span class="flow-card-stat"><i class="fas fa-heart"></i> ${likes}</span>
-            <span class="flow-card-stat"><i class="fas fa-bookmark"></i> ${saves}</span>
-            ` : (this.isNew(flow) ? '<span class="flow-card-stat flow-card-stat--new">Nuevo</span>' : '')}
-            <span class="flow-card-actions-icons">
-              <button type="button" class="flow-card-icon-btn flow-card-like ${isLiked ? 'is-active' : ''}" data-flow-id="${flow.id}" data-action="like" aria-label="Me gusta"><i class="fas fa-heart"></i></button>
-              <button type="button" class="flow-card-icon-btn flow-card-save ${isSaved ? 'is-active' : ''}" data-flow-id="${flow.id}" data-action="save" aria-label="Guardar"><i class="fas fa-bookmark"></i></button>
-            </span>
+        <div class="flow-card-media">
+          ${img}
+          <div class="flow-card-media-veil" aria-hidden="true"></div>
+          <div class="flow-card-badges">${badges.join('')}</div>
+          <div class="flow-card-overlay flow-card-overlay--default">
+            <h3 class="flow-card-title">${name}</h3>
           </div>
-          <div class="flow-card-cta-row">
-            <span class="flow-card-cost-pill"><i class="fas fa-coins"></i> ${cost}</span>
-            <button type="button" class="flow-card-cta" data-flow-id="${flow.id}">Iniciar</button>
+          <div class="flow-card-overlay flow-card-overlay--hover">
+            <div class="flow-card-hover-content">
+              ${tagsHtml ? `<div class="flow-card-tags">${tagsHtml}</div>` : ''}
+              <div class="flow-card-metrics">
+                <span class="flow-card-metric" title="Likes"><i class="fas fa-heart"></i> ${likes}</span>
+                <span class="flow-card-metric" title="Ejecuciones"><i class="fas fa-play"></i> ${runs}</span>
+                <span class="flow-card-metric" title="Guardados"><i class="fas fa-bookmark"></i> ${saves}</span>
+              </div>
+              <span class="flow-card-output-type"><i class="fas ${this.getOutputTypeIcon(flow.output_type)}"></i> ${outputTypeLabel}</span>
+            </div>
           </div>
         </div>
       </article>
@@ -605,6 +562,12 @@ class FlowCatalogView extends BaseView {
     }
     el.closest('.flow-catalog-row-section').style.display = '';
     el.innerHTML = flows.map(f => this.renderFlowCard(f)).join('');
+    el.querySelectorAll('.flow-card').forEach(card => {
+      card.addEventListener('click', () => this.openFlow(card.getAttribute('data-flow-id')));
+      card.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
+      });
+    });
   }
 
   renderSectionSaved() {
@@ -656,6 +619,9 @@ class FlowCatalogView extends BaseView {
         <div class="flow-catalog-row-scroll">${flows.map(f => this.renderFlowCard(f)).join('')}</div>
       </section>
     `).join('');
+    gallery.querySelectorAll('.flow-card').forEach(card => {
+      card.addEventListener('click', () => this.openFlow(card.getAttribute('data-flow-id')));
+    });
     gallery.querySelectorAll('.flow-catalog-sub-row').forEach(row => {
       const subId = row.querySelector('.flow-card')?.closest('.flow-catalog-sub-row')?.dataset?.subcategoryId;
       if (subId) row.dataset.subcategoryId = subId;
@@ -687,172 +653,6 @@ class FlowCatalogView extends BaseView {
           window.router.navigate(path);
         }
       });
-    });
-  }
-
-  bindCardInteractions() {
-    document.querySelectorAll('#flowCatalogContent .flow-catalog-row-scroll').forEach(el => this.attachCardListeners(el));
-  }
-
-  attachCardListeners(container) {
-    if (!container) return;
-    container.querySelectorAll('.flow-card').forEach(card => {
-      card.addEventListener('click', (e) => {
-        if (e.target.closest('.flow-card-cta, .flow-card-icon-btn')) return;
-        const flow = this.flowsById.get(card.dataset.flowId);
-        if (flow) this.openDrawer(flow);
-      });
-      card.addEventListener('keydown', e => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
-      });
-    });
-    container.querySelectorAll('.flow-card-cta').forEach(btn => {
-      btn.addEventListener('click', e => {
-        e.stopPropagation();
-        this.openFlow(btn.dataset.flowId);
-      });
-    });
-    container.querySelectorAll('.flow-card-like').forEach(btn => {
-      btn.addEventListener('click', e => { e.stopPropagation(); this.toggleLike(btn.dataset.flowId, btn); });
-    });
-    container.querySelectorAll('.flow-card-save').forEach(btn => {
-      btn.addEventListener('click', e => { e.stopPropagation(); this.toggleSave(btn.dataset.flowId, btn); });
-    });
-  }
-
-  openDrawer(flow) {
-    const drawer = document.getElementById('flowCatalogDrawer');
-    const content = document.getElementById('flowCatalogDrawerContent');
-    if (!drawer || !content) return;
-    content.innerHTML = this.renderDrawerContent(flow);
-    drawer.classList.add('is-open');
-    drawer.setAttribute('aria-hidden', 'false');
-    content.querySelector('.flow-catalog-drawer-cta')?.addEventListener('click', () => this.openFlow(flow.id));
-    content.querySelectorAll('.flow-card-like').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); this.toggleLike(flow.id, btn); }));
-    content.querySelectorAll('.flow-card-save').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); this.toggleSave(flow.id, btn); }));
-  }
-
-  closeDrawer() {
-    const drawer = document.getElementById('flowCatalogDrawer');
-    if (!drawer) return;
-    drawer.classList.remove('is-open');
-    drawer.setAttribute('aria-hidden', 'true');
-  }
-
-  renderDrawerContent(flow) {
-    const name = this.escapeHtml(flow.name);
-    const desc = flow.description ? this.escapeHtml(flow.description) : '';
-    const cost = flow.token_cost ?? 1;
-    const outputLabel = this.getOutputTypeLabel(flow.output_type);
-    const isSaved = this.isFlowSaved(flow.id);
-    const isLiked = this.isFlowLiked(flow.id);
-    const img = flow.flow_image_url
-      ? `<img src="${this.escapeHtml(flow.flow_image_url)}" alt="${name}" class="flow-catalog-drawer-img">`
-      : '';
-    const inputsNote = flow.ui_layout_config && Object.keys(flow.ui_layout_config).length
-      ? '<p class="flow-catalog-drawer-meta"><strong>Inputs:</strong> según configuración del flujo.</p>'
-      : '';
-    return `
-      <div class="flow-catalog-drawer-body">
-        ${img}
-        <h2 class="flow-catalog-drawer-title">${name}</h2>
-        ${desc ? `<div class="flow-catalog-drawer-desc">${desc}</div>` : ''}
-        <p class="flow-catalog-drawer-meta"><strong>Salida:</strong> ${this.escapeHtml(outputLabel)} · <strong>Costo:</strong> ${cost} crédito(s)</p>
-        ${inputsNote}
-        <div class="flow-catalog-drawer-actions">
-          <button type="button" class="flow-card-icon-btn flow-card-like ${isLiked ? 'is-active' : ''}" data-flow-id="${flow.id}" aria-label="Me gusta"><i class="fas fa-heart"></i></button>
-          <button type="button" class="flow-card-icon-btn flow-card-save ${isSaved ? 'is-active' : ''}" data-flow-id="${flow.id}" aria-label="Guardar"><i class="fas fa-bookmark"></i></button>
-          <button type="button" class="flow-catalog-drawer-cta">Iniciar</button>
-        </div>
-      </div>
-    `;
-  }
-
-  bindDrawer() {
-    const backdrop = document.getElementById('flowCatalogDrawerBackdrop');
-    const closeBtn = document.getElementById('flowCatalogDrawerClose');
-    [backdrop, closeBtn].forEach(el => {
-      if (el) el.addEventListener('click', () => this.closeDrawer());
-    });
-  }
-
-  async toggleSave(flowId, buttonEl) {
-    if (!this.userId) {
-      if (window.router) window.router.navigate('/login', true);
-      return;
-    }
-    const isSaved = this.isFlowSaved(flowId);
-    if (buttonEl) {
-      buttonEl.classList.toggle('is-active', !isSaved);
-      buttonEl.disabled = true;
-    }
-    try {
-      if (isSaved) {
-        await this.supabase.from('user_flow_favorites').delete().eq('user_id', this.userId).eq('flow_id', flowId);
-        this.favorites = this.favorites.filter(f => f.flow_id !== flowId);
-      } else {
-        const { data: existing } = await this.supabase.from('user_flow_favorites').select('id').eq('user_id', this.userId).eq('flow_id', flowId).maybeSingle();
-        if (existing) {
-          await this.supabase.from('user_flow_favorites').update({ is_favorite: true, last_used_at: new Date().toISOString() }).eq('id', existing.id);
-        } else {
-          await this.supabase.from('user_flow_favorites').insert({ user_id: this.userId, flow_id: flowId, is_favorite: true, last_used_at: new Date().toISOString() });
-        }
-        this.favorites.push({ flow_id: flowId, is_favorite: true });
-      }
-      const flow = this.flowsById.get(flowId);
-      if (flow) flow.saves_count = Math.max(0, (flow.saves_count || 0) + (isSaved ? -1 : 1));
-      this.updateCardStats(flowId);
-    } catch (e) {
-      console.error('FlowCatalog toggleSave:', e);
-      if (buttonEl) buttonEl.classList.toggle('is-active', isSaved);
-    }
-    if (buttonEl) buttonEl.disabled = false;
-  }
-
-  async toggleLike(flowId, buttonEl) {
-    if (!this.userId) {
-      if (window.router) window.router.navigate('/login', true);
-      return;
-    }
-    const isLiked = this.isFlowLiked(flowId);
-    if (buttonEl) {
-      buttonEl.classList.toggle('is-active', !isLiked);
-      buttonEl.disabled = true;
-    }
-    try {
-      const { data: row } = await this.supabase.from('user_flow_favorites').select('id').eq('user_id', this.userId).eq('flow_id', flowId).maybeSingle();
-      if (isLiked) {
-        if (row) await this.supabase.from('user_flow_favorites').update({ rating: null }).eq('id', row.id);
-        this.favorites = this.favorites.map(f => f.flow_id === flowId ? { ...f, rating: null } : f);
-      } else {
-        const payload = { user_id: this.userId, flow_id: flowId, is_favorite: true, rating: 5, last_used_at: new Date().toISOString() };
-        if (row) await this.supabase.from('user_flow_favorites').update({ rating: 5, last_used_at: payload.last_used_at }).eq('id', row.id);
-        else await this.supabase.from('user_flow_favorites').insert(payload);
-        const idx = this.favorites.findIndex(f => f.flow_id === flowId);
-        if (idx >= 0) this.favorites[idx] = { ...this.favorites[idx], rating: 5 };
-        else this.favorites.push({ flow_id: flowId, is_favorite: true, rating: 5 });
-      }
-      const flow = this.flowsById.get(flowId);
-      if (flow) flow.likes_count = Math.max(0, (flow.likes_count || 0) + (isLiked ? -1 : 1));
-      this.updateCardStats(flowId);
-    } catch (e) {
-      console.error('FlowCatalog toggleLike:', e);
-      if (buttonEl) buttonEl.classList.toggle('is-active', isLiked);
-    }
-    if (buttonEl) buttonEl.disabled = false;
-  }
-
-  updateCardStats(flowId) {
-    const flow = this.flowsById.get(flowId);
-    if (!flow) return;
-    const card = document.querySelector(`.flow-card[data-flow-id="${flowId}"]`);
-    if (!card) return;
-    card.querySelectorAll('.flow-card-stat').forEach(el => {
-      const icon = el.querySelector('i');
-      if (!icon) return;
-      if (icon.classList.contains('fa-play')) el.innerHTML = `<i class="fas fa-play"></i> ${flow.run_count || 0}`;
-      else if (icon.classList.contains('fa-heart')) el.innerHTML = `<i class="fas fa-heart"></i> ${flow.likes_count || 0}`;
-      else if (icon.classList.contains('fa-bookmark')) el.innerHTML = `<i class="fas fa-bookmark"></i> ${flow.saves_count || 0}`;
     });
   }
 

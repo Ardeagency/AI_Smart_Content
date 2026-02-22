@@ -242,7 +242,7 @@ class DevFlowsView extends DevBaseView {
    */
   renderFlowCard(flow) {
     const statusClass = `status-${flow.status}`;
-    const statusLabel = this.getFlowStatusLabel(flow.status);
+    const statusLabel = this.getStatusLabel(flow.status);
     
     return `
       <div class="dev-flow-card" data-flow-id="${flow.id}">
@@ -505,6 +505,16 @@ class DevFlowsView extends DevBaseView {
   }
 
   // ========== Utilidades ==========
+
+  getStatusLabel(status) {
+    const labels = {
+      'draft': 'Borrador',
+      'testing': 'En Pruebas',
+      'published': 'Publicado',
+      'archived': 'Archivado'
+    };
+    return labels[status] || status;
+  }
 
   getFilterLabel(filter) {
     const labels = {

@@ -328,15 +328,8 @@
     var alignment = (f.alignment || 'left').toLowerCase();
     var alignClass = alignment !== 'left' ? ' structural-align-' + alignment : '';
     if (t === 'section') {
-      var collapsible = f.collapsible;
-      if (collapsible && (title || sectionDesc)) {
-        var openAttr = f.default_open !== false ? ' open' : '';
-        return '<details class="form-structural form-section form-section-collapsible' + alignClass + '" data-key="' + escapeHtml(f.key || '') + '"' + openAttr + '>' +
-          '<summary class="form-section-header"><span class="form-section-title">' + (title || 'Sección') + '</span></summary>' +
-          (sectionDesc ? '<p class="form-section-description">' + sectionDesc + '</p>' : '') +
-          '</details>';
-      }
-      return '<div class="form-structural form-section' + alignClass + '" data-key="' + escapeHtml(f.key || '') + '">' +
+      var collapsible = f.collapsible ? ' structural-section-collapsible' : '';
+      return '<div class="form-structural form-section' + collapsible + alignClass + '" data-key="' + escapeHtml(f.key || '') + '">' +
         (title ? '<div class="form-section-header"><span class="form-section-title">' + title + '</span></div>' : '') +
         (sectionDesc ? '<p class="form-section-description">' + sectionDesc + '</p>' : '') +
         '</div>';
@@ -348,7 +341,7 @@
     if (t === 'heading') {
       return '<h' + level + ' class="form-structural form-heading' + alignClass + '" data-key="' + escapeHtml(f.key || '') + '">' + (text || 'Título') + '</h' + level + '>';
     }
-    if (t === 'description' || t === 'description_block') {
+    if (t === 'description') {
       return '<p class="form-structural form-description' + alignClass + '" data-key="' + escapeHtml(f.key || '') + '">' + (text || '') + '</p>';
     }
     return '';
@@ -595,14 +588,7 @@
         var t = getInputType(f);
         var labels = { section: 'Sección', divider: 'Divisor', heading: 'Título', description: 'Texto informativo', description_block: 'Texto informativo', accordion: 'Acordeón', tabs: 'Pestañas', repeater: 'Repetidor', group: 'Grupo' };
         var icons = { section: 'square', divider: 'minus', heading: 'type', description: 'align-left', description_block: 'info', accordion: 'caret-double-down', tabs: 'squares-four', repeater: 'repeat', group: 'stack' };
-        var displayLabel = labels[t] || f.label || 'Bloque';
-        if (t === 'section' && (f.title || f.label)) displayLabel = (f.title || f.label || '').trim() || displayLabel;
-        else if (t === 'heading' && (f.text || f.label)) displayLabel = (f.text || f.label || '').trim() || displayLabel;
-        else if (t === 'description' || t === 'description_block') {
-          var descText = (f.text || f.label || '').trim();
-          displayLabel = descText.length > 28 ? descText.slice(0, 28) + '…' : (descText || displayLabel);
-        }
-        return previewBlock(displayLabel, icons[t] || 'placeholder');
+        return previewBlock(labels[t] || f.label || 'Bloque', icons[t] || 'placeholder');
       },
       form: formStructural
     }

@@ -35,19 +35,20 @@ class DevBaseView extends BaseView {
     }
   }
 
+  /**
+   * Escapar HTML para evitar XSS
+   * @param {string} text
+   * @returns {string}
+   */
+  escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text ?? '';
+    return div.innerHTML;
+  }
+
   /** Alias para compatibilidad (ej. DevLeadVectorsView usaba esc) */
   esc(text) {
     return this.escapeHtml(text);
-  }
-
-  /**
-   * Etiqueta de estado de flujo (draft/testing/published/archived). Una sola fuente de verdad.
-   * @param {string} status
-   * @returns {string}
-   */
-  getFlowStatusLabel(status) {
-    const labels = { draft: 'Borrador', testing: 'En Pruebas', published: 'Publicado', archived: 'Archivado' };
-    return labels[(status || '').toLowerCase()] || status || '-';
   }
 
   /**

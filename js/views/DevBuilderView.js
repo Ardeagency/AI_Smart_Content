@@ -698,14 +698,17 @@ class DevBuilderView extends DevBaseView {
     });
 
     const escapeAttr = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'));
-
+    const escapeHtml = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'));
+    
     let html = '';
+    
     Object.entries(groups).forEach(([key, group]) => {
       if (group.items.length === 0) return;
+      
       html += `
         <div class="component-group" data-group-key="${escapeAttr(key)}">
           <div class="component-group-header">
-            <span>${this.escapeHtml(group.name)}</span>
+            <span>${escapeHtml(group.name)}</span>
           </div>
           <div class="component-group-items component-group-grid">
             ${group.items.map(template => {
@@ -718,8 +721,8 @@ class DevBuilderView extends DevBaseView {
                    data-template-id="${escapeAttr(template.id)}"
                    data-template="${escapeAttr(templateJson)}"
                    data-search="${escapeAttr(searchText)}">
-                <i class="ph ph-${this.escapeHtml(iconName)}"></i>
-                <span class="component-name">${this.escapeHtml(template.name)}</span>
+                <i class="ph ph-${escapeHtml(iconName)}"></i>
+                <span class="component-name">${escapeHtml(template.name)}</span>
                 </div>
             `;
             }).join('')}
@@ -834,21 +837,15 @@ class DevBuilderView extends DevBaseView {
       ? { ...template.base_schema }
       : (templateDataFromDrag && typeof templateDataFromDrag === 'object' ? { ...templateDataFromDrag } : {});
     const defaultUi = template?.default_ui_config && typeof template.default_ui_config === 'object' ? { ...template.default_ui_config } : {};
-    const inputType = (baseSchema.input_type || baseSchema.type || 'text').toLowerCase();
-    const isStructural = this.isStructuralField({ input_type: inputType, type: inputType, container_type: baseSchema.container_type });
-    const fieldName = isStructural
-      ? this.generateUniqueStructuralKey(inputType)
-      : this.generateFieldKey(template?.name || templateId);
-    const friendlyLabel = this.getStructuralDefaultLabel(inputType, template?.name);
-    const structuralDefaults = this.getStructuralDefaults(inputType, friendlyLabel);
+    const fieldName = this.generateFieldKey(template?.name || templateId);
+    
     const newField = {
       key: fieldName,
-      label: friendlyLabel,
-      required: isStructural ? false : Boolean(baseSchema.required),
+      label: template?.name || 'Campo',
+      required: Boolean(baseSchema.required),
       placeholder: baseSchema.placeholder ?? '',
       description: baseSchema.description ?? '',
       ...baseSchema,
-      ...structuralDefaults,
       input_type: baseSchema.input_type || baseSchema.type || 'text',
       ui: {
         width: 'full',
@@ -883,32 +880,6 @@ class DevBuilderView extends DevBaseView {
     }
     
     return key;
-  }
-
-  generateUniqueStructuralKey(inputType) {
-    const base = (inputType || 'section').toLowerCase().replace(/[^a-z0-9_]/g, '') || 'section';
-    let key = base;
-    let counter = 1;
-    while (this.inputSchema.some(f => f.key === key)) {
-      key = `${base}_${counter}`;
-      counter++;
-    }
-    return key;
-  }
-
-  getStructuralDefaultLabel(inputType, templateName) {
-    const t = (inputType || '').toLowerCase();
-    const labels = { section: 'Sección', divider: 'Divisor', heading: 'Título', description: 'Texto informativo', description_block: 'Texto informativo' };
-    return labels[t] || templateName || 'Campo';
-  }
-
-  getStructuralDefaults(inputType, friendlyLabel) {
-    const t = (inputType || '').toLowerCase();
-    if (t === 'section') return { title: friendlyLabel };
-    if (t === 'heading') return { text: friendlyLabel, level: 2 };
-    if (t === 'description' || t === 'description_block') return { text: '' };
-    if (t === 'divider') return { spacing: 'medium' };
-    return {};
   }
 
   reorderField(fromIndex, toIndex) {
@@ -1212,9 +1183,6 @@ class DevBuilderView extends DevBaseView {
           <div class="property-toggle">
             <label><input type="checkbox" id="propStructuralCollapsible" ${field.collapsible ? 'checked' : ''}><span>Colapsable</span></label>
           </div>
-          <div class="property-toggle">
-            <label><input type="checkbox" id="propStructuralDefaultOpen" ${field.default_open !== false ? 'checked' : ''}><span>Abierto por defecto</span></label>
-          </div>
         </div>`;
     } else if (t === 'divider') {
       content += `
@@ -1225,7 +1193,7 @@ class DevBuilderView extends DevBaseView {
             <select id="propStructuralSpacing">
               <option value="small" ${(field.spacing || 'medium') === 'small' ? 'selected' : ''}>Pequeño</option>
               <option value="medium" ${(field.spacing || 'medium') === 'medium' ? 'selected' : ''}>Medio</option>
-              <option value="large" ${(field.spacing || 'medium') === 'large' ? 'selected' : ''}>Grande</option>
+              <option value="large" ${(field.spacing || '') === 'large' ? 'selected' : ''}>Grande</option>
             </select>
           </div>
         </div>`;
@@ -1287,11 +1255,9 @@ class DevBuilderView extends DevBaseView {
       const titleEl = this.querySelector('#propStructuralTitle');
       const descEl = this.querySelector('#propStructuralDesc');
       const collEl = this.querySelector('#propStructuralCollapsible');
-      const defaultOpenEl = this.querySelector('#propStructuralDefaultOpen');
       if (titleEl) titleEl.addEventListener('input', () => { field.title = titleEl.value; field.label = titleEl.value; sync(); });
       if (descEl) descEl.addEventListener('input', () => { field.section_description = descEl.value; sync(); });
       if (collEl) collEl.addEventListener('change', () => { field.collapsible = collEl.checked; sync(); });
-      if (defaultOpenEl) defaultOpenEl.addEventListener('change', () => { field.default_open = defaultOpenEl.checked; sync(); });
     } else if (structuralType === 'divider') {
       const spacingEl = this.querySelector('#propStructuralSpacing');
       if (spacingEl) spacingEl.addEventListener('change', () => { field.spacing = spacingEl.value; sync(); });

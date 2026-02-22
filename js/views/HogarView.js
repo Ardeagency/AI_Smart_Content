@@ -677,6 +677,15 @@ class HogarView extends BaseView {
   }
 
   /**
+   * Escapar HTML para prevenir XSS
+   */
+  escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  /**
    * Mostrar error
    */
   showError(message) {
