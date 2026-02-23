@@ -657,17 +657,28 @@ class DevBuilderView extends DevBaseView {
       return window.InputRegistry.getDefaultTemplates();
     }
     return [
-      { id: 'text', name: 'Texto Corto', description: 'Campo de texto', category: 'basic', icon_name: 'textbox', base_schema: { input_type: 'text', placeholder: '', maxLength: 255 } },
-      { id: 'textarea', name: 'Texto Largo', description: 'Área de texto', category: 'basic', icon_name: 'article', base_schema: { input_type: 'textarea', placeholder: '', rows: 4 } },
-      { id: 'select', name: 'Selector', description: 'Lista desplegable', category: 'basic', icon_name: 'list-bullets', base_schema: { input_type: 'select', options: [] } },
+      { id: 'string', name: 'Texto', description: 'Texto (línea, multilínea o prompt)', category: 'basic', icon_name: 'textbox', base_schema: { input_type: 'string', mode: 'single_line', placeholder: '', maxLength: 255 } },
       { id: 'dropdown', name: 'Dropdown', description: 'Menú desplegable', category: 'basic', icon_name: 'caret-down', base_schema: { input_type: 'dropdown', options: [{ value: 'opcion1', label: 'Opción 1' }, { value: 'opcion2', label: 'Opción 2' }] } },
-      { id: 'number', name: 'Número', description: 'Campo numérico', category: 'basic', icon_name: 'hash', base_schema: { input_type: 'number', min: 0, max: 100, step: 1 } },
-      { id: 'checkbox', name: 'Checkbox', description: 'Casilla', category: 'basic', icon_name: 'check-square', base_schema: { input_type: 'checkbox', defaultValue: false } },
-      { id: 'radio', name: 'Radio', description: 'Opciones', category: 'basic', icon_name: 'radio-button', base_schema: { input_type: 'radio', options: [] } },
+      { id: 'choice_chips', name: 'Chips (única)', description: 'Opciones en chips', category: 'basic', icon_name: 'squares-four', base_schema: { input_type: 'choice_chips', options: [] } },
+      { id: 'multi_select_chips', name: 'Chips (múltiple)', description: 'Selección múltiple en chips', category: 'basic', icon_name: 'squares-four', base_schema: { input_type: 'multi_select_chips', options: [] } },
+      { id: 'radio', name: 'Radio', description: 'Opciones radio', category: 'basic', icon_name: 'radio-button', base_schema: { input_type: 'radio', options: [] } },
+      { id: 'selection_checkboxes', name: 'Checkboxes', description: 'Selección múltiple', category: 'basic', icon_name: 'check-square', base_schema: { input_type: 'selection_checkboxes', options: [] } },
+      { id: 'num_stepper', name: 'Número (stepper)', description: 'Número con +/-', category: 'basic', icon_name: 'hash', base_schema: { input_type: 'num_stepper', min: 0, max: 100, step: 1 } },
       { id: 'range', name: 'Slider', description: 'Control deslizante', category: 'advanced', icon_name: 'sliders', base_schema: { input_type: 'range', min: 0, max: 100, step: 1, defaultValue: 50 } },
+      { id: 'toggle_switch', name: 'Switch', description: 'Interruptor sí/no', category: 'basic', icon_name: 'toggle-left', base_schema: { input_type: 'toggle_switch', defaultValue: false } },
+      { id: 'tags', name: 'Tags', description: 'Etiquetas', category: 'basic', icon_name: 'tags', base_schema: { input_type: 'tags' } },
+      { id: 'flags', name: 'Flags', description: 'Banderas múltiples', category: 'basic', icon_name: 'flag', base_schema: { input_type: 'flags', options: [] } },
       { id: 'brand_selector', name: 'Selector de Marca', description: 'Marca del usuario', category: 'context', icon_name: 'storefront', base_schema: { input_type: 'brand_selector' } },
       { id: 'entity_selector', name: 'Selector de Entidad', description: 'Producto/servicio', category: 'context', icon_name: 'package', base_schema: { input_type: 'entity_selector' } },
-      { id: 'audience_selector', name: 'Selector de Audiencia', description: 'Audiencia', category: 'context', icon_name: 'users', base_schema: { input_type: 'audience_selector' } }
+      { id: 'audience_selector', name: 'Selector de Audiencia', description: 'Audiencia', category: 'context', icon_name: 'users', base_schema: { input_type: 'audience_selector' } },
+      { id: 'product_selector', name: 'Selector de Producto', description: 'Producto', category: 'context', icon_name: 'package', base_schema: { input_type: 'product_selector' } },
+      { id: 'image_selector', name: 'Selector de imagen', description: 'Imagen (productos/referencias)', category: 'media', icon_name: 'image', base_schema: { input_type: 'image_selector' } },
+      { id: 'tone_selector', name: 'Tono', description: 'Tono del contenido', category: 'semantic', icon_name: 'microphone', base_schema: { input_type: 'tone_selector' } },
+      { id: 'length_selector', name: 'Longitud', description: 'Longitud del texto', category: 'semantic', icon_name: 'ruler', base_schema: { input_type: 'length_selector' } },
+      { id: 'section', name: 'Sección', description: 'Agrupador', category: 'structural', icon_name: 'layout', base_schema: { input_type: 'section' } },
+      { id: 'divider', name: 'Divisor', description: 'Línea separadora', category: 'structural', icon_name: 'minus', base_schema: { input_type: 'divider' } },
+      { id: 'heading', name: 'Título', description: 'Encabezado', category: 'structural', icon_name: 'text-h', base_schema: { input_type: 'heading' } },
+      { id: 'description', name: 'Descripción', description: 'Texto informativo', category: 'structural', icon_name: 'info', base_schema: { input_type: 'description' } }
     ];
   }
 

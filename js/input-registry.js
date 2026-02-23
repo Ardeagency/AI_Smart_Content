@@ -19,6 +19,7 @@
 
   /** Mapeo: input_type (semántica) → contenedor de render. Todo lo demás es config. */
   var INPUT_TYPE_TO_CONTAINER = {
+    string: 'STRING_CONTAINER',
     text: 'STRING_CONTAINER',
     textarea: 'STRING_CONTAINER',
     prompt_input: 'STRING_CONTAINER',
@@ -588,15 +589,15 @@
       preview: function (f) {
         var it = getInputType(f);
         if (it === 'tags') return previewTags(f);
-        var multi = f.mode === 'multi_line' || f.mode === 'prompt' || f.is_multiline ||
-          (f.input_type && (f.input_type === 'textarea' || f.input_type === 'prompt_input' || f.input_type === 'prompt_user' || f.input_type === 'prompt_system'));
+        var multi = f.mode === 'multi_line' || f.mode === 'multiline' || f.mode === 'prompt' || f.is_multiline ||
+          (f.input_type && (f.input_type === 'string' && (f.mode === 'multiline' || f.mode === 'multi_line' || f.mode === 'prompt') || f.input_type === 'textarea' || f.input_type === 'prompt_input' || f.input_type === 'prompt_user' || f.input_type === 'prompt_system'));
         return multi ? previewTextarea(f) : previewText(f);
       },
       form: function (f, opts) {
         opts = opts || {};
         if (getInputType(f) === 'tags') return formTags(f, opts);
-        var multi = f.mode === 'multi_line' || f.mode === 'prompt' || f.is_multiline ||
-          (f.input_type && (f.input_type === 'textarea' || f.input_type === 'prompt_input' || f.input_type === 'prompt_user' || f.input_type === 'prompt_system'));
+        var multi = f.mode === 'multi_line' || f.mode === 'multiline' || f.mode === 'prompt' || f.is_multiline ||
+          (f.input_type && (f.input_type === 'string' && (f.mode === 'multiline' || f.mode === 'multi_line' || f.mode === 'prompt') || f.input_type === 'textarea' || f.input_type === 'prompt_input' || f.input_type === 'prompt_user' || f.input_type === 'prompt_system'));
         return multi ? formTextarea(f, opts) : formText(f, opts);
       }
     },
@@ -770,33 +771,30 @@
    * Plantillas por defecto para el Builder cuando no hay BD.
    * Cada una tiene id, name, description, category, icon_name, base_schema.
    */
+  /**
+   * Plantillas canónicas: una por familia (la más configurable). Sin duplicados text/textarea, select/dropdown, number/stepper, checkbox/switch, etc.
+   * Los input_type antiguos (text, textarea, prompt_input, etc.) siguen mapeados en INPUT_TYPE_TO_CONTAINER para flujos existentes.
+   */
   function getDefaultTemplates() {
     return [
-      { id: 'text', name: 'Texto Corto', description: 'Campo de texto de una línea', category: 'basic', icon_name: 'textbox', base_schema: { input_type: 'text', type: 'text', data_type: 'string', placeholder: '', maxLength: 255 } },
-      { id: 'textarea', name: 'Texto Largo', description: 'Área de texto multilínea', category: 'basic', icon_name: 'article', base_schema: { input_type: 'textarea', type: 'textarea', data_type: 'string', placeholder: '', rows: 4, maxLength: 2000 } },
-      { id: 'prompt_input', name: 'Prompt IA', description: 'Prompt para generación con IA', category: 'smart_text', icon_name: 'terminal', base_schema: { input_type: 'prompt_input', type: 'prompt_input', data_type: 'string', placeholder: 'Describe el contenido...', rows: 6 } },
-      { id: 'select', name: 'Lista Desplegable', description: 'Selector desplegable (dropdown)', category: 'basic', icon_name: 'list-bullets', base_schema: { input_type: 'select', type: 'select', data_type: 'string', options: [] } },
-      { id: 'dropdown', name: 'Dropdown', description: 'Menú desplegable clásico', category: 'basic', icon_name: 'caret-down', base_schema: { input_type: 'dropdown', type: 'dropdown', data_type: 'string', select_style: 'dropdown', options: [{ value: 'opcion1', label: 'Opción 1' }, { value: 'opcion2', label: 'Opción 2' }] } },
-      { id: 'choice_chips', name: 'Choice Chips', description: 'Opciones en pastillas (una sola)', category: 'basic', icon_name: 'squares-four', base_schema: { input_type: 'choice_chips', type: 'choice_chips', data_type: 'string', select_style: 'choice_chips', options: [{ value: 'a', label: 'Opción A' }, { value: 'b', label: 'Opción B' }, { value: 'c', label: 'Opción C' }] } },
+      { id: 'string', name: 'Texto (String)', description: 'Campo de texto: una línea, multilínea o prompt (modo configurable)', category: 'basic', icon_name: 'textbox', base_schema: { input_type: 'string', type: 'string', data_type: 'string', mode: 'single_line', placeholder: '', maxLength: 255, rows: 4 } },
+      { id: 'dropdown', name: 'Lista desplegable', description: 'Selección única con opciones configurables', category: 'basic', icon_name: 'caret-down', base_schema: { input_type: 'dropdown', type: 'dropdown', data_type: 'string', select_style: 'dropdown', options: [{ value: 'opcion1', label: 'Opción 1' }, { value: 'opcion2', label: 'Opción 2' }] } },
+      { id: 'choice_chips', name: 'Choice Chips', description: 'Opciones en pastillas (selección única)', category: 'basic', icon_name: 'squares-four', base_schema: { input_type: 'choice_chips', type: 'choice_chips', data_type: 'string', select_style: 'choice_chips', options: [{ value: 'a', label: 'Opción A' }, { value: 'b', label: 'Opción B' }, { value: 'c', label: 'Opción C' }] } },
       { id: 'multi_select_chips', name: 'Multi-select Chips', description: 'Pastillas con múltiple selección', category: 'basic', icon_name: 'check-square', base_schema: { input_type: 'multi_select_chips', type: 'multi_select_chips', data_type: 'array', select_style: 'multi_select_chips', options: [{ value: 'x', label: 'X' }, { value: 'y', label: 'Y' }, { value: 'z', label: 'Z' }] } },
-      { id: 'number', name: 'Número', description: 'Campo numérico', category: 'basic', icon_name: 'hash', base_schema: { input_type: 'number', type: 'number', data_type: 'number', min: 0, max: 100, step: 1 } },
-      { id: 'stepper_num', name: 'Stepper', description: 'Número con botones subir/bajar', category: 'controls', icon_name: 'caret-up-down', base_schema: { input_type: 'stepper_num', type: 'stepper_num', data_type: 'number', min: 0, max: 999, step: 1, defaultValue: 0, unit: '' } },
-      { id: 'checkbox', name: 'Checkbox', description: 'Casilla de verificación', category: 'basic', icon_name: 'check-square', base_schema: { input_type: 'checkbox', type: 'checkbox', data_type: 'boolean', defaultValue: false } },
       { id: 'radio', name: 'Radio', description: 'Opciones mutuamente excluyentes', category: 'basic', icon_name: 'radio-button', base_schema: { input_type: 'radio', type: 'radio', data_type: 'string', options: [] } },
-      { id: 'selection_checkboxes', name: 'Selection Checkboxes', description: 'Lista de casillas por opción', category: 'basic', icon_name: 'list-checks', base_schema: { input_type: 'selection_checkboxes', type: 'selection_checkboxes', data_type: 'array', display_style: 'selection_checkboxes', options: [{ value: '1', label: 'Opción 1' }, { value: '2', label: 'Opción 2' }] } },
-      { id: 'range', name: 'Slider', description: 'Control deslizante', category: 'controls', icon_name: 'sliders', base_schema: { input_type: 'range', type: 'range', data_type: 'number', min: 0, max: 100, step: 1, defaultValue: 50 } },
-      { id: 'switch', name: 'Switch', description: 'Interruptor on/off', category: 'controls', icon_name: 'toggle-left', base_schema: { input_type: 'switch', type: 'switch', data_type: 'boolean', defaultValue: false } },
-      { id: 'toggle_switch', name: 'Toggle Switch', description: 'Interruptor tipo toggle', category: 'controls', icon_name: 'toggle-right', base_schema: { input_type: 'toggle_switch', type: 'toggle_switch', data_type: 'boolean', display_style: 'switch', defaultValue: false } },
+      { id: 'selection_checkboxes', name: 'Selection Checkboxes', description: 'Lista de casillas por opción (selección múltiple)', category: 'basic', icon_name: 'list-checks', base_schema: { input_type: 'selection_checkboxes', type: 'selection_checkboxes', data_type: 'array', display_style: 'selection_checkboxes', options: [{ value: '1', label: 'Opción 1' }, { value: '2', label: 'Opción 2' }] } },
+      { id: 'num_stepper', name: 'Número (Stepper)', description: 'Número con min/max/step/unit y botones +/-', category: 'controls', icon_name: 'caret-up-down', base_schema: { input_type: 'num_stepper', type: 'num_stepper', data_type: 'number', min: 0, max: 999, step: 1, defaultValue: 0, unit: '' } },
+      { id: 'range', name: 'Slider', description: 'Control deslizante (rango)', category: 'controls', icon_name: 'sliders', base_schema: { input_type: 'range', type: 'range', data_type: 'number', min: 0, max: 100, step: 1, defaultValue: 50 } },
+      { id: 'toggle_switch', name: 'Toggle / Boolean', description: 'Interruptor on/off configurable', category: 'controls', icon_name: 'toggle-right', base_schema: { input_type: 'toggle_switch', type: 'toggle_switch', data_type: 'boolean', display_style: 'switch', defaultValue: false } },
       { id: 'tags', name: 'Tags', description: 'Etiquetas añadibles/eliminables', category: 'basic', icon_name: 'tag', base_schema: { input_type: 'tags', type: 'tags', data_type: 'array', placeholder: 'Añade tags...', defaultValue: [] } },
       { id: 'flags', name: 'Flags', description: 'Selector tipo banderas (locale/país)', category: 'basic', icon_name: 'flag', base_schema: { input_type: 'flags', type: 'flags', data_type: 'string', options: [{ value: 'es', label: 'ES' }, { value: 'en', label: 'EN' }, { value: 'fr', label: 'FR' }] } },
-      { id: 'brand_selector', name: 'Selector de Marca', description: 'Selecciona una marca', category: 'brand', icon_name: 'storefront', base_schema: { input_type: 'brand_selector', type: 'brand_selector', data_type: 'object' } },
-      { id: 'entity_selector', name: 'Selector de Entidad', description: 'Producto/servicio', category: 'brand', icon_name: 'package', base_schema: { input_type: 'entity_selector', type: 'entity_selector', data_type: 'object', entityTypes: ['product', 'service'] } },
-      { id: 'audience_selector', name: 'Selector de Audiencia', description: 'Audiencia definida', category: 'brand', icon_name: 'users', base_schema: { input_type: 'audience_selector', type: 'audience_selector', data_type: 'object' } },
+      { id: 'brand_selector', name: 'Selector de Marca', description: 'Enfoque de producción: marca (acordeón)', category: 'brand', icon_name: 'storefront', base_schema: { input_type: 'brand_selector', type: 'brand_selector', data_type: 'object' } },
+      { id: 'entity_selector', name: 'Selector de Entidad', description: 'Producto/servicio/lugar', category: 'brand', icon_name: 'package', base_schema: { input_type: 'entity_selector', type: 'entity_selector', data_type: 'object', entityTypes: ['product', 'service'] } },
+      { id: 'audience_selector', name: 'Selector de Audiencia', description: 'Enfoque: audiencia', category: 'brand', icon_name: 'users', base_schema: { input_type: 'audience_selector', type: 'audience_selector', data_type: 'object' } },
+      { id: 'product_selector', name: 'Selector de Producto', description: 'Enfoque: producto', category: 'brand', icon_name: 'shopping-bag', base_schema: { input_type: 'product_selector', type: 'product_selector', data_type: 'object' } },
+      { id: 'image_selector', name: 'Selector de Imagen', description: 'Carrusel de imágenes (productos/referencias)', category: 'media', icon_name: 'image', base_schema: { input_type: 'image_selector', type: 'image_selector', data_type: 'object' } },
       { id: 'tone_selector', name: 'Tono de Voz', description: 'Tono/estilo del contenido', category: 'semantic', icon_name: 'microphone', base_schema: { input_type: 'tone_selector', type: 'tone_selector', data_type: 'string', options: [{ value: 'profesional', label: 'Profesional' }, { value: 'casual', label: 'Casual' }, { value: 'inspirador', label: 'Inspirador' }] } },
       { id: 'length_selector', name: 'Longitud', description: 'Longitud del contenido', category: 'semantic', icon_name: 'text-align-left', base_schema: { input_type: 'length_selector', type: 'length_selector', data_type: 'string', options: [{ value: 'corto', label: 'Corto' }, { value: 'medio', label: 'Medio' }, { value: 'largo', label: 'Largo' }] } },
-      { id: 'image_selector', name: 'Selector de Imagen', description: 'Imagen de referencia', category: 'media', icon_name: 'image', base_schema: { input_type: 'image_selector', type: 'image_selector', data_type: 'object' } },
-      { id: 'product_selector', name: 'Selector de Producto', description: 'Producto (único o múltiple)', category: 'brand', icon_name: 'shopping-bag', base_schema: { input_type: 'product_selector', type: 'product_selector', data_type: 'object' } },
-      { id: 'tag_input', name: 'Tags (texto)', description: 'Etiquetas como texto', category: 'smart_text', icon_name: 'tag', base_schema: { input_type: 'tag_input', type: 'tag_input', data_type: 'array', placeholder: 'Añade tags...' } },
       { id: 'section', name: 'Sección', description: 'Agrupador visual', category: 'structural', icon_name: 'square', base_schema: { input_type: 'section', type: 'section' } },
       { id: 'divider', name: 'Divisor', description: 'Línea separadora', category: 'structural', icon_name: 'minus', base_schema: { input_type: 'divider', type: 'divider' } },
       { id: 'heading', name: 'Título', description: 'Título visual', category: 'structural', icon_name: 'type', base_schema: { input_type: 'heading', type: 'heading', text: 'Título', level: 2 } },
@@ -806,10 +804,10 @@
 
   function getPropertyFamily(type) {
     var t = (type || '').toLowerCase();
-    if (['text', 'textarea', 'prompt_input', 'tag_input', 'tags', 'slug_input'].indexOf(t) >= 0) return 'text';
+    if (['string', 'text', 'textarea', 'prompt_input', 'tag_input', 'tags', 'slug_input'].indexOf(t) >= 0) return 'text';
     if (['number'].indexOf(t) >= 0) return 'number';
     if (['range', 'slider'].indexOf(t) >= 0) return 'range';
-    if (['stepper_num', 'stepper', 'num_stepper'].indexOf(t) >= 0) return 'stepper';
+    if (['stepper_num', 'stepper', 'num_stepper', 'number'].indexOf(t) >= 0) return 'stepper';
     if (['checkbox'].indexOf(t) >= 0) return 'checkbox';
     if (['switch', 'toggle_switch', 'toggle'].indexOf(t) >= 0) return 'switch';
     if (['select', 'dropdown', 'multi_select', 'radio', 'choice_chips', 'multi_select_chips', 'flags', 'tone_selector', 'mood_selector', 'length_selector', 'selection_checkboxes'].indexOf(t) >= 0) return 'select';
