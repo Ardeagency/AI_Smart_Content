@@ -1989,32 +1989,13 @@ body.sidebar-collapsed .app-header.with-sidebar {
     border-color: var(--border-color);
 }
 
-.nav-identity-content {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-}
+/* .nav-identity-content: definicion unica arriba */
 
-.nav-identity-info {
-    flex: 1;
-    min-width: 0;
-}
+/* .nav-identity-info: definicion unica arriba */
 
-.nav-org-name {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
+/* .nav-org-name: definicion unica arriba */
 
-.nav-org-type {
-    font-size: 12px;
-    color: var(--text-muted);
-    margin-top: 2px;
-}
+/* .nav-org-type: definicion unica arriba */
 
 .nav-org-chevron {
     display: flex;
