@@ -1,7 +1,18 @@
 -- Consolidación: eliminar plantillas duplicadas/obsoletas e insertar solo las canónicas.
 -- Ejecutar en Supabase SQL Editor.
+--
+-- Duplicados eliminados (misma función, otro nombre/estructura):
+--   text, textarea, prompt_input, tag_input → usar "string"
+--   select → usar "dropdown"
+--   number, stepper_num → usar "num_stepper"
+--   checkbox, switch → usar "toggle_switch"
+--   checkboxes → usar "selection_checkboxes"
+--   radio_buttons → usar "radio" (misma función, nombre distinto)
+--   slider → usar "range" (misma función, mismo control)
+--   description_block → usar "description" (mismo bloque de texto informativo)
+--   multi_select → usar "multi_select_chips" o dropdown con is_multiple (selección múltiple)
 
--- 1) Eliminar plantillas que ya no usamos (duplicados de string, dropdown, num_stepper, toggle, etc.)
+-- 1) Eliminar plantillas duplicadas/obsoletas
 DELETE FROM public.ui_component_templates
 WHERE name IN (
   'text',
@@ -13,7 +24,11 @@ WHERE name IN (
   'stepper_num',
   'checkbox',
   'switch',
-  'checkboxes'
+  'checkboxes',
+  'radio_buttons',
+  'slider',
+  'description_block',
+  'multi_select'
 );
 
 -- 2) Insertar solo plantillas canónicas que falten (por name)

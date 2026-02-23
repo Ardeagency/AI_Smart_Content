@@ -51,6 +51,7 @@
     gallery_picker: 'MEDIA_CONTAINER',
     visual_reference: 'MEDIA_CONTAINER',
     radio: 'BOOLEAN_CONTAINER',
+    radio_buttons: 'BOOLEAN_CONTAINER',
     checkbox: 'BOOLEAN_CONTAINER',
     switch: 'BOOLEAN_CONTAINER',
     toggle_switch: 'BOOLEAN_CONTAINER',
@@ -641,14 +642,14 @@
     BOOLEAN_CONTAINER: {
       preview: function (f) {
         var display = (f.display_style || f.display || getInputType(f) || 'checkbox');
-        if (display === 'radio') return previewRadio(f);
+        if (display === 'radio' || display === 'radio_buttons') return previewRadio(f);
         if (display === 'switch' || display === 'toggle_switch') return previewSwitch(f);
         if (display === 'selection_checkboxes') return previewSelectionCheckboxes(f);
         return previewCheckbox(f);
       },
       form: function (f, opts) {
         var display = (f.display_style || f.display || getInputType(f) || 'checkbox');
-        if (display === 'radio') return formRadio(f, opts);
+        if (display === 'radio' || display === 'radio_buttons') return formRadio(f, opts);
         if (display === 'switch' || display === 'toggle_switch') return formSwitch(f, opts);
         if (display === 'selection_checkboxes') return formSelectionCheckboxes(f, opts);
         return formCheckbox(f, opts);
@@ -811,7 +812,7 @@
     if (['stepper_num', 'stepper', 'num_stepper', 'number'].indexOf(t) >= 0) return 'stepper';
     if (['checkbox'].indexOf(t) >= 0) return 'checkbox';
     if (['switch', 'toggle_switch', 'toggle'].indexOf(t) >= 0) return 'switch';
-    if (['select', 'dropdown', 'multi_select', 'radio', 'choice_chips', 'multi_select_chips', 'flags', 'tone_selector', 'mood_selector', 'length_selector', 'selection_checkboxes'].indexOf(t) >= 0) return 'select';
+    if (['select', 'dropdown', 'multi_select', 'radio', 'radio_buttons', 'choice_chips', 'multi_select_chips', 'flags', 'tone_selector', 'mood_selector', 'length_selector', 'selection_checkboxes'].indexOf(t) >= 0) return 'select';
     return 'generic';
   }
 
