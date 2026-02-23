@@ -34,10 +34,10 @@
     justify-content: center;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: calc(48px + 15px) 15px 15px 15px !important; /* Respeta header principal (48px) + padding */
-    padding-left: max(15px, env(safe-area-inset-left)) !important;
-    padding-right: max(15px, env(safe-area-inset-right)) !important;
-    padding-bottom: max(15px, env(safe-area-inset-bottom)) !important;
+    padding: calc(48px + 15px) 15px 15px 15px; /* Respeta header principal (48px) + padding */
+    padding-left: max(15px, env(safe-area-inset-left));
+    padding-right: max(15px, env(safe-area-inset-right));
+    padding-bottom: max(15px, env(safe-area-inset-bottom));
     transition: padding 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     will-change: padding;
     min-height: 100%;
@@ -200,28 +200,28 @@
 }
 
 .brand-name-large {
-    font-size: 6rem !important;
+    font-size: 6rem;
     font-weight: 700;
     color: var(--brand-text-light);
     margin: 0;
     letter-spacing: -0.02em;
     line-height: 1;
-    transition: none !important;
-    -webkit-transition: none !important;
-    -moz-transition: none !important;
-    -o-transition: none !important;
-    animation: none !important;
-    -webkit-animation: none !important;
-    -moz-animation: none !important;
-    -o-animation: none !important;
-    will-change: auto !important;
-    transform: none !important;
-    -webkit-transform: none !important;
-    -moz-transform: none !important;
-    -o-transform: none !important;
-    scale: 1 !important;
-    -webkit-scale: 1 !important;
-    zoom: 1 !important;
+    transition: none;
+    -webkit-transition: none;
+    -moz-transition: none;
+    -o-transition: none;
+    animation: none;
+    -webkit-animation: none;
+    -moz-animation: none;
+    -o-animation: none;
+    will-change: auto;
+    transform: none;
+    -webkit-transform: none;
+    -moz-transform: none;
+    -o-transform: none;
+    scale: 1;
+    -webkit-scale: 1;
+    zoom: 1;
 }
 
 /* Asegurar tamaño GRANDE en el contenedor exacto (override a base.css) */
@@ -229,9 +229,9 @@
 #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:hover,
 #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:active,
 #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:focus {
-    font-size: 6rem !important;
-    line-height: 1 !important;
-    letter-spacing: -0.02em !important;
+    font-size: 6rem;
+    line-height: 1;
+    letter-spacing: -0.02em;
 }
 
 /* Eliminar hover del nombre de marca - REGLAS MÁS ESPECÍFICAS */
@@ -244,22 +244,22 @@ h1.brand-name-large[contenteditable="true"]:hover,
 .brand-name-row:hover .brand-name-large,
 .brand-main-info:hover .brand-name-large,
 .brand-corner-bottom-left:hover .brand-name-large {
-    background: transparent !important;
-    border-color: transparent !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    transform: none !important;
-    box-shadow: none !important;
-    width: auto !important;
-    height: auto !important;
-    min-width: auto !important;
-    max-width: none !important;
-    min-height: auto !important;
-    max-height: none !important;
-    scale: 1 !important;
-    font-size: inherit !important;
-    line-height: inherit !important;
-    letter-spacing: inherit !important;
+    background: transparent;
+    border-color: transparent;
+    padding: 0;
+    margin: 0;
+    transform: none;
+    box-shadow: none;
+    width: auto;
+    height: auto;
+    min-width: auto;
+    max-width: none;
+    min-height: auto;
+    max-height: none;
+    scale: 1;
+    font-size: inherit;
+    line-height: inherit;
+    letter-spacing: inherit;
 }
 
 /* Status dot - sin animación para evitar problemas de rendimiento */
@@ -308,8 +308,8 @@ h1.brand-name-large[contenteditable="true"]:hover,
     font-family: inherit;
     font-weight: inherit;
     color: var(--brand-text-light);
-    background: transparent !important;
-    border: none !important;
+    background: transparent;
+    border: none;
     border-radius: 0;
     outline: none;
     box-shadow: none;
@@ -324,8 +324,8 @@ h1.brand-name-large[contenteditable="true"]:hover,
 
 .brand-link-input:hover,
 .brand-link-input:focus {
-    background: transparent !important;
-    border: none !important;
+    background: transparent;
+    border: none;
     box-shadow: none;
 }
 
@@ -368,16 +368,16 @@ h1.brand-name-large[contenteditable="true"]:hover,
 
 /* Card base - usa paleta global */
 .brand-card {
-    background: var(--bg-card) !important;
+    background: var(--bg-card);
     border-radius: 16px;
     padding: 1.25rem;
     display: flex;
     flex-direction: column;
     position: relative;
     flex-shrink: 0;
-    border: 1px solid var(--border-color) !important;
-    cursor: default !important;
-    transition: none !important;
+    border: 1px solid var(--border-color);
+    cursor: default;
+    transition: none;
 }
 
 /* Card Header */
@@ -518,26 +518,26 @@ h1.brand-name-large[contenteditable="true"]:hover,
 .card-info {
     min-height: 50px;
     padding: 1rem 1.25rem;
-    cursor: pointer !important;
-    transition: none !important;
+    cursor: pointer;
+    transition: none;
     overflow: hidden;
-    background: var(--bg-interactive) !important;
-    border: 1px solid var(--border-color) !important;
+    background: var(--bg-interactive);
+    border: 1px solid var(--border-color);
 }
 
 .card-info:hover {
-    background: var(--bg-hover) !important;
+    background: var(--bg-hover);
 }
 
 .card-info .card-header {
     align-items: center;
     position: relative;
-    justify-content: space-between !important;
+    justify-content: space-between;
 }
 
 /* Ocultar flecha cuando INFO está expandido */
 .card-info.expanded .card-arrow {
-    display: none !important;
+    display: none;
 }
 
 /* Botón cerrar en header */
@@ -566,21 +566,21 @@ h1.brand-name-large[contenteditable="true"]:hover,
 /* INFO expandida - Modo secundario (adaptado a todas las pantallas) */
 .brand-dashboard-container.info-mode-secondary .card-info.expanded,
 #brandsListContainer > div.brand-card.card-info.expanded {
-    position: relative !important;
-    width: 100% !important;
-    max-width: min(960px, 100%) !important; /* Ancho máximo en pantallas grandes, 100% en móvil */
-    min-width: 0 !important;
+    position: relative;
+    width: 100%;
+    max-width: min(960px, 100%); /* Ancho máximo en pantallas grandes, 100% en móvil */
+    min-width: 0;
     min-height: calc(100vh - 48px - 30px);
     min-height: calc(100dvh - 48px - 30px);
     height: calc(100vh - 48px - 30px);
     height: calc(100dvh - 48px - 30px);
     max-height: calc(100dvh - 48px - 30px);
     padding: 1.25rem;
-    margin: 0 auto !important;
-    margin-bottom: 15px !important;
+    margin: 0 auto;
+    margin-bottom: 15px;
     z-index: 1010;
-    display: flex !important;
-    flex-direction: column !important;
+    display: flex;
+    flex-direction: column;
     box-sizing: border-box;
     flex-shrink: 0;
     transition: opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s,
@@ -665,9 +665,9 @@ h1.brand-name-large[contenteditable="true"]:hover,
 
 /* INFO: quitar padding/border/margin inferior del div interno (card-header) */
 #brandsListContainer > div.brand-cards-zone > div.brand-card.card-info > div {
-    padding: 0 !important;
-    border: 0 !important;
-    margin-bottom: 0 !important;
+    padding: 0;
+    border: 0;
+    margin-bottom: 0;
 }
 
 /* Visual de marca (antes CONCEPT LAB) */
@@ -1064,29 +1064,29 @@ h1.brand-name-large[contenteditable="true"]:hover,
 
 /* Botón Subir archivo (contenedor interactivo) */
 .file-upload-btn {
-    margin-top: 1rem !important;
-    padding: 0.5rem 1rem !important;
-    background: var(--bg-interactive) !important;
-    border: 1px solid var(--border-color) !important;
-    border-radius: 6px !important;
-    color: var(--text-primary) !important;
-    cursor: pointer !important;
-    font-size: 0.875rem !important;
-    width: 100% !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 0.5rem !important;
-    transition: background 0.2s ease, border-color 0.2s ease !important;
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background: var(--bg-interactive);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 0.875rem;
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .file-upload-btn:hover {
-    background: var(--bg-hover) !important;
-    border-color: var(--border-light) !important;
+    background: var(--bg-hover);
+    border-color: var(--border-light);
 }
 
 .file-upload-btn i {
-    color: var(--icon-button) !important;
+    color: var(--icon-button);
 }
 
 .identity-cta-link:hover {
@@ -1101,13 +1101,13 @@ h1.brand-name-large[contenteditable="true"]:hover,
         width: 340px;
     }
     .brand-name-large {
-        font-size: 5rem !important;
+        font-size: 5rem;
     }
     #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large,
     #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:hover,
     #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:active,
     #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:focus {
-        font-size: 5rem !important;
+        font-size: 5rem;
     }
 }
 
@@ -1116,13 +1116,13 @@ h1.brand-name-large[contenteditable="true"]:hover,
         width: 300px;
     }
     .brand-name-large {
-        font-size: 4.25rem !important;
+        font-size: 4.25rem;
     }
     #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large,
     #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:hover,
     #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:active,
     #brandsListContainer .brand-corner-bottom-left .brand-main-info .brand-name-row .brand-name-large:focus {
-        font-size: 4.25rem !important;
+        font-size: 4.25rem;
     }
     .brand-main-info {
         flex-direction: column;
@@ -1177,9 +1177,9 @@ h1.brand-name-large[contenteditable="true"]:hover,
 
 /* Sección de identidad - sin fondo, sin bordes */
 .card-content-expanded .info-section-identity {
-    background: transparent !important;
-    border: none !important;
-    padding: 0 !important;
+    background: transparent;
+    border: none;
+    padding: 0;
     margin-bottom: 2.5rem;
 }
 
@@ -1276,8 +1276,8 @@ h1.brand-name-large[contenteditable="true"]:hover,
     font-size: inherit;
     font-family: inherit;
     color: var(--text-primary);
-    background: transparent !important;
-    border: none !important;
+    background: transparent;
+    border: none;
     outline: none;
     box-shadow: none;
     overflow-x: auto;
@@ -1471,11 +1471,11 @@ h1.brand-name-large[contenteditable="true"]:hover,
 /* Inputs de INFO - contenedores interactivos #201D26 */
 .card-content-expanded .info-field-value.editable-field {
     display: block;
-    padding: 0.75rem 1rem !important;
-    border: 1px solid var(--border-color) !important;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
-    background: var(--bg-interactive) !important;
-    color: var(--text-primary) !important;
+    background: var(--bg-interactive);
+    color: var(--text-primary);
     min-height: 2.5rem;
     width: 100%;
     box-sizing: border-box;
@@ -1487,58 +1487,58 @@ h1.brand-name-large[contenteditable="true"]:hover,
 .card-content-expanded .info-field-value.editable-field[contenteditable="true"]:hover,
 .card-content-expanded .info-field-value.editable-field[contenteditable="true"]:active,
 .card-content-expanded .info-field-value.editable-field[contenteditable="true"]:focus {
-    background: var(--bg-hover) !important;
-    border: 1px solid var(--border-color) !important;
-    padding: 0.75rem 1rem !important;
-    margin: 0 !important;
-    width: 100% !important;
-    height: auto !important;
-    transform: none !important;
-    box-shadow: none !important;
+    background: var(--bg-hover);
+    border: 1px solid var(--border-color);
+    padding: 0.75rem 1rem;
+    margin: 0;
+    width: 100%;
+    height: auto;
+    transform: none;
+    box-shadow: none;
 }
 
 /* Select y multiselect dentro de INFO - contenedores interactivos */
 .card-content-expanded .editable-select,
 .card-content-expanded .info-field-value select {
-    width: 100% !important;
-    padding: 0.5rem 0.75rem !important;
-    background: var(--bg-interactive) !important;
-    border: 1px solid var(--border-color) !important;
-    border-radius: 6px !important;
-    color: var(--text-primary) !important;
-    font-size: 0.875rem !important;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-interactive);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 0.875rem;
 }
 
 .card-content-expanded .multiselect-trigger {
-    background: var(--bg-interactive) !important;
-    border: 1px solid var(--border-color) !important;
-    color: var(--text-primary) !important;
+    background: var(--bg-interactive);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
 }
 
 .card-content-expanded .multiselect-trigger:hover,
 .card-content-expanded .multiselect-trigger.open {
-    background: var(--bg-hover) !important;
-    border-color: var(--border-light) !important;
-    box-shadow: none !important;
+    background: var(--bg-hover);
+    border-color: var(--border-light);
+    box-shadow: none;
 }
 
 .card-content-expanded .multiselect-dropdown {
-    background: var(--bg-card) !important;
-    border: 1px solid var(--border-color) !important;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
 }
 
 .card-content-expanded .multiselect-option:hover {
-    background: var(--bg-hover) !important;
+    background: var(--bg-hover);
 }
 
 .card-content-expanded .multiselect-option.selected {
-    background: var(--bg-hover) !important;
-    color: var(--text-primary) !important;
+    background: var(--bg-hover);
+    color: var(--text-primary);
 }
 
 .card-content-expanded .multiselect-tag {
-    background: var(--bg-hover) !important;
-    color: var(--text-primary) !important;
+    background: var(--bg-hover);
+    color: var(--text-primary);
     border: 1px solid var(--border-color);
 }
 
@@ -1568,12 +1568,12 @@ h1.brand-name-large[contenteditable="true"]:hover,
 
 /* Input "+ Agregar" en multiselect dentro de INFO */
 .card-content-expanded .editable-tag-input {
-    padding: 0.25rem 0.5rem !important;
-    background: var(--bg-interactive) !important;
-    border: 1px solid var(--border-color) !important;
-    border-radius: 4px !important;
-    font-size: 0.75rem !important;
-    color: var(--text-primary) !important;
+    padding: 0.25rem 0.5rem;
+    background: var(--bg-interactive);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: var(--text-primary);
 }
 
 .card-content-expanded .editable-tag-input::placeholder {
@@ -1582,8 +1582,8 @@ h1.brand-name-large[contenteditable="true"]:hover,
 
 .card-content-expanded .editable-tag-input:focus {
     outline: none;
-    border-color: var(--border-light) !important;
-    background: var(--bg-hover) !important;
+    border-color: var(--border-light);
+    background: var(--bg-hover);
 }
 
 .card-content-expanded .info-list {
@@ -1624,16 +1624,16 @@ h1.brand-name-large[contenteditable="true"]:hover,
 /* Responsive: panel INFO y card expandida en pantallas pequeñas */
 @media (max-width: 768px) {
     .brand-dashboard-container.info-mode-secondary {
-        padding: calc(48px + 10px) 10px 10px 10px !important;
-        padding-left: max(10px, env(safe-area-inset-left)) !important;
-        padding-right: max(10px, env(safe-area-inset-right)) !important;
-        padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
+        padding: calc(48px + 10px) 10px 10px 10px;
+        padding-left: max(10px, env(safe-area-inset-left));
+        padding-right: max(10px, env(safe-area-inset-right));
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
     }
 
     .brand-dashboard-container.info-mode-secondary .card-info.expanded,
     #brandsListContainer > div.brand-card.card-info.expanded {
-        width: 100% !important;
-        max-width: 100% !important;
+        width: 100%;
+        max-width: 100%;
         min-height: min(500px, calc(100dvh - 48px - 24px));
         max-height: calc(100dvh - 48px - 24px);
         padding: 1rem;
