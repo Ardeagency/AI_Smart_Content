@@ -176,10 +176,38 @@
         }
     }
     
+    // ===== ENTRANCE SEQUENCE =====
+    const ENTRANCE_DURATION_MS = 2400;
+
+    function runEntranceSequence() {
+        const overlay = document.getElementById('entranceOverlay');
+        if (!overlay) return Promise.resolve();
+
+        return new Promise((resolve) => {
+            requestAnimationFrame(() => {
+                overlay.classList.add('started');
+            });
+            setTimeout(() => {
+                overlay.classList.add('entrance-overlay--hidden');
+                const container = document.getElementById('app-container');
+                const hasContent = container && container.innerHTML.trim().length > 0;
+                if (!hasContent && typeof window.appLoader !== 'undefined' && window.appLoader.showSpinner) {
+                    window.appLoader.showSpinner();
+                }
+                resolve();
+            }, ENTRANCE_DURATION_MS);
+        });
+    }
+
+    function startEntranceAndInit() {
+        runEntranceSequence();
+        loadSupabaseConfig();
+    }
+
     // ===== INICIALIZACIÓN =====
     
     /**
-     * Inicializa el app loader
+     * Inicializa el app loader (Supabase). La secuencia de entrada se ejecuta en paralelo.
      */
     async function init() {
         await loadSupabaseConfig();
@@ -207,11 +235,13 @@
     // También exponer getSupabaseClient globalmente para compatibilidad
     window.getSupabaseClient = getSupabaseClient;
     
-    // Iniciar cuando el DOM esté listo
+    // Iniciar cuando el DOM esté listo: entrada (presentación) + carga de Supabase en paralelo
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', function onReady() {
+            startEntranceAndInit();
+        });
     } else {
-        init();
+        startEntranceAndInit();
     }
 })();
 
