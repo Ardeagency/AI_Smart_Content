@@ -39,10 +39,16 @@
     --accent-warm: #87868B;
     --accent-warm-glow: transparent;
 
-    /* ── Aliases de color principal ──────────── */
+    /* ── Color principal (texto/headings — NO usar como acento de botón) ── */
     --primary-color: #D4D1D8;
     --primary-light: rgba(212, 209, 216, 0.95);
     --primary-hover: #D4D1D8;
+    --primary-dark: #b8b5bc;
+
+    /* ── Acento CTA (botones, badges, enlaces activos) ── */
+    --accent-cta: var(--warm-1);
+    --accent-cta-hover: var(--warm-2);
+    --accent-cta-dark: var(--warm-3);
 
     /* ── Estados ─────────────────────────────── */
     --success-color: rgba(16, 185, 129, 0.8);
@@ -191,4 +197,135 @@ body {
     padding: 0;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================
+   CONTAINERS GLOBALES (desde app.css)
+   ============================================ */
+
+#app-container {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    min-height: 100vh;
+    background: var(--bg-primary);
+    transition: opacity 0.3s ease;
+    will-change: opacity, transform;
+    overflow-x: hidden;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+#app-container:has(main.builder-main) {
+    overflow: hidden;
+    height: 100vh;
+    min-height: 100vh;
+}
+
+#app-container > main,
+#app-container > div {
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+    min-width: 0;
+}
+
+#app-container main section,
+#app-container main div,
+#app-container > div section,
+#app-container > div div {
+    max-width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+}
+
+#app-container main > div,
+#app-container > div > div {
+    overflow-x: hidden;
+}
+
+#app-container .main-header {
+    position: fixed !important;
+    top: 0 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    z-index: 1000 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    display: flex !important;
+}
+
+#navigation-container {
+    position: relative;
+    z-index: 1000;
+}
+
+/* ============================================
+   UTILIDADES GLOBALES (desde app.css)
+   ============================================ */
+
+.hidden {
+    display: none !important;
+}
+
+.invisible {
+    visibility: hidden;
+}
+
+.no-pointer {
+    pointer-events: none;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* ============================================
+   FOCUS & ACCESIBILIDAD (desde app.css)
+   ============================================ */
+
+*:focus-visible {
+    outline: 2px solid var(--border-light);
+    outline-offset: 2px;
+}
+
+/* ============================================
+   SCROLLBAR GLOBAL (desde app.css)
+   ============================================ */
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-warm);
+}
+
+/* ============================================
+   PRINT (desde app.css)
+   ============================================ */
+
+@media print {
+    #navigation-container {
+        display: none;
+    }
 }

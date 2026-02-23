@@ -41,12 +41,12 @@
 }
 
 .logo-link:hover {
-    color: var(--primary-color);
+    color: var(--accent-cta);
 }
 
 .logo-link i {
     font-size: 1.25rem;
-    color: var(--primary-color);
+    color: var(--accent-cta);
 }
 
 .header-nav {
@@ -202,8 +202,8 @@
 }
 
 .category-tab.active {
-    background: var(--primary-color);
-    border-color: var(--primary-color);
+    background: var(--accent-cta);
+    border-color: var(--accent-cta);
     color: var(--bg-black);
     font-weight: 600;
 }
@@ -388,8 +388,8 @@
 
 .btn-icon:hover {
     background: var(--bg-tertiary);
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    border-color: var(--accent-cta);
+    color: var(--accent-cta);
 }
 
 .btn-icon.delete:hover {
@@ -481,14 +481,14 @@
 }
 
 .btn-secondary:hover {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    border-color: var(--accent-cta);
+    color: var(--accent-cta);
 }
 
 .btn-primary {
     flex: 1;
     padding: 0.75rem;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    background: linear-gradient(135deg, var(--accent-cta), var(--accent-cta-dark));
     border: none;
     border-radius: 6px;
     color: var(--bg-black);

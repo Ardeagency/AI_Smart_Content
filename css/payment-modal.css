@@ -94,7 +94,7 @@
 }
 
 .plan-selected i {
-    color: var(--primary-color);
+    color: var(--accent-cta);
 }
 
 /* Plan-specific styling */
@@ -113,7 +113,7 @@
 }
 
 .plan-selected.pro i {
-    color: var(--primary-color);
+    color: var(--accent-cta);
 }
 
 .plan-selected.enterprise {
@@ -129,7 +129,7 @@
     font-size: 1.8rem;
     font-weight: 700;
     margin-bottom: 0.5rem;
-    background: linear-gradient(135deg, var(--text-primary), var(--primary-color));
+    background: linear-gradient(135deg, var(--text-primary), var(--accent-cta));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -152,7 +152,7 @@
 .price-amount {
     font-size: 2rem;
     font-weight: 800;
-    color: var(--primary-color);
+    color: var(--accent-cta);
     margin-bottom: 0.25rem;
 }
 
@@ -190,7 +190,7 @@
 }
 
 .section-title i {
-    color: var(--primary-color);
+    color: var(--accent-cta);
     font-size: 1.2rem;
 }
 
@@ -253,7 +253,7 @@
 
 .password-toggle:focus {
     outline: none;
-    color: var(--primary-color);
+    color: var(--accent-cta);
 }
 
 .password-strength {
@@ -358,7 +358,7 @@
 }
 
 .beta-badge {
-    background: linear-gradient(135deg, var(--primary-color), #ff6b35);
+    background: linear-gradient(135deg, var(--accent-cta), #ff6b35);
     color: white;
     font-size: 0.7rem;
     font-weight: 700;
@@ -458,7 +458,7 @@
 }
 
 .features-title i {
-    color: var(--primary-color);
+    color: var(--accent-cta);
 }
 
 .features-list {
@@ -510,7 +510,7 @@
 .total-row.final {
     font-weight: 700;
     font-size: 1.1rem;
-    color: var(--primary-color);
+    color: var(--accent-cta);
 }
 
 .total-label {
@@ -535,7 +535,7 @@
 }
 
 .pay-button {
-    background: linear-gradient(135deg, var(--primary-color), #ff6b35);
+    background: linear-gradient(135deg, var(--accent-cta), #ff6b35);
     color: white;
     border: none;
     padding: 1rem 2rem;
@@ -646,8 +646,8 @@
 }
 
 .checkbox-container input[type="checkbox"]:checked + .checkmark {
-    background: var(--primary-color);
-    border-color: var(--primary-color);
+    background: var(--accent-cta);
+    border-color: var(--accent-cta);
 }
 
 .checkbox-container input[type="checkbox"]:checked + .checkmark::after {
@@ -663,7 +663,7 @@
 }
 
 .payment-disclaimer a {
-    color: var(--primary-color);
+    color: var(--accent-cta);
     text-decoration: none;
     font-weight: 500;
 }
