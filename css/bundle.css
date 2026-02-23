@@ -555,7 +555,8 @@ body {
 }
 
 /* ============================================
-   GLOBAL LOADING (línea con degradado oficial)
+   GLOBAL LOADING (beam: luz blanca → prisma → degradado espectral)
+   Línea 100% ancho, glow, pulso y destello que viaja
    ============================================ */
 
 .global-spinner-overlay {
@@ -565,23 +566,120 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.85);
+    background: #000000;
     pointer-events: auto;
 }
 
-.global-spinner-line {
-    width: 60%;
-    max-width: 320px;
-    height: 4px;
-    border-radius: 2px;
-    background: var(--brand-gradient);
-    box-shadow: 0 0 16px rgba(255, 0, 0, 0.35), 0 0 32px rgba(0, 230, 255, 0.2), 0 0 48px rgba(144, 0, 144, 0.25);
-    animation: global-spinner-line-pulse 1.4s ease-in-out infinite;
+/* Gradiente ambiental (no negro plano) */
+.global-spinner-overlay::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.05), transparent 60%);
+    pointer-events: none;
 }
 
-@keyframes global-spinner-line-pulse {
-    0%, 100% { opacity: 0.85; filter: brightness(1); }
-    50%      { opacity: 1;    filter: brightness(1.15); }
+.loader {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.beam {
+    position: relative;
+    width: 100%;
+    height: 2px;
+    /* Gradiente completo para que ::after (glow) herede */
+    background: linear-gradient(
+        to right,
+        #ffffff 0%,
+        rgba(255, 255, 255, 0.6) 45%,
+        #ff0000 50%,
+        #ff6500 55%,
+        #ffe500 62%,
+        #9acc00 70%,
+        #00d614 78%,
+        #00e7ff 85%,
+        #0018ee 91%,
+        #5b00ea 96%,
+        #900090 100%
+    );
+    animation: beam-pulse 3s ease-in-out infinite;
+}
+
+/* Glow / halo cinemático */
+.beam::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 14px;
+    transform: translateY(-50%);
+    background: inherit;
+    filter: blur(12px);
+    opacity: 0.6;
+    z-index: -1;
+}
+
+.beam-left {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(to right, #ffffff, rgba(255, 255, 255, 0.6));
+    pointer-events: none;
+}
+
+.beam-right {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+        to right,
+        #ff0000,
+        #ff6500,
+        #ffe500,
+        #9acc00,
+        #00d614,
+        #00e7ff,
+        #0018ee,
+        #5b00ea,
+        #900090
+    );
+    pointer-events: none;
+}
+
+@keyframes beam-pulse {
+    0%, 100% { opacity: 0.7; transform: scaleX(1); }
+    50%      { opacity: 1;   transform: scaleX(1.03); }
+}
+
+/* Destello que viaja por la línea */
+.spark {
+    position: absolute;
+    top: 50%;
+    left: -10%;
+    width: 80px;
+    height: 4px;
+    transform: translateY(-50%);
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.95), transparent 70%);
+    filter: blur(6px);
+    animation: spark-travel 2.5s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes spark-travel {
+    0%   { left: -10%; opacity: 0; }
+    15%  { opacity: 1; }
+    85%  { opacity: 1; }
+    100% { left: 110%; opacity: 0; }
 }
 
 /* ============================================
