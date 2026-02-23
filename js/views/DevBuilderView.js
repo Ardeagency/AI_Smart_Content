@@ -668,6 +668,7 @@ class DevBuilderView extends DevBaseView {
       { id: 'toggle_switch', name: 'Switch', description: 'Interruptor sí/no', category: 'basic', icon_name: 'toggle-left', base_schema: { input_type: 'toggle_switch', defaultValue: false } },
       { id: 'tags', name: 'Tags', description: 'Etiquetas', category: 'basic', icon_name: 'tags', base_schema: { input_type: 'tags' } },
       { id: 'flags', name: 'Flags', description: 'Dropdown: idioma, país o etnia (flag_category).', category: 'basic', icon_name: 'flag', base_schema: { input_type: 'flags', flag_category: 'language', options: [] } },
+      { id: 'colores', name: 'Colores', description: 'Círculos de colores seleccionables (máx. 6).', category: 'basic', icon_name: 'palette', base_schema: { input_type: 'colores', max_selections: 6, options: [{ value: '#000000', label: 'Negro' }, { value: '#ef4444', label: 'Rojo' }, { value: '#22c55e', label: 'Verde' }, { value: '#3b82f6', label: 'Azul' }, { value: '#eab308', label: 'Amarillo' }, { value: '#8b5cf6', label: 'Violeta' }] } },
       { id: 'brand_selector', name: 'Selector de Marca', description: 'Marca del usuario', category: 'context', icon_name: 'storefront', base_schema: { input_type: 'brand_selector' } },
       { id: 'entity_selector', name: 'Selector de Entidad', description: 'Producto/servicio', category: 'context', icon_name: 'package', base_schema: { input_type: 'entity_selector' } },
       { id: 'audience_selector', name: 'Selector de Audiencia', description: 'Audiencia', category: 'context', icon_name: 'users', base_schema: { input_type: 'audience_selector' } },
@@ -1336,6 +1337,7 @@ class DevBuilderView extends DevBaseView {
               <option value="radio" ${(field.input_type || field.type) === 'radio' ? 'selected' : ''}>Radio</option>
               <option value="range" ${(field.input_type || field.type) === 'range' ? 'selected' : ''}>Slider</option>
               <option value="flags" ${(field.input_type || field.type) === 'flags' ? 'selected' : ''}>Flags (idioma, país, etnia)</option>
+              <option value="colores" ${(field.input_type || field.type) === 'colores' ? 'selected' : ''}>Colores (círculos, máx. 6)</option>
               <option value="image_selector" ${(field.input_type || field.type) === 'image_selector' ? 'selected' : ''}>Selector de imagen (carrusel)</option>
             </select>
             <span class="field-help">Define si el campo es texto, dropdown, número, etc. Cambia el aspecto en el canvas y las opciones de abajo.</span>
@@ -1399,6 +1401,7 @@ class DevBuilderView extends DevBaseView {
     
     this.setupPropertiesListeners();
     this.syncDefaultValueAndExtraConfigToDom(field, dataType);
+    if (window.InputRegistry && window.InputRegistry.initColorsPicker) window.InputRegistry.initColorsPicker(panel);
   }
 
   inferDataType(field) {
@@ -1406,7 +1409,7 @@ class DevBuilderView extends DevBaseView {
     if (['number', 'range', 'stepper', 'stepper_num', 'num_stepper', 'rating', 'slider'].indexOf(t) >= 0) return 'number';
     if (['checkbox', 'switch', 'boolean', 'toggle', 'toggle_switch'].indexOf(t) >= 0) return 'boolean';
     if (['select', 'multi_select', 'tone_selector', 'mood_selector', 'length_selector', 'radio'].indexOf(t) >= 0) return 'string';
-    if (['tag_input', 'gallery_picker', 'selection_checkboxes'].indexOf(t) >= 0) return 'array';
+    if (['tag_input', 'gallery_picker', 'selection_checkboxes', 'colores'].indexOf(t) >= 0) return 'array';
     if (['brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector', 'image_selector'].indexOf(t) >= 0) return 'object';
     return field.data_type || 'string';
   }
@@ -1744,6 +1747,39 @@ class DevBuilderView extends DevBaseView {
         `;
       }
 
+      case 'colores': {
+        const maxSel = field.max_selections != null ? field.max_selections : 6;
+        const colorOpts = field.options || [{ value: '#000000', label: 'Negro' }, { value: '#ef4444', label: 'Rojo' }, { value: '#22c55e', label: 'Verde' }, { value: '#3b82f6', label: 'Azul' }];
+        return `
+          <div class="property-group">
+            <h4>Colores (círculos seleccionables)</h4>
+            <div class="property-field">
+              <label for="propColoresMax">Máximo de colores seleccionables</label>
+              <input type="number" id="propColoresMax" value="${maxSel}" min="1" max="12">
+              <span class="field-help">Límite por defecto: 6 (como en brands son 4).</span>
+            </div>
+            <div class="property-field">
+              <label>Paleta (hex + etiqueta)</label>
+            </div>
+            <div class="options-editor options-editor--colors" id="optionsEditorColores">
+              ${colorOpts.map((opt, i) => {
+                const v = (opt.value != null ? opt.value : opt).toString();
+                const lbl = (opt.label != null ? opt.label : '').toString();
+                return `
+                <div class="option-row option-row--color" data-index="${i}">
+                  <input type="text" class="option-color-hex" placeholder="#hex" value="${escapeProp(v)}" data-index="${i}" maxlength="7">
+                  <input type="text" class="option-label" placeholder="Etiqueta" value="${escapeProp(lbl)}" data-index="${i}">
+                  <button type="button" class="btn-icon remove-option" title="Eliminar"><i class="ph ph-x"></i></button>
+                </div>`;
+              }).join('')}
+            </div>
+            <button type="button" class="btn-small btn-add-options" id="addOptionBtnColores">
+              <i class="ph ph-plus"></i> Añadir color
+            </button>
+          </div>
+        `;
+      }
+
       case 'select':
       case 'radio': {
         const options = field.options || [];
@@ -1753,7 +1789,8 @@ class DevBuilderView extends DevBaseView {
         const isRadio = it === 'radio';
         const isSelectionCheckboxes = it === 'selection_checkboxes';
         const isFlags = it === 'flags';
-        const title = isFlags ? 'Flags' : (isSelectionCheckboxes ? 'Checkboxes (opciones)' : (isRadio ? 'Radio Buttons' : (isDropdown ? 'Dropdown' : 'Lista desplegable')));
+        const isColores = it === 'colores';
+        const title = isColores ? 'Colores' : (isFlags ? 'Flags' : (isSelectionCheckboxes ? 'Checkboxes (opciones)' : (isRadio ? 'Radio Buttons' : (isDropdown ? 'Dropdown' : 'Lista desplegable'))));
         const optVal = (o) => (o && (o.value !== undefined ? o.value : o.label !== undefined ? o.label : o));
         return `
           <div class="property-group">
@@ -1982,6 +2019,12 @@ class DevBuilderView extends DevBaseView {
         if (newType === 'flags') {
           if (!field.flag_category) field.flag_category = 'language';
           if (!field.flags_category) field.flags_category = 'language';
+        }
+        if (newType === 'colores') {
+          if (field.max_selections == null) field.max_selections = 6;
+          if (!Array.isArray(field.options) || field.options.length === 0) {
+            field.options = [{ value: '#000000', label: 'Negro' }, { value: '#ef4444', label: 'Rojo' }, { value: '#22c55e', label: 'Verde' }, { value: '#3b82f6', label: 'Azul' }, { value: '#eab308', label: 'Amarillo' }, { value: '#8b5cf6', label: 'Violeta' }];
+          }
         }
         if (newType === 'toggle_switch' || newType === 'switch') {
           field.display_style = 'switch';
@@ -2341,6 +2384,65 @@ class DevBuilderView extends DevBaseView {
         this.onFieldChange();
       });
     }
+
+    const propColoresMax = this.querySelector('#propColoresMax');
+    if (propColoresMax) {
+      propColoresMax.addEventListener('input', (e) => {
+        const n = parseInt(e.target.value, 10);
+        if (!isNaN(n) && n >= 1 && n <= 12) {
+          field.max_selections = n;
+          this.renderCanvas();
+          this.onFieldChange();
+        }
+      });
+    }
+    const addOptionBtnColores = this.querySelector('#addOptionBtnColores');
+    const optionsEditorColores = this.querySelector('#optionsEditorColores');
+    if (addOptionBtnColores) {
+      addOptionBtnColores.addEventListener('click', () => {
+        if (!field.options) field.options = [];
+        field.options.push({ value: '#888888', label: 'Nuevo' });
+        this.renderPropertiesPanel();
+        this.setupTypeSpecificListeners(field);
+        this.renderCanvas();
+        this.onFieldChange();
+      });
+    }
+    if (optionsEditorColores) {
+      optionsEditorColores.querySelectorAll('.option-row--color').forEach((row) => {
+        const index = parseInt(row.getAttribute('data-index'), 10);
+        const hexInput = row.querySelector('.option-color-hex');
+        const labelInput = row.querySelector('.option-label');
+        const removeBtn = row.querySelector('.remove-option');
+        if (hexInput) {
+          hexInput.addEventListener('input', (e) => {
+            while (field.options.length <= index) field.options.push({ value: '#000000', label: '' });
+            field.options[index] = field.options[index] || {};
+            field.options[index].value = e.target.value.trim() || '#000000';
+            this.renderCanvas();
+            this.onFieldChange();
+          });
+        }
+        if (labelInput) {
+          labelInput.addEventListener('input', (e) => {
+            while (field.options.length <= index) field.options.push({ value: '#000000', label: '' });
+            field.options[index] = field.options[index] || {};
+            field.options[index].label = e.target.value;
+            this.onFieldChange();
+          });
+        }
+        if (removeBtn) {
+          removeBtn.addEventListener('click', () => {
+            field.options.splice(index, 1);
+            this.renderPropertiesPanel();
+            this.setupTypeSpecificListeners(field);
+            this.renderCanvas();
+            this.onFieldChange();
+          });
+        }
+      });
+    }
+
     // Select/Dropdown/Radio: opciones (un input por opción o valor/etiqueta)
     const addOptionBtn = this.querySelector('#addOptionBtn');
     const optionsEditor = this.querySelector('#optionsEditor');

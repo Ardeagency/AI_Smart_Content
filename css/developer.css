@@ -2384,6 +2384,34 @@
   cursor: not-allowed;
 }
 
+/* Colores: círculos seleccionables (mismo formato que brands, máx. 6) */
+.input-colors-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.input-colors-wrap--preview .input-color-swatch {
+  cursor: default;
+  pointer-events: none;
+}
+.input-color-swatch {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  padding: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.input-color-swatch:hover {
+  transform: scale(1.08);
+}
+.input-color-swatch.selected {
+  box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--dev-primary);
+}
+
 /* Checkbox y radio: estilo design system (cuadrado/círculo con borde, checked con color primario) */
 .preview-checkbox,
 .preview-radio {

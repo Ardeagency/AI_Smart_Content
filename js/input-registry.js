@@ -39,6 +39,7 @@
     choice_chips: 'SELECT_CONTAINER',
     multi_select_chips: 'SELECT_CONTAINER',
     flags: 'SELECT_CONTAINER',
+    colores: 'SELECT_CONTAINER',
     tone_selector: 'SELECT_CONTAINER',
     mood_selector: 'SELECT_CONTAINER',
     length_selector: 'SELECT_CONTAINER',
@@ -498,6 +499,58 @@
     return renderSelectDropdown(fWithOpts, opts || {}, isPreviewOpts(opts));
   }
 
+  /** Paleta por defecto para contenedor colores (círculos seleccionables, max 6). */
+  var DEFAULT_COLOR_PALETTE = [
+    { value: '#000000', label: 'Negro' }, { value: '#ffffff', label: 'Blanco' }, { value: '#ef4444', label: 'Rojo' },
+    { value: '#f97316', label: 'Naranja' }, { value: '#eab308', label: 'Amarillo' }, { value: '#22c55e', label: 'Verde' },
+    { value: '#06b6d4', label: 'Cian' }, { value: '#3b82f6', label: 'Azul' }, { value: '#8b5cf6', label: 'Violeta' },
+    { value: '#ec4899', label: 'Rosa' }, { value: '#78716c', label: 'Marrón' }, { value: '#64748b', label: 'Gris' }
+  ];
+  function getColorsOptionsForField(f) {
+    var opts = f.options && f.options.length ? f.options : DEFAULT_COLOR_PALETTE;
+    return opts.map(function (o) {
+      var val = (o.value != null ? o.value : o).toString().trim();
+      if (val && val.indexOf('#') !== 0) val = '#' + val;
+      return { value: val || '#000000', label: o.label != null ? o.label : val };
+    });
+  }
+  function previewColores(f) {
+    var opts = getColorsOptionsForField(f);
+    var maxShow = 10;
+    var slice = opts.slice(0, maxShow);
+    var html = slice.map(function (o) {
+      var hex = escapeHtml((o.value || '#000000').toString());
+      return '<span class="input-color-swatch" style="background:' + hex + ';" title="' + escapeHtml(o.label || o.value || '') + '" aria-hidden="true"></span>';
+    }).join('');
+    return '<div class="input-colors-wrap input-colors-wrap--preview">' + html + '</div>';
+  }
+  function formColores(f, opts) {
+    opts = opts || {};
+    var a = formAttrs(f, opts);
+    var isPreview = isPreviewOpts(opts);
+    var optsList = getColorsOptionsForField(f);
+    var maxSel = Math.max(1, Math.min(12, f.max_selections != null ? f.max_selections : 6));
+    var selected = f.defaultValue != null
+      ? (Array.isArray(f.defaultValue) ? f.defaultValue : String(f.defaultValue).split(',').map(function (s) { return s.trim(); }).filter(Boolean))
+      : [];
+    var selectedStr = selected.slice(0, maxSel).join(',');
+    if (isPreview) {
+      var previewHtml = optsList.slice(0, 8).map(function (o) {
+        var hex = escapeHtml((o.value || '#000000').toString());
+        return '<span class="input-color-swatch" style="background:' + hex + ';"></span>';
+      }).join('');
+      return '<div class="input-colors-wrap input-colors-wrap--preview">' + previewHtml + '</div>';
+    }
+    var swatches = optsList.map(function (o) {
+      var hex = (o.value || '#000000').toString();
+      var valEsc = escapeHtml(hex);
+      var isSel = selected.indexOf(hex) >= 0;
+      return '<button type="button" class="input-color-swatch' + (isSel ? ' selected' : '') + '" data-value="' + valEsc + '" style="background:' + valEsc + ';" title="' + escapeHtml(o.label || hex) + '" aria-pressed="' + (isSel ? 'true' : 'false') + '"></button>';
+    }).join('');
+    return '<input type="hidden" class="input-colors-value" name="' + escapeHtml(a.name) + '" id="' + escapeHtml(a.id) + '" value="' + escapeHtml(selectedStr) + '" data-max="' + maxSel + '">' +
+      '<div class="input-colors-wrap" data-colors-key="' + escapeHtml(f.key || '') + '" data-colors-max="' + maxSel + '" role="group" aria-label="' + escapeHtml(f.label || 'Colores') + '">' + swatches + '</div>';
+  }
+
   /** Placeholder para FILE_CONTAINER (upload) */
   function previewFile(f) {
     return '<div class="preview-structural"><i class="ph ph-upload-simple"></i><span>' + escapeHtml(f.label || 'Subir archivo') + '</span></div>';
@@ -624,6 +677,7 @@
         var isContext = ['brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector'].indexOf(getInputType(f)) >= 0 || !!f.context_selector_type;
         if (isContext) return previewFocusSelectorAccordion(f);
         if (t === 'flags') return previewFlags(f);
+        if (t === 'colores') return previewColores(f);
         var style = f.select_style || (t === 'choice_chips' ? 'choice_chips' : (t === 'multi_select_chips' ? 'multi_select_chips' : 'dropdown'));
         if (style === 'choice_chips') return previewChoiceChips(f);
         if (style === 'multi_select_chips' || f.is_multiple) return previewMultiSelectChips(f);
@@ -634,6 +688,7 @@
         var isContext = ['brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector'].indexOf(getInputType(f)) >= 0 || !!f.context_selector_type;
         if (isContext) return formFocusSelectorAccordion(f, opts || {});
         if (t === 'flags') return formFlags(f, opts);
+        if (t === 'colores') return formColores(f, opts);
         var style = f.select_style || (t === 'choice_chips' ? 'choice_chips' : (t === 'multi_select_chips' ? 'multi_select_chips' : 'dropdown'));
         if (style === 'choice_chips') return formChoiceChips(f, opts);
         if (style === 'multi_select_chips' || f.is_multiple) return formMultiSelectChips(f, opts);
@@ -735,6 +790,7 @@
     register('choice_chips', { preview: previewChoiceChips, form: formChoiceChips });
     register('multi_select_chips', { preview: previewMultiSelectChips, form: formMultiSelectChips });
     register('flags', { preview: previewFlags, form: formFlags });
+    register('colores', { preview: previewColores, form: formColores });
     register('tags', { preview: previewTags, form: formTags });
     register('stepper_num', { preview: previewStepper, form: formStepper });
     register('num_stepper', { preview: previewStepper, form: formStepper });
@@ -805,6 +861,7 @@
       { id: 'toggle_switch', name: 'Toggle / Boolean', description: 'Interruptor on/off configurable', category: 'controls', icon_name: 'toggle-right', base_schema: { input_type: 'toggle_switch', type: 'toggle_switch', data_type: 'boolean', display_style: 'switch', defaultValue: false } },
       { id: 'tags', name: 'Tags', description: 'Etiquetas añadibles/eliminables', category: 'basic', icon_name: 'tag', base_schema: { input_type: 'tags', type: 'tags', data_type: 'array', placeholder: 'Añade tags...', defaultValue: [] } },
       { id: 'flags', name: 'Flags', description: 'Dropdown preconfigurado: idioma, país o etnia/origen (flag_category).', category: 'basic', icon_name: 'flag', base_schema: { input_type: 'flags', type: 'flags', data_type: 'string', flag_category: 'language', options: [] } },
+      { id: 'colores', name: 'Colores', description: 'Círculos de colores seleccionables (como brands). Máx. 6. El desarrollador define la paleta.', category: 'basic', icon_name: 'palette', base_schema: { input_type: 'colores', type: 'colores', data_type: 'array', max_selections: 6, options: [{ value: '#000000', label: 'Negro' }, { value: '#ef4444', label: 'Rojo' }, { value: '#22c55e', label: 'Verde' }, { value: '#3b82f6', label: 'Azul' }, { value: '#eab308', label: 'Amarillo' }, { value: '#8b5cf6', label: 'Violeta' }] } },
       { id: 'brand_selector', name: 'Selector de Marca', description: 'Enfoque de producción: marca (acordeón)', category: 'brand', icon_name: 'storefront', base_schema: { input_type: 'brand_selector', type: 'brand_selector', data_type: 'object' } },
       { id: 'entity_selector', name: 'Selector de Entidad', description: 'Producto/servicio/lugar', category: 'brand', icon_name: 'package', base_schema: { input_type: 'entity_selector', type: 'entity_selector', data_type: 'object', entityTypes: ['product', 'service'] } },
       { id: 'audience_selector', name: 'Selector de Audiencia', description: 'Enfoque: audiencia', category: 'brand', icon_name: 'users', base_schema: { input_type: 'audience_selector', type: 'audience_selector', data_type: 'object' } },
@@ -827,7 +884,7 @@
     if (['stepper_num', 'stepper', 'num_stepper', 'number'].indexOf(t) >= 0) return 'stepper';
     if (['checkbox'].indexOf(t) >= 0) return 'checkbox';
     if (['switch', 'toggle_switch', 'toggle'].indexOf(t) >= 0) return 'switch';
-    if (['select', 'dropdown', 'multi_select', 'radio', 'radio_buttons', 'choice_chips', 'multi_select_chips', 'flags', 'tone_selector', 'mood_selector', 'length_selector', 'selection_checkboxes'].indexOf(t) >= 0) return 'select';
+    if (['select', 'dropdown', 'multi_select', 'radio', 'radio_buttons', 'choice_chips', 'multi_select_chips', 'flags', 'colores', 'tone_selector', 'mood_selector', 'length_selector', 'selection_checkboxes'].indexOf(t) >= 0) return 'select';
     return 'generic';
   }
 
@@ -891,6 +948,40 @@
     });
   }
 
+  /**
+   * Inicializa los selectores de colores (círculos): al hacer clic se toggle selección (máx. N) y se actualiza el hidden.
+   * @param {Element} root - Contenedor donde buscar (ej. #formFields o document.body)
+   */
+  function initColorsPicker(root) {
+    if (!root || !root.querySelectorAll) return;
+    root.querySelectorAll('.input-colors-wrap[data-colors-max]').forEach(function (wrap) {
+      if (wrap._colorsInit) return;
+      wrap._colorsInit = true;
+      var max = parseInt(wrap.getAttribute('data-colors-max'), 10) || 6;
+      var hidden = wrap.previousElementSibling;
+      if (!hidden || !hidden.classList.contains('input-colors-value')) hidden = wrap.parentElement.querySelector('.input-colors-value');
+      wrap.querySelectorAll('.input-color-swatch').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var val = btn.getAttribute('data-value');
+          var cur = (hidden.value || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+          var idx = cur.indexOf(val);
+          if (idx >= 0) {
+            cur.splice(idx, 1);
+          } else if (cur.length < max) {
+            cur.push(val);
+          }
+          hidden.value = cur.join(',');
+          wrap.querySelectorAll('.input-color-swatch').forEach(function (b) {
+            var v = b.getAttribute('data-value');
+            b.classList.toggle('selected', cur.indexOf(v) >= 0);
+            b.setAttribute('aria-pressed', cur.indexOf(v) >= 0 ? 'true' : 'false');
+          });
+          if (hidden.dispatchEvent) hidden.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+      });
+    });
+  }
+
   var InputRegistry = {
     CONTAINER_TYPES: CONTAINER_TYPES,
     getContainerType: getContainerType,
@@ -906,6 +997,7 @@
     getDefaultTemplates: getDefaultTemplates,
     getPropertyFamily: getPropertyFamily,
     escapeHtml: escapeHtml,
+    initColorsPicker: initColorsPicker,
     CONTAINER_RENDERERS: CONTAINER_RENDERERS
   };
 

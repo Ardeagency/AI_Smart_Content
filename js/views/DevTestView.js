@@ -572,6 +572,7 @@ class DevTestView extends DevBaseView {
     if (fieldsContainer) {
       fieldsContainer.innerHTML = fields.map(field => this.renderInputField(field)).join('');
       this.setupInputListeners();
+      if (window.InputRegistry && window.InputRegistry.initColorsPicker) window.InputRegistry.initColorsPicker(fieldsContainer);
     }
     
     // Habilitar botón de ejecutar
@@ -1446,12 +1447,24 @@ class DevTestView extends DevBaseView {
         const radio = this.querySelector(`[name="${field.key}"][value="${value}"]`);
         if (radio) radio.checked = true;
       } else {
-        el.value = value;
+        const isColores = field.type === 'colores' || field.input_type === 'colores';
+        el.value = isColores && Array.isArray(value) ? value.join(',') : value;
       }
       
       if (el.type === 'range') {
         const display = el.parentElement.querySelector('.range-value');
         if (display) display.textContent = value;
+      }
+      if (field.type === 'colores' || field.input_type === 'colores') {
+        const wrap = el.closest('.form-field')?.querySelector('.input-colors-wrap');
+        if (wrap) {
+          const vals = Array.isArray(value) ? value : String(value || '').split(',').map(s => s.trim()).filter(Boolean);
+          wrap.querySelectorAll('.input-color-swatch').forEach(btn => {
+            const v = btn.getAttribute('data-value');
+            btn.classList.toggle('selected', vals.indexOf(v) >= 0);
+            btn.setAttribute('aria-pressed', vals.indexOf(v) >= 0 ? 'true' : 'false');
+          });
+        }
       }
     });
     
