@@ -1,37 +1,21 @@
--- Consolidación: eliminar plantillas duplicadas/obsoletas e insertar solo las canónicas.
+-- Plantillas canónicas de UI: limpiar duplicados e insertar/actualizar las que usamos.
 -- Ejecutar en Supabase SQL Editor.
---
--- Duplicados eliminados (misma función, otro nombre/estructura):
---   text, textarea, prompt_input, tag_input → usar "string"
---   select → usar "dropdown"
---   number, stepper_num → usar "num_stepper"
---   checkbox, switch → usar "toggle_switch"
---   checkboxes → usar "selection_checkboxes"
---   radio_buttons → usar "radio" (misma función, nombre distinto)
---   slider → usar "range" (misma función, mismo control)
---   description_block → usar "description" (mismo bloque de texto informativo)
---   multi_select → usar "multi_select_chips" o dropdown con is_multiple (selección múltiple)
 
--- 1) Eliminar plantillas duplicadas/obsoletas
+-- 1) Eliminar plantillas obsoletas (duplicados ya consolidados)
 DELETE FROM public.ui_component_templates
 WHERE name IN (
-  'text',
-  'textarea',
-  'prompt_input',
-  'tag_input',
-  'select',
-  'number',
-  'stepper_num',
-  'checkbox',
-  'switch',
-  'checkboxes',
-  'radio_buttons',
-  'slider',
-  'description_block',
-  'multi_select'
+  'text', 'textarea', 'prompt_input', 'tag_input', 'select', 'number', 'stepper_num',
+  'checkbox', 'switch', 'checkboxes', 'radio_buttons', 'slider', 'description_block', 'multi_select'
 );
 
--- 2) Insertar solo plantillas canónicas que falten (por name)
+-- 2) Actualizar "flags" si ya existe (idioma, país, etnia; lista masiva de banderas)
+UPDATE public.ui_component_templates
+SET
+  description = 'Idioma, país, etnia (personaje/voz). Lista masiva de banderas.',
+  base_schema = '{"input_type":"flags","type":"flags","data_type":"string","flag_category":"language","options":[]}'::jsonb
+WHERE name = 'flags';
+
+-- 3) Insertar solo plantillas canónicas que falten
 INSERT INTO public.ui_component_templates (name, description, category, icon_name, base_schema, default_ui_config, is_active, order_index)
 SELECT v.name, v.description, v.category, v.icon_name, v.base_schema, v.default_ui_config, v.is_active, v.order_index
 FROM (VALUES
