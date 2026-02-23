@@ -163,7 +163,7 @@
         const el = document.getElementById('globalSpinner');
         if (!el) return;
         spinnerRefCount++;
-        el.classList.remove('hidden');
+        el.classList.remove('loader-overlay--hidden');
     }
 
     function hideSpinner() {
@@ -172,7 +172,7 @@
         if (spinnerRefCount > 0) spinnerRefCount--;
         if (spinnerRefCount <= 0) {
             spinnerRefCount = 0;
-            el.classList.add('hidden');
+            el.classList.add('loader-overlay--hidden');
         }
     }
     
