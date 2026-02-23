@@ -21,65 +21,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- Application CSS (base incluye tema global; rutas absolutas para /org/xxx/...) -->
-    <link rel="stylesheet" href="/css/base.css">
-    <link rel="stylesheet" href="/css/app.css">
-    <link rel="stylesheet" href="/css/landing.css">
-    <link rel="stylesheet" href="/css/signin.css">
-    <link rel="stylesheet" href="/css/planes.css">
-    <link rel="stylesheet" href="/css/navigation.css">
-    <link rel="stylesheet" href="/css/hogar.css">
-    <link rel="stylesheet" href="/css/brands.css">
-    <link rel="stylesheet" href="/css/campaigns.css">
-    <link rel="stylesheet" href="/css/audiences.css">
-    <link rel="stylesheet" href="/css/create.css">
-    <link rel="stylesheet" href="/css/content.css">
-    <link rel="stylesheet" href="/css/settings.css">
-    <link rel="stylesheet" href="/css/living.css">
-    <link rel="stylesheet" href="/css/studio.css">
-    <link rel="stylesheet" href="/css/flow-catalog.css">
-    <link rel="stylesheet" href="/css/products.css">
-    <link rel="stylesheet" href="/css/product-detail.css">
-    <link rel="stylesheet" href="/css/form-record.css">
-    <link rel="stylesheet" href="/css/organization.css">
-    <link rel="stylesheet" href="/css/developer.css">
+    <!-- Application CSS — bundle unico (regenerar con: bash scripts/build-css.sh) -->
+    <link rel="stylesheet" href="/css/bundle.css">
     
     <style>
-        /* Estilos base para la SPA */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html, body {
-            height: 100%;
-            width: 100%;
-            overflow-x: hidden;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-            color: var(--text-primary);
-            background: var(--bg-primary);
-            position: relative;
-        }
-
-        /* Container para navegación (persistente) */
-        #navigation-container {
-            position: relative;
-            z-index: 1000;
-        }
-
-        /* Container principal de la aplicación (dinámico) */
-        #app-container {
-            position: relative;
-            min-height: 100vh;
-            width: 100%;
-            z-index: 1;
-        }
-
-        /* Portal de modales: fuera del scroll, fijo en viewport, centrados */
         #modals-portal {
             position: fixed;
             inset: 0;
@@ -89,38 +34,6 @@
         #modals-portal > .modal {
             pointer-events: auto;
         }
-
-        /* Animación para cambio de vistas */
-        .view-enter {
-            animation: fadeIn 0.3s ease;
-        }
-
-        .view-leave {
-            animation: fadeOut 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeOut {
-            from {
-            opacity: 1;
-                transform: translateY(0);
-            }
-            to {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-        }
-
     </style>
 </head>
 <body>

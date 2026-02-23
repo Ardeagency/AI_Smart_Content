@@ -60,7 +60,7 @@
 5. Estilos globales movidos de app.css a base.css -- #app-container, #navigation-container, utilidades (.hidden, .invisible, .no-pointer, .sr-only), *:focus-visible, scrollbar, print. app.css reducido a solo SPA (animaciones, loading, notificaciones).
 6. Conflictos --primary-color corregidos -- Nuevas vars: --accent-cta/hover/dark, --primary-dark. payment-modal.css (13 usos) y products.css (8 usos) migrados a --accent-cta.
 
-### Fase 2: Un solo archivo fisico (opcion A) o un solo bundle (opcion B)
+### Fase 2: Bundle unico -- COMPLETADA (23 feb 2025)
 
 **Opcion A -- Un unico base.css grande**
 
