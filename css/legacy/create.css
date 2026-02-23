@@ -128,7 +128,7 @@
     border: 1px solid rgba(236, 235, 218, 0.2);
     border-radius: 8px;
     color: var(--text-primary);
-    font-family: 'Courier New', monospace;
+    font-family: var(--font-mono);
     font-size: 0.875rem;
     resize: vertical;
 }

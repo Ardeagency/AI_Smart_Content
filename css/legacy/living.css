@@ -1336,7 +1336,7 @@ body.sidebar-collapsed .living-container {
     max-height: 100px;
     overflow-y: auto;
     padding: var(--spacing-sm) var(--spacing-md);
-    font-family: ui-monospace, 'SF Mono', monospace;
+    font-family: var(--font-mono);
     white-space: pre-wrap;
     word-break: break-word;
     transition: max-height 0.3s ease;

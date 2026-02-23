@@ -875,7 +875,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
 .color-editor-hex-input {
     width: 100px;
     padding: 0.4rem 0.5rem;
-    font-family: 'Courier New', monospace;
+    font-family: var(--font-mono);
     font-size: 0.8rem;
     border: 1px solid var(--border-color);
     border-radius: 6px;
