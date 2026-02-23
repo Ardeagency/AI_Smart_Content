@@ -225,8 +225,8 @@
     align-items: center;
     justify-content: center;
     gap: 1rem;
-    visibility: visible !important;
-    opacity: 1 !important;
+    visibility: visible;
+    opacity: 1;
     width: fit-content;
 }
 

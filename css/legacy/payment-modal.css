@@ -29,21 +29,21 @@
 }
 
 .payment-modal {
-    background: var(--bg-card) !important;
-    border: 1px solid var(--border-divider) !important;
-    border-radius: 24px !important;
-    width: 90% !important;
-    max-width: 520px !important;
-    max-height: 90vh !important;
-    overflow-y: auto !important;
-    position: relative !important;
+    background: var(--bg-card);
+    border: 1px solid var(--border-divider);
+    border-radius: 24px;
+    width: 90%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
     transform: scale(0.8) translateY(50px);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5) !important;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
 }
 
 .payment-overlay.active .payment-modal {
-    transform: scale(1) translateY(0) !important;
+    transform: scale(1) translateY(0);
 }
 
 /* ========================

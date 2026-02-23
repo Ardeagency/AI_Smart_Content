@@ -1458,7 +1458,7 @@
 }
 
 .builder-sidebar.builder-sidebar-hidden {
-  display: none !important;
+  display: none;
 }
 
 /* Configuración / Técnico: formulario ancho completo */
@@ -1996,7 +1996,7 @@
 }
 
 .component-item-hidden {
-  display: none !important;
+  display: none;
 }
 
 .component-item i {
@@ -4360,8 +4360,8 @@
 }
 
 .dev-lead-empty-hint {
-  margin-top: 8px !important;
-  font-size: 0.75rem !important;
+  margin-top: 8px;
+  font-size: 0.75rem;
   opacity: 0.8;
 }
 
@@ -4396,7 +4396,7 @@
   pointer-events: auto;
 }
 .dev-lead-vectors .dev-lead-empty #uploadFromEmptyBtn {
-  display: inline-flex !important;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
   pointer-events: auto;
@@ -4434,7 +4434,7 @@
 /* Referencias visuales: preview */
 .dev-lead-td-preview {
   width: 56px;
-  padding: 8px !important;
+  padding: 8px;
   vertical-align: middle;
 }
 
@@ -4516,8 +4516,8 @@
 }
 
 .dev-lead-modal.is-open {
-  display: grid !important;
-  place-items: center !important;
+  display: grid;
+  place-items: center;
 }
 
 .dev-lead-modal .modal-overlay {

@@ -40,6 +40,7 @@
     multi_select_chips: 'SELECT_CONTAINER',
     flags: 'SELECT_CONTAINER',
     colores: 'SELECT_CONTAINER',
+    aspect_ratio: 'SELECT_CONTAINER',
     tone_selector: 'SELECT_CONTAINER',
     mood_selector: 'SELECT_CONTAINER',
     length_selector: 'SELECT_CONTAINER',
@@ -411,6 +412,58 @@
     return '';
   }
 
+  /** Aspect ratio: grid of cards with icon (shape) + label. Single selection. Defines format of production. */
+  var DEFAULT_ASPECT_RATIO_OPTIONS = [
+    { value: '1:1', label: '1:1' },
+    { value: '2:3', label: '2:3' },
+    { value: '3:2', label: '3:2' },
+    { value: '4:3', label: '4:3' },
+    { value: '3:4', label: '3:4' },
+    { value: '4:5', label: '4:5' },
+    { value: '5:4', label: '5:4' },
+    { value: '16:9', label: '16:9' },
+    { value: '9:16', label: '9:16' },
+    { value: '21:9', label: '21:9' }
+  ];
+  function getAspectRatioOptions(f) {
+    return (f.options && f.options.length) ? f.options : DEFAULT_ASPECT_RATIO_OPTIONS;
+  }
+  function previewAspectRatio(f) {
+    var opts = getAspectRatioOptions(f);
+    var slice = opts.slice(0, 8);
+    var html = slice.map(function (o) {
+      var v = escapeHtml(String(o.value || o));
+      var lbl = escapeHtml(o.label != null ? o.label : v);
+      return '<div class="aspect-ratio-card aspect-ratio-card--preview"><span class="aspect-ratio-icon" data-ratio="' + v + '" aria-hidden="true"></span><span class="aspect-ratio-label">' + lbl + '</span></div>';
+    }).join('');
+    return '<div class="aspect-ratio-grid aspect-ratio-grid--preview">' + html + '</div>';
+  }
+  function formAspectRatio(f, opts) {
+    opts = opts || {};
+    var a = formAttrs(f, opts);
+    var isPreview = isPreviewOpts(opts);
+    var optsList = getAspectRatioOptions(f);
+    var selected = f.defaultValue != null ? String(f.defaultValue) : (optsList[0] && (optsList[0].value != null ? optsList[0].value : optsList[0]));
+    if (isPreview) {
+      var previewHtml = optsList.slice(0, 8).map(function (o) {
+        var v = o.value != null ? o.value : o;
+        var vs = escapeHtml(String(v));
+        var lbl = escapeHtml(o.label != null ? o.label : vs);
+        return '<div class="aspect-ratio-card aspect-ratio-card--preview"><span class="aspect-ratio-icon" data-ratio="' + vs + '"></span><span class="aspect-ratio-label">' + lbl + '</span></div>';
+      }).join('');
+      return '<div class="aspect-ratio-grid aspect-ratio-grid--preview">' + previewHtml + '</div>';
+    }
+    var cardsHtml = optsList.map(function (o) {
+      var v = o.value != null ? o.value : o;
+      var vs = escapeHtml(String(v));
+      var lbl = escapeHtml(o.label != null ? o.label : vs);
+      var checked = (selected === v || selected === vs) ? ' checked' : '';
+      var id = a.id + '-' + vs.replace(/:/g, '-');
+      return '<label class="aspect-ratio-card" for="' + id + '"><input type="radio" name="' + a.name + '" id="' + id + '" value="' + vs + '"' + checked + a.disabled + a.required + '><span class="aspect-ratio-icon" data-ratio="' + vs + '"></span><span class="aspect-ratio-label">' + lbl + '</span></label>';
+    }).join('');
+    return '<div class="aspect-ratio-grid" role="radiogroup" aria-label="' + escapeHtml(f.label || 'Formato de producción') + '">' + cardsHtml + '</div>';
+  }
+
   /** Choice chips (single): pill buttons, one selected */
   function renderChoiceChips(f, opts, isPreview) {
     var a = isPreview ? { disabled: ' disabled', name: '', id: '', required: '' } : formAttrs(f, opts);
@@ -692,6 +745,7 @@
         if (isContext) return previewFocusSelectorAccordion(f);
         if (t === 'flags') return previewFlags(f);
         if (t === 'colores') return previewColores(f);
+        if (t === 'aspect_ratio') return previewAspectRatio(f);
         var style = f.select_style || (t === 'choice_chips' ? 'choice_chips' : (t === 'multi_select_chips' ? 'multi_select_chips' : 'dropdown'));
         if (style === 'choice_chips') return previewChoiceChips(f);
         if (style === 'multi_select_chips' || f.is_multiple) return previewMultiSelectChips(f);
@@ -703,6 +757,7 @@
         if (isContext) return formFocusSelectorAccordion(f, opts || {});
         if (t === 'flags') return formFlags(f, opts);
         if (t === 'colores') return formColores(f, opts);
+        if (t === 'aspect_ratio') return formAspectRatio(f, opts);
         var style = f.select_style || (t === 'choice_chips' ? 'choice_chips' : (t === 'multi_select_chips' ? 'multi_select_chips' : 'dropdown'));
         if (style === 'choice_chips') return formChoiceChips(f, opts);
         if (style === 'multi_select_chips' || f.is_multiple) return formMultiSelectChips(f, opts);
@@ -805,6 +860,7 @@
     register('multi_select_chips', { preview: previewMultiSelectChips, form: formMultiSelectChips });
     register('flags', { preview: previewFlags, form: formFlags });
     register('colores', { preview: previewColores, form: formColores });
+    register('aspect_ratio', { preview: previewAspectRatio, form: formAspectRatio });
     register('tags', { preview: previewTags, form: formTags });
     register('stepper_num', { preview: previewStepper, form: formStepper });
     register('num_stepper', { preview: previewStepper, form: formStepper });
@@ -876,6 +932,7 @@
       { id: 'tags', name: 'Tags', description: 'Etiquetas añadibles/eliminables', category: 'basic', icon_name: 'tag', base_schema: { input_type: 'tags', type: 'tags', data_type: 'array', placeholder: 'Añade tags...', defaultValue: [] } },
       { id: 'flags', name: 'Flags', description: 'Dropdown preconfigurado: idioma, país o etnia/origen (flag_category).', category: 'basic', icon_name: 'flag', base_schema: { input_type: 'flags', type: 'flags', data_type: 'string', flag_category: 'language', options: [] } },
       { id: 'colores', name: 'Colores', description: 'Círculos de colores seleccionables (como brands). Máx. 6. El desarrollador define la paleta.', category: 'basic', icon_name: 'palette', base_schema: { input_type: 'colores', type: 'colores', data_type: 'array', max_selections: 6, options: [{ value: '#000000', label: 'Negro' }, { value: '#ef4444', label: 'Rojo' }, { value: '#22c55e', label: 'Verde' }, { value: '#3b82f6', label: 'Azul' }, { value: '#eab308', label: 'Amarillo' }, { value: '#8b5cf6', label: 'Violeta' }] } },
+      { id: 'aspect_ratio', name: 'Aspect ratio', description: 'Formato de producción (1:1, 16:9, etc.). Grid de tarjetas con icono.', category: 'basic', icon_name: 'crop', base_schema: { input_type: 'aspect_ratio', type: 'aspect_ratio', data_type: 'string', options: [{ value: '1:1', label: '1:1' }, { value: '2:3', label: '2:3' }, { value: '3:2', label: '3:2' }, { value: '4:3', label: '4:3' }, { value: '3:4', label: '3:4' }, { value: '4:5', label: '4:5' }, { value: '5:4', label: '5:4' }, { value: '16:9', label: '16:9' }, { value: '9:16', label: '9:16' }, { value: '21:9', label: '21:9' }] } },
       { id: 'brand_selector', name: 'Selector de Marca', description: 'Enfoque de producción: marca (acordeón)', category: 'brand', icon_name: 'storefront', base_schema: { input_type: 'brand_selector', type: 'brand_selector', data_type: 'object' } },
       { id: 'entity_selector', name: 'Selector de Entidad', description: 'Producto/servicio/lugar', category: 'brand', icon_name: 'package', base_schema: { input_type: 'entity_selector', type: 'entity_selector', data_type: 'object', entityTypes: ['product', 'service'] } },
       { id: 'audience_selector', name: 'Selector de Audiencia', description: 'Enfoque: audiencia', category: 'brand', icon_name: 'users', base_schema: { input_type: 'audience_selector', type: 'audience_selector', data_type: 'object' } },
@@ -899,6 +956,7 @@
     if (['checkbox'].indexOf(t) >= 0) return 'checkbox';
     if (['switch', 'toggle_switch', 'toggle'].indexOf(t) >= 0) return 'switch';
     if (t === 'colores') return 'colores';
+    if (t === 'aspect_ratio') return 'aspect_ratio';
     if (['select', 'dropdown', 'multi_select', 'radio', 'radio_buttons', 'choice_chips', 'multi_select_chips', 'flags', 'tone_selector', 'mood_selector', 'length_selector', 'selection_checkboxes'].indexOf(t) >= 0) return 'select';
     return 'generic';
   }

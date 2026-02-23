@@ -278,7 +278,7 @@
 /* Ancho fijo del contenido: gana sobre #app-container > div div { max-width: 100% } de app.css */
 .planes-form-panel .planes-form-inner {
     width: 100%;
-    max-width: 420px !important;
+    max-width: 420px;
     min-width: 0;
     box-sizing: border-box;
 }
@@ -623,7 +623,7 @@
 
 @media (max-width: 480px) {
     .planes-form-panel .planes-form-inner {
-        max-width: 100% !important;
+        max-width: 100%;
     }
 
     .planes-form-title {

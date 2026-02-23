@@ -669,6 +669,7 @@ class DevBuilderView extends DevBaseView {
       { id: 'tags', name: 'Tags', description: 'Etiquetas', category: 'basic', icon_name: 'tags', base_schema: { input_type: 'tags' } },
       { id: 'flags', name: 'Flags', description: 'Dropdown: idioma, país o etnia (flag_category).', category: 'basic', icon_name: 'flag', base_schema: { input_type: 'flags', flag_category: 'language', options: [] } },
       { id: 'colores', name: 'Colores', description: 'Círculos de colores seleccionables (máx. 6).', category: 'basic', icon_name: 'palette', base_schema: { input_type: 'colores', max_selections: 6, options: [{ value: '#000000', label: 'Negro' }, { value: '#ef4444', label: 'Rojo' }, { value: '#22c55e', label: 'Verde' }, { value: '#3b82f6', label: 'Azul' }, { value: '#eab308', label: 'Amarillo' }, { value: '#8b5cf6', label: 'Violeta' }] } },
+      { id: 'aspect_ratio', name: 'Aspect ratio', description: 'Formato de producción (1:1, 16:9, etc.).', category: 'basic', icon_name: 'crop', base_schema: { input_type: 'aspect_ratio', type: 'aspect_ratio', data_type: 'string', defaultValue: '1:1', options: [{ value: '1:1', label: '1:1' }, { value: '2:3', label: '2:3' }, { value: '3:2', label: '3:2' }, { value: '4:3', label: '4:3' }, { value: '3:4', label: '3:4' }, { value: '4:5', label: '4:5' }, { value: '5:4', label: '5:4' }, { value: '16:9', label: '16:9' }, { value: '9:16', label: '9:16' }, { value: '21:9', label: '21:9' }] } },
       { id: 'brand_selector', name: 'Selector de Marca', description: 'Marca del usuario', category: 'context', icon_name: 'storefront', base_schema: { input_type: 'brand_selector' } },
       { id: 'entity_selector', name: 'Selector de Entidad', description: 'Producto/servicio', category: 'context', icon_name: 'package', base_schema: { input_type: 'entity_selector' } },
       { id: 'audience_selector', name: 'Selector de Audiencia', description: 'Audiencia', category: 'context', icon_name: 'users', base_schema: { input_type: 'audience_selector' } },
@@ -1339,6 +1340,7 @@ class DevBuilderView extends DevBaseView {
               <option value="range" ${(field.input_type || field.type) === 'range' ? 'selected' : ''}>Slider</option>
               <option value="flags" ${(field.input_type || field.type) === 'flags' ? 'selected' : ''}>Flags (idioma, país, etnia)</option>
               <option value="colores" ${(field.input_type || field.type) === 'colores' ? 'selected' : ''}>Colores (círculos, máx. 6)</option>
+              <option value="aspect_ratio" ${(field.input_type || field.type) === 'aspect_ratio' ? 'selected' : ''}>Aspect ratio (formato producción)</option>
               <option value="image_selector" ${(field.input_type || field.type) === 'image_selector' ? 'selected' : ''}>Selector de imagen (carrusel)</option>
             </select>
             <span class="field-help">Define si el campo es texto, dropdown, número, etc. Cambia el aspecto en el canvas y las opciones de abajo.</span>
@@ -1410,7 +1412,7 @@ class DevBuilderView extends DevBaseView {
     const t = (field.input_type || field.type || '').toLowerCase();
     if (['number', 'range', 'stepper', 'stepper_num', 'num_stepper', 'rating', 'slider'].indexOf(t) >= 0) return 'number';
     if (['checkbox', 'switch', 'boolean', 'toggle', 'toggle_switch'].indexOf(t) >= 0) return 'boolean';
-    if (['select', 'multi_select', 'tone_selector', 'mood_selector', 'length_selector', 'radio'].indexOf(t) >= 0) return 'string';
+    if (['select', 'multi_select', 'tone_selector', 'mood_selector', 'length_selector', 'radio', 'aspect_ratio'].indexOf(t) >= 0) return 'string';
     if (['tag_input', 'gallery_picker', 'selection_checkboxes', 'colores'].indexOf(t) >= 0) return 'array';
     if (['brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector', 'image_selector'].indexOf(t) >= 0) return 'object';
     return field.data_type || 'string';
@@ -1420,7 +1422,7 @@ class DevBuilderView extends DevBaseView {
     const type = (field.input_type || field.type || '').toLowerCase();
     const isNumberFamily = ['number', 'range', 'stepper', 'stepper_num', 'num_stepper', 'rating', 'slider'].indexOf(type) >= 0;
     const isBooleanFamily = ['checkbox', 'switch', 'boolean', 'toggle', 'toggle_switch'].indexOf(type) >= 0;
-    const hasOptions = ['dropdown', 'select', 'radio', 'tone_selector', 'mood_selector', 'length_selector'].indexOf(type) >= 0;
+    const hasOptions = ['dropdown', 'select', 'radio', 'tone_selector', 'mood_selector', 'length_selector', 'aspect_ratio'].indexOf(type) >= 0;
     const opts = field.options || [];
     const escapeVal = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'));
     const optVal = (o) => (o && (o.value !== undefined ? o.value : o.label !== undefined ? o.label : o));
@@ -1782,6 +1784,14 @@ class DevBuilderView extends DevBaseView {
         `;
       }
 
+      case 'aspect_ratio':
+        return `
+          <div class="property-group">
+            <h4>Aspect ratio (formato de producción)</h4>
+            <span class="field-help">Opciones fijas: 1:1, 2:3, 3:2, 4:3, 3:4, 4:5, 5:4, 16:9, 9:16, 21:9. Define el formato de la producción.</span>
+          </div>
+        `;
+
       case 'select':
       case 'radio': {
         const options = field.options || [];
@@ -1792,7 +1802,8 @@ class DevBuilderView extends DevBaseView {
         const isSelectionCheckboxes = it === 'selection_checkboxes';
         const isFlags = it === 'flags';
         const isColores = it === 'colores';
-        const title = isColores ? 'Colores' : (isFlags ? 'Flags' : (isSelectionCheckboxes ? 'Checkboxes (opciones)' : (isRadio ? 'Radio Buttons' : (isDropdown ? 'Dropdown' : 'Lista desplegable'))));
+        const isAspectRatio = it === 'aspect_ratio';
+        const title = isAspectRatio ? 'Aspect ratio' : (isColores ? 'Colores' : (isFlags ? 'Flags' : (isSelectionCheckboxes ? 'Checkboxes (opciones)' : (isRadio ? 'Radio Buttons' : (isDropdown ? 'Dropdown' : 'Lista desplegable')))));
         const optVal = (o) => (o && (o.value !== undefined ? o.value : o.label !== undefined ? o.label : o));
         return `
           <div class="property-group">
@@ -2028,6 +2039,12 @@ class DevBuilderView extends DevBaseView {
           if (!Array.isArray(field.options) || field.options.length === 0) {
             field.options = [{ value: '#000000', label: 'Negro' }, { value: '#ef4444', label: 'Rojo' }, { value: '#22c55e', label: 'Verde' }, { value: '#3b82f6', label: 'Azul' }, { value: '#eab308', label: 'Amarillo' }, { value: '#8b5cf6', label: 'Violeta' }];
           }
+        }
+        if (newType === 'aspect_ratio') {
+          if (!Array.isArray(field.options) || field.options.length === 0) {
+            field.options = [{ value: '1:1', label: '1:1' }, { value: '2:3', label: '2:3' }, { value: '3:2', label: '3:2' }, { value: '4:3', label: '4:3' }, { value: '3:4', label: '3:4' }, { value: '4:5', label: '4:5' }, { value: '5:4', label: '5:4' }, { value: '16:9', label: '16:9' }, { value: '9:16', label: '9:16' }, { value: '21:9', label: '21:9' }];
+          }
+          if (field.defaultValue == null) field.defaultValue = '1:1';
         }
         if (newType === 'toggle_switch' || newType === 'switch') {
           field.display_style = 'switch';

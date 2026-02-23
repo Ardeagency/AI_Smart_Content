@@ -9,11 +9,10 @@
    CONTENEDOR PRINCIPAL
    ============================================ */
 .living-main-content {
-    /* Asegurar que el scroll funcione correctamente */
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    height: auto !important;
-    max-height: none !important;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: auto;
+    max-height: none;
 }
 
 /* #app-container > main > div (living): sin padding superior ni inferior */
@@ -545,20 +544,20 @@ body.sidebar-collapsed .living-container {
 
 /* Cards de destacados - Estilo similar a brands */
 .highlight-card {
-    background: var(--bg-card) !important;
+    background: var(--bg-card);
     border-radius: 16px;
     padding: 1.25rem;
     display: flex;
     flex-direction: column;
     position: relative;
-    border: 1px solid var(--border-divider) !important;
-    cursor: default !important;
-    transition: none !important;
+    border: 1px solid var(--border-divider);
+    cursor: default;
+    transition: none;
 }
 
 .highlight-card:hover {
-    background: var(--bg-card) !important;
-    border-color: var(--border-divider) !important;
+    background: var(--bg-card);
+    border-color: var(--border-divider);
 }
 
 .highlight-card-title {
@@ -1378,7 +1377,7 @@ body.sidebar-collapsed .living-container {
 
 /* Filas de Information (label | value) */
 .living-viewer-info-rows {
-    padding: 0 !important;
+    padding: 0;
     max-height: 180px;
     overflow-y: auto;
     overflow-x: hidden;
