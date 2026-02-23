@@ -88,9 +88,19 @@
 
 ### Fase 4: Validacion y organizacion final -- COMPLETADA (23 feb 2026)
 
-13. **Validacion estructural del bundle** -- Sintaxis correcta: 2798 llaves balanceadas, sin comentarios abiertos, sin selectores vacios. 18 variables scoped (--hogar-*, --settings-*, --org-card-*, --header-height) verificadas como definidas en sus contenedores respectivos (patron valido). 1 variable huerfana (--primary) corregida a --accent-cta en developer.css.
-14. **CSS individuales movidos a `css/legacy/`** -- 24 archivos movidos. En `css/` solo queda `bundle.css`. El script `build-css.sh` actualizado para leer de `css/legacy/`.
-15. **index.html** -- Solo enlaza `/css/bundle.css` (confirmado: 1 stylesheet propio + Font Awesome externo).
+13. **Validacion estructural del bundle** -- Sintaxis correcta: 2798 llaves balanceadas, sin comentarios abiertos, sin selectores vacios.
+14. **CSS individuales eliminados** -- 24 archivos legacy eliminados. `css/` contiene UNICAMENTE `bundle.css`.
+15. **index.html** -- Solo enlaza `/css/bundle.css` (1 stylesheet propio + Font Awesome externo).
+
+### Fase 5: Rediseno visual completo -- COMPLETADA (23 feb 2026)
+
+16. **Tipografia Helvetica Neue** -- font-family global cambiada a 'Helvetica Neue', Helvetica, Arial, sans-serif. Monospace unificado a 'Fira Code', 'SF Mono', 'Consolas'. 26 reemplazos en 6 archivos. Variable --font-family y --font-mono.
+17. **Colores semanticos** -- ~350 colores hardcoded reemplazados por variables: --color-error/success/warning/info + variantes -light/-bg. Opacidades de blanco (--white-5..95), negro (--black-20..85), warm (--warm-10..50). 42+ patrones en 11 archivos.
+18. **Selectores duplicados eliminados** -- 8 selectores en navigation.css fusionados (.nav-org-option, .nav-org-dropdown-list, .nav-org-name, .nav-org-type, .nav-identity-content, .nav-identity-info, .nav-org-divider, .nav-org-dropdown-header).
+19. **!important limpiados** -- De 234 declaraciones, 195 eliminadas. 39 conservadas (necesarias para JS overrides y portales modales).
+20. **border-radius unificado** -- Escala de 4px: 67 reemplazos (6px→8px, 10px→12px, 14px→12px, 15px→16px). Variables --radius-xs(4px) a --radius-pill(9999px).
+21. **Escala tipografica** -- Variables --font-size-xs..4xl definidas en :root.
+22. **Sistema de diseno completo** -- :root expandido con tokens de opacidad, spacing, radius, tipografia, colores semanticos.
 
 ---
 
