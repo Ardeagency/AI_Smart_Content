@@ -35,6 +35,12 @@
   to = "/recursos/:splat"
   status = 200
 
+# Favicons - servir directamente (evitar que el SPA fallback devuelva index.html)
+[[redirects]]
+  from = "/favicons/*"
+  to = "/favicons/:splat"
+  status = 200
+
 # SQL files - servir directamente
 [[redirects]]
   from = "/SQL/*"
@@ -66,6 +72,12 @@
   for = "/templates/*"
   [headers.values]
     Cache-Control = "public, max-age=3600"
+
+# Headers para favicons (cache largo, son estáticos)
+[[headers]]
+  for = "/favicons/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
 
 # Variables de entorno deben configurarse en Netlify Dashboard:
 # - SUPABASE_DATABASE_URL
