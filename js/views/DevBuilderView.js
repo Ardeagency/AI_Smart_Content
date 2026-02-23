@@ -970,7 +970,7 @@ class DevBuilderView extends DevBaseView {
           </div>
           <div class="canvas-field-info">
             <span class="field-label">${field.label || field.key}</span>
-            <span class="field-type">${field.input_type || field.type || 'text'}</span>
+            <span class="field-type">${(field.input_type || field.type) === 'colores' ? `colores (máx. ${field.max_selections != null ? field.max_selections : 6})` : (field.input_type || field.type || 'text')}</span>
             ${field.required ? '<span class="field-required">*</span>' : ''}
           </div>
           <div class="canvas-field-actions">
@@ -1307,7 +1307,8 @@ class DevBuilderView extends DevBaseView {
       this.renderStructuralPropertiesPanel(field, panel);
       return;
     }
-    const dataType = field.data_type || this.inferDataType(field);
+    const isColores = (field.input_type || field.type) === 'colores';
+    const dataType = isColores ? 'array' : (field.data_type || this.inferDataType(field));
     const defaultValueBlock = this.renderDefaultValueBlock(field, dataType);
     
     panel.innerHTML = `
@@ -1355,13 +1356,14 @@ class DevBuilderView extends DevBaseView {
           
           <div class="property-field">
             <label for="propDataType">Tipo de dato</label>
-            <select id="propDataType">
+            <select id="propDataType" ${isColores ? 'disabled' : ''}>
               <option value="string" ${dataType === 'string' ? 'selected' : ''}>String</option>
               <option value="number" ${dataType === 'number' ? 'selected' : ''}>Number</option>
               <option value="boolean" ${dataType === 'boolean' ? 'selected' : ''}>Boolean</option>
               <option value="array" ${dataType === 'array' ? 'selected' : ''}>Array</option>
               <option value="object" ${dataType === 'object' ? 'selected' : ''}>Object (JSON)</option>
             </select>
+            ${isColores ? '<span class="field-help">Colores siempre es array (lista de hex).</span>' : ''}
           </div>
           
           ${defaultValueBlock}
@@ -1992,7 +1994,7 @@ class DevBuilderView extends DevBaseView {
       inputTypeSelect.addEventListener('change', (e) => {
         const newType = e.target.value;
         field.input_type = newType;
-        if (field.type !== undefined) field.type = newType;
+        field.type = newType;
         if (newType === 'dropdown' || newType === 'select') {
           if (!Array.isArray(field.options) || field.options.length === 0) {
             field.options = [{ value: 'opcion1', label: 'Opción 1' }, { value: 'opcion2', label: 'Opción 2' }];
@@ -2021,6 +2023,7 @@ class DevBuilderView extends DevBaseView {
           if (!field.flags_category) field.flags_category = 'language';
         }
         if (newType === 'colores') {
+          field.data_type = 'array';
           if (field.max_selections == null) field.max_selections = 6;
           if (!Array.isArray(field.options) || field.options.length === 0) {
             field.options = [{ value: '#000000', label: 'Negro' }, { value: '#ef4444', label: 'Rojo' }, { value: '#22c55e', label: 'Verde' }, { value: '#3b82f6', label: 'Azul' }, { value: '#eab308', label: 'Amarillo' }, { value: '#8b5cf6', label: 'Violeta' }];

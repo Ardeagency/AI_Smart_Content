@@ -884,7 +884,8 @@
     if (['stepper_num', 'stepper', 'num_stepper', 'number'].indexOf(t) >= 0) return 'stepper';
     if (['checkbox'].indexOf(t) >= 0) return 'checkbox';
     if (['switch', 'toggle_switch', 'toggle'].indexOf(t) >= 0) return 'switch';
-    if (['select', 'dropdown', 'multi_select', 'radio', 'radio_buttons', 'choice_chips', 'multi_select_chips', 'flags', 'colores', 'tone_selector', 'mood_selector', 'length_selector', 'selection_checkboxes'].indexOf(t) >= 0) return 'select';
+    if (t === 'colores') return 'colores';
+    if (['select', 'dropdown', 'multi_select', 'radio', 'radio_buttons', 'choice_chips', 'multi_select_chips', 'flags', 'tone_selector', 'mood_selector', 'length_selector', 'selection_checkboxes'].indexOf(t) >= 0) return 'select';
     return 'generic';
   }
 
