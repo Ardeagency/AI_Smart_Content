@@ -555,8 +555,8 @@ body {
 }
 
 /* ============================================
-   GLOBAL LOADING (beam: luz → refracción → espectro)
-   Punto de refracción, profundidad izquierda, espectro animado, bloom, grano
+   GLOBAL LOADING – Onda gaussiana sobre línea base
+   Línea estática + ::after = onda de luz (scaleX + blur + opacity) que viaja
    ============================================ */
 
 .global-spinner-overlay {
@@ -570,28 +570,16 @@ body {
     pointer-events: auto;
 }
 
-/* Capa 1 – Halo atmosférico */
 .global-spinner-overlay::before {
     content: "";
     position: absolute;
     inset: 0;
     background: radial-gradient(
         circle at center,
-        rgba(255, 255, 255, 0.08),
+        rgba(255, 255, 255, 0.06),
         transparent 60%
     );
     pointer-events: none;
-}
-
-/* Capa 3 – Micro grano cinematográfico (SVG noise inline) */
-.global-spinner-overlay::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
-    opacity: 0.035;
-    pointer-events: none;
-    z-index: 2;
 }
 
 .loader {
@@ -603,220 +591,67 @@ body {
     z-index: 1;
 }
 
-.beam {
+/* Línea base estática: núcleo fino + degradado espectral */
+.line {
     position: relative;
-    width: 100%;
+    width: 80%;
     height: 2px;
     background: linear-gradient(
         to right,
-        #ffffff 0%,
-        rgba(255, 255, 255, 0.6) 45%,
-        #ff0000 50%,
-        #ff6500 55%,
-        #ffe500 62%,
-        #9acc00 70%,
-        #00d614 78%,
-        #00e7ff 85%,
-        #0018ee 91%,
-        #5b00ea 96%,
+        white 0%,
+        #ff0000 10%,
+        #ff6500 20%,
+        #ffe500 30%,
+        #9acc00 40%,
+        #00d614 50%,
+        #00e7ff 60%,
+        #0018ee 70%,
+        #5b00ea 85%,
         #900090 100%
     );
-    animation: beam-pulse 3s ease-in-out infinite;
 }
 
-/* Capa 2 – Bloom real (drop-shadow en lugar de blur plano) */
-.beam::after {
+/* Onda de luz: gradiente radial elongado, se mueve y “respira” (ensancha → contrae) */
+.line::after {
     content: "";
     position: absolute;
     top: 50%;
-    left: 0;
-    right: 0;
-    height: 16px;
-    transform: translateY(-50%);
-    background: inherit;
-    filter: blur(6px)
-        drop-shadow(0 0 6px rgba(255, 255, 255, 0.6))
-        drop-shadow(0 0 20px rgba(255, 255, 255, 0.3));
-    opacity: 0.7;
-    z-index: -1;
-    animation: glow-breathe 3s ease-in-out infinite;
-}
-
-@keyframes glow-breathe {
-    0%, 100% { opacity: 0.55; }
-    50%      { opacity: 0.75; }
-}
-
-/* Izquierda: núcleo blanco intenso, halo, decaimiento progresivo + blur detrás */
-.beam-left {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 50%;
-    height: 100%;
-    background: linear-gradient(
-        to right,
-        rgba(255, 255, 255, 1) 0%,
-        rgba(255, 255, 255, 0.9) 30%,
-        rgba(255, 255, 255, 0.4) 60%,
-        rgba(255, 255, 255, 0) 100%
-    );
-    pointer-events: none;
-}
-
-.beam-left::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 50%;
-    width: 100%;
-    height: 24px;
-    transform: translateY(-50%);
-    background: inherit;
-    filter: blur(10px);
-    opacity: 0.5;
-    z-index: -1;
-}
-
-/* Derecha: espectro con más intensidad en azul/violeta + animación de flujo */
-.beam-right {
-    position: absolute;
-    right: 0;
-    top: 0;
-    width: 50%;
-    height: 100%;
-    background: linear-gradient(
-        to right,
-        #ff0000,
-        #ff6500,
-        #ffe500,
-        #9acc00,
-        #00d614,
-        #00e7ff,
-        #0088ff,
-        #0018ee,
-        #4000c0,
-        #5b00ea,
-        #900090
-    );
-    background-size: 200% 100%;
-    animation: spectrum-flow 6s linear infinite;
-    pointer-events: none;
-}
-
-.beam-right::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 50%;
-    width: 100%;
-    height: 14px;
-    transform: translateY(-50%);
-    background: inherit;
-    filter: blur(8px)
-        drop-shadow(0 0 8px rgba(0, 24, 238, 0.4))
-        drop-shadow(0 0 16px rgba(91, 0, 234, 0.3));
-    opacity: 0.5;
-    z-index: -1;
-    animation: glow-breathe 3s ease-in-out infinite 0.3s;
-}
-
-@keyframes spectrum-flow {
-    0%   { background-position: 0% 50%; }
-    100% { background-position: 200% 50%; }
-}
-
-/* Punto de refracción: micro hotspot + 1px más grosor + lens flare sutil */
-.beam-refraction {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 6px;
-    height: 3px;
-    transform: translate(-50%, -50%);
-    background: radial-gradient(
-        ellipse 80% 100% at center,
-        rgba(255, 255, 255, 1),
-        rgba(255, 255, 255, 0.7) 40%,
-        transparent 70%
-    );
-    box-shadow: 0 0 12px 2px rgba(255, 255, 255, 0.5),
-                0 0 24px 4px rgba(255, 255, 255, 0.2);
-    pointer-events: none;
-    z-index: 1;
-}
-
-.beam-refraction::before {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 40px;
-    height: 2px;
-    transform: translate(-50%, -50%);
-    background: linear-gradient(
-        to right,
-        transparent 0%,
-        rgba(255, 255, 255, 0.15) 30%,
-        rgba(255, 255, 255, 0.35) 50%,
-        rgba(255, 255, 255, 0.15) 70%,
-        transparent 100%
-    );
-    filter: blur(2px);
-}
-
-@keyframes beam-pulse {
-    0%, 100% { opacity: 0.75; transform: scaleX(1); }
-    50%      { opacity: 1;   transform: scaleX(1.02); }
-}
-
-/* Destello viajero: nace izquierda, cruza, se refracta (visible + trail) */
-.spark {
-    position: absolute;
-    top: 50%;
-    left: -10%;
-    width: 100px;
-    height: 6px;
-    transform: translateY(-50%);
-    background: radial-gradient(
-        ellipse 100% 100% at center,
-        rgba(255, 255, 255, 0.98),
-        rgba(255, 255, 255, 0.5) 30%,
-        transparent 70%
-    );
-    filter: blur(4px)
-        drop-shadow(0 0 4px rgba(255, 255, 255, 0.8));
-    animation: spark-travel 2.5s linear infinite;
-    pointer-events: none;
-    z-index: 2;
-}
-
-/* Cola de color del spark (se mueve con el spark, no animar por separado) */
-.spark::after {
-    content: "";
-    position: absolute;
     left: -20%;
-    top: 0;
-    width: 140%;
-    height: 100%;
-    background: linear-gradient(
-        to right,
-        transparent 0%,
-        transparent 40%,
-        rgba(255, 230, 0, 0.35) 50%,
-        rgba(0, 232, 255, 0.3) 58%,
-        rgba(91, 0, 234, 0.35) 66%,
-        transparent 75%,
+    width: 200px;
+    height: 20px;
+    transform: translateY(-50%);
+    background: radial-gradient(
+        ellipse at center,
+        rgba(255, 255, 255, 0.9) 0%,
+        rgba(255, 255, 255, 0.4) 30%,
+        rgba(255, 255, 255, 0.15) 60%,
         transparent 100%
     );
-    filter: blur(6px);
+    filter: blur(8px);
+    opacity: 0.9;
+    animation: loader-breathe 3s linear infinite;
 }
 
-@keyframes spark-travel {
-    0%   { left: -10%; opacity: 0; }
-    12%  { opacity: 1; }
-    88%  { opacity: 1; }
-    100% { left: 110%; opacity: 0; }
+@keyframes loader-breathe {
+    0% {
+        left: -20%;
+        transform: translateY(-50%) scaleX(0.5);
+        opacity: 0;
+    }
+    15% {
+        opacity: 1;
+    }
+    50% {
+        transform: translateY(-50%) scaleX(1.4);
+    }
+    85% {
+        opacity: 1;
+    }
+    100% {
+        left: 120%;
+        transform: translateY(-50%) scaleX(0.6);
+        opacity: 0;
+    }
 }
 
 /* ============================================
