@@ -2465,7 +2465,7 @@
 .color-editor-modal {
   position: fixed;
   inset: 0;
-  z-index: 10000;
+  z-index: var(--z-modal-backdrop);
   display: flex;
   align-items: center;
   justify-content: center;

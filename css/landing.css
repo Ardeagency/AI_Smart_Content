@@ -295,7 +295,7 @@
     width: 100%;
     max-width: 100vw;
     height: 100%;
-    z-index: 2000;
+    z-index: var(--z-modal-backdrop);
     align-items: center;
     justify-content: center;
     backdrop-filter: blur(4px);
@@ -366,8 +366,8 @@
 
 .close-btn:hover,
 .modal-close:hover {
-    background: #f1f5f9;
-    color: #1e293b;
+    background: var(--bg-hover);
+    color: var(--text-primary);
 }
 
 .login-form {
@@ -421,7 +421,7 @@
     right: 0.75rem;
     background: transparent;
     border: none;
-    color: #64748b;
+    color: var(--text-muted);
     cursor: pointer;
     padding: 0.5rem;
     display: flex;
@@ -433,7 +433,7 @@
 
 .password-toggle:hover,
 .password-toggle-btn:hover {
-    color: #1e293b;
+    color: var(--text-primary);
 }
 
 .password-input-wrapper .form-input {
@@ -472,8 +472,8 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 3000;
-    background: #ffffff;
+    z-index: var(--z-modal);
+    background: var(--bg-card);
     border-radius: 16px;
     padding: 2.5rem;
     max-width: 500px;
@@ -504,13 +504,13 @@
 .notification-title {
     font-size: 1.5rem;
     font-weight: 600;
-    color: #1e293b;
+    color: var(--text-primary);
     margin-bottom: 1rem;
 }
 
 .notification-text {
     font-size: 1rem;
-    color: #64748b;
+    color: var(--text-secondary);
     line-height: 1.6;
     margin-bottom: 1.5rem;
 }
@@ -525,13 +525,13 @@
     transition: all 0.2s ease;
     border: none;
     font-family: inherit;
-    background: #000000;
-    color: #ffffff;
+    background: var(--text-primary);
+    color: var(--bg-primary);
 }
 
 .notification-btn:hover,
 .btn.btn-accent:hover {
-    background: #374151;
+    background: var(--text-secondary);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }

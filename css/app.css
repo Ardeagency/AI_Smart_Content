@@ -176,7 +176,7 @@
     position: fixed;
     top: 20px;
     right: 20px;
-    z-index: 10000;
+    z-index: var(--z-notification);
     padding: 1rem 1.5rem;
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);

@@ -14,7 +14,7 @@
     height: 100% !important;
     background: rgba(0, 0, 0, 0.85) !important;
     backdrop-filter: blur(15px) !important;
-    z-index: 10000 !important;
+    z-index: var(--z-modal-backdrop) !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -327,7 +327,7 @@
 .wompi-logo {
     width: 48px;
     height: 48px;
-    background: white;
+    background: var(--bg-card);
     border-radius: 8px;
     display: flex;
     align-items: center;

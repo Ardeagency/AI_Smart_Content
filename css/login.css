@@ -107,10 +107,10 @@
     width: 100%;
     padding: 12px 16px;
     padding-right: 45px;
-    background: white;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
-    color: var(--bg-black);
+    color: var(--text-primary);
     font-size: 0.95rem;
     transition: all 0.3s ease;
     outline: none;
@@ -354,10 +354,10 @@
 .social-button {
     flex: 1;
     padding: 12px;
-    background: white;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
-    color: var(--bg-black);
+    color: var(--text-primary);
     font-size: 0.9rem;
     font-weight: 500;
     cursor: pointer;

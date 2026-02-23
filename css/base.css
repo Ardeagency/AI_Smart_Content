@@ -88,12 +88,17 @@
     /* ── Z-index (escalera) ──────────────────── */
     --z-base: 1;
     --z-dropdown: 100;
-    --z-sticky: 200;
-    --z-fixed: 300;
-    --z-modal-backdrop: 400;
-    --z-modal: 500;
-    --z-popover: 600;
-    --z-tooltip: 700;
+    --z-nav-overlay: 800;
+    --z-nav-sidebar: 850;
+    --z-sticky: 999;
+    --z-fixed: 1000;
+    --z-nav-mobile-overlay: 1001;
+    --z-nav-mobile-sidebar: 1002;
+    --z-modal-backdrop: 10000;
+    --z-modal: 10001;
+    --z-popover: 10002;
+    --z-tooltip: 10003;
+    --z-notification: 10000;
 
     /* ── Breakpoints (referencia; no usables en @media, pero documentan el estándar) ── */
     --bp-sm: 480px;

@@ -79,21 +79,12 @@
 7. Mismo orden de concatenacion pero en un paso de build que genere `base.bundle.css`.
 8. index.html solo enlaza `base.bundle.css`. Los archivos individuales se mantienen para edicion.
 
-### Fase 3: Limpieza posterior
+### Fase 3: Limpieza posterior -- COMPLETADA (23 feb 2026)
 
-9. **Eliminar duplicados dentro del unico CSS**
-   - navigation.css: unificar .nav-overlay, .nav-identity-section, etc.
-   - Revisar reglas repetidas en otros bloques.
-
-10. **Tema oscuro consistente**
-    - Revisar landing, login, products: sustituir fondos/textos claros (#ffffff, #1e293b, #F5F5F5) por variables de base.
-
-11. **Z-index**
-    - Reemplazar valores sueltos (10000, 10001) por --z-modal, --z-modal-backdrop.
-
-12. **Archivos no enlazados**
-    - Si payment-modal.css se incorpora al bundle, annadir su contenido al unico CSS.
-    - Decidir si login.css y style.css se fusionan o eliminan una vez migrado.
+9. **Duplicados eliminados en navigation.css** -- .nav-overlay (3→1), .nav-identity-section (2→1), .nav-identity-card (2→1), .nav-footer (3→2 contextuales), .side-navigation (2→1), .nav-menu (2→1), .nav-section exacto, .nav-dev-stat i exacto.
+10. **Tema oscuro consistente** -- Colores claros (#ffffff, #1e293b, #64748b, #f1f5f9, white) reemplazados por var(--bg-card), var(--bg-hover), var(--bg-secondary), var(--text-primary), var(--text-secondary), var(--text-muted), var(--border-color) en landing.css, login.css, payment-modal.css, navigation.css.
+11. **Z-index centralizado** -- Escala redefinida en base.css: --z-nav-overlay(800), --z-nav-sidebar(850), --z-sticky(999), --z-fixed(1000), --z-nav-mobile-overlay(1001), --z-nav-mobile-sidebar(1002), --z-modal-backdrop(10000), --z-modal(10001), --z-popover(10002), --z-notification(10000). Reemplazados en app.css, navigation.css, payment-modal.css, hogar.css, brands.css, developer.css, landing.css.
+12. **Archivos no enlazados** -- payment-modal.css, login.css y style.css ya incluidos en bundle.css. Los 24 archivos individuales se mantienen para edicion; el bundle se regenera con build-css.sh.
 
 ### Fase 4: No eliminar hasta validar
 
