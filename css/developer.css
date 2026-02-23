@@ -2412,6 +2412,179 @@
   box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--dev-primary);
 }
 
+/* Colores: estilo Brand Colors (swatch con X para quitar + círculo punteado con + para añadir) */
+.input-colors-wrap .color-swatch {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  position: relative;
+  cursor: default;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+.input-colors-wrap .color-swatch:hover {
+  transform: scale(1.05);
+}
+.input-colors-wrap .color-delete-btn {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(220, 38, 38, 0.85);
+  color: #fff;
+  font-size: 0.75rem;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  transition: opacity 0.2s ease, transform 0.15s ease, background 0.15s ease;
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+}
+.input-colors-wrap .color-swatch:hover .color-delete-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+.input-colors-wrap .color-delete-btn:hover {
+  background: rgba(220, 38, 38, 1);
+  transform: scale(1.1);
+}
+.input-colors-wrap .color-swatch-add-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px dashed rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+.input-colors-wrap .color-swatch-add-btn:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.08);
+}
+.input-colors-wrap .color-swatch-add-btn span {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+/* Modal editor de color (rueda + hex + Aplicar/Cerrar) para colores */
+.color-editor-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+.color-editor-panel {
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: var(--shadow-floating);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  border: 1px solid var(--border-color);
+}
+.color-editor-wheel-wrap { position: relative; }
+.color-editor-hue-ring {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+  position: relative;
+  cursor: crosshair;
+}
+.color-editor-sl-area {
+  position: absolute;
+  inset: 12px;
+  border-radius: 50%;
+  cursor: crosshair;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+.color-editor-sl-handle {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+.color-editor-hue-handle {
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  margin-left: -6px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+.color-editor-current {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+}
+.color-editor-hex-wrap { display: flex; align-items: center; gap: 0.5rem; }
+.color-editor-hex-input {
+  width: 100px;
+  padding: 0.4rem 0.5rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.color-editor-format {
+  padding: 0.4rem 0.5rem;
+  font-size: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.color-editor-actions { display: flex; gap: 0.5rem; }
+.color-editor-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  border: none;
+}
+.color-editor-btn-apply {
+  background: var(--bg-interactive);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+.color-editor-btn-cancel {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
 /* Checkbox y radio: estilo design system (cuadrado/círculo con borde, checked con color primario) */
 .preview-checkbox,
 .preview-radio {

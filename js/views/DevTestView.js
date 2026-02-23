@@ -1456,14 +1456,20 @@ class DevTestView extends DevBaseView {
         if (display) display.textContent = value;
       }
       if (field.type === 'colores' || field.input_type === 'colores') {
-        const wrap = el.closest('.form-field')?.querySelector('.input-colors-wrap');
+        const wrap = el.closest('.form-field')?.querySelector('.input-colors-wrap[data-colors-brand-style="1"]');
         if (wrap) {
-          const vals = Array.isArray(value) ? value : String(value || '').split(',').map(s => s.trim()).filter(Boolean);
-          wrap.querySelectorAll('.input-color-swatch').forEach(btn => {
-            const v = btn.getAttribute('data-value');
-            btn.classList.toggle('selected', vals.indexOf(v) >= 0);
-            btn.setAttribute('aria-pressed', vals.indexOf(v) >= 0 ? 'true' : 'false');
-          });
+          const max = Math.max(1, Math.min(12, parseInt(wrap.getAttribute('data-colors-max'), 10) || 6));
+          const vals = (Array.isArray(value) ? value : String(value || '').split(',').map(s => s.trim()).filter(Boolean))
+            .map(v => (v.startsWith('#') ? v : '#' + v).replace(/^#([0-9A-Fa-f]{6}).*/, '#$1'));
+          wrap._colorsInit = false;
+          wrap.innerHTML = vals.slice(0, max).map(hex =>
+            `<div class="color-swatch" style="background:${hex};" data-hex="${hex}"><button type="button" class="color-delete-btn" title="Eliminar" aria-label="Eliminar color">×</button></div>`
+          ).join('') + (vals.length < max
+            ? '<button type="button" class="color-swatch-add-btn" title="Agregar color" aria-label="Agregar color"><span>+</span></button>'
+            : '');
+          if (window.InputRegistry && window.InputRegistry.initColorsPicker) {
+            window.InputRegistry.initColorsPicker(wrap.closest('#formFields') || wrap.parentElement);
+          }
         }
       }
     });

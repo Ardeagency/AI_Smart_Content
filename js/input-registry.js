@@ -514,41 +514,54 @@
       return { value: val || '#000000', label: o.label != null ? o.label : val };
     });
   }
+  function normalizeHex(hex) {
+    var s = (hex || '').toString().trim().replace(/^#/, '');
+    if (!/^[0-9A-Fa-f]{6}$/.test(s)) s = '000000';
+    return '#' + s;
+  }
   function previewColores(f) {
-    var opts = getColorsOptionsForField(f);
-    var maxShow = 10;
-    var slice = opts.slice(0, maxShow);
-    var html = slice.map(function (o) {
-      var hex = escapeHtml((o.value || '#000000').toString());
-      return '<span class="input-color-swatch" style="background:' + hex + ';" title="' + escapeHtml(o.label || o.value || '') + '" aria-hidden="true"></span>';
+    var maxSel = Math.max(1, Math.min(12, f.max_selections != null ? f.max_selections : 6));
+    var selected = f.defaultValue != null
+      ? (Array.isArray(f.defaultValue) ? f.defaultValue : String(f.defaultValue).split(',').map(function (s) { return s.trim(); }).filter(Boolean)).map(normalizeHex)
+      : [];
+    var list = selected.slice(0, maxSel);
+    var swatchesHtml = list.map(function (hex) {
+      var esc = escapeHtml(hex);
+      return '<div class="color-swatch" style="background:' + esc + ';" data-hex="' + esc + '"></div>';
     }).join('');
-    return '<div class="input-colors-wrap input-colors-wrap--preview">' + html + '</div>';
+    var addHtml = list.length < maxSel
+      ? '<div class="color-swatch-add-btn" aria-hidden="true"><span>+</span></div>'
+      : '';
+    return '<div class="input-colors-wrap input-colors-wrap--preview">' + swatchesHtml + addHtml + '</div>';
   }
   function formColores(f, opts) {
     opts = opts || {};
     var a = formAttrs(f, opts);
     var isPreview = isPreviewOpts(opts);
-    var optsList = getColorsOptionsForField(f);
     var maxSel = Math.max(1, Math.min(12, f.max_selections != null ? f.max_selections : 6));
     var selected = f.defaultValue != null
-      ? (Array.isArray(f.defaultValue) ? f.defaultValue : String(f.defaultValue).split(',').map(function (s) { return s.trim(); }).filter(Boolean))
+      ? (Array.isArray(f.defaultValue) ? f.defaultValue : String(f.defaultValue).split(',').map(function (s) { return s.trim(); }).filter(Boolean)).map(normalizeHex)
       : [];
-    var selectedStr = selected.slice(0, maxSel).join(',');
+    var list = selected.slice(0, maxSel);
+    var selectedStr = list.join(',');
     if (isPreview) {
-      var previewHtml = optsList.slice(0, 8).map(function (o) {
-        var hex = escapeHtml((o.value || '#000000').toString());
-        return '<span class="input-color-swatch" style="background:' + hex + ';"></span>';
+      var previewSwatches = list.map(function (hex) {
+        var esc = escapeHtml(hex);
+        return '<div class="color-swatch" style="background:' + esc + ';" data-hex="' + esc + '"></div>';
       }).join('');
-      return '<div class="input-colors-wrap input-colors-wrap--preview">' + previewHtml + '</div>';
+      var previewAdd = list.length < maxSel ? '<div class="color-swatch-add-btn"><span>+</span></div>' : '';
+      return '<div class="input-colors-wrap input-colors-wrap--preview">' + previewSwatches + previewAdd + '</div>';
     }
-    var swatches = optsList.map(function (o) {
-      var hex = (o.value || '#000000').toString();
-      var valEsc = escapeHtml(hex);
-      var isSel = selected.indexOf(hex) >= 0;
-      return '<button type="button" class="input-color-swatch' + (isSel ? ' selected' : '') + '" data-value="' + valEsc + '" style="background:' + valEsc + ';" title="' + escapeHtml(o.label || hex) + '" aria-pressed="' + (isSel ? 'true' : 'false') + '"></button>';
+    var swatchesHtml = list.map(function (hex) {
+      var esc = escapeHtml(hex);
+      return '<div class="color-swatch" style="background:' + esc + ';" data-hex="' + esc + '">' +
+        '<button type="button" class="color-delete-btn" title="Eliminar" aria-label="Eliminar color">×</button></div>';
     }).join('');
+    var addBtnHtml = list.length < maxSel
+      ? '<button type="button" class="color-swatch-add-btn" title="Agregar color" aria-label="Agregar color"><span>+</span></button>'
+      : '';
     return '<input type="hidden" class="input-colors-value" name="' + escapeHtml(a.name) + '" id="' + escapeHtml(a.id) + '" value="' + escapeHtml(selectedStr) + '" data-max="' + maxSel + '">' +
-      '<div class="input-colors-wrap" data-colors-key="' + escapeHtml(f.key || '') + '" data-colors-max="' + maxSel + '" role="group" aria-label="' + escapeHtml(f.label || 'Colores') + '">' + swatches + '</div>';
+      '<div class="input-colors-wrap" data-colors-key="' + escapeHtml(f.key || '') + '" data-colors-max="' + maxSel + '" data-colors-brand-style="1" role="group" aria-label="' + escapeHtml(f.label || 'Colores') + '">' + swatchesHtml + addBtnHtml + '</div>';
   }
 
   /** Placeholder para FILE_CONTAINER (upload) */
@@ -949,37 +962,268 @@
     });
   }
 
+  function hexToHSL(hex) {
+    var clean = (hex || '').toString().replace(/^#/, '');
+    if (clean.length < 6) clean = '000000';
+    var r = parseInt(clean.slice(0, 2), 16) / 255;
+    var g = parseInt(clean.slice(2, 4), 16) / 255;
+    var b = parseInt(clean.slice(4, 6), 16) / 255;
+    var max = Math.max(r, g, b), min = Math.min(r, g, b);
+    var h = 0, s = 0, l = (max + min) / 2;
+    if (max !== min) {
+      var d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      switch (max) {
+        case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+        case g: h = ((b - r) / d + 2) / 6; break;
+        default: h = ((r - g) / d + 4) / 6;
+      }
+    }
+    return { h: h * 360, s: s * 100, l: l * 100 };
+  }
+  function hslToHex(h, s, l) {
+    s /= 100; l /= 100;
+    var a = s * Math.min(l, 1 - l);
+    var f = function (n) {
+      var k = (n + h / 30) % 12;
+      return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+    };
+    var r = Math.round(f(0) * 255);
+    var g = Math.round(f(8) * 255);
+    var b = Math.round(f(4) * 255);
+    return '#' + r.toString(16).padStart(2, '0') + g.toString(16).padStart(2, '0') + b.toString(16).padStart(2, '0');
+  }
   /**
-   * Inicializa los selectores de colores (círculos): al hacer clic se toggle selección (máx. N) y se actualiza el hidden.
+   * Abre el modal de selección de color (rueda + hex + Aplicar/Cerrar). Llama a onApply(hex) al pulsar Aplicar.
+   * @param {string} initialHex - Hex inicial (ej. #6E3DE9)
+   * @param {function(string)} onApply - Callback con el hex elegido (ej. #001B72)
+   */
+  function openColorPickerModal(initialHex, onApply) {
+    var hex = (initialHex || '#6E3DE9').toString().trim().replace(/^#/, '');
+    if (hex.length < 6) hex = '6E3DE9';
+    var initial = '#' + hex.slice(0, 6);
+    var h = hexToHSL(initial).h;
+    var s = hexToHSL(initial).s;
+    var l = hexToHSL(initial).l;
+    var container = document.getElementById('app-container') || document.body;
+    var modal = document.createElement('div');
+    modal.className = 'color-editor-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-label', 'Editor de color');
+    var panel = document.createElement('div');
+    panel.className = 'color-editor-panel';
+    var wheelWrap = document.createElement('div');
+    wheelWrap.className = 'color-editor-wheel-wrap';
+    var hueRing = document.createElement('div');
+    hueRing.className = 'color-editor-hue-ring';
+    hueRing.setAttribute('aria-label', 'Seleccionar tono');
+    var slArea = document.createElement('div');
+    slArea.className = 'color-editor-sl-area';
+    var slHandle = document.createElement('div');
+    slHandle.className = 'color-editor-sl-handle';
+    var hueHandle = document.createElement('div');
+    hueHandle.className = 'color-editor-hue-handle';
+    var previewEl = document.createElement('div');
+    previewEl.className = 'color-editor-current';
+    var hexInput = document.createElement('input');
+    hexInput.type = 'text';
+    hexInput.className = 'color-editor-hex-input';
+    var formatSelect = document.createElement('select');
+    formatSelect.className = 'color-editor-format';
+    formatSelect.innerHTML = '<option value="hex">hex</option><option value="rgb">rgb</option><option value="hsl">hsl</option>';
+    var applyBtn = document.createElement('button');
+    applyBtn.type = 'button';
+    applyBtn.className = 'color-editor-btn color-editor-btn-apply';
+    applyBtn.textContent = 'Aplicar';
+    var cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'color-editor-btn color-editor-btn-cancel';
+    cancelBtn.textContent = 'Cerrar';
+    function setHexFromHSL() {
+      var newHex = hslToHex(h, s, l);
+      hexInput.value = newHex.toUpperCase().replace(/^#/, '');
+      previewEl.style.background = newHex;
+      slArea.style.background = 'linear-gradient(to bottom, #fff 0%, transparent 50%, #000 100%), linear-gradient(to right, hsl(' + h + ', 0%, 50%), hsl(' + h + ', 100%, 50%))';
+      return newHex;
+    }
+    function setSLHandlePos() {
+      slHandle.style.left = s + '%';
+      slHandle.style.top = (100 - l) + '%';
+      slHandle.style.transform = 'translate(-50%, -50%)';
+    }
+    function closeEditor() {
+      if (modal.parentNode) modal.remove();
+      document.removeEventListener('keydown', onKeyDown);
+    }
+    function onKeyDown(e) { if (e.key === 'Escape') closeEditor(); }
+    document.addEventListener('keydown', onKeyDown);
+    slArea.style.background = 'linear-gradient(to bottom, #fff 0%, transparent 50%, #000 100%), linear-gradient(to right, hsl(' + h + ', 0%, 50%), hsl(' + h + ', 100%, 50%))';
+    setSLHandlePos();
+    hueHandle.style.transform = 'rotate(' + h + 'deg)';
+    previewEl.style.background = hslToHex(h, s, l);
+    hexInput.value = hslToHex(h, s, l).toUpperCase().replace(/^#/, '');
+    hexInput.setAttribute('maxlength', 7);
+    hueRing.addEventListener('mousedown', function (e) {
+      e.preventDefault();
+      var rect = hueRing.getBoundingClientRect();
+      var cx = rect.left + rect.width / 2;
+      var cy = rect.top + rect.height / 2;
+      var angle = Math.atan2(e.clientY - cy, e.clientX - cx);
+      h = (angle * 180 / Math.PI + 90 + 360) % 360;
+      if (h < 0) h += 360;
+      hueHandle.style.transform = 'rotate(' + h + 'deg)';
+      setHexFromHSL();
+      function moveHue(ev) {
+        var r = hueRing.getBoundingClientRect();
+        var centerX = r.left + r.width / 2;
+        var centerY = r.top + r.height / 2;
+        var a = Math.atan2(ev.clientY - centerY, ev.clientX - centerX);
+        h = (a * 180 / Math.PI + 90 + 360) % 360;
+        if (h < 0) h += 360;
+        hueHandle.style.transform = 'rotate(' + h + 'deg)';
+        setHexFromHSL();
+      }
+      function upHue() {
+        document.removeEventListener('mousemove', moveHue);
+        document.removeEventListener('mouseup', upHue);
+      }
+      document.addEventListener('mousemove', moveHue);
+      document.addEventListener('mouseup', upHue);
+    });
+    slArea.addEventListener('mousedown', function (e) {
+      e.preventDefault();
+      var rect = slArea.getBoundingClientRect();
+      s = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+      l = Math.max(0, Math.min(100, 100 - ((e.clientY - rect.top) / rect.height) * 100));
+      setSLHandlePos();
+      setHexFromHSL();
+      function move(ev) {
+        var r = slArea.getBoundingClientRect();
+        var x = Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width));
+        var y = Math.max(0, Math.min(1, (ev.clientY - r.top) / r.height));
+        s = x * 100;
+        l = (1 - y) * 100;
+        setSLHandlePos();
+        setHexFromHSL();
+      }
+      function up() {
+        document.removeEventListener('mousemove', move);
+        document.removeEventListener('mouseup', up);
+      }
+      document.addEventListener('mousemove', move);
+      document.addEventListener('mouseup', up);
+    });
+    hexInput.addEventListener('input', function () {
+      var v = hexInput.value.replace(/^#/, '').trim();
+      if (/^[0-9A-Fa-f]{6}$/.test(v)) {
+        var nh = hexToHSL('#' + v);
+        h = nh.h; s = nh.s; l = nh.l;
+        hueHandle.style.transform = 'rotate(' + h + 'deg)';
+        setSLHandlePos();
+        slArea.style.background = 'linear-gradient(to bottom, #fff 0%, transparent 50%, #000 100%), linear-gradient(to right, hsl(' + h + ', 0%, 50%), hsl(' + h + ', 100%, 50%))';
+        previewEl.style.background = '#' + v;
+      }
+    });
+    applyBtn.addEventListener('click', function () {
+      var out = hslToHex(h, s, l);
+      closeEditor();
+      if (typeof onApply === 'function') onApply(out);
+    });
+    cancelBtn.addEventListener('click', closeEditor);
+    modal.addEventListener('click', function (e) { if (e.target === modal) closeEditor(); });
+    var hexWrap = document.createElement('div');
+    hexWrap.className = 'color-editor-hex-wrap';
+    hexWrap.appendChild(hexInput);
+    hexWrap.appendChild(formatSelect);
+    var btnWrap = document.createElement('div');
+    btnWrap.className = 'color-editor-actions';
+    btnWrap.appendChild(applyBtn);
+    btnWrap.appendChild(cancelBtn);
+    wheelWrap.appendChild(hueRing);
+    hueRing.appendChild(slArea);
+    slArea.appendChild(slHandle);
+    hueRing.appendChild(hueHandle);
+    panel.appendChild(wheelWrap);
+    panel.appendChild(previewEl);
+    panel.appendChild(hexWrap);
+    panel.appendChild(btnWrap);
+    modal.appendChild(panel);
+    container.appendChild(modal);
+    hexInput.focus();
+  }
+
+  /**
+   * Inicializa los selectores de colores: estilo Brand Colors (swatch con X + círculo punteado +) o legacy (paleta toggle).
    * @param {Element} root - Contenedor donde buscar (ej. #formFields o document.body)
    */
   function initColorsPicker(root) {
     if (!root || !root.querySelectorAll) return;
-    root.querySelectorAll('.input-colors-wrap[data-colors-max]').forEach(function (wrap) {
+    root.querySelectorAll('.input-colors-wrap[data-colors-brand-style="1"]').forEach(function (wrap) {
       if (wrap._colorsInit) return;
       wrap._colorsInit = true;
       var max = parseInt(wrap.getAttribute('data-colors-max'), 10) || 6;
       var hidden = wrap.previousElementSibling;
       if (!hidden || !hidden.classList.contains('input-colors-value')) hidden = wrap.parentElement.querySelector('.input-colors-value');
-      wrap.querySelectorAll('.input-color-swatch').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          var val = btn.getAttribute('data-value');
-          var cur = (hidden.value || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
-          var idx = cur.indexOf(val);
-          if (idx >= 0) {
-            cur.splice(idx, 1);
-          } else if (cur.length < max) {
-            cur.push(val);
-          }
-          hidden.value = cur.join(',');
-          wrap.querySelectorAll('.input-color-swatch').forEach(function (b) {
-            var v = b.getAttribute('data-value');
-            b.classList.toggle('selected', cur.indexOf(v) >= 0);
-            b.setAttribute('aria-pressed', cur.indexOf(v) >= 0 ? 'true' : 'false');
-          });
-          if (hidden.dispatchEvent) hidden.dispatchEvent(new Event('change', { bubbles: true }));
+      if (!hidden) return;
+      function syncHiddenFromSwatches() {
+        var hexes = [];
+        wrap.querySelectorAll('.color-swatch[data-hex]').forEach(function (el) {
+          hexes.push(el.getAttribute('data-hex'));
         });
-      });
+        hidden.value = hexes.filter(Boolean).join(',');
+        if (hidden.dispatchEvent) hidden.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      function bindDelete(swatch) {
+        var btn = swatch && swatch.querySelector('.color-delete-btn');
+        if (!btn) return;
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          swatch.remove();
+          syncHiddenFromSwatches();
+          var addBtn = wrap.querySelector('.color-swatch-add-btn');
+          if (!addBtn && wrap.querySelectorAll('.color-swatch').length < max) {
+            var add = document.createElement('button');
+            add.type = 'button';
+            add.className = 'color-swatch-add-btn';
+            add.title = 'Agregar color';
+            add.setAttribute('aria-label', 'Agregar color');
+            add.innerHTML = '<span>+</span>';
+            wrap.appendChild(add);
+            bindAddBtn(add);
+          }
+        });
+      }
+      function bindAddBtn(addBtn) {
+        addBtn.addEventListener('click', function () {
+          var curCount = wrap.querySelectorAll('.color-swatch[data-hex]').length;
+          if (curCount >= max) return;
+          var lastHex = hidden.value ? (hidden.value.split(',').map(function (s) { return s.trim(); }).filter(Boolean).pop()) : null;
+          openColorPickerModal(lastHex || '#6E3DE9', function (hex) {
+            var norm = normalizeHex(hex);
+            var cur = (hidden.value || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+            if (cur.length >= max) return;
+            cur.push(norm);
+            hidden.value = cur.join(',');
+            var div = document.createElement('div');
+            div.className = 'color-swatch';
+            div.style.background = norm;
+            div.setAttribute('data-hex', norm);
+            div.innerHTML = '<button type="button" class="color-delete-btn" title="Eliminar" aria-label="Eliminar color">×</button>';
+            var addEl = wrap.querySelector('.color-swatch-add-btn');
+            if (addEl) wrap.insertBefore(div, addEl);
+            else wrap.appendChild(div);
+            bindDelete(div);
+            if (wrap.querySelectorAll('.color-swatch').length >= max) {
+              var addB = wrap.querySelector('.color-swatch-add-btn');
+              if (addB) addB.remove();
+            }
+            if (hidden.dispatchEvent) hidden.dispatchEvent(new Event('change', { bubbles: true }));
+          });
+        });
+      }
+      wrap.querySelectorAll('.color-swatch').forEach(bindDelete);
+      var addBtn = wrap.querySelector('.color-swatch-add-btn');
+      if (addBtn) bindAddBtn(addBtn);
     });
   }
 
