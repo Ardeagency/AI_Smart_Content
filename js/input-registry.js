@@ -309,9 +309,55 @@
     var val = f.defaultValue != null ? f.defaultValue : 50;
     return '<div class="range-input"><input type="range" class="modern-input" id="' + a.id + '" name="' + a.name + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + val + '"' + a.disabled + '><span class="range-value">' + val + '</span></div>';
   }
+  /** Preview en canvas del Builder: bloque tipo acordeón para selectores de enfoque. */
+  function previewFocusSelectorAccordion(f) {
+    var t = f.context_selector_type || getInputType(f) || 'brand_selector';
+    var label = getContextSelectorLabel(t);
+    return (
+      '<div class="preview-focus-selector">' +
+        '<div class="preview-focus-selector-header">' +
+          '<i class="ph ph-caret-down"></i>' +
+          '<span>Selector de enfoque: ' + escapeHtml(label) + '</span>' +
+          '<span class="preview-focus-selector-badge">Que la IA decida</span>' +
+        '</div>' +
+        '<div class="preview-focus-selector-hint">Personalizar enfoque desactivando el botón anterior</div>' +
+      '</div>'
+    );
+  }
+
   function formContextPlaceholder(f, opts, label) {
     var a = formAttrs(f, opts || {});
     return '<input type="text" class="modern-input" id="' + a.id + '" name="' + a.name + '" placeholder="' + escapeHtml(label || 'ID o valor...') + '"' + a.disabled + a.required + '>';
+  }
+
+  /**
+   * Selector de enfoque: acordeón con toggle "Que la IA decida" (por defecto activado).
+   * Cuando está activado se envía TODOS los datos al webhook; cuando se desactiva el usuario
+   * selecciona qué aspectos destacar (ej. solo descripción de marca). Un único contenedor por tipo:
+   * brand, campaign, product, audience, entity. La vista (StudioView) rellena el acordeón con datos
+   * de la organización y actualiza el hidden con el payload (completo o filtrado).
+   */
+  function formFocusSelectorAccordion(f, opts) {
+    var a = formAttrs(f, opts || {});
+    var focusType = f.context_selector_type || getInputType(f) || 'brand_selector';
+    var label = getContextSelectorLabel(focusType);
+    return (
+      '<div class="focus-selector-accordion" data-focus-type="' + escapeHtml(focusType) + '" data-field-name="' + escapeHtml(a.name) + '">' +
+        '<div class="focus-selector-toggle-wrap">' +
+          '<label class="focus-selector-ai-toggle">' +
+            '<input type="checkbox" class="focus-selector-let-ai-decide" checked aria-label="Que la IA decida">' +
+            '<span class="focus-selector-ai-label">Que la IA decida</span>' +
+          '</label>' +
+          '<p class="focus-selector-ai-help">Cuando está activado se envían todos los datos al webhook. Desactívalo para elegir en qué quieres enfocar la producción.</p>' +
+        '</div>' +
+        '<div class="focus-selector-body" aria-hidden="true">' +
+          '<div class="focus-selector-accordion-inner">' +
+            '<p class="focus-selector-empty-msg">Cargando datos de ' + escapeHtml(label) + '…</p>' +
+          '</div>' +
+        '</div>' +
+        '<input type="hidden" id="' + a.id + '" name="' + a.name + '" value=""' + a.disabled + a.required + '>' +
+      '</div>'
+    );
   }
   function formSwitch(f, opts) {
     var f2 = { display_style: 'switch', label: f.label, key: f.key, defaultValue: f.defaultValue, required: f.required };
@@ -558,7 +604,7 @@
       preview: function (f) {
         var t = f.context_selector_type || getInputType(f);
         var isContext = ['brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector'].indexOf(getInputType(f)) >= 0 || !!f.context_selector_type;
-        if (isContext) return previewContext(getContextSelectorLabel(t));
+        if (isContext) return previewFocusSelectorAccordion(f);
         if (t === 'flags') return previewFlags(f);
         var style = f.select_style || (t === 'choice_chips' ? 'choice_chips' : (t === 'multi_select_chips' ? 'multi_select_chips' : 'dropdown'));
         if (style === 'choice_chips') return previewChoiceChips(f);
@@ -568,7 +614,7 @@
       form: function (f, opts) {
         var t = f.context_selector_type || getInputType(f);
         var isContext = ['brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector'].indexOf(getInputType(f)) >= 0 || !!f.context_selector_type;
-        if (isContext) return formContextPlaceholder(f, opts || {}, getContextPlaceholder(t));
+        if (isContext) return formFocusSelectorAccordion(f, opts || {});
         if (t === 'flags') return formFlags(f, opts);
         var style = f.select_style || (t === 'choice_chips' ? 'choice_chips' : (t === 'multi_select_chips' ? 'multi_select_chips' : 'dropdown'));
         if (style === 'choice_chips') return formChoiceChips(f, opts);

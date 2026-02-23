@@ -2589,6 +2589,43 @@
   padding: 12px;
 }
 
+/* Preview Selector de enfoque (canvas Builder) */
+.preview-focus-selector {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-secondary);
+}
+.preview-focus-selector-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  font-size: 0.8125rem;
+  color: var(--text-primary);
+}
+.preview-focus-selector-header .ph {
+  font-size: 1rem;
+  color: var(--text-muted);
+}
+.preview-focus-selector-badge {
+  margin-left: auto;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--dev-primary);
+  background: rgba(224, 145, 69, 0.15);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.preview-focus-selector-hint {
+  padding: 6px 12px 10px;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border-color);
+}
+
 /* Chips (choice / multi-select) preview */
 .preview-chips {
   display: flex;

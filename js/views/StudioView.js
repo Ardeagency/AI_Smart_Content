@@ -271,8 +271,11 @@ class StudioView extends BaseView {
       el.addEventListener('change', () => this.updateCreditsDisplay());
     });
 
-    // Poblar carruseles de image_selector con productos/referencias (misma lógica que biblioteca de productos)
-    setTimeout(() => this.populateImageSelectorCarousels(), 0);
+    // Poblar carruseles de image_selector y selectores de enfoque (acordeones marca/campaña/producto/audiencia)
+    setTimeout(() => {
+      this.populateImageSelectorCarousels();
+      this.populateFocusSelectorAccordions();
+    }, 0);
   }
 
   /**
@@ -423,6 +426,277 @@ class StudioView extends BaseView {
     });
   }
 
+  /** Opciones de enfoque por tipo: secciones y keys a mostrar como checkboxes (personalizar enfoque). */
+  getFocusOptionsByType() {
+    return {
+      brand_selector: [
+        { section: 'Identidad', options: [
+          { key: 'nombre_marca', label: 'Nombre de la marca' },
+          { key: 'logo_url', label: 'Logo' },
+          { key: 'mercado_objetivo', label: 'Mercado objetivo' },
+          { key: 'idiomas_contenido', label: 'Idiomas de contenido' }
+        ]},
+        { section: 'Esencia', options: [
+          { key: 'objetivos_marca', label: 'Objetivos de marca' },
+          { key: 'nicho_mercado', label: 'Nicho de mercado' },
+          { key: 'arquetipo_personalidad', label: 'Arquetipo / personalidad' },
+          { key: 'enfoque_marca', label: 'Enfoque de marca' }
+        ]},
+        { section: 'Lenguaje', options: [
+          { key: 'palabras_clave', label: 'Palabras a usar' },
+          { key: 'palabras_prohibidas', label: 'Palabras a evitar' },
+          { key: 'tono_comunicacion', label: 'Tono de comunicación' },
+          { key: 'estilo_escritura', label: 'Estilo de escritura' }
+        ]},
+        { section: 'Estilo visual', options: [
+          { key: 'estilo_visual', label: 'Estilo visual' },
+          { key: 'estilo_publicidad', label: 'Estilo publicidad' },
+          { key: 'transmitir_visualmente', label: 'Transmitir visualmente' },
+          { key: 'evitar_visualmente', label: 'Evitar visualmente' }
+        ]}
+      ],
+      campaign_selector: [
+        { section: 'Campaña', options: [
+          { key: 'nombre_campana', label: 'Nombre de campaña' },
+          { key: 'descripcion_interna', label: 'Descripción interna' },
+          { key: 'cta', label: 'Llamada a la acción' },
+          { key: 'cta_url', label: 'URL del CTA' },
+          { key: 'contexto_temporal', label: 'Contexto temporal' },
+          { key: 'objetivos_estrategicos', label: 'Objetivos estratégicos' },
+          { key: 'angulos_venta', label: 'Ángulos de venta' },
+          { key: 'oferta_principal', label: 'Oferta principal' },
+          { key: 'tono_modificador', label: 'Tono modificador' }
+        ]}
+      ],
+      product_selector: [
+        { section: 'Producto', options: [
+          { key: 'id', label: 'ID' },
+          { key: 'nombre_producto', label: 'Nombre' },
+          { key: 'tipo_producto', label: 'Tipo' },
+          { key: 'main_image', label: 'Imagen principal' },
+          { key: 'description', label: 'Descripción' }
+        ]}
+      ],
+      audience_selector: [
+        { section: 'Audiencia', options: [
+          { key: 'name', label: 'Nombre' },
+          { key: 'description', label: 'Descripción' },
+          { key: 'awareness_level', label: 'Nivel de conciencia' },
+          { key: 'datos_demograficos', label: 'Datos demográficos' },
+          { key: 'datos_psicograficos', label: 'Datos psicográficos' },
+          { key: 'dolores', label: 'Dolores' },
+          { key: 'deseos', label: 'Deseos' },
+          { key: 'objeciones', label: 'Objeciones' },
+          { key: 'gatillos_compra', label: 'Gatillos de compra' },
+          { key: 'estilo_lenguaje', label: 'Estilo de lenguaje' }
+        ]}
+      ],
+      entity_selector: [
+        { section: 'Entidad', options: [
+          { key: 'id', label: 'ID' },
+          { key: 'name', label: 'Nombre' },
+          { key: 'description', label: 'Descripción' },
+          { key: 'entity_type', label: 'Tipo (producto/servicio/lugar)' },
+          { key: 'price', label: 'Precio' },
+          { key: 'currency', label: 'Moneda' },
+          { key: 'metadata', label: 'Metadatos' }
+        ]}
+      ]
+    };
+  }
+
+  async loadBrandData(brandContainerId) {
+    if (!this.supabase || !brandContainerId) return null;
+    try {
+      const { data: container, error: e1 } = await this.supabase
+        .from('brand_containers')
+        .select('*')
+        .eq('id', brandContainerId)
+        .single();
+      if (e1 || !container) return null;
+      const { data: brand, error: e2 } = await this.supabase
+        .from('brands')
+        .select('*')
+        .eq('project_id', brandContainerId)
+        .maybeSingle();
+      if (e2) return { ...container };
+      return { ...container, ...(brand || {}) };
+    } catch (e) {
+      console.error('Studio loadBrandData:', e);
+      return null;
+    }
+  }
+
+  async loadCampaigns(brandContainerId) {
+    if (!this.supabase || !brandContainerId) return [];
+    try {
+      const { data, error } = await this.supabase
+        .from('campaigns')
+        .select('*')
+        .eq('brand_container_id', brandContainerId)
+        .order('created_at', { ascending: false });
+      return error ? [] : (data || []);
+    } catch (e) {
+      console.error('Studio loadCampaigns:', e);
+      return [];
+    }
+  }
+
+  async loadAudiences(brandContainerId) {
+    if (!this.supabase || !brandContainerId) return [];
+    try {
+      const { data: brand, error: e1 } = await this.supabase
+        .from('brands')
+        .select('id')
+        .eq('project_id', brandContainerId)
+        .maybeSingle();
+      if (e1 || !brand) return [];
+      const { data, error } = await this.supabase
+        .from('audiences')
+        .select('*')
+        .eq('brand_id', brand.id);
+      return error ? [] : (data || []);
+    } catch (e) {
+      console.error('Studio loadAudiences:', e);
+      return [];
+    }
+  }
+
+  async loadEntities(brandContainerId) {
+    if (!this.supabase || !brandContainerId) return [];
+    try {
+      const { data, error } = await this.supabase
+        .from('brand_entities')
+        .select('*')
+        .eq('brand_container_id', brandContainerId)
+        .order('created_at', { ascending: false });
+      return error ? [] : (data || []);
+    } catch (e) {
+      console.error('Studio loadEntities:', e);
+      return [];
+    }
+  }
+
+  /**
+   * Rellena los acordeones "Selector de enfoque" con datos de la org y enlaza el toggle "Que la IA decida".
+   * Si está activado se envía el objeto completo; si no, solo las claves seleccionadas por el usuario.
+   */
+  async populateFocusSelectorAccordions() {
+    const formEl = document.getElementById('studioFlowForm');
+    if (!formEl) return;
+
+    const accordions = formEl.querySelectorAll('.focus-selector-accordion');
+    if (accordions.length === 0) return;
+
+    const brandContainerId = await this.getBrandContainerId();
+    const focusOptions = this.getFocusOptionsByType();
+    const escapeHtml = (s) => {
+      if (s == null) return '';
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    };
+
+    for (const accordion of accordions) {
+      const focusType = accordion.getAttribute('data-focus-type') || 'brand_selector';
+      const body = accordion.querySelector('.focus-selector-body');
+      const inner = accordion.querySelector('.focus-selector-accordion-inner');
+      const hiddenInput = accordion.querySelector('input[type="hidden"]');
+      const letAiCheckbox = accordion.querySelector('.focus-selector-let-ai-decide');
+      if (!body || !inner || !hiddenInput) continue;
+
+      let fullData = null;
+      let listData = [];
+
+      if (focusType === 'brand_selector') {
+        fullData = await this.loadBrandData(brandContainerId);
+      } else if (focusType === 'campaign_selector') {
+        listData = await this.loadCampaigns(brandContainerId);
+        fullData = listData.length > 0 ? listData[0] : null;
+      } else if (focusType === 'product_selector') {
+        listData = await this.loadProductsWithImages(brandContainerId);
+        fullData = listData.length > 0 ? listData[0] : null;
+        if (fullData && fullData.images && fullData.images.length > 0) {
+          fullData.main_image = fullData.images[0].image_url;
+        }
+      } else if (focusType === 'audience_selector') {
+        listData = await this.loadAudiences(brandContainerId);
+        fullData = listData.length > 0 ? listData[0] : null;
+      } else if (focusType === 'entity_selector') {
+        listData = await this.loadEntities(brandContainerId);
+        fullData = listData.length > 0 ? listData[0] : null;
+      }
+
+      const sections = focusOptions[focusType] || focusOptions.brand_selector;
+      if (!fullData && focusType === 'brand_selector') {
+        inner.innerHTML = '<p class="focus-selector-empty-msg">No hay datos de marca en esta organización.</p>';
+        if (hiddenInput) hiddenInput.value = '{}';
+        continue;
+      }
+      if (!fullData && listData.length === 0) {
+        inner.innerHTML = '<p class="focus-selector-empty-msg">No hay datos de ' + focusType.replace('_selector', '') + ' en esta organización.</p>';
+        if (hiddenInput) hiddenInput.value = '{}';
+        continue;
+      }
+
+      if (fullData && hiddenInput) {
+        hiddenInput.value = JSON.stringify(fullData);
+      }
+
+      const sectionsHtml = sections.map(sec => {
+        const opts = sec.options.map(o => {
+          const val = fullData && fullData[o.key] !== undefined;
+          return (
+            '<label class="focus-selector-option">' +
+            '<input type="checkbox" class="focus-selector-checkbox" data-key="' + escapeHtml(o.key) + '">' +
+            '<span>' + escapeHtml(o.label) + '</span>' +
+            '</label>'
+          );
+        }).join('');
+        return (
+          '<div class="focus-selector-section">' +
+          '<h4 class="focus-selector-section-title">' + escapeHtml(sec.section) + '</h4>' +
+          '<div class="focus-selector-options">' + opts + '</div>' +
+          '</div>'
+        );
+      }).join('');
+
+      inner.innerHTML = sectionsHtml;
+      body.setAttribute('aria-hidden', 'false');
+      body.classList.add('focus-selector-body--has-data');
+
+      const updateValue = () => {
+        if (!hiddenInput) return;
+        if (letAiCheckbox && letAiCheckbox.checked) {
+          hiddenInput.value = JSON.stringify(fullData || {});
+          return;
+        }
+        const selected = {};
+        accordion.querySelectorAll('.focus-selector-checkbox:checked').forEach(cb => {
+          const key = cb.getAttribute('data-key');
+          if (fullData && fullData[key] !== undefined) selected[key] = fullData[key];
+        });
+        hiddenInput.value = JSON.stringify(selected);
+      };
+
+      if (letAiCheckbox) {
+        letAiCheckbox.addEventListener('change', () => {
+          const custom = !letAiCheckbox.checked;
+          body.classList.toggle('focus-selector-body--open', custom);
+          body.setAttribute('aria-hidden', !custom);
+          updateValue();
+          this.updateCreditsDisplay();
+        });
+      }
+      accordion.querySelectorAll('.focus-selector-checkbox').forEach(cb => {
+        cb.addEventListener('change', () => { updateValue(); this.updateCreditsDisplay(); });
+      });
+
+      body.classList.toggle('focus-selector-body--open', !(letAiCheckbox && letAiCheckbox.checked));
+      body.setAttribute('aria-hidden', !!(letAiCheckbox && letAiCheckbox.checked));
+    }
+  }
+
   renderFormField(field) {
     const name = field.name || field.key || field.id || 'field';
     const fieldNorm = { ...field, key: name, required: field.required !== false };
@@ -462,7 +736,18 @@ class StudioView extends BaseView {
       const name = el.getAttribute('name');
       if (!name) return;
       if (el.type === 'checkbox') data[name] = el.checked;
-      else data[name] = el.value?.trim() ?? '';
+      else {
+        const raw = el.value?.trim() ?? '';
+        if (raw && (raw.startsWith('{') || raw.startsWith('['))) {
+          try {
+            data[name] = JSON.parse(raw);
+          } catch (_) {
+            data[name] = raw;
+          }
+        } else {
+          data[name] = raw;
+        }
+      }
     });
     return data;
   }
