@@ -267,7 +267,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #4ADE80;
+    background: var(--color-success);
 }
 
 /* Lista de URLs editables (header arriba a la izquierda, poco espacio entre ítems) */
@@ -735,7 +735,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     height: 18px;
     border-radius: 50%;
     border: 1px solid rgba(255, 255, 255, 0.25);
-    background: rgba(220, 38, 38, 0.85);
+    background: var(--color-critical);
     color: #fff;
     font-size: 0.75rem;
     line-height: 1;
@@ -976,7 +976,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
 
 .visual-status-synced::before {
     content: '✔';
-    color: #4ADE80;
+    color: var(--color-success);
     font-size: 0.625rem;
 }
 

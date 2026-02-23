@@ -446,7 +446,7 @@ body.sidebar-collapsed .living-container {
 }
 
 .history-card-actions .history-card-copy-prompt.history-copy-ok {
-    color: #4ade80;
+    color: var(--color-success);
 }
 
 /* Nombre del flujo (esquina inferior izquierda) */

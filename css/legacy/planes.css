@@ -299,7 +299,7 @@
 
 .planes-form-subtitle {
     font-size: 0.9rem;
-    color: #6b7280;
+    color: var(--text-muted);
     margin: 0 0 1.75rem 0;
 }
 
@@ -344,7 +344,7 @@
 .form-group label {
     font-size: 0.8rem;
     font-weight: 500;
-    color: #9ca3af;
+    color: var(--text-muted);
 }
 
 .input-wrapper {
@@ -365,7 +365,7 @@
 }
 
 .planes-input::placeholder {
-    color: #6b7280;
+    color: var(--text-muted);
 }
 
 .planes-input:hover {
@@ -373,7 +373,7 @@
 }
 
 .planes-input:focus {
-    border-color: #4b5563;
+    border-color: var(--text-secondary);
     box-shadow: 0 0 0 2px rgba(107, 114, 128, 0.2);
 }
 
@@ -382,7 +382,7 @@
     left: 1rem;
     top: 50%;
     transform: translateY(-50%);
-    color: #6b7280;
+    color: var(--text-muted);
     font-size: 0.9rem;
     pointer-events: none;
 }
@@ -396,7 +396,7 @@
 
 .planes-input-hint {
     font-size: 0.75rem;
-    color: #6b7280;
+    color: var(--text-muted);
     margin-top: 0.2rem;
 }
 
@@ -423,7 +423,7 @@
 
 .planes-btn-submit:hover {
     background: #374151;
-    border-color: #4b5563;
+    border-color: var(--text-secondary);
 }
 
 .planes-btn-submit:active {
@@ -438,7 +438,7 @@
 .planes-login-link {
     text-align: center;
     font-size: 0.9rem;
-    color: #6b7280;
+    color: var(--text-muted);
     margin: 1.5rem 0 0 0;
 }
 
@@ -484,7 +484,7 @@
 
 .confirmation-icon {
     font-size: 3.5rem;
-    color: #22c55e;
+    color: var(--color-success);
     margin-bottom: 1.25rem;
 }
 
@@ -497,7 +497,7 @@
 
 .confirmation-message {
     font-size: 0.95rem;
-    color: #9ca3af;
+    color: var(--text-muted);
     margin-bottom: 0.5rem;
     line-height: 1.5;
 }
@@ -508,7 +508,7 @@
 
 .confirmation-instructions {
     font-size: 0.9rem;
-    color: #6b7280;
+    color: var(--text-muted);
     margin-bottom: 1.75rem;
     line-height: 1.5;
 }
@@ -563,7 +563,7 @@
 }
 
 .btn-back-login:hover {
-    border-color: #4b5563;
+    border-color: var(--text-secondary);
     background: #1a1a1a;
 }
 

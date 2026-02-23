@@ -351,12 +351,12 @@ body.sidebar-collapsed #app-container .main-header,
 }
 
 .header-user-dropdown-item.header-user-logout:hover {
-    color: #ef4444;
-    background: rgba(239, 68, 68, 0.1);
+    color: var(--color-error);
+    background: var(--color-error-bg);
 }
 
 .header-user-dropdown-item.header-user-logout:hover i {
-    color: #ef4444;
+    color: var(--color-error);
 }
 
 /* Botón hamburguesa - solo móvil */
@@ -1469,12 +1469,12 @@ body.sidebar-collapsed #app-container .main-header,
 }
 
 .nav-profile-dropdown-item.nav-logout:hover {
-    color: #ef4444;
-    background: rgba(239, 68, 68, 0.1);
+    color: var(--color-error);
+    background: var(--color-error-bg);
 }
 
 .nav-profile-dropdown-item.nav-logout:hover i {
-    color: #ef4444;
+    color: var(--color-error);
 }
 
 /* Estado colapsado del footer */
@@ -1650,7 +1650,7 @@ body.sidebar-collapsed #app-container .main-header,
     content: 'Próximamente';
     font-size: 0.7rem;
     color: var(--warning-color);
-    background: rgba(245, 158, 11, 0.2);
+    background: var(--color-warning-light);
     padding: 2px 6px;
     border-radius: 8px;
     margin-left: 8px;
@@ -1660,7 +1660,7 @@ body.sidebar-collapsed #app-container .main-header,
     content: 'Beta';
     font-size: 0.7rem;
     color: var(--success-color);
-    background: rgba(16, 185, 129, 0.2);
+    background: var(--color-success-light);
     padding: 2px 6px;
     border-radius: 8px;
     margin-left: 8px;
@@ -2154,7 +2154,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
 }
 
 .nav-tokens i {
-    color: #fbbf24;
+    color: var(--color-warning);
     font-size: 16px;
 }
 

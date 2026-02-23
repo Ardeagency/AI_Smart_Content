@@ -216,7 +216,7 @@
   font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: 0.04em;
-  color: #f87171;
+  color: var(--color-error);
 }
 
 /* Formulario dinámico (input_schema) */

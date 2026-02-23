@@ -494,11 +494,11 @@
 }
 
 .notification-icon.warning {
-    color: #f59e0b;
+    color: var(--color-warning);
 }
 
 .notification-icon.info {
-    color: #3b82f6;
+    color: var(--color-info);
 }
 
 .notification-title {
