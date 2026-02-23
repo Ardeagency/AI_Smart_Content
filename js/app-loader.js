@@ -176,26 +176,59 @@
         }
     }
     
-    // ===== ENTRANCE SEQUENCE =====
-    const ENTRANCE_DURATION_MS = 2400;
-
+    // ===== ENTRANCE SEQUENCE (timeline explícita, referencia Ashley) =====
     function runEntranceSequence() {
         const overlay = document.getElementById('entranceOverlay');
-        if (!overlay) return Promise.resolve();
+        if (!overlay) return;
 
-        return new Promise((resolve) => {
-            requestAnimationFrame(() => {
-                overlay.classList.add('started');
-            });
-            setTimeout(() => {
-                overlay.classList.add('entrance-overlay--hidden');
-                const container = document.getElementById('app-container');
-                const hasContent = container && container.innerHTML.trim().length > 0;
-                if (!hasContent && typeof window.appLoader !== 'undefined' && window.appLoader.showSpinner) {
-                    window.appLoader.showSpinner();
-                }
-                resolve();
-            }, ENTRANCE_DURATION_MS);
+        var lines1 = overlay.querySelectorAll('.entrance-text-1 .entrance-h3');
+        var revealBox = overlay.querySelector('.entrance-reveal-box');
+        var domainLine = overlay.querySelector('.entrance-text-2 .entrance-h3');
+
+        function at(ms, fn) {
+            if (ms <= 0) fn();
+            else setTimeout(fn, ms);
+        }
+
+        // 1) Líneas entran con stagger (0, 0.35s, 0.7s)
+        at(0, function () { if (lines1[0]) lines1[0].classList.add('entrance-visible'); });
+        at(350, function () { if (lines1[1]) lines1[1].classList.add('entrance-visible'); });
+        at(700, function () { if (lines1[2]) lines1[2].classList.add('entrance-visible'); });
+
+        // 2) Líneas salen
+        at(1100, function () {
+            lines1.forEach(function (el) { el.classList.add('entrance-out'); });
+        });
+
+        // 3) Reveal box: mostrar → expandir → barrer a la derecha
+        at(1400, function () {
+            if (revealBox) revealBox.classList.add('entrance-reveal-show');
+        });
+        at(1550, function () {
+            if (revealBox) revealBox.classList.add('entrance-reveal-expand');
+        });
+        at(2000, function () {
+            if (revealBox) revealBox.classList.add('entrance-reveal-away');
+        });
+
+        // 4) Texto dominio visible
+        at(2250, function () {
+            if (domainLine) domainLine.classList.add('entrance-visible');
+        });
+
+        // 5) Salida dominio y fade del overlay
+        at(2850, function () {
+            if (domainLine) domainLine.classList.add('entrance-out');
+            overlay.classList.add('entrance-overlay--hidden');
+        });
+
+        // 6) Al terminar: mostrar spinner solo si la landing no ha renderizado
+        at(3400, function () {
+            var container = document.getElementById('app-container');
+            var hasContent = container && container.innerHTML.trim().length > 0;
+            if (!hasContent && window.appLoader && typeof window.appLoader.showSpinner === 'function') {
+                window.appLoader.showSpinner();
+            }
         });
     }
 
