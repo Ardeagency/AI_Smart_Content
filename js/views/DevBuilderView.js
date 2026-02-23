@@ -667,7 +667,7 @@ class DevBuilderView extends DevBaseView {
       { id: 'range', name: 'Slider', description: 'Control deslizante', category: 'advanced', icon_name: 'sliders', base_schema: { input_type: 'range', min: 0, max: 100, step: 1, defaultValue: 50 } },
       { id: 'toggle_switch', name: 'Switch', description: 'Interruptor sí/no', category: 'basic', icon_name: 'toggle-left', base_schema: { input_type: 'toggle_switch', defaultValue: false } },
       { id: 'tags', name: 'Tags', description: 'Etiquetas', category: 'basic', icon_name: 'tags', base_schema: { input_type: 'tags' } },
-      { id: 'flags', name: 'Flags', description: 'Idioma, país, etnia (personaje/voz). Lista de banderas.', category: 'basic', icon_name: 'flag', base_schema: { input_type: 'flags', flag_category: 'language', options: [] } },
+      { id: 'flags', name: 'Flags', description: 'Dropdown: idioma, país o etnia (flag_category).', category: 'basic', icon_name: 'flag', base_schema: { input_type: 'flags', flag_category: 'language', options: [] } },
       { id: 'brand_selector', name: 'Selector de Marca', description: 'Marca del usuario', category: 'context', icon_name: 'storefront', base_schema: { input_type: 'brand_selector' } },
       { id: 'entity_selector', name: 'Selector de Entidad', description: 'Producto/servicio', category: 'context', icon_name: 'package', base_schema: { input_type: 'entity_selector' } },
       { id: 'audience_selector', name: 'Selector de Audiencia', description: 'Audiencia', category: 'context', icon_name: 'users', base_schema: { input_type: 'audience_selector' } },
@@ -1399,7 +1399,6 @@ class DevBuilderView extends DevBaseView {
     
     this.setupPropertiesListeners();
     this.syncDefaultValueAndExtraConfigToDom(field, dataType);
-    if (window.InputRegistry && window.InputRegistry.initFlagsGrid) window.InputRegistry.initFlagsGrid(panel);
   }
 
   inferDataType(field) {
@@ -1725,26 +1724,21 @@ class DevBuilderView extends DevBaseView {
         const flagCategory = field.flag_category || field.flags_category || 'language';
         return `
           <div class="property-group">
-            <h4>Flags (idioma, país, etnia)</h4>
+            <h4>Flags (dropdown con idioma / país / etnia)</h4>
             <div class="property-field">
               <label for="propFlagsCategory">Categoría</label>
               <select id="propFlagsCategory">
                 <option value="language" ${flagCategory === 'language' ? 'selected' : ''}>Idioma</option>
                 <option value="country" ${flagCategory === 'country' ? 'selected' : ''}>País / Región</option>
-                <option value="ethnicity_region" ${flagCategory === 'ethnicity_region' ? 'selected' : ''}>Etnia / Origen (personaje, voz)</option>
-                <option value="custom" ${flagCategory === 'custom' ? 'selected' : ''}>Personalizado</option>
+                <option value="ethnicity_region" ${flagCategory === 'ethnicity_region' ? 'selected' : ''}>Etnia / Origen</option>
               </select>
-              <span class="field-help">Idioma del contenido o personaje; país; rasgos/origen (latino, asiático, europeo…).</span>
+              <span class="field-help">Mismo contenedor que dropdown; opciones según categoría (vienen de FlagsData).</span>
             </div>
             <div class="property-toggle">
               <label>
                 <input type="checkbox" id="propFlagsMultiple" ${field.is_multiple ? 'checked' : ''}>
                 <span>Permitir varias selecciones</span>
               </label>
-            </div>
-            <div class="property-field">
-              <label>Vista previa del selector</label>
-              <div class="flags-property-preview" id="flagsPropertyPreview"></div>
             </div>
           </div>
         `;
@@ -2347,11 +2341,6 @@ class DevBuilderView extends DevBaseView {
         this.onFieldChange();
       });
     }
-    const flagsPreviewEl = this.querySelector('#flagsPropertyPreview');
-    if (flagsPreviewEl && field && (field.input_type || field.type) === 'flags' && window.InputRegistry && window.InputRegistry.renderPreview) {
-      flagsPreviewEl.innerHTML = window.InputRegistry.renderPreview(field);
-    }
-    
     // Select/Dropdown/Radio: opciones (un input por opción o valor/etiqueta)
     const addOptionBtn = this.querySelector('#addOptionBtn');
     const optionsEditor = this.querySelector('#optionsEditor');

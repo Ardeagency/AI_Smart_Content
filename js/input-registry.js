@@ -195,32 +195,25 @@
     }).join('');
     return '<div class="preview-selection-checkboxes">' + list + '</div>';
   }
-  /** Flags: grid de banderas (idioma, país, etnia/origen). Usa FlagsData si existe. */
+  /** Flags: mismo contenedor que dropdown; opciones según flag_category (idioma, país, etnia). */
   function getFlagsOptionsForField(f) {
     var category = (f.flag_category || f.flags_category || 'language').toLowerCase();
+    var raw = [];
     if (typeof global.FlagsData !== 'undefined' && global.FlagsData.getFlagsOptionsByCategory && category !== 'custom') {
-      return global.FlagsData.getFlagsOptionsByCategory(category);
+      raw = global.FlagsData.getFlagsOptionsByCategory(category);
+    } else {
+      raw = (f.options && f.options.length) ? f.options : [{ value: 'es', label: 'Español' }, { value: 'en', label: 'English' }];
     }
-    var custom = f.options && f.options.length ? f.options : [{ value: 'es', label: 'Español' }, { value: 'en', label: 'English' }];
-    var toFlag = typeof global.FlagsData !== 'undefined' && global.FlagsData.countryCodeToFlag
-      ? global.FlagsData.countryCodeToFlag
-      : function (code) { return code && code.length === 2 ? String.fromCodePoint.apply(null, code.toUpperCase().split('').map(function (c) { return 127397 + c.charCodeAt(0); })) : ''; };
-    return custom.map(function (o) {
-      var code = o.flag || o.value;
-      return { value: optVal(o), label: optLabel(o), flag: toFlag(code) };
+    return raw.map(function (o) {
+      var val = o.value !== undefined ? o.value : o;
+      var name = (o.label !== undefined ? o.label : String(val));
+      var flag = (o.flag !== undefined ? o.flag : (typeof global.FlagsData !== 'undefined' && global.FlagsData.countryCodeToFlag && String(val).length === 2 ? global.FlagsData.countryCodeToFlag(String(val)) : ''));
+      return { value: val, label: (flag ? flag + ' ' : '') + name };
     });
   }
   function previewFlags(f) {
-    var opts = getFlagsOptionsForField(f);
-    var maxShow = 12;
-    var slice = opts.slice(0, maxShow);
-    var cards = slice.map(function (o) {
-      var emoji = (o.flag || '').toString();
-      var lbl = escapeHtml((o.label || o.value || '').toString());
-      return '<span class="flags-preview-card" title="' + lbl + '">' + (emoji ? '<span class="flags-emoji">' + emoji + '</span>' : '') + '<span class="flags-label">' + lbl + '</span></span>';
-    }).join('');
-    var more = opts.length > maxShow ? '<span class="flags-preview-more">+' + (opts.length - maxShow) + '</span>' : '';
-    return '<div class="flags-preview-wrap"><div class="flags-preview-grid">' + cards + more + '</div></div>';
+    var fWithOpts = Object.assign({}, f, { options: getFlagsOptionsForField(f) });
+    return previewSelect(fWithOpts);
   }
 
   // ============================================================================
@@ -501,39 +494,8 @@
     return renderSelectionCheckboxes(f, opts || {}, isPreviewOpts(opts));
   }
   function formFlags(f, opts) {
-    opts = opts || {};
-    var isPreview = isPreviewOpts(opts);
-    if (isPreview) {
-      return '<div class="flags-preview-wrap"><div class="flags-preview-grid">' + getFlagsOptionsForField(f).slice(0, 8).map(function (o) {
-        var lbl = escapeHtml((o.label || o.value || '').toString());
-        return '<span class="flags-preview-card"><span class="flags-emoji">' + (o.flag || '') + '</span><span class="flags-label">' + lbl + '</span></span>';
-      }).join('') + '</div></div>';
-    }
-    var a = formAttrs(f, opts);
-    var category = (f.flag_category || f.flags_category || 'language').toLowerCase();
-    var options = getFlagsOptionsForField(f);
-    var optionsJson = escapeHtml(JSON.stringify(options));
-    var customOpts = (f.options && f.options.length) ? escapeHtml(JSON.stringify(getFlagsOptionsForField({ flag_category: 'custom', options: f.options }))) : '[]';
-    var multiple = f.is_multiple ? 'true' : 'false';
-    var name = a.name;
-    var id = a.id;
-    var selectedVal = (f.defaultValue != null ? f.defaultValue : (f.value != null ? f.value : ''));
-    var selectedStr = typeof selectedVal === 'string' ? selectedVal : (Array.isArray(selectedVal) ? selectedVal.join(',') : '');
-    var categories = typeof global.FlagsData !== 'undefined' && global.FlagsData.getFlagsCategories
-      ? global.FlagsData.getFlagsCategories()
-      : [{ value: 'language', label: 'Idioma' }, { value: 'country', label: 'País / Región' }, { value: 'ethnicity_region', label: 'Etnia / Origen' }, { value: 'custom', label: 'Personalizado' }];
-    var catOptions = categories.map(function (c) {
-      return '<option value="' + escapeHtml(c.value) + '"' + (c.value === category ? ' selected' : '') + '>' + escapeHtml(c.label) + '</option>';
-    }).join('');
-    return ''
-      + '<input type="hidden" class="flags-value-input" name="' + escapeHtml(name) + '" id="' + escapeHtml(id) + '" value="' + escapeHtml(selectedStr) + '" data-multiple="' + multiple + '">'
-      + '<div class="flags-form-container" data-flags-key="' + escapeHtml(f.key || '') + '" data-flags-multiple="' + multiple + '" data-flags-category="' + escapeHtml(category) + '" data-flags-options="' + optionsJson + '" data-flags-custom-options="' + customOpts + '">'
-      + '<div class="flags-form-toolbar">'
-      + '<select class="flags-category-select modern-input" aria-label="Tipo de banderas">' + catOptions + '</select>'
-      + '<input type="text" class="flags-search-input modern-input" placeholder="Buscar..." aria-label="Buscar">'
-      + '</div>'
-      + '<div class="flags-grid" role="listbox" tabindex="0" aria-multiselectable="' + multiple + '"></div>'
-      + '</div>';
+    var fWithOpts = Object.assign({}, f, { options: getFlagsOptionsForField(f) });
+    return renderSelectDropdown(fWithOpts, opts || {}, isPreviewOpts(opts));
   }
 
   /** Placeholder para FILE_CONTAINER (upload) */
@@ -842,7 +804,7 @@
       { id: 'range', name: 'Slider', description: 'Control deslizante (rango)', category: 'controls', icon_name: 'sliders', base_schema: { input_type: 'range', type: 'range', data_type: 'number', min: 0, max: 100, step: 1, defaultValue: 50 } },
       { id: 'toggle_switch', name: 'Toggle / Boolean', description: 'Interruptor on/off configurable', category: 'controls', icon_name: 'toggle-right', base_schema: { input_type: 'toggle_switch', type: 'toggle_switch', data_type: 'boolean', display_style: 'switch', defaultValue: false } },
       { id: 'tags', name: 'Tags', description: 'Etiquetas añadibles/eliminables', category: 'basic', icon_name: 'tag', base_schema: { input_type: 'tags', type: 'tags', data_type: 'array', placeholder: 'Añade tags...', defaultValue: [] } },
-      { id: 'flags', name: 'Flags', description: 'Idioma, país, etnia/origen (personaje, voz). Lista masiva con iconos de banderas.', category: 'basic', icon_name: 'flag', base_schema: { input_type: 'flags', type: 'flags', data_type: 'string', flag_category: 'language', options: [] } },
+      { id: 'flags', name: 'Flags', description: 'Dropdown preconfigurado: idioma, país o etnia/origen (flag_category).', category: 'basic', icon_name: 'flag', base_schema: { input_type: 'flags', type: 'flags', data_type: 'string', flag_category: 'language', options: [] } },
       { id: 'brand_selector', name: 'Selector de Marca', description: 'Enfoque de producción: marca (acordeón)', category: 'brand', icon_name: 'storefront', base_schema: { input_type: 'brand_selector', type: 'brand_selector', data_type: 'object' } },
       { id: 'entity_selector', name: 'Selector de Entidad', description: 'Producto/servicio/lugar', category: 'brand', icon_name: 'package', base_schema: { input_type: 'entity_selector', type: 'entity_selector', data_type: 'object', entityTypes: ['product', 'service'] } },
       { id: 'audience_selector', name: 'Selector de Audiencia', description: 'Enfoque: audiencia', category: 'brand', icon_name: 'users', base_schema: { input_type: 'audience_selector', type: 'audience_selector', data_type: 'object' } },
@@ -929,108 +891,6 @@
     });
   }
 
-  /**
-   * Inicializa los contenedores Flags en el DOM: rellena la grid, enlaces de selección y búsqueda.
-   * Llamar después de inyectar HTML del formulario (ej. panel de propiedades o vista Test).
-   * @param {Element} root - Contenedor donde buscar (ej. document.body o #propertiesPanel)
-   */
-  function initFlagsGrid(root) {
-    if (!root || !root.querySelectorAll) return;
-    var containers = root.querySelectorAll('.flags-form-container');
-    for (var i = 0; i < containers.length; i++) {
-      var wrap = containers[i];
-      if (wrap._flagsInit) continue;
-      wrap._flagsInit = true;
-      var hidden = wrap.previousElementSibling;
-      if (!hidden || !hidden.classList.contains('flags-value-input')) hidden = wrap.parentElement.querySelector('.flags-value-input');
-      var grid = wrap.querySelector('.flags-grid');
-      var searchInput = wrap.querySelector('.flags-search-input');
-      var categorySelect = wrap.querySelector('.flags-category-select');
-      var multiple = wrap.getAttribute('data-flags-multiple') === 'true';
-      var options = [];
-      try {
-        var raw = wrap.getAttribute('data-flags-options');
-        if (raw) options = JSON.parse(raw);
-      } catch (e) {}
-      function renderGrid(opts) {
-        if (!grid) return;
-        opts = opts || options;
-        grid.innerHTML = opts.map(function (o) {
-          var val = (o.value !== undefined ? o.value : o).toString();
-          var lbl = (o.label !== undefined ? o.label : val);
-          var emoji = (o.flag !== undefined ? o.flag : '').toString();
-          return '<div class="flags-card" role="option" data-value="' + escapeHtml(val) + '" tabindex="-1" title="' + escapeHtml(lbl) + '">' +
-            (emoji ? '<span class="flags-card-emoji">' + emoji + '</span>' : '') +
-            '<span class="flags-card-label">' + escapeHtml(lbl) + '</span></div>';
-        }).join('');
-        var current = (hidden && hidden.value) ? hidden.value.split(',').map(function (s) { return s.trim(); }).filter(Boolean) : [];
-        grid.querySelectorAll('.flags-card').forEach(function (card) {
-          var v = card.getAttribute('data-value');
-          if (current.indexOf(v) >= 0) card.classList.add('selected');
-        });
-      }
-      function updateValue(added) {
-        if (!hidden) return;
-        if (multiple) {
-          var cur = (hidden.value || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
-          var idx = cur.indexOf(added);
-          if (idx >= 0) cur.splice(idx, 1);
-          else cur.push(added);
-          hidden.value = cur.join(',');
-        } else {
-          hidden.value = added;
-        }
-        if (hidden.dispatchEvent) hidden.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-      renderGrid();
-      grid.addEventListener('click', function (e) {
-        var card = e.target.closest('.flags-card');
-        if (!card) return;
-        var v = card.getAttribute('data-value');
-        if (multiple) {
-          card.classList.toggle('selected');
-          var cur = (hidden.value || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
-          if (card.classList.contains('selected')) {
-            if (cur.indexOf(v) < 0) cur.push(v);
-          } else {
-            cur = cur.filter(function (x) { return x !== v; });
-          }
-          hidden.value = cur.join(',');
-          if (hidden.dispatchEvent) hidden.dispatchEvent(new Event('change', { bubbles: true }));
-        } else {
-          grid.querySelectorAll('.flags-card').forEach(function (c) { c.classList.remove('selected'); });
-          card.classList.add('selected');
-          updateValue(v);
-        }
-      });
-      if (searchInput) {
-        searchInput.addEventListener('input', function () {
-          var q = (searchInput.value || '').toLowerCase().trim();
-          grid.querySelectorAll('.flags-card').forEach(function (card) {
-            var lbl = (card.querySelector('.flags-card-label') || card).textContent || '';
-            card.style.display = (!q || lbl.toLowerCase().indexOf(q) >= 0) ? '' : 'none';
-          });
-        });
-      }
-      if (categorySelect) {
-        categorySelect.addEventListener('change', function () {
-          var cat = categorySelect.value || 'language';
-          wrap.setAttribute('data-flags-category', cat);
-          if (cat === 'custom') {
-            try {
-              var rawCustom = wrap.getAttribute('data-flags-custom-options');
-              options = rawCustom ? JSON.parse(rawCustom) : [];
-            } catch (e) { options = []; }
-          } else if (typeof global.FlagsData !== 'undefined' && global.FlagsData.getFlagsOptionsByCategory) {
-            options = global.FlagsData.getFlagsOptionsByCategory(cat);
-          }
-          wrap.setAttribute('data-flags-options', JSON.stringify(options));
-          renderGrid(options);
-        });
-      }
-    }
-  }
-
   var InputRegistry = {
     CONTAINER_TYPES: CONTAINER_TYPES,
     getContainerType: getContainerType,
@@ -1046,7 +906,6 @@
     getDefaultTemplates: getDefaultTemplates,
     getPropertyFamily: getPropertyFamily,
     escapeHtml: escapeHtml,
-    initFlagsGrid: initFlagsGrid,
     CONTAINER_RENDERERS: CONTAINER_RENDERERS
   };
 
