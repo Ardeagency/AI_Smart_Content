@@ -1,14 +1,14 @@
 #!/bin/bash
 #
-# build-css.sh — Genera css/bundle.css concatenando todos los CSS en orden.
+# build-css.sh — Genera css/bundle.css concatenando los CSS de css/legacy/ en orden.
 # Ejecutar desde la raiz del proyecto:  bash scripts/build-css.sh
 #
 
 set -e
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-CSS="$ROOT/css"
-OUT="$CSS/bundle.css"
+CSS="$ROOT/css/legacy"
+OUT="$ROOT/css/bundle.css"
 
 FILES=(
   "base.css"

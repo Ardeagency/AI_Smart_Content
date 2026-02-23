@@ -1488,7 +1488,7 @@
 }
 .flow-url-input:focus {
   outline: none;
-  border-color: var(--primary);
+  border-color: var(--accent-cta);
 }
 
 .field-help.block {

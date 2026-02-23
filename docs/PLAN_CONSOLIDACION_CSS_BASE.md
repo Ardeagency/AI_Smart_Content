@@ -86,10 +86,11 @@
 11. **Z-index centralizado** -- Escala redefinida en base.css: --z-nav-overlay(800), --z-nav-sidebar(850), --z-sticky(999), --z-fixed(1000), --z-nav-mobile-overlay(1001), --z-nav-mobile-sidebar(1002), --z-modal-backdrop(10000), --z-modal(10001), --z-popover(10002), --z-notification(10000). Reemplazados en app.css, navigation.css, payment-modal.css, hogar.css, brands.css, developer.css, landing.css.
 12. **Archivos no enlazados** -- payment-modal.css, login.css y style.css ya incluidos en bundle.css. Los 24 archivos individuales se mantienen para edicion; el bundle se regenera con build-css.sh.
 
-### Fase 4: No eliminar hasta validar
+### Fase 4: Validacion y organizacion final -- COMPLETADA (23 feb 2026)
 
-- **No eliminar** los CSS actuales hasta que el unico CSS este en produccion y todas las rutas se hayan comprobado.
-- Dejar los archivos en el repo como referencia o moverlos a `css/legacy/` hasta cerrar la migracion.
+13. **Validacion estructural del bundle** -- Sintaxis correcta: 2798 llaves balanceadas, sin comentarios abiertos, sin selectores vacios. 18 variables scoped (--hogar-*, --settings-*, --org-card-*, --header-height) verificadas como definidas en sus contenedores respectivos (patron valido). 1 variable huerfana (--primary) corregida a --accent-cta en developer.css.
+14. **CSS individuales movidos a `css/legacy/`** -- 24 archivos movidos. En `css/` solo queda `bundle.css`. El script `build-css.sh` actualizado para leer de `css/legacy/`.
+15. **index.html** -- Solo enlaza `/css/bundle.css` (confirmado: 1 stylesheet propio + Font Awesome externo).
 
 ---
 
