@@ -117,6 +117,10 @@
     --warm-30: rgba(212, 117, 78, 0.3);
     --warm-50: rgba(212, 117, 78, 0.5);
 
+    /* ── Degradado oficial de la plataforma (izq → der) ── */
+    --brand-gradient: linear-gradient(90deg, #ff0000 0%, #ff6500 12.5%, #ffe500 25%, #9acc00 37.5%, #00d614 50%, #00e7ff 62.5%, #0018ee 75%, #5b00ea 87.5%, #900090 100%);
+    --brand-gradient-vertical: linear-gradient(180deg, #ff0000 0%, #ff6500 12.5%, #ffe500 25%, #9acc00 37.5%, #00d614 50%, #00e7ff 62.5%, #0018ee 75%, #5b00ea 87.5%, #900090 100%);
+
     /* ── Border-radius (escala 4px) ────────── */
     --radius-xs: 4px;
     --radius-sm: 8px;
@@ -548,6 +552,36 @@ body {
     .error-icon {
         font-size: 2rem;
     }
+}
+
+/* ============================================
+   GLOBAL LOADING (línea con degradado oficial)
+   ============================================ */
+
+.global-spinner-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.85);
+    pointer-events: auto;
+}
+
+.global-spinner-line {
+    width: 60%;
+    max-width: 320px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--brand-gradient);
+    box-shadow: 0 0 16px rgba(255, 0, 0, 0.35), 0 0 32px rgba(0, 230, 255, 0.2), 0 0 48px rgba(144, 0, 144, 0.25);
+    animation: global-spinner-line-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes global-spinner-line-pulse {
+    0%, 100% { opacity: 0.85; filter: brightness(1); }
+    50%      { opacity: 1;    filter: brightness(1.15); }
 }
 
 /* ============================================
