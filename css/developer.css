@@ -2470,6 +2470,94 @@
   font-style: italic;
 }
 
+/* Image selector: carrusel horizontal (canvas + formulario consumidor) */
+.image-selector-carousel {
+  width: 100%;
+  min-width: 0;
+}
+.image-selector-carousel-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.image-selector-carousel-track {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 8px 0;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  min-height: 100px;
+}
+.image-selector-carousel-track::-webkit-scrollbar {
+  height: 6px;
+}
+.image-selector-carousel-track::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 3px;
+}
+.image-selector-carousel-track::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+.image-selector-card {
+  flex: 0 0 auto;
+  width: 100px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.image-selector-card:hover {
+  border-color: var(--dev-primary);
+  box-shadow: 0 0 0 2px rgba(224, 145, 69, 0.2);
+}
+.image-selector-card.selected {
+  border-color: var(--dev-primary);
+  box-shadow: 0 0 0 2px var(--dev-primary);
+}
+.image-selector-card-placeholder {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
+}
+.image-selector-card-placeholder .ph {
+  font-size: 1.5rem;
+}
+.image-selector-card-label {
+  display: block;
+  padding: 6px 8px;
+  font-size: 0.6875rem;
+  color: var(--text-secondary);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.image-selector-carousel--preview .image-selector-card {
+  cursor: default;
+}
+.image-selector-carousel-track--empty {
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-style: italic;
+}
+.image-selector-carousel-track--empty::before {
+  content: attr(data-empty-msg);
+}
+
 /* Chips (choice / multi-select) preview */
 .preview-chips {
   display: flex;
@@ -3276,6 +3364,16 @@
 
 .property-toggle {
   margin-bottom: 8px;
+}
+
+.property-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+}
+
+.property-toggles .property-toggle {
+  margin-bottom: 0;
 }
 
 .property-toggle label {

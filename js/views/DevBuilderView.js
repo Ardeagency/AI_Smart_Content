@@ -652,25 +652,22 @@ class DevBuilderView extends DevBaseView {
     }
   }
 
-  /** Lista canónica Builder V1; si existe InputRegistry usa la de allí, si no este fallback. */
   getDefaultTemplates() {
     if (typeof window.InputRegistry !== 'undefined' && window.InputRegistry.getDefaultTemplates) {
       return window.InputRegistry.getDefaultTemplates();
     }
     return [
-      { id: 'string', name: 'Texto', description: 'Texto (una línea, multilínea, prompt o tags según modo)', category: 'inputs', icon_name: 'textbox', base_schema: { input_type: 'string', type: 'string', data_type: 'string', mode: 'single_line', placeholder: '', maxLength: 255 } },
-      { id: 'select', name: 'Selector', description: 'Lista desplegable o chips', category: 'inputs', icon_name: 'list-bullets', base_schema: { input_type: 'select', type: 'select', data_type: 'string', ui_variant: 'dropdown', selection_mode: 'single', data_source: 'static', options: [{ value: 'opcion1', label: 'Opción 1' }, { value: 'opcion2', label: 'Opción 2' }] } },
-      { id: 'number', name: 'Número', description: 'Campo numérico o stepper', category: 'inputs', icon_name: 'hash', base_schema: { input_type: 'number', type: 'number', data_type: 'number', ui_variant: 'input', min: 0, max: 100, step: 1 } },
-      { id: 'boolean', name: 'Sí/No', description: 'Checkbox o switch', category: 'inputs', icon_name: 'check-square', base_schema: { input_type: 'boolean', type: 'boolean', data_type: 'boolean', ui_variant: 'checkbox', defaultValue: false } },
-      { id: 'radio_group', name: 'Opción única', description: 'Radio: una opción de la lista', category: 'inputs', icon_name: 'radio-button', base_schema: { input_type: 'radio_group', type: 'radio_group', data_type: 'string', options: [{ value: 'a', label: 'Opción A' }, { value: 'b', label: 'Opción B' }] } },
-      { id: 'checkbox_group', name: 'Opciones múltiples', description: 'Varias casillas por opción', category: 'inputs', icon_name: 'list-checks', base_schema: { input_type: 'checkbox_group', type: 'checkbox_group', data_type: 'array', options: [{ value: '1', label: 'Opción 1' }, { value: '2', label: 'Opción 2' }] } },
-      { id: 'range', name: 'Slider', description: 'Control deslizante min/max/step', category: 'inputs', icon_name: 'sliders', base_schema: { input_type: 'range', type: 'range', data_type: 'number', min: 0, max: 100, step: 1, defaultValue: 50 } },
-      { id: 'media_selector', name: 'Selector de medio', description: 'Imagen o galería', category: 'inputs', icon_name: 'image', base_schema: { input_type: 'media_selector', type: 'media_selector', data_type: 'object' } },
-      { id: 'file_upload', name: 'Subir archivo', description: 'Upload / import', category: 'inputs', icon_name: 'upload-simple', base_schema: { input_type: 'file_upload', type: 'file_upload', data_type: 'object' } },
-      { id: 'section', name: 'Sección', description: 'Agrupador visual', category: 'structural', icon_name: 'square', base_schema: { input_type: 'section', type: 'section' } },
-      { id: 'divider', name: 'Divisor', description: 'Línea separadora', category: 'structural', icon_name: 'minus', base_schema: { input_type: 'divider', type: 'divider' } },
-      { id: 'heading', name: 'Título', description: 'Título visual', category: 'structural', icon_name: 'type', base_schema: { input_type: 'heading', type: 'heading', text: 'Título', level: 2 } },
-      { id: 'description', name: 'Texto informativo', description: 'Bloque de texto', category: 'structural', icon_name: 'align-left', base_schema: { input_type: 'description', type: 'description', text: '' } }
+      { id: 'text', name: 'Texto Corto', description: 'Campo de texto', category: 'basic', icon_name: 'textbox', base_schema: { input_type: 'text', placeholder: '', maxLength: 255 } },
+      { id: 'textarea', name: 'Texto Largo', description: 'Área de texto', category: 'basic', icon_name: 'article', base_schema: { input_type: 'textarea', placeholder: '', rows: 4 } },
+      { id: 'select', name: 'Selector', description: 'Lista desplegable', category: 'basic', icon_name: 'list-bullets', base_schema: { input_type: 'select', options: [] } },
+      { id: 'dropdown', name: 'Dropdown', description: 'Menú desplegable', category: 'basic', icon_name: 'caret-down', base_schema: { input_type: 'dropdown', options: [{ value: 'opcion1', label: 'Opción 1' }, { value: 'opcion2', label: 'Opción 2' }] } },
+      { id: 'number', name: 'Número', description: 'Campo numérico', category: 'basic', icon_name: 'hash', base_schema: { input_type: 'number', min: 0, max: 100, step: 1 } },
+      { id: 'checkbox', name: 'Checkbox', description: 'Casilla', category: 'basic', icon_name: 'check-square', base_schema: { input_type: 'checkbox', defaultValue: false } },
+      { id: 'radio', name: 'Radio', description: 'Opciones', category: 'basic', icon_name: 'radio-button', base_schema: { input_type: 'radio', options: [] } },
+      { id: 'range', name: 'Slider', description: 'Control deslizante', category: 'advanced', icon_name: 'sliders', base_schema: { input_type: 'range', min: 0, max: 100, step: 1, defaultValue: 50 } },
+      { id: 'brand_selector', name: 'Selector de Marca', description: 'Marca del usuario', category: 'context', icon_name: 'storefront', base_schema: { input_type: 'brand_selector' } },
+      { id: 'entity_selector', name: 'Selector de Entidad', description: 'Producto/servicio', category: 'context', icon_name: 'package', base_schema: { input_type: 'entity_selector' } },
+      { id: 'audience_selector', name: 'Selector de Audiencia', description: 'Audiencia', category: 'context', icon_name: 'users', base_schema: { input_type: 'audience_selector' } }
     ];
   }
 
@@ -678,9 +675,8 @@ class DevBuilderView extends DevBaseView {
     const container = this.querySelector('#componentsList');
     if (!container) return;
     
-    // Agrupar por categoría (canónico: inputs, structural; legacy: basic, smart_text, brand, media, controls, etc.)
+    // Agrupar por categoría (taxonomía: basic, smart_text, semantic, brand, media, controls, structural)
     const groups = {
-      inputs: { name: 'Inputs', icon: 'shapes', items: [] },
       basic: { name: 'Básicos', icon: 'shapes', items: [] },
       smart_text: { name: 'Texto / IA', icon: 'terminal', items: [] },
       semantic: { name: 'Semánticos', icon: 'microphone', items: [] },
@@ -1320,17 +1316,17 @@ class DevBuilderView extends DevBaseView {
           <div class="property-field">
             <label for="propInputType">Tipo de control</label>
             <select id="propInputType">
-              <option value="string" ${this.getEffectiveCanonicalType(field) === 'string' ? 'selected' : ''}>Texto</option>
-              <option value="select" ${this.getEffectiveCanonicalType(field) === 'select' ? 'selected' : ''}>Selector</option>
-              <option value="number" ${this.getEffectiveCanonicalType(field) === 'number' ? 'selected' : ''}>Número</option>
-              <option value="boolean" ${this.getEffectiveCanonicalType(field) === 'boolean' ? 'selected' : ''}>Sí/No</option>
-              <option value="radio_group" ${this.getEffectiveCanonicalType(field) === 'radio_group' ? 'selected' : ''}>Opción única (radio)</option>
-              <option value="checkbox_group" ${this.getEffectiveCanonicalType(field) === 'checkbox_group' ? 'selected' : ''}>Opciones múltiples</option>
-              <option value="range" ${this.getEffectiveCanonicalType(field) === 'range' ? 'selected' : ''}>Slider</option>
-              <option value="media_selector" ${this.getEffectiveCanonicalType(field) === 'media_selector' ? 'selected' : ''}>Selector de medio</option>
-              <option value="file_upload" ${this.getEffectiveCanonicalType(field) === 'file_upload' ? 'selected' : ''}>Subir archivo</option>
+              <option value="text" ${(field.input_type || field.type || 'text') === 'text' ? 'selected' : ''}>Texto corto</option>
+              <option value="textarea" ${(field.input_type || field.type) === 'textarea' ? 'selected' : ''}>Texto largo</option>
+              <option value="dropdown" ${(field.input_type || field.type) === 'dropdown' ? 'selected' : ''}>Dropdown</option>
+              <option value="select" ${(field.input_type || field.type) === 'select' ? 'selected' : ''}>Selector (select)</option>
+              <option value="number" ${(field.input_type || field.type) === 'number' ? 'selected' : ''}>Número</option>
+              <option value="checkbox" ${(field.input_type || field.type) === 'checkbox' ? 'selected' : ''}>Checkbox</option>
+              <option value="radio" ${(field.input_type || field.type) === 'radio' ? 'selected' : ''}>Radio</option>
+              <option value="range" ${(field.input_type || field.type) === 'range' ? 'selected' : ''}>Slider</option>
+              <option value="image_selector" ${(field.input_type || field.type) === 'image_selector' ? 'selected' : ''}>Selector de imagen (carrusel)</option>
             </select>
-            <span class="field-help">Tipo canónico. Variantes (modo texto, dropdown/chips, etc.) se configuran abajo.</span>
+            <span class="field-help">Define si el campo es texto, dropdown, número, etc. Cambia el aspecto en el canvas y las opciones de abajo.</span>
           </div>
           
           <div class="property-field">
@@ -1393,28 +1389,13 @@ class DevBuilderView extends DevBaseView {
     this.syncDefaultValueAndExtraConfigToDom(field, dataType);
   }
 
-  /** Mapea input_type (legacy o canónico) al tipo canónico para el dropdown del panel de propiedades. */
-  getEffectiveCanonicalType(field) {
-    const t = (field.input_type || field.type || '').toLowerCase();
-    if (['string', 'text', 'textarea', 'prompt_input', 'prompt_user', 'prompt_system', 'tag_input', 'tags', 'slug_input', 'code_input'].indexOf(t) >= 0) return 'string';
-    if (['select', 'dropdown', 'multi_select', 'choice_chips', 'multi_select_chips', 'flags', 'tone_selector', 'mood_selector', 'length_selector', 'brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector'].indexOf(t) >= 0) return 'select';
-    if (['number', 'stepper_num', 'stepper', 'num_stepper', 'rating'].indexOf(t) >= 0) return 'number';
-    if (['boolean', 'checkbox', 'switch', 'toggle_switch', 'toggle'].indexOf(t) >= 0) return 'boolean';
-    if (['radio', 'radio_buttons'].indexOf(t) >= 0) return 'radio_group';
-    if (['checkbox_group', 'selection_checkboxes', 'checkboxes'].indexOf(t) >= 0) return 'checkbox_group';
-    if (['range', 'slider'].indexOf(t) >= 0) return 'range';
-    if (['media_selector', 'image_selector', 'gallery_picker', 'visual_reference'].indexOf(t) >= 0) return 'media_selector';
-    if (['file_upload', 'file', 'upload'].indexOf(t) >= 0) return 'file_upload';
-    return t || 'string';
-  }
-
   inferDataType(field) {
     const t = (field.input_type || field.type || '').toLowerCase();
     if (['number', 'range', 'stepper', 'stepper_num', 'num_stepper', 'rating', 'slider'].indexOf(t) >= 0) return 'number';
     if (['checkbox', 'switch', 'boolean', 'toggle', 'toggle_switch'].indexOf(t) >= 0) return 'boolean';
-    if (['select', 'multi_select', 'tone_selector', 'mood_selector', 'length_selector', 'radio', 'radio_group'].indexOf(t) >= 0) return 'string';
-    if (['tag_input', 'gallery_picker', 'selection_checkboxes', 'checkbox_group'].indexOf(t) >= 0) return 'array';
-    if (['brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector', 'image_selector', 'media_selector', 'file_upload'].indexOf(t) >= 0) return 'object';
+    if (['select', 'multi_select', 'tone_selector', 'mood_selector', 'length_selector', 'radio'].indexOf(t) >= 0) return 'string';
+    if (['tag_input', 'gallery_picker', 'selection_checkboxes'].indexOf(t) >= 0) return 'array';
+    if (['brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector', 'image_selector'].indexOf(t) >= 0) return 'object';
     return field.data_type || 'string';
   }
 
@@ -1422,13 +1403,26 @@ class DevBuilderView extends DevBaseView {
     const type = (field.input_type || field.type || '').toLowerCase();
     const isNumberFamily = ['number', 'range', 'stepper', 'stepper_num', 'num_stepper', 'rating', 'slider'].indexOf(type) >= 0;
     const isBooleanFamily = ['checkbox', 'switch', 'boolean', 'toggle', 'toggle_switch'].indexOf(type) >= 0;
-    const hasOptions = ['dropdown', 'select', 'radio', 'radio_group', 'tone_selector', 'mood_selector', 'length_selector'].indexOf(type) >= 0;
+    const hasOptions = ['dropdown', 'select', 'radio', 'tone_selector', 'mood_selector', 'length_selector'].indexOf(type) >= 0;
     const opts = field.options || [];
     const escapeVal = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'));
     const optVal = (o) => (o && (o.value !== undefined ? o.value : o.label !== undefined ? o.label : o));
     const optLabel = (o) => (o && (o.label !== undefined ? o.label : o.value !== undefined ? o.value : o));
     if (isNumberFamily) return '';
-    if (isBooleanFamily) return ''; /* Valor por defecto se muestra en tipo específico (propBooleanDefault) */
+    if (isBooleanFamily) {
+      const checked = field.defaultValue === true;
+      return `
+        <div class="property-field">
+          <label>Valor por defecto</label>
+          <div class="property-toggle">
+            <label>
+              <input type="checkbox" id="propDefaultValueBool" ${checked ? 'checked' : ''}>
+              <span>Activado por defecto</span>
+            </label>
+          </div>
+        </div>
+      `;
+    }
     if (hasOptions && opts.length > 0 && (dataType === 'string' || !dataType)) {
       const current = field.defaultValue != null ? String(field.defaultValue) : '';
       const optionsHtml = '<option value="">— Ninguno —</option>' + opts.map((o) => {
@@ -1507,48 +1501,48 @@ class DevBuilderView extends DevBaseView {
       case 'text':
       case 'textarea': {
         const it = (field.input_type || field.type || 'text').toLowerCase();
-        const mode = field.mode || (it === 'string' ? 'single_line' : (it === 'textarea' || it === 'prompt_input' || it === 'prompt_system' ? 'multiline' : (it === 'tags' || it === 'tag_input' ? 'tags' : 'single_line')));
-        const isLong = mode === 'multiline' || mode === 'prompt' || mode === 'code' || it === 'textarea' || it === 'prompt_input';
+        const isLong = it === 'textarea' || it === 'prompt_input' || it === 'prompt_system';
+        const currentStringType = field.html_type === 'url' ? 'website' : (it === 'prompt_input' ? 'prompt' : (it === 'prompt_system' ? 'system_prompt' : (it === 'textarea' ? 'textarea' : 'text')));
         return `
           <div class="property-group">
             <h4>Texto / String</h4>
             <div class="property-field">
-              <label for="propStringMode">Modo</label>
+              <label for="propStringMode">Modo de texto</label>
               <select id="propStringMode">
-                <option value="single_line" ${mode === 'single_line' ? 'selected' : ''}>Una línea</option>
-                <option value="multiline" ${mode === 'multiline' ? 'selected' : ''}>Multilínea</option>
-                <option value="prompt" ${mode === 'prompt' ? 'selected' : ''}>Prompt IA</option>
-                <option value="tags" ${mode === 'tags' ? 'selected' : ''}>Tags</option>
-                <option value="code" ${mode === 'code' ? 'selected' : ''}>Código</option>
+                <option value="short" ${!isLong ? 'selected' : ''}>Texto corto</option>
+                <option value="long" ${isLong ? 'selected' : ''}>Texto largo</option>
               </select>
-              <span class="field-help">single_line | multiline | prompt | tags | code</span>
+            </div>
+            <div class="property-field">
+              <label for="propStringDataType">Tipo de texto</label>
+              <select id="propStringDataType">
+                <option value="text" ${currentStringType === 'text' ? 'selected' : ''}>Texto</option>
+                <option value="textarea" ${currentStringType === 'textarea' ? 'selected' : ''}>Textarea</option>
+                <option value="website" ${currentStringType === 'website' ? 'selected' : ''}>Website</option>
+                <option value="prompt" ${currentStringType === 'prompt' ? 'selected' : ''}>Prompt</option>
+                <option value="system_prompt" ${currentStringType === 'system_prompt' ? 'selected' : ''}>System prompt</option>
+              </select>
+              <span class="field-help">Website = URL; Prompt = entrada para IA; System prompt = prompt de sistema.</span>
             </div>
             <div class="property-field">
               <label for="propMaxLength">Límite de caracteres</label>
               <input type="number" id="propMaxLength" value="${field.maxLength != null ? field.maxLength : ''}" min="1" placeholder="Sin límite">
+              <span class="field-help">Opcional. Dejar vacío para sin límite.</span>
             </div>
-            ${(isLong || mode === 'prompt' || mode === 'code') ? `
+            ${isLong ? `
               <div class="property-field">
                 <label for="propRows">Filas</label>
-                <input type="number" id="propRows" value="${field.rows != null ? field.rows : (mode === 'prompt' ? 6 : 4)}" min="2" max="20">
+                <input type="number" id="propRows" value="${field.rows != null ? field.rows : 4}" min="2" max="20">
               </div>
             ` : ''}
           </div>
         `;
       }
       
-      case 'number': {
-        const numVariant = field.ui_variant || (['stepper_num', 'stepper', 'num_stepper'].indexOf((field.input_type || '').toLowerCase()) >= 0 ? 'stepper' : 'input');
+      case 'number':
         return `
           <div class="property-group">
             <h4>Número</h4>
-            <div class="property-field">
-              <label for="propNumberVariant">Variante</label>
-              <select id="propNumberVariant">
-                <option value="input" ${numVariant === 'input' ? 'selected' : ''}>Campo numérico</option>
-                <option value="stepper" ${numVariant === 'stepper' ? 'selected' : ''}>Stepper (+/-)</option>
-              </select>
-            </div>
             <div class="property-row">
               <div class="property-field">
                 <label for="propMin">Mínimo</label>
@@ -1569,15 +1563,8 @@ class DevBuilderView extends DevBaseView {
                 <input type="number" id="propDefaultValue" value="${field.defaultValue ?? ''}">
               </div>
             </div>
-            ${numVariant === 'stepper' ? `
-            <div class="property-field">
-              <label for="propStepperUnit">Unidad (opcional)</label>
-              <input type="text" id="propStepperUnit" value="${escapeProp(field.unit || '')}" placeholder="px, %, kg">
-            </div>
-            ` : ''}
           </div>
         `;
-      }
 
       case 'stepper':
         return `
@@ -1611,30 +1598,34 @@ class DevBuilderView extends DevBaseView {
           </div>
         `;
 
-      case 'boolean':
       case 'checkbox':
-      case 'switch': {
-        const boolVariant = field.ui_variant || (['switch', 'toggle_switch', 'toggle'].indexOf((field.input_type || '').toLowerCase()) >= 0 ? 'switch' : 'checkbox');
-        const boolChecked = field.defaultValue === true || field.defaultValue === 'true';
+        const checkboxChecked = field.defaultValue === true || field.defaultValue === 'true';
         return `
           <div class="property-group">
-            <h4>Sí/No</h4>
-            <div class="property-field">
-              <label for="propBooleanVariant">Variante</label>
-              <select id="propBooleanVariant">
-                <option value="checkbox" ${boolVariant === 'checkbox' ? 'selected' : ''}>Checkbox</option>
-                <option value="switch" ${boolVariant === 'switch' ? 'selected' : ''}>Switch</option>
-              </select>
-            </div>
+            <h4>Checkbox</h4>
             <div class="property-toggle">
               <label>
-                <input type="checkbox" id="propBooleanDefault" ${boolChecked ? 'checked' : ''}>
-                <span>Activado por defecto</span>
+                <input type="checkbox" id="propCheckboxDefault" ${checkboxChecked ? 'checked' : ''}>
+                <span>Marcado por defecto</span>
               </label>
             </div>
           </div>
         `;
-      }
+
+      case 'switch':
+        const switchChecked = field.defaultValue === true || field.defaultValue === 'true';
+        return `
+          <div class="property-group">
+            <h4>Toggle / Switch</h4>
+            <div class="property-toggle">
+              <label>
+                <input type="checkbox" id="propSwitchDefault" ${switchChecked ? 'checked' : ''}>
+                <span>Activado por defecto (on)</span>
+              </label>
+            </div>
+            <span class="field-help">Estado inicial del interruptor.</span>
+          </div>
+        `;
 
       case 'range': {
         const sliderMode = field.slider_mode || field.sliderMode || 'num';
@@ -1722,33 +1713,15 @@ class DevBuilderView extends DevBaseView {
         const options = field.options || [];
         const it = (field.input_type || field.type || '').toLowerCase();
         const isSelect = it === 'select' || it === 'dropdown' || it === 'multi_select';
-        const isCanonicalSelect = it === 'select';
-        const uiVariant = field.ui_variant || 'dropdown';
-        const selectionMode = field.selection_mode || (field.is_multiple ? 'multiple' : 'single');
-        const isRadio = it === 'radio' || it === 'radio_group';
-        const isSelectionCheckboxes = it === 'selection_checkboxes' || it === 'checkbox_group';
-        const title = isSelectionCheckboxes ? 'Opciones múltiples' : (isRadio ? 'Opción única (radio)' : 'Selector');
+        const isDropdown = it === 'dropdown' || it === 'select';
+        const isRadio = it === 'radio';
+        const isSelectionCheckboxes = it === 'selection_checkboxes';
+        const title = isSelectionCheckboxes ? 'Checkboxes (opciones)' : (isRadio ? 'Radio Buttons' : (isDropdown ? 'Dropdown' : 'Lista desplegable'));
         const optVal = (o) => (o && (o.value !== undefined ? o.value : o.label !== undefined ? o.label : o));
         return `
           <div class="property-group">
             <h4>${title}</h4>
-            ${isCanonicalSelect ? `
-            <div class="property-field">
-              <label for="propSelectUiVariant">Apariencia</label>
-              <select id="propSelectUiVariant">
-                <option value="dropdown" ${uiVariant === 'dropdown' ? 'selected' : ''}>Desplegable</option>
-                <option value="chips" ${uiVariant === 'chips' ? 'selected' : ''}>Chips (pastillas)</option>
-              </select>
-            </div>
-            <div class="property-field">
-              <label for="propSelectionMode">Selección</label>
-              <select id="propSelectionMode">
-                <option value="single" ${selectionMode === 'single' ? 'selected' : ''}>Una opción</option>
-                <option value="multiple" ${selectionMode === 'multiple' ? 'selected' : ''}>Varias opciones</option>
-              </select>
-            </div>
-            ` : ''}
-            ${isSelect && !isCanonicalSelect ? `
+            ${isSelect ? `
             <div class="property-toggle" style="margin-bottom: 12px;">
               <label>
                 <input type="checkbox" id="propMultiselect" ${field.is_multiple ? 'checked' : ''}>
@@ -1830,23 +1803,75 @@ class DevBuilderView extends DevBaseView {
           const mediaSources = [
             { value: 'products', label: 'Productos' },
             { value: 'entities', label: 'Entidades (producto/servicio/lugar)' },
+            { value: 'references', label: 'Referencias' },
             { value: 'visual_reference', label: 'Referencia visual' },
             { value: 'brand', label: 'Marca' },
             { value: 'audience', label: 'Audiencia' },
             { value: 'campaign', label: 'Campaña' },
             { value: 'other', label: 'Otro' }
           ];
-          const currentMedia = field.media_source || 'other';
+          const currentMedia = field.media_source || field.function_type || 'other';
+          const selectionMode = field.image_selection_mode || field.selection_mode || 'single';
+          const inputDataMode = field.image_input_data === 'specific' ? 'specific' : 'all';
+          const filterProducts = !!field.filter_products;
+          const filterReferences = !!field.filter_references;
+          const productFields = field.image_product_fields || ['id', 'name', 'main_image'];
+          const productFieldOpts = [
+            { value: 'id', label: 'ID' },
+            { value: 'name', label: 'Nombre' },
+            { value: 'main_image', label: 'Imagen principal' },
+            { value: 'images', label: 'Imágenes' },
+            { value: 'description', label: 'Descripción' },
+            { value: 'price', label: 'Precio' },
+            { value: 'category', label: 'Categoría' }
+          ];
           html += `
             <div class="property-group">
               <h4>Selector de imagen / Carrusel</h4>
               <div class="property-field">
-                <label for="propMediaSource">Función / Origen de imágenes</label>
+                <label for="propImageSelectionMode">Tipo de selección</label>
+                <select id="propImageSelectionMode">
+                  <option value="single" ${selectionMode === 'single' ? 'selected' : ''}>Única</option>
+                  <option value="multiple" ${selectionMode === 'multiple' ? 'selected' : ''}>Múltiple</option>
+                </select>
+              </div>
+              <div class="property-field">
+                <label for="propMediaSource">Tipo de función</label>
                 <select id="propMediaSource">
                   ${mediaSources.map(function (o) {
                     return '<option value="' + o.value + '"' + (currentMedia === o.value ? ' selected' : '') + '>' + escapeProp(o.label) + '</option>';
                   }).join('')}
                 </select>
+                <span class="field-help">Productos: imagen principal por producto. Referencias: todas las imágenes de referencia (con filtro de intención).</span>
+              </div>
+              <div class="property-field">
+                <label for="propImageInputData">Input data</label>
+                <select id="propImageInputData">
+                  <option value="all" ${inputDataMode === 'all' ? 'selected' : ''}>Todos los datos del producto</option>
+                  <option value="specific" ${inputDataMode === 'specific' ? 'selected' : ''}>Seleccionar datos específicos</option>
+                </select>
+              </div>
+              <div class="property-field property-field--product-fields" id="propImageProductFieldsWrap" style="display: ${inputDataMode === 'specific' ? 'block' : 'none'};">
+                <label>Datos del producto a incluir</label>
+                <div class="property-toggles property-product-fields">
+                  ${productFieldOpts.map(function (o) {
+                    const checked = Array.isArray(productFields) && productFields.indexOf(o.value) >= 0;
+                    return '<label class="property-toggle"><input type="checkbox" data-field="' + o.value + '"' + (checked ? ' checked' : '') + '><span>' + escapeProp(o.label) + '</span></label>';
+                  }).join('')}
+                </div>
+              </div>
+              <div class="property-field">
+                <label>Activar filtro</label>
+                <div class="property-toggles">
+                  <label class="property-toggle">
+                    <input type="checkbox" id="propFilterProducts" ${filterProducts ? 'checked' : ''}>
+                    <span>Filtrar productos</span>
+                  </label>
+                  <label class="property-toggle">
+                    <input type="checkbox" id="propFilterReferences" ${filterReferences ? 'checked' : ''}>
+                    <span>Filtrar referencias</span>
+                  </label>
+                </div>
               </div>
             </div>
           `;
@@ -1894,42 +1919,32 @@ class DevBuilderView extends DevBaseView {
         const newType = e.target.value;
         field.input_type = newType;
         if (field.type !== undefined) field.type = newType;
-        if (newType === 'string') {
-          field.mode = field.mode || 'single_line';
-        }
-        if (newType === 'select') {
-          field.ui_variant = field.ui_variant || 'dropdown';
-          field.selection_mode = field.selection_mode || 'single';
-          field.data_source = field.data_source || 'static';
+        if (newType === 'dropdown' || newType === 'select') {
           if (!Array.isArray(field.options) || field.options.length === 0) {
             field.options = [{ value: 'opcion1', label: 'Opción 1' }, { value: 'opcion2', label: 'Opción 2' }];
           }
         }
-        if (newType === 'number') {
-          field.ui_variant = field.ui_variant || 'input';
+        if (newType === 'stepper_num' || newType === 'num_stepper') {
           if (field.min == null) field.min = 0;
-          if (field.max == null) field.max = 100;
+          if (field.max == null) field.max = 999;
           if (field.step == null) field.step = 1;
+          if (field.defaultValue == null) field.defaultValue = 0;
         }
-        if (newType === 'boolean') {
-          field.ui_variant = field.ui_variant || 'checkbox';
-          if (field.defaultValue == null) field.defaultValue = false;
-        }
-        if (newType === 'radio_group') {
-          if (!Array.isArray(field.options) || field.options.length === 0) {
-            field.options = [{ value: 'a', label: 'Opción A' }, { value: 'b', label: 'Opción B' }];
-          }
-        }
-        if (newType === 'checkbox_group') {
+        if (newType === 'selection_checkboxes') {
           if (!Array.isArray(field.options) || field.options.length === 0) {
             field.options = [{ value: '1', label: 'Opción 1' }, { value: '2', label: 'Opción 2' }];
           }
+          field.display_style = 'selection_checkboxes';
         }
         if (newType === 'range') {
           if (field.min == null) field.min = 0;
           if (field.max == null) field.max = 100;
           if (field.step == null) field.step = 1;
           if (field.defaultValue == null) field.defaultValue = 50;
+        }
+        if (newType === 'toggle_switch' || newType === 'switch') {
+          field.display_style = 'switch';
+          if (field.defaultValue == null) field.defaultValue = false;
         }
         this.renderPropertiesPanel();
         this.renderCanvas();
@@ -2040,20 +2055,59 @@ class DevBuilderView extends DevBaseView {
   }
 
   setupTypeSpecificListeners(field) {
-    // Text/String: modo canónico (single_line | multiline | prompt | tags | code)
+    // Text/Textarea: modo corto/largo, tipo de dato, límite, filas
     const stringModeSelect = this.querySelector('#propStringMode');
+    const stringDataTypeSelect = this.querySelector('#propStringDataType');
     const maxLengthInput = this.querySelector('#propMaxLength');
     const rowsInput = this.querySelector('#propRows');
     
     if (stringModeSelect) {
       stringModeSelect.addEventListener('change', (e) => {
-        field.mode = e.target.value;
-        if (field.input_type !== 'string') field.input_type = 'string';
-        if (field.type !== undefined) field.type = 'string';
-        if (['multiline', 'prompt', 'code'].indexOf(field.mode) >= 0 && field.rows == null) {
-          field.rows = field.mode === 'prompt' ? 6 : 4;
+        const isLong = e.target.value === 'long';
+        const tipo = stringDataTypeSelect ? stringDataTypeSelect.value : 'text';
+        if (isLong) {
+          if (tipo === 'prompt') field.input_type = 'prompt_input';
+          else if (tipo === 'system_prompt') field.input_type = 'prompt_system';
+          else field.input_type = 'textarea';
+          if (field.rows == null) field.rows = 4;
+        } else {
+          if (tipo === 'website') {
+            field.input_type = 'text';
+            field.html_type = 'url';
+          } else field.input_type = 'text';
+          field.html_type = field.html_type === 'url' ? 'url' : undefined;
+          delete field.rows;
         }
-        if (field.mode === 'single_line' || field.mode === 'tags') delete field.rows;
+        this.renderCanvas();
+        this.renderPropertiesPanel();
+        this.onFieldChange();
+      });
+    }
+    
+    if (stringDataTypeSelect) {
+      stringDataTypeSelect.addEventListener('change', (e) => {
+        const v = e.target.value;
+        if (v === 'website') {
+          field.input_type = 'text';
+          field.html_type = 'url';
+          field.rows = undefined;
+        } else if (v === 'prompt') {
+          field.input_type = 'prompt_input';
+          field.html_type = undefined;
+          if (field.rows == null) field.rows = 4;
+        } else if (v === 'system_prompt') {
+          field.input_type = 'prompt_system';
+          field.html_type = undefined;
+          if (field.rows == null) field.rows = 4;
+        } else if (v === 'textarea') {
+          field.input_type = 'textarea';
+          field.html_type = undefined;
+          if (field.rows == null) field.rows = 4;
+        } else {
+          field.input_type = 'text';
+          field.html_type = undefined;
+          field.rows = undefined;
+        }
         this.renderCanvas();
         this.renderPropertiesPanel();
         this.onFieldChange();
@@ -2122,44 +2176,19 @@ class DevBuilderView extends DevBaseView {
     if (propStepperUnit) propStepperUnit.addEventListener('input', (e) => { field.unit = e.target.value.trim() || undefined; this.onFieldChange(); });
     
     // Checkbox: valor por defecto
-    const propBooleanDefault = this.querySelector('#propBooleanDefault');
-    if (propBooleanDefault) {
-      propBooleanDefault.addEventListener('change', (e) => {
+    const propCheckboxDefault = this.querySelector('#propCheckboxDefault');
+    if (propCheckboxDefault) {
+      propCheckboxDefault.addEventListener('change', (e) => {
         field.defaultValue = e.target.checked;
         this.onFieldChange();
       });
     }
-    const propBooleanVariant = this.querySelector('#propBooleanVariant');
-    if (propBooleanVariant) {
-      propBooleanVariant.addEventListener('change', (e) => {
-        field.ui_variant = e.target.value;
-        this.renderCanvas();
-        this.onFieldChange();
-      });
-    }
-    const propNumberVariant = this.querySelector('#propNumberVariant');
-    if (propNumberVariant) {
-      propNumberVariant.addEventListener('change', (e) => {
-        field.ui_variant = e.target.value;
-        this.renderCanvas();
-        this.renderPropertiesPanel();
-        this.onFieldChange();
-      });
-    }
-    const propSelectUiVariant = this.querySelector('#propSelectUiVariant');
-    if (propSelectUiVariant) {
-      propSelectUiVariant.addEventListener('change', (e) => {
-        field.ui_variant = e.target.value;
-        this.renderCanvas();
-        this.onFieldChange();
-      });
-    }
-    const propSelectionMode = this.querySelector('#propSelectionMode');
-    if (propSelectionMode) {
-      propSelectionMode.addEventListener('change', (e) => {
-        field.selection_mode = e.target.value;
-        field.is_multiple = e.target.value === 'multiple';
-        this.renderCanvas();
+    
+    // Toggle / Switch: valor por defecto
+    const propSwitchDefault = this.querySelector('#propSwitchDefault');
+    if (propSwitchDefault) {
+      propSwitchDefault.addEventListener('change', (e) => {
+        field.defaultValue = e.target.checked;
         this.onFieldChange();
       });
     }
@@ -2343,6 +2372,51 @@ class DevBuilderView extends DevBaseView {
     if (mediaSourceSelect) {
       mediaSourceSelect.addEventListener('change', (e) => {
         field.media_source = e.target.value;
+        field.function_type = e.target.value;
+        this.renderCanvas();
+        this.onFieldChange();
+      });
+    }
+
+    const imageSelectionModeSelect = this.querySelector('#propImageSelectionMode');
+    if (imageSelectionModeSelect) {
+      imageSelectionModeSelect.addEventListener('change', (e) => {
+        field.image_selection_mode = e.target.value;
+        field.selection_mode = e.target.value;
+        this.renderCanvas();
+        this.onFieldChange();
+      });
+    }
+
+    const imageInputDataSelect = this.querySelector('#propImageInputData');
+    if (imageInputDataSelect) {
+      imageInputDataSelect.addEventListener('change', (e) => {
+        field.image_input_data = e.target.value;
+        const wrap = this.querySelector('#propImageProductFieldsWrap');
+        if (wrap) wrap.style.display = e.target.value === 'specific' ? 'block' : 'none';
+        this.onFieldChange();
+      });
+    }
+
+    this.querySelectorAll('.property-product-fields input[type="checkbox"][data-field]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        field.image_product_fields = Array.from(this.querySelectorAll('.property-product-fields input[type="checkbox"][data-field]:checked'))
+          .map(el => el.dataset.field);
+        this.onFieldChange();
+      });
+    });
+
+    const propFilterProducts = this.querySelector('#propFilterProducts');
+    if (propFilterProducts) {
+      propFilterProducts.addEventListener('change', (e) => {
+        field.filter_products = e.target.checked;
+        this.onFieldChange();
+      });
+    }
+    const propFilterReferences = this.querySelector('#propFilterReferences');
+    if (propFilterReferences) {
+      propFilterReferences.addEventListener('change', (e) => {
+        field.filter_references = e.target.checked;
         this.onFieldChange();
       });
     }
