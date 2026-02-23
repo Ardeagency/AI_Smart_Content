@@ -601,7 +601,7 @@ body {
     z-index: 2;
 }
 
-/* Línea: espectro cíclico, fluye (linear 16s), sin inicio/loop perceptible */
+/* Línea base: 1.5px, espectro ~65–70% ancho, degradado cíclico */
 .loader-line {
     position: relative;
     width: 80%;
@@ -609,73 +609,88 @@ body {
     height: 1.5px;
     background: linear-gradient(
         90deg,
-        #ff3b3b 0%,
-        #ff7a2f 12%,
-        #ffd84d 25%,
-        #9fd63c 37%,
-        #2edc78 50%,
-        #35d4ff 62%,
+        rgba(255, 255, 255, 0.9) 0%,
+        rgba(255, 255, 255, 0.4) 10%,
+        #ff3b3b 15%,
+        #ff7a2f 25%,
+        #ffd84d 35%,
+        #9fd63c 45%,
+        #2edc78 55%,
+        #35d4ff 65%,
         #2c59ff 75%,
-        #7b3cff 87%,
-        #b53cff 100%,
-        #ff3b3b 100%,
-        #ff7a2f 112%,
-        #ffd84d 125%,
-        #9fd63c 137%,
-        #2edc78 150%,
-        #35d4ff 162%,
-        #2c59ff 175%,
-        #7b3cff 187%,
-        #b53cff 200%
+        #7b3cff 85%,
+        #b53cff 95%,
+        rgba(255, 255, 255, 0.9) 100%
     );
     background-size: 200% 100%;
-    animation: spectrumFlow 16s linear infinite;
+    animation: loader-gradient-cycle 10s linear infinite;
 }
 
-@keyframes spectrumFlow {
-    0%   { background-position: 0% 0%; }
-    100% { background-position: -50% 0%; }
+@keyframes loader-gradient-cycle {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
 }
 
-/* Bloom capa 1: hereda espectro (fluye), blur 16px, respira (opacidad + scaleX) */
+/* Bloom secundario (capa profunda 18px), respira con desfase */
 .loader-line::before {
     content: "";
     position: absolute;
-    left: 0;
-    right: 0;
     top: 50%;
-    height: 20px;
-    margin-top: -10px;
+    left: 50%;
+    width: 180px;
+    height: 24px;
+    transform: translate(-50%, -50%);
     background: inherit;
-    background-size: 200% 100%;
-    animation: spectrumFlow 16s linear infinite, loader-breathe 3.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    filter: blur(16px);
-    opacity: 0.6;
-    z-index: -1;
-    transform-origin: center center;
+    filter: blur(18px);
+    opacity: 0.25;
+    z-index: -2;
+    animation: loader-breathe-bloom 3.6s cubic-bezier(0.4, 0, 0.2, 1) infinite 0.35s;
 }
 
-/* Bloom capa 2: más suave y amplia (blur 40px), solo fluye */
+/* Halo: centro ligeramente frío, expansión suave, opacidad 0.35–0.9 */
 .loader-line::after {
     content: "";
     position: absolute;
-    left: 0;
-    right: 0;
     top: 50%;
-    height: 44px;
-    margin-top: -22px;
-    background: inherit;
-    background-size: 200% 100%;
-    animation: spectrumFlow 16s linear infinite;
-    filter: blur(40px);
-    opacity: 0.15;
-    z-index: -2;
+    left: 50%;
+    width: 180px;
+    height: 28px;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(
+        ellipse at center,
+        rgba(255, 255, 255, 0.6) 0%,
+        rgba(255, 255, 255, 0.25) 35%,
+        rgba(255, 255, 255, 0.1) 55%,
+        transparent 100%
+    );
+    filter: blur(14px);
+    opacity: 0.6;
+    z-index: -1;
+    animation: loader-breathe 3.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 @keyframes loader-breathe {
-    0%   { opacity: 0.5;  transform: scaleX(1); }
-    50%  { opacity: 0.8;  transform: scaleX(1.1); }
-    100% { opacity: 0.5;  transform: scaleX(1); }
+    0%, 100% {
+        opacity: 0.35;
+        transform: translate(-50%, -50%) scaleX(0.85);
+        filter: blur(14px);
+    }
+    50% {
+        opacity: 0.9;
+        transform: translate(-50%, -50%) scaleX(1.15);
+        filter: blur(16px);
+    }
+}
+
+@keyframes loader-breathe-bloom {
+    0%, 100% {
+        opacity: 0.2;
+        transform: translate(-50%, -50%) scaleX(0.9);
+    }
+    50% {
+        opacity: 0.4;
+        transform: translate(-50%, -50%) scaleX(1.12);
+    }
 }
 
 /* ============================================
