@@ -45,7 +45,7 @@ FROM (VALUES
   ('range', 'Slider', 'controls', 'sliders', '{"input_type":"range","type":"range","data_type":"number","min":0,"max":100,"step":1,"defaultValue":50}'::jsonb, '{}'::jsonb, true, 40),
   ('toggle_switch', 'Switch on/off', 'basic', 'toggle-left', '{"input_type":"toggle_switch","type":"toggle_switch","data_type":"boolean","defaultValue":false}'::jsonb, '{}'::jsonb, true, 45),
   ('tags', 'Etiquetas', 'basic', 'tag', '{"input_type":"tags","type":"tags","data_type":"array","placeholder":"Añade tags...","defaultValue":[]}'::jsonb, '{}'::jsonb, true, 50),
-  ('flags', 'Banderas (locale/país)', 'basic', 'flag', '{"input_type":"flags","type":"flags","data_type":"string","options":[{"value":"es","label":"ES"},{"value":"en","label":"EN"}]}'::jsonb, '{}'::jsonb, true, 55),
+  ('flags', 'Idioma, país, etnia (personaje/voz). Lista masiva de banderas.', 'basic', 'flag', '{"input_type":"flags","type":"flags","data_type":"string","flag_category":"language","options":[]}'::jsonb, '{}'::jsonb, true, 55),
   ('brand_selector', 'Selector de Marca', 'brand', 'storefront', '{"input_type":"brand_selector","type":"brand_selector","data_type":"object"}'::jsonb, '{}'::jsonb, true, 140),
   ('entity_selector', 'Selector de Entidad', 'brand', 'package', '{"input_type":"entity_selector","type":"entity_selector","data_type":"object","entityTypes":["product","service"]}'::jsonb, '{}'::jsonb, true, 145),
   ('audience_selector', 'Selector de Audiencia', 'brand', 'users', '{"input_type":"audience_selector","type":"audience_selector","data_type":"object"}'::jsonb, '{}'::jsonb, true, 150),

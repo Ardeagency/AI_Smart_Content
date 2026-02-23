@@ -572,6 +572,7 @@ class DevTestView extends DevBaseView {
     if (fieldsContainer) {
       fieldsContainer.innerHTML = fields.map(field => this.renderInputField(field)).join('');
       this.setupInputListeners();
+      if (window.InputRegistry && window.InputRegistry.initFlagsGrid) window.InputRegistry.initFlagsGrid(fieldsContainer);
     }
     
     // Habilitar botón de ejecutar
@@ -649,6 +650,8 @@ class DevTestView extends DevBaseView {
       field.addEventListener('change', (e) => {
         const key = e.target.name;
         if (e.target.type === 'radio') {
+          this.testInputs[key] = e.target.value;
+        } else if (e.target.type === 'hidden' || e.target.classList.contains('flags-value-input')) {
           this.testInputs[key] = e.target.value;
         }
       });
