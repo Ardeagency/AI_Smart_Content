@@ -213,7 +213,7 @@
 .product-view-sheet {
   background: var(--living-bg-card);
   border: 1px solid var(--border-divider);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 1rem 1.25rem;
   margin-bottom: 1rem;
 }

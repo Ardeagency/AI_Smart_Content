@@ -544,7 +544,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
 .info-close-btn {
     width: 28px;
     height: 28px;
-    border-radius: 6px;
+    border-radius: 8px;
     border: 1px solid var(--border-color);
     background: transparent;
     color: var(--text-secondary);
@@ -878,7 +878,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     font-family: var(--font-mono);
     font-size: 0.8rem;
     border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: 8px;
     background: var(--bg-hover);
     color: var(--text-primary);
 }
@@ -887,7 +887,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     padding: 0.4rem 0.5rem;
     font-size: 0.75rem;
     border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: 8px;
     background: var(--bg-hover);
     color: var(--text-primary);
     cursor: pointer;
@@ -901,7 +901,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
 .color-editor-btn {
     padding: 0.5rem 1rem;
     font-size: 0.8rem;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     border: none;
 }
@@ -1357,7 +1357,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     min-width: 120px;
     padding: 0.35rem 0.5rem;
     font-size: 0.875rem;
-    border-radius: 6px;
+    border-radius: 8px;
     border: 1px solid rgba(255,255,255,0.2);
     background: rgba(0,0,0,0.2);
     color: var(--text-primary);
@@ -1368,7 +1368,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     min-width: 140px;
     padding: 0.35rem 0.5rem;
     font-size: 0.875rem;
-    border-radius: 6px;
+    border-radius: 8px;
     border: 1px solid rgba(255,255,255,0.2);
     background: rgba(0,0,0,0.2);
     color: var(--text-primary);
@@ -1377,7 +1377,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
 .brand-link-btn-add {
     padding: 0.35rem 0.75rem;
     font-size: 0.875rem;
-    border-radius: 6px;
+    border-radius: 8px;
     border: 1px solid rgba(255,255,255,0.3);
     background: rgba(255,255,255,0.1);
     color: var(--text-primary);

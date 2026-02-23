@@ -203,7 +203,7 @@
     font-weight: 600;
     text-transform: uppercase;
     padding: 0.25rem 0.5rem;
-    border-radius: 6px;
+    border-radius: 8px;
 }
 
 .org-role-owner {
@@ -227,7 +227,7 @@
     border: none;
     background: transparent;
     cursor: pointer;
-    border-radius: 6px;
+    border-radius: 8px;
 }
 
 .org-member-remove:hover {

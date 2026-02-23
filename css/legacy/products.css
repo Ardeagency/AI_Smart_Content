@@ -380,7 +380,7 @@
     justify-content: center;
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: 8px;
     color: var(--text-secondary);
     cursor: pointer;
     transition: var(--transition);
@@ -431,7 +431,7 @@
 .form-textarea,
 .form-select {
     border: 1px solid rgba(236, 235, 218, 0.3);
-    border-radius: 6px;
+    border-radius: 8px;
     transition: none !important;
     -webkit-transition: none !important;
     -moz-transition: none !important;
@@ -473,7 +473,7 @@
     padding: 0.75rem;
     background: var(--bg-secondary);
     border: 1px solid rgba(236, 235, 218, 0.3);
-    border-radius: 6px;
+    border-radius: 8px;
     color: var(--text-primary);
     font-weight: 500;
     cursor: pointer;
@@ -490,7 +490,7 @@
     padding: 0.75rem;
     background: linear-gradient(135deg, var(--accent-cta), var(--accent-cta-dark));
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     color: var(--bg-black);
     font-weight: 600;
     cursor: pointer;
@@ -585,7 +585,7 @@
     justify-content: center;
     background: rgba(255, 255, 255, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 6px;
+    border-radius: 8px;
     color: white;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -780,7 +780,7 @@
     justify-content: center;
     background: var(--bg-secondary);
     border: 1px solid rgba(236, 235, 218, 0.3);
-    border-radius: 6px;
+    border-radius: 8px;
     color: var(--text-secondary);
     cursor: pointer;
     transition: var(--transition);

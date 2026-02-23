@@ -531,7 +531,7 @@
 @media (max-width: 480px) {
     .auth-card {
         padding: 25px 20px;
-        border-radius: 15px;
+        border-radius: 16px;
     }
     
     .input-container input,

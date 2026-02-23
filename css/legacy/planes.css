@@ -105,7 +105,7 @@
 .planes-billing-toggle {
     display: inline-flex;
     background: rgba(15, 46, 34, 0.9);
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 0.25rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
     gap: 0;
@@ -358,7 +358,7 @@
     color: #ffffff;
     background: #1a1a1a;
     border: 1px solid #2d2d2d;
-    border-radius: 10px;
+    border-radius: 12px;
     outline: none;
     transition: var(--transition);
     box-sizing: border-box;
@@ -415,7 +415,7 @@
     color: #ffffff;
     background: #1f2937;
     border: 1px solid #374151;
-    border-radius: 10px;
+    border-radius: 12px;
     cursor: pointer;
     transition: var(--transition);
     box-sizing: border-box;
@@ -527,7 +527,7 @@
     background: #ffffff;
     color: #000000;
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -555,7 +555,7 @@
     gap: 0.5rem;
     background: transparent;
     border: 1px solid #2d2d2d;
-    border-radius: 10px;
+    border-radius: 12px;
     color: #ffffff;
     font-weight: 500;
     text-decoration: none;

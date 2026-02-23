@@ -278,7 +278,7 @@
 .studio-field select {
   padding: 0.5rem 0.6rem;
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: 8px;
   background: var(--bg-hover);
   color: var(--text-primary);
   font-size: 0.875rem;
@@ -301,7 +301,7 @@
 .focus-selector-accordion {
   width: 100%;
   border: 1px solid var(--border-color);
-  border-radius: 10px;
+  border-radius: 12px;
   overflow: hidden;
   background: var(--bg-card);
 }
