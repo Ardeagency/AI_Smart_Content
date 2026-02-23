@@ -8754,6 +8754,7 @@ body.sidebar-collapsed .living-container {
     line-height: 1.4;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -9942,6 +9943,7 @@ body.sidebar-collapsed .living-container {
   line-height: 1.25;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -10035,6 +10037,7 @@ body.sidebar-collapsed .living-container {
   line-height: 1.3;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -13832,6 +13835,7 @@ body.sidebar-collapsed .living-container {
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
 }
 
@@ -18519,10 +18523,6 @@ body.sidebar-collapsed .living-container {
     width: 100%;
     justify-content: center;
   }
-}
-;
-  background: var(--bg-primary);
-  border-radius: 8px;
 }
 
 .health-result-item.success i {

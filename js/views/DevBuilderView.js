@@ -1406,6 +1406,7 @@ class DevBuilderView extends DevBaseView {
     this.setupPropertiesListeners();
     this.syncDefaultValueAndExtraConfigToDom(field, dataType);
     if (window.InputRegistry && window.InputRegistry.initColorsPicker) window.InputRegistry.initColorsPicker(panel);
+    if (window.InputRegistry && window.InputRegistry.initAspectRatioPicker) window.InputRegistry.initAspectRatioPicker(panel);
   }
 
   inferDataType(field) {

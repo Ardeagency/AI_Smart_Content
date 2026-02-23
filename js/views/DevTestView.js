@@ -573,6 +573,7 @@ class DevTestView extends DevBaseView {
       fieldsContainer.innerHTML = fields.map(field => this.renderInputField(field)).join('');
       this.setupInputListeners();
       if (window.InputRegistry && window.InputRegistry.initColorsPicker) window.InputRegistry.initColorsPicker(fieldsContainer);
+      if (window.InputRegistry && window.InputRegistry.initAspectRatioPicker) window.InputRegistry.initAspectRatioPicker(fieldsContainer);
       this.populateColoresFromBrand();
     }
 
@@ -730,6 +731,9 @@ class DevTestView extends DevBaseView {
     });
     if (window.InputRegistry && window.InputRegistry.initColorsPicker) {
       window.InputRegistry.initColorsPicker(fieldsContainer);
+    }
+    if (window.InputRegistry && window.InputRegistry.initAspectRatioPicker) {
+      window.InputRegistry.initAspectRatioPicker(fieldsContainer);
     }
   }
 
@@ -1544,13 +1548,27 @@ class DevTestView extends DevBaseView {
           ).join('') + (vals.length < max
             ? '<button type="button" class="color-swatch-add-btn" title="Agregar color" aria-label="Agregar color"><span>+</span></button>'
             : '');
-          if (window.InputRegistry && window.InputRegistry.initColorsPicker) {
+if (window.InputRegistry && window.InputRegistry.initColorsPicker) {
             window.InputRegistry.initColorsPicker(wrap.closest('#formFields') || wrap.parentElement);
+          }
+          if (window.InputRegistry && window.InputRegistry.initAspectRatioPicker) {
+            window.InputRegistry.initAspectRatioPicker(wrap.closest('#formFields') || wrap.parentElement);
           }
         }
       }
+      if (field.type === 'aspect_ratio' || field.input_type === 'aspect_ratio') {
+        const grid = el.closest('.form-field')?.querySelector('.aspect-ratio-grid[data-aspect-ratio-picker="1"]');
+        if (grid) {
+          const val = String(value || '');
+          grid.querySelectorAll('.aspect-ratio-card').forEach(btn => {
+            const sel = btn.getAttribute('data-value') === val;
+            btn.classList.toggle('selected', sel);
+            btn.setAttribute('aria-pressed', sel ? 'true' : 'false');
+          });
+        }
+      }
     });
-    
+
     // Update environment
     if (testCase.environment) {
       this.setEnvironment(testCase.environment);

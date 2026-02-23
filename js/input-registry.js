@@ -457,11 +457,11 @@
       var v = o.value != null ? o.value : o;
       var vs = escapeHtml(String(v));
       var lbl = escapeHtml(o.label != null ? o.label : vs);
-      var checked = (selected === v || selected === vs) ? ' checked' : '';
-      var id = a.id + '-' + vs.replace(/:/g, '-');
-      return '<label class="aspect-ratio-card" for="' + id + '"><input type="radio" name="' + a.name + '" id="' + id + '" value="' + vs + '"' + checked + a.disabled + a.required + '><span class="aspect-ratio-icon" data-ratio="' + vs + '"></span><span class="aspect-ratio-label">' + lbl + '</span></label>';
+      var isSel = (selected === v || selected === vs);
+      return '<button type="button" class="aspect-ratio-card' + (isSel ? ' selected' : '') + '" data-value="' + vs + '"' + (a.disabled ? ' disabled' : '') + ' aria-pressed="' + (isSel ? 'true' : 'false') + '" title="' + lbl + '"><span class="aspect-ratio-icon" data-ratio="' + vs + '"></span><span class="aspect-ratio-label">' + lbl + '</span></button>';
     }).join('');
-    return '<div class="aspect-ratio-grid" role="radiogroup" aria-label="' + escapeHtml(f.label || 'Formato de producción') + '">' + cardsHtml + '</div>';
+    return '<input type="hidden" class="aspect-ratio-value" name="' + escapeHtml(a.name) + '" id="' + escapeHtml(a.id) + '" value="' + escapeHtml(selected) + '"' + (a.required ? ' required' : '') + '>' +
+      '<div class="aspect-ratio-grid" data-aspect-ratio-picker="1" data-aspect-ratio-key="' + escapeHtml(f.key || '') + '" role="group" aria-label="' + escapeHtml(f.label || 'Formato de producción') + '">' + cardsHtml + '</div>';
   }
 
   /** Choice chips (single): pill buttons, one selected */
@@ -1286,6 +1286,35 @@
     });
   }
 
+  /**
+   * Inicializa los selectores de aspect ratio (iconos/cards seleccionables, sin radios).
+   * @param {Element} root - Contenedor donde buscar (ej. #formFields o panel de propiedades)
+   */
+  function initAspectRatioPicker(root) {
+    if (!root || !root.querySelectorAll) return;
+    root.querySelectorAll('.aspect-ratio-grid[data-aspect-ratio-picker="1"]').forEach(function (grid) {
+      if (grid._aspectRatioInit) return;
+      grid._aspectRatioInit = true;
+      var hidden = grid.previousElementSibling;
+      if (!hidden || !hidden.classList.contains('aspect-ratio-value')) hidden = grid.parentElement.querySelector('.aspect-ratio-value');
+      if (!hidden) return;
+      grid.querySelectorAll('.aspect-ratio-card').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          if (btn.disabled) return;
+          var val = btn.getAttribute('data-value');
+          if (!val) return;
+          hidden.value = val;
+          grid.querySelectorAll('.aspect-ratio-card').forEach(function (b) {
+            var sel = b.getAttribute('data-value') === val;
+            b.classList.toggle('selected', sel);
+            b.setAttribute('aria-pressed', sel ? 'true' : 'false');
+          });
+          if (hidden.dispatchEvent) hidden.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+      });
+    });
+  }
+
   var InputRegistry = {
     CONTAINER_TYPES: CONTAINER_TYPES,
     getContainerType: getContainerType,
@@ -1302,6 +1331,7 @@
     getPropertyFamily: getPropertyFamily,
     escapeHtml: escapeHtml,
     initColorsPicker: initColorsPicker,
+    initAspectRatioPicker: initAspectRatioPicker,
     CONTAINER_RENDERERS: CONTAINER_RENDERERS
   };
 

@@ -274,6 +274,9 @@ class StudioView extends BaseView {
     if (window.InputRegistry && window.InputRegistry.initColorsPicker) {
       window.InputRegistry.initColorsPicker(formEl);
     }
+    if (window.InputRegistry && window.InputRegistry.initAspectRatioPicker) {
+      window.InputRegistry.initAspectRatioPicker(formEl);
+    }
 
     // Poblar carruseles, selectores de enfoque y colores por defecto desde la marca
     setTimeout(() => {
@@ -351,6 +354,9 @@ class StudioView extends BaseView {
     });
     if (window.InputRegistry && window.InputRegistry.initColorsPicker) {
       window.InputRegistry.initColorsPicker(formEl);
+    }
+    if (window.InputRegistry && window.InputRegistry.initAspectRatioPicker) {
+      window.InputRegistry.initAspectRatioPicker(formEl);
     }
   }
 
