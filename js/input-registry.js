@@ -50,6 +50,7 @@
     image_selector: 'MEDIA_CONTAINER',
     gallery_picker: 'MEDIA_CONTAINER',
     visual_reference: 'MEDIA_CONTAINER',
+    radio: 'BOOLEAN_CONTAINER',
     checkbox: 'BOOLEAN_CONTAINER',
     switch: 'BOOLEAN_CONTAINER',
     toggle_switch: 'BOOLEAN_CONTAINER',
