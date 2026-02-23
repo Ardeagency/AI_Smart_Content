@@ -1776,10 +1776,11 @@ body.has-sidebar.sidebar-collapsed #app-container {
     max-width: calc(100vw - var(--nav-width-collapsed, 72px));
 }
 
-/* Sin padding superior en Products (#app-container > div) y Living (#app-container > main); lo aplican sus contenedores internos */
+/* Sin padding superior en Products, Living y Studio; lo aplican sus contenedores internos */
 body.has-sidebar #app-container:has(> div.product-view),
 body.has-sidebar #app-container:has(> div.main-content > div.products-container),
-body.has-sidebar #app-container:has(> main.living-main-content) {
+body.has-sidebar #app-container:has(> main.living-main-content),
+body.has-sidebar #app-container:has(> div.studio-layout) {
     padding-top: 0;
 }
 
@@ -2400,10 +2401,11 @@ body.sidebar-collapsed .app-header.with-sidebar {
         padding-top: var(--app-header-height, 45.8px);
     }
 
-    /* Misma excepción en móvil: sin padding superior en Products y Living */
+    /* Misma excepción en móvil: sin padding superior en Products, Living y Studio */
     body.has-sidebar #app-container:has(> div.product-view),
     body.has-sidebar #app-container:has(> div.main-content > div.products-container),
-    body.has-sidebar #app-container:has(> main.living-main-content) {
+    body.has-sidebar #app-container:has(> main.living-main-content),
+    body.has-sidebar #app-container:has(> div.studio-layout) {
         padding-top: 0;
     }
 

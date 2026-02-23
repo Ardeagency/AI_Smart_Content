@@ -6,7 +6,7 @@
 
 .studio-layout {
   position: absolute;
-  top: 0;
+  top: var(--app-header-height, 45.8px);
   left: 0;
   right: 0;
   bottom: 0;
@@ -294,6 +294,113 @@
 .studio-field textarea {
   resize: vertical;
   min-height: 72px;
+}
+
+/* ============================================
+   Selector de enfoque (acordeón marca/campaña/producto/audiencia)
+   ============================================ */
+.focus-selector-accordion {
+  width: 100%;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-card);
+}
+
+.focus-selector-toggle-wrap {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.focus-selector-ai-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.focus-selector-ai-toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent-warm, #e09145);
+  cursor: pointer;
+}
+
+.focus-selector-ai-label {
+  user-select: none;
+}
+
+.focus-selector-ai-help {
+  margin: 8px 0 0 28px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.focus-selector-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.25s ease;
+}
+
+.focus-selector-body--open {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.focus-selector-accordion-inner {
+  padding: 14px 16px 18px;
+  border-top: 1px solid var(--border-color);
+}
+
+.focus-selector-empty-msg {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.focus-selector-section {
+  margin-bottom: 16px;
+}
+
+.focus-selector-section:last-child {
+  margin-bottom: 0;
+}
+
+.focus-selector-section-title {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  margin: 0 0 10px 0;
+}
+
+.focus-selector-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.focus-selector-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.8125rem;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.focus-selector-option input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  accent-color: var(--accent-warm, #e09145);
+  cursor: pointer;
 }
 
 @media (max-width: 900px) {
