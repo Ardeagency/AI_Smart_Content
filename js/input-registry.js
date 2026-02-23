@@ -522,17 +522,17 @@
     return '<div class="image-selector-carousel image-selector-carousel--preview" data-media-source="' + escapeHtml(source) + '" data-selection-mode="' + (multi ? 'multiple' : 'single') + '"><div class="image-selector-carousel-label">' + escapeHtml(title) + '</div><div class="image-selector-carousel-track">' + cards.join('') + '</div></div>';
   }
 
-  /** Form: carrusel horizontal para image_selector (formulario consumidor) */
+  /** Form: carrusel horizontal para image_selector (formulario consumidor).
+   * El valor seleccionado se guarda en un hidden: single = id del producto, multiple = JSON array de ids.
+   * La vista (StudioView) debe poblar el track con productos/referencias y actualizar este input al seleccionar. */
   function formImageSelectorCarousel(f, opts) {
     var a = formAttrs(f, opts || {});
     var source = f.media_source || f.function_type || 'other';
     var multi = f.image_selection_mode === 'multiple' || f.selection_mode === 'multiple';
-    var nameAttr = multi ? a.name + '[]' : a.name;
-    var inputType = multi ? 'checkbox' : 'radio';
     var placeholderLabel = getMediaSourceLabel(source);
-    return '<div class="image-selector-carousel" data-media-source="' + escapeHtml(source) + '" data-selection-mode="' + (multi ? 'multiple' : 'single') + '" data-key="' + escapeHtml(f.key || '') + '">' +
+    return '<div class="image-selector-carousel" data-media-source="' + escapeHtml(source) + '" data-selection-mode="' + (multi ? 'multiple' : 'single') + '" data-key="' + escapeHtml(f.key || '') + '" data-field-name="' + escapeHtml(a.name) + '">' +
       '<div class="image-selector-carousel-track image-selector-carousel-track--empty" data-empty-msg="' + escapeHtml(placeholderLabel) + '"></div>' +
-      (multi ? '' : '<input type="hidden" id="' + a.id + '" name="' + a.name + '" value=""' + a.disabled + a.required + '>') +
+      '<input type="hidden" id="' + a.id + '" name="' + a.name + '" value=""' + a.disabled + a.required + '>' +
       '</div>';
   }
 

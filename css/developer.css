@@ -2534,6 +2534,30 @@
 .image-selector-card-placeholder .ph {
   font-size: 1.5rem;
 }
+
+.image-selector-card-image {
+  width: 100%;
+  aspect-ratio: 1;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-tertiary);
+}
+
+.image-selector-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.image-selector-card-image .image-selector-card-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
 .image-selector-card-label {
   display: block;
   padding: 6px 8px;
@@ -2556,6 +2580,13 @@
 }
 .image-selector-carousel-track--empty::before {
   content: attr(data-empty-msg);
+}
+
+.image-selector-empty-msg {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 12px;
 }
 
 /* Chips (choice / multi-select) preview */

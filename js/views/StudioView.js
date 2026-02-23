@@ -270,6 +270,157 @@ class StudioView extends BaseView {
       el.addEventListener('input', () => this.updateCreditsDisplay());
       el.addEventListener('change', () => this.updateCreditsDisplay());
     });
+
+    // Poblar carruseles de image_selector con productos/referencias (misma lógica que biblioteca de productos)
+    setTimeout(() => this.populateImageSelectorCarousels(), 0);
+  }
+
+  /**
+   * Obtiene el primer brand_container_id de la organización (para cargar productos).
+   * Misma relación que en products.js y living.js: products.brand_container_id → brand_containers.id
+   */
+  async getBrandContainerId() {
+    if (!this.supabase || !this.organizationId) return null;
+    try {
+      const { data, error } = await this.supabase
+        .from('brand_containers')
+        .select('id')
+        .eq('organization_id', this.organizationId)
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (error || !data) return null;
+      return data.id;
+    } catch (e) {
+      console.error('Studio getBrandContainerId:', e);
+      return null;
+    }
+  }
+
+  /**
+   * Carga productos con sus imágenes (misma lógica que products.js loadProducts).
+   * Tablas: products (brand_container_id), product_images (product_id, image_url, image_type, image_order).
+   * Devuelve array de productos con .images = [{ image_url, image_type, image_order }, ...].
+   * Imagen principal: primera de la lista o la que tenga image_type === 'principal'.
+   */
+  async loadProductsWithImages(brandContainerId) {
+    if (!this.supabase || !brandContainerId) return [];
+    try {
+      const { data: products, error: productsError } = await this.supabase
+        .from('products')
+        .select('id, nombre_producto, tipo_producto, brand_container_id, created_at')
+        .eq('brand_container_id', brandContainerId)
+        .order('created_at', { ascending: false });
+
+      if (productsError || !products || products.length === 0) return [];
+
+      const productIds = products.map(p => p.id).filter(Boolean);
+      const { data: allImages, error: imagesError } = await this.supabase
+        .from('product_images')
+        .select('id, product_id, image_url, image_type, image_order')
+        .in('product_id', productIds)
+        .order('image_order', { ascending: true });
+
+      if (!imagesError && allImages && allImages.length > 0) {
+        const byProduct = {};
+        allImages.forEach(img => {
+          if (!byProduct[img.product_id]) byProduct[img.product_id] = [];
+          byProduct[img.product_id].push(img);
+        });
+        products.forEach(p => {
+          const imgs = byProduct[p.id] || [];
+          // Ordenar: principal primero, luego por image_order
+          p.images = imgs.sort((a, b) => {
+            if (a.image_type === 'principal') return -1;
+            if (b.image_type === 'principal') return 1;
+            return (a.image_order ?? 0) - (b.image_order ?? 0);
+          });
+        });
+      } else {
+        products.forEach(p => { p.images = []; });
+      }
+      return products;
+    } catch (e) {
+      console.error('Studio loadProductsWithImages:', e);
+      return [];
+    }
+  }
+
+  /**
+   * Rellena los carruseles .image-selector-carousel con productos cuando data-media-source="products".
+   * Usa la misma estructura de tarjeta que la biblioteca de productos: imagen principal (product.images[0].image_url), nombre.
+   */
+  async populateImageSelectorCarousels() {
+    const formEl = document.getElementById('studioFlowForm');
+    if (!formEl) return;
+
+    const carousels = formEl.querySelectorAll('.image-selector-carousel[data-media-source="products"]');
+    if (carousels.length === 0) return;
+
+    const brandContainerId = await this.getBrandContainerId();
+    const products = await this.loadProductsWithImages(brandContainerId);
+
+    const escapeHtml = (s) => {
+      if (s == null) return '';
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    };
+
+    carousels.forEach(carousel => {
+      const track = carousel.querySelector('.image-selector-carousel-track');
+      const hiddenInput = carousel.querySelector('input[type="hidden"]');
+      const fieldName = carousel.getAttribute('data-field-name') || (hiddenInput && hiddenInput.getAttribute('name'));
+      const isMultiple = carousel.getAttribute('data-selection-mode') === 'multiple';
+
+      if (!track) return;
+
+      track.classList.remove('image-selector-carousel-track--empty');
+      track.removeAttribute('data-empty-msg');
+
+      if (products.length === 0) {
+        track.innerHTML = '<span class="image-selector-empty-msg">No hay productos en esta marca.</span>';
+        if (hiddenInput) hiddenInput.value = isMultiple ? '[]' : '';
+        return;
+      }
+
+      const selectedIds = new Set();
+
+      track.innerHTML = products.map(product => {
+        const mainImage = product.images && product.images.length > 0 ? product.images[0].image_url : null;
+        const nombre = product.nombre_producto || 'Producto';
+        const imgHtml = mainImage
+          ? `<img src="${escapeHtml(mainImage)}" alt="${escapeHtml(nombre)}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling && (this.nextElementSibling.style.display='flex');">`
+          : '';
+        const noImageHtml = '<div class="image-selector-card-placeholder" style="' + (mainImage ? 'display:none;' : '') + '"><i class="ph ph-image"></i></div>';
+        return (
+          '<div class="image-selector-card" data-product-id="' + escapeHtml(product.id) + '" role="button" tabindex="0">' +
+          '<div class="image-selector-card-image">' + imgHtml + noImageHtml + '</div>' +
+          '<span class="image-selector-card-label">' + escapeHtml(nombre) + '</span>' +
+          '</div>'
+        );
+      }).join('');
+
+      track.querySelectorAll('.image-selector-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const id = card.getAttribute('data-product-id');
+          if (!id) return;
+          if (isMultiple) {
+            if (selectedIds.has(id)) selectedIds.delete(id);
+            else selectedIds.add(id);
+            card.classList.toggle('selected', selectedIds.has(id));
+            if (hiddenInput) hiddenInput.value = JSON.stringify(Array.from(selectedIds));
+          } else {
+            track.querySelectorAll('.image-selector-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            if (hiddenInput) hiddenInput.value = id;
+          }
+          this.updateCreditsDisplay();
+        });
+      });
+
+      if (hiddenInput) hiddenInput.value = isMultiple ? '[]' : '';
+    });
   }
 
   renderFormField(field) {
