@@ -3,13 +3,7 @@
  * AI Smart Content - Diseño futurista consistente
  */
 
-/* Importar estilos base */
-@import url('base.css');
-
-/* Variables específicas de login */
-:root {
-    --bg-primary: var(--bg-primary);
-}
+/* Variables globales en base.css :root (fuente única) */
 
 body {
     position: relative;

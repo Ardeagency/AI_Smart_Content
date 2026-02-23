@@ -3,7 +3,7 @@
  * Estilo referencia: dos columnas, panel izquierdo gradiente verde, panel derecho negro
  */
 
-@import url('base.css');
+/* Variables globales en base.css :root (fuente única) */
 
 /* ============================================
    LAYOUT PRINCIPAL

@@ -271,11 +271,87 @@ class StudioView extends BaseView {
       el.addEventListener('change', () => this.updateCreditsDisplay());
     });
 
-    // Poblar carruseles de image_selector y selectores de enfoque (acordeones marca/campaña/producto/audiencia)
+    if (window.InputRegistry && window.InputRegistry.initColorsPicker) {
+      window.InputRegistry.initColorsPicker(formEl);
+    }
+
+    // Poblar carruseles, selectores de enfoque y colores por defecto desde la marca
     setTimeout(() => {
       this.populateImageSelectorCarousels();
       this.populateFocusSelectorAccordions();
+      this.populateColoresFromBrand();
     }, 0);
+  }
+
+  /**
+   * Obtiene los hex de colores de la marca (brand_colors) para un brand_container_id. Máx. 6.
+   * Solo lectura; no modifica la marca. Usado para prellenar el campo "colores" en el formulario.
+   */
+  async getBrandColorsForContainer(brandContainerId) {
+    if (!this.supabase || !brandContainerId) return [];
+    try {
+      const { data: brand, error: e1 } = await this.supabase
+        .from('brands')
+        .select('id')
+        .eq('project_id', brandContainerId)
+        .maybeSingle();
+      if (e1 || !brand) return [];
+      const { data: colors, error: e2 } = await this.supabase
+        .from('brand_colors')
+        .select('hex_value')
+        .eq('brand_id', brand.id)
+        .order('created_at', { ascending: true });
+      if (e2 || !colors || colors.length === 0) return [];
+      const seen = new Set();
+      const hexes = [];
+      for (const row of colors) {
+        const raw = (row.hex_value || '').trim().replace(/^#/, '');
+        if (!/^[0-9A-Fa-f]{6}$/.test(raw)) continue;
+        const hex = '#' + raw;
+        if (!seen.has(hex)) {
+          seen.add(hex);
+          hexes.push(hex);
+          if (hexes.length >= 6) break;
+        }
+      }
+      return hexes;
+    } catch (e) {
+      console.error('Studio getBrandColorsForContainer:', e);
+      return [];
+    }
+  }
+
+  /**
+   * Prellena los campos "colores" vacíos con los colores de la marca. Solo afecta al valor del formulario (JSON del webhook); no modifica brand_colors.
+   */
+  async populateColoresFromBrand() {
+    const formEl = document.getElementById('studioFlowForm');
+    if (!formEl) return;
+    const wraps = formEl.querySelectorAll('.input-colors-wrap[data-colors-brand-style="1"]');
+    if (wraps.length === 0) return;
+    const brandContainerId = await this.getBrandContainerId();
+    const brandHexes = brandContainerId ? await this.getBrandColorsForContainer(brandContainerId) : [];
+    if (brandHexes.length === 0) return;
+    const maxDefault = 6;
+    const hexList = brandHexes.slice(0, maxDefault);
+    wraps.forEach(wrap => {
+      const hidden = wrap.previousElementSibling;
+      if (!hidden || !hidden.classList.contains('input-colors-value')) return;
+      const current = (hidden.value || '').split(',').map(s => s.trim()).filter(Boolean);
+      if (current.length > 0) return;
+      const max = Math.max(1, Math.min(12, parseInt(wrap.getAttribute('data-colors-max'), 10) || 6));
+      const list = hexList.slice(0, max);
+      hidden.value = list.join(',');
+      wrap._colorsInit = false;
+      wrap.innerHTML = list.map(hex =>
+        `<div class="color-swatch" style="background:${hex};" data-hex="${hex}"><button type="button" class="color-delete-btn" title="Eliminar" aria-label="Eliminar color">×</button></div>`
+      ).join('') + (list.length < max
+        ? '<button type="button" class="color-swatch-add-btn" title="Agregar color" aria-label="Agregar color"><span>+</span></button>'
+        : '');
+    });
+    if (window.InputRegistry && window.InputRegistry.initColorsPicker) {
+      window.InputRegistry.initColorsPicker(formEl);
+    }
   }
 
   /**

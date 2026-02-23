@@ -3,34 +3,7 @@
  * Estructura única con featured content, categorías y grid
  */
 
-/* ============================================
-   VARIABLES
-   ============================================ */
-:root {
-    --living-warm-1: #D4754E;
-    --living-warm-2: #C86B45;
-    --living-warm-3: #B85D3A;
-    --living-warm-4: #8B4332;
-    --living-warm-5: #5C2D22;
-    
-    --living-text-light: var(--text-primary);
-    --living-text-gold: var(--icon-button);
-    --living-text-muted: var(--text-muted);
-    --living-text-whisper: var(--text-disabled);
-    
-    --living-bg-deep: var(--bg-primary);
-    --living-bg-surface: var(--bg-secondary);
-    --living-bg-card: var(--bg-card);
-    --living-bg-card-hover: var(--bg-hover);
-    --living-bg-glass: var(--bg-card);
-    
-    --living-shadow-soft: var(--shadow-card);
-    --living-shadow-medium: var(--shadow-hover);
-    --living-shadow-deep: var(--shadow-floating);
-    
-    --living-spacing-section: 3rem;
-    --living-spacing-card: 1.5rem;
-}
+/* Variables --living-* definidas en base.css :root (fuente única) */
 
 /* ============================================
    CONTENEDOR PRINCIPAL

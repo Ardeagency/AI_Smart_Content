@@ -1,7 +1,6 @@
 /* Payment Modal Styles - Registro de Usuario con Wompi Beta */
 
-/* Importar estilos base */
-@import url('base.css');
+/* Variables globales en base.css :root (fuente única) */
 
 /* ========================
    MODAL BASE STYLES

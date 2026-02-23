@@ -3,22 +3,7 @@
  * Fondo cálido + Cards con color del sistema
  */
 
-/* ============================================
-   VARIABLES (paleta global)
-   ============================================ */
-:root {
-    /* Fondo cálido (gradientes de marca, se mantienen) */
-    --brand-warm-1: #D4754E;
-    --brand-warm-2: #C86B45;
-    --brand-warm-3: #B85D3A;
-    --brand-warm-4: #8B4332;
-    --brand-warm-5: #5C2D22;
-    
-    /* Texto e iconos: paleta global */
-    --brand-text-light: var(--text-primary);
-    --brand-text-gold: var(--text-primary);
-    --brand-text-muted: var(--text-muted);
-}
+/* Variables --brand-* definidas en base.css :root (fuente única) */
 
 /* ============================================
    CONTENEDOR PRINCIPAL

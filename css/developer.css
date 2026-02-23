@@ -3,27 +3,7 @@
  * Estilos para el portal PaaS de desarrolladores
  */
 
-/* ==========================================
-   Variables portal dev - Mismo tema que Living/Brands
-   Tema oscuro + naranja como color principal (NO morado)
-   ========================================== */
-:root {
-  /* Naranja: color principal de la plataforma (igual que hogar, living, brands) */
-  --dev-primary: var(--accent-warm);
-  --dev-primary-light: var(--accent-yellow-hover);
-  --dev-primary-dark: #c87a3a;
-  --dev-success: #10b981;
-  --dev-warning: #f59e0b;
-  --dev-error: #ef4444;
-  --dev-critical: #dc2626;
-  --dev-info: #3b82f6;
-  /* Widgets/cards: mismos colores que Living y Brands (no gris azulado) */
-  --dev-bg-card: var(--living-bg-card, rgba(21, 23, 28, 0.6));
-  --dev-bg-card-hover: var(--living-bg-card-hover, rgba(21, 23, 28, 0.8));
-  --dev-border: rgba(224, 145, 69, 0.2);
-  /* Borde sutil para cards, como en Living (no el border-color azulado de base) */
-  --dev-card-border: var(--border-divider);
-}
+/* Variables --dev-* definidas en base.css :root (fuente única) */
 
 /* ==========================================
    Navegación modo desarrollador

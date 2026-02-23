@@ -1,8 +1,7 @@
 /**
  * Studio - Panel central + footer créditos + Sidebar flujos y input_schema
  */
-@import url('base.css');
-@import url('navigation.css');
+/* Variables globales en base.css :root (fuente única) */
 
 .studio-layout {
   position: absolute;

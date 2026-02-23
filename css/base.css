@@ -1,13 +1,15 @@
 /**
- * AI Smart Content - Base
- * Solo paleta de colores grises y oscuros. El resto de estilos en app.css y vistas.
+ * AI Smart Content - Base (fuente única de verdad)
+ * Todas las variables globales de la plataforma en un solo :root.
+ * Ningún otro CSS debe redefinir :root; solo usar las variables aquí definidas.
  */
 
 /* ============================================
-   PALETA — GRISES Y OSCUROS
+   :ROOT — TOKENS GLOBALES
    ============================================ */
 :root {
-    /* Fondos */
+
+    /* ── Fondos ─────────────────────────────── */
     --bg-primary: #17141D;
     --bg-secondary: #1C1922;
     --bg-card: #212129;
@@ -16,19 +18,20 @@
     --bg-overlay: rgba(23, 20, 29, 0.9);
     --bg-black: #000000;
     --bg-dark: #0F0D12;
+    --bg-interactive: #201D26;
 
-    /* Bordes (card bordes) */
+    /* ── Bordes ─────────────────────────────── */
     --border-color: #33333B;
     --border-light: #3d3d45;
     --border-divider: #2d2d34;
 
-    /* Texto (letras) */
+    /* ── Texto ──────────────────────────────── */
     --text-primary: #D4D1D8;
     --text-secondary: rgba(212, 209, 216, 0.85);
     --text-muted: rgba(212, 209, 216, 0.6);
     --text-disabled: rgba(212, 209, 216, 0.35);
 
-    /* Iconos y botones */
+    /* ── Iconos y acentos ───────────────────── */
     --icon-button: #87868B;
     --accent-yellow: #87868B;
     --accent-yellow-hover: #9a99a0;
@@ -36,43 +39,47 @@
     --accent-warm: #87868B;
     --accent-warm-glow: transparent;
 
-    /* Aliases */
+    /* ── Aliases de color principal ──────────── */
     --primary-color: #D4D1D8;
     --primary-light: rgba(212, 209, 216, 0.95);
     --primary-hover: #D4D1D8;
 
-    /* Estados */
+    /* ── Estados ─────────────────────────────── */
     --success-color: rgba(16, 185, 129, 0.8);
     --warning-color: rgba(245, 158, 11, 0.8);
     --error-color: #ef4444;
     --info-color: rgba(59, 130, 246, 0.8);
 
-    /* Contenedores interactivos (botones, barras clicables, etc.) */
-    --bg-interactive: #201D26;
-
-    /* Sombras (#201D26) */
+    /* ── Sombras ─────────────────────────────── */
     --shadow-fill: #201D26;
     --shadow-card: 0 4px 16px rgba(32, 29, 38, 0.5);
     --shadow-hover: 0 8px 24px rgba(32, 29, 38, 0.6);
     --shadow-floating: 0 12px 32px rgba(32, 29, 38, 0.7);
     --shadow-yellow: 0 4px 16px rgba(32, 29, 38, 0.4);
+    --shadow-warm: 0 4px 16px rgba(32, 29, 38, 0.4);
     --accent-glow: transparent;
     --grid-color: rgba(212, 209, 216, 0.03);
 
-    /* Tokens mínimos (usados por otros CSS) */
+    /* ── Transiciones ────────────────────────── */
     --transition: all 0.2s ease;
     --transition-fast: all 0.15s ease;
     --transition-slow: all 0.5s ease;
+
+    /* ── Espaciado ───────────────────────────── */
     --spacing-xs: 0.25rem;
     --spacing-sm: 0.5rem;
     --spacing-md: 1rem;
     --spacing-lg: 1.5rem;
     --spacing-xl: 2rem;
     --spacing-2xl: 3rem;
+
+    /* ── Bordes redondeados ──────────────────── */
     --border-radius: 12px;
     --border-radius-sm: 8px;
     --border-radius-lg: 16px;
     --border-radius-full: 9999px;
+
+    /* ── Z-index (escalera) ──────────────────── */
     --z-base: 1;
     --z-dropdown: 100;
     --z-sticky: 200;
@@ -81,6 +88,83 @@
     --z-modal: 500;
     --z-popover: 600;
     --z-tooltip: 700;
+
+    /* ── Breakpoints (referencia; no usables en @media, pero documentan el estándar) ── */
+    --bp-sm: 480px;
+    --bp-md: 768px;
+    --bp-lg: 1024px;
+    --bp-xl: 1200px;
+    --bp-2xl: 1600px;
+
+    /* ── Navegación / sidebar ────────────────── */
+    --nav-width: 260px;
+    --nav-width-collapsed: 51px;
+    --nav-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --nav-overlay: rgba(0, 0, 0, 0.8);
+    --nav-bg: var(--bg-primary);
+    --nav-border: var(--border-divider);
+    --nav-separator: var(--border-divider);
+    --nav-item-height: 44px;
+    --nav-item-height-sub: 36px;
+    --app-header-height: 45.8px;
+    --sidebar-background: var(--bg-primary);
+    --sidebar-hover: rgba(255, 255, 255, 0.08);
+    --sidebar-active: rgba(255, 255, 255, 0.08);
+    --sidebar-icon-color: var(--text-secondary);
+    --sidebar-text-primary: var(--text-primary);
+    --sidebar-text-secondary: var(--text-secondary);
+
+    /* ── Paleta cálida (canónica — usada por living, brands, hogar, developer) ── */
+    --warm-1: #D4754E;
+    --warm-2: #C86B45;
+    --warm-3: #B85D3A;
+    --warm-4: #8B4332;
+    --warm-5: #5C2D22;
+
+    /* Aliases living (para retrocompatibilidad con living.css, hogar.css, developer.css, etc.) */
+    --living-warm-1: var(--warm-1);
+    --living-warm-2: var(--warm-2);
+    --living-warm-3: var(--warm-3);
+    --living-warm-4: var(--warm-4);
+    --living-warm-5: var(--warm-5);
+    --living-text-light: var(--text-primary);
+    --living-text-gold: var(--icon-button);
+    --living-text-muted: var(--text-muted);
+    --living-text-whisper: var(--text-disabled);
+    --living-bg-deep: var(--bg-primary);
+    --living-bg-surface: var(--bg-secondary);
+    --living-bg-card: var(--bg-card);
+    --living-bg-card-hover: var(--bg-hover);
+    --living-bg-glass: var(--bg-card);
+    --living-shadow-soft: var(--shadow-card);
+    --living-shadow-medium: var(--shadow-hover);
+    --living-shadow-deep: var(--shadow-floating);
+    --living-spacing-section: 3rem;
+    --living-spacing-card: 1.5rem;
+
+    /* Aliases brands (misma paleta cálida) */
+    --brand-warm-1: var(--warm-1);
+    --brand-warm-2: var(--warm-2);
+    --brand-warm-3: var(--warm-3);
+    --brand-warm-4: var(--warm-4);
+    --brand-warm-5: var(--warm-5);
+    --brand-text-light: var(--text-primary);
+    --brand-text-gold: var(--text-primary);
+    --brand-text-muted: var(--text-muted);
+
+    /* Aliases developer (portal PaaS) */
+    --dev-primary: var(--accent-warm);
+    --dev-primary-light: var(--accent-yellow-hover);
+    --dev-primary-dark: #c87a3a;
+    --dev-success: #10b981;
+    --dev-warning: #f59e0b;
+    --dev-error: #ef4444;
+    --dev-critical: #dc2626;
+    --dev-info: #3b82f6;
+    --dev-bg-card: var(--living-bg-card);
+    --dev-bg-card-hover: var(--living-bg-card-hover);
+    --dev-border: rgba(224, 145, 69, 0.2);
+    --dev-card-border: var(--border-divider);
 }
 
 /* ============================================

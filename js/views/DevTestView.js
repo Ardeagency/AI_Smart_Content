@@ -568,13 +568,14 @@ class DevTestView extends DevBaseView {
     if (empty) empty.style.display = 'none';
     if (form) form.style.display = 'block';
     
-    // Renderizar campos
+// Renderizar campos
     if (fieldsContainer) {
       fieldsContainer.innerHTML = fields.map(field => this.renderInputField(field)).join('');
       this.setupInputListeners();
       if (window.InputRegistry && window.InputRegistry.initColorsPicker) window.InputRegistry.initColorsPicker(fieldsContainer);
+      this.populateColoresFromBrand();
     }
-    
+
     // Habilitar botón de ejecutar
     if (runBtn) runBtn.removeAttribute('disabled');
     
@@ -654,6 +655,82 @@ class DevTestView extends DevBaseView {
         }
       });
     });
+  }
+
+  /**
+   * Obtiene los hex de colores de la marca para el usuario actual (primer brand_container). Máx. 6. Solo lectura.
+   */
+  async getBrandColorsForUser() {
+    if (!this.supabase || !this.userId) return [];
+    try {
+      const { data: container, error: e0 } = await this.supabase
+        .from('brand_containers')
+        .select('id')
+        .eq('user_id', this.userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (e0 || !container) return [];
+      const { data: brand, error: e1 } = await this.supabase
+        .from('brands')
+        .select('id')
+        .eq('project_id', container.id)
+        .maybeSingle();
+      if (e1 || !brand) return [];
+      const { data: colors, error: e2 } = await this.supabase
+        .from('brand_colors')
+        .select('hex_value')
+        .eq('brand_id', brand.id)
+        .order('created_at', { ascending: true });
+      if (e2 || !colors || colors.length === 0) return [];
+      const seen = new Set();
+      const hexes = [];
+      for (const row of colors) {
+        const raw = (row.hex_value || '').trim().replace(/^#/, '');
+        if (!/^[0-9A-Fa-f]{6}$/.test(raw)) continue;
+        const hex = '#' + raw;
+        if (!seen.has(hex)) {
+          seen.add(hex);
+          hexes.push(hex);
+          if (hexes.length >= 6) break;
+        }
+      }
+      return hexes;
+    } catch (e) {
+      console.error('DevTest getBrandColorsForUser:', e);
+      return [];
+    }
+  }
+
+  /**
+   * Prellena los campos "colores" vacíos con los colores de la marca del usuario. Solo afecta al valor del formulario (JSON del webhook); no modifica brand_colors.
+   */
+  async populateColoresFromBrand() {
+    const fieldsContainer = this.querySelector('#formFields');
+    if (!fieldsContainer) return;
+    const wraps = fieldsContainer.querySelectorAll('.input-colors-wrap[data-colors-brand-style="1"]');
+    if (wraps.length === 0) return;
+    const brandHexes = await this.getBrandColorsForUser();
+    if (brandHexes.length === 0) return;
+    const hexList = brandHexes.slice(0, 6);
+    wraps.forEach(wrap => {
+      const hidden = wrap.previousElementSibling;
+      if (!hidden || !hidden.classList.contains('input-colors-value')) return;
+      const current = (hidden.value || '').split(',').map(s => s.trim()).filter(Boolean);
+      if (current.length > 0) return;
+      const max = Math.max(1, Math.min(12, parseInt(wrap.getAttribute('data-colors-max'), 10) || 6));
+      const list = hexList.slice(0, max);
+      hidden.value = list.join(',');
+      wrap._colorsInit = false;
+      wrap.innerHTML = list.map(hex =>
+        `<div class="color-swatch" style="background:${hex};" data-hex="${hex}"><button type="button" class="color-delete-btn" title="Eliminar" aria-label="Eliminar color">×</button></div>`
+      ).join('') + (list.length < max
+        ? '<button type="button" class="color-swatch-add-btn" title="Agregar color" aria-label="Agregar color"><span>+</span></button>'
+        : '');
+    });
+    if (window.InputRegistry && window.InputRegistry.initColorsPicker) {
+      window.InputRegistry.initColorsPicker(fieldsContainer);
+    }
   }
 
   collectInputs() {

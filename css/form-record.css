@@ -2,7 +2,7 @@
  * Form Org - Estilo tipo lexaboard: fondo oscuro, gradiente, rejilla, formulario centrado.
  */
 
-@import url('base.css');
+/* Variables globales en base.css :root (fuente única) */
 
 /* Fondo: oscuro con gradientes (azul arriba-izq, púrpura arriba-derecha) y rejilla sutil */
 .form-record-container {

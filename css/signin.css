@@ -3,7 +3,7 @@
  * Usa base.css y misma estructura que form-record.
  */
 
-@import url('base.css');
+/* Variables globales en base.css :root (fuente única) */
 
 /* Contenedor: fondo oscuro con gradientes (azul arriba-izq, púrpura arriba-derecha) y rejilla */
 .signin-container {

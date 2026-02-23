@@ -2,30 +2,7 @@
    SISTEMA DE NAVEGACIÓN AI SMART CONTENT
    ========================================= */
 
-/* Importar estilos base */
-@import url('base.css');
-
-/* Variables específicas para navegación */
-:root {
-    /* Width states (spec: expanded 260px, collapsed 51px) */
-    --nav-width: 260px;
-    --nav-width-collapsed: 51px;
-    --nav-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --nav-overlay: rgba(0, 0, 0, 0.8);
-    --nav-bg: var(--bg-primary);
-    --nav-border: var(--border-divider);
-    --nav-separator: var(--border-divider);
-    --nav-item-height: 44px;
-    --nav-item-height-sub: 36px;
-    --app-header-height: 45.8px;
-    /* Design tokens sidebar (spec) */
-    --sidebar-background: var(--bg-primary);
-    --sidebar-hover: rgba(255, 255, 255, 0.08);
-    --sidebar-active: rgba(255, 255, 255, 0.08);
-    --sidebar-icon-color: var(--text-secondary);
-    --sidebar-text-primary: var(--text-primary);
-    --sidebar-text-secondary: var(--text-secondary);
-}
+/* Variables --nav-* y --sidebar-* definidas en base.css :root (fuente única) */
 
 /* =========================================
    HEADER PRINCIPAL

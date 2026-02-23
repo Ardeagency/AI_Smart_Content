@@ -105,25 +105,15 @@ Hoy **todas las hojas se cargan en todas las rutas**; no hay carga por ruta. Un 
 
 ## 4. Plan de acciones (consolidación en base.css)
 
-### Fase 0: Preparación (sin tocar aún los demás CSS)
+### Fase 0: Preparación — ✅ COMPLETADA (23 feb 2025)
 
-1. **Documentar variables globales únicas**
-   - Listar todas las variables `--*` que aparecen en los 24 CSS (ya parcialmente en §2.2).
-   - Decidir nombres canónicos en base.css (p. ej. un solo set --warm-1..5 y que living/brands/developer referencien).
+1. ✅ **Variables globales documentadas** — nombres canónicos decididos: --warm-1..5 (canónicas), --living-warm-* / --brand-warm-* / --dev-* como aliases.
 
-2. **Definir en base.css lo que falta**
-   - Añadir `--shadow-warm` (o alias a --shadow-yellow) para planes.css.
-   - Añadir breakpoints como variables opcionales: --bp-sm, --bp-md, --bp-lg, --bp-xl.
-   - Añadir variables de navegación que hoy solo están en navigation.css: --nav-width, --nav-width-collapsed, --sidebar-*, etc., para que navigation.css solo use esas variables y no redefina :root.
+2. ✅ **Variables faltantes añadidas a base.css** — --shadow-warm, breakpoints (--bp-sm..2xl), variables de navegación (--nav-*, --sidebar-*, --app-header-height).
 
-3. **Unificar paleta cálida en base.css**
-   - Definir una sola vez --warm-1 … --warm-5 (o --living-warm-* como canónicas).
-   - En brands.css y living.css: eliminar :root propio y usar las de base (o alias --brand-warm-*: var(--warm-*)).
-   - Asegurar que developer.css siga teniendo --living-bg-deep, --living-bg-card (definidas en base o en living y luego base las incluye).
+3. ✅ **Paleta cálida unificada** — :root de living.css, brands.css, developer.css, navigation.css y login.css eliminados; todas sus variables ahora viven en base.css :root.
 
-4. **Eliminar @import de base en el resto**
-   - Quitar `@import url('base.css');` de: studio.css, navigation.css, form-record.css, signin.css, planes.css, payment-modal.css, login.css, style.css.
-   - base.css se cargará solo desde index.html (primera posición). Así no hay doble evaluación.
+4. ✅ **@import url('base.css') eliminados** — quitados de: studio, navigation, form-record, signin, planes, payment-modal, login, style. base.css se carga solo desde index.html.
 
 ### Fase 1: base.css como única fuente de verdad (variables + reset + global)
 
