@@ -280,7 +280,7 @@ class Navigation {
         <div class="header-content">
           <div class="header-left">
             <div class="header-logo">
-              <span class="logo-text">AI SMART CONTENT</span>
+              <img src="/recursos/Recursos%20de%20Marca/Recursos/logo-02.svg" alt="AI Smart Content" class="header-logo-img">
             </div>
           </div>
           <div class="header-right">

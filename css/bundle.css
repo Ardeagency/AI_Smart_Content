@@ -2458,6 +2458,12 @@ body.sidebar-collapsed .app-header.with-sidebar {
     letter-spacing: 0.5px;
 }
 
+.app-header .header-logo .header-logo-img {
+    height: 32px;
+    width: auto;
+    display: block;
+}
+
 /* Oculto por defecto (solo header sin sidebar, ej. Hogar) */
 .app-header .header-hamburger {
     display: none;
@@ -3937,6 +3943,14 @@ body.sidebar-collapsed .app-header.with-sidebar {
     font-weight: 600;
     color: var(--text-primary);
     letter-spacing: -0.02em;
+}
+
+.signin-brand-logo {
+    max-height: 2.5rem;
+    height: auto;
+    width: auto;
+    max-width: 100%;
+    display: block;
 }
 
 /* Banner de contraseña actualizada */
