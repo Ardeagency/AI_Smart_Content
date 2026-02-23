@@ -555,8 +555,8 @@ body {
 }
 
 /* ============================================
-   GLOBAL LOADING (beam: luz blanca → prisma → degradado espectral)
-   Línea 100% ancho, glow, pulso y destello que viaja
+   GLOBAL LOADING (beam: luz → refracción → espectro)
+   Punto de refracción, profundidad izquierda, espectro animado, bloom, grano
    ============================================ */
 
 .global-spinner-overlay {
@@ -570,13 +570,28 @@ body {
     pointer-events: auto;
 }
 
-/* Gradiente ambiental (no negro plano) */
+/* Capa 1 – Halo atmosférico */
 .global-spinner-overlay::before {
     content: "";
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.05), transparent 60%);
+    background: radial-gradient(
+        circle at center,
+        rgba(255, 255, 255, 0.08),
+        transparent 60%
+    );
     pointer-events: none;
+}
+
+/* Capa 3 – Micro grano cinematográfico (SVG noise inline) */
+.global-spinner-overlay::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+    opacity: 0.035;
+    pointer-events: none;
+    z-index: 2;
 }
 
 .loader {
@@ -592,7 +607,6 @@ body {
     position: relative;
     width: 100%;
     height: 2px;
-    /* Gradiente completo para que ::after (glow) herede */
     background: linear-gradient(
         to right,
         #ffffff 0%,
@@ -610,31 +624,61 @@ body {
     animation: beam-pulse 3s ease-in-out infinite;
 }
 
-/* Glow / halo cinemático */
+/* Capa 2 – Bloom real (drop-shadow en lugar de blur plano) */
 .beam::after {
     content: "";
     position: absolute;
     top: 50%;
     left: 0;
     right: 0;
-    height: 14px;
+    height: 16px;
     transform: translateY(-50%);
     background: inherit;
-    filter: blur(12px);
-    opacity: 0.6;
+    filter: blur(6px)
+        drop-shadow(0 0 6px rgba(255, 255, 255, 0.6))
+        drop-shadow(0 0 20px rgba(255, 255, 255, 0.3));
+    opacity: 0.7;
     z-index: -1;
+    animation: glow-breathe 3s ease-in-out infinite;
 }
 
+@keyframes glow-breathe {
+    0%, 100% { opacity: 0.55; }
+    50%      { opacity: 0.75; }
+}
+
+/* Izquierda: núcleo blanco intenso, halo, decaimiento progresivo + blur detrás */
 .beam-left {
     position: absolute;
     left: 0;
     top: 0;
     width: 50%;
     height: 100%;
-    background: linear-gradient(to right, #ffffff, rgba(255, 255, 255, 0.6));
+    background: linear-gradient(
+        to right,
+        rgba(255, 255, 255, 1) 0%,
+        rgba(255, 255, 255, 0.9) 30%,
+        rgba(255, 255, 255, 0.4) 60%,
+        rgba(255, 255, 255, 0) 100%
+    );
     pointer-events: none;
 }
 
+.beam-left::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    height: 24px;
+    transform: translateY(-50%);
+    background: inherit;
+    filter: blur(10px);
+    opacity: 0.5;
+    z-index: -1;
+}
+
+/* Derecha: espectro con más intensidad en azul/violeta + animación de flujo */
 .beam-right {
     position: absolute;
     right: 0;
@@ -649,36 +693,129 @@ body {
         #9acc00,
         #00d614,
         #00e7ff,
+        #0088ff,
         #0018ee,
+        #4000c0,
         #5b00ea,
         #900090
     );
+    background-size: 200% 100%;
+    animation: spectrum-flow 6s linear infinite;
     pointer-events: none;
 }
 
-@keyframes beam-pulse {
-    0%, 100% { opacity: 0.7; transform: scaleX(1); }
-    50%      { opacity: 1;   transform: scaleX(1.03); }
+.beam-right::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    height: 14px;
+    transform: translateY(-50%);
+    background: inherit;
+    filter: blur(8px)
+        drop-shadow(0 0 8px rgba(0, 24, 238, 0.4))
+        drop-shadow(0 0 16px rgba(91, 0, 234, 0.3));
+    opacity: 0.5;
+    z-index: -1;
+    animation: glow-breathe 3s ease-in-out infinite 0.3s;
 }
 
-/* Destello que viaja por la línea */
+@keyframes spectrum-flow {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+}
+
+/* Punto de refracción: micro hotspot + 1px más grosor + lens flare sutil */
+.beam-refraction {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 6px;
+    height: 3px;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(
+        ellipse 80% 100% at center,
+        rgba(255, 255, 255, 1),
+        rgba(255, 255, 255, 0.7) 40%,
+        transparent 70%
+    );
+    box-shadow: 0 0 12px 2px rgba(255, 255, 255, 0.5),
+                0 0 24px 4px rgba(255, 255, 255, 0.2);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.beam-refraction::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 40px;
+    height: 2px;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(
+        to right,
+        transparent 0%,
+        rgba(255, 255, 255, 0.15) 30%,
+        rgba(255, 255, 255, 0.35) 50%,
+        rgba(255, 255, 255, 0.15) 70%,
+        transparent 100%
+    );
+    filter: blur(2px);
+}
+
+@keyframes beam-pulse {
+    0%, 100% { opacity: 0.75; transform: scaleX(1); }
+    50%      { opacity: 1;   transform: scaleX(1.02); }
+}
+
+/* Destello viajero: nace izquierda, cruza, se refracta (visible + trail) */
 .spark {
     position: absolute;
     top: 50%;
     left: -10%;
-    width: 80px;
-    height: 4px;
+    width: 100px;
+    height: 6px;
     transform: translateY(-50%);
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.95), transparent 70%);
-    filter: blur(6px);
+    background: radial-gradient(
+        ellipse 100% 100% at center,
+        rgba(255, 255, 255, 0.98),
+        rgba(255, 255, 255, 0.5) 30%,
+        transparent 70%
+    );
+    filter: blur(4px)
+        drop-shadow(0 0 4px rgba(255, 255, 255, 0.8));
     animation: spark-travel 2.5s linear infinite;
     pointer-events: none;
+    z-index: 2;
+}
+
+/* Cola de color del spark (se mueve con el spark, no animar por separado) */
+.spark::after {
+    content: "";
+    position: absolute;
+    left: -20%;
+    top: 0;
+    width: 140%;
+    height: 100%;
+    background: linear-gradient(
+        to right,
+        transparent 0%,
+        transparent 40%,
+        rgba(255, 230, 0, 0.35) 50%,
+        rgba(0, 232, 255, 0.3) 58%,
+        rgba(91, 0, 234, 0.35) 66%,
+        transparent 75%,
+        transparent 100%
+    );
+    filter: blur(6px);
 }
 
 @keyframes spark-travel {
     0%   { left: -10%; opacity: 0; }
-    15%  { opacity: 1; }
-    85%  { opacity: 1; }
+    12%  { opacity: 1; }
+    88%  { opacity: 1; }
     100% { left: 110%; opacity: 0; }
 }
 
