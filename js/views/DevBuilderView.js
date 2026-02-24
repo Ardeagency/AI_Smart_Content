@@ -306,6 +306,15 @@ class DevBuilderView extends DevBaseView {
                   </div>
                 <div id="techDetailsFormWrap" class="tech-details-form" style="display: none;">
                   <div class="settings-field">
+                    <label for="techDetailsWebhookMethod">Método HTTP</label>
+                    <select id="techDetailsWebhookMethod">
+                      <option value="POST">POST</option>
+                      <option value="GET">GET</option>
+                      <option value="PUT">PUT</option>
+                      <option value="PATCH">PATCH</option>
+                    </select>
+                  </div>
+                  <div class="settings-field">
                     <label for="techDetailsPlatformName">Plataforma</label>
                     <select id="techDetailsPlatformName">
                       <option value="n8n">n8n</option>

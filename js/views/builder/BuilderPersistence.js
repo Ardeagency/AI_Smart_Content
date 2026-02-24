@@ -90,12 +90,13 @@
         const moduleIds = modulesList.map(m => m.id);
         const { data: techDetailsList } = await this.supabase
           .from('flow_technical_details')
-          .select('id, flow_module_id, platform_name, platform_flow_id, platform_flow_name, editor_url, credential_id, is_healthy, last_health_check, avg_execution_time_ms')
+          .select('id, flow_module_id, webhook_method, platform_name, platform_flow_id, platform_flow_name, editor_url, credential_id, is_healthy, last_health_check, avg_execution_time_ms')
           .in('flow_module_id', moduleIds);
         this.flowTechnicalDetailsByModule = {};
         (techDetailsList || []).forEach(t => {
           this.flowTechnicalDetailsByModule[t.flow_module_id] = {
             id: t.id,
+            webhook_method: (t.webhook_method || 'POST').toUpperCase(),
             platform_name: t.platform_name || 'n8n',
             platform_flow_id: t.platform_flow_id || '',
             platform_flow_name: t.platform_flow_name || '',
@@ -109,7 +110,7 @@
         this.technicalDetails = {
           webhook_url_test: first.webhook_url_test || '',
           webhook_url_prod: first.webhook_url_prod || '',
-          webhook_method: 'POST',
+          webhook_method: (this.flowTechnicalDetailsByModule[first.id]?.webhook_method || 'POST').toUpperCase(),
           platform_name: this.flowTechnicalDetailsByModule[first.id]?.platform_name || 'n8n',
           editor_url: this.flowTechnicalDetailsByModule[first.id]?.editor_url || ''
         };
@@ -385,6 +386,7 @@
         const td = this.flowTechnicalDetailsByModule[key] || {};
         const techPayload = {
           flow_module_id: mod.id,
+          webhook_method: (td.webhook_method || 'POST').toUpperCase(),
           platform_name: td.platform_name || 'n8n',
           platform_flow_id: td.platform_flow_id || null,
           platform_flow_name: td.platform_flow_name || null,

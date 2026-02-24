@@ -17141,6 +17141,20 @@ body.sidebar-collapsed .living-container {
   gap: 8px;
 }
 
+.history-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px;
+  border-top: 1px solid var(--border-color);
+}
+
+.history-page-info {
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+}
+
 .history-loading {
   display: flex;
   flex-direction: column;

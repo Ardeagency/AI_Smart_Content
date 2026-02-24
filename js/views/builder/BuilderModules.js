@@ -175,7 +175,7 @@
         }
       };
     }
-    const fieldIds = ['techDetailsPlatformName', 'techDetailsPlatformFlowId', 'techDetailsPlatformFlowName', 'techDetailsEditorUrl', 'techDetailsCredentialId', 'techDetailsIsHealthy', 'techDetailsAvgExecutionTimeMs'];
+    const fieldIds = ['techDetailsWebhookMethod', 'techDetailsPlatformName', 'techDetailsPlatformFlowId', 'techDetailsPlatformFlowName', 'techDetailsEditorUrl', 'techDetailsCredentialId', 'techDetailsIsHealthy', 'techDetailsAvgExecutionTimeMs'];
     fieldIds.forEach(id => {
       const el = this.querySelector(`#${id}`);
       if (el) {
@@ -217,6 +217,7 @@
 
   P.getTechDetailsDefault = function () {
     return {
+      webhook_method: 'POST',
       platform_name: 'n8n',
       platform_flow_id: '',
       platform_flow_name: '',
@@ -236,6 +237,7 @@
     const t = this.flowTechnicalDetailsByModule[moduleKey];
     const set = (id, value) => { const el = this.querySelector(`#${id}`); if (el) el.value = value ?? ''; };
     const setCheck = (id, value) => { const el = this.querySelector(`#${id}`); if (el) el.checked = !!value; };
+    set('techDetailsWebhookMethod', t.webhook_method || 'POST');
     set('techDetailsPlatformName', t.platform_name);
     set('techDetailsPlatformFlowId', t.platform_flow_id);
     set('techDetailsPlatformFlowName', t.platform_flow_name);
@@ -255,6 +257,7 @@
     const t = this.flowTechnicalDetailsByModule[this.technicalDetailsPanelModuleKey];
     const get = (id) => { const el = this.querySelector(`#${id}`); return el ? el.value : ''; };
     const getCheck = (id) => { const el = this.querySelector(`#${id}`); return el ? el.checked : false; };
+    t.webhook_method = (get('techDetailsWebhookMethod') || 'POST').toUpperCase();
     t.platform_name = get('techDetailsPlatformName') || 'n8n';
     t.platform_flow_id = get('techDetailsPlatformFlowId') || '';
     t.platform_flow_name = get('techDetailsPlatformFlowName') || '';
@@ -265,6 +268,7 @@
     t.avg_execution_time_ms = avg === '' ? '' : parseInt(avg, 10);
     const firstKey = this.flowModules[0]?.id || 'idx_0';
     if (this.technicalDetailsPanelModuleKey === firstKey) {
+      this.technicalDetails.webhook_method = t.webhook_method || 'POST';
       this.technicalDetails.platform_name = t.platform_name || 'n8n';
       this.technicalDetails.editor_url = t.editor_url || '';
     }

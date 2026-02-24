@@ -41,6 +41,15 @@ class DevTestView extends DevBaseView {
     this.startTime = null;
     this.elapsedTime = 0;
     this.timerInterval = null;
+
+    // Opciones de ejecución (timeout segundos, reintentos)
+    this.testTimeoutSec = 120;
+    this.testMaxRetries = 3;
+
+    // Paginación historial
+    this.historyPage = 0;
+    this.historyPageSize = 20;
+    this.historyTotalCount = 0;
   }
 
   onLeave() {
@@ -134,6 +143,23 @@ class DevTestView extends DevBaseView {
               <div class="webhook-info" id="webhookInfo">
                 <span class="webhook-label">Webhook:</span>
                 <span class="webhook-url" id="webhookUrl">No configurado</span>
+              </div>
+            </section>
+
+            <!-- Opciones de ejecución -->
+            <section class="config-section">
+              <h3><i class="ph ph-sliders"></i> Ejecución</h3>
+              <div class="form-field">
+                <label for="testTimeoutSec">Timeout (seg)</label>
+                <input type="number" id="testTimeoutSec" min="5" max="300" value="120" title="Tiempo máximo de espera por petición">
+              </div>
+              <div class="form-field">
+                <label for="testMaxRetries">Reintentos</label>
+                <input type="number" id="testMaxRetries" min="0" max="10" value="3" title="Reintentos si falla la petición">
+              </div>
+              <div class="webhook-info" id="webhookMethodInfo">
+                <span class="webhook-label">Método HTTP:</span>
+                <span class="webhook-url" id="webhookMethodLabel">POST</span>
               </div>
             </section>
 
@@ -274,6 +300,15 @@ class DevTestView extends DevBaseView {
               </button>
             </div>
             <div class="history-list" id="historyList"></div>
+            <div class="history-pagination" id="historyPagination" style="display: none;">
+              <button type="button" class="btn-icon-small" id="historyPrevBtn" title="Página anterior" disabled>
+                <i class="ph ph-caret-left"></i>
+              </button>
+              <span class="history-page-info" id="historyPageInfo"></span>
+              <button type="button" class="btn-icon-small" id="historyNextBtn" title="Página siguiente">
+                <i class="ph ph-caret-right"></i>
+              </button>
+            </div>
           </aside>
         </div>
       </div>
@@ -534,6 +569,12 @@ class DevTestView extends DevBaseView {
     } else {
       urlEl.textContent = 'No configurado';
       urlEl.classList.add('not-configured');
+    }
+
+    const methodLabel = this.querySelector('#webhookMethodLabel');
+    if (methodLabel) {
+      const method = (this.technicalDetails?.webhook_method || 'POST').toUpperCase();
+      methodLabel.textContent = method;
     }
   }
 
@@ -810,9 +851,14 @@ class DevTestView extends DevBaseView {
     
     const inputs = this.collectInputs();
     const method = (this.technicalDetails?.webhook_method || 'POST').toUpperCase();
-    
+    const timeoutInput = this.querySelector('#testTimeoutSec');
+    const retriesInput = this.querySelector('#testMaxRetries');
+    const timeoutSec = Math.max(5, Math.min(300, parseInt(timeoutInput?.value || this.testTimeoutSec, 10) || 120));
+    const maxRetries = Math.max(0, Math.min(10, parseInt(retriesInput?.value || this.testMaxRetries, 10) ?? 3));
+    const timeoutMs = timeoutSec * 1000;
+
     let runId = null;
-    
+
     try {
       if (this.supabase) {
         const { data: run, error: runError } = await this.supabase
@@ -854,8 +900,8 @@ class DevTestView extends DevBaseView {
         url: webhookUrl,
         method,
         body: method !== 'GET' ? body : undefined,
-        timeoutMs: 120000,
-        maxRetries: 3
+        timeoutMs,
+        maxRetries
       }) : { ok: false, status: 0, statusText: '', data: null, error: 'FlowWebhookService no disponible' };
       
       const statusCode = res.status;
@@ -921,8 +967,8 @@ class DevTestView extends DevBaseView {
       this.stopTimer();
       this.showProgress(false);
       this.updateRunButton(false);
-      
-      // Recargar historial
+
+      this.historyPage = 0;
       await this.loadRunHistory();
       await this.loadStats();
     }
@@ -1098,12 +1144,20 @@ class DevTestView extends DevBaseView {
 
   async loadRunHistory() {
     if (!this.supabase || !this.selectedFlow) {
+      this.runHistory = [];
+      this.historyTotalCount = 0;
       this.renderHistory([]);
+      this.renderHistoryPagination();
       return;
     }
-    
+
+    const page = this.historyPage ?? 0;
+    const pageSize = this.historyPageSize ?? 20;
+    const from = page * pageSize;
+    const to = from + pageSize - 1;
+
     try {
-      const { data, error } = await this.supabase
+      const { data, error, count } = await this.supabase
         .from('flow_runs')
         .select(`
           id,
@@ -1111,19 +1165,51 @@ class DevTestView extends DevBaseView {
           created_at,
           tokens_consumed,
           webhook_response_code
-        `)
+        `, { count: 'exact' })
         .eq('flow_id', this.selectedFlow.id)
         .order('created_at', { ascending: false })
-        .limit(20);
-      
+        .range(from, to);
+
       if (error) throw error;
-      
+
       this.runHistory = data || [];
+      this.historyTotalCount = count ?? 0;
       this.renderHistory(this.runHistory);
+      this.renderHistoryPagination();
     } catch (err) {
       console.error('Error loading history:', err);
+      this.runHistory = [];
+      this.historyTotalCount = 0;
       this.renderHistory([]);
+      this.renderHistoryPagination();
     }
+  }
+
+  renderHistoryPagination() {
+    const wrap = this.querySelector('#historyPagination');
+    const prevBtn = this.querySelector('#historyPrevBtn');
+    const nextBtn = this.querySelector('#historyNextBtn');
+    const infoEl = this.querySelector('#historyPageInfo');
+    if (!wrap) return;
+
+    const total = this.historyTotalCount ?? 0;
+    const pageSize = this.historyPageSize ?? 20;
+    const page = this.historyPage ?? 0;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+    if (total === 0) {
+      wrap.style.display = 'none';
+      return;
+    }
+
+    wrap.style.display = 'flex';
+    if (infoEl) {
+      const from = page * pageSize + 1;
+      const to = Math.min((page + 1) * pageSize, total);
+      infoEl.textContent = `${from}-${to} / ${total}`;
+    }
+    if (prevBtn) prevBtn.disabled = page <= 0;
+    if (nextBtn) nextBtn.disabled = page >= totalPages - 1;
   }
 
   renderHistory(runs) {
@@ -1754,6 +1840,43 @@ if (window.InputRegistry && window.InputRegistry.initColorsPicker) {
     const refreshHistoryBtn = this.querySelector('#refreshHistoryBtn');
     if (refreshHistoryBtn) {
       refreshHistoryBtn.addEventListener('click', () => this.loadRunHistory());
+    }
+
+    // Paginación historial
+    const historyPrevBtn = this.querySelector('#historyPrevBtn');
+    const historyNextBtn = this.querySelector('#historyNextBtn');
+    if (historyPrevBtn) {
+      historyPrevBtn.addEventListener('click', () => {
+        if (this.historyPage > 0) {
+          this.historyPage--;
+          this.loadRunHistory();
+        }
+      });
+    }
+    if (historyNextBtn) {
+      historyNextBtn.addEventListener('click', () => {
+        const totalPages = Math.ceil((this.historyTotalCount || 0) / (this.historyPageSize || 20));
+        if (this.historyPage < totalPages - 1) {
+          this.historyPage++;
+          this.loadRunHistory();
+        }
+      });
+    }
+
+    // Timeout y reintentos
+    const testTimeoutSec = this.querySelector('#testTimeoutSec');
+    const testMaxRetries = this.querySelector('#testMaxRetries');
+    if (testTimeoutSec) {
+      testTimeoutSec.addEventListener('change', (e) => {
+        const v = parseInt(e.target.value, 10);
+        if (!isNaN(v)) this.testTimeoutSec = Math.max(5, Math.min(300, v));
+      });
+    }
+    if (testMaxRetries) {
+      testMaxRetries.addEventListener('change', (e) => {
+        const v = parseInt(e.target.value, 10);
+        if (!isNaN(v)) this.testMaxRetries = Math.max(0, Math.min(10, v));
+      });
     }
     
     // Copy response
