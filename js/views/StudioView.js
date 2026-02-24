@@ -74,8 +74,7 @@ class StudioView extends BaseView {
   async init() {
     window.studioView = this;
     await this.initSupabase();
-    await this.loadCredits();
-    await this.loadFlows();
+    await Promise.all([this.loadCredits(), this.loadFlows()]);
 
     const preselectedId = (window.appState && window.appState.get('selectedFlowId')) || localStorage.getItem('selectedFlowId');
     if (preselectedId) {

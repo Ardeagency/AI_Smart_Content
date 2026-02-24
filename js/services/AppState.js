@@ -33,19 +33,22 @@ class AppState {
    */
   set(key, value, persist = false) {
     const oldValue = this.state[key];
+    if (oldValue === value) return;
     this.state[key] = value;
 
-    // Guardar en localStorage si es persistente
     if (persist) {
-      try {
-        localStorage.setItem('app_state', JSON.stringify(this.state));
-      } catch (error) {
-        console.error('Error guardando estado:', error);
-      }
+      this._debouncedPersist();
     }
 
-    // Notificar listeners
     this.notifyListeners(key, value, oldValue);
+  }
+
+  _debouncedPersist() {
+    if (this._persistTimer) clearTimeout(this._persistTimer);
+    this._persistTimer = setTimeout(() => {
+      try { localStorage.setItem('app_state', JSON.stringify(this.state)); }
+      catch (_) {}
+    }, 100);
   }
 
   /**
@@ -63,13 +66,11 @@ class AppState {
    * @param {string} key - Clave a eliminar
    */
   remove(key) {
+    if (!(key in this.state)) return;
+    const oldValue = this.state[key];
     delete this.state[key];
-    try {
-      localStorage.setItem('app_state', JSON.stringify(this.state));
-    } catch (error) {
-      console.error('Error guardando estado:', error);
-    }
-    this.notifyListeners(key, undefined, this.state[key]);
+    this._debouncedPersist();
+    this.notifyListeners(key, undefined, oldValue);
   }
 
   /**
@@ -196,10 +197,9 @@ class AppState {
 // Crear instancia global
 window.appState = new AppState();
 
-// Limpiar cache expirado periódicamente
-setInterval(() => {
+window.appState._cleanupInterval = setInterval(() => {
   window.appState.cacheCleanup();
-}, 60000); // Cada minuto
+}, 60000);
 
 // Exportar para uso en otros módulos
 if (typeof module !== 'undefined' && module.exports) {

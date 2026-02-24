@@ -141,10 +141,10 @@
     --accent-glow: transparent;
     --grid-color: rgba(212, 209, 216, 0.03);
 
-    /* ── Transiciones ────────────────────────── */
-    --transition: all 0.2s ease;
-    --transition-fast: all 0.15s ease;
-    --transition-slow: all 0.5s ease;
+    /* ── Transiciones (solo opacity, transform, color, background, border — nunca all) ── */
+    --transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    --transition-fast: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+    --transition-slow: color 0.5s ease, background-color 0.5s ease, opacity 0.5s ease, transform 0.5s ease;
 
     /* ── Espaciado ───────────────────────────── */
     --spacing-xs: 0.25rem;
@@ -185,7 +185,7 @@
     /* ── Navegación / sidebar ────────────────── */
     --nav-width: 260px;
     --nav-width-collapsed: 51px;
-    --nav-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --nav-transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --nav-overlay: rgba(0, 0, 0, 0.8);
     --nav-bg: var(--bg-primary);
     --nav-border: var(--border-divider);
@@ -343,7 +343,7 @@ body {
    UTILIDADES GLOBALES (desde app.css)
    ============================================ */
 
-.hidden {
+.hidden, .d-none {
     display: none !important;
 }
 
@@ -834,7 +834,7 @@ body.sidebar-collapsed .main-header,
     cursor: pointer;
     padding: 0;
     border-radius: 8px;
-    transition: all 0.15s ease;
+    transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
     flex-shrink: 0;
     margin-right: 0.5rem;
 }
@@ -988,7 +988,7 @@ body.sidebar-collapsed .main-header,
     flex-shrink: 0;
     overflow: hidden;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .avatar-circle:hover {
@@ -1823,7 +1823,7 @@ body.sidebar-collapsed .main-header,
     min-height: var(--nav-item-height);
     color: var(--text-primary); /* Texto normal, no grita */
     text-decoration: none;
-    transition: all 0.15s ease;
+    transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
     position: relative;
     font-weight: 400; /* Texto normal, no medium */
     font-size: 14px;
@@ -2546,7 +2546,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     font-size: 20px;
     cursor: pointer;
     border-radius: 8px;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 /* Visible cuando hay sidebar (desktop y móvil) para colapsar/abrir */
@@ -2600,7 +2600,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     font-size: 12px;
     cursor: pointer;
     border-radius: 8px;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .user-menu-btn:hover {
@@ -2621,7 +2621,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     z-index: 1000;
 }
 
@@ -2666,7 +2666,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     font-size: 14px;
     text-decoration: none;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .user-dropdown-item:hover {
@@ -2737,7 +2737,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     border: 1px solid var(--nav-border);
     border-radius: 12px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .nav-identity-card:hover {
@@ -2765,7 +2765,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     font-size: 12px;
     cursor: pointer;
     border-radius: 8px;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .nav-org-chevron:hover {
@@ -2817,7 +2817,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     z-index: 100;
     max-height: 300px;
     overflow-y: auto;
@@ -2967,7 +2967,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .nav-mode-switch:hover {
@@ -3043,7 +3043,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     z-index: var(--z-nav-overlay);
     opacity: 0;
     visibility: hidden;
-    transition: all 0.3s ease;
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .nav-overlay.active {
@@ -3066,7 +3066,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     display: flex;
     flex-direction: column;
     z-index: var(--z-nav-sidebar);
-    transition: all 0.3s ease;
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 /* =========================================
@@ -3223,7 +3223,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     text-decoration: none;
     font-size: 13px;
     border-radius: 8px;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .side-navigation:not(.nav-mode-user) .nav-submenu-link:hover,
@@ -3327,7 +3327,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .error-actions .btn-primary {
@@ -3620,7 +3620,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     cursor: pointer;
     padding: 0.25rem;
     border-radius: 4px;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     width: 32px;
     height: 32px;
     display: flex;
@@ -3660,7 +3660,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     font-family: inherit;
     color: var(--text-primary);
     background: var(--bg-secondary);
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .login-card .form-input:focus {
@@ -3710,7 +3710,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     border: none;
     font-family: inherit;
     background: var(--accent-yellow);
@@ -3786,7 +3786,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     border: none;
     font-family: inherit;
     background: var(--text-primary);
@@ -5339,7 +5339,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     font-weight: 600;
     font-size: 0.875rem;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
@@ -5928,7 +5928,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     font-size: 0.875rem;
     padding: 0;
 }
@@ -7227,7 +7227,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     color: var(--text-secondary);
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -7321,7 +7321,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     border-radius: 12px;
     border: 1px solid var(--border-color);
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
     text-align: center;
 }
 
@@ -7992,7 +7992,7 @@ body.sidebar-collapsed .living-container {
     border-radius: 16px;
     overflow: hidden;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: color 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -8032,7 +8032,7 @@ body.sidebar-collapsed .living-container {
     border-radius: 0;
     overflow: hidden;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-    transition: all 0.3s ease;
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
     background: transparent;
 }
 
@@ -8121,7 +8121,7 @@ body.sidebar-collapsed .living-container {
     justify-content: center;
     gap: 0.75rem;
     cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: color 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
@@ -8286,7 +8286,7 @@ body.sidebar-collapsed .living-container {
     overflow: hidden;
     position: relative;
     cursor: pointer; /* Ahora sí pide interacción para abrir modal */
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: color 0.5s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3); /* Sombra más suave */
     background: var(--living-bg-card);
     display: inline-block;
@@ -8361,7 +8361,7 @@ body.sidebar-collapsed .living-container {
     z-index: 3;
     opacity: 0;
     transform: translateY(20px);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     pointer-events: none;
     max-height: 60%;
     overflow: hidden;
@@ -8431,7 +8431,7 @@ body.sidebar-collapsed .living-container {
     align-items: center;
     justify-content: center;
     z-index: 4;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
@@ -8513,7 +8513,7 @@ body.sidebar-collapsed .living-container {
     font-size: 0.938rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: color 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
@@ -8574,7 +8574,7 @@ body.sidebar-collapsed .living-container {
     border-radius: 12px;
     color: var(--living-text-muted);
     cursor: pointer;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: color 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -8601,7 +8601,7 @@ body.sidebar-collapsed .living-container {
     box-shadow: var(--living-shadow-soft);
     border: 1px solid rgba(255, 255, 255, 0.1);
     cursor: pointer;
-    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: color 0.6s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.6s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     display: flex;
     flex-direction: column;
@@ -10181,7 +10181,7 @@ body.sidebar-collapsed .living-container {
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     white-space: nowrap;
     flex-shrink: 0;
 }
@@ -10301,7 +10301,7 @@ body.sidebar-collapsed .living-container {
     border: none;
     border-radius: 16px;
     overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     position: relative;
     break-inside: avoid;
@@ -10514,7 +10514,7 @@ body.sidebar-collapsed .living-container {
     border: 1px solid var(--border-color);
     border-radius: 8px;
     overflow: hidden;
-    transition: all 0.3s ease;
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .image-item:hover {
@@ -10574,7 +10574,7 @@ body.sidebar-collapsed .living-container {
     border-radius: 8px;
     color: white;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     backdrop-filter: blur(4px);
 }
 
@@ -10621,7 +10621,7 @@ body.sidebar-collapsed .living-container {
     border-radius: 4px;
     color: var(--text-secondary);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     font-size: 0.75rem;
 }
 
@@ -10668,7 +10668,7 @@ body.sidebar-collapsed .living-container {
     border-radius: 50%;
     color: white;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
     font-size: 0.85rem;
     z-index: 10;
 }
@@ -10684,7 +10684,7 @@ body.sidebar-collapsed .living-container {
     padding: 1.5rem;
     text-align: center;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
     background: #121416;
 }
 
@@ -11431,7 +11431,7 @@ body.sidebar-collapsed .living-container {
     color: var(--text-secondary);
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .organization-tabs .tab-btn:hover {
@@ -11862,7 +11862,7 @@ body.sidebar-collapsed .living-container {
   background: var(--dev-bg-card);
   border: 1px solid var(--dev-card-border);
   border-radius: 12px;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .dev-stat-card:hover {
@@ -12068,7 +12068,7 @@ body.sidebar-collapsed .living-container {
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
 .dev-flow-action:hover {
@@ -12297,7 +12297,7 @@ body.sidebar-collapsed .living-container {
   color: var(--text-secondary);
   font-size: 0.875rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
 .dev-filter-btn:hover {
@@ -12351,7 +12351,7 @@ body.sidebar-collapsed .living-container {
   border-radius: 12px;
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
 .dev-flow-card:hover {
@@ -12467,7 +12467,7 @@ body.sidebar-collapsed .living-container {
   border-radius: 8px;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
 .dev-flow-action-btn:hover {
@@ -12607,7 +12607,7 @@ body.sidebar-collapsed .living-container {
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
 .log-action-btn:hover {
@@ -12631,7 +12631,7 @@ body.sidebar-collapsed .living-container {
   color: var(--text-primary);
   font-size: 0.875rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
 .pagination-btn:hover:not(:disabled) {
@@ -12960,7 +12960,7 @@ body.sidebar-collapsed .living-container {
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .btn-builder-primary:hover {
@@ -12984,7 +12984,7 @@ body.sidebar-collapsed .living-container {
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .btn-builder-secondary:hover {
@@ -13003,7 +13003,7 @@ body.sidebar-collapsed .living-container {
   border: 1px solid var(--border-color);
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .btn-builder-icon:hover {
@@ -13023,7 +13023,7 @@ body.sidebar-collapsed .living-container {
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .btn-builder-danger:hover {
@@ -13060,7 +13060,7 @@ body.sidebar-collapsed .living-container {
   color: var(--text-primary);
   font-size: 0.875rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
   text-align: left;
 }
 
@@ -13421,7 +13421,7 @@ body.sidebar-collapsed .living-container {
   border: 1px solid var(--border-color);
   background: var(--bg-primary);
   color: var(--text-primary);
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .btn-builder-footer:hover {
@@ -13737,7 +13737,7 @@ body.sidebar-collapsed .living-container {
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .builder-tab:hover {
@@ -13769,7 +13769,7 @@ body.sidebar-collapsed .living-container {
   background: var(--bg-secondary);
   border: 2px dashed var(--border-color);
   border-radius: 12px;
-  transition: all 0.3s ease;
+  transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .builder-canvas.drag-active {
@@ -13819,7 +13819,7 @@ body.sidebar-collapsed .living-container {
   border-radius: 8px;
   margin-bottom: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 /* X eliminar: esquina derecha, solo visible al hover del contenedor */
@@ -13943,7 +13943,7 @@ body.sidebar-collapsed .living-container {
   border-radius: 4px;
   color: var(--text-muted);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .field-action-btn:hover {
@@ -15144,7 +15144,7 @@ body.sidebar-collapsed .living-container {
   color: var(--text-primary);
   font-size: 0.8125rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .btn-small:hover {
@@ -15883,7 +15883,7 @@ body.sidebar-collapsed .living-container {
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .dev-lead-tab:hover {
@@ -15992,7 +15992,7 @@ body.sidebar-collapsed .living-container {
   border-radius: 8px;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .dev-lead-actions .btn-icon:hover {
@@ -16542,7 +16542,7 @@ body.sidebar-collapsed .living-container {
   color: var(--text-secondary);
   font-size: 0.8125rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .env-btn:hover {
@@ -16667,7 +16667,7 @@ body.sidebar-collapsed .living-container {
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .test-tab:hover {
@@ -16891,7 +16891,7 @@ body.sidebar-collapsed .living-container {
   color: var(--text-secondary);
   font-size: 0.875rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .btn-secondary:hover {
@@ -16911,7 +16911,7 @@ body.sidebar-collapsed .living-container {
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .btn-primary:hover {
@@ -17147,7 +17147,7 @@ body.sidebar-collapsed .living-container {
   background: var(--bg-primary);
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .history-item:hover {
@@ -17406,7 +17406,7 @@ body.sidebar-collapsed .living-container {
   border-radius: 8px;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .btn-icon:hover {
@@ -17425,7 +17425,7 @@ body.sidebar-collapsed .living-container {
   border-radius: 4px;
   color: var(--text-muted);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .btn-icon-small:hover {
@@ -17444,7 +17444,7 @@ body.sidebar-collapsed .living-container {
   color: var(--text-secondary);
   font-size: 0.8125rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .btn-small:hover {
@@ -17704,7 +17704,7 @@ body.sidebar-collapsed .living-container {
   color: var(--text-secondary);
   font-size: 0.8125rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .filter-btn:hover {
@@ -17926,7 +17926,7 @@ body.sidebar-collapsed .living-container {
   color: var(--text-muted);
   cursor: pointer;
   opacity: 0;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .webhook-url-cell:hover .btn-icon-tiny {
@@ -18513,7 +18513,7 @@ body.sidebar-collapsed .living-container {
     justify-content: center !important;
     opacity: 0;
     visibility: hidden;
-    transition: all 0.3s ease !important;
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease !important;
 }
 
 .payment-overlay.active {
@@ -18531,7 +18531,7 @@ body.sidebar-collapsed .living-container {
     overflow-y: auto;
     position: relative;
     transform: scale(0.8) translateY(50px);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: color 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
 }
 
@@ -19377,7 +19377,7 @@ body.sidebar-collapsed .living-container {
     border-radius: 8px;
     color: var(--text-primary);
     font-size: 0.95rem;
-    transition: all 0.3s ease;
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
     outline: none;
 }
 
@@ -19427,7 +19427,7 @@ body.sidebar-collapsed .living-container {
     height: 100%;
     background: var(--error-color);
     width: 0%;
-    transition: all 0.3s ease;
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .strength-fill.weak {
@@ -19492,7 +19492,7 @@ body.sidebar-collapsed .living-container {
     margin-right: 10px;
     flex-shrink: 0;
     position: relative;
-    transition: all 0.3s ease;
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .checkbox-container:hover input ~ .checkmark {
@@ -19548,7 +19548,7 @@ body.sidebar-collapsed .living-container {
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
     position: relative;
     overflow: hidden;
     margin-bottom: 25px;
@@ -19626,7 +19626,7 @@ body.sidebar-collapsed .living-container {
     font-size: 0.9rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -19678,7 +19678,7 @@ body.sidebar-collapsed .living-container {
     border: 1px solid rgba(255, 255, 255, 0.1);
     z-index: 1000;
     transform: translateX(400px);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: color 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     max-width: 350px;
 }
 
@@ -19719,7 +19719,7 @@ body.sidebar-collapsed .living-container {
     cursor: pointer;
     padding: 4px;
     border-radius: 4px;
-    transition: all 0.3s ease;
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .notification-close:hover {

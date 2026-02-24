@@ -20,9 +20,10 @@ class App {
     if (this.initialized) return;
 
     try {
-      await this.initSupabase();
       this.initRouter();
       this.registerRoutes();
+
+      const [supabaseResult] = await Promise.allSettled([this.initSupabase()]);
 
       if (window.router && Object.keys(window.router.routes).length > 0) {
         window.router.handleRoute();

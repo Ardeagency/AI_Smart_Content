@@ -94,35 +94,18 @@ class HogarView extends BaseView {
       if (emptyEl) emptyEl.style.display = 'none';
       if (gridEl) gridEl.style.display = 'none';
 
-      // Cargar organizaciones donde el usuario es miembro o owner
-      const { data: orgMembers, error: membersError } = await this.supabase
-        .from('organization_members')
-        .select(`
-          organization_id,
-          role,
-          organizations (
-            id,
-            name,
-            owner_user_id,
-            created_at
-          )
-        `)
-        .eq('user_id', this.userId);
+      const [membersResult, ownedResult] = await Promise.all([
+        this.supabase.from('organization_members').select(`
+          organization_id, role,
+          organizations ( id, name, owner_user_id, created_at )
+        `).eq('user_id', this.userId),
+        this.supabase.from('organizations').select('*').eq('owner_user_id', this.userId)
+      ]);
 
-      if (membersError) {
-        console.error('Error cargando miembros:', membersError);
-        throw membersError;
-      }
+      const { data: orgMembers, error: membersError } = membersResult;
+      const { data: ownedOrgs, error: ownedError } = ownedResult;
 
-      // También cargar organizaciones donde el usuario es owner
-      const { data: ownedOrgs, error: ownedError } = await this.supabase
-        .from('organizations')
-        .select('*')
-        .eq('owner_user_id', this.userId);
-
-      if (ownedError) {
-        console.error('Error cargando organizaciones propias:', ownedError);
-      }
+      if (membersError) throw membersError;
 
       // Combinar y deduplicar organizaciones
       const orgsMap = new Map();
@@ -155,19 +138,26 @@ class HogarView extends BaseView {
       this.organizations = Array.from(orgsMap.values());
       const orgIds = this.organizations.map(o => o.id);
 
-      // Créditos por organización (organization_credits)
-      const { data: creditsRows } = await this.supabase
-        .from('organization_credits')
-        .select('organization_id, credits_available, credits_total')
-        .in('organization_id', orgIds);
+      const [creditsRes, containersRes, membersRes] = await Promise.all([
+        this.supabase.from('organization_credits')
+          .select('organization_id, credits_available, credits_total')
+          .in('organization_id', orgIds),
+        this.supabase.from('brand_containers')
+          .select('organization_id, nombre_marca, logo_url')
+          .in('organization_id', orgIds),
+        this.supabase.from('organization_members')
+          .select('organization_id, user_id')
+          .in('organization_id', orgIds)
+          .order('created_at', { ascending: true })
+      ]);
+
+      const creditsRows = creditsRes.data;
+      const containersRows = containersRes.data;
+      const membersRows = membersRes.data;
+
       const creditsByOrg = {};
       (creditsRows || []).forEach(r => { creditsByOrg[r.organization_id] = r; });
 
-      // Marcas por organización (brand_containers: nombre_marca, logo_url — primera marca para logo flotante)
-      const { data: containersRows } = await this.supabase
-        .from('brand_containers')
-        .select('organization_id, nombre_marca, logo_url')
-        .in('organization_id', orgIds);
       const marcasByOrg = {};
       const firstBrandByOrg = {};
       (containersRows || []).forEach(r => {
@@ -176,56 +166,51 @@ class HogarView extends BaseView {
         if (!firstBrandByOrg[r.organization_id]) firstBrandByOrg[r.organization_id] = { nombre_marca: r.nombre_marca, logo_url: r.logo_url || '' };
       });
 
-      // Miembros por organización: user_id (ordenados, para avatares máx 4)
-      const { data: membersRows } = await this.supabase
-        .from('organization_members')
-        .select('organization_id, user_id')
-        .in('organization_id', orgIds)
-        .order('created_at', { ascending: true });
       const membersByOrg = {};
       orgIds.forEach(id => { membersByOrg[id] = []; });
       (membersRows || []).forEach(r => {
         if (r.user_id) membersByOrg[r.organization_id].push(r.user_id);
       });
       const allMemberIds = [...new Set((membersRows || []).map(m => m.user_id).filter(Boolean))];
-      let avatarByUser = {};
-      if (allMemberIds.length > 0) {
-        const { data: profiles } = await this.supabase
-          .from('profiles')
-          .select('id, full_name')
-          .in('id', allMemberIds);
-        (profiles || []).forEach(p => { avatarByUser[p.id] = { avatar_url: '', full_name: p.full_name || '' }; });
-      }
-
-      // Plan y costo: owner_user_id → profiles.plan_type y subscriptions (price, currency)
       const ownerIds = [...new Set(this.organizations.map(o => o.owner_user_id).filter(Boolean))];
+
+      const parallelQueries = [];
+      parallelQueries.push(
+        allMemberIds.length > 0
+          ? this.supabase.from('profiles').select('id, full_name').in('id', allMemberIds)
+          : Promise.resolve({ data: [] })
+      );
+      parallelQueries.push(
+        ownerIds.length > 0
+          ? this.supabase.from('profiles').select('id, plan_type').in('id', ownerIds)
+          : Promise.resolve({ data: [] })
+      );
+      parallelQueries.push(
+        ownerIds.length > 0
+          ? this.supabase.from('subscriptions').select('user_id, price, currency').in('user_id', ownerIds).order('created_at', { ascending: false })
+          : Promise.resolve({ data: [] })
+      );
+      parallelQueries.push(
+        ...this.organizations.map(org =>
+          this.getOrganizationBrandColors(org.id).catch(() => [])
+        )
+      );
+
+      const parallelResults = await Promise.all(parallelQueries);
+
+      let avatarByUser = {};
+      (parallelResults[0].data || []).forEach(p => { avatarByUser[p.id] = { avatar_url: '', full_name: p.full_name || '' }; });
+
       let planByUser = {};
+      (parallelResults[1].data || []).forEach(u => { planByUser[u.id] = u.plan_type || '—'; });
+
       let costByUser = {};
-      if (ownerIds.length > 0) {
-        const { data: profileRows } = await this.supabase
-          .from('profiles')
-          .select('id, plan_type')
-          .in('id', ownerIds);
-        (profileRows || []).forEach(u => { planByUser[u.id] = u.plan_type || '—'; });
+      (parallelResults[2].data || []).forEach(s => {
+        if (costByUser[s.user_id] == null) costByUser[s.user_id] = { price: s.price, currency: s.currency || 'USD' };
+      });
 
-        const { data: subRows } = await this.supabase
-          .from('subscriptions')
-          .select('user_id, price, currency')
-          .in('user_id', ownerIds)
-          .order('created_at', { ascending: false });
-        (subRows || []).forEach(s => {
-          if (costByUser[s.user_id] == null) costByUser[s.user_id] = { price: s.price, currency: s.currency || 'USD' };
-        });
-      }
-
-      // Colores de marca para degradado inferior y enriquecer org
-      for (const org of this.organizations) {
-        try {
-          org.brandColors = await this.getOrganizationBrandColors(org.id);
-        } catch (error) {
-          console.error(`Error cargando brand colors para org ${org.id}:`, error);
-          org.brandColors = [];
-        }
+      this.organizations.forEach((org, i) => {
+        org.brandColors = parallelResults[3 + i] || [];
         const cred = creditsByOrg[org.id];
         org.credits_available = cred ? cred.credits_available : 0;
         org.credits_total = cred ? cred.credits_total : 0;
@@ -239,7 +224,7 @@ class HogarView extends BaseView {
         org.planType = ownerId ? (planByUser[ownerId] || '—') : '—';
         const cost = ownerId ? costByUser[ownerId] : null;
         org.planCost = cost ? `${cost.currency} ${Number(cost.price)}` : '—';
-      }
+      });
 
       if (this.organizations.length === 0) {
         if (emptyEl) emptyEl.style.display = 'flex';

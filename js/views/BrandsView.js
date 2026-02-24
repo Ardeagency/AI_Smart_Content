@@ -68,46 +68,33 @@ class BrandsView extends BaseView {
       return;
     }
 
-    const MAX_ATTEMPTS = 15;
-    const tryRender = (attempt = 0) => {
-      if (!this.isActive) return;
-
+    const checkContainers = () => {
+      if (!this.isActive) return false;
       const brandColorsEl = container.querySelector('#brandColorSwatches') || document.getElementById('brandColorSwatches');
       const typographyEl = container.querySelector('#typographyPreview') || document.getElementById('typographyPreview');
       const statusEl = container.querySelector('#visualStatus') || document.getElementById('visualStatus');
-      const hasContainers = brandColorsEl && typographyEl && statusEl;
-
-      if (hasContainers) {
-        this._tryRenderTimeout = null;
+      if (brandColorsEl && typographyEl && statusEl) {
         this.renderAll();
         const root = container.querySelector('#brandsListContainer');
         if (root) root.classList.add('brands-ready');
-        // Solo el fondo espera datos; luego crossfade skeleton → gradiente
         (async () => {
           await this.ensureDataLoaded();
           if (!this.isActive) return;
           this.applyBrandBackgroundGradient();
           if (root) root.classList.add('brands-background-ready');
         })();
-        return;
+        return true;
       }
-
-      if (attempt >= MAX_ATTEMPTS) {
-        this._tryRenderTimeout = null;
-        // Solo un aviso si tras todos los intentos siguen faltando contenedores
-        if (!this._containerWarned.template) {
-          this._containerWarned.template = true;
-          console.warn('⚠️ Vista Marcas: contenedores del template no disponibles tras varios intentos.');
-        }
-        return;
-      }
-
-      this._tryRenderTimeout = setTimeout(() => tryRender(attempt + 1), 120);
+      return false;
     };
 
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => tryRender());
-    });
+    if (!checkContainers()) {
+      const observer = new MutationObserver(() => {
+        if (checkContainers()) observer.disconnect();
+      });
+      observer.observe(container, { childList: true, subtree: true });
+      setTimeout(() => observer.disconnect(), 2000);
+    }
   }
 
   async init() {

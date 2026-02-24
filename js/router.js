@@ -20,7 +20,8 @@ class Router {
     this.routes = {};
     this.currentView = null;
     this.currentRoute = null;
-    // Sistema de caché eliminado - siempre crear nuevas instancias
+    this._handlingRoute = false;
+    this._pendingRoute = null;
     this.init();
   }
 
@@ -76,56 +77,40 @@ class Router {
    * Manejar cambio de ruta
    */
   async handleRoute() {
-    try {
-      // Obtener path actual usando History API
-      let path = window.location.pathname || '/';
-      
-      // Normalizar path (asegurar que empiece con /)
-      if (!path.startsWith('/')) {
-        path = '/' + path;
-      }
-      
-      // Si el path es solo '/' o está vacío, usar '/'
-      if (path === '' || path === '/index.html') {
-        path = '/';
-      }
-      // Quitar barra final para que /dev/lead/flows/ coincida con /dev/lead/flows
-      if (path.length > 1 && path.endsWith('/')) {
-        path = path.slice(0, -1);
-      }
+    if (this._handlingRoute) {
+      this._pendingRoute = window.location.pathname;
+      return;
+    }
+    this._handlingRoute = true;
 
-      // Redirigir /org/:id/settings → /settings (configuración de usuario fuera de org)
+    try {
+      let path = window.location.pathname || '/';
+      if (!path.startsWith('/')) path = '/' + path;
+      if (path === '' || path === '/index.html') path = '/';
+      if (path.length > 1 && path.endsWith('/')) path = path.slice(0, -1);
+
       const orgSettingsMatch = path.match(/^\/org\/[^/]+\/settings$/);
       if (orgSettingsMatch) {
         const query = window.location.search || '';
+        this._handlingRoute = false;
         this.navigate('/settings' + query, true);
         return;
       }
 
-      // Buscar ruta exacta primero
       let route = this.routes[path];
       let routeParams = {};
 
-      // Si no hay ruta exacta, buscar rutas dinámicas
       if (!route) {
-        // Buscar rutas con parámetros (ej: /brands/:brandId)
         for (const [routePattern, routeConfig] of Object.entries(this.routes)) {
           if (routePattern.includes(':')) {
-            // Convertir patrón a regex
             const patternRegex = new RegExp('^' + routePattern.replace(/:[^/]+/g, '([^/]+)') + '$');
             const match = path.match(patternRegex);
-            
             if (match) {
-              // Extraer nombres de parámetros del patrón
               const paramNames = routePattern.match(/:[^/]+/g) || [];
               const paramValues = match.slice(1);
-              
-              // Crear objeto de parámetros
               paramNames.forEach((paramName, index) => {
-                const key = paramName.replace(':', '');
-                routeParams[key] = paramValues[index];
+                routeParams[paramName.replace(':', '')] = paramValues[index];
               });
-              
               route = routeConfig;
               break;
             }
@@ -138,6 +123,7 @@ class Router {
         if (route404) {
           route = route404;
         } else if (this.routes['/']) {
+          this._handlingRoute = false;
           this.navigate('/', true);
           return;
         } else {
@@ -145,61 +131,48 @@ class Router {
         }
       }
 
-      if (route.requiresAuth) {
-        const isAuth = await this.checkAuthentication();
-        if (!isAuth) {
-          this.navigate('/login', true);
-          return;
-        }
+      // Single auth check (cached) instead of calling twice
+      let isAuth = null;
+      if (route.requiresAuth || route.redirectIfAuth) {
+        isAuth = await this.checkAuthentication();
       }
-
-      if (route.redirectIfAuth) {
-        const isAuth = await this.checkAuthentication();
-        if (isAuth) {
-          // Redirigir según el modo del usuario (MPA + SPA)
-          const redirectRoute = await this.getAuthenticatedRedirect();
-          this.navigate(redirectRoute, true);
-          return;
-        }
+      if (route.requiresAuth && !isAuth) {
+        this._handlingRoute = false;
+        this.navigate('/login', true);
+        return;
+      }
+      if (route.redirectIfAuth && isAuth) {
+        const redirectRoute = await this.getAuthenticatedRedirect();
+        this._handlingRoute = false;
+        this.navigate(redirectRoute, true);
+        return;
       }
 
       const container = document.getElementById('app-container');
       if (!container) return;
 
-      // Limpiar vista anterior (evita fugas de memoria y listeners duplicados)
+      // Cleanup anterior (fire-and-forget, no bloquea navegación)
       if (this.currentView) {
-        if (typeof this.currentView.onLeave === 'function') {
-          await this.currentView.onLeave();
+        const prevView = this.currentView;
+        this.currentView = null;
+        if (typeof prevView.onLeave === 'function') {
+          try { prevView.onLeave(); } catch (_) {}
         }
-        if (typeof this.currentView.destroy === 'function') {
-          this.currentView.destroy();
+        if (typeof prevView.destroy === 'function') {
+          try { prevView.destroy(); } catch (_) {}
         }
       }
 
-      // Preparar container para nueva vista
-      if (container) {
-        container.innerHTML = '';
-      }
+      // Batch DOM operations
+      container.innerHTML = '';
+      container.classList.remove('view-leave', 'view-enter');
 
-      // Remover clases de animación
-      if (container) {
-        container.classList.remove('view-leave', 'view-enter');
-      }
-
-      // Cargar clase de vista (puede ser lazy loading)
       let ViewClass;
-      
-      // Verificar si es una función async o una función que retorna una promesa (lazy loading)
       if (typeof route.viewLoader === 'function') {
-        // Verificar si es una clase (constructor) o una función de lazy loading
-        // Las clases tienen prototype.constructor === themselves
         const isClass = route.viewLoader.prototype && route.viewLoader.prototype.constructor === route.viewLoader;
-        
         if (isClass) {
-          // Es una clase directa, usar directamente
           ViewClass = route.viewLoader;
         } else {
-          // Es una función de lazy loading, ejecutarla
           const result = await route.viewLoader();
           ViewClass = result.default || result;
         }
@@ -207,32 +180,22 @@ class Router {
         ViewClass = route.viewLoader;
       }
 
-      if (!ViewClass || typeof ViewClass !== 'function') {
-        console.error('Vista no válida para ruta:', path);
-        return;
-      }
+      if (!ViewClass || typeof ViewClass !== 'function') return;
 
-      // Siempre crear nueva instancia - sin caché
       this.currentView = new ViewClass();
       this.currentRoute = path;
-      
       if (Object.keys(routeParams).length > 0) {
         this.currentView.routeParams = routeParams;
       }
 
-      if (container) {
-        container.classList.add('view-enter');
-      }
+      container.classList.add('view-enter');
 
-      // Renderizar la navegación ANTES de la vista
-      // Esto actualiza el sidebar/header según la ruta
       if (window.appNavigation && typeof window.appNavigation.render === 'function') {
         await window.appNavigation.render();
       }
 
       await this.currentView.render();
 
-      // Un solo lugar actualiza la nav: Navigation (vía routechange)
       window.dispatchEvent(new CustomEvent('routechange', { detail: { path, params: routeParams } }));
     } catch (error) {
       console.error('Error manejando ruta:', error);
@@ -244,6 +207,12 @@ class Router {
     } finally {
       if (window.appLoader && typeof window.appLoader.hideSpinner === 'function') {
         window.appLoader.hideSpinner();
+      }
+      this._handlingRoute = false;
+      if (this._pendingRoute) {
+        const pending = this._pendingRoute;
+        this._pendingRoute = null;
+        this.handleRoute();
       }
     }
   }

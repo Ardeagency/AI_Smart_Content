@@ -19,6 +19,11 @@
  * }
  */
 class BaseView {
+  static _templateCache = new Map();
+  static _userProfileCache = null;
+  static _userProfileCacheTime = 0;
+  static _USER_CACHE_TTL = 60000;
+
   constructor() {
     this.container = document.getElementById('app-container');
     this.templatePath = null;
@@ -37,20 +42,19 @@ class BaseView {
     }
 
     try {
-      // Ruta absoluta para que funcione en rutas tipo /org/xxx/brand (evita 404)
-      const url = `/templates/${this.templatePath}?t=${Date.now()}`;
+      if (BaseView._templateCache.has(this.templatePath)) {
+        return BaseView._templateCache.get(this.templatePath);
+      }
 
-      const response = await fetch(url, {
-        cache: 'no-cache'
-      });
+      const url = `/templates/${this.templatePath}`;
+      const response = await fetch(url);
       
       if (!response.ok) {
         throw new Error(`Error cargando template: ${response.status} ${response.statusText}`);
       }
       
       const html = await response.text();
-      
-      // Caché eliminado - siempre cargar templates frescos
+      BaseView._templateCache.set(this.templatePath, html);
       return html;
     } catch (error) {
       console.error('Error cargando template:', error);
@@ -338,26 +342,20 @@ class BaseView {
    * Actualizar links para usar router (History API)
    */
   updateLinksForRouter() {
-    const links = this.container.querySelectorAll('a[href^="#"], a[href^="/"]');
+    const links = this.container.querySelectorAll('a[href^="#"]:not([data-router]), a[href^="/"]:not([data-router])');
     links.forEach(link => {
       const href = link.getAttribute('href');
       if (href && (href.startsWith('#') || href.startsWith('/'))) {
-        // Normalizar href
         let path = href.replace('#', '');
-        if (!path.startsWith('/')) {
-          path = '/' + path;
-        }
-        
-        // Agregar event listener para usar router
+        if (!path.startsWith('/')) path = '/' + path;
+
         this.addEventListener(link, 'click', (e) => {
           e.preventDefault();
-          if (window.router) {
-            window.router.navigate(path);
-          }
+          if (window.router) window.router.navigate(path);
         });
-        
-        // Actualizar href para que sea clickeable sin JS
+
         link.setAttribute('href', path);
+        link.setAttribute('data-router', '1');
       }
     });
   }
@@ -492,37 +490,42 @@ class BaseView {
       }
     }
 
-    // Actualizar avatar del usuario
-    const supabase = await this.getSupabaseClient();
-    if (!supabase) return;
+    const now = Date.now();
+    let profile = null;
 
-    try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) return;
+    if (BaseView._userProfileCache && (now - BaseView._userProfileCacheTime) < BaseView._USER_CACHE_TTL) {
+      profile = BaseView._userProfileCache;
+    } else {
+      const supabase = await this.getSupabaseClient();
+      if (!supabase) return;
+      try {
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user) return;
 
-      // Perfil desde tabla unificada profiles
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id, full_name, email, role')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      const headerUserInitials = document.getElementById('headerUserInitials');
-      const headerUserAvatar = document.getElementById('headerUserAvatar');
-
-      if (profile) {
-        if (headerUserInitials) {
-          const name = profile.full_name || profile.email || 'Usuario';
-          const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-          headerUserInitials.textContent = initials || 'U';
-        }
+        const { data } = await supabase
+          .from('profiles')
+          .select('id, full_name, email, role')
+          .eq('id', user.id)
+          .maybeSingle();
+        profile = data;
+        BaseView._userProfileCache = profile;
+        BaseView._userProfileCacheTime = now;
+      } catch (error) {
+        console.error('Error actualizando header:', error);
+        return;
       }
-
-      // Setup event listeners para dropdown de usuario
-      this.setupHeaderUserDropdown();
-    } catch (error) {
-      console.error('Error actualizando header:', error);
     }
+
+    if (profile) {
+      const headerUserInitials = document.getElementById('headerUserInitials');
+      if (headerUserInitials) {
+        const name = profile.full_name || profile.email || 'Usuario';
+        const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        headerUserInitials.textContent = initials || 'U';
+      }
+    }
+
+    this.setupHeaderUserDropdown();
   }
 
   /**

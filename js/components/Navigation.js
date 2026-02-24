@@ -611,8 +611,8 @@ class Navigation {
       });
     }
 
-    // Navegación con History API (main, submenu, footer y enlace "Mi cuenta" del dropdown usuario)
-    document.querySelectorAll('.nav-link[data-route], .nav-main-link[data-route], .nav-submenu-link[data-route], .nav-footer-link[data-route], #userDropdownSettingsLink, #userDropdown a[data-route]').forEach((link) => {
+    document.querySelectorAll('.nav-link[data-route]:not([data-nav-bound]), .nav-main-link[data-route]:not([data-nav-bound]), .nav-submenu-link[data-route]:not([data-nav-bound]), .nav-footer-link[data-route]:not([data-nav-bound]), #userDropdownSettingsLink:not([data-nav-bound]), #userDropdown a[data-route]:not([data-nav-bound])').forEach((link) => {
+      link.setAttribute('data-nav-bound', '1');
       link.addEventListener('click', (e) => {
         e.preventDefault();
         const route = link.dataset.route || (link.getAttribute && link.getAttribute('href'));
@@ -625,8 +625,8 @@ class Navigation {
       });
     });
 
-    // Salir de la organización: modal de confirmación
-    document.querySelectorAll('.nav-footer-action[data-action="leaveWorkspace"]').forEach((btn) => {
+    document.querySelectorAll('.nav-footer-action[data-action="leaveWorkspace"]:not([data-nav-bound])').forEach((btn) => {
+      btn.setAttribute('data-nav-bound', '1');
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         this.showLeaveWorkspaceConfirm();
@@ -875,6 +875,9 @@ class Navigation {
    */
   updateActiveLink() {
     const currentPath = window.location.pathname;
+    if (this._lastActivePath === currentPath) return;
+    this._lastActivePath = currentPath;
+
     const links = document.querySelectorAll('.nav-link[data-route], .nav-main-link[data-route], .nav-submenu-link[data-route], .nav-footer-link[data-route]');
     const toggles = document.querySelectorAll('.nav-submenu-toggle');
 
