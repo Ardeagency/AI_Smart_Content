@@ -42,11 +42,14 @@ class BaseView {
     }
 
     try {
-      if (BaseView._templateCache.has(this.templatePath)) {
+      let url = `/templates/${this.templatePath}`;
+      const skipCache = this.templatePath === 'signin.html';
+      if (!skipCache && BaseView._templateCache.has(this.templatePath)) {
         return BaseView._templateCache.get(this.templatePath);
       }
-
-      const url = `/templates/${this.templatePath}`;
+      if (skipCache) {
+        url += '?v=logo02';
+      }
       const response = await fetch(url);
       
       if (!response.ok) {
@@ -54,7 +57,9 @@ class BaseView {
       }
       
       const html = await response.text();
-      BaseView._templateCache.set(this.templatePath, html);
+      if (!skipCache) {
+        BaseView._templateCache.set(this.templatePath, html);
+      }
       return html;
     } catch (error) {
       console.error('Error cargando template:', error);
