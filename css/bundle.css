@@ -4197,7 +4197,7 @@ body.entrance-done .signin-container {
     box-sizing: border-box;
 }
 
-/* Card del login: negro, borde degradado negro (arriba) → blanco (abajo) */
+/* Card del login: negro sin borde, sombra/luz con degradado del loader */
 .signin-container .signin-card {
     width: 360px;
     max-width: calc(100vw - 2rem);
@@ -4208,11 +4208,22 @@ body.entrance-done .signin-container {
     flex-direction: column;
     gap: var(--spacing-lg);
     align-items: center;
-    background: linear-gradient(#000, #000) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
-    border: 1px solid transparent;
+    background: #000;
+    border: none;
     border-radius: 20px;
     padding: 2rem;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    position: relative;
+}
+
+.signin-container .signin-card::before {
+    content: '';
+    position: absolute;
+    inset: -24px;
+    z-index: -1;
+    border-radius: 28px;
+    background: var(--brand-gradient);
+    filter: blur(32px);
+    opacity: 0.45;
 }
 
 /* Cambiar contraseña: reutiliza form-main-content y form-org-card */
@@ -4239,11 +4250,22 @@ body.entrance-done .signin-container {
     flex-direction: column;
     gap: var(--spacing-lg);
     align-items: center;
-    background: linear-gradient(#000, #000) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
-    border: 1px solid transparent;
+    background: #000;
+    border: none;
     border-radius: 20px;
     padding: 2rem;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    position: relative;
+}
+
+.signin-container .form-org-card.signin-card::before {
+    content: '';
+    position: absolute;
+    inset: -24px;
+    z-index: -1;
+    border-radius: 28px;
+    background: var(--brand-gradient);
+    filter: blur(32px);
+    opacity: 0.45;
 }
 
 .signin-brand {
