@@ -3659,12 +3659,11 @@ body.sidebar-collapsed .app-header.with-sidebar {
  * Landing – Estilos optimizados, sin duplicados
  */
 
-/* Fondo quitado temporalmente; contenedor se mantiene para volver a ponerlo */
 .landing-background {
     position: fixed;
     inset: 0;
     z-index: -2;
-    background: none;
+    background: #000;
     min-height: 100vh;
     min-width: 100vw;
 }
