@@ -108,7 +108,7 @@
     --color-white: #ffffff;
     --text-black: #000000;
     --bg-light-gray: #f3f4f6;
-    --planes-dark: #0a1612;
+    --planes-dark: #0c0c10;
 
     /* ── Acento naranja paleta (ff6500) opacidades ── */
     --warm-10: rgba(255, 101, 0, 0.1);
@@ -4867,7 +4867,7 @@ body.entrance-done .signin-container {
 }
 
 .planes-hero .plan-card-small.selected .plan-card-details {
-    color: rgba(10, 22, 18, 0.85);
+    color: rgba(12, 12, 16, 0.85);
 }
 
 .plan-card-details li {
