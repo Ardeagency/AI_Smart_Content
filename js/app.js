@@ -183,7 +183,7 @@ class App {
     r.register('/dev/flows', devFlowsLoader, auth);
     r.register('/dev/flows/:flowId', devFlowsLoader, auth);
     r.register('/dev/logs', this._lazy('DevLogsView', [...devBase, '/js/views/DevLogsView.js']), auth);
-    const devBuilderLoader = this._lazy('DevBuilderView', [...devInput, '/js/views/DevBuilderView.js']);
+    const devBuilderLoader = this._lazy('DevBuilderView', [...devInput, '/js/services/FlowWebhookService.js', '/js/views/DevBuilderView.js', '/js/views/builder/BuilderInputs.js', '/js/views/builder/BuilderModules.js', '/js/views/builder/BuilderPersistence.js']);
     r.register('/dev/builder', devBuilderLoader, auth);
     r.register('/dev/builder/:flowId', devBuilderLoader, auth);
     const devTestLoader = this._lazy('DevTestView', [...devInput, '/js/services/FlowWebhookService.js', '/js/views/DevTestView.js']);
