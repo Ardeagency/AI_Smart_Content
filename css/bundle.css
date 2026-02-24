@@ -20,19 +20,19 @@
 
     /* ── Fondos ─────────────────────────────── */
     --bg-primary: #000000;
-    --bg-secondary: #1C1922;
-    --bg-card: #212129;
-    --bg-tertiary: #212129;
-    --bg-hover: #313139;
+    --bg-secondary: #141517;
+    --bg-card: #212126;
+    --bg-tertiary: #212126;
+    --bg-hover: #353539;
     --bg-overlay: rgba(23, 20, 29, 0.9);
     --bg-black: #000000;
     --bg-dark: #0F0D12;
-    --bg-interactive: #201D26;
+    --bg-interactive: #212126;
 
-    /* ── Bordes ─────────────────────────────── */
-    --border-color: #33333B;
-    --border-light: #3d3d45;
-    --border-divider: #2d2d34;
+    /* ── Bordes (blanco, D4D1D8, 87868B) ────── */
+    --border-color: #87868B;
+    --border-light: #D4D1D8;
+    --border-divider: #87868B;
 
     /* ── Texto ──────────────────────────────── */
     --text-primary: #D4D1D8;
@@ -40,10 +40,12 @@
     --text-muted: rgba(212, 209, 216, 0.6);
     --text-disabled: rgba(212, 209, 216, 0.35);
 
-    /* ── Iconos y acentos ───────────────────── */
+    /* ── Iconos (base, hover, resaltado) ─────── */
     --icon-button: #87868B;
+    --icon-button-hover: #D4D1D8;
+    --icon-button-active: #ffffff;
     --accent-yellow: #87868B;
-    --accent-yellow-hover: #9a99a0;
+    --accent-yellow-hover: #D4D1D8;
     --accent-warm: #87868B;
 
     /* ── Color principal (texto/headings — NO usar como acento de botón) ── */
@@ -175,7 +177,9 @@
     --sidebar-background: var(--bg-primary);
     --sidebar-hover: var(--white-8);
     --sidebar-active: var(--white-8);
-    --sidebar-icon-color: var(--text-secondary);
+    --sidebar-icon-color: var(--icon-button);
+    --sidebar-icon-hover: var(--icon-button-hover);
+    --sidebar-icon-active: var(--icon-button-active);
     --sidebar-text-primary: var(--text-primary);
     --sidebar-text-secondary: var(--text-secondary);
 
@@ -2176,7 +2180,7 @@ body.sidebar-collapsed .main-header,
 }
 
 .nav-link.active .nav-icon {
-    color: var(--white-95); /* Ligeramente más brillante, pero sutil */
+    color: var(--sidebar-icon-active);
 }
 
 
@@ -2191,17 +2195,17 @@ body.sidebar-collapsed .main-header,
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    color: var(--text-secondary);
+    color: var(--sidebar-icon-color);
     line-height: 1;
     -webkit-font-smoothing: antialiased;
 }
 
 .nav-link:hover .nav-icon {
-    color: var(--accent-yellow);
+    color: var(--sidebar-icon-hover);
 }
 
 .nav-link.active .nav-icon {
-    color: var(--text-primary);
+    color: var(--sidebar-icon-active);
 }
 
 .nav-text {
@@ -2302,7 +2306,7 @@ body.sidebar-collapsed .main-header,
 }
 
 .nav-item-has-submenu.active > .nav-link-parent .nav-icon {
-    color: var(--white-95);
+    color: var(--sidebar-icon-active);
 }
 
 /* =========================================
