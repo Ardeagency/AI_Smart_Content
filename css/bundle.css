@@ -100,7 +100,15 @@
 
     /* ── Opacidades negro (overlays, sombras) ── */
     --black-20: rgba(0, 0, 0, 0.2);
+    --black-40: rgba(0, 0, 0, 0.4);
     --black-50: rgba(0, 0, 0, 0.5);
+    --black-70: rgba(0, 0, 0, 0.7);
+
+    /* ── Colores puros ────────────────────────── */
+    --color-white: #ffffff;
+    --text-black: #000000;
+    --bg-light-gray: #f3f4f6;
+    --planes-dark: #0a1612;
 
     /* ── Warm accent opacidades ─────────────── */
     --warm-10: rgba(212, 117, 78, 0.1);
@@ -165,8 +173,8 @@
     --nav-item-height: 44px;
     --app-header-height: 45.8px;
     --sidebar-background: var(--bg-primary);
-    --sidebar-hover: rgba(255, 255, 255, 0.08);
-    --sidebar-active: rgba(255, 255, 255, 0.08);
+    --sidebar-hover: var(--white-8);
+    --sidebar-active: var(--white-8);
     --sidebar-icon-color: var(--text-secondary);
     --sidebar-text-primary: var(--text-primary);
     --sidebar-text-secondary: var(--text-secondary);
@@ -284,7 +292,7 @@ body {
 
 .btn-primary {
     background: linear-gradient(135deg, var(--accent-cta), var(--accent-cta-dark, var(--warm-3)));
-    color: #fff;
+    color: var(--color-white);
     border-color: transparent;
     font-weight: 600;
 }
@@ -315,7 +323,7 @@ body {
 
 .btn-danger {
     background: var(--color-error);
-    color: #fff;
+    color: var(--color-white);
     border-color: transparent;
 }
 .btn-danger:hover {
@@ -824,7 +832,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #050505;
+    background: var(--bg-black);
     pointer-events: auto;
     transition: opacity 0.9s ease-out;
 }
@@ -867,7 +875,7 @@ body {
     position: fixed;
     z-index: 2001;
     inset: 0;
-    background: #050505;
+    background: var(--bg-black);
     pointer-events: auto;
     transition: opacity 0.5s ease-out;
 }
@@ -883,7 +891,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #ecebda;
+    color: var(--text-primary);
     font-family: var(--font-sans, "Inter", sans-serif);
 }
 
@@ -929,7 +937,7 @@ body {
     top: 0;
     height: 100%;
     width: 0;
-    background: #fff;
+    background: var(--color-white);
     z-index: 2;
     opacity: 0;
     transition: opacity 0.15s ease-out, width 0.4s ease-out, left 0s, right 0s;
@@ -1012,7 +1020,7 @@ body {
     cursor: pointer;
     padding: 0.25rem;
     opacity: 0.7;
-    transition: opacity 0.2s ease;
+    transition: var(--transition);
 }
 
 .app-notification .notification-close:hover {
@@ -1128,7 +1136,7 @@ body.sidebar-collapsed .main-header,
     cursor: pointer;
     padding: 0;
     border-radius: var(--radius-sm);
-    transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+    transition: var(--transition-fast);
     flex-shrink: 0;
     margin-right: 0.5rem;
 }
@@ -1282,7 +1290,7 @@ body.sidebar-collapsed .main-header,
     flex-shrink: 0;
     overflow: hidden;
     cursor: pointer;
-    transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+    transition: var(--transition-fast);
 }
 
 .avatar-circle:hover {
@@ -1518,7 +1526,7 @@ body.sidebar-collapsed .main-header,
 /* Active en collapsed: barra izquierda + highlight sutil (no tarjeta gigante) */
 .side-navigation.collapsed .nav-link.active,
 .side-navigation.collapsed .nav-submenu-toggle.active {
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--white-5);
 }
 
 .side-navigation.collapsed .nav-link.active::before,
@@ -1979,7 +1987,7 @@ body.sidebar-collapsed .main-header,
 }
 
 .nav-flyout-link:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--white-5);
     color: var(--text-primary);
 }
 
@@ -2013,7 +2021,7 @@ body.sidebar-collapsed .main-header,
 }
 
 .nav-flyout-cta:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--white-5);
     color: var(--text-primary);
 }
 
@@ -2117,7 +2125,7 @@ body.sidebar-collapsed .main-header,
     min-height: var(--nav-item-height);
     color: var(--text-primary); /* Texto normal, no grita */
     text-decoration: none;
-    transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+    transition: var(--transition-fast);
     position: relative;
     font-weight: 400; /* Texto normal, no medium */
     font-size: 14px;
@@ -2130,7 +2138,7 @@ body.sidebar-collapsed .main-header,
 
 /* Hover sutil */
 .nav-link:hover {
-    color: rgba(255, 255, 255, 0.95);
+    color: var(--white-95);
     background: var(--bg-hover);
 }
 
@@ -2153,7 +2161,7 @@ body.sidebar-collapsed .main-header,
 }
 
 .nav-link.active .nav-icon {
-    color: rgba(255, 255, 255, 0.95); /* Ligeramente más brillante, pero sutil */
+    color: var(--white-95); /* Ligeramente más brillante, pero sutil */
 }
 
 
@@ -2185,7 +2193,7 @@ body.sidebar-collapsed .main-header,
     flex: 1;
     font-size: 14px;
     font-family: var(--font-family);
-    transition: opacity 0.15s ease;
+    transition: var(--transition-fast);
     opacity: 1;
     overflow: visible;
     line-height: 1.4;
@@ -2279,7 +2287,7 @@ body.sidebar-collapsed .main-header,
 }
 
 .nav-item-has-submenu.active > .nav-link-parent .nav-icon {
-    color: rgba(255, 255, 255, 0.95);
+    color: var(--white-95);
 }
 
 /* =========================================
@@ -2840,7 +2848,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     font-size: 20px;
     cursor: pointer;
     border-radius: var(--radius-sm);
-    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition: var(--transition);
 }
 
 /* Visible cuando hay sidebar (desktop y móvil) para colapsar/abrir */
@@ -2894,7 +2902,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     font-size: 12px;
     cursor: pointer;
     border-radius: var(--radius-sm);
-    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition: var(--transition);
 }
 
 .user-menu-btn:hover {
@@ -2915,7 +2923,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
-    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition: var(--transition);
     z-index: 1000;
 }
 
@@ -2960,7 +2968,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     font-size: 14px;
     text-decoration: none;
     cursor: pointer;
-    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition: var(--transition);
 }
 
 .user-dropdown-item:hover {
@@ -2994,7 +3002,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     cursor: pointer;
     font-size: 14px;
     color: var(--text-secondary);
-    transition: color 0.2s ease;
+    transition: var(--transition);
 }
 
 .user-dropdown-mode-option:hover {
@@ -3031,11 +3039,11 @@ body.sidebar-collapsed .app-header.with-sidebar {
     border: 1px solid var(--nav-border);
     border-radius: var(--radius-md);
     cursor: pointer;
-    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition: var(--transition);
 }
 
 .nav-identity-card:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--white-5);
     border-color: var(--border-color);
 }
 
@@ -3059,7 +3067,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     font-size: 12px;
     cursor: pointer;
     border-radius: var(--radius-sm);
-    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition: var(--transition);
 }
 
 .nav-org-chevron:hover {
@@ -3111,7 +3119,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
-    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition: var(--transition);
     z-index: 100;
     max-height: 300px;
     overflow-y: auto;
@@ -3261,7 +3269,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
-    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition: var(--transition);
 }
 
 .nav-mode-switch:hover {
@@ -3333,7 +3341,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
 .nav-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.7);
+    background: var(--black-70);
     z-index: var(--z-nav-overlay);
     opacity: 0;
     visibility: hidden;
@@ -3427,7 +3435,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
 .nav-mode-user .nav-chevron {
     font-size: 12px;
     color: var(--text-muted);
-    transition: transform 0.2s ease;
+    transition: var(--transition);
 }
 
 /* Submenú: indent 18px, solo texto, peso 400 */
@@ -3517,7 +3525,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     text-decoration: none;
     font-size: 13px;
     border-radius: var(--radius-sm);
-    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition: var(--transition);
 }
 
 .side-navigation:not(.nav-mode-user) .nav-submenu-link:hover,
@@ -3621,7 +3629,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition: var(--transition);
 }
 
 .error-actions .btn-primary {
@@ -3671,7 +3679,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     position: fixed;
     inset: 0;
     z-index: -1;
-    background: rgba(0, 0, 0, 0.4);
+    background: var(--black-40);
 }
 
 .landing-header {
@@ -3731,10 +3739,10 @@ body.sidebar-collapsed .app-header.with-sidebar {
 }
 
 .landing-footer-contact a {
-    color: #fff;
+    color: var(--color-white);
     text-decoration: none;
     opacity: 0.85;
-    transition: opacity 0.2s ease;
+    transition: var(--transition);
 }
 
 .landing-footer-contact a:hover {
@@ -3745,7 +3753,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     display: inline-flex;
     align-items: center;
     opacity: 0.85;
-    transition: opacity 0.2s ease;
+    transition: var(--transition);
 }
 
 .landing-footer-signature-link:hover {
@@ -3807,13 +3815,13 @@ body.sidebar-collapsed .app-header.with-sidebar {
     font-family: inherit;
     text-decoration: none;
     display: inline-block;
-    transition: opacity 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+    transition: var(--transition);
 }
 
 .auth-btn.login {
     background: transparent;
-    color: #fff;
-    border: 1px solid #fff;
+    color: var(--color-white);
+    border: 1px solid var(--color-white);
 }
 
 .auth-btn.login:hover {
@@ -3821,12 +3829,12 @@ body.sidebar-collapsed .app-header.with-sidebar {
 }
 
 .auth-btn.register {
-    background: #fff;
-    color: #000;
+    background: var(--color-white);
+    color: var(--text-black);
 }
 
 .auth-btn.register:hover {
-    background: #f3f4f6;
+    background: var(--bg-light-gray);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -3914,7 +3922,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     cursor: pointer;
     padding: 0.25rem;
     border-radius: var(--radius-xs);
-    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition: var(--transition);
     width: 32px;
     height: 32px;
     display: flex;
@@ -3954,7 +3962,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     font-family: inherit;
     color: var(--text-primary);
     background: var(--bg-secondary);
-    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition: var(--transition);
 }
 
 .login-card .form-input:focus {
@@ -3985,7 +3993,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: color 0.2s ease;
+    transition: var(--transition);
     z-index: 10;
 }
 
@@ -4004,7 +4012,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     font-size: var(--font-size-md);
     font-weight: 600;
     cursor: pointer;
-    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition: var(--transition);
     border: none;
     font-family: inherit;
     background: var(--accent-yellow);
@@ -4080,7 +4088,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     font-size: var(--font-size-md);
     font-weight: 600;
     cursor: pointer;
-    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition: var(--transition);
     border: none;
     font-family: inherit;
     background: var(--text-primary);
@@ -4306,7 +4314,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
 .signin-container input:focus {
     outline: none;
     border-color: var(--border-light);
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.06);
+    box-shadow: 0 0 0 2px var(--white-5);
 }
 
 /* Botones */
@@ -4576,7 +4584,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
 }
 
 .planes-cta-login .planes-link-login {
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--white-95);
     text-decoration: none;
     font-weight: 500;
     font-size: 0.95rem;
@@ -4608,7 +4616,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
 .planes-background-gradient {
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, #0d1f1a 0%, #0a1612 35%, #0f2e22 70%, #134330 100%);
+    background: linear-gradient(180deg, #0d1f1a 0%, var(--planes-dark) 35%, #0f2e22 70%, #134330 100%);
 }
 
 .planes-background-gradient::before {
@@ -4642,7 +4650,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
 .planes-hero-title {
     font-size: clamp(1.75rem, 4vw, 2.25rem);
     font-weight: 700;
-    color: #ffffff;
+    color: var(--color-white);
     margin: 0;
     line-height: 1.2;
     letter-spacing: -0.02em;
@@ -4662,7 +4670,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     padding: 0.5rem 1.25rem;
     font-size: 0.9rem;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--white-80);
     background: transparent;
     border: none;
     border-radius: var(--radius-sm);
@@ -4671,17 +4679,17 @@ body.sidebar-collapsed .app-header.with-sidebar {
 }
 
 .planes-toggle-btn:hover {
-    color: #ffffff;
+    color: var(--color-white);
 }
 
 .planes-toggle-btn.active {
-    background: #ffffff;
-    color: #0a1612;
+    background: var(--color-white);
+    color: var(--planes-dark);
 }
 
 .planes-hero-subtitle {
     font-size: 0.95rem;
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--text-secondary);
     margin: 0;
     line-height: 1.5;
 }
@@ -4731,38 +4739,38 @@ body.sidebar-collapsed .app-header.with-sidebar {
 }
 
 .planes-hero .plan-card-small.selected {
-    background: #ffffff;
+    background: var(--color-white);
     border-color: transparent;
     box-shadow: var(--shadow-card);
 }
 
 .planes-hero .plan-card-name {
-    color: rgba(255, 255, 255, 0.95);
+    color: var(--white-95);
 }
 
 .planes-hero .plan-card-small.selected .plan-card-name {
-    color: #0a1612;
+    color: var(--planes-dark);
 }
 
 .planes-hero .plan-card-price {
-    color: #ffffff;
+    color: var(--color-white);
 }
 
 .planes-hero .plan-card-price span {
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--white-80);
 }
 
 .planes-hero .plan-card-small.selected .plan-card-price,
 .planes-hero .plan-card-small.selected .plan-card-price span {
-    color: #0a1612;
+    color: var(--planes-dark);
 }
 
 .planes-hero .plan-card-credits {
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--text-secondary);
 }
 
 .planes-hero .plan-card-small.selected .plan-card-credits {
-    color: #0a1612;
+    color: var(--planes-dark);
 }
 
 /* Vertical cards: nombre arriba, precio y créditos centrados */
@@ -4790,7 +4798,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     padding: 0 0 0 1rem;
     font-size: var(--font-size-sm);
     line-height: 1.4;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--white-80);
     text-align: left;
     list-style: disc;
 }
@@ -4812,7 +4820,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     width: 50%;
     max-width: 50%;
     min-height: 100vh;
-    background: #000000;
+    background: var(--bg-black);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -4839,7 +4847,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
 .planes-form-title {
     font-size: 1.75rem;
     font-weight: 700;
-    color: #ffffff;
+    color: var(--color-white);
     margin: 0 0 0.35rem 0;
     letter-spacing: -0.02em;
 }
@@ -4902,7 +4910,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     width: 100%;
     padding: 0.75rem 1rem 0.75rem 2.75rem;
     font-size: 0.95rem;
-    color: #ffffff;
+    color: var(--color-white);
     background: #1a1a1a;
     border: 1px solid #2d2d2d;
     border-radius: var(--radius-md);
@@ -4959,7 +4967,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     padding: 0.875rem 1.25rem;
     font-size: 0.95rem;
     font-weight: 600;
-    color: #ffffff;
+    color: var(--color-white);
     background: #1f2937;
     border: 1px solid #374151;
     border-radius: var(--radius-md);
@@ -4990,7 +4998,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
 }
 
 .planes-login-link .login-link {
-    color: #ffffff;
+    color: var(--color-white);
     text-decoration: none;
     font-weight: 500;
 }
@@ -5038,7 +5046,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
 .confirmation-title {
     font-size: var(--font-size-2xl);
     font-weight: 700;
-    color: #ffffff;
+    color: var(--color-white);
     margin: 0 0 0.75rem 0;
 }
 
@@ -5050,7 +5058,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
 }
 
 .confirmation-message strong {
-    color: #ffffff;
+    color: var(--color-white);
 }
 
 .confirmation-instructions {
@@ -5071,8 +5079,8 @@ body.sidebar-collapsed .app-header.with-sidebar {
     padding: 0.875rem 1.5rem;
     font-size: 0.95rem;
     font-weight: 600;
-    background: #ffffff;
-    color: #000000;
+    background: var(--color-white);
+    color: var(--text-black);
     border: none;
     border-radius: var(--radius-md);
     cursor: pointer;
@@ -5084,7 +5092,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
 }
 
 .btn-resend-email:hover:not(:disabled) {
-    background: #f3f4f6;
+    background: var(--bg-light-gray);
 }
 
 .btn-resend-email:disabled {
@@ -5103,7 +5111,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     background: transparent;
     border: 1px solid #2d2d2d;
     border-radius: var(--radius-md);
-    color: #ffffff;
+    color: var(--color-white);
     font-weight: 500;
     text-decoration: none;
     transition: var(--transition);
@@ -5337,7 +5345,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
 
 .hogar-empty .btn-primary {
     background: var(--hogar-accent);
-    color: #fff;
+    color: var(--color-white);
     border: none;
     padding: 0.65rem 1.25rem;
     border-radius: var(--hogar-radius);
@@ -5346,7 +5354,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
 
 .hogar-empty .btn-primary:hover {
     background: var(--hogar-accent-hover);
-    color: #fff;
+    color: var(--color-white);
 }
 
 /* ============================================
@@ -5418,7 +5426,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     color: var(--hogar-text-muted);
     font-size: 0.9rem;
     cursor: pointer;
-    transition: color 0.2s ease, opacity 0.2s ease;
+    transition: var(--transition);
 }
 
 .org-card-fav-icon {
@@ -5578,7 +5586,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     font-size: var(--font-size-xl);
     cursor: pointer;
     padding: 0.25rem;
-    transition: color 0.2s ease;
+    transition: var(--transition);
 }
 
 .hogar-container .modal-close:hover {
@@ -5609,7 +5617,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     border-radius: var(--hogar-radius);
     color: var(--text-primary);
     font-size: var(--font-size-md);
-    transition: border-color 0.2s ease;
+    transition: var(--transition);
 }
 
 .hogar-container .form-group input:focus {
@@ -5633,7 +5641,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     font-weight: 600;
     font-size: var(--font-size-base);
     cursor: pointer;
-    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition: var(--transition);
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
@@ -6222,7 +6230,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition: var(--transition);
     font-size: var(--font-size-base);
     padding: 0;
 }
@@ -6376,7 +6384,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     border: 1px solid var(--border-color);
     position: relative;
     cursor: default;
-    transition: transform 0.2s ease;
+    transition: var(--transition);
     flex-shrink: 0;
 }
 
@@ -6394,7 +6402,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     border-radius: 50%;
     border: 1px solid rgba(255, 255, 255, 0.25);
     background: var(--color-critical);
-    color: #fff;
+    color: var(--color-white);
     font-size: var(--font-size-sm);
     line-height: 1;
     padding: 0;
@@ -6425,19 +6433,19 @@ h1.brand-name-large[contenteditable="true"]:hover,
     height: 40px;
     border-radius: 50%;
     border: 2px dashed rgba(255, 255, 255, 0.35);
-    background: rgba(255, 255, 255, 0.06);
-    color: rgba(255, 255, 255, 0.5);
+    background: var(--white-5);
+    color: var(--white-50);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+    transition: var(--transition);
 }
 
 .color-swatch-add-btn:hover {
-    border-color: rgba(255, 255, 255, 0.5);
-    color: rgba(255, 255, 255, 0.8);
+    border-color: var(--white-50);
+    color: var(--white-80);
     background: var(--white-8);
 }
 
@@ -6456,7 +6464,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0, 0, 0, 0.6);
+    background: var(--black-50);
     backdrop-filter: blur(4px);
 }
 
@@ -6498,8 +6506,8 @@ h1.brand-name-large[contenteditable="true"]:hover,
     width: 14px;
     height: 14px;
     border-radius: 50%;
-    border: 2px solid #fff;
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+    border: 2px solid var(--color-white);
+    box-shadow: 0 0 0 1px var(--black-50);
     pointer-events: none;
 }
 
@@ -6511,8 +6519,8 @@ h1.brand-name-large[contenteditable="true"]:hover,
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    border: 2px solid #fff;
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+    border: 2px solid var(--color-white);
+    box-shadow: 0 0 0 1px var(--black-50);
     pointer-events: none;
 }
 
@@ -6717,7 +6725,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     font-size: var(--font-size-sm);
     color: var(--icon-button);
     text-decoration: none;
-    transition: opacity 0.2s;
+    transition: var(--transition);
 }
 
 /* Botón Subir archivo (contenedor interactivo) */
@@ -6735,7 +6743,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    transition: background 0.2s ease, border-color 0.2s ease;
+    transition: var(--transition);
 }
 
 .file-upload-btn:hover {
@@ -6971,7 +6979,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     padding: 0.25rem 0.4rem;
     font-size: inherit;
     color: var(--text-primary);
-    background: rgba(0,0,0,0.2);
+    background: var(--black-20);
     border: 1px solid var(--white-15);
     border-radius: var(--radius-xs);
     outline: none;
@@ -7017,7 +7025,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     font-size: var(--font-size-base);
     border-radius: var(--radius-sm);
     border: 1px solid var(--white-20);
-    background: rgba(0,0,0,0.2);
+    background: var(--black-20);
     color: var(--text-primary);
 }
 
@@ -7028,7 +7036,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     font-size: var(--font-size-base);
     border-radius: var(--radius-sm);
     border: 1px solid var(--white-20);
-    background: rgba(0,0,0,0.2);
+    background: var(--black-20);
     color: var(--text-primary);
 }
 
@@ -7511,7 +7519,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     color: var(--text-secondary);
     font-weight: 500;
     cursor: pointer;
-    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition: var(--transition);
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -7909,7 +7917,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     font-size: 0.9375rem;
     font-family: inherit;
     cursor: pointer;
-    transition: background 0.2s ease, border-color 0.2s ease;
+    transition: var(--transition);
 }
 
 .settings-form .btn-primary:hover:not(:disabled) {
@@ -8227,7 +8235,7 @@ body.sidebar-collapsed .living-container {
 .living-date-cell.range-start,
 .living-date-cell.range-end {
     background: var(--info-color);
-    color: #fff;
+    color: var(--color-white);
 }
 
 .living-date-cell.in-range {
@@ -8351,13 +8359,13 @@ body.sidebar-collapsed .living-container {
     border-radius: 50%;
     background: rgba(0, 0, 0, 0.55);
     border: none;
-    color: rgba(255, 255, 255, 0.95);
+    color: var(--white-95);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     opacity: 0;
-    transition: opacity 0.2s ease;
+    transition: var(--transition);
     font-size: var(--font-size-base);
 }
 
@@ -8369,7 +8377,7 @@ body.sidebar-collapsed .living-container {
 .history-card-actions .history-card-download:hover,
 .history-card-actions .history-card-copy-prompt:hover {
     background: rgba(0, 0, 0, 0.75);
-    color: #fff;
+    color: var(--color-white);
 }
 
 .history-card-actions .history-card-copy-prompt.history-copy-ok {
@@ -8384,7 +8392,7 @@ body.sidebar-collapsed .living-container {
     right: 0;
     padding: 8px 10px;
     background: linear-gradient(transparent, rgba(0, 0, 0, 0.75));
-    color: #fff;
+    color: var(--color-white);
     font-size: var(--font-size-sm);
     font-weight: 600;
     letter-spacing: 0.02em;
@@ -8606,7 +8614,7 @@ body.sidebar-collapsed .living-container {
     content: '';
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.6);
+    background: var(--black-50);
     opacity: 0;
     transition: opacity 0.3s ease;
     z-index: 2;
@@ -8706,7 +8714,7 @@ body.sidebar-collapsed .living-container {
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    background: rgba(0, 0, 0, 0.7);
+    background: var(--black-70);
     backdrop-filter: blur(10px);
     border: 1px solid var(--white-20);
     color: var(--living-text-light);
@@ -8723,7 +8731,7 @@ body.sidebar-collapsed .living-container {
     background: rgba(212, 117, 78, 0.9);
     border-color: var(--warm-50);
     transform: scale(1.1);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 6px 16px var(--black-40);
 }
 
 .featured-card-download-btn i {
@@ -9461,7 +9469,7 @@ body.sidebar-collapsed .living-container {
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s ease;
+    transition: var(--transition);
 }
 
 .studio-btn-producir:hover:not(:disabled) {
@@ -9515,7 +9523,7 @@ body.sidebar-collapsed .living-container {
   padding: 0.4rem 0.75rem;
   border-radius: 999px;
   background: rgba(125, 211, 252, 0.15);
-  transition: background 0.2s ease;
+    transition: var(--transition);
 }
 
 .studio-tab-future:hover {
@@ -9557,7 +9565,7 @@ body.sidebar-collapsed .living-container {
   flex-direction: column;
   gap: 0.5rem;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition: var(--transition);
 }
 
 .studio-card-flow:hover {
@@ -9616,7 +9624,7 @@ body.sidebar-collapsed .living-container {
   color: var(--text-muted);
   font-size: 0.8rem;
   cursor: pointer;
-  transition: color 0.2s ease;
+    transition: var(--transition);
 }
 
 .studio-back-flows:hover {
@@ -9853,7 +9861,7 @@ body.sidebar-collapsed .living-container {
   align-items: center;
   min-height: 320px;
   padding: 2rem 2.5rem;
-  background: linear-gradient(135deg, var(--bg-hover) 0%, rgba(0,0,0,0.5) 50%);
+  background: linear-gradient(135deg, var(--bg-hover) 0%, var(--black-50) 50%);
   border-radius: var(--radius-lg);
   margin: 0 0.5rem;
   border: 1px solid var(--border-divider);
@@ -9892,7 +9900,7 @@ body.sidebar-collapsed .living-container {
   border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.2s ease;
+    transition: var(--transition);
 }
 .flow-hero-slide-cta:hover {
   background: var(--accent-yellow-hover);
@@ -9933,15 +9941,15 @@ body.sidebar-collapsed .living-container {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: rgba(0,0,0,0.6);
+  background: var(--black-50);
   border: 1px solid var(--white-15);
-  color: #fff;
+  color: var(--color-white);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2;
-  transition: background 0.2s, transform 0.2s;
+    transition: var(--transition);
 }
 .flow-catalog-hero-nav:hover {
   background: var(--bg-hover);
@@ -9989,7 +9997,7 @@ body.sidebar-collapsed .living-container {
   border: 1px solid var(--border-color);
   border-radius: 999px;
   text-decoration: none;
-  transition: color 0.2s, background 0.2s, border-color 0.2s;
+    transition: var(--transition);
   white-space: nowrap;
 }
 .flow-catalog-category-chip:hover {
@@ -10022,7 +10030,7 @@ body.sidebar-collapsed .living-container {
   border-radius: var(--radius-md);
   overflow: hidden;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    transition: var(--transition);
   display: block;
   text-align: left;
 }
@@ -10072,7 +10080,7 @@ body.sidebar-collapsed .living-container {
   justify-content: center;
   color: var(--text-muted);
   font-size: var(--font-size-4xl);
-  background: linear-gradient(145deg, var(--bg-hover) 0%, rgba(0, 0, 0, 0.4) 100%);
+  background: linear-gradient(145deg, var(--bg-hover) 0%, var(--black-40) 100%);
 }
 .flow-card:hover .flow-card-placeholder,
 .flow-card:focus-visible .flow-card-placeholder {
@@ -10096,12 +10104,12 @@ body.sidebar-collapsed .living-container {
   text-transform: uppercase;
   letter-spacing: 0.03em;
   border-radius: var(--radius-sm);
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--black-50);
   color: var(--text-primary);
 }
 .flow-card-badge--new {
   background: rgba(76, 175, 80, 0.9);
-  color: #fff;
+  color: var(--color-white);
 }
 .flow-card-badge--trending {
   background: var(--accent-warm);
@@ -10119,7 +10127,7 @@ body.sidebar-collapsed .living-container {
   bottom: 0;
   padding: 1rem 0.75rem;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.35) 50%, transparent 100%);
-  color: #fff;
+  color: var(--color-white);
   z-index: 1;
   transition: opacity 0.25s ease;
 }
@@ -10131,7 +10139,7 @@ body.sidebar-collapsed .living-container {
 .flow-card--catalog .flow-card-title {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--color-white);
   margin: 0;
   line-height: 1.25;
   display: -webkit-box;
@@ -10149,8 +10157,8 @@ body.sidebar-collapsed .living-container {
   align-items: center;
   justify-content: center;
   padding: 1rem 0.75rem;
-  background: rgba(0, 0, 0, 0.5);
-  color: #fff;
+  background: var(--black-50);
+  color: var(--color-white);
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.25s ease, visibility 0.25s ease;
@@ -10181,7 +10189,7 @@ body.sidebar-collapsed .living-container {
   padding: 0.25rem 0.5rem;
   font-size: 0.65rem;
   font-weight: 500;
-  color: #fff;
+  color: var(--color-white);
   background: var(--white-20);
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: var(--radius-sm);
@@ -10194,7 +10202,7 @@ body.sidebar-collapsed .living-container {
   justify-content: center;
   gap: 0.75rem;
   font-size: var(--font-size-sm);
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--white-95);
 }
 .flow-card-metric {
   display: inline-flex;
@@ -10211,7 +10219,7 @@ body.sidebar-collapsed .living-container {
   gap: 0.35rem;
   font-size: var(--font-size-sm);
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--white-95);
 }
 .flow-card-output-type i {
   font-size: 0.8rem;
@@ -10465,7 +10473,7 @@ body.sidebar-collapsed .living-container {
     font-size: var(--font-size-base);
     font-weight: 500;
     cursor: pointer;
-    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition: var(--transition);
     white-space: nowrap;
     flex-shrink: 0;
 }
@@ -10774,7 +10782,7 @@ body.sidebar-collapsed .living-container {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
+    background: var(--black-50);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -10802,7 +10810,7 @@ body.sidebar-collapsed .living-container {
     border-radius: var(--radius-sm);
     color: white;
     cursor: pointer;
-    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition: var(--transition);
     backdrop-filter: blur(4px);
 }
 
@@ -10849,7 +10857,7 @@ body.sidebar-collapsed .living-container {
     border-radius: var(--radius-xs);
     color: var(--text-secondary);
     cursor: pointer;
-    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition: var(--transition);
     font-size: var(--font-size-sm);
 }
 
@@ -11092,7 +11100,7 @@ body.sidebar-collapsed .living-container {
 .product-view-breadcrumbs a {
   color: var(--living-text-light);
   text-decoration: none;
-  transition: color 0.2s ease;
+    transition: var(--transition);
 }
 
 .product-view-breadcrumbs a:hover {
@@ -11118,7 +11126,7 @@ body.sidebar-collapsed .living-container {
   color: var(--living-text-muted);
   font-size: 0.9rem;
   cursor: pointer;
-  transition: color 0.2s ease;
+    transition: var(--transition);
   text-decoration: none;
 }
 
@@ -11186,7 +11194,7 @@ body.sidebar-collapsed .living-container {
   overflow: hidden;
   border: 2px solid transparent;
   cursor: pointer;
-  transition: border-color 0.2s ease, opacity 0.2s ease;
+    transition: var(--transition);
   background: var(--living-bg-surface, #0E1012);
 }
 
@@ -11239,7 +11247,7 @@ body.sidebar-collapsed .living-container {
   color: var(--living-text-light);
   font-size: 0.95rem;
   font-family: inherit;
-  transition: border-color 0.2s ease;
+    transition: var(--transition);
 }
 
 .product-view-input:focus,
@@ -11381,7 +11389,7 @@ body.sidebar-collapsed .living-container {
 .form-record-container {
     min-height: 100vh;
     background: #0a0a0f;
-    color: #fff;
+    color: var(--color-white);
     padding: 0;
     margin: 0;
     display: flex;
@@ -11466,7 +11474,7 @@ body.sidebar-collapsed .living-container {
 .form-record-container .step-title {
     font-size: var(--font-size-xl);
     font-weight: 600;
-    color: #fff;
+    color: var(--color-white);
     margin: 0 0 0.25rem 0;
     text-align: center;
 }
@@ -11482,11 +11490,11 @@ body.sidebar-collapsed .living-container {
     background: #1e1e24;
     border: 1px solid #3d3d45;
     border-radius: var(--radius-md);
-    color: #fff;
+    color: var(--color-white);
     font-size: var(--font-size-md);
     font-family: inherit;
     line-height: 1.4;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    transition: var(--transition);
     -webkit-appearance: none;
     appearance: none;
     box-sizing: border-box;
@@ -11502,13 +11510,13 @@ body.sidebar-collapsed .living-container {
 
 .form-record-container select.form-select option {
     background: #1e1e24;
-    color: #fff;
+    color: var(--color-white);
 }
 
 .form-record-container .form-input::placeholder,
 .form-record-container input[type="text"]::placeholder,
 .form-record-container input[type="url"]::placeholder {
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--white-50);
 }
 
 .form-record-container .form-input:focus,
@@ -11517,7 +11525,7 @@ body.sidebar-collapsed .living-container {
 .form-record-container select.form-select:focus {
     outline: none;
     border-color: #5b5b66;
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.06);
+    box-shadow: 0 0 0 2px var(--white-5);
 }
 
 /* Bloque "Datos de tarjeta — por ahora desactivado" */
@@ -11531,13 +11539,13 @@ body.sidebar-collapsed .living-container {
 
 .form-record-container .form-step-disabled p {
     margin: 0;
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--text-secondary);
     font-size: 0.95rem;
 }
 
 .form-record-container .form-step-disabled-sub {
     margin-top: 0.5rem;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--white-50);
     font-size: 0.85rem;
 }
 
@@ -11550,10 +11558,10 @@ body.sidebar-collapsed .living-container {
     font-weight: 600;
     font-size: var(--font-size-md);
     cursor: pointer;
-    transition: background 0.2s ease, border-color 0.2s ease;
+    transition: var(--transition);
     border: 1px solid #3d3d45;
     background: #25252d;
-    color: #fff;
+    color: var(--color-white);
     font-family: inherit;
     display: inline-flex;
     align-items: center;
@@ -11572,13 +11580,13 @@ body.sidebar-collapsed .living-container {
 
 .form-record-container .btn-secondary {
     background: transparent;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--white-80);
     border: 1px solid #3d3d45;
 }
 
 .form-record-container .btn-secondary:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.06);
-    color: #fff;
+    background: var(--white-5);
+    color: var(--color-white);
     border-color: #4a4a54;
 }
 
@@ -11659,7 +11667,7 @@ body.sidebar-collapsed .living-container {
     color: var(--text-secondary);
     font-weight: 500;
     cursor: pointer;
-    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition: var(--transition);
 }
 
 .organization-tabs .tab-btn:hover {
@@ -11763,7 +11771,7 @@ body.sidebar-collapsed .living-container {
 }
 
 .metadata-value code {
-    background: rgba(255,255,255,0.06);
+    background: var(--white-5);
     padding: 0.2rem 0.5rem;
     border-radius: var(--radius-xs);
 }
@@ -11866,7 +11874,7 @@ body.sidebar-collapsed .living-container {
     position: fixed;
     inset: 0;
     z-index: 2000;
-    background: rgba(0,0,0,0.5);
+    background: var(--black-50);
     align-items: center;
     justify-content: center;
     padding: 1rem;
@@ -12090,7 +12098,7 @@ body.sidebar-collapsed .living-container {
   background: var(--dev-bg-card);
   border: 1px solid var(--dev-card-border);
   border-radius: var(--radius-md);
-  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: var(--transition);
 }
 
 .dev-stat-card:hover {
@@ -12188,7 +12196,7 @@ body.sidebar-collapsed .living-container {
   font-size: var(--font-size-base);
   color: var(--dev-primary);
   text-decoration: none;
-  transition: color 0.2s;
+    transition: var(--transition);
 }
 
 .dev-section-link:hover {
@@ -12210,7 +12218,7 @@ body.sidebar-collapsed .living-container {
   padding: 14px 20px;
   border-bottom: 1px solid var(--dev-card-border);
   cursor: pointer;
-  transition: background 0.2s;
+    transition: var(--transition);
 }
 
 .dev-flow-item:last-child {
@@ -12296,7 +12304,7 @@ body.sidebar-collapsed .living-container {
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+  transition: var(--transition);
 }
 
 .dev-flow-action:hover {
@@ -12525,7 +12533,7 @@ body.sidebar-collapsed .living-container {
   color: var(--text-secondary);
   font-size: var(--font-size-base);
   cursor: pointer;
-  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+  transition: var(--transition);
 }
 
 .dev-filter-btn:hover {
@@ -12579,7 +12587,7 @@ body.sidebar-collapsed .living-container {
   border-radius: var(--radius-md);
   overflow: hidden;
   cursor: pointer;
-  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+  transition: var(--transition);
 }
 
 .dev-flow-card:hover {
@@ -12695,7 +12703,7 @@ body.sidebar-collapsed .living-container {
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+  transition: var(--transition);
 }
 
 .dev-flow-action-btn:hover {
@@ -12779,7 +12787,7 @@ body.sidebar-collapsed .living-container {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--text-secondary);
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--black-20);
 }
 
 .log-severity-badge {
@@ -12835,7 +12843,7 @@ body.sidebar-collapsed .living-container {
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
-  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+  transition: var(--transition);
 }
 
 .log-action-btn:hover {
@@ -12859,7 +12867,7 @@ body.sidebar-collapsed .living-container {
   color: var(--text-primary);
   font-size: var(--font-size-base);
   cursor: pointer;
-  transition: color 0.2s, background-color 0.2s, border-color 0.2s, opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+  transition: var(--transition);
 }
 
 .pagination-btn:hover:not(:disabled) {
@@ -13031,7 +13039,7 @@ body.sidebar-collapsed .living-container {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--black-70);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -13188,7 +13196,7 @@ body.sidebar-collapsed .living-container {
   font-size: var(--font-size-base);
   font-weight: 500;
   cursor: pointer;
-  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: var(--transition);
 }
 
 .btn-builder-primary:hover {
@@ -13212,7 +13220,7 @@ body.sidebar-collapsed .living-container {
   font-size: var(--font-size-base);
   font-weight: 500;
   cursor: pointer;
-  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: var(--transition);
 }
 
 .btn-builder-secondary:hover {
@@ -13231,7 +13239,7 @@ body.sidebar-collapsed .living-container {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: var(--transition);
 }
 
 .btn-builder-icon:hover {
@@ -13251,7 +13259,7 @@ body.sidebar-collapsed .living-container {
   font-size: var(--font-size-base);
   font-weight: 500;
   cursor: pointer;
-  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: var(--transition);
 }
 
 .btn-builder-danger:hover {
@@ -13288,7 +13296,7 @@ body.sidebar-collapsed .living-container {
   color: var(--text-primary);
   font-size: var(--font-size-base);
   cursor: pointer;
-  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: var(--transition);
   text-align: left;
 }
 
@@ -13649,7 +13657,7 @@ body.sidebar-collapsed .living-container {
   border: 1px solid var(--border-color);
   background: var(--bg-primary);
   color: var(--text-primary);
-  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: var(--transition);
 }
 
 .btn-builder-footer:hover {
@@ -13793,7 +13801,7 @@ body.sidebar-collapsed .living-container {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   outline: none;
-  transition: border-color 0.2s ease, background 0.2s ease;
+  transition: var(--transition);
 }
 
 .builder-components-search::placeholder {
@@ -13871,7 +13879,7 @@ body.sidebar-collapsed .living-container {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   cursor: grab;
-  transition: border-color 0.2s ease, background 0.2s ease;
+  transition: var(--transition);
   min-height: 64px;
 }
 
@@ -13965,7 +13973,7 @@ body.sidebar-collapsed .living-container {
   font-size: var(--font-size-base);
   font-weight: 500;
   cursor: pointer;
-  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: var(--transition);
 }
 
 .builder-tab:hover {
@@ -14047,7 +14055,7 @@ body.sidebar-collapsed .living-container {
   border-radius: var(--radius-sm);
   margin-bottom: 12px;
   cursor: pointer;
-  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: var(--transition);
 }
 
 /* X eliminar: esquina derecha, solo visible al hover del contenedor */
@@ -14069,7 +14077,7 @@ body.sidebar-collapsed .living-container {
   cursor: pointer;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s ease, background 0.2s ease, color 0.2s ease;
+  transition: var(--transition);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 .canvas-field:hover .canvas-field-remove {
@@ -14153,7 +14161,7 @@ body.sidebar-collapsed .living-container {
   display: flex;
   gap: 4px;
   opacity: 1;
-  transition: opacity 0.2s ease;
+  transition: var(--transition);
 }
 
 .canvas-field:hover .canvas-field-actions {
@@ -14171,7 +14179,7 @@ body.sidebar-collapsed .living-container {
   border-radius: var(--radius-xs);
   color: var(--text-muted);
   cursor: pointer;
-  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: var(--transition);
 }
 
 .field-action-btn:hover {
@@ -14295,7 +14303,7 @@ body.sidebar-collapsed .living-container {
   border: 1px solid var(--border-color);
   position: relative;
   cursor: default;
-  transition: transform 0.2s ease;
+  transition: var(--transition);
   flex-shrink: 0;
 }
 .input-colors-wrap .color-swatch:hover {
@@ -14310,7 +14318,7 @@ body.sidebar-collapsed .living-container {
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.25);
   background: var(--color-critical);
-  color: #fff;
+  color: var(--color-white);
   font-size: var(--font-size-sm);
   line-height: 1;
   padding: 0;
@@ -14337,18 +14345,18 @@ body.sidebar-collapsed .living-container {
   height: 40px;
   border-radius: 50%;
   border: 2px dashed rgba(255, 255, 255, 0.35);
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.5);
+  background: var(--white-5);
+  color: var(--white-50);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+  transition: var(--transition);
 }
 .input-colors-wrap .color-swatch-add-btn:hover {
-  border-color: rgba(255, 255, 255, 0.5);
-  color: rgba(255, 255, 255, 0.8);
+  border-color: var(--white-50);
+  color: var(--white-80);
   background: var(--white-8);
 }
 .input-colors-wrap .color-swatch-add-btn span {
@@ -14364,7 +14372,7 @@ body.sidebar-collapsed .living-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--black-50);
   backdrop-filter: blur(4px);
 }
 .color-editor-panel {
@@ -14399,8 +14407,8 @@ body.sidebar-collapsed .living-container {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  border: 2px solid #fff;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+  border: 2px solid var(--color-white);
+  box-shadow: 0 0 0 1px var(--black-50);
   pointer-events: none;
 }
 .color-editor-hue-handle {
@@ -14411,8 +14419,8 @@ body.sidebar-collapsed .living-container {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  border: 2px solid #fff;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+  border: 2px solid var(--color-white);
+  box-shadow: 0 0 0 1px var(--black-50);
   pointer-events: none;
 }
 .color-editor-current {
@@ -14588,7 +14596,7 @@ body.sidebar-collapsed .living-container {
   border: 1px solid var(--border-color);
   background: var(--bg-secondary);
   cursor: pointer;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: var(--transition);
 }
 .image-selector-card:hover {
   border-color: var(--dev-primary);
@@ -15252,7 +15260,7 @@ body.sidebar-collapsed .living-container {
   color: var(--text-primary);
   font-size: var(--font-size-base);
   font-family: inherit;
-  transition: border-color 0.2s ease;
+    transition: var(--transition);
 }
 
 .settings-field input:focus,
@@ -15348,7 +15356,7 @@ body.sidebar-collapsed .living-container {
 
 .image-preview--upload {
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition: var(--transition);
 }
 .image-preview--upload:hover {
   background: var(--bg-hover);
@@ -16093,7 +16101,7 @@ body.sidebar-collapsed .living-container {
   font-size: var(--font-size-base);
   font-weight: 500;
   cursor: pointer;
-  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: var(--transition);
 }
 
 .dev-lead-tab:hover {
@@ -16177,7 +16185,7 @@ body.sidebar-collapsed .living-container {
 }
 
 .dev-lead-table th {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--black-20);
   color: var(--text-secondary);
   font-weight: 600;
 }
@@ -16202,7 +16210,7 @@ body.sidebar-collapsed .living-container {
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: var(--transition);
 }
 
 .dev-lead-actions .btn-icon:hover {
@@ -16400,7 +16408,7 @@ body.sidebar-collapsed .living-container {
 .dev-lead-modal .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--black-70);
   z-index: 0;
   cursor: pointer;
 }
@@ -16526,7 +16534,7 @@ body.sidebar-collapsed .living-container {
 .dev-lead-modal .modal-footer .btn-primary {
   background: var(--dev-primary);
   border: none;
-  color: #fff;
+  color: var(--color-white);
   padding: 8px 16px;
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -16752,7 +16760,7 @@ body.sidebar-collapsed .living-container {
   color: var(--text-secondary);
   font-size: 0.8125rem;
   cursor: pointer;
-  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: var(--transition);
 }
 
 .env-btn:hover {
@@ -16807,7 +16815,7 @@ body.sidebar-collapsed .living-container {
   background: var(--bg-primary);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background 0.2s ease;
+    transition: var(--transition);
 }
 
 .test-case-item:hover {
@@ -16839,7 +16847,7 @@ body.sidebar-collapsed .living-container {
   display: flex;
   gap: 4px;
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: var(--transition);
 }
 
 .test-case-item:hover .test-case-actions {
@@ -16877,7 +16885,7 @@ body.sidebar-collapsed .living-container {
   font-size: var(--font-size-base);
   font-weight: 500;
   cursor: pointer;
-  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: var(--transition);
 }
 
 .test-tab:hover {
@@ -17315,7 +17323,7 @@ body.sidebar-collapsed .living-container {
   background: var(--bg-primary);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: var(--transition);
 }
 
 .history-item:hover {
@@ -17849,7 +17857,7 @@ body.sidebar-collapsed .living-container {
   color: var(--text-secondary);
   font-size: 0.8125rem;
   cursor: pointer;
-  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: var(--transition);
 }
 
 .filter-btn:hover {
@@ -18071,7 +18079,7 @@ body.sidebar-collapsed .living-container {
   color: var(--text-muted);
   cursor: pointer;
   opacity: 0;
-  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: var(--transition);
 }
 
 .webhook-url-cell:hover .btn-icon-tiny {
@@ -19532,7 +19540,7 @@ body.sidebar-collapsed .living-container {
 }
 
 .input-container input::placeholder {
-    color: rgba(0, 0, 0, 0.5);
+    color: var(--black-50);
 }
 
 /* Botón de toggle password */
@@ -19541,7 +19549,7 @@ body.sidebar-collapsed .living-container {
     right: 12px;
     background: none;
     border: none;
-    color: rgba(0, 0, 0, 0.5);
+    color: var(--black-50);
     cursor: pointer;
     padding: 5px;
     transition: color 0.3s ease;
@@ -19549,7 +19557,7 @@ body.sidebar-collapsed .living-container {
 }
 
 .toggle-password:hover {
-    color: rgba(0, 0, 0, 0.7);
+    color: var(--black-70);
 }
 
 /* Indicador de fortaleza de contraseña */
@@ -19779,7 +19787,7 @@ body.sidebar-collapsed .living-container {
 }
 
 .social-button:hover {
-    background: rgba(255, 255, 255, 0.9);
+    background: var(--white-95);
     border-color: rgba(0, 0, 0, 0.15);
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);

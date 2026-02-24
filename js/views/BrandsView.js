@@ -49,6 +49,11 @@ class BrandsView extends BaseView {
       clearTimeout(this._tryRenderTimeout);
       this._tryRenderTimeout = null;
     }
+    if (this._domObserver) {
+      this._domObserver.disconnect();
+      this._domObserver = null;
+    }
+    this.cleanup();
   }
 
   async render() {
@@ -89,11 +94,19 @@ class BrandsView extends BaseView {
     };
 
     if (!checkContainers()) {
-      const observer = new MutationObserver(() => {
-        if (checkContainers()) observer.disconnect();
+      this._domObserver = new MutationObserver(() => {
+        if (checkContainers() && this._domObserver) {
+          this._domObserver.disconnect();
+          this._domObserver = null;
+        }
       });
-      observer.observe(container, { childList: true, subtree: true });
-      setTimeout(() => observer.disconnect(), 2000);
+      this._domObserver.observe(container, { childList: true, subtree: true });
+      setTimeout(() => {
+        if (this._domObserver) {
+          this._domObserver.disconnect();
+          this._domObserver = null;
+        }
+      }, 2000);
     }
   }
 

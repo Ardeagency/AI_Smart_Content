@@ -171,24 +171,6 @@ class BaseView {
   }
   
   /**
-   * Ocultar la vista (sin destruir)
-   */
-  hide() {
-    if (this.container) {
-      this.container.style.display = 'none';
-    }
-  }
-  
-  /**
-   * Mostrar la vista
-   */
-  show() {
-    if (this.container) {
-      this.container.style.display = '';
-    }
-  }
-
-  /**
    * Limpiar listeners registrados con addEventListener (evita fugas al salir de la vista)
    */
   cleanup() {
@@ -600,37 +582,24 @@ class BaseView {
     const headerUserLogout = document.getElementById('headerUserLogout');
 
     if (!headerUser || !headerUserChevron || !headerUserDropdown) return;
+    if (headerUser.hasAttribute('data-dropdown-bound')) return;
+    headerUser.setAttribute('data-dropdown-bound', '1');
 
-    // Toggle dropdown
     headerUser.addEventListener('click', (e) => {
       e.stopPropagation();
       const isOpen = headerUserDropdown.classList.contains('open');
-      
-      // Cerrar otros dropdowns
       document.querySelectorAll('.header-user-dropdown.open').forEach(dropdown => {
-        if (dropdown !== headerUserDropdown) {
-          dropdown.classList.remove('open');
-        }
+        if (dropdown !== headerUserDropdown) dropdown.classList.remove('open');
       });
 
-      if (isOpen) {
-        headerUserDropdown.classList.remove('open');
-        const icon = headerUserChevron.querySelector('i');
-        if (icon) {
-          icon.classList.remove('fa-chevron-up');
-          icon.classList.add('fa-chevron-down');
-        }
-      } else {
-        headerUserDropdown.classList.add('open');
-        const icon = headerUserChevron.querySelector('i');
-        if (icon) {
-          icon.classList.remove('fa-chevron-down');
-          icon.classList.add('fa-chevron-up');
-        }
+      headerUserDropdown.classList.toggle('open', !isOpen);
+      const icon = headerUserChevron.querySelector('i');
+      if (icon) {
+        icon.classList.toggle('fa-chevron-up', !isOpen);
+        icon.classList.toggle('fa-chevron-down', isOpen);
       }
     });
 
-    // Logout
     if (headerUserLogout) {
       headerUserLogout.addEventListener('click', async (e) => {
         e.preventDefault();
@@ -639,31 +608,31 @@ class BaseView {
       });
     }
 
-    // Perfil
     const profileItem = headerUserDropdown.querySelector('[data-action="profile"]');
     if (profileItem) {
       profileItem.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (window.router) {
-          window.router.navigate('/settings');
-        }
+        if (window.router) window.router.navigate('/settings');
         headerUserDropdown.classList.remove('open');
       });
     }
 
-    // Cerrar al hacer click fuera (registrado para limpieza en destroy)
-    const closeOnClickOutside = (e) => {
-      if (!e.target.closest('.header-user')) {
-        headerUserDropdown.classList.remove('open');
-        const icon = headerUserChevron.querySelector('i');
-        if (icon) {
-          icon.classList.remove('fa-chevron-up');
-          icon.classList.add('fa-chevron-down');
+    if (!BaseView._headerDocClickBound) {
+      BaseView._headerDocClickBound = true;
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.header-user')) {
+          const dd = document.getElementById('headerUserDropdown');
+          if (dd) dd.classList.remove('open');
+          const chevron = document.getElementById('headerUserChevron');
+          const icon = chevron?.querySelector('i');
+          if (icon) {
+            icon.classList.remove('fa-chevron-up');
+            icon.classList.add('fa-chevron-down');
+          }
         }
-      }
-    };
-    this.addEventListener(document, 'click', closeOnClickOutside);
+      });
+    }
   }
 
   /**

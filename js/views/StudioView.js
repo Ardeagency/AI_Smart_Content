@@ -902,6 +902,16 @@ class StudioView extends BaseView {
     }
   }
 
+  async onLeave() {
+    this.cleanup();
+    window.studioView = null;
+    this.supabase = null;
+    this.userId = null;
+    this.organizationId = null;
+    this.flows = [];
+    this.selectedFlow = null;
+  }
+
   escapeHtml(text) {
     if (text == null) return '';
     const div = document.createElement('div');
