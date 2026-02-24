@@ -1,35 +1,47 @@
 /**
  * DevWebhooksView.js
  * Gestión de Webhooks para el Portal de Desarrolladores (PaaS)
- * 
- * Permite a los desarrolladores:
+ *
  * - Ver y gestionar webhooks de todos sus flujos
  * - Configurar URLs de test y producción
- * - Verificar el estado de salud de webhooks
- * - Ver estadísticas de ejecución
- * - Editar configuraciones técnicas
+ * - Health check: verificación de conectividad/disponibilidad (ping HTTP 2xx = saludable)
+ * - Rate limiting en chequeo masivo para no saturar endpoints
+ * - Opción de auto-refresh periódico (solo mientras la vista está abierta; alertas 24/7 requieren servicio en servidor)
  */
+
+const PLATFORM_OPTIONS = [
+  { value: 'n8n', label: 'n8n' },
+  { value: 'make', label: 'Make (Integromat)' },
+  { value: 'zapier', label: 'Zapier' },
+  { value: 'custom', label: 'Custom / Otro' }
+];
+
+const PLATFORM_ICONS = {
+  n8n: 'graph',
+  make: 'arrows-merge',
+  zapier: 'lightning',
+  custom: 'code'
+};
+
+const BULK_HEALTH_CHECK_DELAY_MS = 500;
+const HEALTH_CHECK_SUCCESS_STATUS_MIN = 200;
+const HEALTH_CHECK_SUCCESS_STATUS_MAX = 299;
+const AUTO_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 
 class DevWebhooksView extends DevBaseView {
   constructor() {
     super();
     this.supabase = null;
     this.userId = null;
-    
-    // Datos
-    this.webhooks = []; // Flujos con sus detalles técnicos
+
+    this.webhooks = [];
     this.filteredWebhooks = [];
-    
-    // Filtros
-    this.currentFilter = 'all'; // all, healthy, unhealthy, unconfigured
+    this.currentFilter = 'all';
     this.searchQuery = '';
     this.platformFilter = 'all';
-    
-    // Estado de edición
     this.editingWebhook = null;
-    
-    // Health check en progreso
     this.healthCheckInProgress = new Set();
+    this.autoRefreshTimerId = null;
   }
 
   renderHTML() {
@@ -45,6 +57,14 @@ class DevWebhooksView extends DevBaseView {
             <p class="dev-header-subtitle">Gestiona las conexiones de tus flujos de IA</p>
           </div>
           <div class="dev-header-actions">
+            <label class="dev-webhooks-auto-refresh">
+              <span>Auto-refresh salud:</span>
+              <select id="autoRefreshSelect" class="auto-refresh-select">
+                <option value="0">Desactivado</option>
+                <option value="300">5 min</option>
+                <option value="600">10 min</option>
+              </select>
+            </label>
             <button class="btn-secondary" id="bulkHealthCheckBtn">
               <i class="ph ph-heartbeat"></i>
               Health Check Global
@@ -55,6 +75,9 @@ class DevWebhooksView extends DevBaseView {
             </button>
           </div>
         </header>
+        <p class="dev-webhooks-monitoring-note" id="monitoringNote">
+          <i class="ph ph-info"></i> El health check verifica conectividad (HTTP 2xx). Para alertas 24/7 se requiere un servicio en el servidor.
+        </p>
 
         <!-- Stats Overview -->
         <div class="webhooks-stats-grid">
@@ -123,10 +146,7 @@ class DevWebhooksView extends DevBaseView {
             </div>
             <select id="platformFilterSelect" class="platform-filter">
               <option value="all">Todas las plataformas</option>
-              <option value="n8n">n8n</option>
-              <option value="make">Make</option>
-              <option value="zapier">Zapier</option>
-              <option value="custom">Custom</option>
+              ${PLATFORM_OPTIONS.map(p => `<option value="${p.value}">${p.label}</option>`).join('')}
             </select>
           </div>
         </div>
@@ -201,10 +221,7 @@ class DevWebhooksView extends DevBaseView {
                   <div class="form-field">
                     <label for="webhookPlatform">Plataforma</label>
                     <select id="webhookPlatform">
-                      <option value="n8n">n8n</option>
-                      <option value="make">Make (Integromat)</option>
-                      <option value="zapier">Zapier</option>
-                      <option value="custom">Custom / Otro</option>
+                      ${PLATFORM_OPTIONS.map(p => `<option value="${p.value}">${p.label}</option>`).join('')}
                     </select>
                   </div>
                   <div class="form-field">
@@ -352,6 +369,13 @@ class DevWebhooksView extends DevBaseView {
     await this.initSupabase();
     await this.loadWebhooks();
     this.setupEventListeners();
+  }
+
+  onLeave() {
+    if (this.autoRefreshTimerId) {
+      clearInterval(this.autoRefreshTimerId);
+      this.autoRefreshTimerId = null;
+    }
   }
 
   async initSupabase() {
@@ -534,14 +558,7 @@ class DevWebhooksView extends DevBaseView {
       }
     }
     
-    // Plataforma
-    const platformIcons = {
-      n8n: 'graph',
-      make: 'arrows-merge',
-      zapier: 'lightning',
-      custom: 'code'
-    };
-    const platformIcon = platformIcons[tech?.platform_name] || 'link';
+    const platformIcon = PLATFORM_ICONS[tech?.platform_name] || 'link';
     const platformName = tech?.platform_name || '-';
     
     // Truncar URLs
@@ -748,9 +765,22 @@ class DevWebhooksView extends DevBaseView {
     }
   }
 
+  /**
+   * Health check: verificación de conectividad/disponibilidad (ping HTTP).
+   * Se considera saludable solo si el status está en rango 2xx; no valida lógica de negocio del flujo.
+   */
+  _isHealthyStatus(status) {
+    if (status == null || typeof status !== 'number') return false;
+    return status >= HEALTH_CHECK_SUCCESS_STATUS_MIN && status <= HEALTH_CHECK_SUCCESS_STATUS_MAX;
+  }
+
   async pingWebhook(url, method = 'POST') {
     if (window.FlowWebhookService && typeof window.FlowWebhookService.pingWebhook === 'function') {
-      return window.FlowWebhookService.pingWebhook(url, method, 10000);
+      const out = await window.FlowWebhookService.pingWebhook(url, method, 10000);
+      if (out && typeof out.success === 'boolean' && out.status != null) {
+        out.success = this._isHealthyStatus(out.status) ? out.success : false;
+      }
+      return out;
     }
     const startTime = Date.now();
     try {
@@ -760,9 +790,10 @@ class DevWebhooksView extends DevBaseView {
         body: method !== 'GET' ? JSON.stringify({ _ping: true, timestamp: new Date().toISOString() }) : undefined
       });
       const elapsed = Date.now() - startTime;
+      const status = response.status;
       return {
-        success: response.ok || response.status === 200 || response.status === 201,
-        status: response.status,
+        success: this._isHealthyStatus(status),
+        status,
         statusText: response.statusText,
         time: elapsed
       };
@@ -771,77 +802,77 @@ class DevWebhooksView extends DevBaseView {
     }
   }
 
-  async runBulkHealthCheck() {
-    const configuredWebhooks = this.webhooks.filter(w => 
+  /**
+   * Health check masivo con rate limiting (BULK_HEALTH_CHECK_DELAY_MS entre cada uno).
+   * @param {Object} [options]
+   * @param {boolean} [options.silent=false] - Si true, no muestra modal (para auto-refresh en segundo plano).
+   */
+  async runBulkHealthCheck(options = {}) {
+    const { silent = false } = options;
+    const configuredWebhooks = this.webhooks.filter(w =>
       w.technical?.webhook_url_test || w.technical?.webhook_url_prod
     );
-    
+
     if (configuredWebhooks.length === 0) {
-      this.showNotification('No hay webhooks configurados para verificar', 'warning');
+      if (!silent) this.showNotification('No hay webhooks configurados para verificar', 'warning');
       return;
     }
-    
-    // Mostrar modal de progreso
+
     const modal = this.querySelector('#healthCheckModal');
     const progressFill = this.querySelector('#healthProgressFill');
     const progressText = this.querySelector('#healthProgressText');
     const resultsContainer = this.querySelector('#healthCheckResults');
-    
-    if (modal) modal.style.display = 'flex';
-    if (resultsContainer) resultsContainer.innerHTML = '';
-    
+
+    if (!silent) {
+      if (modal) modal.style.display = 'flex';
+      if (resultsContainer) resultsContainer.innerHTML = '';
+    }
+
     const results = [];
     const total = configuredWebhooks.length;
-    
+
     for (let i = 0; i < configuredWebhooks.length; i++) {
       const webhook = configuredWebhooks[i];
-      
-      // Actualizar progreso
-      const progress = ((i + 1) / total) * 100;
-      if (progressFill) progressFill.style.width = `${progress}%`;
-      if (progressText) progressText.textContent = `Verificando ${webhook.flowName}... (${i + 1}/${total})`;
-      
-      // Ejecutar health check
+      if (!silent) {
+        const progress = ((i + 1) / total) * 100;
+        if (progressFill) progressFill.style.width = `${progress}%`;
+        if (progressText) progressText.textContent = `Verificando ${webhook.flowName}... (${i + 1}/${total})`;
+      }
       await this.runHealthCheck(webhook.flowId);
-      
-      // Registrar resultado
       const updatedWebhook = this.webhooks.find(w => w.flowId === webhook.flowId);
-      results.push({
-        name: webhook.flowName,
-        healthy: updatedWebhook?.technical?.is_healthy
-      });
-      
-      // Pequeña pausa entre requests
-      await new Promise(resolve => setTimeout(resolve, 200));
+      results.push({ name: webhook.flowName, healthy: updatedWebhook?.technical?.is_healthy });
+      await new Promise(resolve => setTimeout(resolve, BULK_HEALTH_CHECK_DELAY_MS));
     }
-    
-    // Mostrar resultados
-    if (progressText) progressText.textContent = '¡Verificación completada!';
-    
-    const healthyCount = results.filter(r => r.healthy).length;
-    const unhealthyCount = results.filter(r => !r.healthy).length;
-    
-    if (resultsContainer) {
-      resultsContainer.innerHTML = `
-        <div class="health-summary">
-          <div class="health-summary-item success">
-            <i class="ph ph-check-circle"></i>
-            <span>${healthyCount} saludables</span>
-          </div>
-          <div class="health-summary-item error">
-            <i class="ph ph-warning"></i>
-            <span>${unhealthyCount} con problemas</span>
-          </div>
-        </div>
-        <div class="health-results-list">
-          ${results.map(r => `
-            <div class="health-result-item ${r.healthy ? 'success' : 'error'}">
-              <i class="ph ph-${r.healthy ? 'check-circle' : 'x-circle'}"></i>
-              <span>${r.name}</span>
+
+    this.renderTable();
+    this.updateStats();
+
+    if (!silent) {
+      if (progressText) progressText.textContent = '¡Verificación completada!';
+      const healthyCount = results.filter(r => r.healthy).length;
+      const unhealthyCount = results.filter(r => !r.healthy).length;
+      if (resultsContainer) {
+        resultsContainer.innerHTML = `
+          <div class="health-summary">
+            <div class="health-summary-item success">
+              <i class="ph ph-check-circle"></i>
+              <span>${healthyCount} saludables</span>
             </div>
-          `).join('')}
-        </div>
-      `;
+            <div class="health-summary-item error">
+              <i class="ph ph-warning"></i>
+              <span>${unhealthyCount} con problemas</span>
+            </div>
+          </div>
+          <div class="health-results-list">
+            ${results.map(r => `
+              <div class="health-result-item ${r.healthy ? 'success' : 'error'}">
+                <i class="ph ph-${r.healthy ? 'check-circle' : 'x-circle'}"></i>
+                <span>${r.name}</span>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
     }
   }
 
@@ -1141,12 +1172,28 @@ class DevWebhooksView extends DevBaseView {
       });
     }
     
-    // Botones de header
     const bulkHealthBtn = this.querySelector('#bulkHealthCheckBtn');
     if (bulkHealthBtn) {
       bulkHealthBtn.addEventListener('click', () => this.runBulkHealthCheck());
     }
-    
+
+    const autoRefreshSelect = this.querySelector('#autoRefreshSelect');
+    if (autoRefreshSelect) {
+      autoRefreshSelect.addEventListener('change', (e) => {
+        const seconds = parseInt(e.target.value, 10) || 0;
+        if (this.autoRefreshTimerId) {
+          clearInterval(this.autoRefreshTimerId);
+          this.autoRefreshTimerId = null;
+        }
+        if (seconds > 0) {
+          const ms = seconds * 1000;
+          this.autoRefreshTimerId = setInterval(() => {
+            this.runBulkHealthCheck({ silent: true });
+          }, ms);
+        }
+      });
+    }
+
     const addBtn = this.querySelector('#addWebhookBtn');
     if (addBtn) {
       addBtn.addEventListener('click', () => this.openEditModal());

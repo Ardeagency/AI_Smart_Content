@@ -17600,7 +17600,37 @@ body.sidebar-collapsed .living-container {
 
 .dev-webhooks-header .dev-header-actions {
   display: flex;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 12px;
+}
+
+.dev-webhooks-auto-refresh {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.dev-webhooks-auto-refresh .auto-refresh-select {
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.dev-webhooks-monitoring-note {
+  margin: -8px 0 16px;
+  padding: 8px 12px;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.dev-webhooks-monitoring-note i {
+  margin-right: 6px;
 }
 
 /* Stats Grid */
