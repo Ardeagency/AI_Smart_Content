@@ -21,18 +21,18 @@
     /* ── Fondos ─────────────────────────────── */
     --bg-primary: #000000;
     --bg-secondary: #141517;
-    --bg-card: #212126;
-    --bg-tertiary: #212126;
-    --bg-hover: #353539;
+    --bg-card: #141517;
+    --bg-tertiary: #141517;
+    --bg-hover: #000000;
     --bg-overlay: rgba(23, 20, 29, 0.9);
     --bg-black: #000000;
     --bg-dark: #0F0D12;
-    --bg-interactive: #212126;
+    --bg-interactive: #000000;
 
-    /* ── Bordes (blanco, D4D1D8, 87868B) ────── */
-    --border-color: #87868B;
-    --border-light: #D4D1D8;
-    --border-divider: #87868B;
+    /* ── Bordes ─────────────────────────────── */
+    --border-color: #212126;
+    --border-light: #212126;
+    --border-divider: #212126;
 
     /* ── Texto ──────────────────────────────── */
     --text-primary: #D4D1D8;
@@ -40,10 +40,10 @@
     --text-muted: rgba(212, 209, 216, 0.6);
     --text-disabled: rgba(212, 209, 216, 0.35);
 
-    /* ── Iconos (base, hover, resaltado) ─────── */
+    /* ── Iconos y acentos ───────────────────── */
     --icon-button: #87868B;
     --icon-button-hover: #D4D1D8;
-    --icon-button-active: #ffffff;
+    --icon-active: #ffffff;
     --accent-yellow: #87868B;
     --accent-yellow-hover: #D4D1D8;
     --accent-warm: #87868B;
@@ -177,9 +177,7 @@
     --sidebar-background: var(--bg-primary);
     --sidebar-hover: var(--white-8);
     --sidebar-active: var(--white-8);
-    --sidebar-icon-color: var(--icon-button);
-    --sidebar-icon-hover: var(--icon-button-hover);
-    --sidebar-icon-active: var(--icon-button-active);
+    --sidebar-icon-color: var(--text-secondary);
     --sidebar-text-primary: var(--text-primary);
     --sidebar-text-secondary: var(--text-secondary);
 
@@ -2180,7 +2178,7 @@ body.sidebar-collapsed .main-header,
 }
 
 .nav-link.active .nav-icon {
-    color: var(--sidebar-icon-active);
+    color: var(--icon-active);
 }
 
 
@@ -2195,17 +2193,17 @@ body.sidebar-collapsed .main-header,
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    color: var(--sidebar-icon-color);
+    color: var(--text-secondary);
     line-height: 1;
     -webkit-font-smoothing: antialiased;
 }
 
 .nav-link:hover .nav-icon {
-    color: var(--sidebar-icon-hover);
+    color: var(--accent-yellow);
 }
 
 .nav-link.active .nav-icon {
-    color: var(--sidebar-icon-active);
+    color: var(--icon-active);
 }
 
 .nav-text {
@@ -2306,7 +2304,7 @@ body.sidebar-collapsed .main-header,
 }
 
 .nav-item-has-submenu.active > .nav-link-parent .nav-icon {
-    color: var(--sidebar-icon-active);
+    color: var(--icon-active);
 }
 
 /* =========================================
@@ -4220,11 +4218,16 @@ body.entrance-done .signin-container {
     flex-direction: column;
     gap: var(--spacing-lg);
     align-items: center;
-    background: #000;
+    background: linear-gradient(180deg, #0A090B 0%, #09101F 100%);
     border: none;
     border-radius: 20px;
     padding: 2rem;
     position: relative;
+    box-shadow:
+        inset 0 40px 36px -16px rgba(22, 76, 205, 0.3),
+        inset 0 20px 20px -8px rgba(96, 148, 255, 0.22),
+        inset 0 10px 12px -5px rgba(255, 255, 255, 0.1),
+        inset 0 4px 6px -2px rgba(35, 133, 255, 0.12);
 }
 
 .signin-container .signin-card::before {
@@ -4269,11 +4272,16 @@ body.entrance-done .signin-container {
     flex-direction: column;
     gap: var(--spacing-lg);
     align-items: center;
-    background: #000;
+    background: linear-gradient(180deg, #0A090B 0%, #09101F 100%);
     border: none;
     border-radius: 20px;
     padding: 2rem;
     position: relative;
+    box-shadow:
+        inset 0 40px 36px -16px rgba(22, 76, 205, 0.3),
+        inset 0 20px 20px -8px rgba(96, 148, 255, 0.22),
+        inset 0 10px 12px -5px rgba(255, 255, 255, 0.1),
+        inset 0 4px 6px -2px rgba(35, 133, 255, 0.12);
 }
 
 .signin-container .form-org-card.signin-card::before {
@@ -4352,7 +4360,7 @@ body.entrance-done .signin-container {
 
 .signin-container .auth-state.active { display: flex; }
 
-/* Inputs: igual que la card (negro, borde degradado negro → blanco) */
+/* Inputs: degradado oscuro + borde degradado + inner glow */
 .signin-container .form-input,
 .signin-container input[type="text"],
 .signin-container input[type="email"],
@@ -4360,7 +4368,7 @@ body.entrance-done .signin-container {
     width: 100%;
     max-width: 100%;
     padding: 0.85rem 1rem;
-    background: linear-gradient(#000, #000) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
+    background: linear-gradient(180deg, #0A090B 0%, #09101F 100%) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
     border: 1px solid transparent;
     border-radius: var(--border-radius);
     color: var(--text-primary);
@@ -4368,6 +4376,10 @@ body.entrance-done .signin-container {
     font-family: inherit;
     line-height: 1.4;
     box-sizing: border-box;
+    box-shadow:
+        inset 0 12px 14px -6px rgba(22, 76, 205, 0.25),
+        inset 0 6px 8px -3px rgba(96, 148, 255, 0.18),
+        inset 0 3px 4px -2px rgba(35, 133, 255, 0.1);
 }
 
 .signin-container .form-input::placeholder,
@@ -4461,15 +4473,19 @@ body.entrance-done .signin-container {
     padding: 0 0.25rem;
 }
 
-/* Botón Google: igual que la card (negro, borde degradado negro → blanco) */
+/* Botón Google: degradado oscuro + borde degradado + inner glow */
 .signin-google-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.75rem;
-    background: linear-gradient(#000, #000) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
+    background: linear-gradient(180deg, #0A090B 0%, #09101F 100%) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
     border: 1px solid transparent;
     color: var(--color-white);
+    box-shadow:
+        inset 0 12px 14px -6px rgba(22, 76, 205, 0.25),
+        inset 0 6px 8px -3px rgba(96, 148, 255, 0.18),
+        inset 0 3px 4px -2px rgba(35, 133, 255, 0.1);
 }
 
 .signin-google-btn:hover:not(:disabled) {
@@ -4710,14 +4726,18 @@ body.entrance-done .signin-container {
     letter-spacing: -0.02em;
 }
 
-/* Toggle Mensual / Anual: mismo estilo que login (card negra, borde degradado; botón activo = blanco) */
+/* Toggle Mensual / Anual: degradado oscuro + borde degradado + inner glow */
 .planes-billing-toggle {
     display: inline-flex;
-    background: linear-gradient(#000, #000) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
+    background: linear-gradient(180deg, #0A090B 0%, #09101F 100%) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
     border: 1px solid transparent;
     border-radius: var(--radius-md);
     padding: 0.25rem;
     gap: 0;
+    box-shadow:
+        inset 0 12px 14px -6px rgba(22, 76, 205, 0.3),
+        inset 0 6px 8px -3px rgba(96, 148, 255, 0.2),
+        inset 0 3px 4px -2px rgba(35, 133, 255, 0.12);
 }
 
 .planes-toggle-btn {
@@ -4769,7 +4789,7 @@ body.entrance-done .signin-container {
     justify-content: center;
 }
 
-/* Cards como login: negro, borde degradado negro → blanco */
+/* Cards: degradado oscuro de relleno + borde degradado + inner glow (ref. azul) */
 .planes-hero .plan-card-small {
     width: 150px;
     min-height: 220px;
@@ -4778,17 +4798,27 @@ body.entrance-done .signin-container {
     align-items: center;
     justify-content: flex-start;
     gap: 0.4rem;
-    background: linear-gradient(#000, #000) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
+    background: linear-gradient(180deg, #0A090B 0%, #09101F 100%) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
     border: 1px solid transparent;
     border-radius: var(--radius-md);
     padding: 1rem 0.875rem;
     transition: var(--transition);
     cursor: pointer;
     overflow: hidden;
+    box-shadow:
+        inset 0 30px 28px -12px rgba(22, 76, 205, 0.35),
+        inset 0 16px 16px -6px rgba(96, 148, 255, 0.25),
+        inset 0 8px 10px -4px rgba(255, 255, 255, 0.12),
+        inset 0 3px 4px -1px rgba(35, 133, 255, 0.15);
 }
 
 .planes-hero .plan-card-small:hover {
-    background: linear-gradient(#0a0a0a, #0a0a0a) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
+    background: linear-gradient(180deg, #0d0c0e 0%, #0c1422 100%) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
+    box-shadow:
+        inset 0 30px 28px -12px rgba(22, 76, 205, 0.45),
+        inset 0 16px 16px -6px rgba(96, 148, 255, 0.35),
+        inset 0 8px 10px -4px rgba(255, 255, 255, 0.18),
+        inset 0 3px 4px -1px rgba(35, 133, 255, 0.2);
 }
 
 .planes-hero .plan-card-small.selected {
