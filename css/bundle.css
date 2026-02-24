@@ -4318,6 +4318,15 @@ body.entrance-done .signin-container {
     object-fit: contain;
 }
 
+.signin-brand-logo svg,
+svg.signin-brand-logo {
+    max-height: 3.5rem;
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    display: block;
+}
+
 /* Banner de contraseña actualizada */
 .signin-success-banner {
     display: flex;
