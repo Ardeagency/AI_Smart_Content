@@ -108,7 +108,7 @@
     --color-white: #ffffff;
     --text-black: #000000;
     --bg-light-gray: #f3f4f6;
-    --planes-dark: #0c0c10;
+    --planes-dark: #0a1612;
 
     /* ── Acento naranja paleta (ff6500) opacidades ── */
     --warm-10: rgba(255, 101, 0, 0.1);
@@ -4624,7 +4624,7 @@ body.entrance-done .signin-container {
    ============================================ */
 .planes-main {
     min-height: 100vh;
-    background: #0a0a0a;
+    background: #000;
 }
 
 .planes-layout {
@@ -4665,7 +4665,7 @@ body.entrance-done .signin-container {
     overflow-y: auto;
 }
 
-/* Fondo: temática oscura, colores de la paleta en versiones opacas ahumadas, negro predominante */
+/* Fondo: gradiente verde (como brands tiene brand-dashboard-background) */
 .planes-hero-background {
     position: absolute;
     inset: 0;
@@ -4678,21 +4678,47 @@ body.entrance-done .signin-container {
     background: #000;
 }
 
-.planes-background-gradient::before {
-    content: '';
+/* Burbujas flotantes negras con sombra gradiente (--brand-gradient), flotar muy lento */
+@keyframes planes-bubble-float {
+    0%, 100% { transform: translate(0, 0); }
+    33%      { transform: translate(2px, -3px); }
+    66%      { transform: translate(-2px, 2px); }
+}
+
+.planes-bubbles {
     position: absolute;
     inset: 0;
+    z-index: 1;
+    overflow: hidden;
     pointer-events: none;
-    /* Degradados radiales distorsionados: rojo/naranja/amarillo/cyan/azul/violeta/magenta opacos y ahumados */
-    background:
-        radial-gradient(ellipse 90% 50% at 20% 20%, rgba(80, 25, 20, 0.7) 0%, transparent 55%),
-        radial-gradient(ellipse 70% 80% at 80% 15%, rgba(20, 25, 55, 0.65) 0%, transparent 50%),
-        radial-gradient(ellipse 85% 60% at 75% 75%, rgba(45, 15, 55, 0.6) 0%, transparent 55%),
-        radial-gradient(ellipse 65% 90% at 15% 70%, rgba(50, 20, 50, 0.55) 0%, transparent 50%),
-        radial-gradient(ellipse 80% 70% at 50% 45%, rgba(15, 45, 55, 0.5) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 85% at 85% 55%, rgba(255, 101, 0, 0.08) 0%, transparent 45%),
-        radial-gradient(ellipse 75% 55% at 35% 85%, rgba(0, 231, 255, 0.06) 0%, transparent 50%);
 }
+
+.planes-bubble {
+    position: absolute;
+    border-radius: 50%;
+    background: #000;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.03);
+}
+
+.planes-bubble::before {
+    content: '';
+    position: absolute;
+    inset: -50%;
+    border-radius: 50%;
+    background: var(--brand-gradient);
+    filter: blur(28px);
+    opacity: 0.5;
+    z-index: -1;
+}
+
+.planes-bubble-1 { width: 72px;  height: 72px;  left: 12%;  top: 18%;  animation: planes-bubble-float 28s ease-in-out infinite; }
+.planes-bubble-2 { width: 110px; height: 110px; left: 75%;  top: 12%;  animation: planes-bubble-float 34s ease-in-out 2s infinite; }
+.planes-bubble-3 { width: 54px;  height: 54px;  left: 8%;  top: 55%;  animation: planes-bubble-float 30s ease-in-out 4s infinite; }
+.planes-bubble-4 { width: 92px;  height: 92px;  right: 15%; top: 45%;  animation: planes-bubble-float 32s ease-in-out 1s infinite; }
+.planes-bubble-5 { width: 64px;  height: 64px;  left: 45%;  top: 75%;  animation: planes-bubble-float 26s ease-in-out 3s infinite; }
+.planes-bubble-6 { width: 82px;  height: 82px;  right: 8%;  top: 70%;  animation: planes-bubble-float 31s ease-in-out 5s infinite; }
+.planes-bubble-7 { width: 48px;  height: 48px;  left: 28%;  top: 35%;  animation: planes-bubble-float 29s ease-in-out 0.5s infinite; }
+.planes-bubble-8 { width: 78px;  height: 78px;  right: 25%; top: 82%;  animation: planes-bubble-float 33s ease-in-out 2.5s infinite; }
 
 /* Contenido del hero: centrado, título arriba */
 .planes-hero-content {
@@ -4722,7 +4748,7 @@ body.entrance-done .signin-container {
 /* Toggle Mensual / Anual */
 .planes-billing-toggle {
     display: inline-flex;
-    background: rgba(20, 20, 25, 0.9);
+    background: rgba(15, 46, 34, 0.9);
     border-radius: var(--radius-md);
     padding: 0.25rem;
     border: 1px solid var(--white-10);
@@ -4786,7 +4812,7 @@ body.entrance-done .signin-container {
     align-items: center;
     justify-content: flex-start;
     gap: 0.4rem;
-    background: rgba(22, 22, 28, 0.9);
+    background: rgba(15, 46, 34, 0.9);
     border: 1px solid var(--white-8);
     border-radius: var(--radius-md);
     padding: 1rem 0.875rem;
@@ -4798,7 +4824,7 @@ body.entrance-done .signin-container {
 
 .planes-hero .plan-card-small:hover {
     border-color: var(--white-20);
-    background: rgba(28, 28, 35, 0.95);
+    background: rgba(19, 67, 48, 0.95);
 }
 
 .planes-hero .plan-card-small.selected {
@@ -4867,7 +4893,7 @@ body.entrance-done .signin-container {
 }
 
 .planes-hero .plan-card-small.selected .plan-card-details {
-    color: rgba(12, 12, 16, 0.85);
+    color: rgba(10, 22, 18, 0.85);
 }
 
 .plan-card-details li {
