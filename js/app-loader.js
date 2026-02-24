@@ -203,14 +203,14 @@
         if (!overlay) return;
 
         var revealBox = overlay.querySelector('.entrance-reveal-box');
-        var entranceLogo = overlay.querySelector('.entrance-text-2 .entrance-logo');
+        var entranceLogo = overlay.querySelector('.entrance-logo');
 
         function at(ms, fn) {
             if (ms <= 0) fn();
             else setTimeout(fn, ms);
         }
 
-        // 1) Reveal box (degradado): mostrar → expandir → barrer a la derecha
+        // 1) Rectángulo con degradado: mostrar → expandir → barrer a la derecha
         at(0, function () {
             if (revealBox) revealBox.classList.add('entrance-reveal-show');
         });
