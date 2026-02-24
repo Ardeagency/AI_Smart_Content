@@ -1,7 +1,12 @@
 /**
  * StudioView - Consumidor de flujos (content_flows).
  * Panel central vacío, footer con créditos y coste, sidebar con input_schema y envío a webhook_url.
+ * Usa FlowWebhookService para ejecución con timeout y reintentos; deducción de créditos atómica vía RPC.
  */
+
+const DEFAULT_STUDIO_TIMEOUT_MS = 120000;
+const DEFAULT_STUDIO_MAX_RETRIES = 3;
+
 class StudioView extends BaseView {
   constructor() {
     super();
@@ -11,6 +16,10 @@ class StudioView extends BaseView {
     this.credits = { available: 0, total: 0 };
     this.flows = [];
     this.selectedFlow = null;
+  }
+
+  _notify(message, _type = 'info') {
+    if (typeof alert === 'function') alert(message);
   }
 
   async onEnter() {
@@ -154,7 +163,7 @@ class StudioView extends BaseView {
         .eq('is_active', true)
         .eq('flow_category_type', 'manual');
       if (!error && data) {
-        this.flows = data.map(f => this.normalizeFlowFromModules(f));
+        this.flows = data.map(f => this.buildFlowFromFirstModule(f));
       } else {
         this.flows = [];
       }
@@ -165,10 +174,10 @@ class StudioView extends BaseView {
   }
 
   /**
-   * Normaliza un flujo con flow_modules al formato que espera la UI (input_schema, webhook_url).
-   * Usa el primer módulo por step_order; para producción usa webhook_url_prod y fallback a test.
+   * Adaptador canónico: construye el objeto flujo que usa Studio a partir de content_flows + flow_modules.
+   * Toma el primer módulo (por step_order) para input_schema y webhooks; en producción usa webhook_url_prod con fallback a test.
    */
-  normalizeFlowFromModules(flow) {
+  buildFlowFromFirstModule(flow) {
     const modules = (flow.flow_modules || []).slice().sort((a, b) => (a.step_order ?? 0) - (b.step_order ?? 0));
     const first = modules[0];
     return {
@@ -854,7 +863,13 @@ class StudioView extends BaseView {
     if (!this.selectedFlow || !this.selectedFlow.webhook_url) return;
     const cost = this.selectedFlow.token_cost ?? 1;
     if (this.credits.available < cost) {
-      alert('Créditos insuficientes para esta producción.');
+      this._notify('Créditos insuficientes para esta producción.');
+      return;
+    }
+
+    const Service = window.FlowWebhookService;
+    if (!Service || typeof Service.executeWebhook !== 'function') {
+      this._notify('Servicio de ejecución no disponible. Recarga la página.');
       return;
     }
 
@@ -862,9 +877,10 @@ class StudioView extends BaseView {
     const btn = document.getElementById('studioProducirBtn');
     if (btn) btn.disabled = true;
 
-    const Service = window.FlowWebhookService;
-    const timeoutMs = 120000;   // 2 min
-    const maxRetries = 3;
+    const timeoutMs = DEFAULT_STUDIO_TIMEOUT_MS;
+    const maxRetries = DEFAULT_STUDIO_MAX_RETRIES;
+    let runId = null;
+    let creditsDeducted = false;
 
     try {
       // 1) Deducción atómica de créditos + creación de run (RPC)
@@ -878,49 +894,45 @@ class StudioView extends BaseView {
 
       if (rpcError) {
         console.error('Studio deduct RPC:', rpcError);
-        alert('No se pudo reservar créditos. Intenta de nuevo.');
+        this._notify('No se pudo reservar créditos. Intenta de nuevo.');
         return;
       }
 
       const success = deductResult?.success === true;
-      const runId = deductResult?.run_id;
+      runId = deductResult?.run_id;
       if (!success || !runId) {
         const msg = deductResult?.error_message === 'insufficient_credits'
           ? 'Créditos insuficientes para esta producción.'
           : (deductResult?.error_message || 'Error al reservar créditos.');
-        alert(msg);
+        this._notify(msg);
         return;
       }
 
+      creditsDeducted = true;
       this.credits.available = deductResult.new_available ?? this.credits.available - cost;
       this.updateCreditsDisplay();
 
       // 2) Ejecutar webhook con reintentos y timeout
       const res = await Service.executeWebhook({
         url: this.selectedFlow.webhook_url,
-        method: 'POST',
+        method: (this.selectedFlow.webhook_method || 'POST').toUpperCase(),
         body: payload,
         timeoutMs,
         maxRetries
       });
 
       if (!res.ok) {
-        // Devolver créditos y marcar run como fallido
-        await this.supabase.rpc('refund_credits_for_run', {
-          p_organization_id: this.organizationId,
-          p_run_id: runId,
-          p_amount: cost
-        });
+        await this._refundCreditsSafe(runId, cost);
         this.credits.available += cost;
         this.updateCreditsDisplay();
         await this.loadCredits();
         const detail = res.error || res.statusText || `Código ${res.status}`;
         if (res.status === 400) {
-          alert('Solicitud incorrecta: ' + detail + '. Revisa los datos del formulario.');
+          this._notify('Solicitud incorrecta: ' + detail + '. Revisa los datos del formulario.');
         } else if (res.status >= 500) {
-          alert('Error del servidor del flujo. Intenta más tarde o contacta al administrador.');
+          this._notify('Error del servidor del flujo. Intenta más tarde o contacta al administrador.');
         } else {
-          alert('Error en la producción: ' + detail);
+          this._notify('Error en la producción: ' + detail);
         }
         return;
       }
@@ -937,13 +949,45 @@ class StudioView extends BaseView {
 
       await this.loadCredits();
       this.updateCreditsDisplay();
-      alert('Producción enviada correctamente.');
+      this._notify('Producción enviada correctamente.');
     } catch (e) {
+      if (creditsDeducted && runId) {
+        await this._refundCreditsSafe(runId, cost);
+        this.credits.available += cost;
+        this.updateCreditsDisplay();
+        await this.loadCredits();
+      }
+      const msg = this._messageForProducirError(e);
       console.error('Studio producir:', e);
-      alert(e.message || (e.name === 'TypeError' && e.cause ? 'Error de red o CORS.' : 'Error al producir.'));
+      this._notify(msg);
     } finally {
       if (btn) btn.disabled = false;
     }
+  }
+
+  async _refundCreditsSafe(runId, amount) {
+    try {
+      await this.supabase.rpc('refund_credits_for_run', {
+        p_organization_id: this.organizationId,
+        p_run_id: runId,
+        p_amount: amount
+      });
+    } catch (refundErr) {
+      console.error('Studio refund fallback:', refundErr);
+    }
+  }
+
+  _messageForProducirError(e) {
+    if (e.name === 'AbortError') {
+      return 'Tiempo de espera agotado. El servidor no respondió a tiempo.';
+    }
+    if (e.name === 'TypeError' && e.cause) {
+      return 'Error de conexión. Comprueba tu red e intenta de nuevo.';
+    }
+    if (e.message && typeof e.message === 'string') {
+      return e.message;
+    }
+    return 'Error al producir. Intenta de nuevo.';
   }
 
   async onLeave() {
