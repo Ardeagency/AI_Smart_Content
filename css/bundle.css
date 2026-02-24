@@ -117,8 +117,8 @@
     --warm-30: rgba(255, 101, 0, 0.3);
     --warm-50: rgba(255, 101, 0, 0.5);
 
-    /* ── Degradado oficial de la plataforma (izq → der) ── */
-    --brand-gradient: linear-gradient(90deg, #ff0000 0%, #ff6500 12.5%, #ffe500 25%, #9acc00 37.5%, #00d614 50%, #00e7ff 62.5%, #0018ee 75%, #5b00ea 87.5%, #900090 100%);
+    /* ── Degradado oficial (suave, transiciones naturales) ── */
+    --brand-gradient: linear-gradient(90deg, #c85c5c 0%, #d48850 18%, #c9b84a 32%, #7aaa5a 46%, #3da86a 58%, #4ab0b8 70%, #5a72c8 82%, #8a62c0 92%, #a06098 100%);
 
     /* ── Border-radius (escala 4px) ────────── */
     --radius-xs: 4px;
