@@ -121,9 +121,15 @@ class Navigation {
     this.isNavOpen = false;
     this.isCollapsed = false;
     this.initialized = false;
-    this.currentMode = null; // 'user' | 'developer' | 'home' | null
+    this.currentMode = null;
     this.currentOrgId = null;
     this.currentBrandId = null;
+    this._orgCache = null;
+    this._orgCacheId = null;
+    this._orgCacheTime = 0;
+    this._devCache = null;
+    this._devCacheTime = 0;
+    this._CACHE_TTL = 60000;
   }
 
   /**
@@ -672,7 +678,8 @@ class Navigation {
       if (isUser) localStorage.setItem(SIDEBAR_USER_EXPANDED_KEY, !isOpen ? containerId : '');
     };
 
-    document.querySelectorAll('.nav-mode-user .nav-submenu-toggle').forEach((toggle) => {
+    document.querySelectorAll('.nav-mode-user .nav-submenu-toggle:not([data-sub-bound])').forEach((toggle) => {
+      toggle.setAttribute('data-sub-bound', '1');
       toggle.addEventListener('click', (e) => {
         const parent = toggle.closest('.nav-item.has-submenu');
         if (!parent) return;
@@ -680,7 +687,8 @@ class Navigation {
       });
     });
 
-    document.querySelectorAll('.nav-mode-developer .nav-submenu-toggle').forEach((toggle) => {
+    document.querySelectorAll('.nav-mode-developer .nav-submenu-toggle:not([data-sub-bound])').forEach((toggle) => {
+      toggle.setAttribute('data-sub-bound', '1');
       toggle.addEventListener('click', (e) => {
         const parent = toggle.closest('.nav-item.has-submenu');
         if (!parent) return;
@@ -688,8 +696,8 @@ class Navigation {
       });
     });
 
-    /* Collapsed: hover 120ms abre flyout; leave 200ms cierra (cancelado si entra al flyout) */
-    document.querySelectorAll('.nav-mode-user .nav-submenu-toggle, .nav-mode-developer .nav-submenu-toggle').forEach((toggle) => {
+    document.querySelectorAll('.nav-submenu-toggle:not([data-hover-bound])').forEach((toggle) => {
+      toggle.setAttribute('data-hover-bound', '1');
       const parent = toggle.closest('.nav-item.has-submenu');
       if (!parent) return;
       toggle.addEventListener('mouseenter', () => {
@@ -825,7 +833,8 @@ class Navigation {
     let showTimeout;
     const delay = 150;
 
-    sidebar.querySelectorAll('[data-tooltip]').forEach((el) => {
+    sidebar.querySelectorAll('[data-tooltip]:not([data-tip-bound])').forEach((el) => {
+      el.setAttribute('data-tip-bound', '1');
       el.addEventListener('mouseenter', () => {
         clearTimeout(hideTimeout);
         showTimeout = setTimeout(() => {
@@ -851,6 +860,9 @@ class Navigation {
    * Cerrar flyout: click outside, ESC, cambio de ruta.
    */
   setupFlyoutCloseListeners() {
+    if (this._flyoutCloseAttached) return;
+    this._flyoutCloseAttached = true;
+
     document.addEventListener('click', (e) => {
       const flyout = document.getElementById('navFlyout');
       if (!flyout?.classList.contains('open')) return;
@@ -861,11 +873,8 @@ class Navigation {
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') this.closeFlyout();
     });
-    if (!this._routeChangeCloseFlyout) {
-      this._routeChangeCloseFlyout = true;
-      window.addEventListener('routechange', () => this.closeFlyout());
-      window.addEventListener('popstate', () => this.closeFlyout());
-    }
+    window.addEventListener('routechange', () => this.closeFlyout());
+    window.addEventListener('popstate', () => this.closeFlyout());
   }
 
   /**
@@ -1114,62 +1123,61 @@ class Navigation {
    * Cargar información de la organización actual (nombre real y plan del owner)
    */
   async loadOrganizationInfo() {
+    const now = Date.now();
+    if (this._orgCache && this._orgCacheId === this.currentOrgId && (now - this._orgCacheTime) < this._CACHE_TTL) {
+      this._applyOrgCache();
+      return;
+    }
+
     const supabase = await this.getSupabase();
     if (!supabase) return;
 
     try {
-      const nameEl = document.getElementById('navOrgName');
-      const typeEl = document.getElementById('navOrgType');
-
-      if (this.currentOrgId) {
-        const { data: org } = await supabase
-          .from('organizations')
-          .select('name, owner_user_id')
-          .eq('id', this.currentOrgId)
-          .single();
-
-        if (org) {
-          if (nameEl) nameEl.textContent = org.name;
-          let planLabel = 'Personal';
-          if (org.owner_user_id) {
-            const { data: owner } = await supabase
-              .from('profiles')
-              .select('plan_type')
-              .eq('id', org.owner_user_id)
-              .maybeSingle();
-            if (owner && owner.plan_type) {
-              const raw = String(owner.plan_type).replace(/_/g, ' ');
-              planLabel = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
-            }
-          }
-          if (typeEl) typeEl.textContent = planLabel;
-        }
-      } else {
+      if (!this.currentOrgId) {
+        const nameEl = document.getElementById('navOrgName');
+        const typeEl = document.getElementById('navOrgType');
         if (nameEl) nameEl.textContent = 'Seleccionar organización';
         if (typeEl) typeEl.textContent = '';
+        await this.loadOrganizationsList();
+        return;
       }
 
-      if (this.currentOrgId) {
-        const { data: credits } = await supabase
-          .from('organization_credits')
-          .select('credits_available')
-          .eq('organization_id', this.currentOrgId)
-          .single();
+      const [orgRes, creditsRes] = await Promise.all([
+        supabase.from('organizations').select('name, owner_user_id').eq('id', this.currentOrgId).single(),
+        supabase.from('organization_credits').select('credits_available').eq('organization_id', this.currentOrgId).single()
+      ]);
 
-        if (credits) {
-          const tokensEl = document.getElementById('navTokensValue');
-          if (tokensEl) {
-            const formatted = credits.credits_available >= 1000
-              ? `${(credits.credits_available / 1000).toFixed(1)}K`
-              : credits.credits_available;
-            tokensEl.textContent = formatted;
-          }
+      let planLabel = 'Personal';
+      if (orgRes.data?.owner_user_id) {
+        const { data: owner } = await supabase.from('profiles').select('plan_type').eq('id', orgRes.data.owner_user_id).maybeSingle();
+        if (owner?.plan_type) {
+          const raw = String(owner.plan_type).replace(/_/g, ' ');
+          planLabel = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
         }
       }
+
+      this._orgCache = { name: orgRes.data?.name, plan: planLabel, credits: creditsRes.data?.credits_available };
+      this._orgCacheId = this.currentOrgId;
+      this._orgCacheTime = Date.now();
+      this._applyOrgCache();
 
       await this.loadOrganizationsList();
     } catch (err) {
       console.error('Error loading organization info:', err);
+    }
+  }
+
+  _applyOrgCache() {
+    if (!this._orgCache) return;
+    const nameEl = document.getElementById('navOrgName');
+    const typeEl = document.getElementById('navOrgType');
+    const tokensEl = document.getElementById('navTokensValue');
+    if (nameEl) nameEl.textContent = this._orgCache.name || '';
+    if (typeEl) typeEl.textContent = this._orgCache.plan || '';
+    if (tokensEl && this._orgCache.credits != null) {
+      tokensEl.textContent = this._orgCache.credits >= 1000
+        ? `${(this._orgCache.credits / 1000).toFixed(1)}K`
+        : this._orgCache.credits;
     }
   }
 
@@ -1184,22 +1192,12 @@ class Navigation {
       const user = window.authService?.getCurrentUser();
       if (!user) return;
 
-      const { data: memberships } = await supabase
-        .from('organization_members')
-        .select(`
-          organization_id,
-          role,
-          organizations (
-            id,
-            name
-          )
-        `)
-        .eq('user_id', user.id);
-
-      const { data: ownedOrgs } = await supabase
-        .from('organizations')
-        .select('id, name')
-        .eq('owner_user_id', user.id);
+      const [membershipsRes, ownedOrgsRes] = await Promise.all([
+        supabase.from('organization_members').select('organization_id, role, organizations (id, name)').eq('user_id', user.id),
+        supabase.from('organizations').select('id, name').eq('owner_user_id', user.id)
+      ]);
+      const memberships = membershipsRes.data;
+      const ownedOrgs = ownedOrgsRes.data;
 
       const orgsMap = new Map();
       (memberships || []).forEach(m => {
@@ -1284,6 +1282,12 @@ class Navigation {
    * Cargar información del desarrollador: perfil (nombre), rol y rank
    */
   async loadDeveloperInfo() {
+    const now = Date.now();
+    if (this._devCache && (now - this._devCacheTime) < this._CACHE_TTL) {
+      this._applyDevCache();
+      return;
+    }
+
     const supabase = await this.getSupabase();
     if (!supabase) return;
 
@@ -1291,57 +1295,56 @@ class Navigation {
       const user = window.authService?.getCurrentUser();
       if (!user) return;
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name, email, dev_rank, dev_role')
-        .eq('id', user.id)
-        .maybeSingle();
+      const [profileRes, runsRes, favsRes] = await Promise.all([
+        supabase.from('profiles').select('full_name, email, dev_rank, dev_role').eq('id', user.id).maybeSingle(),
+        supabase.from('flow_runs').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+        supabase.from('user_flow_favorites').select('rating').eq('user_id', user.id).not('rating', 'is', null)
+      ]);
 
-      const iconWrap = document.getElementById('navDevIcon');
-      if (iconWrap && profile?.full_name) {
-        const initials = (profile.full_name || profile.email || 'D').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-        iconWrap.innerHTML = `<span class="nav-dev-initials">${initials}</span>`;
-      }
+      const profile = profileRes.data;
+      const runsCount = runsRes.count ?? 0;
+      const favs = favsRes.data;
+      const avgRating = favs && favs.length > 0
+        ? (favs.reduce((s, f) => s + (f.rating || 0), 0) / favs.length).toFixed(1)
+        : null;
 
-      const nameEl = document.getElementById('navDevName');
-      const tierEl = document.getElementById('navDevTier');
-      if (nameEl) {
-        const name = profile?.full_name?.trim() || profile?.email?.trim() || user.email || 'Developer Portal';
-        nameEl.textContent = name;
-      }
-      if (tierEl && profile) {
-        const role = profile.dev_role ? String(profile.dev_role).replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '';
-        const rank = profile.dev_rank ? String(profile.dev_rank).replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '';
-        const parts = [role, rank].filter(Boolean);
-        tierEl.textContent = parts.length ? parts.join(' · ') : '—';
-      }
-
-      const leadSection = document.getElementById('navLeadSection');
-      if (leadSection && profile?.dev_role === 'lead') {
-        leadSection.style.display = '';
-      }
-
-      const { count: runsCount } = await supabase
-        .from('flow_runs')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
-
-      const runsEl = document.getElementById('navRunsCount');
-      if (runsEl) runsEl.textContent = runsCount ?? 0;
-
-      const { data: favs } = await supabase
-        .from('user_flow_favorites')
-        .select('rating')
-        .eq('user_id', user.id)
-        .not('rating', 'is', null);
-
-      if (favs && favs.length > 0) {
-        const avgRating = favs.reduce((sum, f) => sum + (f.rating || 0), 0) / favs.length;
-        const ratingEl = document.getElementById('navRatingValue');
-        if (ratingEl) ratingEl.textContent = avgRating.toFixed(1);
-      }
+      this._devCache = { profile, runsCount, avgRating, userId: user.id, email: user.email };
+      this._devCacheTime = Date.now();
+      this._applyDevCache();
     } catch (err) {
       console.error('Error loading developer info:', err);
+    }
+  }
+
+  _applyDevCache() {
+    if (!this._devCache) return;
+    const { profile, runsCount, avgRating, email } = this._devCache;
+
+    const iconWrap = document.getElementById('navDevIcon');
+    if (iconWrap && profile?.full_name) {
+      const initials = (profile.full_name || profile.email || 'D').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      iconWrap.innerHTML = `<span class="nav-dev-initials">${initials}</span>`;
+    }
+    const nameEl = document.getElementById('navDevName');
+    if (nameEl) nameEl.textContent = profile?.full_name?.trim() || profile?.email?.trim() || email || 'Developer Portal';
+
+    const tierEl = document.getElementById('navDevTier');
+    if (tierEl && profile) {
+      const role = profile.dev_role ? String(profile.dev_role).replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '';
+      const rank = profile.dev_rank ? String(profile.dev_rank).replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '';
+      const parts = [role, rank].filter(Boolean);
+      tierEl.textContent = parts.length ? parts.join(' · ') : '—';
+    }
+
+    const leadSection = document.getElementById('navLeadSection');
+    if (leadSection && profile?.dev_role === 'lead') leadSection.style.display = '';
+
+    const runsEl = document.getElementById('navRunsCount');
+    if (runsEl) runsEl.textContent = runsCount;
+
+    if (avgRating) {
+      const ratingEl = document.getElementById('navRatingValue');
+      if (ratingEl) ratingEl.textContent = avgRating;
     }
   }
 

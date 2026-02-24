@@ -93,9 +93,13 @@ class ProductsView extends BaseView {
       try {
         product = await this.loadProductForDetail(productId);
         if (product) {
-          images = await this.loadProductImagesForDetail(productId);
           const containerId = product.brand_container_id || brandId;
-          if (containerId) brandName = await this.loadBrandName(containerId);
+          const [imgs, bn] = await Promise.all([
+            this.loadProductImagesForDetail(productId),
+            containerId ? this.loadBrandName(containerId) : Promise.resolve('')
+          ]);
+          images = imgs;
+          brandName = bn;
         }
       } catch (e) {
         console.error('Error cargando detalle:', e);

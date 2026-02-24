@@ -145,7 +145,10 @@ class LivingView extends BaseView {
    * Hook al salir de la vista - sin limpieza
    */
   async onLeave() {
-    // Sin limpieza - el navegador maneja todo automáticamente
+    if (this.livingManager && typeof this.livingManager.destroy === 'function') {
+      this.livingManager.destroy();
+    }
+    this.livingManager = null;
   }
 }
 

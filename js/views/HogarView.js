@@ -534,43 +534,6 @@ class HogarView extends BaseView {
     }
   }
 
-  /**
-   * Mostrar modal de crear organización
-   */
-  showCreateModal() {
-    const modal = this.querySelector('#orgModal');
-    const title = this.querySelector('#orgModalTitle');
-    const form = this.querySelector('#orgForm');
-    
-    if (modal) {
-      if (title) title.textContent = 'Nueva Organización';
-      if (form) form.reset();
-      modal.style.display = 'flex';
-      this.currentEditOrgId = null;
-    }
-  }
-
-  /**
-   * Editar organización
-   */
-  editOrganization(orgId) {
-    const org = this.organizations.find(o => o.id === orgId);
-    if (!org) return;
-
-    const modal = this.querySelector('#orgModal');
-    const title = this.querySelector('#orgModalTitle');
-    const nameInput = this.querySelector('#orgName');
-    const form = this.querySelector('#orgForm');
-    
-    if (modal) {
-      if (title) title.textContent = 'Editar Organización';
-      if (nameInput) nameInput.value = org.name;
-      if (form) form.reset();
-      form.querySelector('#orgName').value = org.name;
-      modal.style.display = 'flex';
-      this.currentEditOrgId = orgId;
-    }
-  }
 
   /**
    * Ocultar modal
@@ -629,23 +592,18 @@ class HogarView extends BaseView {
 
         if (error) throw error;
 
-        // Crear registro de créditos inicial
-        await this.supabase
-          .from('organization_credits')
-          .insert({
+        await Promise.all([
+          this.supabase.from('organization_credits').insert({
             organization_id: data.id,
             credits_available: 0,
             credits_total: 0
-          });
-
-        // Agregar al usuario como miembro con rol owner
-        await this.supabase
-          .from('organization_members')
-          .insert({
+          }),
+          this.supabase.from('organization_members').insert({
             organization_id: data.id,
             user_id: this.userId,
             role: 'owner'
-          });
+          })
+        ]);
       }
 
       this.hideModal();

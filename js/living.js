@@ -122,77 +122,26 @@ class LivingManager {
 
     async initSupabase() {
         try {
-            // Prioridad 1: Usar SupabaseService si está disponible
-            if (window.supabaseService) {
-                this.supabase = await window.supabaseService.getClient();
-                if (this.supabase && this.isValidSupabaseClient(this.supabase)) {
-                    const { data: { user }, error: authError } = await this.supabase.auth.getUser();
-                    if (!authError && user) {
-                        this.userId = user.id;
-                    if (this.userId) {
-                        // Supabase inicializado desde SupabaseService
-                        return;
+            const sources = [
+                () => window.supabaseService ? window.supabaseService.getClient() : null,
+                () => typeof waitForSupabase === 'function' ? waitForSupabase() : null,
+                () => window.supabaseClient,
+                () => window.appLoader?.waitFor?.('supabase'),
+                () => window.supabase
+            ];
+
+            for (const getClient of sources) {
+                try {
+                    const client = await getClient();
+                    if (client && this.isValidSupabaseClient(client)) {
+                        this.supabase = client;
+                        const { data: { user }, error } = await client.auth.getUser();
+                        if (!error && user?.id) {
+                            this.userId = user.id;
+                            return;
                         }
                     }
-                }
-            }
-
-            // Prioridad 2: Usar waitForSupabase si está disponible
-            if (typeof waitForSupabase === 'function') {
-                const supabaseClient = await waitForSupabase();
-                if (supabaseClient && this.isValidSupabaseClient(supabaseClient)) {
-                    this.supabase = supabaseClient;
-                    const { data: { user }, error: authError } = await this.supabase.auth.getUser();
-                    if (!authError && user) {
-                        this.userId = user.id;
-                        if (this.userId) {
-                        // Supabase inicializado desde waitForSupabase
-                        return;
-                        }
-                    }
-                }
-            }
-
-            // Prioridad 3: Usar window.supabaseClient
-            if (window.supabaseClient && this.isValidSupabaseClient(window.supabaseClient)) {
-                this.supabase = window.supabaseClient;
-                const { data: { user }, error: authError } = await this.supabase.auth.getUser();
-                if (!authError && user) {
-                    this.userId = user.id;
-                    if (this.userId) {
-                    // Supabase inicializado desde window.supabaseClient
-                    return;
-                    }
-                }
-            }
-
-            // Prioridad 4: Usar appLoader.waitFor
-            if (window.appLoader && typeof window.appLoader.waitFor === 'function') {
-                const supabaseClient = await window.appLoader.waitFor('supabase');
-                if (supabaseClient && this.isValidSupabaseClient(supabaseClient)) {
-                    this.supabase = supabaseClient;
-                    const { data: { user }, error: authError } = await this.supabase.auth.getUser();
-                    if (!authError && user) {
-                        this.userId = user.id;
-                        if (this.userId) {
-                        // Supabase inicializado desde appLoader
-                        return;
-                        }
-                    }
-                }
-            }
-
-            // Prioridad 5: Usar window.supabase directamente
-            if (window.supabase && this.isValidSupabaseClient(window.supabase)) {
-                this.supabase = window.supabase;
-                const { data: { user }, error: authError } = await this.supabase.auth.getUser();
-                if (!authError && user) {
-                    this.userId = user.id;
-                    if (this.userId) {
-                    // Supabase inicializado desde window.supabase
-                    return;
-                    }
-                }
+                } catch (_) {}
             }
 
             console.warn('⚠️ No se pudo inicializar Supabase con ningún método disponible');
@@ -212,41 +161,11 @@ class LivingManager {
     }
 
     async loadUserData() {
-        // Validar cliente de Supabase antes de hacer consulta
-        if (!this.supabase || !this.isValidSupabaseClient(this.supabase) || !this.userId) {
-            this.userData = null;
-            return;
-        }
-
+        if (!this.supabase || !this.userId) { this.userData = null; return; }
         try {
-            // Validar que userId sea válido
-            if (!this.userId || this.userId === null || this.userId === undefined || this.userId === '') {
-                console.warn('⚠️ userId no válido para loadUserData');
-                this.userData = null;
-                return;
-            }
-
-            // Hacer consulta validando que el cliente tenga el método from
-            if (typeof this.supabase.from !== 'function') {
-                console.error('❌ Cliente de Supabase no tiene método from()');
-                this.userData = null;
-                return;
-            }
-
             const { data, error } = await this.supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', this.userId)
-                .maybeSingle();
-
-            if (error) {
-                if (error.status === 400 || error.code === '400') {
-                    console.warn('⚠️ Error 400 cargando profiles:', error.message);
-                    this.userData = null;
-                    return;
-                }
-                throw error;
-            }
+                .from('profiles').select('*').eq('id', this.userId).maybeSingle();
+            if (error) throw error;
             this.userData = data;
         } catch (error) {
             console.error('❌ Error cargando datos de usuario:', error);
@@ -255,45 +174,14 @@ class LivingManager {
     }
 
     async loadProjectData() {
-        // Validar cliente de Supabase antes de hacer consulta
-        if (!this.supabase || !this.isValidSupabaseClient(this.supabase) || !this.userId) {
-            this.projectData = null;
-            return;
-        }
-
+        if (!this.supabase || !this.userId) { this.projectData = null; return; }
         try {
-            // Validar que userId sea válido
-            if (!this.userId || this.userId === null || this.userId === undefined || this.userId === '') {
-                console.warn('⚠️ userId no válido para loadProjectData');
-                this.projectData = null;
-                return;
-            }
-
-            // Validar que el cliente tenga el método from
-            if (typeof this.supabase.from !== 'function') {
-                console.error('❌ Cliente de Supabase no tiene método from()');
-                this.projectData = null;
-                return;
-            }
-
-            // La tabla correcta es brand_containers, no projects
-            // brand_containers no tiene columna is_active
             const { data, error } = await this.supabase
-                .from('brand_containers')
-                .select('*')
+                .from('brand_containers').select('*')
                 .eq('user_id', this.userId)
                 .order('created_at', { ascending: false })
-                .limit(1)
-                .maybeSingle();
-
-            if (error) {
-                if (error.status === 400 || error.code === '400') {
-                    console.warn('⚠️ Error 400 cargando brand_containers:', error.message);
-                    this.projectData = null;
-                    return;
-                }
-                throw error;
-            }
+                .limit(1).maybeSingle();
+            if (error) throw error;
             this.projectData = data;
         } catch (error) {
             console.error('❌ Error cargando datos del proyecto:', error);
@@ -307,77 +195,14 @@ class LivingManager {
      * Para funcionalidad completa (con imágenes), usar ProductsManager.
      */
     async loadProducts() {
-        // Validar cliente de Supabase antes de hacer consulta
-        if (!this.supabase || !this.isValidSupabaseClient(this.supabase) || !this.userId) {
-            this.products = [];
-            return;
-        }
-
+        if (!this.supabase || !this.brandContainerId) { this.products = []; return; }
         try {
-            // Validar que userId sea válido
-            if (!this.userId || typeof this.userId !== 'string' || this.userId.trim() === '') {
-                console.warn('⚠️ userId no válido para loadProducts');
-                this.products = [];
-                return;
-            }
-
-            // Validar que el cliente tenga el método from
-            if (typeof this.supabase.from !== 'function') {
-                console.error('❌ Cliente de Supabase no tiene método from()');
-                this.products = [];
-                return;
-            }
-
-            // Usar brandContainerId si ya está cargado, sino cargarlo
-            if (!this.brandContainerId) {
-            const { data: container, error: containerError } = await this.supabase
-                .from('brand_containers')
-                .select('id')
-                .eq('user_id', this.userId)
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .maybeSingle();
-
-            if (containerError) {
-                if (containerError.status === 400 || containerError.code === '400') {
-                    console.warn('⚠️ Error 400 cargando brand_container:', containerError.message);
-                }
-                    this.products = [];
-                    return;
-            }
-            
-            if (!container || !container.id) {
-                this.products = [];
-                return;
-            }
-
-            // Validar que container.id sea un UUID válido
-            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-                if (!uuidRegex.test(container.id)) {
-                console.warn('⚠️ container.id no es un UUID válido:', container.id);
-                this.products = [];
-                return;
-                }
-
-                this.brandContainerId = container.id;
-            }
-
-            // Products usa brand_container_id según schema.sql (línea 309)
             const { data, error } = await this.supabase
                 .from('products')
                 .select('id, nombre_producto, tipo_producto, precio_producto, moneda, created_at')
                 .eq('brand_container_id', this.brandContainerId)
                 .order('created_at', { ascending: false });
-
-            if (error) {
-                if (error.status === 400 || error.code === '400') {
-                    console.warn('⚠️ Error 400 cargando productos:', error.message);
-                    console.warn('⚠️ brand_container_id usado:', this.brandContainerId);
-                    this.products = [];
-                    return;
-                }
-                throw error;
-            }
+            if (error) throw error;
             this.products = data || [];
         } catch (error) {
             console.error('❌ Error cargando productos:', error);
@@ -386,57 +211,25 @@ class LivingManager {
     }
 
     async loadFlowRuns() {
-        // Validar cliente de Supabase antes de hacer consulta
-        if (!this.supabase || !this.isValidSupabaseClient(this.supabase) || !this.userId) {
-            this.flowRuns = [];
-            return;
-        }
-
+        if (!this.supabase || (!this.brandId && !this.userId)) { this.flowRuns = []; return; }
         try {
-            // Validar que el cliente tenga el método from
-            if (typeof this.supabase.from !== 'function') {
-                console.error('❌ Cliente de Supabase no tiene método from()');
-                this.flowRuns = [];
-                return;
-            }
-
-            // brand_id ya debería estar cargado antes de llamar a esta función
-            // Validar que al menos uno de los IDs sea válido
-            const hasValidBrandId = this.brandId && this.brandId !== null && this.brandId !== undefined && this.brandId !== '';
-            const hasValidUserId = this.userId && this.userId !== null && this.userId !== undefined && this.userId !== '';
-
-            if (!hasValidBrandId && !hasValidUserId) {
-                console.warn('⚠️ No hay brand_id ni user_id válido para filtrar flow_runs');
-                this.flowRuns = [];
-                return;
-            }
-
             let query = this.supabase
                 .from('flow_runs')
                 .select('*, content_flows(name)')
                 .order('created_at', { ascending: false })
                 .limit(100);
 
-            // Filtrar por brand_id si está disponible y es válido, sino por user_id
-            if (hasValidBrandId) {
-                query = query.eq('brand_id', this.brandId);
-            } else {
-                query = query.eq('user_id', this.userId);
-            }
-
+            query = this.brandId ? query.eq('brand_id', this.brandId) : query.eq('user_id', this.userId);
             let { data, error } = await query;
 
             if (error) {
-                const isBadRequest = error.status === 400 || error.code === '400' || error.code === 'PGRST301' || error.code === 'PGRST116';
-                if (isBadRequest) {
-                    query = this.supabase.from('flow_runs').select('*').order('created_at', { ascending: false }).limit(100);
-                    if (hasValidBrandId) query = query.eq('brand_id', this.brandId);
-                    else query = query.eq('user_id', this.userId);
-                    const res = await query;
-                    this.flowRuns = (res.error) ? [] : (res.data || []);
-                    return;
-                }
-                throw error;
+                // Fallback sin join si la relación falla
+                query = this.supabase.from('flow_runs').select('*')
+                    .order('created_at', { ascending: false }).limit(100);
+                query = this.brandId ? query.eq('brand_id', this.brandId) : query.eq('user_id', this.userId);
+                const res = await query;
+                this.flowRuns = res.error ? [] : (res.data || []);
+                return;
             }
             this.flowRuns = data || [];
         } catch (error) {
@@ -446,42 +239,16 @@ class LivingManager {
     }
 
     async loadFlowOutputs() {
-        // Validar cliente de Supabase antes de hacer consulta
-        if (!this.supabase || !this.isValidSupabaseClient(this.supabase) || !this.flowRuns || !this.flowRuns.length) {
-            this.flowOutputs = [];
-            return;
-        }
-
+        if (!this.supabase || !this.flowRuns?.length) { this.flowOutputs = []; return; }
         try {
-            // Validar que el cliente tenga el método from
-            if (typeof this.supabase.from !== 'function') {
-                console.error('❌ Cliente de Supabase no tiene método from()');
-                this.flowOutputs = [];
-                return;
-            }
-
-            const runIds = this.flowRuns
-                .map(run => run?.id)
-                .filter(id => id !== null && id !== undefined);
-            
-            if (runIds.length === 0) {
-                this.flowOutputs = [];
-                return;
-            }
+            const runIds = this.flowRuns.map(r => r?.id).filter(Boolean);
+            if (!runIds.length) { this.flowOutputs = []; return; }
 
             const { data, error } = await this.supabase
-                .from('runs_outputs')
-                .select('*')
+                .from('runs_outputs').select('*')
                 .in('run_id', runIds)
                 .order('created_at', { ascending: false });
-
-            if (error) {
-                if (error.status === 400 || error.code === '400') {
-                    console.warn('⚠️ Error 400 cargando runs_outputs:', error.message);
-                    console.warn('⚠️ runIds:', runIds);
-                }
-                throw error;
-            }
+            if (error) throw error;
             this.flowOutputs = data || [];
         } catch (error) {
             console.error('❌ Error cargando flow outputs:', error);
@@ -490,44 +257,13 @@ class LivingManager {
     }
 
     async loadCreditUsage() {
-        // Validar cliente de Supabase antes de hacer consulta
-        if (!this.supabase || !this.isValidSupabaseClient(this.supabase) || !this.userId) {
-            this.creditUsage = [];
-            return;
-        }
-
+        if (!this.supabase || !this.userId) { this.creditUsage = []; return; }
         try {
-            // Validar que userId sea válido antes de hacer la consulta
-            if (!this.userId || this.userId === null || this.userId === undefined || this.userId === '') {
-                console.warn('⚠️ userId no válido para loadCreditUsage');
-                this.creditUsage = [];
-                return;
-            }
-
-            // Validar que el cliente tenga el método from
-            if (typeof this.supabase.from !== 'function') {
-                console.error('❌ Cliente de Supabase no tiene método from()');
-                this.creditUsage = [];
-                return;
-            }
-
             const { data, error } = await this.supabase
-                .from('credit_usage')
-                .select('*')
+                .from('credit_usage').select('*')
                 .eq('user_id', this.userId)
-                .order('created_at', { ascending: false })
-                .limit(100);
-
-            if (error) {
-                // Si es un error 400, loguear pero no lanzar error
-                if (error.status === 400 || error.code === '400') {
-                    console.warn('⚠️ Error 400 cargando credit_usage:', error.message);
-                    console.warn('⚠️ userId:', this.userId);
-                    this.creditUsage = [];
-                    return;
-                }
-                throw error;
-            }
+                .order('created_at', { ascending: false }).limit(100);
+            if (error) throw error;
             this.creditUsage = data || [];
         } catch (error) {
             console.error('❌ Error cargando credit usage:', error);
@@ -536,72 +272,35 @@ class LivingManager {
     }
 
     async loadBrandId() {
-        // Validar cliente de Supabase antes de hacer consulta
         if (!this.supabase || !this.isValidSupabaseClient(this.supabase) || !this.userId) {
             this.brandId = null;
             return;
         }
 
         try {
-            // Validar que userId sea válido
-            if (!this.userId || this.userId === null || this.userId === undefined || this.userId === '') {
-                console.warn('⚠️ userId no válido para loadBrandId');
+            // Reutilizar brandContainerId de loadProjectData() si ya se cargó
+            if (!this.brandContainerId && this.projectData?.id) {
+                this.brandContainerId = this.projectData.id;
+                this.organizationId = this.projectData.organization_id;
+            }
+
+            if (!this.brandContainerId) {
                 this.brandId = null;
                 return;
             }
 
-            // Validar que el cliente tenga el método from
-            if (typeof this.supabase.from !== 'function') {
-                console.error('❌ Cliente de Supabase no tiene método from()');
-                this.brandId = null;
-                return;
-            }
-
-            // Primero obtener brand_container por user_id
-            const { data: container, error: containerError } = await this.supabase
-                .from('brand_containers')
-                .select('id, organization_id')
-                .eq('user_id', this.userId)
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .maybeSingle();
-
-            if (containerError) {
-                if (containerError.status === 400 || containerError.code === '400') {
-                    console.warn('⚠️ Error 400 cargando brand_containers en loadBrandId:', containerError.message);
-                    this.brandId = null;
-                    this.brandContainerId = null;
-                    this.organizationId = null;
-                    return;
-                }
-                throw containerError;
-            }
-            
-            if (!container || !container.id) {
-                this.brandId = null;
-                this.brandContainerId = null;
-                this.organizationId = null;
-                return;
-            }
-
-            // Guardar brand_container_id y organization_id
-            this.brandContainerId = container.id;
-            this.organizationId = container.organization_id;
-
-            // Luego obtener brand usando project_id que referencia a brand_container.id
             const { data: brand, error: brandError } = await this.supabase
                 .from('brands')
                 .select('id')
-                .eq('project_id', container.id)
+                .eq('project_id', this.brandContainerId)
                 .maybeSingle();
 
             if (brandError) {
                 if (brandError.status === 400 || brandError.code === '400') {
                     console.warn('⚠️ Error 400 cargando brands en loadBrandId:', brandError.message);
-                    this.brandId = null;
-                    return;
                 }
-                throw brandError;
+                this.brandId = null;
+                return;
             }
             this.brandId = brand?.id || null;
         } catch (error) {
@@ -611,99 +310,25 @@ class LivingManager {
     }
 
     async loadLatestGeneratedContent() {
-        // Función RPC eliminada para evitar errores 400
-        // Usar runs_outputs directamente (schema real: runs_outputs)
-        // Validar cliente de Supabase antes de hacer consulta
-        if (!this.supabase || !this.isValidSupabaseClient(this.supabase)) {
-            this.latestGeneratedContent = [];
-            return;
-        }
+        if (!this.supabase || !this.brandId) { this.latestGeneratedContent = []; return; }
 
         try {
-            // Validar que el cliente tenga el método from
-            if (typeof this.supabase.from !== 'function') {
-                console.error('❌ Cliente de Supabase no tiene método from()');
-                this.latestGeneratedContent = [];
-                return;
-            }
-
-            // Primero obtener brand_id si no lo tenemos
-            if (!this.brandId) {
-                await this.loadBrandId();
-            }
-
-            if (!this.brandId) {
-                // No hay brand_id disponible, saltando carga de contenido generado
-                this.latestGeneratedContent = [];
-                return;
-            }
-
-            // Cargar contenido desde runs_outputs (schema real) usando método seguro (sin joins complejos)
-            // Paso 1: Obtener flow_runs por brand_id
             const { data: runs, error: runsError } = await this.supabase
-                .from('flow_runs')
-                .select('id')
+                .from('flow_runs').select('id')
                 .eq('brand_id', this.brandId)
-                .order('created_at', { ascending: false })
-                .limit(10);
+                .order('created_at', { ascending: false }).limit(10);
+            if (runsError || !runs?.length) { this.latestGeneratedContent = []; return; }
 
-            if (runsError) {
-                if (runsError.status === 400 || runsError.code === '400') {
-                    console.warn('⚠️ Error 400 cargando flow_runs:', runsError.message);
-                }
-                    this.latestGeneratedContent = [];
-                    return;
-                }
+            const runIds = runs.map(r => r.id).filter(Boolean);
+            if (!runIds.length) { this.latestGeneratedContent = []; return; }
 
-            if (!runs || runs.length === 0) {
-                    this.latestGeneratedContent = [];
-                    return;
-                }
-
-            // Paso 2: Obtener runs_outputs usando los run_ids
-            const runIds = runs.map(r => r.id).filter(id => id !== null && id !== undefined);
-            
-            if (runIds.length === 0) {
-                this.latestGeneratedContent = [];
-                return;
-            }
-
-            // Validar que runIds sean UUIDs válidos antes de usar en .in()
-            const validRunIds = runIds.filter(id => {
-                // Validar que sea un UUID válido (formato básico)
-                const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-                return id && typeof id === 'string' && uuidRegex.test(id);
-            });
-
-            if (validRunIds.length === 0) {
-                console.warn('⚠️ No hay run_ids válidos (UUIDs) para cargar runs_outputs');
-                this.latestGeneratedContent = [];
-                return;
-            }
-
-            // Seleccionar campos específicos incluyendo prompt_used y otros campos de texto
-            // Esto asegura que prompt_used se traiga correctamente
             const { data: outputs, error: outputsError } = await this.supabase
                 .from('runs_outputs')
                 .select('id, run_id, output_type, storage_path, storage_object_id, prompt_used, generated_copy, text_content, metadata, created_at, generated_hashtags, creative_rationale')
-                .in('run_id', validRunIds)
-                .order('created_at', { ascending: false })
-                .limit(10);
+                .in('run_id', runIds)
+                .order('created_at', { ascending: false }).limit(10);
 
-            if (outputsError) {
-                if (outputsError.status === 400 || outputsError.code === '400') {
-                    console.warn('⚠️ Error 400 cargando runs_outputs:', outputsError.message);
-                    console.warn('⚠️ runIds usados:', validRunIds);
-                }
-                this.latestGeneratedContent = [];
-                return;
-            }
-
-            this.latestGeneratedContent = outputs || [];
-
-            if (this.latestGeneratedContent.length > 0) {
-                // Contenido generado cargado
-            }
+            this.latestGeneratedContent = outputsError ? [] : (outputs || []);
         } catch (error) {
             console.error('❌ Error loading latest generated content:', error);
             this.latestGeneratedContent = [];
@@ -1273,10 +898,12 @@ class LivingManager {
             this.renderHistorySection();
             closeDropdown();
         });
-        document.addEventListener('click', (e) => {
+        if (this._docClickCloseDropdown) document.removeEventListener('click', this._docClickCloseDropdown);
+        this._docClickCloseDropdown = (e) => {
             if (dropdown?.classList.contains('is-open') && !dropdown.contains(e.target) && trigger && !trigger.contains(e.target))
                 closeDropdown();
-        });
+        };
+        document.addEventListener('click', this._docClickCloseDropdown);
 
         if (valueEl) valueEl.textContent = formatDateRange();
         valueEl?.classList.toggle('has-range', !!(this.filterDateFrom || this.filterDateTo));
@@ -2142,7 +1769,23 @@ class LivingManager {
         image.style.transition = 'transform 0.1s ease-out';
     }
 
-    // Método destroy() eliminado - sin limpieza manual
+    destroy() {
+        if (this._docClickCloseDropdown) {
+            document.removeEventListener('click', this._docClickCloseDropdown);
+            this._docClickCloseDropdown = null;
+        }
+        this.supabase = null;
+        this.userId = null;
+        this.userData = null;
+        this.projectData = null;
+        this.products = [];
+        this.flowRuns = [];
+        this.flowOutputs = [];
+        this.latestGeneratedContent = [];
+        this.initialized = false;
+        this.eventListenersSetup = false;
+        this._historyFiltersSetup = false;
+    }
 }
 
 // Hacer disponible globalmente para que pueda ser usado por LivingView
