@@ -4116,17 +4116,17 @@ body.sidebar-collapsed .app-header.with-sidebar {
 
 
 
-/* ========== signin.css – Login: prisma de refracción, glass morphism ========== */
+/* ========== signin.css – Login: glass morphism, luz sutil, botón arcoíris ========== */
 
 /**
- * Sign In / Sign Up - Fondo negro, degradado en parte inferior con animación tipo olas.
- * Paleta: degradado marca (ff0000 → 900090). Sin morado. Estilo glass morphism.
+ * Sign In / Sign Up - Fondo negro con efecto de luz ligera. Card con borde gris claro discreto.
+ * Botón login: cuerpo oscuro, texto blanco, línea degradada inferior con resplandor (imagen 2).
  */
 
-/* Contenedor: fondo negro puro, degradado animado abajo */
+/* Contenedor: fondo negro con efecto de luz ligeramente notoria */
 .signin-container {
     min-height: 100vh;
-    background: #000000;
+    background: #0a0a0a;
     color: var(--text-primary);
     padding: 0;
     margin: 0;
@@ -4136,49 +4136,20 @@ body.sidebar-collapsed .app-header.with-sidebar {
     overflow: hidden;
 }
 
-/* Capa inferior: degradado con efecto refracción y animación olas */
+/* Efecto de luz sutil (sin degradado): brillos difusos desde esquinas */
 .signin-container::before {
     content: '';
     position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 42%;
-    background: linear-gradient(90deg, #ff0000 0%, #ff6500 12.5%, #ffe500 25%, #9acc00 37.5%, #00d614 50%, #00e7ff 62.5%, #0018ee 75%, #5b00ea 87.5%, #900090 100%);
-    background-size: 200% 100%;
-    opacity: 0.7;
-    filter: blur(72px);
-    animation: signinWave 10s ease-in-out infinite;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 70% 50% at 10% 10%, rgba(120, 120, 125, 0.12) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 45% at 92% 88%, rgba(100, 100, 108, 0.1) 0%, transparent 50%);
     pointer-events: none;
     z-index: 0;
 }
 
-@keyframes signinWave {
-    0%, 100% { background-position: 0% 50%; opacity: 0.7; transform: scaleX(1); }
-    33% { background-position: 50% 50%; opacity: 0.85; transform: scaleX(1.03); }
-    66% { background-position: 100% 50%; opacity: 0.75; transform: scaleX(0.98); }
-}
-
-/* Segunda capa de ola (desfasada) para mayor profundidad */
 .signin-container::after {
-    content: '';
-    position: fixed;
-    left: -10%;
-    right: -10%;
-    bottom: -5%;
-    height: 35%;
-    background: linear-gradient(90deg, #900090 0%, #5b00ea 15%, #00e7ff 50%, #ff6500 85%, #ff0000 100%);
-    background-size: 250% 100%;
-    opacity: 0.4;
-    filter: blur(90px);
-    animation: signinWaveAlt 14s ease-in-out infinite;
-    pointer-events: none;
-    z-index: 0;
-}
-
-@keyframes signinWaveAlt {
-    0%, 100% { background-position: 100% 50%; }
-    50% { background-position: 0% 50%; }
+    content: none;
 }
 
 /* Rejilla eliminada en login para diseño limpio */
@@ -4199,7 +4170,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     box-sizing: border-box;
 }
 
-/* Card: glass morphism (prisma de refracción) */
+/* Card: glass morphism con profundidad en gris claro muy discreto (no blanco) */
 .signin-container .form-org-card.signin-card {
     width: 360px;
     max-width: calc(100vw - 2rem);
@@ -4210,13 +4181,13 @@ body.sidebar-collapsed .app-header.with-sidebar {
     flex-direction: column;
     gap: var(--spacing-lg);
     align-items: center;
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(180, 182, 190, 0.12);
     border-radius: 20px;
     padding: 2rem;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), 0 1px 0 rgba(180, 182, 190, 0.06) inset;
 }
 
 .signin-brand {
@@ -4316,7 +4287,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Inputs: glass morphism, bordes suaves */
+/* Inputs: glass morphism, borde gris claro discreto */
 .signin-container .form-input,
 .signin-container input[type="text"],
 .signin-container input[type="email"],
@@ -4324,8 +4295,8 @@ body.sidebar-collapsed .app-header.with-sidebar {
     width: 100%;
     max-width: 100%;
     padding: 0.85rem 1rem;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(180, 182, 190, 0.15);
     border-radius: var(--border-radius);
     color: var(--text-primary);
     font-size: var(--font-size-md);
@@ -4345,8 +4316,8 @@ body.sidebar-collapsed .app-header.with-sidebar {
 .signin-container .form-input:focus,
 .signin-container input:focus {
     outline: none;
-    border-color: rgba(0, 231, 255, 0.5);
-    box-shadow: 0 0 0 2px rgba(0, 231, 255, 0.15);
+    border-color: rgba(180, 182, 190, 0.25);
+    box-shadow: 0 0 0 2px rgba(180, 182, 190, 0.08);
 }
 
 /* Botones */
@@ -4359,8 +4330,8 @@ body.sidebar-collapsed .app-header.with-sidebar {
     font-size: var(--font-size-md);
     cursor: pointer;
     transition: var(--transition);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(180, 182, 190, 0.15);
+    background: rgba(255, 255, 255, 0.06);
     color: var(--text-primary);
     font-family: inherit;
     display: inline-flex;
@@ -4368,16 +4339,46 @@ body.sidebar-collapsed .app-header.with-sidebar {
     justify-content: center;
 }
 
+/* Botón Login: estilo imagen 2 – cuerpo oscuro, texto blanco, línea arcoíris en borde inferior + resplandor */
 .signin-container .btn-primary {
-    background: var(--brand-gradient);
+    position: relative;
+    background: #252528;
     border: none;
-    color: #000000;
+    color: #ffffff;
+    padding-bottom: calc(0.85rem + 4px);
+    box-shadow: 0 6px 24px -4px rgba(255, 100, 0, 0.2), 0 8px 28px -4px rgba(0, 230, 255, 0.15);
+    overflow: visible;
+}
+
+.signin-container .btn-primary::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #ff0000 0%, #ff6500 12.5%, #ffe500 25%, #9acc00 37.5%, #00d614 50%, #00e7ff 62.5%, #0018ee 75%, #5b00ea 87.5%, #900090 100%);
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+}
+
+.signin-container .btn-primary::after {
+    content: '';
+    position: absolute;
+    left: 8%;
+    right: 8%;
+    bottom: -10px;
+    height: 14px;
+    background: linear-gradient(90deg, #ff0000 0%, #ff6500 15%, #ffe500 30%, #9acc00 45%, #00d614 60%, #00e7ff 75%, #0018ee 88%, #900090 100%);
+    filter: blur(10px);
+    opacity: 0.55;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: -1;
 }
 
 .signin-container .btn-primary:hover:not(:disabled) {
-    opacity: 0.95;
-    filter: brightness(1.1);
-    box-shadow: 0 4px 20px rgba(0, 231, 255, 0.25);
+    background: #2a2a2e;
+    box-shadow: 0 8px 28px -4px rgba(255, 100, 0, 0.28), 0 12px 32px -4px rgba(0, 230, 255, 0.2);
 }
 
 .signin-container .btn:disabled {
@@ -4433,20 +4434,20 @@ body.sidebar-collapsed .app-header.with-sidebar {
     padding: 0 0.25rem;
 }
 
-/* Botón Google – glass */
+/* Botón Google – glass, borde gris claro discreto */
 .signin-google-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.75rem;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(180, 182, 190, 0.15);
     color: var(--text-primary);
 }
 
 .signin-google-btn:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(180, 182, 190, 0.22);
 }
 
 .signin-google-icon {
