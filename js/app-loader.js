@@ -163,7 +163,7 @@
         const el = document.getElementById('globalSpinner');
         if (!el) return;
         spinnerRefCount++;
-        el.classList.remove('loader-overlay--hidden');
+        el.classList.remove('loader-overlay--hidden', 'loader-overlay--gone');
     }
 
     function hideSpinner() {
@@ -173,6 +173,15 @@
         if (spinnerRefCount <= 0) {
             spinnerRefCount = 0;
             el.classList.add('loader-overlay--hidden');
+            var duration = 900;
+            el.addEventListener('transitionend', function onEnd(e) {
+                if (e.target !== el || e.propertyName !== 'opacity') return;
+                el.removeEventListener('transitionend', onEnd);
+                el.classList.add('loader-overlay--gone');
+            }, { once: true });
+            setTimeout(function () {
+                el.classList.add('loader-overlay--gone');
+            }, duration + 50);
         }
     }
     

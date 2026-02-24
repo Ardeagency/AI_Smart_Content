@@ -562,12 +562,15 @@ body {
     justify-content: center;
     background: #050505;
     pointer-events: auto;
-    transition: opacity 0.45s ease-out;
+    transition: opacity 0.9s ease-out;
 }
 
 .loader-overlay.loader-overlay--hidden {
     opacity: 0;
     pointer-events: none;
+}
+
+.loader-overlay.loader-overlay--gone {
     visibility: hidden;
 }
 
