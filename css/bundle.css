@@ -3762,10 +3762,10 @@ body.sidebar-collapsed .app-header.with-sidebar {
     opacity: 1;
 }
 
-.landing-footer-signature-link img {
-    height: 2rem;
-    width: auto;
-    display: block;
+/* Imagen "by arde" quitada temporalmente; contenedor se mantiene */
+.landing-footer-signature-link img,
+#app-container > footer > div > a > img {
+    display: none !important;
 }
 
 @media (max-width: 768px) {
@@ -3777,9 +3777,6 @@ body.sidebar-collapsed .app-header.with-sidebar {
         font-size: var(--font-size-sm);
     }
 
-    .landing-footer-signature-link img {
-        height: 1.6rem;
-    }
 }
 
 .landing-content {
