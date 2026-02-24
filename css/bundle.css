@@ -581,10 +581,17 @@ body {
     max-width: 100%;
     min-height: 100vh;
     background: var(--bg-primary);
-    transition: opacity 0.3s ease;
+    transition: opacity 0.5s ease-out;
     overflow-x: hidden;
     overflow-y: auto;
     box-sizing: border-box;
+}
+
+/* Ocultar contenido hasta que termine la animación de entrada; luego se revela con fade */
+body.entrance-active #app-container {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
 }
 
 #app-container:has(main.builder-main) {
@@ -877,7 +884,7 @@ body {
     inset: 0;
     background: var(--bg-black);
     pointer-events: auto;
-    transition: opacity 0.5s ease-out;
+    transition: opacity 0.7s ease-out;
 }
 .entrance-overlay.entrance-overlay--hidden {
     opacity: 0;
@@ -908,7 +915,7 @@ body {
     margin: 0;
     opacity: 0;
     transform: translateY(30px);
-    transition: opacity 0.35s ease-out, transform 0.35s ease-out;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
 }
 .entrance-text-block p.entrance-visible {
     opacity: 1;
@@ -940,7 +947,7 @@ body {
     background: var(--color-white);
     z-index: 2;
     opacity: 0;
-    transition: opacity 0.15s ease-out, width 0.4s ease-out, left 0s, right 0s;
+    transition: opacity 0.2s ease-out, width 0.7s ease-out, left 0s, right 0s;
 }
 .entrance-reveal-box.entrance-reveal-show {
     opacity: 1;
@@ -952,12 +959,12 @@ body {
     left: auto;
     right: 0;
     width: 0;
-    transition: width 0.3s ease-out;
+    transition: width 0.5s ease-out;
 }
 
 .entrance-text-2 .entrance-h3 {
     opacity: 0;
-    transition: opacity 0.4s ease-out;
+    transition: opacity 0.55s ease-out, transform 0.5s ease-out;
 }
 .entrance-text-2 .entrance-h3.entrance-visible {
     opacity: 1;

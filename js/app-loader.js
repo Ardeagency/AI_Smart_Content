@@ -197,6 +197,7 @@
     }
     
     // ===== ENTRANCE SEQUENCE: solo caja (blanco) + dominio =====
+    // La landing se oculta con body.entrance-active hasta que termina esta animación.
     function runEntranceSequence() {
         const overlay = document.getElementById('entranceOverlay');
         if (!overlay) return;
@@ -209,30 +210,31 @@
             else setTimeout(fn, ms);
         }
 
-        // 1) Reveal box (blanco): mostrar → expandir → barrer a la derecha
+        // 1) Reveal box (blanco): mostrar → expandir → barrer a la derecha (velocidad más pausada)
         at(0, function () {
             if (revealBox) revealBox.classList.add('entrance-reveal-show');
         });
-        at(150, function () {
+        at(280, function () {
             if (revealBox) revealBox.classList.add('entrance-reveal-expand');
         });
-        at(600, function () {
+        at(1100, function () {
             if (revealBox) revealBox.classList.add('entrance-reveal-away');
         });
 
         // 2) Texto dominio visible
-        at(850, function () {
+        at(1400, function () {
             if (domainLine) domainLine.classList.add('entrance-visible');
         });
 
-        // 3) Salida dominio y fade del overlay
-        at(1450, function () {
+        // 3) Salida dominio, fade del overlay y revelar landing (#app-container)
+        at(2400, function () {
             if (domainLine) domainLine.classList.add('entrance-out');
             overlay.classList.add('entrance-overlay--hidden');
+            document.body.classList.remove('entrance-active');
         });
 
-        // 4) Al terminar: mostrar spinner solo si la landing no ha renderizado
-        at(2000, function () {
+        // 4) Al terminar: mostrar spinner solo si la landing aún no ha renderizado
+        at(3200, function () {
             var container = document.getElementById('app-container');
             var hasContent = container && container.innerHTML.trim().length > 0;
             if (!hasContent && window.appLoader && typeof window.appLoader.showSpinner === 'function') {
