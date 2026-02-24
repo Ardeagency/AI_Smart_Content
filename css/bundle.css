@@ -4665,7 +4665,7 @@ body.entrance-done .signin-container {
     overflow-y: auto;
 }
 
-/* Fondo: gradiente verde (como brands tiene brand-dashboard-background) */
+/* Fondo negro completamente */
 .planes-hero-background {
     position: absolute;
     inset: 0;
@@ -4677,54 +4677,6 @@ body.entrance-done .signin-container {
     inset: 0;
     background: #000;
 }
-
-/* Burbujas flotantes negras con sombra gradiente (--brand-gradient), flotar muy lento */
-@keyframes planes-bubble-float {
-    0%, 100% { transform: translate(0, 0); }
-    33%      { transform: translate(2px, -3px); }
-    66%      { transform: translate(-2px, 2px); }
-}
-
-.planes-bubbles {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    overflow: visible;
-    pointer-events: none;
-}
-
-.planes-bubble {
-    position: absolute;
-    border-radius: 50%;
-    background: #000;
-}
-
-/* Sombra/gradiente reducida, solo brilla alrededor; cada esfera con su variante de color */
-.planes-bubble::before {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 140%;
-    height: 140%;
-    margin-left: -70%;
-    margin-top: -70%;
-    border-radius: 50%;
-    filter: blur(22px);
-    opacity: 0.5;
-    z-index: -1;
-}
-
-.planes-bubble-1::before { background: radial-gradient(circle, #6600FF 0%, #1a0a2e 40%, transparent 70%); }
-.planes-bubble-2::before { background: radial-gradient(circle, #9ACD32 0%, #FFFF00 35%, transparent 70%); }
-.planes-bubble-3::before { background: radial-gradient(circle, #FF6500 0%, #FF0000 40%, transparent 70%); }
-.planes-bubble-4::before { background: radial-gradient(circle, #00E7FF 0%, #00AA66 40%, transparent 70%); }
-
-/* Círculos más grandes y centrados (como referencia imagen 2) */
-.planes-bubble-1 { width: 110px; height: 110px; left: 28%;  top: 25%;  animation: planes-bubble-float 28s ease-in-out infinite; }
-.planes-bubble-2 { width: 95px;  height: 95px;  left: 58%;  top: 18%;  animation: planes-bubble-float 34s ease-in-out 2s infinite; }
-.planes-bubble-3 { width: 100px; height: 100px; left: 22%;  top: 58%;  animation: planes-bubble-float 30s ease-in-out 4s infinite; }
-.planes-bubble-4 { width: 105px; height: 105px; left: 55%;  top: 62%;  animation: planes-bubble-float 32s ease-in-out 1s infinite; }
 
 /* Contenido del hero: centrado, título arriba */
 .planes-hero-content {
@@ -4751,13 +4703,13 @@ body.entrance-done .signin-container {
     letter-spacing: -0.02em;
 }
 
-/* Toggle Mensual / Anual */
+/* Toggle Mensual / Anual: mismo estilo que login (card negra, borde degradado; botón activo = blanco) */
 .planes-billing-toggle {
     display: inline-flex;
-    background: rgba(15, 46, 34, 0.9);
+    background: linear-gradient(#000, #000) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
+    border: 1px solid transparent;
     border-radius: var(--radius-md);
     padding: 0.25rem;
-    border: 1px solid var(--white-10);
     gap: 0;
 }
 
@@ -4779,7 +4731,7 @@ body.entrance-done .signin-container {
 
 .planes-toggle-btn.active {
     background: var(--color-white);
-    color: var(--planes-dark);
+    color: #000;
 }
 
 .planes-hero-subtitle {
@@ -4810,6 +4762,7 @@ body.entrance-done .signin-container {
     justify-content: center;
 }
 
+/* Cards como login: negro, borde degradado negro → blanco */
 .planes-hero .plan-card-small {
     width: 150px;
     min-height: 220px;
@@ -4818,24 +4771,22 @@ body.entrance-done .signin-container {
     align-items: center;
     justify-content: flex-start;
     gap: 0.4rem;
-    background: rgba(15, 46, 34, 0.9);
-    border: 1px solid var(--white-8);
+    background: linear-gradient(#000, #000) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
+    border: 1px solid transparent;
     border-radius: var(--radius-md);
     padding: 1rem 0.875rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     transition: var(--transition);
     cursor: pointer;
     overflow: hidden;
 }
 
 .planes-hero .plan-card-small:hover {
-    border-color: var(--white-20);
-    background: rgba(19, 67, 48, 0.95);
+    background: linear-gradient(#0a0a0a, #0a0a0a) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
 }
 
 .planes-hero .plan-card-small.selected {
     background: var(--color-white);
-    border-color: transparent;
+    border: 1px solid transparent;
     box-shadow: var(--shadow-card);
 }
 
@@ -4844,7 +4795,7 @@ body.entrance-done .signin-container {
 }
 
 .planes-hero .plan-card-small.selected .plan-card-name {
-    color: var(--planes-dark);
+    color: #000;
 }
 
 .planes-hero .plan-card-price {
@@ -4857,7 +4808,7 @@ body.entrance-done .signin-container {
 
 .planes-hero .plan-card-small.selected .plan-card-price,
 .planes-hero .plan-card-small.selected .plan-card-price span {
-    color: var(--planes-dark);
+    color: #000;
 }
 
 .planes-hero .plan-card-credits {
@@ -4865,7 +4816,7 @@ body.entrance-done .signin-container {
 }
 
 .planes-hero .plan-card-small.selected .plan-card-credits {
-    color: var(--planes-dark);
+    color: #000;
 }
 
 /* Vertical cards: nombre arriba, precio y créditos centrados */
@@ -4899,7 +4850,7 @@ body.entrance-done .signin-container {
 }
 
 .planes-hero .plan-card-small.selected .plan-card-details {
-    color: rgba(10, 22, 18, 0.85);
+    color: rgba(0, 0, 0, 0.85);
 }
 
 .plan-card-details li {
@@ -5056,24 +5007,25 @@ body.entrance-done .signin-container {
     max-width: 100%;
 }
 
+/* Botón como login: blanco, texto negro */
 .planes-btn-submit {
     width: 100%;
     max-width: 100%;
-    padding: 0.875rem 1.25rem;
-    font-size: 0.95rem;
+    padding: 0.625rem 1.5rem;
+    font-size: 0.9rem;
     font-weight: 600;
-    color: var(--color-white);
-    background: #1f2937;
-    border: 1px solid #374151;
-    border-radius: var(--radius-md);
+    color: var(--text-black);
+    background: var(--color-white);
+    border: none;
+    border-radius: var(--radius-sm);
     cursor: pointer;
     transition: var(--transition);
     box-sizing: border-box;
 }
 
 .planes-btn-submit:hover {
-    background: #374151;
-    border-color: var(--text-secondary);
+    background: var(--bg-light-gray);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .planes-btn-submit:active {
