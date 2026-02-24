@@ -941,7 +941,7 @@ body.entrance-active #app-container {
     top: 0;
     height: 100%;
     width: 0;
-    background: linear-gradient(90deg, #FFFF00 0%, #9ACD32 50%, #00FF00 100%);
+    background: var(--brand-gradient);
     z-index: 2;
     opacity: 0;
     transition: opacity 0.2s ease-out, width 0.7s ease-out, left 0s, right 0s;
