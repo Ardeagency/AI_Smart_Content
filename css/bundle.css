@@ -117,8 +117,8 @@
     --warm-30: rgba(255, 101, 0, 0.3);
     --warm-50: rgba(255, 101, 0, 0.5);
 
-    /* ── Degradado oficial (sin verde, suave, distorsionado) ── */
-    --brand-gradient: linear-gradient(90deg, #e84a4a 0%, #f07a38 8%, #f5d85c 18%, #fff0b8 32%, #50d8e8 48%, #3088e8 62%, #6b50d8 78%, #a838a0 92%, #903090 100%);
+    /* ── Degradado oficial de la plataforma (izq → der) ── */
+    --brand-gradient: linear-gradient(90deg, #ff0000 0%, #ff6500 12.5%, #ffe500 25%, #9acc00 37.5%, #00d614 50%, #00e7ff 62.5%, #0018ee 75%, #5b00ea 87.5%, #900090 100%);
 
     /* ── Border-radius (escala 4px) ────────── */
     --radius-xs: 4px;
@@ -941,7 +941,10 @@ body.entrance-active #app-container {
     top: 0;
     height: 100%;
     width: 0;
-    background: var(--brand-gradient);
+    /* Sin verde; suave (más paradas) y distorsionado (dos capas a ángulos distintos) */
+    background:
+        linear-gradient(98deg, #ff0000 0%, #ff6500 14%, #ffe500 28%, #00e7ff 52%, #0018ee 72%, #5b00ea 88%, #900090 100%),
+        linear-gradient(82deg, rgba(255,229,0,0.35) 20%, rgba(0,231,255,0.3) 50%, rgba(91,0,234,0.35) 80%);
     z-index: 2;
     opacity: 0;
     transition: opacity 0.2s ease-out, width 0.7s ease-out, left 0s, right 0s;
