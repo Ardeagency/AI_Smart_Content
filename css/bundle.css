@@ -4697,29 +4697,34 @@ body.entrance-done .signin-container {
     position: absolute;
     border-radius: 50%;
     background: #000;
-    /* Sombra con degradado de la plataforma: capa difusa detrás */
 }
 
+/* Sombra/gradiente reducida, solo brilla alrededor; cada esfera con su variante de color */
 .planes-bubble::before {
     content: '';
     position: absolute;
     left: 50%;
     top: 50%;
-    width: 200%;
-    height: 200%;
-    margin-left: -100%;
-    margin-top: -100%;
+    width: 140%;
+    height: 140%;
+    margin-left: -70%;
+    margin-top: -70%;
     border-radius: 50%;
-    background: var(--brand-gradient);
-    filter: blur(35px);
-    opacity: 0.65;
+    filter: blur(22px);
+    opacity: 0.5;
     z-index: -1;
 }
 
-.planes-bubble-1 { width: 70px;  height: 70px;  left: 15%;  top: 20%;  animation: planes-bubble-float 28s ease-in-out infinite; }
-.planes-bubble-2 { width: 100px; height: 100px; left: 72%;  top: 15%;  animation: planes-bubble-float 34s ease-in-out 2s infinite; }
-.planes-bubble-3 { width: 58px;  height: 58px;  left: 10%;  top: 60%;  animation: planes-bubble-float 30s ease-in-out 4s infinite; }
-.planes-bubble-4 { width: 85px;  height: 85px;  right: 12%; top: 70%;  animation: planes-bubble-float 32s ease-in-out 1s infinite; }
+.planes-bubble-1::before { background: radial-gradient(circle, #6600FF 0%, #1a0a2e 40%, transparent 70%); }
+.planes-bubble-2::before { background: radial-gradient(circle, #9ACD32 0%, #FFFF00 35%, transparent 70%); }
+.planes-bubble-3::before { background: radial-gradient(circle, #FF6500 0%, #FF0000 40%, transparent 70%); }
+.planes-bubble-4::before { background: radial-gradient(circle, #00E7FF 0%, #00AA66 40%, transparent 70%); }
+
+/* Círculos más grandes y centrados (como referencia imagen 2) */
+.planes-bubble-1 { width: 110px; height: 110px; left: 28%;  top: 25%;  animation: planes-bubble-float 28s ease-in-out infinite; }
+.planes-bubble-2 { width: 95px;  height: 95px;  left: 58%;  top: 18%;  animation: planes-bubble-float 34s ease-in-out 2s infinite; }
+.planes-bubble-3 { width: 100px; height: 100px; left: 22%;  top: 58%;  animation: planes-bubble-float 30s ease-in-out 4s infinite; }
+.planes-bubble-4 { width: 105px; height: 105px; left: 55%;  top: 62%;  animation: planes-bubble-float 32s ease-in-out 1s infinite; }
 
 /* Contenido del hero: centrado, título arriba */
 .planes-hero-content {
