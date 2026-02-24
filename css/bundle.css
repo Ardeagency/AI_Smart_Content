@@ -4689,7 +4689,7 @@ body.entrance-done .signin-container {
     position: absolute;
     inset: 0;
     z-index: 1;
-    overflow: hidden;
+    overflow: visible;
     pointer-events: none;
 }
 
@@ -4697,28 +4697,29 @@ body.entrance-done .signin-container {
     position: absolute;
     border-radius: 50%;
     background: #000;
-    box-shadow: 0 0 0 1px rgba(255,255,255,0.03);
+    /* Sombra con degradado de la plataforma: capa difusa detrás */
 }
 
 .planes-bubble::before {
     content: '';
     position: absolute;
-    inset: -50%;
+    left: 50%;
+    top: 50%;
+    width: 200%;
+    height: 200%;
+    margin-left: -100%;
+    margin-top: -100%;
     border-radius: 50%;
     background: var(--brand-gradient);
-    filter: blur(28px);
-    opacity: 0.5;
+    filter: blur(35px);
+    opacity: 0.65;
     z-index: -1;
 }
 
-.planes-bubble-1 { width: 72px;  height: 72px;  left: 12%;  top: 18%;  animation: planes-bubble-float 28s ease-in-out infinite; }
-.planes-bubble-2 { width: 110px; height: 110px; left: 75%;  top: 12%;  animation: planes-bubble-float 34s ease-in-out 2s infinite; }
-.planes-bubble-3 { width: 54px;  height: 54px;  left: 8%;  top: 55%;  animation: planes-bubble-float 30s ease-in-out 4s infinite; }
-.planes-bubble-4 { width: 92px;  height: 92px;  right: 15%; top: 45%;  animation: planes-bubble-float 32s ease-in-out 1s infinite; }
-.planes-bubble-5 { width: 64px;  height: 64px;  left: 45%;  top: 75%;  animation: planes-bubble-float 26s ease-in-out 3s infinite; }
-.planes-bubble-6 { width: 82px;  height: 82px;  right: 8%;  top: 70%;  animation: planes-bubble-float 31s ease-in-out 5s infinite; }
-.planes-bubble-7 { width: 48px;  height: 48px;  left: 28%;  top: 35%;  animation: planes-bubble-float 29s ease-in-out 0.5s infinite; }
-.planes-bubble-8 { width: 78px;  height: 78px;  right: 25%; top: 82%;  animation: planes-bubble-float 33s ease-in-out 2.5s infinite; }
+.planes-bubble-1 { width: 70px;  height: 70px;  left: 15%;  top: 20%;  animation: planes-bubble-float 28s ease-in-out infinite; }
+.planes-bubble-2 { width: 100px; height: 100px; left: 72%;  top: 15%;  animation: planes-bubble-float 34s ease-in-out 2s infinite; }
+.planes-bubble-3 { width: 58px;  height: 58px;  left: 10%;  top: 60%;  animation: planes-bubble-float 30s ease-in-out 4s infinite; }
+.planes-bubble-4 { width: 85px;  height: 85px;  right: 12%; top: 70%;  animation: planes-bubble-float 32s ease-in-out 1s infinite; }
 
 /* Contenido del hero: centrado, título arriba */
 .planes-hero-content {
