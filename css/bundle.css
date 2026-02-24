@@ -5633,6 +5633,7 @@ svg.signin-brand-logo {
     align-items: center;
     flex-wrap: wrap;
     gap: 0.5rem;
+    margin-top: auto;
 }
 
 .org-card-credits-wrap {
