@@ -44,6 +44,15 @@ class DevTestView extends DevBaseView {
   }
 
   onLeave() {
+    this.cleanup();
+  }
+
+  destroy() {
+    this.cleanup();
+    if (typeof super.destroy === 'function') super.destroy();
+  }
+
+  cleanup() {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
@@ -950,6 +959,7 @@ class DevTestView extends DevBaseView {
   }
 
   startTimer() {
+    if (this.timerInterval) clearInterval(this.timerInterval);
     this.startTime = Date.now();
     this.elapsedTime = 0;
     

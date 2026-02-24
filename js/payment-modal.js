@@ -224,43 +224,32 @@ class PaymentModal {
     }
 
     bindEvents() {
-        // Close modal events
+        if (this._eventsBound) return;
+        this._eventsBound = true;
+
         const overlay = document.getElementById('paymentOverlay');
         const closeBtn = document.getElementById('paymentClose');
         const cancelBtn = document.getElementById('cancelPayment');
 
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => this.close());
-        }
-        if (cancelBtn) {
-            cancelBtn.addEventListener('click', () => this.close());
-        }
+        if (closeBtn) closeBtn.addEventListener('click', () => this.close());
+        if (cancelBtn) cancelBtn.addEventListener('click', () => this.close());
         if (overlay) {
             overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) {
-                    this.close();
-                }
+                if (e.target === overlay) this.close();
             });
         }
 
-        // Register button
         const registerButton = document.getElementById('registerButton');
         if (registerButton) {
             registerButton.addEventListener('click', () => this.processRegistration());
         }
 
-        // Password toggle functionality
         this.setupPasswordToggles();
-
-        // Form validation
         this.setupFormValidation();
 
-        // Escape key to close
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.isOpen) {
-                this.close();
-            }
-        });
+        if (this._escHandler) document.removeEventListener('keydown', this._escHandler);
+        this._escHandler = (e) => { if (e.key === 'Escape' && this.isOpen) this.close(); };
+        document.addEventListener('keydown', this._escHandler);
     }
 
     open(planData) {
@@ -299,22 +288,18 @@ class PaymentModal {
 
     close() {
         const overlay = document.getElementById('paymentOverlay');
-        if (overlay) {
-        overlay.classList.remove('active');
-        }
+        if (overlay) overlay.classList.remove('active');
         document.body.style.overflow = '';
         this.isOpen = false;
-        
-        // Clean up any lingering modals after close animation
-        setTimeout(() => {
-            const allPaymentModals = document.querySelectorAll('[id*="payment"], [class*="payment-overlay"]');
-            allPaymentModals.forEach(modal => {
-                if (modal.innerHTML && (modal.innerHTML.includes('PayPal') || modal.innerHTML.includes('Apple Pay'))) {
-                    console.log('🧹 Limpiando modal antiguo:', modal);
-                    modal.remove();
-                }
-            });
-        }, 400);
+    }
+
+    destroy() {
+        this.close();
+        if (this._escHandler) {
+            document.removeEventListener('keydown', this._escHandler);
+            this._escHandler = null;
+        }
+        this._eventsBound = false;
     }
 
     updateModalContent() {
@@ -1505,8 +1490,9 @@ function openPaymentModal(planData) {
         
         // Recrear modal para asegurar versión actualizada
         if (paymentModal) {
-            paymentModal.createModal(); // Recreate to ensure no cache issues
-            paymentModal.bindEvents(); // Rebind events
+            paymentModal.createModal();
+            paymentModal._eventsBound = false;
+            paymentModal.bindEvents();
             paymentModal.open(planData);
         } else {
             console.error('❌ No se pudo crear PaymentModal');

@@ -12,7 +12,12 @@ class AuthService {
     this.isAuth = false;
     this.supabase = null;
     this.listeners = [];
-    this.userMode = 'user'; // 'user' | 'developer'
+    this.userMode = 'user';
+    this._sessionCheckedAt = 0;
+    this._userDataLoadedAt = 0;
+    this._SESSION_TTL = 30000;
+    this._USERDATA_TTL = 60000;
+    this._checkingSession = null;
     this.init();
   }
 
@@ -75,10 +80,25 @@ class AuthService {
    * Verificar sesión actual
    */
   async checkSession() {
+    const now = Date.now();
+    if (this.isAuth && this.currentUser && (now - this._sessionCheckedAt) < this._SESSION_TTL) {
+      return true;
+    }
+
+    if (this._checkingSession) return this._checkingSession;
+
+    this._checkingSession = this._doCheckSession(now);
+    try {
+      return await this._checkingSession;
+    } finally {
+      this._checkingSession = null;
+    }
+  }
+
+  async _doCheckSession(now) {
     if (!this.supabase) {
       this.supabase = await this.getSupabaseClient();
     }
-
     if (!this.supabase) {
       this.isAuth = false;
       return false;
@@ -86,9 +106,9 @@ class AuthService {
 
     try {
       const { data: { user }, error } = await this.supabase.auth.getUser();
-      
       if (user && !error) {
         this.isAuth = true;
+        this._sessionCheckedAt = now;
         await this.loadUserData(user.id);
         return true;
       }
@@ -107,8 +127,12 @@ class AuthService {
   async loadUserData(userId) {
     if (!this.supabase || !userId) return;
 
+    const now = Date.now();
+    if (this.currentUser && this.currentUser.id === userId && (now - this._userDataLoadedAt) < this._USERDATA_TTL) {
+      return;
+    }
+
     try {
-      // Cargar perfil del usuario desde profiles (tabla unificada)
       const { data: profile, error } = await this.supabase
         .from('profiles')
         .select('*')
@@ -128,10 +152,8 @@ class AuthService {
           dev_rank: profile.dev_rank || 'novice'
         };
 
-        // Actualizar modo del servicio
         this.userMode = this.currentUser.default_view_mode;
-
-        // Guardar modo en localStorage para acceso rápido
+        this._userDataLoadedAt = Date.now();
         localStorage.setItem('userViewMode', this.userMode);
 
         // Guardar en sessionManager si está disponible

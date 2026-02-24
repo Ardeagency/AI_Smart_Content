@@ -4,7 +4,18 @@
  */
 (function() {
     'use strict';
-    
+
+    // ===== CONSOLE: silenciar logs en producción =====
+    if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+        const noop = () => {};
+        const _error = console.error.bind(console);
+        console.log = noop;
+        console.debug = noop;
+        console.info = noop;
+        console.warn = noop;
+        console.error = _error;
+    }
+
     // ===== CONFIGURACIÓN =====
     const CONFIG = {
         supabaseTimeout: 10000,      // Timeout para carga de Supabase (10s)

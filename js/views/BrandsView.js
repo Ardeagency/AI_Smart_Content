@@ -478,6 +478,10 @@ class BrandsView extends BaseView {
     const gradientEl = container.querySelector('.background-gradient');
     if (!gradientEl) return;
     const hexes = this.getBrandColorsHexArray();
+    const colorsKey = hexes.join(',');
+    if (this._cachedGradientKey === colorsKey) return;
+    this._cachedGradientKey = colorsKey;
+
     const gradientCss = hexes.length ? this.buildBrandGradientCss(hexes) : '';
     const neutralBg = 'linear-gradient(145deg, #2d2a28 0%, #1f1d1b 50%, #252220 100%)';
     if (gradientCss) {

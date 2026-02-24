@@ -678,6 +678,21 @@ class StudioView extends BaseView {
       return div.innerHTML;
     };
 
+    const focusTypes = Array.from(accordions).map(a => a.getAttribute('data-focus-type') || 'brand_selector');
+    const uniqueTypes = [...new Set(focusTypes)];
+    const dataByType = {};
+
+    const loaders = uniqueTypes.map(async (type) => {
+      try {
+        if (type === 'brand_selector') dataByType[type] = { full: await this.loadBrandData(brandContainerId), list: [] };
+        else if (type === 'campaign_selector') { const l = await this.loadCampaigns(brandContainerId); dataByType[type] = { full: l[0] || null, list: l }; }
+        else if (type === 'product_selector') { const l = await this.loadProductsWithImages(brandContainerId); const f = l[0] || null; if (f && f.images && f.images.length > 0) f.main_image = f.images[0].image_url; dataByType[type] = { full: f, list: l }; }
+        else if (type === 'audience_selector') { const l = await this.loadAudiences(brandContainerId); dataByType[type] = { full: l[0] || null, list: l }; }
+        else if (type === 'entity_selector') { const l = await this.loadEntities(brandContainerId); dataByType[type] = { full: l[0] || null, list: l }; }
+      } catch (_) { dataByType[type] = { full: null, list: [] }; }
+    });
+    await Promise.all(loaders);
+
     for (const accordion of accordions) {
       const focusType = accordion.getAttribute('data-focus-type') || 'brand_selector';
       const body = accordion.querySelector('.focus-selector-body');
@@ -686,27 +701,9 @@ class StudioView extends BaseView {
       const letAiCheckbox = accordion.querySelector('.focus-selector-let-ai-decide');
       if (!body || !inner || !hiddenInput) continue;
 
-      let fullData = null;
-      let listData = [];
-
-      if (focusType === 'brand_selector') {
-        fullData = await this.loadBrandData(brandContainerId);
-      } else if (focusType === 'campaign_selector') {
-        listData = await this.loadCampaigns(brandContainerId);
-        fullData = listData.length > 0 ? listData[0] : null;
-      } else if (focusType === 'product_selector') {
-        listData = await this.loadProductsWithImages(brandContainerId);
-        fullData = listData.length > 0 ? listData[0] : null;
-        if (fullData && fullData.images && fullData.images.length > 0) {
-          fullData.main_image = fullData.images[0].image_url;
-        }
-      } else if (focusType === 'audience_selector') {
-        listData = await this.loadAudiences(brandContainerId);
-        fullData = listData.length > 0 ? listData[0] : null;
-      } else if (focusType === 'entity_selector') {
-        listData = await this.loadEntities(brandContainerId);
-        fullData = listData.length > 0 ? listData[0] : null;
-      }
+      const typeData = dataByType[focusType] || { full: null, list: [] };
+      const fullData = typeData.full;
+      const listData = typeData.list;
 
       const sections = focusOptions[focusType] || focusOptions.brand_selector;
       if (!fullData && focusType === 'brand_selector') {
