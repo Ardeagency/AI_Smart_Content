@@ -869,15 +869,43 @@ class StudioView extends BaseView {
         body: JSON.stringify(payload)
       });
 
-      if (!res.ok) throw new Error(res.statusText || 'Error en la producción');
+      if (!res.ok) {
+        let detail = res.statusText || '';
+        try {
+          const contentType = res.headers.get('content-type') || '';
+          const text = await res.text();
+          if (text) {
+            if (contentType.includes('application/json')) {
+              const j = JSON.parse(text);
+              detail = j.message || j.error || j.detail || text;
+            } else {
+              detail = text.slice(0, 200);
+            }
+          }
+        } catch (_) { /* ignorar fallo al leer cuerpo */ }
+        const msg = detail ? ` (${detail})` : '';
+        if (res.status === 400) {
+          throw new Error('Solicitud incorrecta' + msg + '. Revisa los datos del formulario.');
+        }
+        if (res.status >= 500) {
+          throw new Error('Error del servidor del flujo (código ' + res.status + '). Intenta más tarde o contacta al administrador.' + msg);
+        }
+        throw new Error('Error en la producción: código ' + res.status + msg);
+      }
 
-      await this.deductCredits(cost);
-      await this.loadCredits();
-      this.updateCreditsDisplay();
-      alert('Producción enviada correctamente.');
+      try {
+        await this.deductCredits(cost);
+        await this.loadCredits();
+        this.updateCreditsDisplay();
+        alert('Producción enviada correctamente.');
+      } catch (creditsErr) {
+        console.error('Studio producir (créditos):', creditsErr);
+        alert('Producción enviada al flujo, pero no se pudieron actualizar los créditos. Revisa la consola o contacta soporte.');
+      }
     } catch (e) {
       console.error('Studio producir:', e);
-      alert('Error al producir. Revisa la consola.');
+      const text = e.message || (e.name === 'TypeError' && e.cause ? 'Error de red o CORS.' : 'Error al producir.');
+      alert(text);
     } finally {
       if (btn) btn.disabled = false;
     }
