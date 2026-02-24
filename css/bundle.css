@@ -4347,6 +4347,15 @@ body.entrance-done .signin-container {
     box-sizing: border-box;
 }
 
+.signin-logo-above-inputs {
+    display: block;
+    max-width: 160px;
+    width: 100%;
+    height: auto;
+    margin: 0 auto 0.5rem;
+    align-self: center;
+}
+
 /* Estados (signin / signup): solo uno visible */
 .signin-container .auth-state {
     display: none;
