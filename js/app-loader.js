@@ -203,14 +203,14 @@
         if (!overlay) return;
 
         var revealBox = overlay.querySelector('.entrance-reveal-box');
-        var domainLine = overlay.querySelector('.entrance-text-2 .entrance-h3');
+        var entranceLogo = overlay.querySelector('.entrance-text-2 .entrance-logo');
 
         function at(ms, fn) {
             if (ms <= 0) fn();
             else setTimeout(fn, ms);
         }
 
-        // 1) Reveal box (blanco): mostrar → expandir → barrer a la derecha (velocidad más pausada)
+        // 1) Reveal box (degradado): mostrar → expandir → barrer a la derecha
         at(0, function () {
             if (revealBox) revealBox.classList.add('entrance-reveal-show');
         });
@@ -221,14 +221,14 @@
             if (revealBox) revealBox.classList.add('entrance-reveal-away');
         });
 
-        // 2) Texto dominio visible
+        // 2) Logo visible
         at(1400, function () {
-            if (domainLine) domainLine.classList.add('entrance-visible');
+            if (entranceLogo) entranceLogo.classList.add('entrance-visible');
         });
 
-        // 3) Salida dominio, fade del overlay y revelar landing (#app-container)
+        // 3) Salida logo, fade del overlay y revelar landing (#app-container)
         at(2400, function () {
-            if (domainLine) domainLine.classList.add('entrance-out');
+            if (entranceLogo) entranceLogo.classList.add('entrance-out');
             overlay.classList.add('entrance-overlay--hidden');
             document.body.classList.remove('entrance-active');
             document.body.classList.add('entrance-done');

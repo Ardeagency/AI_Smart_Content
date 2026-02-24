@@ -933,7 +933,7 @@ body.entrance-active #app-container {
 }
 .entrance-h3.entrance-thin { font-weight: 300; }
 
-/* Bloque 2: reveal + dominio */
+/* Bloque 2: reveal (degradado azul→violeta→magenta) + logo */
 .entrance-reveal-frame {
     position: relative;
     padding: 0 24px;
@@ -944,7 +944,7 @@ body.entrance-active #app-container {
     top: 0;
     height: 100%;
     width: 0;
-    background: var(--color-white);
+    background: linear-gradient(90deg, #0000FF 0%, #6A00FF 50%, #B9006F 100%);
     z-index: 2;
     opacity: 0;
     transition: opacity 0.2s ease-out, width 0.7s ease-out, left 0s, right 0s;
@@ -962,14 +962,17 @@ body.entrance-active #app-container {
     transition: width 0.5s ease-out;
 }
 
-.entrance-text-2 .entrance-h3 {
+.entrance-logo {
+    display: block;
+    max-height: clamp(2rem, 6vw, 3.5rem);
+    width: auto;
     opacity: 0;
     transition: opacity 0.55s ease-out, transform 0.5s ease-out;
 }
-.entrance-text-2 .entrance-h3.entrance-visible {
+.entrance-text-2 .entrance-logo.entrance-visible {
     opacity: 1;
 }
-.entrance-text-2 .entrance-h3.entrance-out {
+.entrance-text-2 .entrance-logo.entrance-out {
     opacity: 0;
     transform: translateY(-30px);
 }
