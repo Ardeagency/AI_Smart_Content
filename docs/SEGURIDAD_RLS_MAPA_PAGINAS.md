@@ -21,7 +21,7 @@ Este documento relaciona cada página/vista de la plataforma con las tablas de S
 
 | Tabla | Usado en | Política necesaria |
 |-------|----------|--------------------|
-| `brands` | HogarView, BrandsView, form-record, living, data-collector | Mismo criterio que `brand_containers` (owner/org/dev). |
+| `brands` | HogarView, BrandsView, form-record, living | Mismo criterio que `brand_containers` (owner/org/dev). |
 | `brand_assets` | BrandsView, form-record | Por `brand_container_id` (owner/org/dev). |
 | `campaigns` | campaigns-manager, form-record | Por `brand_container_id` (owner/org/dev). |
 | `credit_usage` | BrandsView, living.js | Usuario ve sus filas; ver por org si `organization_id` y es miembro. |
