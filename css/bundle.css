@@ -4213,6 +4213,7 @@ body.entrance-done .signin-container {
 }
 
 /* Card del login: negro sin borde, sombra/luz con degradado del loader */
+/* Card login: negra sin degradados; solo borde con inner glow */
 .signin-container .signin-card {
     width: 360px;
     max-width: calc(100vw - 2rem);
@@ -4223,11 +4224,12 @@ body.entrance-done .signin-container {
     flex-direction: column;
     gap: var(--spacing-lg);
     align-items: center;
-    background: #000;
-    border: none;
+    background: linear-gradient(#000, #000) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
+    border: 1px solid transparent;
     border-radius: 20px;
     padding: 2rem;
     position: relative;
+    box-shadow: inset 0 0 24px -4px rgba(255, 255, 255, 0.06);
 }
 
 .signin-container .signin-card::before {
@@ -4272,11 +4274,12 @@ body.entrance-done .signin-container {
     flex-direction: column;
     gap: var(--spacing-lg);
     align-items: center;
-    background: #000;
-    border: none;
+    background: linear-gradient(#000, #000) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
+    border: 1px solid transparent;
     border-radius: 20px;
     padding: 2rem;
     position: relative;
+    box-shadow: inset 0 0 24px -4px rgba(255, 255, 255, 0.06);
 }
 
 .signin-container .form-org-card.signin-card::before {
@@ -4355,7 +4358,7 @@ body.entrance-done .signin-container {
 
 .signin-container .auth-state.active { display: flex; }
 
-/* Inputs: negro sin degradados */
+/* Inputs login: negros sin degradados; solo borde con inner glow */
 .signin-container .form-input,
 .signin-container input[type="text"],
 .signin-container input[type="email"],
@@ -4363,14 +4366,15 @@ body.entrance-done .signin-container {
     width: 100%;
     max-width: 100%;
     padding: 0.85rem 1rem;
-    background: #000;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: linear-gradient(#000, #000) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
+    border: 1px solid transparent;
     border-radius: var(--border-radius);
     color: var(--text-primary);
     font-size: var(--font-size-md);
     font-family: inherit;
     line-height: 1.4;
     box-sizing: border-box;
+    box-shadow: inset 0 0 14px -4px rgba(255, 255, 255, 0.05);
 }
 
 .signin-container .form-input::placeholder,
@@ -4464,19 +4468,20 @@ body.entrance-done .signin-container {
     padding: 0 0.25rem;
 }
 
-/* Botón Google: negro sin degradados */
+/* Botón Google: negro sin degradados; solo borde con inner glow */
 .signin-google-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.75rem;
-    background: #000;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: linear-gradient(#000, #000) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
+    border: 1px solid transparent;
     color: var(--color-white);
+    box-shadow: inset 0 0 14px -4px rgba(255, 255, 255, 0.05);
 }
 
 .signin-google-btn:hover:not(:disabled) {
-    background: var(--white-10);
+    box-shadow: inset 0 0 18px -4px rgba(255, 255, 255, 0.08);
 }
 
 .signin-google-icon {
