@@ -73,63 +73,23 @@
     <!-- External Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <!-- Core Scripts: app-loader inicia la entrada en cuanto corre (no espera DOMContentLoaded), evita lag -->
+    <!-- Core: loader + entrada animada (ejecuta inmediatamente) -->
     <script src="/js/app-loader.js"></script>
     <script src="/js/views/BaseView.js"></script>
     <script src="/js/router.js"></script>
     
-    <!-- Services (cargar antes de las vistas) -->
+    <!-- Services -->
     <script src="/js/services/SupabaseService.js"></script>
     <script src="/js/services/AuthService.js"></script>
     <script src="/js/services/AppState.js"></script>
-    <script src="/js/utils/Performance.js"></script>
-    <script src="/js/utils/ErrorHandler.js"></script>
     <script src="/js/session-utils.js"></script>
     
-    <!-- Views (cargar antes de app.js para que estén disponibles) -->
+    <!-- Vistas críticas (landing + login) — el resto se carga lazy por ruta -->
     <script src="/js/views/LandingView.js"></script>
     <script src="/js/views/SignInView.js"></script>
-    <script src="/js/views/CambiarContrasenaView.js"></script>
-    <script src="/js/views/PlanesView.js"></script>
-    <script src="/js/views/FormRecordView.js"></script>
-    <script src="/js/views/HogarView.js"></script>
-    <script src="/js/views/BrandsView.js"></script>
-    <script src="/js/views/CampaignsView.js"></script>
-    <script src="/js/views/AudiencesView.js"></script>
-    <script src="/js/views/CreateView.js"></script>
-    <script src="/js/views/ContentView.js"></script>
-    <script src="/js/views/SettingsView.js"></script>
-    <script src="/js/views/OrganizationView.js"></script>
-    <script src="/js/views/LivingView.js"></script>
-    <script src="/js/views/StudioView.js"></script>
-    <script src="/js/views/FlowCatalogView.js"></script>
-    <script src="/js/views/ProductsView.js"></script>
     
-    <!-- Input Registry (render dinámico de inputs, schema-driven) -->
-    <script src="/js/flags-data.js"></script>
-    <script src="/js/input-registry.js"></script>
-    <!-- Developer Portal Views (PaaS) -->
-    <script src="/js/views/DevBaseView.js"></script>
-    <script src="/js/views/DevDashboardView.js"></script>
-    <script src="/js/views/DevFlowsView.js"></script>
-    <script src="/js/views/DevLogsView.js"></script>
-    <script src="/js/views/DevBuilderView.js"></script>
-    <script src="/js/views/DevTestView.js"></script>
-    <script src="/js/views/DevWebhooksView.js"></script>
-    <!-- Lead-only views (dev_role === 'lead') -->
-    <script src="/js/views/DevLeadTeamView.js"></script>
-    <script src="/js/views/DevLeadCategoriesView.js"></script>
-    <script src="/js/views/DevLeadInputSchemasView.js"></script>
-    <script src="/js/views/DevLeadVectorsView.js"></script>
-    <script src="/js/views/DevLeadReferencesView.js"></script>
-    <script src="/js/views/DevLeadAllFlowsView.js"></script>
-    
-    <!-- Components -->
+    <!-- Navigation + App init -->
     <script src="/js/components/Navigation.js"></script>
-    
-    <!-- Managers (cargar después de las vistas) -->
-    <script src="/js/products.js"></script>
-    
     <script src="/js/app.js"></script>
 
 </body>
