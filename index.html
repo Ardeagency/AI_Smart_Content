@@ -78,7 +78,7 @@
     <!-- External Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <!-- Core Scripts (rutas absolutas para que funcionen en /org/xxx/...) -->
+    <!-- Core Scripts: app-loader inicia la entrada en cuanto corre (no espera DOMContentLoaded), evita lag -->
     <script src="/js/app-loader.js"></script>
     <script src="/js/views/BaseView.js"></script>
     <script src="/js/router.js"></script>

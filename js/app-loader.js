@@ -268,13 +268,10 @@
     // También exponer getSupabaseClient globalmente para compatibilidad
     window.getSupabaseClient = getSupabaseClient;
     
-    // Iniciar cuando el DOM esté listo: entrada (presentación) + carga de Supabase en paralelo
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function onReady() {
-            startEntranceAndInit();
-        });
-    } else {
+    // Iniciar entrada en cuanto este script corre (el overlay ya está en el DOM arriba).
+    // Así no esperamos a DOMContentLoaded ni a los demás scripts → se elimina el lag.
+    requestAnimationFrame(function () {
         startEntranceAndInit();
-    }
+    });
 })();
 
