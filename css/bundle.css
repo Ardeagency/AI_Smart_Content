@@ -4304,15 +4304,18 @@ body.entrance-done .signin-container {
     align-items: center;
     justify-content: center;
     gap: 0.75rem;
-    margin-bottom: 0.25rem;
+    margin-bottom: 1rem;
+    min-height: 3rem;
+    width: 100%;
 }
 
 .signin-brand-logo {
-    max-height: 2.5rem;
+    max-height: 3.5rem;
     height: auto;
     width: auto;
     max-width: 100%;
     display: block;
+    object-fit: contain;
 }
 
 /* Banner de contraseña actualizada */
@@ -4345,25 +4348,6 @@ body.entrance-done .signin-container {
     gap: var(--spacing-md);
     width: 100%;
     box-sizing: border-box;
-}
-
-.signin-logo-above-inputs-wrap {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    min-height: 56px;
-    margin-bottom: 0.75rem;
-    flex-shrink: 0;
-}
-
-.signin-logo-above-inputs {
-    display: block;
-    max-width: 180px;
-    width: 100%;
-    height: auto;
-    max-height: 48px;
-    object-fit: contain;
 }
 
 /* Estados (signin / signup): solo uno visible */
