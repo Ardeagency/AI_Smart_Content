@@ -21,9 +21,9 @@
     /* ── Fondos ─────────────────────────────── */
     --bg-primary: #000000;
     --bg-secondary: #141517;
-    --bg-card: #141517;
-    --bg-tertiary: #141517;
-    --bg-hover: #000000;
+    --bg-card: #000000;
+    --bg-tertiary: #000000;
+    --bg-hover: #141517;
     --bg-overlay: rgba(23, 20, 29, 0.9);
     --bg-black: #000000;
     --bg-dark: #0F0D12;
@@ -43,7 +43,7 @@
     /* ── Iconos y acentos ───────────────────── */
     --icon-button: #87868B;
     --icon-button-hover: #D4D1D8;
-    --icon-active: #ffffff;
+    --icon-button-active: #ffffff;
     --accent-yellow: #87868B;
     --accent-yellow-hover: #D4D1D8;
     --accent-warm: #87868B;
@@ -2183,7 +2183,7 @@ body.sidebar-collapsed .main-header,
 }
 
 .nav-link.active .nav-icon {
-    color: var(--icon-active);
+    color: var(--icon-button-active);
 }
 
 
@@ -2204,11 +2204,11 @@ body.sidebar-collapsed .main-header,
 }
 
 .nav-link:hover .nav-icon {
-    color: var(--accent-yellow);
+    color: var(--icon-button-hover);
 }
 
 .nav-link.active .nav-icon {
-    color: var(--icon-active);
+    color: var(--icon-button-active);
 }
 
 .nav-text {
@@ -2309,7 +2309,7 @@ body.sidebar-collapsed .main-header,
 }
 
 .nav-item-has-submenu.active > .nav-link-parent .nav-icon {
-    color: var(--icon-active);
+    color: var(--icon-button-active);
 }
 
 /* =========================================
