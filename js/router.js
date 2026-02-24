@@ -188,13 +188,18 @@ class Router {
         this.currentView.routeParams = routeParams;
       }
 
-      container.classList.add('view-enter');
-
       if (window.appNavigation && typeof window.appNavigation.render === 'function') {
         await window.appNavigation.render();
       }
 
       await this.currentView.render();
+
+      // Animación de entrada suave en todas las páginas (igual que landing/login). Landing y login ya usan body.entrance-done.
+      if (path !== '/' && path !== '/login' && path !== '/signin') {
+        container.classList.remove('view-enter');
+        void container.offsetHeight;
+        container.classList.add('view-enter');
+      }
 
       window.dispatchEvent(new CustomEvent('routechange', { detail: { path, params: routeParams } }));
     } catch (error) {

@@ -765,21 +765,21 @@ body.entrance-active #app-container {
    ============================================ */
 
 /* ── TRANSICIÓN GLOBAL DE PÁGINA ──────────────────────────
-   Usa .view-enter en cualquier contenedor para aplicar la
-   animación de entrada estándar de la plataforma.
+   Misma animación suave que landing y login (inicio de página).
+   Se aplica a todas las vistas al navegar.
    ──────────────────────────────────────────────────────── */
 .view-enter {
-    animation: viewFadeIn 0.3s cubic-bezier(0.25, 0.1, 0.25, 1) both;
+    animation: viewFadeIn 0.55s ease-out both;
 }
 
 .view-leave {
-    animation: viewFadeOut 0.15s ease both;
+    animation: viewFadeOut 0.2s ease both;
 }
 
 @keyframes viewFadeIn {
     from {
         opacity: 0;
-        transform: translateY(6px);
+        transform: translateY(10px);
     }
     to {
         opacity: 1;
