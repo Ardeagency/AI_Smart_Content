@@ -19,7 +19,7 @@
 :root {
 
     /* ── Fondos ─────────────────────────────── */
-    --bg-primary: #17141D;
+    --bg-primary: #000000;
     --bg-secondary: #1C1922;
     --bg-card: #212129;
     --bg-tertiary: #212129;
@@ -4665,7 +4665,7 @@ body.entrance-done .signin-container {
     overflow-y: auto;
 }
 
-/* Fondo: gradiente verde (como brands tiene brand-dashboard-background) */
+/* Fondo: temática oscura, colores de la paleta en versiones opacas ahumadas, negro predominante */
 .planes-hero-background {
     position: absolute;
     inset: 0;
@@ -4675,19 +4675,23 @@ body.entrance-done .signin-container {
 .planes-background-gradient {
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, #0d1f1a 0%, var(--planes-dark) 35%, #0f2e22 70%, #134330 100%);
+    background: #000;
 }
 
 .planes-background-gradient::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 120%;
-    height: 40%;
-    background: radial-gradient(ellipse at center, rgba(19, 67, 48, 0.4) 0%, transparent 70%);
+    inset: 0;
     pointer-events: none;
+    /* Degradados radiales distorsionados: rojo/naranja/amarillo/cyan/azul/violeta/magenta opacos y ahumados */
+    background:
+        radial-gradient(ellipse 90% 50% at 20% 20%, rgba(80, 25, 20, 0.7) 0%, transparent 55%),
+        radial-gradient(ellipse 70% 80% at 80% 15%, rgba(20, 25, 55, 0.65) 0%, transparent 50%),
+        radial-gradient(ellipse 85% 60% at 75% 75%, rgba(45, 15, 55, 0.6) 0%, transparent 55%),
+        radial-gradient(ellipse 65% 90% at 15% 70%, rgba(50, 20, 50, 0.55) 0%, transparent 50%),
+        radial-gradient(ellipse 80% 70% at 50% 45%, rgba(15, 45, 55, 0.5) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 85% at 85% 55%, rgba(255, 101, 0, 0.08) 0%, transparent 45%),
+        radial-gradient(ellipse 75% 55% at 35% 85%, rgba(0, 231, 255, 0.06) 0%, transparent 50%);
 }
 
 /* Contenido del hero: centrado, título arriba */
@@ -4718,7 +4722,7 @@ body.entrance-done .signin-container {
 /* Toggle Mensual / Anual */
 .planes-billing-toggle {
     display: inline-flex;
-    background: rgba(15, 46, 34, 0.9);
+    background: rgba(20, 20, 25, 0.9);
     border-radius: var(--radius-md);
     padding: 0.25rem;
     border: 1px solid var(--white-10);
@@ -4782,7 +4786,7 @@ body.entrance-done .signin-container {
     align-items: center;
     justify-content: flex-start;
     gap: 0.4rem;
-    background: rgba(15, 46, 34, 0.9);
+    background: rgba(22, 22, 28, 0.9);
     border: 1px solid var(--white-8);
     border-radius: var(--radius-md);
     padding: 1rem 0.875rem;
@@ -4794,7 +4798,7 @@ body.entrance-done .signin-container {
 
 .planes-hero .plan-card-small:hover {
     border-color: var(--white-20);
-    background: rgba(19, 67, 48, 0.95);
+    background: rgba(28, 28, 35, 0.95);
 }
 
 .planes-hero .plan-card-small.selected {
