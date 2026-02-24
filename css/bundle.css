@@ -122,6 +122,11 @@
     /* ── Degradado oficial de la plataforma (izq → der) ── */
     --brand-gradient: linear-gradient(90deg, #ff0000 0%, #ff6500 12.5%, #ffe500 25%, #9acc00 37.5%, #00d614 50%, #00e7ff 62.5%, #0018ee 75%, #5b00ea 87.5%, #900090 100%);
 
+    /* ── Degradado en 3 tramos (misma paleta) ── */
+    --brand-gradient-1: linear-gradient(90deg, #ff0000 0%, #ff6500 50%, #ffe500 100%); /* rojo, naranja, amarillo */
+    --brand-gradient-2: linear-gradient(90deg, #9acc00 0%, #00d614 50%, #00e7ff 100%); /* verde clara, verde normal, celeste */
+    --brand-gradient-3: linear-gradient(90deg, #0018ee 0%, #5b00ea 50%, #900090 100%); /* azul oscuro, morado, violeta */
+
     /* ── Border-radius (escala 4px) ────────── */
     --radius-xs: 4px;
     --radius-sm: 8px;
@@ -4789,7 +4794,7 @@ body.entrance-done .signin-container {
     justify-content: center;
 }
 
-/* Cards: degradado oscuro de relleno + borde degradado + inner glow (ref. azul) */
+/* Cards: degradado oscuro + borde degradado + inner glow por tramo del degradado plataforma */
 .planes-hero .plan-card-small {
     width: 150px;
     min-height: 220px;
@@ -4805,20 +4810,58 @@ body.entrance-done .signin-container {
     transition: var(--transition);
     cursor: pointer;
     overflow: hidden;
+}
+
+/* Tramo 1: rojo, naranja, amarillo */
+.planes-hero .plan-card-small:nth-child(1) {
     box-shadow:
-        inset 0 30px 28px -12px rgba(22, 76, 205, 0.35),
-        inset 0 16px 16px -6px rgba(96, 148, 255, 0.25),
-        inset 0 8px 10px -4px rgba(255, 255, 255, 0.12),
-        inset 0 3px 4px -1px rgba(35, 133, 255, 0.15);
+        inset 0 30px 28px -12px rgba(255, 101, 0, 0.35),
+        inset 0 16px 16px -6px rgba(255, 229, 0, 0.25),
+        inset 0 8px 10px -4px rgba(255, 255, 255, 0.1),
+        inset 0 3px 4px -1px rgba(255, 0, 0, 0.2);
+}
+.planes-hero .plan-card-small:nth-child(1):hover {
+    box-shadow:
+        inset 0 30px 28px -12px rgba(255, 101, 0, 0.45),
+        inset 0 16px 16px -6px rgba(255, 229, 0, 0.35),
+        inset 0 8px 10px -4px rgba(255, 255, 255, 0.15),
+        inset 0 3px 4px -1px rgba(255, 0, 0, 0.25);
+}
+
+/* Tramo 2: verde clara, verde normal, celeste */
+.planes-hero .plan-card-small:nth-child(2) {
+    box-shadow:
+        inset 0 30px 28px -12px rgba(0, 214, 20, 0.35),
+        inset 0 16px 16px -6px rgba(0, 231, 255, 0.25),
+        inset 0 8px 10px -4px rgba(255, 255, 255, 0.1),
+        inset 0 3px 4px -1px rgba(154, 204, 0, 0.25);
+}
+.planes-hero .plan-card-small:nth-child(2):hover {
+    box-shadow:
+        inset 0 30px 28px -12px rgba(0, 214, 20, 0.45),
+        inset 0 16px 16px -6px rgba(0, 231, 255, 0.35),
+        inset 0 8px 10px -4px rgba(255, 255, 255, 0.15),
+        inset 0 3px 4px -1px rgba(154, 204, 0, 0.3);
+}
+
+/* Tramo 3: azul oscuro, morado, violeta */
+.planes-hero .plan-card-small:nth-child(3) {
+    box-shadow:
+        inset 0 30px 28px -12px rgba(0, 24, 238, 0.35),
+        inset 0 16px 16px -6px rgba(91, 0, 234, 0.25),
+        inset 0 8px 10px -4px rgba(255, 255, 255, 0.1),
+        inset 0 3px 4px -1px rgba(144, 0, 144, 0.25);
+}
+.planes-hero .plan-card-small:nth-child(3):hover {
+    box-shadow:
+        inset 0 30px 28px -12px rgba(0, 24, 238, 0.45),
+        inset 0 16px 16px -6px rgba(91, 0, 234, 0.35),
+        inset 0 8px 10px -4px rgba(255, 255, 255, 0.15),
+        inset 0 3px 4px -1px rgba(144, 0, 144, 0.3);
 }
 
 .planes-hero .plan-card-small:hover {
     background: linear-gradient(180deg, #0d0c0e 0%, #0c1422 100%) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
-    box-shadow:
-        inset 0 30px 28px -12px rgba(22, 76, 205, 0.45),
-        inset 0 16px 16px -6px rgba(96, 148, 255, 0.35),
-        inset 0 8px 10px -4px rgba(255, 255, 255, 0.18),
-        inset 0 3px 4px -1px rgba(35, 133, 255, 0.2);
 }
 
 .planes-hero .plan-card-small.selected {
