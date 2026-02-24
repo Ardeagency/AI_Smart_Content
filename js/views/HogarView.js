@@ -417,56 +417,30 @@ class HogarView extends BaseView {
       const card = gridEl.querySelector(`[data-org-id="${org.id}"]`);
       if (!card) return;
       const go = () => this.navigateToOrganization(org.id);
-      card.addEventListener('click', (e) => {
-        if (e.target.closest('.org-card-config-icon')) return;
-        go();
-      });
+      card.addEventListener('click', () => go());
       card.addEventListener('keydown', (e) => {
-        if (e.target.closest('.org-card-config-icon')) return;
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           go();
         }
       });
-      const configIcon = card.querySelector('.org-card-config-icon');
-      if (configIcon) {
-        configIcon.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          if (window.router) {
-            window.router.navigate(`/org/${org.id}/organization`);
-          } else {
-            window.location.href = `/org/${org.id}/organization`;
-          }
-        });
-      }
     });
   }
 
   /**
-   * Card estilo FUNCTIONALITY IN CARDS: estrella, menú, icono tipo, nombre, separador, créditos, tags.
+   * Card simplificada: solo nombre, plan y créditos.
    */
   renderOrgCard(org) {
     const name = this.escapeHtml(org.name || '');
     const credits = org.credits_available != null ? `${org.credits_available}` : '0';
-    const logoUrl = (org.firstBrandLogo || '').trim();
-    const brandInitial = (org.marcaNames && org.marcaNames[0]) ? org.marcaNames[0].charAt(0).toUpperCase() : 'O';
-    const logoHtml = logoUrl
-      ? `<img src="${this.escapeHtml(logoUrl)}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling&&this.nextElementSibling.classList.add('visible')"><span class="org-card-logo-initial">${brandInitial}</span>`
-      : `<span class="org-card-logo-initial visible">${brandInitial}</span>`;
-    const planRaw = String(org.planType || '').replace(/_/g, '');
-    const planInitial = planRaw ? planRaw.charAt(0).toUpperCase() : 'A';
-    const tagHtml = `<span class="org-card-tag">${planInitial}</span>`;
+    const planRaw = String(org.planType || '').replace(/_/g, ' ').trim();
+    const planLabel = planRaw ? planRaw.charAt(0).toUpperCase() + planRaw.slice(1).toLowerCase() : '—';
     return `
       <div class="org-card org-card-premium" data-org-id="${org.id}" role="button" tabindex="0" title="Entrar a ${name}">
-        <span class="org-card-fav-icon" aria-hidden="true"><i class="far fa-star"></i></span>
-        <button type="button" class="org-card-config-icon" aria-label="Configuración" title="Configuración"><i class="fas fa-ellipsis-v"></i></button>
-        <div class="org-card-icon-wrap">${logoHtml}</div>
         <h3 class="org-card-org-name">${name}</h3>
-        <div class="org-card-separator"></div>
-        <div class="org-card-footer">
-          <div class="org-card-credits-wrap">Créditos: <span class="org-card-credits-num">${credits}</span></div>
-          <div class="org-card-tags">${tagHtml}</div>
+        <div class="org-card-meta">
+          <span class="org-card-plan">Plan: ${this.escapeHtml(planLabel)}</span>
+          <span class="org-card-credits-wrap">Créditos: <span class="org-card-credits-num">${credits}</span></span>
         </div>
       </div>
     `;
