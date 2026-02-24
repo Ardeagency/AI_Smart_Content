@@ -231,6 +231,7 @@
             if (domainLine) domainLine.classList.add('entrance-out');
             overlay.classList.add('entrance-overlay--hidden');
             document.body.classList.remove('entrance-active');
+            document.body.classList.add('entrance-done');
         });
 
         // 4) Al terminar: mostrar spinner solo si la landing aún no ha renderizado

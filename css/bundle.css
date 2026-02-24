@@ -3696,6 +3696,10 @@ body.sidebar-collapsed .app-header.with-sidebar {
     background: #000;
     min-height: 100vh;
     min-width: 100vw;
+    opacity: 0;
+}
+
+body.entrance-done .landing-background {
     animation: landing-fade-in 0.5s ease-out forwards;
 }
 
@@ -3726,6 +3730,9 @@ body.sidebar-collapsed .app-header.with-sidebar {
     padding: 60px 32px 24px;
     background: transparent;
     opacity: 0;
+}
+
+body.entrance-done .landing-header {
     animation: landing-fade-in 0.6s ease-out 0.1s forwards;
 }
 
@@ -3755,6 +3762,9 @@ body.sidebar-collapsed .app-header.with-sidebar {
     padding: 16px 32px 60px;
     background: transparent;
     opacity: 0;
+}
+
+body.entrance-done .landing-footer {
     animation: landing-fade-in 0.6s ease-out 0.35s forwards;
 }
 
@@ -3826,6 +3836,9 @@ body.sidebar-collapsed .app-header.with-sidebar {
     max-width: 500px;
     padding: 2rem;
     opacity: 0;
+}
+
+body.entrance-done .landing-content {
     animation: landing-fade-in-center 0.6s ease-out 0.2s forwards;
 }
 
