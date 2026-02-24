@@ -5366,75 +5366,30 @@ svg.signin-brand-logo {
 }
 
 /* ============================================
-   HEADER — Centrado, estilo imagen (FUNCTIONALITY IN CARDS)
+   HEADER — Centrado, título + subtítulo (estilo referencia)
    ============================================ */
 .hogar-header {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: 2.5rem;
     width: 100%;
     text-align: center;
 }
 
-.hogar-header-content {
-    width: 100%;
-}
-
-.hogar-header-centered {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.hogar-header-actions {
-    margin-top: 1rem;
-}
-
-.hogar-title-decoration {
-    font-size: 0.9rem;
-    letter-spacing: 0.2em;
-    color: var(--hogar-text-muted);
-    margin-bottom: 0.5rem;
-}
-
 .hogar-title {
     font-size: var(--font-size-2xl);
-    font-weight: 600;
+    font-weight: 700;
     color: var(--hogar-text);
-    margin: 0 0 0.35rem 0;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    margin: 0 0 0.5rem 0;
+    line-height: 1.3;
 }
 
 .hogar-subtitle {
     font-size: 0.9375rem;
     color: var(--hogar-text-muted);
     margin: 0;
-}
-
-.btn-create-org {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    min-width: 160px;
-    height: 40px;
-    padding: 0 1rem;
-    background: var(--bg-interactive);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--hogar-radius);
-    font-size: var(--font-size-base);
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s ease, transform 0.15s ease;
-}
-
-.btn-create-org:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
-    transform: translateY(-1px);
+    max-width: 420px;
 }
 
 /* ============================================
@@ -5511,8 +5466,8 @@ svg.signin-brand-logo {
 }
 
 /* ============================================
-   CARD DE ORGANIZACIÓN — Solo nombre, plan y créditos
-   Card cuadrada, fondo negro
+   CARD DE ORGANIZACIÓN — Estilo referencia: icono (arriba izq), título, descripción
+   Card redondeada, fondo negro, squarish
    ============================================ */
 .org-card.org-card-premium {
     --org-card-radius: 16px;
@@ -5526,48 +5481,70 @@ svg.signin-brand-logo {
     aspect-ratio: 1;
     display: flex;
     flex-direction: column;
-    transition: transform 0.2s ease, background 0.2s ease;
+    align-items: flex-start;
+    text-align: left;
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
 }
 
 .org-card.org-card-premium:hover {
     transform: translateY(-2px);
     background: var(--bg-hover);
+    border-color: var(--border-light);
 }
 
-/* Nombre de la organización */
+/* Icono arriba a la izquierda */
+.org-card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin-bottom: 1rem;
+    color: var(--icon-button);
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.org-card.org-card-premium:hover .org-card-icon {
+    color: var(--icon-button-hover);
+}
+
+.org-card-icon--new {
+    color: var(--icon-button);
+}
+
+.org-card--new:hover .org-card-icon--new {
+    color: var(--icon-button-hover);
+}
+
+/* Título (nombre de org o "Nueva Organización") */
 .org-card-org-name {
-    font-size: 0.95rem;
-    font-weight: 500;
+    font-size: 1rem;
+    font-weight: 600;
     color: var(--hogar-text);
-    margin: 0 0 1rem 0;
+    margin: 0 0 0.5rem 0;
     line-height: 1.35;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
-    text-align: center;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-clamp: 2;
 }
 
-/* Meta: plan + créditos */
-.org-card-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
+/* Descripción (plan + créditos o texto nueva org) */
+.org-card-desc {
+    font-size: 0.8125rem;
+    color: var(--hogar-text-muted);
+    margin: 0;
+    line-height: 1.45;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-clamp: 2;
     margin-top: auto;
-    font-size: 0.8rem;
-    color: var(--hogar-text-muted);
-}
-
-.org-card-plan {
-    display: block;
-}
-
-.org-card-credits-wrap {
-    color: var(--hogar-text-muted);
-}
-
-.org-card-credits-wrap .org-card-credits-num {
-    font-weight: 600;
-    color: var(--hogar-text);
 }
 
 /* ============================================

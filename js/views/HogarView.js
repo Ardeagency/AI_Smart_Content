@@ -226,12 +226,10 @@ class HogarView extends BaseView {
         org.planCost = cost ? `${cost.currency} ${Number(cost.price)}` : '—';
       });
 
-      if (this.organizations.length === 0) {
-        if (emptyEl) emptyEl.style.display = 'flex';
-        if (gridEl) gridEl.style.display = 'none';
-      } else {
-        if (emptyEl) emptyEl.style.display = 'none';
-        if (gridEl) gridEl.style.display = 'grid';
+      /* Siempre mostrar grid de cards (orgs + "Nueva Organización"); si no hay orgs, solo se ve la card nueva */
+      if (emptyEl) emptyEl.style.display = 'none';
+      if (gridEl) {
+        gridEl.style.display = 'grid';
         this.renderOrganizations();
       }
     } catch (error) {
@@ -407,12 +405,15 @@ class HogarView extends BaseView {
   }
 
   /**
-   * Renderizar cards de organizaciones (premium: header 30% gradiente marca, content 70%, créditos + avatares, config solo en hover)
+   * Renderizar cards de organizaciones + card "Nueva Organización" (estilo referencia: icono, título, descripción).
    */
   renderOrganizations() {
     const gridEl = this.querySelector('#organizationsGrid');
     if (!gridEl) return;
-    gridEl.innerHTML = this.organizations.map(org => this.renderOrgCard(org)).join('');
+    const orgCardsHtml = this.organizations.map(org => this.renderOrgCard(org)).join('');
+    const newCardHtml = this.renderNewOrgCard();
+    gridEl.innerHTML = orgCardsHtml + newCardHtml;
+
     this.organizations.forEach(org => {
       const card = gridEl.querySelector(`[data-org-id="${org.id}"]`);
       if (!card) return;
@@ -425,23 +426,53 @@ class HogarView extends BaseView {
         }
       });
     });
+
+    const newCard = gridEl.querySelector('[data-new-org]');
+    if (newCard) {
+      const goNew = () => {
+        if (window.router) {
+          window.router.navigate('/form_org');
+        } else {
+          window.location.href = '/form_org';
+        }
+      };
+      newCard.addEventListener('click', () => goNew());
+      newCard.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          goNew();
+        }
+      });
+    }
   }
 
   /**
-   * Card simplificada: solo nombre, plan y créditos.
+   * Card de organización: icono (arriba izq), título, descripción (plan + créditos). Estilo referencia.
    */
   renderOrgCard(org) {
     const name = this.escapeHtml(org.name || '');
     const credits = org.credits_available != null ? `${org.credits_available}` : '0';
     const planRaw = String(org.planType || '').replace(/_/g, ' ').trim();
     const planLabel = planRaw ? planRaw.charAt(0).toUpperCase() + planRaw.slice(1).toLowerCase() : '—';
+    const description = `Plan: ${this.escapeHtml(planLabel)} · Créditos: ${credits}`;
     return `
       <div class="org-card org-card-premium" data-org-id="${org.id}" role="button" tabindex="0" title="Entrar a ${name}">
+        <span class="org-card-icon" aria-hidden="true"><i class="fas fa-building"></i></span>
         <h3 class="org-card-org-name">${name}</h3>
-        <div class="org-card-meta">
-          <span class="org-card-plan">Plan: ${this.escapeHtml(planLabel)}</span>
-          <span class="org-card-credits-wrap">Créditos: <span class="org-card-credits-num">${credits}</span></span>
-        </div>
+        <p class="org-card-desc">${description}</p>
+      </div>
+    `;
+  }
+
+  /**
+   * Card "Nueva Organización": mismo estilo que las de org, icono plus, título y descripción.
+   */
+  renderNewOrgCard() {
+    return `
+      <div class="org-card org-card-premium org-card--new" data-new-org role="button" tabindex="0" title="Crear nueva organización">
+        <span class="org-card-icon org-card-icon--new" aria-hidden="true"><i class="fas fa-plus"></i></span>
+        <h3 class="org-card-org-name">Nueva Organización</h3>
+        <p class="org-card-desc">Crea una organización para gestionar tus marcas y contenido</p>
       </div>
     `;
   }
@@ -466,10 +497,10 @@ class HogarView extends BaseView {
    * Configurar event listeners
    */
   setupEventListeners() {
-    // Botón nueva organización → redirige a form_org (formulario de registro)
-    const createBtn = this.querySelector('#createOrgBtn');
-    if (createBtn) {
-      createBtn.addEventListener('click', () => {
+    // Empty state: botón crear organización → form_org
+    const emptyCreateBtn = this.querySelector('#hogarEmptyCreateBtn');
+    if (emptyCreateBtn) {
+      emptyCreateBtn.addEventListener('click', () => {
         if (window.router) {
           window.router.navigate('/form_org');
         } else {

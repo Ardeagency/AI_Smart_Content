@@ -4,17 +4,8 @@
 -->
 <div class="hogar-container">
     <div class="hogar-header">
-        <div class="hogar-header-content hogar-header-centered">
-            <div class="hogar-title-decoration">++ &nbsp; ++ &nbsp; ++ &nbsp; ++</div>
-            <h1 class="hogar-title">Mis Organizaciones</h1>
-            <p class="hogar-subtitle">Gestiona tus organizaciones y accede a todas tus marcas</p>
-        </div>
-        <div class="hogar-header-actions">
-            <button class="btn btn-create-org" id="createOrgBtn" type="button">
-                <i class="fas fa-plus"></i>
-                Nueva Organización
-            </button>
-        </div>
+        <h1 class="hogar-title">Mis Organizaciones</h1>
+        <p class="hogar-subtitle">Selecciona una organización para continuar o crea una nueva</p>
     </div>
 
     <!-- Empty State -->
@@ -24,7 +15,7 @@
         </div>
         <h2>No tienes organizaciones</h2>
         <p>Crea tu primera organización para comenzar a gestionar tus marcas</p>
-        <button class="btn btn-primary" onclick="document.getElementById('createOrgBtn').click()">
+        <button class="btn btn-primary" id="hogarEmptyCreateBtn" type="button">
             <i class="fas fa-plus"></i>
             Crear Organización
         </button>
