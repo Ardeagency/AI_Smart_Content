@@ -4164,9 +4164,9 @@ body.entrance-done .landing-content {
 
 
 
-/* ========== signin.css – Login simplificado (sin blur/mask para evitar crash) ========== */
+/* ========== signin.css – Login (misma animación que landing, botones alineados) ========== */
 
-/* Contenedor */
+/* Contenedor: misma animación de entrada que la landing */
 .signin-container {
     min-height: 100vh;
     background: #000;
@@ -4176,11 +4176,15 @@ body.entrance-done .landing-content {
     display: flex;
     flex-direction: column;
     position: relative;
+    opacity: 0;
 }
 
-.signin-container .form-org-bg-grid { display: none; }
+body.entrance-done .signin-container {
+    animation: landing-fade-in 0.6s ease-out 0.1s forwards;
+}
 
-.signin-container .form-main-content {
+/* Wrapper centrado (login) */
+.signin-container .signin-inner {
     flex: 1;
     display: flex;
     align-items: center;
@@ -4193,7 +4197,38 @@ body.entrance-done .landing-content {
     box-sizing: border-box;
 }
 
-/* Card: fondo sólido, sin backdrop-filter ni pseudo-elementos con blur */
+/* Card del login */
+.signin-container .signin-card {
+    width: 360px;
+    max-width: calc(100vw - 2rem);
+    margin: 0 auto;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    align-items: center;
+    background: #16161a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Cambiar contraseña: reutiliza form-main-content y form-org-card */
+.signin-container .form-org-bg-grid { display: none; }
+.signin-container .form-main-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl);
+    min-height: 0;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    box-sizing: border-box;
+}
 .signin-container .form-org-card.signin-card {
     width: 360px;
     max-width: calc(100vw - 2rem);
@@ -4217,20 +4252,6 @@ body.entrance-done .landing-content {
     justify-content: center;
     gap: 0.75rem;
     margin-bottom: 0.25rem;
-}
-
-.signin-brand-icon {
-    width: 32px;
-    height: 32px;
-    background: var(--brand-gradient);
-    border-radius: var(--border-radius-sm);
-}
-
-.signin-brand-name {
-    font-size: var(--font-size-xl);
-    font-weight: 600;
-    color: var(--text-primary);
-    letter-spacing: -0.02em;
 }
 
 .signin-brand-logo {
@@ -4314,53 +4335,31 @@ body.entrance-done .landing-content {
     box-shadow: 0 0 0 2px rgba(0, 231, 255, 0.15);
 }
 
-/* Botones */
+/* Botones: mismo estilo que landing (.auth-btn) */
 .signin-container .btn {
     width: 100%;
     max-width: 100%;
-    padding: 0.85rem 1rem;
-    border-radius: var(--border-radius);
+    padding: 0.625rem 1.5rem;
+    border-radius: var(--radius-sm);
     font-weight: 600;
-    font-size: var(--font-size-md);
+    font-size: 0.9rem;
     cursor: pointer;
     transition: var(--transition);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--text-primary);
     font-family: inherit;
     display: inline-flex;
     align-items: center;
     justify-content: center;
 }
 
-/* Botón Login: borde degradado solo verde, azul claro, azul oscuro y violeta (paleta) */
 .signin-container .btn-primary {
-    background: rgba(26, 26, 28, 0.92);
-    color: #ffffff;
-    border: 1px solid transparent;
-    border-radius: 999px;
-    background-clip: padding-box;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 0 0 1px transparent;
-    position: relative;
-}
-
-.signin-container .btn-primary::before {
-    content: '';
-    position: absolute;
-    inset: -1px;
-    border-radius: 999px;
-    padding: 1px;
-    background: linear-gradient(90deg, #00d614 0%, #9acc00 25%, #00e7ff 50%, #0018ee 75%, #5b00ea 90%, #900090 100%);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
+    background: var(--color-white);
+    color: var(--text-black);
+    border: none;
 }
 
 .signin-container .btn-primary:hover:not(:disabled) {
-    background: rgba(32, 32, 35, 0.95);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 0 1px transparent, 0 4px 16px rgba(0, 231, 255, 0.15);
+    background: var(--bg-light-gray);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .signin-container .btn:disabled {
@@ -4416,20 +4415,19 @@ body.entrance-done .landing-content {
     padding: 0 0.25rem;
 }
 
-/* Botón Google – glass */
+/* Botón Google: estilo tipo landing .auth-btn.login (transparente, borde blanco) */
 .signin-google-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.75rem;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: var(--text-primary);
+    background: transparent;
+    border: 1px solid var(--color-white);
+    color: var(--color-white);
 }
 
 .signin-google-btn:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
+    background: var(--white-10);
 }
 
 .signin-google-icon {
@@ -4561,14 +4559,11 @@ body.entrance-done .landing-content {
 }
 
 @media (max-width: 768px) {
-    .signin-container .form-main-content {
+    .signin-container .form-main-content,
+    .signin-container .signin-inner {
         padding: var(--spacing-lg);
         align-items: flex-start;
         padding-top: 3rem;
-    }
-
-    .signin-brand-name {
-        font-size: 1.1rem;
     }
 }
 
