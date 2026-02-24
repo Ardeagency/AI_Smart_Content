@@ -4305,7 +4305,7 @@ body.entrance-done .signin-container {
 
 .signin-container .auth-state.active { display: flex; }
 
-/* Inputs: borde degradado negro (arriba) → blanco (abajo) */
+/* Inputs: igual que la card (negro, borde degradado negro → blanco) */
 .signin-container .form-input,
 .signin-container input[type="text"],
 .signin-container input[type="email"],
@@ -4313,7 +4313,7 @@ body.entrance-done .signin-container {
     width: 100%;
     max-width: 100%;
     padding: 0.85rem 1rem;
-    background: linear-gradient(#1e1e24, #1e1e24) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
+    background: linear-gradient(#000, #000) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
     border: 1px solid transparent;
     border-radius: var(--border-radius);
     color: var(--text-primary);
@@ -4414,13 +4414,13 @@ body.entrance-done .signin-container {
     padding: 0 0.25rem;
 }
 
-/* Botón Google: borde degradado negro (arriba) → blanco (abajo) */
+/* Botón Google: igual que la card (negro, borde degradado negro → blanco) */
 .signin-google-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.75rem;
-    background: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0)) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
+    background: linear-gradient(#000, #000) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
     border: 1px solid transparent;
     color: var(--color-white);
 }
