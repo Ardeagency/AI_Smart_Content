@@ -290,7 +290,6 @@ body {
     min-height: 100vh;
     background: var(--bg-primary);
     transition: opacity 0.3s ease;
-    will-change: opacity, transform;
     overflow-x: hidden;
     overflow-y: auto;
     box-sizing: border-box;
@@ -483,35 +482,6 @@ body {
     }
 }
 
-.view-slide-enter {
-    animation: slideIn 0.3s ease;
-}
-
-.view-slide-leave {
-    animation: slideOut 0.3s ease;
-}
-
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateX(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-@keyframes slideOut {
-    from {
-        opacity: 1;
-        transform: translateX(0);
-    }
-    to {
-        opacity: 0;
-        transform: translateX(-20px);
-    }
-}
 
 /* ============================================
    RESPONSIVE (estados de vista)
@@ -574,125 +544,25 @@ body {
     visibility: hidden;
 }
 
-.loader-overlay::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(
-        circle at center,
-        rgba(255, 255, 255, 0.03),
-        transparent 70%
-    );
-    pointer-events: none;
-}
-
-.loader-overlay::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.5'/%3E%3C/svg%3E");
-    opacity: 0.02;
-    pointer-events: none;
-    z-index: 1;
-}
-
 .loader {
-    position: relative;
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 2;
 }
 
-/* Línea base: 1.5px, espectro ~65–70% ancho, degradado cíclico */
 .loader-line {
-    position: relative;
-    width: 80%;
-    max-width: 720px;
+    width: 65%;
+    max-width: 520px;
     height: 1.5px;
-    background: linear-gradient(
-        90deg,
-        #ff3b3b 0%,
-        #ff7a2f 12%,
-        #ffd84d 25%,
-        #9fd63c 38%,
-        #2edc78 50%,
-        #35d4ff 62%,
-        #2c59ff 75%,
-        #7b3cff 87%,
-        #b53cff 97%,
-        #ff3b3b 100%
-    );
+    background: var(--brand-gradient);
     background-size: 200% 100%;
-    animation: loader-gradient-cycle 10s linear infinite;
+    animation: loader-gradient-cycle 6s linear infinite;
 }
 
 @keyframes loader-gradient-cycle {
     0%   { background-position: 0% 50%; }
     100% { background-position: 200% 50%; }
-}
-
-/* Bloom secundario (capa profunda 18px), respira con desfase */
-.loader-line::before {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 180px;
-    height: 24px;
-    transform: translate(-50%, -50%);
-    background: inherit;
-    filter: blur(18px);
-    opacity: 0.25;
-    z-index: -2;
-    animation: loader-breathe-bloom 3.6s cubic-bezier(0.4, 0, 0.2, 1) infinite 0.35s;
-}
-
-/* Halo: centro ligeramente frío, expansión suave, opacidad 0.35–0.9 */
-.loader-line::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 180px;
-    height: 28px;
-    transform: translate(-50%, -50%);
-    background: radial-gradient(
-        ellipse at center,
-        rgba(255, 255, 255, 0.6) 0%,
-        rgba(255, 255, 255, 0.25) 35%,
-        rgba(255, 255, 255, 0.1) 55%,
-        transparent 100%
-    );
-    filter: blur(14px);
-    opacity: 0.6;
-    z-index: -1;
-    animation: loader-breathe 3.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-
-@keyframes loader-breathe {
-    0%, 100% {
-        opacity: 0.35;
-        transform: translate(-50%, -50%) scaleX(0.85);
-        filter: blur(14px);
-    }
-    50% {
-        opacity: 0.9;
-        transform: translate(-50%, -50%) scaleX(1.15);
-        filter: blur(16px);
-    }
-}
-
-@keyframes loader-breathe-bloom {
-    0%, 100% {
-        opacity: 0.2;
-        transform: translate(-50%, -50%) scaleX(0.9);
-    }
-    50% {
-        opacity: 0.4;
-        transform: translate(-50%, -50%) scaleX(1.12);
-    }
 }
 
 /* ============================================
@@ -799,30 +669,6 @@ body {
    LOADING STATES
    ============================================ */
 
-.inline-loading {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 40px 20px;
-    color: var(--text-secondary);
-    font-size: 0.875rem;
-}
-
-.inline-loading i {
-    animation: spin 1s linear infinite;
-}
-
-.sidebar-loading {
-    padding: 20px;
-    text-align: center;
-    color: rgba(236, 235, 218, 0.6);
-    font-size: 0.813rem;
-}
-
-.sidebar-loading i {
-    animation: spin 1s linear infinite;
-}
 
 /* ============================================
    NOTIFICACIONES GLOBALES
@@ -950,11 +796,6 @@ body {
     min-height: 48px;
     display: flex;
     align-items: center;
-    will-change: transform;
-    backface-visibility: hidden;
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-    backdrop-filter: none;
     box-sizing: border-box;
 }
 
@@ -965,23 +806,6 @@ body.sidebar-collapsed .main-header,
     left: var(--nav-width-collapsed, 72px);
 }
 
-/* Asegurar que el header dentro de app-container también respete el sidebar */
-#app-container .main-header {
-    position: fixed;
-    top: 0;
-    left: var(--nav-width, 260px);
-    max-width: calc(100vw - var(--nav-width, 260px));
-    background: transparent;
-    z-index: 1000;
-    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-sizing: border-box;
-}
-
-body.sidebar-collapsed #app-container .main-header,
-.side-navigation.collapsed ~ #app-container .main-header {
-    left: var(--nav-width-collapsed, 72px);
-    max-width: calc(100vw - var(--nav-width-collapsed, 72px));
-}
 
 .header-content {
     display: flex;
@@ -5607,7 +5431,6 @@ body.sidebar-collapsed .app-header.with-sidebar {
     padding-right: max(15px, env(safe-area-inset-right));
     padding-bottom: max(15px, env(safe-area-inset-bottom));
     transition: padding 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    will-change: padding;
     min-height: 100%;
     box-sizing: border-box;
 }
@@ -5619,7 +5442,6 @@ body.sidebar-collapsed .app-header.with-sidebar {
     pointer-events: none;
     transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s,
                 transform 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s;
-    will-change: opacity, transform;
 }
 
 /* Asegurar que elementos vuelvan a ser visibles cuando NO está en modo secundario */
@@ -5629,7 +5451,6 @@ body.sidebar-collapsed .app-header.with-sidebar {
     pointer-events: auto !important;
     transition: opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.3s,
                 transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.3s;
-    will-change: opacity, transform;
 }
 
 
@@ -5775,21 +5596,8 @@ body.sidebar-collapsed .app-header.with-sidebar {
     letter-spacing: -0.02em;
     line-height: 1;
     transition: none;
-    -webkit-transition: none;
-    -moz-transition: none;
-    -o-transition: none;
     animation: none;
-    -webkit-animation: none;
-    -moz-animation: none;
-    -o-animation: none;
-    will-change: auto;
     transform: none;
-    -webkit-transform: none;
-    -moz-transform: none;
-    -o-transform: none;
-    scale: 1;
-    -webkit-scale: 1;
-    zoom: 1;
 }
 
 /* Asegurar tamaño GRANDE en el contenedor exacto (override a base.css) */
@@ -6153,7 +5961,6 @@ h1.brand-name-large[contenteditable="true"]:hover,
     flex-shrink: 0;
     transition: opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s,
                 transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s;
-    will-change: opacity, transform;
 }
 
 /* Contenedor del panel INFO: se adapta al espacio disponible y hace scroll */
@@ -6174,7 +5981,6 @@ h1.brand-name-large[contenteditable="true"]:hover,
     max-width: 100%;
     min-width: 0;
     box-sizing: border-box;
-    will-change: opacity, transform;
 }
 
 .card-info.expanded .card-content-expanded::-webkit-scrollbar {
@@ -8700,7 +8506,7 @@ body.sidebar-collapsed .living-container {
 .category-btn {
     padding: 0.875rem 1.5rem;
     background: var(--living-bg-glass);
-    backdrop-filter: blur(20px);
+    backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 50px;
     color: var(--living-text-muted);
@@ -8763,7 +8569,7 @@ body.sidebar-collapsed .living-container {
     width: 40px;
     height: 40px;
     background: var(--living-bg-glass);
-    backdrop-filter: blur(20px);
+    backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     color: var(--living-text-muted);
@@ -8789,7 +8595,7 @@ body.sidebar-collapsed .living-container {
 
 .content-card {
     background: var(--living-bg-glass);
-    backdrop-filter: blur(20px);
+    backdrop-filter: blur(8px);
     border-radius: 16px;
     overflow: hidden;
     box-shadow: var(--living-shadow-soft);
@@ -10436,11 +10242,6 @@ body.sidebar-collapsed .living-container {
     text-align: center;
     padding: 4rem 2rem;
     color: var(--text-secondary);
-}
-
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
 }
 
 .empty-state i {
@@ -13028,64 +12829,6 @@ body.sidebar-collapsed .living-container {
   max-width: 700px;
 }
 
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 1.125rem;
-  color: var(--text-primary);
-}
-
-.modal-close {
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 1.5rem;
-  cursor: pointer;
-  border-radius: 8px;
-  transition: all 0.2s;
-}
-
-.modal-close:hover {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-}
-
-.modal-body {
-  padding: 20px;
-  overflow-y: auto;
-}
-
-.modal-warning {
-  color: var(--dev-error);
-  font-weight: 500;
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 16px 20px;
-  border-top: 1px solid var(--border-color);
-}
-
-/* Botones */
-.btn-danger {
-  background: var(--dev-error);
-  color: white;
-}
-
-.btn-danger:hover {
-  background: var(--color-critical);
-}
 
 /* ==========================================
    Responsive
@@ -18763,7 +18506,7 @@ body.sidebar-collapsed .living-container {
     width: 100% !important;
     height: 100% !important;
     background: rgba(0, 0, 0, 0.85) !important;
-    backdrop-filter: blur(15px) !important;
+    backdrop-filter: blur(8px) !important;
     z-index: var(--z-modal-backdrop) !important;
     display: flex !important;
     align-items: center !important;
@@ -19335,11 +19078,6 @@ body.sidebar-collapsed .living-container {
     display: none;
 }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
 .cancel-button {
     background: transparent;
     color: var(--text-secondary);
@@ -19558,7 +19296,7 @@ body.sidebar-collapsed .living-container {
 /* Tarjeta de autenticación */
 .auth-card {
     background: var(--bg-card);
-    backdrop-filter: blur(20px);
+    backdrop-filter: blur(8px);
     border: 1px solid var(--border-color);
     border-radius: 16px;
     padding: 40px;
@@ -19933,7 +19671,7 @@ body.sidebar-collapsed .living-container {
     top: 20px;
     right: 20px;
     background: rgba(26, 26, 26, 0.95);
-    backdrop-filter: blur(20px);
+    backdrop-filter: blur(8px);
     border-radius: 12px;
     padding: 16px 20px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
@@ -20078,32 +19816,4 @@ body.sidebar-collapsed .living-container {
     }
 }
 
-/* ========== style.css (26 lineas) ========== */
-
-/**
- * AI Smart Content - Estilos principales (Landing Page)
- * Diseño minimalista inspirado en IA PARTNER
- */
-
-/* Importar estilos base */
-/* Variables globales en base.css :root (fuente única) */
-
-/* ============================================
-   LANDING PAGE MINIMALISTA
-   ============================================ */
-/* Los estilos principales están en el HTML inline para mejor control */
-/* Este archivo mantiene compatibilidad con otros componentes */
-
-/* Estilos de respaldo para elementos que puedan no tener estilos inline */
-.landing-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    width: 100%;
-    padding: 2rem;
-    position: relative;
-    z-index: 1;
-}
 
