@@ -5321,241 +5321,117 @@ svg.signin-brand-logo {
 }
 
 
-/* ========== hogar.css (491 lineas) ========== */
+/* ========== hogar.css — Home básico, cards como planes, todo centrado ========== */
 
-/**
- * Hogar (Home) - Selector de organizaciones
- * Mismo estilo visual que el resto de la web: Living/Brands (fondo oscuro, acentos cálidos, superficies card)
- */
-
-/* Variables locales: heredan de base + living */
-.hogar-container {
-    --hogar-bg: var(--living-bg-deep, var(--bg-primary));
-    --hogar-surface: var(--living-bg-surface, var(--bg-secondary));
-    --hogar-card: var(--living-bg-card, var(--bg-card));
-    --hogar-card-border: var(--border-color);
-    --hogar-text: var(--living-text-light, var(--text-primary));
-    --hogar-text-muted: var(--living-text-muted, var(--text-muted));
-    --hogar-accent: var(--living-warm-1, #ff6500);
-    --hogar-accent-hover: var(--living-warm-2, #ff0000);
-    --hogar-radius: 12px;
-    --hogar-radius-card: 16px;
-}
-
-/* ============================================
-   CONTENEDOR PRINCIPAL — Centrado
-   ============================================ */
 .hogar-container {
     min-height: calc(100vh - 70px);
-    padding: 2rem;
-    padding-top: calc(70px + 2rem); /* header-only: 70px + aire */
-    max-width: 1400px;
+    padding: 1.5rem;
+    padding-top: calc(70px + 1.5rem);
     margin: 0 auto;
-    background: var(--hogar-bg);
+    background: var(--bg-primary);
     display: flex;
     flex-direction: column;
     align-items: center;
     box-sizing: border-box;
 }
 
-@media (max-width: 768px) {
-    .hogar-container {
-        padding: 1.5rem;
-        padding-top: calc(70px + 1rem);
-    }
-}
-
-/* ============================================
-   HEADER — Centrado, título + subtítulo (estilo referencia)
-   ============================================ */
 .hogar-header {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 2.5rem;
-    width: 100%;
     text-align: center;
+    margin-bottom: 1.5rem;
 }
 
 .hogar-title {
-    font-size: var(--font-size-2xl);
+    font-size: var(--font-size-xl);
     font-weight: 700;
-    color: var(--hogar-text);
-    margin: 0 0 0.5rem 0;
-    line-height: 1.3;
+    color: var(--text-primary);
+    margin: 0 0 0.25rem 0;
 }
 
 .hogar-subtitle {
-    font-size: 0.9375rem;
-    color: var(--hogar-text-muted);
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
     margin: 0;
-    max-width: 420px;
 }
 
-/* ============================================
-   EMPTY STATE
-   ============================================ */
-.hogar-empty {
+/* Grid: flex wrap, centrado, cards pequeñas fijas (como planes) */
+.organizations-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Card mismo estilo que plan-card-small: tamaño fijo, centrado, gradiente + borde */
+.org-card.org-card-premium {
+    width: 160px;
+    min-height: 200px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    min-height: 360px;
+    justify-content: flex-start;
     text-align: center;
-    padding: 2rem;
-}
-
-.hogar-empty .empty-icon {
-    font-size: 3.5rem;
-    color: var(--hogar-text-muted);
-    margin-bottom: 1rem;
-}
-
-.hogar-empty h2 {
-    font-size: 1.35rem;
-    font-weight: 600;
-    color: var(--hogar-text);
-    margin-bottom: 0.5rem;
-}
-
-.hogar-empty p {
-    color: var(--hogar-text-muted);
-    margin-bottom: 1.5rem;
-    font-size: 0.9375rem;
-}
-
-.hogar-empty .btn-primary {
-    background: var(--hogar-accent);
-    color: var(--color-white);
-    border: none;
-    padding: 0.65rem 1.25rem;
-    border-radius: var(--hogar-radius);
-    font-weight: 600;
-}
-
-.hogar-empty .btn-primary:hover {
-    background: var(--hogar-accent-hover);
-    color: var(--color-white);
-}
-
-/* ============================================
-   GRID DE ORGANIZACIONES — Centrado, fila como en imagen
-   ============================================ */
-.organizations-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.5rem;
-    margin-top: 0.5rem;
-    width: 100%;
-    max-width: 960px;
-    justify-content: center;
-}
-
-@media (min-width: 600px) and (max-width: 899px) {
-    .organizations-grid {
-        grid-template-columns: repeat(2, 1fr);
-        max-width: 640px;
-    }
-}
-
-@media (min-width: 900px) {
-    .organizations-grid {
-        grid-template-columns: repeat(3, 1fr);
-        max-width: 960px;
-    }
-}
-
-/* ============================================
-   CARD DE ORGANIZACIÓN — Estilo referencia: icono (arriba izq), título, descripción
-   Card redondeada, fondo negro, squarish
-   ============================================ */
-.org-card.org-card-premium {
-    --org-card-radius: 16px;
-    position: relative;
-    overflow: hidden;
-    border-radius: var(--org-card-radius);
-    background: var(--bg-card);
-    border: 1px solid var(--hogar-card-border);
+    gap: 0.4rem;
+    padding: 1rem 0.75rem;
+    border-radius: var(--radius-md);
+    background: linear-gradient(180deg, #0A090B 0%, #09101F 100%) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
+    border: 1px solid transparent;
     cursor: pointer;
-    padding: 1.25rem;
-    aspect-ratio: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    text-align: left;
-    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    transition: var(--transition);
+    overflow: hidden;
 }
 
 .org-card.org-card-premium:hover {
-    transform: translateY(-2px);
-    background: var(--bg-hover);
-    border-color: var(--border-light);
+    background: linear-gradient(180deg, #0d0c0e 0%, #0c1422 100%) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
 }
 
-/* Icono arriba a la izquierda */
 .org-card-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
-    margin-bottom: 1rem;
+    width: 32px;
+    height: 32px;
     color: var(--icon-button);
-    font-size: 1.25rem;
-    flex-shrink: 0;
+    font-size: 1rem;
 }
 
-.org-card.org-card-premium:hover .org-card-icon {
-    color: var(--icon-button-hover);
-}
-
-.org-card-icon--new {
-    color: var(--icon-button);
-}
-
+.org-card.org-card-premium:hover .org-card-icon,
 .org-card--new:hover .org-card-icon--new {
     color: var(--icon-button-hover);
 }
 
-/* Título (nombre de org o "Nueva Organización") */
 .org-card-org-name {
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 600;
-    color: var(--hogar-text);
-    margin: 0 0 0.5rem 0;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.org-card-desc {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin: 0;
     line-height: 1.35;
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
-    line-clamp: 2;
 }
 
-/* Descripción (plan + créditos o texto nueva org) */
-.org-card-desc {
-    font-size: 0.8125rem;
-    color: var(--hogar-text-muted);
-    margin: 0;
-    line-height: 1.45;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    line-clamp: 2;
-    margin-top: auto;
-}
-
-/* ============================================
-   MODAL (mismo lenguaje visual)
-   ============================================ */
+/* Modal hogar — mínimo */
 .hogar-container .modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     background: var(--bg-overlay);
     display: flex;
     align-items: center;
@@ -5567,94 +5443,73 @@ svg.signin-brand-logo {
 .hogar-container .modal-content {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: var(--hogar-radius-card);
+    border-radius: var(--radius-md);
     width: 100%;
-    max-width: 440px;
+    max-width: 400px;
     max-height: 90vh;
     overflow-y: auto;
-    box-shadow: var(--shadow-floating);
 }
 
 .hogar-container .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid var(--hogar-card-border);
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .hogar-container .modal-header h2 {
-    font-size: var(--font-size-xl);
+    font-size: var(--font-size-lg);
     font-weight: 600;
-    color: var(--hogar-text);
+    color: var(--text-primary);
 }
 
 .hogar-container .modal-close {
-    background: transparent;
+    background: none;
     border: none;
-    color: var(--hogar-text-muted);
-    font-size: var(--font-size-xl);
+    color: var(--text-muted);
     cursor: pointer;
     padding: 0.25rem;
-    transition: var(--transition);
-}
-
-.hogar-container .modal-close:hover {
-    color: var(--hogar-text);
 }
 
 .hogar-container .modal-body {
-    padding: 1.5rem;
+    padding: 1.25rem;
 }
 
 .hogar-container .form-group {
-    margin-bottom: 1.25rem;
+    margin-bottom: 1rem;
 }
 
 .hogar-container .form-group label {
     display: block;
-    margin-bottom: 0.5rem;
-    color: var(--hogar-text);
-    font-weight: 500;
-    font-size: var(--font-size-base);
+    margin-bottom: 0.35rem;
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
 }
 
 .hogar-container .form-group input {
     width: 100%;
-    padding: 0.75rem 1rem;
+    padding: 0.6rem 0.75rem;
     background: var(--bg-interactive);
     border: 1px solid var(--border-color);
-    border-radius: var(--hogar-radius);
+    border-radius: var(--radius-sm);
     color: var(--text-primary);
-    font-size: var(--font-size-md);
-    transition: var(--transition);
-}
-
-.hogar-container .form-group input:focus {
-    outline: none;
-    border-color: var(--border-light);
-    background: var(--bg-hover);
+    font-size: var(--font-size-base);
 }
 
 .hogar-container .form-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 0.75rem;
-    margin-top: 1.5rem;
+    gap: 0.5rem;
+    margin-top: 1rem;
 }
 
-/* Botones dentro de hogar (modal y empty) */
-.hogar-container .btn {
-    padding: 0.65rem 1.25rem;
-    border: none;
-    border-radius: var(--hogar-radius);
-    font-weight: 600;
-    font-size: var(--font-size-base);
+.hogar-container .btn-primary,
+.hogar-container .btn-secondary {
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
     cursor: pointer;
-    transition: var(--transition);
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
 }
 
 .hogar-container .btn-primary {
@@ -5663,40 +5518,10 @@ svg.signin-brand-logo {
     border: 1px solid var(--border-color);
 }
 
-.hogar-container .btn-primary:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
-}
-
 .hogar-container .btn-secondary {
     background: transparent;
     color: var(--text-muted);
     border: 1px solid var(--border-color);
-}
-
-.hogar-container .btn-secondary:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
-    border-color: var(--border-light);
-}
-
-.btn-sm {
-    padding: 0.5rem;
-    font-size: var(--font-size-base);
-}
-
-/* ============================================
-   RESPONSIVE
-   ============================================ */
-@media (max-width: 768px) {
-    .hogar-title {
-        font-size: var(--font-size-xl);
-        letter-spacing: 0.08em;
-    }
-
-    .org-card-org-name {
-        font-size: 0.9rem;
-    }
 }
 
 

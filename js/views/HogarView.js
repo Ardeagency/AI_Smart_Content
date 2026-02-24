@@ -87,11 +87,9 @@ class HogarView extends BaseView {
       return;
     }
 
-    const emptyEl = this.querySelector('#hogarEmpty');
     const gridEl = this.querySelector('#organizationsGrid');
 
     try {
-      if (emptyEl) emptyEl.style.display = 'none';
       if (gridEl) gridEl.style.display = 'none';
 
       const [membersResult, ownedResult] = await Promise.all([
@@ -226,10 +224,8 @@ class HogarView extends BaseView {
         org.planCost = cost ? `${cost.currency} ${Number(cost.price)}` : '—';
       });
 
-      /* Siempre mostrar grid de cards (orgs + "Nueva Organización"); si no hay orgs, solo se ve la card nueva */
-      if (emptyEl) emptyEl.style.display = 'none';
       if (gridEl) {
-        gridEl.style.display = 'grid';
+        gridEl.style.display = 'flex';
         this.renderOrganizations();
       }
     } catch (error) {
@@ -497,18 +493,6 @@ class HogarView extends BaseView {
    * Configurar event listeners
    */
   setupEventListeners() {
-    // Empty state: botón crear organización → form_org
-    const emptyCreateBtn = this.querySelector('#hogarEmptyCreateBtn');
-    if (emptyCreateBtn) {
-      emptyCreateBtn.addEventListener('click', () => {
-        if (window.router) {
-          window.router.navigate('/form_org');
-        } else {
-          window.location.href = '/form_org';
-        }
-      });
-    }
-
     // Modal de organización
     const modal = this.querySelector('#orgModal');
     const modalClose = this.querySelector('#orgModalClose');
