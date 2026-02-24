@@ -338,7 +338,7 @@ class DevTestView extends DevBaseView {
     await this.loadFlows();
     this.checkUrlParams();
     this.setupEventListeners();
-    this.loadTestCases();
+    await this.loadTestCases();
   }
 
   async initSupabase() {
@@ -794,20 +794,14 @@ class DevTestView extends DevBaseView {
       return;
     }
     
-    // Obtener webhook URL
-    let webhookUrl = null;
-    if (this.environment === 'test') {
-      webhookUrl = this.selectedFlow?.webhook_url_test || this.selectedFlowModule?.webhook_url_test;
-    } else {
-      webhookUrl = this.selectedFlow?.webhook_url_prod || this.selectedFlowModule?.webhook_url_prod;
-    }
+    const Service = window.FlowWebhookService;
+    const webhookUrl = Service ? Service.getWebhookUrl(this.selectedFlowModule || this.selectedFlow, this.environment) : null;
     
     if (!webhookUrl) {
       this.showNotification('No hay webhook configurado para este ambiente', 'error');
       return;
     }
     
-    // Iniciar test
     this.isRunning = true;
     this.startTimer();
     this.showProgress(true);
@@ -815,15 +809,11 @@ class DevTestView extends DevBaseView {
     this.addLog('info', `Iniciando test en ambiente ${this.environment.toUpperCase()}`);
     
     const inputs = this.collectInputs();
-    const method = this.technicalDetails?.webhook_method || 'POST';
+    const method = (this.technicalDetails?.webhook_method || 'POST').toUpperCase();
     
     let runId = null;
-    let response = null;
-    let responseData = null;
-    let statusCode = null;
     
     try {
-      // Crear registro de ejecución (inputs van en runs_inputs)
       if (this.supabase) {
         const { data: run, error: runError } = await this.supabase
           .from('flow_runs')
@@ -849,61 +839,47 @@ class DevTestView extends DevBaseView {
         }
       }
       
-      this.addLog('info', `Enviando ${method} a ${webhookUrl.substring(0, 50)}...`);
-      
-      // Ejecutar request
-      const requestOptions = {
-        method,
-        headers: {
-          'Content-Type': 'application/json'
-        }
+      const body = {
+        inputs,
+        flow_id: this.selectedFlow.id,
+        environment: this.environment,
+        test_mode: true,
+        run_id: runId,
+        timestamp: new Date().toISOString()
       };
       
-      if (method !== 'GET') {
-        requestOptions.body = JSON.stringify({
-          inputs,
-          flow_id: this.selectedFlow.id,
-          environment: this.environment,
-          test_mode: true,
-          run_id: runId,
-          timestamp: new Date().toISOString()
-        });
-      }
+      this.addLog('info', `Enviando ${method} a ${webhookUrl.substring(0, 50)}...`);
       
-      response = await fetch(webhookUrl, requestOptions);
-      statusCode = response.status;
+      const res = Service ? await Service.executeWebhook({
+        url: webhookUrl,
+        method,
+        body: method !== 'GET' ? body : undefined,
+        timeoutMs: 120000,
+        maxRetries: 3
+      }) : { ok: false, status: 0, statusText: '', data: null, error: 'FlowWebhookService no disponible' };
       
-      const contentType = response.headers.get('content-type');
+      const statusCode = res.status;
+      const responseData = res.data;
       
-      if (contentType && contentType.includes('application/json')) {
-        responseData = await response.json();
+      if (res.ok) {
+        this.addLog('success', `Respuesta exitosa: ${statusCode} ${res.statusText}`);
       } else {
-        responseData = await response.text();
+        this.addLog('error', `Error: ${statusCode} ${res.statusText}${res.error ? ' - ' + res.error : ''}`);
       }
       
-      // Log resultado
-      if (response.ok) {
-        this.addLog('success', `Respuesta exitosa: ${statusCode} ${response.statusText}`);
-      } else {
-        this.addLog('error', `Error: ${statusCode} ${response.statusText}`);
-      }
+      this.showResponse(statusCode, res.statusText, responseData);
       
-      // Mostrar respuesta
-      this.showResponse(statusCode, response.statusText, responseData);
-      
-      // Actualizar registro de ejecución
       if (this.supabase && runId) {
         await this.supabase
           .from('flow_runs')
           .update({
-            status: response.ok ? 'completed' : 'failed',
+            status: res.ok ? 'completed' : 'failed',
             webhook_response_code: statusCode,
             tokens_consumed: this.selectedFlow.token_cost || 1
           })
           .eq('id', runId);
         
-        // Crear log si hay error (con flow_module_id si existe)
-        if (!response.ok) {
+        if (!res.ok) {
           await this.supabase
             .from('developer_logs')
             .insert({
@@ -912,7 +888,7 @@ class DevTestView extends DevBaseView {
               flow_module_id: this.selectedFlowModule?.id || null,
               environment: this.environment,
               severity: 'error',
-              error_message: `HTTP ${statusCode}: ${response.statusText}`,
+              error_message: `HTTP ${statusCode}: ${res.statusText}`,
               raw_details: { response: responseData }
             });
         }
@@ -921,19 +897,13 @@ class DevTestView extends DevBaseView {
     } catch (err) {
       console.error('Test error:', err);
       this.addLog('error', `Error de conexión: ${err.message}`);
-      
       this.showResponse(0, 'Network Error', { error: err.message, type: 'network_error' });
       
-      // Registrar error
       if (this.supabase && runId) {
         await this.supabase
           .from('flow_runs')
-          .update({
-            status: 'error',
-            webhook_response_code: 0
-          })
+          .update({ status: 'error', webhook_response_code: 0 })
           .eq('id', runId);
-        
         await this.supabase
           .from('developer_logs')
           .insert({
@@ -1416,15 +1386,48 @@ class DevTestView extends DevBaseView {
     }
   }
 
-  // Test Cases
-  loadTestCases() {
-    const stored = localStorage.getItem(`testCases_${this.userId}`);
-    if (stored) {
-      try {
-        this.savedTestCases = JSON.parse(stored);
-      } catch {
-        this.savedTestCases = [];
+  // Test Cases (persistidos en flow_test_cases; fallback a localStorage si la tabla no existe)
+  async loadTestCases() {
+    if (!this.supabase || !this.userId) {
+      this.savedTestCases = [];
+      this.renderTestCases();
+      return;
+    }
+    try {
+      let query = this.supabase
+        .from('flow_test_cases')
+        .select('id, flow_id, user_id, name, description, inputs, environment, created_at')
+        .eq('user_id', this.userId)
+        .order('created_at', { ascending: false });
+      const { data: rows, error } = await query;
+      if (error) {
+        if (error.code === '42P01') {
+          const stored = localStorage.getItem(`testCases_${this.userId}`);
+          if (stored) {
+            try {
+              this.savedTestCases = JSON.parse(stored);
+            } catch {
+              this.savedTestCases = [];
+            }
+          } else {
+            this.savedTestCases = [];
+          }
+        } else {
+          this.savedTestCases = [];
+        }
+      } else {
+        this.savedTestCases = (rows || []).map(r => ({
+          id: r.id,
+          flowId: r.flow_id,
+          name: r.name,
+          description: r.description || '',
+          inputs: r.inputs || {},
+          environment: r.environment || 'test',
+          createdAt: r.created_at
+        }));
       }
+    } catch {
+      this.savedTestCases = [];
     }
     this.renderTestCases();
   }
@@ -1489,7 +1492,7 @@ class DevTestView extends DevBaseView {
     }
   }
 
-  saveTestCase() {
+  async saveTestCase() {
     const name = this.querySelector('#testCaseName')?.value?.trim();
     const description = this.querySelector('#testCaseDescription')?.value?.trim();
     
@@ -1500,18 +1503,49 @@ class DevTestView extends DevBaseView {
     
     const inputs = this.collectInputs();
     
-    const testCase = {
-      id: Date.now().toString(),
-      flowId: this.selectedFlow.id,
-      name,
-      description,
-      inputs,
-      environment: this.environment,
-      createdAt: new Date().toISOString()
-    };
-    
-    this.savedTestCases.push(testCase);
-    localStorage.setItem(`testCases_${this.userId}`, JSON.stringify(this.savedTestCases));
+    if (this.supabase && this.userId) {
+      try {
+        const { data: row, error } = await this.supabase
+          .from('flow_test_cases')
+          .insert({
+            flow_id: this.selectedFlow.id,
+            user_id: this.userId,
+            name,
+            description: description || null,
+            inputs: inputs || {},
+            environment: this.environment
+          })
+          .select('id, flow_id, name, description, inputs, environment, created_at')
+          .single();
+        if (error) throw error;
+        const testCase = {
+          id: row.id,
+          flowId: row.flow_id,
+          name: row.name,
+          description: row.description || '',
+          inputs: row.inputs || {},
+          environment: row.environment || 'test',
+          createdAt: row.created_at
+        };
+        this.savedTestCases.unshift(testCase);
+      } catch (e) {
+        console.error('saveTestCase:', e);
+        this.showNotification('No se pudo guardar el test case', 'error');
+        return;
+      }
+    } else {
+      const testCase = {
+        id: Date.now().toString(),
+        flowId: this.selectedFlow.id,
+        name,
+        description: description || '',
+        inputs,
+        environment: this.environment,
+        createdAt: new Date().toISOString()
+      };
+      this.savedTestCases.push(testCase);
+      localStorage.setItem(`testCases_${this.userId}`, JSON.stringify(this.savedTestCases));
+    }
     
     this.querySelector('#saveTestCaseModal').style.display = 'none';
     this.querySelector('#testCaseName').value = '';
@@ -1588,11 +1622,22 @@ if (window.InputRegistry && window.InputRegistry.initColorsPicker) {
     this.showNotification(`Test case "${testCase.name}" cargado`, 'success');
   }
 
-  deleteTestCase(testCase) {
+  async deleteTestCase(testCase) {
     if (!confirm(`¿Eliminar el test case "${testCase.name}"?`)) return;
     
+    const isFromDb = typeof testCase.id === 'string' && testCase.id.length === 36;
+    if (this.supabase && isFromDb) {
+      try {
+        await this.supabase.from('flow_test_cases').delete().eq('id', testCase.id);
+      } catch (e) {
+        console.error('deleteTestCase:', e);
+      }
+    }
+    
     this.savedTestCases = this.savedTestCases.filter(tc => tc.id !== testCase.id);
-    localStorage.setItem(`testCases_${this.userId}`, JSON.stringify(this.savedTestCases));
+    if (!isFromDb) {
+      localStorage.setItem(`testCases_${this.userId}`, JSON.stringify(this.savedTestCases));
+    }
     
     this.renderTestCases();
     this.showNotification('Test case eliminado', 'success');

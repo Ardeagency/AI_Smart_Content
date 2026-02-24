@@ -136,7 +136,7 @@ class App {
     r.register('/products/:productId', productsLoader, auth);
 
     // ── Org: Studio ──
-    const studioLoader = this._lazy('StudioView', [...inputDeps, '/js/products.js', '/js/views/StudioView.js']);
+    const studioLoader = this._lazy('StudioView', [...inputDeps, '/js/services/FlowWebhookService.js', '/js/products.js', '/js/views/StudioView.js']);
     r.register('/org/:orgId/studio', studioLoader, auth);
     r.register('/studio', studioLoader, auth);
 
@@ -186,11 +186,11 @@ class App {
     const devBuilderLoader = this._lazy('DevBuilderView', [...devInput, '/js/views/DevBuilderView.js']);
     r.register('/dev/builder', devBuilderLoader, auth);
     r.register('/dev/builder/:flowId', devBuilderLoader, auth);
-    const devTestLoader = this._lazy('DevTestView', [...devInput, '/js/views/DevTestView.js']);
+    const devTestLoader = this._lazy('DevTestView', [...devInput, '/js/services/FlowWebhookService.js', '/js/views/DevTestView.js']);
     r.register('/dev/test', devTestLoader, auth);
     r.register('/dev/runs', devTestLoader, auth);
     r.register('/dev/test/:flowId', devTestLoader, auth);
-    r.register('/dev/webhooks', this._lazy('DevWebhooksView', [...devBase, '/js/views/DevWebhooksView.js']), auth);
+    r.register('/dev/webhooks', this._lazy('DevWebhooksView', [...devBase, '/js/services/FlowWebhookService.js', '/js/views/DevWebhooksView.js']), auth);
 
     // ── Dev Lead ──
     r.register('/dev/lead/team', this._lazy('DevLeadTeamView', [...devBase, '/js/views/DevLeadTeamView.js']), auth);

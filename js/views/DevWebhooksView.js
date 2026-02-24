@@ -749,20 +749,17 @@ class DevWebhooksView extends DevBaseView {
   }
 
   async pingWebhook(url, method = 'POST') {
+    if (window.FlowWebhookService && typeof window.FlowWebhookService.pingWebhook === 'function') {
+      return window.FlowWebhookService.pingWebhook(url, method, 10000);
+    }
     const startTime = Date.now();
-    
     try {
-      // Usar HEAD o un request liviano para verificar
       const response = await fetch(url, {
         method: method === 'GET' ? 'GET' : 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: method !== 'GET' ? JSON.stringify({ _ping: true, timestamp: new Date().toISOString() }) : undefined
       });
-      
       const elapsed = Date.now() - startTime;
-      
       return {
         success: response.ok || response.status === 200 || response.status === 201,
         status: response.status,
@@ -770,11 +767,7 @@ class DevWebhooksView extends DevBaseView {
         time: elapsed
       };
     } catch (err) {
-      return {
-        success: false,
-        error: err.message,
-        time: Date.now() - startTime
-      };
+      return { success: false, error: err.message, time: Date.now() - startTime };
     }
   }
 
