@@ -553,15 +553,13 @@ class DevTestView extends DevBaseView {
   updateWebhookInfo() {
     const urlEl = this.querySelector('#webhookUrl');
     if (!urlEl) return;
-    
-    // URLs viven en flow_modules (selectedFlow ya las tiene copiadas desde loadFlowModuleAndTechnicalDetails)
-    let url = null;
-    if (this.environment === 'test') {
-      url = this.selectedFlow?.webhook_url_test || this.selectedFlowModule?.webhook_url_test;
-    } else {
-      url = this.selectedFlow?.webhook_url_prod || this.selectedFlowModule?.webhook_url_prod;
-    }
-    
+
+    const flowOrModule = this.selectedFlowModule || this.selectedFlow;
+    const Service = (typeof window !== 'undefined' && window.FlowWebhookService) ? window.FlowWebhookService : null;
+    const url = Service ? Service.getWebhookUrl(flowOrModule, this.environment) : (this.environment === 'test'
+      ? (this.selectedFlow?.webhook_url_test || this.selectedFlowModule?.webhook_url_test)
+      : (this.selectedFlow?.webhook_url_prod || this.selectedFlowModule?.webhook_url_prod));
+
     if (url) {
       const truncated = url.length > 40 ? url.substring(0, 40) + '...' : url;
       urlEl.innerHTML = `<span title="${url}">${truncated}</span>`;
@@ -620,10 +618,25 @@ class DevTestView extends DevBaseView {
     
 // Renderizar campos
     if (fieldsContainer) {
-      fieldsContainer.innerHTML = fields.map(field => this.renderInputField(field)).join('');
+      const Registry = window.InputRegistry;
+      if (Registry && Registry.renderFormFromSchema) {
+        fieldsContainer.innerHTML = Registry.renderFormFromSchema(fields, {
+          idPrefix: 'input_',
+          wrapperClass: 'form-field',
+          showLabel: true,
+          showHelper: true,
+          showRequired: true
+        });
+        if (Registry.initFormPickers) Registry.initFormPickers(fieldsContainer);
+      } else {
+        fieldsContainer.innerHTML = fields.map(field => this.renderInputField(field)).join('');
+        if (Registry && Registry.initFormPickers) Registry.initFormPickers(fieldsContainer);
+        else if (Registry) {
+          if (Registry.initColorsPicker) Registry.initColorsPicker(fieldsContainer);
+          if (Registry.initAspectRatioPicker) Registry.initAspectRatioPicker(fieldsContainer);
+        }
+      }
       this.setupInputListeners();
-      if (window.InputRegistry && window.InputRegistry.initColorsPicker) window.InputRegistry.initColorsPicker(fieldsContainer);
-      if (window.InputRegistry && window.InputRegistry.initAspectRatioPicker) window.InputRegistry.initAspectRatioPicker(fieldsContainer);
       this.populateColoresFromBrand();
     }
 

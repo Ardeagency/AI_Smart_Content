@@ -12103,25 +12103,42 @@ body.sidebar-collapsed .living-container {
   font-size: var(--font-size-sm);
 }
 
+/* Badge de estado unificado (Builder + DevFlows): una sola familia de clases */
+.flow-status-badge,
+.builder-status-badge,
 .dev-flow-status {
-  padding: 2px 8px;
-  border-radius: var(--radius-xs);
+  padding: 4px 10px;
+  border-radius: var(--radius-xl);
+  font-size: var(--font-size-sm);
   font-weight: 500;
+  text-transform: uppercase;
 }
 
+.flow-status-badge.draft,
+.builder-status-badge.draft,
 .dev-flow-status.status-draft {
-  background: rgba(107, 114, 128, 0.2);
+  background: rgba(148, 163, 184, 0.2);
   color: var(--text-muted);
 }
 
+.flow-status-badge.testing,
+.builder-status-badge.testing,
 .dev-flow-status.status-testing {
   background: var(--color-warning-light);
-  color: var(--dev-warning);
+  color: var(--color-warning);
 }
 
+.flow-status-badge.published,
+.builder-status-badge.published,
 .dev-flow-status.status-published {
   background: var(--color-success-light);
-  color: var(--dev-success);
+  color: var(--color-success);
+}
+
+.flow-status-badge.checking,
+.builder-status-badge.checking {
+  background: var(--color-warning-light);
+  color: var(--dev-warning);
 }
 
 .dev-flow-runs {
@@ -12990,33 +13007,7 @@ body.sidebar-collapsed .living-container {
   border-bottom: none;
 }
 
-.builder-status-badge {
-  padding: 4px 10px;
-  border-radius: var(--radius-xl);
-  font-size: var(--font-size-sm);
-  font-weight: 500;
-  text-transform: uppercase;
-}
-
-.builder-status-badge.draft {
-  background: rgba(148, 163, 184, 0.2);
-  color: var(--text-muted);
-}
-
-.builder-status-badge.testing {
-  background: var(--color-warning-light);
-  color: var(--color-warning);
-}
-
-.builder-status-badge.published {
-  background: var(--color-success-light);
-  color: var(--color-success);
-}
-
-.builder-status-badge.checking {
-  background: var(--color-warning-light);
-  color: var(--dev-warning);
-}
+/* Estilos de badge de estado: ver bloque unificado .flow-status-badge más arriba */
 
 /* Botones del Builder */
 .btn-builder-primary {
@@ -13419,6 +13410,7 @@ body.sidebar-collapsed .living-container {
   flex-wrap: wrap;
 }
 
+.builder-footer .flow-status-badge,
 .builder-footer .builder-status-badge {
   margin-left: 4px;
 }

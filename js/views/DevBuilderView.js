@@ -428,7 +428,7 @@ class DevBuilderView extends DevBaseView {
       <!-- Footer: mensaje + estado + todas las acciones -->
       <footer class="builder-footer" id="builderFooter">
         <div class="builder-footer-message" id="builderFooterMessage"></div>
-        <span class="builder-status-badge draft" id="flowStatusBadge">Borrador</span>
+        <span class="flow-status-badge draft" id="flowStatusBadge">Borrador</span>
         <div class="builder-footer-actions" id="builderFooterActions">
           <button type="button" class="btn-builder-footer btn-save-draft" id="btnSaveDraft" style="display: none;">
             <i class="ph ph-floppy-disk"></i> Guardar flujo
@@ -843,7 +843,7 @@ class DevBuilderView extends DevBaseView {
       published: 'Publicado'
     };
     
-    badge.className = `builder-status-badge ${this.flowData.status}`;
+    badge.className = `flow-status-badge ${this.flowData.status}`;
     badge.textContent = statusLabels[this.flowData.status] || 'Borrador';
   }
 

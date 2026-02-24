@@ -175,11 +175,13 @@ class StudioView extends BaseView {
 
   /**
    * Adaptador canónico: construye el objeto flujo que usa Studio a partir de content_flows + flow_modules.
-   * Toma el primer módulo (por step_order) para input_schema y webhooks; en producción usa webhook_url_prod con fallback a test.
+   * Toma el primer módulo (por step_order) para input_schema y webhooks. URL de webhook vía FlowWebhookService.
    */
   buildFlowFromFirstModule(flow) {
     const modules = (flow.flow_modules || []).slice().sort((a, b) => (a.step_order ?? 0) - (b.step_order ?? 0));
     const first = modules[0];
+    const Service = (typeof window !== 'undefined' && window.FlowWebhookService) ? window.FlowWebhookService : null;
+    const webhookUrlProd = Service ? Service.getWebhookUrl(first, 'prod') : (first?.webhook_url_prod || first?.webhook_url_test || null);
     return {
       id: flow.id,
       name: flow.name,
@@ -188,7 +190,7 @@ class StudioView extends BaseView {
       output_type: flow.output_type,
       execution_mode: flow.execution_mode || 'single_step',
       input_schema: first?.input_schema ?? {},
-      webhook_url: first?.webhook_url_prod || first?.webhook_url_test || null,
+      webhook_url: webhookUrlProd,
       webhook_url_test: first?.webhook_url_test,
       webhook_url_prod: first?.webhook_url_prod
     };
@@ -272,19 +274,29 @@ class StudioView extends BaseView {
       return;
     }
 
-    formEl.innerHTML = fields.map(f => this.renderFormField(f)).join('');
+    const Registry = window.InputRegistry;
+    if (Registry && Registry.renderFormFromSchema) {
+      formEl.innerHTML = Registry.renderFormFromSchema(fields, {
+        idPrefix: 'studio-',
+        wrapperClass: 'studio-field',
+        showLabel: true,
+        showHelper: true,
+        showRequired: true
+      });
+      if (Registry.initFormPickers) Registry.initFormPickers(formEl);
+    } else {
+      formEl.innerHTML = fields.map(f => this.renderFormField(f)).join('');
+      if (Registry && Registry.initFormPickers) Registry.initFormPickers(formEl);
+      else if (Registry) {
+        if (Registry.initColorsPicker) Registry.initColorsPicker(formEl);
+        if (Registry.initAspectRatioPicker) Registry.initAspectRatioPicker(formEl);
+      }
+    }
 
     formEl.querySelectorAll('input, textarea, select').forEach(el => {
       el.addEventListener('input', () => this.updateCreditsDisplay());
       el.addEventListener('change', () => this.updateCreditsDisplay());
     });
-
-    if (window.InputRegistry && window.InputRegistry.initColorsPicker) {
-      window.InputRegistry.initColorsPicker(formEl);
-    }
-    if (window.InputRegistry && window.InputRegistry.initAspectRatioPicker) {
-      window.InputRegistry.initAspectRatioPicker(formEl);
-    }
 
     // Poblar carruseles, selectores de enfoque y colores por defecto desde la marca
     setTimeout(() => {

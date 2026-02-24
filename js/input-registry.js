@@ -1021,6 +1021,50 @@
     });
   }
 
+  /**
+   * Renderiza un formulario completo desde un array de campos (input_schema).
+   * Centraliza la lógica usada por StudioView, DevTestView y Builder.
+   * @param {Array<Object>} fields - Campos del schema (key/name, label, input_type, etc.)
+   * @param {Object} opts - idPrefix, wrapperClass, showLabel, showHelper, showRequired
+   * @returns {string} HTML del formulario
+   */
+  function renderFormFromSchema(fields, opts) {
+    if (!Array.isArray(fields) || fields.length === 0) return '';
+    opts = opts || {};
+    return fields.map(function (f) {
+      var field = f && typeof f === 'object' ? {
+        key: f.key || f.name || f.id || 'field',
+        name: f.name || f.key || f.id || 'field',
+        label: f.label,
+        description: f.description,
+        required: f.required !== false,
+        input_type: f.input_type || f.type,
+        type: f.type || f.input_type,
+        options: f.options,
+        placeholder: f.placeholder,
+        default: f.default,
+        defaultValue: f.defaultValue !== undefined ? f.defaultValue : f.default
+      } : { key: 'field', label: '', required: false };
+      return renderFormFieldWithWrapper(field, {
+        idPrefix: opts.idPrefix,
+        wrapperClass: opts.wrapperClass,
+        showLabel: opts.showLabel !== false,
+        showHelper: opts.showHelper !== false,
+        showRequired: opts.showRequired !== false,
+        required: field.required
+      });
+    }).join('');
+  }
+
+  /**
+   * Inicializa pickers de color y aspect ratio dentro de un contenedor (formulario ya renderizado).
+   */
+  function initFormPickers(container) {
+    if (!container) return;
+    initColorsPicker(container);
+    initAspectRatioPicker(container);
+  }
+
   function hexToHSL(hex) {
     var clean = (hex || '').toString().replace(/^#/, '');
     if (clean.length < 6) clean = '000000';
@@ -1325,6 +1369,8 @@
     renderFormField: renderFormField,
     wrapFormField: wrapFormField,
     renderFormFieldWithWrapper: renderFormFieldWithWrapper,
+    renderFormFromSchema: renderFormFromSchema,
+    initFormPickers: initFormPickers,
     isStructural: isStructural,
     hasOwnLabel: hasOwnLabel,
     getDefaultTemplates: getDefaultTemplates,

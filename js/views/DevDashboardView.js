@@ -335,7 +335,7 @@ class DevDashboardView extends DevBaseView {
         <div class="dev-flow-info">
           <div class="dev-flow-name">${this.escapeHtml(flow.name)}</div>
           <div class="dev-flow-meta">
-            <span class="dev-flow-status status-${flow.status}">${this.getStatusLabel(flow.status)}</span>
+            <span class="flow-status-badge ${flow.status}">${this.getStatusLabel(flow.status)}</span>
             <span class="dev-flow-runs"><i class="fas fa-play"></i> ${this.formatNumber(flow.run_count || 0)}</span>
           </div>
         </div>
