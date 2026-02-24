@@ -4663,6 +4663,9 @@ body.entrance-done .signin-container {
     position: relative;
     overflow-x: hidden;
     overflow-y: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Fondo negro completamente */
