@@ -771,8 +771,16 @@ class BaseView {
       target.style.maxWidth = 'none';
       target.style.minHeight = 'auto';
       target.style.maxHeight = 'none';
+    } else if (isBrandName) {
+      // Nombre de marca: no fijar ancho en píxeles para que el texto pueda hacer wrap y no se desborde
+      target.style.width = '100%';
+      target.style.maxWidth = '100%';
+      target.style.minWidth = '0';
+      target.style.height = 'auto';
+      target.style.minHeight = 'auto';
+      target.style.maxHeight = 'none';
     } else {
-      // Para elementos protegidos, preservar los valores del CSS
+      // Para el resto de elementos protegidos, preservar los valores del CSS
       if (padding && padding !== '0px') {
         target.style.padding = padding;
       }
