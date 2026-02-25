@@ -8539,10 +8539,9 @@ body.sidebar-collapsed .living-container {
     position: relative;
     cursor: pointer;
     background: var(--bg-card);
-    border-radius: 0;
+    border-radius: var(--radius-lg);
     overflow: hidden;
     box-shadow: var(--shadow-floating);
-    border: 1px solid var(--white-5, rgba(255, 255, 255, 0.06));
     transition: color 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
@@ -8561,23 +8560,21 @@ body.sidebar-collapsed .living-container {
     background: var(--bg-card);
 }
 
-/* Masonry Flat: bloques de distintas alturas que rellenan el espacio sin huecos */
 .living-history-masonry {
     column-count: 3;
-    column-gap: 16px;
+    column-gap: 5px;
     column-fill: balance;
-    width: 100%;
 }
 
 .living-masonry-item {
     break-inside: avoid;
-    margin-bottom: 16px;
+    margin-bottom: 5px;
     page-break-inside: avoid;
     display: inline-block;
     width: 100%;
 }
 
-/* Card de imagen - Masonry Flat: bloque con borde sutil */
+/* Card de imagen - Sin radio de esquinas */
 .history-image-card {
     width: 100%;
     position: relative;
@@ -8585,9 +8582,8 @@ body.sidebar-collapsed .living-container {
     border-radius: 0;
     overflow: hidden;
     box-shadow: var(--shadow-card);
-    border: 1px solid var(--white-5, rgba(255, 255, 255, 0.06));
     transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-    background: var(--living-bg-card, var(--bg-card));
+    background: transparent;
 }
 
 .history-image-card:hover {
@@ -8667,7 +8663,7 @@ body.sidebar-collapsed .living-container {
     width: 100%;
     min-height: 200px;
     border-radius: 0;
-    background: var(--living-bg-card, rgba(15, 17, 21, 0.6));
+    background: rgba(15, 17, 21, 0.6);
     border: 1px solid var(--white-5);
     display: flex;
     flex-direction: column;
@@ -8802,13 +8798,8 @@ body.sidebar-collapsed .living-container {
 @media (max-width: 1024px) {
     .living-history-masonry {
         column-count: 2;
-        column-gap: 16px;
     }
-
-    .living-masonry-item {
-        margin-bottom: 16px;
-    }
-
+    
     .history-video-card {
         height: 200px;
     }
@@ -8825,13 +8816,8 @@ body.sidebar-collapsed .living-container {
     
     .living-history-masonry {
         column-count: 1;
-        column-gap: 16px;
     }
-
-    .living-masonry-item {
-        margin-bottom: 16px;
-    }
-
+    
     .history-video-card {
         height: 180px;
     }
@@ -10901,6 +10887,7 @@ body.sidebar-collapsed .living-container {
     margin-bottom: 1.5rem;
 }
 
+/* Masonry flat: columnas con ítems de alturas variables */
 .products-grid {
     column-count: 4;
     column-gap: 1.5rem;
@@ -10966,6 +10953,13 @@ body.sidebar-collapsed .living-container {
     border-radius: var(--radius-lg);
     transition: transform 0.3s ease;
 }
+
+/* Masonry flat: variantes de proporción para bloques de distintos tamaños */
+.product-card--masonry-0 .product-card-image { aspect-ratio: 1; }
+.product-card--masonry-1 .product-card-image { aspect-ratio: 4/3; }
+.product-card--masonry-2 .product-card-image { aspect-ratio: 3/4; }
+.product-card--masonry-3 .product-card-image { aspect-ratio: 3/2; }
+.product-card--masonry-4 .product-card-image { aspect-ratio: 2/3; }
 
 .product-card:hover .product-card-image {
     transform: scale(1.02);

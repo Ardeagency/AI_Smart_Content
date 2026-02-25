@@ -665,10 +665,10 @@ if (typeof window.ProductsManager === 'undefined') {
         productsGrid.style.display = 'block';
         productsGrid.innerHTML = '';
 
-        // Renderizar productos con animación escalonada
+        // Renderizar productos con animación escalonada (masonry: variantes de tamaño por índice)
         filteredProducts.forEach((product, index) => {
             try {
-                const card = this.createProductCard(product);
+                const card = this.createProductCard(product, index);
                 if (!card) {
                     console.error(`❌ Error: createProductCard retornó null para producto ${product.id}`);
                     return;
@@ -695,9 +695,11 @@ if (typeof window.ProductsManager === 'undefined') {
         }, filteredProducts.length * 50 + 100);
     }
 
-    createProductCard(product) {
+    createProductCard(product, index = 0) {
         const card = document.createElement('div');
-        card.className = 'product-card';
+        // Masonry: variantes de tamaño (0-4) para layout tipo masonry flat
+        const sizeVariant = index % 5;
+        card.className = `product-card product-card--masonry-${sizeVariant}`;
         card.dataset.productId = product.id;
         card.dataset.tipoProducto = product.tipo_producto || 'otro';
 
