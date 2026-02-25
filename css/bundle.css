@@ -6425,6 +6425,32 @@ h1.brand-name-large[contenteditable="true"]:hover,
     gap: 0.5rem;
 }
 
+.typography-label {
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+    display: block;
+}
+
+.typography-select {
+    width: 100%;
+    max-width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    background: var(--bg-secondary, #1f1d1b);
+    border: 1px solid var(--border-divider, #333);
+    border-radius: 6px;
+    cursor: pointer;
+    margin-bottom: 0.5rem;
+}
+
+.typography-select:focus {
+    outline: none;
+    border-color: var(--accent-primary, #6A5ACD);
+}
+
 .typography-font-name {
     font-size: var(--font-size-base);
     font-weight: 600;
