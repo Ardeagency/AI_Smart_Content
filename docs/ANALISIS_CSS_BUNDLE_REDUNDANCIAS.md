@@ -1,7 +1,7 @@
-# Análisis de redundancias en `css/bundle.css`
+# Análisis de redundancias en el CSS
 
 **Fecha:** 25 feb 2025  
-**Archivo:** `css/bundle.css` (~20.355 líneas)  
+**Archivo analizado:** `css/bundle-v1.css` (legacy, ~20.355 líneas). **Bundle activo:** `css/bundle.css` (v2 unificado).  
 **Objetivo:** Identificar estilos duplicados, redundantes e innecesarios para poder reducir el bundle y unificar criterios.
 
 ---
@@ -167,14 +167,15 @@ Por tanto, los cambios deben hacerse en los CSS fuente (base.css, navigation.css
 
 ---
 
-## 10. Bundle v2 creado
+## 10. Bundle v2 como bundle activo
 
-Se creó **`css/bundle-v2.css`** como nueva versión unificada:
+**`css/bundle.css`** es ahora el bundle **activo** (estilo unificado v2). El antiguo bundle se guardó como **`css/bundle-v1.css`** (legacy/backup).
 
-- **Design system al inicio:** un solo `:root`, dos estilos de botón (`.btn-primary` = blanco/texto negro, `.btn-secondary` = borde/texto blanco o primary según contexto), un solo sistema de modal (`.modal`, `.modal-overlay`, `.modal-content`, `.modal-header`, `.modal-body`, `.modal-footer`, `.modal-close`) y un solo sistema de formularios.
-- **Resto del bundle** (navegación, landing, signin, vistas…) concatenado después; se eliminó la redefinición de `.error-actions .btn-primary` / `.btn-secondary` para que use los botones globales.
-- **Uso:** en el HTML cargar `bundle-v2.css` en lugar de `bundle.css` cuando se quiera usar el estilo unificado. Para migrar del todo, ir sustituyendo en cada vista los modales/botones/formularios por las clases del design system y quitando redefiniciones en CSS.
+- **Design system al inicio de `bundle.css`:** un solo `:root`, dos estilos de botón (`.btn-primary` / `.btn-secondary`), un solo modal y un solo sistema de formularios.
+- **index.html** sigue enlazando `/css/bundle.css`; no hace falta cambiar nada para usar el nuevo estilo.
+- **Rollback:** si hubiera que volver al estilo anterior, renombrar `bundle.css` → `bundle-v2.css`, `bundle-v1.css` → `bundle.css`.
+- **build-css.sh** genera `bundle-v1.css` (desde `css/legacy/`), no sobrescribe `bundle.css`.
 
 ---
 
-*Documento generado a partir del análisis de `css/bundle.css`.*
+*Documento generado a partir del análisis del bundle legacy (ahora bundle-v1.css).*

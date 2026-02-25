@@ -1,14 +1,15 @@
 #!/bin/bash
 #
-# build-css.sh — Genera css/bundle.css concatenando los CSS de css/legacy/ en orden.
-# Ejecutar desde la raiz del proyecto:  bash scripts/build-css.sh
+# build-css.sh — Genera css/bundle-v1.css (legacy) concatenando los CSS de css/legacy/.
+# El bundle activo es css/bundle.css (estilo unificado v2). No sobrescribir bundle.css.
+# Ejecutar desde la raiz:  bash scripts/build-css.sh
 #
 
 set -e
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CSS="$ROOT/css/legacy"
-OUT="$ROOT/css/bundle.css"
+OUT="$ROOT/css/bundle-v1.css"
 
 FILES=(
   "base.css"
@@ -37,9 +38,8 @@ FILES=(
 )
 
 echo "/* ============================================================" > "$OUT"
-echo "   AI Smart Content — CSS Bundle (generado por build-css.sh)" >> "$OUT"
-echo "   NO editar manualmente; editar los archivos individuales" >> "$OUT"
-echo "   y regenerar con: bash scripts/build-css.sh" >> "$OUT"
+echo "   AI Smart Content — CSS Bundle v1 / Legacy (generado por build-css.sh)" >> "$OUT"
+echo "   Bundle activo de la app: css/bundle.css (v2 unificado)" >> "$OUT"
 echo "   ============================================================ */" >> "$OUT"
 echo "" >> "$OUT"
 
@@ -62,6 +62,6 @@ done
 
 BUNDLE_LINES=$(wc -l < "$OUT" | tr -d ' ')
 echo ""
-echo "bundle.css generado: $BUNDLE_LINES lineas ($TOTAL de fuentes)"
+echo "bundle-v1.css (legacy) generado: $BUNDLE_LINES lineas ($TOTAL de fuentes)"
 echo "Archivos incluidos: ${#FILES[@]}"
 echo "Salida: $OUT"
