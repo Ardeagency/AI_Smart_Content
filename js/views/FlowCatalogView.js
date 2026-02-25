@@ -120,6 +120,11 @@ class FlowCatalogView extends BaseView {
           <p>Cargando catálogo...</p>
         </div>
         <div class="flow-catalog-content" id="flowCatalogContent" style="display: none;">
+          <!-- Mensaje cuando no hay flujos en esta sección -->
+          <div class="flow-catalog-empty" id="flowCatalogEmpty" style="display: none;" aria-live="polite">
+            <p class="flow-catalog-empty-text">PROXIMAMENTE</p>
+          </div>
+
           <!-- HERO: carousel horizontal (nuevos en home / populares en categoría) -->
           <section class="flow-catalog-hero-section" id="flowCatalogHeroSection">
             <div class="flow-catalog-hero-track" id="flowCatalogHeroTrack"></div>
@@ -251,6 +256,9 @@ class FlowCatalogView extends BaseView {
     }
     this.bindHeroNav();
     this.bindCategoryClicks();
+
+    const emptyEl = document.getElementById('flowCatalogEmpty');
+    if (emptyEl) emptyEl.style.display = this.flows.length === 0 ? '' : 'none';
   }
 
   showContentError() {

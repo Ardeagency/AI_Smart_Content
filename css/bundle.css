@@ -9803,6 +9803,24 @@ body.sidebar-collapsed .living-container {
 .flow-catalog-loading .fa-spin { font-size: var(--font-size-3xl); color: var(--accent-warm); }
 
 /* ---------- HERO CAROUSEL ---------- */
+/* Estado vacío: mensaje PROXIMAMENTE cuando no hay flujos */
+.flow-catalog-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+  padding: 3rem 2rem;
+  text-align: center;
+}
+.flow-catalog-empty-text {
+  margin: 0;
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
 .flow-catalog-hero-section {
   position: relative;
   width: 100%;
