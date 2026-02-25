@@ -127,56 +127,56 @@ class FlowCatalogView extends BaseView {
             <button type="button" class="flow-catalog-hero-nav flow-catalog-hero-next" id="heroNext" aria-label="Siguiente"><i class="fas fa-chevron-right"></i></button>
           </section>
 
-          <!-- Continuar donde lo dejaste: solo si el usuario tiene runs (flow_runs) -->
+          <!-- Continuar donde lo dejaste: solo si el usuario tiene runs; oculta por defecto -->
           ${!isCategoryView ? `
-          <section class="flow-catalog-row-section" id="sectionSaved">
+          <section class="flow-catalog-row-section" id="sectionSaved" style="display: none;">
             <h2 class="flow-catalog-row-title">Continuar donde lo dejaste</h2>
             <div class="flow-catalog-row-scroll" id="rowSaved"></div>
           </section>` : ''}
 
-          <!-- Categorías visuales (grid por content_categories / subcategory_id) -->
-          <section class="flow-catalog-row-section" id="sectionCategories">
+          <!-- Categorías visuales: oculta por defecto; se muestra solo si hay flujos -->
+          <section class="flow-catalog-row-section" id="sectionCategories" style="display: none;">
             <h2 class="flow-catalog-row-title">Categorías visuales</h2>
             <div class="flow-catalog-categories-grid" id="categoriesVisualGrid"></div>
           </section>
 
           ${!isCategoryView ? `
-          <!-- Todos los flujos -->
-          <section class="flow-catalog-row-section" id="sectionAllFlows">
-            <h2 class="flow-catalog-row-title">Todos los flujos</h2>
-            <div class="flow-catalog-row-scroll" id="rowAllFlows"></div>
-          </section>
-
-          <!-- Las siguientes solo se muestran si hay flujos -->
-          <section class="flow-catalog-row-section" id="sectionLiked">
+          <!-- Las siguientes solo se muestran si hay flujos; ocultas por defecto -->
+          <section class="flow-catalog-row-section" id="sectionLiked" style="display: none;">
             <h2 class="flow-catalog-row-title">Flujos que te han gustado</h2>
             <div class="flow-catalog-row-scroll" id="rowLiked"></div>
           </section>
 
-          <section class="flow-catalog-row-section" id="sectionRecent">
+          <section class="flow-catalog-row-section" id="sectionRecent" style="display: none;">
             <h2 class="flow-catalog-row-title">Últimos flujos utilizados</h2>
             <div class="flow-catalog-row-scroll" id="rowRecent"></div>
           </section>
 
-          <section class="flow-catalog-row-section" id="sectionRecommended">
+          <section class="flow-catalog-row-section" id="sectionRecommended" style="display: none;">
             <h2 class="flow-catalog-row-title">Flujos que te podrían interesar</h2>
             <div class="flow-catalog-row-scroll" id="rowRecommended"></div>
           </section>
 
-          <section class="flow-catalog-row-section" id="sectionTrending">
+          <section class="flow-catalog-row-section" id="sectionTrending" style="display: none;">
             <h2 class="flow-catalog-row-title">Flujos en tendencia</h2>
             <div class="flow-catalog-row-scroll" id="rowTrending"></div>
           </section>
 
-          <section class="flow-catalog-row-section" id="sectionLoved">
+          <section class="flow-catalog-row-section" id="sectionLoved" style="display: none;">
             <h2 class="flow-catalog-row-title">Flujos amados por el público</h2>
             <div class="flow-catalog-row-scroll" id="rowLoved"></div>
           </section>
 
           <!-- Por tema profesional (subcategory_id) -->
-          <section class="flow-catalog-row-section" id="sectionBySubcategory">
+          <section class="flow-catalog-row-section" id="sectionBySubcategory" style="display: none;">
             <h2 class="flow-catalog-row-title">Por tema profesional</h2>
             <div id="galleryBySubHome"></div>
+          </section>
+
+          <!-- Todos los flujos: última sección -->
+          <section class="flow-catalog-row-section" id="sectionAllFlows" style="display: none;">
+            <h2 class="flow-catalog-row-title">Todos los flujos</h2>
+            <div class="flow-catalog-row-scroll" id="rowAllFlows"></div>
           </section>
           ` : `
           <!-- VIEW CATEGORÍA: subcategorías strip -->
@@ -241,13 +241,13 @@ class FlowCatalogView extends BaseView {
       this.renderGalleryBySubcategory();
     } else {
       this.renderSectionSaved();
-      this.renderSectionAllFlows();
       this.renderSectionLiked();
       this.renderSectionRecent();
       this.renderSectionRecommended();
       this.renderSectionTrending();
       this.renderSectionLoved();
       this.renderGalleryBySubcategoryHome();
+      this.renderSectionAllFlows();
     }
     this.bindHeroNav();
     this.bindCategoryClicks();
@@ -305,23 +305,29 @@ class FlowCatalogView extends BaseView {
 
   /**
    * Carga flujos del catálogo. Filtra por category_id o subcategory_id (content_flows)
-   * según la vista activa.
+   * según la vista activa. En home, intenta primero con show_in_catalog=true; si no
+   * hay resultados, vuelve a cargar sin ese filtro para mostrar flujos activos manuales.
    */
   async loadFlows() {
     if (!this.supabase) return;
     try {
-      let q = this.supabase
-        .from('content_flows')
-        .select('id, name, description, token_cost, output_type, flow_image_url, category_id, subcategory_id, flow_category_type, likes_count, saves_count, run_count, created_at, status')
-        .eq('is_active', true)
-        .eq('flow_category_type', 'manual')
-        .eq('show_in_catalog', true);
-      if (this.selectedSubcategoryId) {
-        q = q.eq('subcategory_id', this.selectedSubcategoryId);
-      } else if (this.selectedCategoryId) {
-        q = q.eq('category_id', this.selectedCategoryId);
+      const baseFilter = () => {
+        let q = this.supabase
+          .from('content_flows')
+          .select('id, name, description, token_cost, output_type, flow_image_url, category_id, subcategory_id, flow_category_type, likes_count, saves_count, run_count, created_at, status')
+          .eq('is_active', true)
+          .eq('flow_category_type', 'manual');
+        if (this.selectedSubcategoryId) q = q.eq('subcategory_id', this.selectedSubcategoryId);
+        else if (this.selectedCategoryId) q = q.eq('category_id', this.selectedCategoryId);
+        return q;
+      };
+      let q = baseFilter().eq('show_in_catalog', true);
+      let { data, error } = await q.order('created_at', { ascending: false });
+      if (!this.selectedCategoryId && !this.selectedSubcategoryId && (!data || data.length === 0)) {
+        const res = await baseFilter().order('created_at', { ascending: false });
+        data = res.data;
+        error = res.error;
       }
-      const { data, error } = await q.order('created_at', { ascending: false });
       this.flows = !error && data ? data : [];
       this.flowsById = new Map(this.flows.map(f => [f.id, f]));
     } catch (e) {
