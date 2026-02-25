@@ -106,7 +106,24 @@
           </div>
         </section>
 
-        <!-- Sección 5: Tono Modificador -->
+        <!-- Sección 5: Productos / Entidades de la campaña (campaign_entities) -->
+        <section class="campaign-section campaign-section-entities" id="sectionEntities">
+          <h2 class="campaign-section-title">Productos / Entidades de la campaña</h2>
+          <p class="campaign-section-desc">Asocia productos o entidades de marca a esta campaña. Marca uno como hero si es el protagonista.</p>
+          <div class="campaign-section-content">
+            <div class="campaign-entities-list" id="campaignEntitiesList"></div>
+            <div class="campaign-entities-add" id="campaignEntitiesAddRow" style="display: none;">
+              <select id="campaignEntitySelect" class="campaign-entity-select">
+                <option value="">Seleccionar entidad...</option>
+              </select>
+              <button type="button" class="btn btn-primary btn-sm" id="campaignEntityAddBtn">Añadir</button>
+              <button type="button" class="btn btn-ghost btn-sm" id="campaignEntityAddCancel">Cancelar</button>
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm campaign-section-add-trigger" id="campaignEntitiesToggleAdd"><i class="fas fa-plus"></i> Añadir producto o entidad</button>
+          </div>
+        </section>
+
+        <!-- Sección 6: Tono Modificador -->
         <section class="campaign-section campaign-section-tono" id="sectionTono">
           <h2 class="campaign-section-title">Tono modificador</h2>
           <p class="campaign-section-desc">Puedes elegir varios.</p>

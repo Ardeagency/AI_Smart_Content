@@ -19,7 +19,6 @@ FILES=(
   "planes.css"
   "hogar.css"
   "brands.css"
-  "campaigns.css"
   "audiences.css"
   "create.css"
   "content.css"
