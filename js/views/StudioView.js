@@ -77,12 +77,6 @@ class StudioView extends BaseView {
         </main>
 
         <aside class="studio-sidebar-creative">
-          <div class="studio-sidebar-tabs">
-            <span class="studio-tab studio-tab-past">PAST</span>
-            <button type="button" class="studio-tab studio-tab-future active">
-              FUTURE <i class="fas fa-caret-right"></i>
-            </button>
-          </div>
           <div class="studio-sidebar-content">
             <div class="studio-flows-list" id="studioFlowsList"></div>
             <div class="studio-flow-form-wrap" id="studioFlowFormWrap" style="display: none;">
@@ -857,7 +851,6 @@ class StudioView extends BaseView {
     const btn = document.getElementById('studioProducirBtn');
     if (btn) btn.addEventListener('click', () => this.producir());
 
-    const tabFuture = document.querySelector('.studio-tab-future');
     const backFlows = document.getElementById('studioBackFlows');
     const showFlowsList = () => {
       const listEl = document.getElementById('studioFlowsList');
@@ -870,7 +863,6 @@ class StudioView extends BaseView {
       if (b) b.disabled = true;
       if (window.router) window.router.navigate(this.getStudioBasePath(), true);
     };
-    if (tabFuture) tabFuture.addEventListener('click', showFlowsList);
     if (backFlows) backFlows.addEventListener('click', showFlowsList);
   }
 
