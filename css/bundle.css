@@ -14696,6 +14696,73 @@ body.sidebar-collapsed .living-container {
   color: var(--text-muted);
 }
 
+/* Form: aspect ratio picker — grid de iconos con forma (cuadrado, rectángulo vertical/horizontal) */
+.aspect-ratio-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.aspect-ratio-card {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: var(--transition, border-color 0.15s, background 0.15s);
+  font-size: var(--font-size-sm);
+}
+.aspect-ratio-card:hover {
+  border-color: var(--border-light);
+  background: var(--bg-hover);
+}
+.aspect-ratio-card.selected {
+  border-color: var(--dev-primary, var(--primary-color));
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 1px var(--dev-primary, var(--primary-color));
+}
+.aspect-ratio-card--preview {
+  cursor: default;
+  pointer-events: none;
+}
+.aspect-ratio-icon {
+  display: block;
+  width: 28px;
+  border: 2px solid var(--text-muted);
+  border-radius: 2px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  background: transparent;
+}
+/* Altura según ratio: la forma representa el formato (cuadrado, vertical, horizontal) */
+.aspect-ratio-icon[data-ratio="1:1"] { aspect-ratio: 1; width: 24px; }
+.aspect-ratio-icon[data-ratio="2:3"] { aspect-ratio: 2/3; }
+.aspect-ratio-icon[data-ratio="3:2"] { aspect-ratio: 3/2; }
+.aspect-ratio-icon[data-ratio="4:3"] { aspect-ratio: 4/3; }
+.aspect-ratio-icon[data-ratio="3:4"] { aspect-ratio: 3/4; }
+.aspect-ratio-icon[data-ratio="4:5"] { aspect-ratio: 4/5; }
+.aspect-ratio-icon[data-ratio="5:4"] { aspect-ratio: 5/4; }
+.aspect-ratio-icon[data-ratio="16:9"] { aspect-ratio: 16/9; width: 32px; }
+.aspect-ratio-icon[data-ratio="9:16"] { aspect-ratio: 9/16; }
+.aspect-ratio-icon[data-ratio="21:9"] { aspect-ratio: 21/9; width: 32px; }
+.aspect-ratio-card.selected .aspect-ratio-icon {
+  border-color: var(--dev-primary, var(--primary-color));
+  background: rgba(255, 255, 255, 0.06);
+}
+.aspect-ratio-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.aspect-ratio-card.selected .aspect-ratio-label {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
 /* Form: selection checkboxes list */
 .input-selection-checkboxes {
   display: flex;
