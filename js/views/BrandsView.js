@@ -1271,10 +1271,7 @@ class BrandsView extends BaseView {
     
     if (assets.length === 0) {
       container.innerHTML = `
-        <div class="identity-file-empty">
-          <div class="identity-file-empty-text">No files uploaded</div>
-          <div class="identity-file-empty-hint">Upload brand identity files</div>
-        </div>
+        <div class="identity-file-empty"></div>
       `;
       return;
     }
