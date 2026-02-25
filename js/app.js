@@ -142,12 +142,7 @@ class App {
 
     // ── Org: Studio ──
     const studioLoader = this._lazy('StudioView', [...inputDeps, '/js/services/FlowWebhookService.js', '/js/products.js', '/js/views/StudioView.js']);
-    r.register('/org/:orgId/studio', studioLoader, auth);
-    r.register('/studio', studioLoader, auth);
-    r.register('/org/:orgId/studio/:flowSlug', studioLoader, auth);
-    r.register('/studio/:flowSlug', studioLoader, auth);
-
-    // ── Org: Flow Catalog ──
+    // Catálogo ANTES que studio/:flowSlug para que /studio/catalog no se interprete como Estudio con flowSlug "catalog"
     const catalogLoader = this._lazy('FlowCatalogView', ['/js/views/FlowCatalogView.js']);
     r.register('/org/:orgId/studio/catalog/sub/:subcategoryId', catalogLoader, auth);
     r.register('/org/:orgId/studio/catalog/:categoryId', catalogLoader, auth);
@@ -155,6 +150,11 @@ class App {
     r.register('/studio/catalog/sub/:subcategoryId', catalogLoader, auth);
     r.register('/studio/catalog/:categoryId', catalogLoader, auth);
     r.register('/studio/catalog', catalogLoader, auth);
+
+    r.register('/org/:orgId/studio', studioLoader, auth);
+    r.register('/studio', studioLoader, auth);
+    r.register('/org/:orgId/studio/:flowSlug', studioLoader, auth);
+    r.register('/studio/:flowSlug', studioLoader, auth);
 
     // ── Org: Audiences ──
     const audiencesLoader = this._lazy('AudiencesView', ['/js/views/AudiencesView.js']);
