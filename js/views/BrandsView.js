@@ -485,14 +485,13 @@ class BrandsView extends BaseView {
   }
 
   /** Aplica el degradado de colores de marca al fondo (skeleton hace crossfade a esta capa). Sin colores usa neutro. */
-  applyBrandBackgroundGradient() {
+  applyBrandBackgroundGradient(forceUpdate = false) {
     const container = this.container || document.getElementById('app-container');
-    if (!container) return;
-    const gradientEl = container.querySelector('.background-gradient');
+    const gradientEl = (container && container.querySelector('.background-gradient')) || document.querySelector('.background-gradient');
     if (!gradientEl) return;
     const hexes = this.getBrandColorsHexArray();
     const colorsKey = hexes.join(',');
-    if (this._cachedGradientKey === colorsKey) return;
+    if (!forceUpdate && this._cachedGradientKey === colorsKey) return;
     this._cachedGradientKey = colorsKey;
 
     const gradientCss = hexes.length ? this.buildBrandGradientCss(hexes) : '';
@@ -969,7 +968,7 @@ class BrandsView extends BaseView {
       if (error) throw error;
       await this.loadData();
       this.renderCards();
-      this.applyBrandBackgroundGradient();
+      this.applyBrandBackgroundGradient(true);
     } catch (error) {
       console.error('❌ Error al actualizar color:', error);
       alert('Error al actualizar el color. Por favor, intenta de nuevo.');
@@ -1007,7 +1006,7 @@ class BrandsView extends BaseView {
       if (error) throw error;
       await this.loadData();
       this.renderCards();
-      this.applyBrandBackgroundGradient();
+      this.applyBrandBackgroundGradient(true);
     } catch (error) {
       const isDuplicate = (error?.code === '23505') || (error?.message || '').includes('duplicate key');
       console.error('❌ Error al crear color:', error);
@@ -1721,9 +1720,10 @@ class BrandsView extends BaseView {
 
       if (error) throw error;
 
-      // Recargar colores
+      // Recargar colores y actualizar degradado de fondo
       await this.loadData();
       this.renderCards();
+      this.applyBrandBackgroundGradient(true);
       console.log(`✅ Color eliminado`);
     } catch (error) {
       console.error(`❌ Error al eliminar color:`, error);
