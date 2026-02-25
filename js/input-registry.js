@@ -449,18 +449,18 @@
     return '';
   }
 
-  /** Aspect ratio: grid of cards with icon (shape) + label. Single selection. Defines format of production. */
+  /** Aspect ratio: iconos 16x16 en fila (verticales, horizontales, cuadrado). Sin fondo ni borde en celdas. */
   var DEFAULT_ASPECT_RATIO_OPTIONS = [
-    { value: '1:1', label: '1:1' },
     { value: '2:3', label: '2:3' },
-    { value: '3:2', label: '3:2' },
-    { value: '4:3', label: '4:3' },
     { value: '3:4', label: '3:4' },
     { value: '4:5', label: '4:5' },
+    { value: '9:16', label: '9:16' },
+    { value: '3:2', label: '3:2' },
+    { value: '4:3', label: '4:3' },
     { value: '5:4', label: '5:4' },
     { value: '16:9', label: '16:9' },
-    { value: '9:16', label: '9:16' },
-    { value: '21:9', label: '21:9' }
+    { value: '21:9', label: '21:9' },
+    { value: '1:1', label: '1:1' }
   ];
   function getAspectRatioOptions(f) {
     return (f.options && f.options.length) ? f.options : DEFAULT_ASPECT_RATIO_OPTIONS;
@@ -970,7 +970,7 @@
       { id: 'tags', name: 'Tags', description: 'Etiquetas añadibles/eliminables', category: 'basic', icon_name: 'tag', base_schema: { input_type: 'tags', type: 'tags', data_type: 'array', placeholder: 'Añade tags...', defaultValue: [] } },
       { id: 'flags', name: 'Flags', description: 'Dropdown preconfigurado: idioma, país o etnia/origen (flag_category).', category: 'basic', icon_name: 'flag', base_schema: { input_type: 'flags', type: 'flags', data_type: 'string', flag_category: 'language', options: [] } },
       { id: 'colores', name: 'Colores', description: 'Círculos de colores seleccionables (como brands). Máx. 6. El desarrollador define la paleta.', category: 'basic', icon_name: 'palette', base_schema: { input_type: 'colores', type: 'colores', data_type: 'array', max_selections: 6, options: [{ value: '#000000', label: 'Negro' }, { value: '#ef4444', label: 'Rojo' }, { value: '#22c55e', label: 'Verde' }, { value: '#3b82f6', label: 'Azul' }, { value: '#eab308', label: 'Amarillo' }, { value: '#8b5cf6', label: 'Violeta' }] } },
-      { id: 'aspect_ratio', name: 'Aspect ratio', description: 'Formato de producción (1:1, 16:9, etc.). Grid de tarjetas con icono.', category: 'basic', icon_name: 'crop', base_schema: { input_type: 'aspect_ratio', type: 'aspect_ratio', data_type: 'string', options: [{ value: '1:1', label: '1:1' }, { value: '2:3', label: '2:3' }, { value: '3:2', label: '3:2' }, { value: '4:3', label: '4:3' }, { value: '3:4', label: '3:4' }, { value: '4:5', label: '4:5' }, { value: '5:4', label: '5:4' }, { value: '16:9', label: '16:9' }, { value: '9:16', label: '9:16' }, { value: '21:9', label: '21:9' }] } },
+      { id: 'aspect_ratio', name: 'Aspect ratio', description: 'Formato de producción. Iconos 16x16 (verticales, horizontales, cuadrado).', category: 'basic', icon_name: 'crop', base_schema: { input_type: 'aspect_ratio', type: 'aspect_ratio', data_type: 'string', options: [{ value: '2:3', label: '2:3' }, { value: '3:4', label: '3:4' }, { value: '4:5', label: '4:5' }, { value: '9:16', label: '9:16' }, { value: '3:2', label: '3:2' }, { value: '4:3', label: '4:3' }, { value: '5:4', label: '5:4' }, { value: '16:9', label: '16:9' }, { value: '21:9', label: '21:9' }, { value: '1:1', label: '1:1' }] } },
       { id: 'scope_picker', name: 'Scope picker (enfoque)', description: 'Enfoque de la producción. Toggle «Que la IA decida» y opciones personalizables.', category: 'basic', icon_name: 'target', base_schema: { input_type: 'scope_picker', type: 'scope_picker', data_type: 'object', options: [] } },
       { id: 'brand_selector', name: 'Selector de Marca', description: 'Enfoque de producción: marca (acordeón)', category: 'brand', icon_name: 'storefront', base_schema: { input_type: 'brand_selector', type: 'brand_selector', data_type: 'object' } },
       { id: 'entity_selector', name: 'Selector de Entidad', description: 'Producto/servicio/lugar', category: 'brand', icon_name: 'package', base_schema: { input_type: 'entity_selector', type: 'entity_selector', data_type: 'object', entityTypes: ['product', 'service'] } },
