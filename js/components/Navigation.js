@@ -28,7 +28,7 @@ const SIDEBAR_USER_CONFIG = {
       children: [
         { label: 'Marca', route: 'brand' },
         { label: 'Productos', route: 'products' },
-        { label: 'Servicios', route: 'products' },
+        { label: 'Servicios', route: 'servicios' },
         { label: 'Audiencias', route: 'audiences' },
         { label: 'Campañas', route: 'campaigns' },
         { label: 'Assets', route: 'content' },

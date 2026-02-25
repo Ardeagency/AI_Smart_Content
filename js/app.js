@@ -135,6 +135,11 @@ class App {
     r.register('/products', productsLoader, auth);
     r.register('/products/:productId', productsLoader, auth);
 
+    // ── Org: Servicios ──
+    const servicesLoader = this._lazy('ServicesView', ['/js/views/ServicesView.js']);
+    r.register('/org/:orgId/servicios', servicesLoader, auth);
+    r.register('/servicios', servicesLoader, auth);
+
     // ── Org: Studio ──
     const studioLoader = this._lazy('StudioView', [...inputDeps, '/js/services/FlowWebhookService.js', '/js/products.js', '/js/views/StudioView.js']);
     r.register('/org/:orgId/studio', studioLoader, auth);
