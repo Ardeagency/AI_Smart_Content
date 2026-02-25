@@ -130,3 +130,6 @@ dist/
 
 # Local development
 .local/
+
+# Fondos: solo local, no subir al repo
+recursos/Recursos de Marca/Fondos/
