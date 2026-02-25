@@ -10251,6 +10251,48 @@ body.sidebar-collapsed .living-container {
   margin-bottom: 1.5rem;
 }
 
+/* Categorías visuales: grid de cards (content_categories / subcategory_id) */
+.flow-catalog-categories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1rem;
+  padding: 0.25rem 0;
+}
+.flow-catalog-category-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 88px;
+  padding: 1rem;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: var(--transition);
+}
+.flow-catalog-category-card:hover {
+  border-color: var(--border-light);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+}
+.flow-catalog-category-card.active {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--accent-warm);
+  color: var(--text-primary);
+}
+.flow-catalog-category-card-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-align: center;
+}
+.flow-catalog-category-card-count {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.35rem;
+}
+
 
 /* ========== products.css (846 lineas) ========== */
 

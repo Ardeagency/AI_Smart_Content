@@ -119,48 +119,56 @@ class FlowCatalogView extends BaseView {
             <button type="button" class="flow-catalog-hero-nav flow-catalog-hero-next" id="heroNext" aria-label="Siguiente"><i class="fas fa-chevron-right"></i></button>
           </section>
 
-          <!-- Continue where you left off / Guardados (solo home) -->
+          <!-- Continuar donde lo dejaste: solo si el usuario tiene runs (flow_runs) -->
           ${!isCategoryView ? `
           <section class="flow-catalog-row-section" id="sectionSaved">
             <h2 class="flow-catalog-row-title">Continuar donde lo dejaste</h2>
             <div class="flow-catalog-row-scroll" id="rowSaved"></div>
           </section>` : ''}
 
-          <!-- Categorías principales (strip horizontal) -->
+          <!-- Categorías visuales (grid por content_categories / subcategory_id) -->
           <section class="flow-catalog-row-section" id="sectionCategories">
-            <h2 class="flow-catalog-row-title">Explorar por intención</h2>
-            <div class="flow-catalog-categories-strip" id="categoriesStrip"></div>
+            <h2 class="flow-catalog-row-title">Categorías visuales</h2>
+            <div class="flow-catalog-categories-grid" id="categoriesVisualGrid"></div>
           </section>
 
           ${!isCategoryView ? `
-          <!-- Flujos que te han gustado (rating >= 4) -->
+          <!-- Todos los flujos -->
+          <section class="flow-catalog-row-section" id="sectionAllFlows">
+            <h2 class="flow-catalog-row-title">Todos los flujos</h2>
+            <div class="flow-catalog-row-scroll" id="rowAllFlows"></div>
+          </section>
+
+          <!-- Las siguientes solo se muestran si hay flujos -->
           <section class="flow-catalog-row-section" id="sectionLiked">
             <h2 class="flow-catalog-row-title">Flujos que te han gustado</h2>
             <div class="flow-catalog-row-scroll" id="rowLiked"></div>
           </section>
 
-          <!-- Últimos utilizados -->
           <section class="flow-catalog-row-section" id="sectionRecent">
             <h2 class="flow-catalog-row-title">Últimos flujos utilizados</h2>
             <div class="flow-catalog-row-scroll" id="rowRecent"></div>
           </section>
 
-          <!-- Recomendados para ti -->
           <section class="flow-catalog-row-section" id="sectionRecommended">
             <h2 class="flow-catalog-row-title">Flujos que te podrían interesar</h2>
             <div class="flow-catalog-row-scroll" id="rowRecommended"></div>
           </section>
 
-          <!-- En tendencia -->
           <section class="flow-catalog-row-section" id="sectionTrending">
             <h2 class="flow-catalog-row-title">Flujos en tendencia</h2>
             <div class="flow-catalog-row-scroll" id="rowTrending"></div>
           </section>
 
-          <!-- Amados por el público -->
           <section class="flow-catalog-row-section" id="sectionLoved">
             <h2 class="flow-catalog-row-title">Flujos amados por el público</h2>
             <div class="flow-catalog-row-scroll" id="rowLoved"></div>
+          </section>
+
+          <!-- Por tema profesional (subcategory_id) -->
+          <section class="flow-catalog-row-section" id="sectionBySubcategory">
+            <h2 class="flow-catalog-row-title">Por tema profesional</h2>
+            <div id="galleryBySubHome"></div>
           </section>
           ` : `
           <!-- VIEW CATEGORÍA: subcategorías strip -->
@@ -213,18 +221,20 @@ class FlowCatalogView extends BaseView {
     document.getElementById('flowCatalogContent').style.display = 'block';
 
     this.renderHero();
-    this.renderCategoriesStrip();
+    this.renderCategoriesVisualGrid();
     if (this.selectedCategoryId) {
       this.renderSubcategoriesStrip();
       this.renderRecentInCategory();
       this.renderGalleryBySubcategory();
     } else {
       this.renderSectionSaved();
+      this.renderSectionAllFlows();
       this.renderSectionLiked();
       this.renderSectionRecent();
       this.renderSectionRecommended();
       this.renderSectionTrending();
       this.renderSectionLoved();
+      this.renderGalleryBySubcategoryHome();
     }
     this.bindHeroNav();
     this.bindCategoryClicks();
@@ -462,6 +472,25 @@ class FlowCatalogView extends BaseView {
     }));
   }
 
+  /** En home: agrupa flujos por subcategory_id (content_flows.subcategory_id → content_subcategories). */
+  getFlowsBySubcategoryHome() {
+    const bySub = new Map();
+    this.flows.forEach(f => {
+      if (!f.subcategory_id) return;
+      if (!bySub.has(f.subcategory_id)) {
+        const sub = this.subcategories.find(s => s.id === f.subcategory_id);
+        if (sub) bySub.set(f.subcategory_id, { sub, flows: [] });
+      }
+      bySub.get(f.subcategory_id).flows.push(f);
+    });
+    return Array.from(bySub.values())
+      .map(({ sub, flows }) => ({
+        sub,
+        flows: flows.sort((a, b) => (b.run_count || 0) + (b.likes_count || 0) - (a.run_count || 0) - (a.likes_count || 0))
+      }))
+      .filter(({ flows }) => flows.length > 0);
+  }
+
   isNew(flow) {
     if (!flow.created_at) return false;
     const days = (Date.now() - new Date(flow.created_at).getTime()) / (1000 * 60 * 60 * 24);
@@ -585,6 +614,40 @@ class FlowCatalogView extends BaseView {
     });
   }
 
+  /** Categorías visuales: grid de cards por content_categories para encontrar flujos por categoría. */
+  renderCategoriesVisualGrid() {
+    const grid = document.getElementById('categoriesVisualGrid');
+    if (!grid) return;
+    const basePath = this.getCatalogPath();
+    const categoriesWithCount = [
+      { id: '', name: 'Todos', count: this.flows.length },
+      ...this.categories.map(cat => ({
+        ...cat,
+        count: this.flows.filter(f => f.category_id === cat.id).length
+      }))
+    ];
+    grid.innerHTML = categoriesWithCount.map(cat => {
+      const href = cat.id ? this.getCatalogPath(cat.id) : basePath;
+      const isActive = (!cat.id && !this.selectedCategoryId) || this.selectedCategoryId === cat.id;
+      return `
+        <a href="${this.escapeHtml(href)}" class="flow-catalog-category-card ${isActive ? 'active' : ''}" data-category-id="${this.escapeHtml(cat.id || '')}">
+          <span class="flow-catalog-category-card-name">${this.escapeHtml(cat.name)}</span>
+          <span class="flow-catalog-category-card-count">${cat.count} flujo${cat.count !== 1 ? 's' : ''}</span>
+        </a>
+      `;
+    }).join('');
+    grid.querySelectorAll('a[data-category-id]').forEach(link => {
+      link.addEventListener('click', (e) => {
+        const id = link.getAttribute('data-category-id');
+        const path = id ? this.getCatalogPath(id) : this.getCatalogPath();
+        if (window.router) {
+          e.preventDefault();
+          window.router.navigate(path);
+        }
+      });
+    });
+  }
+
   renderCategoriesStrip() {
     const strip = document.getElementById('categoriesStrip');
     if (!strip) return;
@@ -636,9 +699,10 @@ class FlowCatalogView extends BaseView {
     });
   }
 
+  /** Continuar donde lo dejaste: solo runs recientes del usuario; sección oculta si no hay runs. */
   renderSectionSaved() {
-    const saved = this.getSavedFlows();
-    this.renderRow('rowSaved', saved, 'Aún no tienes flujos guardados.');
+    const recent = this.getRecentFlows();
+    this.renderRow('rowSaved', recent, '');
   }
 
   renderSectionLiked() {
@@ -664,6 +728,32 @@ class FlowCatalogView extends BaseView {
   renderSectionLoved() {
     const loved = this.getLovedFlows();
     this.renderRow('rowLoved', loved, '');
+  }
+
+  renderSectionAllFlows() {
+    const all = this.getPublishedFlows();
+    this.renderRow('rowAllFlows', all, '');
+  }
+
+  renderGalleryBySubcategoryHome() {
+    const gallery = document.getElementById('galleryBySubHome');
+    if (!gallery) return;
+    const rows = this.getFlowsBySubcategoryHome();
+    if (rows.length === 0) {
+      gallery.closest('.flow-catalog-row-section').style.display = 'none';
+      gallery.innerHTML = '';
+      return;
+    }
+    gallery.closest('.flow-catalog-row-section').style.display = '';
+    gallery.innerHTML = rows.map(({ sub, flows }) => `
+      <section class="flow-catalog-sub-row flow-catalog-row-section">
+        <h3 class="flow-catalog-row-title">${this.escapeHtml(sub?.name || '')}</h3>
+        <div class="flow-catalog-row-scroll">${flows.map(f => this.renderFlowCard(f)).join('')}</div>
+      </section>
+    `).join('');
+    gallery.querySelectorAll('.flow-card').forEach(card => {
+      card.addEventListener('click', () => this.openFlow(card.getAttribute('data-flow-id')));
+    });
   }
 
   renderRecentInCategory() {
