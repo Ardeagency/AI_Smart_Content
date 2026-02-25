@@ -41,6 +41,17 @@ class FlowCatalogView extends BaseView {
     return this.organizationId ? `/org/${this.organizationId}/studio` : '/studio';
   }
 
+  /** Slug para URL a partir del nombre del flujo (ej: "Product Render Futurista" → "product-render-futurista"). */
+  flowNameToSlug(name) {
+    if (!name || typeof name !== 'string') return '';
+    return name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/\p{M}/gu, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+  }
+
   getCatalogPath(categoryId) {
     const base = this.organizationId ? `/org/${this.organizationId}/studio/catalog` : '/studio/catalog';
     return categoryId ? `${base}/${categoryId}` : base;
@@ -657,6 +668,12 @@ class FlowCatalogView extends BaseView {
   }
 
   openFlow(flowId) {
+    const flow = this.flowsById?.get(flowId) || this.flows?.find(f => f.id === flowId);
+    const slug = flow?.name ? this.flowNameToSlug(flow.name) : '';
+    if (slug && window.router) {
+      window.router.navigate(`${this.getStudioPath()}/${encodeURIComponent(slug)}`);
+      return;
+    }
     if (window.appState) window.appState.set('selectedFlowId', flowId, true);
     else localStorage.setItem('selectedFlowId', flowId);
     if (window.router) window.router.navigate(this.getStudioPath());

@@ -22,6 +22,22 @@ class StudioView extends BaseView {
     if (typeof alert === 'function') alert(message);
   }
 
+  /** Ruta base de Studio (con o sin org) para construir URL con slug del flujo. */
+  getStudioBasePath() {
+    return this.organizationId ? `/org/${this.organizationId}/studio` : '/studio';
+  }
+
+  /** Convierte el nombre del flujo en slug para la URL (ej: "Product Render Futurista" → "product-render-futurista"). */
+  flowNameToSlug(name) {
+    if (!name || typeof name !== 'string') return '';
+    return name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/\p{M}/gu, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+  }
+
   async onEnter() {
     if (window.authService) {
       const isAuth = await window.authService.checkAccess(true);
@@ -85,22 +101,35 @@ class StudioView extends BaseView {
     await this.initSupabase();
     await Promise.all([this.loadCredits(), this.loadFlows()]);
 
+    const flowSlug = (this.routeParams && this.routeParams.flowSlug) ? decodeURIComponent(this.routeParams.flowSlug) : null;
     const preselectedId = (window.appState && window.appState.get('selectedFlowId')) || localStorage.getItem('selectedFlowId');
-    if (preselectedId) {
-      const flow = this.flows.find(f => f.id === preselectedId);
-      if (flow) {
-        this.selectedFlow = flow;
-        this.updateCreditsDisplay();
-        this.renderFlowForm(flow);
-        const listEl = document.getElementById('studioFlowsList');
-        const formWrap = document.getElementById('studioFlowFormWrap');
-        if (listEl) listEl.style.display = 'none';
-        if (formWrap) formWrap.style.display = 'block';
-        const btn = document.getElementById('studioProducirBtn');
-        if (btn) btn.disabled = !flow.webhook_url;
-      }
+
+    let flowToSelect = null;
+    if (flowSlug) {
+      const found = this.flows.find(f => this.flowNameToSlug(f.name) === flowSlug);
+      if (found) flowToSelect = found;
+    }
+    if (!flowToSelect && preselectedId) {
+      const byId = this.flows.find(f => f.id === preselectedId);
+      if (byId) flowToSelect = byId;
       if (window.appState) window.appState.set('selectedFlowId', null, true);
       localStorage.removeItem('selectedFlowId');
+    }
+
+    if (flowToSelect) {
+      this.selectedFlow = flowToSelect;
+      this.updateCreditsDisplay();
+      this.renderFlowForm(flowToSelect);
+      const listEl = document.getElementById('studioFlowsList');
+      const formWrap = document.getElementById('studioFlowFormWrap');
+      if (listEl) listEl.style.display = 'none';
+      if (formWrap) formWrap.style.display = 'block';
+      const btn = document.getElementById('studioProducirBtn');
+      if (btn) btn.disabled = !flowToSelect.webhook_url;
+      if (!flowSlug && window.router) {
+        const slug = this.flowNameToSlug(flowToSelect.name);
+        if (slug) window.router.navigate(`${this.getStudioBasePath()}/${encodeURIComponent(slug)}`, true);
+      }
     } else {
       this.updateCreditsDisplay();
       this.renderFlowsList();
@@ -257,6 +286,11 @@ class StudioView extends BaseView {
     const btn = document.getElementById('studioProducirBtn');
     if (btn) {
       btn.disabled = !flow.webhook_url;
+    }
+
+    const slug = this.flowNameToSlug(flow.name);
+    if (slug && window.router) {
+      window.router.navigate(`${this.getStudioBasePath()}/${encodeURIComponent(slug)}`, true);
     }
   }
 
@@ -981,6 +1015,7 @@ class StudioView extends BaseView {
       this.updateCreditsDisplay();
       const b = document.getElementById('studioProducirBtn');
       if (b) b.disabled = true;
+      if (window.router) window.router.navigate(this.getStudioBasePath(), true);
     };
     if (tabFuture) tabFuture.addEventListener('click', showFlowsList);
     if (backFlows) backFlows.addEventListener('click', showFlowsList);

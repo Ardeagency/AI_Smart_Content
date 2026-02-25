@@ -144,6 +144,8 @@ class App {
     const studioLoader = this._lazy('StudioView', [...inputDeps, '/js/services/FlowWebhookService.js', '/js/products.js', '/js/views/StudioView.js']);
     r.register('/org/:orgId/studio', studioLoader, auth);
     r.register('/studio', studioLoader, auth);
+    r.register('/org/:orgId/studio/:flowSlug', studioLoader, auth);
+    r.register('/studio/:flowSlug', studioLoader, auth);
 
     // ── Org: Flow Catalog ──
     const catalogLoader = this._lazy('FlowCatalogView', ['/js/views/FlowCatalogView.js']);
