@@ -1147,10 +1147,23 @@ class BrandsView extends BaseView {
       }
     };
 
-    const selectFont = (fontValue) => {
+    const selectFont = async (fontValue) => {
+      if (this._typographySaving) return;
+      closePanel();
       this.loadFontForPreview(fontValue);
-      this.saveTypographyForImages(fontValue);
+      const previousFonts = [...(this.brandFonts || [])];
+      const others = (this.brandFonts || []).filter(f => (f.font_usage || '').toLowerCase() !== 'images');
+      this.brandFonts = [...others, { brand_id: this.brandData?.id, font_usage: 'images', font_family: fontValue, font_weight: '400', fallback_font: 'sans-serif' }];
       this.renderTypography();
+      this._typographySaving = true;
+      try {
+        await this.saveTypographyForImages(fontValue);
+      } catch (e) {
+        this.brandFonts = previousFonts;
+        this.renderTypography();
+      } finally {
+        this._typographySaving = false;
+      }
     };
 
     if (trigger) {
@@ -1177,7 +1190,6 @@ class BrandsView extends BaseView {
         e.stopPropagation();
         const value = opt.getAttribute('data-value');
         if (value) selectFont(value);
-        closePanel();
       });
     });
   }
