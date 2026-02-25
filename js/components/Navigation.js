@@ -1,11 +1,11 @@
 /**
  * Sidebar usuario consumidor — Schema final (Zona 1: navegación workspace, Zona 2: footer organizacional).
- * Estructura: main[] (Historial, Estudio, Catálogo, Identidad) + footer[] (Configuración, Planes, Créditos, Salir).
+ * Estructura: main[] (Historial, Catálogo, Identidad) + footer[] (Configuración, Planes, Créditos, Salir).
+ * Estudio no tiene entrada en el sidebar: solo se accede seleccionando un flujo desde el Catálogo.
  */
 const SIDEBAR_USER_CONFIG = {
   main: [
     { type: 'page', id: 'activity', label: 'Historial', icon: 'fa-chart-line', route: 'historial' },
-    { type: 'page', id: 'studio', label: 'Estudio', icon: 'fa-wand-magic-sparkles', route: 'studio' },
     {
       type: 'container',
       id: 'catalog',
@@ -336,7 +336,7 @@ class Navigation {
 
   /**
    * HTML para navegación de usuario SaaS.
-   * Zona 1: WorkspaceHeader + NavigationMain (Actividad, Estudio, Catálogo, Identidad).
+   * Zona 1: WorkspaceHeader + NavigationMain (Actividad, Catálogo, Identidad).
    * Zona 2: NavigationFooter anclado (Configuración, Planes, Créditos, Salir).
    */
   getUserNavigationHTML() {
