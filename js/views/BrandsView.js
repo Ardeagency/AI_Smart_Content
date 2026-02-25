@@ -981,22 +981,41 @@ class BrandsView extends BaseView {
     const hex = (hexValue || '').replace(/^#/, '').trim();
     if (!/^[0-9A-Fa-f]{6}$/.test(hex)) return;
     const currentCount = (this.brandColors || []).length;
-    if (currentCount >= 4) return;
+    if (currentCount >= 4) {
+      alert('Máximo 4 colores por marca.');
+      return;
+    }
+    const hexNorm = `#${hex}`.toLowerCase();
+    const alreadyExists = (this.brandColors || []).some(
+      c => (c.hex_value || '').toLowerCase() === hexNorm
+    );
+    if (alreadyExists) {
+      alert('Este color ya existe en la marca.');
+      return;
+    }
+    // color_role distinto por posición para evitar violación UNIQUE(brand_id, color_role) si existe
+    const roleLabels = ['Color', 'Color 2', 'Color 3', 'Color 4'];
+    const colorRole = roleLabels[currentCount] || `Color ${currentCount + 1}`;
     try {
       const { error } = await this.supabase
         .from('brand_colors')
         .insert({
           brand_id: this.brandData.id,
-          color_role: 'Color',
-          hex_value: `#${hex}`
+          color_role: colorRole,
+          hex_value: hexNorm
         });
       if (error) throw error;
       await this.loadData();
       this.renderCards();
       this.applyBrandBackgroundGradient();
     } catch (error) {
+      const isDuplicate = (error?.code === '23505') || (error?.message || '').includes('duplicate key');
       console.error('❌ Error al crear color:', error);
-      alert('Error al agregar el color. Por favor, intenta de nuevo.');
+      if (isDuplicate) {
+        alert('Este color ya existe en la marca. Elige otro valor.');
+      } else {
+        alert('Error al agregar el color. Por favor, intenta de nuevo.');
+      }
     }
   }
 

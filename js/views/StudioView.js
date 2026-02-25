@@ -911,6 +911,61 @@ class StudioView extends BaseView {
     return data;
   }
 
+  /**
+   * Detecta si un campo del schema es selector de productos (image_selector de productos).
+   */
+  _isProductSelectorField(field) {
+    const type = (field.input_type || field.type || '').toLowerCase();
+    if (type !== 'image_selector') return false;
+    const source = (field.media_source || field.function_type || '').toLowerCase();
+    if (source === 'products') return true;
+    const key = (field.key || field.name || '').toLowerCase();
+    return key.includes('product');
+  }
+
+  /**
+   * Reemplaza en el payload los campos "selector de productos" (UUID o array de UUIDs)
+   * por el objeto completo de cada producto (con imágenes y todos los datos de BD), vía RPC get_products_full_by_ids.
+   * El webhook recibe así todos los datos del producto, no solo el ID.
+   */
+  async enrichProductPayload(payload) {
+    if (!this.supabase || !this.selectedFlow) return payload;
+    const schema = this.selectedFlow.input_schema || {};
+    const fields = Array.isArray(schema) ? schema : (schema.fields || schema.inputs || []);
+    if (!Array.isArray(fields) || fields.length === 0) return payload;
+
+    const productFields = fields.filter(f => this._isProductSelectorField(f));
+    if (productFields.length === 0) return payload;
+
+    const out = { ...payload };
+    for (const field of productFields) {
+      const key = field.key || field.name;
+      if (!key || out[key] == null) continue;
+      let ids = out[key];
+      if (typeof ids === 'string') {
+        const trimmed = ids.trim();
+        if (!trimmed) continue;
+        ids = [trimmed];
+      }
+      if (!Array.isArray(ids) || ids.length === 0) continue;
+      const validIds = ids.filter(id => typeof id === 'string' && id.length > 0);
+      if (validIds.length === 0) continue;
+
+      try {
+        const { data, error } = await this.supabase.rpc('get_products_full_by_ids', { p_product_ids: validIds });
+        if (error) {
+          console.warn('[Studio] get_products_full_by_ids:', error.message);
+          continue;
+        }
+        const list = Array.isArray(data) ? data : [];
+        out[key] = list.length === 1 && validIds.length === 1 ? list[0] : list;
+      } catch (e) {
+        console.warn('[Studio] enrichProductPayload:', e);
+      }
+    }
+    return out;
+  }
+
   setupEventListeners() {
     const btn = document.getElementById('studioProducirBtn');
     if (btn) btn.addEventListener('click', () => this.producir());
@@ -945,7 +1000,8 @@ class StudioView extends BaseView {
       return;
     }
 
-    const payload = this.collectFormData();
+    let payload = this.collectFormData();
+    payload = await this.enrichProductPayload(payload);
     const btn = document.getElementById('studioProducirBtn');
     if (btn) btn.disabled = true;
 
