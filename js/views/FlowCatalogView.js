@@ -74,6 +74,35 @@ class FlowCatalogView extends BaseView {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
   }
 
+  /**
+   * Resuelve el slug de la URL (ej. "posts", "stories") al UUID de content_categories.
+   * Usa category_id/subcategory_id del schema para filtrar correctamente por categoría.
+   * Acepta: coincidencia exacta, singular/plural (post↔posts) y slug que empiece por el segmento (stories ↔ stories-estados).
+   */
+  resolveCategoryIdFromSlug(slug) {
+    if (!slug || typeof slug !== 'string' || !this.categories.length) return null;
+    const s = slug.trim().toLowerCase();
+    // 1) Coincidencia exacta con slug del nombre
+    let cat = this.categories.find(c => this.categoryNameToSlug(c.name) === s);
+    if (cat) return cat.id;
+    // 2) Slug compuesto: "stories" coincide con "stories-estados", "ads" con "anuncios-ads"
+    cat = this.categories.find(c => {
+      const catSlug = this.categoryNameToSlug(c.name);
+      return catSlug === s || catSlug.startsWith(s + '-') || s.startsWith(catSlug + '-');
+    });
+    if (cat) return cat.id;
+    // 3) Singular/plural: "posts" ↔ "post", "reels" ↔ "reel"
+    cat = this.categories.find(c => {
+      const catSlug = this.categoryNameToSlug(c.name);
+      if (catSlug === s) return true;
+      if (s.endsWith('s') && catSlug === s.slice(0, -1)) return true; // posts → post
+      if (catSlug.endsWith('s') && catSlug.slice(0, -1) === s) return true; // post → posts
+      return false;
+    });
+    if (cat) return cat.id;
+    return null;
+  }
+
   renderHTML() {
     const isCategoryView = !!this.selectedCategoryId;
     return `
@@ -165,9 +194,8 @@ class FlowCatalogView extends BaseView {
       this.loadSubcategories()
     ]);
     if (this.selectedCategoryId && !this.isUuid(this.selectedCategoryId)) {
-      const slug = this.selectedCategoryId;
-      const cat = this.categories.find(c => this.categoryNameToSlug(c.name) === slug);
-      this.selectedCategoryId = cat ? cat.id : null;
+      const resolved = this.resolveCategoryIdFromSlug(this.selectedCategoryId);
+      this.selectedCategoryId = resolved;
     }
     await this.loadFlows();
     this.enrichFlowsWithCategories();
@@ -252,6 +280,11 @@ class FlowCatalogView extends BaseView {
     }
   }
 
+  /**
+   * Carga flujos del catálogo. En vista por categoría filtra estrictamente por
+   * content_flows.category_id (schema: FK a content_categories) para que cada
+   * flujo solo aparezca en su sección correcta (Posts, Stories, Ads, etc.).
+   */
   async loadFlows() {
     if (!this.supabase) return;
     try {
