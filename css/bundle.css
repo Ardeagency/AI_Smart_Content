@@ -298,14 +298,15 @@ body {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--accent-cta), var(--accent-cta-dark, var(--warm-3)));
-    color: var(--color-white);
-    border-color: transparent;
+    background: #ffffff;
+    color: #000000;
+    border: 1px solid rgba(0, 0, 0, 0.12);
     font-weight: 600;
 }
 .btn-primary:hover {
-    background: linear-gradient(135deg, var(--accent-cta-hover, var(--warm-2)), var(--accent-cta));
-    box-shadow: 0 4px 12px var(--warm-20);
+    background: #f3f4f6;
+    color: #000000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .btn-secondary {
@@ -4152,17 +4153,18 @@ body.entrance-done .landing-content {
     font-weight: 600;
     cursor: pointer;
     transition: var(--transition);
-    border: none;
+    border: 1px solid rgba(0, 0, 0, 0.12);
     font-family: inherit;
-    background: var(--text-primary);
-    color: var(--bg-primary);
+    background: #ffffff;
+    color: #000000;
 }
 
 .notification-btn:hover,
 .btn.btn-accent:hover {
-    background: var(--text-secondary);
+    background: #f3f4f6;
+    color: #000000;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 @media (max-width: 768px) {
@@ -9851,15 +9853,16 @@ body.sidebar-collapsed .living-container {
   padding: 0.75rem 1.5rem;
   font-size: 0.95rem;
   font-weight: 600;
-  color: var(--bg-primary);
-  background: var(--accent-warm);
-  border: none;
+  color: #000000;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: var(--radius-md);
   cursor: pointer;
     transition: var(--transition);
 }
 .flow-hero-slide-cta:hover {
-  background: var(--accent-yellow-hover);
+  background: #f3f4f6;
+  color: #000000;
   transform: translateY(-1px);
 }
 .flow-hero-slide-media {
@@ -9962,18 +9965,18 @@ body.sidebar-collapsed .living-container {
   border-color: var(--border-light);
 }
 .flow-catalog-category-chip.active {
-  color: var(--bg-primary);
-  background: var(--accent-warm);
-  border-color: var(--accent-warm);
+  color: #000000;
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.2);
 }
 .flow-catalog-sub-chip {
   cursor: pointer;
   font-family: inherit;
 }
 .flow-catalog-subcategories-strip .flow-catalog-category-chip.active {
-  background: var(--bg-hover);
-  border-color: var(--accent-warm);
-  color: var(--accent-warm);
+  background: #f3f4f6;
+  border-color: rgba(0, 0, 0, 0.2);
+  color: #000000;
 }
 
 /* ---------- FLOW CARD (minimalista: imagen + nombre + badge; hover: opacar/difuminar + métricas) ---------- */
@@ -10068,8 +10071,8 @@ body.sidebar-collapsed .living-container {
   color: var(--color-white);
 }
 .flow-card-badge--trending {
-  background: var(--accent-warm);
-  color: var(--bg-primary);
+  background: #ffffff;
+  color: #000000;
 }
 .flow-card-badge--auto {
   background: var(--icon-button);
@@ -10441,9 +10444,9 @@ body.sidebar-collapsed .living-container {
 }
 
 .category-tab.active {
-    background: var(--accent-cta);
-    border-color: var(--accent-cta);
-    color: var(--bg-black);
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.2);
+    color: #000000;
     font-weight: 600;
 }
 
@@ -10776,16 +10779,17 @@ body.sidebar-collapsed .living-container {
 }
 
 .btn-image-action.active {
-    background: var(--accent-warm);
-    border-color: var(--accent-warm);
+    background: #ffffff;
+    border-color: rgba(255, 255, 255, 0.5);
+    color: #000000;
 }
 
 .image-badge {
     position: absolute;
     top: 0.5rem;
     left: 0.5rem;
-    background: var(--accent-warm);
-    color: white;
+    background: #ffffff;
+    color: #000000;
     padding: 0.25rem 0.5rem;
     border-radius: var(--radius-xs);
     font-size: var(--font-size-sm);
@@ -10818,8 +10822,8 @@ body.sidebar-collapsed .living-container {
 }
 
 .btn-order:hover:not(:disabled) {
-    border-color: var(--accent-warm);
-    color: var(--accent-warm);
+    border-color: rgba(255, 255, 255, 0.5);
+    color: #ffffff;
     background: var(--bg-hover);
 }
 
@@ -13557,15 +13561,15 @@ body.sidebar-collapsed .living-container {
 }
 
 .btn-builder-footer.btn-primary-footer {
-  background: var(--dev-primary);
-  border-color: var(--dev-primary);
-  color: white;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  color: #000000;
 }
 
 .btn-builder-footer.btn-primary-footer:hover {
-  background: var(--dev-primary-dark);
-  border-color: var(--dev-primary-dark);
-  color: white;
+  background: #f3f4f6;
+  border-color: rgba(0, 0, 0, 0.2);
+  color: #000000;
 }
 
 .builder-footer-message {
@@ -16480,9 +16484,9 @@ body.sidebar-collapsed .living-container {
 }
 
 .dev-lead-modal .modal-footer .btn-primary {
-  background: var(--dev-primary);
-  border: none;
-  color: var(--color-white);
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  color: #000000;
   padding: 8px 16px;
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -16490,7 +16494,8 @@ body.sidebar-collapsed .living-container {
 }
 
 .dev-lead-modal .modal-footer .btn-primary:hover {
-  background: var(--dev-primary-dark);
+  background: #f3f4f6;
+  color: #000000;
 }
 
 .dev-lead-modal-wide .modal-content {
@@ -18996,8 +19001,8 @@ body.sidebar-collapsed .living-container {
 }
 
 .beta-badge {
-    background: linear-gradient(135deg, var(--accent-cta), #ff6500);
-    color: white;
+    background: #ffffff;
+    color: #000000;
     font-size: 0.7rem;
     font-weight: 700;
     padding: 0.375rem 0.75rem;
@@ -19005,6 +19010,7 @@ body.sidebar-collapsed .living-container {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     box-shadow: var(--shadow-card);
+    border: 1px solid rgba(0, 0, 0, 0.12);
 }
 
 .wompi-features {
@@ -19173,9 +19179,9 @@ body.sidebar-collapsed .living-container {
 }
 
 .pay-button {
-    background: linear-gradient(135deg, var(--accent-cta), #ff6500);
-    color: white;
-    border: none;
+    background: #ffffff;
+    color: #000000;
+    border: 1px solid rgba(0, 0, 0, 0.12);
     padding: 1rem 2rem;
     border-radius: var(--radius-md);
     font-size: var(--font-size-md);
@@ -19191,6 +19197,8 @@ body.sidebar-collapsed .living-container {
 }
 
 .pay-button:hover {
+    background: #f3f4f6;
+    color: #000000;
     transform: translateY(-2px);
     box-shadow: var(--shadow-floating);
 }
