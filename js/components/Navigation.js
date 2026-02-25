@@ -23,9 +23,7 @@ const SIDEBAR_USER_CONFIG = {
         { label: 'Productos', route: 'products' },
         { label: 'Servicios', route: 'servicios' },
         { label: 'Audiencias', route: 'audiences' },
-        { label: 'Campañas', route: 'campaigns' },
-        { label: 'Assets', route: 'content' },
-        { label: 'Reglas IA', route: 'brand' }
+        { label: 'Campañas', route: 'campaigns' }
       ]
     }
   ],

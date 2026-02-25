@@ -21,7 +21,7 @@
 ## Coherencias revisadas (sin cambio)
 
 - **Estudio / Catálogo:** Estudio → Studio; Catálogo (Posts, Reels, etc.) → `studio/catalog/<slug>`. Correcto.
-- **Identidad:** Marca, Productos, Servicios, Audiencias, Campañas, Assets tienen rutas propias; Reglas IA apunta a `brand` (mismo que Marca). Si en el futuro "Reglas IA" es una subsección distinta, convendría una ruta o hash propia.
+- **Identidad:** Marca, Productos, Servicios, Audiencias, Campañas (Assets y Reglas IA eliminados de la navegación).
 - **Footer:** Configuración → organization; Planes → /planes; Créditos → /credits; Salir → acción. Correcto.
 - **Developer:** Resources > "Referencias visuales" apunta a `/dev/lead/references` (ruta de lead). Usuarios no-lead que entren pueden recibir restricción según cómo esté protegida la vista; es coherente con que sea recurso de lead.
 
@@ -39,8 +39,6 @@
 | Servicios      | `/org/:id/servicios`               | ServicesView                  |
 | Audiencias     | `/org/:id/audiences`               | AudiencesView                 |
 | Campañas       | `/org/:id/campaigns`               | CampaignsView                 |
-| Assets         | `/org/:id/content`                 | ContentView                   |
-| Reglas IA      | `/org/:id/brand`                   | BrandsView (mismo que Marca)  |
 | Configuración  | `/org/:id/organization`            | OrganizationView              |
 | Planes         | `/planes`                          | PlanesView                    |
 | Créditos       | `/credits` → redirige              | CreditsView → organization o hogar |
