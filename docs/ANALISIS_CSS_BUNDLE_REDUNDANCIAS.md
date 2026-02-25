@@ -175,6 +175,7 @@ Por tanto, los cambios deben hacerse en los CSS fuente (base.css, navigation.css
 - **index.html** sigue enlazando `/css/bundle.css`; no hace falta cambiar nada para usar el nuevo estilo.
 - **Rollback:** si hubiera que volver al estilo anterior, renombrar `bundle.css` → `bundle-v2.css`, `bundle-v1.css` → `bundle.css`.
 - **build-css.sh** genera `bundle-v1.css` (desde `css/legacy/`), no sobrescribe `bundle.css`.
+- **Ajustes posteriores:** se añadieron al bundle activo (1) la secuencia de entrada completa (`.entrance-animation`, `.entrance-reveal-box`, `.entrance-logo`, etc.) que faltaba por haberse saltado el bloque de app.css al construir v2, y (2) todas las variables `:root` que usan developer, living y brands (aliases `--dev-*`, `--living-*`, `--brand-*`, opacidades, sombras, etc.) para que toda la plataforma mantenga el mismo estilo visual.
 
 ---
 
