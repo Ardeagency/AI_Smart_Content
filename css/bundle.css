@@ -2069,7 +2069,7 @@ body.sidebar-collapsed .main-header,
     gap: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    flex: 1;
+    flex: 1 1 0;
     min-height: 0;
 }
 
@@ -2407,10 +2407,7 @@ body.sidebar-collapsed .main-header,
    ========================================= */
 
 .nav-footer {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    flex-shrink: 0;
     padding: 16px;
     border-top: 1px solid var(--nav-separator);
     background: var(--bg-primary);
@@ -3398,9 +3395,9 @@ body.sidebar-collapsed .app-header.with-sidebar {
    MENÚ DE NAVEGACIÓN
    ========================================= */
 
-/* Spacer entre navegación principal y footer (Zona 1 vs Zona 2) */
+/* Spacer entre menú y footer: no crece para que .nav-menu use todo el espacio disponible */
 .nav-spacer {
-    flex: 1;
+    flex: 0 0 0;
     min-height: 0;
 }
 
