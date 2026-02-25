@@ -5711,6 +5711,8 @@ svg.signin-brand-logo {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    max-width: min(85vw, calc(100% - 420px));
+    min-width: 0;
 }
 
 /* Header: redes/web arriba; nombre de marca abajo, todo a la izquierda */
@@ -5719,12 +5721,16 @@ svg.signin-brand-logo {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
+    max-width: 100%;
+    min-width: 0;
 }
 
 .brand-name-row {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.5rem;
+    max-width: 100%;
+    min-width: 0;
 }
 
 .brand-name-large {
@@ -5733,10 +5739,14 @@ svg.signin-brand-logo {
     color: var(--brand-text-light);
     margin: 0;
     letter-spacing: -0.02em;
-    line-height: 1;
+    line-height: 1.1;
     transition: none;
     animation: none;
     transform: none;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+    min-width: 0;
 }
 
 /* Asegurar tamaño GRANDE en el contenedor exacto (override a base.css) */
@@ -5847,11 +5857,17 @@ h1.brand-name-large[contenteditable="true"]:hover,
 /* Mercado objetivo debajo */
 .brand-market-row {
     margin-top: 0.25rem;
+    max-width: 100%;
+    min-width: 0;
 }
 
 .market-label {
     font-size: var(--font-size-sm);
     color: var(--brand-text-muted);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+    display: block;
 }
 
 /* ============================================
@@ -6765,6 +6781,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     .brand-corner-bottom-left {
         position: relative;
         padding: 1.5rem;
+        max-width: 100%;
     }
     .brand-cards-zone {
         position: relative;
