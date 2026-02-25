@@ -57,6 +57,23 @@ class FlowCatalogView extends BaseView {
     return categoryId ? `${base}/${categoryId}` : base;
   }
 
+  /** Convierte nombre de categoría en slug para URL (ej: "Posts" → "posts"). */
+  categoryNameToSlug(name) {
+    if (!name || typeof name !== 'string') return '';
+    return name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/\p{M}/gu, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+  }
+
+  /** Indica si el valor parece un UUID (categoryId desde URL). */
+  isUuid(value) {
+    if (!value || typeof value !== 'string') return false;
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+  }
+
   renderHTML() {
     const isCategoryView = !!this.selectedCategoryId;
     return `
@@ -145,9 +162,14 @@ class FlowCatalogView extends BaseView {
     }
     await Promise.all([
       this.loadCategories(),
-      this.loadSubcategories(),
-      this.loadFlows()
+      this.loadSubcategories()
     ]);
+    if (this.selectedCategoryId && !this.isUuid(this.selectedCategoryId)) {
+      const slug = this.selectedCategoryId;
+      const cat = this.categories.find(c => this.categoryNameToSlug(c.name) === slug);
+      this.selectedCategoryId = cat ? cat.id : null;
+    }
+    await this.loadFlows();
     this.enrichFlowsWithCategories();
     if (this.userId) {
       await Promise.all([

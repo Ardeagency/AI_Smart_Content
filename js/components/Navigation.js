@@ -12,12 +12,12 @@ const SIDEBAR_USER_CONFIG = {
       label: 'Catálogo',
       icon: 'fa-th-large',
       children: [
-        { label: 'Posts', route: 'studio/catalog' },
-        { label: 'Reels', route: 'studio/catalog' },
-        { label: 'Stories', route: 'studio/catalog' },
-        { label: 'Ads', route: 'studio/catalog' },
-        { label: 'Templates', route: 'studio/catalog' },
-        { label: 'Videos', route: 'studio/catalog' }
+        { label: 'Posts', route: 'studio/catalog/posts' },
+        { label: 'Reels', route: 'studio/catalog/reels' },
+        { label: 'Stories', route: 'studio/catalog/stories' },
+        { label: 'Ads', route: 'studio/catalog/ads' },
+        { label: 'Templates', route: 'studio/catalog/templates' },
+        { label: 'Videos', route: 'studio/catalog/videos' }
       ]
     },
     {
