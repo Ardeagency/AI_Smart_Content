@@ -178,10 +178,10 @@ class FlowCatalogView extends BaseView {
             <div id="galleryBySubHome"></div>
           </section>
 
-          <!-- Todos los flujos: última sección -->
+          <!-- Todos los flujos: mismo catálogo por categoría y subcategoría -->
           <section class="flow-catalog-row-section" id="sectionAllFlows" style="display: none;">
             <h2 class="flow-catalog-row-title">Todos los flujos</h2>
-            <div class="flow-catalog-row-scroll" id="rowAllFlows"></div>
+            <div class="flow-catalog-gallery-by-category-sub" id="galleryAllByCategorySub"></div>
           </section>
           ` : `
           <!-- VIEW CATEGORÍA: subcategorías strip -->
@@ -523,6 +523,65 @@ class FlowCatalogView extends BaseView {
       .filter(({ flows }) => flows.length > 0);
   }
 
+  /**
+   * En home (Todos): agrupa todos los flujos por categoría (content_categories) y luego por subcategoría (content_subcategories).
+   * Misma estructura que el catálogo por categoría: categoría → filas por subcategoría.
+   */
+  getFlowsByCategoryAndSubcategory() {
+    const result = [];
+    const categoryOrder = [...this.categories].sort((a, b) => (a.order_index ?? 999) - (b.order_index ?? 999) || (a.name || '').localeCompare(b.name || ''));
+    for (const cat of categoryOrder) {
+      const flowsInCat = this.flows.filter(f => f.category_id === cat.id);
+      if (flowsInCat.length === 0) continue;
+      const bySub = new Map();
+      const withoutSub = [];
+      flowsInCat.forEach(f => {
+        if (!f.subcategory_id) {
+          withoutSub.push(f);
+          return;
+        }
+        if (!bySub.has(f.subcategory_id)) {
+          const sub = this.subcategories.find(s => s.id === f.subcategory_id);
+          bySub.set(f.subcategory_id, { sub: sub || { id: f.subcategory_id, name: 'Sin nombre' }, flows: [] });
+        }
+        bySub.get(f.subcategory_id).flows.push(f);
+      });
+      const subOrder = [...this.subcategories].sort((a, b) => (a.order_index ?? 999) - (b.order_index ?? 999) || (a.name || '').localeCompare(b.name || ''));
+      const rows = [];
+      subOrder.forEach(sub => {
+        if (!bySub.has(sub.id)) return;
+        const { flows } = bySub.get(sub.id);
+        if (flows.length === 0) return;
+        rows.push({
+          subcategory: sub,
+          flows: flows.sort((a, b) => (b.run_count || 0) + (b.likes_count || 0) - (a.run_count || 0) - (a.likes_count || 0))
+        });
+      });
+      bySub.forEach((entry, id) => {
+        if (subOrder.some(s => s.id === id)) return;
+        rows.push({
+          subcategory: entry.sub,
+          flows: entry.flows.sort((a, b) => (b.run_count || 0) + (b.likes_count || 0) - (a.run_count || 0) - (a.likes_count || 0))
+        });
+      });
+      if (withoutSub.length > 0) {
+        rows.push({
+          subcategory: { id: null, name: 'Sin subcategoría' },
+          flows: withoutSub.sort((a, b) => (b.run_count || 0) + (b.likes_count || 0) - (a.run_count || 0) - (a.likes_count || 0))
+        });
+      }
+      result.push({ category: cat, rows });
+    }
+    const uncategorized = this.flows.filter(f => !f.category_id);
+    if (uncategorized.length > 0) {
+      result.push({
+        category: { id: null, name: 'Sin categoría' },
+        rows: [{ subcategory: { id: null, name: '' }, flows: uncategorized }]
+      });
+    }
+    return result;
+  }
+
   isNew(flow) {
     if (!flow.created_at) return false;
     const days = (Date.now() - new Date(flow.created_at).getTime()) / (1000 * 60 * 60 * 24);
@@ -788,9 +847,34 @@ class FlowCatalogView extends BaseView {
     this.renderRow('rowLoved', loved, '');
   }
 
+  /**
+   * Sección Todos los flujos: mismo catálogo por categoría y subcategoría (content_categories → content_subcategories).
+   */
   renderSectionAllFlows() {
-    const all = this.getPublishedFlows();
-    this.renderRow('rowAllFlows', all, '');
+    const section = document.getElementById('sectionAllFlows');
+    const gallery = document.getElementById('galleryAllByCategorySub');
+    if (!section || !gallery) return;
+    const data = this.getFlowsByCategoryAndSubcategory();
+    if (data.length === 0) {
+      section.style.display = 'none';
+      gallery.innerHTML = '';
+      return;
+    }
+    section.style.display = '';
+    gallery.innerHTML = data.map(({ category, rows }) => `
+      <div class="flow-catalog-category-block" data-category-id="${this.escapeHtml(category?.id || '')}">
+        <h3 class="flow-catalog-category-block-title">${this.escapeHtml(category?.name || '')}</h3>
+        ${rows.map(({ subcategory, flows }) => `
+          <section class="flow-catalog-sub-row flow-catalog-row-section">
+            ${subcategory?.name ? `<h4 class="flow-catalog-row-title">${this.escapeHtml(subcategory.name)}</h4>` : ''}
+            <div class="flow-catalog-row-scroll">${flows.map(f => this.renderFlowCard(f)).join('')}</div>
+          </section>
+        `).join('')}
+      </div>
+    `).join('');
+    gallery.querySelectorAll('.flow-card').forEach(card => {
+      card.addEventListener('click', () => this.openFlow(card.getAttribute('data-flow-id')));
+    });
   }
 
   renderGalleryBySubcategoryHome() {

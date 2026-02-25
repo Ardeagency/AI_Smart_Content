@@ -10269,6 +10269,22 @@ body.sidebar-collapsed .living-container {
   margin-bottom: 1.5rem;
 }
 
+/* Todos los flujos: por categoría y subcategoría (mismo catálogo) */
+.flow-catalog-gallery-by-category-sub {
+  padding: 0 0 2rem;
+}
+.flow-catalog-category-block {
+  margin-bottom: 2.5rem;
+}
+.flow-catalog-category-block-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
 /* Categorías visuales: grid de cards (content_categories / subcategory_id) */
 .flow-catalog-categories-grid {
   display: grid;
