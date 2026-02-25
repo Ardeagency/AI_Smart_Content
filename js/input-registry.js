@@ -339,7 +339,6 @@
           '<span>' + escapeHtml(label) + '</span>' +
           '<span class="preview-focus-selector-badge">Que la IA decida</span>' +
         '</div>' +
-        '<div class="preview-focus-selector-hint">Personalizar enfoque desactivando el botón anterior</div>' +
       '</div>'
     );
   }
@@ -374,7 +373,6 @@
             '<input type="checkbox" class="focus-selector-let-ai-decide" checked aria-label="Que la IA decida">' +
             '<span class="focus-selector-ai-label">Que la IA decida</span>' +
           '</label>' +
-          '<p class="focus-selector-ai-help">Cuando está activado se envían todos los datos al webhook. Desactívalo para elegir en qué quieres enfocar la producción.</p>' +
         '</div>' +
         '<div class="focus-selector-body" aria-hidden="true">' +
           '<div class="focus-selector-accordion-inner">' + innerHtml + '</div>' +
@@ -407,7 +405,6 @@
             '<input type="checkbox" class="focus-selector-let-ai-decide" checked aria-label="Que la IA decida">' +
             '<span class="focus-selector-ai-label">Que la IA decida</span>' +
           '</label>' +
-          '<p class="focus-selector-ai-help">Cuando está activado se envían todos los datos al webhook. Desactívalo para elegir en qué quieres enfocar la producción.</p>' +
         '</div>' +
         '<div class="focus-selector-body" aria-hidden="true">' +
           '<div class="focus-selector-accordion-inner">' +
@@ -654,8 +651,7 @@
       ? '<button type="button" class="color-swatch-add-btn" title="Agregar color" aria-label="Agregar color"><span>+</span></button>'
       : '';
     return '<input type="hidden" class="input-colors-value" name="' + escapeHtml(a.name) + '" id="' + escapeHtml(a.id) + '" value="' + escapeHtml(selectedStr) + '" data-max="' + maxSel + '">' +
-      '<div class="input-colors-wrap" data-colors-key="' + escapeHtml(f.key || '') + '" data-colors-max="' + maxSel + '" data-colors-brand-style="1" role="group" aria-label="' + escapeHtml(f.label || 'Colores') + '">' + swatchesHtml + addBtnHtml + '</div>' +
-      '<span class="field-help input-colors-help">Quitar o editar solo cambia los datos enviados al webhook; no modifica los colores de la marca.</span>';
+      '<div class="input-colors-wrap" data-colors-key="' + escapeHtml(f.key || '') + '" data-colors-max="' + maxSel + '" data-colors-brand-style="1" role="group" aria-label="' + escapeHtml(f.label || 'Colores') + '">' + swatchesHtml + addBtnHtml + '</div>';
   }
 
   /** Placeholder para FILE_CONTAINER (upload) */
