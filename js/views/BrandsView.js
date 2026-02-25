@@ -1148,21 +1148,21 @@ class BrandsView extends BaseView {
     };
 
     const selectFont = async (fontValue) => {
-      if (this._typographySaving) return;
       closePanel();
       this.loadFontForPreview(fontValue);
       const previousFonts = [...(this.brandFonts || [])];
       const others = (this.brandFonts || []).filter(f => (f.font_usage || '').toLowerCase() !== 'images');
       this.brandFonts = [...others, { brand_id: this.brandData?.id, font_usage: 'images', font_family: fontValue, font_weight: '400', fallback_font: 'sans-serif' }];
       this.renderTypography();
-      this._typographySaving = true;
       try {
-        await this.saveTypographyForImages(fontValue);
+        if (this._typographySavePromise) await this._typographySavePromise;
+        this._typographySavePromise = this.saveTypographyForImages(fontValue);
+        await this._typographySavePromise;
       } catch (e) {
         this.brandFonts = previousFonts;
         this.renderTypography();
       } finally {
-        this._typographySaving = false;
+        this._typographySavePromise = null;
       }
     };
 
@@ -1224,8 +1224,6 @@ class BrandsView extends BaseView {
             fallback_font: 'sans-serif'
           });
       }
-      const others = (this.brandFonts || []).filter(f => (f.font_usage || '').toLowerCase() !== 'images');
-      this.brandFonts = [...others, { brand_id: this.brandData.id, font_usage: 'images', font_family: fontFamily, font_weight: '400', fallback_font: 'sans-serif' }];
     } catch (e) {
       console.error('Error al guardar tipografía:', e);
       alert('No se pudo guardar la tipografía. Intenta de nuevo.');
