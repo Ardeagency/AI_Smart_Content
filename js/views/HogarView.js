@@ -185,7 +185,9 @@ class HogarView extends BaseView {
       );
       parallelQueries.push(
         ownerIds.length > 0
-          ? this.supabase.from('subscriptions').select('user_id, price, currency').in('user_id', ownerIds).order('created_at', { ascending: false })
+          ? (ownerIds.length === 1
+              ? this.supabase.from('subscriptions').select('user_id, price, currency').eq('user_id', ownerIds[0]).order('created_at', { ascending: false })
+              : this.supabase.from('subscriptions').select('user_id, price, currency').in('user_id', ownerIds).order('created_at', { ascending: false }))
           : Promise.resolve({ data: [] })
       );
       parallelQueries.push(
