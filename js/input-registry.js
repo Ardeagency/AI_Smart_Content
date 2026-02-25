@@ -41,6 +41,7 @@
     flags: 'SELECT_CONTAINER',
     colores: 'SELECT_CONTAINER',
     aspect_ratio: 'SELECT_CONTAINER',
+    scope_picker: 'SELECT_CONTAINER',
     tone_selector: 'SELECT_CONTAINER',
     mood_selector: 'SELECT_CONTAINER',
     length_selector: 'SELECT_CONTAINER',
@@ -328,18 +329,57 @@
     var val = f.defaultValue != null ? f.defaultValue : 50;
     return '<div class="range-input"><input type="range" class="modern-input" id="' + a.id + '" name="' + a.name + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + val + '"' + a.disabled + '><span class="range-value">' + val + '</span></div>';
   }
-  /** Preview en canvas del Builder: bloque tipo acordeón para selectores de enfoque. */
+  /** Preview en canvas del Builder: bloque tipo acordeón para selectores de enfoque (solo scope_picker). */
   function previewFocusSelectorAccordion(f) {
-    var t = f.context_selector_type || getInputType(f) || 'brand_selector';
-    var label = getContextSelectorLabel(t);
+    var label = f.label || 'Enfoque de la producción';
     return (
       '<div class="preview-focus-selector">' +
         '<div class="preview-focus-selector-header">' +
           '<i class="ph ph-caret-down"></i>' +
-          '<span>Selector de enfoque: ' + escapeHtml(label) + '</span>' +
+          '<span>' + escapeHtml(label) + '</span>' +
           '<span class="preview-focus-selector-badge">Que la IA decida</span>' +
         '</div>' +
         '<div class="preview-focus-selector-hint">Personalizar enfoque desactivando el botón anterior</div>' +
+      '</div>'
+    );
+  }
+
+  /** Scope picker: enfoque de la producción. Toggle "Que la IA decida" + opciones personalizables (field.options). */
+  function previewScopePicker(f) {
+    return previewFocusSelectorAccordion(f);
+  }
+  function formScopePicker(f, opts) {
+    var a = formAttrs(f, opts || {});
+    var optsList = f.options || [];
+    var label = f.label || 'Enfoque de la producción';
+    var innerHtml;
+    if (optsList.length === 0) {
+      innerHtml = '<p class="focus-selector-empty-msg">Añade opciones de enfoque en el Builder.</p>';
+    } else {
+      innerHtml = '<div class="focus-selector-section">' +
+        '<div class="focus-selector-options">' +
+        optsList.map(function (o) {
+          var v = escapeHtml(String(o.value != null ? o.value : o.label != null ? o.label : o));
+          var lbl = escapeHtml(o.label != null ? o.label : v);
+          return '<label class="focus-selector-option">' +
+            '<input type="checkbox" class="focus-selector-checkbox" data-value="' + v + '">' +
+            '<span>' + lbl + '</span></label>';
+        }).join('') +
+        '</div></div>';
+    }
+    return (
+      '<div class="focus-selector-accordion" data-focus-type="scope_picker" data-field-name="' + escapeHtml(a.name) + '">' +
+        '<div class="focus-selector-toggle-wrap">' +
+          '<label class="focus-selector-ai-toggle">' +
+            '<input type="checkbox" class="focus-selector-let-ai-decide" checked aria-label="Que la IA decida">' +
+            '<span class="focus-selector-ai-label">Que la IA decida</span>' +
+          '</label>' +
+          '<p class="focus-selector-ai-help">Cuando está activado se envían todos los datos al webhook. Desactívalo para elegir en qué quieres enfocar la producción.</p>' +
+        '</div>' +
+        '<div class="focus-selector-body" aria-hidden="true">' +
+          '<div class="focus-selector-accordion-inner">' + innerHtml + '</div>' +
+        '</div>' +
+        '<input type="hidden" id="' + a.id + '" name="' + a.name + '" value="' + escapeHtml(JSON.stringify({ let_ai_decide: true })) + '"' + a.disabled + a.required + '>' +
       '</div>'
     );
   }
@@ -742,7 +782,8 @@
       preview: function (f) {
         var t = f.context_selector_type || getInputType(f);
         var isContext = ['brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector'].indexOf(getInputType(f)) >= 0 || !!f.context_selector_type;
-        if (isContext) return previewFocusSelectorAccordion(f);
+        if (isContext) return previewContext(getContextSelectorLabel(getInputType(f)));
+        if (t === 'scope_picker') return previewScopePicker(f);
         if (t === 'flags') return previewFlags(f);
         if (t === 'colores') return previewColores(f);
         if (t === 'aspect_ratio') return previewAspectRatio(f);
@@ -754,7 +795,8 @@
       form: function (f, opts) {
         var t = f.context_selector_type || getInputType(f);
         var isContext = ['brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector'].indexOf(getInputType(f)) >= 0 || !!f.context_selector_type;
-        if (isContext) return formFocusSelectorAccordion(f, opts || {});
+        if (isContext) return formContextPlaceholder(f, opts || {}, getContextPlaceholder(getInputType(f)));
+        if (t === 'scope_picker') return formScopePicker(f, opts || {});
         if (t === 'flags') return formFlags(f, opts);
         if (t === 'colores') return formColores(f, opts);
         if (t === 'aspect_ratio') return formAspectRatio(f, opts);
@@ -933,6 +975,7 @@
       { id: 'flags', name: 'Flags', description: 'Dropdown preconfigurado: idioma, país o etnia/origen (flag_category).', category: 'basic', icon_name: 'flag', base_schema: { input_type: 'flags', type: 'flags', data_type: 'string', flag_category: 'language', options: [] } },
       { id: 'colores', name: 'Colores', description: 'Círculos de colores seleccionables (como brands). Máx. 6. El desarrollador define la paleta.', category: 'basic', icon_name: 'palette', base_schema: { input_type: 'colores', type: 'colores', data_type: 'array', max_selections: 6, options: [{ value: '#000000', label: 'Negro' }, { value: '#ef4444', label: 'Rojo' }, { value: '#22c55e', label: 'Verde' }, { value: '#3b82f6', label: 'Azul' }, { value: '#eab308', label: 'Amarillo' }, { value: '#8b5cf6', label: 'Violeta' }] } },
       { id: 'aspect_ratio', name: 'Aspect ratio', description: 'Formato de producción (1:1, 16:9, etc.). Grid de tarjetas con icono.', category: 'basic', icon_name: 'crop', base_schema: { input_type: 'aspect_ratio', type: 'aspect_ratio', data_type: 'string', options: [{ value: '1:1', label: '1:1' }, { value: '2:3', label: '2:3' }, { value: '3:2', label: '3:2' }, { value: '4:3', label: '4:3' }, { value: '3:4', label: '3:4' }, { value: '4:5', label: '4:5' }, { value: '5:4', label: '5:4' }, { value: '16:9', label: '16:9' }, { value: '9:16', label: '9:16' }, { value: '21:9', label: '21:9' }] } },
+      { id: 'scope_picker', name: 'Scope picker (enfoque)', description: 'Enfoque de la producción. Toggle «Que la IA decida» y opciones personalizables.', category: 'basic', icon_name: 'target', base_schema: { input_type: 'scope_picker', type: 'scope_picker', data_type: 'object', options: [] } },
       { id: 'brand_selector', name: 'Selector de Marca', description: 'Enfoque de producción: marca (acordeón)', category: 'brand', icon_name: 'storefront', base_schema: { input_type: 'brand_selector', type: 'brand_selector', data_type: 'object' } },
       { id: 'entity_selector', name: 'Selector de Entidad', description: 'Producto/servicio/lugar', category: 'brand', icon_name: 'package', base_schema: { input_type: 'entity_selector', type: 'entity_selector', data_type: 'object', entityTypes: ['product', 'service'] } },
       { id: 'audience_selector', name: 'Selector de Audiencia', description: 'Enfoque: audiencia', category: 'brand', icon_name: 'users', base_schema: { input_type: 'audience_selector', type: 'audience_selector', data_type: 'object' } },
@@ -957,6 +1000,7 @@
     if (['switch', 'toggle_switch', 'toggle'].indexOf(t) >= 0) return 'switch';
     if (t === 'colores') return 'colores';
     if (t === 'aspect_ratio') return 'aspect_ratio';
+    if (t === 'scope_picker') return 'scope_picker';
     if (['select', 'dropdown', 'multi_select', 'radio', 'radio_buttons', 'choice_chips', 'multi_select_chips', 'flags', 'tone_selector', 'mood_selector', 'length_selector', 'selection_checkboxes'].indexOf(t) >= 0) return 'select';
     return 'generic';
   }

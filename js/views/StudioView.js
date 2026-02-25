@@ -622,85 +622,6 @@ class StudioView extends BaseView {
     });
   }
 
-  /** Opciones de enfoque por tipo: secciones y keys a mostrar como checkboxes (personalizar enfoque). */
-  getFocusOptionsByType() {
-    return {
-      brand_selector: [
-        { section: 'Identidad', options: [
-          { key: 'nombre_marca', label: 'Nombre de la marca' },
-          { key: 'logo_url', label: 'Logo' },
-          { key: 'mercado_objetivo', label: 'Mercado objetivo' },
-          { key: 'idiomas_contenido', label: 'Idiomas de contenido' }
-        ]},
-        { section: 'Esencia', options: [
-          { key: 'objetivos_marca', label: 'Objetivos de marca' },
-          { key: 'nicho_mercado', label: 'Nicho de mercado' },
-          { key: 'arquetipo_personalidad', label: 'Arquetipo / personalidad' },
-          { key: 'enfoque_marca', label: 'Enfoque de marca' }
-        ]},
-        { section: 'Lenguaje', options: [
-          { key: 'palabras_clave', label: 'Palabras a usar' },
-          { key: 'palabras_prohibidas', label: 'Palabras a evitar' },
-          { key: 'tono_comunicacion', label: 'Tono de comunicación' },
-          { key: 'estilo_escritura', label: 'Estilo de escritura' }
-        ]},
-        { section: 'Estilo visual', options: [
-          { key: 'estilo_visual', label: 'Estilo visual' },
-          { key: 'estilo_publicidad', label: 'Estilo publicidad' },
-          { key: 'transmitir_visualmente', label: 'Transmitir visualmente' },
-          { key: 'evitar_visualmente', label: 'Evitar visualmente' }
-        ]}
-      ],
-      campaign_selector: [
-        { section: 'Campaña', options: [
-          { key: 'nombre_campana', label: 'Nombre de campaña' },
-          { key: 'descripcion_interna', label: 'Descripción interna' },
-          { key: 'cta', label: 'Llamada a la acción' },
-          { key: 'cta_url', label: 'URL del CTA' },
-          { key: 'contexto_temporal', label: 'Contexto temporal' },
-          { key: 'objetivos_estrategicos', label: 'Objetivos estratégicos' },
-          { key: 'angulos_venta', label: 'Ángulos de venta' },
-          { key: 'oferta_principal', label: 'Oferta principal' },
-          { key: 'tono_modificador', label: 'Tono modificador' }
-        ]}
-      ],
-      product_selector: [
-        { section: 'Producto', options: [
-          { key: 'id', label: 'ID' },
-          { key: 'nombre_producto', label: 'Nombre' },
-          { key: 'tipo_producto', label: 'Tipo' },
-          { key: 'main_image', label: 'Imagen principal' },
-          { key: 'description', label: 'Descripción' }
-        ]}
-      ],
-      audience_selector: [
-        { section: 'Audiencia', options: [
-          { key: 'name', label: 'Nombre' },
-          { key: 'description', label: 'Descripción' },
-          { key: 'awareness_level', label: 'Nivel de conciencia' },
-          { key: 'datos_demograficos', label: 'Datos demográficos' },
-          { key: 'datos_psicograficos', label: 'Datos psicográficos' },
-          { key: 'dolores', label: 'Dolores' },
-          { key: 'deseos', label: 'Deseos' },
-          { key: 'objeciones', label: 'Objeciones' },
-          { key: 'gatillos_compra', label: 'Gatillos de compra' },
-          { key: 'estilo_lenguaje', label: 'Estilo de lenguaje' }
-        ]}
-      ],
-      entity_selector: [
-        { section: 'Entidad', options: [
-          { key: 'id', label: 'ID' },
-          { key: 'name', label: 'Nombre' },
-          { key: 'description', label: 'Descripción' },
-          { key: 'entity_type', label: 'Tipo (producto/servicio/lugar)' },
-          { key: 'price', label: 'Precio' },
-          { key: 'currency', label: 'Moneda' },
-          { key: 'metadata', label: 'Metadatos' }
-        ]}
-      ]
-    };
-  }
-
   async loadBrandData(brandContainerId) {
     if (!this.supabase || !brandContainerId) return null;
     try {
@@ -774,102 +695,32 @@ class StudioView extends BaseView {
   }
 
   /**
-   * Rellena los acordeones "Selector de enfoque" con datos de la org y enlaza el toggle "Que la IA decida".
-   * Si está activado se envía el objeto completo; si no, solo las claves seleccionadas por el usuario.
+   * Enlaza los acordeones scope_picker (enfoque de la producción): toggle "Que la IA decida" y checkboxes
+   * de opciones ya renderizadas por el registry. Solo procesa data-focus-type="scope_picker".
    */
-  async populateFocusSelectorAccordions() {
+  populateFocusSelectorAccordions() {
     const formEl = document.getElementById('studioFlowForm');
     if (!formEl) return;
 
-    const accordions = formEl.querySelectorAll('.focus-selector-accordion');
-    if (accordions.length === 0) return;
-
-    const brandContainerId = await this.getBrandContainerId();
-    const focusOptions = this.getFocusOptionsByType();
-    const escapeHtml = (s) => {
-      if (s == null) return '';
-      const div = document.createElement('div');
-      div.textContent = s;
-      return div.innerHTML;
-    };
-
-    const focusTypes = Array.from(accordions).map(a => a.getAttribute('data-focus-type') || 'brand_selector');
-    const uniqueTypes = [...new Set(focusTypes)];
-    const dataByType = {};
-
-    const loaders = uniqueTypes.map(async (type) => {
-      try {
-        if (type === 'brand_selector') dataByType[type] = { full: await this.loadBrandData(brandContainerId), list: [] };
-        else if (type === 'campaign_selector') { const l = await this.loadCampaigns(brandContainerId); dataByType[type] = { full: l[0] || null, list: l }; }
-        else if (type === 'product_selector') { const l = await this.loadProductsWithImages(brandContainerId); const f = l[0] || null; if (f && f.images && f.images.length > 0) f.main_image = f.images[0].image_url; dataByType[type] = { full: f, list: l }; }
-        else if (type === 'audience_selector') { const l = await this.loadAudiences(brandContainerId); dataByType[type] = { full: l[0] || null, list: l }; }
-        else if (type === 'entity_selector') { const l = await this.loadEntities(brandContainerId); dataByType[type] = { full: l[0] || null, list: l }; }
-      } catch (_) { dataByType[type] = { full: null, list: [] }; }
-    });
-    await Promise.all(loaders);
-
+    const accordions = formEl.querySelectorAll('.focus-selector-accordion[data-focus-type="scope_picker"]');
     for (const accordion of accordions) {
-      const focusType = accordion.getAttribute('data-focus-type') || 'brand_selector';
       const body = accordion.querySelector('.focus-selector-body');
-      const inner = accordion.querySelector('.focus-selector-accordion-inner');
       const hiddenInput = accordion.querySelector('input[type="hidden"]');
       const letAiCheckbox = accordion.querySelector('.focus-selector-let-ai-decide');
-      if (!body || !inner || !hiddenInput) continue;
-
-      const typeData = dataByType[focusType] || { full: null, list: [] };
-      const fullData = typeData.full;
-      const listData = typeData.list;
-
-      const sections = focusOptions[focusType] || focusOptions.brand_selector;
-      if (!fullData && focusType === 'brand_selector') {
-        inner.innerHTML = '<p class="focus-selector-empty-msg">No hay datos de marca en esta organización.</p>';
-        if (hiddenInput) hiddenInput.value = '{}';
-        continue;
-      }
-      if (!fullData && listData.length === 0) {
-        inner.innerHTML = '<p class="focus-selector-empty-msg">No hay datos de ' + focusType.replace('_selector', '') + ' en esta organización.</p>';
-        if (hiddenInput) hiddenInput.value = '{}';
-        continue;
-      }
-
-      if (fullData && hiddenInput) {
-        hiddenInput.value = JSON.stringify(fullData);
-      }
-
-      const sectionsHtml = sections.map(sec => {
-        const opts = sec.options.map(o => {
-          const val = fullData && fullData[o.key] !== undefined;
-          return (
-            '<label class="focus-selector-option">' +
-            '<input type="checkbox" class="focus-selector-checkbox" data-key="' + escapeHtml(o.key) + '">' +
-            '<span>' + escapeHtml(o.label) + '</span>' +
-            '</label>'
-          );
-        }).join('');
-        return (
-          '<div class="focus-selector-section">' +
-          '<h4 class="focus-selector-section-title">' + escapeHtml(sec.section) + '</h4>' +
-          '<div class="focus-selector-options">' + opts + '</div>' +
-          '</div>'
-        );
-      }).join('');
-
-      inner.innerHTML = sectionsHtml;
-      body.setAttribute('aria-hidden', 'false');
-      body.classList.add('focus-selector-body--has-data');
+      if (!body || !hiddenInput) continue;
 
       const updateValue = () => {
         if (!hiddenInput) return;
         if (letAiCheckbox && letAiCheckbox.checked) {
-          hiddenInput.value = JSON.stringify(fullData || {});
+          hiddenInput.value = '{"let_ai_decide":true}';
           return;
         }
-        const selected = {};
+        const values = [];
         accordion.querySelectorAll('.focus-selector-checkbox:checked').forEach(cb => {
-          const key = cb.getAttribute('data-key');
-          if (fullData && fullData[key] !== undefined) selected[key] = fullData[key];
+          const v = cb.getAttribute('data-value');
+          if (v != null) values.push(v);
         });
-        hiddenInput.value = JSON.stringify(selected);
+        hiddenInput.value = JSON.stringify({ let_ai_decide: false, values });
       };
 
       if (letAiCheckbox) {

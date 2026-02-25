@@ -663,6 +663,7 @@
               <option value="flags" ${(field.input_type || field.type) === 'flags' ? 'selected' : ''}>Flags (idioma, país, etnia)</option>
               <option value="colores" ${(field.input_type || field.type) === 'colores' ? 'selected' : ''}>Colores (círculos, máx. 6)</option>
               <option value="aspect_ratio" ${(field.input_type || field.type) === 'aspect_ratio' ? 'selected' : ''}>Aspect ratio (formato producción)</option>
+              <option value="scope_picker" ${(field.input_type || field.type) === 'scope_picker' ? 'selected' : ''}>Scope picker (enfoque producción)</option>
               <option value="image_selector" ${(field.input_type || field.type) === 'image_selector' ? 'selected' : ''}>Selector de imagen (carrusel)</option>
             </select>
             <span class="field-help">Define si el campo es texto, dropdown, número, etc. Cambia el aspecto en el canvas y las opciones de abajo.</span>
@@ -737,7 +738,7 @@
     if (['checkbox', 'switch', 'boolean', 'toggle', 'toggle_switch'].indexOf(t) >= 0) return 'boolean';
     if (['select', 'multi_select', 'tone_selector', 'mood_selector', 'length_selector', 'radio', 'aspect_ratio'].indexOf(t) >= 0) return 'string';
     if (['tag_input', 'gallery_picker', 'selection_checkboxes', 'colores'].indexOf(t) >= 0) return 'array';
-    if (['brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector', 'image_selector'].indexOf(t) >= 0) return 'object';
+    if (['brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector', 'image_selector', 'scope_picker'].indexOf(t) >= 0) return 'object';
     return field.data_type || 'string';
   };
 
@@ -1115,6 +1116,38 @@
           </div>
         `;
 
+      case 'scope_picker': {
+        const options = field.options || [];
+        const optVal = (o) => (o && (o.value !== undefined ? o.value : o.label !== undefined ? o.label : o));
+        return `
+          <div class="property-group">
+            <h4>Opciones de enfoque (scope picker)</h4>
+            <span class="field-help">Opciones que verá el usuario al desactivar «Que la IA decida». Valor y etiqueta por opción.</span>
+            <div class="property-field">
+              <label>Opciones</label>
+            </div>
+            <div class="options-editor options-editor--dropdown" id="optionsEditor">
+              ${options.length === 0 ? `
+                <div class="option-row" data-index="0">
+                  <input type="text" class="option-single" placeholder="ej. Identidad de marca" data-index="0">
+                  <button type="button" class="btn-icon remove-option" title="Eliminar"><i class="ph ph-x"></i></button>
+                </div>
+              ` : options.map((opt, i) => {
+                const str = escapeProp(optVal(opt) != null ? String(optVal(opt)) : '');
+                return `
+                <div class="option-row" data-index="${i}">
+                  <input type="text" class="option-single" placeholder="ej. Identidad de marca" data-index="${i}" value="${str}">
+                  <button type="button" class="btn-icon remove-option" title="Eliminar"><i class="ph ph-x"></i></button>
+                </div>
+              `; }).join('')}
+            </div>
+            <button type="button" class="btn-small btn-add-options" id="addOptionBtn">
+              <i class="ph ph-plus"></i> Opciones
+            </button>
+          </div>
+        `;
+      }
+
       case 'select':
       case 'radio': {
         const options = field.options || [];
@@ -1368,6 +1401,9 @@
             field.options = [{ value: '1:1', label: '1:1' }, { value: '2:3', label: '2:3' }, { value: '3:2', label: '3:2' }, { value: '4:3', label: '4:3' }, { value: '3:4', label: '3:4' }, { value: '4:5', label: '4:5' }, { value: '5:4', label: '5:4' }, { value: '16:9', label: '16:9' }, { value: '9:16', label: '9:16' }, { value: '21:9', label: '21:9' }];
           }
           if (field.defaultValue == null) field.defaultValue = '1:1';
+        }
+        if (newType === 'scope_picker') {
+          if (!Array.isArray(field.options)) field.options = [];
         }
         if (newType === 'toggle_switch' || newType === 'switch') {
           field.display_style = 'switch';
