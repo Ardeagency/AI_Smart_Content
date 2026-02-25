@@ -77,8 +77,7 @@ class BrandsView extends BaseView {
       if (!this.isActive) return false;
       const brandColorsEl = container.querySelector('#brandColorSwatches') || document.getElementById('brandColorSwatches');
       const typographyEl = container.querySelector('#typographyPreview') || document.getElementById('typographyPreview');
-      const statusEl = container.querySelector('#visualStatus') || document.getElementById('visualStatus');
-      if (brandColorsEl && typographyEl && statusEl) {
+      if (brandColorsEl && typographyEl) {
         this.renderAll();
         const root = container.querySelector('#brandsListContainer');
         if (root) root.classList.add('brands-ready');
@@ -721,9 +720,6 @@ class BrandsView extends BaseView {
     
     // Visual de marca - Typography
     this.renderTypography();
-    
-    // Visual de marca - Status
-    this.renderVisualStatus();
 
     // Archivos de identidad
     this.renderIdentityFiles();
@@ -1129,10 +1125,6 @@ class BrandsView extends BaseView {
             </div>
           `).join('')}
         </div>
-      </div>
-      <div class="typography-samples">
-        <div class="typography-sample heading" style="font-family: '${this.escapeHtml(currentFont)}', sans-serif; font-weight: 600;">Heading</div>
-        <div class="typography-sample body" style="font-family: '${this.escapeHtml(currentFont)}', sans-serif; font-weight: 400;">Body</div>
       </div>
     `;
     const dropdown = container.querySelector(`#${dropdownId}`);
