@@ -12,6 +12,7 @@ class BrandsView extends BaseView {
     this.brandData = null;
     this.products = [];
     this.brandColors = [];
+    this.brandFonts = [];
     this.brandRules = [];
     this.brandAssets = [];
     this.brandEntities = [];
@@ -272,10 +273,11 @@ class BrandsView extends BaseView {
           }
         }
 
-        // Colores y reglas
+        // Colores, fuentes y reglas
         if (this.brandData?.id) {
-          const [colorsResult, rulesResult] = await Promise.allSettled([
+          const [colorsResult, fontsResult, rulesResult] = await Promise.allSettled([
             this.supabase.from('brand_colors').select('*').eq('brand_id', this.brandData.id),
+            this.supabase.from('brand_fonts').select('*').eq('brand_id', this.brandData.id),
             this.supabase.from('brand_rules').select('*').eq('brand_id', this.brandData.id)
           ]);
           
@@ -284,6 +286,13 @@ class BrandsView extends BaseView {
           } else {
             console.warn('⚠️ Error cargando colores:', colorsResult.reason || colorsResult.value?.error);
             this.brandColors = [];
+          }
+          
+          if (fontsResult.status === 'fulfilled' && !fontsResult.value.error) {
+            this.brandFonts = fontsResult.value.data || [];
+          } else {
+            console.warn('⚠️ Error cargando fuentes:', fontsResult.reason || fontsResult.value?.error);
+            this.brandFonts = [];
           }
           
           if (rulesResult.status === 'fulfilled' && !rulesResult.value.error) {
@@ -1066,15 +1075,11 @@ class BrandsView extends BaseView {
     }
   }
 
-  /** Devuelve la fuente de tipografía actual (para imágenes) desde brand_rules. */
+  /** Devuelve la fuente de tipografía actual (para imágenes) desde brand_fonts (font_usage = 'images'). */
   getTypographyFontFamily() {
-    const typographyRule = (this.brandRules || []).find(rule =>
-      rule.rule_type === 'typography' ||
-      (rule.rule_value && typeof rule.rule_value === 'object' && rule.rule_value.font_family)
-    );
-    if (!typographyRule) return 'Inter';
-    const rv = typographyRule.rule_value || {};
-    return rv.font_family || typographyRule.font_family || 'Inter';
+    const fontRow = (this.brandFonts || []).find(f => (f.font_usage || '').toLowerCase() === 'images');
+    if (fontRow && fontRow.font_family) return fontRow.font_family;
+    return 'Inter';
   }
 
   /** Carga la fuente en el documento para la vista previa (Google Fonts). */
@@ -1179,36 +1184,36 @@ class BrandsView extends BaseView {
 
   async saveTypographyForImages(fontFamily) {
     if (!this.supabase || !this.brandData?.id) return;
-    const ruleValue = { font_family: fontFamily, font_weight: '400' };
     try {
       const { data: existing } = await this.supabase
-        .from('brand_rules')
+        .from('brand_fonts')
         .select('id')
         .eq('brand_id', this.brandData.id)
-        .eq('rule_type', 'typography')
+        .eq('font_usage', 'images')
         .limit(1)
         .maybeSingle();
       if (existing) {
         await this.supabase
-          .from('brand_rules')
-          .update({ rule_value: ruleValue })
+          .from('brand_fonts')
+          .update({
+            font_family: fontFamily,
+            font_weight: '400',
+            fallback_font: 'sans-serif'
+          })
           .eq('id', existing.id);
       } else {
         await this.supabase
-          .from('brand_rules')
+          .from('brand_fonts')
           .insert({
             brand_id: this.brandData.id,
-            rule_type: 'typography',
-            rule_value: ruleValue
+            font_family: fontFamily,
+            font_usage: 'images',
+            font_weight: '400',
+            fallback_font: 'sans-serif'
           });
       }
-      const rules = (this.brandRules || []).map(r =>
-        r.rule_type === 'typography' ? { ...r, rule_value: ruleValue } : r
-      );
-      if (!rules.some(r => r.rule_type === 'typography')) {
-        rules.push({ rule_type: 'typography', rule_value: ruleValue });
-      }
-      this.brandRules = rules;
+      const others = (this.brandFonts || []).filter(f => (f.font_usage || '').toLowerCase() !== 'images');
+      this.brandFonts = [...others, { brand_id: this.brandData.id, font_usage: 'images', font_family: fontFamily, font_weight: '400', fallback_font: 'sans-serif' }];
     } catch (e) {
       console.error('Error al guardar tipografía:', e);
       alert('No se pudo guardar la tipografía. Intenta de nuevo.');
