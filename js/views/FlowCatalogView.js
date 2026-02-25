@@ -15,6 +15,7 @@ class FlowCatalogView extends BaseView {
     this.favorites = [];       // { flow_id, rating?, ... }
     this.recentRunFlowIds = [];
     this.selectedCategoryId = null; // null = home, uuid = category view
+    this.selectedSubcategoryId = null; // vista por content_subcategories (schema 254-261)
     this.subcategoriesInCategory = []; // subcategories that appear in flows of selected category
   }
 
@@ -34,6 +35,7 @@ class FlowCatalogView extends BaseView {
       return;
     }
     localStorage.setItem('selectedOrganizationId', this.organizationId);
+    this.selectedSubcategoryId = this.routeParams?.subcategoryId || null;
     this.selectedCategoryId = this.routeParams?.categoryId || null;
   }
 
@@ -55,6 +57,12 @@ class FlowCatalogView extends BaseView {
   getCatalogPath(categoryId) {
     const base = this.organizationId ? `/org/${this.organizationId}/studio/catalog` : '/studio/catalog';
     return categoryId ? `${base}/${categoryId}` : base;
+  }
+
+  /** Ruta para vista por subcategoría (content_subcategories). */
+  getCatalogPathForSubcategory(subcategoryId) {
+    const base = this.organizationId ? `/org/${this.organizationId}/studio/catalog` : '/studio/catalog';
+    return subcategoryId ? `${base}/sub/${subcategoryId}` : base;
   }
 
   /** Convierte nombre de categoría en slug para URL (ej: "Posts" → "posts"). */
@@ -104,7 +112,7 @@ class FlowCatalogView extends BaseView {
   }
 
   renderHTML() {
-    const isCategoryView = !!this.selectedCategoryId;
+    const isCategoryView = !!(this.selectedCategoryId || this.selectedSubcategoryId);
     return `
       <div class="flow-catalog" id="flowCatalogContainer">
         <div class="flow-catalog-loading" id="flowCatalogLoading">
@@ -201,7 +209,9 @@ class FlowCatalogView extends BaseView {
       this.loadCategories(),
       this.loadSubcategories()
     ]);
-    if (this.selectedCategoryId && !this.isUuid(this.selectedCategoryId)) {
+    if (this.selectedSubcategoryId) {
+      this.selectedCategoryId = null;
+    } else if (this.selectedCategoryId && !this.isUuid(this.selectedCategoryId)) {
       const resolved = this.resolveCategoryIdFromSlug(this.selectedCategoryId);
       this.selectedCategoryId = resolved;
     }
@@ -215,6 +225,9 @@ class FlowCatalogView extends BaseView {
     }
     if (this.selectedCategoryId) {
       this.computeSubcategoriesInCategory();
+    } else if (this.selectedSubcategoryId) {
+      const sub = this.subcategories.find(s => s.id === this.selectedSubcategoryId);
+      this.subcategoriesInCategory = sub ? [sub] : [];
     }
 
     document.getElementById('flowCatalogLoading').style.display = 'none';
@@ -222,7 +235,7 @@ class FlowCatalogView extends BaseView {
 
     this.renderHero();
     this.renderCategoriesVisualGrid();
-    if (this.selectedCategoryId) {
+    if (this.selectedCategoryId || this.selectedSubcategoryId) {
       this.renderSubcategoriesStrip();
       this.renderRecentInCategory();
       this.renderGalleryBySubcategory();
@@ -291,9 +304,8 @@ class FlowCatalogView extends BaseView {
   }
 
   /**
-   * Carga flujos del catálogo. En vista por categoría filtra estrictamente por
-   * content_flows.category_id (schema: FK a content_categories) para que cada
-   * flujo solo aparezca en su sección correcta (Posts, Stories, Ads, etc.).
+   * Carga flujos del catálogo. Filtra por category_id o subcategory_id (content_flows)
+   * según la vista activa.
    */
   async loadFlows() {
     if (!this.supabase) return;
@@ -304,7 +316,9 @@ class FlowCatalogView extends BaseView {
         .eq('is_active', true)
         .eq('flow_category_type', 'manual')
         .eq('show_in_catalog', true);
-      if (this.selectedCategoryId) {
+      if (this.selectedSubcategoryId) {
+        q = q.eq('subcategory_id', this.selectedSubcategoryId);
+      } else if (this.selectedCategoryId) {
         q = q.eq('category_id', this.selectedCategoryId);
       }
       const { data, error } = await q.order('created_at', { ascending: false });
@@ -380,7 +394,7 @@ class FlowCatalogView extends BaseView {
 
   getHeroFlows() {
     const published = this.getPublishedFlows();
-    if (this.selectedCategoryId) {
+    if (this.selectedCategoryId || this.selectedSubcategoryId) {
       return [...published].sort((a, b) => {
         const scoreA = (a.run_count || 0) + (a.likes_count || 0) + (a.saves_count || 0);
         const scoreB = (b.run_count || 0) + (b.likes_count || 0) + (b.saves_count || 0);
@@ -449,7 +463,11 @@ class FlowCatalogView extends BaseView {
   getRecentInCategoryFlows() {
     return this.recentRunFlowIds
       .map(id => this.flowsById.get(id))
-      .filter(f => f && f.category_id === this.selectedCategoryId);
+      .filter(f => {
+        if (!f) return false;
+        if (this.selectedSubcategoryId) return f.subcategory_id === this.selectedSubcategoryId;
+        return f.category_id === this.selectedCategoryId;
+      });
   }
 
   getFlowsBySubcategory() {
@@ -596,12 +614,14 @@ class FlowCatalogView extends BaseView {
 
   renderHero() {
     const list = this.getHeroFlows();
+    const section = document.getElementById('flowCatalogHeroSection');
     const track = document.getElementById('flowCatalogHeroTrack');
-    if (!track) return;
+    if (!section || !track) return;
     if (list.length === 0) {
-      track.innerHTML = '<div class="flow-hero-slide flow-hero-empty"><p>No hay flujos destacados</p></div>';
+      section.style.display = 'none';
       return;
     }
+    section.style.display = '';
     track.innerHTML = list.map(f => this.renderHeroSlide(f)).join('');
     track.querySelectorAll('.flow-hero-slide-cta, .flow-hero-slide').forEach(el => {
       const flowId = el.dataset.flowId || el.closest('[data-flow-id]')?.dataset?.flowId;
@@ -614,32 +634,50 @@ class FlowCatalogView extends BaseView {
     });
   }
 
-  /** Categorías visuales: grid de cards por content_categories para encontrar flujos por categoría. */
+  /**
+   * Categorías visuales: grid por content_subcategories (schema 254-261).
+   * Solo se muestran subcategorías que tienen al menos 1 flujo; si ninguna tiene flujos, la sección entera se oculta.
+   */
   renderCategoriesVisualGrid() {
+    const section = document.getElementById('sectionCategories');
     const grid = document.getElementById('categoriesVisualGrid');
-    if (!grid) return;
-    const basePath = this.getCatalogPath();
-    const categoriesWithCount = [
-      { id: '', name: 'Todos', count: this.flows.length },
-      ...this.categories.map(cat => ({
-        ...cat,
-        count: this.flows.filter(f => f.category_id === cat.id).length
+    if (!section || !grid) return;
+    const subcategoriesWithCount = this.subcategories
+      .map(sub => ({
+        ...sub,
+        count: this.flows.filter(f => f.subcategory_id === sub.id).length
       }))
+      .filter(sub => sub.count > 0);
+    const hasAnyFlows = this.flows.length > 0;
+    if (!hasAnyFlows && subcategoriesWithCount.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+    section.style.display = '';
+    const basePath = this.getCatalogPath();
+    const onHome = !this.selectedSubcategoryId && !this.selectedCategoryId;
+    const cards = [
+      { id: '', name: 'Todos', count: onHome ? this.flows.length : 0, isSub: false },
+      ...subcategoriesWithCount.map(sub => ({ ...sub, isSub: true }))
     ];
-    grid.innerHTML = categoriesWithCount.map(cat => {
-      const href = cat.id ? this.getCatalogPath(cat.id) : basePath;
-      const isActive = (!cat.id && !this.selectedCategoryId) || this.selectedCategoryId === cat.id;
+    grid.innerHTML = cards.map(item => {
+      const href = item.isSub && item.id ? this.getCatalogPathForSubcategory(item.id) : basePath;
+      const isActive = !this.selectedSubcategoryId && !item.id
+        ? true
+        : this.selectedSubcategoryId === item.id;
+      const dataAttr = `data-subcategory-id="${this.escapeHtml(item.id || '')}"`;
+      const countText = item.count > 0 ? `${item.count} flujo${item.count !== 1 ? 's' : ''}` : '';
       return `
-        <a href="${this.escapeHtml(href)}" class="flow-catalog-category-card ${isActive ? 'active' : ''}" data-category-id="${this.escapeHtml(cat.id || '')}">
-          <span class="flow-catalog-category-card-name">${this.escapeHtml(cat.name)}</span>
-          <span class="flow-catalog-category-card-count">${cat.count} flujo${cat.count !== 1 ? 's' : ''}</span>
+        <a href="${this.escapeHtml(href)}" class="flow-catalog-category-card ${isActive ? 'active' : ''}" ${dataAttr}>
+          <span class="flow-catalog-category-card-name">${this.escapeHtml(item.name)}</span>
+          ${countText ? `<span class="flow-catalog-category-card-count">${countText}</span>` : ''}
         </a>
       `;
     }).join('');
-    grid.querySelectorAll('a[data-category-id]').forEach(link => {
+    grid.querySelectorAll('a[data-subcategory-id]').forEach(link => {
       link.addEventListener('click', (e) => {
-        const id = link.getAttribute('data-category-id');
-        const path = id ? this.getCatalogPath(id) : this.getCatalogPath();
+        const id = link.getAttribute('data-subcategory-id');
+        const path = id ? this.getCatalogPathForSubcategory(id) : this.getCatalogPath();
         if (window.router) {
           e.preventDefault();
           window.router.navigate(path);
@@ -663,8 +701,14 @@ class FlowCatalogView extends BaseView {
   }
 
   renderSubcategoriesStrip() {
+    const section = document.getElementById('sectionSubcategories');
     const strip = document.getElementById('subcategoriesStrip');
-    if (!strip) return;
+    if (!section || !strip) return;
+    if (!this.subcategoriesInCategory.length) {
+      section.style.display = 'none';
+      return;
+    }
+    section.style.display = '';
     strip.innerHTML = this.subcategoriesInCategory.map(sub => `
       <button type="button" class="flow-catalog-category-chip flow-catalog-sub-chip" data-subcategory-id="${this.escapeHtml(sub.id)}">
         ${this.escapeHtml(sub.name)}
@@ -764,11 +808,13 @@ class FlowCatalogView extends BaseView {
   renderGalleryBySubcategory() {
     const gallery = document.getElementById('galleryBySub');
     if (!gallery) return;
-    const rows = this.getFlowsBySubcategory();
+    const rows = this.getFlowsBySubcategory().filter(({ flows }) => flows.length > 0);
     if (rows.length === 0) {
       gallery.innerHTML = '';
+      gallery.closest('.flow-catalog-gallery-by-sub')?.style.setProperty('display', 'none');
       return;
     }
+    gallery.closest('.flow-catalog-gallery-by-sub')?.style.removeProperty('display');
     gallery.innerHTML = rows.map(({ sub, flows }) => `
       <section class="flow-catalog-sub-row flow-catalog-row-section" data-subcategory-id="${this.escapeHtml(sub?.id || '')}">
         <h2 class="flow-catalog-row-title">${this.escapeHtml(sub?.name || '')}</h2>

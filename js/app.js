@@ -149,8 +149,10 @@ class App {
 
     // ── Org: Flow Catalog ──
     const catalogLoader = this._lazy('FlowCatalogView', ['/js/views/FlowCatalogView.js']);
+    r.register('/org/:orgId/studio/catalog/sub/:subcategoryId', catalogLoader, auth);
     r.register('/org/:orgId/studio/catalog/:categoryId', catalogLoader, auth);
     r.register('/org/:orgId/studio/catalog', catalogLoader, auth);
+    r.register('/studio/catalog/sub/:subcategoryId', catalogLoader, auth);
     r.register('/studio/catalog/:categoryId', catalogLoader, auth);
     r.register('/studio/catalog', catalogLoader, auth);
 
