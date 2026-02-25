@@ -170,7 +170,7 @@ class Navigation {
     
     // Rutas legacy sin /org/ - tratar como usuario pero sin org_id
     // Esto mantiene compatibilidad temporal (/settings ya tratado arriba)
-    if (['/historial', '/living', '/brands', '/products', '/studio', '/audiences', '/marketing', '/campaigns', '/content', '/organization'].some(r => path.startsWith(r))) {
+    if (['/historial', '/living', '/brands', '/products', '/studio', '/audiences', '/marketing', '/campaigns', '/content', '/organization', '/servicios', '/credits'].some(r => path.startsWith(r))) {
       return { mode: 'user', showSidebar: true, showHeader: true, orgId: null, brandId: null };
     }
     
@@ -943,6 +943,7 @@ class Navigation {
       '/marketing': 'Identidad',
       '/campaigns': 'Identidad',
       '/content': 'Identidad',
+      '/servicios': 'Identidad',
       '/settings': 'Configuración',
       '/organization': 'Configuración',
       '/planes': 'Planes',

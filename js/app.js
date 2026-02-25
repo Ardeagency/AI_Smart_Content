@@ -177,6 +177,10 @@ class App {
     // ── Settings ──
     r.register('/settings', this._lazy('SettingsView', ['/js/views/SettingsView.js']), auth);
 
+    // ── Créditos (sidebar footer): con org → organization; sin org → hogar ──
+    r.register('/credits', this._lazy('CreditsView', ['/js/views/CreditsView.js']), auth);
+    r.register('/org/:orgId/credits', this._lazy('OrganizationView', ['/js/views/OrganizationView.js']), auth);
+
     // ── Org: Organization ──
     r.register('/org/:orgId/organization', this._lazy('OrganizationView', ['/js/views/OrganizationView.js']), auth);
 
