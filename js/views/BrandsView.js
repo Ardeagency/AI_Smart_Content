@@ -1093,6 +1093,11 @@ class BrandsView extends BaseView {
     document.head.appendChild(link);
   }
 
+  /** Carga todas las fuentes del dropdown para que "AaBbCc" se vea bien en cada opción. */
+  loadAllTypographyFonts() {
+    BrandsView.TYPOGRAPHY_FONTS.forEach(f => this.loadFontForPreview(f.value));
+  }
+
   renderTypography() {
     const container = (this.container && this.container.querySelector('#typographyPreview')) ||
                       document.getElementById('typographyPreview');
@@ -1106,27 +1111,78 @@ class BrandsView extends BaseView {
     const currentFont = this.getTypographyFontFamily();
     this.loadFontForPreview(currentFont);
     const fonts = BrandsView.TYPOGRAPHY_FONTS;
-    const selectId = 'typographyFontSelect';
+    const dropdownId = 'typographyFontDropdown';
+    const panelId = 'typographyFontPanel';
     container.innerHTML = `
-      <label for="${selectId}" class="typography-label">Tipografía para imágenes</label>
-      <select id="${selectId}" class="typography-select" aria-label="Seleccionar tipografía para imágenes">
-        ${fonts.map(f => `<option value="${this.escapeHtml(f.value)}" ${f.value === currentFont ? 'selected' : ''}>${this.escapeHtml(f.label)}</option>`).join('')}
-      </select>
-      <div class="typography-font-name" style="font-family: '${this.escapeHtml(currentFont)}', sans-serif;">${this.escapeHtml(currentFont)}</div>
+      <label class="typography-label">Tipografía para imágenes</label>
+      <div class="typography-dropdown" id="${dropdownId}" role="combobox" aria-expanded="false" aria-haspopup="listbox" aria-label="Seleccionar tipografía para imágenes">
+        <button type="button" class="typography-dropdown-trigger" aria-controls="${panelId}">
+          <span class="typography-trigger-name">${this.escapeHtml(currentFont)}</span>
+          <span class="typography-trigger-preview" style="font-family: '${this.escapeHtml(currentFont)}', sans-serif;">AaBbCc</span>
+          <span class="typography-trigger-chevron" aria-hidden="true"></span>
+        </button>
+        <div class="typography-dropdown-panel" id="${panelId}" role="listbox" hidden>
+          ${fonts.map(f => `
+            <div class="typography-dropdown-option" role="option" data-value="${this.escapeHtml(f.value)}" ${f.value === currentFont ? 'aria-selected="true"' : ''}>
+              <span class="typography-option-name">${this.escapeHtml(f.label)}</span>
+              <span class="typography-option-preview" style="font-family: '${this.escapeHtml(f.value)}', sans-serif;">AaBbCc</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
       <div class="typography-samples">
         <div class="typography-sample heading" style="font-family: '${this.escapeHtml(currentFont)}', sans-serif; font-weight: 600;">Heading</div>
         <div class="typography-sample body" style="font-family: '${this.escapeHtml(currentFont)}', sans-serif; font-weight: 400;">Body</div>
       </div>
     `;
-    const select = container.querySelector(`#${selectId}`);
-    if (select) {
-      select.addEventListener('change', () => {
-        const selected = select.value;
-        this.loadFontForPreview(selected);
-        this.saveTypographyForImages(selected);
-        this.renderTypography();
+    const dropdown = container.querySelector(`#${dropdownId}`);
+    const trigger = container.querySelector('.typography-dropdown-trigger');
+    const panel = container.querySelector(`#${panelId}`);
+    const options = container.querySelectorAll('.typography-dropdown-option');
+
+    const closePanel = () => {
+      if (panel) panel.setAttribute('hidden', '');
+      if (dropdown) dropdown.setAttribute('aria-expanded', 'false');
+      if (trigger) trigger.setAttribute('aria-expanded', 'false');
+      if (this._typographyOutsideClose) {
+        document.removeEventListener('click', this._typographyOutsideClose);
+        this._typographyOutsideClose = null;
+      }
+    };
+
+    const selectFont = (fontValue) => {
+      this.loadFontForPreview(fontValue);
+      this.saveTypographyForImages(fontValue);
+      this.renderTypography();
+    };
+
+    if (trigger) {
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = panel && !panel.hasAttribute('hidden');
+        if (isOpen) {
+          closePanel();
+        } else {
+          this.loadAllTypographyFonts();
+          if (panel) panel.removeAttribute('hidden');
+          if (dropdown) dropdown.setAttribute('aria-expanded', 'true');
+          if (trigger) trigger.setAttribute('aria-expanded', 'true');
+          this._typographyOutsideClose = (ev) => {
+            if (dropdown && !dropdown.contains(ev.target)) closePanel();
+          };
+          document.addEventListener('click', this._typographyOutsideClose);
+        }
       });
     }
+
+    options.forEach(opt => {
+      opt.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const value = opt.getAttribute('data-value');
+        if (value) selectFont(value);
+        closePanel();
+      });
+    });
   }
 
   async saveTypographyForImages(fontFamily) {

@@ -6433,6 +6433,101 @@ h1.brand-name-large[contenteditable="true"]:hover,
     display: block;
 }
 
+/* Dropdown custom (nombre izquierda, AaBbCc derecha) */
+.typography-dropdown {
+    position: relative;
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+.typography-dropdown-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    background: var(--bg-secondary, #1f1d1b);
+    border: 1px solid var(--border-divider, #333);
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: left;
+}
+
+.typography-dropdown-trigger:focus {
+    outline: none;
+    border-color: var(--accent-primary, #6A5ACD);
+}
+
+.typography-trigger-name {
+    flex: 1;
+    min-width: 0;
+}
+
+.typography-trigger-preview {
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+    color: var(--text-secondary);
+}
+
+.typography-trigger-chevron {
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid var(--text-muted);
+    flex-shrink: 0;
+}
+
+.typography-dropdown-panel {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 2px;
+    max-height: 280px;
+    overflow-y: auto;
+    background: var(--bg-secondary, #1f1d1b);
+    border: 1px solid var(--border-divider, #333);
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    z-index: 50;
+}
+
+.typography-dropdown-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-divider, #2a2826);
+}
+
+.typography-dropdown-option:last-child {
+    border-bottom: none;
+}
+
+.typography-dropdown-option:hover,
+.typography-dropdown-option[aria-selected="true"] {
+    background: var(--bg-hover, rgba(106, 90, 205, 0.15));
+}
+
+.typography-option-name {
+    flex: 1;
+    min-width: 0;
+}
+
+.typography-option-preview {
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
 .typography-select {
     width: 100%;
     max-width: 100%;
