@@ -975,26 +975,42 @@ class BrandsView extends BaseView {
     }
   }
 
+  /** Elige un color_role que no esté ya usado (para respetar UNIQUE(brand_id, color_role)). */
+  pickNextColorRole(existingColors) {
+    const roleLabels = ['Color', 'Color 2', 'Color 3', 'Color 4'];
+    const usedRoles = new Set((existingColors || []).map(c => (c.color_role || '').trim()));
+    const next = roleLabels.find(r => !usedRoles.has(r));
+    return next || `Color ${(existingColors || []).length + 1}`;
+  }
+
   async createColor(hexValue) {
     if (!this.supabase || !this.brandData) return;
     const hex = (hexValue || '').replace(/^#/, '').trim();
     if (!/^[0-9A-Fa-f]{6}$/.test(hex)) return;
-    const currentCount = (this.brandColors || []).length;
-    if (currentCount >= 4) {
+    const existing = this.brandColors || [];
+    if (existing.length >= 4) {
       alert('Máximo 4 colores por marca.');
       return;
     }
     const hexNorm = `#${hex}`.toLowerCase();
-    const alreadyExists = (this.brandColors || []).some(
+    const alreadyExists = existing.some(
       c => (c.hex_value || '').toLowerCase() === hexNorm
     );
     if (alreadyExists) {
       alert('Este color ya existe en la marca.');
       return;
     }
-    // color_role distinto por posición para evitar violación UNIQUE(brand_id, color_role) si existe
-    const roleLabels = ['Color', 'Color 2', 'Color 3', 'Color 4'];
-    const colorRole = roleLabels[currentCount] || `Color ${currentCount + 1}`;
+    // Refrescar colores desde BD por si hubo cambios (otra pestaña, etc.)
+    const { data: freshColors } = await this.supabase
+      .from('brand_colors')
+      .select('id, color_role, hex_value')
+      .eq('brand_id', this.brandData.id);
+    const currentInDb = freshColors || [];
+    if (currentInDb.length >= 4) {
+      alert('Máximo 4 colores por marca.');
+      return;
+    }
+    const colorRole = this.pickNextColorRole(currentInDb);
     try {
       const { error } = await this.supabase
         .from('brand_colors')
