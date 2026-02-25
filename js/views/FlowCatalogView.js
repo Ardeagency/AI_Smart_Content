@@ -676,7 +676,7 @@ class FlowCatalogView extends BaseView {
     ];
     grid.innerHTML = cards.map(item => {
       const href = item.isSub && item.id ? this.getCatalogPathForSubcategory(item.id) : basePath;
-      const isActive = !this.selectedSubcategoryId && !item.id
+      const isActive = !this.selectedSubcategoryId && !this.selectedCategoryId && !item.id
         ? true
         : this.selectedSubcategoryId === item.id;
       const dataAttr = `data-subcategory-id="${this.escapeHtml(item.id || '')}"`;

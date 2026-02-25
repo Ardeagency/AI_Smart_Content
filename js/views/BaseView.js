@@ -100,6 +100,7 @@ class BaseView {
     // Eliminada verificación de inicialización - siempre renderizar desde cero
 
     try {
+      await this.onEnter();
       let html;
       if (typeof this.renderHTML === 'function' && this.renderHTML !== BaseView.prototype.renderHTML) {
         html = await this.renderHTML();
@@ -116,7 +117,6 @@ class BaseView {
       this.container.innerHTML = html;
       this.moveModalsToPortal();
       this.updateLinksForRouter();
-      await this.onEnter();
       await this.init();
       await this.updateHeader();
       this.initialized = true;
