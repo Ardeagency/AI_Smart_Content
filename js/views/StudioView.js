@@ -298,17 +298,12 @@ class StudioView extends BaseView {
       el.addEventListener('change', () => this.updateCreditsDisplay());
     });
 
-    // Poblar carruseles, selectores de enfoque y colores por defecto desde la marca (delay para que el DOM esté listo)
-    const runAfterFormReady = () => {
+    // Poblar carruseles, selectores de enfoque y colores por defecto desde la marca
+    setTimeout(() => {
       this.populateImageSelectorCarousels();
       this.populateFocusSelectorAccordions();
       this.populateColoresFromBrand();
-    };
-    if (typeof requestAnimationFrame !== 'undefined') {
-      requestAnimationFrame(() => setTimeout(runAfterFormReady, 50));
-    } else {
-      setTimeout(runAfterFormReady, 50);
-    }
+    }, 0);
   }
 
   /**
@@ -386,21 +381,37 @@ class StudioView extends BaseView {
   }
 
   /**
-   * Obtiene el primer brand_container_id de la organización (para cargar productos).
-   * Misma relación que en products.js y living.js: products.brand_container_id → brand_containers.id
+   * Obtiene el brand_container_id para cargar productos de la marca del usuario.
+   * 1) Intenta por organización (brand_containers.organization_id).
+   * 2) Si no hay marca en la org, fallback por usuario (brand_containers.user_id) para que el usuario vea sus productos.
+   * Misma relación que en products.js: products.brand_container_id → brand_containers.id
    */
   async getBrandContainerId() {
-    if (!this.supabase || !this.organizationId) return null;
+    if (!this.supabase) return null;
     try {
-      const { data, error } = await this.supabase
-        .from('brand_containers')
-        .select('id')
-        .eq('organization_id', this.organizationId)
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .maybeSingle();
-      if (error || !data) return null;
-      return data.id;
+      // 1) Marca de la organización (cuando la org tiene brand_containers con organization_id)
+      if (this.organizationId) {
+        const { data: byOrg, error: errOrg } = await this.supabase
+          .from('brand_containers')
+          .select('id')
+          .eq('organization_id', this.organizationId)
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        if (!errOrg && byOrg && byOrg.id) return byOrg.id;
+      }
+      // 2) Fallback: marca del usuario (user_id), como en products.js
+      if (this.userId) {
+        const { data: byUser, error: errUser } = await this.supabase
+          .from('brand_containers')
+          .select('id')
+          .eq('user_id', this.userId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (!errUser && byUser && byUser.id) return byUser.id;
+      }
+      return null;
     } catch (e) {
       console.error('Studio getBrandContainerId:', e);
       return null;
@@ -459,47 +470,60 @@ class StudioView extends BaseView {
   }
 
   /**
-   * Rellena los carruseles .image-selector-carousel con productos.
-   * Detecta carruseles por: data-media-source="products", key/field con "product", label "productos", o cualquier carrusel vacío (fallback).
+   * Rellena los carruseles .image-selector-carousel con productos cuando:
+   * - data-media-source="products", o
+   * - data-key/data-field-name contiene "product", o
+   * - el label del wrapper (.studio-field) contiene "producto" (ej. "productos").
+   * Usa la misma estructura de tarjeta que la biblioteca de productos.
    */
   async populateImageSelectorCarousels() {
     const formEl = document.getElementById('studioFlowForm');
     if (!formEl) return;
 
-    const seen = new Set();
-    const add = (list) => {
-      if (!list || !list.length) return;
-      Array.from(list).forEach(el => { if (el && !seen.has(el)) seen.add(el); });
-    };
-
     const bySource = formEl.querySelectorAll('.image-selector-carousel[data-media-source="products"]');
-    add(bySource);
-
-    const byKey = Array.from(formEl.querySelectorAll('.image-selector-carousel')).filter(el => {
+    if (bySource.length > 0) {
+      await this._fillProductCarousels(bySource);
+      return;
+    }
+    const allCarousels = Array.from(formEl.querySelectorAll('.image-selector-carousel'));
+    const byKey = allCarousels.filter(el => {
       const key = (el.getAttribute('data-key') || el.getAttribute('data-field-name') || '').toLowerCase();
       return key.includes('product');
     });
-    add(byKey);
-
-    const byLabel = Array.from(formEl.querySelectorAll('.studio-field')).filter(wrap => {
-      const text = (wrap.textContent || '').toLowerCase();
-      return text.includes('productos') && wrap.querySelector('.image-selector-carousel');
-    }).map(wrap => wrap.querySelector('.image-selector-carousel')).filter(Boolean);
-    add(byLabel);
-
-    if (seen.size === 0) {
-      const emptyTracks = formEl.querySelectorAll('.image-selector-carousel .image-selector-carousel-track--empty');
-      emptyTracks.forEach(track => {
-        const carousel = track.closest('.image-selector-carousel');
-        if (carousel) add([carousel]);
-      });
+    if (byKey.length > 0) {
+      await this._fillProductCarousels(byKey);
+      return;
     }
+    const byLabel = allCarousels.filter(carousel => {
+      const wrapper = carousel.closest('.studio-field, .form-field');
+      if (!wrapper) return false;
+      const labelEl = wrapper.querySelector('label');
+      const labelText = (labelEl && labelEl.textContent || '').trim().toLowerCase();
+      return labelText.includes('producto');
+    });
+    if (byLabel.length > 0) {
+      await this._fillProductCarousels(byLabel);
+      return;
+    }
+    // Fallback: si hay un solo carrusel image_selector y no es "references", asumir productos (ej. flujo "Product Render")
+    const notReferences = allCarousels.filter(el => el.getAttribute('data-media-source') !== 'references');
+    if (notReferences.length === 1) {
+      await this._fillProductCarousels(notReferences);
+    }
+  }
 
-    const carousels = Array.from(seen);
-    if (carousels.length === 0) return;
-
+  /**
+   * Rellena los carruseles dados con productos de la marca (internal).
+   */
+  async _fillProductCarousels(carousels) {
     const brandContainerId = await this.getBrandContainerId();
+    if (!brandContainerId) {
+      console.warn('[Studio] No se encontró marca: ni organization_id ni user_id tienen brand_containers. Comprueba que la org o el usuario tengan al menos una marca.');
+    }
     const products = await this.loadProductsWithImages(brandContainerId);
+    if (brandContainerId && (!products || products.length === 0)) {
+      console.warn('[Studio] Marca encontrada pero sin productos. brand_container_id=', brandContainerId, '- Añade productos en la sección Productos de la app.');
+    }
 
     const escapeHtml = (s) => {
       if (s == null) return '';
