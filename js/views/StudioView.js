@@ -298,12 +298,17 @@ class StudioView extends BaseView {
       el.addEventListener('change', () => this.updateCreditsDisplay());
     });
 
-    // Poblar carruseles, selectores de enfoque y colores por defecto desde la marca
-    setTimeout(() => {
+    // Poblar carruseles, selectores de enfoque y colores por defecto desde la marca (delay para que el DOM esté listo)
+    const runAfterFormReady = () => {
       this.populateImageSelectorCarousels();
       this.populateFocusSelectorAccordions();
       this.populateColoresFromBrand();
-    }, 0);
+    };
+    if (typeof requestAnimationFrame !== 'undefined') {
+      requestAnimationFrame(() => setTimeout(runAfterFormReady, 50));
+    } else {
+      setTimeout(runAfterFormReady, 50);
+    }
   }
 
   /**
@@ -454,21 +459,43 @@ class StudioView extends BaseView {
   }
 
   /**
-   * Rellena los carruseles .image-selector-carousel con productos cuando data-media-source="products"
-   * o cuando el key/field del campo sugiere productos (ej. "productos", "product").
-   * Usa la misma estructura de tarjeta que la biblioteca de productos: imagen principal (product.images[0].image_url), nombre.
+   * Rellena los carruseles .image-selector-carousel con productos.
+   * Detecta carruseles por: data-media-source="products", key/field con "product", label "productos", o cualquier carrusel vacío (fallback).
    */
   async populateImageSelectorCarousels() {
     const formEl = document.getElementById('studioFlowForm');
     if (!formEl) return;
 
+    const seen = new Set();
+    const add = (list) => {
+      if (!list || !list.length) return;
+      Array.from(list).forEach(el => { if (el && !seen.has(el)) seen.add(el); });
+    };
+
     const bySource = formEl.querySelectorAll('.image-selector-carousel[data-media-source="products"]');
-    const carousels = bySource.length > 0
-      ? bySource
-      : Array.from(formEl.querySelectorAll('.image-selector-carousel')).filter(el => {
-          const key = (el.getAttribute('data-key') || el.getAttribute('data-field-name') || '').toLowerCase();
-          return key.includes('product');
-        });
+    add(bySource);
+
+    const byKey = Array.from(formEl.querySelectorAll('.image-selector-carousel')).filter(el => {
+      const key = (el.getAttribute('data-key') || el.getAttribute('data-field-name') || '').toLowerCase();
+      return key.includes('product');
+    });
+    add(byKey);
+
+    const byLabel = Array.from(formEl.querySelectorAll('.studio-field')).filter(wrap => {
+      const text = (wrap.textContent || '').toLowerCase();
+      return text.includes('productos') && wrap.querySelector('.image-selector-carousel');
+    }).map(wrap => wrap.querySelector('.image-selector-carousel')).filter(Boolean);
+    add(byLabel);
+
+    if (seen.size === 0) {
+      const emptyTracks = formEl.querySelectorAll('.image-selector-carousel .image-selector-carousel-track--empty');
+      emptyTracks.forEach(track => {
+        const carousel = track.closest('.image-selector-carousel');
+        if (carousel) add([carousel]);
+      });
+    }
+
+    const carousels = Array.from(seen);
     if (carousels.length === 0) return;
 
     const brandContainerId = await this.getBrandContainerId();
