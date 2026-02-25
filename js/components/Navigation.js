@@ -11,14 +11,7 @@ const SIDEBAR_USER_CONFIG = {
       id: 'catalog',
       label: 'Catálogo',
       icon: 'fa-th-large',
-      children: [
-        { label: 'Posts', route: 'studio/catalog/posts' },
-        { label: 'Reels', route: 'studio/catalog/reels' },
-        { label: 'Stories', route: 'studio/catalog/stories' },
-        { label: 'Ads', route: 'studio/catalog/ads' },
-        { label: 'Templates', route: 'studio/catalog/templates' },
-        { label: 'Videos', route: 'studio/catalog/videos' }
-      ]
+      children: [] // Se rellenan con content_categories (schema 218-224) en render
     },
     {
       type: 'container',
@@ -129,7 +122,32 @@ class Navigation {
     this._orgCacheTime = 0;
     this._devCache = null;
     this._devCacheTime = 0;
+    this._catalogCategories = [];
     this._CACHE_TTL = 60000;
+  }
+
+  /**
+   * Carga categorías de intención desde content_categories (schema 218-224) para el sidebar Catálogo.
+   * @returns {Promise<Array<{id: string, name: string}>>}
+   */
+  async loadCatalogCategories() {
+    try {
+      const supabase = window.supabaseService
+        ? await window.supabaseService.getClient()
+        : window.supabase;
+      if (!supabase) return [];
+      const { data, error } = await supabase
+        .from('content_categories')
+        .select('id, name')
+        .order('order_index', { ascending: true, nullsFirst: false })
+        .order('name');
+      if (error) return [];
+      this._catalogCategories = Array.isArray(data) ? data : [];
+      return this._catalogCategories;
+    } catch (e) {
+      console.warn('Navigation: no se pudieron cargar content_categories', e);
+      return [];
+    }
   }
 
   /**
@@ -208,6 +226,10 @@ class Navigation {
     this.currentMode = config.mode;
     this.currentOrgId = config.orgId;
     this.currentBrandId = config.brandId;
+
+    if (config.mode === 'user') {
+      await this.loadCatalogCategories();
+    }
 
     // Renderizar según el modo
     if (config.mode === 'home') {
@@ -336,7 +358,15 @@ class Navigation {
           </div>`;
       }
       const isOpen = expandedId === item.id;
-      const children = (item.children || [])
+      let childItems = item.children || [];
+      if (item.id === 'catalog') {
+        const cats = Array.isArray(this._catalogCategories) ? this._catalogCategories : [];
+        childItems = [
+          { label: 'Todos', route: 'studio/catalog' },
+          ...cats.map((c) => ({ label: c.name, route: `studio/catalog/${c.id}` }))
+        ];
+      }
+      const children = childItems
         .map(
           (c) => `
             <a href="${full(c.route)}" class="nav-submenu-link" data-route="${full(c.route)}" data-tooltip="${c.label}">
