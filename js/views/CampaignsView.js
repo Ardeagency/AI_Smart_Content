@@ -128,10 +128,15 @@ class CampaignsView extends BaseView {
         console.error('CampaignsView loadCampaigns:', error);
         return [];
       }
-      this.campaigns = (data || []).map(c => ({
-        ...c,
-        audience_name: c.audiences?.name ?? (Array.isArray(c.audiences) ? c.audiences[0]?.name : null) || '—',
-      }));
+      this.campaigns = (data || []).map(c => {
+        const aud = c.audiences;
+        let audienceName = '—';
+        if (aud) {
+          if (aud.name) audienceName = aud.name;
+          else if (Array.isArray(aud) && aud[0] && aud[0].name) audienceName = aud[0].name;
+        }
+        return Object.assign({}, c, { audience_name: audienceName });
+      });
       return this.campaigns;
     } catch (e) {
       console.error('CampaignsView loadCampaigns:', e);
@@ -165,10 +170,13 @@ class CampaignsView extends BaseView {
         .eq('id', id)
         .single();
       if (error || !data) return null;
-      return {
-        ...data,
-        audience_name: data.audiences?.name ?? (Array.isArray(data.audiences) ? data.audiences[0]?.name : null) || '—',
-      };
+      const aud = data.audiences;
+      let audienceName = '—';
+      if (aud) {
+        if (aud.name) audienceName = aud.name;
+        else if (Array.isArray(aud) && aud[0] && aud[0].name) audienceName = aud[0].name;
+      }
+      return Object.assign({}, data, { audience_name: audienceName });
     } catch (e) {
       console.error('CampaignsView loadCampaignById:', e);
       return null;
