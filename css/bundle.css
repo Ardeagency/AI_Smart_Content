@@ -11261,19 +11261,14 @@ body.sidebar-collapsed .living-container {
 }
 
 
-/* ========== form-record.css (233 lineas) ========== */
+/* ========== form-record.css — Estilo unificado (mismo look que el resto de la plataforma) ========== */
 
-/**
- * Form Org - Estilo tipo lexaboard: fondo oscuro, gradiente, rejilla, formulario centrado.
- */
+.form-org-bg-grid { display: none; }
 
-/* Variables globales en base.css :root (fuente única) */
-
-/* Fondo: oscuro con gradientes (azul arriba-izq, púrpura arriba-derecha) y rejilla sutil */
 .form-record-container {
     min-height: 100vh;
-    background: #0a0a0f;
-    color: var(--color-white);
+    background: var(--bg-primary);
+    color: var(--text-primary);
     padding: 0;
     margin: 0;
     display: flex;
@@ -11282,35 +11277,12 @@ body.sidebar-collapsed .living-container {
     overflow: hidden;
 }
 
-.form-record-container::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background:
-        radial-gradient(ellipse 80% 50% at 20% 10%, rgba(0, 231, 255, 0.08) 0%, transparent 50%),
-        radial-gradient(ellipse 60% 40% at 85% 15%, rgba(0, 214, 20, 0.06) 0%, transparent 50%),
-        linear-gradient(180deg, rgba(10, 10, 15, 0.97) 0%, #0a0a0f 40%, #0a0a0f 100%);
-    pointer-events: none;
-    z-index: 0;
-}
-
-.form-org-bg-grid {
-    position: fixed;
-    inset: 0;
-    background-image:
-        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-    background-size: 32px 32px;
-    pointer-events: none;
-    z-index: 0;
-}
-
 .form-main-content {
     flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 2rem;
+    padding: var(--spacing-xl);
     min-height: 0;
     position: relative;
     z-index: 1;
@@ -11318,8 +11290,7 @@ body.sidebar-collapsed .living-container {
     box-sizing: border-box;
 }
 
-/* Contenedor central: ancho fijo (como lexaboard), no 100%. Centrado. */
-.form-org-card {
+.form-org-card.card {
     width: 360px;
     max-width: calc(100vw - 2rem);
     margin: 0 auto;
@@ -11330,7 +11301,7 @@ body.sidebar-collapsed .living-container {
 .form-org-card #form_org {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: var(--spacing-lg);
     width: 100%;
     box-sizing: border-box;
 }
@@ -11338,7 +11309,7 @@ body.sidebar-collapsed .living-container {
 .form-record-container .form-step {
     display: none;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: var(--spacing-lg);
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
@@ -11354,69 +11325,18 @@ body.sidebar-collapsed .living-container {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Título del paso */
 .form-record-container .step-title {
     font-size: var(--font-size-xl);
     font-weight: 600;
-    color: var(--color-white);
+    color: var(--text-primary);
     margin: 0 0 0.25rem 0;
     text-align: center;
 }
 
-/* Inputs y select: mismo estilo oscuro */
-.form-record-container .form-input,
-.form-record-container input[type="text"],
-.form-record-container input[type="url"],
-.form-record-container select.form-select {
-    width: 100%;
-    max-width: 100%;
-    padding: 0.85rem 1rem;
-    background: #1e1e24;
-    border: 1px solid #3d3d45;
-    border-radius: var(--radius-md);
-    color: var(--color-white);
-    font-size: var(--font-size-md);
-    font-family: inherit;
-    line-height: 1.4;
-    transition: var(--transition);
-    -webkit-appearance: none;
-    appearance: none;
-    box-sizing: border-box;
-}
-
-.form-record-container select.form-select {
-    cursor: pointer;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='rgba(255,255,255,0.6)' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 1rem center;
-    padding-right: 2.5rem;
-}
-
-.form-record-container select.form-select option {
-    background: #1e1e24;
-    color: var(--color-white);
-}
-
-.form-record-container .form-input::placeholder,
-.form-record-container input[type="text"]::placeholder,
-.form-record-container input[type="url"]::placeholder {
-    color: var(--white-50);
-}
-
-.form-record-container .form-input:focus,
-.form-record-container input[type="text"]:focus,
-.form-record-container input[type="url"]:focus,
-.form-record-container select.form-select:focus {
-    outline: none;
-    border-color: #5b5b66;
-    box-shadow: 0 0 0 2px var(--white-5);
-}
-
-/* Bloque "Datos de tarjeta — por ahora desactivado" */
 .form-record-container .form-step-disabled {
-    padding: 1.25rem;
-    background: rgba(30, 30, 36, 0.6);
-    border: 1px dashed #3d3d45;
+    padding: var(--spacing-lg);
+    background: var(--bg-hover);
+    border: 1px dashed var(--border-color);
     border-radius: var(--radius-md);
     text-align: center;
 }
@@ -11424,77 +11344,29 @@ body.sidebar-collapsed .living-container {
 .form-record-container .form-step-disabled p {
     margin: 0;
     color: var(--text-secondary);
-    font-size: 0.95rem;
+    font-size: var(--font-size-base);
 }
 
 .form-record-container .form-step-disabled-sub {
-    margin-top: 0.5rem;
-    color: var(--white-50);
-    font-size: 0.85rem;
+    margin-top: var(--spacing-sm);
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
 }
 
-/* Botones: ancho del contenedor, no de toda la pantalla */
-.form-record-container .btn {
-    width: 100%;
-    max-width: 100%;
-    padding: 0.85rem 1rem;
-    border-radius: var(--radius-md);
-    font-weight: 600;
-    font-size: var(--font-size-md);
-    cursor: pointer;
-    transition: var(--transition);
-    border: 1px solid #3d3d45;
-    background: #25252d;
-    color: var(--color-white);
-    font-family: inherit;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.form-record-container .btn-primary:hover:not(:disabled) {
-    background: #2e2e38;
-    border-color: #4a4a54;
-}
-
-.form-record-container .btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.form-record-container .btn-secondary {
-    background: transparent;
-    color: var(--white-80);
-    border: 1px solid #3d3d45;
-}
-
-.form-record-container .btn-secondary:hover:not(:disabled) {
-    background: var(--white-5);
-    color: var(--color-white);
-    border-color: #4a4a54;
-}
-
-/* Dos botones en fila */
+.form-record-container .btn { width: 100%; }
 .form-record-container .form-actions-two {
     display: flex;
-    gap: 0.75rem;
+    gap: var(--spacing-sm);
 }
-
-.form-record-container .form-actions-two .btn {
-    flex: 1;
-    min-width: 0;
-}
+.form-record-container .form-actions-two .btn { flex: 1; min-width: 0; }
 
 @media (max-width: 768px) {
     .form-main-content {
-        padding: 1.5rem;
+        padding: var(--spacing-lg);
         align-items: flex-start;
-        padding-top: 3rem;
+        padding-top: var(--spacing-2xl);
     }
-
-    .form-record-container .step-title {
-        font-size: 1.1rem;
-    }
+    .form-record-container .step-title { font-size: var(--font-size-lg); }
 }
 
 
