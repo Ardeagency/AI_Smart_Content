@@ -420,11 +420,13 @@ class StudioView extends BaseView {
       if (productsError || !products || products.length === 0) return [];
 
       const productIds = products.map(p => p.id).filter(Boolean);
-      const { data: allImages, error: imagesError } = await this.supabase
+      const imagesQuery = this.supabase
         .from('product_images')
         .select('id, product_id, image_url, image_type, image_order')
-        .in('product_id', productIds)
         .order('image_order', { ascending: true });
+      const { data: allImages, error: imagesError } = productIds.length === 1
+        ? await imagesQuery.eq('product_id', productIds[0])
+        : await imagesQuery.in('product_id', productIds);
 
       if (!imagesError && allImages && allImages.length > 0) {
         const byProduct = {};
@@ -452,14 +454,21 @@ class StudioView extends BaseView {
   }
 
   /**
-   * Rellena los carruseles .image-selector-carousel con productos cuando data-media-source="products".
+   * Rellena los carruseles .image-selector-carousel con productos cuando data-media-source="products"
+   * o cuando el key/field del campo sugiere productos (ej. "productos", "product").
    * Usa la misma estructura de tarjeta que la biblioteca de productos: imagen principal (product.images[0].image_url), nombre.
    */
   async populateImageSelectorCarousels() {
     const formEl = document.getElementById('studioFlowForm');
     if (!formEl) return;
 
-    const carousels = formEl.querySelectorAll('.image-selector-carousel[data-media-source="products"]');
+    const bySource = formEl.querySelectorAll('.image-selector-carousel[data-media-source="products"]');
+    const carousels = bySource.length > 0
+      ? bySource
+      : Array.from(formEl.querySelectorAll('.image-selector-carousel')).filter(el => {
+          const key = (el.getAttribute('data-key') || el.getAttribute('data-field-name') || '').toLowerCase();
+          return key.includes('product');
+        });
     if (carousels.length === 0) return;
 
     const brandContainerId = await this.getBrandContainerId();
