@@ -385,7 +385,7 @@ class BrandsView extends BaseView {
   // Usa brand_colors para construir un degradado primary → secondary.
   // ============================================
 
-  /** Devuelve array de hex válidos desde this.brandColors (máx 3, sin duplicados). */
+  /** Devuelve array de hex válidos desde this.brandColors (máx 4, sin duplicados). */
   getBrandColorsHexArray() {
     const colors = this.brandColors || [];
     const seen = new Set();
@@ -398,10 +398,20 @@ class BrandsView extends BaseView {
       if (!seen.has(normalized)) {
         seen.add(normalized);
         hexes.push(normalized);
-        if (hexes.length >= 3) break;
+        if (hexes.length >= 4) break;
       }
     }
     return hexes;
+  }
+
+  /** Convierte #rrggbb a rgba(r,g,b,alpha). */
+  hexToRgba(hex, alpha = 1) {
+    const clean = (hex || '').replace(/^#/, '');
+    if (clean.length !== 6) return hex;
+    const r = parseInt(clean.slice(0, 2), 16);
+    const g = parseInt(clean.slice(2, 4), 16);
+    const b = parseInt(clean.slice(4, 6), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
   }
 
   hexToHSL(hex) {
@@ -478,10 +488,18 @@ class BrandsView extends BaseView {
     return { primary, secondary };
   }
 
-  buildBrandGradientCss(brandColors) {
-    const palette = this.getBrandUIPalette(brandColors);
-    if (!palette) return '';
-    return `linear-gradient(135deg, ${palette.primary}, ${palette.secondary})`;
+  /**
+   * Construye un degradado que usa TODOS los colores de la marca (hasta 4),
+   * con transparencia suave para que se mezclen bien y no se vean bloques opacos.
+   */
+  buildBrandGradientCss(hexes) {
+    if (!hexes || hexes.length === 0) return '';
+    const alpha = 0.88;
+    const stops = hexes.map((hex, i) => {
+      const pct = hexes.length === 1 ? 100 : (i / (hexes.length - 1)) * 100;
+      return `${this.hexToRgba(hex, alpha)} ${Math.round(pct)}%`;
+    });
+    return `linear-gradient(135deg, ${stops.join(', ')})`;
   }
 
   /** Aplica el degradado de colores de marca al fondo (skeleton hace crossfade a esta capa). Sin colores usa neutro. */
@@ -494,10 +512,10 @@ class BrandsView extends BaseView {
     if (!forceUpdate && this._cachedGradientKey === colorsKey) return;
     this._cachedGradientKey = colorsKey;
 
-    const gradientCss = hexes.length ? this.buildBrandGradientCss(hexes) : '';
     const neutralBg = 'linear-gradient(145deg, #2d2a28 0%, #1f1d1b 50%, #252220 100%)';
-    if (gradientCss) {
-      gradientEl.style.background = gradientCss;
+    if (hexes.length) {
+      const brandGradient = this.buildBrandGradientCss(hexes);
+      gradientEl.style.background = `${brandGradient}, ${neutralBg}`;
       gradientEl.setAttribute('data-brand-gradient', 'true');
     } else {
       gradientEl.style.background = neutralBg;
