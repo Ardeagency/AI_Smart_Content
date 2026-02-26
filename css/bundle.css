@@ -1,12 +1,12 @@
 /* ============================================================
    AI Smart Content — CSS Bundle (estilo unificado)
-   Un solo sistema visual en toda la plataforma.
-   — 2 botones: .btn-primary (blanco, texto negro) y .btn-secondary
-     (borde, texto blanco en landing / texto primary en app). Como la landing.
-   — Un solo modal: .modal, .modal-overlay, .modal-content, .modal-header,
-     .modal-body, .modal-footer, .modal-close. Modificadores: .modal-content--sm, --lg.
-   — Un solo formulario: .form-group, .form-label, .form-input, etc.
-   Las vistas no deben redefinir estos componentes; solo usar clases o modificadores.
+   Design glass unificado: dropdowns, tooltips, botones, cards y modales
+   usan --glass-bg, --glass-border, --glass-radius, --glass-blur, --glass-padding.
+   — Botones: .btn, .btn-primary, .btn-secondary, .btn-icon (glass).
+   — Cards: .card, .brand-card, .org-card-home, .login-card (glass).
+   — Dropdowns: .user-dropdown, .header-user-dropdown, .nav-org-dropdown,
+     .nav-profile-dropdown, .nav-flyout, .living-date-dropdown (glass).
+   — Modales: .modal-content y variantes (glass).
    ============================================================ */
 
 /* ========== DESIGN SYSTEM V2 — Tokens ========== */
@@ -201,64 +201,68 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
-/* ========== BOTONES — Solo 2 estilos (landing) ========== */
+/* ========== BOTONES — Design glass unificado ========== */
 .btn {
+    box-sizing: border-box;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    padding: 0.625rem 1.5rem;
+    padding: var(--glass-padding);
     font-family: var(--font-family);
     font-size: var(--font-size-base);
     font-weight: 600;
     line-height: 1.4;
-    border-radius: var(--radius-sm);
+    border-radius: var(--glass-radius);
     cursor: pointer;
     transition: var(--transition);
     white-space: nowrap;
     text-decoration: none;
     outline: none;
     -webkit-tap-highlight-color: transparent;
-    border: 1px solid transparent;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
 }
 .btn:disabled, .btn[disabled] {
     opacity: 0.45;
     pointer-events: none;
 }
 
-/* Primario: blanco, texto negro (como landing "Registrarse") */
+/* Primario: glass, texto primary */
 .btn-primary {
-    background: var(--color-white);
-    color: var(--text-black);
-    border-color: rgba(0, 0, 0, 0.12);
+    background: var(--glass-bg);
+    color: var(--text-primary);
+    border-color: var(--glass-border);
 }
 .btn-primary:hover:not(:disabled) {
-    background: var(--bg-light-gray);
-    color: var(--text-black);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    border-color: var(--glass-border);
 }
 
-/* Secundario: transparente + borde, texto claro (como landing "Iniciar sesión") */
+/* Secundario: glass */
 .btn-secondary {
-    background: transparent;
-    color: var(--color-white);
-    border: 1px solid var(--color-white);
+    background: var(--glass-bg);
+    color: var(--text-primary);
+    border: 1px solid var(--glass-border);
 }
 .btn-secondary:hover:not(:disabled) {
-    background: var(--white-10);
-    color: var(--color-white);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
 }
-/* En contexto oscuro (dentro de app), secundario = borde gris, texto primary */
 .app-shell .btn-secondary,
 #app-container .btn-secondary,
 body:not(.on-landing) .btn-secondary {
     color: var(--text-primary);
-    border-color: var(--border-color);
+    border-color: var(--glass-border);
+    background: var(--glass-bg);
 }
 .app-shell .btn-secondary:hover:not(:disabled),
 #app-container .btn-secondary:hover:not(:disabled),
 body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
-    background: var(--white-8);
+    background: rgba(255, 255, 255, 0.08);
     color: var(--text-primary);
 }
 
@@ -267,13 +271,16 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
 .btn-block { width: 100%; }
 
 .btn-icon {
+    box-sizing: border-box;
     width: 36px;
     height: 36px;
     padding: 0;
-    border-radius: var(--radius-sm);
-    background: var(--bg-hover);
+    border-radius: var(--glass-radius);
+    background: var(--glass-bg);
     color: var(--text-secondary);
-    border: 1px solid transparent;
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -281,11 +288,11 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
     transition: var(--transition);
     font-size: var(--font-size-base);
 }
-.btn-icon:hover { background: var(--bg-interactive); color: var(--text-primary); }
-.btn-icon.btn-secondary { background: transparent; border-color: var(--border-color); color: var(--text-secondary); }
-.btn-icon.btn-secondary:hover { background: var(--white-8); color: var(--text-primary); }
-.btn-icon-sm { width: 28px; height: 28px; font-size: var(--font-size-sm); }
-.btn-icon-xs { width: 24px; height: 24px; font-size: var(--font-size-xs); border-radius: var(--radius-xs); }
+.btn-icon:hover { background: rgba(255, 255, 255, 0.08); color: var(--text-primary); }
+.btn-icon.btn-secondary { background: var(--glass-bg); border-color: var(--glass-border); color: var(--text-secondary); }
+.btn-icon.btn-secondary:hover { background: rgba(255, 255, 255, 0.08); color: var(--text-primary); }
+.btn-icon-sm { width: 28px; height: 28px; font-size: var(--font-size-sm); border-radius: var(--glass-radius); }
+.btn-icon-xs { width: 24px; height: 24px; font-size: var(--font-size-xs); border-radius: var(--glass-radius); }
 
 /* ========== MODAL — Un solo sistema ========== */
 .modal {
@@ -317,13 +324,14 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
     width: 100%;
     max-width: min(500px, calc(100vw - 2rem));
     max-height: 90vh;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    box-shadow: var(--shadow-floating);
     animation: modalIn 0.25s ease-out;
 }
 .modal-content--sm { max-width: min(420px, calc(100vw - 2rem)); }
@@ -333,7 +341,7 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
     align-items: center;
     justify-content: space-between;
     padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid var(--border-divider);
+    border-bottom: 1px solid var(--glass-border);
 }
 .modal-header h2, .modal-header h3 {
     font-size: var(--font-size-xl);
@@ -352,7 +360,7 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
     justify-content: flex-end;
     gap: var(--spacing-sm);
     padding: 1rem 1.5rem;
-    border-top: 1px solid var(--border-divider);
+    border-top: 1px solid var(--glass-border);
 }
 .modal-close {
     width: 36px;
@@ -971,7 +979,7 @@ body.sidebar-collapsed .main-header,
     font-size: 10px;
 }
 
-/* Dropdown de usuario — design glass unificado */
+/* Dropdown de usuario — design glass (variables) */
 .header-user-dropdown {
     box-sizing: border-box;
     position: absolute;
@@ -981,12 +989,12 @@ body.sidebar-collapsed .main-header,
     flex-direction: column;
     justify-content: center;
     align-items: stretch;
-    padding: 8px 24px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(7px);
-    -webkit-backdrop-filter: blur(7px);
-    border-radius: 14px;
+    padding: var(--glass-padding);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
     z-index: 1000;
     display: none;
     overflow: hidden;
@@ -1285,7 +1293,7 @@ body.sidebar-collapsed .main-header,
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    border-bottom: 1px solid var(--nav-separator);
+    border-bottom: 1px solid var(--glass-border);
 }
 
 .nav-org-dropdown-list {
@@ -1470,7 +1478,7 @@ body.sidebar-collapsed .main-header,
 
 /* Toggle button removido del sidebar - ahora está en el header */
 
-/* Tooltips unificados: design glass (blur 7px, fondo 5%, borde 10%, radio 14px) */
+/* Tooltips unificados — design glass (variables) */
 .nav-tooltip {
     box-sizing: border-box;
     position: fixed;
@@ -1481,12 +1489,12 @@ body.sidebar-collapsed .main-header,
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 8px 24px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(7px);
-    -webkit-backdrop-filter: blur(7px);
-    border-radius: 14px;
+    padding: var(--glass-padding);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
     font-size: 13px;
     color: rgba(255, 255, 255, 0.9);
     max-width: 180px;
@@ -1505,7 +1513,7 @@ body.sidebar-collapsed .main-header,
     visibility: visible;
 }
 
-/* Flyout: mini mapa del módulo — design glass unificado */
+/* Flyout: mini mapa del módulo — design glass (variables) */
 .nav-flyout {
     box-sizing: border-box;
     position: fixed;
@@ -1516,12 +1524,12 @@ body.sidebar-collapsed .main-header,
     flex-direction: column;
     justify-content: center;
     align-items: stretch;
-    padding: 8px 24px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(7px);
-    -webkit-backdrop-filter: blur(7px);
-    border-radius: 14px;
+    padding: var(--glass-padding);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
     z-index: var(--z-modal);
     overflow: visible;
     opacity: 0;
@@ -1552,7 +1560,7 @@ body.sidebar-collapsed .main-header,
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    border-radius: 14px;
+    border-radius: var(--glass-radius);
     background: transparent;
     width: 100%;
 }
@@ -1564,7 +1572,7 @@ body.sidebar-collapsed .main-header,
     gap: 8px;
     padding-bottom: 10px;
     margin-bottom: 8px;
-    border-bottom: 1px solid var(--nav-border);
+    border-bottom: 1px solid var(--glass-border);
 }
 
 .nav-flyout-header-icon {
@@ -1614,7 +1622,7 @@ body.sidebar-collapsed .main-header,
     font-size: 13px;
     color: var(--text-secondary);
     text-decoration: none;
-    border-radius: var(--radius-sm);
+    border-radius: var(--glass-radius);
     transition: background 0.1s ease, color 0.1s ease;
 }
 
@@ -1633,7 +1641,7 @@ body.sidebar-collapsed .main-header,
 .nav-flyout-footer {
     margin-top: 8px;
     padding-top: 8px;
-    border-top: 1px solid var(--nav-border);
+    border-top: 1px solid var(--glass-border);
 }
 
 .nav-flyout-cta {
@@ -2106,16 +2114,19 @@ body.sidebar-collapsed .main-header,
     font-size: 12px;
 }
 
-/* Dropdown de perfil */
+/* Dropdown de perfil — design glass unificado */
 .nav-profile-dropdown {
+    box-sizing: border-box;
     position: absolute;
     bottom: calc(100% + 8px);
     left: 16px;
     right: 16px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    box-shadow: var(--shadow-floating);
+    padding: var(--glass-padding);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
     z-index: 1000;
     display: none;
     overflow: hidden;
@@ -2559,7 +2570,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     color: var(--text-primary);
 }
 
-/* User Dropdown — design glass unificado */
+/* User Dropdown — design glass (variables) */
 .user-dropdown {
     box-sizing: border-box;
     position: absolute;
@@ -2570,12 +2581,12 @@ body.sidebar-collapsed .app-header.with-sidebar {
     flex-direction: column;
     justify-content: center;
     align-items: stretch;
-    padding: 8px 24px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(7px);
-    -webkit-backdrop-filter: blur(7px);
-    border-radius: 14px;
+    padding: var(--glass-padding);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
@@ -2591,7 +2602,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
 
 .user-dropdown-header {
     padding: 16px;
-    border-bottom: 1px solid var(--nav-border);
+    border-bottom: 1px solid var(--glass-border);
 }
 
 .user-dropdown-name {
@@ -2608,7 +2619,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
 
 .user-dropdown-divider {
     height: 1px;
-    background: var(--nav-border);
+    background: var(--glass-border);
     margin: 0;
 }
 
@@ -2762,16 +2773,19 @@ body.sidebar-collapsed .app-header.with-sidebar {
     object-fit: cover;
 }
 
-/* Organization Dropdown */
+/* Organization Dropdown — design glass (segunda definición) */
 .nav-org-dropdown {
+    box-sizing: border-box;
     position: absolute;
     top: 100%;
     left: 16px;
     right: 16px;
-    background: var(--nav-bg);
-    border: 1px solid var(--nav-border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-floating);
+    padding: var(--glass-padding);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
@@ -3531,16 +3545,17 @@ body.entrance-done .landing-content {
     display: flex;
 }
 
-/* Modal login: tamaño pequeño fijo (como en commit ce5eeb81) y tema oscuro */
+/* Modal login — design glass unificado */
 .login-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color, rgba(42, 47, 58, 0.4));
-    border-radius: var(--radius-lg);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
     padding: 2.5rem;
     width: 420px;
     max-width: calc(100vw - 2rem);
     flex: 0 0 auto;
-    box-shadow: var(--shadow-floating);
     animation: modalSlideIn 0.3s ease-out;
     position: relative;
     box-sizing: border-box;
@@ -3741,24 +3756,25 @@ body.entrance-done .landing-content {
 
 .notification-btn,
 .btn.btn-accent {
-    padding: 0.75rem 2rem;
-    border-radius: var(--radius-sm);
+    padding: var(--glass-padding);
+    border-radius: var(--glass-radius);
     font-size: var(--font-size-md);
     font-weight: 600;
     cursor: pointer;
     transition: var(--transition);
-    border: 1px solid rgba(0, 0, 0, 0.12);
+    border: 1px solid var(--glass-border);
     font-family: inherit;
-    background: #ffffff;
-    color: #000000;
+    background: var(--glass-bg);
+    color: var(--text-primary);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
 }
 
 .notification-btn:hover,
 .btn.btn-accent:hover {
-    background: #f3f4f6;
-    color: #000000;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    border-color: var(--glass-border);
 }
 
 @media (max-width: 768px) {
@@ -5014,7 +5030,7 @@ svg.signin-brand-logo {
     box-sizing: border-box;
 }
 
-/* Cards hogar: card-home.svg + capa vidrio (blur + tinte ámbar) para aspecto imagen 2 */
+/* Cards hogar — design glass unificado */
 .org-card-home {
     position: relative;
     width: 150px;
@@ -5024,7 +5040,11 @@ svg.signin-brand-logo {
     transition: opacity 0.2s ease, transform 0.2s ease;
     display: block;
     overflow: hidden;
-    border-radius: 20px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
 }
 
 .org-card-home:hover {
@@ -5032,15 +5052,14 @@ svg.signin-brand-logo {
     transform: scale(1.02);
 }
 
-/* Capa vidrio: blur + tinte ámbar para efecto frosted glass (imagen 2) */
 .org-card-home::before {
     content: '';
     position: absolute;
     inset: 0;
-    border-radius: 20px;
-    background: linear-gradient(180deg, rgba(80, 45, 0, 0.06) 0%, rgba(0, 0, 0, 0.08) 100%);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    border-radius: var(--glass-radius);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     z-index: 0;
     pointer-events: none;
 }
@@ -5051,7 +5070,7 @@ svg.signin-brand-logo {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 20px;
+    border-radius: var(--glass-radius);
     pointer-events: none;
     z-index: 0;
 }
@@ -5059,7 +5078,7 @@ svg.signin-brand-logo {
 .org-card-home-content {
     position: absolute;
     inset: 0;
-    border-radius: 20px;
+    border-radius: var(--glass-radius);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -5149,9 +5168,11 @@ svg.signin-brand-logo {
 }
 
 .hogar-container .modal-content {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
     width: 100%;
     max-width: 400px;
     max-height: 90vh;
@@ -5163,7 +5184,7 @@ svg.signin-brand-logo {
     justify-content: space-between;
     align-items: center;
     padding: 1rem 1.25rem;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--glass-border);
 }
 
 .hogar-container .modal-header h2 {
@@ -5603,16 +5624,18 @@ h1.brand-name-large[contenteditable="true"]:hover,
     width: 0;
 }
 
-/* Card base - usa paleta global */
+/* Card base — design glass unificado */
 .brand-card {
-    background: var(--bg-card);
-    border-radius: var(--radius-lg);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
     padding: 1.25rem;
     display: flex;
     flex-direction: column;
     position: relative;
     flex-shrink: 0;
-    border: 1px solid var(--border-color);
     cursor: default;
     transition: none;
 }
@@ -8094,7 +8117,7 @@ body.sidebar-collapsed .living-container {
     margin-left: var(--spacing-sm);
 }
 
-/* Dropdown calendario — design glass unificado */
+/* Dropdown calendario — design glass (variables) */
 .living-date-dropdown {
     box-sizing: border-box;
     position: absolute;
@@ -8105,12 +8128,12 @@ body.sidebar-collapsed .living-container {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 8px 24px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(7px);
-    -webkit-backdrop-filter: blur(7px);
-    border-radius: 14px;
+    padding: var(--glass-padding);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
     z-index: var(--z-dropdown);
     width: 320px;
     min-width: 320px;
@@ -11883,9 +11906,11 @@ body.sidebar-collapsed .living-container {
 }
 
 .org-modal .modal-content {
-    background: var(--living-bg-card, var(--bg-primary));
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-divider);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
     max-width: 420px;
     width: 100%;
     max-height: 90vh;
@@ -15631,8 +15656,11 @@ body.sidebar-collapsed .living-container {
 
 /* Builder Modals */
 .builder-modal .modal-content {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: var(--glass-radius);
 }
 
 .builder-modal .modal-content.modal-lg {
@@ -16468,9 +16496,11 @@ body.sidebar-collapsed .living-container {
 .dev-lead-modal .modal-content {
   position: relative;
   z-index: 1;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: var(--glass-radius);
   max-width: 440px;
   width: 100%;
   max-height: 90vh;
