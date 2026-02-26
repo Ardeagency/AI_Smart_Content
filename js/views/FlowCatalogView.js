@@ -31,7 +31,10 @@ class FlowCatalogView extends BaseView {
       window.appState?.get('selectedOrganizationId') ||
       localStorage.getItem('selectedOrganizationId');
     if (!this.organizationId) {
-      window.router?.navigate('/hogar');
+      const url = window.authService?.getDefaultUserRoute && window.authService.getCurrentUser()?.id
+        ? await window.authService.getDefaultUserRoute(window.authService.getCurrentUser().id)
+        : '/settings';
+      window.router?.navigate(url, true);
       return;
     }
     localStorage.setItem('selectedOrganizationId', this.organizationId);

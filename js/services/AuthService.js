@@ -271,20 +271,46 @@ class AuthService {
 
   /**
    * Determinar ruta de redirección para usuario autenticado.
-   * Según modo: developer → /dev/dashboard, user → /hogar.
+   * Según modo: developer → /dev/dashboard, user → primera organización (Production) o /settings.
    */
   async determineRedirectRoute(userId) {
-    if (!this.supabase || !userId) return '/hogar';
+    if (!userId) return '/settings';
 
     try {
       const viewMode = this.userMode || localStorage.getItem('userViewMode') || 'user';
       if (viewMode === 'developer') {
         return '/dev/dashboard';
       }
-      return '/hogar';
+      return await this.getDefaultUserRoute(userId);
     } catch (error) {
       console.error('Error determinando ruta:', error);
-      return '/hogar';
+      return '/settings';
+    }
+  }
+
+  /**
+   * Obtener ruta por defecto para usuario consumidor: primera org (Production) o /settings si no tiene org.
+   * @param {string} userId - ID del usuario
+   * @returns {Promise<string>} /org/:id/production o /settings
+   */
+  async getDefaultUserRoute(userId) {
+    if (!this.supabase || !userId) return '/settings';
+    try {
+      const selectedId = localStorage.getItem('selectedOrganizationId') || window.appState?.get?.('selectedOrganizationId');
+      const [membersRes, ownedRes] = await Promise.all([
+        this.supabase.from('organization_members').select('organization_id').eq('user_id', userId),
+        this.supabase.from('organizations').select('id').eq('owner_user_id', userId)
+      ]);
+      const ids = new Set();
+      (membersRes.data || []).forEach(m => { if (m.organization_id) ids.add(m.organization_id); });
+      (ownedRes.data || []).forEach(o => { if (o.id) ids.add(o.id); });
+      const arr = Array.from(ids);
+      if (arr.length === 0) return '/settings';
+      const orgId = selectedId && ids.has(selectedId) ? selectedId : arr[0];
+      return `/org/${orgId}/production`;
+    } catch (e) {
+      console.warn('getDefaultUserRoute:', e);
+      return '/settings';
     }
   }
 
@@ -447,7 +473,7 @@ class AuthService {
       const { data, error } = await this.supabase.auth.signInWithOAuth({
         provider: provider,
         options: {
-          redirectTo: `${window.location.origin}/hogar`
+          redirectTo: `${window.location.origin}/`
         }
       });
 

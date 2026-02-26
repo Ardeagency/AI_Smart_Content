@@ -2,9 +2,8 @@
  * App - Aplicación principal de la SPA
  * 
  * Arquitectura de rutas:
- * - Públicas: /, /login, /signin, /planes (sin navegación)
- * - Home: /home, /hogar (solo header, sin sidebar)
- * - Organización: /org/:org_id/... (sidebar SaaS)
+ * - Públicas: /, /login, /signin (sin navegación)
+ * - Organización: /org/:org_id/... (sidebar SaaS); tras login el usuario entra directo a su org
  * - Desarrollador: /dev/... (sidebar PaaS)
  */
 class App {
@@ -100,18 +99,33 @@ class App {
     const devInput = ['/js/views/DevBaseView.js', '/js/flags-data.js', '/js/input-registry.js'];
 
     // ── Públicas (cargadas sincrónicamente) ──
-    r.register('/', window.LandingView, pub);
+    r.register('/', window.LandingView, { requiresAuth: false, redirectIfAuth: true });
     r.register('/login', window.SignInView, pub);
     r.register('/signin', window.SignInView, pub);
 
     // ── Públicas (lazy) ──
-    r.register('/planes', this._lazy('PlanesView', ['/js/views/PlanesView.js']), pub);
     r.register('/cambiar-contrasena', this._lazy('CambiarContrasenaView', ['/js/views/CambiarContrasenaView.js']), pub);
 
-    // ── Home / Hogar ──
-    const hogarLoader = this._lazy('HogarView', ['/js/views/HogarView.js']);
-    r.register('/home', hogarLoader, auth);
-    r.register('/hogar', hogarLoader, auth);
+    // ── Redirect legacy home/hogar a organización o settings ──
+    const redirectToDefaultOrg = async () => {
+      const auth = window.authService;
+      const userId = auth?.getCurrentUser()?.id;
+      const url = auth && typeof auth.getDefaultUserRoute === 'function' && userId
+        ? await auth.getDefaultUserRoute(userId)
+        : '/settings';
+      if (window.router) window.router.navigate(url, true);
+    };
+    const redirectToDefaultView = class extends (window.BaseView || class {}) {
+      async onEnter() {
+        await redirectToDefaultOrg();
+      }
+      async render() {
+        const c = document.getElementById('app-container');
+        if (c) c.innerHTML = '<div class="page-content"><p class="text-muted">Redirigiendo...</p></div>';
+      }
+    };
+    r.register('/home', redirectToDefaultView, auth);
+    r.register('/hogar', redirectToDefaultView, auth);
 
     // ── Org: Production (antes Historial / Living) ──
     const livingLoader = this._lazy('LivingView', ['/js/views/LivingView.js']);
@@ -187,7 +201,7 @@ class App {
     // ── Settings ──
     r.register('/settings', this._lazy('SettingsView', ['/js/views/SettingsView.js']), auth);
 
-    // ── Créditos (sidebar footer): con org → organization; sin org → hogar ──
+    // ── Créditos (sidebar footer): con org → organization; sin org → settings ──
     r.register('/credits', this._lazy('CreditsView', ['/js/views/CreditsView.js']), auth);
     r.register('/org/:orgId/credits', this._lazy('OrganizationView', ['/js/views/OrganizationView.js']), auth);
 
@@ -231,7 +245,7 @@ class App {
             <h1>404 En Construcción</h1>
             <p>Esta página está en construcción. En una próxima actualización será agregada.</p>
             <div class="error-actions">
-              <button onclick="window.router.navigate('/home')" class="btn-primary"><i class="fas fa-home"></i> Ir a Inicio</button>
+              <button onclick="window.router.navigate('/settings')" class="btn-primary"><i class="fas fa-cog"></i> Ir a Configuración</button>
               <button onclick="window.history.back()" class="btn-secondary"><i class="fas fa-arrow-left"></i> Volver</button>
             </div>
           </div></div>`;

@@ -278,8 +278,8 @@ class Router {
       return '/dev/dashboard';
     }
 
-    // Default: ir a selector de organizaciones (SaaS)
-    return '/hogar';
+    // Default: ir a configuración (usuario entra directo a su org vía determineRedirectRoute)
+    return '/settings';
   }
 
   /**

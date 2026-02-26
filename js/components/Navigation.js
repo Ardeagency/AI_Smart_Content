@@ -1,6 +1,6 @@
 /**
  * Sidebar usuario consumidor — Schema final (Zona 1: navegación workspace, Zona 2: footer organizacional).
- * Estructura: main[] (Production, flows, Identity) + footer[] (Configuración, Planes, Créditos, Salir).
+ * Estructura: main[] (Production, flows, Identity) + footer[] (Configuración, Créditos, Salir).
  * Estudio no tiene entrada en el sidebar: solo se accede seleccionando un flujo desde flows.
  */
 const SIDEBAR_USER_CONFIG = {
@@ -29,7 +29,6 @@ const SIDEBAR_USER_CONFIG = {
   ],
   footer: [
     { label: 'Configuración', icon: 'fa-cog', route: 'organization' },
-    { label: 'Planes', icon: 'fa-credit-card', route: 'planes' },
     { label: 'Créditos', icon: 'fa-coins', route: 'credits' },
     { label: 'Salir de la organización', icon: 'fa-sign-out-alt', action: 'leaveWorkspace' }
   ]
@@ -101,10 +100,10 @@ const SIDEBAR_DEVELOPER_CONFIG = [
  * Navigation Component - Sistema de navegación inteligente
  * 
  * Maneja el sidebar y header según el contexto de la ruta:
- * - /home, /hogar: Solo header (sin sidebar)
+ * - (Home/Hogar eliminado: tras login el usuario entra directo a su organización)
  * - /org/:org_id/...: Sidebar de organización (SaaS)
  * - /dev/...: Sidebar de desarrollador (PaaS)
- * - Rutas públicas (/, /login, /signin, /planes, /cambiar-contrasena): Sin navegación
+ * - Rutas públicas (/, /login, /signin, /cambiar-contrasena): Sin navegación
  */
 class Navigation {
   constructor() {
@@ -156,16 +155,11 @@ class Navigation {
     const path = window.location.pathname || '/';
     
     // Rutas públicas - sin navegación
-    if (path === '/' || path === '/login' || path === '/signin' || path === '/planes' || path === '/cambiar-contrasena' || path === '/index.html') {
+    if (path === '/' || path === '/login' || path === '/signin' || path === '/cambiar-contrasena' || path === '/index.html') {
       return { mode: null, showSidebar: false, showHeader: false, orgId: null, brandId: null };
     }
     
-    // Home/Hogar - solo header sin sidebar
-    if (path === '/home' || path === '/hogar') {
-      return { mode: 'home', showSidebar: false, showHeader: true, orgId: null, brandId: null };
-    }
-
-    // Configuración de usuario (Mi cuenta): fuera de org, mismo layout que Home (solo header, sin sidebar)
+    // Configuración de usuario (Mi cuenta): fuera de org, solo header sin sidebar
     if (path === '/settings' || path.startsWith('/settings?')) {
       return { mode: 'home', showSidebar: false, showHeader: true, orgId: null, brandId: null };
     }
@@ -327,7 +321,7 @@ class Navigation {
    */
   getUserSidebarRoute(routeSuffix) {
     const basePath = this.currentOrgId ? `/org/${this.currentOrgId}` : '';
-    const globalRoutes = { planes: '/planes', credits: '/credits' };
+    const globalRoutes = { credits: '/credits' };
     if (globalRoutes[routeSuffix]) return globalRoutes[routeSuffix];
     if (basePath) return `${basePath}/${routeSuffix}`;
     const legacy = { brand: '/brands', settings: '/settings' };
@@ -337,7 +331,7 @@ class Navigation {
   /**
    * HTML para navegación de usuario SaaS.
    * Zona 1: WorkspaceHeader + NavigationMain (Production, flows, Identity).
-   * Zona 2: NavigationFooter anclado (Configuración, Planes, Créditos, Salir).
+   * Zona 2: NavigationFooter anclado (Configuración, Créditos, Salir).
    */
   getUserNavigationHTML() {
     const basePath = this.currentOrgId ? `/org/${this.currentOrgId}` : '';
@@ -565,7 +559,10 @@ class Navigation {
       window.router?.navigate('/dev/dashboard');
     } else {
       localStorage.setItem('userViewMode', 'user');
-      window.router?.navigate('/hogar');
+      const url = window.authService && typeof window.authService.getDefaultUserRoute === 'function'
+        ? await window.authService.getDefaultUserRoute(window.authService.getCurrentUser()?.id)
+        : '/settings';
+      window.router?.navigate(url, true);
     }
   }
 
@@ -957,8 +954,6 @@ class Navigation {
     const pathWithoutOrg = path.replace(/^\/org\/[^/]+/, '') || '/';
 
     const titles = {
-      '/hogar': 'Hogar',
-      '/home': 'Hogar',
       '/production': 'Production',
       '/historial': 'Production',
       '/living': 'Production',
@@ -976,7 +971,6 @@ class Navigation {
       '/servicios': 'Identity',
       '/settings': 'Configuración',
       '/organization': 'Configuración',
-      '/planes': 'Planes',
       '/credits': 'Créditos',
       '/dev/dashboard': 'Dashboard',
       '/dev/flows': 'Mis Flujos',
@@ -1042,13 +1036,16 @@ class Navigation {
   }
 
   /**
-   * Modal de confirmación para Salir de la organización. Navega a /hogar (selector de workspace).
+   * Modal de confirmación para Salir de la organización. Navega a otra org o a configuración.
    */
-  showLeaveWorkspaceConfirm() {
-    const msg = '¿Salir de la organización? Volverás al inicio para elegir otro workspace.';
+  async showLeaveWorkspaceConfirm() {
+    const msg = '¿Salir de la organización? Serás redirigido a otra organización o a configuración.';
     if (!window.confirm(msg)) return;
     this.closeMobileNav();
-    if (window.router) window.router.navigate('/hogar');
+    const url = window.authService && typeof window.authService.getDefaultUserRoute === 'function'
+      ? await window.authService.getDefaultUserRoute(window.authService.getCurrentUser()?.id)
+      : '/settings';
+    if (window.router) window.router.navigate(url, true);
   }
 
   /**
@@ -1125,14 +1122,15 @@ class Navigation {
       } else {
         localStorage.setItem('userViewMode', mode);
       }
-      if (window.router) {
-        if (mode === 'user') {
-          window.router.navigate('/hogar');
-        } else {
-          window.router.navigate('/dev/dashboard');
-        }
+      if (mode === 'user') {
+        const url = window.authService && typeof window.authService.getDefaultUserRoute === 'function'
+          ? await window.authService.getDefaultUserRoute(window.authService.getCurrentUser()?.id)
+          : '/settings';
+        if (window.router) window.router.navigate(url, true);
+        else window.location.href = url;
       } else {
-        window.location.href = mode === 'user' ? '/hogar' : '/dev/dashboard';
+        if (window.router) window.router.navigate('/dev/dashboard', true);
+        else window.location.href = '/dev/dashboard';
       }
     };
 
@@ -1283,26 +1281,16 @@ class Navigation {
 
       listEl.insertAdjacentHTML('beforeend', `
         <div class="nav-org-divider"></div>
-        <div class="nav-org-option nav-org-home" data-action="home">
-          <i class="fas fa-home"></i>
-          <span>Volver a Hogar</span>
-        </div>
         <div class="nav-org-option nav-org-create" data-action="create-org">
           <i class="fas fa-plus"></i>
           <span>Crear nueva organización</span>
         </div>
       `);
 
-      listEl.querySelector('.nav-org-home')?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        document.getElementById('navOrgDropdown')?.classList.remove('active');
-        window.router?.navigate('/hogar');
-      });
-
       listEl.querySelector('.nav-org-create')?.addEventListener('click', (e) => {
         e.stopPropagation();
         document.getElementById('navOrgDropdown')?.classList.remove('active');
-        window.router?.navigate('/hogar');
+        window.router?.navigate('/settings');
       });
     } catch (err) {
       console.error('Error loading organizations list:', err);

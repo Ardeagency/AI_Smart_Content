@@ -36,7 +36,10 @@ class OrganizationView extends BaseView {
       localStorage.getItem('selectedOrganizationId');
 
     if (!this.orgId) {
-      window.router?.navigate('/hogar');
+      const url = window.authService?.getDefaultUserRoute && window.authService.getCurrentUser()?.id
+        ? await window.authService.getDefaultUserRoute(window.authService.getCurrentUser().id)
+        : '/settings';
+      window.router?.navigate(url, true);
       return;
     }
 

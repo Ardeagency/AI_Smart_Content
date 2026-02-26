@@ -39,9 +39,12 @@ class LivingView extends BaseView {
                  window.appState?.get('selectedOrganizationId') ||
                  localStorage.getItem('selectedOrganizationId');
     
-    // Si no hay orgId, redirigir a hogar para seleccionar organización
+    // Si no hay orgId, redirigir a organización por defecto o configuración
     if (!this.orgId) {
-      window.router?.navigate('/hogar');
+      const url = window.authService?.getDefaultUserRoute && window.authService.getCurrentUser()?.id
+        ? await window.authService.getDefaultUserRoute(window.authService.getCurrentUser().id)
+        : '/settings';
+      window.router?.navigate(url, true);
       return;
     }
 

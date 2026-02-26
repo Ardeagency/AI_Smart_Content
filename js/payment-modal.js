@@ -1265,9 +1265,9 @@ class PaymentModal {
         // Force close ALL modals and overlays immediately
         this.forceCloseAllModals();
         
-        // Redirigir al hogar
+        // Redirigir al inicio (el router enviará al usuario a su organización)
         setTimeout(() => {
-            window.location.href = '/hogar';
+            window.location.href = '/';
         }, 100);
     }
 
@@ -1431,8 +1431,8 @@ class PaymentModal {
                 sessionStorage.setItem('selectedPlan', JSON.stringify(this.selectedPlan));
             }
             
-            // Redirect to hogar
-            window.location.href = '/hogar';
+            // Redirect to app (router will send user to their organization)
+            window.location.href = '/';
         }, 3500);
     }
 

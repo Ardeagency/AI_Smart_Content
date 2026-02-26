@@ -1,6 +1,6 @@
 /**
  * LandingView - Vista de la página principal (landing).
- * Solo muestra botones Login y Planes; el login se hace en /login (SignInView).
+ * Muestra botón Login; el login se hace en /login (SignInView).
  */
 class LandingView extends BaseView {
   constructor() {
@@ -13,7 +13,7 @@ class LandingView extends BaseView {
   }
 
   async init() {
-    // Sin lógica de login ni modales; los enlaces /login y /planes llevan a sus vistas
+    // Sin lógica de login ni modales; el enlace /login lleva a la vista de inicio de sesión
   }
 }
 
