@@ -51,6 +51,11 @@ class LivingManager {
             return;
         }
 
+        const historyContainer = document.getElementById('livingHistoryContent');
+        if (historyContainer) {
+            historyContainer.innerHTML = this.renderHistorySkeletons();
+        }
+
         try {
         // Verificar acceso antes de continuar
         if (typeof verifyUserAccess === 'function') {
@@ -721,8 +726,9 @@ class LivingManager {
             container.innerHTML = this.renderEmptyState();
             return;
         }
-        
-        container.innerHTML = allItems.map((item, index) => {
+
+        const COLUMNS = 5;
+        const itemHtmls = allItems.map((item, index) => {
             if (item.contentType === 'video') {
                 let thumbnailUrl = item.fileUrl;
                 if (thumbnailUrl && !thumbnailUrl.startsWith('http') && item.output) {
@@ -747,8 +753,15 @@ class LivingManager {
                 }
             }
             return this.renderHistoryImageCard(imageUrl, item.run, item.output, item.prompt, index);
-            }).join('');
-            
+        });
+
+        const columns = Array.from({ length: COLUMNS }, () => []);
+        itemHtmls.forEach((html, i) => {
+            columns[i % COLUMNS].push(html);
+        });
+        const gridHtml = `<div class="living-masonry-grid living-history-masonry">${columns.map(col => `<div class="living-masonry-column">${col.join('')}</div>`).join('')}</div>`;
+        container.innerHTML = gridHtml;
+
         this.setupHistoryCardListeners(container);
         this.setupHistoryFilters();
     }
@@ -1016,6 +1029,26 @@ class LivingManager {
                 <p class="living-history-empty-message">No hay producción</p>
             </div>
         `;
+    }
+
+    /**
+     * Skeletons de carga para el contenedor History/Community (misma estructura masonry).
+     */
+    renderHistorySkeletons() {
+        const COLUMNS = 5;
+        const SKELETONS_PER_COLUMN = 4;
+        const columns = [];
+        for (let c = 0; c < COLUMNS; c++) {
+            const skeletons = [];
+            for (let i = 0; i < SKELETONS_PER_COLUMN; i++) {
+                const isWide = (c + i) % 3 === 0;
+                skeletons.push(
+                    `<div class="living-history-skeleton ${isWide ? 'living-history-skeleton--wide' : 'living-history-skeleton--tall'}"></div>`
+                );
+            }
+            columns.push(`<div class="living-masonry-column">${skeletons.join('')}</div>`);
+        }
+        return `<div class="living-masonry-grid living-history-masonry">${columns.join('')}</div>`;
     }
 
     /**

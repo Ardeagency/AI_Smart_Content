@@ -99,6 +99,12 @@
     --radius-md: 12px;
     --radius-lg: 16px;
     --radius-pill: 9999px;
+    /* Design glass unificado (dropdowns, tooltips, botones, cards) */
+    --glass-bg: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-radius: 14px;
+    --glass-blur: blur(7px);
+    --glass-padding: 8px 24px;
     --shadow-card: 0 4px 16px rgba(32, 29, 38, 0.5);
     --shadow-hover: 0 8px 24px rgba(32, 29, 38, 0.6);
     --shadow-floating: 0 12px 32px rgba(32, 29, 38, 0.7);
@@ -451,20 +457,23 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
 }
 .form-hint { font-size: var(--font-size-xs); color: var(--text-muted); margin-top: 0.2rem; }
 
-/* ========== CARDS ========== */
+/* ========== CARDS — Design glass unificado ========== */
 .card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
+    box-sizing: border-box;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
     padding: 1.25rem;
     transition: var(--transition);
 }
-.card:hover { border-color: var(--border-light); }
+.card:hover { border-color: var(--glass-border); }
 .card-interactive { cursor: pointer; }
-.card-interactive:hover { background: var(--bg-hover); box-shadow: var(--shadow-card); }
+.card-interactive:hover { background: rgba(255, 255, 255, 0.08); }
 .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--spacing-md); }
 .card-body { flex: 1; }
-.card-footer { display: flex; align-items: center; gap: var(--spacing-sm); margin-top: var(--spacing-md); padding-top: var(--spacing-md); border-top: 1px solid var(--border-divider); }
+.card-footer { display: flex; align-items: center; gap: var(--spacing-sm); margin-top: var(--spacing-md); padding-top: var(--spacing-md); border-top: 1px solid var(--glass-border); }
 
 /* ========== BADGES ========== */
 .badge {
@@ -1247,16 +1256,19 @@ body.sidebar-collapsed .main-header,
     font-size: 12px;
 }
 
-/* Dropdown de organización */
+/* Dropdown de organización — design glass unificado */
 .nav-org-dropdown {
+    box-sizing: border-box;
     position: absolute;
     top: calc(100% + 8px);
     left: 16px;
     right: 16px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    box-shadow: var(--shadow-floating);
+    padding: var(--glass-padding);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
     z-index: 1000;
     display: none;
     overflow: hidden;
@@ -8225,9 +8237,72 @@ body.sidebar-collapsed .living-container {
     background: var(--bg-hover);
 }
 
-/* Historial general: un solo masonry con todo el contenido producido */
+/* Historial general: contenedor masonry con columnas (estilo History/Community) */
 .living-history-content {
     width: 100%;
+}
+
+/* Grid masonry: columnas con espacio entre items (space-y-3) */
+.living-masonry-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    column-gap: 0;
+    row-gap: 0;
+    overflow-x: hidden;
+}
+
+@media (min-width: 768px) {
+    .living-masonry-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .living-masonry-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (min-width: 1280px) {
+    .living-masonry-grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+.living-masonry-column {
+    padding-right: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+/* Skeletons de carga para History/Community */
+.living-history-skeleton {
+    width: 100%;
+    border-radius: var(--radius-md, 8px);
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.04) 0%,
+        rgba(255, 255, 255, 0.08) 50%,
+        rgba(255, 255, 255, 0.04) 100%
+    );
+    background-size: 200% 100%;
+    animation: living-skeleton-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes living-skeleton-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.living-history-skeleton--tall {
+    aspect-ratio: 0.75 / 1;
+    min-height: 200px;
+}
+
+.living-history-skeleton--wide {
+    aspect-ratio: 1.33333 / 1;
+    min-height: 160px;
 }
 
 /* Card de video dentro del masonry */
@@ -8262,21 +8337,21 @@ body.sidebar-collapsed .living-container {
     background: var(--bg-card);
 }
 
+/* Mantener clase por compatibilidad; el layout real es .living-masonry-grid */
 .living-history-masonry {
-    column-count: 3;
-    column-gap: 5px;
-    column-fill: balance;
-}
-
-.living-masonry-item {
-    break-inside: avoid;
-    margin-bottom: 5px;
-    page-break-inside: avoid;
-    display: inline-block;
     width: 100%;
 }
 
-/* Card de imagen - Sin radio de esquinas */
+.living-masonry-item {
+    width: 100%;
+    min-width: 0;
+}
+
+.living-masonry-column .living-masonry-item {
+    margin-bottom: 0;
+}
+
+/* Card de imagen - aspect ratio tipo masonry (portrait por defecto) */
 .history-image-card {
     width: 100%;
     position: relative;
@@ -8286,6 +8361,11 @@ body.sidebar-collapsed .living-container {
     box-shadow: var(--shadow-card);
     transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
     background: transparent;
+    aspect-ratio: 0.75 / 1;
+}
+
+.history-image-card.history-image-card--wide {
+    aspect-ratio: 1.33333 / 1;
 }
 
 .history-image-card:hover {
@@ -8294,9 +8374,9 @@ body.sidebar-collapsed .living-container {
 
 .history-image-card img {
     width: 100%;
-    height: auto;
+    height: 100%;
     display: block;
-    /* Sin object-fit - respeta 100% el ratio original */
+    object-fit: cover;
 }
 
 /* Acciones: Descargar + Copiar prompt (esquina superior derecha) */
