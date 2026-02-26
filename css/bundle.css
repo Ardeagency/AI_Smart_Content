@@ -4903,11 +4903,24 @@ svg.signin-brand-logo {
 }
 
 /* Overlay oscuro sobre el fondo para opacar/oscurecer */
+/* Capa que opaca el fondo: Relleno negro 60%, efecto Vidrio (Refracción 70, Profundidad 80, Dispersión 100, Escarcha 10, Claro -45° 80%) */
 .hogar-container::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px) saturate(180%);
+    -webkit-backdrop-filter: blur(10px) saturate(180%);
+    z-index: 0;
+}
+
+/* Claro: reflejo -45°, 80% intensidad */
+.hogar-container::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 55%);
+    pointer-events: none;
     z-index: 0;
 }
 
