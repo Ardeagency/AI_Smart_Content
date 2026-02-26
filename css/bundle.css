@@ -1451,18 +1451,20 @@ body.sidebar-collapsed .main-header,
 
 /* Toggle button removido del sidebar - ahora está en el header */
 
-/* Tooltips para estado colapsado: right center, max-width 180px, delay 150ms (JS) */
+/* Tooltips unificados: formato oscuro con blur, radio 14px, borde sutil (nav colapsado y resto de la plataforma) */
 .nav-tooltip {
     position: fixed;
     left: 67px; /* 51px sidebar + 16px gap */
     top: 50%;
     transform: translateY(-50%);
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
+    background: rgba(36, 36, 36, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
     padding: 8px 12px;
     font-size: 13px;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     max-width: 180px;
     white-space: nowrap;
     overflow: hidden;
@@ -1472,7 +1474,7 @@ body.sidebar-collapsed .main-header,
     pointer-events: none;
     transition: opacity 0.15s ease, visibility 0.15s ease;
     z-index: var(--z-popover);
-    box-shadow: var(--shadow-floating);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
 }
 
 .nav-tooltip.show {
