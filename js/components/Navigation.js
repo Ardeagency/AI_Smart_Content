@@ -9,7 +9,7 @@ const SIDEBAR_USER_CONFIG = {
     {
       type: 'container',
       id: 'catalog',
-      label: 'flows',
+      label: 'Flows',
       icon: 'fa-th-large',
       iconSrc: '/recursos/icons/Flows.svg',
       children: [] // Se rellenan con content_categories (schema 218-224) en render
@@ -449,6 +449,11 @@ class Navigation {
 
         <div class="nav-footer" role="navigation" aria-label="Administración organizacional">
           ${footerHTML}
+          <div class="nav-org-credits" id="navOrgCreditsBlock">
+            <span class="nav-org-credits-label">Créditos</span>
+            <span class="nav-org-credits-value" id="navTokensValue">—</span>
+            <div class="nav-org-credits-bar" aria-hidden="true"><div class="nav-org-credits-bar-fill"></div></div>
+          </div>
         </div>
       </nav>
       <div class="nav-flyout" id="navFlyout" aria-hidden="true"></div>

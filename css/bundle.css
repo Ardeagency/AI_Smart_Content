@@ -3280,6 +3280,48 @@ body.sidebar-collapsed .app-header.with-sidebar {
     color: var(--sidebar-text-primary);
 }
 
+/* Créditos de la organización (debajo del enlace Créditos) */
+.nav-org-credits {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--nav-border);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.nav-org-credits-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.nav-org-credits-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.nav-org-credits-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+}
+
+.nav-org-credits-bar-fill {
+    height: 100%;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #8B5CF6, #EC4899, #F97316, #EAB308);
+}
+
+.side-navigation.collapsed .nav-org-credits {
+    display: none;
+}
+
 /* =========================================
    PÁGINA DE ERROR
    ========================================= */
