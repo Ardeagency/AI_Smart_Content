@@ -4911,14 +4911,19 @@ svg.signin-brand-logo {
 .hogar-container > * {
     position: relative;
     z-index: 1;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .hogar-header {
+    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
     margin-bottom: 1.5rem;
+    box-sizing: border-box;
 }
 
 /* "Mis Organizaciones": Parabolica Bold 30px, line-height 100%, #FFFFFF */
@@ -4945,13 +4950,15 @@ svg.signin-brand-logo {
     margin: 0;
 }
 
-/* Grid: flex wrap, centrado, cards pequeñas fijas (como planes) */
+/* Grid: ancho completo, cards centradas al 100% */
 .organizations-grid {
+    width: 100%;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
     gap: 0.75rem;
+    box-sizing: border-box;
 }
 
 /* Cards hogar: 150×200px, radio 20px, fondo negro 7% opacidad, efecto vidrio, sin borde */
