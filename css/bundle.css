@@ -437,7 +437,8 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
     color: var(--text-secondary);
     margin-bottom: 0.2rem;
 }
-.form-input, .form-textarea, .form-select {
+/* Inputs de texto: sin efecto glass (nombre de marca, etc.) */
+.form-input, .form-textarea {
     width: 100%;
     padding: 0.6rem 0.75rem;
     font-family: var(--font-family);
@@ -448,21 +449,40 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
     border-radius: var(--radius-sm);
     outline: none;
     transition: var(--transition);
-    -webkit-appearance: none;
 }
-.form-input:focus, .form-textarea:focus, .form-select:focus {
+.form-input:focus, .form-textarea:focus {
     border-color: var(--warm-1);
     box-shadow: 0 0 0 2px var(--warm-10);
 }
 .form-input::placeholder, .form-textarea::placeholder { color: var(--text-disabled); }
-.form-input:disabled, .form-textarea:disabled, .form-select:disabled { opacity: 0.5; cursor: not-allowed; }
+.form-input:disabled, .form-textarea:disabled { opacity: 0.5; cursor: not-allowed; }
 .form-textarea { min-height: 80px; resize: vertical; line-height: 1.5; }
+
+/* Select y contenedores tipo dropdown: efecto glass */
 .form-select {
-    padding-right: 2.5rem;
+    width: 100%;
+    padding: 0.6rem 2.5rem 0.6rem 0.75rem;
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
+    outline: none;
+    transition: var(--transition);
+    appearance: none;
+    -webkit-appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23D4D1D8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 0.75rem center;
 }
+.form-select:focus {
+    border-color: var(--glass-border);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
+}
+.form-select:disabled { opacity: 0.5; cursor: not-allowed; }
 .form-hint { font-size: var(--font-size-xs); color: var(--text-muted); margin-top: 0.2rem; }
 
 /* ========== CARDS — Design glass unificado ========== */
@@ -6150,16 +6170,19 @@ h1.brand-name-large[contenteditable="true"]:hover,
     padding: 0.5rem 0.75rem;
     font-size: var(--font-size-sm);
     color: var(--text-primary);
-    background: var(--bg-secondary, #1f1d1b);
-    border: 1px solid var(--border-divider, #333);
-    border-radius: 6px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
     cursor: pointer;
     text-align: left;
 }
 
 .typography-dropdown-trigger:focus {
     outline: none;
-    border-color: var(--accent-primary, #6A5ACD);
+    border-color: var(--glass-border);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
 }
 
 .typography-trigger-name {
@@ -6190,10 +6213,11 @@ h1.brand-name-large[contenteditable="true"]:hover,
     margin-top: 2px;
     max-height: 280px;
     overflow-y: auto;
-    background: var(--bg-secondary, #1f1d1b);
-    border: 1px solid var(--border-divider, #333);
-    border-radius: 6px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
     z-index: 50;
 }
 
@@ -6206,7 +6230,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
     font-size: var(--font-size-sm);
     color: var(--text-primary);
     cursor: pointer;
-    border-bottom: 1px solid var(--border-divider, #2a2826);
+    border-bottom: 1px solid var(--glass-border);
 }
 
 .typography-dropdown-option:last-child {
@@ -6236,16 +6260,19 @@ h1.brand-name-large[contenteditable="true"]:hover,
     padding: 0.5rem 0.75rem;
     font-size: var(--font-size-sm);
     color: var(--text-primary);
-    background: var(--bg-secondary, #1f1d1b);
-    border: 1px solid var(--border-divider, #333);
-    border-radius: 6px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
     cursor: pointer;
     margin-bottom: 0.5rem;
 }
 
 .typography-select:focus {
     outline: none;
-    border-color: var(--accent-primary, #6A5ACD);
+    border-color: var(--glass-border);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
 }
 
 .typography-font-name {
@@ -6386,13 +6413,15 @@ h1.brand-name-large[contenteditable="true"]:hover,
     transition: var(--transition);
 }
 
-/* Botón Subir archivo (contenedor interactivo) */
+/* Botón Subir archivo — efecto glass */
 .file-upload-btn {
     margin-top: 1rem;
     padding: 0.5rem 1rem;
-    background: var(--bg-interactive);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
     color: var(--text-primary);
     cursor: pointer;
     font-size: var(--font-size-base);
@@ -6405,8 +6434,8 @@ h1.brand-name-large[contenteditable="true"]:hover,
 }
 
 .file-upload-btn:hover {
-    background: var(--bg-hover);
-    border-color: var(--border-light);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--glass-border);
 }
 
 .file-upload-btn i {
@@ -6682,9 +6711,11 @@ h1.brand-name-large[contenteditable="true"]:hover,
     min-width: 120px;
     padding: 0.35rem 0.5rem;
     font-size: var(--font-size-base);
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--white-20);
-    background: var(--black-20);
+    border-radius: var(--glass-radius);
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     color: var(--text-primary);
 }
 
@@ -6827,9 +6858,11 @@ h1.brand-name-large[contenteditable="true"]:hover,
 .card-content-expanded .info-field-value select {
     width: 100%;
     padding: 0.5rem 0.75rem;
-    background: var(--bg-interactive);
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
     color: var(--text-primary);
     font-size: var(--font-size-base);
 }
@@ -7648,9 +7681,11 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 
 .filter-select {
     padding: 0.75rem;
-    background: var(--living-bg-surface);
-    border: 1px solid var(--border-divider);
-    border-radius: var(--radius-sm);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
     color: var(--text-primary);
     font-size: var(--font-size-base);
 }
