@@ -4886,7 +4886,9 @@ svg.signin-brand-logo {
     position: relative;
     min-height: 100vh;
     padding: 1.5rem;
-    padding-top: calc(50px + var(--app-header-height, 45.8px) + 1.5rem);
+    /* Solo reservar espacio para el header fijo; el centrado vertical lo hace justify-content */
+    padding-top: calc(50px + var(--app-header-height, 45.8px));
+    padding-bottom: 1.5rem;
     margin: 0 auto;
     background-color: var(--bg-primary);
     background-image: url('https://res.cloudinary.com/dmruwjuxn/image/upload/v1772113558/Fondos-08_wpaag0.jpg');
@@ -4896,6 +4898,7 @@ svg.signin-brand-logo {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     box-sizing: border-box;
 }
 
