@@ -848,6 +848,18 @@ class Navigation {
   closeFlyout() {
     const flyout = document.getElementById('navFlyout');
     if (flyout) {
+      if (document.activeElement && flyout.contains(document.activeElement)) {
+        try {
+          const trigger = this._flyoutContainer?.querySelector('.nav-submenu-toggle');
+          if (trigger && typeof trigger.focus === 'function') {
+            trigger.focus();
+          } else {
+            const header = document.getElementById('appHeader');
+            const firstFocusable = header?.querySelector('button, [href], [tabindex]:not([tabindex="-1"])');
+            if (firstFocusable && typeof firstFocusable.focus === 'function') firstFocusable.focus();
+          }
+        } catch (_) {}
+      }
       flyout.classList.remove('open');
       flyout.setAttribute('aria-hidden', 'true');
     }

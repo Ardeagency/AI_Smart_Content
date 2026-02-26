@@ -18,9 +18,9 @@
 
     // ===== CONFIGURACIÓN =====
     const CONFIG = {
-        supabaseTimeout: 10000,      // Timeout para carga de Supabase (10s)
+        supabaseTimeout: 25000,      // Timeout para carga de Supabase (25s; red/functions lentas)
         retryAttempts: 3,            // Intentos de reconexión
-        retryDelay: 1000             // Delay entre intentos (ms)
+        retryDelay: 2000             // Delay entre intentos (ms)
     };
     
     // ===== ESTADO GLOBAL =====
