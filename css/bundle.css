@@ -1094,8 +1094,6 @@ body.sidebar-collapsed .main-header,
    NAVEGACIÓN LATERAL
    ========================================= */
 
-/* .nav-overlay y .side-navigation: definicion unica mas abajo (seccion SIDEBAR NAVEGACION PRINCIPAL) */
-
 .side-navigation.collapsed {
     width: var(--nav-width-collapsed);
 }
@@ -1177,8 +1175,6 @@ body.sidebar-collapsed .main-header,
 /* =========================================
    CAPA SUPERIOR: IDENTIDAD + ORGANIZACIÓN
    ========================================= */
-
-/* .nav-identity-section y .nav-identity-card: definicion unica mas abajo (seccion SIDEBAR - IDENTIDAD) */
 
 .nav-identity-card:hover {
     background: var(--bg-hover);
@@ -1264,7 +1260,7 @@ body.sidebar-collapsed .main-header,
     font-size: 12px;
 }
 
-/* Dropdown de organización — design glass unificado */
+/* Dropdown de organización — design glass (una sola definición) */
 .nav-org-dropdown {
     box-sizing: border-box;
     position: absolute;
@@ -1279,11 +1275,24 @@ body.sidebar-collapsed .main-header,
     border-radius: var(--glass-radius);
     z-index: 1000;
     display: none;
-    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: var(--transition);
+    max-height: 300px;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 .nav-org-dropdown.open {
     display: block;
+}
+
+.nav-org-dropdown.active {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(8px);
 }
 
 .nav-org-dropdown-header {
@@ -2714,14 +2723,6 @@ body.sidebar-collapsed .app-header.with-sidebar {
     border-color: var(--border-color);
 }
 
-/* .nav-identity-content: definicion unica arriba */
-
-/* .nav-identity-info: definicion unica arriba */
-
-/* .nav-org-name: definicion unica arriba */
-
-/* .nav-org-type: definicion unica arriba */
-
 .nav-org-chevron {
     display: flex;
     align-items: center;
@@ -2773,41 +2774,6 @@ body.sidebar-collapsed .app-header.with-sidebar {
     object-fit: cover;
 }
 
-/* Organization Dropdown — design glass (segunda definición) */
-.nav-org-dropdown {
-    box-sizing: border-box;
-    position: absolute;
-    top: 100%;
-    left: 16px;
-    right: 16px;
-    padding: var(--glass-padding);
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border-radius: var(--glass-radius);
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
-    transition: var(--transition);
-    z-index: 100;
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.nav-org-dropdown.active {
-    display: block;
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(8px);
-}
-
-/* .nav-org-dropdown-header: definicion unica arriba */
-
-/* .nav-org-dropdown-list: definicion unica arriba */
-
-/* .nav-org-option: definicion unica arriba */
-
 .nav-org-option-avatar {
     width: 28px;
     height: 28px;
@@ -2852,8 +2818,6 @@ body.sidebar-collapsed .app-header.with-sidebar {
     flex-shrink: 0;
 }
 
-/* .nav-org-divider: definicion unica arriba */
-
 .nav-org-home,
 .nav-org-create {
     color: var(--text-secondary);
@@ -2867,8 +2831,6 @@ body.sidebar-collapsed .app-header.with-sidebar {
     flex-shrink: 0;
     color: var(--sidebar-icon-color);
 }
-
-/* .nav-footer: definicion unica arriba (seccion FOOTER) */
 
 /* Tokens Display */
 .nav-tokens {
@@ -3050,8 +3012,6 @@ body.sidebar-collapsed .app-header.with-sidebar {
     flex: 0 0 0;
     min-height: 0;
 }
-
-/* .nav-menu: definicion unica arriba (seccion MENU) */
 
 .nav-item {
     margin-bottom: 0;
@@ -5168,11 +5128,6 @@ svg.signin-brand-logo {
 }
 
 .hogar-container .modal-content {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border-radius: var(--glass-radius);
     width: 100%;
     max-width: 400px;
     max-height: 90vh;
@@ -11107,7 +11062,7 @@ body.sidebar-collapsed .living-container {
     background: var(--bg-overlay);
 }
 
-.modal-content {
+.new-product-modal .modal-content {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -11115,9 +11070,11 @@ body.sidebar-collapsed .living-container {
     width: 90%;
     max-width: 600px;
     max-height: 90vh;
-    background: var(--bg-card);
-    border: 1px solid rgba(236, 235, 218, 0.3);
-    border-radius: var(--radius-md);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
     display: flex;
     flex-direction: column;
     transition: var(--transition);
@@ -11128,9 +11085,9 @@ body.sidebar-collapsed .living-container {
     transform: translate(-50%, -50%) scale(1);
 }
 
-.modal-header {
+.new-product-modal .modal-header {
     padding: 1.5rem;
-    border-bottom: 1px solid rgba(236, 235, 218, 0.3);
+    border-bottom: 1px solid var(--glass-border);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -11906,11 +11863,6 @@ body.sidebar-collapsed .living-container {
 }
 
 .org-modal .modal-content {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border-radius: var(--glass-radius);
     max-width: 420px;
     width: 100%;
     max-height: 90vh;
@@ -13089,10 +13041,14 @@ body.sidebar-collapsed .living-container {
   box-sizing: border-box;
 }
 
-.modal-content {
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+.dev-dashboard-container .modal-content,
+.dev-flows-container .modal-content,
+.dev-logs-container .modal-content {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-radius: var(--glass-radius);
   width: 100%;
   max-width: 500px;
   max-height: 90vh;
@@ -13104,7 +13060,6 @@ body.sidebar-collapsed .living-container {
 .modal-content.modal-lg {
   max-width: 700px;
 }
-
 
 /* ==========================================
    Responsive
@@ -15655,14 +15610,6 @@ body.sidebar-collapsed .living-container {
 }
 
 /* Builder Modals */
-.builder-modal .modal-content {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border-radius: var(--glass-radius);
-}
-
 .builder-modal .modal-content.modal-lg {
   max-width: 800px;
   width: 90%;
@@ -16496,16 +16443,10 @@ body.sidebar-collapsed .living-container {
 .dev-lead-modal .modal-content {
   position: relative;
   z-index: 1;
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border-radius: var(--glass-radius);
   max-width: 440px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: var(--shadow-floating);
 }
 
 .dev-lead-modal .modal-header {
