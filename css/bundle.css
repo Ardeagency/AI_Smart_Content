@@ -3114,6 +3114,13 @@ body.sidebar-collapsed .app-header.with-sidebar {
     color: var(--sidebar-icon-color);
 }
 
+.nav-mode-user .nav-icon-img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
 .nav-mode-user .nav-text {
     flex: 1;
 }

@@ -1,16 +1,17 @@
 /**
  * Sidebar usuario consumidor — Schema final (Zona 1: navegación workspace, Zona 2: footer organizacional).
- * Estructura: main[] (Production, flows, Identity) + footer[] (Configuración, Créditos, Salir).
+ * Estructura: main[] (Production, flows, Identity) + footer[] (Configuración, Créditos).
  * Estudio no tiene entrada en el sidebar: solo se accede seleccionando un flujo desde flows.
  */
 const SIDEBAR_USER_CONFIG = {
   main: [
-    { type: 'page', id: 'activity', label: 'Production', icon: 'fa-chart-line', route: 'production' },
+    { type: 'page', id: 'activity', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
     {
       type: 'container',
       id: 'catalog',
       label: 'flows',
       icon: 'fa-th-large',
+      iconSrc: '/recursos/icons/Flows.svg',
       children: [] // Se rellenan con content_categories (schema 218-224) en render
     },
     {
@@ -18,6 +19,7 @@ const SIDEBAR_USER_CONFIG = {
       id: 'identity',
       label: 'Identity',
       icon: 'fa-layer-group',
+      iconSrc: '/recursos/icons/Identity-Brands.svg',
       children: [
         { label: 'Brand', route: 'brand' },
         { label: 'Products', route: 'products' },
@@ -28,9 +30,8 @@ const SIDEBAR_USER_CONFIG = {
     }
   ],
   footer: [
-    { label: 'Configuración', icon: 'fa-cog', route: 'organization' },
-    { label: 'Créditos', icon: 'fa-coins', route: 'credits' },
-    { label: 'Salir de la organización', icon: 'fa-sign-out-alt', action: 'leaveWorkspace' }
+    { label: 'Configuración', icon: 'fa-cog', iconSrc: '/recursos/icons/settings.svg', route: 'organization' },
+    { label: 'Créditos', icon: 'fa-coins', iconSrc: '/recursos/icons/Credits.svg', route: 'credits' }
   ]
 };
 
@@ -354,13 +355,17 @@ class Navigation {
     const full = (suffix) => this.getUserSidebarRoute(suffix);
     const expandedId = localStorage.getItem(SIDEBAR_USER_EXPANDED_KEY) || '';
 
+    const iconHTML = (item) => item.iconSrc
+      ? `<img src="${item.iconSrc}" class="nav-icon nav-icon-img" alt="" width="20" height="20">`
+      : `<i class="fas ${item.icon} nav-icon"></i>`;
+
     const mainHTML = SIDEBAR_USER_CONFIG.main.map((item) => {
       if (item.type === 'page') {
         const href = full(item.route);
         return `
           <div class="nav-item">
             <a href="${href}" class="nav-link nav-main-link" data-route="${href}" data-tooltip="${item.label}">
-              <i class="fas ${item.icon} nav-icon"></i>
+              ${iconHTML(item)}
               <span class="nav-text">${item.label}</span>
             </a>
           </div>`;
@@ -385,7 +390,7 @@ class Navigation {
       return `
         <div class="nav-item has-submenu ${isOpen ? 'submenu-open' : ''}" data-container-id="${item.id}">
           <button type="button" class="nav-link nav-submenu-toggle" data-tooltip="${item.label}" aria-expanded="${isOpen}" aria-controls="nav-sub-${item.id}">
-            <i class="fas ${item.icon} nav-icon"></i>
+            ${iconHTML(item)}
             <span class="nav-text">${item.label}</span>
             <i class="fas fa-chevron-right nav-chevron" aria-hidden="true"></i>
           </button>
@@ -395,18 +400,15 @@ class Navigation {
         </div>`;
     }).join('');
 
+    const footerIconHTML = (f) => f.iconSrc
+      ? `<img src="${f.iconSrc}" class="nav-icon nav-icon-img" alt="" width="20" height="20">`
+      : `<i class="fas ${f.icon} nav-icon"></i>`;
+
     const footerHTML = SIDEBAR_USER_CONFIG.footer.map((f) => {
-      if (f.action === 'leaveWorkspace') {
-        return `
-          <button type="button" class="nav-footer-link nav-footer-action" data-action="leaveWorkspace" data-tooltip="${f.label}">
-            <i class="fas ${f.icon} nav-icon"></i>
-            <span class="nav-text">${f.label}</span>
-          </button>`;
-      }
       const href = full(f.route);
       return `
         <a href="${href}" class="nav-footer-link" data-route="${href}" data-tooltip="${f.label}">
-          <i class="fas ${f.icon} nav-icon"></i>
+          ${footerIconHTML(f)}
           <span class="nav-text">${f.label}</span>
         </a>`;
     }).join('');
@@ -644,14 +646,6 @@ class Navigation {
         }
         const ud = document.getElementById('userDropdown');
         if (ud) ud.classList.remove('active');
-      });
-    });
-
-    document.querySelectorAll('.nav-footer-action[data-action="leaveWorkspace"]:not([data-nav-bound])').forEach((btn) => {
-      btn.setAttribute('data-nav-bound', '1');
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        this.showLeaveWorkspaceConfirm();
       });
     });
 
