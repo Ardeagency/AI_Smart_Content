@@ -435,21 +435,11 @@ class Navigation {
 
       <nav class="side-navigation nav-mode-user" id="sideNavigation" aria-label="Navegación principal">
         <div class="nav-workspace-header nav-identity-section" id="navWorkspaceHeader">
-          <div class="nav-identity-card" id="navIdentityCard">
+          <div class="nav-identity-card nav-identity-card--title-only" id="navIdentityCard">
             <div class="nav-identity-content">
               <i class="fas fa-building nav-collapsed-only-icon" aria-hidden="true"></i>
-              <div class="nav-identity-info">
-                <div class="nav-org-name" id="navOrgName">Mi Organización</div>
-                <div class="nav-org-type" id="navOrgType">Enterprise</div>
-              </div>
-              <button class="nav-org-chevron" id="navOrgChevron" aria-label="Cambiar organización">
-                <i class="fas fa-chevron-down"></i>
-              </button>
+              <h2 class="nav-org-title" id="navOrgName">Mi Organización</h2>
             </div>
-          </div>
-          <div class="nav-org-dropdown" id="navOrgDropdown">
-            <div class="nav-org-dropdown-header">Workspaces</div>
-            <div class="nav-org-dropdown-list" id="navOrgDropdownList"></div>
           </div>
         </div>
 
@@ -634,17 +624,6 @@ class Navigation {
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
       logoutBtn.addEventListener('click', () => this.handleLogout());
-    }
-
-    // Org dropdown: clic en toda la casilla (incl. chevron) abre/cierra la lista
-    const orgIdentityCard = document.getElementById('navIdentityCard');
-    const orgDropdown = document.getElementById('navOrgDropdown');
-    if (orgIdentityCard && orgDropdown) {
-      orgIdentityCard.addEventListener('click', (e) => {
-        e.stopPropagation();
-        orgDropdown.classList.toggle('active');
-      });
-      orgIdentityCard.style.cursor = 'pointer';
     }
 
     // Un solo listener en document para cerrar todos los dropdowns (evita duplicados al re-render)

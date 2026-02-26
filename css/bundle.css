@@ -1260,6 +1260,35 @@ body.sidebar-collapsed .main-header,
     text-overflow: ellipsis;
 }
 
+/* Título único del header del sidebar (solo nombre de la organización) */
+.nav-org-title {
+    font-family: Inter, system-ui, sans-serif;
+    font-size: 35px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: normal;
+    color: #FFFFFF;
+    text-align: left;
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+    min-width: 0;
+}
+
+.nav-identity-card--title-only {
+    cursor: default;
+    background: transparent;
+    border: none;
+}
+
+.nav-identity-card--title-only:hover {
+    background: transparent;
+    border-color: transparent;
+}
+
 .nav-org-type {
     font-size: var(--font-size-sm);
     color: var(--text-muted);
@@ -1429,7 +1458,8 @@ body.sidebar-collapsed .main-header,
 }
 
 .side-navigation.collapsed .nav-identity-info,
-.side-navigation.collapsed .nav-org-chevron {
+.side-navigation.collapsed .nav-org-chevron,
+.side-navigation.collapsed .nav-org-title {
     display: none;
 }
 
