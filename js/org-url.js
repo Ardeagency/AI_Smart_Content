@@ -22,14 +22,17 @@ function getOrgSlug(name) {
 
 /**
  * Construir prefijo de ruta para una org: /org/{shortId}/{slug}
+ * Solo genera URL cuando hay nombre real (nunca /org/xxx/org).
  * @param {string} orgId - UUID de la organización
  * @param {string} orgName - Nombre de la organización (para el slug)
  * @returns {string}
  */
 function getOrgPathPrefix(orgId, orgName) {
   const shortId = getOrgShortId(orgId);
-  const slug = getOrgSlug(orgName || '');
   if (!shortId) return '';
+  const name = (orgName && typeof orgName === 'string') ? orgName.trim() : '';
+  if (!name) return '';
+  const slug = getOrgSlug(name);
   return `/org/${shortId}/${slug}`;
 }
 

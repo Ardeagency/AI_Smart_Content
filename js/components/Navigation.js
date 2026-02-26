@@ -329,16 +329,17 @@ class Navigation {
     return legacy[routeSuffix] || `/${routeSuffix}`;
   }
 
-  /** Prefijo de ruta para la org actual: /org/{shortId}/{slug} (requiere window.getOrgPathPrefix). */
+  /** Prefijo de ruta para la org actual: /org/{shortId}/{slug} con el nombre real de la org. */
   getOrgBasePath() {
-    if (!this.currentOrgId || typeof window.getOrgPathPrefix !== 'function') return '';
-    const name = this._orgCache?.name || '';
-    const prefix = window.getOrgPathPrefix(this.currentOrgId, name);
-    if (prefix) return prefix;
-    const slug = window.currentOrgSlug || (typeof window.getOrgSlug === 'function' ? window.getOrgSlug(name) : '');
-    if (slug && typeof window.getOrgShortId === 'function') {
+    if (!this.currentOrgId) return '';
+    const name = (this._orgCache?.name || window.currentOrgName || '').trim();
+    if (name && typeof window.getOrgPathPrefix === 'function') {
+      const prefix = window.getOrgPathPrefix(this.currentOrgId, name);
+      if (prefix) return prefix;
+    }
+    if (window.currentOrgSlug && typeof window.getOrgShortId === 'function') {
       const shortId = window.getOrgShortId(this.currentOrgId);
-      if (shortId) return `/org/${shortId}/${slug}`;
+      if (shortId) return `/org/${shortId}/${window.currentOrgSlug}`;
     }
     return '';
   }
