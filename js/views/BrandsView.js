@@ -46,6 +46,7 @@ class BrandsView extends BaseView {
 
   onLeave() {
     this.isActive = false;
+    this.resetBrandPrimaryBrillo();
     if (this._tryRenderTimeout) {
       clearTimeout(this._tryRenderTimeout);
       this._tryRenderTimeout = null;
@@ -543,10 +544,45 @@ class BrandsView extends BaseView {
       const brandGradient = this.buildBrandGradientCss(hexes);
       gradientEl.style.background = `${brandGradient}, ${neutralBg}`;
       gradientEl.setAttribute('data-brand-gradient', 'true');
+      this.applyBrandPrimaryBrillo();
     } else {
       gradientEl.style.background = neutralBg;
       gradientEl.removeAttribute('data-brand-gradient');
+      this.resetBrandPrimaryBrillo();
     }
+  }
+
+  /** Pone en :root el color principal de la marca para hover/selected (brillo). */
+  applyBrandPrimaryBrillo() {
+    const hexes = this.getBrandColorsHexArray();
+    if (!hexes.length) {
+      this.resetBrandPrimaryBrillo();
+      return;
+    }
+    const palette = this.getBrandUIPalette(hexes);
+    if (!palette || !palette.primary) {
+      this.resetBrandPrimaryBrillo();
+      return;
+    }
+    const hex = palette.primary.replace(/^#/, '');
+    if (hex.length !== 6) return;
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+    const root = document.documentElement;
+    root.style.setProperty('--brand-primary', palette.primary);
+    root.style.setProperty('--brand-primary-rgb', `${r},${g},${b}`);
+    root.style.setProperty('--brand-primary-brillo', this.hexToRgba(palette.primary, 0.12));
+    root.style.setProperty('--brand-primary-brillo-strong', this.hexToRgba(palette.primary, 0.18));
+  }
+
+  /** Vuelve al brillo por defecto (cuando no hay marca o se sale de brands). */
+  resetBrandPrimaryBrillo() {
+    const root = document.documentElement;
+    root.style.removeProperty('--brand-primary');
+    root.style.removeProperty('--brand-primary-rgb');
+    root.style.removeProperty('--brand-primary-brillo');
+    root.style.removeProperty('--brand-primary-brillo-strong');
   }
 
   // ============================================

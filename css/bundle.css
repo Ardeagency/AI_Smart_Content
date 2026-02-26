@@ -15,7 +15,12 @@
     --bg-secondary: #141517;
     --bg-card: #000000;
     --bg-tertiary: #000000;
-    --bg-hover: #141517;
+    /* Brillo hover/selected: color principal de la marca (JS lo setea en brands); fallback neutro */
+    --brand-primary: var(--warm-1);
+    --brand-primary-rgb: 255, 101, 0;
+    --brand-primary-brillo: rgba(255, 101, 0, 0.12);
+    --brand-primary-brillo-strong: rgba(255, 101, 0, 0.18);
+    --bg-hover: var(--brand-primary-brillo);
     --bg-overlay: rgba(23, 20, 29, 0.9);
     --bg-black: #000000;
     --bg-dark: #0F0D12;
@@ -138,8 +143,8 @@
     --nav-item-height: 44px;
     --app-header-height: 45.8px;
     --sidebar-background: var(--bg-primary);
-    --sidebar-hover: var(--white-8);
-    --sidebar-active: var(--white-8);
+    --sidebar-hover: var(--brand-primary-brillo);
+    --sidebar-active: var(--brand-primary-brillo-strong);
     --sidebar-icon-color: var(--text-secondary);
     --sidebar-text-primary: var(--text-primary);
     --sidebar-text-secondary: var(--text-secondary);
@@ -155,7 +160,7 @@
     --living-bg-deep: var(--bg-primary);
     --living-bg-surface: var(--bg-secondary);
     --living-bg-card: var(--bg-card);
-    --living-bg-card-hover: var(--bg-hover);
+    --living-bg-card-hover: var(--brand-primary-brillo);
     --living-bg-glass: var(--bg-card);
     --living-shadow-soft: var(--shadow-card);
     --living-shadow-medium: var(--shadow-hover);
