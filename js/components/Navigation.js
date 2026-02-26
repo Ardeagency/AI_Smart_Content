@@ -435,12 +435,8 @@ class Navigation {
 
       <nav class="side-navigation nav-mode-user" id="sideNavigation" aria-label="Navegación principal">
         <div class="nav-workspace-header nav-identity-section" id="navWorkspaceHeader">
-          <div class="nav-identity-card nav-identity-card--title-only" id="navIdentityCard">
-            <div class="nav-identity-content">
-              <i class="fas fa-building nav-collapsed-only-icon" aria-hidden="true"></i>
-              <h2 class="nav-org-title" id="navOrgName">Mi Organización</h2>
-            </div>
-          </div>
+          <i class="fas fa-building nav-collapsed-only-icon" aria-hidden="true"></i>
+          <h2 class="nav-org-title" id="navOrgName">Mi Organización</h2>
         </div>
 
         <div class="nav-menu" role="navigation" aria-label="Navegación del workspace">

@@ -1204,6 +1204,14 @@ body.sidebar-collapsed .main-header,
    CAPA SUPERIOR: IDENTIDAD + ORGANIZACIÓN
    ========================================= */
 
+/* Header del sidebar (solo nombre de la organización, sin card) */
+.nav-mode-user .nav-workspace-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
 .nav-identity-card:hover {
     background: var(--bg-hover);
     border-color: var(--border-divider);
@@ -1276,17 +1284,6 @@ body.sidebar-collapsed .main-header,
     text-overflow: ellipsis;
     flex: 1;
     min-width: 0;
-}
-
-.nav-identity-card--title-only {
-    cursor: default;
-    background: transparent;
-    border: none;
-}
-
-.nav-identity-card--title-only:hover {
-    background: transparent;
-    border-color: transparent;
 }
 
 .nav-org-type {
