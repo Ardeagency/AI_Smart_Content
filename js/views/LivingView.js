@@ -82,7 +82,9 @@ class LivingView extends BaseView {
    * Configurar links para usar router con contexto de organización
    */
   setupRouterLinks() {
-    const basePath = this.orgId ? `/org/${this.orgId}` : '';
+    const basePath = (this.orgId && typeof window.getOrgPathPrefix === 'function')
+      ? window.getOrgPathPrefix(this.orgId, window.currentOrgName || '')
+      : '';
     
     const productsLinks = this.querySelectorAll('a[href*="products"]');
     const studioLinks = this.querySelectorAll('a[href*="studio"]');

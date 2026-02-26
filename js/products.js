@@ -720,11 +720,11 @@ if (typeof window.ProductsManager === 'undefined') {
         card.addEventListener('click', (e) => {
             e.stopPropagation();
             const path = window.location.pathname || '';
-            const orgMatch = path.match(/^\/org\/([^/]+)/);
+            const orgMatch = path.match(/^\/org\/([^/]+)\/([^/]+)/);
             if (orgMatch && window.router) {
-                const orgId = orgMatch[1];
                 const brandId = product.brand_container_id || '';
-                window.router.navigate(`/org/${orgId}/product-detail/${brandId}/${product.id}`);
+                const prefix = `/org/${orgMatch[1]}/${orgMatch[2]}`;
+                window.router.navigate(`${prefix}/product-detail/${brandId}/${product.id}`);
             } else if (window.router) {
                 window.router.navigate(`/products/${product.id}`);
             }

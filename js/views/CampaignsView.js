@@ -341,7 +341,7 @@ class CampaignsView extends BaseView {
         <p><strong>Última actualización:</strong> ${this.formatDate(campaign.updated_at)}</p>
       </div>
     `;
-    const base = this.organizationId ? `/org/${this.organizationId}/campaigns` : '/campaigns';
+    const base = this.organizationId && typeof window.getOrgPathPrefix === 'function' ? (window.getOrgPathPrefix(this.organizationId, window.currentOrgName || '') + '/campaigns') : (this.organizationId ? `/org/${this.organizationId}/campaigns` : '/campaigns');
     linkDetalle.href = `${base}/${campaignId}`;
     linkDetalle.onclick = (e) => {
       e.preventDefault();
@@ -493,7 +493,7 @@ class CampaignsView extends BaseView {
     const backBtn = document.getElementById('backToCampaignsBtn');
     if (backBtn) {
       backBtn.onclick = () => {
-        const base = this.organizationId ? `/org/${this.organizationId}/campaigns` : '/campaigns';
+        const base = this.organizationId && typeof window.getOrgPathPrefix === 'function' ? (window.getOrgPathPrefix(this.organizationId, window.currentOrgName || '') + '/campaigns') : (this.organizationId ? `/org/${this.organizationId}/campaigns` : '/campaigns');
         if (window.router) window.router.navigate(base, true);
       };
     }
@@ -662,7 +662,7 @@ class CampaignsView extends BaseView {
       return;
     }
     modal.remove();
-    const base = this.organizationId ? `/org/${this.organizationId}/campaigns` : '/campaigns';
+    const base = this.organizationId && typeof window.getOrgPathPrefix === 'function' ? (window.getOrgPathPrefix(this.organizationId, window.currentOrgName || '') + '/campaigns') : (this.organizationId ? `/org/${this.organizationId}/campaigns` : '/campaigns');
     if (window.router) window.router.navigate(`${base}/${data.id}`, true);
   }
 
@@ -741,12 +741,12 @@ class CampaignsView extends BaseView {
         })
       );
     }
-    const base = this.organizationId ? `/org/${this.organizationId}/campaigns` : '/campaigns';
+    const base = this.organizationId && typeof window.getOrgPathPrefix === 'function' ? (window.getOrgPathPrefix(this.organizationId, window.currentOrgName || '') + '/campaigns') : (this.organizationId ? `/org/${this.organizationId}/campaigns` : '/campaigns');
     if (window.router) window.router.navigate(`${base}/${data.id}`, true);
   }
 
   goToGenerateContent() {
-    const base = this.organizationId ? `/org/${this.organizationId}/studio` : '/studio';
+    const base = this.organizationId && typeof window.getOrgPathPrefix === 'function' ? (window.getOrgPathPrefix(this.organizationId, window.currentOrgName || '') + '/studio') : (this.organizationId ? `/org/${this.organizationId}/studio` : '/studio');
     if (window.appState) window.appState.set('selectedCampaignId', this.campaignId, true);
     if (window.router) window.router.navigate(base, true);
   }

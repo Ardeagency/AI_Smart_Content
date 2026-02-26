@@ -43,7 +43,9 @@ class FlowCatalogView extends BaseView {
   }
 
   getStudioPath() {
-    return this.organizationId ? `/org/${this.organizationId}/studio` : '/studio';
+    if (!this.organizationId) return '/studio';
+    const prefix = typeof window.getOrgPathPrefix === 'function' ? window.getOrgPathPrefix(this.organizationId, window.currentOrgName || '') : '';
+    return prefix ? `${prefix}/studio` : '/studio';
   }
 
   /** Slug para URL a partir del nombre del flujo (ej: "Product Render Futurista" → "product-render-futurista"). */
@@ -58,13 +60,19 @@ class FlowCatalogView extends BaseView {
   }
 
   getCatalogPath(categoryId) {
-    const base = this.organizationId ? `/org/${this.organizationId}/studio/flows` : '/studio/flows';
+    const base = this.getCatalogBasePath();
     return categoryId ? `${base}/${categoryId}` : base;
+  }
+
+  getCatalogBasePath() {
+    if (!this.organizationId) return '/studio/flows';
+    const prefix = typeof window.getOrgPathPrefix === 'function' ? window.getOrgPathPrefix(this.organizationId, window.currentOrgName || '') : '';
+    return prefix ? `${prefix}/studio/flows` : '/studio/flows';
   }
 
   /** Ruta para vista por subcategoría (content_subcategories). */
   getCatalogPathForSubcategory(subcategoryId) {
-    const base = this.organizationId ? `/org/${this.organizationId}/studio/flows` : '/studio/flows';
+    const base = this.getCatalogBasePath();
     return subcategoryId ? `${base}/sub/${subcategoryId}` : base;
   }
 

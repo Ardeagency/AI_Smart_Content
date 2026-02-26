@@ -89,7 +89,7 @@ class Router {
       if (path === '' || path === '/index.html') path = '/';
       if (path.length > 1 && path.endsWith('/')) path = path.slice(0, -1);
 
-      const orgSettingsMatch = path.match(/^\/org\/[^/]+\/settings$/);
+      const orgSettingsMatch = path.match(/^\/org\/[^/]+\/[^/]+\/settings$/);
       if (orgSettingsMatch) {
         const query = window.location.search || '';
         this._handlingRoute = false;
@@ -116,6 +116,29 @@ class Router {
             }
           }
         }
+      }
+
+      // Resolver org: /org/:orgIdShort/:orgNameSlug/... → routeParams.orgId (UUID)
+      if (routeParams.orgIdShort && routeParams.orgNameSlug && typeof window.resolveOrgIdFromShortAndSlug === 'function') {
+        const resolved = await window.resolveOrgIdFromShortAndSlug(routeParams.orgIdShort, routeParams.orgNameSlug);
+        if (resolved) {
+          routeParams.orgId = resolved.id;
+          window.currentOrgId = resolved.id;
+          window.currentOrgSlug = routeParams.orgNameSlug;
+          window.currentOrgName = resolved.name || '';
+        } else {
+          this._handlingRoute = false;
+          this.navigate('/404', true);
+          return;
+        }
+      } else if (routeParams.orgId) {
+        window.currentOrgId = routeParams.orgId;
+        window.currentOrgSlug = window.currentOrgSlug || '';
+        window.currentOrgName = window.currentOrgName || '';
+      } else {
+        window.currentOrgId = null;
+        window.currentOrgSlug = null;
+        window.currentOrgName = null;
       }
 
       if (!route) {

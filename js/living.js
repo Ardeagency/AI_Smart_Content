@@ -1028,7 +1028,7 @@ class LivingManager {
         cta.addEventListener('click', (e) => {
             e.preventDefault();
             const path = window.location.pathname || '';
-            const base = path.startsWith('/org/') ? path.split('/').slice(0, 3).join('/') : '';
+            const base = path.startsWith('/org/') ? path.split('/').slice(0, 4).join('/') : '';
             const studioPath = base ? `${base}/studio` : '/studio';
             window.router.navigate(studioPath);
         });

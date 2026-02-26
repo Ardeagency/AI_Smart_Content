@@ -16,6 +16,15 @@ class CreditsView extends BaseView {
       window.appState?.get('selectedOrganizationId') ||
       localStorage.getItem('selectedOrganizationId');
     if (orgId && window.router) {
+      if (typeof window.getOrgPathPrefix === 'function') {
+        const supabase = window.supabaseService ? await window.supabaseService.getClient() : window.supabase;
+        const name = (orgId === window.currentOrgId && window.currentOrgName) ? window.currentOrgName : (supabase && (await supabase.from('organizations').select('name').eq('id', orgId).single()).data?.name) || '';
+        const prefix = window.getOrgPathPrefix(orgId, name);
+        if (prefix) {
+          window.router.navigate(`${prefix}/organization`, true);
+          return;
+        }
+      }
       window.router.navigate(`/org/${orgId}/organization`, true);
       return;
     }

@@ -127,86 +127,85 @@ class App {
     r.register('/home', redirectToDefaultView, auth);
     r.register('/hogar', redirectToDefaultView, auth);
 
-    // ── Org: Production (antes Historial / Living) ──
+    // ── Org: Production (URL formato /org/:orgIdShort/:orgNameSlug/...) ──
     const livingLoader = this._lazy('LivingView', ['/js/views/LivingView.js']);
-    r.register('/org/:orgId/production', livingLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/production', livingLoader, auth);
     r.register('/production', livingLoader, auth);
-    r.register('/org/:orgId/historial', livingLoader, auth);
-    r.register('/org/:orgId/living', livingLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/historial', livingLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/living', livingLoader, auth);
     r.register('/historial', livingLoader, auth);
     r.register('/living', livingLoader, auth);
 
     // ── Org: Brand ──
     const brandsLoader = this._lazy('BrandsView', ['/js/views/BrandsView.js']);
-    r.register('/org/:orgId/brand', brandsLoader, auth);
-    r.register('/org/:orgId/brand/:brandId', brandsLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/brand', brandsLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/brand/:brandId', brandsLoader, auth);
     r.register('/brands', brandsLoader, auth);
     r.register('/brands/:brandId', brandsLoader, auth);
 
     // ── Org: Products ──
     const productsLoader = this._lazy('ProductsView', ['/js/products.js', '/js/views/ProductsView.js']);
-    r.register('/org/:orgId/product-detail/:brandId/:productId', productsLoader, auth);
-    r.register('/org/:orgId/products', productsLoader, auth);
-    r.register('/org/:orgId/products/:brandId', productsLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/product-detail/:brandId/:productId', productsLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/products', productsLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/products/:brandId', productsLoader, auth);
     r.register('/products', productsLoader, auth);
     r.register('/products/:productId', productsLoader, auth);
 
     // ── Org: Servicios ──
     const servicesLoader = this._lazy('ServicesView', ['/js/views/ServicesView.js']);
-    r.register('/org/:orgId/servicios', servicesLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/servicios', servicesLoader, auth);
     r.register('/servicios', servicesLoader, auth);
 
     // ── Org: Studio ──
     const studioLoader = this._lazy('StudioView', [...inputDeps, '/js/services/FlowWebhookService.js', '/js/products.js', '/js/views/StudioView.js']);
-    // flows ANTES que studio/:flowSlug para que /studio/flows no se interprete como Estudio con flowSlug "flows"
     const catalogLoader = this._lazy('FlowCatalogView', ['/js/views/FlowCatalogView.js']);
-    r.register('/org/:orgId/studio/flows/sub/:subcategoryId', catalogLoader, auth);
-    r.register('/org/:orgId/studio/flows/:categoryId', catalogLoader, auth);
-    r.register('/org/:orgId/studio/flows', catalogLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/studio/flows/sub/:subcategoryId', catalogLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/studio/flows/:categoryId', catalogLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/studio/flows', catalogLoader, auth);
     r.register('/studio/flows/sub/:subcategoryId', catalogLoader, auth);
     r.register('/studio/flows/:categoryId', catalogLoader, auth);
     r.register('/studio/flows', catalogLoader, auth);
-    r.register('/org/:orgId/studio/catalog/sub/:subcategoryId', catalogLoader, auth);
-    r.register('/org/:orgId/studio/catalog/:categoryId', catalogLoader, auth);
-    r.register('/org/:orgId/studio/catalog', catalogLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/studio/catalog/sub/:subcategoryId', catalogLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/studio/catalog/:categoryId', catalogLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/studio/catalog', catalogLoader, auth);
     r.register('/studio/catalog/sub/:subcategoryId', catalogLoader, auth);
     r.register('/studio/catalog/:categoryId', catalogLoader, auth);
     r.register('/studio/catalog', catalogLoader, auth);
 
-    r.register('/org/:orgId/studio', studioLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/studio', studioLoader, auth);
     r.register('/studio', studioLoader, auth);
-    r.register('/org/:orgId/studio/:flowSlug', studioLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/studio/:flowSlug', studioLoader, auth);
     r.register('/studio/:flowSlug', studioLoader, auth);
 
     // ── Org: Audiences ──
     const audiencesLoader = this._lazy('AudiencesView', ['/js/views/AudiencesView.js']);
-    r.register('/org/:orgId/audiences', audiencesLoader, auth);
-    r.register('/org/:orgId/audiences/:audienceId', audiencesLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/audiences', audiencesLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/audiences/:audienceId', audiencesLoader, auth);
     r.register('/audiences', audiencesLoader, auth);
 
     // ── Org: Campaigns ──
     const campaignsLoader = this._lazy('CampaignsView', ['/js/views/CampaignsView.js']);
-    r.register('/org/:orgId/marketing', campaignsLoader, auth);
-    r.register('/org/:orgId/campaigns', campaignsLoader, auth);
-    r.register('/org/:orgId/campaigns/:campaignId', campaignsLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/marketing', campaignsLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/campaigns', campaignsLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/campaigns/:campaignId', campaignsLoader, auth);
     r.register('/campaigns', campaignsLoader, auth);
     r.register('/marketing', campaignsLoader, auth);
 
     // ── Org: Content ──
     const contentLoader = this._lazy('ContentView', ['/js/views/ContentView.js']);
-    r.register('/org/:orgId/content', contentLoader, auth);
-    r.register('/org/:orgId/content/:contentId', contentLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/content', contentLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/content/:contentId', contentLoader, auth);
     r.register('/content', contentLoader, auth);
 
     // ── Settings ──
     r.register('/settings', this._lazy('SettingsView', ['/js/views/SettingsView.js']), auth);
 
-    // ── Créditos (sidebar footer): con org → organization; sin org → settings ──
+    // ── Créditos ──
     r.register('/credits', this._lazy('CreditsView', ['/js/views/CreditsView.js']), auth);
-    r.register('/org/:orgId/credits', this._lazy('OrganizationView', ['/js/views/OrganizationView.js']), auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/credits', this._lazy('OrganizationView', ['/js/views/OrganizationView.js']), auth);
 
     // ── Org: Organization ──
-    r.register('/org/:orgId/organization', this._lazy('OrganizationView', ['/js/views/OrganizationView.js']), auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/organization', this._lazy('OrganizationView', ['/js/views/OrganizationView.js']), auth);
 
     // ── Create / Form ──
     r.register('/create', this._lazy('CreateView', ['/js/views/CreateView.js']), auth);

@@ -110,7 +110,7 @@ class ProductsView extends BaseView {
           <div class="product-view-error">
             <h2>Producto no encontrado</h2>
             <p>El producto solicitado no existe o no tienes acceso.</p>
-            <a href="${orgId ? `/org/${orgId}/products` + (brandId ? `/${brandId}` : '') : '/products'}" class="product-view-back" data-router-link>
+            <a href="${orgId && typeof window.getOrgPathPrefix === 'function' ? (window.getOrgPathPrefix(orgId, window.currentOrgName || '') + '/products' + (brandId ? `/${brandId}` : '')) : (orgId ? `/org/${orgId}/products` + (brandId ? `/${brandId}` : '') : '/products')}" class="product-view-back" data-router-link>
               <i class="fas fa-arrow-left"></i> Volver a productos
             </a>
           </div>
@@ -126,7 +126,9 @@ class ProductsView extends BaseView {
       this.productImages = images;
       this.brandName = brandName || 'Marca';
 
-      const backUrl = orgId ? `/org/${orgId}/products` + (brandId ? `/${brandId}` : '') : '/products';
+      const backUrl = orgId && typeof window.getOrgPathPrefix === 'function'
+        ? (window.getOrgPathPrefix(orgId, window.currentOrgName || '') + '/products' + (brandId ? `/${brandId}` : ''))
+        : (orgId ? `/org/${orgId}/products` + (brandId ? `/${brandId}` : '') : '/products');
       const html = this.getProductDetailHTML(product, images, brandName || 'Marca', backUrl);
       this.container.innerHTML = html;
       this.updateLinksForRouter();
@@ -422,8 +424,14 @@ class ProductsView extends BaseView {
   /**
    * Configurar links para usar router
    */
+  getOrgBasePath() {
+    const orgId = this.routeParams?.orgId;
+    if (!orgId || typeof window.getOrgPathPrefix !== 'function') return '';
+    return window.getOrgPathPrefix(orgId, window.currentOrgName || '');
+  }
+
   setupRouterLinks() {
-    const basePath = (this.routeParams && this.routeParams.orgId) ? `/org/${this.routeParams.orgId}` : '';
+    const basePath = this.getOrgBasePath();
     const productionLinks = this.querySelectorAll('a[href*="production"], a[href*="historial"], a[href*="living"]');
     const studioLinks = this.querySelectorAll('a[href*="studio"]');
 

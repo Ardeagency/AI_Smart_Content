@@ -415,7 +415,7 @@ class HogarView extends BaseView {
     this.organizations.forEach(org => {
       const card = gridEl.querySelector(`[data-org-id="${org.id}"]`);
       if (!card) return;
-      const go = () => this.navigateToOrganization(org.id);
+      const go = () => this.navigateToOrganization(org.id, org.name);
       card.addEventListener('click', () => go());
       card.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -493,15 +493,13 @@ class HogarView extends BaseView {
   /**
    * Navegar a una organización (ir a living con esa organización seleccionada)
    */
-  navigateToOrganization(orgId) {
-    // Guardar organización seleccionada en el estado (para compatibilidad)
+  navigateToOrganization(orgId, orgName) {
     if (window.appState) {
       window.appState.set('selectedOrganizationId', orgId, true);
     }
-    
-    // Navegar a la ruta de organización
     if (window.router) {
-      window.router.navigate(`/org/${orgId}/production`);
+      const prefix = typeof window.getOrgPathPrefix === 'function' ? window.getOrgPathPrefix(orgId, orgName || '') : '';
+      window.router.navigate(prefix ? `${prefix}/production` : `/org/${orgId}/production`);
     }
   }
 

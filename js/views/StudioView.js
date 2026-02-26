@@ -24,7 +24,9 @@ class StudioView extends BaseView {
 
   /** Ruta base de Studio (con o sin org) para construir URL con slug del flujo. */
   getStudioBasePath() {
-    return this.organizationId ? `/org/${this.organizationId}/studio` : '/studio';
+    if (!this.organizationId) return '/studio';
+    const prefix = typeof window.getOrgPathPrefix === 'function' ? window.getOrgPathPrefix(this.organizationId, window.currentOrgName || '') : '';
+    return prefix ? `${prefix}/studio` : '/studio';
   }
 
   /** Convierte el nombre del flujo en slug para la URL (ej: "Product Render Futurista" → "product-render-futurista"). */

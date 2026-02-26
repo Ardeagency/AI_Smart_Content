@@ -298,16 +298,25 @@ class AuthService {
     try {
       const selectedId = localStorage.getItem('selectedOrganizationId') || window.appState?.get?.('selectedOrganizationId');
       const [membersRes, ownedRes] = await Promise.all([
-        this.supabase.from('organization_members').select('organization_id').eq('user_id', userId),
-        this.supabase.from('organizations').select('id').eq('owner_user_id', userId)
+        this.supabase.from('organization_members').select('organization_id, organizations(id, name)').eq('user_id', userId),
+        this.supabase.from('organizations').select('id, name').eq('owner_user_id', userId)
       ]);
-      const ids = new Set();
-      (membersRes.data || []).forEach(m => { if (m.organization_id) ids.add(m.organization_id); });
-      (ownedRes.data || []).forEach(o => { if (o.id) ids.add(o.id); });
-      const arr = Array.from(ids);
-      if (arr.length === 0) return '/settings';
-      const orgId = selectedId && ids.has(selectedId) ? selectedId : arr[0];
-      return `/org/${orgId}/production`;
+      const list = [];
+      (membersRes.data || []).forEach((m) => {
+        const o = m.organizations;
+        const id = o?.id ?? m.organization_id;
+        if (id) list.push({ id, name: (o && o.name) || '' });
+      });
+      (ownedRes.data || []).forEach((o) => {
+        if (o?.id && !list.some((x) => x.id === o.id)) list.push({ id: o.id, name: o.name || '' });
+      });
+      if (list.length === 0) return '/settings';
+      const org = selectedId ? list.find((x) => x.id === selectedId) || list[0] : list[0];
+      if (typeof window.getOrgPathPrefix === 'function') {
+        const prefix = window.getOrgPathPrefix(org.id, org.name);
+        return prefix ? `${prefix}/production` : '/settings';
+      }
+      return `/org/${org.id}/production`;
     } catch (e) {
       console.warn('getDefaultUserRoute:', e);
       return '/settings';

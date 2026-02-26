@@ -169,13 +169,14 @@ class Navigation {
       return { mode: 'developer', showSidebar: true, showHeader: true, orgId: null, brandId: null };
     }
     
-    // Rutas de organización /org/:org_id/*
-    const orgMatch = path.match(/^\/org\/([^\/]+)/);
+    // Rutas de organización /org/:orgIdShort/:orgNameSlug/*
+    const orgMatch = path.match(/^\/org\/([^\/]+)\/([^\/]+)/);
     if (orgMatch) {
-      const orgId = orgMatch[1];
-      const brandMatch = path.match(/^\/org\/[^\/]+\/(?:brand|products|product-detail)\/([^\/]+)/);
+      const orgId = window.currentOrgId || null;
+      const orgSlug = orgMatch[2];
+      const brandMatch = path.match(/^\/org\/[^/]+\/[^/]+\/(?:brand|products|product-detail)\/([^/]+)/);
       const brandId = brandMatch ? brandMatch[1] : null;
-      return { mode: 'user', showSidebar: true, showHeader: true, orgId, brandId };
+      return { mode: 'user', showSidebar: true, showHeader: true, orgId, brandId, orgSlug };
     }
     
     // Rutas legacy sin /org/ - tratar como usuario pero sin org_id
@@ -320,12 +321,26 @@ class Navigation {
    * Sin org: rutas legacy (ej. brand → /brands). Con org: /org/:id/route.
    */
   getUserSidebarRoute(routeSuffix) {
-    const basePath = this.currentOrgId ? `/org/${this.currentOrgId}` : '';
+    const basePath = this.getOrgBasePath();
     const globalRoutes = { credits: '/credits' };
     if (globalRoutes[routeSuffix]) return globalRoutes[routeSuffix];
     if (basePath) return `${basePath}/${routeSuffix}`;
     const legacy = { brand: '/brands', settings: '/settings' };
     return legacy[routeSuffix] || `/${routeSuffix}`;
+  }
+
+  /** Prefijo de ruta para la org actual: /org/{shortId}/{slug} (requiere window.getOrgPathPrefix). */
+  getOrgBasePath() {
+    if (!this.currentOrgId || typeof window.getOrgPathPrefix !== 'function') return '';
+    const name = this._orgCache?.name || '';
+    const prefix = window.getOrgPathPrefix(this.currentOrgId, name);
+    if (prefix) return prefix;
+    const slug = window.currentOrgSlug || (typeof window.getOrgSlug === 'function' ? window.getOrgSlug(name) : '');
+    if (slug && typeof window.getOrgShortId === 'function') {
+      const shortId = window.getOrgShortId(this.currentOrgId);
+      if (shortId) return `/org/${shortId}/${slug}`;
+    }
+    return '';
   }
 
   /**
@@ -334,7 +349,7 @@ class Navigation {
    * Zona 2: NavigationFooter anclado (Configuración, Créditos, Salir).
    */
   getUserNavigationHTML() {
-    const basePath = this.currentOrgId ? `/org/${this.currentOrgId}` : '';
+    const basePath = this.getOrgBasePath();
     const full = (suffix) => this.getUserSidebarRoute(suffix);
     const expandedId = localStorage.getItem(SIDEBAR_USER_EXPANDED_KEY) || '';
 
@@ -950,8 +965,8 @@ class Navigation {
     if (!titleEl) return;
 
     const path = window.location.pathname;
-    // Normalizar: quitar prefijo /org/:id para comparar segmento de vista
-    const pathWithoutOrg = path.replace(/^\/org\/[^/]+/, '') || '/';
+    // Normalizar: quitar prefijo /org/:short/:slug para comparar segmento de vista
+    const pathWithoutOrg = path.replace(/^\/org\/[^/]+\/[^/]+/, '') || '/';
 
     const titles = {
       '/production': 'Production',
@@ -1272,9 +1287,11 @@ class Navigation {
         option.addEventListener('click', (e) => {
           e.stopPropagation();
           const orgId = option.dataset.orgId;
-          if (orgId && orgId !== this.currentOrgId) {
+          const orgName = option.querySelector('.nav-org-option-name')?.textContent || '';
+          if (orgId && orgId !== this.currentOrgId && typeof window.getOrgPathPrefix === 'function') {
             document.getElementById('navOrgDropdown')?.classList.remove('active');
-            window.router?.navigate(`/org/${orgId}/production`);
+            const prefix = window.getOrgPathPrefix(orgId, orgName);
+            window.router?.navigate(prefix ? `${prefix}/production` : '/settings');
           }
         });
       });
