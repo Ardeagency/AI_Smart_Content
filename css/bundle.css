@@ -1482,7 +1482,7 @@ body.sidebar-collapsed .main-header,
 
 /* Footer collapsed: icon stack + divider, iconos centrados */
 .side-navigation.collapsed .nav-footer {
-    border-top: 1px solid var(--nav-border);
+    border: none;
     padding: 12px 6px 16px;
     gap: 4px;
     display: flex;
@@ -2090,8 +2090,8 @@ body.sidebar-collapsed .main-header,
 .nav-footer {
     flex-shrink: 0;
     padding: 16px;
-    border-top: 1px solid var(--nav-separator);
-    background: var(--bg-primary);
+    border: none;
+    background: transparent;
     display: flex;
     flex-direction: column;
     gap: 0;
@@ -2758,7 +2758,8 @@ body.sidebar-collapsed .app-header.with-sidebar {
 
 .nav-identity-section {
     padding: 16px;
-    border-bottom: 1px solid var(--nav-border);
+    background: transparent;
+    border: none;
     position: relative;
 }
 
@@ -3234,7 +3235,8 @@ body.sidebar-collapsed .app-header.with-sidebar {
 .nav-mode-user .nav-footer {
     flex-shrink: 0;
     padding: 12px 16px 16px;
-    border-top: 1px solid var(--nav-border);
+    border: none;
+    background: transparent;
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -12087,7 +12089,8 @@ body.sidebar-collapsed .living-container {
 }
 
 .nav-mode-developer .nav-identity-section {
-  border-bottom: 1px solid var(--nav-separator);
+  border: none;
+  background: transparent;
 }
 
 /* Cards y stats del footer: mismo estilo que nav-tokens (definido en navigation.css) */
