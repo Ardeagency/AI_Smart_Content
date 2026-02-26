@@ -2452,9 +2452,14 @@ body.has-header-only #app-container:has(> .hogar-container) {
 body.has-sidebar #app-container {
     margin-left: var(--nav-width, 260px);
     max-width: calc(100vw - var(--nav-width, 260px));
-    padding-top: 0;
+    padding: 24px;
     transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-sizing: border-box;
+}
+
+/* Brands: sin padding en app-container (el contenedor de brands ocupa todo) */
+body.has-sidebar #app-container:has(> .brand-dashboard-container) {
+    padding: 0;
 }
 
 body.has-sidebar.sidebar-collapsed #app-container {
@@ -3004,7 +3009,12 @@ body.sidebar-collapsed .app-header.with-sidebar {
     body.has-sidebar #app-container {
         margin-left: 0;
         max-width: 100vw;
+        padding: 24px;
         padding-top: var(--app-header-height, 45.8px);
+    }
+
+    body.has-sidebar #app-container:has(> .brand-dashboard-container) {
+        padding: 0;
     }
 
     /* Misma excepción en móvil: sin padding superior en Products, Living y Studio */
