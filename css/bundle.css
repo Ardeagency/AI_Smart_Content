@@ -2338,6 +2338,11 @@ body.has-header-only #app-container {
     padding-top: 70px;
 }
 
+/* En hogar: sin padding para que el fondo llegue a los bordes */
+body.has-header-only #app-container:has(> .hogar-container) {
+    padding: 0;
+}
+
 /* === LAYOUT: CON SIDEBAR (Org y Dev) === */
 body.has-sidebar #app-container {
     margin-left: var(--nav-width, 260px);
@@ -2376,11 +2381,24 @@ body.has-sidebar #app-container:has(> div.studio-layout) {
     align-items: center;
 }
 
-/* Header solo (sin sidebar) - Home/Hogar: transparente y sin borde */
+/* Header solo (sin sidebar) - Home/Hogar: transparente, sin borde, logo centrado, 50px padding superior */
 .app-header.header-only {
     left: 0;
     background: transparent;
     border-bottom: none;
+    padding-top: 50px;
+    height: auto;
+    min-height: calc(50px + var(--app-header-height, 45.8px));
+}
+
+.app-header.header-only .header-content {
+    position: relative;
+}
+
+.app-header.header-only .header-left {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 /* Header con sidebar */
@@ -4865,9 +4883,10 @@ svg.signin-brand-logo {
 /* ========== hogar.css — Home básico, cards como planes, todo centrado ========== */
 
 .hogar-container {
-    min-height: calc(100vh - 70px);
+    position: relative;
+    min-height: 100vh;
     padding: 1.5rem;
-    padding-top: calc(70px + 1.5rem);
+    padding-top: calc(50px + var(--app-header-height, 45.8px) + 1.5rem);
     margin: 0 auto;
     background-color: var(--bg-primary);
     background-image: url('https://res.cloudinary.com/dmruwjuxn/image/upload/v1772113558/Fondos-08_wpaag0.jpg');
@@ -4878,6 +4897,20 @@ svg.signin-brand-logo {
     flex-direction: column;
     align-items: center;
     box-sizing: border-box;
+}
+
+/* Overlay oscuro sobre el fondo para opacar/oscurecer */
+.hogar-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 0;
+}
+
+.hogar-container > * {
+    position: relative;
+    z-index: 1;
 }
 
 .hogar-header {
