@@ -1,14 +1,19 @@
 /**
  * Input Registry - Arquitectura por contenedores (Render Container Registry).
- * El frontend solo conoce 8 contenedores; toda la variación es schema/config.
- * Regla: render(container_type, config) — nunca branch por input_type semántico.
+ * Contenedores = UI real (string, dropdown, colores, aspect_ratio, scope_picker, etc.).
+ * Plantillas (tone_selector, brand_selector, product_selector, etc.) son nombres con config
+ * que usan un contenedor existente (SELECT_CONTAINER o STRING_CONTAINER).
  */
 (function (global) {
   'use strict';
 
+  /** Contenedores reales: cada uno es una UI distinta. */
   var CONTAINER_TYPES = [
     'STRING_CONTAINER',
     'SELECT_CONTAINER',
+    'COLORS_CONTAINER',
+    'ASPECT_RATIO_CONTAINER',
+    'SCOPE_PICKER_CONTAINER',
     'MEDIA_CONTAINER',
     'BOOLEAN_CONTAINER',
     'NUMBER_CONTAINER',
@@ -17,7 +22,10 @@
     'STRUCTURAL_CONTAINER'
   ];
 
-  /** Mapeo: input_type (semántica) → contenedor de render. Todo lo demás es config. */
+  /** Plantillas de contexto: solo placeholder (usan STRING_CONTAINER). */
+  var CONTEXT_TEMPLATE_TYPES = ['brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector'];
+
+  /** Mapeo: input_type → contenedor de render. Plantillas (tone_selector, brand_selector, etc.) apuntan al contenedor que usan. */
   var INPUT_TYPE_TO_CONTAINER = {
     string: 'STRING_CONTAINER',
     text: 'STRING_CONTAINER',
@@ -33,23 +41,23 @@
     labels: 'STRING_CONTAINER',
     instructions: 'STRING_CONTAINER',
     notes: 'STRING_CONTAINER',
+    brand_selector: 'STRING_CONTAINER',
+    entity_selector: 'STRING_CONTAINER',
+    audience_selector: 'STRING_CONTAINER',
+    campaign_selector: 'STRING_CONTAINER',
+    product_selector: 'STRING_CONTAINER',
     select: 'SELECT_CONTAINER',
     dropdown: 'SELECT_CONTAINER',
     multi_select: 'SELECT_CONTAINER',
     choice_chips: 'SELECT_CONTAINER',
     multi_select_chips: 'SELECT_CONTAINER',
     flags: 'SELECT_CONTAINER',
-    colores: 'SELECT_CONTAINER',
-    aspect_ratio: 'SELECT_CONTAINER',
-    scope_picker: 'SELECT_CONTAINER',
     tone_selector: 'SELECT_CONTAINER',
     mood_selector: 'SELECT_CONTAINER',
     length_selector: 'SELECT_CONTAINER',
-    brand_selector: 'SELECT_CONTAINER',
-    entity_selector: 'SELECT_CONTAINER',
-    audience_selector: 'SELECT_CONTAINER',
-    campaign_selector: 'SELECT_CONTAINER',
-    product_selector: 'SELECT_CONTAINER',
+    colores: 'COLORS_CONTAINER',
+    aspect_ratio: 'ASPECT_RATIO_CONTAINER',
+    scope_picker: 'SCOPE_PICKER_CONTAINER',
     image_selector: 'MEDIA_CONTAINER',
     gallery_picker: 'MEDIA_CONTAINER',
     visual_reference: 'MEDIA_CONTAINER',
@@ -100,6 +108,11 @@
   function getContainerType(field) {
     var type = getInputType(field);
     return INPUT_TYPE_TO_CONTAINER[type] || 'STRING_CONTAINER';
+  }
+
+  function isContextTemplate(field) {
+    var t = getInputType(field);
+    return CONTEXT_TEMPLATE_TYPES.indexOf(t) >= 0;
   }
 
   function optVal(opt) {
@@ -756,11 +769,12 @@
       '</div>';
   }
 
-  /** Registry de los 8 contenedores. El frontend solo conoce estos. */
+  /** Registry de contenedores reales. Cada uno tiene preview + form. */
   var CONTAINER_RENDERERS = {
     STRING_CONTAINER: {
       preview: function (f) {
         var it = getInputType(f);
+        if (isContextTemplate(f)) return previewContext(getContextSelectorLabel(it));
         if (it === 'tags') return previewTags(f);
         var multi = f.mode === 'multi_line' || f.mode === 'multiline' || f.mode === 'prompt' || f.is_multiline ||
           (f.input_type && (f.input_type === 'string' && (f.mode === 'multiline' || f.mode === 'multi_line' || f.mode === 'prompt') || f.input_type === 'textarea' || f.input_type === 'prompt_input' || f.input_type === 'prompt_user' || f.input_type === 'prompt_system'));
@@ -768,6 +782,7 @@
       },
       form: function (f, opts) {
         opts = opts || {};
+        if (isContextTemplate(f)) return formContextPlaceholder(f, opts || {}, getContextPlaceholder(getInputType(f)));
         if (getInputType(f) === 'tags') return formTags(f, opts);
         var multi = f.mode === 'multi_line' || f.mode === 'multiline' || f.mode === 'prompt' || f.is_multiline ||
           (f.input_type && (f.input_type === 'string' && (f.mode === 'multiline' || f.mode === 'multi_line' || f.mode === 'prompt') || f.input_type === 'textarea' || f.input_type === 'prompt_input' || f.input_type === 'prompt_user' || f.input_type === 'prompt_system'));
@@ -776,31 +791,33 @@
     },
     SELECT_CONTAINER: {
       preview: function (f) {
-        var t = f.context_selector_type || getInputType(f);
-        var isContext = ['brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector'].indexOf(getInputType(f)) >= 0 || !!f.context_selector_type;
-        if (isContext) return previewContext(getContextSelectorLabel(getInputType(f)));
-        if (t === 'scope_picker') return previewScopePicker(f);
+        var t = getInputType(f);
         if (t === 'flags') return previewFlags(f);
-        if (t === 'colores') return previewColores(f);
-        if (t === 'aspect_ratio') return previewAspectRatio(f);
         var style = f.select_style || (t === 'choice_chips' ? 'choice_chips' : (t === 'multi_select_chips' ? 'multi_select_chips' : 'dropdown'));
         if (style === 'choice_chips') return previewChoiceChips(f);
         if (style === 'multi_select_chips' || f.is_multiple) return previewMultiSelectChips(f);
         return previewSelect(f);
       },
       form: function (f, opts) {
-        var t = f.context_selector_type || getInputType(f);
-        var isContext = ['brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector'].indexOf(getInputType(f)) >= 0 || !!f.context_selector_type;
-        if (isContext) return formContextPlaceholder(f, opts || {}, getContextPlaceholder(getInputType(f)));
-        if (t === 'scope_picker') return formScopePicker(f, opts || {});
+        var t = getInputType(f);
         if (t === 'flags') return formFlags(f, opts);
-        if (t === 'colores') return formColores(f, opts);
-        if (t === 'aspect_ratio') return formAspectRatio(f, opts);
         var style = f.select_style || (t === 'choice_chips' ? 'choice_chips' : (t === 'multi_select_chips' ? 'multi_select_chips' : 'dropdown'));
         if (style === 'choice_chips') return formChoiceChips(f, opts);
         if (style === 'multi_select_chips' || f.is_multiple) return formMultiSelectChips(f, opts);
         return formSelect(f, opts);
       }
+    },
+    COLORS_CONTAINER: {
+      preview: previewColores,
+      form: formColores
+    },
+    ASPECT_RATIO_CONTAINER: {
+      preview: previewAspectRatio,
+      form: formAspectRatio
+    },
+    SCOPE_PICKER_CONTAINER: {
+      preview: previewScopePicker,
+      form: formScopePicker
     },
     MEDIA_CONTAINER: {
       preview: function (f) {

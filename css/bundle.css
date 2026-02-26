@@ -2376,9 +2376,11 @@ body.has-sidebar #app-container:has(> div.studio-layout) {
     align-items: center;
 }
 
-/* Header solo (sin sidebar) - Home/Hogar */
+/* Header solo (sin sidebar) - Home/Hogar: transparente y sin borde */
 .app-header.header-only {
     left: 0;
+    background: transparent;
+    border-bottom: none;
 }
 
 /* Header con sidebar */
@@ -4867,7 +4869,11 @@ svg.signin-brand-logo {
     padding: 1.5rem;
     padding-top: calc(70px + 1.5rem);
     margin: 0 auto;
-    background: var(--bg-primary);
+    background-color: var(--bg-primary);
+    background-image: url('https://res.cloudinary.com/dmruwjuxn/image/upload/v1772113558/Fondos-08_wpaag0.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     display: flex;
     flex-direction: column;
     align-items: center;
