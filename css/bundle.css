@@ -8119,6 +8119,16 @@ body.sidebar-collapsed .living-container {
     }
 }
 
+/* Production: padding y separación entre contenedores (5px) */
+#app-container > main > div {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+#app-container > main > div > section {
+    padding: 5px;
+}
+
 /* ============================================
    SECCIÓN 1: HERO/ENCABEZADO - Producciones Automatizadas
    Jerarquía: Protagonista absoluto, mesa de edición, daily output
