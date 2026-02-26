@@ -2338,12 +2338,9 @@ body.has-header-only #app-container {
     padding-top: 70px;
 }
 
-/* En hogar: sin padding y contenido 100% centrado en app-container */
+/* En hogar: sin padding para que el fondo llegue a los bordes */
 body.has-header-only #app-container:has(> .hogar-container) {
     padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 /* === LAYOUT: CON SIDEBAR (Org y Dev) === */
@@ -4924,7 +4921,7 @@ svg.signin-brand-logo {
     margin-bottom: 1.5rem;
 }
 
-/* "Mis Organizaciones": Parabolica Bold 30px, blanco (imagen 1) */
+/* "Mis Organizaciones": Parabolica Bold 30px, line-height 100%, #FFFFFF */
 .hogar-title {
     font-family: 'Parabolica', var(--font-family);
     font-weight: 700;
@@ -4936,7 +4933,7 @@ svg.signin-brand-logo {
     margin: 0 0 0.25rem 0;
 }
 
-/* "Selecciona una organización o crea una nueva": Parabolica Regular 12px, blanco (imagen 2) */
+/* "Selecciona una organización...": Parabolica Regular 12px, line-height 100%, #FFFFFF */
 .hogar-subtitle {
     font-family: 'Parabolica', var(--font-family);
     font-weight: 400;
