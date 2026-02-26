@@ -5747,21 +5747,33 @@ h1.brand-name-large[contenteditable="true"]:hover,
 
 /* ============================================
    CARDS ESPECÍFICAS
+   ============================================
+
+   DIAGNÓSTICO INFO (brands modo INFO) — conflictos resueltos:
+   • Botón INFO: .card-info sobrescribía .brand-card con --bg-interactive/--border-color → ahora glass.
+   • Panel expandido: no tenía background/border explícito y heredaba .card-info (opaco) → ahora glass explícito.
+   • Duplicidad: dos bloques con la misma regla (.info-mode-secondary .card-info.expanded e #brandsListContainer > ...) → un solo bloque con glass.
+   • Selector > div reseteaba padding/border en todos los hijos (header + contenido) → acotado a > .card-header.
+   • .card-content-expanded: una base (display:none) y otra en .card-info.expanded (display:flex); scrollbar en ambos → correcto por especificidad.
    ============================================ */
 
-/* INFO - Barra interactiva (color contenedores interactivos) */
+/* INFO - Botón/barra con efecto glass (igual que resto de contenedores) */
 .card-info {
     min-height: 50px;
     padding: 1rem 1.25rem;
     cursor: pointer;
     transition: none;
     overflow: hidden;
-    background: var(--bg-interactive);
-    border: 1px solid var(--border-color);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
 }
 
 .card-info:hover {
-    background: var(--bg-hover);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--glass-border);
 }
 
 .card-info .card-header {
@@ -5798,16 +5810,14 @@ h1.brand-name-large[contenteditable="true"]:hover,
     border-color: var(--white-20);
 }
 
-/* INFO expandida - Modo secundario (adaptado a todas las pantallas) */
+/* INFO expandida - Panel emergente: mismo glass, una sola regla para evitar conflictos */
 .brand-dashboard-container.info-mode-secondary .card-info.expanded,
 #brandsListContainer > div.brand-card.card-info.expanded {
     position: relative;
     width: 100%;
-    max-width: min(960px, 100%); /* Ancho máximo en pantallas grandes, 100% en móvil */
+    max-width: min(960px, 100%);
     min-width: 0;
-    min-height: calc(100vh - 48px - 30px);
     min-height: calc(100dvh - 48px - 30px);
-    height: calc(100vh - 48px - 30px);
     height: calc(100dvh - 48px - 30px);
     max-height: calc(100dvh - 48px - 30px);
     padding: 1.25rem;
@@ -5818,6 +5828,11 @@ h1.brand-name-large[contenteditable="true"]:hover,
     flex-direction: column;
     box-sizing: border-box;
     flex-shrink: 0;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
     transition: opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s,
                 transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s;
 }
@@ -5886,8 +5901,8 @@ h1.brand-name-large[contenteditable="true"]:hover,
     background: var(--accent-yellow-hover);
 }
 
-/* INFO: quitar padding/border/margin inferior del div interno (card-header) */
-#brandsListContainer > div.brand-cards-zone > div.brand-card.card-info > div {
+/* INFO: solo el header sin padding/borde extra (no afectar .card-content-expanded) */
+#brandsListContainer > div.brand-cards-zone > div.brand-card.card-info > .card-header {
     padding: 0;
     border: 0;
     margin-bottom: 0;
