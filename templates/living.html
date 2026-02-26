@@ -5,9 +5,10 @@
                 <!-- Header de filtros -->
                 <header class="living-history-filters">
                     <div class="living-filter living-filter-date">
-                        <div class="living-date-trigger living-filter-split" id="livingDateTrigger" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false">
-                            <span class="living-filter-leading"><span class="living-date-value" id="livingDateValue">Seleccionar</span></span>
-                            <span class="living-filter-trailing"><i class="fas fa-calendar-alt living-date-icon" aria-hidden="true"></i></span>
+                        <label class="living-filter-label">Fecha</label>
+                        <div class="living-date-trigger" id="livingDateTrigger" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false">
+                            <span class="living-date-value" id="livingDateValue">Seleccionar</span>
+                            <i class="fas fa-calendar-alt living-date-icon" aria-hidden="true"></i>
                         </div>
                         <div class="living-date-dropdown" id="livingDateDropdown" aria-hidden="true">
                             <div class="living-date-nav">
@@ -25,23 +26,19 @@
                         </div>
                     </div>
                     <div class="living-filter living-filter-type">
-                        <div class="living-filter-split living-filter-split-select">
-                            <select class="living-filter-select" id="livingFilterType">
-                                <option value="">Todos</option>
-                                <option value="image">Imagen</option>
-                                <option value="video">Video</option>
-                                <option value="text">Texto</option>
-                            </select>
-                            <span class="living-filter-trailing" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
-                        </div>
+                        <label class="living-filter-label">Tipo de contenido</label>
+                        <select class="living-filter-select" id="livingFilterType">
+                            <option value="">Todos</option>
+                            <option value="image">Imagen</option>
+                            <option value="video">Video</option>
+                            <option value="text">Texto</option>
+                        </select>
                     </div>
                     <div class="living-filter living-filter-flow">
-                        <div class="living-filter-split living-filter-split-select">
-                            <select class="living-filter-select" id="livingFilterFlow">
-                                <option value="">Todos los flujos</option>
-                            </select>
-                            <span class="living-filter-trailing" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
-                        </div>
+                        <label class="living-filter-label">Flujo</label>
+                        <select class="living-filter-select" id="livingFilterFlow">
+                            <option value="">Todos los flujos</option>
+                        </select>
                     </div>
                 </header>
                 <div class="living-history-content living-history-masonry" id="livingHistoryContent">

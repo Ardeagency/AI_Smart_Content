@@ -8120,14 +8120,13 @@ body.sidebar-collapsed .living-container {
 }
 
 /* Production: padding y separación entre contenedores (5px) */
-#app-container > main > div.living-container {
+#app-container > main > div {
     display: flex;
     flex-direction: column;
     gap: 5px;
 }
-#app-container > main > div.living-container > section {
-    padding: 16px;
-    min-height: 200px;
+#app-container > main > div > section {
+    padding: 5px;
 }
 
 /* ============================================
@@ -8201,143 +8200,105 @@ body.sidebar-collapsed .living-container {
     flex-direction: column;
     gap: var(--spacing-lg);
     min-height: 400px;
-    box-sizing: border-box;
 }
 
-.living-history-content {
-    display: block;
-    min-height: 120px;
-    width: 100%;
-}
-
-/* Header de filtros — estilo split-button glass (imagen 1) */
+/* Header de filtros (fecha, tipo, flujo) */
 .living-history-filters {
     display: flex;
-    flex-direction: row;
     flex-wrap: wrap;
-    align-items: center;
-    gap: 12px;
+    align-items: flex-end;
+    gap: var(--spacing-lg);
     margin-bottom: var(--spacing-md);
+    padding: var(--glass-padding);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
 }
 
 .living-filter {
-    position: relative;
-}
-
-/* Contenedor split: dos partes (leading + trailing), gap 2px, blur — glass explícito */
-.living-container .living-filter-split {
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    gap: 2px;
-    height: 48px;
-    min-height: 48px;
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 12px;
-    box-sizing: border-box;
-}
-
-/* Leading: texto/valor — glass (valores explícitos para que siempre se vea) */
-.living-container .living-filter-leading {
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 10px 12px 10px 16px;
-    min-width: 0;
-    flex: 1;
-    background: rgba(255, 255, 255, 0.08);
-    border: 0.5px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px 0 0 12px;
-    font-size: 14px;
+    gap: var(--spacing-xs);
+}
+
+.living-filter-label {
+    font-size: 0.8125rem;
     font-weight: 500;
-    line-height: 20px;
-    color: #FFFFFF;
+    color: var(--text-primary);
 }
 
-/* Trailing: icono — glass, ancho fijo */
-.living-container .living-filter-trailing {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    width: 48px;
-    min-width: 48px;
-    flex-shrink: 0;
-    background: rgba(255, 255, 255, 0.08);
-    border: 0.5px solid rgba(255, 255, 255, 0.2);
-    border-radius: 0 12px 12px 0;
-    color: #FFFFFF;
-}
-
-.living-filter-trailing i {
-    font-size: 14px;
-}
-
-.living-date-value {
-    color: rgba(255, 255, 255, 0.9);
-}
-
-.living-date-value.has-range {
-    color: #FFFFFF;
-}
-
-/* Date trigger: ancho mínimo para “Seleccionar” */
-.living-date-trigger {
-    min-width: 140px;
+.living-filter-select {
+    min-width: 160px;
+    padding: var(--glass-padding);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
+    color: var(--text-primary);
+    font-size: var(--font-size-base);
     cursor: pointer;
     transition: var(--transition-fast);
 }
 
-.living-container .living-date-trigger:hover .living-filter-leading,
-.living-container .living-date-trigger:hover .living-filter-trailing {
-    background: rgba(255, 255, 255, 0.12);
+.living-filter-select:hover {
+    border-color: var(--glass-border);
+    background: rgba(255, 255, 255, 0.08);
 }
 
-/* Select dentro de split: aspecto leading */
-.living-container .living-filter-split-select {
-    min-width: 160px;
-}
-
-.living-container .living-filter-split .living-filter-select {
-    flex: 1;
-    min-width: 0;
-    height: 40px;
-    padding: 10px 12px 10px 16px;
-    background: rgba(255, 255, 255, 0.08) !important;
-    border: 0.5px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px 0 0 12px;
-    color: #FFFFFF !important;
-    font-size: 14px;
-    font-weight: 500;
-    line-height: 20px;
-    cursor: pointer;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-image: none;
-}
-
-.living-container .living-filter-split .living-filter-select:hover,
-.living-container .living-filter-split .living-filter-select:focus {
+.living-filter-select:focus {
     outline: none;
+    border-color: var(--accent-brand);
+    box-shadow: 0 0 0 2px var(--accent-brand-soft);
 }
 
-.living-container .living-filter-split .living-filter-select option {
-    background: var(--bg-primary, #0E0F12);
-    color: var(--text-primary, #fff);
-}
-
-.living-container .living-filter-split-select:hover .living-filter-select,
-.living-container .living-filter-split-select:hover .living-filter-trailing {
-    background: rgba(255, 255, 255, 0.12);
-}
-
-/* Date range: posición del dropdown */
+/* Date range trigger (estilo referencia: input + icono calendario) */
 .living-filter-date {
     position: relative;
+}
+
+.living-date-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 200px;
+    padding: var(--glass-padding);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
+    color: var(--text-primary);
+    font-size: var(--font-size-base);
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.living-date-trigger:hover {
+    border-color: var(--glass-border);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.living-date-trigger:focus {
+    outline: none;
+    border-color: var(--accent-brand);
+    box-shadow: 0 0 0 2px var(--accent-brand-soft);
+}
+
+.living-date-value {
+    color: var(--text-muted);
+}
+
+.living-date-value.has-range {
+    color: var(--text-primary);
+}
+
+.living-date-icon {
+    font-size: var(--font-size-base);
+    color: var(--icon-button);
+    margin-left: var(--spacing-sm);
 }
 
 /* Dropdown calendario — design glass (variables) */
