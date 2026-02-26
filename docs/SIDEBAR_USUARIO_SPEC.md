@@ -25,10 +25,9 @@ El sidebar se divide en **2 zonas**:
 
 | Orden | Módulo     | Tipo UX        | Comportamiento |
 |-------|------------|----------------|-----------------|
-| 1     | **Actividad** | Página directa | No expandible. Dashboard operativo. Punto de entrada. |
-| 2     | **Estudio**   | Página directa | Navegación directa. Workspace creativo. |
-| 3     | **Catálogo**  | Contenedor     | Expandible. Subniveles: Posts, Reels, Stories, Ads, Templates, Videos. |
-| 4     | **Identidad** | Contenedor     | Expandible. Marca, Productos, Servicios, Audiencias, Campañas, Assets, Reglas IA. |
+| 1     | **Production** | Página directa | No expandible. Contenido producido. Punto de entrada. |
+| 2     | **flows**      | Contenedor     | Expandible. Subniveles: categorías (Posts, Reels, Stories, etc.). |
+| 3     | **Identidad**  | Contenedor     | Expandible. Marca, Productos, Servicios, Audiencias, Campañas, Assets, Reglas IA. |
 
 ---
 
@@ -59,7 +58,7 @@ Anclada al footer del sidebar. No se mezcla con la navegación funcional.
 ## Comportamiento interactivo
 
 - **Expand/Collapse:** Solo 1 contenedor expandido a la vez. Estado persistido en `localStorage` (`sidebarUserExpanded`).
-- **Active state:** Enlace que coincide con la ruta actual; su contenedor (Catálogo o Identidad) se abre automáticamente.
+- **Active state:** Enlace que coincide con la ruta actual; su contenedor (flows o Identidad) se abre automáticamente.
 
 ---
 
@@ -68,7 +67,7 @@ Anclada al footer del sidebar. No se mezcla con la navegación funcional.
 ```
 Sidebar
  ├── WorkspaceHeader (selector de organización)
- ├── NavigationMain (Actividad, Estudio, Catálogo, Identidad)
+ ├── NavigationMain (Production, flows, Identidad)
  ├── Spacer (flex grow)
  └── NavigationFooter (Configuración, Planes, Créditos, Salir)
 ```
@@ -79,10 +78,10 @@ Sidebar
 
 En `js/components/Navigation.js`, `SIDEBAR_USER_CONFIG`:
 
-- **main[]:** `type: 'page'` (Actividad, Estudio) o `type: 'container'` (Catálogo, Identidad) con `children[]`.
+- **main[]:** `type: 'page'` (Production) o `type: 'container'` (flows, Identidad) con `children[]`.
 - **footer[]:** Items con `label`, `icon`, `route` o `action: 'leaveWorkspace'`.
 
-Rutas existentes se reutilizan (`/living`, `/studio`, `/studio/catalog`, `/brand`, `/products`, `/audiences`, `/campaigns`, `/content`, `/settings`, `/planes`). Créditos puede apuntar a `/credits` cuando exista la vista.
+Rutas existentes se reutilizan (`/production`, `/living`, `/studio`, `/studio/flows`, `/brand`, `/products`, `/audiences`, `/campaigns`, `/content`, `/settings`, `/planes`). Créditos puede apuntar a `/credits` cuando exista la vista.
 
 ---
 

@@ -55,13 +55,13 @@ class FlowCatalogView extends BaseView {
   }
 
   getCatalogPath(categoryId) {
-    const base = this.organizationId ? `/org/${this.organizationId}/studio/catalog` : '/studio/catalog';
+    const base = this.organizationId ? `/org/${this.organizationId}/studio/flows` : '/studio/flows';
     return categoryId ? `${base}/${categoryId}` : base;
   }
 
   /** Ruta para vista por subcategoría (content_subcategories). */
   getCatalogPathForSubcategory(subcategoryId) {
-    const base = this.organizationId ? `/org/${this.organizationId}/studio/catalog` : '/studio/catalog';
+    const base = this.organizationId ? `/org/${this.organizationId}/studio/flows` : '/studio/flows';
     return subcategoryId ? `${base}/sub/${subcategoryId}` : base;
   }
 
@@ -117,7 +117,7 @@ class FlowCatalogView extends BaseView {
       <div class="flow-catalog" id="flowCatalogContainer">
         <div class="flow-catalog-loading" id="flowCatalogLoading">
           <i class="fas fa-circle-notch fa-spin"></i>
-          <p>Cargando catálogo...</p>
+          <p>Cargando flows...</p>
         </div>
         <div class="flow-catalog-content" id="flowCatalogContent" style="display: none;">
           <!-- Mensaje cuando no hay flujos en esta sección -->

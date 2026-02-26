@@ -40,7 +40,7 @@ Este documento relaciona cada página/vista de la plataforma con las tablas de S
 | **Campaigns** | campaigns |
 | **Studio** | organization_credits, content_flows |
 | **Living** | profiles, brand_containers, products, flow_runs, runs_outputs, credit_usage, brands |
-| **Content / Catálogo** | content_categories, content_subcategories, content_flows, user_flow_favorites, flow_runs |
+| **Content / flows** | content_categories, content_subcategories, content_flows, user_flow_favorites, flow_runs |
 | **Create** | (depende del flujo) |
 | **Form Record** | profiles, brand_containers, brands, brand_assets, brand_core (storage), products, product_images, campaigns |
 | **Settings** | profiles |

@@ -125,9 +125,9 @@ class StudioView extends BaseView {
         if (slug) window.router.navigate(`${this.getStudioBasePath()}/${encodeURIComponent(slug)}`, true);
       }
     } else {
-      // Sin flujo: Studio solo se accede desde el catálogo (seleccionando un flujo). Redirigir a catálogo.
-      const catalogPath = `${this.getStudioBasePath()}/catalog`;
-      if (window.router) window.router.navigate(catalogPath, true);
+      // Sin flujo: Studio solo se accede desde flows (seleccionando un flujo). Redirigir a flows.
+      const flowsPath = `${this.getStudioBasePath()}/flows`;
+      if (window.router) window.router.navigate(flowsPath, true);
       return;
     }
 

@@ -1,15 +1,15 @@
 /**
  * Sidebar usuario consumidor — Schema final (Zona 1: navegación workspace, Zona 2: footer organizacional).
- * Estructura: main[] (Historial, Catálogo, Identidad) + footer[] (Configuración, Planes, Créditos, Salir).
- * Estudio no tiene entrada en el sidebar: solo se accede seleccionando un flujo desde el Catálogo.
+ * Estructura: main[] (Production, flows, Identidad) + footer[] (Configuración, Planes, Créditos, Salir).
+ * Estudio no tiene entrada en el sidebar: solo se accede seleccionando un flujo desde flows.
  */
 const SIDEBAR_USER_CONFIG = {
   main: [
-    { type: 'page', id: 'activity', label: 'Historial', icon: 'fa-chart-line', route: 'historial' },
+    { type: 'page', id: 'activity', label: 'Production', icon: 'fa-chart-line', route: 'production' },
     {
       type: 'container',
       id: 'catalog',
-      label: 'Catálogo',
+      label: 'flows',
       icon: 'fa-th-large',
       children: [] // Se rellenan con content_categories (schema 218-224) en render
     },
@@ -125,7 +125,7 @@ class Navigation {
   }
 
   /**
-   * Carga categorías de intención desde content_categories (schema 218-224) para el sidebar Catálogo.
+   * Carga categorías de intención desde content_categories (schema 218-224) para el sidebar flows.
    * @returns {Promise<Array<{id: string, name: string}>>}
    */
   async loadCatalogCategories() {
@@ -186,7 +186,7 @@ class Navigation {
     
     // Rutas legacy sin /org/ - tratar como usuario pero sin org_id
     // Esto mantiene compatibilidad temporal (/settings ya tratado arriba)
-    if (['/historial', '/living', '/brands', '/products', '/studio', '/audiences', '/marketing', '/campaigns', '/content', '/organization', '/servicios', '/credits'].some(r => path.startsWith(r))) {
+    if (['/production', '/historial', '/living', '/brands', '/products', '/studio', '/audiences', '/marketing', '/campaigns', '/content', '/organization', '/servicios', '/credits'].some(r => path.startsWith(r))) {
       return { mode: 'user', showSidebar: true, showHeader: true, orgId: null, brandId: null };
     }
     
@@ -336,7 +336,7 @@ class Navigation {
 
   /**
    * HTML para navegación de usuario SaaS.
-   * Zona 1: WorkspaceHeader + NavigationMain (Actividad, Catálogo, Identidad).
+   * Zona 1: WorkspaceHeader + NavigationMain (Production, flows, Identidad).
    * Zona 2: NavigationFooter anclado (Configuración, Planes, Créditos, Salir).
    */
   getUserNavigationHTML() {
@@ -360,8 +360,8 @@ class Navigation {
       if (item.id === 'catalog') {
         const cats = Array.isArray(this._catalogCategories) ? this._catalogCategories : [];
         childItems = [
-          { label: 'Todos', route: 'studio/catalog' },
-          ...cats.map((c) => ({ label: c.name, route: `studio/catalog/${c.id}` }))
+          { label: 'Todos', route: 'studio/flows' },
+          ...cats.map((c) => ({ label: c.name, route: `studio/flows/${c.id}` }))
         ];
       }
       const children = childItems
@@ -410,7 +410,7 @@ class Navigation {
             <button class="header-hamburger" id="headerHamburger" aria-label="Menú">
               <i class="fas fa-bars"></i>
             </button>
-            <h1 class="header-title" id="headerTitle">Actividad</h1>
+            <h1 class="header-title" id="headerTitle">Production</h1>
           </div>
           <div class="header-right">
             <div class="header-user" id="headerUser">
@@ -908,7 +908,7 @@ class Navigation {
   /**
    * Actualizar enlace activo.
    * Solo se marca activo el enlace con la ruta más específica (más larga) que coincida,
-   * para evitar que /studio y /studio/catalog queden ambos activos.
+   * para evitar que /studio y /studio/flows queden ambos activos.
    */
   updateActiveLink() {
     const currentPath = window.location.pathname;
@@ -959,13 +959,15 @@ class Navigation {
     const titles = {
       '/hogar': 'Hogar',
       '/home': 'Hogar',
-      '/historial': 'Historial',
-      '/living': 'Historial',
+      '/production': 'Production',
+      '/historial': 'Production',
+      '/living': 'Production',
       '/brand': 'Identidad',
       '/brands': 'Identidad',
       '/products': 'Identidad',
       '/product-detail': 'Identidad',
-      '/studio/catalog': 'Catálogo',
+      '/studio/flows': 'flows',
+      '/studio/catalog': 'flows',
       '/studio': 'Estudio',
       '/audiences': 'Identidad',
       '/marketing': 'Identidad',
@@ -1274,7 +1276,7 @@ class Navigation {
           const orgId = option.dataset.orgId;
           if (orgId && orgId !== this.currentOrgId) {
             document.getElementById('navOrgDropdown')?.classList.remove('active');
-            window.router?.navigate(`/org/${orgId}/historial`);
+            window.router?.navigate(`/org/${orgId}/production`);
           }
         });
       });

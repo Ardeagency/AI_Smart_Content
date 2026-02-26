@@ -113,8 +113,10 @@ class App {
     r.register('/home', hogarLoader, auth);
     r.register('/hogar', hogarLoader, auth);
 
-    // ── Org: Historial / Living ──
+    // ── Org: Production (antes Historial / Living) ──
     const livingLoader = this._lazy('LivingView', ['/js/views/LivingView.js']);
+    r.register('/org/:orgId/production', livingLoader, auth);
+    r.register('/production', livingLoader, auth);
     r.register('/org/:orgId/historial', livingLoader, auth);
     r.register('/org/:orgId/living', livingLoader, auth);
     r.register('/historial', livingLoader, auth);
@@ -142,8 +144,14 @@ class App {
 
     // ── Org: Studio ──
     const studioLoader = this._lazy('StudioView', [...inputDeps, '/js/services/FlowWebhookService.js', '/js/products.js', '/js/views/StudioView.js']);
-    // Catálogo ANTES que studio/:flowSlug para que /studio/catalog no se interprete como Estudio con flowSlug "catalog"
+    // flows ANTES que studio/:flowSlug para que /studio/flows no se interprete como Estudio con flowSlug "flows"
     const catalogLoader = this._lazy('FlowCatalogView', ['/js/views/FlowCatalogView.js']);
+    r.register('/org/:orgId/studio/flows/sub/:subcategoryId', catalogLoader, auth);
+    r.register('/org/:orgId/studio/flows/:categoryId', catalogLoader, auth);
+    r.register('/org/:orgId/studio/flows', catalogLoader, auth);
+    r.register('/studio/flows/sub/:subcategoryId', catalogLoader, auth);
+    r.register('/studio/flows/:categoryId', catalogLoader, auth);
+    r.register('/studio/flows', catalogLoader, auth);
     r.register('/org/:orgId/studio/catalog/sub/:subcategoryId', catalogLoader, auth);
     r.register('/org/:orgId/studio/catalog/:categoryId', catalogLoader, auth);
     r.register('/org/:orgId/studio/catalog', catalogLoader, auth);
