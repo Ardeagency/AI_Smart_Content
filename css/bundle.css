@@ -4964,7 +4964,7 @@ svg.signin-brand-logo {
     box-sizing: border-box;
 }
 
-/* Cards hogar: recurso card-home.svg como card; overlay con nombre y créditos/descripción */
+/* Cards hogar: card-home.svg + capa vidrio (blur + tinte ámbar) para aspecto imagen 2 */
 .org-card-home {
     position: relative;
     width: 150px;
@@ -4973,6 +4973,8 @@ svg.signin-brand-logo {
     cursor: pointer;
     transition: opacity 0.2s ease, transform 0.2s ease;
     display: block;
+    overflow: hidden;
+    border-radius: 20px;
 }
 
 .org-card-home:hover {
@@ -4980,13 +4982,28 @@ svg.signin-brand-logo {
     transform: scale(1.02);
 }
 
+/* Capa vidrio: blur + tinte ámbar para efecto frosted glass (imagen 2) */
+.org-card-home::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    background: linear-gradient(180deg, rgba(80, 45, 0, 0.06) 0%, rgba(0, 0, 0, 0.08) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 0;
+    pointer-events: none;
+}
+
 .org-card-home-svg {
-    display: block;
-    width: 150px;
-    height: 200px;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
     border-radius: 20px;
     pointer-events: none;
+    z-index: 0;
 }
 
 .org-card-home-content {
@@ -5000,6 +5017,7 @@ svg.signin-brand-logo {
     text-align: center;
     padding: 1rem 0.75rem;
     box-sizing: border-box;
+    z-index: 1;
 }
 
 .org-card-home-name {
@@ -5021,6 +5039,38 @@ svg.signin-brand-logo {
     color: rgba(255, 255, 255, 0.9);
     margin: 0;
     line-height: 1.2;
+}
+
+/* Indicador circular de créditos (card de org, como imagen 2) */
+.org-card-home-credits-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+    margin-top: 0.35rem;
+}
+
+.org-card-home-credits-arc {
+    width: 44px;
+    height: 44px;
+    display: block;
+}
+
+.org-card-home-credits-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    line-height: 1;
+}
+
+.org-card-home-credits-label {
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1;
+}
+
+.org-card-home-credits-dot {
+    filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.3));
 }
 
 .org-card-home-desc {

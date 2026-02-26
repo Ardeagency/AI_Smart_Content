@@ -445,17 +445,31 @@ class HogarView extends BaseView {
   }
 
   /**
-   * Card de organización: usa recurso card-home.svg como card; overlay con nombre y créditos.
+   * Card de organización: card-home.svg + vidrio; overlay con nombre e indicador circular de créditos (imagen 2).
    */
   renderOrgCard(org) {
     const name = this.escapeHtml(org.name || '');
     const credits = org.credits_available != null ? `${org.credits_available}` : '0';
+    const safeId = `credits-${String(org.id).replace(/[^a-z0-9-]/gi, '')}`;
     return `
       <div class="org-card-home" data-org-id="${org.id}" role="button" tabindex="0" title="Entrar a ${name}">
         <img src="/recursos/card-home.svg" alt="" class="org-card-home-svg" width="150" height="200">
         <div class="org-card-home-content">
           <h3 class="org-card-home-name">${name}</h3>
-          <p class="org-card-home-credits">${credits} Créditos</p>
+          <div class="org-card-home-credits-wrap" aria-hidden="true">
+            <svg class="org-card-home-credits-arc" viewBox="0 0 40 40">
+              <defs>
+                <linearGradient id="${safeId}" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#8B5CF6"/>
+                  <stop offset="100%" stop-color="#F97316"/>
+                </linearGradient>
+              </defs>
+              <circle cx="20" cy="20" r="16" fill="none" stroke="url(#${safeId})" stroke-width="2.5" stroke-dasharray="70 30" stroke-linecap="round" transform="rotate(-135 20 20)"/>
+              <circle class="org-card-home-credits-dot" cx="12.7" cy="34.3" r="1.8" fill="white"/>
+            </svg>
+            <span class="org-card-home-credits-value">${credits}</span>
+            <span class="org-card-home-credits-label">Créditos</span>
+          </div>
         </div>
       </div>
     `;
