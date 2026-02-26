@@ -10,13 +10,14 @@ function getOrgShortId(orgId) {
 }
 
 function getOrgSlug(name) {
-  if (!name || typeof name !== 'string') return '';
-  return name
+  if (!name || typeof name !== 'string') return 'org';
+  const slug = name
     .toLowerCase()
     .normalize('NFD')
     .replace(/\p{M}/gu, '')
     .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '') || 'org';
+    .replace(/^-|-$/g, '');
+  return slug || 'org';
 }
 
 /**
@@ -27,7 +28,7 @@ function getOrgSlug(name) {
  */
 function getOrgPathPrefix(orgId, orgName) {
   const shortId = getOrgShortId(orgId);
-  const slug = getOrgSlug(orgName);
+  const slug = getOrgSlug(orgName || '');
   if (!shortId) return '';
   return `/org/${shortId}/${slug}`;
 }
@@ -39,7 +40,7 @@ function getOrgPathPrefix(orgId, orgName) {
  * @returns {Promise<{id: string, name: string}|null>} { id, name } o null
  */
 async function resolveOrgIdFromShortAndSlug(shortId, nameSlug) {
-  if (!shortId || !nameSlug) return null;
+  if (!shortId) return null;
   const supabase = window.supabaseService ? await window.supabaseService.getClient() : window.supabase;
   const user = window.authService?.getCurrentUser();
   if (!supabase || !user?.id) return null;
@@ -57,10 +58,13 @@ async function resolveOrgIdFromShortAndSlug(shortId, nameSlug) {
     (ownedRes.data || []).forEach((o) => {
       if (o?.id && !list.some((x) => x.id === o.id)) list.push({ id: o.id, name: o.name || '' });
     });
-    const match = list.find(
-      (o) => getOrgShortId(o.id) === shortId && getOrgSlug(o.name) === nameSlug
-    );
-    return match ? { id: match.id, name: match.name } : null;
+    const byShortId = list.filter((o) => getOrgShortId(o.id) === shortId);
+    if (byShortId.length === 0) return null;
+    if (nameSlug && nameSlug !== 'org') {
+      const match = byShortId.find((o) => getOrgSlug(o.name) === nameSlug);
+      if (match) return { id: match.id, name: match.name };
+    }
+    return { id: byShortId[0].id, name: byShortId[0].name };
   } catch (e) {
     console.warn('resolveOrgIdFromShortAndSlug:', e);
     return null;

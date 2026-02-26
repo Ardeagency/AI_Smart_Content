@@ -88,6 +88,12 @@ class Router {
       if (!path.startsWith('/')) path = '/' + path;
       if (path === '' || path === '/index.html') path = '/';
       if (path.length > 1 && path.endsWith('/')) path = path.slice(0, -1);
+      if (path.includes('//')) {
+        path = path.replace(/\/\/+/g, (m) => (m.length === 2 ? '/org/' : '/'));
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState(null, '', path + (window.location.search || ''));
+        }
+      }
 
       const orgSettingsMatch = path.match(/^\/org\/[^/]+\/[^/]+\/settings$/);
       if (orgSettingsMatch) {
@@ -119,17 +125,31 @@ class Router {
       }
 
       // Resolver org: /org/:orgIdShort/:orgNameSlug/... → routeParams.orgId (UUID)
-      if (routeParams.orgIdShort && routeParams.orgNameSlug && typeof window.resolveOrgIdFromShortAndSlug === 'function') {
-        const resolved = await window.resolveOrgIdFromShortAndSlug(routeParams.orgIdShort, routeParams.orgNameSlug);
-        if (resolved) {
-          routeParams.orgId = resolved.id;
-          window.currentOrgId = resolved.id;
-          window.currentOrgSlug = routeParams.orgNameSlug;
-          window.currentOrgName = resolved.name || '';
-        } else {
-          this._handlingRoute = false;
-          this.navigate('/404', true);
-          return;
+      // Asegurar sesión cargada antes de resolver (en refresh getCurrentUser puede ser null aún)
+      if (routeParams.orgIdShort && routeParams.orgNameSlug) {
+        if (window.authService && typeof window.authService.checkSession === 'function') {
+          await window.authService.checkSession();
+        }
+        if (typeof window.resolveOrgIdFromShortAndSlug === 'function') {
+          const resolved = await window.resolveOrgIdFromShortAndSlug(routeParams.orgIdShort, routeParams.orgNameSlug);
+          if (resolved) {
+            routeParams.orgId = resolved.id;
+            window.currentOrgId = resolved.id;
+            window.currentOrgSlug = routeParams.orgNameSlug;
+            window.currentOrgName = resolved.name || '';
+          } else {
+            this._handlingRoute = false;
+            const isAuth = await this.checkAuthentication();
+            if (!isAuth) {
+              this.navigate('/login', true);
+              return;
+            }
+            const defaultUrl = window.authService?.getDefaultUserRoute && window.authService.getCurrentUser()?.id
+              ? await window.authService.getDefaultUserRoute(window.authService.getCurrentUser().id)
+              : '/settings';
+            this.navigate(defaultUrl, true);
+            return;
+          }
         }
       } else if (routeParams.orgId) {
         window.currentOrgId = routeParams.orgId;
