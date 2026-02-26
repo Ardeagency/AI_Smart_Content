@@ -2385,7 +2385,7 @@ body.no-nav #app-container {
 /* === LAYOUT: SOLO HEADER (Home/Hogar) === */
 body.has-header-only #app-container {
     margin-left: 0;
-    padding-top: 70px;
+    padding-top: 0;
 }
 
 /* En hogar: sin padding para que el fondo llegue a los bordes */
@@ -2397,7 +2397,7 @@ body.has-header-only #app-container:has(> .hogar-container) {
 body.has-sidebar #app-container {
     margin-left: var(--nav-width, 260px);
     max-width: calc(100vw - var(--nav-width, 260px));
-    padding-top: var(--app-header-height, 45.8px);
+    padding-top: 0;
     transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-sizing: border-box;
 }
@@ -2424,8 +2424,8 @@ body.has-sidebar #app-container:has(> div.studio-layout) {
     top: 0;
     right: 0;
     height: var(--app-header-height, 45.8px);
-    background: var(--nav-bg);
-    border-bottom: 1px solid var(--nav-border);
+    background: transparent;
+    border: none;
     z-index: 900;
     display: flex;
     align-items: center;
