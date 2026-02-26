@@ -445,25 +445,35 @@ class HogarView extends BaseView {
   }
 
   /**
-   * Card de organización: icono (arriba izq), título, descripción (plan + créditos). Estilo referencia.
+   * Card de organización: título + círculo de créditos (arco con gradiente púrpura–naranja). Estilo referencia.
    */
   renderOrgCard(org) {
     const name = this.escapeHtml(org.name || '');
     const credits = org.credits_available != null ? `${org.credits_available}` : '0';
-    const planRaw = String(org.planType || '').replace(/_/g, ' ').trim();
-    const planLabel = planRaw ? planRaw.charAt(0).toUpperCase() + planRaw.slice(1).toLowerCase() : '—';
-    const description = `Plan: ${this.escapeHtml(planLabel)} · Créditos: ${credits}`;
+    const safeId = `credits-${String(org.id).replace(/[^a-z0-9-]/gi, '')}`;
     return `
       <div class="org-card org-card-premium" data-org-id="${org.id}" role="button" tabindex="0" title="Entrar a ${name}">
-        <span class="org-card-icon" aria-hidden="true"><i class="fas fa-building"></i></span>
         <h3 class="org-card-org-name">${name}</h3>
-        <p class="org-card-desc">${description}</p>
+        <div class="org-card-credits-circle" aria-hidden="true">
+          <svg class="org-card-credits-arc" viewBox="0 0 40 40">
+            <defs>
+              <linearGradient id="${safeId}" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#8B5CF6"/>
+                <stop offset="100%" stop-color="#F97316"/>
+              </linearGradient>
+            </defs>
+            <circle cx="20" cy="20" r="16" fill="none" stroke="url(#${safeId})" stroke-width="2.5" stroke-dasharray="70 30" stroke-linecap="round" transform="rotate(-135 20 20)"/>
+            <circle class="org-card-credits-dot" cx="12.7" cy="34.3" r="1.8" fill="white"/>
+          </svg>
+          <span class="org-card-credits-value">${credits}</span>
+          <span class="org-card-credits-label">Créditos</span>
+        </div>
       </div>
     `;
   }
 
   /**
-   * Card "Nueva Organización": mismo estilo que las de org, icono plus, título y descripción.
+   * Card "Nueva Organización": icono plus, título y descripción. Mismo estilo vidrio que las de org.
    */
   renderNewOrgCard() {
     return `
