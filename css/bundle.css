@@ -578,6 +578,9 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
 }
 body.entrance-active #app-container { opacity: 0; visibility: hidden; pointer-events: none; }
 #app-container > main, #app-container > div { max-width: 100%; overflow-x: hidden; box-sizing: border-box; min-width: 0; }
+#app-container > main {
+    padding-top: 100px;
+}
 #app-container .main-header {
     position: fixed !important;
     top: 0 !important;
@@ -2504,8 +2507,11 @@ body.has-sidebar #app-container:has(> div.studio-layout) {
     top: 0;
     right: 0;
     height: var(--app-header-height, 45.8px);
-    background: transparent;
+    background: var(--glass-bg);
     border: none;
+    border-bottom: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     z-index: 900;
     display: flex;
     align-items: center;
@@ -2531,56 +2537,18 @@ body.has-sidebar #app-container:has(> div.studio-layout) {
     transform: translateX(-50%);
 }
 
-/* Header con sidebar */
+/* Header con sidebar: efecto glass */
 .app-header.with-sidebar {
     left: var(--nav-width, 260px);
     max-width: calc(100vw - var(--nav-width, 260px));
     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-sizing: border-box;
+    border-radius: 0 0 var(--glass-radius) 0;
 }
 
 body.sidebar-collapsed .app-header.with-sidebar {
     left: var(--nav-width-collapsed, 72px);
     max-width: calc(100vw - var(--nav-width-collapsed, 72px));
-}
-
-/* Production: header con filtros dentro → efecto glass en todo el header */
-.app-header:has(.living-history-filters) {
-    height: auto;
-    min-height: var(--app-header-height, 45.8px);
-    flex-direction: column;
-    align-items: stretch;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    border-top: none;
-    border-radius: 0 0 var(--glass-radius) var(--glass-radius);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-}
-
-.app-header:has(.living-history-filters) .header-content {
-    flex-shrink: 0;
-}
-
-.app-header .header-production-slot {
-    flex-shrink: 0;
-    padding: 8px 20px 12px;
-    min-height: 0;
-}
-
-/* Filtros dentro del header: sin posición fija, sin fondo/borde propio (usa el glass del header) */
-.app-header .living-history-filters {
-    position: static;
-    top: auto;
-    left: auto;
-    right: auto;
-    margin: 0;
-    padding: 0;
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
 }
 
 /* #appHeader > .header-content: adaptar al ancho del header (no desbordar) */

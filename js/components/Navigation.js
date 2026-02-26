@@ -432,7 +432,6 @@ class Navigation {
             </div>
           </div>
         </div>
-        <div class="header-production-slot" id="headerProductionSlot"></div>
         ${this.getUserDropdownHTML('/settings')}
       </header>
 
