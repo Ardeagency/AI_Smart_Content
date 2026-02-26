@@ -1,6 +1,6 @@
 /**
  * Sidebar usuario consumidor — Schema final (Zona 1: navegación workspace, Zona 2: footer organizacional).
- * Estructura: main[] (Production, flows, Identidad) + footer[] (Configuración, Planes, Créditos, Salir).
+ * Estructura: main[] (Production, flows, Identity) + footer[] (Configuración, Planes, Créditos, Salir).
  * Estudio no tiene entrada en el sidebar: solo se accede seleccionando un flujo desde flows.
  */
 const SIDEBAR_USER_CONFIG = {
@@ -16,14 +16,14 @@ const SIDEBAR_USER_CONFIG = {
     {
       type: 'container',
       id: 'identity',
-      label: 'Identidad',
+      label: 'Identity',
       icon: 'fa-layer-group',
       children: [
-        { label: 'Marca', route: 'brand' },
-        { label: 'Productos', route: 'products' },
-        { label: 'Servicios', route: 'servicios' },
-        { label: 'Audiencias', route: 'audiences' },
-        { label: 'Campañas', route: 'campaigns' }
+        { label: 'Brand', route: 'brand' },
+        { label: 'Products', route: 'products' },
+        { label: 'Services', route: 'servicios' },
+        { label: 'Audiences', route: 'audiences' },
+        { label: 'Campaigns', route: 'campaigns' }
       ]
     }
   ],
@@ -336,7 +336,7 @@ class Navigation {
 
   /**
    * HTML para navegación de usuario SaaS.
-   * Zona 1: WorkspaceHeader + NavigationMain (Production, flows, Identidad).
+   * Zona 1: WorkspaceHeader + NavigationMain (Production, flows, Identity).
    * Zona 2: NavigationFooter anclado (Configuración, Planes, Créditos, Salir).
    */
   getUserNavigationHTML() {
@@ -360,7 +360,7 @@ class Navigation {
       if (item.id === 'catalog') {
         const cats = Array.isArray(this._catalogCategories) ? this._catalogCategories : [];
         childItems = [
-          { label: 'Todos', route: 'studio/flows' },
+          { label: 'All', route: 'studio/flows' },
           ...cats.map((c) => ({ label: c.name, route: `studio/flows/${c.id}` }))
         ];
       }
@@ -962,18 +962,18 @@ class Navigation {
       '/production': 'Production',
       '/historial': 'Production',
       '/living': 'Production',
-      '/brand': 'Identidad',
-      '/brands': 'Identidad',
-      '/products': 'Identidad',
-      '/product-detail': 'Identidad',
+      '/brand': 'Identity',
+      '/brands': 'Identity',
+      '/products': 'Identity',
+      '/product-detail': 'Identity',
       '/studio/flows': 'flows',
       '/studio/catalog': 'flows',
-      '/studio': 'Estudio',
-      '/audiences': 'Identidad',
-      '/marketing': 'Identidad',
-      '/campaigns': 'Identidad',
-      '/content': 'Identidad',
-      '/servicios': 'Identidad',
+      '/studio': 'Studio',
+      '/audiences': 'Identity',
+      '/marketing': 'Identity',
+      '/campaigns': 'Identity',
+      '/content': 'Identity',
+      '/servicios': 'Identity',
       '/settings': 'Configuración',
       '/organization': 'Configuración',
       '/planes': 'Planes',

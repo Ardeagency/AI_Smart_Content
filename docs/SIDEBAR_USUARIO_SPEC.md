@@ -27,7 +27,7 @@ El sidebar se divide en **2 zonas**:
 |-------|------------|----------------|-----------------|
 | 1     | **Production** | Página directa | No expandible. Contenido producido. Punto de entrada. |
 | 2     | **flows**      | Contenedor     | Expandible. Subniveles: categorías (Posts, Reels, Stories, etc.). |
-| 3     | **Identidad**  | Contenedor     | Expandible. Marca, Productos, Servicios, Audiencias, Campañas, Assets, Reglas IA. |
+| 3     | **Identity**   | Contenedor     | Expandible. Brand, Products, Services, Audiences, Campaigns, Assets, Reglas IA. |
 
 ---
 
@@ -58,7 +58,7 @@ Anclada al footer del sidebar. No se mezcla con la navegación funcional.
 ## Comportamiento interactivo
 
 - **Expand/Collapse:** Solo 1 contenedor expandido a la vez. Estado persistido en `localStorage` (`sidebarUserExpanded`).
-- **Active state:** Enlace que coincide con la ruta actual; su contenedor (flows o Identidad) se abre automáticamente.
+- **Active state:** Enlace que coincide con la ruta actual; su contenedor (flows o Identity) se abre automáticamente.
 
 ---
 
@@ -67,7 +67,7 @@ Anclada al footer del sidebar. No se mezcla con la navegación funcional.
 ```
 Sidebar
  ├── WorkspaceHeader (selector de organización)
- ├── NavigationMain (Production, flows, Identidad)
+ ├── NavigationMain (Production, flows, Identity)
  ├── Spacer (flex grow)
  └── NavigationFooter (Configuración, Planes, Créditos, Salir)
 ```
@@ -78,7 +78,7 @@ Sidebar
 
 En `js/components/Navigation.js`, `SIDEBAR_USER_CONFIG`:
 
-- **main[]:** `type: 'page'` (Production) o `type: 'container'` (flows, Identidad) con `children[]`.
+- **main[]:** `type: 'page'` (Production) o `type: 'container'` (flows, Identity) con `children[]`.
 - **footer[]:** Items con `label`, `icon`, `route` o `action: 'leaveWorkspace'`.
 
 Rutas existentes se reutilizan (`/production`, `/living`, `/studio`, `/studio/flows`, `/brand`, `/products`, `/audiences`, `/campaigns`, `/content`, `/settings`, `/planes`). Créditos puede apuntar a `/credits` cuando exista la vista.
