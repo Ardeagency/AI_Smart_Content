@@ -962,15 +962,22 @@ body.sidebar-collapsed .main-header,
     font-size: 10px;
 }
 
-/* Dropdown de usuario */
+/* Dropdown de usuario — design glass unificado */
 .header-user-dropdown {
+    box-sizing: border-box;
     position: absolute;
     top: calc(100% + 8px);
     right: 0;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    box-shadow: var(--shadow-floating);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+    padding: 8px 24px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+    border-radius: 14px;
     z-index: 1000;
     display: none;
     overflow: hidden;
@@ -978,7 +985,7 @@ body.sidebar-collapsed .main-header,
 }
 
 .header-user-dropdown.open {
-    display: block;
+    display: flex;
 }
 
 .header-user-dropdown-item {
@@ -1451,18 +1458,23 @@ body.sidebar-collapsed .main-header,
 
 /* Toggle button removido del sidebar - ahora está en el header */
 
-/* Tooltips unificados: formato oscuro con blur, radio 14px, borde sutil (nav colapsado y resto de la plataforma) */
+/* Tooltips unificados: design glass (blur 7px, fondo 5%, borde 10%, radio 14px) */
 .nav-tooltip {
+    box-sizing: border-box;
     position: fixed;
     left: 67px; /* 51px sidebar + 16px gap */
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(36, 36, 36, 0.92);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 24px;
+    background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
     border-radius: 14px;
-    padding: 8px 12px;
     font-size: 13px;
     color: rgba(255, 255, 255, 0.9);
     max-width: 180px;
@@ -1474,7 +1486,6 @@ body.sidebar-collapsed .main-header,
     pointer-events: none;
     transition: opacity 0.15s ease, visibility 0.15s ease;
     z-index: var(--z-popover);
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
 }
 
 .nav-tooltip.show {
@@ -1482,21 +1493,25 @@ body.sidebar-collapsed .main-header,
     visibility: visible;
 }
 
-/* Flyout: mini mapa del módulo — Header (icono + nombre) | Body (tree) | Footer (CTA) */
+/* Flyout: mini mapa del módulo — design glass unificado */
 .nav-flyout {
+    box-sizing: border-box;
     position: fixed;
     left: 63px; /* 51px sidebar + 12px safe zone */
     width: 240px;
     max-height: calc(100vh - 32px);
-    background: var(--bg-card);
-    border: 1px solid var(--nav-border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-floating);
-    z-index: var(--z-modal);
-    padding: 12px;
-    overflow: visible;
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+    padding: 8px 24px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+    border-radius: 14px;
+    z-index: var(--z-modal);
+    overflow: visible;
     opacity: 0;
     visibility: hidden;
     transform: translateX(-6px);
@@ -1525,8 +1540,9 @@ body.sidebar-collapsed .main-header,
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    border-radius: var(--radius-md);
-    background: var(--bg-card);
+    border-radius: 14px;
+    background: transparent;
+    width: 100%;
 }
 
 /* Header: icono 16px + nombre módulo 14px medium, divider */
@@ -2531,16 +2547,23 @@ body.sidebar-collapsed .app-header.with-sidebar {
     color: var(--text-primary);
 }
 
-/* User Dropdown */
+/* User Dropdown — design glass unificado */
 .user-dropdown {
+    box-sizing: border-box;
     position: absolute;
     top: calc(100% + 8px);
     right: 0;
     width: 240px;
-    background: var(--nav-bg);
-    border: 1px solid var(--nav-border);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-floating);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+    padding: 8px 24px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+    border-radius: 14px;
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
@@ -8059,27 +8082,32 @@ body.sidebar-collapsed .living-container {
     margin-left: var(--spacing-sm);
 }
 
-/* Dropdown calendario: fuera del flujo cuando está abierto para no ser recortado por ancestros */
+/* Dropdown calendario — design glass unificado */
 .living-date-dropdown {
+    box-sizing: border-box;
     position: absolute;
     top: 100%;
     left: 0;
     margin-top: var(--spacing-xs);
-    padding: var(--spacing-md);
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-floating);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 24px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+    border-radius: 14px;
     z-index: var(--z-dropdown);
     width: 320px;
     min-width: 320px;
     max-width: 320px;
-    box-sizing: border-box;
     display: none;
 }
 
 .living-date-dropdown.is-open {
-    display: block;
+    display: flex;
     position: fixed;
     /* left y top se asignan por JS desde el trigger para que no lo recorte ningún contenedor */
     z-index: calc(var(--z-modal, 500) - 1);
