@@ -4961,7 +4961,7 @@ svg.signin-brand-logo {
     box-sizing: border-box;
 }
 
-/* Cards hogar: 150×200px, radio 20px, fondo negro 7% opacidad, efecto vidrio, sin borde */
+/* Cards hogar: 150×200px, radio 20px, fondo negro 7%, efecto vidrio (Refracción 70, Profundidad 80, Dispersión 100, Escarcha 7, Claro -45° 70%) */
 .org-card.org-card-premium {
     width: 150px;
     height: 200px;
@@ -4975,19 +4975,35 @@ svg.signin-brand-logo {
     padding: 1rem 0.75rem;
     border-radius: 20px;
     background: rgba(0, 0, 0, 0.07);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
     border: none;
     cursor: pointer;
     transition: var(--transition);
     overflow: hidden;
     box-sizing: border-box;
+    position: relative;
+}
+
+/* Claro: reflejo -45° (top-left), ~70% intensidad → gradiente sutil */
+.org-card.org-card-premium::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.org-card.org-card-premium > * {
+    position: relative;
+    z-index: 1;
 }
 
 .org-card.org-card-premium:hover {
     background: rgba(0, 0, 0, 0.12);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
 }
 
 .org-card-icon {
