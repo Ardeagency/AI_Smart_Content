@@ -8202,8 +8202,11 @@ body.sidebar-collapsed .living-container {
     min-height: 400px;
 }
 
-/* Header de filtros (fecha, tipo, flujo) */
+/* Header de filtros (fecha, tipo, flujo): sticky para que scrollee junto con el header */
 .living-history-filters {
+    position: sticky;
+    top: var(--app-header-height, 45.8px);
+    z-index: 80;
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
