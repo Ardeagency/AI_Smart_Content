@@ -2544,6 +2544,45 @@ body.sidebar-collapsed .app-header.with-sidebar {
     max-width: calc(100vw - var(--nav-width-collapsed, 72px));
 }
 
+/* Production: header con filtros dentro → efecto glass en todo el header */
+.app-header:has(.living-history-filters) {
+    height: auto;
+    min-height: var(--app-header-height, 45.8px);
+    flex-direction: column;
+    align-items: stretch;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-top: none;
+    border-radius: 0 0 var(--glass-radius) var(--glass-radius);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+}
+
+.app-header:has(.living-history-filters) .header-content {
+    flex-shrink: 0;
+}
+
+.app-header .header-production-slot {
+    flex-shrink: 0;
+    padding: 8px 20px 12px;
+    min-height: 0;
+}
+
+/* Filtros dentro del header: sin posición fija, sin fondo/borde propio (usa el glass del header) */
+.app-header .living-history-filters {
+    position: static;
+    top: auto;
+    left: auto;
+    right: auto;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
 /* #appHeader > .header-content: adaptar al ancho del header (no desbordar) */
 #appHeader > .header-content,
 .app-header .header-content {
@@ -6939,13 +6978,17 @@ body.sidebar-collapsed .living-container {
    HISTORIAL (única sección a ancho completo)
    ============================================ */
 .living-container > .living-history-section {
-    /* Padding superior: header + barra de filtros fija para que el historial no quede oculto al hacer scroll */
     padding-top: calc(var(--app-header-height, 45.8px) + 80px);
     padding-left: 4rem;
     padding-right: 4rem;
     padding-bottom: var(--living-spacing-section);
     max-width: none;
     width: 100%;
+}
+
+/* Cuando los filtros están en el header (Production), reservar espacio para header + fila de filtros */
+body.production-filters-in-header .living-container > .living-history-section {
+    padding-top: 110px;
 }
 
 .living-history-section {
@@ -6955,29 +6998,15 @@ body.sidebar-collapsed .living-container {
     min-height: 400px;
 }
 
-/* Header de filtros (fecha, tipo, flujo): fijos, no hacen scroll con app-container */
+/* Header de filtros (fecha, tipo, flujo): en Production se mueven al app-header (ver LivingView.moveFiltersToHeader) */
 .living-history-filters {
-    position: fixed;
-    top: var(--app-header-height, 45.8px);
-    left: var(--nav-width, 260px);
-    right: 0;
-    z-index: 100;
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
     gap: var(--spacing-lg);
     margin: 0;
-    padding: var(--glass-padding);
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border-radius: 0 0 var(--glass-radius) var(--glass-radius);
+    padding: 0;
     box-sizing: border-box;
-}
-
-body.sidebar-collapsed .living-history-filters {
-    left: var(--nav-width-collapsed, 51px);
 }
 
 /* Filtros en forma de pill: [ etiqueta | divisor | chevron/valor ] */

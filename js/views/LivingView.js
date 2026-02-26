@@ -59,6 +59,9 @@ class LivingView extends BaseView {
    * Inicializar la vista
    */
   async init() {
+    // Mover filtros al header principal (solo en Production)
+    this.moveFiltersToHeader();
+
     // Cargar script si es necesario
     if (!window.LivingManager) {
       await this.loadScript('js/living.js', 'LivingManager');
@@ -76,6 +79,31 @@ class LivingView extends BaseView {
 
     // Setup links para usar router con orgId
     this.setupRouterLinks();
+  }
+
+  /**
+   * Mueve la barra de filtros al header principal (solo Production).
+   * El header aplica efecto glass cuando contiene los filtros.
+   */
+  moveFiltersToHeader() {
+    const slot = document.getElementById('headerProductionSlot');
+    const filters = document.querySelector('.living-history-filters');
+    if (slot && filters) {
+      slot.innerHTML = '';
+      slot.appendChild(filters);
+      document.body.classList.add('production-filters-in-header');
+    }
+  }
+
+  /**
+   * Restaura el slot del header al salir de Production.
+   */
+  clearFiltersFromHeader() {
+    const slot = document.getElementById('headerProductionSlot');
+    if (slot) {
+      slot.innerHTML = '';
+    }
+    document.body.classList.remove('production-filters-in-header');
   }
 
   /**
@@ -148,9 +176,10 @@ class LivingView extends BaseView {
   }
 
   /**
-   * Hook al salir de la vista - sin limpieza
+   * Hook al salir de la vista
    */
   async onLeave() {
+    this.clearFiltersFromHeader();
     if (this.livingManager && typeof this.livingManager.destroy === 'function') {
       this.livingManager.destroy();
     }
