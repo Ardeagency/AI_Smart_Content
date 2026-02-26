@@ -445,42 +445,33 @@ class HogarView extends BaseView {
   }
 
   /**
-   * Card de organización: título + círculo de créditos (arco con gradiente púrpura–naranja). Estilo referencia.
+   * Card de organización: usa recurso card-home.svg como card; overlay con nombre y créditos.
    */
   renderOrgCard(org) {
     const name = this.escapeHtml(org.name || '');
     const credits = org.credits_available != null ? `${org.credits_available}` : '0';
-    const safeId = `credits-${String(org.id).replace(/[^a-z0-9-]/gi, '')}`;
     return `
-      <div class="org-card org-card-premium" data-org-id="${org.id}" role="button" tabindex="0" title="Entrar a ${name}">
-        <h3 class="org-card-org-name">${name}</h3>
-        <div class="org-card-credits-circle" aria-hidden="true">
-          <svg class="org-card-credits-arc" viewBox="0 0 40 40">
-            <defs>
-              <linearGradient id="${safeId}" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#8B5CF6"/>
-                <stop offset="100%" stop-color="#F97316"/>
-              </linearGradient>
-            </defs>
-            <circle cx="20" cy="20" r="16" fill="none" stroke="url(#${safeId})" stroke-width="2.5" stroke-dasharray="70 30" stroke-linecap="round" transform="rotate(-135 20 20)"/>
-            <circle class="org-card-credits-dot" cx="12.7" cy="34.3" r="1.8" fill="white"/>
-          </svg>
-          <span class="org-card-credits-value">${credits}</span>
-          <span class="org-card-credits-label">Créditos</span>
+      <div class="org-card-home" data-org-id="${org.id}" role="button" tabindex="0" title="Entrar a ${name}">
+        <img src="/recursos/card-home.svg" alt="" class="org-card-home-svg" width="150" height="200">
+        <div class="org-card-home-content">
+          <h3 class="org-card-home-name">${name}</h3>
+          <p class="org-card-home-credits">${credits} Créditos</p>
         </div>
       </div>
     `;
   }
 
   /**
-   * Card "Nueva Organización": icono plus, título y descripción. Mismo estilo vidrio que las de org.
+   * Card "Nueva Organización": mismo recurso card-home.svg; overlay con título y descripción.
    */
   renderNewOrgCard() {
     return `
-      <div class="org-card org-card-premium org-card--new" data-new-org role="button" tabindex="0" title="Crear nueva organización">
-        <span class="org-card-icon org-card-icon--new" aria-hidden="true"><i class="fas fa-plus"></i></span>
-        <h3 class="org-card-org-name">Nueva Organización</h3>
-        <p class="org-card-desc">Crea una organización para gestionar tus marcas y contenido</p>
+      <div class="org-card-home org-card-home--new" data-new-org role="button" tabindex="0" title="Crear nueva organización">
+        <img src="/recursos/card-home.svg" alt="" class="org-card-home-svg" width="150" height="200">
+        <div class="org-card-home-content">
+          <h3 class="org-card-home-name">Nueva Organización</h3>
+          <p class="org-card-home-desc">Crea una organización para gestionar tus marcas y contenido</p>
+        </div>
       </div>
     `;
   }
