@@ -435,7 +435,7 @@ class Navigation {
       <nav class="side-navigation nav-mode-user" id="sideNavigation" aria-label="Navegación principal">
         <div class="nav-workspace-header nav-identity-section" id="navWorkspaceHeader">
           <button type="button" class="nav-sidebar-toggle" id="sidebarToggleBtn" aria-label="Abrir o cerrar menú">
-            <img src="/recursos/icons/colapsado.svg" alt="" width="21" height="18" class="nav-sidebar-toggle-icon" />
+            <img src="/recursos/icons/expandido.svg" alt="" width="21" height="18" class="nav-sidebar-toggle-icon" />
           </button>
           <h2 class="nav-org-title" id="navOrgName">Mi Organización</h2>
         </div>
@@ -522,7 +522,7 @@ class Navigation {
       <nav class="side-navigation nav-mode-developer" id="sideNavigation" aria-label="Navegación desarrollador">
         <div class="nav-identity-section nav-workspace-header nav-dev-toggle-header">
           <button type="button" class="nav-sidebar-toggle" id="sidebarToggleBtn" aria-label="Abrir o cerrar menú">
-            <img src="/recursos/icons/colapsado.svg" alt="" width="21" height="18" class="nav-sidebar-toggle-icon" />
+            <img src="/recursos/icons/expandido.svg" alt="" width="21" height="18" class="nav-sidebar-toggle-icon" />
           </button>
         </div>
         <div class="nav-identity-section">
@@ -590,6 +590,16 @@ class Navigation {
       sidebar.classList.add('collapsed');
       document.body.classList.add('sidebar-collapsed');
     }
+    this.updateSidebarToggleIcon();
+  }
+
+  /**
+   * Actualiza el icono del botón toggle según estado del sidebar (abierto → expandido.svg, cerrado → colapsado.svg)
+   */
+  updateSidebarToggleIcon() {
+    const img = document.querySelector('#sidebarToggleBtn .nav-sidebar-toggle-icon');
+    if (!img) return;
+    img.src = this.isCollapsed ? '/recursos/icons/colapsado.svg' : '/recursos/icons/expandido.svg';
   }
 
   /**
@@ -1008,6 +1018,7 @@ class Navigation {
     sidebar.classList.toggle('collapsed', this.isCollapsed);
     document.body.classList.toggle('sidebar-collapsed', this.isCollapsed);
     localStorage.setItem('sidebarCollapsed', this.isCollapsed ? 'true' : 'false');
+    this.updateSidebarToggleIcon();
   }
 
   /**
