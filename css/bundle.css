@@ -2689,6 +2689,11 @@ body.sidebar-collapsed .app-header.with-sidebar {
     flex-shrink: 0;
 }
 
+/* Zona botón + dropdown perfil: el dropdown se posiciona respecto a este contenedor */
+.app-header .header-user-dropdown-zone {
+    position: relative;
+}
+
 /* Botón menú de usuario (chevron) — sin contenedor extra */
 .user-menu-btn {
     width: 28px;
