@@ -1500,6 +1500,65 @@ if (typeof window.ProductsManager === 'undefined') {
         }
     }
 
+    async duplicateProduct(productId) {
+        if (!this.isValidUUID(productId)) {
+            console.error('❌ productId no válido');
+            return;
+        }
+        try {
+            const { data: product, error: fetchError } = await this.supabase
+                .from('products')
+                .select('*')
+                .eq('id', productId)
+                .single();
+
+            if (fetchError || !product) {
+                this.showNotification('❌ No se pudo cargar el producto para duplicar', 'error');
+                return;
+            }
+
+            const { id, created_at, updated_at, ...rest } = product;
+            const copyData = {
+                ...rest,
+                nombre_producto: (product.nombre_producto || 'Producto').trim() + ' (copia)'
+            };
+
+            const { data: newProduct, error: insertError } = await this.supabase
+                .from('products')
+                .insert(copyData)
+                .select('id')
+                .single();
+
+            if (insertError || !newProduct) {
+                this.showNotification(`❌ Error al duplicar: ${insertError?.message || 'desconocido'}`, 'error');
+                return;
+            }
+
+            const { data: images } = await this.supabase
+                .from('product_images')
+                .select('image_url, image_type, image_order')
+                .eq('product_id', productId)
+                .order('image_order', { ascending: true });
+
+            if (images && images.length > 0) {
+                await this.supabase
+                    .from('product_images')
+                    .insert(images.map(img => ({
+                        product_id: newProduct.id,
+                        image_url: img.image_url,
+                        image_type: img.image_type,
+                        image_order: img.image_order
+                    })));
+            }
+
+            await this.loadProducts();
+            this.showNotification('✅ Producto duplicado correctamente', 'success');
+        } catch (error) {
+            console.error('Error duplicando producto:', error);
+            this.showNotification(`❌ Error al duplicar: ${error.message}`, 'error');
+        }
+    }
+
     async logout() {
         if (this.supabase) {
             await this.supabase.auth.signOut();

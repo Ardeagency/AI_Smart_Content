@@ -9674,7 +9674,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 .product-card {
     background: transparent;
     border: none;
-    border-radius: var(--radius-lg);
+    border-radius: var(--media-container-radius);
     overflow: hidden;
     transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
@@ -9689,6 +9689,78 @@ body.production-filters-in-header .living-container > .living-history-section {
 .product-card:hover {
     transform: translateY(-4px);
     box-shadow: var(--shadow-hover);
+}
+
+/* Acciones: Eliminar + Duplicar (esquina superior derecha) — mismo estilo que production (glass) */
+.product-card-actions {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.product-card-actions .product-card-delete,
+.product-card-actions .product-card-duplicate {
+    pointer-events: all;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    color: var(--white-95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: var(--transition);
+    font-size: var(--font-size-base);
+}
+
+.product-card:hover .product-card-actions .product-card-delete,
+.product-card:hover .product-card-actions .product-card-duplicate {
+    opacity: 1;
+}
+
+.product-card-actions .product-card-delete:hover,
+.product-card-actions .product-card-duplicate:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--glass-border);
+    color: var(--color-white);
+}
+
+.product-card-actions .product-card-delete:hover {
+    border-color: var(--color-error);
+    color: var(--color-error);
+    background: var(--color-error-bg);
+}
+
+/* Nombre del producto (esquina inferior) — solo visible en hover, igual que production */
+.product-card-product-name {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 8px 10px;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.75));
+    color: var(--color-white);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.product-card:hover .product-card-product-name {
+    opacity: 1;
 }
 
 .product-card-image .no-image {
