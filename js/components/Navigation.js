@@ -122,6 +122,7 @@ class Navigation {
     this._devCacheTime = 0;
     this._catalogCategories = [];
     this._CACHE_TTL = 60000;
+    this._userMenuDelegationAttached = false;
   }
 
   /**
@@ -618,13 +619,16 @@ class Navigation {
       overlay.addEventListener('click', () => this.closeMobileNav());
     }
 
-    // User menu
-    const userMenuBtn = document.getElementById('userMenuBtn');
-    const userDropdown = document.getElementById('userDropdown');
-    if (userMenuBtn && userDropdown) {
-      userMenuBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        userDropdown.classList.toggle('active');
+    // User menu: delegación en el contenedor para que funcione aunque el DOM se reemplace
+    if (this.container && !this._userMenuDelegationAttached) {
+      this._userMenuDelegationAttached = true;
+      this.container.addEventListener('click', (e) => {
+        const btn = document.getElementById('userMenuBtn');
+        const ud = document.getElementById('userDropdown');
+        if (btn && ud && (e.target === btn || btn.contains(e.target))) {
+          e.stopPropagation();
+          ud.classList.toggle('active');
+        }
       });
     }
 
