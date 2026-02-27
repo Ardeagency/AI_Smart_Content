@@ -2689,14 +2689,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     flex-shrink: 0;
 }
 
-/* Usuario en header: solo botón menú (avatar quitado por diseño) */
-.header-user {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    position: relative;
-}
-
+/* Botón menú de usuario (chevron) — sin contenedor extra */
 .user-menu-btn {
     width: 28px;
     height: 28px;
@@ -2717,8 +2710,9 @@ body.sidebar-collapsed .app-header.with-sidebar {
     color: var(--text-primary);
 }
 
-/* User Dropdown — design glass (variables) */
-.user-dropdown {
+/* User Dropdown — mismo efecto glass que .app-header */
+.user-dropdown,
+#userDropdown {
     box-sizing: border-box;
     position: absolute;
     top: calc(100% + 8px);
@@ -2731,13 +2725,13 @@ body.sidebar-collapsed .app-header.with-sidebar {
     padding: var(--glass-padding);
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
+    border-radius: var(--glass-radius);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
-    border-radius: var(--glass-radius);
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
-    transition: var(--transition);
+    transition: opacity var(--transition), visibility var(--transition), transform var(--transition);
     z-index: 1000;
 }
 

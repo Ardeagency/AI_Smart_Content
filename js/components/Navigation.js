@@ -306,11 +306,9 @@ class Navigation {
             </div>
           </div>
           <div class="header-right">
-            <div class="header-user" id="headerUser">
-              <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
-                <i class="fas fa-chevron-down"></i>
-              </button>
-            </div>
+            <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
+              <i class="fas fa-chevron-down"></i>
+            </button>
           </div>
         </div>
         ${this.getUserDropdownHTML(settingsHref)}
@@ -422,11 +420,9 @@ class Navigation {
             <h1 class="header-title" id="headerTitle">Production</h1>
           </div>
           <div class="header-right">
-            <div class="header-user" id="headerUser">
-              <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
-                <i class="fas fa-chevron-down"></i>
-              </button>
-            </div>
+            <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
+              <i class="fas fa-chevron-down"></i>
+            </button>
           </div>
         </div>
         ${this.getUserDropdownHTML('/settings')}
@@ -509,11 +505,9 @@ class Navigation {
             <h1 class="header-title" id="headerTitle">Developer Portal</h1>
           </div>
           <div class="header-right">
-            <div class="header-user" id="headerUser">
-              <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
-                <i class="fas fa-chevron-down"></i>
-              </button>
-            </div>
+            <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
+              <i class="fas fa-chevron-down"></i>
+            </button>
           </div>
         </div>
         ${this.getUserDropdownHTML('/settings')}
