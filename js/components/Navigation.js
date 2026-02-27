@@ -419,9 +419,6 @@ class Navigation {
       <header class="app-header with-sidebar" id="appHeader">
         <div class="header-content">
           <div class="header-left">
-            <button class="header-hamburger" id="headerHamburger" aria-label="Menú">
-              <i class="fas fa-bars"></i>
-            </button>
             <h1 class="header-title" id="headerTitle">Production</h1>
           </div>
           <div class="header-right">
@@ -437,7 +434,9 @@ class Navigation {
 
       <nav class="side-navigation nav-mode-user" id="sideNavigation" aria-label="Navegación principal">
         <div class="nav-workspace-header nav-identity-section" id="navWorkspaceHeader">
-          <i class="fas fa-building nav-collapsed-only-icon" aria-hidden="true"></i>
+          <button type="button" class="nav-sidebar-toggle" id="sidebarToggleBtn" aria-label="Abrir o cerrar menú">
+            <img src="/recursos/icons/colapsado.svg" alt="" width="21" height="18" class="nav-sidebar-toggle-icon" />
+          </button>
           <h2 class="nav-org-title" id="navOrgName">Mi Organización</h2>
         </div>
 
@@ -507,9 +506,6 @@ class Navigation {
       <header class="app-header with-sidebar" id="appHeader">
         <div class="header-content">
           <div class="header-left">
-            <button class="header-hamburger" id="headerHamburger" aria-label="Menú">
-              <i class="fas fa-bars"></i>
-            </button>
             <h1 class="header-title" id="headerTitle">Developer Portal</h1>
           </div>
           <div class="header-right">
@@ -524,6 +520,11 @@ class Navigation {
       </header>
 
       <nav class="side-navigation nav-mode-developer" id="sideNavigation" aria-label="Navegación desarrollador">
+        <div class="nav-identity-section nav-workspace-header nav-dev-toggle-header">
+          <button type="button" class="nav-sidebar-toggle" id="sidebarToggleBtn" aria-label="Abrir o cerrar menú">
+            <img src="/recursos/icons/colapsado.svg" alt="" width="21" height="18" class="nav-sidebar-toggle-icon" />
+          </button>
+        </div>
         <div class="nav-identity-section">
           <div class="nav-identity-card dev-identity" id="navIdentityCard">
             <div class="nav-identity-content">
@@ -595,10 +596,10 @@ class Navigation {
    * Configurar event listeners
    */
   setupEventListeners() {
-    // Hamburger: en móvil abre/cierra overlay; en desktop colapsa/expande sidebar
-    const hamburger = document.getElementById('headerHamburger');
-    if (hamburger) {
-      hamburger.addEventListener('click', () => {
+    // Botón del sidebar (icono colapsado): en móvil abre/cierra overlay; en desktop colapsa/expande sidebar
+    const sidebarToggle = document.getElementById('sidebarToggleBtn');
+    if (sidebarToggle) {
+      sidebarToggle.addEventListener('click', () => {
         if (window.matchMedia('(max-width: 768px)').matches) {
           this.toggleMobileNav();
         } else {

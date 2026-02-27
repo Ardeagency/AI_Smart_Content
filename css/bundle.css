@@ -1240,6 +1240,51 @@ body.sidebar-collapsed .main-header,
     min-width: 0;
 }
 
+/* Botón abrir/cerrar sidebar (icono colapsado) */
+.nav-sidebar-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--sidebar-icon-color, var(--text-secondary));
+    transition: var(--nav-transition);
+    flex-shrink: 0;
+}
+.nav-sidebar-toggle:hover {
+    background: var(--sidebar-hover);
+    color: var(--sidebar-text-primary);
+}
+.nav-sidebar-toggle-icon {
+    width: 21px;
+    height: 18px;
+    object-fit: contain;
+    pointer-events: none;
+}
+
+/* Developer: cabecera con solo el botón toggle */
+.nav-dev-toggle-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 12px 16px 8px;
+}
+.side-navigation.collapsed .nav-dev-toggle-header {
+    justify-content: center;
+    padding: 12px;
+}
+/* En modo desarrollador colapsado, solo mostrar el botón toggle (ocultar la card de identidad) */
+.side-navigation.collapsed.nav-mode-developer .nav-identity-section:not(.nav-dev-toggle-header) {
+    display: none;
+}
+
 .nav-identity-card:hover {
     background: var(--bg-hover);
     border-color: var(--border-divider);
