@@ -18204,10 +18204,12 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 /* ============================================
    MEDIA CARD UNIFICADA — Un solo estilo para todos los contenedores de imagen/video
-   Reglas: (1) Contenedor muestra TODA la imagen (contain), (2) radio 3px,
-   (3) borde mínimo, (4) hover solo para overlays (títulos, botones, iconos).
-   Skeleton con aspect-ratio del contexto; imagen aparece con transición al cargar.
-   Añadir .media-card--loaded al contenedor en img.onload para ocultar skeleton a tiempo.
+   — El CONTENEDOR define el tamaño (grande, mediano, pequeño); el contenido NUNCA
+     lo cambia. Imagen/video (9:16, 1:1, 4:3, etc.) siempre se adapta DENTRO del
+     contenedor: sin deformar, sin desbordar. El contenido no estira el contenedor.
+   — Contenedor: radio 3px, borde mínimo. Hover solo para overlays (títulos, botones).
+   — Skeleton con aspect-ratio del contexto; imagen aparece con transición al cargar.
+   — Añadir .media-card--loaded al contenedor en img.onload para ocultar skeleton.
    ============================================ */
 
 :root {
@@ -18216,7 +18218,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   --media-card-bg: var(--bg-card, rgba(15, 17, 21, 0.9));
 }
 
-/* — Contenedor único: todos los que muestran imagen/video — */
+/* — Contenedor: tamaño fijo por layout/aspect-ratio; el contenido no lo modifica — */
 .history-image-card,
 .history-video-card-thumbnail,
 .featured-card-visual,
@@ -18239,9 +18241,11 @@ body.production-filters-in-header .living-container > .living-history-section {
   border: var(--media-card-border);
   background: var(--media-card-bg);
   box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
 }
 
-/* — Imagen/video: siempre mostrar TODA la imagen (contain), aparición elegante — */
+/* — Imagen/video: se adapta DENTRO del contenedor, sin deformar ni desbordar — */
 .history-image-card img,
 .history-video-card-thumbnail img,
 .featured-card-visual img,
@@ -18262,6 +18266,8 @@ body.production-filters-in-header .living-container > .living-history-section {
   display: block;
   width: 100%;
   height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
   object-position: center;
   position: relative;
