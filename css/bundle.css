@@ -115,7 +115,7 @@
     --media-container-shadow-hover: var(--shadow-hover);
     --media-container-bg: transparent;
     --media-container-bg-fill: var(--bg-card);
-    --media-container-radius: 0;
+    --media-container-radius: 2px;
     --grid-color: rgba(212, 209, 216, 0.03);
     --transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     --transition-fast: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
@@ -7427,8 +7427,10 @@ body.production-filters-in-header .living-container > .living-history-section {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: rgba(0, 0, 0, 0.55);
-    border: none;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     color: var(--white-95);
     display: flex;
     align-items: center;
@@ -7446,7 +7448,8 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 .history-card-actions .history-card-download:hover,
 .history-card-actions .history-card-copy-prompt:hover {
-    background: rgba(0, 0, 0, 0.75);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--glass-border);
     color: var(--color-white);
 }
 
@@ -7454,7 +7457,7 @@ body.production-filters-in-header .living-container > .living-history-section {
     color: var(--color-success);
 }
 
-/* Nombre del flujo (esquina inferior izquierda) */
+/* Nombre del flujo (esquina inferior izquierda) — solo visible en hover */
 .history-card-flow-name {
     position: absolute;
     bottom: 0;
@@ -7468,6 +7471,13 @@ body.production-filters-in-header .living-container > .living-history-section {
     letter-spacing: 0.02em;
     text-transform: uppercase;
     z-index: 1;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.history-image-card:hover .history-card-flow-name,
+.history-video-card:hover .history-card-flow-name {
+    opacity: 1;
 }
 
 /* Card de texto - Minimalista, sin radio */
