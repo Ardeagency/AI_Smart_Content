@@ -7353,14 +7353,6 @@ body.production-filters-in-header .living-container > .living-history-section {
     box-shadow: var(--shadow-hover);
 }
 
-.history-video-card-thumbnail {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    background: var(--bg-card);
-}
-
 /* Mantener clase por compatibilidad; el layout real es .living-masonry-grid */
 .living-history-masonry {
     width: 100%;
@@ -7375,32 +7367,8 @@ body.production-filters-in-header .living-container > .living-history-section {
     margin-bottom: 0;
 }
 
-/* Card de imagen - aspect ratio tipo masonry (portrait por defecto) */
 .history-image-card {
-    width: 100%;
-    position: relative;
     cursor: pointer;
-    border-radius: 0;
-    overflow: hidden;
-    box-shadow: var(--shadow-card);
-    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-    background: transparent;
-    aspect-ratio: 0.75 / 1;
-}
-
-.history-image-card.history-image-card--wide {
-    aspect-ratio: 1.33333 / 1;
-}
-
-.history-image-card:hover {
-    box-shadow: var(--shadow-hover);
-}
-
-.history-image-card img {
-    width: 100%;
-    height: 100%;
-    display: block;
-    object-fit: cover;
 }
 
 /* Acciones: Descargar + Copiar prompt (esquina superior derecha) */
@@ -7672,15 +7640,6 @@ body.production-filters-in-header .living-container > .living-history-section {
     opacity: 1;
 }
 
-.featured-card-visual {
-    position: relative;
-    width: 100%;
-    height: auto;
-    z-index: 1;
-    display: block;
-    line-height: 0; /* Eliminar espacio extra debajo de la imagen */
-}
-
 .featured-card-visual::after {
     content: '';
     position: absolute;
@@ -7690,14 +7649,6 @@ body.production-filters-in-header .living-container > .living-history-section {
     transition: opacity 0.3s ease;
     z-index: 2;
     pointer-events: none;
-}
-
-.featured-card-visual img {
-    width: 100%;
-    height: auto;
-    display: block;
-    /* La imagen mantiene su aspect ratio natural */
-    /* No usar object-fit para que respete el tamaño original */
 }
 
 .featured-card-visual-placeholder {
@@ -7974,31 +7925,6 @@ body.production-filters-in-header .living-container > .living-history-section {
     transform: translateY(-8px);
     box-shadow: var(--living-shadow-medium);
     border-color: var(--warm-30);
-}
-
-.content-card-image-container {
-    width: 100%;
-    min-height: 200px;
-    max-height: 500px;
-    overflow: hidden;
-    border-radius: 16px 16px 0 0;
-    background: rgba(0, 0, 0, 0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-}
-
-.content-card-image {
-    width: 100%;
-    height: auto;
-    min-height: 200px;
-    max-height: 500px;
-    object-fit: cover;
-    object-position: center;
-    display: block;
-    /* Permitir que la imagen mantenga su proporción natural */
-    min-width: 0;
 }
 
 .content-card-image-placeholder {
@@ -8996,17 +8922,6 @@ body.production-filters-in-header .living-container > .living-history-section {
   color: #000000;
   transform: translateY(-1px);
 }
-.flow-hero-slide-media {
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  aspect-ratio: 16/10;
-  background: rgba(0,0,0,0.3);
-}
-.flow-hero-slide-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
 .flow-hero-slide-placeholder {
   width: 100%;
   height: 100%;
@@ -9132,35 +9047,6 @@ body.production-filters-in-header .living-container > .living-history-section {
 .flow-card:focus {
   outline: 2px solid var(--accent-warm);
   outline-offset: 2px;
-}
-.flow-card-media {
-  position: relative;
-  aspect-ratio: 4/5;
-  background: rgba(0, 0, 0, 0.35);
-  overflow: hidden;
-}
-.flow-card-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: filter 0.3s ease, transform 0.3s ease;
-}
-.flow-card:hover .flow-card-img,
-.flow-card:focus-visible .flow-card-img {
-  filter: blur(6px) brightness(0.45);
-  transform: scale(1.05);
-}
-.flow-card-media-veil {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.35);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-.flow-card:hover .flow-card-media-veil,
-.flow-card:focus-visible .flow-card-media-veil {
-  opacity: 1;
 }
 .flow-card-placeholder {
   width: 100%;
@@ -9757,34 +9643,6 @@ body.production-filters-in-header .living-container > .living-history-section {
     box-shadow: var(--shadow-hover);
 }
 
-.product-card-image {
-    width: 100%;
-    aspect-ratio: 1;
-    background: var(--bg-hover);
-    position: relative;
-    overflow: hidden;
-    border-radius: var(--radius-lg);
-    transition: transform 0.3s ease;
-}
-
-/* Masonry flat: variantes de proporción para bloques de distintos tamaños */
-.product-card--masonry-0 .product-card-image { aspect-ratio: 1; }
-.product-card--masonry-1 .product-card-image { aspect-ratio: 4/3; }
-.product-card--masonry-2 .product-card-image { aspect-ratio: 3/4; }
-.product-card--masonry-3 .product-card-image { aspect-ratio: 3/2; }
-.product-card--masonry-4 .product-card-image { aspect-ratio: 2/3; }
-
-.product-card:hover .product-card-image {
-    transform: scale(1.02);
-}
-
-.product-card-image img {
-    width: 100%;
-    height: 100%;
-    display: block;
-    object-fit: cover;
-}
-
 .product-card-image .no-image {
     display: flex;
     flex-direction: column;
@@ -9897,20 +9755,6 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 .image-item[draggable="true"] {
     cursor: move;
-}
-
-.image-wrapper {
-    position: relative;
-    width: 100%;
-    height: 150px;
-    overflow: hidden;
-}
-
-.image-item img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
 }
 
 .image-overlay {
@@ -10303,21 +10147,6 @@ body.production-filters-in-header .living-container > .living-history-section {
   top: 1.5rem;
 }
 
-.product-view-main-wrap {
-  aspect-ratio: 1;
-  background: var(--living-bg-surface, #0E1012);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-}
-
-.product-view-main-wrap img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-}
-
 .product-view-thumbnails {
   display: flex;
   gap: 0.5rem;
@@ -10330,12 +10159,8 @@ body.production-filters-in-header .living-container > .living-history-section {
   flex-shrink: 0;
   width: 72px;
   height: 72px;
-  border-radius: var(--radius-sm);
-  overflow: hidden;
   border: 2px solid transparent;
   cursor: pointer;
-    transition: var(--transition);
-  background: var(--living-bg-surface, #0E1012);
 }
 
 .product-view-thumb:hover {
@@ -10344,12 +10169,6 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 .product-view-thumb.active {
   border-color: var(--accent-warm, #ff6500);
-}
-
-.product-view-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 /* ============================================
@@ -11521,17 +11340,6 @@ body.production-filters-in-header .living-container > .living-history-section {
   background: var(--living-bg-surface);
 }
 
-.dev-flow-card-image {
-  width: 100%;
-  height: 100%;
-}
-
-.dev-flow-card-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
 .dev-flow-card-placeholder {
   width: 100%;
   height: 100%;
@@ -12307,23 +12115,6 @@ body.production-filters-in-header .living-container > .living-history-section {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   overflow: hidden;
-}
-
-.ficha-image {
-  aspect-ratio: 16/9;
-  background: var(--bg-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 8px;
-  color: var(--text-muted);
-}
-
-.ficha-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .ficha-body {
@@ -13515,21 +13306,6 @@ body.production-filters-in-header .living-container > .living-history-section {
   font-size: var(--font-size-2xl);
 }
 
-.image-selector-card-image {
-  width: 100%;
-  aspect-ratio: 1;
-  position: relative;
-  overflow: hidden;
-  background: var(--bg-tertiary);
-}
-
-.image-selector-card-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
 .image-selector-card-image .image-selector-card-placeholder {
   position: absolute;
   top: 0;
@@ -14287,15 +14063,10 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 .image-preview {
   width: 120px;
-  height: 80px;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
   color: var(--text-muted);
   font-size: var(--font-size-sm);
 }
@@ -14303,13 +14074,6 @@ body.production-filters-in-header .living-container > .living-history-section {
 .image-preview i {
   font-size: var(--font-size-2xl);
   margin-bottom: 4px;
-}
-
-.image-preview img,
-.image-preview video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .image-preview--upload {
@@ -18439,85 +18203,119 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 
 /* ============================================
-   MEDIA CARD UNIFICADA (imágenes y video)
-   Aplica a Production, Products, Flows, Studio, Content, Dev, etc.
+   MEDIA CARD UNIFICADA — Un solo estilo para todos los contenedores de imagen/video
+   Reglas: (1) Contenedor muestra TODA la imagen (contain), (2) radio 3px,
+   (3) borde mínimo, (4) hover solo para overlays (títulos, botones, iconos).
+   Skeleton con aspect-ratio del contexto; imagen aparece con transición al cargar.
+   Añadir .media-card--loaded al contenedor en img.onload para ocultar skeleton a tiempo.
    ============================================ */
 
-/* Contenedores que muestran imágenes/video: un solo estilo base */
+:root {
+  --media-card-radius: 3px;
+  --media-card-border: 1px solid rgba(255, 255, 255, 0.06);
+  --media-card-bg: var(--bg-card, rgba(15, 17, 21, 0.9));
+}
+
+/* — Contenedor único: todos los que muestran imagen/video — */
 .history-image-card,
 .history-video-card-thumbnail,
 .featured-card-visual,
-.content-card-image,
 .content-card-image-container,
 .product-card-image,
+.product-view-main-wrap,
 .product-view-thumb,
 .flow-card-media,
 .flow-card-img,
 .flow-hero-slide-media,
 .flow-hero-slide-img,
 .dev-flow-card-image,
-.image-selector-card-image {
+.image-selector-card-image,
+.image-preview,
+.image-wrapper,
+.ficha-image {
   position: relative;
   overflow: hidden;
-  border-radius: 3px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: var(--bg-card, rgba(15, 17, 21, 0.9));
+  border-radius: var(--media-card-radius);
+  border: var(--media-card-border);
+  background: var(--media-card-bg);
   box-sizing: border-box;
 }
 
-/* Medios dentro del contenedor: siempre mostrar TODA la imagen (object-fit: contain) */
+/* — Imagen/video: siempre mostrar TODA la imagen (contain), aparición elegante — */
 .history-image-card img,
 .history-video-card-thumbnail img,
 .featured-card-visual img,
-.content-card-image img,
+.content-card-image,
+.content-card-image-container img,
 .product-card-image img,
+.product-view-main-wrap img,
 .product-view-thumb img,
 .flow-card-img,
 .flow-hero-slide-img,
 .dev-flow-card-image img,
-.image-selector-card-image img {
+.image-selector-card-image img,
+.image-preview img,
+.image-preview video,
+.image-wrapper img,
+.image-item img,
+.ficha-image img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;
   object-position: center;
-  transition: opacity 0.35s ease-out, transform 0.35s ease-out;
+  position: relative;
+  z-index: 1;
   opacity: 0;
   transform: scale(1.02);
+  transition: opacity 0.4s ease-out, transform 0.4s ease-out;
 }
 
-/* Aparición elegante al cargar (aprox. al asignar src) */
+/* Aparición al cargar: con src o cuando el contenedor tiene .media-card--loaded (img.onload) */
 .history-image-card img[src],
 .history-video-card-thumbnail img[src],
 .featured-card-visual img[src],
-.content-card-image img[src],
+.content-card-image[src],
+.content-card-image-container img[src],
 .product-card-image img[src],
+.product-view-main-wrap img[src],
 .product-view-thumb img[src],
 .flow-card-img[src],
 .flow-hero-slide-img[src],
 .dev-flow-card-image img[src],
-.image-selector-card-image img[src] {
+.image-selector-card-image img[src],
+.image-preview img[src],
+.image-preview video[src],
+.image-wrapper img[src],
+.image-item img[src],
+.ficha-image img[src],
+.media-card--loaded img,
+.media-card--loaded video {
   opacity: 1;
   transform: scale(1);
 }
 
-/* Skeleton de carga: shimmer suave detrás del medio */
+/* Skeleton: visible hasta que la imagen termina de cargar (quitar con .media-card--loaded) */
 .history-image-card::before,
 .history-video-card-thumbnail::before,
 .featured-card-visual::before,
-.content-card-image::before,
+.content-card-image-container::before,
 .product-card-image::before,
+.product-view-main-wrap::before,
 .product-view-thumb::before,
 .flow-card-media::before,
 .flow-card-img::before,
 .flow-hero-slide-media::before,
 .flow-hero-slide-img::before,
 .dev-flow-card-image::before,
-.image-selector-card-image::before {
+.image-selector-card-image::before,
+.image-preview::before,
+.image-wrapper::before,
+.ficha-image::before {
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: 3px;
+  border-radius: var(--media-card-radius);
   background: linear-gradient(
     90deg,
     rgba(255, 255, 255, 0.04) 0%,
@@ -18527,30 +18325,46 @@ body.production-filters-in-header .living-container > .living-history-section {
   background-size: 200% 100%;
   animation: media-card-skeleton 1.2s ease-in-out infinite;
   opacity: 0.7;
+  z-index: 0;
 }
 
-.history-image-card img,
-.history-video-card-thumbnail img,
-.featured-card-visual img,
-.content-card-image img,
-.product-card-image img,
-.product-view-thumb img,
-.flow-card-img,
-.flow-hero-slide-img,
-.dev-flow-card-image img,
-.image-selector-card-image img {
-  position: relative;
-  z-index: 1;
+.media-card--loaded::before {
+  opacity: 0;
+  pointer-events: none;
 }
 
 @keyframes media-card-skeleton {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
+
+/* — Aspect ratio por contexto (skeleton y contenedor respetan la proporción) — */
+.history-image-card { aspect-ratio: 0.75 / 1; }
+.history-image-card.history-image-card--wide { aspect-ratio: 1.33333 / 1; }
+.history-video-card-thumbnail { aspect-ratio: 0.75 / 1; }
+.featured-card-visual { aspect-ratio: 16 / 10; }
+.content-card-image-container { aspect-ratio: 16 / 10; }
+.product-card-image { aspect-ratio: 1; }
+.product-card--masonry-0 .product-card-image { aspect-ratio: 1; }
+.product-card--masonry-1 .product-card-image { aspect-ratio: 4 / 3; }
+.product-card--masonry-2 .product-card-image { aspect-ratio: 3 / 4; }
+.product-card--masonry-3 .product-card-image { aspect-ratio: 3 / 2; }
+.product-card--masonry-4 .product-card-image { aspect-ratio: 2 / 3; }
+.product-view-main-wrap {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.product-view-thumb { aspect-ratio: 1; }
+.flow-card-media { aspect-ratio: 4 / 5; }
+.flow-hero-slide-media { aspect-ratio: 16 / 10; }
+.dev-flow-card-image { aspect-ratio: 16 / 10; }
+.image-selector-card-image { aspect-ratio: 1; }
+.image-preview { aspect-ratio: 3 / 2; }
+.image-wrapper { aspect-ratio: 1; }
+.ficha-image { aspect-ratio: 16 / 9; }
 
 
 .section-title {
