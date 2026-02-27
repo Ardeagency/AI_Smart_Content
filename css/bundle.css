@@ -18218,7 +18218,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   --media-card-bg: var(--bg-card, rgba(15, 17, 21, 0.9));
 }
 
-/* — Contenedor: tamaño fijo por layout/aspect-ratio; el contenido no lo modifica — */
+/* — Contenedor: el LAYOUT define el tamaño (width 100% del padre); ratio sí, tamaño NO por la imagen — */
 .history-image-card,
 .history-video-card-thumbnail,
 .featured-card-visual,
@@ -18236,6 +18236,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 .image-wrapper,
 .ficha-image {
   position: relative;
+  width: 100%;
   overflow: hidden;
   border-radius: var(--media-card-radius);
   border: var(--media-card-border);
@@ -18245,7 +18246,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   min-height: 0;
 }
 
-/* — Imagen/video: se adapta DENTRO del contenedor, sin deformar ni desbordar — */
+/* — Imagen/video: rellena el contenedor sin salir del flujo; nunca deforma ni desborda — */
 .history-image-card img,
 .history-video-card-thumbnail img,
 .featured-card-visual img,
@@ -18264,13 +18265,14 @@ body.production-filters-in-header .living-container > .living-history-section {
 .image-item img,
 .ficha-image img {
   display: block;
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
   object-position: center;
-  position: relative;
   z-index: 1;
   opacity: 0;
   transform: scale(1.02);
