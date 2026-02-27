@@ -18438,6 +18438,121 @@ body.production-filters-in-header .living-container > .living-history-section {
         margin-bottom: 1.5rem;
 }
 
+/* ============================================
+   MEDIA CARD UNIFICADA (imágenes y video)
+   Aplica a Production, Products, Flows, Studio, Content, Dev, etc.
+   ============================================ */
+
+/* Contenedores que muestran imágenes/video: un solo estilo base */
+.history-image-card,
+.history-video-card-thumbnail,
+.featured-card-visual,
+.content-card-image,
+.content-card-image-container,
+.product-card-image,
+.product-view-thumb,
+.flow-card-media,
+.flow-card-img,
+.flow-hero-slide-media,
+.flow-hero-slide-img,
+.dev-flow-card-image,
+.image-selector-card-image {
+  position: relative;
+  overflow: hidden;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-card, rgba(15, 17, 21, 0.9));
+  box-sizing: border-box;
+}
+
+/* Medios dentro del contenedor: siempre mostrar TODA la imagen (object-fit: contain) */
+.history-image-card img,
+.history-video-card-thumbnail img,
+.featured-card-visual img,
+.content-card-image img,
+.product-card-image img,
+.product-view-thumb img,
+.flow-card-img,
+.flow-hero-slide-img,
+.dev-flow-card-image img,
+.image-selector-card-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  transition: opacity 0.35s ease-out, transform 0.35s ease-out;
+  opacity: 0;
+  transform: scale(1.02);
+}
+
+/* Aparición elegante al cargar (aprox. al asignar src) */
+.history-image-card img[src],
+.history-video-card-thumbnail img[src],
+.featured-card-visual img[src],
+.content-card-image img[src],
+.product-card-image img[src],
+.product-view-thumb img[src],
+.flow-card-img[src],
+.flow-hero-slide-img[src],
+.dev-flow-card-image img[src],
+.image-selector-card-image img[src] {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Skeleton de carga: shimmer suave detrás del medio */
+.history-image-card::before,
+.history-video-card-thumbnail::before,
+.featured-card-visual::before,
+.content-card-image::before,
+.product-card-image::before,
+.product-view-thumb::before,
+.flow-card-media::before,
+.flow-card-img::before,
+.flow-hero-slide-media::before,
+.flow-hero-slide-img::before,
+.dev-flow-card-image::before,
+.image-selector-card-image::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.10) 50%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  background-size: 200% 100%;
+  animation: media-card-skeleton 1.2s ease-in-out infinite;
+  opacity: 0.7;
+}
+
+.history-image-card img,
+.history-video-card-thumbnail img,
+.featured-card-visual img,
+.content-card-image img,
+.product-card-image img,
+.product-view-thumb img,
+.flow-card-img,
+.flow-hero-slide-img,
+.dev-flow-card-image img,
+.image-selector-card-image img {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes media-card-skeleton {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+
 .section-title {
         font-size: var(--font-size-md);
     margin-bottom: 1rem;

@@ -1,3 +1,6 @@
+# - OPENAI_API_KEY (solo para backend: funciones que llamen a OpenAI)
+# - KIE_API_KEY (solo para backend: funciones que llamen a KIE)
+
 # Netlify Configuration for AI Smart Content (SPA)
 
 [build]
