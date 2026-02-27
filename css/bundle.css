@@ -110,6 +110,12 @@
     --shadow-card: 0 4px 16px rgba(32, 29, 38, 0.5);
     --shadow-hover: 0 8px 24px rgba(32, 29, 38, 0.6);
     --shadow-floating: 0 12px 32px rgba(32, 29, 38, 0.7);
+    /* Contenedor de imagen (estilo historial-living) — único punto de verdad */
+    --media-container-shadow: var(--shadow-card);
+    --media-container-shadow-hover: var(--shadow-hover);
+    --media-container-bg: transparent;
+    --media-container-bg-fill: var(--bg-card);
+    --media-container-radius: 0;
     --grid-color: rgba(212, 209, 216, 0.03);
     --transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     --transition-fast: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
@@ -7373,18 +7379,18 @@ body.production-filters-in-header .living-container > .living-history-section {
     height: 100%;
     object-fit: cover;
     display: block;
-    background: var(--bg-card);
+    background: var(--media-container-bg-fill);
 }
 
 .history-image-card {
     width: 100%;
     position: relative;
     cursor: pointer;
-    border-radius: 0;
+    border-radius: var(--media-container-radius);
     overflow: hidden;
-    box-shadow: var(--shadow-card);
+    box-shadow: var(--media-container-shadow);
     transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-    background: transparent;
+    background: var(--media-container-bg);
     aspect-ratio: 0.75 / 1;
 }
 
@@ -7393,7 +7399,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 
 .history-image-card:hover {
-    box-shadow: var(--shadow-hover);
+    box-shadow: var(--media-container-shadow-hover);
 }
 
 .history-image-card img {
@@ -13302,20 +13308,20 @@ body.production-filters-in-header .living-container > .living-history-section {
 .image-selector-card {
   flex: 0 0 auto;
   width: 100px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--media-container-radius);
   overflow: hidden;
   border: 1px solid var(--border-color);
-  background: var(--bg-secondary);
+  background: var(--media-container-bg);
+  box-shadow: var(--media-container-shadow);
   cursor: pointer;
   transition: var(--transition);
 }
 .image-selector-card:hover {
-  border-color: var(--dev-primary);
-  box-shadow: 0 0 0 2px rgba(255, 101, 0, 0.2);
+  box-shadow: var(--media-container-shadow-hover);
 }
 .image-selector-card.selected {
-  border-color: var(--dev-primary);
-  box-shadow: 0 0 0 2px var(--dev-primary);
+  border-color: var(--accent-brand);
+  box-shadow: 0 0 0 2px var(--accent-brand-soft);
 }
 .image-selector-card-placeholder {
   width: 100%;
@@ -17623,10 +17629,10 @@ body.production-filters-in-header .living-container > .living-history-section {
   width: 100%;
   position: relative;
   overflow: hidden;
-  border-radius: 0;
-  box-shadow: var(--shadow-card);
+  border-radius: var(--media-container-radius);
+  box-shadow: var(--media-container-shadow);
   transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-  background: transparent;
+  background: var(--media-container-bg);
 }
 .featured-card-visual { aspect-ratio: 16 / 10; }
 .content-card-image-container { aspect-ratio: 16 / 10; }
@@ -17637,7 +17643,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 .product-card--masonry-3 .product-card-image { aspect-ratio: 3 / 2; }
 .product-card--masonry-4 .product-card-image { aspect-ratio: 2 / 3; }
 .product-view-main-wrap { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; padding: 1rem; }
-.product-view-thumb { aspect-ratio: 1; width: 72px; height: 72px; flex-shrink: 0; border: 2px solid transparent; cursor: pointer; }
+.product-view-thumb { aspect-ratio: 1; width: 72px; height: 72px; flex-shrink: 0; border: 2px solid var(--border-color); cursor: pointer; }
 .flow-card-media { aspect-ratio: 4 / 5; }
 .flow-hero-slide-media { aspect-ratio: 16 / 10; }
 .dev-flow-card-image { aspect-ratio: 16 / 10; }
