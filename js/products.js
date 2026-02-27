@@ -27,6 +27,13 @@ if (typeof window.ProductsManager === 'undefined') {
         return uuidRegex.test(uuid);
     }
 
+    escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     // Mapeo completo de todas las categorías posibles
     getCategoryMap() {
         return {
@@ -706,18 +713,29 @@ if (typeof window.ProductsManager === 'undefined') {
         const mainImage = product.images && product.images.length > 0 
             ? product.images[0].image_url 
             : null;
+        const safeName = this.escapeHtml(product.nombre_producto || '');
 
         card.innerHTML = `
             <div class="product-card-image">
                 ${mainImage 
-                    ? `<img src="${mainImage}" alt="${product.nombre_producto}" loading="lazy" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'no-image\\'><i class=\\'fas fa-image\\'></i><span>Sin imagen</span></div>'">` 
+                    ? `<img src="${this.escapeHtml(mainImage)}" alt="${safeName}" loading="lazy" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'no-image\\'><i class=\\'fas fa-image\\'></i><span>Sin imagen</span></div>'">` 
                     : `<div class="no-image"><i class="fas fa-image"></i><span>Sin imagen</span></div>`
                 }
             </div>
+            <div class="product-card-actions">
+                <button type="button" class="product-card-delete" title="Eliminar" data-product-id="${product.id}">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+                <button type="button" class="product-card-duplicate" title="Duplicar" data-product-id="${product.id}">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
+            <div class="product-card-product-name">${safeName}</div>
         `;
 
-        // Event listener para click en la card - navegar al detalle (respetar contexto org)
+        // Click en la card: navegar al detalle; no navegar si se hace click en acciones
         card.addEventListener('click', (e) => {
+            if (e.target.closest('.product-card-delete, .product-card-duplicate')) return;
             e.stopPropagation();
             const path = window.location.pathname || '';
             const orgMatch = path.match(/^\/org\/([^/]+)\/([^/]+)/);
@@ -728,6 +746,18 @@ if (typeof window.ProductsManager === 'undefined') {
             } else if (window.router) {
                 window.router.navigate(`/products/${product.id}`);
             }
+        });
+
+        card.querySelector('.product-card-delete')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            if (confirm('¿Eliminar este producto?')) this.deleteProduct(product.id);
+        });
+
+        card.querySelector('.product-card-duplicate')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            this.duplicateProduct(product.id);
         });
 
         return card;

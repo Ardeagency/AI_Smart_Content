@@ -122,7 +122,6 @@ class Navigation {
     this._devCacheTime = 0;
     this._catalogCategories = [];
     this._CACHE_TTL = 60000;
-    this._userMenuDelegationAttached = false;
   }
 
   /**
@@ -306,13 +305,13 @@ class Navigation {
               <img src="/recursos/Recursos%20de%20Marca/Recursos/logo-03.svg" alt="AI Smart Content" class="header-logo-img">
             </div>
           </div>
-          <div class="header-right header-user-dropdown-zone">
+          <div class="header-right">
             <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
               <i class="fas fa-chevron-down"></i>
             </button>
-            ${this.getUserDropdownHTML(settingsHref)}
           </div>
         </div>
+        ${this.getUserDropdownHTML(settingsHref)}
       </header>`;
   }
 
@@ -420,13 +419,13 @@ class Navigation {
           <div class="header-left">
             <h1 class="header-title" id="headerTitle">Production</h1>
           </div>
-          <div class="header-right header-user-dropdown-zone">
+          <div class="header-right">
             <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
               <i class="fas fa-chevron-down"></i>
             </button>
-            ${this.getUserDropdownHTML('/settings')}
           </div>
         </div>
+        ${this.getUserDropdownHTML('/settings')}
       </header>
 
       <nav class="side-navigation nav-mode-user" id="sideNavigation" aria-label="Navegación principal">
@@ -505,13 +504,13 @@ class Navigation {
           <div class="header-left">
             <h1 class="header-title" id="headerTitle">Developer Portal</h1>
           </div>
-          <div class="header-right header-user-dropdown-zone">
+          <div class="header-right">
             <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
               <i class="fas fa-chevron-down"></i>
             </button>
-            ${this.getUserDropdownHTML('/settings')}
           </div>
         </div>
+        ${this.getUserDropdownHTML('/settings')}
       </header>
 
       <nav class="side-navigation nav-mode-developer" id="sideNavigation" aria-label="Navegación desarrollador">
@@ -619,16 +618,13 @@ class Navigation {
       overlay.addEventListener('click', () => this.closeMobileNav());
     }
 
-    // User menu: delegación en el contenedor para que funcione aunque el DOM se reemplace
-    if (this.container && !this._userMenuDelegationAttached) {
-      this._userMenuDelegationAttached = true;
-      this.container.addEventListener('click', (e) => {
-        const btn = document.getElementById('userMenuBtn');
-        const ud = document.getElementById('userDropdown');
-        if (btn && ud && (e.target === btn || btn.contains(e.target))) {
-          e.stopPropagation();
-          ud.classList.toggle('active');
-        }
+    // User menu
+    const userMenuBtn = document.getElementById('userMenuBtn');
+    const userDropdown = document.getElementById('userDropdown');
+    if (userMenuBtn && userDropdown) {
+      userMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        userDropdown.classList.toggle('active');
       });
     }
 
@@ -638,19 +634,14 @@ class Navigation {
       logoutBtn.addEventListener('click', () => this.handleLogout());
     }
 
-    // Un solo listener en document para cerrar todos los dropdowns (solo si el clic fue fuera del botón y del dropdown)
+    // Un solo listener en document para cerrar todos los dropdowns (evita duplicados al re-render)
     if (!this._documentClickAttached) {
       this._documentClickAttached = true;
-      document.addEventListener('click', (e) => {
+      document.addEventListener('click', () => {
         const ud = document.getElementById('userDropdown');
-        const btn = document.getElementById('userMenuBtn');
         const od = document.getElementById('navOrgDropdown');
-        if (ud && (!btn || !btn.contains(e.target)) && !ud.contains(e.target)) {
-          ud.classList.remove('active');
-        }
-        if (od && !od.contains(e.target)) {
-          od.classList.remove('active');
-        }
+        if (ud) ud.classList.remove('active');
+        if (od) od.classList.remove('active');
       });
     }
 
