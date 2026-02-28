@@ -37,6 +37,10 @@ const SIDEBAR_USER_CONFIG = {
 
 const SIDEBAR_USER_EXPANDED_KEY = 'sidebarUserExpanded';
 
+/** SVG inline para el botón toggle del sidebar (hereda color del botón). */
+const SIDEBAR_TOGGLE_ICON_DESPLEGADO = `<svg class="nav-sidebar-toggle-icon" width="21" height="18" viewBox="0 0 20 17" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8.29167 0.999999L1 8.29166L8.29167 15.5833M18.5 1L11.2083 8.29167L18.5 15.5833" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const SIDEBAR_TOGGLE_ICON_COLAPSADO = `<svg class="nav-sidebar-toggle-icon" width="21" height="18" viewBox="0 0 20 17" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M11.2083 15.5833L18.5 8.29167L11.2083 1M1 15.5833L8.29167 8.29167L1 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
 /**
  * Sidebar desarrollador — Build, Operations, Observability, Resources, Lead (solo lead).
  */
@@ -432,7 +436,7 @@ class Navigation {
       <nav class="side-navigation nav-mode-user" id="sideNavigation" aria-label="Navegación principal">
         <div class="nav-workspace-header nav-identity-section" id="navWorkspaceHeader">
           <button type="button" class="nav-sidebar-toggle" id="sidebarToggleBtn" aria-label="Abrir o cerrar menú">
-            <img src="/recursos/icons/desplegado.svg" alt="" width="21" height="18" class="nav-sidebar-toggle-icon" />
+            ${SIDEBAR_TOGGLE_ICON_DESPLEGADO}
           </button>
           <h2 class="nav-org-title" id="navOrgName">Mi Organización</h2>
         </div>
@@ -517,7 +521,7 @@ class Navigation {
       <nav class="side-navigation nav-mode-developer" id="sideNavigation" aria-label="Navegación desarrollador">
         <div class="nav-identity-section nav-workspace-header nav-dev-toggle-header">
           <button type="button" class="nav-sidebar-toggle" id="sidebarToggleBtn" aria-label="Abrir o cerrar menú">
-            <img src="/recursos/icons/desplegado.svg" alt="" width="21" height="18" class="nav-sidebar-toggle-icon" />
+            ${SIDEBAR_TOGGLE_ICON_DESPLEGADO}
           </button>
         </div>
         <div class="nav-identity-section">
@@ -589,12 +593,12 @@ class Navigation {
   }
 
   /**
-   * Actualiza el icono del botón toggle según estado del sidebar (abierto → desplegado.svg, cerrado → colapsado.svg)
+   * Actualiza el icono del botón toggle según estado del sidebar (abierto → desplegado, cerrado → colapsado).
    */
   updateSidebarToggleIcon() {
-    const img = document.querySelector('#sidebarToggleBtn .nav-sidebar-toggle-icon');
-    if (!img) return;
-    img.src = this.isCollapsed ? '/recursos/icons/colapsado.svg' : '/recursos/icons/desplegado.svg';
+    const btn = document.getElementById('sidebarToggleBtn');
+    if (!btn) return;
+    btn.innerHTML = this.isCollapsed ? SIDEBAR_TOGGLE_ICON_COLAPSADO : SIDEBAR_TOGGLE_ICON_DESPLEGADO;
   }
 
   /**

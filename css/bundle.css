@@ -190,9 +190,9 @@
     --brand-text-light: var(--text-primary);
     --brand-text-gold: var(--text-primary);
     --brand-text-muted: var(--text-muted);
-    --dev-primary: var(--accent-warm);
-    --dev-primary-light: var(--accent-yellow-hover);
-    --dev-primary-dark: #ff6500;
+    --dev-primary: #00E7FF;
+    --dev-primary-light: #66f0ff;
+    --dev-primary-dark: #00b8cc;
     --dev-success: #00d614;
     --dev-warning: #ffe500;
     --dev-error: #ff0000;
@@ -203,7 +203,7 @@
     /* Superficie visible para cards/secciones en dev (evita negro sobre negro) */
     --dev-bg-surface: rgba(21, 23, 28, 0.6);
     --dev-bg-surface-hover: rgba(255, 255, 255, 0.06);
-    --dev-border: rgba(255, 101, 0, 0.2);
+    --dev-border: rgba(0, 231, 255, 0.2);
     --dev-card-border: var(--border-divider);
     --border-radius: var(--radius-md);
 }
@@ -11105,7 +11105,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 .dev-stat-card:hover {
   background: var(--dev-bg-card-hover);
-  border-color: rgba(255, 101, 0, 0.3);
+  border-color: rgba(0, 231, 255, 0.3);
   transform: translateY(-2px);
 }
 
@@ -11113,7 +11113,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   width: 48px;
   height: 48px;
   border-radius: var(--radius-md);
-  background: rgba(255, 101, 0, 0.15);
+  background: rgba(0, 231, 255, 0.15);
   color: var(--dev-primary);
   display: flex;
   align-items: center;
@@ -11228,7 +11228,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 
 .dev-flow-item:hover {
-  background: rgba(255, 101, 0, 0.05);
+  background: rgba(0, 231, 255, 0.05);
 }
 
 .dev-flow-icon {
@@ -11612,7 +11612,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 .dev-flow-card:hover {
   background: var(--dev-bg-card-hover);
-  border-color: rgba(255, 101, 0, 0.3);
+  border-color: rgba(0, 231, 255, 0.3);
   transform: translateY(-2px);
   box-shadow: var(--shadow-hover);
 }
@@ -13099,12 +13099,12 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 .builder-canvas.drag-active {
   border-color: var(--dev-primary);
-  background: rgba(255, 101, 0, 0.05);
+  background: rgba(0, 231, 255, 0.05);
 }
 
 .builder-canvas.drag-over {
   border-style: solid;
-  background: rgba(255, 101, 0, 0.1);
+  background: rgba(0, 231, 255, 0.1);
 }
 
 .canvas-empty-state {
