@@ -200,9 +200,9 @@ class App {
     // ── Settings ──
     r.register('/settings', this._lazy('SettingsView', ['/js/views/SettingsView.js']), auth);
 
-    // ── Créditos ──
+    // ── Créditos (sin org: redirige; en org: tienda de créditos) ──
     r.register('/credits', this._lazy('CreditsView', ['/js/views/CreditsView.js']), auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/credits', this._lazy('OrganizationView', ['/js/views/OrganizationView.js']), auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/credits', this._lazy('CreditsShopView', ['/js/views/CreditsShopView.js']), auth);
 
     // ── Org: Organization ──
     r.register('/org/:orgIdShort/:orgNameSlug/organization', this._lazy('OrganizationView', ['/js/views/OrganizationView.js']), auth);

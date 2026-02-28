@@ -321,7 +321,8 @@ class Navigation {
    */
   getUserSidebarRoute(routeSuffix) {
     const basePath = this.getOrgBasePath();
-    const globalRoutes = { credits: '/credits' };
+    // Con org: Créditos → tienda org/.../credits; sin org: /credits (CreditsView redirige)
+    const globalRoutes = {};
     if (globalRoutes[routeSuffix]) return globalRoutes[routeSuffix];
     if (basePath) return `${basePath}/${routeSuffix}`;
     const legacy = { brand: '/brands', settings: '/settings' };

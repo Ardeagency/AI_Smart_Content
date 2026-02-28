@@ -10823,6 +10823,122 @@ body.production-filters-in-header .living-container > .living-history-section {
     font-size: var(--font-size-base);
 }
 
+/* ========== Credits Shop (comprar créditos en org) ========== */
+.credits-shop-container {
+    padding-top: calc(48px + 2rem);
+}
+
+.credits-shop-current {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--living-bg-card, rgba(21, 23, 28, 0.6));
+    border: 1px solid var(--border-divider);
+    border-radius: var(--radius-md);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.credits-shop-current-label {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.credits-shop-current-value {
+    color: var(--accent-warm);
+    font-size: 1.1rem;
+}
+
+.credits-shop-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.25rem;
+    margin-top: 2rem;
+    list-style: none;
+    padding: 0;
+    margin-left: 0;
+}
+
+.credits-shop-card {
+    background: var(--living-bg-card, rgba(21, 23, 28, 0.6));
+    border: 1px solid var(--border-divider);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.credits-shop-card:hover {
+    border-color: var(--glass-border);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.credits-shop-card--popular {
+    border-color: var(--accent-warm);
+    box-shadow: 0 0 0 1px var(--accent-warm);
+}
+
+.credits-shop-badge {
+    position: absolute;
+    top: -0.5rem;
+    right: 1rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--accent-warm);
+    background: rgba(224, 145, 69, 0.15);
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+}
+
+.credits-shop-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.credits-shop-card-credits {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.credits-shop-card-price {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--accent-warm);
+}
+
+.credits-shop-card-desc {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0;
+    flex: 1;
+}
+
+.credits-shop-btn-buy {
+    margin-top: auto;
+    width: 100%;
+    justify-content: center;
+}
+
+.credits-shop-footer-note {
+    margin-top: 2rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    max-width: 560px;
+}
+
+@media (max-width: 768px) {
+    .credits-shop-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 
 /* ========== developer.css (6826 lineas) ========== */
 
