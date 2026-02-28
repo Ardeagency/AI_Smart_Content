@@ -1194,30 +1194,9 @@ body.sidebar-collapsed .main-header,
    NAVEGACIÓN LATERAL
    ========================================= */
 
-/* Sidebar colapsado: glass-black (negro 60%, textos blancos, bordes negros) */
+/* Sidebar colapsado: ancho reducido (el efecto glass-black va en #navFlyout, no aquí) */
 .side-navigation.collapsed {
     width: var(--nav-width-collapsed);
-    background: var(--glass-black-bg);
-    border-right-color: var(--glass-black-border);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    color: var(--glass-black-text);
-}
-.side-navigation.collapsed .nav-link,
-.side-navigation.collapsed .nav-submenu-toggle,
-.side-navigation.collapsed .nav-icon,
-.side-navigation.collapsed .nav-main-link,
-.side-navigation.collapsed .nav-sidebar-toggle,
-.side-navigation.collapsed .nav-collapsed-only-icon,
-.side-navigation.collapsed .nav-logo-icon,
-.side-navigation.collapsed .nav-dev-icon {
-    color: var(--glass-black-text);
-}
-.side-navigation.collapsed .nav-link:hover,
-.side-navigation.collapsed .nav-submenu-toggle:hover,
-.side-navigation.collapsed .nav-main-link:hover {
-    color: var(--glass-black-text);
-    background: rgba(255, 255, 255, 0.1);
 }
 
 /* Centrar todos los iconos en collapsed (consumidor y desarrollador) */
@@ -1716,7 +1695,7 @@ body.sidebar-collapsed .main-header,
     visibility: visible;
 }
 
-/* Flyout: mini mapa del módulo — design glass (variables) */
+/* Flyout (#navFlyout): glass-black — negro 60%, textos blancos, bordes negros */
 .nav-flyout {
     box-sizing: border-box;
     position: fixed;
@@ -1728,8 +1707,9 @@ body.sidebar-collapsed .main-header,
     justify-content: center;
     align-items: stretch;
     padding: var(--glass-padding);
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
+    background: var(--glass-black-bg);
+    border: 1px solid var(--glass-black-border);
+    color: var(--glass-black-text);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border-radius: var(--glass-radius);
@@ -1775,7 +1755,7 @@ body.sidebar-collapsed .main-header,
     gap: 8px;
     padding-bottom: 10px;
     margin-bottom: 8px;
-    border-bottom: 1px solid var(--glass-border);
+    border-bottom: 1px solid var(--glass-black-border);
 }
 
 .nav-flyout-header-icon {
@@ -1785,14 +1765,14 @@ body.sidebar-collapsed .main-header,
     align-items: center;
     justify-content: center;
     font-size: 16px;
-    color: var(--text-primary);
+    color: var(--glass-black-text);
     flex-shrink: 0;
 }
 
 .nav-flyout-header-label {
     font-size: 14px;
     font-weight: 500;
-    color: var(--text-primary);
+    color: var(--glass-black-text);
 }
 
 /* Body: lista vertical con tree indicator (línea izquierda) */
@@ -1808,8 +1788,8 @@ body.sidebar-collapsed .main-header,
     top: 8px;
     bottom: 8px;
     width: 2px;
-    background: var(--text-muted);
-    opacity: 0.2;
+    background: var(--glass-black-text);
+    opacity: 0.35;
     border-radius: 1px;
 }
 
@@ -1823,20 +1803,20 @@ body.sidebar-collapsed .main-header,
     display: block;
     padding: 6px 12px 6px 20px; /* indent: 10px line + 2px + 8px */
     font-size: 13px;
-    color: var(--text-secondary);
+    color: var(--glass-black-text);
     text-decoration: none;
     border-radius: var(--glass-radius);
     transition: background 0.1s ease, color 0.1s ease;
 }
 
 .nav-flyout-link:hover {
-    background: var(--white-5);
-    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--glass-black-text);
 }
 
 .nav-flyout-link.active {
-    background: var(--sidebar-active);
-    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.15);
+    color: var(--glass-black-text);
     font-weight: 500;
 }
 
@@ -1844,7 +1824,7 @@ body.sidebar-collapsed .main-header,
 .nav-flyout-footer {
     margin-top: 8px;
     padding-top: 8px;
-    border-top: 1px solid var(--glass-border);
+    border-top: 1px solid var(--glass-black-border);
 }
 
 .nav-flyout-cta {
@@ -1855,7 +1835,7 @@ body.sidebar-collapsed .main-header,
     padding: 8px 12px;
     font-size: 13px;
     font-weight: 500;
-    color: var(--text-muted);
+    color: var(--glass-black-text);
     background: none;
     border: none;
     border-radius: var(--radius-sm);
@@ -1864,8 +1844,8 @@ body.sidebar-collapsed .main-header,
 }
 
 .nav-flyout-cta:hover {
-    background: var(--white-5);
-    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--glass-black-text);
 }
 
 .nav-flyout-cta i {
