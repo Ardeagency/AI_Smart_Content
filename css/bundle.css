@@ -110,9 +110,10 @@
     --glass-radius: 14px;
     --glass-blur: blur(7px);
     --glass-padding: 8px 24px;
-    /* glass-black: panel más oscuro para legibilidad sobre fondos claros */
-    --glass-black-bg: rgba(0, 0, 0, 0.45);
-    --glass-black-border: rgba(255, 255, 255, 0.06);
+    /* glass-black: negro 60%, textos blancos, bordes negros (legibilidad sobre fondos claros) */
+    --glass-black-bg: rgba(0, 0, 0, 0.6);
+    --glass-black-border: rgba(0, 0, 0, 0.85);
+    --glass-black-text: #ffffff;
     /* glass-white: panel más claro para legibilidad sobre fondos oscuros */
     --glass-white-bg: rgba(255, 255, 255, 0.14);
     --glass-white-border: rgba(255, 255, 255, 0.22);
@@ -563,6 +564,7 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
 .glass-black {
     background: var(--glass-black-bg);
     border: 1px solid var(--glass-black-border);
+    color: var(--glass-black-text);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border-radius: var(--glass-radius);
@@ -1192,13 +1194,30 @@ body.sidebar-collapsed .main-header,
    NAVEGACIÓN LATERAL
    ========================================= */
 
-/* Sidebar colapsado: glass-black para legibilidad sobre fondos claros/imágenes blancas */
+/* Sidebar colapsado: glass-black (negro 60%, textos blancos, bordes negros) */
 .side-navigation.collapsed {
     width: var(--nav-width-collapsed);
     background: var(--glass-black-bg);
     border-right-color: var(--glass-black-border);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
+    color: var(--glass-black-text);
+}
+.side-navigation.collapsed .nav-link,
+.side-navigation.collapsed .nav-submenu-toggle,
+.side-navigation.collapsed .nav-icon,
+.side-navigation.collapsed .nav-main-link,
+.side-navigation.collapsed .nav-sidebar-toggle,
+.side-navigation.collapsed .nav-collapsed-only-icon,
+.side-navigation.collapsed .nav-logo-icon,
+.side-navigation.collapsed .nav-dev-icon {
+    color: var(--glass-black-text);
+}
+.side-navigation.collapsed .nav-link:hover,
+.side-navigation.collapsed .nav-submenu-toggle:hover,
+.side-navigation.collapsed .nav-main-link:hover {
+    color: var(--glass-black-text);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 /* Centrar todos los iconos en collapsed (consumidor y desarrollador) */
