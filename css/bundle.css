@@ -12234,6 +12234,71 @@ body.production-filters-in-header .living-container > .living-history-section {
   max-width: 720px;
 }
 
+/* Configuración Builder: grid sin títulos de sección */
+.builder-config-grid {
+  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.builder-config-row {
+  display: grid;
+  gap: var(--spacing-md);
+  align-items: start;
+}
+
+.builder-config-row--portada-name {
+  grid-template-columns: 180px 1fr;
+}
+
+.builder-config-row--description,
+.builder-config-row--url,
+.builder-config-row--technical-name {
+  grid-template-columns: 1fr;
+}
+
+.builder-config-row--version-credits-catalog {
+  grid-template-columns: 120px 120px 1fr;
+}
+
+.builder-config-row--category-type {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.builder-config-cell {
+  min-width: 0;
+}
+
+.builder-config-cell--full {
+  grid-column: 1 / -1;
+}
+
+.builder-config-cell--catalog {
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 6px;
+}
+
+.builder-config-grid .field-help.block {
+  margin-top: 0;
+}
+
+@media (max-width: 640px) {
+  .builder-config-row--portada-name {
+    grid-template-columns: 1fr;
+  }
+  .builder-config-row--version-credits-catalog {
+    grid-template-columns: 1fr 1fr;
+  }
+  .builder-config-row--version-credits-catalog .builder-config-cell--catalog {
+    grid-column: 1 / -1;
+  }
+  .builder-config-row--category-type {
+    grid-template-columns: 1fr;
+  }
+}
+
 .flow-url-field {
   display: flex;
   align-items: center;
