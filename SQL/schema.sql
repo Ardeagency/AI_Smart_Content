@@ -384,6 +384,8 @@ CREATE TABLE public.flow_schedules (
 );
 CREATE TABLE public.flow_technical_details (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  flow_module_id uuid NOT NULL UNIQUE,
+  webhook_method text NOT NULL DEFAULT 'POST'::text,
   platform_name text DEFAULT 'n8n'::text,
   platform_flow_id text,
   platform_flow_name text,
@@ -394,7 +396,6 @@ CREATE TABLE public.flow_technical_details (
   avg_execution_time_ms integer,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
-  flow_module_id uuid NOT NULL UNIQUE,
   CONSTRAINT flow_technical_details_pkey PRIMARY KEY (id),
   CONSTRAINT fk_tech_module FOREIGN KEY (flow_module_id) REFERENCES public.flow_modules(id)
 );
