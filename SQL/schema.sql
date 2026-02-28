@@ -245,6 +245,7 @@ CREATE TABLE public.content_flows (
   execution_mode text DEFAULT 'single_step'::text CHECK (execution_mode = ANY (ARRAY['single_step'::text, 'multi_step'::text, 'sequential'::text])),
   execution_strategy text DEFAULT 'linear'::text CHECK (execution_strategy = ANY (ARRAY['linear'::text, 'conditional'::text, 'parallel'::text])),
   show_in_catalog boolean DEFAULT false,
+  schedule_schema jsonb DEFAULT '{"fields":[]}'::jsonb,
   CONSTRAINT content_flows_pkey PRIMARY KEY (id),
   CONSTRAINT content_flows_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.content_categories(id),
   CONSTRAINT content_flows_subcategory_id_fkey FOREIGN KEY (subcategory_id) REFERENCES public.content_subcategories(id),
@@ -573,6 +574,7 @@ CREATE TABLE public.ui_component_templates (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   template_level text DEFAULT 'core'::text CHECK (template_level = ANY (ARRAY['shell'::text, 'core'::text, 'preset'::text, 'domain'::text])),
+  for_flow_type text DEFAULT NULL CHECK (for_flow_type IS NULL OR for_flow_type = ANY (ARRAY['manual'::text, 'automated'::text])),
   CONSTRAINT ui_component_templates_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.user_flow_favorites (

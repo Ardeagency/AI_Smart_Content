@@ -3,6 +3,10 @@
 -- 2) Plantillas predefinidas (preset): variantes con opciones/uso definido (prompts, flags, tone_selector, etc.).
 -- 3) Domain: selectores de contexto (marca, audiencia, producto, etc.).
 --
+-- Plantillas "basic" = inputs vacíos: el desarrollador configura opciones, min/max, etc. desde cero
+-- (toggle_switch, num_stepper, range, choice_chips, multi_select_chips, radio, selection_checkboxes, checkboxes).
+-- Por eso llevan category = 'basic' y aparecen como controles básicos/vacíos en el Builder.
+--
 -- Se eliminan ambos nombres habituales del CHECK (template_level_check y level_check).
 -- Si aún falla, buscar el nombre real con:
 --   SELECT conname FROM pg_constraint WHERE conrelid = 'public.ui_component_templates'::regclass AND contype = 'c';
@@ -36,13 +40,14 @@ UPDATE public.ui_component_templates SET template_level = 'shell', category = 'b
 UPDATE public.ui_component_templates SET template_level = 'shell', category = 'basic', order_index = 40  WHERE name = 'aspect_ratio';
 UPDATE public.ui_component_templates SET template_level = 'shell', category = 'basic', order_index = 50  WHERE name = 'scope_picker';
 UPDATE public.ui_component_templates SET template_level = 'shell', category = 'media', order_index = 60  WHERE name = 'image_selector';
-UPDATE public.ui_component_templates SET template_level = 'shell', category = 'controls', order_index = 70  WHERE name = 'toggle_switch';
+-- Controles vacíos (basic): el desarrollador configura desde cero
+UPDATE public.ui_component_templates SET template_level = 'shell', category = 'basic', order_index = 70  WHERE name = 'toggle_switch';
 -- Asegurar que toggle_switch tenga input_type explícito (evita confusión con checkbox; data_type sigue siendo boolean)
 UPDATE public.ui_component_templates
 SET base_schema = COALESCE(base_schema, '{}'::jsonb) || '{"input_type": "toggle_switch", "data_type": "boolean"}'::jsonb
 WHERE name = 'toggle_switch';
-UPDATE public.ui_component_templates SET template_level = 'shell', category = 'controls', order_index = 80  WHERE name = 'num_stepper';
-UPDATE public.ui_component_templates SET template_level = 'shell', category = 'controls', order_index = 90  WHERE name = 'range';
+UPDATE public.ui_component_templates SET template_level = 'shell', category = 'basic', order_index = 80  WHERE name = 'num_stepper';
+UPDATE public.ui_component_templates SET template_level = 'shell', category = 'basic', order_index = 90  WHERE name = 'range';
 UPDATE public.ui_component_templates SET template_level = 'shell', category = 'structural', order_index = 100 WHERE name = 'section';
 
 -- ---------------------------------------------------------------------------
@@ -69,10 +74,11 @@ UPDATE public.ui_component_templates SET template_level = 'shell', category = 'b
 
 -- ---------------------------------------------------------------------------
 -- PASO 4: Plantillas PREDEFINIDAS (preset) — variantes con opciones/uso definido
+-- Inputs vacíos (basic): choice_chips, multi_select_chips, radio, checkboxes, selection_checkboxes
 -- ---------------------------------------------------------------------------
-UPDATE public.ui_component_templates SET template_level = 'preset', category = 'controls', order_index = 200 WHERE name = 'choice_chips';
-UPDATE public.ui_component_templates SET template_level = 'preset', category = 'controls', order_index = 210 WHERE name = 'multi_select_chips';
-UPDATE public.ui_component_templates SET template_level = 'preset', category = 'controls', order_index = 220 WHERE name = 'radio';
+UPDATE public.ui_component_templates SET template_level = 'preset', category = 'basic', order_index = 200 WHERE name = 'choice_chips';
+UPDATE public.ui_component_templates SET template_level = 'preset', category = 'basic', order_index = 210 WHERE name = 'multi_select_chips';
+UPDATE public.ui_component_templates SET template_level = 'preset', category = 'basic', order_index = 220 WHERE name = 'radio';
 -- Checkboxes (una opción): variable = valor elegido (ej. cabello = rubio). SELECT_CONTAINER, data_type string.
 INSERT INTO public.ui_component_templates (
   id, name, description, category, icon_name, base_schema, default_ui_config, is_active, order_index, template_level
@@ -90,8 +96,8 @@ SELECT
   'preset'
 WHERE NOT EXISTS (SELECT 1 FROM public.ui_component_templates WHERE name = 'checkboxes');
 UPDATE public.ui_component_templates SET template_level = 'preset', category = 'basic', order_index = 232 WHERE name = 'checkboxes';
--- Selection checkboxes: varias opciones → variable = array. SELECT_CONTAINER, data_type array.
-UPDATE public.ui_component_templates SET template_level = 'preset', category = 'controls', order_index = 230 WHERE name = 'selection_checkboxes';
+-- Selection checkboxes: varias opciones → variable = array. SELECT_CONTAINER, data_type array. Input vacío (basic).
+UPDATE public.ui_component_templates SET template_level = 'preset', category = 'basic', order_index = 230 WHERE name = 'selection_checkboxes';
 UPDATE public.ui_component_templates
 SET base_schema = COALESCE(base_schema, '{}'::jsonb) || '{"input_type": "selection_checkboxes", "data_type": "array"}'::jsonb
 WHERE name = 'selection_checkboxes';

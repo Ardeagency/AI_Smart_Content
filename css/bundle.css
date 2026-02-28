@@ -14167,6 +14167,30 @@ body.production-filters-in-header .living-container > .living-history-section {
   font-style: italic;
 }
 
+.preview-cron-schedule {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+}
+.preview-cron-schedule .ph-clock {
+  color: var(--dev-primary);
+}
+
+.input-cron-schedule-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.input-cron-schedule-wrap .input-cron-presets {
+  min-width: 0;
+}
+.input-cron-schedule-wrap .input-cron-expression {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.9em;
+}
+
 /* Image selector: carrusel horizontal (canvas + formulario consumidor) */
 .image-selector-carousel {
   width: 100%;

@@ -79,6 +79,7 @@
     slider: 'RANGE_CONTAINER',
     file: 'FILE_CONTAINER',
     upload: 'FILE_CONTAINER',
+    cron_schedule: 'STRING_CONTAINER',
     section: 'STRUCTURAL_CONTAINER',
     divider: 'STRUCTURAL_CONTAINER',
     heading: 'STRUCTURAL_CONTAINER',
@@ -231,6 +232,38 @@
   function previewFlags(f) {
     var fWithOpts = Object.assign({}, f, { options: getFlagsOptionsForField(f) });
     return previewSelect(fWithOpts);
+  }
+
+  /** cron_schedule: programación de ejecución (solo flujos automated). Presets + expresión cron. */
+  function previewCronSchedule(f) {
+    var lb = escapeHtml(f.label || 'Programación');
+    return '<div class="preview-cron-schedule"><i class="ph ph-clock"></i><span>' + lb + '</span></div>';
+  }
+  function formCronSchedule(f, opts) {
+    var a = formAttrs(f, opts || {});
+    var presets = f.presets || [
+      { label: 'Todos los días a las 9:00', value: '0 9 * * *' },
+      { label: 'Cada 6 horas', value: '0 */6 * * *' },
+      { label: 'Cada hora', value: '0 * * * *' },
+      { label: 'Diario a medianoche', value: '0 0 * * *' }
+    ];
+    var current = (f.defaultValue != null ? String(f.defaultValue) : '') || (presets[0] && presets[0].value) || '';
+    var optionsHtml = presets.map(function (p) {
+      var v = escapeHtml(String(p.value != null ? p.value : p.label));
+      var lbl = escapeHtml(p.label != null ? p.label : v);
+      var sel = (current === v || current === (p.value != null ? String(p.value) : '')) ? ' selected' : '';
+      return '<option value="' + v + '"' + sel + '>' + lbl + '</option>';
+    }).join('');
+    var ph = escapeHtml(f.placeholder || '0 9 * * *');
+    return (
+      '<div class="input-cron-schedule-wrap">' +
+        '<select class="modern-input input-cron-presets" id="' + a.id + '_preset" name="' + a.name + '_preset" aria-label="Preset programación">' +
+          optionsHtml +
+          '<option value="__custom__">Otro (cron personalizado)</option>' +
+        '</select>' +
+        '<input type="text" class="modern-input input-cron-expression" id="' + a.id + '" name="' + a.name + '" placeholder="' + ph + '" value="' + (current || '').replace(/"/g, '&quot;') + '"' + a.disabled + a.required + ' pattern="[0-9*,\\-/ ]+" title="Expresión cron (ej: 0 9 * * *)">' +
+      '</div>'
+    );
   }
 
   // ============================================================================
@@ -798,6 +831,7 @@
         var it = getInputType(f);
         if (isContextTemplate(f)) return previewContext(getContextSelectorLabel(it));
         if (it === 'tags') return previewTags(f);
+        if (it === 'cron_schedule') return previewCronSchedule(f);
         var multi = f.mode === 'multi_line' || f.mode === 'multiline' || f.mode === 'prompt' || f.is_multiline ||
           (f.input_type && (f.input_type === 'string' && (f.mode === 'multiline' || f.mode === 'multi_line' || f.mode === 'prompt') || f.input_type === 'textarea' || f.input_type === 'prompt_input' || f.input_type === 'prompt_user' || f.input_type === 'prompt_system'));
         return multi ? previewTextarea(f) : previewText(f);
@@ -806,6 +840,7 @@
         opts = opts || {};
         if (isContextTemplate(f)) return formContextPlaceholder(f, opts || {}, getContextPlaceholder(getInputType(f)));
         if (getInputType(f) === 'tags') return formTags(f, opts);
+        if (getInputType(f) === 'cron_schedule') return formCronSchedule(f, opts);
         var multi = f.mode === 'multi_line' || f.mode === 'multiline' || f.mode === 'prompt' || f.is_multiline ||
           (f.input_type && (f.input_type === 'string' && (f.mode === 'multiline' || f.mode === 'multi_line' || f.mode === 'prompt') || f.input_type === 'textarea' || f.input_type === 'prompt_input' || f.input_type === 'prompt_user' || f.input_type === 'prompt_system'));
         return multi ? formTextarea(f, opts) : formText(f, opts);
@@ -948,6 +983,7 @@
     register('selection_checkboxes', { preview: previewSelectionCheckboxes, form: formSelectionCheckboxes });
     register('toggle_switch', { preview: previewSwitch, form: formSwitch });
     register('slider', { preview: previewRange, form: formRange });
+    register('cron_schedule', { preview: previewCronSchedule, form: formCronSchedule });
 
     register('section', { preview: function () { return previewBlock('Sección', 'square'); }, form: formStructural });
     register('divider', { preview: function () { return previewBlock('Divisor', 'minus'); }, form: formStructural });
@@ -1031,7 +1067,7 @@
 
   function getPropertyFamily(type) {
     var t = (type || '').toLowerCase();
-    if (['string', 'text', 'textarea', 'prompt_input', 'tag_input', 'tags', 'slug_input'].indexOf(t) >= 0) return 'text';
+    if (['string', 'text', 'textarea', 'prompt_input', 'tag_input', 'tags', 'slug_input', 'cron_schedule'].indexOf(t) >= 0) return 'text';
     if (['number'].indexOf(t) >= 0) return 'number';
     if (['range', 'slider'].indexOf(t) >= 0) return 'range';
     if (['stepper_num', 'stepper', 'num_stepper', 'number'].indexOf(t) >= 0) return 'stepper';
