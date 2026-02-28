@@ -2582,12 +2582,16 @@ body.has-sidebar.sidebar-collapsed #app-container {
     max-width: calc(100vw - var(--nav-width-collapsed, 72px));
 }
 
-/* Sin padding superior en Products, Living y Studio; lo aplican sus contenedores internos */
+/* Sin padding superior en Products y Studio; lo aplican sus contenedores internos */
 body.has-sidebar #app-container:has(> div.product-view),
 body.has-sidebar #app-container:has(> div.main-content > div.products-container),
-body.has-sidebar #app-container:has(> main.living-main-content),
 body.has-sidebar #app-container:has(> div.studio-layout) {
     padding-top: 0;
+}
+
+/* Production: padding superior 100px para que el contenido no quede debajo del header principal */
+body.has-sidebar #app-container:has(> main.living-main-content) {
+    padding-top: 100px;
 }
 
 /* =========================================
@@ -2714,6 +2718,24 @@ body.sidebar-collapsed .app-header.with-sidebar {
     font-weight: 500;
     color: var(--text-primary);
     margin: 0;
+}
+
+/* Slot de filtros de Production: oculto por defecto; solo Production lo muestra con contenido */
+.app-header .header-production-slot {
+    display: none;
+    min-width: 0;
+}
+body.production-filters-in-header .app-header .header-production-slot {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    min-width: 0;
+    flex: 1;
+}
+body.production-filters-in-header .app-header .header-production-slot .living-history-filters {
+    margin: 0;
+    padding: 0;
 }
 
 .app-header .header-center {
@@ -9895,6 +9917,22 @@ body.production-filters-in-header .living-container > .living-history-section {
     border-color: var(--color-error);
     color: var(--color-error);
     background: var(--color-error-bg);
+}
+
+/* Tipo de producto (siempre visible en la card, encima del nombre) */
+.product-card-product-type {
+    position: absolute;
+    bottom: 2rem;
+    left: 0;
+    right: 0;
+    padding: 0 10px;
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    z-index: 1;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 /* Nombre del producto (esquina inferior) — solo visible en hover, igual que production */
@@ -18780,6 +18818,37 @@ body.production-filters-in-header .living-container > .living-history-section {
     
     .price-display {
         margin-bottom: 0.75rem;
+    }
+    
+    .price-amount {
+        font-size: 1.75rem;
+    }
+    
+    .payment-method-fixed {
+        padding: 1rem;
+}
+
+.form-section {
+        margin-bottom: 1.5rem;
+}
+
+.section-title {
+        font-size: var(--font-size-md);
+    margin-bottom: 1rem;
+}
+
+    .wompi-note {
+        padding: 0.75rem;
+        font-size: 0.8rem;
+    }
+    
+    .payment-total {
+        padding: 1rem;
+    }
+}
+
+
+om: 0.75rem;
     }
     
     .price-amount {
