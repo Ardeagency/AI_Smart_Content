@@ -19,7 +19,7 @@
     --brillo-hover: var(--brand-primary-brillo, rgba(255, 255, 255, 0.08));
     --brillo-active: var(--brand-primary-brillo-strong, rgba(255, 255, 255, 0.12));
     --bg-hover: var(--brillo-hover);
-    /* Acento interactivo: focus, bordes de formularios; resaltados nav/sidebar usan --accent-gradient */
+    /* Acento interactivo: BrandsView inyecta --brand-primary desde brand_colors; resaltados lo usan */
     --accent-brand: var(--brand-primary, var(--warm-1));
     --accent-brand-soft: var(--brand-primary-brillo, var(--warm-10));
     --icon-button-active: var(--brand-primary, var(--icon-button));
@@ -93,13 +93,9 @@
     --warm-30: rgba(255, 101, 0, 0.3);
     --warm-50: rgba(255, 101, 0, 0.5);
     --brand-gradient: linear-gradient(90deg, #ff0000 0%, #ff6500 12.5%, #ffe500 25%, #9acc00 37.5%, #00d614 50%, #00e7ff 62.5%, #0018ee 75%, #5b00ea 87.5%, #900090 100%);
-    /* Mismo degradado en vertical (barras activas nav/sidebar) */
-    --brand-gradient-vertical: linear-gradient(180deg, #ff0000 0%, #ff6500 12.5%, #ffe500 25%, #9acc00 37.5%, #00d614 50%, #00e7ff 62.5%, #0018ee 75%, #5b00ea 87.5%, #900090 100%);
     --brand-gradient-1: linear-gradient(90deg, #ff0000 0%, #ff6500 50%, #ffe500 100%);
     --brand-gradient-2: linear-gradient(90deg, #9acc00 0%, #00d614 50%, #00e7ff 100%);
     --brand-gradient-3: linear-gradient(90deg, #0018ee 0%, #5b00ea 50%, #900090 100%);
-    /* Resaltados de la plataforma: mismo degradado que brands (sustituye el naranja sólido) */
-    --accent-gradient: var(--brand-gradient);
     --radius-xs: 4px;
     --radius-sm: 8px;
     --radius-md: 12px;
@@ -1230,7 +1226,7 @@ body.sidebar-collapsed .main-header,
     transform: translateY(-50%);
     width: 3px;
     height: 20px;
-    background: var(--brand-gradient-vertical);
+    background: var(--accent-brand);
     border-radius: 0 2px 2px 0;
     opacity: 0.9;
 }
@@ -1317,15 +1313,10 @@ body.sidebar-collapsed .main-header,
     justify-content: center;
     background: var(--accent-brand-soft, rgba(255, 101, 0, 0.1));
     border-radius: var(--radius-sm);
+    color: var(--accent-brand);
     font-size: 16px;
     flex-shrink: 0;
     overflow: hidden;
-}
-.nav-logo-icon i {
-    background: var(--accent-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
 }
 
 .nav-logo-icon img {
@@ -1491,10 +1482,7 @@ body.sidebar-collapsed .main-header,
 }
 
 .nav-org-check {
-    background: var(--accent-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: var(--accent-brand);
     font-size: 14px;
     flex-shrink: 0;
 }
@@ -1953,15 +1941,12 @@ body.sidebar-collapsed .main-header,
     top: 0;
     bottom: 0;
     width: 2px;
-    background: var(--brand-gradient-vertical);
+    background: var(--accent-brand);
     border-radius: 0 2px 2px 0;
 }
 
 .nav-link.active .nav-icon {
-    background: var(--accent-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: var(--icon-button-active);
 }
 
 
@@ -1997,7 +1982,7 @@ body.sidebar-collapsed .main-header,
 }
 
 .nav-badge {
-    background: var(--accent-gradient);
+    background: var(--accent-brand);
     color: var(--bg-primary);
     font-size: 0.7rem;
     font-weight: 600;
@@ -2078,15 +2063,12 @@ body.sidebar-collapsed .main-header,
     top: 0;
     bottom: 0;
     width: 2px;
-    background: var(--brand-gradient-vertical);
+    background: var(--accent-brand);
     border-radius: 0 2px 2px 0;
 }
 
 .nav-item-has-submenu.active > .nav-link-parent .nav-icon {
-    background: var(--accent-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: var(--icon-button-active);
 }
 
 /* =========================================
@@ -2158,7 +2140,7 @@ body.sidebar-collapsed .main-header,
     top: 0;
     bottom: 0;
     width: 2px;
-    background: var(--brand-gradient-vertical);
+    background: var(--accent-brand);
     border-radius: 0 2px 2px 0;
 }
 
@@ -3032,10 +3014,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
 
 .nav-dev-stat i {
     font-size: 14px;
-    background: var(--accent-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: var(--accent-brand);
 }
 
 .nav-dev-stat span {
@@ -3065,13 +3044,10 @@ body.sidebar-collapsed .app-header.with-sidebar {
 .nav-mode-switch:hover {
     background: var(--bg-hover);
     border-color: var(--border-color);
+    color: var(--accent-brand);
 }
-
 .nav-mode-switch:hover i {
-    background: var(--accent-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: var(--accent-brand);
 }
 
 .nav-mode-switch i {
@@ -3424,7 +3400,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     width: 100%;
     max-width: 100%;
     border-radius: 3px;
-    background: var(--accent-gradient);
+    background: var(--accent-brand);
 }
 
 .side-navigation.collapsed .nav-org-credits {
@@ -4812,7 +4788,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
 }
 
 .card-content-expanded::-webkit-scrollbar-thumb:hover {
-    background: var(--accent-gradient);
+    background: var(--accent-brand);
 }
 
 /* INFO: solo el header sin padding/borde extra (no afectar .card-content-expanded) */
