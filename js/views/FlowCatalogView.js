@@ -641,7 +641,7 @@ class FlowCatalogView extends BaseView {
     const badges = [];
     if (this.isNew(flow)) badges.push('<span class="flow-card-badge flow-card-badge--new">Nuevo</span>');
     if (this.isTrending(flow)) badges.push('<span class="flow-card-badge flow-card-badge--trending">Trending</span>');
-    if ((flow.flow_category_type || 'manual') === 'automated') badges.push('<span class="flow-card-badge flow-card-badge--auto">Automated</span>');
+    if ((flow.flow_category_type || 'manual') === 'automated') badges.push('<span class="flow-card-badge flow-card-badge--auto">Automatizado (sistema)</span>');
     const img = flow.flow_image_url
       ? `<img src="${this.escapeHtml(flow.flow_image_url)}" alt="${name}" class="flow-card-img" loading="lazy">`
       : `<div class="flow-card-placeholder"><i class="fas ${this.getOutputTypeIcon(flow.output_type)}"></i></div>`;

@@ -7154,7 +7154,7 @@ body.production-filters-in-header .living-container > .living-history-section {
     flex-shrink: 0;
 }
 
-/* Dropdown calendario — design glass (variables) */
+/* Dropdown calendario (#livingDateDropdown) — glass-black */
 .living-date-dropdown {
     box-sizing: border-box;
     position: absolute;
@@ -7166,8 +7166,9 @@ body.production-filters-in-header .living-container > .living-history-section {
     justify-content: center;
     align-items: center;
     padding: var(--glass-padding);
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
+    background: var(--glass-black-bg);
+    border: 1px solid var(--glass-black-border);
+    color: var(--glass-black-text);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border-radius: var(--glass-radius);
@@ -11139,11 +11140,12 @@ body.production-filters-in-header .living-container > .living-history-section {
 .flow-status-badge,
 .builder-status-badge,
 .dev-flow-status {
-  padding: 4px 10px;
-  border-radius: var(--radius-xl);
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
   font-size: var(--font-size-sm);
   font-weight: 500;
   text-transform: uppercase;
+  transition: var(--transition);
 }
 
 .flow-status-badge.draft,
@@ -12019,12 +12021,15 @@ body.production-filters-in-header .living-container > .living-history-section {
    Constructor Visual de Flujos de IA
    ========================================== */
 
-/* Header del Builder = pestañas (arriba del todo) */
+/* Header del Builder = pestañas (arriba del todo) — Design system: glass, radius, transiciones */
 .builder-tabs-header {
   flex: 0 0 auto;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border-color);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--border-divider);
   z-index: 10;
+  transition: var(--transition);
 }
 
 .builder-tabs-header .builder-tabs {
@@ -12033,24 +12038,25 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 /* Estilos de badge de estado: ver bloque unificado .flow-status-badge más arriba */
 
-/* Botones del Builder */
+/* Botones del Builder — Design system: glass, radius, transiciones */
 .btn-builder-primary {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: var(--dev-primary);
-  color: white;
-  border: none;
-  border-radius: var(--radius-sm);
+  gap: var(--spacing-sm);
+  padding: var(--glass-padding);
+  background: var(--warm-1);
+  color: var(--color-white);
+  border: 1px solid transparent;
+  border-radius: var(--glass-radius);
   font-size: var(--font-size-base);
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: var(--transition);
 }
 
-.btn-builder-primary:hover {
-  background: var(--dev-primary-dark);
+.btn-builder-primary:hover:not(:disabled) {
+  background: var(--warm-2);
+  box-shadow: var(--shadow-hover);
 }
 
 .btn-builder-primary:disabled {
@@ -12059,53 +12065,59 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 
 .btn-builder-secondary {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: transparent;
-  color: var(--text-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
+  gap: var(--spacing-sm);
+  padding: var(--glass-padding);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
   font-size: var(--font-size-base);
   font-weight: 500;
   cursor: pointer;
   transition: var(--transition);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
 }
 
 .btn-builder-secondary:hover {
-  background: var(--bg-hover);
+  background: var(--brillo-hover);
   color: var(--text-primary);
+  border-color: var(--glass-border);
 }
 
 .btn-builder-icon {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 36px;
   height: 36px;
-  background: transparent;
+  padding: 0;
+  background: var(--glass-bg);
   color: var(--text-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
   cursor: pointer;
   transition: var(--transition);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
 }
 
 .btn-builder-icon:hover {
-  background: var(--bg-hover);
+  background: var(--brillo-hover);
   color: var(--text-primary);
 }
 
 .btn-builder-danger {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: var(--dev-error);
-  color: white;
-  border: none;
-  border-radius: var(--radius-sm);
+  gap: var(--spacing-sm);
+  padding: var(--glass-padding);
+  background: var(--color-error);
+  color: var(--color-white);
+  border: 1px solid transparent;
+  border-radius: var(--glass-radius);
   font-size: var(--font-size-base);
   font-weight: 500;
   cursor: pointer;
@@ -12114,6 +12126,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 .btn-builder-danger:hover {
   background: var(--color-critical);
+  box-shadow: 0 4px 12px rgba(255, 0, 0, 0.25);
 }
 
 /* Dropdown Menu */
@@ -12403,18 +12416,21 @@ body.production-filters-in-header .living-container > .living-history-section {
   color: var(--text-muted);
 }
 
-/* Footer Builder: mensaje, estado y acciones */
+/* Footer Builder: mensaje, estado y acciones — Design system: glass, sombras */
 .builder-footer {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 12px 20px;
-  background: var(--bg-secondary);
-  border-top: 1px solid var(--border-color);
-  min-height: 52px;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-xl);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-top: 1px solid var(--border-divider);
+  min-height: 56px;
   flex-wrap: wrap;
+  transition: var(--transition);
 }
 
 .builder-footer .flow-status-badge,
@@ -12439,19 +12455,22 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 .btn-builder-footer.btn-save-draft,
 .btn-builder-footer.btn-update-flow {
-  background: var(--bg-primary);
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
 }
 
 .btn-builder-footer.btn-primary-footer {
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  color: #000000;
+  background: var(--warm-1);
+  border: 1px solid transparent;
+  color: var(--color-white);
+  font-weight: 600;
 }
 
 .btn-builder-footer.btn-primary-footer:hover {
-  background: #f3f4f6;
-  border-color: rgba(0, 0, 0, 0.2);
-  color: #000000;
+  background: var(--warm-2);
+  border-color: transparent;
+  color: var(--color-white);
+  box-shadow: var(--shadow-hover);
 }
 
 .builder-footer-message {
@@ -12482,22 +12501,24 @@ body.production-filters-in-header .living-container > .living-history-section {
 .btn-builder-footer {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border-radius: var(--radius-sm);
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--glass-radius);
   font-size: var(--font-size-base);
   font-weight: 500;
   cursor: pointer;
-  border: 1px solid var(--border-color);
-  background: var(--bg-primary);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
   color: var(--text-primary);
   transition: var(--transition);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
 }
 
 .btn-builder-footer:hover {
-  background: var(--bg-hover);
-  border-color: var(--dev-primary);
-  color: var(--dev-primary-light);
+  background: var(--brillo-hover);
+  border-color: var(--border-light);
+  color: var(--text-primary);
 }
 
 .btn-builder-footer.btn-approve-publish {
@@ -14161,6 +14182,44 @@ body.production-filters-in-header .living-container > .living-history-section {
   font-size: var(--font-size-sm);
   color: var(--text-muted);
   margin-top: 4px;
+}
+
+/* Tipo de flujo: picker Manual / Automatizado (sistema) */
+.flow-type-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
+  background: var(--bg-secondary, #e5e7eb);
+  border-radius: var(--radius-sm, 6px);
+  border: 1px solid var(--border-color, #d1d5db);
+}
+.flow-type-picker-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  font-size: var(--font-size-base);
+  color: var(--text-secondary, #4b5563);
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+.flow-type-picker-option:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+.flow-type-picker-option .ph-check {
+  font-size: 1rem;
+  visibility: hidden;
+}
+.flow-type-picker-option.is-selected {
+  background: #dc2626;
+  color: #fff;
+  border: 1px solid #b91c1c;
+}
+.flow-type-picker-option.is-selected .ph-check {
+  visibility: visible;
 }
 
 .settings-row {

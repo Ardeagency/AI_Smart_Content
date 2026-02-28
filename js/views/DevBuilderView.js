@@ -186,11 +186,12 @@ class DevBuilderView extends DevBaseView {
                 </div>
                 <div class="settings-row">
                   <div class="settings-field">
-                    <label for="flowType">Tipo de flujo</label>
-                    <select id="flowType">
-                      <option value="manual">Manual</option>
-                      <option value="automated">Automatizado (sistema)</option>
-                    </select>
+                    <label for="flowTypePicker">Tipo de flujo</label>
+                    <input type="hidden" id="flowType" value="manual">
+                    <div class="flow-type-picker" id="flowTypePicker" role="listbox" aria-label="Tipo de flujo">
+                      <div class="flow-type-picker-option" data-value="manual" role="option">Manual</div>
+                      <div class="flow-type-picker-option" data-value="automated" role="option"><i class="ph ph-check"></i> Automatizado (sistema)</div>
+                    </div>
                   </div>
                   <div class="settings-toggles settings-catalog-visibility" id="settingsCatalogVisibility">
                     <label class="toggle-field">
@@ -772,10 +773,26 @@ class DevBuilderView extends DevBaseView {
   }
 
   /**
+   * Actualiza la apariencia del picker "Tipo de flujo" (Manual / Automatizado sistema).
+   * Marca la opción seleccionada con .is-selected para el estilo rojo + check.
+   */
+  updateFlowTypePicker(value) {
+    const picker = this.querySelector('#flowTypePicker');
+    if (!picker) return;
+    const v = value || this.flowData.flow_category_type || 'manual';
+    picker.querySelectorAll('.flow-type-picker-option').forEach((opt) => {
+      opt.classList.toggle('is-selected', opt.getAttribute('data-value') === v);
+      const check = opt.querySelector('.ph-check');
+      if (check) check.style.visibility = opt.classList.contains('is-selected') ? 'visible' : 'hidden';
+    });
+  }
+
+  /**
    * Adapta la interfaz según flow_category_type (manual vs automated).
    * Modo Sistema: oculta componentes, muestra mensaje en canvas, webhooks → CRON, token cost 0, oculto catálogo.
    */
   applyFlowTypeUI() {
+    this.updateFlowTypePicker(this.flowData.flow_category_type);
     const isAutomated = this.flowData.flow_category_type === 'automated';
     this.isAutomatedFlow = isAutomated;
 
@@ -1078,18 +1095,34 @@ class DevBuilderView extends DevBaseView {
       }
     });
 
-    // Tipo de flujo: solo Lead puede cambiar a "automated"
-    const flowTypeSelect = this.querySelector('#flowType');
-    if (flowTypeSelect) {
-      flowTypeSelect.addEventListener('change', (e) => {
+    // Tipo de flujo: picker custom (Manual / Automatizado sistema) + input hidden para persistencia
+    const flowTypeInput = this.querySelector('#flowType');
+    const flowTypePicker = this.querySelector('#flowTypePicker');
+    if (flowTypePicker && flowTypeInput) {
+      flowTypePicker.querySelectorAll('.flow-type-picker-option').forEach((opt) => {
+        opt.addEventListener('click', () => {
+          const v = opt.getAttribute('data-value');
+          if (v === 'automated' && !this.isLead()) {
+            this.showNotification('Solo los Lead pueden crear o convertir flujos en automatizados.', 'warning');
+            return;
+          }
+          flowTypeInput.value = v;
+          flowTypeInput.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+      });
+    }
+    if (flowTypeInput) {
+      flowTypeInput.addEventListener('change', (e) => {
         const v = e.target.value;
         if (v === 'automated' && !this.isLead()) {
           e.target.value = this.flowData.flow_category_type || 'manual';
           this.showNotification('Solo los Lead pueden crear o convertir flujos en automatizados.', 'warning');
+          this.updateFlowTypePicker(e.target.value);
           return;
         }
         this.flowData.flow_category_type = v;
         this.hasUnsavedChanges = true;
+        this.updateFlowTypePicker(v);
         this.applyFlowTypeUI();
         this.renderFooter();
       });

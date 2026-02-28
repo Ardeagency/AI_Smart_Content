@@ -167,7 +167,10 @@
     if (descInput) descInput.value = this.flowData.description;
     if (categorySelect) categorySelect.value = this.flowData.category_id || '';
     if (outputTypeSelect) outputTypeSelect.value = this.flowData.output_type;
-    if (flowTypeSelect) flowTypeSelect.value = this.flowData.flow_category_type;
+    if (flowTypeSelect) {
+      flowTypeSelect.value = this.flowData.flow_category_type;
+      if (typeof this.updateFlowTypePicker === 'function') this.updateFlowTypePicker(this.flowData.flow_category_type);
+    }
     if (tokenCostInput) tokenCostInput.value = this.flowData.token_cost ?? 1;
     if (versionInput) versionInput.value = this.flowData.version;
     

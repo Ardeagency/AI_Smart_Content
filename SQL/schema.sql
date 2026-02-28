@@ -94,7 +94,6 @@ CREATE TABLE public.brand_entities (
   metadata jsonb DEFAULT '{}'::jsonb,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
-  is_active_for_automation boolean DEFAULT false,
   CONSTRAINT brand_entities_pkey PRIMARY KEY (id),
   CONSTRAINT brand_entities_brand_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id)
 );
@@ -359,6 +358,27 @@ CREATE TABLE public.flow_runs (
   CONSTRAINT flow_runs_entity_id_fkey FOREIGN KEY (entity_id) REFERENCES public.brand_entities(id),
   CONSTRAINT flow_runs_flow_id_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id)
 );
+CREATE TABLE public.flow_schedules (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid,
+  flow_id uuid,
+  brand_id uuid,
+  cron_expression text NOT NULL,
+  is_active boolean DEFAULT true,
+  job_name text NOT NULL UNIQUE,
+  created_at timestamp with time zone DEFAULT now(),
+  entity_id uuid,
+  campaign_id uuid,
+  audience_id uuid,
+  metadata_config jsonb DEFAULT '{}'::jsonb,
+  CONSTRAINT flow_schedules_pkey PRIMARY KEY (id),
+  CONSTRAINT flow_schedules_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id),
+  CONSTRAINT flow_schedules_flow_id_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id),
+  CONSTRAINT flow_schedules_brand_id_fkey FOREIGN KEY (brand_id) REFERENCES public.brands(id),
+  CONSTRAINT flow_schedules_entity_id_fkey FOREIGN KEY (entity_id) REFERENCES public.brand_entities(id),
+  CONSTRAINT flow_schedules_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id),
+  CONSTRAINT flow_schedules_audience_id_fkey FOREIGN KEY (audience_id) REFERENCES public.audiences(id)
+);
 CREATE TABLE public.flow_technical_details (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   platform_name text DEFAULT 'n8n'::text,
@@ -374,6 +394,19 @@ CREATE TABLE public.flow_technical_details (
   flow_module_id uuid NOT NULL UNIQUE,
   CONSTRAINT flow_technical_details_pkey PRIMARY KEY (id),
   CONSTRAINT fk_tech_module FOREIGN KEY (flow_module_id) REFERENCES public.flow_modules(id)
+);
+CREATE TABLE public.flow_test_cases (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  flow_id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  name text NOT NULL,
+  description text,
+  inputs jsonb NOT NULL DEFAULT '{}'::jsonb,
+  environment text NOT NULL DEFAULT 'test'::text CHECK (environment = ANY (ARRAY['test'::text, 'prod'::text])),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT flow_test_cases_pkey PRIMARY KEY (id),
+  CONSTRAINT flow_test_cases_flow_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id),
+  CONSTRAINT flow_test_cases_user_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
 );
 CREATE TABLE public.organization_credits (
   organization_id uuid NOT NULL,
@@ -535,6 +568,7 @@ CREATE TABLE public.ui_component_templates (
   order_index integer DEFAULT 0,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  template_level text DEFAULT 'core'::text CHECK (template_level = ANY (ARRAY['core'::text, 'preset'::text, 'domain'::text])),
   CONSTRAINT ui_component_templates_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.user_flow_favorites (
