@@ -11011,15 +11011,15 @@ body.production-filters-in-header .living-container > .living-history-section {
   --border-color: var(--border-color);
 }
 
-/* Builder: jerarquía de fondos para que no sea todo negro (contraste y profundidad) */
+/* Builder: fondo negro (tema oscuro) */
 #app-container:has(.builder-footer) .builder-main {
-  background: #0a0a0c;
+  background: var(--bg-primary);
 }
 #app-container:has(.builder-footer) .builder-canvas-wrapper {
-  background: #141517;
+  background: var(--bg-primary);
 }
 #app-container:has(.builder-footer) .builder-tab-content {
-  background: transparent;
+  background: var(--bg-primary);
 }
 
 
@@ -12149,10 +12149,10 @@ body.production-filters-in-header .living-container > .living-history-section {
    Constructor Visual de Flujos de IA
    ========================================== */
 
-/* Header del Builder = pestañas — Design system: glass + superficie visible (no todo negro) */
+/* Header del Builder = pestañas — tema oscuro */
 .builder-tabs-header {
   flex: 0 0 auto;
-  background: #1a1b1e;
+  background: var(--bg-primary);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border-bottom: 1px solid var(--border-divider);
@@ -12351,16 +12351,14 @@ body.production-filters-in-header .living-container > .living-history-section {
   max-width: 720px;
 }
 
-/* Configuración Builder: grid sin títulos de sección + superficie sutil (no todo plano) */
+/* Configuración Builder: grid que se adapta a #tabSettings (llena el tab, sin caja interna) */
 .builder-config-grid {
-  max-width: 900px;
+  width: 100%;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--border-divider);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-xl);
+  box-sizing: border-box;
 }
 
 .builder-config-row {
@@ -12644,7 +12642,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   color: var(--text-muted);
 }
 
-/* Footer Builder: mensaje, estado y acciones — superficie visible (no todo negro) */
+/* Footer Builder: mensaje, estado y acciones — tema oscuro */
 .builder-footer {
   flex: 0 0 auto;
   display: flex;
@@ -12652,7 +12650,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   justify-content: space-between;
   gap: var(--spacing-md);
   padding: var(--spacing-md) var(--spacing-xl);
-  background: #1a1b1e;
+  background: var(--bg-primary);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border-top: 1px solid var(--border-divider);
@@ -12808,7 +12806,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 /* Sidebar del Builder: altura fija y scroll en el contenido interior */
 .builder-sidebar {
-  background: #1a1b1e;
+  background: var(--bg-primary);
   border-right: 1px solid var(--border-color);
   min-height: 0;
   height: 100%;
@@ -12824,7 +12822,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 .builder-sidebar-header {
   flex: 0 0 auto;
-  background: #1a1b1e;
+  background: var(--bg-primary);
   padding: 16px;
   border-bottom: 1px solid var(--border-color);
   z-index: 10;
@@ -13029,7 +13027,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 .builder-canvas-wrapper {
   display: flex;
   flex-direction: column;
-  background: #141517;
+  background: var(--bg-primary);
   min-height: 0;
   overflow-y: auto;
 }
