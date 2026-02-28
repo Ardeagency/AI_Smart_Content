@@ -423,6 +423,7 @@ class Navigation {
         <div class="header-content">
           <div class="header-left">
             <h1 class="header-title" id="headerTitle">Production</h1>
+            <div class="header-production-slot" id="headerProductionSlot" aria-hidden="true"></div>
           </div>
           <div class="header-right">
             <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">

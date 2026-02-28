@@ -696,6 +696,11 @@ if (typeof window.ProductsManager === 'undefined') {
             ? product.images[0].image_url 
             : null;
         const safeName = this.escapeHtml(product.nombre_producto || '');
+        const tipoProducto = product.tipo_producto || 'otro';
+        const categoryMap = this.getCategoryMap();
+        const tipoLabel = (categoryMap[tipoProducto] && categoryMap[tipoProducto].label) 
+            ? this.escapeHtml(categoryMap[tipoProducto].label) 
+            : this.escapeHtml(tipoProducto);
 
         card.innerHTML = `
             <div class="product-card-image">
@@ -712,6 +717,7 @@ if (typeof window.ProductsManager === 'undefined') {
                     <i class="fas fa-copy"></i>
                 </button>
             </div>
+            <div class="product-card-product-type">${tipoLabel}</div>
             <div class="product-card-product-name">${safeName}</div>
         `;
 

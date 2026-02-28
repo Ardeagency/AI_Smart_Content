@@ -91,6 +91,7 @@ class LivingView extends BaseView {
     if (slot && filters) {
       slot.innerHTML = '';
       slot.appendChild(filters);
+      slot.setAttribute('aria-hidden', 'false');
       document.body.classList.add('production-filters-in-header');
     }
   }
@@ -102,6 +103,7 @@ class LivingView extends BaseView {
     const slot = document.getElementById('headerProductionSlot');
     if (slot) {
       slot.innerHTML = '';
+      slot.setAttribute('aria-hidden', 'true');
     }
     document.body.classList.remove('production-filters-in-header');
   }
