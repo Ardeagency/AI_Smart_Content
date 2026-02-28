@@ -44,7 +44,8 @@ class TasksView extends BaseView {
     this.brandContainerId = await this.getBrandContainerId();
 
     const path = window.location.pathname || '';
-    this.taskId = this.routeParams?.taskId || (path.match(/\/tasks\/([^/]+)/)?.[1];
+    const taskMatch = path.match(/\/tasks\/([^/]+)/);
+    this.taskId = this.routeParams?.taskId || (taskMatch ? taskMatch[1] : null);
     if (this.taskId && this.taskId !== 'new') {
       await this.renderTaskDetail();
       const listEl = document.getElementById('tasksListContainer');
