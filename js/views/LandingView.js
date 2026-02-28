@@ -13,7 +13,7 @@ class LandingView extends BaseView {
   }
 
   async init() {
-    // Fondo de la landing: imagen en #landing-background-wrap (index.html), mismo estilo que login
+    // Sin lógica adicional; el fondo está en index.html (#landing-background-wrap)
   }
 }
 

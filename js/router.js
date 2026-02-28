@@ -225,7 +225,7 @@ class Router {
 
       if (!ViewClass || typeof ViewClass !== 'function') return;
 
-      // Mostrar/ocultar video de fondo de la landing (está en index.html, fuera de #app-container)
+      // Mostrar/ocultar fondo de la landing (imagen en index.html #landing-background-wrap)
       if (path === '/') {
         document.body.classList.add('route-landing');
       } else {

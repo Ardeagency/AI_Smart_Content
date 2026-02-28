@@ -3480,7 +3480,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     background: linear-gradient(rgba(0, 0, 0, 0.88), rgba(0, 0, 0, 0.88)), url(https://res.cloudinary.com/dmruwjuxn/image/upload/v1772113558/Fondos-08_wpaag0.jpg) center/cover no-repeat;
 }
 
-/* Video de fondo solo visible en ruta landing (está en index.html) */
+/* Fondo de la landing: solo visible en ruta / (index.html) */
 body:not(.route-landing) #landing-background-wrap {
     opacity: 0;
     visibility: hidden;
