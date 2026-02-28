@@ -1,5 +1,9 @@
 # Diagnóstico: Estilos y diseño dev/ vs org/
 
+**Aplicado (corto plazo):** Variables `--dev-bg-surface` y `--dev-bg-surface-hover` en `:root`; override de `--dev-bg-card` en contenedores dev para usar superficie; Builder con header/footer/sidebars en `--bg-secondary`; `.dev-lead-content` y `.settings-section` (Builder) usan superficie.
+
+---
+
 ## Resumen ejecutivo
 
 El portal **dev/** (desarrolladores) presenta un **mal uso sistemático del negro** y de las variables del design system en comparación con **org/** (organizaciones). El resultado es una interfaz plana, sin jerarquía visual y con cards/secciones que se confunden con el fondo.
