@@ -47,6 +47,9 @@ class BrandsView extends BaseView {
   onLeave() {
     this.isActive = false;
     this.resetBrandPrimaryBrillo();
+    if (window.currentOrgId && window.OrgBrandTheme && typeof window.OrgBrandTheme.applyOrgBrandTheme === 'function') {
+      window.OrgBrandTheme.applyOrgBrandTheme(window.currentOrgId);
+    }
     if (this._tryRenderTimeout) {
       clearTimeout(this._tryRenderTimeout);
       this._tryRenderTimeout = null;

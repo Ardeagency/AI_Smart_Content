@@ -161,6 +161,15 @@ class Router {
         window.currentOrgName = null;
       }
 
+      // Tema de marca para toda la org: resaltados en production, products, flows, identity, settings
+      if (window.OrgBrandTheme) {
+        if (window.currentOrgId) {
+          window.OrgBrandTheme.applyOrgBrandTheme(window.currentOrgId);
+        } else {
+          window.OrgBrandTheme.clearOrgBrandTheme();
+        }
+      }
+
       if (!route) {
         const route404 = this.routes['/404'];
         if (route404) {
