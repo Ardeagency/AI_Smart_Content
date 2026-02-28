@@ -371,6 +371,9 @@ CREATE TABLE public.flow_schedules (
   campaign_id uuid,
   audience_id uuid,
   metadata_config jsonb DEFAULT '{}'::jsonb,
+  production_count integer DEFAULT 1,
+  aspect_ratio text DEFAULT '1:1'::text CHECK (aspect_ratio = ANY (ARRAY['1:1'::text, '9:16'::text, '16:9'::text, '4:5'::text])),
+  production_specifications text,
   CONSTRAINT flow_schedules_pkey PRIMARY KEY (id),
   CONSTRAINT flow_schedules_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id),
   CONSTRAINT flow_schedules_flow_id_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id),
@@ -582,6 +585,18 @@ CREATE TABLE public.user_flow_favorites (
   CONSTRAINT user_flow_favorites_pkey PRIMARY KEY (id),
   CONSTRAINT favorites_flow_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id),
   CONSTRAINT user_flow_favorites_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
+);
+CREATE TABLE public.user_notifications (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  user_id uuid NOT NULL,
+  title text NOT NULL,
+  message text NOT NULL,
+  type text DEFAULT 'info'::text CHECK (type = ANY (ARRAY['info'::text, 'success'::text, 'warning'::text, 'error'::text])),
+  is_read boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT now(),
+  link_to text,
+  CONSTRAINT user_notifications_pkey PRIMARY KEY (id),
+  CONSTRAINT user_notifications_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
 );
 CREATE TABLE public.visual_references (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),

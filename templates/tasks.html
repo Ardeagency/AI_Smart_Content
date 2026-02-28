@@ -1,0 +1,64 @@
+<!-- Vista Tareas programadas (flow_schedules) -->
+<div class="tasks-page" id="tasksPage">
+  <div class="tasks-container tasks-list-view" id="tasksListContainer">
+    <div class="tasks-header">
+      <h1 class="tasks-title">Tareas programadas</h1>
+      <p class="tasks-subtitle">Gestiona tus flujos programados y asigna entidad, campaña y audiencia a cada tarea.</p>
+    </div>
+    <div class="tasks-cards-grid" id="tasksGrid"></div>
+    <div class="tasks-empty" id="tasksEmpty" style="display: none;">
+      <div class="tasks-empty-icon"><i class="fas fa-calendar-alt"></i></div>
+      <p>Aún no tienes tareas programadas.</p>
+      <p class="tasks-empty-hint">Las tareas se crean al programar un flujo desde el Estudio. Cuando tengas alguna, aparecerán aquí y podrás asignarles entidad, campaña y audiencia.</p>
+    </div>
+  </div>
+
+  <!-- Vista detalle de una tarea -->
+  <div class="task-detail-wrapper" id="taskDetailContainer" style="display: none;">
+    <div class="task-detail">
+      <header class="task-detail-header">
+        <div class="task-detail-header-top">
+          <a class="btn btn-ghost task-detail-back" id="backToTasksBtn">
+            <i class="fas fa-arrow-left"></i>
+            Volver a tareas
+          </a>
+          <div class="task-detail-actions">
+            <button type="button" class="btn btn-primary" id="taskDetailEditBtn"><i class="fas fa-cog"></i> Configurar tarea</button>
+          </div>
+        </div>
+        <div class="task-detail-hero">
+          <h1 class="task-detail-title" id="taskDetailTitle">Tarea programada</h1>
+          <p class="task-detail-flow" id="taskDetailFlow">Flujo: —</p>
+          <span class="task-detail-status" id="taskDetailStatus">Activa</span>
+        </div>
+      </header>
+
+      <div class="task-detail-sections">
+        <section class="task-section">
+          <h2 class="task-section-title">Programación</h2>
+          <p class="task-detail-cron" id="taskDetailCron"><i class="fas fa-clock"></i> —</p>
+          <p class="task-detail-meta">Creada: <span id="taskDetailCreated">—</span></p>
+        </section>
+
+        <section class="task-section">
+          <h2 class="task-section-title">Asignaciones</h2>
+          <ul class="task-detail-list">
+            <li><strong>Marca:</strong> <span id="taskDetailBrand">—</span></li>
+            <li><strong>Entidad:</strong> <span id="taskDetailEntity">—</span></li>
+            <li><strong>Campaña:</strong> <span id="taskDetailCampaign">—</span></li>
+            <li><strong>Audiencia:</strong> <span id="taskDetailAudience">—</span></li>
+          </ul>
+        </section>
+
+        <section class="task-section">
+          <h2 class="task-section-title">Producción</h2>
+          <ul class="task-detail-list">
+            <li><strong>Relación de aspecto:</strong> <span id="taskDetailAspect">1:1</span></li>
+            <li><strong>Producciones por ejecución:</strong> <span id="taskDetailProductionCount">1</span></li>
+            <li><strong>Especificaciones:</strong> <span id="taskDetailSpecs">—</span></li>
+          </ul>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>

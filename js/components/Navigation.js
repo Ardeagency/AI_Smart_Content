@@ -25,7 +25,8 @@ const SIDEBAR_USER_CONFIG = {
         { label: 'Products', route: 'products' },
         { label: 'Services', route: 'servicios' },
         { label: 'Audiences', route: 'audiences' },
-        { label: 'Campaigns', route: 'campaigns' }
+        { label: 'Campaigns', route: 'campaigns' },
+        { label: 'Tareas', route: 'tasks' }
       ]
     }
   ],
@@ -253,7 +254,7 @@ class Navigation {
     }
     
     // Rutas legacy sin /org/ - usar org actual si existe (para mostrar créditos reales en sidebar)
-    if (['/production', '/historial', '/living', '/brands', '/products', '/studio', '/audiences', '/marketing', '/campaigns', '/content', '/organization', '/servicios', '/credits'].some(r => path.startsWith(r))) {
+    if (['/production', '/historial', '/living', '/brands', '/products', '/studio', '/audiences', '/marketing', '/campaigns', '/content', '/tasks', '/organization', '/servicios', '/credits'].some(r => path.startsWith(r))) {
       return { mode: 'user', showSidebar: true, showHeader: true, orgId: window.currentOrgId || null, brandId: null };
     }
     

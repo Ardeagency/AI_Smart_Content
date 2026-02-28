@@ -6405,6 +6405,265 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 }
 
 
+/* ========== tasks.css (Tareas programadas) ========== */
+
+.tasks-page {
+  min-height: 100%;
+  background: var(--living-bg-deep, var(--bg-primary));
+}
+
+.tasks-container,
+.task-detail-wrapper {
+  min-height: calc(100vh - 48px);
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-top: calc(48px + 2rem);
+  background: var(--living-bg-deep, var(--bg-primary));
+}
+
+@media (max-width: 768px) {
+  .tasks-container,
+  .task-detail-wrapper {
+    padding: 1rem;
+    padding-top: calc(48px + 1rem);
+  }
+}
+
+.tasks-header {
+  margin-bottom: 2.5rem;
+}
+
+.tasks-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  margin: 0 0 0.35rem 0;
+}
+
+.tasks-subtitle {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.tasks-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.task-card {
+  background: var(--bg-secondary, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border-divider, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-md);
+  padding: 1.25rem 1.5rem;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.task-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-color: var(--accent-warm, rgba(224, 145, 69, 0.35));
+}
+
+.task-card:focus {
+  outline: 2px solid var(--accent-warm);
+  outline-offset: 2px;
+}
+
+.task-card-inner { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.task-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.task-card-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.task-card-badge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.task-card-badge-active {
+  background: rgba(107, 207, 127, 0.2);
+  color: var(--accent-success, #6bcf7f);
+}
+
+.task-card-badge-paused {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-tertiary);
+}
+
+.task-card-flow,
+.task-card-cron {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.task-card-cron i { margin-right: 0.35rem; opacity: 0.9; }
+
+.task-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.8125rem;
+  color: var(--text-tertiary);
+  margin-top: 0.5rem;
+}
+
+.task-card-footer {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-divider);
+}
+
+.tasks-empty {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--text-secondary);
+}
+
+.tasks-empty-icon {
+  font-size: 3rem;
+  color: var(--accent-warm, rgba(224, 145, 69, 0.6));
+  margin-bottom: 1rem;
+}
+
+.tasks-empty-hint {
+  font-size: 0.875rem;
+  max-width: 420px;
+  margin: 0.75rem auto 0;
+  line-height: 1.5;
+}
+
+.task-detail { max-width: 800px; margin: 0 auto; }
+
+.task-detail-header { margin-bottom: 2.5rem; }
+
+.task-detail-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.task-detail-back { font-size: 0.9375rem; color: var(--text-secondary); }
+.task-detail-back:hover { color: var(--accent-warm); }
+
+.task-detail-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.task-detail-hero { padding: 1rem 0; }
+
+.task-detail-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 0.35rem 0;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.task-detail-flow {
+  font-size: 1.0625rem;
+  color: var(--text-secondary);
+  margin: 0 0 0.5rem 0;
+}
+
+.task-detail-status {
+  display: inline-block;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-sm);
+}
+
+.task-detail-status-active {
+  background: rgba(107, 207, 127, 0.2);
+  color: var(--accent-success, #6bcf7f);
+}
+
+.task-detail-status-paused {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-tertiary);
+}
+
+.task-detail-cron {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin: 0 0 0.5rem 0;
+}
+
+.task-detail-cron i { margin-right: 0.35rem; }
+
+.task-detail-meta { font-size: 0.875rem; color: var(--text-tertiary); margin: 0; }
+
+.task-detail-sections { display: flex; flex-direction: column; gap: 2rem; }
+
+.task-section { padding: 0; }
+
+.task-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.75rem 0;
+}
+
+.task-detail-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+}
+
+.task-detail-list strong { color: var(--text-primary); margin-right: 0.35rem; }
+
+.task-modal-overlay .task-edit-select,
+.task-modal-overlay input[type="number"] {
+  width: 100%;
+  max-width: 320px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  border: 1px solid var(--border-divider);
+  border-radius: var(--radius-sm);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.task-modal-overlay .modal-body label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin: 0.5rem 0 0.25rem 0;
+}
+
+.task-modal-overlay .modal-body label:first-of-type { margin-top: 0; }
+
+
 /* ========== audiences.css (75 lineas) ========== */
 
 /* Audiences View Styles - Tema Living/Brands */

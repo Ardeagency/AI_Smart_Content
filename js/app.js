@@ -197,6 +197,13 @@ class App {
     r.register('/org/:orgIdShort/:orgNameSlug/content/:contentId', contentLoader, auth);
     r.register('/content', contentLoader, auth);
 
+    // ── Org: Tasks (tareas programadas / flow_schedules) ──
+    const tasksLoader = this._lazy('TasksView', ['/js/views/TasksView.js']);
+    r.register('/org/:orgIdShort/:orgNameSlug/tasks', tasksLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/tasks/:taskId', tasksLoader, auth);
+    r.register('/tasks', tasksLoader, auth);
+    r.register('/tasks/:taskId', tasksLoader, auth);
+
     // ── Settings ──
     r.register('/settings', this._lazy('SettingsView', ['/js/views/SettingsView.js']), auth);
 
