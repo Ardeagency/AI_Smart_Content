@@ -3,21 +3,22 @@
         <div class="products-container">
             <!-- Main Content -->
             <div class="products-main">
-                <!-- Page Header: filtros tipo Controls (segmentados por tipo_producto) -->
-                <div class="page-header">
-                    <div class="page-header-top">
-                        <div class="products-controls">
-                            <h3 class="products-controls-title">Tipo de producto</h3>
-                            <div id="categoryTabs" class="products-controls-segments" role="group" aria-label="Filtrar por tipo de producto">
-                                <!-- Segmentos (tipo_producto) insertados por JavaScript -->
+                <!-- Page Header: estilo imagen (título + All + filtros dropdown + Nuevo Producto) -->
+                <header class="products-page-header">
+                    <h1 class="products-page-title">Productos</h1>
+                    <div class="products-header-actions">
+                        <div class="products-filters-row" role="group" aria-label="Filtrar por tipo">
+                            <button type="button" class="products-filter-all active" id="productsFilterAll" data-category="todos">All</button>
+                            <div id="categoryTabs" class="products-filter-dropdowns">
+                                <!-- Filtros por tipo_producto (dropdown style) insertados por JS -->
                             </div>
                         </div>
-                        <button class="btn-primary btn-add-product" id="addProductBtn">
+                        <button class="products-btn-new btn-add-product" id="addProductBtn">
                             <i class="fas fa-plus"></i>
                             <span>Nuevo Producto</span>
                         </button>
                     </div>
-                </div>
+                </header>
 
                 <!-- Products Gallery -->
             <div class="products-gallery" id="productsGallery">

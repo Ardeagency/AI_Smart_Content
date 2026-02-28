@@ -368,82 +368,60 @@ if (typeof window.ProductsManager === 'undefined') {
         // Los tabs se renderizarán después de cargar productos
     }
 
-    /**
-     * Cuenta productos por tipo_producto (para badges en segmentos)
-     */
-    getCategoryCounts() {
-        const counts = { todos: this.products.length };
-        this.products.forEach(p => {
-            const tipo = p.tipo_producto || 'otro';
-            counts[tipo] = (counts[tipo] || 0) + 1;
-        });
-        return counts;
-    }
-
     renderCategoryTabs() {
-        let tabsContainer = document.getElementById('categoryTabs');
-        if (!tabsContainer) {
-            const appContainer = document.getElementById('app-container');
-            if (appContainer) tabsContainer = appContainer.querySelector('#categoryTabs');
-            if (!tabsContainer) return;
-        }
+        const appContainer = document.getElementById('app-container');
+        const root = appContainer || document;
+        const tabsContainer = root.querySelector('#categoryTabs');
+        const allBtn = root.querySelector('#productsFilterAll');
+        if (!tabsContainer) return;
 
         const categoryMap = this.getCategoryMap();
-        const counts = this.getCategoryCounts();
-
-        // Orden: Todos primero, luego el resto según schema (mismo orden que getCategoryMap)
         const orderedIds = [
-            'todos', 'bebida', 'bebida_alcoholica', 'agua', 'energetica', 'alimento', 'snack',
+            'bebida', 'bebida_alcoholica', 'agua', 'energetica', 'alimento', 'snack',
             'suplemento_alimenticio', 'cosmetico', 'skincare', 'maquillaje', 'perfume', 'cuidado_cabello',
             'app', 'electronico', 'smartphone', 'ropa', 'calzado', 'accesorio_moda', 'otro'
         ];
-        const segmentsList = orderedIds
+        const filtersList = orderedIds
             .map(catId => ({ id: catId, ...categoryMap[catId] }))
             .filter(cat => cat && cat.label);
 
-        // Si no hay productos, mostrar solo "Todos" en el segmento
-        if (this.products.length === 0) {
-            tabsContainer.innerHTML = `
-                <button type="button" class="products-control-segment active" data-category="todos" aria-pressed="true">
-                    <span class="segment-label">Todos</span>
-                </button>
-            `;
-            tabsContainer.querySelector('.products-control-segment').addEventListener('click', () => this.setActiveFilter('todos'));
-            return;
+        if (allBtn) {
+            allBtn.classList.toggle('active', this.activeFilter === 'todos');
+            allBtn.setAttribute('aria-pressed', this.activeFilter === 'todos');
+            if (!allBtn.dataset.bound) {
+                allBtn.dataset.bound = '1';
+                allBtn.addEventListener('click', () => this.setActiveFilter('todos'));
+            }
         }
 
-        tabsContainer.innerHTML = segmentsList.map((cat, i) => {
+        tabsContainer.innerHTML = filtersList.map(cat => {
             const isActive = this.activeFilter === cat.id;
-            const count = counts[cat.id] != null ? counts[cat.id] : 0;
-            const showBadge = count > 0 && cat.id !== 'todos';
             return `
-                <button type="button" class="products-control-segment ${isActive ? 'active' : ''}"
+                <button type="button" class="products-filter-dropdown ${isActive ? 'active' : ''}"
                         data-category="${this.escapeHtml(cat.id)}"
                         aria-pressed="${isActive}"
                         title="${this.escapeHtml(cat.label)}">
-                    <span class="segment-label">${this.escapeHtml(cat.label)}</span>
-                    ${showBadge ? `<span class="segment-badge" aria-hidden="true">${count}</span>` : ''}
+                    <span class="products-filter-dropdown-label">${this.escapeHtml(cat.label)}</span>
+                    <i class="fas fa-chevron-down products-filter-dropdown-chevron" aria-hidden="true"></i>
                 </button>
             `;
         }).join('');
 
-        tabsContainer.querySelectorAll('.products-control-segment').forEach(btn => {
+        tabsContainer.querySelectorAll('.products-filter-dropdown').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const category = e.currentTarget.dataset.category;
-                this.setActiveFilter(category);
+                this.setActiveFilter(e.currentTarget.dataset.category);
             });
         });
     }
 
     setActiveFilter(category) {
-        // Validar que la categoría esté disponible
-        if (!this.availableCategories.has(category)) {
+        const categoryMap = this.getCategoryMap();
+        if (!category || !categoryMap[category]) {
             category = 'todos';
         }
-        
         this.activeFilter = category;
-        this.renderCategoryTabs(); // Re-renderizar tabs para actualizar estado activo
-        this.renderProducts(); // Re-renderizar productos con el nuevo filtro
+        this.renderCategoryTabs();
+        this.renderProducts();
     }
 
     async loadProducts() {
@@ -574,14 +552,11 @@ if (typeof window.ProductsManager === 'undefined') {
             // ============================================
             this.products = products;
             
-            // Detectar categorías disponibles
             this.detectAvailableCategories();
-            
-            // Validar y ajustar filtro activo
-            if (!this.availableCategories.has(this.activeFilter)) {
+            const categoryMap = this.getCategoryMap();
+            if (!categoryMap[this.activeFilter]) {
                 this.activeFilter = 'todos';
             }
-            
             // Renderizar
             this.renderCategoryTabs();
             await this.renderProducts();
