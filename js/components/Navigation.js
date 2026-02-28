@@ -6,7 +6,7 @@
 const SIDEBAR_USER_CONFIG = {
   main: [
     { type: 'page', id: 'activity', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
-    { type: 'page', id: 'tasks', label: 'Task', icon: 'fa-clock', route: 'tasks' },
+    { type: 'page', id: 'tasks', label: 'Task', icon: 'fa-clock', iconSrc: '/recursos/icons/taks.svg', route: 'tasks' },
     {
       type: 'container',
       id: 'catalog',
