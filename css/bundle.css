@@ -2589,9 +2589,9 @@ body.has-sidebar #app-container:has(> div.studio-layout) {
     padding-top: 0;
 }
 
-/* Production: padding superior para header de dos filas (ruta+icono + filtros) */
+/* Production: padding superior para header de dos filas (ruta+icono + filtros + paddings) */
 body.has-sidebar #app-container:has(> main.living-main-content) {
-    padding-top: 110px;
+    padding-top: 135px;
 }
 
 /* =========================================
@@ -2646,6 +2646,10 @@ body.production-filters-in-header .app-header.with-sidebar {
     align-items: stretch;
     height: auto;
     min-height: var(--app-header-height, 45.8px);
+    padding-top: 12px;
+}
+body.production-filters-in-header .app-header .header-content {
+    padding-bottom: 14px;
 }
 
 body.sidebar-collapsed .app-header.with-sidebar {
@@ -2738,7 +2742,7 @@ body.production-filters-in-header .app-header .header-production-slot {
     gap: 12px;
     width: 100%;
     min-width: 0;
-    padding: 0 20px 12px;
+    padding: 0 20px 16px;
     box-sizing: border-box;
 }
 body.production-filters-in-header .app-header .header-production-slot .living-history-filters {
