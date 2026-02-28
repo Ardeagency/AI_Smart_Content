@@ -2589,9 +2589,9 @@ body.has-sidebar #app-container:has(> div.studio-layout) {
     padding-top: 0;
 }
 
-/* Production: padding superior 100px para que el contenido no quede debajo del header principal */
+/* Production: padding superior para header de dos filas (ruta+icono + filtros) */
 body.has-sidebar #app-container:has(> main.living-main-content) {
-    padding-top: 100px;
+    padding-top: 110px;
 }
 
 /* =========================================
@@ -2633,13 +2633,19 @@ body.has-sidebar #app-container:has(> main.living-main-content) {
     transform: translateX(-50%);
 }
 
-/* Header con sidebar: efecto glass */
+/* Header con sidebar: efecto glass. Con filtros (Production) pasa a dos filas. */
 .app-header.with-sidebar {
     left: var(--nav-width, 260px);
     max-width: calc(100vw - var(--nav-width, 260px));
     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-sizing: border-box;
     border-radius: 0 0 var(--glass-radius) 0;
+}
+body.production-filters-in-header .app-header.with-sidebar {
+    flex-direction: column;
+    align-items: stretch;
+    height: auto;
+    min-height: var(--app-header-height, 45.8px);
 }
 
 body.sidebar-collapsed .app-header.with-sidebar {
@@ -2720,7 +2726,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     margin: 0;
 }
 
-/* Slot de filtros de Production: oculto por defecto; solo Production lo muestra con contenido */
+/* Slot de filtros de Production: segunda fila del header, oculto por defecto */
 .app-header .header-production-slot {
     display: none;
     min-width: 0;
@@ -2730,12 +2736,18 @@ body.production-filters-in-header .app-header .header-production-slot {
     align-items: center;
     flex-wrap: wrap;
     gap: 12px;
+    width: 100%;
     min-width: 0;
-    flex: 1;
+    padding: 0 20px 12px;
+    box-sizing: border-box;
 }
 body.production-filters-in-header .app-header .header-production-slot .living-history-filters {
     margin: 0;
     padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
 }
 
 .app-header .header-center {
