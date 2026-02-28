@@ -220,8 +220,9 @@
   P.reorderField = function (fromIndex, toIndex) {
     if (fromIndex === toIndex) return;
     
-    const [field] = this.inputSchema.splice(fromIndex, 1);
-    this.inputSchema.splice(toIndex, 0, field);
+    const arr = this.getCanvasFields();
+    const [field] = arr.splice(fromIndex, 1);
+    arr.splice(toIndex, 0, field);
     
     this.hasUnsavedChanges = true;
     this.renderCanvas();
@@ -233,13 +234,14 @@
 
   P.getDropIndex = function (e) {
     const fields = this.querySelectorAll('.canvas-field');
-    let index = this.inputSchema.length;
-    
+    const len = this.getCanvasFields().length;
+    let index = len;
+
     fields.forEach((field, i) => {
       const rect = field.getBoundingClientRect();
       const midY = rect.top + rect.height / 2;
       
-      if (e.clientY < midY && index === this.inputSchema.length) {
+      if (e.clientY < midY && index === len) {
         index = i;
       }
     });
@@ -247,22 +249,31 @@
     return index;
   };
 
+  /** Campos que se muestran en el canvas: input_schema (manual) o schedule_schema.fields (automated). */
+  P.getCanvasFields = function () {
+    if (this.isAutomatedFlow && this.flowData.schedule_schema && Array.isArray(this.flowData.schedule_schema.fields)) {
+      return this.flowData.schedule_schema.fields;
+    }
+    return this.inputSchema;
+  };
+
   P.renderCanvas = function () {
     const canvas = this.querySelector('#canvasFields');
     const emptyState = this.querySelector('#canvasEmptyState');
-    
+    const fields = this.getCanvasFields();
+
     if (!canvas) return;
-    
-    if (this.inputSchema.length === 0) {
+
+    if (!this.isAutomatedFlow && fields.length === 0) {
       canvas.style.display = 'none';
       if (emptyState) emptyState.style.display = 'flex';
       return;
     }
-    
+
     canvas.style.display = 'block';
     if (emptyState) emptyState.style.display = 'none';
-    
-    canvas.innerHTML = this.inputSchema.map((field, index) => this.renderCanvasField(field, index)).join('');
+
+    canvas.innerHTML = fields.map((field, index) => this.renderCanvasField(field, index)).join('');
     this.enableCanvasPreviewInputs(canvas);
     this.setupCanvasFieldListeners();
   };
@@ -456,14 +467,15 @@
   };
 
   P.duplicateField = function (index) {
-    const original = this.inputSchema[index];
+    const arr = this.getCanvasFields();
+    const original = arr[index];
     const duplicate = {
       ...JSON.parse(JSON.stringify(original)),
       key: this.generateFieldKey(original.key),
       label: `${original.label} (copia)`
     };
-    
-    this.inputSchema.splice(index + 1, 0, duplicate);
+
+    arr.splice(index + 1, 0, duplicate);
     this.hasUnsavedChanges = true;
     this.renderCanvas();
     this.selectField(index + 1);
@@ -471,7 +483,7 @@
   };
 
   P.deleteField = function (index) {
-    this.inputSchema.splice(index, 1);
+    this.getCanvasFields().splice(index, 1);
     this.hasUnsavedChanges = true;
     
     if (this.selectedFieldIndex === index) {
@@ -615,7 +627,7 @@
     const panel = this.querySelector('#propertiesPanel');
     if (!panel) return;
     
-    if (this.selectedFieldIndex === null || !this.inputSchema[this.selectedFieldIndex]) {
+    if (this.selectedFieldIndex === null || !this.getCanvasFields()[this.selectedFieldIndex]) {
       panel.innerHTML = `
         <div class="properties-empty">
           <i class="ph ph-cursor-click"></i>
@@ -625,7 +637,7 @@
       return;
     }
     
-    const field = this.inputSchema[this.selectedFieldIndex];
+    const field = this.getCanvasFields()[this.selectedFieldIndex];
     if (this.isStructuralField(field)) {
       this.renderStructuralPropertiesPanel(field, panel);
       return;
@@ -1330,7 +1342,7 @@
   };
 
   P.setupPropertiesListeners = function () {
-    const field = this.inputSchema[this.selectedFieldIndex];
+    const field = this.getCanvasFields()[this.selectedFieldIndex];
     if (!field) return;
     
     // General properties
@@ -1345,7 +1357,7 @@
     if (keyInput) {
       keyInput.addEventListener('change', (e) => {
         const newKey = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
-        if (newKey && !this.inputSchema.some((f, i) => i !== this.selectedFieldIndex && f.key === newKey)) {
+        if (newKey && !this.getCanvasFields().some((f, i) => i !== this.selectedFieldIndex && f.key === newKey)) {
           field.key = newKey;
           this.onFieldChange();
         } else {
@@ -1975,15 +1987,17 @@
     const preview = this.querySelector('#jsonSchemaPreview code');
     if (!preview) return;
     
-    const schema = {
-      fields: this.inputSchema
-    };
-    
+    const fields = this.getCanvasFields();
+    const schema = this.isAutomatedFlow
+      ? { schedule_schema: { fields } }
+      : { fields };
+
     preview.textContent = JSON.stringify(schema, null, 2);
   };
 
   P.generateFormPreview = function () {
-    if (this.inputSchema.length === 0) {
+    const fields = this.getCanvasFields();
+    if (fields.length === 0) {
       return `
         <div class="preview-empty">
           <i class="ph ph-warning"></i>
@@ -1995,7 +2009,7 @@
     const showLabels = this.uiLayoutConfig.showLabels !== false;
     const showHelperText = this.uiLayoutConfig.showHelperText !== false;
     const Registry = window.InputRegistry;
-    const fieldsHtml = this.inputSchema.map(field => {
+    const fieldsHtml = fields.map(field => {
       const widthClass = field.ui?.width === 'half' ? 'col-half' : field.ui?.width === 'third' ? 'col-third' : 'col-full';
       if (Registry && Registry.renderFormFieldWithWrapper) {
         return Registry.renderFormFieldWithWrapper(field, {

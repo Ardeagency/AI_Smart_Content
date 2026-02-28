@@ -50,7 +50,8 @@
         version: flow.version || '1.0.0',
         owner_id: flow.owner_id,
         execution_mode: flow.execution_mode || 'single_step',
-        show_in_catalog: showInCatalog
+        show_in_catalog: showInCatalog,
+        schedule_schema: flow.schedule_schema && Array.isArray(flow.schedule_schema.fields) ? { fields: flow.schedule_schema.fields } : { fields: [] }
       };
       
       this.inputSchema = [];
@@ -241,7 +242,8 @@
         version: this.flowData.version,
         execution_mode: this.flowData.execution_mode || 'single_step',
         show_in_catalog: !!this.flowData.show_in_catalog,
-        ui_layout_config: this.uiLayoutConfig
+        ui_layout_config: this.uiLayoutConfig,
+        schedule_schema: this.flowData.schedule_schema && Array.isArray(this.flowData.schedule_schema.fields) ? this.flowData.schedule_schema : { fields: [] }
       };
       
       let flowId = this.flowId;

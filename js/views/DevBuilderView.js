@@ -25,7 +25,21 @@ class DevBuilderView extends DevBaseView {
       status: 'draft',
       version: '1.0.0',
       execution_mode: 'single_step',
-      show_in_catalog: false
+      show_in_catalog: false,
+      schedule_schema: { fields: [] }
+    };
+
+    /** Schema por defecto para flujos automated (programación de tareas). Se establece al cambiar tipo a automated. */
+    this.DEFAULT_SCHEDULE_SCHEMA = {
+      fields: [
+        { key: 'cron_expression', label: 'Programación', input_type: 'cron_schedule', required: true },
+        { key: 'entity_id', label: 'Entidad', input_type: 'entity_selector' },
+        { key: 'campaign_id', label: 'Campaña', input_type: 'campaign_selector' },
+        { key: 'audience_id', label: 'Audiencia', input_type: 'audience_selector' },
+        { key: 'aspect_ratio', label: 'Formato', input_type: 'aspect_ratio', options: [{ value: '1:1', label: '1:1' }, { value: '9:16', label: '9:16' }, { value: '16:9', label: '16:9' }, { value: '4:5', label: '4:5' }], defaultValue: '1:1' },
+        { key: 'production_count', label: 'Producciones por ejecución', input_type: 'number', min: 1, max: 10, defaultValue: 1 },
+        { key: 'production_specifications', label: 'Especificaciones', input_type: 'textarea' }
+      ]
     };
     
     // Schema de inputs (array de campos)
@@ -782,10 +796,43 @@ class DevBuilderView extends DevBaseView {
     const testFlowBtn = this.querySelector('#testFlowBtn');
     const tabModules = this.querySelector('.builder-tab[data-tab="technical"]');
 
-    // Misma UI para flujos manuales y automatizados: módulos visibles, inputs editables, etc.
+    if (this.isAutomatedFlow) {
+      // Flujo automated: sin lista de componentes; canvas muestra schedule_schema (programación)
+      if (!this.flowData.schedule_schema || !Array.isArray(this.flowData.schedule_schema.fields)) {
+        this.flowData.schedule_schema = { fields: [] };
+      }
+      if (this.flowData.schedule_schema.fields.length === 0) {
+        this.flowData.schedule_schema = JSON.parse(JSON.stringify(this.DEFAULT_SCHEDULE_SCHEMA));
+        this.hasUnsavedChanges = true;
+      }
+      if (main) main.classList.add('builder-mode-automated');
+      if (componentsSidebar) componentsSidebar.style.display = 'none';
+      if (canvasEmpty) canvasEmpty.style.display = 'none';
+      if (canvasAutomated) canvasAutomated.style.display = 'none';
+      if (canvasFields) canvasFields.style.display = 'block';
+      if (technicalWebhook) technicalWebhook.style.display = 'none';
+      if (technicalAutomated) technicalAutomated.style.display = 'block';
+      if (tokenCostInput) {
+        tokenCostInput.min = 0;
+        tokenCostInput.max = 100;
+        tokenCostInput.disabled = false;
+        tokenCostInput.value = this.flowData.token_cost ?? 1;
+      }
+      if (uiShowInCatalog) {
+        uiShowInCatalog.disabled = true;
+        uiShowInCatalog.checked = false;
+      }
+      if (testFlowBtn) testFlowBtn.style.display = 'none';
+      if (tabModules) tabModules.style.display = '';
+      this.renderCanvas();
+      this.updateJsonPreview();
+      return;
+    }
+
+    // Flujo manual: lista de componentes visible, canvas con input_schema
     if (main) main.classList.remove('builder-mode-automated');
-    if (componentsSidebar) componentsSidebar.classList.remove('builder-sidebar-hidden');
-    if (canvasEmpty) canvasEmpty.style.display = 'flex';
+    if (componentsSidebar) componentsSidebar.style.display = '';
+    if (canvasEmpty) canvasEmpty.style.display = (this.inputSchema.length === 0) ? 'flex' : 'none';
     if (canvasAutomated) canvasAutomated.style.display = 'none';
     if (canvasFields) canvasFields.style.display = (this.inputSchema.length > 0) ? 'block' : 'none';
     if (technicalWebhook) technicalWebhook.style.display = 'block';
@@ -802,6 +849,8 @@ class DevBuilderView extends DevBaseView {
     }
     if (testFlowBtn) testFlowBtn.style.display = '';
     if (tabModules) tabModules.style.display = '';
+    this.renderCanvas();
+    this.updateJsonPreview();
   }
 
   updateStatusBadge() {
