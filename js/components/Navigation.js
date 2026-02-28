@@ -127,6 +127,7 @@ class Navigation {
     this._catalogCategories = [];
     this._CACHE_TTL = 60000;
     this._creditsUpdatedAttached = false;
+    this._creditsRefreshInterval = null;
   }
 
   /**
@@ -137,6 +138,48 @@ class Navigation {
     this._orgCacheTime = 0;
     if (this.currentMode === 'user' && this.currentOrgId) {
       this.loadOrganizationInfo();
+    }
+  }
+
+  /**
+   * Lee créditos desde la tabla organization_credits (BD) y actualiza el DOM del sidebar.
+   * Siempre hace una petición a la BD; no usa valor en memoria.
+   */
+  async loadCreditsFromDb() {
+    if (!this.currentOrgId) return;
+    const supabase = await this.getSupabase();
+    if (!supabase) return;
+    const tokensEl = document.getElementById('navTokensValue');
+    const barFill = document.querySelector('.nav-org-credits-bar-fill');
+    if (tokensEl) tokensEl.textContent = '…';
+    if (barFill) barFill.style.width = '0%';
+    try {
+      const { data, error } = await supabase
+        .from('organization_credits')
+        .select('credits_available, credits_total')
+        .eq('organization_id', this.currentOrgId)
+        .maybeSingle();
+      if (error) {
+        if (tokensEl) tokensEl.textContent = '—';
+        console.warn('Navigation: error leyendo créditos', error);
+        return;
+      }
+      const available = data != null ? (data.credits_available ?? 0) : 0;
+      const total = data != null ? (data.credits_total ?? 0) : 0;
+      if (tokensEl) {
+        tokensEl.textContent = available >= 1000 ? `${(available / 1000).toFixed(1)}K` : String(available);
+      }
+      if (barFill) {
+        const pct = total > 0 ? Math.min(100, Math.round((available / total) * 100)) : 0;
+        barFill.style.width = `${pct}%`;
+      }
+      if (this._orgCache && this._orgCacheId === this.currentOrgId) {
+        this._orgCache.credits = available;
+        this._orgCache.credits_total = total;
+      }
+    } catch (e) {
+      if (tokensEl) tokensEl.textContent = '—';
+      console.warn('Navigation: loadCreditsFromDb', e);
     }
   }
 
@@ -226,15 +269,21 @@ class Navigation {
       return;
     }
 
-    // Si el modo no ha cambiado y ya está inicializado, solo actualizar enlaces activos
+    // Si el modo no ha cambiado y ya está inicializado, actualizar enlaces y refrescar créditos desde BD
     if (this.initialized && this.currentMode === config.mode && this.currentOrgId === config.orgId) {
       this.updateActiveLink();
+      if (config.mode === 'user' && config.orgId) {
+        this.loadCreditsFromDb();
+      }
       return;
     }
 
     this.currentMode = config.mode;
     this.currentOrgId = config.orgId;
     this.currentBrandId = config.brandId;
+    if (config.mode !== 'user') {
+      this._stopCreditsRefreshInterval();
+    }
 
     if (config.mode === 'user') {
       await this.loadCatalogCategories();
@@ -1180,12 +1229,10 @@ class Navigation {
   }
 
   /**
-   * Cargar información de la organización actual (nombre real y plan del owner)
+   * Cargar información de la organización actual (nombre real y plan del owner).
+   * Los créditos se leen SIEMPRE desde organization_credits en la BD (loadCreditsFromDb).
    */
   async loadOrganizationInfo() {
-    const now = Date.now();
-    const cacheValid = this._orgCache && this._orgCacheId === this.currentOrgId && (now - this._orgCacheTime) < this._CACHE_TTL;
-
     const supabase = await this.getSupabase();
     if (!supabase) return;
 
@@ -1199,44 +1246,56 @@ class Navigation {
         if (tokensEl) tokensEl.textContent = '—';
         const barFill = document.querySelector('.nav-org-credits-bar-fill');
         if (barFill) barFill.style.width = '0%';
+        this._stopCreditsRefreshInterval();
         await this.loadOrganizationsList();
         return;
       }
 
-      if (cacheValid) {
-        const { data } = await supabase.from('organization_credits').select('credits_available, credits_total').eq('organization_id', this.currentOrgId).maybeSingle();
-        const cred = data;
-        this._orgCache.credits = cred != null ? (cred.credits_available ?? 0) : 0;
-        this._orgCache.credits_total = cred != null ? (cred.credits_total ?? 0) : 0;
-        this._applyOrgCache();
-        return;
-      }
+      const now = Date.now();
+      const cacheValid = this._orgCache && this._orgCacheId === this.currentOrgId && (now - this._orgCacheTime) < this._CACHE_TTL;
 
-      const [orgRes, creditsRes] = await Promise.all([
-        supabase.from('organizations').select('name, owner_user_id').eq('id', this.currentOrgId).single(),
-        supabase.from('organization_credits').select('credits_available, credits_total').eq('organization_id', this.currentOrgId).maybeSingle()
-      ]);
-
-      let planLabel = 'Personal';
-      if (orgRes.data?.owner_user_id) {
-        const { data: owner } = await supabase.from('profiles').select('plan_type').eq('id', orgRes.data.owner_user_id).maybeSingle();
-        if (owner?.plan_type) {
-          const raw = String(owner.plan_type).replace(/_/g, ' ');
-          planLabel = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
+      if (!cacheValid) {
+        const orgRes = await supabase.from('organizations').select('name, owner_user_id').eq('id', this.currentOrgId).single();
+        let planLabel = 'Personal';
+        if (orgRes.data?.owner_user_id) {
+          const { data: owner } = await supabase.from('profiles').select('plan_type').eq('id', orgRes.data.owner_user_id).maybeSingle();
+          if (owner?.plan_type) {
+            const raw = String(owner.plan_type).replace(/_/g, ' ');
+            planLabel = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
+          }
         }
+        this._orgCache = { name: orgRes.data?.name, plan: planLabel, credits: 0, credits_total: 0 };
+        this._orgCacheId = this.currentOrgId;
+        this._orgCacheTime = Date.now();
       }
+      const nameEl = document.getElementById('navOrgName');
+      const typeEl = document.getElementById('navOrgType');
+      if (nameEl && this._orgCache) nameEl.textContent = this._orgCache.name || '';
+      if (typeEl && this._orgCache) typeEl.textContent = this._orgCache.plan || '';
 
-      const cred = creditsRes.data;
-      const creditsAvailable = cred != null ? (cred.credits_available ?? 0) : 0;
-      const creditsTotal = cred != null ? (cred.credits_total ?? 0) : 0;
-      this._orgCache = { name: orgRes.data?.name, plan: planLabel, credits: creditsAvailable, credits_total: creditsTotal };
-      this._orgCacheId = this.currentOrgId;
-      this._orgCacheTime = Date.now();
-      this._applyOrgCache();
-
+      // Siempre leer créditos desde la BD (tabla organization_credits) para mostrar el valor real
+      await this.loadCreditsFromDb();
+      this._startCreditsRefreshInterval();
       await this.loadOrganizationsList();
     } catch (err) {
       console.error('Error loading organization info:', err);
+    }
+  }
+
+  _startCreditsRefreshInterval() {
+    this._stopCreditsRefreshInterval();
+    if (this.currentMode !== 'user' || !this.currentOrgId) return;
+    this._creditsRefreshInterval = setInterval(() => {
+      if (this.currentMode === 'user' && this.currentOrgId) {
+        this.loadCreditsFromDb();
+      }
+    }, 25000);
+  }
+
+  _stopCreditsRefreshInterval() {
+    if (this._creditsRefreshInterval) {
+      clearInterval(this._creditsRefreshInterval);
+      this._creditsRefreshInterval = null;
     }
   }
 
