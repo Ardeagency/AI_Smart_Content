@@ -376,14 +376,13 @@ if (typeof window.ProductsManager === 'undefined') {
         if (!tabsContainer) return;
 
         const categoryMap = this.getCategoryMap();
-        const orderedIds = [
-            'bebida', 'bebida_alcoholica', 'agua', 'energetica', 'alimento', 'snack',
-            'suplemento_alimenticio', 'cosmetico', 'skincare', 'maquillaje', 'perfume', 'cuidado_cabello',
-            'app', 'electronico', 'smartphone', 'ropa', 'calzado', 'accesorio_moda', 'otro'
-        ];
-        const filtersList = orderedIds
+        // Solo tipos que existen en la BD para los productos cargados (tipo_producto en products)
+        const availableIds = Array.from(this.availableCategories || new Set(['todos']))
+            .filter(id => id !== 'todos' && categoryMap[id]);
+        const filtersList = availableIds
             .map(catId => ({ id: catId, ...categoryMap[catId] }))
-            .filter(cat => cat && cat.label);
+            .filter(cat => cat && cat.label)
+            .sort((a, b) => a.label.localeCompare(b.label));
 
         if (allBtn) {
             allBtn.classList.toggle('active', this.activeFilter === 'todos');
@@ -394,7 +393,8 @@ if (typeof window.ProductsManager === 'undefined') {
             }
         }
 
-        tabsContainer.innerHTML = filtersList.map(cat => {
+        tabsContainer.innerHTML = filtersList.length
+            ? filtersList.map(cat => {
             const isActive = this.activeFilter === cat.id;
             return `
                 <button type="button" class="products-filter-dropdown ${isActive ? 'active' : ''}"
@@ -405,7 +405,8 @@ if (typeof window.ProductsManager === 'undefined') {
                     <i class="fas fa-chevron-down products-filter-dropdown-chevron" aria-hidden="true"></i>
                 </button>
             `;
-        }).join('');
+        }).join('')
+            : '';
 
         tabsContainer.querySelectorAll('.products-filter-dropdown').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -554,7 +555,7 @@ if (typeof window.ProductsManager === 'undefined') {
             
             this.detectAvailableCategories();
             const categoryMap = this.getCategoryMap();
-            if (!categoryMap[this.activeFilter]) {
+            if (!categoryMap[this.activeFilter] || !this.availableCategories.has(this.activeFilter)) {
                 this.activeFilter = 'todos';
             }
             // Renderizar
