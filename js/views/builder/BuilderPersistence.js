@@ -159,18 +159,15 @@
     // Configuración
     const descInput = this.querySelector('#flowDescription');
     const categorySelect = this.querySelector('#flowCategory');
-    const subcategorySelect = this.querySelector('#flowSubcategory');
+    const outputTypeSelect = this.querySelector('#flowOutputType');
     const flowTypeSelect = this.querySelector('#flowType');
     const tokenCostInput = this.querySelector('#flowTokenCost');
     const versionInput = this.querySelector('#flowVersion');
     
     if (descInput) descInput.value = this.flowData.description;
     if (categorySelect) categorySelect.value = this.flowData.category_id || '';
-    if (subcategorySelect) subcategorySelect.value = this.flowData.subcategory_id || '';
-    if (flowTypeSelect) {
-      flowTypeSelect.value = this.flowData.flow_category_type;
-      if (typeof this.updateFlowTypePicker === 'function') this.updateFlowTypePicker(this.flowData.flow_category_type);
-    }
+    if (outputTypeSelect) outputTypeSelect.value = this.flowData.output_type;
+    if (flowTypeSelect) flowTypeSelect.value = this.flowData.flow_category_type;
     if (tokenCostInput) tokenCostInput.value = this.flowData.token_cost ?? 1;
     if (versionInput) versionInput.value = this.flowData.version;
     
