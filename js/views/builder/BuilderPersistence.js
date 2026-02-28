@@ -125,7 +125,7 @@
       // Normalizar input_type en cada campo para que el canvas muestre el cascarón correcto (number, select, checkbox, etc.)
       this.inputSchema = this.inputSchema.map(f => ({ ...f, input_type: f.input_type || f.type || 'text' }));
       
-      // Actualizar UI y adaptar por tipo (manual vs automated)
+      // Actualizar UI (manual y automatizado usan la misma interfaz)
       this.populateForm();
       this.applyFlowTypeUI();
       

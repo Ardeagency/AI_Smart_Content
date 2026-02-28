@@ -355,7 +355,7 @@ class DevBuilderView extends DevBaseView {
               <aside class="ficha-sidebar">
                 <h4><i class="ph ph-textbox"></i> Inputs (vista consumidor)</h4>
                 <div class="ficha-inputs-preview" id="fichaInputsPreview">
-                  <p class="ficha-inputs-empty">Sin campos de entrada o flujo automatizado.</p>
+                  <p class="ficha-inputs-empty">Sin campos de entrada.</p>
                 </div>
               </aside>
             </div>
@@ -697,7 +697,7 @@ class DevBuilderView extends DevBaseView {
     if (!main) return;
     const isInputs = tabId === 'inputs';
     main.classList.toggle('builder-tab-inputs-active', isInputs);
-    if (componentsSidebar) componentsSidebar.style.display = (isInputs && !this.isAutomatedFlow) ? '' : 'none';
+    if (componentsSidebar) componentsSidebar.style.display = isInputs ? '' : 'none';
     if (propertiesSidebar) propertiesSidebar.style.display = isInputs ? '' : 'none';
     if (tabId === 'ficha') this.renderFicha();
   }
@@ -745,8 +745,8 @@ class DevBuilderView extends DevBaseView {
     if (isPublished && runsEl) runsEl.textContent = this.flowData.run_count ?? 0;
 
     if (inputsPreview) {
-      if (this.isAutomatedFlow || this.inputSchema.length === 0) {
-        inputsPreview.innerHTML = '<p class="ficha-inputs-empty">Sin campos de entrada o flujo automatizado.</p>';
+      if (this.inputSchema.length === 0) {
+        inputsPreview.innerHTML = '<p class="ficha-inputs-empty">Sin campos de entrada.</p>';
       } else {
         inputsPreview.innerHTML = this.generateFormPreview();
       }
@@ -754,8 +754,8 @@ class DevBuilderView extends DevBaseView {
   }
 
   /**
-   * Adapta la interfaz según flow_category_type (manual vs automated).
-   * Automated: oculta pestaña Módulos (no son modulares), muestra bloque CRON; puede estar en catálogo; inputs se configuran al programar.
+   * Actualiza el estado visual del picker Manual / Automatizado.
+   * Los flujos automatizados usan la misma UI que los manuales (módulos, inputs, etc.).
    */
   updateFlowTypePicker(value) {
     const picker = this.querySelector('#flowTypePicker');
@@ -767,8 +767,7 @@ class DevBuilderView extends DevBaseView {
   }
 
   applyFlowTypeUI() {
-    const isAutomated = this.flowData.flow_category_type === 'automated';
-    this.isAutomatedFlow = isAutomated;
+    this.isAutomatedFlow = this.flowData.flow_category_type === 'automated';
 
     const main = this.querySelector('.builder-main');
     const componentsSidebar = this.querySelector('.builder-sidebar.builder-components');
@@ -781,55 +780,27 @@ class DevBuilderView extends DevBaseView {
     const uiShowInCatalog = this.querySelector('#uiShowInCatalog');
     const testFlowBtn = this.querySelector('#testFlowBtn');
     const tabModules = this.querySelector('.builder-tab[data-tab="technical"]');
-    const tabTechnicalContent = this.querySelector('#tabTechnical');
-    const activeTab = this.querySelector('.builder-tab.active');
 
-    if (isAutomated) {
-      this.flowData.token_cost = 0;
-      if (main) main.classList.add('builder-mode-automated');
-      if (componentsSidebar) componentsSidebar.classList.add('builder-sidebar-hidden');
-      if (canvasEmpty) canvasEmpty.style.display = 'none';
-      if (canvasFields) canvasFields.style.display = 'none';
-      if (canvasAutomated) canvasAutomated.style.display = 'flex';
-      if (technicalWebhook) technicalWebhook.style.display = 'none';
-      if (technicalAutomated) technicalAutomated.style.display = 'block';
-      if (tokenCostInput) {
-        tokenCostInput.value = 0;
-        tokenCostInput.min = 0;
-        tokenCostInput.max = 0;
-        tokenCostInput.disabled = true;
-      }
-      if (uiShowInCatalog) {
-        uiShowInCatalog.disabled = false;
-        uiShowInCatalog.checked = !!this.flowData.show_in_catalog;
-      }
-      if (testFlowBtn) testFlowBtn.style.display = 'none';
-      if (tabModules) {
-        tabModules.style.display = 'none';
-        if (activeTab && activeTab.dataset.tab === 'technical') this.switchTab('settings');
-      }
-      if (tabTechnicalContent) tabTechnicalContent.classList.remove('active');
-    } else {
-      if (main) main.classList.remove('builder-mode-automated');
-      if (componentsSidebar) componentsSidebar.classList.remove('builder-sidebar-hidden');
-      if (canvasEmpty) canvasEmpty.style.display = 'flex';
-      if (canvasAutomated) canvasAutomated.style.display = 'none';
-      if (canvasFields) canvasFields.style.display = (this.inputSchema.length > 0) ? 'block' : 'none';
-      if (technicalWebhook) technicalWebhook.style.display = 'block';
-      if (technicalAutomated) technicalAutomated.style.display = 'none';
-      if (tokenCostInput) {
-        tokenCostInput.min = 0;
-        tokenCostInput.max = 100;
-        tokenCostInput.disabled = false;
-        tokenCostInput.value = this.flowData.token_cost ?? 1;
-      }
-      if (uiShowInCatalog) {
-        uiShowInCatalog.disabled = false;
-        uiShowInCatalog.checked = !!this.flowData.show_in_catalog;
-      }
-      if (testFlowBtn) testFlowBtn.style.display = '';
-      if (tabModules) tabModules.style.display = '';
+    // Misma UI para flujos manuales y automatizados: módulos visibles, inputs editables, etc.
+    if (main) main.classList.remove('builder-mode-automated');
+    if (componentsSidebar) componentsSidebar.classList.remove('builder-sidebar-hidden');
+    if (canvasEmpty) canvasEmpty.style.display = 'flex';
+    if (canvasAutomated) canvasAutomated.style.display = 'none';
+    if (canvasFields) canvasFields.style.display = (this.inputSchema.length > 0) ? 'block' : 'none';
+    if (technicalWebhook) technicalWebhook.style.display = 'block';
+    if (technicalAutomated) technicalAutomated.style.display = 'none';
+    if (tokenCostInput) {
+      tokenCostInput.min = 0;
+      tokenCostInput.max = 100;
+      tokenCostInput.disabled = false;
+      tokenCostInput.value = this.flowData.token_cost ?? 1;
     }
+    if (uiShowInCatalog) {
+      uiShowInCatalog.disabled = false;
+      uiShowInCatalog.checked = !!this.flowData.show_in_catalog;
+    }
+    if (testFlowBtn) testFlowBtn.style.display = '';
+    if (tabModules) tabModules.style.display = '';
   }
 
   updateStatusBadge() {
