@@ -6,6 +6,7 @@
 const SIDEBAR_USER_CONFIG = {
   main: [
     { type: 'page', id: 'activity', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
+    { type: 'page', id: 'tasks', label: 'Task', icon: 'fa-clock', route: 'tasks' },
     {
       type: 'container',
       id: 'catalog',
@@ -25,8 +26,7 @@ const SIDEBAR_USER_CONFIG = {
         { label: 'Products', route: 'products' },
         { label: 'Services', route: 'servicios' },
         { label: 'Audiences', route: 'audiences' },
-        { label: 'Campaigns', route: 'campaigns' },
-        { label: 'Tareas', route: 'tasks' }
+        { label: 'Campaigns', route: 'campaigns' }
       ]
     }
   ],
