@@ -58,9 +58,8 @@ class DevBuilderView extends DevBaseView {
     // Templates de componentes disponibles
     this.componentTemplates = [];
     
-    // Categorías y subcategorías disponibles
+    // Categorías disponibles
     this.categories = [];
-    this.subcategories = [];
     
     // ID del flow_module que se está editando en Técnico (flow_technical_details se enlaza a este id)
     this.currentFlowModuleId = null;
@@ -115,36 +114,21 @@ class DevBuilderView extends DevBaseView {
 
         <!-- Panel central: contenido de pestañas -->
         <div class="builder-canvas-wrapper">
-          <!-- Tab 1: Configuración — grid: portada|nombre, descripción, url, técnico, versión|créditos|catálogo, categoría|subcategoría|tipo -->
+          <!-- Tab 1: Configuración (lo primero que ve el desarrollador; sin componentes ni propiedades) -->
           <div class="builder-tab-content active" id="tabSettings">
-            <div class="builder-settings-form builder-config-grid">
-              <div class="builder-config-row builder-config-row--portada-name">
-                <div class="settings-field builder-config-cell builder-config-cell--portada">
-                  <label for="flowImagePreview">Portada / media</label>
-                  <div class="flow-image-upload" id="flowImageUpload">
-                    <div class="image-preview image-preview--upload" id="flowImagePreview" title="Subir portada">
-                      <i class="ph ph-image"></i>
-                      <span>Subir portada</span>
-                    </div>
-                    <div class="image-actions">
-                      <button type="button" class="btn-small secondary" id="removeImageBtn" style="display: none;"><i class="ph ph-trash"></i> Eliminar</button>
-                    </div>
-                    <input type="file" id="flowImageInput" accept="image/*,video/*" style="display: none;">
-                  </div>
-                </div>
-                <div class="settings-field builder-config-cell builder-config-cell--name">
-                  <label for="flowNameConfig">Nombre del flujo *</label>
+            <div class="builder-settings-form builder-config-fullwidth">
+              <div class="settings-section">
+                <h4><i class="ph ph-identification-card"></i> Identidad del flujo</h4>
+                <div class="settings-field">
+                  <label for="flowNameConfig">Nombre público del flujo *</label>
                   <input type="text" id="flowNameConfig" placeholder="Ej: Generador de Reels Virales" maxlength="100">
                 </div>
-              </div>
-              <div class="builder-config-row builder-config-row--description">
-                <div class="settings-field builder-config-cell builder-config-cell--full">
-                  <label for="flowDescription">Descripción</label>
-                  <textarea id="flowDescription" placeholder="Describe qué hace este flujo..." rows="3"></textarea>
+                <div class="settings-field">
+                  <label for="flowTechnicalName">Nombre técnico</label>
+                  <input type="text" id="flowTechnicalName" placeholder="Ej: reels_viral_generator (solo referencia interna)">
+                  <span class="field-help">Referencia para desarrolladores y n8n. No se muestra a usuarios.</span>
                 </div>
-              </div>
-              <div class="builder-config-row builder-config-row--url">
-                <div class="settings-field builder-config-cell builder-config-cell--full">
+                <div class="settings-field">
                   <label for="flowUrlInput">URL del flujo</label>
                   <div class="flow-url-field" id="flowUrlWrap">
                     <input type="text" class="flow-url-input" id="flowUrlInput" placeholder="— Guarda el flujo para ver la URL">
@@ -152,52 +136,117 @@ class DevBuilderView extends DevBaseView {
                   </div>
                 </div>
               </div>
-              <div class="builder-config-row builder-config-row--technical-name">
-                <div class="settings-field builder-config-cell builder-config-cell--full">
-                  <label for="flowTechnicalName">Nombre técnico</label>
-                  <input type="text" id="flowTechnicalName" placeholder="Ej: reels_viral_generator (solo referencia interna)">
-                  <span class="field-help">Referencia para desarrolladores y n8n. No se muestra a usuarios.</span>
+              <div class="settings-section">
+                <h4><i class="ph ph-info"></i> Descripción e imagen</h4>
+                <div class="settings-field">
+                  <label for="flowDescription">Descripción</label>
+                  <textarea id="flowDescription" placeholder="Describe qué hace este flujo..." rows="3"></textarea>
+                </div>
+                <div class="flow-image-upload" id="flowImageUpload">
+                  <div class="image-preview image-preview--upload" id="flowImagePreview" title="Subir portada">
+                    <i class="ph ph-image"></i>
+                    <span>Subir portada</span>
+                  </div>
+                  <div class="image-actions">
+                    <button class="btn-small secondary" id="removeImageBtn" style="display: none;"><i class="ph ph-trash"></i> Eliminar</button>
+                  </div>
+                  <input type="file" id="flowImageInput" accept="image/*,video/*" style="display: none;">
                 </div>
               </div>
-              <div class="builder-config-row builder-config-row--version-credits-catalog">
-                <div class="settings-field builder-config-cell">
-                  <label for="flowVersion">Versión</label>
-                  <input type="text" id="flowVersion" value="1.0.0" placeholder="1.0.0">
+              <div class="settings-section">
+                <h4><i class="ph ph-sliders"></i> Versión, créditos y categoría</h4>
+                <div class="settings-row">
+                  <div class="settings-field">
+                    <label for="flowVersion">Versión</label>
+                    <input type="text" id="flowVersion" value="1.0.0" placeholder="1.0.0">
+                  </div>
+                  <div class="settings-field" id="settingsTokenCostWrap">
+                    <label for="flowTokenCost">Créditos (por ejecución)</label>
+                    <input type="number" id="flowTokenCost" min="0" max="100" value="1">
+                  </div>
                 </div>
-                <div class="settings-field builder-config-cell" id="settingsTokenCostWrap">
-                  <label for="flowTokenCost">Créditos (por ejecución)</label>
-                  <input type="number" id="flowTokenCost" min="0" max="100" value="1">
+                <div class="settings-row">
+                  <div class="settings-field">
+                    <label for="flowCategory">Categoría</label>
+                    <select id="flowCategory">
+                      <option value="">Seleccionar categoría...</option>
+                    </select>
+                  </div>
+                  <div class="settings-field">
+                    <label for="flowOutputType">Tipo de output</label>
+                    <select id="flowOutputType">
+                      <option value="text">Texto</option>
+                      <option value="image">Imagen</option>
+                      <option value="video">Video</option>
+                      <option value="audio">Audio</option>
+                      <option value="document">Documento</option>
+                      <option value="mixed">Mixto</option>
+                    </select>
+                  </div>
                 </div>
-                <div class="settings-field builder-config-cell builder-config-cell--catalog">
+                <div class="settings-row">
+                  <div class="settings-field">
+                    <label for="flowType">Tipo de flujo</label>
+                    <select id="flowType">
+                      <option value="manual">Manual</option>
+                      <option value="automated">Automatizado (sistema)</option>
+                    </select>
+                  </div>
+                  <div class="settings-toggles settings-catalog-visibility" id="settingsCatalogVisibility">
+                    <label class="toggle-field">
+                      <input type="checkbox" id="uiShowInCatalog">
+                      <span>Mostrar en catálogo</span>
+                    </label>
+                  </div>
+                </div>
+                <span class="field-help block">Los flujos automatizados pueden mostrarse en el catálogo; los usuarios podrán verlos y programarlos (schedule).</span>
+              </div>
+              <div class="settings-section">
+                <h4><i class="ph ph-layout"></i> Apariencia del formulario (inputs)</h4>
+                <div class="settings-row">
+                  <div class="settings-field">
+                    <label for="uiTheme">Tema</label>
+                    <select id="uiTheme">
+                      <option value="default">Default</option>
+                      <option value="minimal">Minimal</option>
+                      <option value="card">Card</option>
+                      <option value="wizard">Wizard</option>
+                    </select>
+                  </div>
+                  <div class="settings-field">
+                    <label for="uiColumns">Columnas</label>
+                    <select id="uiColumns">
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <option value="3">3</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="settings-toggles">
                   <label class="toggle-field">
-                    <input type="checkbox" id="uiShowInCatalog">
-                    <span>Mostrar en catálogo</span>
+                    <input type="checkbox" id="uiShowLabels" checked>
+                    <span>Mostrar labels</span>
+                  </label>
+                  <label class="toggle-field">
+                    <input type="checkbox" id="uiShowHelperText" checked>
+                    <span>Mostrar texto de ayuda</span>
                   </label>
                 </div>
-              </div>
-              <div class="builder-config-row builder-config-row--category-type">
-                <div class="settings-field builder-config-cell">
-                  <label for="flowCategory">Categoría</label>
-                  <select id="flowCategory">
-                    <option value="">Seleccionar categoría...</option>
-                  </select>
-                </div>
-                <div class="settings-field builder-config-cell">
-                  <label for="flowSubcategory">Subcategoría</label>
-                  <select id="flowSubcategory">
-                    <option value="">Seleccionar subcategoría...</option>
-                  </select>
-                </div>
-                <div class="settings-field builder-config-cell">
-                  <label for="flowTypePicker">Tipo de flujo</label>
-                  <input type="hidden" id="flowType" value="manual">
-                  <div class="flow-type-picker" id="flowTypePicker" role="listbox" aria-label="Tipo de flujo">
-                    <div class="flow-type-picker-option" data-value="manual" role="option">Manual</div>
-                    <div class="flow-type-picker-option" data-value="automated" role="option"><i class="ph ph-check"></i> Automatizado (sistema)</div>
+                <div class="settings-row">
+                  <div class="settings-field">
+                    <label for="uiSubmitText">Texto del botón</label>
+                    <input type="text" id="uiSubmitText" value="Generar" placeholder="Generar">
+                  </div>
+                  <div class="settings-field">
+                    <label for="uiSubmitPosition">Posición del botón</label>
+                    <select id="uiSubmitPosition">
+                      <option value="right">Derecha</option>
+                      <option value="center">Centro</option>
+                      <option value="full">Ancho completo</option>
+                    </select>
                   </div>
                 </div>
               </div>
-              <span class="field-help block">Los flujos automatizados no aparecen en la librería de usuarios.</span>
             </div>
           </div>
 
@@ -464,7 +513,6 @@ class DevBuilderView extends DevBaseView {
     await this.initSupabase();
     this.checkUrlParams();
     await this.loadCategories();
-    await this.loadSubcategories();
     await this.loadComponentTemplates();
 
     // Debounce para actualizar canvas/JSON/footer al editar propiedades (evita lag al escribir)
@@ -553,36 +601,6 @@ class DevBuilderView extends DevBaseView {
       option.value = cat.id;
       option.textContent = cat.name;
       if (this.flowData.category_id === cat.id) {
-        option.selected = true;
-      }
-      select.appendChild(option);
-    });
-  }
-
-  async loadSubcategories() {
-    if (!this.supabase) return;
-    try {
-      const { data, error } = await this.supabase
-        .from('content_subcategories')
-        .select('id, name, description')
-        .order('order_index', { ascending: true });
-      if (error) throw error;
-      this.subcategories = data || [];
-      this.renderSubcategorySelect();
-    } catch (err) {
-      console.error('Error loading subcategories:', err);
-    }
-  }
-
-  renderSubcategorySelect() {
-    const select = this.querySelector('#flowSubcategory');
-    if (!select) return;
-    select.innerHTML = '<option value="">Seleccionar subcategoría...</option>';
-    this.subcategories.forEach(sub => {
-      const option = document.createElement('option');
-      option.value = sub.id;
-      option.textContent = sub.name;
-      if (this.flowData.subcategory_id === sub.id) {
         option.selected = true;
       }
       select.appendChild(option);
@@ -754,26 +772,10 @@ class DevBuilderView extends DevBaseView {
   }
 
   /**
-   * Actualiza la apariencia del picker "Tipo de flujo" (Manual / Automatizado sistema).
-   * Marca la opción seleccionada con .is-selected para el estilo rojo + check.
-   */
-  updateFlowTypePicker(value) {
-    const picker = this.querySelector('#flowTypePicker');
-    if (!picker) return;
-    const v = value || this.flowData.flow_category_type || 'manual';
-    picker.querySelectorAll('.flow-type-picker-option').forEach((opt) => {
-      opt.classList.toggle('is-selected', opt.getAttribute('data-value') === v);
-      const check = opt.querySelector('.ph-check');
-      if (check) check.style.visibility = opt.classList.contains('is-selected') ? 'visible' : 'hidden';
-    });
-  }
-
-  /**
    * Adapta la interfaz según flow_category_type (manual vs automated).
-   * Modo Sistema: oculta componentes, muestra mensaje en canvas, webhooks → CRON, token cost 0, oculto catálogo.
+   * Automated: oculta pestaña Módulos (no son modulares), muestra bloque CRON; puede estar en catálogo; inputs se configuran al programar.
    */
   applyFlowTypeUI() {
-    this.updateFlowTypePicker(this.flowData.flow_category_type);
     const isAutomated = this.flowData.flow_category_type === 'automated';
     this.isAutomatedFlow = isAutomated;
 
@@ -787,10 +789,12 @@ class DevBuilderView extends DevBaseView {
     const tokenCostInput = this.querySelector('#flowTokenCost');
     const uiShowInCatalog = this.querySelector('#uiShowInCatalog');
     const testFlowBtn = this.querySelector('#testFlowBtn');
+    const tabModules = this.querySelector('.builder-tab[data-tab="technical"]');
+    const tabTechnicalContent = this.querySelector('#tabTechnical');
+    const activeTab = this.querySelector('.builder-tab.active');
 
     if (isAutomated) {
       this.flowData.token_cost = 0;
-      this.flowData.show_in_catalog = false;
       if (main) main.classList.add('builder-mode-automated');
       if (componentsSidebar) componentsSidebar.classList.add('builder-sidebar-hidden');
       if (canvasEmpty) canvasEmpty.style.display = 'none';
@@ -805,10 +809,15 @@ class DevBuilderView extends DevBaseView {
         tokenCostInput.disabled = true;
       }
       if (uiShowInCatalog) {
-        uiShowInCatalog.checked = false;
-        uiShowInCatalog.disabled = true;
+        uiShowInCatalog.disabled = false;
+        uiShowInCatalog.checked = !!this.flowData.show_in_catalog;
       }
       if (testFlowBtn) testFlowBtn.style.display = 'none';
+      if (tabModules) {
+        tabModules.style.display = 'none';
+        if (activeTab && activeTab.dataset.tab === 'technical') this.switchTab('settings');
+      }
+      if (tabTechnicalContent) tabTechnicalContent.classList.remove('active');
     } else {
       if (main) main.classList.remove('builder-mode-automated');
       if (componentsSidebar) componentsSidebar.classList.remove('builder-sidebar-hidden');
@@ -828,6 +837,7 @@ class DevBuilderView extends DevBaseView {
         uiShowInCatalog.checked = !!this.flowData.show_in_catalog;
       }
       if (testFlowBtn) testFlowBtn.style.display = '';
+      if (tabModules) tabModules.style.display = '';
     }
   }
 
@@ -1053,9 +1063,13 @@ class DevBuilderView extends DevBaseView {
     const fields = {
       flowDescription: (v) => this.flowData.description = v,
       flowCategory: (v) => this.flowData.category_id = v || null,
-      flowSubcategory: (v) => this.flowData.subcategory_id = v || null,
+      flowOutputType: (v) => this.flowData.output_type = v,
       flowTokenCost: (v) => this.flowData.token_cost = parseInt(v, 10) >= 0 ? parseInt(v, 10) : 1,
-      flowVersion: (v) => this.flowData.version = v
+      flowVersion: (v) => this.flowData.version = v,
+      uiTheme: (v) => this.uiLayoutConfig.theme = v,
+      uiColumns: (v) => this.uiLayoutConfig.columns = parseInt(v) || 1,
+      uiSubmitText: (v) => this.uiLayoutConfig.submitButtonText = v,
+      uiSubmitPosition: (v) => this.uiLayoutConfig.submitButtonPosition = v
     };
     
     Object.entries(fields).forEach(([id, setter]) => {
@@ -1072,39 +1086,41 @@ class DevBuilderView extends DevBaseView {
       }
     });
 
-    // Tipo de flujo: picker custom (Manual / Automatizado sistema) + input hidden para persistencia
-    const flowTypeInput = this.querySelector('#flowType');
-    const flowTypePicker = this.querySelector('#flowTypePicker');
-    if (flowTypePicker && flowTypeInput) {
-      flowTypePicker.querySelectorAll('.flow-type-picker-option').forEach((opt) => {
-        opt.addEventListener('click', () => {
-          const v = opt.getAttribute('data-value');
-          if (v === 'automated' && !this.isLead()) {
-            this.showNotification('Solo los Lead pueden crear o convertir flujos en automatizados.', 'warning');
-            return;
-          }
-          flowTypeInput.value = v;
-          flowTypeInput.dispatchEvent(new Event('change', { bubbles: true }));
-        });
-      });
-    }
-    if (flowTypeInput) {
-      flowTypeInput.addEventListener('change', (e) => {
+    // Tipo de flujo: solo Lead puede cambiar a "automated"
+    const flowTypeSelect = this.querySelector('#flowType');
+    if (flowTypeSelect) {
+      flowTypeSelect.addEventListener('change', (e) => {
         const v = e.target.value;
         if (v === 'automated' && !this.isLead()) {
           e.target.value = this.flowData.flow_category_type || 'manual';
           this.showNotification('Solo los Lead pueden crear o convertir flujos en automatizados.', 'warning');
-          this.updateFlowTypePicker(e.target.value);
           return;
         }
         this.flowData.flow_category_type = v;
         this.hasUnsavedChanges = true;
-        this.updateFlowTypePicker(v);
         this.applyFlowTypeUI();
         this.renderFooter();
       });
     }
     
+    // Checkboxes
+    const uiShowLabels = this.querySelector('#uiShowLabels');
+    const uiShowHelperText = this.querySelector('#uiShowHelperText');
+    
+    if (uiShowLabels) {
+      uiShowLabels.addEventListener('change', (e) => {
+        this.uiLayoutConfig.showLabels = e.target.checked;
+        this.hasUnsavedChanges = true;
+      });
+    }
+    
+    if (uiShowHelperText) {
+      uiShowHelperText.addEventListener('change', (e) => {
+        this.uiLayoutConfig.showHelperText = e.target.checked;
+        this.hasUnsavedChanges = true;
+      });
+    }
+
     const uiShowInCatalog = this.querySelector('#uiShowInCatalog');
     if (uiShowInCatalog) {
       uiShowInCatalog.addEventListener('change', (e) => {

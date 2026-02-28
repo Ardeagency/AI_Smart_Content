@@ -324,8 +324,7 @@ class FlowCatalogView extends BaseView {
 
   /**
    * Carga flujos del catálogo. Filtra por category_id o subcategory_id (content_flows)
-   * según la vista activa. En home, intenta primero con show_in_catalog=true; si no
-   * hay resultados, vuelve a cargar sin ese filtro para mostrar flujos activos manuales.
+   * según la vista activa. Incluye flujos manuales y automatizados con show_in_catalog=true.
    */
   async loadFlows() {
     if (!this.supabase) return;
@@ -334,8 +333,7 @@ class FlowCatalogView extends BaseView {
         let q = this.supabase
           .from('content_flows')
           .select('id, name, description, token_cost, output_type, flow_image_url, category_id, subcategory_id, flow_category_type, likes_count, saves_count, run_count, created_at, status')
-          .eq('is_active', true)
-          .eq('flow_category_type', 'manual');
+          .eq('is_active', true);
         if (this.selectedSubcategoryId) q = q.eq('subcategory_id', this.selectedSubcategoryId);
         else if (this.selectedCategoryId) q = q.eq('category_id', this.selectedCategoryId);
         return q;
@@ -641,7 +639,7 @@ class FlowCatalogView extends BaseView {
     const badges = [];
     if (this.isNew(flow)) badges.push('<span class="flow-card-badge flow-card-badge--new">Nuevo</span>');
     if (this.isTrending(flow)) badges.push('<span class="flow-card-badge flow-card-badge--trending">Trending</span>');
-    if ((flow.flow_category_type || 'manual') === 'automated') badges.push('<span class="flow-card-badge flow-card-badge--auto">Automatizado (sistema)</span>');
+    if ((flow.flow_category_type || 'manual') === 'automated') badges.push('<span class="flow-card-badge flow-card-badge--auto">Automated</span>');
     const img = flow.flow_image_url
       ? `<img src="${this.escapeHtml(flow.flow_image_url)}" alt="${name}" class="flow-card-img" loading="lazy">`
       : `<div class="flow-card-placeholder"><i class="fas ${this.getOutputTypeIcon(flow.output_type)}"></i></div>`;

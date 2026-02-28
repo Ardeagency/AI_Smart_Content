@@ -173,8 +173,8 @@ class StudioView extends BaseView {
   }
 
   /**
-   * Carga flujos manuales con su primer módulo (input_schema y webhooks viven en flow_modules).
-   * Schema actual: content_flows no tiene input_schema ni webhook_url; flow_modules sí.
+   * Carga flujos (manuales y automatizados) con su primer módulo si existe (input_schema y webhooks en flow_modules).
+   * Los flujos automatizados no son modulares y pueden no tener flow_modules.
    */
   async loadFlows() {
     if (!this.supabase) return;
@@ -188,10 +188,10 @@ class StudioView extends BaseView {
           token_cost,
           output_type,
           execution_mode,
+          flow_category_type,
           flow_modules ( step_order, input_schema, webhook_url_test, webhook_url_prod )
         `)
-        .eq('is_active', true)
-        .eq('flow_category_type', 'manual');
+        .eq('is_active', true);
       if (!error && data) {
         this.flows = data.map(f => this.buildFlowFromFirstModule(f));
       } else {
@@ -209,9 +209,9 @@ class StudioView extends BaseView {
    */
   buildFlowFromFirstModule(flow) {
     const modules = (flow.flow_modules || []).slice().sort((a, b) => (a.step_order ?? 0) - (b.step_order ?? 0));
-    const first = modules[0];
+    const first = modules[0] || null;
     const Service = (typeof window !== 'undefined' && window.FlowWebhookService) ? window.FlowWebhookService : null;
-    const webhookUrlProd = Service ? Service.getWebhookUrl(first, 'prod') : (first?.webhook_url_prod || first?.webhook_url_test || null);
+    const webhookUrlProd = first && Service ? Service.getWebhookUrl(first, 'prod') : (first?.webhook_url_prod || first?.webhook_url_test || null);
     return {
       id: flow.id,
       name: flow.name,
@@ -219,6 +219,7 @@ class StudioView extends BaseView {
       token_cost: flow.token_cost,
       output_type: flow.output_type,
       execution_mode: flow.execution_mode || 'single_step',
+      flow_category_type: flow.flow_category_type || 'manual',
       input_schema: first?.input_schema ?? {},
       webhook_url: webhookUrlProd,
       webhook_url_test: first?.webhook_url_test,
