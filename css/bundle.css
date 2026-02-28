@@ -1192,8 +1192,13 @@ body.sidebar-collapsed .main-header,
    NAVEGACIÓN LATERAL
    ========================================= */
 
+/* Sidebar colapsado: glass-black para legibilidad sobre fondos claros/imágenes blancas */
 .side-navigation.collapsed {
     width: var(--nav-width-collapsed);
+    background: var(--glass-black-bg);
+    border-right-color: var(--glass-black-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
 }
 
 /* Centrar todos los iconos en collapsed (consumidor y desarrollador) */
