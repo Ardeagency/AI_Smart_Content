@@ -19,7 +19,7 @@
     --brillo-hover: var(--brand-primary-brillo, rgba(255, 255, 255, 0.08));
     --brillo-active: var(--brand-primary-brillo-strong, rgba(255, 255, 255, 0.12));
     --bg-hover: var(--brillo-hover);
-    /* Acento interactivo: BrandsView inyecta --brand-primary desde brand_colors; resaltados lo usan */
+    /* Acento: BrandsView inyecta --brand-primary y --brand-gradient-dynamic desde brand_colors; resaltados los usan */
     --accent-brand: var(--brand-primary, var(--warm-1));
     --accent-brand-soft: var(--brand-primary-brillo, var(--warm-10));
     --icon-button-active: var(--brand-primary, var(--icon-button));
@@ -1226,7 +1226,7 @@ body.sidebar-collapsed .main-header,
     transform: translateY(-50%);
     width: 3px;
     height: 20px;
-    background: var(--accent-brand);
+    background: var(--brand-gradient-dynamic-vertical, var(--accent-brand));
     border-radius: 0 2px 2px 0;
     opacity: 0.9;
 }
@@ -1941,7 +1941,7 @@ body.sidebar-collapsed .main-header,
     top: 0;
     bottom: 0;
     width: 2px;
-    background: var(--accent-brand);
+    background: var(--brand-gradient-dynamic-vertical, var(--accent-brand));
     border-radius: 0 2px 2px 0;
 }
 
@@ -1982,7 +1982,7 @@ body.sidebar-collapsed .main-header,
 }
 
 .nav-badge {
-    background: var(--accent-brand);
+    background: var(--brand-gradient-dynamic, var(--accent-brand));
     color: var(--bg-primary);
     font-size: 0.7rem;
     font-weight: 600;
@@ -2063,7 +2063,7 @@ body.sidebar-collapsed .main-header,
     top: 0;
     bottom: 0;
     width: 2px;
-    background: var(--accent-brand);
+    background: var(--brand-gradient-dynamic-vertical, var(--accent-brand));
     border-radius: 0 2px 2px 0;
 }
 
@@ -2140,7 +2140,7 @@ body.sidebar-collapsed .main-header,
     top: 0;
     bottom: 0;
     width: 2px;
-    background: var(--accent-brand);
+    background: var(--brand-gradient-dynamic-vertical, var(--accent-brand));
     border-radius: 0 2px 2px 0;
 }
 
@@ -3400,7 +3400,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     width: 100%;
     max-width: 100%;
     border-radius: 3px;
-    background: var(--accent-brand);
+    background: var(--brand-gradient-dynamic, var(--accent-brand));
 }
 
 .side-navigation.collapsed .nav-org-credits {
@@ -4194,7 +4194,9 @@ svg.signin-brand-logo {
 /* ============================================
    FONDO CON GRADIENTE
    Cuando hay colores de marca (brand_colors), BrandsView aplica el mismo
-   degradado inteligente que HogarView (organización) vía inline style.
+   degradado inteligente vía inline style y además setea en :root:
+   --brand-gradient-dynamic (135deg) y --brand-gradient-dynamic-vertical (180deg)
+   para que resaltados, barras activas, créditos y selecciones en toda la app los usen.
    Sin colores, se usa este degradado estático (fallback).
    ============================================ */
 .brand-dashboard-background {
@@ -4788,7 +4790,7 @@ h1.brand-name-large[contenteditable="true"]:hover,
 }
 
 .card-content-expanded::-webkit-scrollbar-thumb:hover {
-    background: var(--accent-brand);
+    background: var(--brand-gradient-dynamic, var(--accent-brand));
 }
 
 /* INFO: solo el header sin padding/borde extra (no afectar .card-content-expanded) */

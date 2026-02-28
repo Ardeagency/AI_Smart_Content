@@ -518,15 +518,17 @@ class BrandsView extends BaseView {
   /**
    * Construye un degradado que usa TODOS los colores de la marca (hasta 4),
    * con transparencia suave para que se mezclen bien y no se vean bloques opacos.
+   * @param {string[]} hexes - Array de hex (#rrggbb)
+   * @param {number} [angle=135] - Ángulo del gradiente en grados (135 = fondo, 180 = vertical para barras nav)
    */
-  buildBrandGradientCss(hexes) {
+  buildBrandGradientCss(hexes, angle = 135) {
     if (!hexes || hexes.length === 0) return '';
-    const alpha = 0.88;
+    const alpha = angle === 180 ? 1 : 0.88; // barras nav opacas; fondo algo transparente
     const stops = hexes.map((hex, i) => {
       const pct = hexes.length === 1 ? 100 : (i / (hexes.length - 1)) * 100;
       return `${this.hexToRgba(hex, alpha)} ${Math.round(pct)}%`;
     });
-    return `linear-gradient(135deg, ${stops.join(', ')})`;
+    return `linear-gradient(${angle}deg, ${stops.join(', ')})`;
   }
 
   /** Aplica el degradado de colores de marca al fondo (skeleton hace crossfade a esta capa). Sin colores usa neutro. */
@@ -540,14 +542,19 @@ class BrandsView extends BaseView {
     this._cachedGradientKey = colorsKey;
 
     const neutralBg = 'linear-gradient(145deg, #2d2a28 0%, #1f1d1b 50%, #252220 100%)';
+    const root = document.documentElement;
     if (hexes.length) {
       const brandGradient = this.buildBrandGradientCss(hexes);
       gradientEl.style.background = `${brandGradient}, ${neutralBg}`;
       gradientEl.setAttribute('data-brand-gradient', 'true');
+      root.style.setProperty('--brand-gradient-dynamic', brandGradient);
+      root.style.setProperty('--brand-gradient-dynamic-vertical', this.buildBrandGradientCss(hexes, 180));
       this.applyBrandPrimaryBrillo();
     } else {
       gradientEl.style.background = neutralBg;
       gradientEl.removeAttribute('data-brand-gradient');
+      root.style.removeProperty('--brand-gradient-dynamic');
+      root.style.removeProperty('--brand-gradient-dynamic-vertical');
       this.resetBrandPrimaryBrillo();
     }
   }
@@ -583,6 +590,8 @@ class BrandsView extends BaseView {
     root.style.removeProperty('--brand-primary-rgb');
     root.style.removeProperty('--brand-primary-brillo');
     root.style.removeProperty('--brand-primary-brillo-strong');
+    root.style.removeProperty('--brand-gradient-dynamic');
+    root.style.removeProperty('--brand-gradient-dynamic-vertical');
   }
 
   // ============================================
