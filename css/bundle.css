@@ -3475,6 +3475,19 @@ body.sidebar-collapsed .app-header.with-sidebar {
     min-height: 100vh;
     min-width: 100vw;
     opacity: 0;
+    overflow: hidden;
+}
+
+.landing-background-video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    transform: translate(-50%, -50%);
+    object-fit: cover;
 }
 
 body.entrance-done .landing-background {
