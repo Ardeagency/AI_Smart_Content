@@ -3736,8 +3736,7 @@ body.entrance-done .signin-container {
     box-sizing: border-box;
 }
 
-/* Card del login: negro sin borde, sombra/luz con degradado del loader */
-/* Card login: negra sin degradados; solo borde con inner glow */
+/* Card del login: estilo glass unificado (misma plataforma) */
 .signin-container .signin-card {
     width: 360px;
     max-width: calc(100vw - 2rem);
@@ -3748,30 +3747,17 @@ body.entrance-done .signin-container {
     flex-direction: column;
     gap: var(--spacing-lg);
     align-items: center;
-    background: linear-gradient(#000, #000) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
-    border: 1px solid transparent;
-    border-radius: 20px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
     padding: 2rem;
     position: relative;
-    box-shadow: inset 0 0 24px -4px rgba(255, 255, 255, 0.06);
 }
 
 .signin-container .signin-card::before {
-    content: '';
-    position: absolute;
-    inset: -40px;
-    z-index: -1;
-    border-radius: 44px;
-    /* Solo cyan #00FFFF, blue #0000FF, violet #6600FF, magenta #AA00AA; muy distorsionado */
-    background:
-        radial-gradient(ellipse 55% 90% at 15% 15%, rgba(0, 255, 255, 0.55) 0%, transparent 50%),
-        radial-gradient(ellipse 90% 45% at 85% 25%, rgba(0, 0, 255, 0.5) 0%, transparent 55%),
-        radial-gradient(ellipse 70% 70% at 75% 85%, rgba(102, 0, 255, 0.55) 0%, transparent 50%),
-        radial-gradient(ellipse 80% 50% at 25% 80%, rgba(170, 0, 170, 0.5) 0%, transparent 55%),
-        radial-gradient(ellipse 50% 110% at 50% 40%, rgba(0, 255, 255, 0.35) 0%, transparent 60%),
-        radial-gradient(ellipse 65% 65% at 60% 10%, rgba(102, 0, 255, 0.4) 0%, transparent 55%);
-    filter: blur(48px);
-    opacity: 0.75;
+    display: none;
 }
 
 /* Cambiar contraseña: reutiliza form-main-content y form-org-card */
@@ -3798,29 +3784,17 @@ body.entrance-done .signin-container {
     flex-direction: column;
     gap: var(--spacing-lg);
     align-items: center;
-    background: linear-gradient(#000, #000) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
-    border: 1px solid transparent;
-    border-radius: 20px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
     padding: 2rem;
     position: relative;
-    box-shadow: inset 0 0 24px -4px rgba(255, 255, 255, 0.06);
 }
 
 .signin-container .form-org-card.signin-card::before {
-    content: '';
-    position: absolute;
-    inset: -40px;
-    z-index: -1;
-    border-radius: 44px;
-    background:
-        radial-gradient(ellipse 55% 90% at 15% 15%, rgba(0, 255, 255, 0.55) 0%, transparent 50%),
-        radial-gradient(ellipse 90% 45% at 85% 25%, rgba(0, 0, 255, 0.5) 0%, transparent 55%),
-        radial-gradient(ellipse 70% 70% at 75% 85%, rgba(102, 0, 255, 0.55) 0%, transparent 50%),
-        radial-gradient(ellipse 80% 50% at 25% 80%, rgba(170, 0, 170, 0.5) 0%, transparent 55%),
-        radial-gradient(ellipse 50% 110% at 50% 40%, rgba(0, 255, 255, 0.35) 0%, transparent 60%),
-        radial-gradient(ellipse 65% 65% at 60% 10%, rgba(102, 0, 255, 0.4) 0%, transparent 55%);
-    filter: blur(48px);
-    opacity: 0.75;
+    display: none;
 }
 
 .signin-brand {
@@ -3894,7 +3868,7 @@ svg.signin-brand-logo {
 
 .signin-container .auth-state.active { display: flex; }
 
-/* Inputs login: negros sin degradados; solo borde con inner glow */
+/* Inputs login: estilo glass unificado */
 .signin-container .form-input,
 .signin-container input[type="text"],
 .signin-container input[type="email"],
@@ -3902,15 +3876,16 @@ svg.signin-brand-logo {
     width: 100%;
     max-width: 100%;
     padding: 0.85rem 1rem;
-    background: linear-gradient(#000, #000) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
-    border: 1px solid transparent;
-    border-radius: var(--border-radius);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
     color: var(--text-primary);
     font-size: var(--font-size-md);
     font-family: inherit;
     line-height: 1.4;
     box-sizing: border-box;
-    box-shadow: inset 0 0 14px -4px rgba(255, 255, 255, 0.05);
 }
 
 .signin-container .form-input::placeholder,
@@ -3925,12 +3900,12 @@ svg.signin-brand-logo {
     box-shadow: 0 0 0 2px var(--accent-brand-soft);
 }
 
-/* Botones: mismo estilo que landing (.auth-btn) */
+/* Botones: estilo glass unificado (misma plataforma) */
 .signin-container .btn {
     width: 100%;
     max-width: 100%;
-    padding: 0.625rem 1.5rem;
-    border-radius: var(--radius-sm);
+    padding: var(--glass-padding);
+    border-radius: var(--glass-radius);
     font-weight: 600;
     font-size: 0.9rem;
     cursor: pointer;
@@ -3939,17 +3914,17 @@ svg.signin-brand-logo {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-}
-
-.signin-container .btn-primary {
-    background: var(--color-white);
-    color: var(--text-black);
-    border: none;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    color: var(--text-primary);
 }
 
 .signin-container .btn-primary:hover:not(:disabled) {
-    background: var(--bg-light-gray);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--glass-border);
+    color: var(--text-primary);
 }
 
 .signin-container .btn:disabled {
@@ -4005,20 +3980,24 @@ svg.signin-brand-logo {
     padding: 0 0.25rem;
 }
 
-/* Botón Google: negro sin degradados; solo borde con inner glow */
+/* Botón Google: estilo glass unificado */
 .signin-google-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.75rem;
-    background: linear-gradient(#000, #000) padding-box, linear-gradient(to bottom, #000 0%, #fff 100%) border-box;
-    border: 1px solid transparent;
-    color: var(--color-white);
-    box-shadow: inset 0 0 14px -4px rgba(255, 255, 255, 0.05);
+    width: 100%;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
+    color: var(--text-primary);
 }
 
 .signin-google-btn:hover:not(:disabled) {
-    box-shadow: inset 0 0 18px -4px rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--glass-border);
 }
 
 .signin-google-icon {
