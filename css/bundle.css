@@ -1,12 +1,11 @@
 /* ============================================================
    AI Smart Content — CSS Bundle (estilo unificado)
-   Design glass unificado: dropdowns, tooltips, botones, cards y modales
-   usan --glass-bg, --glass-border, --glass-radius, --glass-blur, --glass-padding.
+   Efecto glass: 3 variantes — .glass (original), .glass-black, .glass-white.
+   Variables: --glass-* (original), --glass-black-bg/border, --glass-white-bg/border.
+   Comparten --glass-radius, --glass-blur, --glass-padding.
    — Botones: .btn, .btn-primary, .btn-secondary, .btn-icon (glass).
    — Cards: .card, .brand-card (glass).
-   — Dropdowns: .user-dropdown, .header-user-dropdown, .nav-org-dropdown,
-     .nav-profile-dropdown, .nav-flyout, .living-date-dropdown (glass).
-   — Modales: .modal-content y variantes (glass).
+   — Dropdowns, tooltips, modales (glass). Usar glass-black o glass-white si el fondo pide más contraste.
    ============================================================ */
 
 /* ========== DESIGN SYSTEM V2 — Tokens ========== */
@@ -101,14 +100,22 @@
     --radius-md: 12px;
     --radius-lg: 16px;
     --radius-pill: 9999px;
-    /* ========== ÚNICO ESTILO GLASS DE LA PLATAFORMA ==========
-       Usar solo estas variables para efecto glass (cards, dropdowns, botones, modales).
-       No definir blur/background/border glass en otros sitios. */
+    /* ========== ESTILOS GLASS DE LA PLATAFORMA (3 variantes) ==========
+       glass = original muy translúcido
+       glass-black = versión oscura (fondos claros detrás → mejor contraste para texto)
+       glass-white = versión más blanca (fondos oscuros detrás → texto más notorio)
+       Todas comparten --glass-radius, --glass-blur, --glass-padding. */
     --glass-bg: rgba(255, 255, 255, 0.05);
     --glass-border: rgba(255, 255, 255, 0.1);
     --glass-radius: 14px;
     --glass-blur: blur(7px);
     --glass-padding: 8px 24px;
+    /* glass-black: panel más oscuro para legibilidad sobre fondos claros */
+    --glass-black-bg: rgba(0, 0, 0, 0.45);
+    --glass-black-border: rgba(255, 255, 255, 0.06);
+    /* glass-white: panel más claro para legibilidad sobre fondos oscuros */
+    --glass-white-bg: rgba(255, 255, 255, 0.14);
+    --glass-white-border: rgba(255, 255, 255, 0.22);
     /* Blur para fondos de overlay (modales, backdrops); distinto del glass de UI */
     --overlay-blur: blur(6px);
     --shadow-card: 0 4px 16px rgba(32, 29, 38, 0.5);
@@ -545,10 +552,24 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
 .card-body { flex: 1; }
 .card-footer { display: flex; align-items: center; gap: var(--spacing-sm); margin-top: var(--spacing-md); padding-top: var(--spacing-md); border-top: 1px solid var(--glass-border); }
 
-/* Clase utilitaria: único estilo glass (usar esta clase o las variables --glass-*) */
+/* Clases utilitarias glass: 3 variantes según contraste necesario */
 .glass {
     background: var(--glass-bg);
     border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
+}
+.glass-black {
+    background: var(--glass-black-bg);
+    border: 1px solid var(--glass-black-border);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
+}
+.glass-white {
+    background: var(--glass-white-bg);
+    border: 1px solid var(--glass-white-border);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border-radius: var(--glass-radius);
