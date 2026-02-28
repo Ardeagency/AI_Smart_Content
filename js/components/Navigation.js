@@ -142,11 +142,24 @@ class Navigation {
   }
 
   /**
+   * Formatea créditos para mostrar: cantidad exacta sin redondear hacia arriba (ej. 1999 → "1.9K", no "2.0K").
+   */
+  _formatCreditsDisplay(n) {
+    const credits = Number(n) || 0;
+    if (credits >= 1000) {
+      return (Math.floor(credits / 100) / 10).toFixed(1) + 'K';
+    }
+    return String(credits);
+  }
+
+  /**
    * Lee créditos desde la tabla organization_credits (BD) y actualiza el DOM del sidebar.
    * Siempre hace una petición a la BD; no usa valor en memoria.
+   * @param {string|null} [organizationId] - Si se pasa (ej. desde Studio), se usa esta org para la consulta.
    */
-  async loadCreditsFromDb() {
-    if (!this.currentOrgId) return;
+  async loadCreditsFromDb(organizationId) {
+    const orgId = organizationId || this.currentOrgId;
+    if (!orgId) return;
     const supabase = await this.getSupabase();
     if (!supabase) return;
     const tokensEl = document.getElementById('navTokensValue');
@@ -157,7 +170,7 @@ class Navigation {
       const { data, error } = await supabase
         .from('organization_credits')
         .select('credits_available, credits_total')
-        .eq('organization_id', this.currentOrgId)
+        .eq('organization_id', orgId)
         .maybeSingle();
       if (error) {
         if (tokensEl) tokensEl.textContent = '—';
@@ -167,13 +180,13 @@ class Navigation {
       const available = data != null ? (data.credits_available ?? 0) : 0;
       const total = data != null ? (data.credits_total ?? 0) : 0;
       if (tokensEl) {
-        tokensEl.textContent = available >= 1000 ? `${(available / 1000).toFixed(1)}K` : String(available);
+        tokensEl.textContent = this._formatCreditsDisplay(available);
       }
       if (barFill) {
         const pct = total > 0 ? Math.min(100, Math.round((available / total) * 100)) : 0;
         barFill.style.width = `${pct}%`;
       }
-      if (this._orgCache && this._orgCacheId === this.currentOrgId) {
+      if (this._orgCache && this._orgCacheId === orgId) {
         this._orgCache.credits = available;
         this._orgCache.credits_total = total;
       }
@@ -1309,7 +1322,7 @@ class Navigation {
     if (typeEl) typeEl.textContent = this._orgCache.plan || '';
     const credits = this._orgCache.credits != null ? this._orgCache.credits : 0;
     if (tokensEl) {
-      tokensEl.textContent = credits >= 1000 ? `${(credits / 1000).toFixed(1)}K` : String(credits);
+      tokensEl.textContent = this._formatCreditsDisplay(credits);
     }
     if (barFill) {
       const total = this._orgCache.credits_total != null && this._orgCache.credits_total > 0 ? this._orgCache.credits_total : 1;

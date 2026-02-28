@@ -941,6 +941,9 @@ class StudioView extends BaseView {
         this.credits.available += cost;
         this.updateCreditsDisplay();
         await this.loadCredits();
+        if (window.appNavigation && typeof window.appNavigation.loadCreditsFromDb === 'function') {
+          await window.appNavigation.loadCreditsFromDb(this.organizationId);
+        }
         const detail = res.error || res.statusText || `Código ${res.status}`;
         if (res.status === 400) {
           this._notify('Solicitud incorrecta: ' + detail + '. Revisa los datos del formulario.');
@@ -964,6 +967,9 @@ class StudioView extends BaseView {
 
       await this.loadCredits();
       this.updateCreditsDisplay();
+      if (window.appNavigation && typeof window.appNavigation.loadCreditsFromDb === 'function') {
+        await window.appNavigation.loadCreditsFromDb(this.organizationId);
+      }
       this._notify('Producción enviada correctamente.');
     } catch (e) {
       if (creditsDeducted && runId) {
@@ -971,6 +977,9 @@ class StudioView extends BaseView {
         this.credits.available += cost;
         this.updateCreditsDisplay();
         await this.loadCredits();
+        if (window.appNavigation && typeof window.appNavigation.loadCreditsFromDb === 'function') {
+          await window.appNavigation.loadCreditsFromDb(this.organizationId);
+        }
       }
       const msg = this._messageForProducirError(e);
       console.error('Studio producir:', e);
