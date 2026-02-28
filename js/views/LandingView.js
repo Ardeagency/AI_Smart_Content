@@ -13,8 +13,9 @@ class LandingView extends BaseView {
   }
 
   async init() {
-    // Forzar reproducción del video de fondo (algunos navegadores no respetan autoplay sin interacción)
-    const video = this.container.querySelector('.landing-background-video');
+    // Forzar reproducción del video de fondo (está en #landing-background-wrap en index.html)
+    const wrap = document.getElementById('landing-background-wrap');
+    const video = wrap ? wrap.querySelector('.landing-background-video') : null;
     if (video) {
       video.muted = true;
       video.playsInline = true;

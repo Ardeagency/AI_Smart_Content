@@ -225,6 +225,13 @@ class Router {
 
       if (!ViewClass || typeof ViewClass !== 'function') return;
 
+      // Mostrar/ocultar video de fondo de la landing (está en index.html, fuera de #app-container)
+      if (path === '/') {
+        document.body.classList.add('route-landing');
+      } else {
+        document.body.classList.remove('route-landing');
+      }
+
       this.currentView = new ViewClass();
       this.currentRoute = path;
       if (Object.keys(routeParams).length > 0) {
