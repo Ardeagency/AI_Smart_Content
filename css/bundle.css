@@ -583,6 +583,8 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
     box-sizing: border-box;
 }
 body.entrance-active #app-container { opacity: 0; visibility: hidden; pointer-events: none; }
+/* En la landing el video está detrás; el contenedor debe ser transparente para que se vea */
+body.route-landing #app-container { background: transparent; }
 #app-container > main, #app-container > div { max-width: 100%; overflow-x: hidden; box-sizing: border-box; min-width: 0; }
 #app-container > main {
     padding-top: 100px;
