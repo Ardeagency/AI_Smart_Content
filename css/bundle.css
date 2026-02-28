@@ -5125,7 +5125,12 @@ h1.brand-name-large[contenteditable="true"]:hover,
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border-radius: var(--glass-radius);
-    z-index: 50;
+    z-index: var(--z-dropdown);
+}
+
+/* Cuando el dropdown de tipografía está abierto, la card debe quedar por encima de "Archivos de identidad" */
+.brand-card:has(.typography-dropdown[aria-expanded="true"]) {
+    z-index: 20;
 }
 
 .typography-dropdown-option {
