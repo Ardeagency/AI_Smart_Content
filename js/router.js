@@ -161,12 +161,19 @@ class Router {
         window.currentOrgName = null;
       }
 
-      // Tema de marca para toda la org: resaltados en production, products, flows, identity, settings
+      // Tema de marca: solo 1 vez al entrar a la org (evita flasheo al navegar entre production, products, etc.)
       if (window.OrgBrandTheme) {
+        const appliedId = window._orgBrandThemeAppliedId;
         if (window.currentOrgId) {
-          window.OrgBrandTheme.applyOrgBrandTheme(window.currentOrgId);
+          if (appliedId !== window.currentOrgId) {
+            window._orgBrandThemeAppliedId = window.currentOrgId;
+            window.OrgBrandTheme.applyOrgBrandTheme(window.currentOrgId);
+          }
         } else {
-          window.OrgBrandTheme.clearOrgBrandTheme();
+          if (appliedId != null) {
+            window._orgBrandThemeAppliedId = null;
+            window.OrgBrandTheme.clearOrgBrandTheme();
+          }
         }
       }
 
