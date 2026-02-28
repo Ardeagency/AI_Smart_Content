@@ -3,11 +3,14 @@
         <div class="products-container">
             <!-- Main Content -->
             <div class="products-main">
-                <!-- Page Header -->
+                <!-- Page Header: filtros tipo Controls (segmentados por tipo_producto) -->
                 <div class="page-header">
                     <div class="page-header-top">
-                        <div id="categoryTabs" class="category-tabs">
-                            <!-- Tabs will be inserted here by JavaScript -->
+                        <div class="products-controls">
+                            <h3 class="products-controls-title">Tipo de producto</h3>
+                            <div id="categoryTabs" class="products-controls-segments" role="group" aria-label="Filtrar por tipo de producto">
+                                <!-- Segmentos (tipo_producto) insertados por JavaScript -->
+                            </div>
                         </div>
                         <button class="btn-primary btn-add-product" id="addProductBtn">
                             <i class="fas fa-plus"></i>

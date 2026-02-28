@@ -9542,9 +9542,114 @@ body.production-filters-in-header .living-container > .living-history-section {
     gap: 1rem;
 }
 
-.page-header-top .category-tabs {
+.page-header-top .category-tabs,
+.page-header-top .products-controls-segments {
     flex: 1;
     min-width: 0;
+}
+
+/* ============================================
+   PRODUCTS CONTROLS (estilo segmentos tipo Production)
+   ============================================ */
+.products-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+    min-width: 0;
+}
+
+.products-controls-title {
+    margin: 0;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+}
+
+.products-controls-segments {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    background: #f5f4ef;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 999px;
+    padding: 0;
+    gap: 0;
+    overflow: hidden;
+    width: auto;
+    max-width: 100%;
+}
+
+.products-control-segment {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    color: #6b7280;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    white-space: nowrap;
+}
+
+.products-controls-segments .products-control-segment:first-child {
+    border-radius: 999px 0 0 999px;
+}
+
+.products-controls-segments .products-control-segment:last-child {
+    border-radius: 0 999px 999px 0;
+}
+
+.products-controls-segments .products-control-segment:only-child {
+    border-radius: 999px;
+}
+
+.products-control-segment:hover:not(.active) {
+    background: rgba(0, 0, 0, 0.06);
+    color: var(--text-primary);
+}
+
+.products-control-segment.active {
+    background: #4f46e5;
+    color: #fff;
+    font-weight: 600;
+}
+
+.products-control-segment.active:hover {
+    background: #4338ca;
+    color: #fff;
+}
+
+.products-control-segment .segment-label {
+    line-height: 1.2;
+}
+
+.products-control-segment .segment-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    padding: 0 0.35rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.products-control-segment:not(.active) .segment-badge {
+    background: rgba(0, 0, 0, 0.08);
+    color: var(--text-secondary);
+}
+
+.products-control-segment.active .segment-badge {
+    background: rgba(255, 255, 255, 0.25);
+    color: #fff;
 }
 
 .page-header .btn-add-product {

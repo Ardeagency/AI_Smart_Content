@@ -368,61 +368,67 @@ if (typeof window.ProductsManager === 'undefined') {
         // Los tabs se renderizarán después de cargar productos
     }
 
+    /**
+     * Cuenta productos por tipo_producto (para badges en segmentos)
+     */
+    getCategoryCounts() {
+        const counts = { todos: this.products.length };
+        this.products.forEach(p => {
+            const tipo = p.tipo_producto || 'otro';
+            counts[tipo] = (counts[tipo] || 0) + 1;
+        });
+        return counts;
+    }
+
     renderCategoryTabs() {
-        // Buscar contenedor de tabs (ya existe en el HTML)
         let tabsContainer = document.getElementById('categoryTabs');
         if (!tabsContainer) {
-            // Intentar buscar en app-container
             const appContainer = document.getElementById('app-container');
-            if (appContainer) {
-                tabsContainer = appContainer.querySelector('#categoryTabs');
-            }
-            if (!tabsContainer) {
-            return;
-            }
-        }
-
-        // Si no hay categorías disponibles, no mostrar tabs
-        if (!this.availableCategories || this.availableCategories.size === 0) {
-            tabsContainer.innerHTML = '';
-            return;
+            if (appContainer) tabsContainer = appContainer.querySelector('#categoryTabs');
+            if (!tabsContainer) return;
         }
 
         const categoryMap = this.getCategoryMap();
-        
-        // Filtrar solo las categorías disponibles y ordenarlas
-        const availableCategoriesList = Array.from(this.availableCategories)
-            .map(catId => ({
-                id: catId,
-                ...categoryMap[catId]
-            }))
-            .filter(cat => cat.label) // Solo incluir si existe en el mapeo
-            .sort((a, b) => {
-                // "Todos" siempre primero
-                if (a.id === 'todos') return -1;
-                if (b.id === 'todos') return 1;
-                // Resto alfabéticamente por label
-                return a.label.localeCompare(b.label);
-            });
+        const counts = this.getCategoryCounts();
 
-        // Si solo hay "Todos" y no hay productos, no mostrar tabs
-        if (availableCategoriesList.length === 1 && availableCategoriesList[0].id === 'todos' && this.products.length === 0) {
-            tabsContainer.innerHTML = '';
+        // Orden: Todos primero, luego el resto según schema (mismo orden que getCategoryMap)
+        const orderedIds = [
+            'todos', 'bebida', 'bebida_alcoholica', 'agua', 'energetica', 'alimento', 'snack',
+            'suplemento_alimenticio', 'cosmetico', 'skincare', 'maquillaje', 'perfume', 'cuidado_cabello',
+            'app', 'electronico', 'smartphone', 'ropa', 'calzado', 'accesorio_moda', 'otro'
+        ];
+        const segmentsList = orderedIds
+            .map(catId => ({ id: catId, ...categoryMap[catId] }))
+            .filter(cat => cat && cat.label);
+
+        // Si no hay productos, mostrar solo "Todos" en el segmento
+        if (this.products.length === 0) {
+            tabsContainer.innerHTML = `
+                <button type="button" class="products-control-segment active" data-category="todos" aria-pressed="true">
+                    <span class="segment-label">Todos</span>
+                </button>
+            `;
+            tabsContainer.querySelector('.products-control-segment').addEventListener('click', () => this.setActiveFilter('todos'));
             return;
         }
 
-        tabsContainer.innerHTML = availableCategoriesList.map(cat => `
-            <button class="category-tab ${this.activeFilter === cat.id ? 'active' : ''}" 
-                    data-category="${cat.id}"
-                    title="${cat.label}">
-                <i class="fas ${cat.icon}"></i>
-                <span>${cat.label}</span>
-            </button>
-        `).join('');
+        tabsContainer.innerHTML = segmentsList.map((cat, i) => {
+            const isActive = this.activeFilter === cat.id;
+            const count = counts[cat.id] != null ? counts[cat.id] : 0;
+            const showBadge = count > 0 && cat.id !== 'todos';
+            return `
+                <button type="button" class="products-control-segment ${isActive ? 'active' : ''}"
+                        data-category="${this.escapeHtml(cat.id)}"
+                        aria-pressed="${isActive}"
+                        title="${this.escapeHtml(cat.label)}">
+                    <span class="segment-label">${this.escapeHtml(cat.label)}</span>
+                    ${showBadge ? `<span class="segment-badge" aria-hidden="true">${count}</span>` : ''}
+                </button>
+            `;
+        }).join('');
 
-        // Event listeners para los tabs
-        tabsContainer.querySelectorAll('.category-tab').forEach(tab => {
-            tab.addEventListener('click', (e) => {
+        tabsContainer.querySelectorAll('.products-control-segment').forEach(btn => {
+            btn.addEventListener('click', (e) => {
                 const category = e.currentTarget.dataset.category;
                 this.setActiveFilter(category);
             });
