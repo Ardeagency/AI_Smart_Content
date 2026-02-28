@@ -136,6 +136,13 @@ class App {
     r.register('/historial', livingLoader, auth);
     r.register('/living', livingLoader, auth);
 
+    // ── Org: Tasks (registrar pronto para que /org/.../tasks coincida con prioridad) ──
+    const tasksLoader = this._lazy('TasksView', ['/js/views/TasksView.js']);
+    r.register('/org/:orgIdShort/:orgNameSlug/tasks', tasksLoader, auth);
+    r.register('/org/:orgIdShort/:orgNameSlug/tasks/:taskId', tasksLoader, auth);
+    r.register('/tasks', tasksLoader, auth);
+    r.register('/tasks/:taskId', tasksLoader, auth);
+
     // ── Org: Brand ──
     const brandsLoader = this._lazy('BrandsView', ['/js/views/BrandsView.js']);
     r.register('/org/:orgIdShort/:orgNameSlug/brand', brandsLoader, auth);
@@ -196,13 +203,6 @@ class App {
     r.register('/org/:orgIdShort/:orgNameSlug/content', contentLoader, auth);
     r.register('/org/:orgIdShort/:orgNameSlug/content/:contentId', contentLoader, auth);
     r.register('/content', contentLoader, auth);
-
-    // ── Org: Tasks (tareas programadas / flow_schedules) ──
-    const tasksLoader = this._lazy('TasksView', ['/js/views/TasksView.js']);
-    r.register('/org/:orgIdShort/:orgNameSlug/tasks', tasksLoader, auth);
-    r.register('/org/:orgIdShort/:orgNameSlug/tasks/:taskId', tasksLoader, auth);
-    r.register('/tasks', tasksLoader, auth);
-    r.register('/tasks/:taskId', tasksLoader, auth);
 
     // ── Settings ──
     r.register('/settings', this._lazy('SettingsView', ['/js/views/SettingsView.js']), auth);

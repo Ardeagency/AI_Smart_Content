@@ -106,6 +106,21 @@ class Router {
       let route = this.routes[path];
       let routeParams = {};
 
+      // Reconocer explícitamente /org/.../tasks y /tasks para evitar que otra ruta genérica coincida antes
+      const tasksOrgMatch = path.match(/^\/org\/([^/]+)\/([^/]+)\/tasks(?:\/([^/]+))?$/);
+      const tasksRootMatch = path.match(/^\/tasks(?:\/([^/]+))?$/);
+      if (!route && (tasksOrgMatch || tasksRootMatch)) {
+        if (tasksOrgMatch) {
+          routeParams.orgIdShort = tasksOrgMatch[1];
+          routeParams.orgNameSlug = tasksOrgMatch[2];
+          if (tasksOrgMatch[3]) routeParams.taskId = tasksOrgMatch[3];
+          route = this.routes[routeParams.taskId ? '/org/:orgIdShort/:orgNameSlug/tasks/:taskId' : '/org/:orgIdShort/:orgNameSlug/tasks'];
+        } else if (tasksRootMatch) {
+          if (tasksRootMatch[1]) routeParams.taskId = tasksRootMatch[1];
+          route = this.routes[routeParams.taskId ? '/tasks/:taskId' : '/tasks'];
+        }
+      }
+
       if (!route) {
         for (const [routePattern, routeConfig] of Object.entries(this.routes)) {
           if (routePattern.includes(':')) {

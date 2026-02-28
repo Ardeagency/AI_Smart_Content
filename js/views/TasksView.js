@@ -40,26 +40,42 @@ class TasksView extends BaseView {
 
   async render() {
     await super.render();
-    await this.initSupabase();
-    this.brandContainerId = await this.getBrandContainerId();
+    try {
+      await this.initSupabase();
+      this.brandContainerId = await this.getBrandContainerId();
 
-    const path = window.location.pathname || '';
-    const taskMatch = path.match(/\/tasks\/([^/]+)/);
-    this.taskId = this.routeParams?.taskId || (taskMatch ? taskMatch[1] : null);
-    if (this.taskId && this.taskId !== 'new') {
-      await this.renderTaskDetail();
-      const listEl = document.getElementById('tasksListContainer');
-      const detailEl = document.getElementById('taskDetailContainer');
-      if (listEl) listEl.style.display = 'none';
-      if (detailEl) detailEl.style.display = 'block';
-    } else {
-      await this.renderTasksList();
-      const listEl = document.getElementById('tasksListContainer');
-      const detailEl = document.getElementById('taskDetailContainer');
-      if (listEl) listEl.style.display = 'block';
-      if (detailEl) detailEl.style.display = 'none';
+      const path = window.location.pathname || '';
+      const taskMatch = path.match(/\/tasks\/([^/]+)/);
+      this.taskId = this.routeParams?.taskId || (taskMatch ? taskMatch[1] : null);
+      if (this.taskId && this.taskId !== 'new') {
+        await this.renderTaskDetail();
+        const listEl = document.getElementById('tasksListContainer');
+        const detailEl = document.getElementById('taskDetailContainer');
+        if (listEl) listEl.style.display = 'none';
+        if (detailEl) detailEl.style.display = 'block';
+      } else {
+        await this.renderTasksList();
+        const listEl = document.getElementById('tasksListContainer');
+        const detailEl = document.getElementById('taskDetailContainer');
+        if (listEl) listEl.style.display = 'block';
+        if (detailEl) detailEl.style.display = 'none';
+      }
+      this.setupEventListeners();
+    } catch (err) {
+      console.error('TasksView render:', err);
+      const container = document.getElementById('app-container');
+      if (container) {
+        const wrap = container.querySelector('.tasks-page') || container;
+        wrap.innerHTML = `
+          <div class="tasks-page" style="padding: 2rem;">
+            <h1 class="tasks-title">Tareas programadas</h1>
+            <div class="error-container" style="margin-top: 2rem; text-align: center;">
+              <p style="color: var(--text-secondary);">Error al cargar las tareas. ${err && err.message ? err.message : 'Por favor, recarga la página.'}</p>
+              <button type="button" class="btn btn-primary" style="margin-top: 1rem;" onclick="window.location.reload()">Recargar</button>
+            </div>
+          </div>`;
+      }
     }
-    this.setupEventListeners();
   }
 
   async initSupabase() {
