@@ -3708,7 +3708,7 @@ body.entrance-done .landing-content {
 /* Contenedor: misma animación de entrada que la landing */
 .signin-container {
     min-height: 100vh;
-    background: #000;
+    background: linear-gradient(rgba(0, 0, 0, 0.88), rgba(0, 0, 0, 0.88)), url(https://res.cloudinary.com/dmruwjuxn/image/upload/v1772113553/Fondos-04_ehuwwn.jpg) center/cover no-repeat;
     color: var(--text-primary);
     padding: 0;
     margin: 0;
