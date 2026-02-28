@@ -126,6 +126,18 @@ class Navigation {
     this._devCacheTime = 0;
     this._catalogCategories = [];
     this._CACHE_TTL = 60000;
+    this._creditsUpdatedAttached = false;
+  }
+
+  /**
+   * Refrescar créditos del sidebar (invalida caché y recarga desde BD).
+   * Útil tras comprar créditos o gastarlos en Studio. También se llama al escuchar 'credits-updated'.
+   */
+  refreshCredits() {
+    this._orgCacheTime = 0;
+    if (this.currentMode === 'user' && this.currentOrgId) {
+      this.loadOrganizationInfo();
+    }
   }
 
   /**
@@ -184,10 +196,9 @@ class Navigation {
       return { mode: 'user', showSidebar: true, showHeader: true, orgId, brandId, orgSlug };
     }
     
-    // Rutas legacy sin /org/ - tratar como usuario pero sin org_id
-    // Esto mantiene compatibilidad temporal (/settings ya tratado arriba)
+    // Rutas legacy sin /org/ - usar org actual si existe (para mostrar créditos reales en sidebar)
     if (['/production', '/historial', '/living', '/brands', '/products', '/studio', '/audiences', '/marketing', '/campaigns', '/content', '/organization', '/servicios', '/credits'].some(r => path.startsWith(r))) {
-      return { mode: 'user', showSidebar: true, showHeader: true, orgId: null, brandId: null };
+      return { mode: 'user', showSidebar: true, showHeader: true, orgId: window.currentOrgId || null, brandId: null };
     }
     
     // Default - sin navegación
@@ -453,7 +464,7 @@ class Navigation {
           <div class="nav-org-credits" id="navOrgCreditsBlock">
             <span class="nav-org-credits-label">Créditos</span>
             <span class="nav-org-credits-value" id="navTokensValue">—</span>
-            <div class="nav-org-credits-bar" aria-hidden="true"><div class="nav-org-credits-bar-fill"></div></div>
+            <div class="nav-org-credits-bar" aria-hidden="true"><div class="nav-org-credits-bar-fill" style="width:0%"></div></div>
           </div>
         </div>
       </nav>
@@ -649,6 +660,12 @@ class Navigation {
         if (ud) ud.classList.remove('active');
         if (od) od.classList.remove('active');
       });
+    }
+
+    // Actualizar créditos del sidebar cuando otra vista los modifica (compra, uso en Studio)
+    if (!this._creditsUpdatedAttached) {
+      this._creditsUpdatedAttached = true;
+      document.addEventListener('credits-updated', () => this.refreshCredits());
     }
 
     document.querySelectorAll('.nav-link[data-route]:not([data-nav-bound]), .nav-main-link[data-route]:not([data-nav-bound]), .nav-submenu-link[data-route]:not([data-nav-bound]), .nav-footer-link[data-route]:not([data-nav-bound]), #userDropdownSettingsLink:not([data-nav-bound]), #userDropdown a[data-route]:not([data-nav-bound])').forEach((link) => {
@@ -1167,10 +1184,7 @@ class Navigation {
    */
   async loadOrganizationInfo() {
     const now = Date.now();
-    if (this._orgCache && this._orgCacheId === this.currentOrgId && (now - this._orgCacheTime) < this._CACHE_TTL) {
-      this._applyOrgCache();
-      return;
-    }
+    const cacheValid = this._orgCache && this._orgCacheId === this.currentOrgId && (now - this._orgCacheTime) < this._CACHE_TTL;
 
     const supabase = await this.getSupabase();
     if (!supabase) return;
@@ -1179,15 +1193,28 @@ class Navigation {
       if (!this.currentOrgId) {
         const nameEl = document.getElementById('navOrgName');
         const typeEl = document.getElementById('navOrgType');
+        const tokensEl = document.getElementById('navTokensValue');
         if (nameEl) nameEl.textContent = 'Seleccionar organización';
         if (typeEl) typeEl.textContent = '';
+        if (tokensEl) tokensEl.textContent = '—';
+        const barFill = document.querySelector('.nav-org-credits-bar-fill');
+        if (barFill) barFill.style.width = '0%';
         await this.loadOrganizationsList();
+        return;
+      }
+
+      if (cacheValid) {
+        const { data } = await supabase.from('organization_credits').select('credits_available, credits_total').eq('organization_id', this.currentOrgId).maybeSingle();
+        const cred = data;
+        this._orgCache.credits = cred != null ? (cred.credits_available ?? 0) : 0;
+        this._orgCache.credits_total = cred != null ? (cred.credits_total ?? 0) : 0;
+        this._applyOrgCache();
         return;
       }
 
       const [orgRes, creditsRes] = await Promise.all([
         supabase.from('organizations').select('name, owner_user_id').eq('id', this.currentOrgId).single(),
-        supabase.from('organization_credits').select('credits_available').eq('organization_id', this.currentOrgId).single()
+        supabase.from('organization_credits').select('credits_available, credits_total').eq('organization_id', this.currentOrgId).maybeSingle()
       ]);
 
       let planLabel = 'Personal';
@@ -1199,7 +1226,10 @@ class Navigation {
         }
       }
 
-      this._orgCache = { name: orgRes.data?.name, plan: planLabel, credits: creditsRes.data?.credits_available };
+      const cred = creditsRes.data;
+      const creditsAvailable = cred != null ? (cred.credits_available ?? 0) : 0;
+      const creditsTotal = cred != null ? (cred.credits_total ?? 0) : 0;
+      this._orgCache = { name: orgRes.data?.name, plan: planLabel, credits: creditsAvailable, credits_total: creditsTotal };
       this._orgCacheId = this.currentOrgId;
       this._orgCacheTime = Date.now();
       this._applyOrgCache();
@@ -1215,12 +1245,17 @@ class Navigation {
     const nameEl = document.getElementById('navOrgName');
     const typeEl = document.getElementById('navOrgType');
     const tokensEl = document.getElementById('navTokensValue');
+    const barFill = document.querySelector('.nav-org-credits-bar-fill');
     if (nameEl) nameEl.textContent = this._orgCache.name || '';
     if (typeEl) typeEl.textContent = this._orgCache.plan || '';
-    if (tokensEl && this._orgCache.credits != null) {
-      tokensEl.textContent = this._orgCache.credits >= 1000
-        ? `${(this._orgCache.credits / 1000).toFixed(1)}K`
-        : this._orgCache.credits;
+    const credits = this._orgCache.credits != null ? this._orgCache.credits : 0;
+    if (tokensEl) {
+      tokensEl.textContent = credits >= 1000 ? `${(credits / 1000).toFixed(1)}K` : String(credits);
+    }
+    if (barFill) {
+      const total = this._orgCache.credits_total != null && this._orgCache.credits_total > 0 ? this._orgCache.credits_total : 1;
+      const pct = Math.min(100, Math.round((credits / total) * 100));
+      barFill.style.width = `${pct}%`;
     }
   }
 

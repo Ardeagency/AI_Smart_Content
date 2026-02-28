@@ -167,6 +167,7 @@ class StudioView extends BaseView {
         this.credits.available = data.credits_available ?? 0;
         this.credits.total = data.credits_total ?? 0;
       }
+      document.dispatchEvent(new CustomEvent('credits-updated'));
     } catch (e) {
       console.error('Studio loadCredits:', e);
     }
