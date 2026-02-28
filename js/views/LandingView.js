@@ -13,7 +13,16 @@ class LandingView extends BaseView {
   }
 
   async init() {
-    // Sin lógica de login ni modales; el enlace /login lleva a la vista de inicio de sesión
+    // Forzar reproducción del video de fondo (algunos navegadores no respetan autoplay sin interacción)
+    const video = this.container.querySelector('.landing-background-video');
+    if (video) {
+      video.muted = true;
+      video.playsInline = true;
+      const play = () => video.play().catch(() => {});
+      play();
+      video.addEventListener('loadeddata', play, { once: true });
+      video.addEventListener('canplay', play, { once: true });
+    }
   }
 }
 
