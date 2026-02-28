@@ -620,10 +620,11 @@ body:not(.on-landing) .btn-secondary:hover:not(:disabled) {
     overflow-x: hidden;
     overflow-y: auto;
     box-sizing: border-box;
+    padding-top: 45px; /* Evitar que el contenido quede debajo del header principal */
 }
 body.entrance-active #app-container { opacity: 0; visibility: hidden; pointer-events: none; }
 /* En la landing el video está detrás; el contenedor debe ser transparente para que se vea */
-body.route-landing #app-container { background: transparent; }
+body.route-landing #app-container { background: transparent; padding-top: 0; }
 #app-container > main, #app-container > div { max-width: 100%; overflow-x: hidden; box-sizing: border-box; min-width: 0; }
 #app-container > main {
     padding: 0;
@@ -11028,6 +11029,14 @@ body.production-filters-in-header .living-container > .living-history-section {
   background: var(--bg-primary);
 }
 
+/* Builder = misma identidad que dev/: acento cian #00E7FF (no naranja) */
+#app-container:has(.builder-footer) {
+  --warm-1: var(--dev-primary);
+  --warm-2: var(--dev-primary-dark);
+  --warm-10: rgba(0, 231, 255, 0.1);
+  --warm-20: rgba(0, 231, 255, 0.2);
+  --accent-cta: var(--dev-primary);
+}
 
 /* ==========================================
    Dashboard de desarrollador
@@ -12327,6 +12336,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
+  padding-top: 45px; /* Evitar que el contenido quede debajo del header principal */
 }
 
 #app-container:has(.builder-footer) .builder-main {
