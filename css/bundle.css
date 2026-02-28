@@ -3473,25 +3473,11 @@ body.sidebar-collapsed .app-header.with-sidebar {
     position: fixed;
     inset: 0;
     z-index: -2;
-    background: #000;
     min-height: 100vh;
     min-width: 100vw;
     opacity: 0;
     overflow: hidden;
-}
-
-.landing-background-video {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    min-width: 100%;
-    min-height: 100%;
-    width: auto;
-    height: auto;
-    transform: translate(-50%, -50%);
-    object-fit: cover;
-    display: block;
-    pointer-events: none;
+    background: linear-gradient(rgba(0, 0, 0, 0.88), rgba(0, 0, 0, 0.88)), url(https://res.cloudinary.com/dmruwjuxn/image/upload/v1772113558/Fondos-08_wpaag0.jpg) center/cover no-repeat;
 }
 
 /* Video de fondo solo visible en ruta landing (está en index.html) */
