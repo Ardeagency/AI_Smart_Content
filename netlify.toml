@@ -12,7 +12,10 @@
   directory = "netlify/functions"
 
 # Excluir archivos estáticos del redirect SPA
-# Netlify procesa los redirects en orden, el primero que coincide gana
+# Netlify procesa los redirects en orden, el primero que coincide gana.
+# IMPORTANTE: index.html debe usar rutas absolutas (/js/..., /css/...) para que,
+# al entrar por /signin, /landing, etc., el navegador pida /js/app-loader.js (no
+# /signin/js/app-loader.js); así esta regla sirve el .js y no el fallback index.html.
 
 # Archivos JS - servir directamente
 [[redirects]]
