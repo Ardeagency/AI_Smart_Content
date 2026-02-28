@@ -572,7 +572,7 @@ CREATE TABLE public.ui_component_templates (
   order_index integer DEFAULT 0,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
-  template_level text DEFAULT 'core'::text CHECK (template_level = ANY (ARRAY['core'::text, 'preset'::text, 'domain'::text])),
+  template_level text DEFAULT 'core'::text CHECK (template_level = ANY (ARRAY['shell'::text, 'core'::text, 'preset'::text, 'domain'::text])),
   CONSTRAINT ui_component_templates_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.user_flow_favorites (

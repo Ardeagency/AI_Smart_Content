@@ -657,7 +657,9 @@
               <option value="dropdown" ${(field.input_type || field.type) === 'dropdown' ? 'selected' : ''}>Dropdown</option>
               <option value="select" ${(field.input_type || field.type) === 'select' ? 'selected' : ''}>Selector (select)</option>
               <option value="number" ${(field.input_type || field.type) === 'number' ? 'selected' : ''}>Número</option>
-              <option value="checkbox" ${(field.input_type || field.type) === 'checkbox' ? 'selected' : ''}>Checkbox</option>
+              <option value="checkbox" ${(field.input_type || field.type) === 'checkbox' ? 'selected' : ''}>Checkbox on/off (boolean)</option>
+              <option value="checkboxes" ${(field.input_type || field.type) === 'checkboxes' ? 'selected' : ''}>Checkboxes (una opción → variable = valor, ej. cabello = rubio)</option>
+              <option value="selection_checkboxes" ${(field.input_type || field.type) === 'selection_checkboxes' ? 'selected' : ''}>Checkboxes múltiples (varias opciones → array)</option>
               <option value="radio" ${(field.input_type || field.type) === 'radio' ? 'selected' : ''}>Radio</option>
               <option value="range" ${(field.input_type || field.type) === 'range' ? 'selected' : ''}>Slider</option>
               <option value="flags" ${(field.input_type || field.type) === 'flags' ? 'selected' : ''}>Flags (idioma, país, etnia)</option>
@@ -736,7 +738,7 @@
     const t = (field.input_type || field.type || '').toLowerCase();
     if (['number', 'range', 'stepper', 'stepper_num', 'num_stepper', 'rating', 'slider'].indexOf(t) >= 0) return 'number';
     if (['checkbox', 'switch', 'boolean', 'toggle', 'toggle_switch'].indexOf(t) >= 0) return 'boolean';
-    if (['select', 'multi_select', 'tone_selector', 'mood_selector', 'length_selector', 'radio', 'aspect_ratio'].indexOf(t) >= 0) return 'string';
+    if (['select', 'multi_select', 'tone_selector', 'mood_selector', 'length_selector', 'radio', 'aspect_ratio', 'checkboxes'].indexOf(t) >= 0) return 'string';
     if (['tag_input', 'gallery_picker', 'selection_checkboxes', 'colores'].indexOf(t) >= 0) return 'array';
     if (['brand_selector', 'entity_selector', 'audience_selector', 'campaign_selector', 'product_selector', 'image_selector', 'scope_picker'].indexOf(t) >= 0) return 'object';
     return field.data_type || 'string';
@@ -746,7 +748,7 @@
     const type = (field.input_type || field.type || '').toLowerCase();
     const isNumberFamily = ['number', 'range', 'stepper', 'stepper_num', 'num_stepper', 'rating', 'slider'].indexOf(type) >= 0;
     const isBooleanFamily = ['checkbox', 'switch', 'boolean', 'toggle', 'toggle_switch'].indexOf(type) >= 0;
-    const hasOptions = ['dropdown', 'select', 'radio', 'tone_selector', 'mood_selector', 'length_selector', 'aspect_ratio'].indexOf(type) >= 0;
+    const hasOptions = ['dropdown', 'select', 'radio', 'checkboxes', 'tone_selector', 'mood_selector', 'length_selector', 'aspect_ratio', 'selection_checkboxes'].indexOf(type) >= 0;
     const opts = field.options || [];
     const escapeVal = (s) => (s == null ? '' : String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'));
     const optVal = (o) => (o && (o.value !== undefined ? o.value : o.label !== undefined ? o.label : o));
@@ -1149,17 +1151,20 @@
       }
 
       case 'select':
-      case 'radio': {
+      case 'radio':
+      case 'checkboxes':
+      case 'selection_checkboxes': {
         const options = field.options || [];
         const it = (field.input_type || field.type || '').toLowerCase();
         const isSelect = it === 'select' || it === 'dropdown' || it === 'multi_select';
         const isDropdown = it === 'dropdown' || it === 'select';
         const isRadio = it === 'radio';
+        const isCheckboxes = it === 'checkboxes';
         const isSelectionCheckboxes = it === 'selection_checkboxes';
         const isFlags = it === 'flags';
         const isColores = it === 'colores';
         const isAspectRatio = it === 'aspect_ratio';
-        const title = isAspectRatio ? 'Aspect ratio' : (isColores ? 'Colores' : (isFlags ? 'Flags' : (isSelectionCheckboxes ? 'Checkboxes (opciones)' : (isRadio ? 'Radio Buttons' : (isDropdown ? 'Dropdown' : 'Lista desplegable')))));
+        const title = isAspectRatio ? 'Aspect ratio' : (isColores ? 'Colores' : (isFlags ? 'Flags' : (isCheckboxes ? 'Checkboxes (una opción → variable = valor)' : (isSelectionCheckboxes ? 'Checkboxes múltiples (array)' : (isRadio ? 'Radio Buttons' : (isDropdown ? 'Dropdown' : 'Lista desplegable'))))));
         const optVal = (o) => (o && (o.value !== undefined ? o.value : o.label !== undefined ? o.label : o));
         return `
           <div class="property-group">

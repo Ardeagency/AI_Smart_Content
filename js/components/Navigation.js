@@ -32,6 +32,7 @@ const SIDEBAR_USER_CONFIG = {
   ],
   footer: [
     { label: 'Configuración', icon: 'fa-cog', iconSrc: '/recursos/icons/settings.svg', route: 'organization' },
+    { label: 'Notificaciones', icon: 'fa-bell', iconSrc: null, flyout: 'notifications' },
     { label: 'Créditos', icon: 'fa-coins', iconSrc: '/recursos/icons/credits.svg', route: 'credits' }
   ]
 };
@@ -482,6 +483,13 @@ class Navigation {
       : `<i class="fas ${f.icon} nav-icon"></i>`;
 
     const footerHTML = SIDEBAR_USER_CONFIG.footer.map((f) => {
+      if (f.flyout === 'notifications') {
+        return `
+          <button type="button" class="nav-footer-link nav-footer-btn" data-flyout="notifications" data-tooltip="${f.label}" aria-label="${f.label}">
+            ${footerIconHTML(f)}
+            <span class="nav-text">${f.label}</span>
+          </button>`;
+      }
       const href = full(f.route);
       return `
         <a href="${href}" class="nav-footer-link" data-route="${href}" data-tooltip="${f.label}">
@@ -917,8 +925,11 @@ class Navigation {
       if (document.activeElement && flyout.contains(document.activeElement)) {
         try {
           const trigger = this._flyoutContainer?.querySelector('.nav-submenu-toggle');
+          const notifTrigger = document.querySelector('.nav-footer-btn[data-flyout="notifications"]');
           if (trigger && typeof trigger.focus === 'function') {
             trigger.focus();
+          } else if (notifTrigger && typeof notifTrigger.focus === 'function') {
+            notifTrigger.focus();
           } else {
             const header = document.getElementById('appHeader');
             const firstFocusable = header?.querySelector('button, [href], [tabindex]:not([tabindex="-1"])');
@@ -930,6 +941,125 @@ class Navigation {
       flyout.setAttribute('aria-hidden', 'true');
     }
     this._flyoutOpen = false;
+  }
+
+  /**
+   * Abre el flyout de notificaciones (user_notifications). Carga desde Supabase y muestra en #navFlyout.
+   * @param {HTMLElement} [triggerEl] - Botón que abrió el flyout (para posicionar).
+   */
+  async openNotificationsFlyout(triggerEl) {
+    const flyout = document.getElementById('navFlyout');
+    if (!flyout) return;
+
+    const user = window.authService?.getCurrentUser();
+    const supabase = window.authService?.supabase;
+    if (!user?.id || !supabase?.from) {
+      this._renderNotificationsFlyoutContent(flyout, [], null, true);
+      this._showNotificationsFlyout(flyout, triggerEl);
+      return;
+    }
+
+    this._renderNotificationsFlyoutContent(flyout, null, 'Cargando…', false);
+    this._showNotificationsFlyout(flyout, triggerEl);
+
+    const { data: notifications, error } = await supabase
+      .from('user_notifications')
+      .select('id, title, message, type, is_read, created_at, link_to')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error) {
+      this._renderNotificationsFlyoutContent(flyout, [], null, true, error.message);
+      return;
+    }
+    this._renderNotificationsFlyoutContent(flyout, notifications || [], null, true);
+  }
+
+  _renderNotificationsFlyoutContent(flyout, notifications, loadingLabel, ready, errorMessage) {
+    const isLoading = notifications === null && !errorMessage;
+    const list = Array.isArray(notifications) ? notifications : [];
+    const configHref = this.getUserSidebarRoute('organization');
+
+    let bodyHtml;
+    if (errorMessage) {
+      bodyHtml = `<div class="nav-flyout-notifications-error">${escapeHtml(errorMessage)}</div>`;
+    } else if (loadingLabel) {
+      bodyHtml = `<div class="nav-flyout-notifications-loading">${escapeHtml(loadingLabel)}</div>`;
+    } else if (list.length === 0) {
+      bodyHtml = '<div class="nav-flyout-notifications-empty">No hay notificaciones</div>';
+    } else {
+      bodyHtml = '<div class="nav-flyout-list nav-flyout-notifications-list">' + list.map((n) => {
+        const type = (n.type || 'info');
+        const dateStr = n.created_at ? formatNotificationDate(n.created_at) : '';
+        const unread = !n.is_read;
+        const link = n.link_to ? ` data-link="${escapeHtml(n.link_to)}"` : '';
+        return `<button type="button" class="nav-flyout-notification-item ${unread ? 'unread' : ''} ${type}" data-id="${n.id}"${link}>
+          <span class="nav-flyout-notification-type">${escapeHtml(type)}</span>
+          <span class="nav-flyout-notification-title">${escapeHtml(n.title)}</span>
+          <span class="nav-flyout-notification-message">${escapeHtml((n.message || '').slice(0, 80))}${(n.message || '').length > 80 ? '…' : ''}</span>
+          <span class="nav-flyout-notification-date">${escapeHtml(dateStr)}</span>
+        </button>`;
+      }).join('') + '</div>';
+    }
+
+    const footerHtml = configHref
+      ? `<div class="nav-flyout-footer">
+          <a href="${configHref}" class="nav-flyout-cta nav-flyout-cta-link" data-route="${configHref}">Configuración <i class="fas fa-chevron-right"></i></a>
+        </div>`
+      : '';
+
+    flyout.innerHTML = `
+      <div class="nav-flyout-bridge" aria-hidden="true"></div>
+      <div class="nav-flyout-inner">
+        <div class="nav-flyout-header">
+          <span class="nav-flyout-header-icon"><i class="fas fa-bell"></i></span>
+          <span class="nav-flyout-header-label">Notificaciones</span>
+        </div>
+        <div class="nav-flyout-body nav-flyout-notifications-body">${bodyHtml}</div>
+        ${footerHtml}
+      </div>`;
+
+    if (ready && list.length) {
+      flyout.querySelectorAll('.nav-flyout-notification-item').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.id;
+          const link = btn.dataset.link;
+          if (id && window.authService?.supabase?.from) {
+            window.authService.supabase.from('user_notifications').update({ is_read: true }).eq('id', id).then(() => {});
+          }
+          if (link && window.router) {
+            this.closeFlyout();
+            window.router.navigate(link.startsWith('/') ? link : `/${link}`);
+          }
+        });
+      });
+    }
+    flyout.querySelector('.nav-flyout-cta-link')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const route = flyout.querySelector('.nav-flyout-cta-link')?.dataset?.route;
+      if (route && window.router) window.router.navigate(route);
+      this.closeFlyout();
+    });
+  }
+
+  _showNotificationsFlyout(flyout, triggerEl) {
+    flyout.classList.add('open');
+    flyout.setAttribute('aria-hidden', 'false');
+    this._flyoutContainer = null;
+    this._flyoutOpen = true;
+    this._bindFlyoutHoverClose();
+
+    requestAnimationFrame(() => {
+      if (triggerEl) {
+        const rect = triggerEl.getBoundingClientRect();
+        const flyoutHeight = flyout.offsetHeight;
+        const top = Math.max(8, Math.min(rect.top + rect.height / 2 - flyoutHeight / 2, window.innerHeight - flyoutHeight - 8));
+        flyout.style.top = `${top}px`;
+      } else {
+        flyout.style.top = '';
+      }
+    });
   }
 
   /**

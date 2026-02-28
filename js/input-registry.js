@@ -51,6 +51,7 @@
     multi_select: 'SELECT_CONTAINER',
     choice_chips: 'SELECT_CONTAINER',
     multi_select_chips: 'SELECT_CONTAINER',
+    checkboxes: 'SELECT_CONTAINER',
     flags: 'SELECT_CONTAINER',
     tone_selector: 'SELECT_CONTAINER',
     mood_selector: 'SELECT_CONTAINER',
@@ -68,7 +69,7 @@
     toggle_switch: 'BOOLEAN_CONTAINER',
     boolean: 'BOOLEAN_CONTAINER',
     toggle: 'BOOLEAN_CONTAINER',
-    selection_checkboxes: 'BOOLEAN_CONTAINER',
+    selection_checkboxes: 'SELECT_CONTAINER',
     number: 'NUMBER_CONTAINER',
     stepper: 'NUMBER_CONTAINER',
     stepper_num: 'NUMBER_CONTAINER',
@@ -567,7 +568,22 @@
     return '<div class="input-stepper-wrap"><input type="number" class="modern-input input-stepper-input" id="' + a.id + '" name="' + a.name + '" value="' + escapeHtml(String(val)) + '" min="' + min + '" max="' + max + '" step="' + step + '"' + a.disabled + a.required + '><div class="input-stepper-btns"><button type="button" class="input-stepper-btn" data-dir="up" tabindex="-1"' + a.disabled + '><i class="ph ph-caret-up"></i></button><button type="button" class="input-stepper-btn" data-dir="down" tabindex="-1"' + a.disabled + '><i class="ph ph-caret-down"></i></button></div>' + (unit ? '<span class="input-stepper-unit">' + unit + '</span>' : '') + '</div>';
   }
 
-  /** Selection checkboxes: one checkbox per option (multi boolean) */
+  /** Checkboxes (selección única): opciones, usuario elige una → variable = valor elegido (ej. cabello = "rubio"). No es boolean. */
+  function renderCheckboxesSingle(f, opts, isPreview) {
+    var a = isPreview ? { disabled: ' disabled', name: '', id: '', required: '' } : formAttrs(f, opts);
+    var optsList = f.options || [{ label: 'Rubio', value: 'rubio' }, { label: 'Negro', value: 'negro' }, { label: 'Castaño', value: 'castaño' }];
+    var defVal = f.defaultValue != null ? String(f.defaultValue) : (optsList[0] ? String(optVal(optsList[0])) : '');
+    var html = optsList.map(function (o, i) {
+      var v = optVal(o);
+      var vs = String(v);
+      var lbl = escapeHtml(optLabel(o));
+      var checked = (defVal === v || defVal === vs) ? ' checked' : '';
+      return '<label class="modern-checkbox-wrapper input-checkboxes-single"><input type="radio" name="' + a.name + '" value="' + escapeHtml(vs) + '"' + checked + a.disabled + '><div class="modern-checkbox-box"></div><span>' + lbl + '</span></label>';
+    }).join('');
+    return '<div class="input-checkboxes-single-group">' + html + '</div>';
+  }
+
+  /** Selection checkboxes: varias opciones, usuario puede marcar varias → variable = array de valores. */
   function renderSelectionCheckboxes(f, opts, isPreview) {
     var a = isPreview ? { disabled: ' disabled', name: '', id: '', required: '' } : formAttrs(f, opts);
     var optsList = f.options || [];
@@ -596,6 +612,12 @@
   }
   function formSelectionCheckboxes(f, opts) {
     return renderSelectionCheckboxes(f, opts || {}, isPreviewOpts(opts));
+  }
+  function previewCheckboxesSingle(f) {
+    return renderCheckboxesSingle(f, {}, true);
+  }
+  function formCheckboxesSingle(f, opts) {
+    return renderCheckboxesSingle(f, opts || {}, isPreviewOpts(opts));
   }
   function formFlags(f, opts) {
     var fWithOpts = Object.assign({}, f, { options: getFlagsOptionsForField(f) });
@@ -793,6 +815,8 @@
       preview: function (f) {
         var t = getInputType(f);
         if (t === 'flags') return previewFlags(f);
+        if (t === 'checkboxes') return previewCheckboxesSingle(f);
+        if (t === 'selection_checkboxes') return previewSelectionCheckboxes(f);
         var style = f.select_style || (t === 'choice_chips' ? 'choice_chips' : (t === 'multi_select_chips' ? 'multi_select_chips' : 'dropdown'));
         if (style === 'choice_chips') return previewChoiceChips(f);
         if (style === 'multi_select_chips' || f.is_multiple) return previewMultiSelectChips(f);
@@ -801,6 +825,8 @@
       form: function (f, opts) {
         var t = getInputType(f);
         if (t === 'flags') return formFlags(f, opts);
+        if (t === 'checkboxes') return formCheckboxesSingle(f, opts);
+        if (t === 'selection_checkboxes') return formSelectionCheckboxes(f, opts);
         var style = f.select_style || (t === 'choice_chips' ? 'choice_chips' : (t === 'multi_select_chips' ? 'multi_select_chips' : 'dropdown'));
         if (style === 'choice_chips') return formChoiceChips(f, opts);
         if (style === 'multi_select_chips' || f.is_multiple) return formMultiSelectChips(f, opts);
@@ -837,15 +863,14 @@
       preview: function (f) {
         var display = (f.display_style || f.display || getInputType(f) || 'checkbox');
         if (display === 'radio' || display === 'radio_buttons') return previewRadio(f);
-        if (display === 'switch' || display === 'toggle_switch') return previewSwitch(f);
-        if (display === 'selection_checkboxes') return previewSelectionCheckboxes(f);
+        /* switch, toggle_switch y boolean (legacy) → interruptor; checkbox (singular) → casilla on/off */
+        if (display === 'switch' || display === 'toggle_switch' || display === 'boolean') return previewSwitch(f);
         return previewCheckbox(f);
       },
       form: function (f, opts) {
         var display = (f.display_style || f.display || getInputType(f) || 'checkbox');
         if (display === 'radio' || display === 'radio_buttons') return formRadio(f, opts);
-        if (display === 'switch' || display === 'toggle_switch') return formSwitch(f, opts);
-        if (display === 'selection_checkboxes') return formSelectionCheckboxes(f, opts);
+        if (display === 'switch' || display === 'toggle_switch' || display === 'boolean') return formSwitch(f, opts);
         return formCheckbox(f, opts);
       }
     },
@@ -919,6 +944,7 @@
     register('tags', { preview: previewTags, form: formTags });
     register('stepper_num', { preview: previewStepper, form: formStepper });
     register('num_stepper', { preview: previewStepper, form: formStepper });
+    register('checkboxes', { preview: previewCheckboxesSingle, form: formCheckboxesSingle });
     register('selection_checkboxes', { preview: previewSelectionCheckboxes, form: formSelectionCheckboxes });
     register('toggle_switch', { preview: previewSwitch, form: formSwitch });
     register('slider', { preview: previewRange, form: formRange });
@@ -1014,7 +1040,7 @@
     if (t === 'colores') return 'colores';
     if (t === 'aspect_ratio') return 'aspect_ratio';
     if (t === 'scope_picker') return 'scope_picker';
-    if (['select', 'dropdown', 'multi_select', 'radio', 'radio_buttons', 'choice_chips', 'multi_select_chips', 'flags', 'tone_selector', 'mood_selector', 'length_selector', 'selection_checkboxes'].indexOf(t) >= 0) return 'select';
+    if (['select', 'dropdown', 'multi_select', 'radio', 'radio_buttons', 'choice_chips', 'multi_select_chips', 'checkboxes', 'flags', 'tone_selector', 'mood_selector', 'length_selector', 'selection_checkboxes'].indexOf(t) >= 0) return 'select';
     return 'generic';
   }
 

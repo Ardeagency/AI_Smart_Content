@@ -14534,6 +14534,75 @@ body.production-filters-in-header .living-container > .living-history-section {
   margin: 0;
 }
 
+/* Checkboxes selección única: variable = opción elegida (ej. cabello = "rubio"), caja cuadrada */
+.input-checkboxes-single-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.input-checkboxes-single-group .input-checkboxes-single .modern-checkbox-box {
+  border-radius: 4px;
+}
+
+/* Switch (toggle) en formulario: pista + pulgar, estilo Light/Dark como diseño referencia */
+.modern-switch-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  color: var(--text-primary, #1a1a1a);
+  font-size: var(--font-size-base, 1rem);
+  user-select: none;
+}
+.modern-switch-wrapper input[type="checkbox"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.modern-switch-track {
+  position: relative;
+  flex-shrink: 0;
+  width: 44px;
+  height: 24px;
+  border-radius: 9999px;
+  background: var(--border-color, #d1d5db);
+  transition: background 0.2s ease;
+}
+.modern-switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--bg-primary, #fff);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+}
+.modern-switch-wrapper input:checked ~ .modern-switch-track {
+  background: var(--dev-primary, #3b82f6);
+}
+.modern-switch-wrapper input:checked ~ .modern-switch-track .modern-switch-thumb {
+  transform: translateX(20px);
+}
+.modern-switch-wrapper input:focus-visible ~ .modern-switch-track {
+  outline: 2px solid var(--dev-primary, #3b82f6);
+  outline-offset: 2px;
+}
+.modern-switch-wrapper input:disabled ~ .modern-switch-track {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.modern-switch-wrapper:has(input:disabled) {
+  cursor: not-allowed;
+}
+
 /* Settings Form */
 .builder-settings-form {
   max-width: 700px;
