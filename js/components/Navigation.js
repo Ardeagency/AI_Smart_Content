@@ -39,6 +39,25 @@ const SIDEBAR_USER_CONFIG = {
 
 const SIDEBAR_USER_EXPANDED_KEY = 'sidebarUserExpanded';
 
+function _escapeHtml(s) {
+  if (s == null) return '';
+  const div = document.createElement('div');
+  div.textContent = String(s);
+  return div.innerHTML;
+}
+
+function _formatNotificationDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 60000) return 'Ahora';
+  if (diff < 3600000) return 'Hace ' + Math.floor(diff / 60000) + ' min';
+  if (d.toDateString() === now.toDateString()) return 'Hoy ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (diff < 86400000 * 2) return 'Ayer';
+  return d.toLocaleDateString();
+}
+
 /** SVG inline para el botón toggle del sidebar (hereda color del botón). */
 const SIDEBAR_TOGGLE_ICON_DESPLEGADO = `<svg class="nav-sidebar-toggle-icon" width="21" height="18" viewBox="0 0 20 17" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8.29167 0.999999L1 8.29166L8.29167 15.5833M18.5 1L11.2083 8.29167L18.5 15.5833" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const SIDEBAR_TOGGLE_ICON_COLAPSADO = `<svg class="nav-sidebar-toggle-icon" width="21" height="18" viewBox="0 0 20 17" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M11.2083 15.5833L18.5 8.29167L11.2083 1M1 15.5833L8.29167 8.29167L1 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
@@ -739,6 +758,16 @@ class Navigation {
       document.addEventListener('credits-updated', () => this.refreshCredits());
     }
 
+    document.querySelectorAll('.nav-footer-btn[data-flyout="notifications"]:not([data-nav-bound])').forEach((btn) => {
+      btn.setAttribute('data-nav-bound', '1');
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.openNotificationsFlyout(btn);
+        const ud = document.getElementById('userDropdown');
+        if (ud) ud.classList.remove('active');
+      });
+    });
+
     document.querySelectorAll('.nav-link[data-route]:not([data-nav-bound]), .nav-main-link[data-route]:not([data-nav-bound]), .nav-submenu-link[data-route]:not([data-nav-bound]), .nav-footer-link[data-route]:not([data-nav-bound]), #userDropdownSettingsLink:not([data-nav-bound]), #userDropdown a[data-route]:not([data-nav-bound])').forEach((link) => {
       link.setAttribute('data-nav-bound', '1');
       link.addEventListener('click', (e) => {
@@ -983,22 +1012,22 @@ class Navigation {
 
     let bodyHtml;
     if (errorMessage) {
-      bodyHtml = `<div class="nav-flyout-notifications-error">${escapeHtml(errorMessage)}</div>`;
+      bodyHtml = `<div class="nav-flyout-notifications-error">${_escapeHtml(errorMessage)}</div>`;
     } else if (loadingLabel) {
-      bodyHtml = `<div class="nav-flyout-notifications-loading">${escapeHtml(loadingLabel)}</div>`;
+      bodyHtml = `<div class="nav-flyout-notifications-loading">${_escapeHtml(loadingLabel)}</div>`;
     } else if (list.length === 0) {
       bodyHtml = '<div class="nav-flyout-notifications-empty">No hay notificaciones</div>';
     } else {
       bodyHtml = '<div class="nav-flyout-list nav-flyout-notifications-list">' + list.map((n) => {
         const type = (n.type || 'info');
-        const dateStr = n.created_at ? formatNotificationDate(n.created_at) : '';
+        const dateStr = n.created_at ? _formatNotificationDate(n.created_at) : '';
         const unread = !n.is_read;
-        const link = n.link_to ? ` data-link="${escapeHtml(n.link_to)}"` : '';
+        const link = n.link_to ? ` data-link="${_escapeHtml(n.link_to)}"` : '';
         return `<button type="button" class="nav-flyout-notification-item ${unread ? 'unread' : ''} ${type}" data-id="${n.id}"${link}>
-          <span class="nav-flyout-notification-type">${escapeHtml(type)}</span>
-          <span class="nav-flyout-notification-title">${escapeHtml(n.title)}</span>
-          <span class="nav-flyout-notification-message">${escapeHtml((n.message || '').slice(0, 80))}${(n.message || '').length > 80 ? '…' : ''}</span>
-          <span class="nav-flyout-notification-date">${escapeHtml(dateStr)}</span>
+          <span class="nav-flyout-notification-type">${_escapeHtml(type)}</span>
+          <span class="nav-flyout-notification-title">${_escapeHtml(n.title)}</span>
+          <span class="nav-flyout-notification-message">${_escapeHtml((n.message || '').slice(0, 80))}${(n.message || '').length > 80 ? '…' : ''}</span>
+          <span class="nav-flyout-notification-date">${_escapeHtml(dateStr)}</span>
         </button>`;
       }).join('') + '</div>';
     }
