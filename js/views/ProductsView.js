@@ -206,16 +206,24 @@ class ProductsView extends BaseView {
    */
   getProductDetailHTML(product, images, brandName, backUrl) {
     const mainImage = images.length > 0 ? images[0].image_url : '';
-    const thumbnails = images.slice(0, 8);
+    const thumbnails = images.slice(0, 20);
     const precio = product.precio_producto != null ? String(product.precio_producto) : '';
     const moneda = product.moneda || 'USD';
     const tipoProducto = product.tipo_producto || 'otro';
 
-    const thumbsHtml = thumbnails.map((img, i) => `
-      <div class="product-view-thumb ${i === 0 ? 'active' : ''}" data-index="${i}" role="button" tabindex="0">
-        <img src="${img.image_url}" alt="Miniatura ${i + 1}" loading="lazy">
-      </div>
-    `).join('');
+    const thumbsHtml = thumbnails.map((img, i) => {
+      const isPrincipal = (img.image_type || '') === 'principal';
+      return `
+      <div class="product-view-thumb-wrap" data-index="${i}" data-image-id="${img.id}">
+        <div class="product-view-thumb ${i === 0 ? 'active' : ''}" role="button" tabindex="0">
+          <img src="${img.image_url}" alt="Miniatura ${i + 1}" loading="lazy">
+        </div>
+        <div class="product-view-thumb-actions">
+          ${thumbnails.length > 1 && !isPrincipal ? `<button type="button" class="product-view-thumb-set-principal" title="Establecer como principal" data-image-id="${img.id}"><i class="fas fa-star"></i></button>` : ''}
+          <button type="button" class="product-view-thumb-delete" title="Eliminar foto" data-image-id="${img.id}"><i class="fas fa-trash-alt"></i></button>
+        </div>
+      </div>`;
+    }).join('');
 
     const tipoOpts = this.getTipoProductoOptions();
     const tipoOptionsHtml = tipoOpts.map(o => `<option value="${this.escapeHtml(o.value)}" ${o.value === tipoProducto ? 'selected' : ''}>${this.escapeHtml(o.label)}</option>`).join('');
@@ -264,7 +272,13 @@ class ProductsView extends BaseView {
                 : `<div class="product-view-loading" style="min-height: 200px;"><i class="fas fa-image"></i><span>Sin imagen</span></div>`
               }
             </div>
-            ${thumbnails.length > 0 ? `<div class="product-view-thumbnails" id="productViewThumbnails">${thumbsHtml}</div>` : ''}
+            <div class="product-view-thumbnails" id="productViewThumbnails" style="${thumbnails.length === 0 ? 'display: none;' : ''}">${thumbsHtml}</div>
+            <div class="product-view-gallery-upload">
+              <input type="file" id="productViewImageUpload" accept="image/*" multiple style="display: none;">
+              <button type="button" class="product-view-upload-btn" id="productViewUploadBtn">
+                <i class="fas fa-plus"></i> Añadir fotos
+              </button>
+            </div>
           </div>
           <div class="product-view-info">
             <div class="product-view-sheet-row product-view-title-row">
@@ -287,6 +301,250 @@ class ProductsView extends BaseView {
         </div>
       </div>
     `;
+  }
+
+  /**
+   * Eliminar una imagen del producto (storage + product_images)
+   */
+  async removeProductImage(imageId) {
+    if (!this.supabase || !this.productId) return;
+    if (!confirm('¿Eliminar esta foto del producto?')) return;
+    try {
+      const { data: image, error: fetchError } = await this.supabase
+        .from('product_images')
+        .select('image_url, image_type')
+        .eq('id', imageId)
+        .single();
+      if (fetchError) throw fetchError;
+
+      const wasPrincipal = (image.image_type || '') === 'principal';
+      if (image.image_url) {
+        try {
+          const url = new URL(image.image_url);
+          const pathParts = url.pathname.split('/');
+          const idx = pathParts.indexOf('product-images');
+          if (idx !== -1) {
+            const fileName = pathParts.slice(idx + 1).join('/');
+            await this.supabase.storage.from('product-images').remove([fileName]);
+          }
+        } catch (_) { /* ignorar fallo storage */ }
+      }
+
+      const { error: deleteError } = await this.supabase
+        .from('product_images')
+        .delete()
+        .eq('id', imageId);
+      if (deleteError) throw deleteError;
+
+      if (wasPrincipal) {
+        const { data: remaining } = await this.supabase
+          .from('product_images')
+          .select('id')
+          .eq('product_id', this.productId)
+          .order('image_order', { ascending: true })
+          .limit(1);
+        if (remaining && remaining.length > 0) {
+          await this.supabase
+            .from('product_images')
+            .update({ image_type: 'principal' })
+            .eq('id', remaining[0].id);
+        }
+      }
+      await this.refreshDetailImages();
+      this.showNotification('Foto eliminada', 'success');
+    } catch (err) {
+      console.error('Error eliminando imagen:', err);
+      this.showNotification('Error al eliminar la foto', 'error');
+    }
+  }
+
+  /**
+   * Subir nuevas fotos al producto
+   */
+  async uploadProductImages(files) {
+    if (!this.supabase || !this.productId || !files || files.length === 0) return;
+    const userId = (await this.supabase.auth.getUser()).data?.user?.id;
+    if (!userId) {
+      this.showNotification('Sesión no disponible', 'error');
+      return;
+    }
+    const validFiles = Array.from(files).filter((file) => {
+      if (file.size > 5 * 1024 * 1024) {
+        this.showNotification(`"${file.name}" es demasiado grande (máx. 5MB)`, 'error');
+        return false;
+      }
+      if (!file.type.startsWith('image/')) {
+        this.showNotification(`"${file.name}" no es una imagen válida`, 'error');
+        return false;
+      }
+      return true;
+    });
+    if (validFiles.length === 0) return;
+
+    try {
+      const { data: existing } = await this.supabase
+        .from('product_images')
+        .select('image_order')
+        .eq('product_id', this.productId)
+        .order('image_order', { ascending: false })
+        .limit(1);
+      let nextOrder = (existing && existing.length > 0) ? (existing[0].image_order + 1) : 0;
+
+      for (const file of validFiles) {
+        const fileName = `${userId}/${this.productId}/${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name}`;
+        const { error: uploadError } = await this.supabase.storage
+          .from('product-images')
+          .upload(fileName, file, { contentType: file.type, cacheControl: '3600', upsert: false });
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = this.supabase.storage.from('product-images').getPublicUrl(fileName);
+        const { data: hasPrincipal } = await this.supabase
+          .from('product_images')
+          .select('id')
+          .eq('product_id', this.productId)
+          .eq('image_type', 'principal')
+          .limit(1);
+        const imageType = (!hasPrincipal || hasPrincipal.length === 0) && nextOrder === 0 ? 'principal' : 'secundaria';
+
+        await this.supabase
+          .from('product_images')
+          .insert({
+            product_id: this.productId,
+            image_url: publicUrl,
+            image_type: imageType,
+            image_order: nextOrder
+          });
+        nextOrder++;
+      }
+      await this.refreshDetailImages();
+      this.showNotification(`${validFiles.length} foto(s) añadida(s)`, 'success');
+    } catch (err) {
+      console.error('Error subiendo imágenes:', err);
+      this.showNotification('Error al subir fotos', 'error');
+    }
+  }
+
+  /**
+   * Marcar una imagen como principal
+   */
+  async setImageAsPrincipal(imageId) {
+    if (!this.supabase || !this.productId) return;
+    try {
+      await this.supabase
+        .from('product_images')
+        .update({ image_type: 'secundaria' })
+        .eq('product_id', this.productId);
+      const { error } = await this.supabase
+        .from('product_images')
+        .update({ image_type: 'principal' })
+        .eq('id', imageId);
+      if (error) throw error;
+      await this.refreshDetailImages();
+      this.showNotification('Imagen principal actualizada', 'success');
+    } catch (err) {
+      console.error('Error estableciendo principal:', err);
+      this.showNotification('Error al cambiar imagen principal', 'error');
+    }
+  }
+
+  /**
+   * Recargar imágenes del detalle y actualizar la galería en el DOM
+   */
+  async refreshDetailImages() {
+    if (!this.container || !this.productId) return;
+    const images = await this.loadProductImagesForDetail(this.productId);
+    this.productImages = images;
+
+    const mainImg = this.container.querySelector('#productViewMainImage');
+    const thumbnailsWrap = this.container.querySelector('#productViewThumbnails');
+    const gallery = this.container.querySelector('.product-view-gallery');
+    if (!gallery) return;
+
+    const mainImage = images.length > 0 ? images[0].image_url : '';
+    if (mainImg) {
+      if (mainImage) {
+        mainImg.src = mainImage;
+        mainImg.alt = (this.productData && this.productData.nombre_producto) || 'Producto';
+        mainImg.style.display = '';
+        mainImg.parentElement.querySelector('.product-view-loading')?.remove();
+      } else {
+        mainImg.style.display = 'none';
+        if (!mainImg.nextElementSibling?.classList?.contains('product-view-loading')) {
+          const placeholder = document.createElement('div');
+          placeholder.className = 'product-view-loading';
+          placeholder.style.minHeight = '200px';
+          placeholder.innerHTML = '<i class="fas fa-image"></i><span>Sin imagen</span>';
+          mainImg.parentElement.appendChild(placeholder);
+        }
+      }
+    }
+
+    const thumbnails = images.slice(0, 20);
+    const thumbsHtml = thumbnails.map((img, i) => {
+      const isPrincipal = (img.image_type || '') === 'principal';
+      return `
+      <div class="product-view-thumb-wrap" data-index="${i}" data-image-id="${img.id}">
+        <div class="product-view-thumb ${i === 0 ? 'active' : ''}" role="button" tabindex="0">
+          <img src="${img.image_url}" alt="Miniatura ${i + 1}" loading="lazy">
+        </div>
+        <div class="product-view-thumb-actions">
+          ${thumbnails.length > 1 && !isPrincipal ? `<button type="button" class="product-view-thumb-set-principal" title="Establecer como principal" data-image-id="${img.id}"><i class="fas fa-star"></i></button>` : ''}
+          <button type="button" class="product-view-thumb-delete" title="Eliminar foto" data-image-id="${img.id}"><i class="fas fa-trash-alt"></i></button>
+        </div>
+      </div>`;
+    }).join('');
+
+    if (thumbnailsWrap) {
+      thumbnailsWrap.innerHTML = thumbsHtml;
+      if (thumbnails.length === 0) thumbnailsWrap.style.display = 'none';
+      else thumbnailsWrap.style.display = 'flex';
+    }
+
+    this.bindGalleryEvents();
+  }
+
+  /**
+   * Enlazar eventos de la galería (clicks en thumbs, eliminar, principal, subir)
+   */
+  bindGalleryEvents() {
+    const container = this.container || document.getElementById('app-container');
+    if (!container) return;
+
+    const mainImg = container.querySelector('#productViewMainImage');
+    const thumbsWrap = container.querySelector('#productViewThumbnails');
+    const thumbs = thumbsWrap ? thumbsWrap.querySelectorAll('.product-view-thumb-wrap') : [];
+
+    thumbs.forEach((wrap, index) => {
+      const thumb = wrap.querySelector('.product-view-thumb');
+      const img = this.productImages[index];
+      if (thumb && img && mainImg) {
+        thumb.onclick = () => {
+          mainImg.src = img.image_url;
+          mainImg.alt = (this.productData && this.productData.nombre_producto) || `Imagen ${index + 1}`;
+          thumbs.forEach(w => w.querySelector('.product-view-thumb')?.classList.remove('active'));
+          thumb.classList.add('active');
+        };
+      }
+      wrap.querySelector('.product-view-thumb-delete')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.removeProductImage(wrap.getAttribute('data-image-id'));
+      });
+      wrap.querySelector('.product-view-thumb-set-principal')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.setImageAsPrincipal(wrap.getAttribute('data-image-id'));
+      });
+    });
+
+    const uploadInput = container.querySelector('#productViewImageUpload');
+    const uploadBtn = container.querySelector('#productViewUploadBtn');
+    if (uploadBtn && uploadInput) {
+      uploadBtn.onclick = () => uploadInput.click();
+      uploadInput.onchange = (e) => {
+        const files = e.target.files;
+        if (files && files.length) this.uploadProductImages(files);
+        e.target.value = '';
+      };
+    }
   }
 
   /**
@@ -370,11 +628,7 @@ class ProductsView extends BaseView {
     const container = this.container || document.getElementById('app-container');
     if (!container) return;
 
-    const mainImg = container.querySelector('#productViewMainImage');
-    const thumbsWrap = container.querySelector('#productViewThumbnails');
-    const thumbs = thumbsWrap ? thumbsWrap.querySelectorAll('.product-view-thumb') : [];
     const backBtn = container.querySelector('.back-to-products-btn');
-
     if (backBtn) {
       backBtn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -383,23 +637,7 @@ class ProductsView extends BaseView {
       });
     }
 
-    thumbs.forEach((thumb, index) => {
-      thumb.addEventListener('click', () => {
-        const img = this.productImages[index];
-        if (img && mainImg) {
-          mainImg.src = img.image_url;
-          mainImg.alt = (this.productData && this.productData.nombre_producto) ? this.productData.nombre_producto : `Imagen ${index + 1}`;
-        }
-        thumbs.forEach(t => t.classList.remove('active'));
-        thumb.classList.add('active');
-      });
-      thumb.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          thumb.click();
-        }
-      });
-    });
+    this.bindGalleryEvents();
 
     // Campos editables: guardar al perder foco (blur) o al cambiar (select)
     container.querySelectorAll('[data-field]').forEach(el => {
