@@ -19412,7 +19412,7 @@ body.production-filters-in-header .living-container > .living-history-section {
     filter: blur(20px);
     pointer-events: none;
 }
-/* Interior = solo efecto glass-black, sin degradado */
+/* Interior = glass-black opaco, sin degradado (opaco para que no se vea el gradiente del borde) */
 .video-prompt-footer-card-inner.glass-black {
     margin: 0;
     padding: 0.75rem 1rem;
@@ -19423,7 +19423,7 @@ body.production-filters-in-header .living-container > .living-history-section {
     display: flex;
     flex-direction: column;
     min-width: 0;
-    background: rgba(0, 0, 0, 0.55);
+    background: rgb(18, 18, 24);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     color: var(--glass-black-text);
