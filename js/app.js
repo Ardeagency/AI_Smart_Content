@@ -204,6 +204,11 @@ class App {
     r.register('/org/:orgIdShort/:orgNameSlug/content/:contentId', contentLoader, auth);
     r.register('/content', contentLoader, auth);
 
+    // ── Org: Video (Kling 3.0 / KIE) ──
+    const videoLoader = this._lazy('VideoView', ['/js/views/VideoView.js']);
+    r.register('/org/:orgIdShort/:orgNameSlug/video', videoLoader, auth);
+    r.register('/video', videoLoader, auth);
+
     // ── Settings ──
     r.register('/settings', this._lazy('SettingsView', ['/js/views/SettingsView.js']), auth);
 

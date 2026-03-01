@@ -19396,3 +19396,110 @@ om: 0.75rem;
 }
 
 
+/* ========== Video (Kling 3.0 / KIE) ========== */
+.video-page {
+    padding: 1.5rem;
+    max-width: 720px;
+    margin: 0 auto;
+}
+.video-header {
+    margin-bottom: 1.5rem;
+}
+.video-title {
+    font-size: var(--font-size-3xl, 1.5rem);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 0.25rem 0;
+}
+.video-subtitle {
+    font-size: var(--font-size-base);
+    color: var(--text-secondary);
+    margin: 0;
+}
+.video-form-card {
+    background: var(--living-bg-card, rgba(21, 23, 28, 0.6));
+    border: 1px solid var(--border-divider);
+    border-radius: var(--radius-md, 12px);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+.video-form-section {
+    margin-bottom: 1rem;
+}
+.video-label {
+    display: block;
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+.video-select {
+    width: 100%;
+    max-width: 280px;
+    padding: 0.5rem 0.75rem;
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-divider);
+    border-radius: var(--radius-sm);
+}
+.video-generate-btn {
+    margin-top: 0.5rem;
+}
+.video-generate-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+.video-status-area,
+.video-result-area,
+.video-error-area {
+    margin-top: 1rem;
+}
+.video-status-card,
+.video-result-card,
+.video-error-card {
+    background: var(--living-bg-card, rgba(21, 23, 28, 0.6));
+    border: 1px solid var(--border-divider);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+}
+.video-status-text {
+    margin: 0;
+    color: var(--text-secondary);
+}
+.video-status-spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--border-divider);
+    border-top-color: var(--accent-warm);
+    border-radius: 50%;
+    animation: video-spin 0.8s linear infinite;
+    margin-top: 0.75rem;
+}
+@keyframes video-spin {
+    to { transform: rotate(360deg); }
+}
+.video-result-title {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 1rem 0;
+}
+.video-result-player-wrap {
+    margin-bottom: 1rem;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: #000;
+}
+.video-result-player {
+    width: 100%;
+    max-height: 400px;
+    display: block;
+}
+.video-download-btn {
+    margin-top: 0.5rem;
+}
+.video-error-text {
+    margin: 0;
+    color: var(--accent-warm, #e09145);
+}

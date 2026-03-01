@@ -1,0 +1,132 @@
+/**
+ * Netlify Function: proxy para la API de Video de KIE (Kling 3.0).
+ * Usa la variable de entorno KIE_API_KEY (configurada en Netlify).
+ *
+ * Acciones:
+ * - POST body: { action: "createTask", mode: "std"|"pro" } → crea tarea y devuelve { taskId }
+ * - GET ?taskId=xxx → consulta estado y resultado (recordInfo)
+ */
+
+const KIE_BASE = 'https://api.kie.ai/api/v1/jobs';
+
+function corsHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
+  };
+}
+
+exports.handler = async (event, context) => {
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers: corsHeaders(), body: '' };
+  }
+
+  const apiKey = process.env.KIE_API_KEY;
+  if (!apiKey) {
+    return {
+      statusCode: 500,
+      headers: corsHeaders(),
+      body: JSON.stringify({ error: 'KIE_API_KEY no configurada en el servidor' })
+    };
+  }
+
+  const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${apiKey}`
+  };
+
+  try {
+    if (event.httpMethod === 'POST') {
+      let body = {};
+      try {
+        body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body || {};
+      } catch (_) {
+        return {
+          statusCode: 400,
+          headers: corsHeaders(),
+          body: JSON.stringify({ error: 'Body JSON inválido' })
+        };
+      }
+      if (body.action !== 'createTask') {
+        return {
+          statusCode: 400,
+          headers: corsHeaders(),
+          body: JSON.stringify({ error: 'Acción no válida. Use action: "createTask"' })
+        };
+      }
+      const mode = body.mode === 'pro' ? 'pro' : 'std';
+      const createRes = await fetch(`${KIE_BASE}/createTask`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          model: 'kling-3.0/video',
+          input: { mode }
+        })
+      });
+      const createData = await createRes.json();
+      if (createRes.status !== 200 || createData.code !== 200) {
+        return {
+          statusCode: createRes.status >= 400 ? createRes.status : 500,
+          headers: corsHeaders(),
+          body: JSON.stringify({
+            error: createData.msg || 'Error al crear la tarea',
+            code: createData.code,
+            failCode: createData.data?.failCode,
+            failMsg: createData.data?.failMsg
+          })
+        };
+      }
+      return {
+        statusCode: 200,
+        headers: corsHeaders(),
+        body: JSON.stringify({ taskId: createData.data?.taskId })
+      };
+    }
+
+    if (event.httpMethod === 'GET') {
+      const taskId = event.queryStringParameters?.taskId;
+      if (!taskId) {
+        return {
+          statusCode: 400,
+          headers: corsHeaders(),
+          body: JSON.stringify({ error: 'Falta el parámetro taskId' })
+        };
+      }
+      const recordRes = await fetch(`${KIE_BASE}/recordInfo?taskId=${encodeURIComponent(taskId)}`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${apiKey}` }
+      });
+      const recordData = await recordRes.json();
+      if (recordRes.status !== 200) {
+        return {
+          statusCode: recordRes.status >= 400 ? recordRes.status : 500,
+          headers: corsHeaders(),
+          body: JSON.stringify({
+            error: recordData.msg || 'Error al consultar la tarea',
+            code: recordData.code
+          })
+        };
+      }
+      return {
+        statusCode: 200,
+        headers: corsHeaders(),
+        body: JSON.stringify(recordData)
+      };
+    }
+
+    return {
+      statusCode: 405,
+      headers: corsHeaders(),
+      body: JSON.stringify({ error: 'Método no permitido' })
+    };
+  } catch (err) {
+    console.error('kie-video error:', err);
+    return {
+      statusCode: 500,
+      headers: corsHeaders(),
+      body: JSON.stringify({ error: err.message || 'Error interno' })
+    };
+  }
+};

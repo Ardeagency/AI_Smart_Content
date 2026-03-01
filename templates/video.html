@@ -1,0 +1,45 @@
+<!-- Página Video - Generación con Kling 3.0 (KIE API) -->
+<div class="video-page" id="videoPage">
+  <div class="video-header">
+    <h1 class="video-title">Video</h1>
+    <p class="video-subtitle">Genera video con Kling 3.0</p>
+  </div>
+
+  <div class="video-form-card">
+    <div class="video-form-section">
+      <label for="videoMode" class="video-label">Modo de resolución</label>
+      <select id="videoMode" class="video-select" aria-label="Modo de generación">
+        <option value="std">Estándar (std)</option>
+        <option value="pro">Alta resolución (pro)</option>
+      </select>
+    </div>
+    <button type="button" id="videoGenerateBtn" class="btn btn-primary video-generate-btn" disabled>
+      <i class="fas fa-play"></i> Generar video
+    </button>
+  </div>
+
+  <div class="video-status-area" id="videoStatusArea" style="display: none;">
+    <div class="video-status-card" id="videoStatusCard">
+      <p class="video-status-text" id="videoStatusText">—</p>
+      <div class="video-status-spinner" id="videoStatusSpinner" style="display: none;"></div>
+    </div>
+  </div>
+
+  <div class="video-result-area" id="videoResultArea" style="display: none;">
+    <div class="video-result-card">
+      <h2 class="video-result-title">Video generado</h2>
+      <div class="video-result-player-wrap">
+        <video id="videoResultPlayer" class="video-result-player" controls playsinline></video>
+      </div>
+      <a id="videoResultDownload" class="btn btn-secondary video-download-btn" href="#" download target="_blank" rel="noopener">
+        <i class="fas fa-download"></i> Descargar
+      </a>
+    </div>
+  </div>
+
+  <div class="video-error-area" id="videoErrorArea" style="display: none;">
+    <div class="video-error-card">
+      <p class="video-error-text" id="videoErrorText">—</p>
+    </div>
+  </div>
+</div>

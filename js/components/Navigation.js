@@ -7,6 +7,7 @@ const SIDEBAR_USER_CONFIG = {
   main: [
     { type: 'page', id: 'activity', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
     { type: 'page', id: 'tasks', label: 'Task', icon: 'fa-clock', iconSrc: '/recursos/icons/taks.svg', route: 'tasks' },
+    { type: 'page', id: 'video', label: 'Video', icon: 'fa-play', iconSrc: null, route: 'video' },
     {
       type: 'container',
       id: 'catalog',
@@ -274,7 +275,7 @@ class Navigation {
     }
     
     // Rutas legacy sin /org/ - usar org actual si existe (para mostrar créditos reales en sidebar)
-    if (['/production', '/historial', '/living', '/brands', '/products', '/studio', '/audiences', '/marketing', '/campaigns', '/content', '/tasks', '/organization', '/servicios', '/credits'].some(r => path.startsWith(r))) {
+    if (['/production', '/historial', '/living', '/brands', '/products', '/studio', '/audiences', '/marketing', '/campaigns', '/content', '/video', '/tasks', '/organization', '/servicios', '/credits'].some(r => path.startsWith(r))) {
       return { mode: 'user', showSidebar: true, showHeader: true, orgId: window.currentOrgId || null, brandId: null };
     }
     
@@ -1220,6 +1221,7 @@ class Navigation {
       '/marketing': 'Identity',
       '/campaigns': 'Identity',
       '/content': 'Identity',
+      '/video': 'Video',
       '/servicios': 'Identity',
       '/settings': 'Configuración',
       '/organization': 'Configuración',
