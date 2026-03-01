@@ -69,17 +69,11 @@ class VideoView extends BaseView {
               <div class="video-prompt-footer-card-inner glass-black">
                 <h3 class="video-prompt-panel-title">Entidades de la marca</h3>
                 <div class="video-prompt-db-toolbar">
-                  <select id="videoDbCategory" class="video-prompt-db-select" aria-label="Categoría">
-                    <option value="products">Productos</option>
-                    <option value="entities">Entidades</option>
-                    <option value="audiences">Audiencias</option>
-                    <option value="campaigns">Campañas</option>
+                  <select id="videoProductSelect" class="video-prompt-db-select" aria-label="Producto de la organización">
+                    <option value="">Ninguno</option>
                   </select>
-                  <button type="button" class="video-prompt-ai-prompt-btn" id="videoAiPromptBtn" aria-label="Generar prompt con IA">
-                    <i class="fas fa-magic"></i> Prompt con IA
-                  </button>
+                  <button type="button" class="video-prompt-db-item-btn" id="videoProductUseImagesBtn" aria-label="Usar imágenes del producto" disabled>Usar imágenes</button>
                 </div>
-                <div class="video-prompt-db-list" id="videoDbList"></div>
               </div>
             </div>
             <div class="video-prompt-footer-card video-prompt-footer-card-center">
@@ -174,16 +168,16 @@ class VideoView extends BaseView {
       fileInput.addEventListener('change', (e) => this.onKlingElementFilesSelected(e));
     }
     this.renderKlingElementsList();
-    const dbCategory = this.container.querySelector('#videoDbCategory');
-    if (dbCategory) {
-      dbCategory.addEventListener('change', () => this.renderDbList());
+    const productSelect = this.container.querySelector('#videoProductSelect');
+    const productUseImagesBtn = this.container.querySelector('#videoProductUseImagesBtn');
+    if (productSelect) {
+      productSelect.addEventListener('change', () => this.updateProductUseImagesButton());
     }
-    const aiPromptBtn = this.container.querySelector('#videoAiPromptBtn');
-    if (aiPromptBtn) {
-      aiPromptBtn.addEventListener('click', () => this.generatePromptWithAI());
+    if (productUseImagesBtn) {
+      productUseImagesBtn.addEventListener('click', () => this.onUseProductImages());
     }
     await this.loadBrandData();
-    this.renderDbList();
+    this.renderProductDropdown();
     this.container.querySelectorAll('.video-prompt-toggle').forEach((btn) => {
       btn.addEventListener('click', () => {
         const pressed = btn.getAttribute('aria-pressed') !== 'true';
@@ -268,90 +262,42 @@ class VideoView extends BaseView {
     }
   }
 
-  renderDbList() {
-    const listEl = this.container.querySelector('#videoDbList');
-    const categoryEl = this.container.querySelector('#videoDbCategory');
-    if (!listEl || !categoryEl) return;
-    const cat = categoryEl.value || 'products';
-    const items = this.dbData[cat] || [];
-    if (items.length === 0) {
-      listEl.innerHTML = '<p class="video-prompt-db-list-empty">Sin datos en esta categoría</p>';
-      return;
-    }
-    if (cat === 'products') {
-      listEl.innerHTML = items.map((p) => {
-        const name = (p.nombre_producto || '').slice(0, 24);
-        const hasImages = Array.isArray(p.image_urls) && p.image_urls.length >= 2;
-        return `<div class="video-prompt-db-item" data-product-id="${p.id}" data-product-name="${this.sanitizeElementName(name || 'producto')}">
-          <span class="video-prompt-db-item-name" title="${(p.nombre_producto || '').replace(/"/g, '&quot;')}">${name || 'Producto'}</span>
-          ${hasImages ? `<button type="button" class="video-prompt-db-item-btn" data-action="use-images">Usar imágenes</button>` : ''}
-        </div>`;
-      }).join('');
-    } else {
-      const nameKey = cat === 'entities' ? 'name' : cat === 'audiences' ? 'name' : 'nombre_campana';
-      listEl.innerHTML = items.map((item, i) => {
-        const name = (item[nameKey] || item.name || 'Sin nombre').slice(0, 24);
-        return `<div class="video-prompt-db-item" data-index="${i}">
-          <span class="video-prompt-db-item-name" title="${String(item[nameKey] || item.name || '').replace(/"/g, '&quot;')}">${name}</span>
-        </div>`;
-      }).join('');
-    }
-    listEl.querySelectorAll('.video-prompt-db-item-btn[data-action="use-images"]').forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        const item = e.target.closest('.video-prompt-db-item');
-        const productId = item?.dataset?.productId;
-        const productName = item?.dataset?.productName || 'producto';
-        const product = this.dbData.products.find((p) => p.id === productId);
-        if (product && Array.isArray(product.image_urls) && product.image_urls.length >= 2 && product.image_urls.length <= 4) {
-          this.klingElements.push({
-            name: productName,
-            description: product.nombre_producto || undefined,
-            element_input_urls: product.image_urls.slice(0, 4)
-          });
-          this.renderKlingElementsList();
-        }
-      });
-    });
+  renderProductDropdown() {
+    const select = this.container.querySelector('#videoProductSelect');
+    if (!select) return;
+    const currentValue = select.value;
+    const options = (this.dbData.products || []).map((p) => {
+      const name = (p.nombre_producto || 'Producto').replace(/"/g, '&quot;').slice(0, 50);
+      return `<option value="${String(p.id)}">${name}</option>`;
+    }).join('');
+    select.innerHTML = '<option value="">Ninguno</option>' + options;
+    if (currentValue) select.value = currentValue;
+    this.updateProductUseImagesButton();
   }
 
-  async generatePromptWithAI() {
-    const inputEl = this.container.querySelector('#videoPromptInput');
-    if (!inputEl) return;
-    const aiBtn = this.container.querySelector('#videoAiPromptBtn');
-    const defaultLabel = '<i class="fas fa-magic"></i> Prompt con IA';
-    if (aiBtn) {
-      aiBtn.disabled = true;
-      aiBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando…';
-    }
-    const currentPrompt = (inputEl.value || '').trim();
-    const context = {
-      entities: this.dbData.entities.slice(0, 10).map((e) => ({ name: e.name, type: e.entity_type, description: e.description })),
-      products: this.dbData.products.slice(0, 10).map((p) => ({ name: p.nombre_producto })),
-      audiences: this.dbData.audiences.slice(0, 5).map((a) => ({ name: a.name, description: a.description })),
-      campaigns: this.dbData.campaigns.slice(0, 5).map((c) => ({ name: c.nombre_campana, description: c.descripcion_interna }))
-    };
-    try {
-      const res = await fetch('/.netlify/functions/openai-prompt', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: currentPrompt || undefined, brand_context: context })
-      });
-      const data = await res.json();
-      if (res.ok && data.prompt) {
-        inputEl.value = data.prompt;
-        inputEl.focus();
-      } else if (data.error && window.alert) {
-        window.alert(data.error);
-      }
-    } catch (e) {
-      console.error('VideoView generatePromptWithAI:', e);
-      if (window.alert) window.alert('Error al generar el prompt. Revisa que OPENAI_API_KEY esté configurada.');
-    } finally {
-      if (aiBtn) {
-        aiBtn.disabled = false;
-        aiBtn.innerHTML = defaultLabel;
-      }
-    }
+  updateProductUseImagesButton() {
+    const btn = this.container.querySelector('#videoProductUseImagesBtn');
+    const select = this.container.querySelector('#videoProductSelect');
+    if (!btn || !select) return;
+    const productId = select.value;
+    const product = (this.dbData.products || []).find((p) => String(p.id) === String(productId));
+    const hasImages = product && Array.isArray(product.image_urls) && product.image_urls.length >= 2 && product.image_urls.length <= 4;
+    btn.disabled = !hasImages;
+  }
+
+  onUseProductImages() {
+    const select = this.container.querySelector('#videoProductSelect');
+    if (!select) return;
+    const productId = select.value;
+    const product = (this.dbData.products || []).find((p) => String(p.id) === String(productId));
+    if (!product || !Array.isArray(product.image_urls) || product.image_urls.length < 2 || product.image_urls.length > 4) return;
+    const name = this.sanitizeElementName((product.nombre_producto || 'producto').slice(0, 24));
+    this.klingElements.push({
+      name,
+      description: product.nombre_producto || undefined,
+      element_input_urls: product.image_urls.slice(0, 4)
+    });
+    this.renderKlingElementsList();
   }
 
   sanitizeElementName(str) {
