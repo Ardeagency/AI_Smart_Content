@@ -23,24 +23,33 @@ class VideoView extends BaseView {
       framing: 'Centered',
       cameraMovement: 'Static',
       motionSpeed: 'Subtle',
+      motionIntensity: 'Subtle',
       lightType: 'Soft diffused',
       contrastLevel: 'Medium',
+      temperature: 'Neutral',
       tone: 'Clean commercial',
-      colorTemp: 'Neutral'
+      colorGrade: 'Neutral',
+      colorTemp: 'Neutral',
+      energyLevel: 'Moderate'
     };
-    this.cineBlocksCollapsed = { camera: false, movement: false, lighting: false, style: false };
+    this.cineBlocksCollapsed = { camera: false, movement: false, lighting: false, mood: false };
+    this.assetScope = 'product';
+    this.selectedAssetId = '';
+    this.storyboardScenes = [{ brief: '', duration: '5' }, { brief: '', duration: '5' }];
+    this.brandContextCollapsed = true;
+    this.promptPreviewCollapsed = true;
+    this.generatedPromptPreview = null;
   }
 
   static get CINEMATOGRAPHY_PRESETS() {
     return {
-      '': { label: '— Sin preset' },
-      'product-launch': { label: 'Product Launch', shotType: 'Hero Product Frame', lens: '50mm (Balanced)', framing: 'Centered', cameraMovement: 'Slow Push In', motionSpeed: 'Moderate', lightType: 'Studio commercial', contrastLevel: 'Medium', tone: 'Clean commercial', colorTemp: 'Neutral' },
-      'social-ad': { label: 'Social Ad', shotType: 'Close-up', lens: '35mm (Natural)', framing: 'Rule of thirds', cameraMovement: 'Tracking', motionSpeed: 'Dynamic', lightType: 'Natural daylight', contrastLevel: 'Medium', tone: 'Bright energetic', colorTemp: 'Warm' },
-      'luxury-hero': { label: 'Luxury Hero', shotType: 'Wide Shot', lens: '85mm (Portrait Compression)', framing: 'Negative space left', cameraMovement: 'Slow Pull Out', motionSpeed: 'Subtle', lightType: 'Rim light', contrastLevel: 'High', tone: 'Minimal luxury', colorTemp: 'Muted tones' },
-      'tech-explainer': { label: 'Tech Explainer', shotType: 'Medium Shot', lens: '35mm (Natural)', framing: 'Centered', cameraMovement: 'Orbit', motionSpeed: 'Moderate', lightType: 'Soft diffused', contrastLevel: 'Low', tone: 'Clean commercial', colorTemp: 'Neutral' },
-      'cinematic-teaser': { label: 'Cinematic Teaser', shotType: 'Wide Shot', lens: '24mm (Wide Cinematic)', framing: 'Dynamic off-center', cameraMovement: 'Dolly Left', motionSpeed: 'Dynamic', lightType: 'Dramatic spotlight', contrastLevel: 'High', tone: 'Cinematic dramatic', colorTemp: 'Cold' },
-      'ecommerce-clean': { label: 'Ecommerce Clean', shotType: 'Hero Product Frame', lens: '50mm (Balanced)', framing: 'Symmetrical', cameraMovement: '360° Rotation', motionSpeed: 'Subtle', lightType: 'Studio commercial', contrastLevel: 'Low', tone: 'Clean commercial', colorTemp: 'Neutral' },
-      'performance-ad': { label: 'Performance Ad', shotType: 'Close-up', lens: '35mm (Natural)', framing: 'Rule of thirds', cameraMovement: 'Handheld', motionSpeed: 'Aggressive', lightType: 'Hard contrast', contrastLevel: 'High', tone: 'Bright energetic', colorTemp: 'High saturation' }
+      '': { label: 'None' },
+      'product-launch': { label: 'Product Launch', shotType: 'Hero Product Frame', lens: '50mm (Balanced)', framing: 'Centered', cameraMovement: 'Slow Push In', motionSpeed: 'Moderate', motionIntensity: 'Moderate', lightType: 'Studio commercial', contrastLevel: 'Medium', temperature: 'Neutral', tone: 'Clean commercial', colorGrade: 'Neutral', colorTemp: 'Neutral', energyLevel: 'Moderate' },
+      'luxury-hero': { label: 'Luxury Hero', shotType: 'Wide Shot', lens: '85mm (Portrait Compression)', framing: 'Negative space left', cameraMovement: 'Slow Pull Out', motionSpeed: 'Subtle', motionIntensity: 'Subtle', lightType: 'Rim light', contrastLevel: 'High', temperature: 'Warm', tone: 'Minimal luxury', colorGrade: 'Muted tones', colorTemp: 'Muted tones', energyLevel: 'Low' },
+      'social-performance': { label: 'Social Performance', shotType: 'Close-up', lens: '35mm (Natural)', framing: 'Rule of thirds', cameraMovement: 'Tracking', motionSpeed: 'Dynamic', motionIntensity: 'Dynamic', lightType: 'Natural daylight', contrastLevel: 'Medium', temperature: 'Warm', tone: 'Bright energetic', colorGrade: 'Warm', colorTemp: 'Warm', energyLevel: 'High' },
+      'cinematic-teaser': { label: 'Cinematic Teaser', shotType: 'Wide Shot', lens: '24mm (Wide Cinematic)', framing: 'Dynamic off-center', cameraMovement: 'Dolly Left', motionSpeed: 'Dynamic', motionIntensity: 'Dynamic', lightType: 'Dramatic spotlight', contrastLevel: 'High', temperature: 'Cold', tone: 'Cinematic dramatic', colorGrade: 'Cold', colorTemp: 'Cold', energyLevel: 'High' },
+      'ecommerce-clean': { label: 'Ecommerce Clean', shotType: 'Hero Product Frame', lens: '50mm (Balanced)', framing: 'Symmetrical', cameraMovement: '360° Rotation', motionSpeed: 'Subtle', motionIntensity: 'Subtle', lightType: 'Studio commercial', contrastLevel: 'Low', temperature: 'Neutral', tone: 'Clean commercial', colorGrade: 'Neutral', colorTemp: 'Neutral', energyLevel: 'Low' },
+      'tech-explainer': { label: 'Tech Explainer', shotType: 'Medium Shot', lens: '35mm (Natural)', framing: 'Centered', cameraMovement: 'Orbit', motionSpeed: 'Moderate', motionIntensity: 'Moderate', lightType: 'Soft diffused', contrastLevel: 'Low', temperature: 'Neutral', tone: 'Clean commercial', colorGrade: 'Neutral', colorTemp: 'Neutral', energyLevel: 'Moderate' }
     };
   }
 
@@ -95,7 +104,7 @@ class VideoView extends BaseView {
           <div class="video-productions-panel-backdrop" id="videoProductionsPanelBackdrop"></div>
           <div class="video-productions-panel-card">
             <div class="video-productions-panel-header">
-              <h3 class="video-prompt-panel-title">Producciones</h3>
+              <h3 class="video-prompt-panel-title">Production Queue</h3>
               <button type="button" class="video-productions-panel-close" id="videoProductionsPanelClose" aria-label="Cerrar"><i class="fas fa-times"></i></button>
             </div>
             <div class="video-productions-carousel-wrap">
@@ -105,96 +114,106 @@ class VideoView extends BaseView {
           </div>
         </div>
 
-        <footer class="video-page-footer video-prompt-wrap" aria-label="Prompt de generación">
+        <footer class="video-page-footer video-prompt-wrap" aria-label="Director Console">
           <div class="video-prompt-cards-row">
-            <div class="video-prompt-footer-card">
-              <div class="video-prompt-footer-card-inner glass-black">
-                <div class="video-prompt-left-section">
-                  <div class="video-prompt-left-block">
-                    <h3 class="video-prompt-panel-title">Producciones</h3>
-                    <button type="button" class="video-prompt-db-select video-prompt-productions-btn" id="videoProductionsBtn" aria-label="Ver producciones">
-                      <i class="fas fa-film"></i> Ver producciones
-                    </button>
+            <div class="video-prompt-footer-card video-prompt-footer-card-left">
+              <div class="video-prompt-footer-card-inner glass-black video-left-inner">
+                <h3 class="video-section-label">Production Context</h3>
+                <div class="video-left-block">
+                  <h4 class="video-prompt-panel-title">Producciones</h4>
+                  <button type="button" class="video-prompt-db-select video-prompt-productions-btn" id="videoProductionsBtn" aria-label="Production Queue">
+                    <i class="fas fa-play"></i> Production Queue
+                  </button>
+                </div>
+                <div class="video-left-block video-asset-stack-block">
+                  <h4 class="video-prompt-panel-title">Asset Stack</h4>
+                  <div class="video-asset-scope-wrap">
+                    <select id="videoAssetScope" class="video-prompt-db-select video-asset-scope-select" aria-label="Scope">
+                      <option value="product">Product</option>
+                      <option value="service">Service</option>
+                      <option value="brand_world">Brand World</option>
+                      <option value="campaign">Campaign</option>
+                      <option value="collection">Collection</option>
+                    </select>
                   </div>
-                  <div class="video-prompt-left-block">
-                    <h3 class="video-prompt-panel-title">Entidades de la marca</h3>
-                    <div class="video-prompt-db-toolbar">
-                      <select id="videoEntityTypeSelect" class="video-prompt-db-select" aria-label="Tipo de entidad">
-                        <option value="producto">Producto</option>
-                        <option value="servicio">Servicio</option>
-                      </select>
-                      <select id="videoEntitySelect" class="video-prompt-db-select" aria-label="Entidad">
-                        <option value="">Ninguno</option>
-                      </select>
+                  <select id="videoAssetSelect" class="video-prompt-db-select video-asset-select" aria-label="Asset" style="margin-top: 0.35rem;">
+                    <option value="">— None</option>
+                  </select>
+                  <div class="video-asset-card" id="videoAssetCard">
+                    <div class="video-asset-card-placeholder" id="videoAssetCardPlaceholder">Select an asset</div>
+                    <div class="video-asset-card-active" id="videoAssetCardActive" style="display: none;">
+                      <div class="video-asset-card-name" id="videoAssetCardName"></div>
+                      <ul class="video-asset-card-locks" id="videoAssetCardLocks"></ul>
+                      <button type="button" class="video-asset-change-btn" id="videoAssetChangeBtn">Change Asset</button>
                     </div>
+                  </div>
+                </div>
+                <div class="video-brand-context-block">
+                  <button type="button" class="video-collapse-header" id="videoBrandContextToggle" aria-expanded="false">
+                    <span>Brand Context Included</span><i class="fas fa-chevron-down video-collapse-icon"></i>
+                  </button>
+                  <div class="video-collapse-content video-collapse-content-closed" id="videoBrandContextContent">
+                    <ul class="video-brand-context-list">
+                      <li>Visual identity</li>
+                      <li>Product specs</li>
+                      <li>Material textures</li>
+                      <li>Brand tone</li>
+                      <li>Logo rules</li>
+                    </ul>
                   </div>
                 </div>
               </div>
             </div>
             <div class="video-prompt-footer-card video-prompt-footer-card-center">
-              <div class="video-prompt-footer-card-inner glass-black">
-                <div class="video-prompt-inner">
-                  <input type="file" id="videoImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
-                  <div class="video-kling-elements-list" id="videoKlingElementsList" aria-live="polite"></div>
-                  <label for="videoPromptInput" class="video-prompt-label visually-hidden">Describe tu video</label>
-                  <input
-                    type="text"
-                    id="videoPromptInput"
-                    class="video-prompt-input"
-                    placeholder="¿Qué video quieres generar? Usa @nombre para referenciar elementos."
-                    autocomplete="off"
-                    aria-label="Prompt para generar video"
-                  />
-                  <div class="video-prompt-actions">
-                    <button type="button" class="video-prompt-btn video-prompt-btn-add" id="videoPromptAdd" aria-label="Subir imágenes">
-                      <i class="fas fa-plus"></i>
-                    </button>
-                    <div class="video-prompt-duration-wrap">
-                      <select id="videoDuration" class="video-prompt-aspect" aria-label="Duración del video">
-                        <option value="5">5s</option>
-                        <option value="10">10s</option>
-                        <option value="15">15s</option>
-                      </select>
-                      <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
-                    </div>
-                    <button type="button" class="video-prompt-toggle video-prompt-multi-shots" id="videoMultiShots" title="Multi shots" aria-pressed="false">
-                      <i class="fas fa-film"></i><span>Multi shots</span>
-                    </button>
-                    <button type="button" class="video-prompt-toggle video-prompt-multi-prompt" id="videoMultiPrompt" title="Multi prompt" aria-pressed="false">
-                      <i class="fas fa-align-left"></i><span>Multi prompt</span>
-                    </button>
-                    <button type="button" class="video-prompt-toggle video-prompt-sound active" id="videoSound" title="Sonido" aria-pressed="true">
-                      <i class="fas fa-volume-up"></i><span>Sonido</span>
-                    </button>
-                    <div class="video-prompt-aspect-wrap">
-                      <select id="videoAspectRatio" class="video-prompt-aspect" aria-label="Relación de aspecto">
-                        <option value="16:9">16:9</option>
-                        <option value="9:16">9:16</option>
-                        <option value="1:1">1:1</option>
-                      </select>
-                      <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
-                    </div>
-                    <button type="button" class="video-prompt-btn video-prompt-btn-send" id="videoPromptSend" aria-label="Generar video">
-                      <i class="fas fa-paper-plane"></i>
-                    </button>
+              <div class="video-prompt-footer-card-inner glass-black video-director-console">
+                <h3 class="video-section-label video-director-title">Director Console</h3>
+                <input type="file" id="videoImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
+                <div class="video-kling-elements-list" id="videoKlingElementsList" aria-live="polite"></div>
+                <label for="videoPromptInput" class="video-cine-label">Director Brief</label>
+                <textarea
+                  id="videoPromptInput"
+                  class="video-prompt-input video-director-brief-input"
+                  placeholder="Describe the intention. We handle the production. Use @product to reference assets."
+                  rows="4"
+                  autocomplete="off"
+                  aria-label="Director Brief"
+                ></textarea>
+                <div class="video-prompt-actions video-prompt-actions-row1">
+                  <button type="button" class="video-prompt-btn video-prompt-btn-add" id="videoPromptAdd" aria-label="Scene"><i class="fas fa-plus"></i> Scene</button>
+                  <div class="video-prompt-duration-wrap">
+                    <select id="videoDuration" class="video-prompt-aspect" aria-label="Duration"><option value="5">5s</option><option value="10">10s</option><option value="15">15s</option></select>
+                    <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
                   </div>
+                  <button type="button" class="video-prompt-toggle video-prompt-multi-shots" id="videoMultiShots" title="Multi Shot" aria-pressed="false"><i class="fas fa-film"></i><span>Multi Shot</span></button>
+                  <button type="button" class="video-prompt-toggle video-prompt-multi-prompt" id="videoMultiPrompt" title="Multi Prompt" aria-pressed="false"><i class="fas fa-align-left"></i><span>Multi Prompt</span></button>
+                </div>
+                <div class="video-prompt-actions video-prompt-actions-row2">
+                  <button type="button" class="video-prompt-toggle video-prompt-sound active" id="videoSound" title="Sound" aria-pressed="true"><i class="fas fa-volume-up"></i><span>Sound</span></button>
+                  <div class="video-prompt-aspect-wrap">
+                    <select id="videoAspectRatio" class="video-prompt-aspect" aria-label="Format"><option value="16:9">16:9</option><option value="9:16">9:16</option><option value="1:1">1:1</option></select>
+                    <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
+                  </div>
+                  <button type="button" class="video-prompt-btn video-prompt-btn-send" id="videoPromptSend" aria-label="Generate"><i class="fas fa-paper-plane"></i></button>
+                </div>
+                <div class="video-storyboard-wrap" id="videoStoryboardWrap" style="display: none;">
+                  <h4 class="video-storyboard-title">Storyboard</h4>
+                  <div class="video-storyboard-scenes" id="videoStoryboardScenes"></div>
                 </div>
               </div>
             </div>
-            <div class="video-prompt-footer-card">
+            <div class="video-prompt-footer-card video-prompt-footer-card-right">
               <div class="video-prompt-footer-card-inner glass-black video-cinematography-panel">
                 <h3 class="video-prompt-panel-title">🎥 Cinematography</h3>
                 <div class="video-cine-preset-wrap">
-                  <label class="video-cine-label">Preset</label>
+                  <label class="video-cine-label">Production Preset</label>
                   <select id="videoCinePreset" class="video-cine-select" aria-label="Production Preset">
-                    <option value="">— Sin preset</option>
+                    <option value="">None</option>
                     <option value="product-launch">Product Launch</option>
-                    <option value="social-ad">Social Ad</option>
                     <option value="luxury-hero">Luxury Hero</option>
-                    <option value="tech-explainer">Tech Explainer</option>
+                    <option value="social-performance">Social Performance</option>
                     <option value="cinematic-teaser">Cinematic Teaser</option>
                     <option value="ecommerce-clean">Ecommerce Clean</option>
-                    <option value="performance-ad">Performance Ad</option>
+                    <option value="tech-explainer">Tech Explainer</option>
                   </select>
                 </div>
                 <div class="video-cine-selected-tags" id="videoCineSelectedTags" aria-live="polite"></div>
@@ -210,8 +229,9 @@ class VideoView extends BaseView {
                   <div class="video-cine-block" data-block="movement">
                     <button type="button" class="video-cine-block-header" aria-expanded="false"><span>Movement</span><i class="fas fa-chevron-down"></i></button>
                     <div class="video-cine-block-content video-cine-block-collapsed">
-                      <div class="video-cine-row"><label class="video-cine-label">Camera Movement</label><select id="videoCineMovement" class="video-cine-select"></select></div>
-                      <div class="video-cine-row"><label class="video-cine-label">Motion Speed</label><select id="videoCineMotionSpeed" class="video-cine-select"></select></div>
+                      <div class="video-cine-row"><label class="video-cine-label">Movement Type</label><select id="videoCineMovement" class="video-cine-select"></select></div>
+                      <div class="video-cine-row"><label class="video-cine-label">Speed</label><select id="videoCineMotionSpeed" class="video-cine-select"></select></div>
+                      <div class="video-cine-row"><label class="video-cine-label">Motion Intensity</label><select id="videoCineMotionIntensity" class="video-cine-select"></select></div>
                     </div>
                   </div>
                   <div class="video-cine-block" data-block="lighting">
@@ -219,14 +239,29 @@ class VideoView extends BaseView {
                     <div class="video-cine-block-content video-cine-block-collapsed">
                       <div class="video-cine-row"><label class="video-cine-label">Light Type</label><select id="videoCineLightType" class="video-cine-select"></select></div>
                       <div class="video-cine-row"><label class="video-cine-label">Contrast</label><select id="videoCineContrast" class="video-cine-select"></select></div>
+                      <div class="video-cine-row"><label class="video-cine-label">Temperature</label><select id="videoCineTemperature" class="video-cine-select"></select></div>
                     </div>
                   </div>
-                  <div class="video-cine-block" data-block="style">
-                    <button type="button" class="video-cine-block-header" aria-expanded="false"><span>Style / Mood</span><i class="fas fa-chevron-down"></i></button>
+                  <div class="video-cine-block" data-block="mood">
+                    <button type="button" class="video-cine-block-header" aria-expanded="false"><span>Mood</span><i class="fas fa-chevron-down"></i></button>
                     <div class="video-cine-block-content video-cine-block-collapsed">
                       <div class="video-cine-row"><label class="video-cine-label">Tone</label><select id="videoCineTone" class="video-cine-select"></select></div>
-                      <div class="video-cine-row"><label class="video-cine-label">Color Temp</label><select id="videoCineColorTemp" class="video-cine-select"></select></div>
+                      <div class="video-cine-row"><label class="video-cine-label">Color Grade</label><select id="videoCineColorGrade" class="video-cine-select"></select></div>
+                      <div class="video-cine-row"><label class="video-cine-label">Energy Level</label><select id="videoCineEnergyLevel" class="video-cine-select"></select></div>
                     </div>
+                  </div>
+                </div>
+              </div>
+              <div class="video-prompt-preview-block">
+                <button type="button" class="video-collapse-header" id="videoPromptPreviewToggle" aria-expanded="false">
+                  <span>AI Prompt Preview</span><i class="fas fa-chevron-down video-collapse-icon"></i>
+                </button>
+                <div class="video-collapse-content video-collapse-content-closed" id="videoPromptPreviewContent">
+                  <div class="video-prompt-preview-placeholder" id="videoPromptPreviewPlaceholder">Generate to see the production prompt.</div>
+                  <div class="video-prompt-preview-generated" id="videoPromptPreviewGenerated" style="display: none;">
+                    <h4 class="video-prompt-preview-title">Generated Production Prompt</h4>
+                    <div class="video-prompt-preview-body" id="videoPromptPreviewBody"></div>
+                    <div class="video-prompt-preview-score" id="videoPromptPreviewScore">Brand Lock Score: 94%</div>
                   </div>
                 </div>
               </div>
@@ -240,6 +275,10 @@ class VideoView extends BaseView {
   async init() {
     this.sendBtn = this.container.querySelector('#videoPromptSend');
     this.promptInput = this.container.querySelector('#videoPromptInput');
+    if (this.promptInput && this.promptInput.tagName === 'TEXTAREA') {
+      this.promptInput.setAttribute('rows', '4');
+      this.promptInput.style.minHeight = '120px';
+    }
     this.aspectSelect = this.container.querySelector('#videoAspectRatio');
     this.statusArea = this.container.querySelector('#videoStatusArea');
     this.statusText = this.container.querySelector('#videoStatusText');
@@ -268,16 +307,47 @@ class VideoView extends BaseView {
       fileInput.addEventListener('change', (e) => this.onKlingElementFilesSelected(e));
     }
     this.renderKlingElementsList();
-    const entityTypeSelect = this.container.querySelector('#videoEntityTypeSelect');
-    const entitySelect = this.container.querySelector('#videoEntitySelect');
-    if (entityTypeSelect) {
-      entityTypeSelect.addEventListener('change', () => {
-        this.renderEntityDropdown();
+    const assetScope = this.container.querySelector('#videoAssetScope');
+    const assetSelect = this.container.querySelector('#videoAssetSelect');
+    if (assetScope) {
+      assetScope.addEventListener('change', () => {
+        this.assetScope = assetScope.value;
+        this.selectedAssetId = '';
+        this.renderAssetDropdown();
+        this.renderAssetCard();
         this.syncProductSelectionToKling();
       });
     }
-    if (entitySelect) {
-      entitySelect.addEventListener('change', () => this.syncProductSelectionToKling());
+    if (assetSelect) {
+      assetSelect.addEventListener('change', () => {
+        this.selectedAssetId = assetSelect.value || '';
+        this.renderAssetCard();
+        this.syncProductSelectionToKling();
+      });
+    }
+    const changeAssetBtn = this.container.querySelector('#videoAssetChangeBtn');
+    if (changeAssetBtn) changeAssetBtn.addEventListener('click', () => this.clearAssetSelection());
+    const brandContextToggle = this.container.querySelector('#videoBrandContextToggle');
+    const brandContextContent = this.container.querySelector('#videoBrandContextContent');
+    if (brandContextToggle && brandContextContent) {
+      brandContextToggle.addEventListener('click', () => {
+        this.brandContextCollapsed = !this.brandContextCollapsed;
+        brandContextContent.classList.toggle('video-collapse-content-closed', this.brandContextCollapsed);
+        brandContextToggle.setAttribute('aria-expanded', !this.brandContextCollapsed);
+        const icon = brandContextToggle.querySelector('.video-collapse-icon');
+        if (icon) icon.style.transform = this.brandContextCollapsed ? 'rotate(-90deg)' : 'rotate(0)';
+      });
+    }
+    const promptPreviewToggle = this.container.querySelector('#videoPromptPreviewToggle');
+    const promptPreviewContent = this.container.querySelector('#videoPromptPreviewContent');
+    if (promptPreviewToggle && promptPreviewContent) {
+      promptPreviewToggle.addEventListener('click', () => {
+        this.promptPreviewCollapsed = !this.promptPreviewCollapsed;
+        promptPreviewContent.classList.toggle('video-collapse-content-closed', this.promptPreviewCollapsed);
+        promptPreviewToggle.setAttribute('aria-expanded', !this.promptPreviewCollapsed);
+        const icon = promptPreviewToggle.querySelector('.video-collapse-icon');
+        if (icon) icon.style.transform = this.promptPreviewCollapsed ? 'rotate(-90deg)' : 'rotate(0)';
+      });
     }
     const productionsBtn = this.container.querySelector('#videoProductionsBtn');
     const panelClose = this.container.querySelector('#videoProductionsPanelClose');
@@ -286,7 +356,10 @@ class VideoView extends BaseView {
     if (panelClose) panelClose.addEventListener('click', () => this.closeProductionsPanel());
     if (panelBackdrop) panelBackdrop.addEventListener('click', () => this.closeProductionsPanel());
     await this.loadBrandData();
-    this.renderEntityDropdown();
+    const scopeEl = this.container.querySelector('#videoAssetScope');
+    if (scopeEl) this.assetScope = scopeEl.value || 'product';
+    this.renderAssetDropdown();
+    this.renderAssetCard();
     await this.loadVideoProductions();
     this.initCinematography();
     this.container.querySelectorAll('.video-prompt-toggle').forEach((btn) => {
@@ -294,6 +367,101 @@ class VideoView extends BaseView {
         const pressed = btn.getAttribute('aria-pressed') !== 'true';
         btn.setAttribute('aria-pressed', pressed);
         btn.classList.toggle('active', pressed);
+        if (btn.id === 'videoMultiShots') {
+          const wrap = this.container.querySelector('#videoStoryboardWrap');
+          if (wrap) {
+            wrap.style.display = pressed ? 'block' : 'none';
+            if (pressed) this.renderStoryboardScenes();
+          }
+        }
+      });
+    });
+  }
+
+  clearAssetSelection() {
+    const assetSelect = this.container.querySelector('#videoAssetSelect');
+    if (assetSelect) assetSelect.value = '';
+    this.selectedAssetId = '';
+    this.renderAssetCard();
+    this.syncProductSelectionToKling();
+  }
+
+  getAssetListByScope() {
+    const scope = this.assetScope || 'product';
+    if (scope === 'product') return (this.dbData.products || []).map((p) => ({ id: p.id, name: p.nombre_producto || 'Product', type: 'product' }));
+    if (scope === 'service') return (this.dbData.services || []).map((s) => ({ id: s.id, name: s.nombre_servicio || 'Service', type: 'service' }));
+    if (scope === 'campaign') return (this.dbData.campaigns || []).map((c) => ({ id: c.id, name: c.nombre_campana || 'Campaign', type: 'campaign' }));
+    if (scope === 'brand_world') return (this.dbData.entities || []).map((e) => ({ id: e.id, name: e.name || 'Entity', type: 'entity' }));
+    return [];
+  }
+
+  renderAssetDropdown() {
+    const select = this.container.querySelector('#videoAssetSelect');
+    if (!select) return;
+    const items = this.getAssetListByScope();
+    const current = select.value;
+    const options = items.map((item) => `<option value="${String(item.id)}">${(item.name || '').slice(0, 50)}</option>`).join('');
+    select.innerHTML = '<option value="">— None</option>' + options;
+    if (current && items.some((i) => String(i.id) === current)) select.value = current;
+    else this.selectedAssetId = '';
+  }
+
+  renderAssetCard() {
+    const placeholder = this.container.querySelector('#videoAssetCardPlaceholder');
+    const active = this.container.querySelector('#videoAssetCardActive');
+    const nameEl = this.container.querySelector('#videoAssetCardName');
+    const locksEl = this.container.querySelector('#videoAssetCardLocks');
+    if (!placeholder || !active) return;
+    const id = this.container.querySelector('#videoAssetSelect')?.value || this.selectedAssetId;
+    if (!id) {
+      placeholder.style.display = 'block';
+      active.style.display = 'none';
+      return;
+    }
+    const scope = this.assetScope || 'product';
+    let displayName = '';
+    const locks = ['Packaging locked', 'Color palette locked', 'Tone locked'];
+    if (scope === 'product') {
+      const p = (this.dbData.products || []).find((x) => String(x.id) === String(id));
+      displayName = p?.nombre_producto || 'Product';
+    } else if (scope === 'service') {
+      const s = (this.dbData.services || []).find((x) => String(x.id) === String(id));
+      displayName = s?.nombre_servicio || 'Service';
+    } else if (scope === 'campaign') {
+      const c = (this.dbData.campaigns || []).find((x) => String(x.id) === String(id));
+      displayName = c?.nombre_campana || 'Campaign';
+    } else {
+      const e = (this.dbData.entities || []).find((x) => String(x.id) === String(id));
+      displayName = e?.name || 'Asset';
+    }
+    placeholder.style.display = 'none';
+    active.style.display = 'block';
+    if (nameEl) nameEl.textContent = displayName;
+    if (locksEl) locksEl.innerHTML = locks.map((l) => `<li><i class="fas fa-check"></i> ${l}</li>`).join('');
+  }
+
+  renderStoryboardScenes() {
+    const container = this.container.querySelector('#videoStoryboardScenes');
+    if (!container) return;
+    const scenes = this.storyboardScenes.length >= 2 ? this.storyboardScenes : [{ brief: '', duration: '5' }, { brief: '', duration: '5' }];
+    this.storyboardScenes = scenes;
+    container.innerHTML = scenes.map((s, i) => `
+      <div class="video-storyboard-scene" data-index="${i}">
+        <span class="video-storyboard-scene-label">SCENE ${String(i + 1).padStart(2, '0')}</span>
+        <input type="text" class="video-storyboard-scene-brief" placeholder="Mini brief" value="${(s.brief || '').replace(/"/g, '&quot;')}" data-index="${i}">
+        <select class="video-storyboard-scene-duration" data-index="${i}"><option value="5" ${s.duration === '5' ? 'selected' : ''}>5s</option><option value="10" ${s.duration === '10' ? 'selected' : ''}>10s</option></select>
+      </div>
+    `).join('');
+    container.querySelectorAll('.video-storyboard-scene-brief').forEach((input) => {
+      input.addEventListener('input', () => {
+        const i = parseInt(input.dataset.index, 10);
+        if (this.storyboardScenes[i]) this.storyboardScenes[i].brief = input.value;
+      });
+    });
+    container.querySelectorAll('.video-storyboard-scene-duration').forEach((sel) => {
+      sel.addEventListener('change', () => {
+        const i = parseInt(sel.dataset.index, 10);
+        if (this.storyboardScenes[i]) this.storyboardScenes[i].duration = sel.value;
       });
     });
   }
@@ -416,10 +584,14 @@ class VideoView extends BaseView {
       framing: ['Centered', 'Rule of thirds', 'Negative space left', 'Negative space right', 'Symmetrical', 'Dynamic off-center'],
       cameraMovement: ['Static', 'Slow Push In', 'Slow Pull Out', 'Dolly Left', 'Dolly Right', 'Orbit', '360° Rotation', 'Handheld', 'Tracking', 'FPV'],
       motionSpeed: ['Subtle', 'Moderate', 'Dynamic', 'Aggressive'],
+      motionIntensity: ['Subtle', 'Moderate', 'Dynamic', 'Aggressive'],
       lightType: ['Soft diffused', 'Hard contrast', 'Rim light', 'Backlit silhouette', 'Studio commercial', 'Natural daylight', 'Dramatic spotlight'],
       contrastLevel: ['Low', 'Medium', 'High', 'Ultra contrast'],
+      temperature: ['Neutral', 'Warm', 'Cold'],
       tone: ['Clean commercial', 'Cinematic dramatic', 'Hyperreal product', 'Minimal luxury', 'Dark premium', 'Bright energetic', 'Editorial fashion', 'Documentary'],
-      colorTemp: ['Neutral', 'Warm', 'Cold', 'High saturation', 'Muted tones']
+      colorGrade: ['Neutral', 'Warm', 'Cold', 'High saturation', 'Muted tones'],
+      colorTemp: ['Neutral', 'Warm', 'Cold', 'High saturation', 'Muted tones'],
+      energyLevel: ['Low', 'Moderate', 'High', 'Peak']
     };
   }
 
@@ -435,11 +607,16 @@ class VideoView extends BaseView {
     fill('#videoCineFraming', opts.framing, this.cinematography.framing);
     fill('#videoCineMovement', opts.cameraMovement, this.cinematography.cameraMovement);
     fill('#videoCineMotionSpeed', opts.motionSpeed, this.cinematography.motionSpeed);
+    fill('#videoCineMotionIntensity', opts.motionIntensity, this.cinematography.motionIntensity);
     fill('#videoCineLightType', opts.lightType, this.cinematography.lightType);
     fill('#videoCineContrast', opts.contrastLevel, this.cinematography.contrastLevel);
+    fill('#videoCineTemperature', opts.temperature, this.cinematography.temperature);
     fill('#videoCineTone', opts.tone, this.cinematography.tone);
+    fill('#videoCineColorGrade', opts.colorGrade, this.cinematography.colorGrade);
+    fill('#videoCineEnergyLevel', opts.energyLevel, this.cinematography.energyLevel);
     fill('#videoCineColorTemp', opts.colorTemp, this.cinematography.colorTemp);
 
+    const presetKeys = ['shotType', 'lens', 'framing', 'cameraMovement', 'motionSpeed', 'motionIntensity', 'lightType', 'contrastLevel', 'temperature', 'tone', 'colorGrade', 'colorTemp', 'energyLevel'];
     const presetEl = this.container.querySelector('#videoCinePreset');
     if (presetEl) {
       presetEl.addEventListener('change', () => {
@@ -448,21 +625,23 @@ class VideoView extends BaseView {
         if (presets[key] && key) {
           const p = presets[key];
           this.cinematography.preset = key;
-          ['shotType', 'lens', 'framing', 'cameraMovement', 'motionSpeed', 'lightType', 'contrastLevel', 'tone', 'colorTemp'].forEach((k) => {
-            if (p[k] != null) this.cinematography[k] = p[k];
-          });
+          presetKeys.forEach((k) => { if (p[k] != null) this.cinematography[k] = p[k]; });
           this.syncCinematographyToSelects();
           this.renderCinematographySelectedTags();
         }
       });
     }
 
-    const ids = ['videoCineShotType', 'videoCineLens', 'videoCineFraming', 'videoCineMovement', 'videoCineMotionSpeed', 'videoCineLightType', 'videoCineContrast', 'videoCineTone', 'videoCineColorTemp'];
-    const keys = ['shotType', 'lens', 'framing', 'cameraMovement', 'motionSpeed', 'lightType', 'contrastLevel', 'tone', 'colorTemp'];
-    ids.forEach((id, i) => {
+    const selectConfig = [
+      ['videoCineShotType', 'shotType'], ['videoCineLens', 'lens'], ['videoCineFraming', 'framing'],
+      ['videoCineMovement', 'cameraMovement'], ['videoCineMotionSpeed', 'motionSpeed'], ['videoCineMotionIntensity', 'motionIntensity'],
+      ['videoCineLightType', 'lightType'], ['videoCineContrast', 'contrastLevel'], ['videoCineTemperature', 'temperature'],
+      ['videoCineTone', 'tone'], ['videoCineColorGrade', 'colorGrade'], ['videoCineEnergyLevel', 'energyLevel'], ['videoCineColorTemp', 'colorTemp']
+    ];
+    selectConfig.forEach(([id, key]) => {
       const el = this.container.querySelector('#' + id);
       if (el) el.addEventListener('change', () => {
-        this.cinematography[keys[i]] = el.value;
+        this.cinematography[key] = el.value;
         this.renderCinematographySelectedTags();
       });
     });
@@ -493,9 +672,13 @@ class VideoView extends BaseView {
     set('#videoCineFraming', c.framing);
     set('#videoCineMovement', c.cameraMovement);
     set('#videoCineMotionSpeed', c.motionSpeed);
+    set('#videoCineMotionIntensity', c.motionIntensity);
     set('#videoCineLightType', c.lightType);
     set('#videoCineContrast', c.contrastLevel);
+    set('#videoCineTemperature', c.temperature);
     set('#videoCineTone', c.tone);
+    set('#videoCineColorGrade', c.colorGrade);
+    set('#videoCineEnergyLevel', c.energyLevel);
     set('#videoCineColorTemp', c.colorTemp);
   }
 
@@ -503,14 +686,34 @@ class VideoView extends BaseView {
     const el = this.container.querySelector('#videoCineSelectedTags');
     if (!el) return;
     const c = this.cinematography;
-    const tags = [c.lens, c.cameraMovement, c.lightType].filter(Boolean);
+    const opts = VideoView.CINE_OPTIONS;
+    const tagConfig = [
+      { key: 'lens', value: c.lens, default: (opts.lens && opts.lens[0]) || '' },
+      { key: 'cameraMovement', value: c.cameraMovement, default: (opts.cameraMovement && opts.cameraMovement[0]) || '' },
+      { key: 'lightType', value: c.lightType, default: (opts.lightType && opts.lightType[0]) || '' }
+    ];
+    const tags = tagConfig.filter((t) => t.value).map((t) => ({ key: t.key, label: t.value, default: t.default }));
     if (tags.length === 0) {
       el.innerHTML = '';
       el.style.display = 'none';
       return;
     }
     el.style.display = 'flex';
-    el.innerHTML = '<span class="video-cine-selected-label">Selected Style:</span>' + tags.map((t) => `<span class="video-cine-tag">${t}</span>`).join('');
+    el.innerHTML = '<span class="video-cine-selected-label">Selected Style:</span>' + tags.map((t) =>
+      `<span class="video-cine-tag" data-key="${t.key}">${t.label.replace(/"/g, '&quot;')}<button type="button" class="video-cine-tag-remove" aria-label="Remove ${t.key}">&times;</button></span>`
+    ).join('');
+    el.querySelectorAll('.video-cine-tag-remove').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const tag = btn.closest('.video-cine-tag');
+        const key = tag?.dataset?.key;
+        if (key && opts[key] && opts[key][0]) {
+          this.cinematography[key] = opts[key][0];
+          this.syncCinematographyToSelects();
+          this.renderCinematographySelectedTags();
+        }
+      });
+    });
   }
 
   async getBrandContainerId() {
@@ -581,19 +784,19 @@ class VideoView extends BaseView {
   }
 
   syncProductSelectionToKling() {
-    const typeSelect = this.container.querySelector('#videoEntityTypeSelect');
-    const entitySelect = this.container.querySelector('#videoEntitySelect');
-    if (!entitySelect || (typeSelect && typeSelect.value !== 'producto')) {
+    const scopeSelect = this.container.querySelector('#videoAssetScope');
+    const assetSelect = this.container.querySelector('#videoAssetSelect');
+    if (!assetSelect || (scopeSelect && scopeSelect.value !== 'product')) {
       this.klingElements = this.klingElements.filter((el) => !el._fromProductSelection);
       this.renderKlingElementsList();
       return;
     }
-    const productId = entitySelect.value;
+    const productId = assetSelect.value;
     this.klingElements = this.klingElements.filter((el) => !el._fromProductSelection);
     if (productId) {
       const product = (this.dbData.products || []).find((p) => String(p.id) === String(productId));
       if (product && Array.isArray(product.image_urls) && product.image_urls.length >= 2 && product.image_urls.length <= 4) {
-        const name = this.sanitizeElementName((product.nombre_producto || 'producto').slice(0, 24));
+        const name = this.sanitizeElementName((product.nombre_producto || 'product').slice(0, 24));
         this.klingElements.push({
           name,
           description: product.nombre_producto || undefined,
@@ -605,21 +808,6 @@ class VideoView extends BaseView {
     this.renderKlingElementsList();
   }
 
-  renderEntityDropdown() {
-    const typeSelect = this.container.querySelector('#videoEntityTypeSelect');
-    const entitySelect = this.container.querySelector('#videoEntitySelect');
-    if (!typeSelect || !entitySelect) return;
-    const type = typeSelect.value || 'producto';
-    const items = type === 'servicio' ? (this.dbData.services || []) : (this.dbData.products || []);
-    const nameKey = type === 'servicio' ? 'nombre_servicio' : 'nombre_producto';
-    const currentValue = entitySelect.value;
-    const options = items.map((item) => {
-      const name = (item[nameKey] || (type === 'servicio' ? 'Servicio' : 'Producto')).replace(/"/g, '&quot;').slice(0, 50);
-      return `<option value="${String(item.id)}">${name}</option>`;
-    }).join('');
-    entitySelect.innerHTML = '<option value="">Ninguno</option>' + options;
-    if (currentValue) entitySelect.value = currentValue;
-  }
 
   sanitizeElementName(str) {
     if (!str || typeof str !== 'string') return 'elemento';
@@ -726,8 +914,9 @@ class VideoView extends BaseView {
           this.klingElements.splice(index, 1);
           this.renderKlingElementsList();
           if (this.klingElements.every((el) => !el._fromProductSelection)) {
-            const entitySelect = this.container.querySelector('#videoEntitySelect');
-            if (entitySelect) entitySelect.value = '';
+            const assetSelect = this.container.querySelector('#videoAssetSelect');
+            if (assetSelect) assetSelect.value = '';
+            this.renderAssetCard();
           }
         }
       });
@@ -764,6 +953,39 @@ class VideoView extends BaseView {
     this.hideAllFeedback();
     if (this.errorArea) this.errorArea.style.display = 'block';
     if (this.errorText) this.errorText.textContent = message;
+  }
+
+  showGeneratedPromptPreview() {
+    const c = this.cinematography;
+    const brief = (this.promptInput && this.promptInput.value) ? this.promptInput.value.trim() : '';
+    const visual = [c.shotType, c.lens, c.framing].filter(Boolean).join(' · ') || '—';
+    const motion = [c.cameraMovement, c.motionSpeed, c.motionIntensity].filter(Boolean).join(' · ') || '—';
+    const lighting = [c.lightType, c.contrastLevel, c.temperature].filter(Boolean).join(' · ') || '—';
+    const placeholder = this.container.querySelector('#videoPromptPreviewPlaceholder');
+    const generated = this.container.querySelector('#videoPromptPreviewGenerated');
+    const body = this.container.querySelector('#videoPromptPreviewBody');
+    const scoreEl = this.container.querySelector('#videoPromptPreviewScore');
+    if (placeholder) placeholder.style.display = 'none';
+    if (generated) generated.style.display = 'block';
+    if (body) {
+      body.innerHTML = `
+        <p><strong>Visual Direction</strong><br>${visual}</p>
+        <p><strong>Camera Plan</strong><br>${c.shotType || '—'} / ${c.lens || '—'} / ${c.framing || '—'}</p>
+        <p><strong>Motion Plan</strong><br>${motion}</p>
+        <p><strong>Lighting Plan</strong><br>${lighting}</p>
+        ${brief ? `<p><strong>Director Brief</strong><br>${brief.slice(0, 200)}${brief.length > 200 ? '…' : ''}</p>` : ''}
+      `;
+    }
+    if (scoreEl) scoreEl.textContent = 'Brand Lock Score: 94%';
+    this.promptPreviewCollapsed = false;
+    const content = this.container.querySelector('#videoPromptPreviewContent');
+    const toggle = this.container.querySelector('#videoPromptPreviewToggle');
+    if (content) content.classList.remove('video-collapse-content-closed');
+    if (toggle) {
+      toggle.setAttribute('aria-expanded', 'true');
+      const icon = toggle.querySelector('.video-collapse-icon');
+      if (icon) icon.style.transform = 'rotate(0)';
+    }
   }
 
   async startGeneration() {
@@ -844,6 +1066,7 @@ class VideoView extends BaseView {
           const url = Array.isArray(urls) && urls.length > 0 ? urls[0] : null;
           if (url) {
             this.showResult(url);
+            this.showGeneratedPromptPreview();
           } else {
             this.showError('No se encontró URL del video en la respuesta');
           }
