@@ -242,29 +242,52 @@ class VideoView extends BaseView {
     panel.setAttribute('aria-hidden', 'true');
   }
 
+  getPublicUrlFromStorage(bucketName, filePath) {
+    if (!this.supabase?.storage?.from || !bucketName || typeof filePath !== 'string' || !filePath.trim()) return null;
+    try {
+      let path = filePath.trim();
+      if (path.startsWith(`${bucketName}/`)) path = path.replace(`${bucketName}/`, '');
+      else if (path.startsWith('/')) path = path.slice(1);
+      const { data } = this.supabase.storage.from(bucketName).getPublicUrl(path);
+      return data?.publicUrl || null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   async loadVideoProductions() {
     if (!this.supabase) return;
     try {
       const { data: { user } } = await this.supabase.auth.getUser();
       if (!user?.id) return;
-      const { data } = await this.supabase.from('video_productions').select('id, task_id, video_url, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(100);
-      this.videoProductions = data || [];
+      const { data: runs } = await this.supabase.from('flow_runs').select('id').eq('user_id', user.id);
+      const runIds = (runs || []).map((r) => r.id).filter(Boolean);
+      if (runIds.length === 0) {
+        this.videoProductions = [];
+        return;
+      }
+      const { data } = await this.supabase
+        .from('runs_outputs')
+        .select('id, run_id, output_type, storage_path, metadata, created_at')
+        .in('run_id', runIds)
+        .order('created_at', { ascending: false })
+        .limit(100);
+      const list = data || [];
+      const withUrl = list.map((o) => {
+        let video_url = null;
+        if (o.storage_path && typeof o.storage_path === 'string' && o.storage_path.trim()) {
+          if (o.storage_path.startsWith('http')) video_url = o.storage_path;
+          else video_url = this.getPublicUrlFromStorage('production-outputs', o.storage_path);
+        }
+        if (!video_url && o.metadata && typeof o.metadata === 'object') {
+          video_url = o.metadata.video_url || o.metadata.url || o.metadata.file_url || null;
+        }
+        return { ...o, video_url };
+      }).filter((o) => o.video_url);
+      this.videoProductions = withUrl;
     } catch (e) {
       console.warn('VideoView loadVideoProductions:', e);
       this.videoProductions = [];
-    }
-  }
-
-  async saveVideoProduction({ taskId, videoUrl }) {
-    if (!this.supabase) return;
-    try {
-      const { data: { user } } = await this.supabase.auth.getUser();
-      if (!user?.id) return;
-      const { data } = await this.supabase.from('video_productions').insert({ user_id: user.id, organization_id: this.organizationId || null, task_id: taskId, video_url: videoUrl }).select('id, task_id, video_url, created_at').single();
-      if (data) this.videoProductions.unshift(data);
-    } catch (e) {
-      console.warn('VideoView saveVideoProduction:', e);
-      this.videoProductions.unshift({ id: taskId, task_id: taskId, video_url: videoUrl, created_at: new Date().toISOString() });
     }
   }
 
@@ -272,18 +295,19 @@ class VideoView extends BaseView {
     const carousel = this.container.querySelector('#videoProductionsCarousel');
     if (!carousel) return;
     if (this.videoProductions.length === 0) {
-      carousel.innerHTML = '<p class="video-productions-empty">Aún no hay producciones. Genera un video para verlo aquí.</p>';
+      carousel.innerHTML = '<p class="video-productions-empty">Aún no hay producciones. Las producciones de tus flows aparecerán aquí.</p>';
       return;
     }
     carousel.innerHTML = this.videoProductions.map((p) => {
-      const id = p.id || p.task_id;
+      const id = p.id;
       const selected = this.selectedProductionIds.has(id);
       const dateStr = p.created_at ? new Date(p.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+      const videoUrl = (p.video_url || '').replace(/"/g, '&quot;');
       return `
         <div class="video-production-item" data-id="${id}" role="button" tabindex="0">
           <input type="checkbox" class="video-production-check" id="prod-${id}" ${selected ? 'checked' : ''} aria-label="Seleccionar producción">
           <div class="video-production-thumb-wrap">
-            <video class="video-production-thumb" src="${(p.video_url || '').replace(/"/g, '&quot;')}" preload="metadata" muted playsinline></video>
+            <video class="video-production-thumb" src="${videoUrl}" preload="metadata" muted playsinline></video>
           </div>
           <span class="video-production-date">${dateStr}</span>
         </div>
@@ -644,7 +668,6 @@ class VideoView extends BaseView {
           const urls = resultJson?.resultUrls;
           const url = Array.isArray(urls) && urls.length > 0 ? urls[0] : null;
           if (url) {
-            await this.saveVideoProduction({ taskId, videoUrl: url });
             this.showResult(url);
           } else {
             this.showError('No se encontró URL del video en la respuesta');

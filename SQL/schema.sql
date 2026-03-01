@@ -538,17 +538,6 @@ CREATE TABLE public.services (
   CONSTRAINT services_entity_id_fkey FOREIGN KEY (entity_id) REFERENCES public.brand_entities(id),
   CONSTRAINT services_project_id_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id)
 );
-CREATE TABLE public.video_productions (
-  id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  user_id uuid NOT NULL,
-  organization_id uuid,
-  task_id text NOT NULL,
-  video_url text NOT NULL,
-  created_at timestamp with time zone DEFAULT now(),
-  CONSTRAINT video_productions_pkey PRIMARY KEY (id),
-  CONSTRAINT video_productions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id),
-  CONSTRAINT video_productions_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id)
-);
 CREATE TABLE public.storage_usage (
   organization_id uuid NOT NULL,
   used_mb numeric DEFAULT 0,
