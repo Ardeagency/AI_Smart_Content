@@ -64,10 +64,9 @@ class VideoView extends BaseView {
         </div>
 
         <footer class="video-page-footer video-prompt-wrap" aria-label="Prompt de generación">
-          <div class="video-prompt-card-gradient-wrap">
-          <div class="video-prompt-card glass-black">
-            <div class="video-prompt-three-cols">
-              <aside class="video-prompt-panel video-prompt-panel-left" aria-label="Entidades de la marca">
+          <div class="video-prompt-cards-row">
+            <div class="video-prompt-footer-card">
+              <div class="video-prompt-footer-card-inner glass-black">
                 <h3 class="video-prompt-panel-title">Entidades de la marca</h3>
                 <div class="video-prompt-db-toolbar">
                   <select id="videoDbCategory" class="video-prompt-db-select" aria-label="Categoría">
@@ -81,60 +80,63 @@ class VideoView extends BaseView {
                   </button>
                 </div>
                 <div class="video-prompt-db-list" id="videoDbList"></div>
-              </aside>
-              <div class="video-prompt-center">
-              <div class="video-prompt-inner">
-                <input type="file" id="videoImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
-                <label for="videoPromptInput" class="video-prompt-label visually-hidden">Describe tu video</label>
-                <input
-                  type="text"
-                  id="videoPromptInput"
-                  class="video-prompt-input"
-                  placeholder="¿Qué video quieres generar? Usa @nombre para referenciar elementos."
-                  autocomplete="off"
-                  aria-label="Prompt para generar video"
-                />
-                <div class="video-kling-elements-list" id="videoKlingElementsList" aria-live="polite"></div>
-                <div class="video-prompt-actions">
-                <button type="button" class="video-prompt-btn video-prompt-btn-add" id="videoPromptAdd" aria-label="Subir imágenes">
-                  <i class="fas fa-plus"></i>
-                </button>
-                <div class="video-prompt-duration-wrap">
-                  <div class="video-prompt-duration-btns" role="group" aria-label="Duración del video">
-                    <button type="button" class="video-prompt-duration-btn active" data-duration="5" aria-pressed="true">5s</button>
-                    <button type="button" class="video-prompt-duration-btn" data-duration="10" aria-pressed="false">10s</button>
-                    <button type="button" class="video-prompt-duration-btn" data-duration="15" aria-pressed="false">15s</button>
+              </div>
+            </div>
+            <div class="video-prompt-footer-card video-prompt-footer-card-center">
+              <div class="video-prompt-footer-card-inner glass-black">
+                <div class="video-prompt-inner">
+                  <input type="file" id="videoImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
+                  <label for="videoPromptInput" class="video-prompt-label visually-hidden">Describe tu video</label>
+                  <input
+                    type="text"
+                    id="videoPromptInput"
+                    class="video-prompt-input"
+                    placeholder="¿Qué video quieres generar? Usa @nombre para referenciar elementos."
+                    autocomplete="off"
+                    aria-label="Prompt para generar video"
+                  />
+                  <div class="video-kling-elements-list" id="videoKlingElementsList" aria-live="polite"></div>
+                  <div class="video-prompt-actions">
+                    <button type="button" class="video-prompt-btn video-prompt-btn-add" id="videoPromptAdd" aria-label="Subir imágenes">
+                      <i class="fas fa-plus"></i>
+                    </button>
+                    <div class="video-prompt-duration-wrap">
+                      <div class="video-prompt-duration-btns" role="group" aria-label="Duración del video">
+                        <button type="button" class="video-prompt-duration-btn active" data-duration="5" aria-pressed="true">5s</button>
+                        <button type="button" class="video-prompt-duration-btn" data-duration="10" aria-pressed="false">10s</button>
+                        <button type="button" class="video-prompt-duration-btn" data-duration="15" aria-pressed="false">15s</button>
+                      </div>
+                    </div>
+                    <button type="button" class="video-prompt-toggle video-prompt-multi-shots" id="videoMultiShots" title="Multi shots" aria-pressed="false">
+                      <i class="fas fa-film"></i><span>Multi shots</span>
+                    </button>
+                    <button type="button" class="video-prompt-toggle video-prompt-multi-prompt" id="videoMultiPrompt" title="Multi prompt" aria-pressed="false">
+                      <i class="fas fa-align-left"></i><span>Multi prompt</span>
+                    </button>
+                    <button type="button" class="video-prompt-toggle video-prompt-sound active" id="videoSound" title="Sonido" aria-pressed="true">
+                      <i class="fas fa-volume-up"></i><span>Sonido</span>
+                    </button>
+                    <div class="video-prompt-aspect-wrap">
+                      <select id="videoAspectRatio" class="video-prompt-aspect" aria-label="Relación de aspecto">
+                        <option value="16:9">16:9</option>
+                        <option value="9:16">9:16</option>
+                        <option value="1:1">1:1</option>
+                      </select>
+                      <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
+                    </div>
+                    <button type="button" class="video-prompt-btn video-prompt-btn-send" id="videoPromptSend" aria-label="Generar video">
+                      <i class="fas fa-paper-plane"></i>
+                    </button>
                   </div>
                 </div>
-                <button type="button" class="video-prompt-toggle video-prompt-multi-shots" id="videoMultiShots" title="Multi shots" aria-pressed="false">
-                  <i class="fas fa-film"></i><span>Multi shots</span>
-                </button>
-                <button type="button" class="video-prompt-toggle video-prompt-multi-prompt" id="videoMultiPrompt" title="Multi prompt" aria-pressed="false">
-                  <i class="fas fa-align-left"></i><span>Multi prompt</span>
-                </button>
-                <button type="button" class="video-prompt-toggle video-prompt-sound active" id="videoSound" title="Sonido" aria-pressed="true">
-                  <i class="fas fa-volume-up"></i><span>Sonido</span>
-                </button>
-                <div class="video-prompt-aspect-wrap">
-                  <select id="videoAspectRatio" class="video-prompt-aspect" aria-label="Relación de aspecto">
-                    <option value="16:9">16:9</option>
-                    <option value="9:16">9:16</option>
-                    <option value="1:1">1:1</option>
-                  </select>
-                  <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
-                </div>
-                <button type="button" class="video-prompt-btn video-prompt-btn-send" id="videoPromptSend" aria-label="Generar video">
-                  <i class="fas fa-paper-plane"></i>
-                </button>
               </div>
-              </div>
-              </div>
-              <aside class="video-prompt-panel video-prompt-panel-right" aria-label="Efectos de video">
+            </div>
+            <div class="video-prompt-footer-card">
+              <div class="video-prompt-footer-card-inner glass-black">
                 <h3 class="video-prompt-panel-title">Efectos de video</h3>
                 <p class="video-prompt-panel-placeholder">Próximamente</p>
-              </aside>
+              </div>
             </div>
-          </div>
           </div>
         </footer>
       </div>
