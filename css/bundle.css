@@ -19456,23 +19456,54 @@ body.production-filters-in-header .living-container > .living-history-section {
 .video-prompt-card.glass-black .video-prompt-btn-send {
     margin-left: auto;
     background: var(--brand-gradient-dynamic, var(--brand-gradient));
-    color: var(--bg-dark);
+    color: var(--color-white, #ffffff);
 }
 .video-prompt-card.glass-black .video-prompt-btn-send:hover {
     background: var(--brand-gradient-dynamic, var(--brand-gradient));
     filter: brightness(1.15);
-    color: var(--bg-dark);
+    color: var(--color-white, #ffffff);
 }
 .video-prompt-btn-send:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
-.video-prompt-mode-wrap {
+.video-prompt-duration-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+.video-prompt-duration-label {
+    font-size: var(--font-size-sm);
+    color: var(--glass-black-text);
+    opacity: 0.9;
+}
+.video-prompt-duration-btns {
+    display: inline-flex;
+    gap: 2px;
+}
+.video-prompt-card.glass-black .video-prompt-duration-btn {
+    padding: 0.35rem 0.6rem;
+    font-size: var(--font-size-xs);
+    color: var(--glass-black-text);
+    background: var(--brand-primary-brillo, var(--brillo-hover));
+    border: 1px solid var(--glass-black-border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+.video-prompt-card.glass-black .video-prompt-duration-btn:hover {
+    background: var(--brand-primary-brillo-strong, var(--brillo-active));
+}
+.video-prompt-card.glass-black .video-prompt-duration-btn.active {
+    border-color: var(--accent-brand);
+    background: var(--brand-primary-brillo-strong, var(--brillo-active));
+}
+.video-prompt-aspect-wrap {
     position: relative;
     display: inline-flex;
     align-items: center;
 }
-.video-prompt-card.glass-black .video-prompt-mode {
+.video-prompt-card.glass-black .video-prompt-aspect {
     padding: 0.4rem 1.75rem 0.4rem 0.6rem;
     font-size: var(--font-size-sm);
     color: var(--glass-black-text);
@@ -19483,7 +19514,7 @@ body.production-filters-in-header .living-container > .living-history-section {
     appearance: none;
     -webkit-appearance: none;
 }
-.video-prompt-mode-chevron {
+.video-prompt-aspect-chevron {
     position: absolute;
     right: 0.5rem;
     pointer-events: none;

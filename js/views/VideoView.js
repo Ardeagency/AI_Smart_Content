@@ -68,12 +68,21 @@ class VideoView extends BaseView {
                 <button type="button" class="video-prompt-btn video-prompt-btn-add" id="videoPromptAdd" aria-label="Añadir adjunto">
                   <i class="fas fa-plus"></i>
                 </button>
-                <div class="video-prompt-mode-wrap">
-                  <select id="videoMode" class="video-prompt-mode" aria-label="Modo de resolución">
-                    <option value="std">Estándar</option>
-                    <option value="pro">Pro</option>
+                <div class="video-prompt-duration-wrap">
+                  <span class="video-prompt-duration-label">Duración</span>
+                  <div class="video-prompt-duration-btns" role="group" aria-label="Duración del video">
+                    <button type="button" class="video-prompt-duration-btn active" data-duration="5" aria-pressed="true">5s</button>
+                    <button type="button" class="video-prompt-duration-btn" data-duration="10" aria-pressed="false">10s</button>
+                    <button type="button" class="video-prompt-duration-btn" data-duration="15" aria-pressed="false">15s</button>
+                  </div>
+                </div>
+                <div class="video-prompt-aspect-wrap">
+                  <select id="videoAspectRatio" class="video-prompt-aspect" aria-label="Relación de aspecto">
+                    <option value="16:9">16:9</option>
+                    <option value="9:16">9:16</option>
+                    <option value="1:1">1:1</option>
                   </select>
-                  <i class="fas fa-chevron-down video-prompt-mode-chevron" aria-hidden="true"></i>
+                  <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
                 </div>
                 <button type="button" class="video-prompt-btn video-prompt-btn-send" id="videoPromptSend" aria-label="Generar video">
                   <i class="fas fa-paper-plane"></i>
@@ -90,7 +99,7 @@ class VideoView extends BaseView {
   async init() {
     this.sendBtn = this.container.querySelector('#videoPromptSend');
     this.promptInput = this.container.querySelector('#videoPromptInput');
-    this.modeSelect = this.container.querySelector('#videoMode');
+    this.aspectSelect = this.container.querySelector('#videoAspectRatio');
     this.statusArea = this.container.querySelector('#videoStatusArea');
     this.statusText = this.container.querySelector('#videoStatusText');
     this.statusSpinner = this.container.querySelector('#videoStatusSpinner');
@@ -115,6 +124,16 @@ class VideoView extends BaseView {
     if (addBtn) {
       addBtn.addEventListener('click', () => { /* reservado para adjuntos */ });
     }
+    this.container.querySelectorAll('.video-prompt-duration-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        this.container.querySelectorAll('.video-prompt-duration-btn').forEach((b) => {
+          b.classList.remove('active');
+          b.setAttribute('aria-pressed', 'false');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-pressed', 'true');
+      });
+    });
   }
 
   hideAllFeedback() {
@@ -150,7 +169,7 @@ class VideoView extends BaseView {
   }
 
   async startGeneration() {
-    const mode = this.modeSelect && this.modeSelect.value === 'pro' ? 'pro' : 'std';
+    const mode = 'pro';
     if (this.sendBtn) this.sendBtn.disabled = true;
     this.showStatus('Creando tarea de generación…', true);
 
