@@ -16,6 +16,32 @@ class VideoView extends BaseView {
     this.dbData = { products: [], services: [], entities: [], audiences: [], campaigns: [] };
     this.videoProductions = [];
     this.selectedProductionIds = new Set();
+    this.cinematography = {
+      preset: '',
+      shotType: 'Hero Product Frame',
+      lens: '50mm (Balanced)',
+      framing: 'Centered',
+      cameraMovement: 'Static',
+      motionSpeed: 'Subtle',
+      lightType: 'Soft diffused',
+      contrastLevel: 'Medium',
+      tone: 'Clean commercial',
+      colorTemp: 'Neutral'
+    };
+    this.cineBlocksCollapsed = { camera: false, movement: false, lighting: false, style: false };
+  }
+
+  static get CINEMATOGRAPHY_PRESETS() {
+    return {
+      '': { label: '— Sin preset' },
+      'product-launch': { label: 'Product Launch', shotType: 'Hero Product Frame', lens: '50mm (Balanced)', framing: 'Centered', cameraMovement: 'Slow Push In', motionSpeed: 'Moderate', lightType: 'Studio commercial', contrastLevel: 'Medium', tone: 'Clean commercial', colorTemp: 'Neutral' },
+      'social-ad': { label: 'Social Ad', shotType: 'Close-up', lens: '35mm (Natural)', framing: 'Rule of thirds', cameraMovement: 'Tracking', motionSpeed: 'Dynamic', lightType: 'Natural daylight', contrastLevel: 'Medium', tone: 'Bright energetic', colorTemp: 'Warm' },
+      'luxury-hero': { label: 'Luxury Hero', shotType: 'Wide Shot', lens: '85mm (Portrait Compression)', framing: 'Negative space left', cameraMovement: 'Slow Pull Out', motionSpeed: 'Subtle', lightType: 'Rim light', contrastLevel: 'High', tone: 'Minimal luxury', colorTemp: 'Muted tones' },
+      'tech-explainer': { label: 'Tech Explainer', shotType: 'Medium Shot', lens: '35mm (Natural)', framing: 'Centered', cameraMovement: 'Orbit', motionSpeed: 'Moderate', lightType: 'Soft diffused', contrastLevel: 'Low', tone: 'Clean commercial', colorTemp: 'Neutral' },
+      'cinematic-teaser': { label: 'Cinematic Teaser', shotType: 'Wide Shot', lens: '24mm (Wide Cinematic)', framing: 'Dynamic off-center', cameraMovement: 'Dolly Left', motionSpeed: 'Dynamic', lightType: 'Dramatic spotlight', contrastLevel: 'High', tone: 'Cinematic dramatic', colorTemp: 'Cold' },
+      'ecommerce-clean': { label: 'Ecommerce Clean', shotType: 'Hero Product Frame', lens: '50mm (Balanced)', framing: 'Symmetrical', cameraMovement: '360° Rotation', motionSpeed: 'Subtle', lightType: 'Studio commercial', contrastLevel: 'Low', tone: 'Clean commercial', colorTemp: 'Neutral' },
+      'performance-ad': { label: 'Performance Ad', shotType: 'Close-up', lens: '35mm (Natural)', framing: 'Rule of thirds', cameraMovement: 'Handheld', motionSpeed: 'Aggressive', lightType: 'Hard contrast', contrastLevel: 'High', tone: 'Bright energetic', colorTemp: 'High saturation' }
+    };
   }
 
   async onEnter() {
@@ -156,9 +182,53 @@ class VideoView extends BaseView {
               </div>
             </div>
             <div class="video-prompt-footer-card">
-              <div class="video-prompt-footer-card-inner glass-black">
-                <h3 class="video-prompt-panel-title">Efectos de video</h3>
-                <p class="video-prompt-panel-placeholder">Próximamente</p>
+              <div class="video-prompt-footer-card-inner glass-black video-cinematography-panel">
+                <h3 class="video-prompt-panel-title">🎥 Cinematography</h3>
+                <div class="video-cine-preset-wrap">
+                  <label class="video-cine-label">Preset</label>
+                  <select id="videoCinePreset" class="video-cine-select" aria-label="Production Preset">
+                    <option value="">— Sin preset</option>
+                    <option value="product-launch">Product Launch</option>
+                    <option value="social-ad">Social Ad</option>
+                    <option value="luxury-hero">Luxury Hero</option>
+                    <option value="tech-explainer">Tech Explainer</option>
+                    <option value="cinematic-teaser">Cinematic Teaser</option>
+                    <option value="ecommerce-clean">Ecommerce Clean</option>
+                    <option value="performance-ad">Performance Ad</option>
+                  </select>
+                </div>
+                <div class="video-cine-selected-tags" id="videoCineSelectedTags" aria-live="polite"></div>
+                <div class="video-cine-blocks">
+                  <div class="video-cine-block" data-block="camera">
+                    <button type="button" class="video-cine-block-header" aria-expanded="true"><span>Camera</span><i class="fas fa-chevron-down"></i></button>
+                    <div class="video-cine-block-content">
+                      <div class="video-cine-row"><label class="video-cine-label">Shot Type</label><select id="videoCineShotType" class="video-cine-select"></select></div>
+                      <div class="video-cine-row"><label class="video-cine-label">Lens</label><select id="videoCineLens" class="video-cine-select"></select></div>
+                      <div class="video-cine-row"><label class="video-cine-label">Framing</label><select id="videoCineFraming" class="video-cine-select"></select></div>
+                    </div>
+                  </div>
+                  <div class="video-cine-block" data-block="movement">
+                    <button type="button" class="video-cine-block-header" aria-expanded="false"><span>Movement</span><i class="fas fa-chevron-down"></i></button>
+                    <div class="video-cine-block-content video-cine-block-collapsed">
+                      <div class="video-cine-row"><label class="video-cine-label">Camera Movement</label><select id="videoCineMovement" class="video-cine-select"></select></div>
+                      <div class="video-cine-row"><label class="video-cine-label">Motion Speed</label><select id="videoCineMotionSpeed" class="video-cine-select"></select></div>
+                    </div>
+                  </div>
+                  <div class="video-cine-block" data-block="lighting">
+                    <button type="button" class="video-cine-block-header" aria-expanded="false"><span>Lighting</span><i class="fas fa-chevron-down"></i></button>
+                    <div class="video-cine-block-content video-cine-block-collapsed">
+                      <div class="video-cine-row"><label class="video-cine-label">Light Type</label><select id="videoCineLightType" class="video-cine-select"></select></div>
+                      <div class="video-cine-row"><label class="video-cine-label">Contrast</label><select id="videoCineContrast" class="video-cine-select"></select></div>
+                    </div>
+                  </div>
+                  <div class="video-cine-block" data-block="style">
+                    <button type="button" class="video-cine-block-header" aria-expanded="false"><span>Style / Mood</span><i class="fas fa-chevron-down"></i></button>
+                    <div class="video-cine-block-content video-cine-block-collapsed">
+                      <div class="video-cine-row"><label class="video-cine-label">Tone</label><select id="videoCineTone" class="video-cine-select"></select></div>
+                      <div class="video-cine-row"><label class="video-cine-label">Color Temp</label><select id="videoCineColorTemp" class="video-cine-select"></select></div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -218,6 +288,7 @@ class VideoView extends BaseView {
     await this.loadBrandData();
     this.renderEntityDropdown();
     await this.loadVideoProductions();
+    this.initCinematography();
     this.container.querySelectorAll('.video-prompt-toggle').forEach((btn) => {
       btn.addEventListener('click', () => {
         const pressed = btn.getAttribute('aria-pressed') !== 'true';
@@ -336,6 +407,110 @@ class VideoView extends BaseView {
         else this.selectedProductionIds.delete(id);
       });
     });
+  }
+
+  static get CINE_OPTIONS() {
+    return {
+      shotType: ['Macro Detail', 'Close-up', 'Medium Shot', 'Wide Shot', 'Hero Product Frame', 'Over-the-Shoulder', 'POV', 'Top Down', 'Low Angle', 'High Angle'],
+      lens: ['24mm (Wide Cinematic)', '35mm (Natural)', '50mm (Balanced)', '85mm (Portrait Compression)', '100mm Macro'],
+      framing: ['Centered', 'Rule of thirds', 'Negative space left', 'Negative space right', 'Symmetrical', 'Dynamic off-center'],
+      cameraMovement: ['Static', 'Slow Push In', 'Slow Pull Out', 'Dolly Left', 'Dolly Right', 'Orbit', '360° Rotation', 'Handheld', 'Tracking', 'FPV'],
+      motionSpeed: ['Subtle', 'Moderate', 'Dynamic', 'Aggressive'],
+      lightType: ['Soft diffused', 'Hard contrast', 'Rim light', 'Backlit silhouette', 'Studio commercial', 'Natural daylight', 'Dramatic spotlight'],
+      contrastLevel: ['Low', 'Medium', 'High', 'Ultra contrast'],
+      tone: ['Clean commercial', 'Cinematic dramatic', 'Hyperreal product', 'Minimal luxury', 'Dark premium', 'Bright energetic', 'Editorial fashion', 'Documentary'],
+      colorTemp: ['Neutral', 'Warm', 'Cold', 'High saturation', 'Muted tones']
+    };
+  }
+
+  initCinematography() {
+    const opts = VideoView.CINE_OPTIONS;
+    const fill = (id, values, current) => {
+      const el = this.container.querySelector(id);
+      if (!el) return;
+      el.innerHTML = values.map((v) => `<option value="${v}" ${v === current ? 'selected' : ''}>${v}</option>`).join('');
+    };
+    fill('#videoCineShotType', opts.shotType, this.cinematography.shotType);
+    fill('#videoCineLens', opts.lens, this.cinematography.lens);
+    fill('#videoCineFraming', opts.framing, this.cinematography.framing);
+    fill('#videoCineMovement', opts.cameraMovement, this.cinematography.cameraMovement);
+    fill('#videoCineMotionSpeed', opts.motionSpeed, this.cinematography.motionSpeed);
+    fill('#videoCineLightType', opts.lightType, this.cinematography.lightType);
+    fill('#videoCineContrast', opts.contrastLevel, this.cinematography.contrastLevel);
+    fill('#videoCineTone', opts.tone, this.cinematography.tone);
+    fill('#videoCineColorTemp', opts.colorTemp, this.cinematography.colorTemp);
+
+    const presetEl = this.container.querySelector('#videoCinePreset');
+    if (presetEl) {
+      presetEl.addEventListener('change', () => {
+        const key = presetEl.value;
+        const presets = VideoView.CINEMATOGRAPHY_PRESETS;
+        if (presets[key] && key) {
+          const p = presets[key];
+          this.cinematography.preset = key;
+          ['shotType', 'lens', 'framing', 'cameraMovement', 'motionSpeed', 'lightType', 'contrastLevel', 'tone', 'colorTemp'].forEach((k) => {
+            if (p[k] != null) this.cinematography[k] = p[k];
+          });
+          this.syncCinematographyToSelects();
+          this.renderCinematographySelectedTags();
+        }
+      });
+    }
+
+    const ids = ['videoCineShotType', 'videoCineLens', 'videoCineFraming', 'videoCineMovement', 'videoCineMotionSpeed', 'videoCineLightType', 'videoCineContrast', 'videoCineTone', 'videoCineColorTemp'];
+    const keys = ['shotType', 'lens', 'framing', 'cameraMovement', 'motionSpeed', 'lightType', 'contrastLevel', 'tone', 'colorTemp'];
+    ids.forEach((id, i) => {
+      const el = this.container.querySelector('#' + id);
+      if (el) el.addEventListener('change', () => {
+        this.cinematography[keys[i]] = el.value;
+        this.renderCinematographySelectedTags();
+      });
+    });
+
+    this.container.querySelectorAll('.video-cine-block-header').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const block = btn.closest('.video-cine-block');
+        const content = block?.querySelector('.video-cine-block-content');
+        if (!content) return;
+        const collapsed = content.classList.toggle('video-cine-block-collapsed');
+        btn.setAttribute('aria-expanded', !collapsed);
+        const icon = btn.querySelector('i.fa-chevron-down');
+        if (icon) icon.style.transform = collapsed ? 'rotate(-90deg)' : 'rotate(0)';
+      });
+    });
+
+    this.renderCinematographySelectedTags();
+  }
+
+  syncCinematographyToSelects() {
+    const c = this.cinematography;
+    const set = (id, value) => {
+      const el = this.container.querySelector(id);
+      if (el && value) el.value = value;
+    };
+    set('#videoCineShotType', c.shotType);
+    set('#videoCineLens', c.lens);
+    set('#videoCineFraming', c.framing);
+    set('#videoCineMovement', c.cameraMovement);
+    set('#videoCineMotionSpeed', c.motionSpeed);
+    set('#videoCineLightType', c.lightType);
+    set('#videoCineContrast', c.contrastLevel);
+    set('#videoCineTone', c.tone);
+    set('#videoCineColorTemp', c.colorTemp);
+  }
+
+  renderCinematographySelectedTags() {
+    const el = this.container.querySelector('#videoCineSelectedTags');
+    if (!el) return;
+    const c = this.cinematography;
+    const tags = [c.lens, c.cameraMovement, c.lightType].filter(Boolean);
+    if (tags.length === 0) {
+      el.innerHTML = '';
+      el.style.display = 'none';
+      return;
+    }
+    el.style.display = 'flex';
+    el.innerHTML = '<span class="video-cine-selected-label">Selected Style:</span>' + tags.map((t) => `<span class="video-cine-tag">${t}</span>`).join('');
   }
 
   async getBrandContainerId() {
