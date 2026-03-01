@@ -159,9 +159,15 @@ class Router {
               this.navigate('/login', true);
               return;
             }
-            const defaultUrl = window.authService?.getDefaultUserRoute && window.authService.getCurrentUser()?.id
-              ? await window.authService.getDefaultUserRoute(window.authService.getCurrentUser().id)
-              : '/settings';
+            let defaultUrl = '/settings';
+            if (window.authService && window.authService.getCurrentUser()?.id) {
+              defaultUrl = typeof window.authService.getDefaultUserRoute === 'function'
+                ? await window.authService.getDefaultUserRoute(window.authService.getCurrentUser().id)
+                : await this._getDefaultUserRouteFallback(window.authService.getCurrentUser().id);
+            } else if (window.supabase) {
+              const { data: { user } } = await window.supabase.auth.getUser();
+              if (user?.id) defaultUrl = await this._getDefaultUserRouteFallback(user.id);
+            }
             this.navigate(defaultUrl, true);
             return;
           }
@@ -339,27 +345,47 @@ class Router {
     return false;
   }
 
-  /**
-   * Obtener ruta de redirección para usuario autenticado
-   * Soporta arquitectura MPA + SPA según modo del usuario
-   * @returns {Promise<string>}
-   */
+  async _getDefaultUserRouteFallback(userId) {
+    const supabase = window.supabase || (window.supabaseService && (await window.supabaseService.getClient()));
+    if (!supabase || !userId) return '/settings';
+    try {
+      const [membersRes, ownedRes] = await Promise.all([
+        supabase.from('organization_members').select('organization_id, organizations(id, name)').eq('user_id', userId),
+        supabase.from('organizations').select('id, name').eq('owner_user_id', userId)
+      ]);
+      const list = [];
+      (membersRes.data || []).forEach((m) => {
+        const o = m.organizations;
+        const id = o?.id ?? m.organization_id;
+        if (id) list.push({ id, name: (o && o.name) || '' });
+      });
+      (ownedRes.data || []).forEach((o) => {
+        if (o?.id && !list.some((x) => x.id === o.id)) list.push({ id: o.id, name: o.name || '' });
+      });
+      if (list.length === 0) return '/settings';
+      const selectedId = localStorage.getItem('selectedOrganizationId');
+      const org = selectedId ? list.find((x) => x.id === selectedId) || list[0] : list[0];
+      if (typeof window.getOrgPathPrefix === 'function') {
+        const prefix = window.getOrgPathPrefix(org.id, org.name);
+        return prefix ? `${prefix}/production` : '/settings';
+      }
+      return `/org/${org.id}/production`;
+    } catch (e) {
+      return '/settings';
+    }
+  }
+
   async getAuthenticatedRedirect() {
-    // Prioridad 1: Usar AuthService para determinar ruta
     if (window.authService && typeof window.authService.determineRedirectRoute === 'function') {
       const user = window.authService.getCurrentUser();
-      if (user?.id) {
-        return await window.authService.determineRedirectRoute(user.id);
-      }
+      if (user?.id) return await window.authService.determineRedirectRoute(user.id);
     }
-
-    // Prioridad 2: Verificar modo guardado en localStorage
-    const userMode = localStorage.getItem('userViewMode');
-    if (userMode === 'developer') {
-      return '/dev/dashboard';
+    const supabase = window.supabase || (window.supabaseService && (await window.supabaseService.getClient()));
+    if (supabase) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.id) return await this._getDefaultUserRouteFallback(user.id);
     }
-
-    // Default: ir a configuración (usuario entra directo a su org vía determineRedirectRoute)
+    if (localStorage.getItem('userViewMode') === 'developer') return '/dev/dashboard';
     return '/settings';
   }
 

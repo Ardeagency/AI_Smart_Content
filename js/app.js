@@ -109,10 +109,19 @@ class App {
     // ── Redirect legacy home/hogar a organización o settings ──
     const redirectToDefaultOrg = async () => {
       const auth = window.authService;
-      const userId = auth?.getCurrentUser()?.id;
-      const url = auth && typeof auth.getDefaultUserRoute === 'function' && userId
-        ? await auth.getDefaultUserRoute(userId)
-        : '/settings';
+      let userId = auth?.getCurrentUser()?.id;
+      if (!userId && window.supabase) {
+        const { data: { user } } = await window.supabase.auth.getUser();
+        userId = user?.id;
+      }
+      let url = '/settings';
+      if (userId) {
+        if (auth && typeof auth.getDefaultUserRoute === 'function') {
+          url = await auth.getDefaultUserRoute(userId);
+        } else if (window.router && typeof window.router._getDefaultUserRouteFallback === 'function') {
+          url = await window.router._getDefaultUserRouteFallback(userId);
+        }
+      }
       if (window.router) window.router.navigate(url, true);
     };
     const redirectToDefaultView = class extends (window.BaseView || class {}) {
