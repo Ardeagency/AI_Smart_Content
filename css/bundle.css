@@ -19563,19 +19563,32 @@ body.production-filters-in-header .living-container > .living-history-section {
 .video-kling-elements-list {
     display: none;
     flex-wrap: wrap;
-    gap: 0.35rem;
+    gap: 0.5rem;
     align-items: center;
 }
 .video-kling-element-chip {
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
-    padding: 0.25rem 0.5rem;
+    padding: 0.25rem 0.25rem 0.25rem 0.5rem;
     font-size: var(--font-size-xs);
     color: var(--glass-black-text);
     background: var(--brand-primary-brillo, rgba(255,255,255,0.08));
     border: 1px solid var(--glass-black-border);
     border-radius: var(--radius-sm);
+    position: relative;
+}
+.video-kling-element-thumbs {
+    display: inline-flex;
+    gap: 0.25rem;
+    align-items: center;
+}
+.video-kling-element-thumb {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: var(--radius-xs);
+    background: rgba(0,0,0,0.3);
 }
 .video-kling-element-remove {
     padding: 0;

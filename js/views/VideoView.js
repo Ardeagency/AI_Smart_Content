@@ -83,6 +83,7 @@ class VideoView extends BaseView {
               <div class="video-prompt-footer-card-inner glass-black">
                 <div class="video-prompt-inner">
                   <input type="file" id="videoImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
+                  <div class="video-kling-elements-list" id="videoKlingElementsList" aria-live="polite"></div>
                   <label for="videoPromptInput" class="video-prompt-label visually-hidden">Describe tu video</label>
                   <input
                     type="text"
@@ -92,7 +93,6 @@ class VideoView extends BaseView {
                     autocomplete="off"
                     aria-label="Prompt para generar video"
                   />
-                  <div class="video-kling-elements-list" id="videoKlingElementsList" aria-live="polite"></div>
                   <div class="video-prompt-actions">
                     <button type="button" class="video-prompt-btn video-prompt-btn-add" id="videoPromptAdd" aria-label="Subir imágenes">
                       <i class="fas fa-plus"></i>
@@ -175,7 +175,13 @@ class VideoView extends BaseView {
     const entityTypeSelect = this.container.querySelector('#videoEntityTypeSelect');
     const entitySelect = this.container.querySelector('#videoEntitySelect');
     if (entityTypeSelect) {
-      entityTypeSelect.addEventListener('change', () => this.renderEntityDropdown());
+      entityTypeSelect.addEventListener('change', () => {
+        this.renderEntityDropdown();
+        this.syncProductSelectionToKling();
+      });
+    }
+    if (entitySelect) {
+      entitySelect.addEventListener('change', () => this.syncProductSelectionToKling());
     }
     await this.loadBrandData();
     this.renderEntityDropdown();
@@ -253,6 +259,31 @@ class VideoView extends BaseView {
     } catch (e) {
       console.error('VideoView loadBrandData:', e);
     }
+  }
+
+  syncProductSelectionToKling() {
+    const typeSelect = this.container.querySelector('#videoEntityTypeSelect');
+    const entitySelect = this.container.querySelector('#videoEntitySelect');
+    if (!entitySelect || (typeSelect && typeSelect.value !== 'producto')) {
+      this.klingElements = this.klingElements.filter((el) => !el._fromProductSelection);
+      this.renderKlingElementsList();
+      return;
+    }
+    const productId = entitySelect.value;
+    this.klingElements = this.klingElements.filter((el) => !el._fromProductSelection);
+    if (productId) {
+      const product = (this.dbData.products || []).find((p) => String(p.id) === String(productId));
+      if (product && Array.isArray(product.image_urls) && product.image_urls.length >= 2 && product.image_urls.length <= 4) {
+        const name = this.sanitizeElementName((product.nombre_producto || 'producto').slice(0, 24));
+        this.klingElements.push({
+          name,
+          description: product.nombre_producto || undefined,
+          element_input_urls: product.image_urls.slice(0, 4),
+          _fromProductSelection: true
+        });
+      }
+    }
+    this.renderKlingElementsList();
   }
 
   renderEntityDropdown() {
@@ -355,12 +386,19 @@ class VideoView extends BaseView {
       return;
     }
     listEl.style.display = 'flex';
-    listEl.innerHTML = this.klingElements.map((el, idx) => `
+    listEl.innerHTML = this.klingElements.map((el, idx) => {
+      const urls = Array.isArray(el.element_input_urls) ? el.element_input_urls : [];
+      const thumbnails = urls.length > 0
+        ? urls.map((url) => `<img src="${String(url).replace(/"/g, '&quot;')}" alt="" class="video-kling-element-thumb" loading="lazy">`).join('')
+        : '';
+      return `
       <span class="video-kling-element-chip" data-index="${idx}">
-        @${el.name}
+        ${thumbnails ? `<span class="video-kling-element-thumbs">${thumbnails}</span>` : ''}
+        ${thumbnails ? '' : `@${el.name}`}
         <button type="button" class="video-kling-element-remove" aria-label="Quitar elemento ${el.name}">&times;</button>
       </span>
-    `).join('');
+    `;
+    }).join('');
     listEl.querySelectorAll('.video-kling-element-remove').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         const chip = e.target.closest('.video-kling-element-chip');
@@ -368,6 +406,10 @@ class VideoView extends BaseView {
         if (index >= 0) {
           this.klingElements.splice(index, 1);
           this.renderKlingElementsList();
+          if (this.klingElements.every((el) => !el._fromProductSelection)) {
+            const entitySelect = this.container.querySelector('#videoEntitySelect');
+            if (entitySelect) entitySelect.value = '';
+          }
         }
       });
     });
