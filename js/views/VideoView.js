@@ -98,11 +98,12 @@ class VideoView extends BaseView {
                       <i class="fas fa-plus"></i>
                     </button>
                     <div class="video-prompt-duration-wrap">
-                      <div class="video-prompt-duration-btns" role="group" aria-label="Duración del video">
-                        <button type="button" class="video-prompt-duration-btn active" data-duration="5" aria-pressed="true">5s</button>
-                        <button type="button" class="video-prompt-duration-btn" data-duration="10" aria-pressed="false">10s</button>
-                        <button type="button" class="video-prompt-duration-btn" data-duration="15" aria-pressed="false">15s</button>
-                      </div>
+                      <select id="videoDuration" class="video-prompt-aspect" aria-label="Duración del video">
+                        <option value="5">5s</option>
+                        <option value="10">10s</option>
+                        <option value="15">15s</option>
+                      </select>
+                      <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
                     </div>
                     <button type="button" class="video-prompt-toggle video-prompt-multi-shots" id="videoMultiShots" title="Multi shots" aria-pressed="false">
                       <i class="fas fa-film"></i><span>Multi shots</span>
@@ -183,16 +184,6 @@ class VideoView extends BaseView {
         const pressed = btn.getAttribute('aria-pressed') !== 'true';
         btn.setAttribute('aria-pressed', pressed);
         btn.classList.toggle('active', pressed);
-      });
-    });
-    this.container.querySelectorAll('.video-prompt-duration-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        this.container.querySelectorAll('.video-prompt-duration-btn').forEach((b) => {
-          b.classList.remove('active');
-          b.setAttribute('aria-pressed', 'false');
-        });
-        btn.classList.add('active');
-        btn.setAttribute('aria-pressed', 'true');
       });
     });
   }

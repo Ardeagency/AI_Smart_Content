@@ -19610,15 +19610,15 @@ body.production-filters-in-header .living-container > .living-history-section {
     width: 100%;
     padding: 0.65rem 0.85rem;
     font-size: var(--font-size-base);
-    color: var(--bg-dark, #0F0D12);
-    background: var(--color-white, rgba(255, 255, 255, 0.98));
-    border: 1px solid var(--glass-black-border);
+    color: var(--glass-black-text, #ffffff);
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: var(--radius-sm);
     outline: none;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .video-prompt-wrap .video-prompt-footer-card-inner .video-prompt-input::placeholder {
-    color: var(--text-secondary, rgba(15, 13, 18, 0.6));
+    color: rgba(255, 255, 255, 0.5);
 }
 .video-prompt-wrap .video-prompt-footer-card-inner .video-prompt-input:focus {
     border-color: var(--accent-brand);
@@ -19663,30 +19663,16 @@ body.production-filters-in-header .living-container > .living-history-section {
     cursor: not-allowed;
 }
 .video-prompt-duration-wrap {
+    position: relative;
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
 }
-.video-prompt-duration-btns {
-    display: inline-flex;
-    gap: 2px;
-}
-.video-prompt-wrap .video-prompt-footer-card-inner .video-prompt-duration-btn {
-    padding: 0.35rem 0.6rem;
-    font-size: var(--font-size-xs);
-    color: var(--glass-black-text);
-    background: var(--brand-primary-brillo, rgba(255, 255, 255, 0.1));
-    border: 1px solid var(--glass-black-border);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    transition: background 0.2s ease, border-color 0.2s ease;
-}
-.video-prompt-wrap .video-prompt-footer-card-inner .video-prompt-duration-btn:hover {
-    background: var(--brand-primary-brillo-strong, rgba(255, 255, 255, 0.18));
-}
-.video-prompt-wrap .video-prompt-footer-card-inner .video-prompt-duration-btn.active {
-    border-color: var(--accent-brand);
-    background: var(--brand-primary-brillo-strong, rgba(255, 255, 255, 0.18));
+.video-prompt-duration-wrap .video-prompt-aspect-chevron {
+    position: absolute;
+    right: 0.5rem;
+    pointer-events: none;
+    font-size: 0.65rem;
+    color: var(--white-50);
 }
 .video-prompt-aspect-wrap {
     position: relative;
