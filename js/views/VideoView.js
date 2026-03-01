@@ -13,7 +13,7 @@ class VideoView extends BaseView {
     this.supabase = null;
     this.organizationId = null;
     this.brandContainerId = null;
-    this.dbData = { products: [], entities: [], audiences: [], campaigns: [] };
+    this.dbData = { products: [], services: [], entities: [], audiences: [], campaigns: [] };
   }
 
   async onEnter() {
@@ -69,10 +69,13 @@ class VideoView extends BaseView {
               <div class="video-prompt-footer-card-inner glass-black">
                 <h3 class="video-prompt-panel-title">Entidades de la marca</h3>
                 <div class="video-prompt-db-toolbar">
-                  <select id="videoProductSelect" class="video-prompt-db-select" aria-label="Producto de la organización">
+                  <select id="videoEntityTypeSelect" class="video-prompt-db-select" aria-label="Tipo de entidad">
+                    <option value="producto">Producto</option>
+                    <option value="servicio">Servicio</option>
+                  </select>
+                  <select id="videoEntitySelect" class="video-prompt-db-select" aria-label="Entidad">
                     <option value="">Ninguno</option>
                   </select>
-                  <button type="button" class="video-prompt-db-item-btn" id="videoProductUseImagesBtn" aria-label="Usar imágenes del producto" disabled>Usar imágenes</button>
                 </div>
               </div>
             </div>
@@ -168,16 +171,13 @@ class VideoView extends BaseView {
       fileInput.addEventListener('change', (e) => this.onKlingElementFilesSelected(e));
     }
     this.renderKlingElementsList();
-    const productSelect = this.container.querySelector('#videoProductSelect');
-    const productUseImagesBtn = this.container.querySelector('#videoProductUseImagesBtn');
-    if (productSelect) {
-      productSelect.addEventListener('change', () => this.updateProductUseImagesButton());
-    }
-    if (productUseImagesBtn) {
-      productUseImagesBtn.addEventListener('click', () => this.onUseProductImages());
+    const entityTypeSelect = this.container.querySelector('#videoEntityTypeSelect');
+    const entitySelect = this.container.querySelector('#videoEntitySelect');
+    if (entityTypeSelect) {
+      entityTypeSelect.addEventListener('change', () => this.renderEntityDropdown());
     }
     await this.loadBrandData();
-    this.renderProductDropdown();
+    this.renderEntityDropdown();
     this.container.querySelectorAll('.video-prompt-toggle').forEach((btn) => {
       btn.addEventListener('click', () => {
         const pressed = btn.getAttribute('aria-pressed') !== 'true';
@@ -235,13 +235,15 @@ class VideoView extends BaseView {
       const bcId = this.brandContainerId;
       const { data: brandRow } = await this.supabase.from('brands').select('id').eq('project_id', bcId).maybeSingle();
       const brandId = brandRow?.id || null;
-      const [productsRes, entitiesRes, audiencesRes, campaignsRes] = await Promise.all([
+      const [productsRes, servicesRes, entitiesRes, audiencesRes, campaignsRes] = await Promise.all([
         this.supabase.from('products').select('id, nombre_producto, brand_container_id').eq('brand_container_id', bcId).order('created_at', { ascending: false }).limit(50),
+        this.supabase.from('services').select('id, nombre_servicio, brand_container_id').eq('brand_container_id', bcId).order('created_at', { ascending: false }).limit(50),
         this.supabase.from('brand_entities').select('id, name, entity_type, description').eq('brand_container_id', bcId).order('created_at', { ascending: false }).limit(50),
         brandId ? this.supabase.from('audiences').select('id, name, description').eq('brand_id', brandId).limit(50) : { data: [], error: null },
         this.supabase.from('campaigns').select('id, nombre_campana, descripcion_interna').eq('brand_container_id', bcId).order('created_at', { ascending: false }).limit(50)
       ]);
       this.dbData.products = productsRes.data || [];
+      this.dbData.services = servicesRes.data || [];
       this.dbData.entities = entitiesRes.data || [];
       this.dbData.audiences = audiencesRes.data || [];
       this.dbData.campaigns = campaignsRes.data || [];
@@ -262,42 +264,20 @@ class VideoView extends BaseView {
     }
   }
 
-  renderProductDropdown() {
-    const select = this.container.querySelector('#videoProductSelect');
-    if (!select) return;
-    const currentValue = select.value;
-    const options = (this.dbData.products || []).map((p) => {
-      const name = (p.nombre_producto || 'Producto').replace(/"/g, '&quot;').slice(0, 50);
-      return `<option value="${String(p.id)}">${name}</option>`;
+  renderEntityDropdown() {
+    const typeSelect = this.container.querySelector('#videoEntityTypeSelect');
+    const entitySelect = this.container.querySelector('#videoEntitySelect');
+    if (!typeSelect || !entitySelect) return;
+    const type = typeSelect.value || 'producto';
+    const items = type === 'servicio' ? (this.dbData.services || []) : (this.dbData.products || []);
+    const nameKey = type === 'servicio' ? 'nombre_servicio' : 'nombre_producto';
+    const currentValue = entitySelect.value;
+    const options = items.map((item) => {
+      const name = (item[nameKey] || (type === 'servicio' ? 'Servicio' : 'Producto')).replace(/"/g, '&quot;').slice(0, 50);
+      return `<option value="${String(item.id)}">${name}</option>`;
     }).join('');
-    select.innerHTML = '<option value="">Ninguno</option>' + options;
-    if (currentValue) select.value = currentValue;
-    this.updateProductUseImagesButton();
-  }
-
-  updateProductUseImagesButton() {
-    const btn = this.container.querySelector('#videoProductUseImagesBtn');
-    const select = this.container.querySelector('#videoProductSelect');
-    if (!btn || !select) return;
-    const productId = select.value;
-    const product = (this.dbData.products || []).find((p) => String(p.id) === String(productId));
-    const hasImages = product && Array.isArray(product.image_urls) && product.image_urls.length >= 2 && product.image_urls.length <= 4;
-    btn.disabled = !hasImages;
-  }
-
-  onUseProductImages() {
-    const select = this.container.querySelector('#videoProductSelect');
-    if (!select) return;
-    const productId = select.value;
-    const product = (this.dbData.products || []).find((p) => String(p.id) === String(productId));
-    if (!product || !Array.isArray(product.image_urls) || product.image_urls.length < 2 || product.image_urls.length > 4) return;
-    const name = this.sanitizeElementName((product.nombre_producto || 'producto').slice(0, 24));
-    this.klingElements.push({
-      name,
-      description: product.nombre_producto || undefined,
-      element_input_urls: product.image_urls.slice(0, 4)
-    });
-    this.renderKlingElementsList();
+    entitySelect.innerHTML = '<option value="">Ninguno</option>' + options;
+    if (currentValue) entitySelect.value = currentValue;
   }
 
   sanitizeElementName(str) {
