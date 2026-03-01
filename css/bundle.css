@@ -19389,18 +19389,28 @@ body.production-filters-in-header .living-container > .living-history-section {
     width: 100%;
     min-height: 120px;
 }
-/* Borde = solo resaltado con degradado dinámico (2px) */
+/* Borde = degradado dinámico discreto (50% opacidad) */
 .video-prompt-footer-card {
     position: relative;
     pointer-events: auto;
     padding: 2px;
     border-radius: var(--glass-radius);
-    background: var(--brand-gradient-dynamic, var(--brand-gradient));
+    background: transparent;
     transition: box-shadow 0.2s ease, opacity 0.2s ease;
     min-width: 0;
     box-shadow: none;
 }
-/* Brillo de fondo = degradado dinámico difuminado (no dentro de la card) */
+.video-prompt-footer-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    background: var(--brand-gradient-dynamic, var(--brand-gradient));
+    opacity: 0.5;
+    pointer-events: none;
+}
+/* Brillo de fondo = degradado dinámico discreto (35% opacidad) */
 .video-prompt-footer-card::before {
     content: "";
     position: absolute;
@@ -19408,12 +19418,14 @@ body.production-filters-in-header .living-container > .living-history-section {
     z-index: -1;
     border-radius: inherit;
     background: var(--brand-gradient-dynamic, var(--brand-gradient));
-    opacity: 0.4;
+    opacity: 0.35;
     filter: blur(20px);
     pointer-events: none;
 }
-/* Interior = glass-black opaco, sin degradado (opaco para que no se vea el gradiente del borde) */
+/* Interior = negro 80% opacidad */
 .video-prompt-footer-card-inner.glass-black {
+    position: relative;
+    z-index: 1;
     margin: 0;
     padding: 0.75rem 1rem;
     border: none;
@@ -19423,7 +19435,7 @@ body.production-filters-in-header .living-container > .living-history-section {
     display: flex;
     flex-direction: column;
     min-width: 0;
-    background: rgb(18, 18, 24);
+    background: rgba(0, 0, 0, 0.8);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     color: var(--glass-black-text);
@@ -19432,7 +19444,7 @@ body.production-filters-in-header .living-container > .living-history-section {
     padding: 0.5rem 1rem 1rem;
 }
 .video-prompt-wrap .video-prompt-footer-card:focus-within::before {
-    opacity: 0.55;
+    opacity: 0.45;
 }
 .video-prompt-panel-title {
     font-size: var(--font-size-xs);
