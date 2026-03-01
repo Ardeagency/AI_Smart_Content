@@ -14,6 +14,8 @@ class VideoView extends BaseView {
     this.organizationId = null;
     this.brandContainerId = null;
     this.dbData = { products: [], services: [], entities: [], audiences: [], campaigns: [] };
+    this.videoProductions = [];
+    this.selectedProductionIds = new Set();
   }
 
   async onEnter() {
@@ -63,19 +65,43 @@ class VideoView extends BaseView {
           </div>
         </div>
 
+        <div class="video-productions-panel" id="videoProductionsPanel" aria-hidden="true" style="display: none;">
+          <div class="video-productions-panel-backdrop" id="videoProductionsPanelBackdrop"></div>
+          <div class="video-productions-panel-card">
+            <div class="video-productions-panel-header">
+              <h3 class="video-prompt-panel-title">Producciones</h3>
+              <button type="button" class="video-productions-panel-close" id="videoProductionsPanelClose" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="video-productions-carousel-wrap">
+              <div class="video-productions-carousel" id="videoProductionsCarousel"></div>
+            </div>
+            <p class="video-productions-panel-hint" id="videoProductionsPanelHint">Selecciona una o más producciones</p>
+          </div>
+        </div>
+
         <footer class="video-page-footer video-prompt-wrap" aria-label="Prompt de generación">
           <div class="video-prompt-cards-row">
             <div class="video-prompt-footer-card">
               <div class="video-prompt-footer-card-inner glass-black">
-                <h3 class="video-prompt-panel-title">Entidades de la marca</h3>
-                <div class="video-prompt-db-toolbar">
-                  <select id="videoEntityTypeSelect" class="video-prompt-db-select" aria-label="Tipo de entidad">
-                    <option value="producto">Producto</option>
-                    <option value="servicio">Servicio</option>
-                  </select>
-                  <select id="videoEntitySelect" class="video-prompt-db-select" aria-label="Entidad">
-                    <option value="">Ninguno</option>
-                  </select>
+                <div class="video-prompt-left-section">
+                  <div class="video-prompt-left-block">
+                    <h3 class="video-prompt-panel-title">Producciones</h3>
+                    <button type="button" class="video-prompt-db-select video-prompt-productions-btn" id="videoProductionsBtn" aria-label="Ver producciones">
+                      <i class="fas fa-film"></i> Ver producciones
+                    </button>
+                  </div>
+                  <div class="video-prompt-left-block">
+                    <h3 class="video-prompt-panel-title">Entidades de la marca</h3>
+                    <div class="video-prompt-db-toolbar">
+                      <select id="videoEntityTypeSelect" class="video-prompt-db-select" aria-label="Tipo de entidad">
+                        <option value="producto">Producto</option>
+                        <option value="servicio">Servicio</option>
+                      </select>
+                      <select id="videoEntitySelect" class="video-prompt-db-select" aria-label="Entidad">
+                        <option value="">Ninguno</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -183,13 +209,107 @@ class VideoView extends BaseView {
     if (entitySelect) {
       entitySelect.addEventListener('change', () => this.syncProductSelectionToKling());
     }
+    const productionsBtn = this.container.querySelector('#videoProductionsBtn');
+    const panelClose = this.container.querySelector('#videoProductionsPanelClose');
+    const panelBackdrop = this.container.querySelector('#videoProductionsPanelBackdrop');
+    if (productionsBtn) productionsBtn.addEventListener('click', () => this.openProductionsPanel());
+    if (panelClose) panelClose.addEventListener('click', () => this.closeProductionsPanel());
+    if (panelBackdrop) panelBackdrop.addEventListener('click', () => this.closeProductionsPanel());
     await this.loadBrandData();
     this.renderEntityDropdown();
+    await this.loadVideoProductions();
     this.container.querySelectorAll('.video-prompt-toggle').forEach((btn) => {
       btn.addEventListener('click', () => {
         const pressed = btn.getAttribute('aria-pressed') !== 'true';
         btn.setAttribute('aria-pressed', pressed);
         btn.classList.toggle('active', pressed);
+      });
+    });
+  }
+
+  openProductionsPanel() {
+    const panel = this.container.querySelector('#videoProductionsPanel');
+    if (!panel) return;
+    panel.style.display = 'block';
+    panel.setAttribute('aria-hidden', 'false');
+    this.renderProductionsCarousel();
+  }
+
+  closeProductionsPanel() {
+    const panel = this.container.querySelector('#videoProductionsPanel');
+    if (!panel) return;
+    panel.style.display = 'none';
+    panel.setAttribute('aria-hidden', 'true');
+  }
+
+  async loadVideoProductions() {
+    if (!this.supabase) return;
+    try {
+      const { data: { user } } = await this.supabase.auth.getUser();
+      if (!user?.id) return;
+      const { data } = await this.supabase.from('video_productions').select('id, task_id, video_url, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(100);
+      this.videoProductions = data || [];
+    } catch (e) {
+      console.warn('VideoView loadVideoProductions:', e);
+      this.videoProductions = [];
+    }
+  }
+
+  async saveVideoProduction({ taskId, videoUrl }) {
+    if (!this.supabase) return;
+    try {
+      const { data: { user } } = await this.supabase.auth.getUser();
+      if (!user?.id) return;
+      const { data } = await this.supabase.from('video_productions').insert({ user_id: user.id, organization_id: this.organizationId || null, task_id: taskId, video_url: videoUrl }).select('id, task_id, video_url, created_at').single();
+      if (data) this.videoProductions.unshift(data);
+    } catch (e) {
+      console.warn('VideoView saveVideoProduction:', e);
+      this.videoProductions.unshift({ id: taskId, task_id: taskId, video_url: videoUrl, created_at: new Date().toISOString() });
+    }
+  }
+
+  renderProductionsCarousel() {
+    const carousel = this.container.querySelector('#videoProductionsCarousel');
+    if (!carousel) return;
+    if (this.videoProductions.length === 0) {
+      carousel.innerHTML = '<p class="video-productions-empty">Aún no hay producciones. Genera un video para verlo aquí.</p>';
+      return;
+    }
+    carousel.innerHTML = this.videoProductions.map((p) => {
+      const id = p.id || p.task_id;
+      const selected = this.selectedProductionIds.has(id);
+      const dateStr = p.created_at ? new Date(p.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+      return `
+        <div class="video-production-item" data-id="${id}" role="button" tabindex="0">
+          <input type="checkbox" class="video-production-check" id="prod-${id}" ${selected ? 'checked' : ''} aria-label="Seleccionar producción">
+          <div class="video-production-thumb-wrap">
+            <video class="video-production-thumb" src="${(p.video_url || '').replace(/"/g, '&quot;')}" preload="metadata" muted playsinline></video>
+          </div>
+          <span class="video-production-date">${dateStr}</span>
+        </div>
+      `;
+    }).join('');
+    carousel.querySelectorAll('.video-production-item').forEach((el) => {
+      el.addEventListener('click', (e) => {
+        if (e.target.classList.contains('video-production-check')) return;
+        const id = el.dataset.id;
+        const check = el.querySelector('.video-production-check');
+        if (this.selectedProductionIds.has(id)) {
+          this.selectedProductionIds.delete(id);
+          if (check) check.checked = false;
+        } else {
+          this.selectedProductionIds.add(id);
+          if (check) check.checked = true;
+        }
+      });
+    });
+    carousel.querySelectorAll('.video-production-check').forEach((check) => {
+      check.addEventListener('change', (e) => {
+        const item = e.target.closest('.video-production-item');
+        const id = item?.dataset?.id;
+        if (!id) return;
+        if (e.target.checked) this.selectedProductionIds.add(id);
+        else this.selectedProductionIds.delete(id);
       });
     });
   }
@@ -524,6 +644,7 @@ class VideoView extends BaseView {
           const urls = resultJson?.resultUrls;
           const url = Array.isArray(urls) && urls.length > 0 ? urls[0] : null;
           if (url) {
+            await this.saveVideoProduction({ taskId, videoUrl: url });
             this.showResult(url);
           } else {
             this.showError('No se encontró URL del video en la respuesta');
