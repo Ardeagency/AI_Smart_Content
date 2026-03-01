@@ -57,12 +57,16 @@ exports.handler = async (event, context) => {
         };
       }
       const mode = body.mode === 'pro' ? 'pro' : 'std';
+      const input = { mode };
+      if (Array.isArray(body.kling_elements) && body.kling_elements.length > 0) {
+        input.kling_elements = body.kling_elements;
+      }
       const createRes = await fetch(`${KIE_BASE}/createTask`, {
         method: 'POST',
         headers,
         body: JSON.stringify({
           model: 'kling-3.0/video',
-          input: { mode }
+          input
         })
       });
       const createData = await createRes.json();
