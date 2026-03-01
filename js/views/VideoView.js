@@ -26,11 +26,6 @@ class VideoView extends BaseView {
   renderHTML() {
     return `
       <div class="organization-container video-view-container" id="videoPage">
-        <div class="organization-header">
-          <h1 class="organization-title">Video</h1>
-          <p class="organization-subtitle">Genera video con Kling 3.0</p>
-        </div>
-
         <div class="video-status-area" id="videoStatusArea" style="display: none;">
           <div class="video-status-card" id="videoStatusCard">
             <p class="video-status-text" id="videoStatusText">—</p>
@@ -57,6 +52,7 @@ class VideoView extends BaseView {
         </div>
 
         <footer class="video-page-footer video-prompt-wrap" aria-label="Prompt de generación">
+          <div class="video-prompt-card-gradient-wrap">
           <div class="video-prompt-card glass-black">
             <div class="video-prompt-inner">
               <label for="videoPromptInput" class="video-prompt-label visually-hidden">Describe tu video</label>
@@ -84,6 +80,7 @@ class VideoView extends BaseView {
                 </button>
               </div>
             </div>
+          </div>
           </div>
         </footer>
       </div>

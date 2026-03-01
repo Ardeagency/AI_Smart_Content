@@ -19368,7 +19368,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 .organization-container.video-view-container {
     padding-bottom: 7rem;
 }
-/* Footer: card tipo prompt — glass-black + colores dinámicos org (--brand-primary, --brand-primary-brillo) */
+/* Footer: card tipo prompt — borde con degradado dinámico completo (--brand-gradient-dynamic) */
 .video-page-footer.video-prompt-wrap {
     position: fixed;
     left: 0;
@@ -19378,17 +19378,30 @@ body.production-filters-in-header .living-container > .living-history-section {
     z-index: 100;
     pointer-events: none;
 }
-.video-prompt-wrap .video-prompt-card.glass-black {
+.video-prompt-card-gradient-wrap {
     pointer-events: auto;
     max-width: 640px;
     margin: 0 auto;
+    padding: 2px;
+    border-radius: var(--glass-radius);
+    background: var(--brand-gradient-dynamic, var(--brand-gradient));
+    box-shadow: var(--shadow-floating), 0 0 24px rgba(0, 0, 0, 0.3);
+    transition: box-shadow 0.2s ease, opacity 0.2s ease;
+}
+.video-prompt-wrap .video-prompt-card.glass-black {
+    margin: 0;
     padding: 0.25rem 1rem 1rem;
-    box-shadow: var(--shadow-floating), 0 0 24px var(--brand-primary-brillo, rgba(255, 255, 255, 0.08));
-    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    border: none;
+    border-radius: calc(var(--glass-radius) - 2px);
+    box-shadow: none;
+    transition: none;
 }
 .video-prompt-wrap .video-prompt-card.glass-black:focus-within {
-    border-color: var(--accent-brand);
-    box-shadow: var(--shadow-floating), 0 0 0 1px var(--accent-brand), 0 0 20px var(--brand-primary-brillo-strong, rgba(255, 255, 255, 0.12));
+    border: none;
+    box-shadow: none;
+}
+.video-prompt-card-gradient-wrap:focus-within {
+    box-shadow: var(--shadow-floating), 0 0 28px var(--brand-primary-brillo-strong, rgba(255, 255, 255, 0.15));
 }
 .video-prompt-inner {
     display: flex;
@@ -19442,11 +19455,11 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 .video-prompt-card.glass-black .video-prompt-btn-send {
     margin-left: auto;
-    background: var(--accent-brand);
+    background: var(--brand-gradient-dynamic, var(--brand-gradient));
     color: var(--bg-dark);
 }
 .video-prompt-card.glass-black .video-prompt-btn-send:hover {
-    background: var(--accent-brand);
+    background: var(--brand-gradient-dynamic, var(--brand-gradient));
     filter: brightness(1.15);
     color: var(--bg-dark);
 }
