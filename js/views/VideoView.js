@@ -1,11 +1,12 @@
 /**
  * VideoView - Página de generación de video con Kling 3.0 (KIE API).
+ * Misma estructura que el resto de vistas: renderHTML() sin template, layout organization-* del bundle.
  * Flujo: crear tarea (createTask) → consultar estado (recordInfo) hasta success/fail → mostrar video o error.
  */
 class VideoView extends BaseView {
   constructor() {
     super();
-    this.templatePath = 'video.html';
+    this.templatePath = null;
     this._pollInterval = null;
   }
 
@@ -20,6 +21,73 @@ class VideoView extends BaseView {
     if (window.appNavigation && !window.appNavigation.initialized) {
       await window.appNavigation.render();
     }
+  }
+
+  renderHTML() {
+    return `
+      <div class="organization-container video-view-container" id="videoPage">
+        <div class="organization-header">
+          <h1 class="organization-title">Video</h1>
+          <p class="organization-subtitle">Genera video con Kling 3.0</p>
+        </div>
+
+        <div class="video-status-area" id="videoStatusArea" style="display: none;">
+          <div class="video-status-card" id="videoStatusCard">
+            <p class="video-status-text" id="videoStatusText">—</p>
+            <div class="video-status-spinner" id="videoStatusSpinner" style="display: none;"></div>
+          </div>
+        </div>
+
+        <div class="video-result-area" id="videoResultArea" style="display: none;">
+          <div class="video-result-card">
+            <h2 class="video-result-title">Video generado</h2>
+            <div class="video-result-player-wrap">
+              <video id="videoResultPlayer" class="video-result-player" controls playsinline></video>
+            </div>
+            <a id="videoResultDownload" class="btn btn-secondary video-download-btn" href="#" download target="_blank" rel="noopener">
+              <i class="fas fa-download"></i> Descargar
+            </a>
+          </div>
+        </div>
+
+        <div class="video-error-area" id="videoErrorArea" style="display: none;">
+          <div class="video-error-card">
+            <p class="video-error-text" id="videoErrorText">—</p>
+          </div>
+        </div>
+
+        <footer class="video-page-footer video-prompt-wrap" aria-label="Prompt de generación">
+          <div class="video-prompt-card glass-black">
+            <div class="video-prompt-inner">
+              <label for="videoPromptInput" class="video-prompt-label visually-hidden">Describe tu video</label>
+              <input
+                type="text"
+                id="videoPromptInput"
+                class="video-prompt-input"
+                placeholder="¿Qué video quieres generar?..."
+                autocomplete="off"
+                aria-label="Prompt para generar video"
+              />
+              <div class="video-prompt-actions">
+                <button type="button" class="video-prompt-btn video-prompt-btn-add" id="videoPromptAdd" aria-label="Añadir adjunto">
+                  <i class="fas fa-plus"></i>
+                </button>
+                <div class="video-prompt-mode-wrap">
+                  <select id="videoMode" class="video-prompt-mode" aria-label="Modo de resolución">
+                    <option value="std">Estándar</option>
+                    <option value="pro">Pro</option>
+                  </select>
+                  <i class="fas fa-chevron-down video-prompt-mode-chevron" aria-hidden="true"></i>
+                </div>
+                <button type="button" class="video-prompt-btn video-prompt-btn-send" id="videoPromptSend" aria-label="Generar video">
+                  <i class="fas fa-paper-plane"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </div>
+    `;
   }
 
   async init() {

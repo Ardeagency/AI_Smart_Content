@@ -19365,25 +19365,8 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 
 /* ========== Video (Kling 3.0 / KIE) ========== */
-.video-page {
-    padding: 1.5rem;
+.organization-container.video-view-container {
     padding-bottom: 7rem;
-    max-width: 720px;
-    margin: 0 auto;
-}
-.video-header {
-    margin-bottom: 1.5rem;
-}
-.video-title {
-    font-size: var(--font-size-3xl, 1.5rem);
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0 0 0.25rem 0;
-}
-.video-subtitle {
-    font-size: var(--font-size-base);
-    color: var(--text-secondary);
-    margin: 0;
 }
 /* Footer: card tipo prompt — glass-black + colores dinámicos org (--brand-primary, --brand-primary-brillo) */
 .video-page-footer.video-prompt-wrap {
