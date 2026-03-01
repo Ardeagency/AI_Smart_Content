@@ -19389,6 +19389,7 @@ body.production-filters-in-header .living-container > .living-history-section {
     width: 100%;
     min-height: 120px;
 }
+/* Borde = solo resaltado con degradado dinámico (2px) */
 .video-prompt-footer-card {
     position: relative;
     pointer-events: auto;
@@ -19397,19 +19398,21 @@ body.production-filters-in-header .living-container > .living-history-section {
     background: var(--brand-gradient-dynamic, var(--brand-gradient));
     transition: box-shadow 0.2s ease, opacity 0.2s ease;
     min-width: 0;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    box-shadow: none;
 }
+/* Brillo de fondo = degradado dinámico difuminado (no dentro de la card) */
 .video-prompt-footer-card::before {
     content: "";
     position: absolute;
-    inset: -12px;
+    inset: -14px;
     z-index: -1;
     border-radius: inherit;
     background: var(--brand-gradient-dynamic, var(--brand-gradient));
-    opacity: 0.35;
-    filter: blur(16px);
+    opacity: 0.4;
+    filter: blur(20px);
     pointer-events: none;
 }
+/* Interior = solo efecto glass-black, sin degradado */
 .video-prompt-footer-card-inner.glass-black {
     margin: 0;
     padding: 0.75rem 1rem;
@@ -19420,7 +19423,7 @@ body.production-filters-in-header .living-container > .living-history-section {
     display: flex;
     flex-direction: column;
     min-width: 0;
-    background: var(--glass-black-bg);
+    background: rgba(0, 0, 0, 0.55);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     color: var(--glass-black-text);
@@ -19429,7 +19432,7 @@ body.production-filters-in-header .living-container > .living-history-section {
     padding: 0.5rem 1rem 1rem;
 }
 .video-prompt-wrap .video-prompt-footer-card:focus-within::before {
-    opacity: 0.5;
+    opacity: 0.55;
 }
 .video-prompt-panel-title {
     font-size: var(--font-size-xs);
