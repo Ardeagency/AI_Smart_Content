@@ -19627,8 +19627,25 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 /* Cinematography panel (card derecha) */
 .video-cinematography-panel {
-    max-height: 70vh;
+    height: 340px;
     overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+.video-cinematography-panel::-webkit-scrollbar {
+    width: 6px;
+}
+.video-cinematography-panel::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 3px;
+}
+.video-cinematography-panel::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+.video-cinematography-panel::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.35);
 }
 .video-cinematography-panel .video-prompt-panel-title {
     margin: 0 0 0.5rem 0;
