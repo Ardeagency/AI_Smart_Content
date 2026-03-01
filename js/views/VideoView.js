@@ -23,7 +23,8 @@ class VideoView extends BaseView {
   }
 
   async init() {
-    this.generateBtn = this.container.querySelector('#videoGenerateBtn');
+    this.sendBtn = this.container.querySelector('#videoPromptSend');
+    this.promptInput = this.container.querySelector('#videoPromptInput');
     this.modeSelect = this.container.querySelector('#videoMode');
     this.statusArea = this.container.querySelector('#videoStatusArea');
     this.statusText = this.container.querySelector('#videoStatusText');
@@ -34,9 +35,20 @@ class VideoView extends BaseView {
     this.errorArea = this.container.querySelector('#videoErrorArea');
     this.errorText = this.container.querySelector('#videoErrorText');
 
-    if (this.generateBtn) {
-      this.generateBtn.disabled = false;
-      this.generateBtn.addEventListener('click', () => this.startGeneration());
+    if (this.sendBtn) {
+      this.sendBtn.addEventListener('click', () => this.startGeneration());
+    }
+    if (this.promptInput) {
+      this.promptInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          this.startGeneration();
+        }
+      });
+    }
+    const addBtn = this.container.querySelector('#videoPromptAdd');
+    if (addBtn) {
+      addBtn.addEventListener('click', () => { /* reservado para adjuntos */ });
     }
   }
 
@@ -74,7 +86,7 @@ class VideoView extends BaseView {
 
   async startGeneration() {
     const mode = this.modeSelect && this.modeSelect.value === 'pro' ? 'pro' : 'std';
-    if (this.generateBtn) this.generateBtn.disabled = true;
+    if (this.sendBtn) this.sendBtn.disabled = true;
     this.showStatus('Creando tarea de generación…', true);
 
     try {
@@ -87,14 +99,14 @@ class VideoView extends BaseView {
 
       if (!createRes.ok) {
         this.showError(createData.error || createData.failMsg || 'Error al crear la tarea');
-        if (this.generateBtn) this.generateBtn.disabled = false;
+        if (this.sendBtn) this.sendBtn.disabled = false;
         return;
       }
 
       const taskId = createData.taskId;
       if (!taskId) {
         this.showError('No se recibió taskId del servidor');
-        if (this.generateBtn) this.generateBtn.disabled = false;
+        if (this.sendBtn) this.sendBtn.disabled = false;
         return;
       }
 
@@ -103,7 +115,7 @@ class VideoView extends BaseView {
     } catch (err) {
       this.showError(err.message || 'Error de conexión');
     } finally {
-      if (this.generateBtn) this.generateBtn.disabled = false;
+      if (this.sendBtn) this.sendBtn.disabled = false;
     }
   }
 

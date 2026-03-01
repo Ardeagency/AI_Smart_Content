@@ -5,19 +5,6 @@
     <p class="video-subtitle">Genera video con Kling 3.0</p>
   </div>
 
-  <div class="video-form-card">
-    <div class="video-form-section">
-      <label for="videoMode" class="video-label">Modo de resolución</label>
-      <select id="videoMode" class="video-select" aria-label="Modo de generación">
-        <option value="std">Estándar (std)</option>
-        <option value="pro">Alta resolución (pro)</option>
-      </select>
-    </div>
-    <button type="button" id="videoGenerateBtn" class="btn btn-primary video-generate-btn" disabled>
-      <i class="fas fa-play"></i> Generar video
-    </button>
-  </div>
-
   <div class="video-status-area" id="videoStatusArea" style="display: none;">
     <div class="video-status-card" id="videoStatusCard">
       <p class="video-status-text" id="videoStatusText">—</p>
@@ -40,6 +27,38 @@
   <div class="video-error-area" id="videoErrorArea" style="display: none;">
     <div class="video-error-card">
       <p class="video-error-text" id="videoErrorText">—</p>
+    </div>
+  </div>
+
+  <!-- Card flotante tipo prompt (parte inferior) -->
+  <div class="video-prompt-wrap">
+    <div class="video-prompt-card">
+      <div class="video-prompt-inner">
+        <label for="videoPromptInput" class="video-prompt-label visually-hidden">Describe tu video</label>
+        <input
+          type="text"
+          id="videoPromptInput"
+          class="video-prompt-input"
+          placeholder="¿Qué video quieres generar?..."
+          autocomplete="off"
+          aria-label="Prompt para generar video"
+        />
+        <div class="video-prompt-actions">
+          <button type="button" class="video-prompt-btn video-prompt-btn-add" id="videoPromptAdd" aria-label="Añadir adjunto">
+            <i class="fas fa-plus"></i>
+          </button>
+          <div class="video-prompt-mode-wrap">
+            <select id="videoMode" class="video-prompt-mode" aria-label="Modo de resolución">
+              <option value="std">Estándar</option>
+              <option value="pro">Pro</option>
+            </select>
+            <i class="fas fa-chevron-down video-prompt-mode-chevron" aria-hidden="true"></i>
+          </div>
+          <button type="button" class="video-prompt-btn video-prompt-btn-send" id="videoPromptSend" aria-label="Generar video">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </div>

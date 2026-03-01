@@ -19399,6 +19399,7 @@ om: 0.75rem;
 /* ========== Video (Kling 3.0 / KIE) ========== */
 .video-page {
     padding: 1.5rem;
+    padding-bottom: 7rem;
     max-width: 720px;
     margin: 0 auto;
 }
@@ -19416,39 +19417,116 @@ om: 0.75rem;
     color: var(--text-secondary);
     margin: 0;
 }
-.video-form-card {
-    background: var(--living-bg-card, rgba(21, 23, 28, 0.6));
+/* Card flotante tipo prompt (parte inferior) — colores del bundle */
+.video-prompt-wrap {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 1rem 1.5rem 1.5rem;
+    z-index: 100;
+    pointer-events: none;
+}
+.video-prompt-wrap .video-prompt-card {
+    pointer-events: auto;
+    max-width: 640px;
+    margin: 0 auto;
+    background: var(--living-bg-card, var(--bg-secondary));
     border: 1px solid var(--border-divider);
-    border-radius: var(--radius-md, 12px);
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
+    border-radius: var(--radius-lg);
+    padding: 0.25rem 1rem 1rem;
+    box-shadow: var(--shadow-floating), 0 0 0 1px var(--border-divider), 0 0 24px var(--warm-10);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
-.video-form-section {
-    margin-bottom: 1rem;
+.video-prompt-wrap .video-prompt-card:focus-within {
+    border-color: var(--accent-cta);
+    box-shadow: var(--shadow-floating), 0 0 0 1px var(--accent-cta), 0 0 20px var(--warm-20);
 }
-.video-label {
-    display: block;
-    font-size: var(--font-size-sm);
-    font-weight: 500;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
+.video-prompt-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
 }
-.video-select {
+.video-prompt-label.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+.video-prompt-input {
     width: 100%;
-    max-width: 280px;
-    padding: 0.5rem 0.75rem;
+    padding: 0.75rem 0;
     font-size: var(--font-size-base);
     color: var(--text-primary);
-    background: var(--bg-primary);
-    border: 1px solid var(--border-divider);
+    background: transparent;
+    border: none;
+    outline: none;
+}
+.video-prompt-input::placeholder {
+    color: var(--text-muted);
+}
+.video-prompt-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.video-prompt-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: none;
     border-radius: var(--radius-sm);
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
 }
-.video-generate-btn {
-    margin-top: 0.5rem;
+.video-prompt-btn:hover {
+    background: var(--brillo-active);
+    color: var(--text-primary);
 }
-.video-generate-btn:disabled {
+.video-prompt-btn-send {
+    margin-left: auto;
+    background: var(--accent-cta);
+    color: var(--bg-dark);
+}
+.video-prompt-btn-send:hover {
+    background: var(--accent-cta-hover);
+    color: var(--bg-dark);
+}
+.video-prompt-btn-send:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+}
+.video-prompt-mode-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+.video-prompt-mode {
+    padding: 0.4rem 1.75rem 0.4rem 0.6rem;
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    background: var(--bg-hover);
+    border: 1px solid var(--border-divider);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+}
+.video-prompt-mode-chevron {
+    position: absolute;
+    right: 0.5rem;
+    pointer-events: none;
+    font-size: 0.65rem;
+    color: var(--text-muted);
 }
 .video-status-area,
 .video-result-area,
