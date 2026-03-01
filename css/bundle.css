@@ -19364,38 +19364,6 @@ body.production-filters-in-header .living-container > .living-history-section {
     }
 }
 
-
-om: 0.75rem;
-    }
-    
-    .price-amount {
-        font-size: 1.75rem;
-    }
-    
-    .payment-method-fixed {
-        padding: 1rem;
-}
-
-.form-section {
-        margin-bottom: 1.5rem;
-}
-
-.section-title {
-        font-size: var(--font-size-md);
-    margin-bottom: 1rem;
-}
-
-    .wompi-note {
-        padding: 0.75rem;
-        font-size: 0.8rem;
-    }
-    
-    .payment-total {
-        padding: 1rem;
-    }
-}
-
-
 /* ========== Video (Kling 3.0 / KIE) ========== */
 .video-page {
     padding: 1.5rem;
@@ -19417,8 +19385,8 @@ om: 0.75rem;
     color: var(--text-secondary);
     margin: 0;
 }
-/* Card flotante tipo prompt (parte inferior) — colores del bundle */
-.video-prompt-wrap {
+/* Footer: card tipo prompt — glass-black + colores dinámicos org (--brand-primary, --brand-primary-brillo) */
+.video-page-footer.video-prompt-wrap {
     position: fixed;
     left: 0;
     right: 0;
@@ -19427,20 +19395,17 @@ om: 0.75rem;
     z-index: 100;
     pointer-events: none;
 }
-.video-prompt-wrap .video-prompt-card {
+.video-prompt-wrap .video-prompt-card.glass-black {
     pointer-events: auto;
     max-width: 640px;
     margin: 0 auto;
-    background: var(--living-bg-card, var(--bg-secondary));
-    border: 1px solid var(--border-divider);
-    border-radius: var(--radius-lg);
     padding: 0.25rem 1rem 1rem;
-    box-shadow: var(--shadow-floating), 0 0 0 1px var(--border-divider), 0 0 24px var(--warm-10);
+    box-shadow: var(--shadow-floating), 0 0 24px var(--brand-primary-brillo, rgba(255, 255, 255, 0.08));
     transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
-.video-prompt-wrap .video-prompt-card:focus-within {
-    border-color: var(--accent-cta);
-    box-shadow: var(--shadow-floating), 0 0 0 1px var(--accent-cta), 0 0 20px var(--warm-20);
+.video-prompt-wrap .video-prompt-card.glass-black:focus-within {
+    border-color: var(--accent-brand);
+    box-shadow: var(--shadow-floating), 0 0 0 1px var(--accent-brand), 0 0 20px var(--brand-primary-brillo-strong, rgba(255, 255, 255, 0.12));
 }
 .video-prompt-inner {
     display: flex;
@@ -19457,24 +19422,24 @@ om: 0.75rem;
     clip: rect(0, 0, 0, 0);
     border: 0;
 }
-.video-prompt-input {
+.video-prompt-card.glass-black .video-prompt-input {
     width: 100%;
     padding: 0.75rem 0;
     font-size: var(--font-size-base);
-    color: var(--text-primary);
+    color: var(--glass-black-text);
     background: transparent;
     border: none;
     outline: none;
 }
-.video-prompt-input::placeholder {
-    color: var(--text-muted);
+.video-prompt-card.glass-black .video-prompt-input::placeholder {
+    color: var(--white-50);
 }
 .video-prompt-actions {
     display: flex;
     align-items: center;
     gap: 0.5rem;
 }
-.video-prompt-btn {
+.video-prompt-card.glass-black .video-prompt-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -19483,22 +19448,23 @@ om: 0.75rem;
     padding: 0;
     border: none;
     border-radius: var(--radius-sm);
-    background: var(--bg-hover);
-    color: var(--text-primary);
+    background: var(--brand-primary-brillo, var(--brillo-hover));
+    color: var(--glass-black-text);
     cursor: pointer;
     transition: background 0.2s ease, color 0.2s ease;
 }
-.video-prompt-btn:hover {
-    background: var(--brillo-active);
-    color: var(--text-primary);
+.video-prompt-card.glass-black .video-prompt-btn:hover {
+    background: var(--brand-primary-brillo-strong, var(--brillo-active));
+    color: var(--glass-black-text);
 }
-.video-prompt-btn-send {
+.video-prompt-card.glass-black .video-prompt-btn-send {
     margin-left: auto;
-    background: var(--accent-cta);
+    background: var(--accent-brand);
     color: var(--bg-dark);
 }
-.video-prompt-btn-send:hover {
-    background: var(--accent-cta-hover);
+.video-prompt-card.glass-black .video-prompt-btn-send:hover {
+    background: var(--accent-brand);
+    filter: brightness(1.15);
     color: var(--bg-dark);
 }
 .video-prompt-btn-send:disabled {
@@ -19510,12 +19476,12 @@ om: 0.75rem;
     display: inline-flex;
     align-items: center;
 }
-.video-prompt-mode {
+.video-prompt-card.glass-black .video-prompt-mode {
     padding: 0.4rem 1.75rem 0.4rem 0.6rem;
     font-size: var(--font-size-sm);
-    color: var(--text-primary);
-    background: var(--bg-hover);
-    border: 1px solid var(--border-divider);
+    color: var(--glass-black-text);
+    background: var(--brand-primary-brillo, var(--brillo-hover));
+    border: 1px solid var(--glass-black-border);
     border-radius: var(--radius-sm);
     cursor: pointer;
     appearance: none;
@@ -19526,7 +19492,7 @@ om: 0.75rem;
     right: 0.5rem;
     pointer-events: none;
     font-size: 0.65rem;
-    color: var(--text-muted);
+    color: var(--white-50);
 }
 .video-status-area,
 .video-result-area,
