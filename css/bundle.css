@@ -19401,7 +19401,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 .video-prompt-wrap .video-prompt-card.glass-black {
     margin: 0;
-    padding: 0.25rem 1rem 1rem;
+    padding: 0;
     border: none;
     border-radius: calc(var(--glass-radius) - 2px);
     box-shadow: none;
@@ -19410,6 +19410,139 @@ body.production-filters-in-header .living-container > .living-history-section {
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     color: var(--glass-black-text);
+}
+.video-prompt-three-cols {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    gap: 0;
+    min-height: 120px;
+    align-items: stretch;
+}
+.video-prompt-panel {
+    padding: 0.75rem 1rem;
+    border-right: 1px solid var(--glass-black-border);
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+.video-prompt-panel-right {
+    border-right: none;
+    border-left: 1px solid var(--glass-black-border);
+}
+.video-prompt-panel-title {
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--glass-black-text);
+    margin: 0 0 0.5rem 0;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    opacity: 0.9;
+}
+.video-prompt-panel-placeholder {
+    font-size: var(--font-size-sm);
+    color: var(--white-50);
+    margin: 0;
+}
+.video-prompt-center {
+    padding: 0.25rem 1rem 1rem;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+.video-prompt-db-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-bottom: 0.5rem;
+}
+.video-prompt-db-select {
+    width: 100%;
+    padding: 0.35rem 0.5rem;
+    font-size: var(--font-size-xs);
+    color: var(--glass-black-text);
+    background: var(--brand-primary-brillo, rgba(255,255,255,0.08));
+    border: 1px solid var(--glass-black-border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+}
+.video-prompt-ai-prompt-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.5rem;
+    font-size: var(--font-size-xs);
+    color: var(--glass-black-text);
+    background: var(--brand-primary-brillo-strong, rgba(255,255,255,0.12));
+    border: 1px solid var(--glass-black-border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+.video-prompt-ai-prompt-btn:hover {
+    background: var(--accent-brand);
+    color: var(--bg-dark);
+}
+.video-prompt-db-list {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 140px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+.video-prompt-db-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem;
+    padding: 0.35rem 0.5rem;
+    font-size: var(--font-size-xs);
+    color: var(--glass-black-text);
+    background: var(--brand-primary-brillo, rgba(255,255,255,0.06));
+    border: 1px solid transparent;
+    border-radius: var(--radius-xs);
+}
+.video-prompt-db-item-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.video-prompt-db-item-btn {
+    flex-shrink: 0;
+    padding: 0.2rem 0.4rem;
+    font-size: 0.65rem;
+    color: var(--glass-black-text);
+    background: transparent;
+    border: 1px solid var(--glass-black-border);
+    border-radius: var(--radius-xs);
+    cursor: pointer;
+}
+.video-prompt-db-item-btn:hover {
+    background: var(--accent-brand);
+    color: var(--bg-dark);
+    border-color: var(--accent-brand);
+}
+.video-prompt-db-list-empty {
+    font-size: var(--font-size-xs);
+    color: var(--white-50);
+    margin: 0;
+    padding: 0.5rem 0;
+}
+@media (max-width: 900px) {
+    .video-prompt-three-cols {
+        grid-template-columns: 1fr;
+    }
+    .video-prompt-panel {
+        border-right: none;
+        border-bottom: 1px solid var(--glass-black-border);
+    }
+    .video-prompt-panel-right {
+        border-left: none;
+        border-bottom: none;
+    }
 }
 .video-prompt-wrap .video-prompt-card.glass-black:focus-within {
     border: none;

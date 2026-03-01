@@ -11,6 +11,9 @@ class VideoView extends BaseView {
     this.uploadedImages = [];
     this.klingElements = [];
     this.supabase = null;
+    this.organizationId = null;
+    this.brandContainerId = null;
+    this.dbData = { products: [], entities: [], audiences: [], campaigns: [] };
   }
 
   async onEnter() {
@@ -29,6 +32,7 @@ class VideoView extends BaseView {
     } else if (window.supabase) {
       this.supabase = window.supabase;
     }
+    this.organizationId = window.currentOrgId || this.routeParams?.orgId || null;
   }
 
   renderHTML() {
@@ -62,19 +66,36 @@ class VideoView extends BaseView {
         <footer class="video-page-footer video-prompt-wrap" aria-label="Prompt de generación">
           <div class="video-prompt-card-gradient-wrap">
           <div class="video-prompt-card glass-black">
-            <div class="video-prompt-inner">
-              <input type="file" id="videoImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
-              <label for="videoPromptInput" class="video-prompt-label visually-hidden">Describe tu video</label>
-              <input
-                type="text"
-                id="videoPromptInput"
-                class="video-prompt-input"
-                placeholder="¿Qué video quieres generar? Usa @nombre para referenciar elementos."
-                autocomplete="off"
-                aria-label="Prompt para generar video"
-              />
-              <div class="video-kling-elements-list" id="videoKlingElementsList" aria-live="polite"></div>
-              <div class="video-prompt-actions">
+            <div class="video-prompt-three-cols">
+              <aside class="video-prompt-panel video-prompt-panel-left" aria-label="Entidades de la marca">
+                <h3 class="video-prompt-panel-title">Entidades de la marca</h3>
+                <div class="video-prompt-db-toolbar">
+                  <select id="videoDbCategory" class="video-prompt-db-select" aria-label="Categoría">
+                    <option value="products">Productos</option>
+                    <option value="entities">Entidades</option>
+                    <option value="audiences">Audiencias</option>
+                    <option value="campaigns">Campañas</option>
+                  </select>
+                  <button type="button" class="video-prompt-ai-prompt-btn" id="videoAiPromptBtn" aria-label="Generar prompt con IA">
+                    <i class="fas fa-magic"></i> Prompt con IA
+                  </button>
+                </div>
+                <div class="video-prompt-db-list" id="videoDbList"></div>
+              </aside>
+              <div class="video-prompt-center">
+              <div class="video-prompt-inner">
+                <input type="file" id="videoImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
+                <label for="videoPromptInput" class="video-prompt-label visually-hidden">Describe tu video</label>
+                <input
+                  type="text"
+                  id="videoPromptInput"
+                  class="video-prompt-input"
+                  placeholder="¿Qué video quieres generar? Usa @nombre para referenciar elementos."
+                  autocomplete="off"
+                  aria-label="Prompt para generar video"
+                />
+                <div class="video-kling-elements-list" id="videoKlingElementsList" aria-live="polite"></div>
+                <div class="video-prompt-actions">
                 <button type="button" class="video-prompt-btn video-prompt-btn-add" id="videoPromptAdd" aria-label="Subir imágenes">
                   <i class="fas fa-plus"></i>
                 </button>
@@ -106,6 +127,12 @@ class VideoView extends BaseView {
                   <i class="fas fa-paper-plane"></i>
                 </button>
               </div>
+              </div>
+              </div>
+              <aside class="video-prompt-panel video-prompt-panel-right" aria-label="Efectos de video">
+                <h3 class="video-prompt-panel-title">Efectos de video</h3>
+                <p class="video-prompt-panel-placeholder">Próximamente</p>
+              </aside>
             </div>
           </div>
           </div>
@@ -145,6 +172,16 @@ class VideoView extends BaseView {
       fileInput.addEventListener('change', (e) => this.onKlingElementFilesSelected(e));
     }
     this.renderKlingElementsList();
+    const dbCategory = this.container.querySelector('#videoDbCategory');
+    if (dbCategory) {
+      dbCategory.addEventListener('change', () => this.renderDbList());
+    }
+    const aiPromptBtn = this.container.querySelector('#videoAiPromptBtn');
+    if (aiPromptBtn) {
+      aiPromptBtn.addEventListener('click', () => this.generatePromptWithAI());
+    }
+    await this.loadBrandData();
+    this.renderDbList();
     this.container.querySelectorAll('.video-prompt-toggle').forEach((btn) => {
       btn.addEventListener('click', () => {
         const pressed = btn.getAttribute('aria-pressed') !== 'true';
@@ -162,6 +199,157 @@ class VideoView extends BaseView {
         btn.setAttribute('aria-pressed', 'true');
       });
     });
+  }
+
+  async getBrandContainerId() {
+    if (!this.supabase) return null;
+    try {
+      if (this.organizationId) {
+        const { data } = await this.supabase
+          .from('brand_containers')
+          .select('id')
+          .eq('organization_id', this.organizationId)
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        if (data?.id) return data.id;
+      }
+      const { data: { user } } = await this.supabase.auth.getUser();
+      if (user?.id) {
+        const { data } = await this.supabase
+          .from('brand_containers')
+          .select('id')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (data?.id) return data.id;
+      }
+      return null;
+    } catch (e) {
+      console.error('VideoView getBrandContainerId:', e);
+      return null;
+    }
+  }
+
+  async loadBrandData() {
+    this.brandContainerId = await this.getBrandContainerId();
+    if (!this.supabase || !this.brandContainerId) return;
+    try {
+      const bcId = this.brandContainerId;
+      const { data: brandRow } = await this.supabase.from('brands').select('id').eq('project_id', bcId).maybeSingle();
+      const brandId = brandRow?.id || null;
+      const [productsRes, entitiesRes, audiencesRes, campaignsRes] = await Promise.all([
+        this.supabase.from('products').select('id, nombre_producto, brand_container_id').eq('brand_container_id', bcId).order('created_at', { ascending: false }).limit(50),
+        this.supabase.from('brand_entities').select('id, name, entity_type, description').eq('brand_container_id', bcId).order('created_at', { ascending: false }).limit(50),
+        brandId ? this.supabase.from('audiences').select('id, name, description').eq('brand_id', brandId).limit(50) : { data: [], error: null },
+        this.supabase.from('campaigns').select('id, nombre_campana, descripcion_interna').eq('brand_container_id', bcId).order('created_at', { ascending: false }).limit(50)
+      ]);
+      this.dbData.products = productsRes.data || [];
+      this.dbData.entities = entitiesRes.data || [];
+      this.dbData.audiences = audiencesRes.data || [];
+      this.dbData.campaigns = campaignsRes.data || [];
+      const productIds = this.dbData.products.map((p) => p.id).filter(Boolean);
+      if (productIds.length > 0) {
+        const { data: imgs } = await this.supabase.from('product_images').select('product_id, image_url, image_type, image_order').in('product_id', productIds).order('image_order', { ascending: true });
+        const byProduct = {};
+        (imgs || []).forEach((img) => {
+          if (!byProduct[img.product_id]) byProduct[img.product_id] = [];
+          byProduct[img.product_id].push(img.image_url);
+        });
+        this.dbData.products.forEach((p) => {
+          p.image_urls = (byProduct[p.id] || []).slice(0, 4);
+        });
+      }
+    } catch (e) {
+      console.error('VideoView loadBrandData:', e);
+    }
+  }
+
+  renderDbList() {
+    const listEl = this.container.querySelector('#videoDbList');
+    const categoryEl = this.container.querySelector('#videoDbCategory');
+    if (!listEl || !categoryEl) return;
+    const cat = categoryEl.value || 'products';
+    const items = this.dbData[cat] || [];
+    if (items.length === 0) {
+      listEl.innerHTML = '<p class="video-prompt-db-list-empty">Sin datos en esta categoría</p>';
+      return;
+    }
+    if (cat === 'products') {
+      listEl.innerHTML = items.map((p) => {
+        const name = (p.nombre_producto || '').slice(0, 24);
+        const hasImages = Array.isArray(p.image_urls) && p.image_urls.length >= 2;
+        return `<div class="video-prompt-db-item" data-product-id="${p.id}" data-product-name="${this.sanitizeElementName(name || 'producto')}">
+          <span class="video-prompt-db-item-name" title="${(p.nombre_producto || '').replace(/"/g, '&quot;')}">${name || 'Producto'}</span>
+          ${hasImages ? `<button type="button" class="video-prompt-db-item-btn" data-action="use-images">Usar imágenes</button>` : ''}
+        </div>`;
+      }).join('');
+    } else {
+      const nameKey = cat === 'entities' ? 'name' : cat === 'audiences' ? 'name' : 'nombre_campana';
+      listEl.innerHTML = items.map((item, i) => {
+        const name = (item[nameKey] || item.name || 'Sin nombre').slice(0, 24);
+        return `<div class="video-prompt-db-item" data-index="${i}">
+          <span class="video-prompt-db-item-name" title="${String(item[nameKey] || item.name || '').replace(/"/g, '&quot;')}">${name}</span>
+        </div>`;
+      }).join('');
+    }
+    listEl.querySelectorAll('.video-prompt-db-item-btn[data-action="use-images"]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const item = e.target.closest('.video-prompt-db-item');
+        const productId = item?.dataset?.productId;
+        const productName = item?.dataset?.productName || 'producto';
+        const product = this.dbData.products.find((p) => p.id === productId);
+        if (product && Array.isArray(product.image_urls) && product.image_urls.length >= 2 && product.image_urls.length <= 4) {
+          this.klingElements.push({
+            name: productName,
+            description: product.nombre_producto || undefined,
+            element_input_urls: product.image_urls.slice(0, 4)
+          });
+          this.renderKlingElementsList();
+        }
+      });
+    });
+  }
+
+  async generatePromptWithAI() {
+    const inputEl = this.container.querySelector('#videoPromptInput');
+    if (!inputEl) return;
+    const aiBtn = this.container.querySelector('#videoAiPromptBtn');
+    const defaultLabel = '<i class="fas fa-magic"></i> Prompt con IA';
+    if (aiBtn) {
+      aiBtn.disabled = true;
+      aiBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando…';
+    }
+    const currentPrompt = (inputEl.value || '').trim();
+    const context = {
+      entities: this.dbData.entities.slice(0, 10).map((e) => ({ name: e.name, type: e.entity_type, description: e.description })),
+      products: this.dbData.products.slice(0, 10).map((p) => ({ name: p.nombre_producto })),
+      audiences: this.dbData.audiences.slice(0, 5).map((a) => ({ name: a.name, description: a.description })),
+      campaigns: this.dbData.campaigns.slice(0, 5).map((c) => ({ name: c.nombre_campana, description: c.descripcion_interna }))
+    };
+    try {
+      const res = await fetch('/.netlify/functions/openai-prompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: currentPrompt || undefined, brand_context: context })
+      });
+      const data = await res.json();
+      if (res.ok && data.prompt) {
+        inputEl.value = data.prompt;
+        inputEl.focus();
+      } else if (data.error && window.alert) {
+        window.alert(data.error);
+      }
+    } catch (e) {
+      console.error('VideoView generatePromptWithAI:', e);
+      if (window.alert) window.alert('Error al generar el prompt. Revisa que OPENAI_API_KEY esté configurada.');
+    } finally {
+      if (aiBtn) {
+        aiBtn.disabled = false;
+        aiBtn.innerHTML = defaultLabel;
+      }
+    }
   }
 
   sanitizeElementName(str) {
