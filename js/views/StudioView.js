@@ -401,10 +401,182 @@ class StudioView extends BaseView {
         showRequired: true
       });
       if (Registry.initFormPickers) Registry.initFormPickers(formEl);
+      this._applyScheduleProgramacionWidget(formEl);
       this._applyScheduleFormEntityByType(formEl);
     } else {
       formEl.innerHTML = fields.map(f => this.renderFormField(f)).join('');
     }
+  }
+
+  /**
+   * Widget de programación: por horas, por día, por semana, personalizado.
+   * Reemplaza el control cron_expression y escribe la expresión cron en un hidden.
+   */
+  _renderScheduleProgramacionWidgetHTML() {
+    const prefix = 'studio-schedule-programacion';
+    const stepper = (key, min, max, step, defaultValue, label, unit = '') => {
+      const val = defaultValue != null ? defaultValue : min;
+      return (
+        '<div class="studio-programacion-row">' +
+        (label ? '<label class="studio-programacion-label">' + this.escapeHtml(label) + '</label>' : '') +
+        '<div class="input-stepper-wrap" data-schedule-stepper="' + key + '">' +
+        '<input type="number" class="modern-input input-stepper-input" data-schedule-key="' + key + '" value="' + val + '" min="' + min + '" max="' + max + '" step="' + step + '">' +
+        '<div class="input-stepper-btns">' +
+        '<button type="button" class="input-stepper-btn" data-dir="up" tabindex="-1"><i class="ph ph-caret-up"></i></button>' +
+        '<button type="button" class="input-stepper-btn" data-dir="down" tabindex="-1"><i class="ph ph-caret-down"></i></button>' +
+        '</div>' +
+        (unit ? '<span class="input-stepper-unit">' + this.escapeHtml(unit) + '</span>' : '') +
+        '</div></div>'
+      );
+    };
+    const weekdays = [
+      { value: '0', label: 'Dom' }, { value: '1', label: 'Lun' }, { value: '2', label: 'Mar' },
+      { value: '3', label: 'Mié' }, { value: '4', label: 'Jue' }, { value: '5', label: 'Vie' }, { value: '6', label: 'Sáb' }
+    ];
+    const weekdayCheckboxes = weekdays.map(d => (
+      '<label class="studio-weekday-check"><input type="checkbox" data-schedule-key="schedule_dow" data-dow="' + d.value + '"><span>' + this.escapeHtml(d.label) + '</span></label>'
+    )).join('');
+    return (
+      '<div class="studio-programacion-widget" id="' + prefix + '-widget">' +
+      '<select class="modern-input input-dropdown-select" id="' + prefix + '-type" data-schedule-key="schedule_type" aria-label="Tipo de programación">' +
+      '<option value="por_horas">Por horas</option>' +
+      '<option value="por_dia">Por día</option>' +
+      '<option value="por_semana">Por semana</option>' +
+      '<option value="personalizado">Personalizado</option>' +
+      '</select>' +
+      '<input type="hidden" name="cron_expression" id="studio-schedule-cron_expression" value="0 */1 * * *">' +
+      '<div class="schedule-panel" data-panel="por_horas">' +
+      stepper('schedule_hours_interval', 1, 24, 1, 1, 'Cada', 'horas') +
+      stepper('schedule_minutes_at', 0, 59, 1, 0, 'En el minuto', '') +
+      '</div>' +
+      '<div class="schedule-panel" data-panel="por_dia" style="display:none">' +
+      stepper('schedule_days_interval', 1, 31, 1, 1, 'Cada', 'días') +
+      stepper('schedule_hour_at', 0, 23, 1, 6, 'A la hora', '') +
+      stepper('schedule_minute_at', 0, 59, 1, 6, 'En el minuto', '') +
+      '</div>' +
+      '<div class="schedule-panel" data-panel="por_semana" style="display:none">' +
+      stepper('schedule_weeks_interval', 1, 4, 1, 1, 'Cada', 'semanas') +
+      '<div class="studio-programacion-row"><span class="studio-programacion-label">Días de la semana</span><div class="studio-weekdays">' + weekdayCheckboxes + '</div></div>' +
+      stepper('schedule_week_hour', 0, 23, 1, 9, 'A la hora', '') +
+      stepper('schedule_week_minute', 0, 59, 1, 0, 'En el minuto', '') +
+      '</div>' +
+      '<div class="schedule-panel" data-panel="personalizado" style="display:none">' +
+      '<div class="studio-programacion-row">' +
+      '<label class="studio-programacion-label">Expresión cron</label>' +
+      '<input type="text" class="modern-input" data-schedule-key="schedule_cron_custom" placeholder="0 9 * * *" value="" pattern="[0-9*,\\-/ ]+">' +
+      '</div></div></div>'
+    );
+  }
+
+  _applyScheduleProgramacionWidget(formEl) {
+    const wrapper = formEl.querySelector('.studio-field[data-key="cron_expression"]');
+    if (!wrapper) return;
+    const controlSlot = wrapper.children[1];
+    if (!controlSlot) return;
+    const container = document.createElement('div');
+    container.className = 'studio-programacion-slot';
+    container.innerHTML = this._renderScheduleProgramacionWidgetHTML();
+    controlSlot.replaceWith(container);
+    this._initScheduleProgramacionWidget(container);
+  }
+
+  _initScheduleProgramacionWidget(widgetEl) {
+    const prefix = 'studio-schedule-programacion';
+    const typeSelect = widgetEl.querySelector('#' + prefix + '-type');
+    const hiddenCron = widgetEl.querySelector('input[name="cron_expression"]');
+    const panels = widgetEl.querySelectorAll('.schedule-panel');
+    if (!typeSelect || !hiddenCron) return;
+
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, Number(v) || min));
+    const getVal = (key) => {
+      const el = widgetEl.querySelector('[data-schedule-key="' + key + '"]');
+      if (!el) return null;
+      if (el.type === 'checkbox') return el.checked;
+      if (el.type === 'number') return clamp(parseInt(el.value, 10), parseInt(el.min, 10), parseInt(el.max, 10));
+      return (el.value || '').trim();
+    };
+    const setVal = (key, value) => {
+      const el = widgetEl.querySelector('[data-schedule-key="' + key + '"]');
+      if (el && el.type === 'number') el.value = value;
+    };
+
+    const buildCron = () => {
+      const type = typeSelect.value || 'por_horas';
+      if (type === 'personalizado') {
+        const custom = getVal('schedule_cron_custom');
+        return (custom && /^[\d*,\-\/ ]+$/.test(custom)) ? custom : '0 9 * * *';
+      }
+      if (type === 'por_horas') {
+        const h = getVal('schedule_hours_interval') || 1;
+        const m = getVal('schedule_minutes_at') != null ? getVal('schedule_minutes_at') : 0;
+        return m + ' */' + h + ' * * *';
+      }
+      if (type === 'por_dia') {
+        const d = getVal('schedule_days_interval') || 1;
+        const h = getVal('schedule_hour_at') != null ? getVal('schedule_hour_at') : 6;
+        const m = getVal('schedule_minute_at') != null ? getVal('schedule_minute_at') : 6;
+        return m + ' ' + h + ' */' + d + ' * *';
+      }
+      if (type === 'por_semana') {
+        const checked = widgetEl.querySelectorAll('[data-schedule-key="schedule_dow"]:checked');
+        const dow = Array.from(checked).map(c => c.getAttribute('data-dow')).filter(Boolean);
+        const dowStr = dow.length ? dow.join(',') : '1';
+        const h = getVal('schedule_week_hour') != null ? getVal('schedule_week_hour') : 9;
+        const m = getVal('schedule_week_minute') != null ? getVal('schedule_week_minute') : 0;
+        return m + ' ' + h + ' * * ' + dowStr;
+      }
+      return '0 */1 * * *';
+    };
+
+    const updateCron = () => {
+      hiddenCron.value = buildCron();
+      this.updateCreditsDisplay();
+    };
+
+    typeSelect.addEventListener('change', () => {
+      const type = typeSelect.value;
+      panels.forEach(p => {
+        p.style.display = p.dataset.panel === type ? '' : 'none';
+      });
+      if (type === 'personalizado') {
+        const custom = hiddenCron.value;
+        const customInput = widgetEl.querySelector('[data-schedule-key="schedule_cron_custom"]');
+        if (customInput && custom && /^[\d*,\-\/ ]+$/.test(custom)) customInput.value = custom;
+      }
+      updateCron();
+    });
+
+    panels.forEach(p => p.style.display = p.dataset.panel === (typeSelect.value || 'por_horas') ? '' : 'none');
+
+    widgetEl.querySelectorAll('.input-stepper-wrap').forEach(wrap => {
+      const input = wrap.querySelector('.input-stepper-input');
+      const up = wrap.querySelector('.input-stepper-btn[data-dir="up"]');
+      const down = wrap.querySelector('.input-stepper-btn[data-dir="down"]');
+      if (!input || !up || !down) return;
+      const step = parseInt(input.step, 10) || 1;
+      const min = parseInt(input.min, 10);
+      const max = parseInt(input.max, 10);
+      up.addEventListener('click', () => {
+        const v = clamp(parseInt(input.value, 10) + step, min, max);
+        input.value = v;
+        updateCron();
+      });
+      down.addEventListener('click', () => {
+        const v = clamp(parseInt(input.value, 10) - step, min, max);
+        input.value = v;
+        updateCron();
+      });
+      input.addEventListener('input', updateCron);
+      input.addEventListener('change', updateCron);
+    });
+
+    widgetEl.querySelectorAll('[data-schedule-key="schedule_dow"]').forEach(cb => {
+      cb.addEventListener('change', updateCron);
+    });
+    const customInput = widgetEl.querySelector('[data-schedule-key="schedule_cron_custom"]');
+    if (customInput) customInput.addEventListener('input', updateCron);
+
+    updateCron();
   }
 
   /**

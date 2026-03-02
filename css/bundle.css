@@ -8968,6 +8968,49 @@ body.production-filters-in-header .living-container > .living-history-section {
   margin-bottom: 0;
 }
 
+/* Widget programación (por horas / día / semana / personalizado) */
+.studio-programacion-widget {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+.studio-programacion-widget > select {
+  width: 100%;
+  max-width: 280px;
+}
+.schedule-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+.studio-programacion-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+.studio-programacion-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  min-width: 6rem;
+}
+.studio-weekdays {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.studio-weekday-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: var(--text-primary);
+}
+.studio-weekday-check input {
+  margin: 0;
+}
+
 /* ========== Footer (créditos + Producir) ========== */
 .studio-footer {
   display: flex;
