@@ -100,8 +100,7 @@ class VideoView extends BaseView {
           </div>
         </div>
 
-        <div class="video-productions-panel" id="videoProductionsPanel" aria-hidden="true" style="display: none;">
-          <div class="video-productions-panel-backdrop" id="videoProductionsPanelBackdrop"></div>
+        <div class="video-productions-panel video-productions-panel-inline" id="videoProductionsPanel" aria-hidden="true" style="display: none;">
           <div class="video-productions-panel-card">
             <div class="video-productions-panel-header">
               <h3 class="video-prompt-panel-title">Production Queue</h3>
@@ -297,10 +296,8 @@ class VideoView extends BaseView {
     if (changeAssetBtn) changeAssetBtn.addEventListener('click', () => this.clearAssetSelection());
     const productionsBtn = this.container.querySelector('#videoProductionsBtn');
     const panelClose = this.container.querySelector('#videoProductionsPanelClose');
-    const panelBackdrop = this.container.querySelector('#videoProductionsPanelBackdrop');
     if (productionsBtn) productionsBtn.addEventListener('click', () => this.openProductionsPanel());
     if (panelClose) panelClose.addEventListener('click', () => this.closeProductionsPanel());
-    if (panelBackdrop) panelBackdrop.addEventListener('click', () => this.closeProductionsPanel());
     await this.loadBrandData();
     const scopeEl = this.container.querySelector('#videoAssetScope');
     if (scopeEl) this.assetScope = scopeEl.value || 'product';
@@ -412,11 +409,12 @@ class VideoView extends BaseView {
     });
   }
 
-  openProductionsPanel() {
+  async openProductionsPanel() {
     const panel = this.container.querySelector('#videoProductionsPanel');
     if (!panel) return;
     panel.style.display = 'block';
     panel.setAttribute('aria-hidden', 'false');
+    await this.loadVideoProductions();
     this.renderProductionsCarousel();
   }
 
@@ -459,16 +457,21 @@ class VideoView extends BaseView {
         .limit(100);
       const list = data || [];
       const withUrl = list.map((o) => {
-        let video_url = null;
-        if (o.storage_path && typeof o.storage_path === 'string' && o.storage_path.trim()) {
-          if (o.storage_path.startsWith('http')) video_url = o.storage_path;
-          else video_url = this.getPublicUrlFromStorage('production-outputs', o.storage_path);
+        let media_url = null;
+        const rawPath = o.storage_path && typeof o.storage_path === 'string' ? o.storage_path.trim() : '';
+        if (rawPath) {
+          if (rawPath.startsWith('http')) media_url = rawPath;
+          else media_url = this.getPublicUrlFromStorage('production-outputs', rawPath) || this.getPublicUrlFromStorage('outputs', rawPath);
         }
-        if (!video_url && o.metadata && typeof o.metadata === 'object') {
-          video_url = o.metadata.video_url || o.metadata.url || o.metadata.file_url || null;
+        const meta = o.metadata && typeof o.metadata === 'object' ? o.metadata : {};
+        if (!media_url) {
+          media_url = meta.video_url || meta.url || meta.file_url || meta.videoUrl || meta.output_url || meta.publicUrl || meta.src || null;
         }
-        return { ...o, video_url };
-      }).filter((o) => o.video_url);
+        const type = (o.output_type || '').toLowerCase();
+        const isVideo = type.includes('video') || /\.(mp4|webm|mov)(\?|$)/i.test(media_url || '');
+        const isImage = type.includes('image') || type.includes('img') || /\.(jpg|jpeg|png|webp|gif)(\?|$)/i.test(media_url || '');
+        return { ...o, media_url, isVideo, isImage };
+      }).filter((o) => o.media_url);
       this.videoProductions = withUrl;
     } catch (e) {
       console.warn('VideoView loadVideoProductions:', e);
@@ -487,12 +490,16 @@ class VideoView extends BaseView {
       const id = p.id;
       const selected = this.selectedProductionIds.has(id);
       const dateStr = p.created_at ? new Date(p.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '';
-      const videoUrl = (p.video_url || '').replace(/"/g, '&quot;');
+      const mediaUrl = (p.media_url || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      const isImg = p.isImage && !p.isVideo;
+      const thumbContent = isImg
+        ? `<img class="video-production-thumb video-production-thumb-img" src="${mediaUrl}" alt="" loading="lazy" decoding="async">`
+        : `<video class="video-production-thumb" src="${mediaUrl}" preload="metadata" muted playsinline crossorigin="anonymous"></video>`;
       return `
         <div class="video-production-item" data-id="${id}" role="button" tabindex="0">
           <input type="checkbox" class="video-production-check" id="prod-${id}" ${selected ? 'checked' : ''} aria-label="Seleccionar producción">
           <div class="video-production-thumb-wrap">
-            <video class="video-production-thumb" src="${videoUrl}" preload="metadata" muted playsinline></video>
+            ${thumbContent}
           </div>
           <span class="video-production-date">${dateStr}</span>
         </div>
