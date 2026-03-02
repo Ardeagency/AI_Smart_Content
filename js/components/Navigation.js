@@ -733,13 +733,22 @@ class Navigation {
       overlay.addEventListener('click', () => this.closeMobileNav());
     }
 
-    // User menu
+    // User menu: abrir/cerrar #userDropdown (retraso mínimo para evitar que un listener global cierre de inmediato)
     const userMenuBtn = document.getElementById('userMenuBtn');
     const userDropdown = document.getElementById('userDropdown');
     if (userMenuBtn && userDropdown) {
       userMenuBtn.addEventListener('click', (e) => {
+        e.preventDefault();
         e.stopPropagation();
+        const willOpen = !userDropdown.classList.contains('active');
         userDropdown.classList.toggle('active');
+        if (willOpen) {
+          requestAnimationFrame(() => {
+            const dd = document.getElementById('userDropdown');
+            if (dd && !dd.classList.contains('active')) return;
+            dd.classList.add('active');
+          });
+        }
       });
     }
 

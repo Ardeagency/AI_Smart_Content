@@ -2778,6 +2778,7 @@ body.sidebar-collapsed .app-header.with-sidebar {
     padding: 0 20px;
     gap: 16px;
     box-sizing: border-box;
+    overflow: visible;
 }
 
 .app-header .header-left {
@@ -2905,23 +2906,26 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     color: var(--text-primary);
 }
 
-/* Contenedor del botón + dropdown para posicionar #userDropdown respecto al botón */
-.header-user-menu-wrap {
+/* Contenedor del botón + dropdown: no recortar y dar contexto de posicionamiento a #userDropdown */
+#appHeader .header-right,
+#appHeader .header-user-menu-wrap {
     position: relative;
+    overflow: visible !important;
+}
+.header-user-menu-wrap {
     display: flex;
     align-items: center;
-    overflow: visible;
 }
 
-/* User Dropdown — glass-black, anclado al botón de usuario. Mostrar/ocultar con .active. */
+/* User Dropdown — glass-black, anclado al botón. Solo display para mostrar/ocultar (evitar conflictos con visibility/opacity). */
+#userDropdown,
 #userDropdown.user-dropdown,
-.user-dropdown {
+.app-header .user-dropdown {
     box-sizing: border-box;
     position: absolute;
     top: calc(100% + 8px);
     right: 0;
     width: 240px;
-    display: none;
     flex-direction: column;
     justify-content: center;
     align-items: stretch;
@@ -2932,18 +2936,14 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     border-radius: var(--glass-radius);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
-    z-index: 1100;
-    visibility: hidden;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.15s ease, visibility 0.15s ease;
+    z-index: 9999;
+    display: none;
 }
-
-.user-dropdown.active {
-    display: flex;
-    visibility: visible;
-    opacity: 1;
-    pointer-events: auto;
+/* Visible solo con .active; especificidad alta para que nada lo pise */
+#userDropdown.active,
+#userDropdown.user-dropdown.active,
+.app-header .header-user-menu-wrap .user-dropdown.active {
+    display: flex !important;
 }
 
 .user-dropdown-header {
