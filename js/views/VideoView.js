@@ -1,8 +1,9 @@
 /**
  * VideoView - Página de generación de video con Kling 3.0 (KIE API).
  * Misma estructura que el resto de vistas: renderHTML() sin template, layout organization-* del bundle.
- * Flujo: crear tarea (createTask) → consultar estado (recordInfo) cada 15s hasta success/fail
+ * Flujo: crear tarea (API Kling oficial) → consultar estado cada 15s hasta success/fail
  * → descargar video, subir a Supabase, mostrar URL de Supabase al usuario.
+ * Proxy: /.netlify/functions/kling-video (usa KLING_ACCESS_KEY + KLING_SECRET_KEY, JWT).
  */
 class VideoView extends BaseView {
   /** Intervalo de polling a KIE (recordInfo) en milisegundos. */
@@ -1187,7 +1188,7 @@ class VideoView extends BaseView {
     }
 
     try {
-      const createRes = await fetch('/.netlify/functions/kie-video', {
+      const createRes = await fetch('/.netlify/functions/kling-video', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -1208,7 +1209,7 @@ class VideoView extends BaseView {
       }
 
       this._lastKieOutputId = await this.saveSystemAIOutput({
-        provider: 'kie_api',
+        provider: 'kling_api',
         output_type: 'video',
         status: 'processing',
         external_job_id: taskId,
@@ -1235,7 +1236,7 @@ class VideoView extends BaseView {
   async pollTask(taskId) {
     const poll = async () => {
       try {
-        const res = await fetch(`/.netlify/functions/kie-video?taskId=${encodeURIComponent(taskId)}`);
+        const res = await fetch(`/.netlify/functions/kling-video?taskId=${encodeURIComponent(taskId)}`);
         const data = await res.json();
 
         if (!res.ok) {

@@ -1,4 +1,8 @@
-# Video API Documentation (KIE)
+# Video API Documentation (KIE) — **Deprecado**
+
+> **Ya no se usa KIE en este proyecto.** La app usa la **API oficial de Kling** (Access Key + Secret Key). Ver [KLING-VIDEO-API.md](./KLING-VIDEO-API.md).
+
+---
 
 > Generate content using the Video model (Kling 3.0).
 
@@ -192,6 +196,16 @@ GET https://api.kie.ai/api/v1/jobs/recordInfo?taskId=281e5b0********************
 | 400 | Invalid request parameters |
 | 401 | Authentication failed |
 | 402 | Insufficient account balance |
+| 404 | Resource not found |
 | 422 | Parameter validation failed |
 | 429 | Request rate limit exceeded |
 | 500 | Internal server error |
+
+### Troubleshooting (mensajes desde KIE)
+
+Los mensajes de error que muestra la app (p. ej. *"Server exception, please try again later or contact customer service"*) **vienen del servidor de KIE**, no de nuestra app. La app solo reenvía el `msg` o `failMsg` que devuelve la API.
+
+- **Reintentar** en unos minutos (puede ser un fallo temporal).
+- **Revisar cuenta KIE**: saldo/créditos, API key correcta en Netlify (`KIE_API_KEY`).
+- **401**: comprobar que `KIE_API_KEY` en Netlify coincide con la clave de [KIE API Key Management](https://kie.ai/api-key).
+- **402**: saldo insuficiente en la cuenta KIE.
