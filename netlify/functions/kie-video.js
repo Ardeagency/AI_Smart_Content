@@ -3,7 +3,14 @@
  * Usa la variable de entorno KIE_API_KEY (configurada en Netlify).
  *
  * Acciones:
- * - POST body: { action: "createTask", mode: "std"|"pro" } → crea tarea y devuelve { taskId }
+ * - POST body createTask:
+ *   - action: "createTask" (requerido)
+ *   - mode: "pro" | "std" (default pro)
+ *   - prompt: string (requerido) — texto del video (Director Brief)
+ *   - duration: "5" | "10" | "15" (opcional, default "5")
+ *   - aspect_ratio: "16:9" | "9:16" | "1:1" (opcional)
+ *   - sound: boolean (opcional)
+ *   - kling_elements: array de { name, element_input_urls?, element_input_video_urls?, description? } (opcional)
  * - GET ?taskId=xxx → consulta estado y resultado (recordInfo)
  */
 
@@ -56,8 +63,28 @@ exports.handler = async (event, context) => {
           body: JSON.stringify({ error: 'Acción no válida. Use action: "createTask"' })
         };
       }
+      const prompt = typeof body.prompt === 'string' ? body.prompt.trim() : '';
+      if (!prompt) {
+        return {
+          statusCode: 400,
+          headers: corsHeaders(),
+          body: JSON.stringify({ error: 'Falta el prompt. Indica el texto del video en Director Brief o genera uno con el botón de estrellas.' })
+        };
+      }
       const mode = body.mode === 'pro' ? 'pro' : 'std';
-      const input = { mode };
+      const input = {
+        mode,
+        prompt
+      };
+      if (typeof body.duration === 'string' && /^[0-9]+$/.test(body.duration)) {
+        input.duration = body.duration;
+      }
+      if (typeof body.aspect_ratio === 'string' && body.aspect_ratio) {
+        input.aspect_ratio = body.aspect_ratio;
+      }
+      if (typeof body.sound === 'boolean') {
+        input.sound = body.sound;
+      }
       if (Array.isArray(body.kling_elements) && body.kling_elements.length > 0) {
         input.kling_elements = body.kling_elements;
       }

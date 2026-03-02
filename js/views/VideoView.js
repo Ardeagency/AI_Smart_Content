@@ -755,6 +755,11 @@ class VideoView extends BaseView {
     }
   }
 
+  /**
+   * Regla principal: cuando el usuario selecciona un producto (Asset Stack), ese producto
+   * se establece automáticamente como kling_element para la API Kie (referencia visual).
+   * Solo aplica con scope "product"; reemplaza cualquier producto previamente seleccionado.
+   */
   syncProductSelectionToKling() {
     const scopeSelect = this.container.querySelector('#videoAssetScope');
     const assetSelect = this.container.querySelector('#videoAssetSelect');
@@ -1059,11 +1064,31 @@ class VideoView extends BaseView {
   }
 
   async startGeneration() {
+    const promptText = (this.promptInput && this.promptInput.value) ? this.promptInput.value.trim() : '';
+    if (!promptText) {
+      this.showError('Escribe o genera un prompt en Director Brief antes de enviar.');
+      return;
+    }
+
     const mode = 'pro';
     if (this.sendBtn) this.sendBtn.disabled = true;
     this.showStatus('Creando tarea de generación…', true);
 
-    const payload = { action: 'createTask', mode };
+    const durationEl = this.container.querySelector('#videoDuration');
+    const aspectEl = this.container.querySelector('#videoAspectRatio');
+    const soundEl = this.container.querySelector('#videoSound');
+    const duration = durationEl && durationEl.value ? String(durationEl.value) : '5';
+    const aspect_ratio = aspectEl && aspectEl.value ? String(aspectEl.value) : '16:9';
+    const sound = soundEl ? soundEl.getAttribute('aria-pressed') === 'true' : true;
+
+    const payload = {
+      action: 'createTask',
+      mode,
+      prompt: promptText,
+      duration,
+      aspect_ratio,
+      sound
+    };
     if (this.klingElements.length > 0) {
       payload.kling_elements = this.klingElements.map((el) => {
         const o = { name: el.name };
@@ -1095,14 +1120,13 @@ class VideoView extends BaseView {
         return;
       }
 
-      const promptUsed = (this.promptInput && this.promptInput.value) ? this.promptInput.value.trim() : null;
       this._lastKieOutputId = await this.saveSystemAIOutput({
         provider: 'kie_api',
         output_type: 'video',
         status: 'processing',
         external_job_id: taskId,
-        prompt_used: promptUsed,
-        metadata: { mode: payload.mode || 'pro', kling_elements_count: (payload.kling_elements || []).length }
+        prompt_used: promptText,
+        metadata: { mode: payload.mode || 'pro', duration: payload.duration, aspect_ratio: payload.aspect_ratio, kling_elements_count: (payload.kling_elements || []).length }
       });
 
       this.showStatus('Generando video (Kling 3.0). Esto puede tardar unos minutos…', true);

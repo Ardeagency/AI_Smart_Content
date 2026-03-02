@@ -1,15 +1,14 @@
 /**
  * Netlify Function: genera un prompt cinematográfico para Kling usando OpenAI.
- * Recibe: Director Brief, URLs de producciones/productos adjuntos, datos de marca, entidades y cinematografía.
  * Requiere OPENAI_API_KEY en variables de entorno.
  *
- * POST body: {
- *   director_brief?: string,
- *   kling_elements?: Array<{ name, element_input_urls?, element_input_video_urls? }>,
- *   brand_context?: { entities?, products?, audiences?, campaigns? },
- *   cinematography?: { shotType, lens, framing, cameraMovement, motionSpeed, motionIntensity, lightType, contrastLevel, temperature, tone, colorGrade, energyLevel, ... }
- * }
- * Respuesta: { prompt: string } o { error: string }
+ * POST body (todo opcional pero se recomienda director_brief o recursos):
+ *   director_brief: string — intención del usuario (Director Brief)
+ *   kling_elements: Array<{ name, element_input_urls?, element_input_video_urls? }> — producciones/productos adjuntos
+ *   brand_context: { entities?, products?, audiences?, campaigns? } — datos de marca (name/nombre, description, etc.)
+ *   cinematography: { shotType, lens, framing, cameraMovement, motionSpeed, motionIntensity, lightType, contrastLevel, temperature, tone, colorGrade, energyLevel }
+ *
+ * Respuesta: { prompt: string } (texto listo para Kling) o { error: string }
  */
 
 function corsHeaders() {
