@@ -16,7 +16,20 @@
 # Netlify procesa los redirects en orden, el primero que coincide gana.
 # IMPORTANTE: Las funciones deben matchear ANTES que el fallback /* para no devolver index.html.
 
-# Netlify Functions — primero para que no las capture el SPA fallback
+# Rutas /api/* reescriben a las funciones (alternativa por si /.netlify/functions/* da 404)
+[[redirects]]
+  from = "/api/kling-video"
+  to = "/.netlify/functions/kling-video"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/kie-video-download"
+  to = "/.netlify/functions/kie-video-download"
+  status = 200
+  force = true
+
+# Netlify Functions — path directo
 [[redirects]]
   from = "/.netlify/functions/*"
   to = "/.netlify/functions/:splat"

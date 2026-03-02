@@ -30,10 +30,10 @@
 
 ## Proxy Netlify (uso en la app)
 
-### Endpoints
+### Endpoints (la app usa /api/* por rewrite en netlify.toml)
 
-- **POST** `/.netlify/functions/kling-video` — crear tarea (body igual que antes: `action: "createTask"`, `prompt`, `mode`, etc.).
-- **GET** `/.netlify/functions/kling-video?taskId=xxx` — consultar estado. La respuesta se normaliza al mismo formato que usaba KIE (`data.state`, `data.resultJson`, `data.failMsg`) para que el frontend no cambie de lógica.
+- **POST** `/api/kling-video` — crear tarea (rewrite a `/.netlify/functions/kling-video`).
+- **GET** `/api/kling-video?taskId=xxx` — consultar estado. Respuesta normalizada: `data.state`, `data.resultJson`, `data.failMsg`.
 
 ### Body para crear tarea (POST)
 
