@@ -6655,6 +6655,8 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 .task-detail-back:hover { color: var(--accent-warm); }
 
 .task-detail-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.task-detail-actions .task-detail-danger { color: var(--accent-danger, #ef4444); }
+.task-detail-actions .task-detail-danger:hover { color: var(--accent-danger, #ef4444); opacity: 0.9; }
 
 .task-detail-hero { padding: 1rem 0; }
 

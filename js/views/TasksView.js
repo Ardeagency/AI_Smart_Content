@@ -330,6 +330,19 @@ class TasksView extends BaseView {
     return div.innerHTML;
   }
 
+  showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.style.cssText = `
+      position: fixed; top: 80px; right: 2rem; padding: 1rem 1.5rem;
+      background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#3b82f6'};
+      color: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); z-index: 10000;
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 3500);
+  }
+
   async renderTasksList() {
     const list = await this.loadSchedules();
     const grid = document.getElementById('tasksGrid');
@@ -413,6 +426,104 @@ class TasksView extends BaseView {
 
     const editBtn = document.getElementById('taskDetailEditBtn');
     if (editBtn) editBtn.onclick = () => this.openEditModal(task);
+
+    const toggleBtn = document.getElementById('taskDetailToggleActiveBtn');
+    const toggleLabel = document.getElementById('taskDetailToggleActiveLabel');
+    if (toggleBtn) {
+      toggleBtn.onclick = () => this.toggleActive(task);
+      const icon = toggleBtn.querySelector('i');
+      if (task.is_active) {
+        if (icon) icon.className = 'fas fa-pause-circle';
+        if (toggleLabel) toggleLabel.textContent = 'Pausar';
+      } else {
+        if (icon) icon.className = 'fas fa-play-circle';
+        if (toggleLabel) toggleLabel.textContent = 'Activar';
+      }
+    }
+
+    const duplicateBtn = document.getElementById('taskDetailDuplicateBtn');
+    if (duplicateBtn) duplicateBtn.onclick = () => this.duplicateSchedule(task);
+
+    const deleteBtn = document.getElementById('taskDetailDeleteBtn');
+    if (deleteBtn) deleteBtn.onclick = () => this.confirmDeleteSchedule(task);
+  }
+
+  /** Activar o pausar la tarea (toggle is_active). */
+  async toggleActive(task) {
+    if (!this.supabase || !task?.id) return;
+    const newActive = !task.is_active;
+    const { error } = await this.supabase
+      .from('flow_schedules')
+      .update({ is_active: newActive })
+      .eq('id', task.id)
+      .eq('user_id', this.userId);
+    if (error) {
+      console.error('TasksView toggleActive:', error);
+      this.showNotification('No se pudo cambiar el estado', 'error');
+      return;
+    }
+    this.showNotification(newActive ? 'Tarea activada' : 'Tarea pausada', 'success');
+    await this.renderTaskDetail();
+  }
+
+  /** Duplicar schedule: mismo flujo y configuración, job_name único. */
+  async duplicateSchedule(task) {
+    if (!this.supabase || !task?.id) return;
+    const baseName = (task.job_name || 'Tarea').trim();
+    const suffix = ` (copia ${new Date().toISOString().slice(0, 10)})`;
+    let jobName = baseName + suffix;
+    if (jobName.length > 255) jobName = baseName.slice(0, 255 - suffix.length) + suffix;
+    const { data: existing } = await this.supabase.from('flow_schedules').select('id').eq('job_name', jobName).maybeSingle();
+    if (existing) jobName = `${baseName} (copia ${Date.now()})`;
+    const insert = {
+      user_id: task.user_id,
+      flow_id: task.flow_id,
+      brand_id: task.brand_id,
+      cron_expression: task.cron_expression,
+      is_active: false,
+      job_name: jobName,
+      entity_id: task.entity_id || null,
+      campaign_id: task.campaign_id || null,
+      audience_id: task.audience_id || null,
+      metadata_config: task.metadata_config ?? {},
+      production_count: task.production_count ?? 1,
+      aspect_ratio: task.aspect_ratio || '1:1',
+      production_specifications: task.production_specifications || null
+    };
+    const { data: created, error } = await this.supabase.from('flow_schedules').insert(insert).select('id').single();
+    if (error) {
+      console.error('TasksView duplicateSchedule:', error);
+      this.showNotification('No se pudo duplicar la tarea', 'error');
+      return;
+    }
+    this.showNotification('Tarea duplicada. La copia está pausada.', 'success');
+    if (window.router && created?.id) window.router.navigate(`${this.getTasksBasePath()}/${created.id}`, true);
+    await this.render();
+  }
+
+  /** Pedir confirmación y eliminar el schedule. */
+  async confirmDeleteSchedule(task) {
+    if (!task?.id) return;
+    const name = task.job_name || 'esta tarea';
+    if (!confirm(`¿Eliminar la tarea "${name}"? Esta acción no se puede deshacer.`)) return;
+    await this.deleteSchedule(task.id);
+  }
+
+  async deleteSchedule(scheduleId) {
+    if (!this.supabase || !scheduleId) return;
+    const { error } = await this.supabase
+      .from('flow_schedules')
+      .delete()
+      .eq('id', scheduleId)
+      .eq('user_id', this.userId);
+    if (error) {
+      console.error('TasksView deleteSchedule:', error);
+      this.showNotification('No se pudo eliminar la tarea', 'error');
+      return;
+    }
+    this.showNotification('Tarea eliminada', 'success');
+    if (window.router) window.router.navigate(this.getTasksBasePath(), true);
+    await this.render();
   }
 
   openEditModal(task) {
