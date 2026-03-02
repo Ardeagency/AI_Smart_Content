@@ -191,12 +191,13 @@
       }
     };
     
-    this.inputSchema.push(newField);
+    const fields = this.getCanvasFields();
+    fields.push(newField);
     this.hasUnsavedChanges = true;
     this.renderCanvas();
     this.updateJsonPreview();
     
-    this.selectField(this.inputSchema.length - 1);
+    this.selectField(fields.length - 1);
   };
 
   P.generateFieldKey = function (baseName) {
@@ -206,10 +207,11 @@
       .replace(/_+/g, '_')
       .replace(/^_|_$/g, '');
     
+    const fields = this.getCanvasFields();
     let key = base;
     let counter = 1;
     
-    while (this.inputSchema.some(f => f.key === key)) {
+    while (fields.some(f => f.key === key)) {
       key = `${base}_${counter}`;
       counter++;
     }
@@ -415,7 +417,8 @@
       if (removeXBtn) removeXBtn.addEventListener('click', doDelete);
       
       // Sincronizar cambios en el preview (slider, texto, dropdown, etc.) con el campo para que el valor "quede"
-      const schemaField = this.inputSchema[index];
+      const fields = this.getCanvasFields();
+      const schemaField = fields[index];
       if (schemaField && preview) {
         const sync = () => { this.onFieldChange(); if (this.selectedFieldIndex === index) this.renderPropertiesPanel(); };
         preview.querySelectorAll('input, select, textarea').forEach((el) => {
