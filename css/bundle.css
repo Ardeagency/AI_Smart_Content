@@ -10189,7 +10189,6 @@ body.production-filters-in-header .living-container > .living-history-section {
   text-align: left;
 }
 .flow-card:hover {
-  transform: translateY(-4px);
   box-shadow: var(--shadow-hover);
   border-color: var(--white-20);
 }
@@ -13206,7 +13205,6 @@ body.production-filters-in-header .living-container > .living-history-section {
 .dev-flow-card:hover {
   background: var(--dev-bg-card-hover);
   border-color: rgba(0, 231, 255, 0.3);
-  transform: translateY(-2px);
   box-shadow: var(--shadow-hover);
 }
 
