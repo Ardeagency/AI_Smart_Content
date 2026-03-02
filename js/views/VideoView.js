@@ -178,19 +178,15 @@ class VideoView extends BaseView {
                   autocomplete="off"
                   aria-label="Director Brief"
                 ></textarea>
-                <div class="video-prompt-actions video-prompt-actions-row1">
-                  <button type="button" class="video-prompt-btn video-prompt-btn-add" id="videoPromptAdd" aria-label="Scene"><i class="fas fa-plus"></i> Scene</button>
-                  <div class="video-prompt-duration-wrap">
-                    <select id="videoDuration" class="video-prompt-aspect" aria-label="Duration"><option value="5">5s</option><option value="10">10s</option><option value="15">15s</option></select>
-                    <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
-                  </div>
-                  <button type="button" class="video-prompt-toggle video-prompt-multi-shots" id="videoMultiShots" title="Multi Shot" aria-pressed="false"><i class="fas fa-film"></i><span>Multi Shot</span></button>
-                  <button type="button" class="video-prompt-toggle video-prompt-multi-prompt" id="videoMultiPrompt" title="Multi Prompt" aria-pressed="false"><i class="fas fa-align-left"></i><span>Multi Prompt</span></button>
-                </div>
                 <div class="video-prompt-actions video-prompt-actions-row2">
                   <button type="button" class="video-prompt-toggle video-prompt-sound active" id="videoSound" title="Sound" aria-pressed="true"><i class="fas fa-volume-up"></i><span>Sound</span></button>
                   <div class="video-prompt-aspect-wrap">
                     <select id="videoAspectRatio" class="video-prompt-aspect" aria-label="Format"><option value="16:9">16:9</option><option value="9:16">9:16</option><option value="1:1">1:1</option></select>
+                    <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
+                  </div>
+                  <button type="button" class="video-prompt-btn video-prompt-btn-add" id="videoPromptAdd" aria-label="Scene"><i class="fas fa-plus"></i> Scene</button>
+                  <div class="video-prompt-duration-wrap">
+                    <select id="videoDuration" class="video-prompt-aspect" aria-label="Duration"><option value="5">5s</option><option value="10">10s</option><option value="15">15s</option></select>
                     <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
                   </div>
                   <button type="button" class="video-prompt-btn video-prompt-btn-send" id="videoPromptSend" aria-label="Generate"><i class="fas fa-paper-plane"></i></button>
