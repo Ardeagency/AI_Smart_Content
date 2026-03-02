@@ -110,8 +110,8 @@
     --glass-radius: 14px;
     --glass-blur: blur(7px);
     --glass-padding: 8px 24px;
-    /* glass-black: negro 60%, textos blancos, bordes negros (legibilidad sobre fondos claros) */
-    --glass-black-bg: rgba(0, 0, 0, 0.6);
+    /* glass-black: negro 80%, textos blancos, bordes negros (legibilidad sobre fondos claros) */
+    --glass-black-bg: rgba(0, 0, 0, 0.8);
     --glass-black-border: rgba(0, 0, 0, 0.85);
     --glass-black-text: #ffffff;
     /* glass-white: panel más claro para legibilidad sobre fondos oscuros */
@@ -2687,14 +2687,38 @@ body.has-sidebar #app-container:has(> main.living-main-content) {
     top: 0;
     right: 0;
     height: var(--app-header-height, 45.8px);
-    background: var(--glass-bg);
+    background: var(--glass-black-bg);
     border: none;
-    border-bottom: 1px solid var(--glass-border);
+    border-bottom: 1px solid var(--glass-black-border);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
+    color: var(--glass-black-text);
+    --text-primary: var(--glass-black-text);
+    --text-secondary: rgba(255, 255, 255, 0.85);
     z-index: 900;
     display: flex;
     align-items: center;
+}
+.app-header .header-title,
+.app-header .header-left,
+.app-header .header-right,
+.app-header .header-logo .logo-text,
+.app-header #headerRoute {
+    color: var(--glass-black-text);
+}
+.app-header .user-menu-btn {
+    color: var(--glass-black-text);
+}
+.app-header .user-menu-btn:hover {
+    color: var(--glass-black-text);
+    background: rgba(255, 255, 255, 0.1);
+}
+.app-header .nav-sidebar-toggle {
+    color: var(--glass-black-text);
+}
+.app-header .nav-sidebar-toggle:hover {
+    color: var(--glass-black-text);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 /* Header solo (sin sidebar) - Home/Hogar: transparente, sin borde, logo centrado, 50px padding superior */
@@ -2717,7 +2741,7 @@ body.has-sidebar #app-container:has(> main.living-main-content) {
     transform: translateX(-50%);
 }
 
-/* Header con sidebar: efecto glass. Con filtros (Production) pasa a dos filas. */
+/* Header con sidebar: efecto glass-black. Con filtros (Production) pasa a dos filas. */
 .app-header.with-sidebar {
     left: var(--nav-width, 260px);
     max-width: calc(100vw - var(--nav-width, 260px));
