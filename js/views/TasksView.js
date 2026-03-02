@@ -122,33 +122,13 @@ class TasksView extends BaseView {
     }
   }
 
-  /** Cargar flow_schedules del usuario con relaciones. */
+  /** Cargar flow_schedules del usuario. Sin embeds para evitar 400; relaciones se cargan aparte. */
   async loadSchedules() {
     if (!this.supabase || !this.userId) return [];
     try {
       const { data, error } = await this.supabase
         .from('flow_schedules')
-        .select(`
-          id,
-          user_id,
-          flow_id,
-          brand_id,
-          cron_expression,
-          is_active,
-          job_name,
-          created_at,
-          entity_id,
-          campaign_id,
-          audience_id,
-          production_count,
-          aspect_ratio,
-          production_specifications,
-          content_flows (id, name),
-          brand_entities (id, name),
-          campaigns (id, nombre_campana),
-          audiences (id, name),
-          brands (id, project_id)
-        `)
+        .select('id, user_id, flow_id, brand_id, cron_expression, is_active, job_name, created_at, entity_id, campaign_id, audience_id, production_count, aspect_ratio, production_specifications')
         .eq('user_id', this.userId)
         .order('created_at', { ascending: false });
       if (error) {
@@ -156,28 +136,44 @@ class TasksView extends BaseView {
         return [];
       }
       const schedules = data || [];
-      const projectIds = [...new Set(schedules.map(s => s.brands?.project_id).filter(Boolean))];
-      let brandNames = {};
-      if (projectIds.length && this.supabase) {
-        const { data: containers } = await this.supabase
-          .from('brand_containers')
-          .select('id, nombre_marca')
-          .in('id', projectIds);
-        if (containers) {
-          containers.forEach(c => { brandNames[c.id] = c.nombre_marca || '—'; });
-        }
+      if (schedules.length === 0) {
+        this.schedules = [];
+        return [];
       }
+      const flowIds = [...new Set(schedules.map(s => s.flow_id).filter(Boolean))];
+      const entityIds = [...new Set(schedules.map(s => s.entity_id).filter(Boolean))];
+      const campaignIds = [...new Set(schedules.map(s => s.campaign_id).filter(Boolean))];
+      const audienceIds = [...new Set(schedules.map(s => s.audience_id).filter(Boolean))];
+      const brandIds = [...new Set(schedules.map(s => s.brand_id).filter(Boolean))];
+
+      const [flowsRes, entitiesRes, campaignsRes, audiencesRes, brandsRes] = await Promise.all([
+        flowIds.length ? this.supabase.from('content_flows').select('id, name').in('id', flowIds) : { data: [] },
+        entityIds.length ? this.supabase.from('brand_entities').select('id, name').in('id', entityIds) : { data: [] },
+        campaignIds.length ? this.supabase.from('campaigns').select('id, nombre_campana').in('id', campaignIds) : { data: [] },
+        audienceIds.length ? this.supabase.from('audiences').select('id, name').in('id', audienceIds) : { data: [] },
+        brandIds.length ? this.supabase.from('brands').select('id, project_id').in('id', brandIds) : { data: [] }
+      ]);
+
+      const flowMap = (flowsRes.data || []).reduce((acc, r) => { acc[r.id] = r.name; return acc; }, {});
+      const entityMap = (entitiesRes.data || []).reduce((acc, r) => { acc[r.id] = r.name; return acc; }, {});
+      const campaignMap = (campaignsRes.data || []).reduce((acc, r) => { acc[r.id] = r.nombre_campana; return acc; }, {});
+      const audienceMap = (audiencesRes.data || []).reduce((acc, r) => { acc[r.id] = r.name; return acc; }, {});
+      const brandProjectMap = (brandsRes.data || []).reduce((acc, r) => { acc[r.id] = r.project_id; return acc; }, {});
+
+      const projectIds = [...new Set(Object.values(brandProjectMap).filter(Boolean))];
+      let brandNames = {};
+      if (projectIds.length) {
+        const { data: containers } = await this.supabase.from('brand_containers').select('id, nombre_marca').in('id', projectIds);
+        (containers || []).forEach(c => { brandNames[c.id] = c.nombre_marca || '—'; });
+      }
+
       this.schedules = schedules.map(s => {
-        const flow = s.content_flows;
-        const flowName = (flow && (flow.name || (Array.isArray(flow) && flow[0]?.name))) ? (flow.name || flow[0].name) : '—';
-        const entity = s.brand_entities;
-        const entityName = (entity && (entity.name || (Array.isArray(entity) && entity[0]?.name))) ? (entity.name || entity[0].name) : '—';
-        const campaign = s.campaigns;
-        const campaignName = (campaign && (campaign.nombre_campana || (Array.isArray(campaign) && campaign[0]?.nombre_campana))) ? (campaign.nombre_campana || campaign[0].nombre_campana) : '—';
-        const audience = s.audiences;
-        const audienceName = (audience && (audience.name || (Array.isArray(audience) && audience[0]?.name))) ? (audience.name || audience[0].name) : '—';
-        const brandProjectId = s.brands?.project_id ?? (Array.isArray(s.brands) && s.brands[0]?.project_id) ? s.brands[0].project_id : null;
-        const brandName = brandProjectId ? (brandNames[brandProjectId] || '—') : '—';
+        const flowName = (s.flow_id && flowMap[s.flow_id]) || '—';
+        const entityName = (s.entity_id && entityMap[s.entity_id]) || '—';
+        const campaignName = (s.campaign_id && campaignMap[s.campaign_id]) || '—';
+        const audienceName = (s.audience_id && audienceMap[s.audience_id]) || '—';
+        const projectId = s.brand_id ? brandProjectMap[s.brand_id] : null;
+        const brandName = projectId ? (brandNames[projectId] || '—') : '—';
         return {
           ...s,
           flow_name: flowName,
@@ -199,46 +195,39 @@ class TasksView extends BaseView {
     try {
       const { data, error } = await this.supabase
         .from('flow_schedules')
-        .select(`
-          id,
-          user_id,
-          flow_id,
-          brand_id,
-          cron_expression,
-          is_active,
-          job_name,
-          created_at,
-          entity_id,
-          campaign_id,
-          audience_id,
-          metadata_config,
-          production_count,
-          aspect_ratio,
-          production_specifications,
-          content_flows (id, name),
-          brand_entities (id, name),
-          campaigns (id, nombre_campana),
-          audiences (id, name),
-          brands (id, project_id)
-        `)
+        .select('id, user_id, flow_id, brand_id, cron_expression, is_active, job_name, created_at, entity_id, campaign_id, audience_id, metadata_config, production_count, aspect_ratio, production_specifications')
         .eq('id', id)
         .eq('user_id', this.userId)
         .single();
       if (error || !data) return null;
       const s = data;
-      const flow = s.content_flows;
-      const flowName = (flow && (flow.name || (Array.isArray(flow) && flow[0]?.name))) ? (flow.name || flow[0].name) : '—';
-      const entity = s.brand_entities;
-      const entityName = (entity && (entity.name || (Array.isArray(entity) && entity[0]?.name))) ? (entity.name || entity[0].name) : '—';
-      const campaign = s.campaigns;
-      const campaignName = (campaign && (campaign.nombre_campana || (Array.isArray(campaign) && campaign[0]?.nombre_campana))) ? (campaign.nombre_campana || campaign[0].nombre_campana) : '—';
-      const audience = s.audiences;
-      const audienceName = (audience && (audience.name || (Array.isArray(audience) && audience[0]?.name))) ? (audience.name || audience[0].name) : '—';
+      let flowName = '—';
+      let entityName = '—';
+      let campaignName = '—';
+      let audienceName = '—';
       let brandName = '—';
-      const projectId = s.brands?.project_id ?? (Array.isArray(s.brands) && s.brands[0]?.project_id) ? s.brands[0].project_id : null;
-      if (projectId) {
-        const { data: bc } = await this.supabase.from('brand_containers').select('nombre_marca').eq('id', projectId).maybeSingle();
-        if (bc?.nombre_marca) brandName = bc.nombre_marca;
+      if (s.flow_id) {
+        const { data: f } = await this.supabase.from('content_flows').select('name').eq('id', s.flow_id).maybeSingle();
+        if (f?.name) flowName = f.name;
+      }
+      if (s.entity_id) {
+        const { data: e } = await this.supabase.from('brand_entities').select('name').eq('id', s.entity_id).maybeSingle();
+        if (e?.name) entityName = e.name;
+      }
+      if (s.campaign_id) {
+        const { data: c } = await this.supabase.from('campaigns').select('nombre_campana').eq('id', s.campaign_id).maybeSingle();
+        if (c?.nombre_campana) campaignName = c.nombre_campana;
+      }
+      if (s.audience_id) {
+        const { data: a } = await this.supabase.from('audiences').select('name').eq('id', s.audience_id).maybeSingle();
+        if (a?.name) audienceName = a.name;
+      }
+      if (s.brand_id) {
+        const { data: b } = await this.supabase.from('brands').select('project_id').eq('id', s.brand_id).maybeSingle();
+        if (b?.project_id) {
+          const { data: bc } = await this.supabase.from('brand_containers').select('nombre_marca').eq('id', b.project_id).maybeSingle();
+          if (bc?.nombre_marca) brandName = bc.nombre_marca;
+        }
       }
       return {
         ...s,
