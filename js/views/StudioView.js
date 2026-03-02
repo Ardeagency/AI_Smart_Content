@@ -69,6 +69,14 @@ class StudioView extends BaseView {
       <div class="studio-layout" id="studioContainer">
         <main class="studio-center">
           <div class="studio-canvas-empty" id="studioCanvas"></div>
+          <div class="studio-automated-wrap" id="studioAutomatedWrap" style="display: none;">
+            <button type="button" class="studio-back-flows studio-back-flows--automated" id="studioBackFlowsAutomated"><i class="fas fa-arrow-left"></i> Elegir otro flujo</button>
+            <div class="studio-hero" id="studioHero"></div>
+            <div class="studio-schedule-form-wrap" id="studioScheduleFormWrap">
+              <h2 class="studio-schedule-title">Programar este flujo</h2>
+              <form class="studio-schedule-form" id="studioScheduleForm"></form>
+            </div>
+          </div>
           <footer class="studio-footer">
             <div class="studio-footer-credits">
               <div class="studio-credits-icon"><i class="fas fa-coins"></i></div>
@@ -81,7 +89,7 @@ class StudioView extends BaseView {
           </footer>
         </main>
 
-        <aside class="studio-sidebar-creative">
+        <aside class="studio-sidebar-creative" id="studioSidebar">
           <div class="studio-sidebar-content">
             <div class="studio-flows-list" id="studioFlowsList"></div>
             <div class="studio-flow-form-wrap" id="studioFlowFormWrap" style="display: none;">
@@ -118,13 +126,7 @@ class StudioView extends BaseView {
     if (flowToSelect) {
       this.selectedFlow = flowToSelect;
       this.updateCreditsDisplay();
-      this.renderFlowForm(flowToSelect);
-      const listEl = document.getElementById('studioFlowsList');
-      const formWrap = document.getElementById('studioFlowFormWrap');
-      if (listEl) listEl.style.display = 'none';
-      if (formWrap) formWrap.style.display = 'block';
-      const btn = document.getElementById('studioProducirBtn');
-      if (btn) btn.disabled = !flowToSelect.webhook_url;
+      this.applyStudioMode(flowToSelect);
       if (!flowSlug && window.router) {
         const slug = this.flowNameToSlug(flowToSelect.name);
         if (slug) window.router.navigate(`${this.getStudioBasePath()}/${encodeURIComponent(slug)}`, true);
@@ -190,6 +192,8 @@ class StudioView extends BaseView {
           output_type,
           execution_mode,
           flow_category_type,
+          flow_image_url,
+          schedule_schema,
           flow_modules ( step_order, input_schema, webhook_url_test, webhook_url_prod )
         `)
         .eq('is_active', true);
@@ -221,6 +225,8 @@ class StudioView extends BaseView {
       output_type: flow.output_type,
       execution_mode: flow.execution_mode || 'single_step',
       flow_category_type: flow.flow_category_type || 'manual',
+      flow_image_url: flow.flow_image_url || null,
+      schedule_schema: flow.schedule_schema && Array.isArray(flow.schedule_schema.fields) ? flow.schedule_schema : { fields: [] },
       input_schema: first?.input_schema ?? {},
       webhook_url: webhookUrlProd,
       webhook_url_test: first?.webhook_url_test,
@@ -280,20 +286,91 @@ class StudioView extends BaseView {
   selectFlow(flow) {
     this.selectedFlow = flow;
     this.updateCreditsDisplay();
-    this.renderFlowForm(flow);
-    const listEl = document.getElementById('studioFlowsList');
-    const formWrap = document.getElementById('studioFlowFormWrap');
-    if (listEl) listEl.style.display = 'none';
-    if (formWrap) formWrap.style.display = 'block';
-
-    const btn = document.getElementById('studioProducirBtn');
-    if (btn) {
-      btn.disabled = !flow.webhook_url;
-    }
+    this.applyStudioMode(flow);
 
     const slug = this.flowNameToSlug(flow.name);
     if (slug && window.router) {
       window.router.navigate(`${this.getStudioBasePath()}/${encodeURIComponent(slug)}`, true);
+    }
+  }
+
+  /**
+   * Aplica el estado de Studio según el tipo de flujo: manual (sidebar + formulario + canvas)
+   * o automático (solo hero + formulario de programación, sin sidebar ni canvas).
+   */
+  applyStudioMode(flow) {
+    const isAutomated = flow && (flow.flow_category_type === 'automated');
+    const container = document.getElementById('studioContainer');
+    const canvasEl = document.getElementById('studioCanvas');
+    const automatedWrap = document.getElementById('studioAutomatedWrap');
+    const sidebar = document.getElementById('studioSidebar');
+    const listEl = document.getElementById('studioFlowsList');
+    const formWrap = document.getElementById('studioFlowFormWrap');
+    const btn = document.getElementById('studioProducirBtn');
+
+    if (container) container.classList.toggle('studio-layout--automated', isAutomated);
+
+    if (isAutomated) {
+      if (canvasEl) canvasEl.style.display = 'none';
+      if (sidebar) sidebar.style.display = 'none';
+      if (automatedWrap) {
+        automatedWrap.style.display = 'block';
+        this.renderStudioHero(flow);
+        this.renderScheduleForm(flow);
+      }
+      if (btn) btn.style.display = 'none';
+    } else {
+      if (canvasEl) canvasEl.style.display = '';
+      if (sidebar) sidebar.style.display = '';
+      if (automatedWrap) automatedWrap.style.display = 'none';
+      if (listEl) listEl.style.display = 'none';
+      if (formWrap) formWrap.style.display = 'block';
+      this.renderFlowForm(flow);
+      if (btn) {
+        btn.style.display = '';
+        btn.disabled = !flow.webhook_url;
+      }
+    }
+  }
+
+  /** Rellena el hero (portada) del flujo en estado automático. */
+  renderStudioHero(flow) {
+    const heroEl = document.getElementById('studioHero');
+    if (!heroEl) return;
+    const url = flow.flow_image_url;
+    const name = flow.name || 'Flujo';
+    if (url) {
+      const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(url) || url.includes('video');
+      heroEl.innerHTML = isVideo
+        ? `<video src="${this.escapeHtml(url)}" alt="" muted playsinline></video>`
+        : `<img src="${this.escapeHtml(url)}" alt="${this.escapeHtml(name)}" loading="eager">`;
+    } else {
+      heroEl.innerHTML = '<div class="studio-hero-placeholder"><i class="ph ph-image"></i><span>Sin portada</span></div>';
+    }
+  }
+
+  /** Rellena el formulario de programación (schedule_schema) para flujos automáticos. */
+  renderScheduleForm(flow) {
+    const formEl = document.getElementById('studioScheduleForm');
+    if (!formEl || !flow) return;
+    const schema = flow.schedule_schema || {};
+    const fields = Array.isArray(schema.fields) ? schema.fields : [];
+    if (fields.length === 0) {
+      formEl.innerHTML = '<p class="studio-form-empty">Este flujo no tiene campos de programación definidos.</p>';
+      return;
+    }
+    const Registry = window.InputRegistry;
+    if (Registry && Registry.renderFormFromSchema) {
+      formEl.innerHTML = Registry.renderFormFromSchema(fields, {
+        idPrefix: 'studio-schedule-',
+        wrapperClass: 'studio-field',
+        showLabel: true,
+        showHelper: true,
+        showRequired: true
+      });
+      if (Registry.initFormPickers) Registry.initFormPickers(formEl);
+    } else {
+      formEl.innerHTML = fields.map(f => this.renderFormField(f)).join('');
     }
   }
 
@@ -858,19 +935,23 @@ class StudioView extends BaseView {
     const btn = document.getElementById('studioProducirBtn');
     if (btn) btn.addEventListener('click', () => this.producir());
 
-    const backFlows = document.getElementById('studioBackFlows');
     const showFlowsList = () => {
+      this.selectedFlow = null;
       const listEl = document.getElementById('studioFlowsList');
       const formWrap = document.getElementById('studioFlowFormWrap');
       if (listEl) listEl.style.display = '';
       if (formWrap) formWrap.style.display = 'none';
-      this.selectedFlow = null;
       this.updateCreditsDisplay();
       const b = document.getElementById('studioProducirBtn');
       if (b) b.disabled = true;
-      if (window.router) window.router.navigate(this.getStudioBasePath(), true);
+      if (window.router) window.router.navigate(this.getStudioBasePath() + '/flows', true);
     };
+
+    const backFlows = document.getElementById('studioBackFlows');
     if (backFlows) backFlows.addEventListener('click', showFlowsList);
+
+    const backFlowsAutomated = document.getElementById('studioBackFlowsAutomated');
+    if (backFlowsAutomated) backFlowsAutomated.addEventListener('click', showFlowsList);
   }
 
   async producir() {

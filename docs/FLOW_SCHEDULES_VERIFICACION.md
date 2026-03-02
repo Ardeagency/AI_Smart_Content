@@ -66,7 +66,7 @@ Tú has indicado un esquema con:
   - Crear la función `sync_flow_to_cron()` (por ejemplo en pl/pgsql o llamando a un job que actualice pg_cron/n8n/otro).
   - Crear el trigger tal como lo indicaste.
 
-En el repo se añadió **`SQL/sync_flow_to_cron_trigger.sql`**: stub de `sync_flow_to_cron()` y trigger `tr_sync_flow_cron`. Ejecutar ese script en la BD y sustituir el cuerpo de la función por la lógica real de sincronización con el cron.
+El trigger y la función `sync_flow_to_cron` ya existen en la base de datos; no se incluyen en el repo.
 
 ---
 
@@ -95,7 +95,7 @@ Para que un flujo automatizado sea realmente “programable” como task hace fa
 | schedule_schema.fields alineados con columnas de flow_schedules | Sí (cron_expression, entity_id, campaign_id, audience_id, aspect_ratio, production_count, production_specifications). |
 | flow_schedules en schema.sql | Sí (con entity_id, campaign_id, audience_id singulares). |
 | Tu BD con entity_ids/campaign_ids/audience_ids y composition_mode | Pendiente de alinear en repo/migración si aplica. |
-| Trigger tr_sync_flow_cron + sync_flow_to_cron() | Stub y trigger en `SQL/sync_flow_to_cron_trigger.sql`; sustituir cuerpo de la función por la lógica real. |
+| Trigger tr_sync_flow_cron + sync_flow_to_cron() | Ya existen en la BD (no en repo). |
 | INSERT en flow_schedules (programar flujo) | No implementado en el frontend revisado. |
 
 Si quieres, el siguiente paso puede ser: (1) añadir un stub de `sync_flow_to_cron` + trigger en SQL, y (2) esbozar el flujo (o endpoint) para crear una fila en `flow_schedules` desde el formulario generado por `schedule_schema`.
