@@ -690,12 +690,27 @@ class LivingManager {
             };
         });
 
+        const hasTextContent = (it) => {
+            const prompt = (it.prompt || '').trim();
+            if (prompt) return true;
+            const out = it.output;
+            if (out && ((out.generated_copy || '').trim() || (out.text_content || '').trim())) return true;
+            return false;
+        };
+
         const seenIds = new Set();
         let allItems = [...fromRuns, ...fromGenerated]
             .filter(it => {
                 const id = it._outputId || it.run?.id + '-' + (it.output?.id || it.created_at);
                 if (seenIds.has(id)) return false;
                 seenIds.add(id);
+                return true;
+            })
+            .filter(it => {
+                // No mostrar runs sin output (tarjetas fantasma)
+                if (it.run && !it.output) return false;
+                // No mostrar ítems de tipo "text" sin contenido mostrable
+                if ((it.contentType || '') === 'text' && !hasTextContent(it)) return false;
                 return true;
             })
             .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
