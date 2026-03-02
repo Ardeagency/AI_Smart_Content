@@ -434,3 +434,5 @@ class DashboardView extends BaseView {
     }
   }
 }
+
+window.DashboardView = DashboardView;
