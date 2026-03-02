@@ -9156,7 +9156,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   border: 1px solid var(--glass-border);
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.08);
-  color: #e2e8f0;
+  color: #ffffff;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -9170,11 +9170,21 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 .studio-schedule-card .input-stepper-btn:first-child {
   border-radius: 4px 4px 0 0;
+  color: #ffffff;
+}
+
+.studio-schedule-card .input-stepper-btn:last-child {
+  color: #ffffff;
 }
 
 .studio-schedule-card .input-stepper-btn:hover {
   background: rgba(255, 255, 255, 0.15);
   color: #fff;
+}
+
+.studio-schedule-card .input-stepper-btn:hover:first-child,
+.studio-schedule-card .input-stepper-btn:hover:last-child {
+  color: #ffffff;
 }
 
 .studio-schedule-card .input-stepper-btn i,
@@ -9300,11 +9310,21 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 .studio-programacion-row .input-stepper-btn:first-child {
   border-radius: 4px 4px 0 0;
+  color: #ffffff;
+}
+
+.studio-programacion-row .input-stepper-btn:last-child {
+  color: #ffffff;
 }
 
 .studio-programacion-row .input-stepper-btn:hover {
   background: rgba(255, 255, 255, 0.15);
   color: #fff;
+}
+
+.studio-programacion-row .input-stepper-btn:hover:first-child,
+.studio-programacion-row .input-stepper-btn:hover:last-child {
+  color: #ffffff;
 }
 
 /* Iconos flecha arriba/abajo con CSS (visibles sin depender de fuente) */
