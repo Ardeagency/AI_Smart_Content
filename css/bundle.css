@@ -9087,15 +9087,16 @@ body.production-filters-in-header .living-container > .living-history-section {
   display: flex;
   flex-direction: column;
   border-left: 1px solid var(--glass-border);
+  gap: 0;
 }
 
 .studio-schedule-card .input-stepper-btn {
   width: 28px;
   height: 22px;
   padding: 0;
-  border: none;
+  border: 1px solid var(--glass-border);
   border-radius: 4px;
-  background: var(--glass-bg);
+  background: rgba(255, 255, 255, 0.08);
   color: #e2e8f0;
   cursor: pointer;
   display: flex;
@@ -9103,14 +9104,25 @@ body.production-filters-in-header .living-container > .living-history-section {
   justify-content: center;
 }
 
+.studio-schedule-card .input-stepper-btn + .input-stepper-btn {
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+}
+
+.studio-schedule-card .input-stepper-btn:first-child {
+  border-radius: 4px 4px 0 0;
+}
+
 .studio-schedule-card .input-stepper-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.15);
   color: #fff;
 }
 
 .studio-schedule-card .input-stepper-btn i,
 .studio-schedule-card .input-stepper-btn .ph {
-  font-size: 10px;
+  font-size: 12px;
+  line-height: 1;
+  display: block;
 }
 
 .studio-schedule-card .input-stepper-unit {
@@ -9162,6 +9174,19 @@ body.production-filters-in-header .living-container > .living-history-section {
   gap: 0;
 }
 
+/* Ocultar controles nativos del number (evitar “botones blancos” duplicados) */
+.studio-programacion-row .input-stepper-input,
+.studio-schedule-card .input-stepper-input {
+  -moz-appearance: textfield;
+}
+.studio-programacion-row .input-stepper-input::-webkit-outer-spin-button,
+.studio-programacion-row .input-stepper-input::-webkit-inner-spin-button,
+.studio-schedule-card .input-stepper-input::-webkit-outer-spin-button,
+.studio-schedule-card .input-stepper-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .studio-programacion-row .input-stepper-input {
   background: transparent;
   border: none;
@@ -9176,21 +9201,31 @@ body.production-filters-in-header .living-container > .living-history-section {
   border-left: 1px solid var(--glass-border);
   margin-left: 4px;
   padding-left: 4px;
+  gap: 0;
 }
 
 .studio-programacion-row .input-stepper-btn {
-  width: 24px;
-  height: 20px;
+  width: 26px;
+  height: 22px;
   padding: 0;
-  border: none;
+  border: 1px solid var(--glass-border);
   border-radius: 4px;
-  background: var(--glass-bg);
+  background: rgba(255, 255, 255, 0.08);
   color: #e2e8f0;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.75rem;
+}
+
+.studio-programacion-row .input-stepper-btn + .input-stepper-btn {
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+}
+
+.studio-programacion-row .input-stepper-btn:first-child {
+  border-radius: 4px 4px 0 0;
 }
 
 .studio-programacion-row .input-stepper-btn:hover {
@@ -9200,7 +9235,9 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 .studio-programacion-row .input-stepper-btn i,
 .studio-programacion-row .input-stepper-btn .ph {
-  font-size: 10px;
+  font-size: 12px;
+  line-height: 1;
+  display: block;
 }
 
 .studio-automation-summary {
