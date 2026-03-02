@@ -71,10 +71,62 @@ class StudioView extends BaseView {
           <div class="studio-canvas-empty" id="studioCanvas"></div>
           <div class="studio-automated-wrap" id="studioAutomatedWrap" style="display: none;">
             <button type="button" class="studio-back-flows studio-back-flows--automated" id="studioBackFlowsAutomated"><i class="fas fa-arrow-left"></i> Elegir otro flujo</button>
-            <div class="studio-hero" id="studioHero"></div>
-            <div class="studio-schedule-form-wrap" id="studioScheduleFormWrap">
-              <h2 class="studio-schedule-title">Programar este flujo</h2>
-              <form class="studio-schedule-form" id="studioScheduleForm"></form>
+            <div class="studio-automated-content">
+              <div class="studio-hero" id="studioHero"></div>
+              <div class="studio-automation-shell">
+                <div class="studio-automation-main">
+                  <div class="studio-schedule-form-wrap" id="studioScheduleFormWrap">
+                    <h2 class="studio-schedule-title">Programar este flujo automático</h2>
+                    <form class="studio-schedule-form" id="studioScheduleForm"></form>
+                  </div>
+                </div>
+                <aside class="studio-automation-summary" id="studioAutomationSummary">
+                  <div class="studio-automation-summary-inner">
+                    <header class="studio-automation-summary-header">
+                      <div class="studio-automation-summary-title">Resumen</div>
+                      <div class="studio-automation-summary-pill">ACTIVO</div>
+                    </header>
+                    <section class="studio-automation-summary-section">
+                      <h4 class="studio-automation-summary-section-label">Configuración</h4>
+                      <div class="studio-automation-summary-pair">
+                        <div class="studio-automation-summary-key">Ejecución</div>
+                        <div class="studio-automation-summary-value" id="studioSummaryExecution">Pendiente de definir</div>
+                      </div>
+                      <div class="studio-automation-summary-pair">
+                        <div class="studio-automation-summary-key">Volumen</div>
+                        <div class="studio-automation-summary-value" id="studioSummaryVolume">0 prod. / periodo</div>
+                      </div>
+                      <div class="studio-automation-summary-pair">
+                        <div class="studio-automation-summary-key">Formato</div>
+                        <div class="studio-automation-summary-value" id="studioSummaryFormat">Sin formato</div>
+                      </div>
+                    </section>
+                    <section class="studio-automation-summary-section">
+                      <h4 class="studio-automation-summary-section-label">Segmentación</h4>
+                      <div class="studio-automation-summary-pair">
+                        <div class="studio-automation-summary-key">Campaña</div>
+                        <div class="studio-automation-summary-value" id="studioSummaryCampaign">Selecciona campaña</div>
+                      </div>
+                      <div class="studio-automation-summary-pair">
+                        <div class="studio-automation-summary-key">Audiencia</div>
+                        <div class="studio-automation-summary-value" id="studioSummaryAudience">Selecciona audiencia</div>
+                      </div>
+                    </section>
+                    <section class="studio-automation-summary-next-run" id="studioSummaryNextRunWrap">
+                      <div class="studio-automation-summary-next-run-icon"></div>
+                      <p class="studio-automation-summary-next-run-text" id="studioSummaryNextRun">Próxima ejecución estimada: pendiente</p>
+                    </section>
+                    <div class="studio-automation-summary-actions">
+                      <button type="button" class="studio-automation-btn-primary" id="studioAutomationScheduleBtn">
+                        Programar
+                      </button>
+                      <button type="button" class="studio-automation-btn-secondary" id="studioAutomationDraftBtn">
+                        Guardar borrador
+                      </button>
+                    </div>
+                  </div>
+                </aside>
+              </div>
             </div>
           </div>
           <footer class="studio-footer">
