@@ -8,8 +8,8 @@
   publish = "."
 
 [functions]
-  # Directorio donde están las Netlify Functions (kling-video, kie-video-download, openai-*, etc.)
-  directory = "netlify/functions"
+  # Directorio de Netlify Functions en la raíz (evita 404 si Netlify no detecta netlify/functions)
+  directory = "functions"
   # En Dashboard: KLING_ACCESS_KEY (o KLING_ACCESSS_KEY), KLING_SECRET_KEY
 
 # Excluir archivos estáticos del redirect SPA
