@@ -2905,7 +2905,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     color: var(--text-primary);
 }
 
-/* User Dropdown — glass-black, anclado al header */
+/* User Dropdown — glass-black, anclado al header. Mostrar/ocultar con display (como .header-user-dropdown) para evitar fallos de render. */
 #userDropdown.user-dropdown,
 .user-dropdown {
     box-sizing: border-box;
@@ -2913,7 +2913,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     top: calc(100% + 8px);
     right: 0;
     width: 240px;
-    display: flex;
+    display: none;
     flex-direction: column;
     justify-content: center;
     align-items: stretch;
@@ -2924,19 +2924,11 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     border-radius: var(--glass-radius);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
-    transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
     z-index: 1100;
-    pointer-events: none;
 }
 
 .user-dropdown.active {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-    pointer-events: auto;
+    display: flex;
 }
 
 .user-dropdown-header {
