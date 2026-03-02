@@ -513,8 +513,35 @@ class VideoView extends BaseView {
           el.classList.add('is-selected');
           el.setAttribute('aria-pressed', 'true');
         }
+        this.syncProductionSelectionToKling();
       });
     });
+  }
+
+  syncProductionSelectionToKling() {
+    this.klingElements = this.klingElements.filter((el) => !el._fromProductionQueue);
+    const ids = Array.from(this.selectedProductionIds);
+    ids.forEach((outputId) => {
+      const p = this.videoProductions.find((prod) => String(prod.id) === String(outputId));
+      if (!p || !p.media_url) return;
+      const name = this.sanitizeElementName(`produccion_${p.id}`.slice(0, 24));
+      if (p.isVideo) {
+        this.klingElements.push({
+          name,
+          element_input_video_urls: [p.media_url],
+          _fromProductionQueue: true,
+          _productionOutputId: p.id
+        });
+      } else {
+        this.klingElements.push({
+          name,
+          element_input_urls: [p.media_url],
+          _fromProductionQueue: true,
+          _productionOutputId: p.id
+        });
+      }
+    });
+    this.renderKlingElementsList();
   }
 
   static get CINE_OPTIONS() {
@@ -851,7 +878,12 @@ class VideoView extends BaseView {
         const chip = e.target.closest('.video-kling-element-chip');
         const index = chip ? parseInt(chip.dataset.index, 10) : -1;
         if (index >= 0) {
+          const removed = this.klingElements[index];
           this.klingElements.splice(index, 1);
+          if (removed && removed._fromProductionQueue && removed._productionOutputId) {
+            this.selectedProductionIds.delete(removed._productionOutputId);
+            this.renderProductionsCarousel();
+          }
           this.renderKlingElementsList();
           if (this.klingElements.every((el) => !el._fromProductSelection)) {
             const assetSelect = this.container.querySelector('#videoAssetSelect');
