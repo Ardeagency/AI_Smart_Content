@@ -14,9 +14,14 @@
 
 # Excluir archivos estáticos del redirect SPA
 # Netlify procesa los redirects en orden, el primero que coincide gana.
-# IMPORTANTE: index.html debe usar rutas absolutas (/js/..., /css/...) para que,
-# al entrar por /signin, /landing, etc., el navegador pida /js/app-loader.js (no
-# /signin/js/app-loader.js); así esta regla sirve el .js y no el fallback index.html.
+# IMPORTANTE: Las funciones deben matchear ANTES que el fallback /* para no devolver index.html.
+
+# Netlify Functions — primero para que no las capture el SPA fallback
+[[redirects]]
+  from = "/.netlify/functions/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+  force = true
 
 # Archivos JS - servir directamente
 [[redirects]]
@@ -54,13 +59,7 @@
   to = "/SQL/:splat"
   status = 200
 
-# Netlify Functions - no redirigir
-[[redirects]]
-  from = "/.netlify/*"
-  to = "/.netlify/:splat"
-  status = 200
-
-# SPA Fallback - todas las demás rutas van a index.html
+# SPA Fallback - todas las demás rutas van a index.html (/.netlify/* ya cubierto arriba)
 [[redirects]]
   from = "/*"
   to = "/index.html"
