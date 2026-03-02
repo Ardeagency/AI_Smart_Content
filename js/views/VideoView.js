@@ -172,6 +172,7 @@ class VideoView extends BaseView {
                     <select id="videoDuration" class="video-prompt-aspect" aria-label="Duration"><option value="5">5s</option><option value="10">10s</option><option value="15">15s</option></select>
                     <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
                   </div>
+                  <button type="button" class="video-prompt-btn video-prompt-btn-ai" id="videoPromptAI" aria-label="Generar prompt con IA" title="Generar prompt cinematográfico con IA"><i class="fas fa-star"></i></button>
                   <button type="button" class="video-prompt-btn video-prompt-btn-send" id="videoPromptSend" aria-label="Generate"><i class="fas fa-paper-plane"></i></button>
                 </div>
                 <div class="video-storyboard-wrap" id="videoStoryboardWrap" style="display: none;">
@@ -257,6 +258,10 @@ class VideoView extends BaseView {
 
     if (this.sendBtn) {
       this.sendBtn.addEventListener('click', () => this.startGeneration());
+    }
+    const aiBtn = this.container.querySelector('#videoPromptAI');
+    if (aiBtn) {
+      aiBtn.addEventListener('click', () => this.requestCinePrompt());
     }
     if (this.promptInput) {
       this.promptInput.addEventListener('keydown', (e) => {
@@ -960,6 +965,99 @@ class VideoView extends BaseView {
     }
   }
 
+  buildBrandContextForAPI() {
+    const d = this.dbData || {};
+    return {
+      entities: (d.entities || []).map((e) => ({ name: e.name, entity_type: e.entity_type, description: e.description })),
+      products: (d.products || []).map((p) => ({ name: p.nombre_producto })),
+      audiences: (d.audiences || []).map((a) => ({ name: a.name, description: a.description })),
+      campaigns: (d.campaigns || []).map((c) => ({ name: c.nombre_campana, description: c.descripcion_interna }))
+    };
+  }
+
+  async saveSystemAIOutput(record) {
+    if (!this.supabase) return null;
+    try {
+      const { data: { user } } = await this.supabase.auth.getUser();
+      if (!user?.id) return null;
+      const brandContainerId = this.brandContainerId || await this.getBrandContainerId();
+      if (!brandContainerId) return null;
+      const row = {
+        brand_container_id: brandContainerId,
+        user_id: user.id,
+        ...record,
+        updated_at: new Date().toISOString()
+      };
+      const { data, error } = await this.supabase.from('system_ai_outputs').insert(row).select('id').single();
+      if (error) {
+        console.warn('VideoView saveSystemAIOutput:', error.message);
+        return null;
+      }
+      return data?.id || null;
+    } catch (e) {
+      console.warn('VideoView saveSystemAIOutput:', e);
+      return null;
+    }
+  }
+
+  async updateSystemAIOutput(id, updates) {
+    if (!this.supabase || !id) return;
+    try {
+      await this.supabase.from('system_ai_outputs').update({ ...updates, updated_at: new Date().toISOString() }).eq('id', id);
+    } catch (e) {
+      console.warn('VideoView updateSystemAIOutput:', e);
+    }
+  }
+
+  async requestCinePrompt() {
+    const aiBtn = this.container.querySelector('#videoPromptAI');
+    if (aiBtn) aiBtn.disabled = true;
+    this.showStatus('Generando prompt cinematográfico con IA…', true);
+
+    const payload = {
+      director_brief: (this.promptInput && this.promptInput.value) ? this.promptInput.value.trim() : '',
+      kling_elements: (this.klingElements || []).map((el) => ({
+        name: el.name,
+        element_input_urls: el.element_input_urls || undefined,
+        element_input_video_urls: el.element_input_video_urls || undefined
+      })),
+      brand_context: this.buildBrandContextForAPI(),
+      cinematography: { ...this.cinematography }
+    };
+
+    try {
+      const res = await fetch('/.netlify/functions/openai-cine-prompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        this.showError(data.error || 'Error al generar el prompt');
+        return;
+      }
+      if (data.prompt && this.promptInput) {
+        this.promptInput.value = data.prompt;
+        this.hideAllFeedback();
+        await this.saveSystemAIOutput({
+          provider: 'openai',
+          output_type: 'text',
+          status: 'completed',
+          prompt_used: payload.director_brief || null,
+          text_content: data.prompt,
+          metadata: { source: 'openai-cine-prompt', has_cinematography: true }
+        });
+      } else {
+        this.showError('No se recibió prompt');
+      }
+    } catch (err) {
+      this.showError(err.message || 'Error de conexión');
+    } finally {
+      if (aiBtn) aiBtn.disabled = false;
+    }
+  }
+
   async startGeneration() {
     const mode = 'pro';
     if (this.sendBtn) this.sendBtn.disabled = true;
@@ -997,6 +1095,16 @@ class VideoView extends BaseView {
         return;
       }
 
+      const promptUsed = (this.promptInput && this.promptInput.value) ? this.promptInput.value.trim() : null;
+      this._lastKieOutputId = await this.saveSystemAIOutput({
+        provider: 'kie_api',
+        output_type: 'video',
+        status: 'processing',
+        external_job_id: taskId,
+        prompt_used: promptUsed,
+        metadata: { mode: payload.mode || 'pro', kling_elements_count: (payload.kling_elements || []).length }
+      });
+
       this.showStatus('Generando video (Kling 3.0). Esto puede tardar unos minutos…', true);
       await this.pollTask(taskId);
     } catch (err) {
@@ -1022,6 +1130,10 @@ class VideoView extends BaseView {
         if (!res.ok) {
           this.stopPolling();
           this.showError(data.error || 'Error al consultar el estado');
+          if (this._lastKieOutputId) {
+            await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: data.error || 'Error al consultar el estado' });
+            this._lastKieOutputId = null;
+          }
           return;
         }
 
@@ -1038,8 +1150,20 @@ class VideoView extends BaseView {
           const url = Array.isArray(urls) && urls.length > 0 ? urls[0] : null;
           if (url) {
             this.showResult(url);
+            if (this._lastKieOutputId) {
+              await this.updateSystemAIOutput(this._lastKieOutputId, {
+                status: 'completed',
+                metadata: { resultUrls: urls, video_url: url },
+                error_message: null
+              });
+              this._lastKieOutputId = null;
+            }
           } else {
             this.showError('No se encontró URL del video en la respuesta');
+            if (this._lastKieOutputId) {
+              await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: 'No se encontró URL del video en la respuesta' });
+              this._lastKieOutputId = null;
+            }
           }
           return;
         }
@@ -1047,6 +1171,10 @@ class VideoView extends BaseView {
           this.stopPolling();
           const msg = data.data?.failMsg || data.data?.failCode || 'La generación falló';
           this.showError(msg);
+          if (this._lastKieOutputId) {
+            await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: msg });
+            this._lastKieOutputId = null;
+          }
           return;
         }
 
@@ -1054,6 +1182,10 @@ class VideoView extends BaseView {
       } catch (err) {
         this.stopPolling();
         this.showError(err.message || 'Error al consultar el estado');
+        if (this._lastKieOutputId) {
+          await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: err.message || 'Error al consultar el estado' });
+          this._lastKieOutputId = null;
+        }
       }
     };
 

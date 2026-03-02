@@ -559,6 +559,28 @@ CREATE TABLE public.subscriptions (
   CONSTRAINT subscriptions_pkey PRIMARY KEY (id),
   CONSTRAINT subscriptions_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id)
 );
+-- Producciones nativas de la página Video (Kie API, OpenAI, etc.)
+CREATE TABLE public.system_ai_outputs (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  brand_container_id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  provider text NOT NULL,
+  output_type text NOT NULL,
+  external_job_id text,
+  status text DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'processing'::text, 'completed'::text, 'failed'::text])),
+  error_message text,
+  prompt_used text,
+  storage_path text,
+  storage_object_id uuid,
+  text_content text,
+  technical_params jsonb DEFAULT '{}'::jsonb,
+  metadata jsonb DEFAULT '{}'::jsonb,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT system_ai_outputs_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_system_brand FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id),
+  CONSTRAINT fk_system_user FOREIGN KEY (user_id) REFERENCES public.profiles(id)
+);
 CREATE TABLE public.ui_component_templates (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   name text NOT NULL,

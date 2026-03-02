@@ -98,7 +98,7 @@ DECLARE
         'flow_modules', 'flow_runs', 'flow_technical_details',
         'organization_credits', 'organization_members', 'organizations',
         'product_images', 'products', 'runs_inputs', 'runs_outputs',
-        'services', 'storage_usage', 'subscriptions',
+        'services', 'storage_usage', 'subscriptions', 'system_ai_outputs',
         'ui_component_templates', 'user_flow_favorites', 'profiles',
         'visual_references'
     ];
@@ -289,6 +289,10 @@ FOR ALL TO authenticated USING (EXISTS (SELECT 1 FROM public.flow_runs fr WHERE 
 
 CREATE POLICY "Access runs outputs" ON public.runs_outputs
 FOR ALL TO authenticated USING (run_id IS NULL OR EXISTS (SELECT 1 FROM public.flow_runs fr WHERE fr.id = run_id AND (fr.user_id = (select auth.uid()) OR public.is_developer())));
+
+-- K2. SYSTEM AI OUTPUTS (página Video: OpenAI prompt cine, Kie API video)
+CREATE POLICY "Access own system_ai_outputs" ON public.system_ai_outputs
+FOR ALL TO authenticated USING (user_id = (select auth.uid()) OR public.is_developer());
 
 -- L. VECTORES DE MARCA
 CREATE POLICY "Read brand vectors" ON public.ai_brand_vectors

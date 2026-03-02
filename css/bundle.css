@@ -20519,6 +20519,21 @@ body.production-filters-in-header .living-container > .living-history-section {
     background: var(--brand-primary-brillo-strong, rgba(255, 255, 255, 0.18));
     color: var(--glass-black-text);
 }
+.video-prompt-wrap .video-prompt-footer-card-inner .video-prompt-btn-ai {
+    flex-shrink: 0;
+    min-width: 36px;
+    background: var(--glass-black-bg, rgba(20, 20, 26, 0.9));
+    color: var(--color-white, #ffffff);
+    border: 1px solid var(--glass-black-border);
+}
+.video-prompt-wrap .video-prompt-footer-card-inner .video-prompt-btn-ai:hover {
+    background: var(--brand-primary-brillo-strong, rgba(255, 255, 255, 0.15));
+    color: var(--color-white, #ffffff);
+}
+.video-prompt-btn-ai:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
 .video-prompt-wrap .video-prompt-footer-card-inner .video-prompt-btn-send {
     margin-left: auto;
     background: var(--glass-black-bg, rgba(20, 20, 26, 0.9));
