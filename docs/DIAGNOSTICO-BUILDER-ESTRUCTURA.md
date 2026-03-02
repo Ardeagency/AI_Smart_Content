@@ -8,10 +8,34 @@
 
 ## ✅ Cambios aplicados (corrección de problemas)
 
+### Ronda 1 (consistencia interna)
 - **Padding unificado:** `.technical-tab-main` usa `var(--spacing-xl)` como el resto de tabs.
-- **Variable única max-width:** `--builder-form-max-width: 720px` en `#app-container:has(.builder-footer)`; `.builder-config-fullwidth` y `.builder-settings-form` usan `var(--builder-form-max-width, 720px)`.
-- **Espaciado en variables:** px sustituidos por `--spacing-*` en: config-cell--catalog, flow-url-field/flow-url-input, ficha (body, sidebar, meta, stats, title, description), canvas (empty-state, fields, field, field-remove, field-header), footer-actions, sidebar-header, components-header/search/list, settings-section (scoped a `.builder-main .settings-section`), settings-field/label/inputs, field-help, settings-row, flow-type-picker/option, technical-tab-main, technical-module-name, badges y dropdowns del footer.
-- **Settings section acotada:** Estilos de sección del Builder aplican solo dentro de `.builder-main .settings-section` (padding/margin en variables); la definición global `.settings-section` (línea ~7200) queda para otras vistas (p. ej. settings.html).
+- **Variable única max-width:** `--builder-form-max-width`; `.builder-config-fullwidth` y `.builder-settings-form` la usan.
+- **Espaciado en variables:** px sustituidos por `--spacing-*` en config, ficha, canvas, footer, sidebars, settings-section/field, inputs, flow-type-picker, technical-tab-main, etc.
+- **Settings section acotada:** Estilos solo en `.builder-main .settings-section`; global `.settings-section` intacta para otras vistas.
+
+### Ronda 2 (por qué seguías viendo todo igual — correcciones visuales)
+
+La primera ronda **no tocaba** por qué “todo es negro” ni el ancho. Causas y cambios:
+
+1. **Inputs sin bordes / todo negro**  
+   En Builder, `--bg-primary` y `--bg-card` seguían siendo **#000** y los inputs usan `background: var(--bg-primary)`. Resultado: inputs negros sobre fondo negro, bordes #212126 casi invisibles.  
+   - **Cambio:** En `#app-container:has(.builder-footer)` se definen `--builder-input-bg: var(--dev-bg-surface)` y `--builder-input-border: rgba(255,255,255,0.12)`. Dentro de Builder, `--bg-card` pasa a `var(--dev-bg-surface)` para dar superficie. Inputs, textareas y selects en `.builder-main` usan `--builder-input-bg` y `--builder-input-border`; mismo criterio para `.flow-url-input` y `.flow-type-picker`. Focus con borde cian y sombra suave.
+
+2. **Sin jerarquía visual en Configuración**  
+   El formulario era solo un grid sin contenedor visual.  
+   - **Cambio:** `.builder-main .builder-settings-form.builder-config-grid` tiene ahora `background: var(--bg-card)`, borde, `border-radius` y padding (panel tipo card). Igual para `.builder-main .builder-settings-form.builder-config-fullwidth` en Módulos.
+
+3. **Contenido empujado a la izquierda / espacio vacío a la derecha**  
+   `--builder-form-max-width: 720px` limitaba el ancho y dejaba mucho hueco.  
+   - **Cambio:** `--builder-form-max-width: min(100%, 1280px)` para que el formulario use el ancho disponible hasta 1280px.
+
+4. **Canvas del tab Inputs**  
+   Mismo problema de fondo negro.  
+   - **Cambio:** `.builder-main .builder-canvas` usa `background: var(--bg-card)` y borde con `--builder-input-border`. Estados drag-active/drag-over con más contraste.
+
+5. **Tab Inputs: 3 columnas y manual vs automatizado**  
+   Sigue pendiente de revisión específica (columnas componentes | canvas | propiedades; estados manual/automatizado). Las correcciones anteriores mejoran la base (canvas con superficie, variables de Builder).
 
 ---
 

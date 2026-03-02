@@ -11608,13 +11608,23 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 
 /* Builder = misma identidad que dev/: acento cian #00E7FF (no naranja) */
+/* Jerarquía visual: superficie para cards e inputs (no negro sobre negro) */
 #app-container:has(.builder-footer) {
   --warm-1: var(--dev-primary);
   --warm-2: var(--dev-primary-dark);
   --warm-10: rgba(0, 231, 255, 0.1);
   --warm-20: rgba(0, 231, 255, 0.2);
   --accent-cta: var(--dev-primary);
-  --builder-form-max-width: 720px;
+  --builder-form-max-width: min(100%, 1280px);
+  --builder-input-bg: var(--dev-bg-surface);
+  --builder-input-border: rgba(255, 255, 255, 0.12);
+}
+
+/* En Builder: cards y superficies usan superficie visible (contraste con fondo) */
+#app-container:has(.builder-footer) .builder-main,
+#app-container:has(.builder-footer) .builder-canvas-wrapper,
+#app-container:has(.builder-footer) .builder-tab-content {
+  --bg-card: var(--dev-bg-surface);
 }
 
 /* ==========================================
@@ -12946,7 +12956,29 @@ body.production-filters-in-header .living-container > .living-history-section {
   max-width: var(--builder-form-max-width, 720px);
 }
 
-/* Configuración Builder: grid que se adapta a #tabSettings (llena el tab, sin caja interna) */
+/* Módulos: mismo panel con superficie y ancho útil que Configuración */
+.builder-main .builder-settings-form.builder-config-fullwidth {
+  max-width: var(--builder-form-max-width, 100%);
+  background: var(--bg-card);
+  border: 1px solid var(--builder-input-border, var(--border-color));
+  border-radius: var(--radius-md);
+  padding: var(--spacing-xl);
+}
+
+/* Configuración Builder: grid que se adapta a #tabSettings; panel con superficie (jerarquía visual) */
+.builder-main .builder-settings-form.builder-config-grid {
+  width: 100%;
+  max-width: var(--builder-form-max-width, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  box-sizing: border-box;
+  background: var(--bg-card);
+  border: 1px solid var(--builder-input-border, var(--border-color));
+  border-radius: var(--radius-md);
+  padding: var(--spacing-xl);
+}
+
 .builder-config-grid {
   width: 100%;
   max-width: 100%;
@@ -13008,6 +13040,12 @@ body.production-filters-in-header .living-container > .living-history-section {
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-color);
 }
+
+/* Builder: picker con superficie visible */
+.builder-main .flow-type-picker {
+  background: var(--builder-input-bg, var(--bg-secondary));
+  border-color: var(--builder-input-border, var(--border-color));
+}
 .flow-type-picker-option {
   display: flex;
   align-items: center;
@@ -13068,6 +13106,12 @@ body.production-filters-in-header .living-container > .living-history-section {
   font-size: var(--font-size-base);
   color: var(--text-primary);
   word-break: break-all;
+}
+
+/* Builder: URL del flujo con misma superficie que el resto de inputs */
+.builder-main .flow-url-input {
+  background: var(--builder-input-bg, var(--bg-secondary));
+  border-color: var(--builder-input-border, var(--border-color));
 }
 .flow-url-input::placeholder {
   color: var(--text-muted);
@@ -13686,14 +13730,20 @@ body.production-filters-in-header .living-container > .living-history-section {
   transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
+/* Builder: canvas con superficie visible (contraste con fondo negro) */
+.builder-main .builder-canvas {
+  background: var(--bg-card);
+  border-color: var(--builder-input-border, var(--border-color));
+}
+
 .builder-canvas.drag-active {
   border-color: var(--dev-primary);
-  background: rgba(0, 231, 255, 0.05);
+  background: rgba(0, 231, 255, 0.12);
 }
 
 .builder-canvas.drag-over {
   border-style: solid;
-  background: rgba(0, 231, 255, 0.1);
+  background: rgba(0, 231, 255, 0.18);
 }
 
 .canvas-empty-state {
@@ -15081,6 +15131,24 @@ body.production-filters-in-header .living-container > .living-history-section {
   font-size: var(--font-size-base);
   font-family: inherit;
   transition: var(--transition);
+}
+
+/* Builder: inputs con superficie y borde visibles (jerarquía, no negro sobre negro) */
+.builder-main .settings-field input[type="text"],
+.builder-main .settings-field input[type="number"],
+.builder-main .settings-field input[type="url"],
+.builder-main .settings-field textarea,
+.builder-main .settings-field select {
+  background: var(--builder-input-bg, var(--bg-secondary));
+  border-color: var(--builder-input-border, var(--border-color));
+}
+
+.builder-main .settings-field input:focus,
+.builder-main .settings-field textarea:focus,
+.builder-main .settings-field select:focus {
+  outline: none;
+  border-color: var(--dev-primary);
+  box-shadow: 0 0 0 2px rgba(0, 231, 255, 0.2);
 }
 
 .settings-field input:focus,
