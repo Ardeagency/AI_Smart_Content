@@ -522,7 +522,7 @@ class FlowCatalogView extends BaseView {
       });
       if (withoutSub.length > 0) {
         rows.push({
-          subcategory: { id: null, name: 'Sin subcategoría' },
+          subcategory: { id: null, name: '' },
           flows: withoutSub.sort((a, b) => (b.run_count || 0) + (b.likes_count || 0) - (a.run_count || 0) - (a.likes_count || 0))
         });
       }
