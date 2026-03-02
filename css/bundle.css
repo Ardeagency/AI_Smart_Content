@@ -9034,14 +9034,25 @@ body.production-filters-in-header .living-container > .living-history-section {
   flex-direction: column;
   gap: var(--spacing-md);
 }
-.studio-programacion-widget > select {
+.studio-programacion-select {
   width: 100%;
-  max-width: 280px;
+  max-width: 240px;
+  background: rgba(15, 23, 42, 0.85);
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.8);
+  color: #e2e8f0;
+  padding-right: 32px;
 }
 .schedule-panel {
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-md);
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px dashed rgba(148, 163, 184, 0.7);
+  background: rgba(15, 23, 42, 0.75);
 }
 .studio-programacion-row {
   display: flex;
@@ -9207,9 +9218,11 @@ body.production-filters-in-header .living-container > .living-history-section {
   color: #ffffff;
 }
 .studio-programacion-label {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  min-width: 6rem;
+  font-size: 0.75rem;
+  color: #9ca3af;
+  min-width: auto;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 .studio-weekdays {
   display: flex;

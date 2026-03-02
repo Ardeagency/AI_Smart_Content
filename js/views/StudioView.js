@@ -493,10 +493,11 @@ class StudioView extends BaseView {
     )).join('');
     return (
       '<div class="studio-programacion-widget" id="' + prefix + '-widget">' +
-      '<select class="modern-input input-dropdown-select" id="' + prefix + '-type" data-schedule-key="schedule_type" aria-label="Tipo de programación">' +
-      '<option value="por_horas">Por horas</option>' +
-      '<option value="por_dia">Por día</option>' +
-      '<option value="por_semana">Por semana</option>' +
+      '<label class="studio-field-label-inline" for="' + prefix + '-type">Programación</label>' +
+      '<select class="modern-input input-dropdown-select studio-programacion-select" id="' + prefix + '-type" data-schedule-key="schedule_type" aria-label="Tipo de programación">' +
+      '<option value="por_dia">Día</option>' +
+      '<option value="por_horas">Hora</option>' +
+      '<option value="por_semana">Semanal</option>' +
       '<option value="personalizado">Personalizado</option>' +
       '</select>' +
       '<input type="hidden" name="cron_expression" id="studio-schedule-cron_expression" value="0 */1 * * *">' +
