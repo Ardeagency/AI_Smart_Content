@@ -1,16 +1,17 @@
 /**
- * Netlify Function: proxy para la API oficial de Kling (可灵).
- * Autenticación: Access Key + Secret Key → JWT (Bearer).
- * Documentación: https://app.klingai.com/global/dev/document-api/quickStart/productIntroduction/overview
+ * Netlify Function: proxy para la API Kling 3.0.
+ * Endpoints: POST /v1/ai/video/kling-v3-pro | kling-v3-std, GET /v1/ai/video/kling-v3/{task-id}
+ *
+ * Autenticación (una de las dos):
+ *   - KLING_API_KEY — Bearer token directo
+ *   - KLING_ACCESS_KEY (o KLING_ACCESSS_KEY) + KLING_SECRET_KEY — JWT (HS256)
  *
  * Variables de entorno:
- *   KLING_ACCESS_KEY o KLING_ACCESSS_KEY — Access Key (desde panel Kling)
- *   KLING_SECRET_KEY — Secret Key
- *   KLING_API_BASE_URL (opcional) — Base URL, default https://api.klingai.com
+ *   KLING_API_BASE_URL (opcional) — default https://api.klingai.com
  *
  * Acciones:
- * - POST body createTask: action, mode, prompt, duration, aspect_ratio, sound, kling_elements, multi_shots
- * - GET ?taskId=xxx → consulta estado (respuesta normalizada a formato KIE para el frontend)
+ * - POST body createTask: action, mode, prompt, duration, aspect_ratio, kling_elements, multi_shots
+ * - GET ?taskId=xxx → consulta estado (normalizado para el frontend: data.state, data.resultJson)
  */
 
 const crypto = require('crypto');
@@ -42,6 +43,13 @@ function createKlingJWT(accessKey, secretKey, ttlSeconds = 300) {
 }
 
 function getKlingAuthHeaders() {
+  const apiKey = process.env.KLING_API_KEY;
+  if (apiKey && typeof apiKey === 'string' && apiKey.trim()) {
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey.trim()}`
+    };
+  }
   const accessKey = process.env.KLING_ACCESS_KEY || process.env.KLING_ACCESSS_KEY;
   const secretKey = process.env.KLING_SECRET_KEY;
   if (!accessKey || !secretKey) return null;
@@ -71,6 +79,7 @@ function normalizeStatusResponse(klingData) {
     else if (Array.isArray(result)) resultUrls = result.filter((u) => typeof u === 'string');
   }
   if (klingData.video_url) resultUrls = [klingData.video_url];
+  if (klingData.data?.video_url) resultUrls = [klingData.data.video_url];
   if (Array.isArray(klingData.response) && klingData.response.length) resultUrls = klingData.response;
 
   const failMsg = klingData.error_message || klingData.message || klingData.data?.error_message || klingData.data?.message || (state === 'fail' ? 'La generación falló' : null);
@@ -104,13 +113,14 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 500,
       headers: corsHeaders(),
-      body: JSON.stringify({ error: 'KLING_ACCESS_KEY y KLING_SECRET_KEY deben estar configurados en el servidor' })
+      body: JSON.stringify({ error: 'Configura KLING_API_KEY o (KLING_ACCESS_KEY + KLING_SECRET_KEY) en el servidor' })
     };
   }
 
   const baseUrl = getBaseUrl();
-  const createPath = '/v1/video/generations';
-  const createUrl = `${baseUrl}${createPath}`;
+  // Kling 3.0: crear tarea según modo
+  const getCreatePath = (mode) => mode === 'pro' ? '/v1/ai/video/kling-v3-pro' : '/v1/ai/video/kling-v3-std';
+  const getStatusPath = () => '/v1/ai/video/kling-v3';
 
   try {
     if (event.httpMethod === 'POST') {
@@ -132,10 +142,7 @@ exports.handler = async (event, context) => {
         .filter(Boolean);
 
       let prompt = promptSingle;
-      if (multiShots.length > 0) {
-        prompt = multiShots[0];
-        if (multiShots.length > 1) prompt = multiShots.map((p, i) => `[Shot ${i + 1}] ${p}`).join(' ');
-      }
+      if (!prompt && multiShots.length > 0) prompt = multiShots[0];
       if (!prompt) {
         return {
           statusCode: 400,
@@ -144,31 +151,40 @@ exports.handler = async (event, context) => {
         };
       }
 
-      const duration = typeof body.duration === 'string' && /^[0-9]+$/.test(body.duration) ? body.duration : '5';
-      const aspect_ratio = typeof body.aspect_ratio === 'string' && body.aspect_ratio ? body.aspect_ratio : '16:9';
+      const durationRaw = typeof body.duration === 'string' && /^[0-9]+$/.test(body.duration) ? body.duration : '5';
+      const duration = Math.min(15, Math.max(3, parseInt(durationRaw, 10) || 5));
 
+      // Payload API Kling 3.0: prompt, duration (3-15), cfg_scale, multi_shot, first_frame, end_frame, negative_prompt
       const payload = {
-        model: 'kling/kling-v2-1-master',
         prompt,
-        mode,
-        aspect_ratio,
-        duration: String(duration)
+        duration,
+        cfg_scale: 0.65
       };
-      if (typeof body.sound === 'boolean') payload.sound = body.sound;
+      if (typeof body.negative_prompt === 'string' && body.negative_prompt.trim()) payload.negative_prompt = body.negative_prompt.trim();
 
-      if (Array.isArray(body.kling_elements) && body.kling_elements.length > 0) {
-        const imageList = [];
-        for (const el of body.kling_elements) {
-          const urls = el.element_input_urls || [];
-          if (urls.length) imageList.push(...urls.slice(0, 1).map((url) => ({ image: url })));
-        }
-        if (imageList.length > 0 && imageList.length <= 4) payload.image_list = imageList.slice(0, 4);
+      if (multiShots.length > 0) {
+        payload.multi_shot = multiShots.map((scenePrompt) => ({
+          scene_prompt: scenePrompt,
+          duration: Math.max(3, Math.min(15, Math.floor(duration / multiShots.length)))
+        }));
       }
 
+      const imageUrls = [];
+      if (Array.isArray(body.kling_elements) && body.kling_elements.length > 0) {
+        for (const el of body.kling_elements) {
+          const urls = el.element_input_urls || [];
+          if (urls.length) imageUrls.push(urls[0]);
+        }
+      }
+      if (imageUrls.length >= 1) payload.first_frame = imageUrls[0];
+      if (imageUrls.length >= 2) payload.end_frame = imageUrls[1];
+
+      const createPath = getCreatePath(mode);
+      const createUrl = `${baseUrl}${createPath}`;
       const createRes = await fetch(createUrl, { method: 'POST', headers, body: JSON.stringify(payload) });
       const createData = await createRes.json().catch(() => ({}));
 
-      const taskId = createData.data?.task_id ?? createData.task_id;
+      const taskId = createData.task_id ?? createData.data?.task_id;
       if (createRes.status >= 400 || !taskId) {
         const errMsg = createData.message || createData.msg || createData.data?.message || createData.error || 'Error al crear la tarea';
         return {
@@ -189,7 +205,7 @@ exports.handler = async (event, context) => {
       if (!taskId) {
         return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Falta el parámetro taskId' }) };
       }
-      const statusPath = process.env.KLING_API_STATUS_PATH || '/v1/video/generations';
+      const statusPath = process.env.KLING_API_STATUS_PATH || getStatusPath();
       const useQuery = process.env.KLING_API_STATUS_USE_QUERY === '1' || process.env.KLING_API_STATUS_USE_QUERY === 'true';
       const statusUrl = useQuery
         ? `${baseUrl}${statusPath}?task_id=${encodeURIComponent(taskId)}`

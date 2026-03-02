@@ -1,34 +1,32 @@
-# API de video Kling (可灵) – Uso en el proyecto
+# API de video Kling 3.0 – Uso en el proyecto
 
-> Integración con la **API oficial de Kling** (Access Key + Secret Key).  
-> Documentación general: [Kling Developer – Overview](https://app.klingai.com/global/dev/document-api/quickStart/productIntroduction/overview)
+> Integración con la **API Kling 3.0** (`https://api.klingai.com`).  
+> Endpoints: crear video (Pro/Standard) y consultar estado por `task_id`.
 
 ## Resumen
 
-- Se dejó de usar **KIE** (`api.kie.ai`). Ahora se usa la **API oficial de Kling** con autenticación por **Access Key** y **Secret Key** (JWT en cada petición).
-- El proxy Netlify `kling-video` genera el JWT en el servidor y reenvía las peticiones a la base URL de Kling.
+- El proxy Netlify `kling-video` llama a la **API Kling 3.0**:
+  - **Crear:** `POST /v1/ai/video/kling-v3-pro` (modo pro) o `kling-v3-std` (modo standard).
+  - **Estado:** `GET /v1/ai/video/kling-v3/{task-id}` hasta `status: completed` y se obtiene `video_url`.
+- Autenticación: **Bearer token**. Puedes usar `KLING_API_KEY` (token directo) o **Access Key + Secret Key** (el proxy genera JWT).
 
 ## Variables de entorno (Netlify)
 
 | Variable | Requerido | Descripción |
 |----------|-----------|-------------|
-| `KLING_ACCESS_KEY` | Sí* | Access Key desde el panel de Kling (API Keys). También se admite `KLING_ACCESSS_KEY` por compatibilidad. |
-| `KLING_SECRET_KEY` | Sí | Secret Key desde el panel de Kling. |
-| `KLING_API_BASE_URL` | No | Base URL de la API. Por defecto: `https://api.klingai.com`. Ajustar si la documentación oficial indica otra. |
-| `KLING_API_STATUS_PATH` | No | Ruta base para consultar estado. Por defecto: `/v1/video/generations`. |
-| `KLING_API_STATUS_USE_QUERY` | No | Si es `1` o `true`, la consulta de estado usa query: `{path}?task_id=xxx`. Si no, usa path: `{path}/{taskId}`. |
+| `KLING_API_KEY` | Sí* | Token Bearer directo (si tu cuenta usa un solo token). |
+| `KLING_ACCESS_KEY` o `KLING_ACCESSS_KEY` | Sí* | Access Key (si usas JWT). |
+| `KLING_SECRET_KEY` | Sí* | Secret Key para firmar el JWT. |
+| `KLING_API_BASE_URL` | No | Base URL. Por defecto: `https://api.klingai.com`. |
+| `KLING_API_STATUS_PATH` | No | Ruta base para estado. Por defecto: `/v1/ai/video/kling-v3`. |
+| `KLING_API_STATUS_USE_QUERY` | No | `1` o `true` para usar `?task_id=xxx` en lugar de `/{taskId}`. |
 
-\* Al menos uno de: `KLING_ACCESS_KEY` o `KLING_ACCESSS_KEY`.
+\* Una de estas opciones: **solo** `KLING_API_KEY`, **o** `KLING_ACCESS_KEY` + `KLING_SECRET_KEY`.
 
-## Autenticación (JWT)
+## Autenticación
 
-La API oficial de Kling usa **JWT** (HS256) con:
-
-- **Header:** `{ "alg": "HS256", "typ": "JWT" }`
-- **Payload:** `{ "iss": "<access_key>", "iat": <timestamp>, "exp": <timestamp + 300> }`
-- **Firma:** HMAC-SHA256 con el **Secret Key**.
-
-El proxy `kling-video` genera este token en el servidor y envía `Authorization: Bearer <token>` en cada llamada. Las claves no se exponen al cliente.
+- **Opción 1:** `KLING_API_KEY` → el proxy envía `Authorization: Bearer <KLING_API_KEY>`.
+- **Opción 2:** `KLING_ACCESS_KEY` + `KLING_SECRET_KEY` → el proxy genera un JWT (HS256, `iss` = access key, `iat`/`exp`) y lo envía como Bearer. Las claves no se exponen al cliente.
 
 ## Proxy Netlify (uso en la app)
 
@@ -50,7 +48,8 @@ Igual que con KIE:
 | duration | string | No | `"5"` \| `"10"` \| `"15"` (default: `"5"`) |
 | aspect_ratio | string | No | `"16:9"` \| `"9:16"` \| `"1:1"` |
 | sound | boolean | No | Incluir sonido |
-| kling_elements | array | No | Referencias: `{ name, element_input_urls?, element_input_video_urls?, description? }`. Se mapean a `image_list` (máx. 4 imágenes) para la API Kling. |
+| kling_elements | array | No | Referencias con `element_input_urls`. La primera URL → `first_frame`, la segunda → `end_frame` (API Kling 3.0). |
+| negative_prompt | string | No | Elementos a excluir en el video. |
 
 ### Respuesta del proxy
 
@@ -58,13 +57,15 @@ Igual que con KIE:
 - **200 (GET status):** Objeto normalizado con `data.state` (`waiting` \| `success` \| `fail`), `data.resultJson` (cuando success, `{ resultUrls: [...] }`), `data.failMsg` (cuando fail).
 - **4xx/5xx:** `{ error, code?, failMsg? }`
 
-## API Kling oficial (referencia)
+## API Kling 3.0 (referencia)
 
-- **Crear tarea:** `POST {base}/v1/video/generations`  
-  Body: `model`, `prompt`, `mode`, `aspect_ratio`, `duration`, opcional `image_list`, `sound`.
-- **Consultar estado:** `GET {base}/v1/video/generations/{task_id}` (o la ruta indicada en la documentación oficial; en ese caso configurar `KLING_API_STATUS_PATH`).
+| Operación | Método | Endpoint |
+|-----------|--------|----------|
+| Crear video (Pro) | POST | `/v1/ai/video/kling-v3-pro` |
+| Crear video (Standard) | POST | `/v1/ai/video/kling-v3-std` |
+| Estado de tarea | GET | `/v1/ai/video/kling-v3/{task-id}` |
 
-Modelos soportados (según documentación 可灵): `kling/kling-v1-6`, `kling/kling-v2-master`, `kling/kling-v2-1`, `kling/kling-v2-1-master`. En el proxy se usa por defecto `kling/kling-v2-1-master` para texto a video.
+**Body al crear:** `prompt`, `duration` (3–15 s), `cfg_scale` (ej. 0.65), opcional `first_frame`, `end_frame`, `multi_shot` (array de `{ scene_prompt, duration }`), `negative_prompt`. Cuando la tarea termina, la respuesta de estado incluye `video_url`.
 
 ## Flujo en la app (página Video)
 
@@ -78,7 +79,7 @@ Sigue usándose el proxy **`/.netlify/functions/kie-video-download?videoUrl=...`
 
 ## Troubleshooting
 
-- **"KLING_ACCESS_KEY y KLING_SECRET_KEY deben estar configurados":** Añade en Netlify (Environment variables) `KLING_ACCESS_KEY` (o `KLING_ACCESSS_KEY`) y `KLING_SECRET_KEY` con los valores del [panel de Kling](https://app.klingai.com).
+- **"Configura KLING_API_KEY o (KLING_ACCESS_KEY + KLING_SECRET_KEY)":** En Netlify define o bien `KLING_API_KEY` (token Bearer), o bien `KLING_ACCESS_KEY` (o `KLING_ACCESSS_KEY`) y `KLING_SECRET_KEY` desde el [panel de Kling](https://app.klingai.com).
 - **401 / Unauthorized:** Revisa que Access Key y Secret Key sean los correctos y que no estén expirados/revocados.
 - **404 al consultar estado:** Es posible que la API use otra ruta para consultar (por ejemplo `/v1/video/tasks/{id}`). Prueba configurando `KLING_API_STATUS_PATH` (por ejemplo `/v1/video/tasks`) o revisa la documentación oficial en app.klingai.com.
 - **Base URL distinta:** Si en la documentación oficial aparece otra base (por ejemplo `https://openapi.klingai.com`), configura `KLING_API_BASE_URL` en Netlify.
