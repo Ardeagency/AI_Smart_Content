@@ -29,10 +29,12 @@ class DevBuilderView extends DevBaseView {
       schedule_schema: { fields: [] }
     };
 
-    /** Schema por defecto para flujos automated (programación de tareas). Se establece al cambiar tipo a automated. */
+    /** Schema por defecto para flujos automated (programación de tareas). Se establece al cambiar tipo a automated.
+     * tipo_entidad condiciona el campo Entidad: productos → image_selector (carrusel múltiple), servicio → dropdown. */
     this.DEFAULT_SCHEDULE_SCHEMA = {
       fields: [
         { key: 'cron_expression', label: 'Programación', input_type: 'cron_schedule', required: true },
+        { key: 'tipo_entidad', label: 'Tipo de entidad', input_type: 'select', required: true, options: [{ value: 'productos', label: 'Productos' }, { value: 'servicio', label: 'Servicio' }], defaultValue: 'productos' },
         { key: 'entity_id', label: 'Entidad', input_type: 'entity_selector' },
         { key: 'campaign_id', label: 'Campaña', input_type: 'campaign_selector' },
         { key: 'audience_id', label: 'Audiencia', input_type: 'audience_selector' },

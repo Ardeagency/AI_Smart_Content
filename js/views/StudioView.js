@@ -369,9 +369,59 @@ class StudioView extends BaseView {
         showRequired: true
       });
       if (Registry.initFormPickers) Registry.initFormPickers(formEl);
+      this._applyScheduleFormEntityByType(formEl);
     } else {
       formEl.innerHTML = fields.map(f => this.renderFormField(f)).join('');
     }
+  }
+
+  /**
+   * Genera el HTML del control Entidad según tipo_entidad: productos → image_selector (carrusel múltiple), servicio → dropdown.
+   */
+  _renderScheduleEntityControl(tipoEntidad) {
+    const id = 'studio-schedule-entity_id';
+    const name = 'entity_id';
+    if (tipoEntidad === 'productos') {
+      return (
+        '<div class="image-selector-carousel" data-media-source="products" data-selection-mode="multiple" data-key="entity_id" data-field-name="' + name + '">' +
+        '<div class="image-selector-carousel-track image-selector-carousel-track--empty" data-empty-msg="Selecciona producto(s)..."></div>' +
+        '<input type="hidden" id="' + id + '" name="' + name + '" value="">' +
+        '</div>'
+      );
+    }
+    return (
+      '<div class="input-dropdown-wrap">' +
+      '<select class="modern-input input-dropdown-select" id="' + id + '" name="' + name + '">' +
+      '<option value="">Selecciona un servicio...</option>' +
+      '</select>' +
+      '</div>'
+    );
+  }
+
+  /**
+   * Si el schema tiene tipo_entidad y entity_id, reemplaza el control Entidad por image_selector (productos) o dropdown (servicio).
+   */
+  _applyScheduleFormEntityByType(formEl) {
+    const tipoWrapper = formEl.querySelector('.studio-field[data-key="tipo_entidad"]');
+    const entityWrapper = formEl.querySelector('.studio-field[data-key="entity_id"]');
+    if (!tipoWrapper || !entityWrapper) return;
+    const tipoSelect = formEl.querySelector('select[name="tipo_entidad"]');
+    if (!tipoSelect) return;
+    const controlSlot = entityWrapper.children[1];
+    if (!controlSlot) return;
+    const container = document.createElement('div');
+    container.className = 'studio-entity-control-slot';
+    const update = () => {
+      const value = tipoSelect.value || 'productos';
+      container.innerHTML = this._renderScheduleEntityControl(value);
+      if (value === 'productos') {
+        const carousels = container.querySelectorAll('.image-selector-carousel');
+        if (carousels.length) this._fillProductCarousels(Array.from(carousels));
+      }
+    };
+    update();
+    controlSlot.replaceWith(container);
+    tipoSelect.addEventListener('change', update);
   }
 
   renderFlowForm(flow) {
