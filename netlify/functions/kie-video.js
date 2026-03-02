@@ -11,6 +11,7 @@
  *   - aspect_ratio: "16:9" | "9:16" | "1:1" (opcional)
  *   - sound: boolean (opcional)
  *   - kling_elements: array de { name, element_input_urls?, element_input_video_urls?, description? } (opcional)
+ *   - multi_shots: array de { prompt: string } (opcional). Si se envía, se usa en lugar de prompt único (requerido por API cuando multi_shots no está vacío).
  * - GET ?taskId=xxx → consulta estado y resultado (recordInfo)
  */
 
@@ -63,19 +64,27 @@ exports.handler = async (event, context) => {
           body: JSON.stringify({ error: 'Acción no válida. Use action: "createTask"' })
         };
       }
-      const prompt = typeof body.prompt === 'string' ? body.prompt.trim() : '';
-      if (!prompt) {
-        return {
-          statusCode: 400,
-          headers: corsHeaders(),
-          body: JSON.stringify({ error: 'Falta el prompt. Indica el texto del video en Director Brief o genera uno con el botón de estrellas.' })
-        };
-      }
       const mode = body.mode === 'pro' ? 'pro' : 'std';
-      const input = {
-        mode,
-        prompt
-      };
+      const multiShots = Array.isArray(body.multi_shots) && body.multi_shots.length > 0
+        ? body.multi_shots.filter((s) => s && (typeof s.prompt === 'string' ? s.prompt.trim() : ''))
+        : [];
+
+      const input = { mode };
+
+      if (multiShots.length > 0) {
+        input.multi_shots = multiShots.map((s) => ({ prompt: typeof s.prompt === 'string' ? s.prompt.trim() : String(s.prompt || '') }));
+      } else {
+        const prompt = typeof body.prompt === 'string' ? body.prompt.trim() : '';
+        if (!prompt) {
+          return {
+            statusCode: 400,
+            headers: corsHeaders(),
+            body: JSON.stringify({ error: 'Falta el prompt. Indica el texto del video en Director Brief o genera uno con el botón de estrellas. Si usas Multi Shot, actívalo y genera prompts multi shot.' })
+          };
+        }
+        input.prompt = prompt;
+      }
+
       if (typeof body.duration === 'string' && /^[0-9]+$/.test(body.duration)) {
         input.duration = body.duration;
       }

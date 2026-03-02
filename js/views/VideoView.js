@@ -36,6 +36,8 @@ class VideoView extends BaseView {
     this.assetScope = 'product';
     this.selectedAssetId = '';
     this.storyboardScenes = [{ brief: '', duration: '5' }, { brief: '', duration: '5' }];
+    this.multiShotEnabled = false;
+    this.multiPrompts = [];
     this.brandContextCollapsed = true;
     this.promptPreviewCollapsed = true;
     this.generatedPromptPreview = null;
@@ -163,6 +165,7 @@ class VideoView extends BaseView {
                 ></textarea>
                 <div class="video-prompt-actions video-prompt-actions-row2">
                   <button type="button" class="video-prompt-toggle video-prompt-sound active" id="videoSound" title="Sound" aria-pressed="true"><i class="fas fa-volume-up"></i><span>Sound</span></button>
+                  <button type="button" class="video-prompt-toggle video-prompt-multi-shot" id="videoMultiShot" title="Multi Shot" aria-pressed="false"><i class="fas fa-film"></i><span>Multi Shot</span></button>
                   <div class="video-prompt-aspect-wrap">
                     <select id="videoAspectRatio" class="video-prompt-aspect" aria-label="Format"><option value="16:9">16:9</option><option value="9:16">9:16</option><option value="1:1">1:1</option></select>
                     <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
@@ -314,12 +317,9 @@ class VideoView extends BaseView {
         const pressed = btn.getAttribute('aria-pressed') !== 'true';
         btn.setAttribute('aria-pressed', pressed);
         btn.classList.toggle('active', pressed);
-        if (btn.id === 'videoMultiShots') {
-          const wrap = this.container.querySelector('#videoStoryboardWrap');
-          if (wrap) {
-            wrap.style.display = pressed ? 'block' : 'none';
-            if (pressed) this.renderStoryboardScenes();
-          }
+        if (btn.id === 'videoMultiShot') {
+          this.multiShotEnabled = pressed;
+          if (!pressed) this.multiPrompts = [];
         }
       });
     });
@@ -1021,6 +1021,7 @@ class VideoView extends BaseView {
 
     const payload = {
       director_brief: (this.promptInput && this.promptInput.value) ? this.promptInput.value.trim() : '',
+      multi_prompt: this.multiShotEnabled,
       kling_elements: (this.klingElements || []).map((el) => ({
         name: el.name,
         element_input_urls: el.element_input_urls || undefined,
@@ -1042,7 +1043,22 @@ class VideoView extends BaseView {
         this.showError(data.error || 'Error al generar el prompt');
         return;
       }
-      if (data.prompt && this.promptInput) {
+      if (data.multi_prompts && Array.isArray(data.multi_prompts) && data.multi_prompts.length > 0) {
+        this.multiPrompts = data.multi_prompts.map((p) => (typeof p === 'string' ? p.trim() : String(p)));
+        if (this.promptInput) {
+          this.promptInput.value = this.multiPrompts.map((p, i) => `--- Shot ${i + 1} ---\n${p}`).join('\n\n');
+        }
+        this.hideAllFeedback();
+        await this.saveSystemAIOutput({
+          provider: 'openai',
+          output_type: 'text',
+          status: 'completed',
+          prompt_used: payload.director_brief || null,
+          text_content: this.multiPrompts.join('\n\n'),
+          metadata: { source: 'openai-cine-prompt', multi_prompt: true, shots: this.multiPrompts.length }
+        });
+      } else if (data.prompt && this.promptInput) {
+        this.multiPrompts = [];
         this.promptInput.value = data.prompt;
         this.hideAllFeedback();
         await this.saveSystemAIOutput({
@@ -1061,6 +1077,16 @@ class VideoView extends BaseView {
     } finally {
       if (aiBtn) aiBtn.disabled = false;
     }
+  }
+
+  parseMultiShotsFromText(text) {
+    if (!text || typeof text !== 'string') return [];
+    const raw = text.trim();
+    const byMarker = raw.split(/\n*---\s*Shot\s*\d+\s*---\s*\n*/i).map((s) => s.trim()).filter(Boolean);
+    if (byMarker.length > 1) return byMarker;
+    const byLine = raw.split(/\n\n+/).map((s) => s.trim()).filter(Boolean);
+    if (byLine.length > 1) return byLine;
+    return raw ? [raw] : [];
   }
 
   async startGeneration() {
@@ -1084,11 +1110,24 @@ class VideoView extends BaseView {
     const payload = {
       action: 'createTask',
       mode,
-      prompt: promptText,
       duration,
       aspect_ratio,
       sound
     };
+
+    if (this.multiShotEnabled) {
+      const shots = this.multiPrompts.length > 0
+        ? this.multiPrompts
+        : this.parseMultiShotsFromText(promptText);
+      if (shots.length > 0) {
+        payload.multi_shots = shots.map((p) => ({ prompt: typeof p === 'string' ? p.trim() : String(p) }));
+      } else {
+        payload.multi_shots = [{ prompt: promptText }];
+      }
+    } else {
+      payload.prompt = promptText;
+    }
+
     if (this.klingElements.length > 0) {
       payload.kling_elements = this.klingElements.map((el) => {
         const o = { name: el.name };

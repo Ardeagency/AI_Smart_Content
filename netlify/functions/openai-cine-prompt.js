@@ -103,12 +103,19 @@ exports.handler = async (event, context) => {
   const klingElements = body.kling_elements || [];
   const brandContext = body.brand_context || {};
   const cinematography = body.cinematography || {};
+  const multiPrompt = !!body.multi_prompt;
 
   const brandText = buildBrandText(brandContext);
   const assetsText = buildAttachedAssetsText(klingElements);
   const cineText = buildCinematographyText(cinematography);
 
-  const systemContent = `Eres un experto en redactar prompts para generación de video con IA (Kling/Sora). 
+  const systemContent = multiPrompt
+    ? `Eres un experto en redactar prompts para generación de video con IA (Kling), en modo MULTI SHOT.
+Tu tarea es devolver un JSON válido con un array de 2 a 4 prompts cinematográficos, uno por shot/escena.
+Cada prompt debe ser: descriptivo, visual, en inglés, y coherente con el anterior para formar una secuencia.
+Formato de respuesta ÚNICAMENTE: ["prompt del shot 1", "prompt del shot 2", ...]
+No incluyas explicaciones, títulos ni texto fuera del JSON.`
+    : `Eres un experto en redactar prompts para generación de video con IA (Kling/Sora). 
 Tu tarea es devolver UN ÚNICO prompt cinematográfico listo para pegar en Kling.
 El prompt debe ser: descriptivo, visual, en inglés (salvo que el usuario pida otro idioma), y debe integrar de forma natural la intención del director, la estética indicada y las referencias de marca/producto.
 Responde ÚNICAMENTE con el texto del prompt, sin explicaciones, títulos ni prefijos.`;
@@ -118,7 +125,13 @@ Responde ÚNICAMENTE con el texto del prompt, sin explicaciones, títulos ni pre
   if (assetsText) userParts.push(assetsText);
   if (cineText) userParts.push(cineText);
   if (directorBrief) userParts.push('BRIEF DEL DIRECTOR (intención del usuario)\n' + directorBrief);
-  if (userParts.length === 0) userParts.push('Genera un prompt cinematográfico corto y atractivo para un video comercial genérico.');
+  if (userParts.length === 0) {
+    userParts.push(multiPrompt
+      ? 'Genera 2 o 3 prompts cinematográficos en secuencia para un video comercial (array JSON).'
+      : 'Genera un prompt cinematográfico corto y atractivo para un video comercial genérico.');
+  } else if (multiPrompt) {
+    userParts.push('Genera 2 a 4 prompts (shots) en secuencia basados en lo anterior. Responde solo con un array JSON de strings.');
+  }
 
   const userContent = userParts.join('\n\n---\n\n');
 
@@ -135,7 +148,7 @@ Responde ÚNICAMENTE con el texto del prompt, sin explicaciones, títulos ni pre
           { role: 'system', content: systemContent },
           { role: 'user', content: userContent }
         ],
-        max_tokens: 400,
+        max_tokens: multiPrompt ? 800 : 400,
         temperature: 0.6
       })
     });
@@ -150,10 +163,10 @@ Responde ÚNICAMENTE con el texto del prompt, sin explicaciones, títulos ni pre
       };
     }
 
-    const prompt = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content)
+    const raw = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content)
       ? String(data.choices[0].message.content).trim()
       : '';
-    if (!prompt) {
+    if (!raw) {
       return {
         statusCode: 500,
         headers: corsHeaders(),
@@ -161,10 +174,30 @@ Responde ÚNICAMENTE con el texto del prompt, sin explicaciones, títulos ni pre
       };
     }
 
+    if (multiPrompt) {
+      let multiPrompts = [];
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          multiPrompts = parsed.map((p) => (typeof p === 'string' ? p.trim() : String(p))).filter(Boolean);
+        }
+      } catch (_) {
+        const byLine = raw.split(/\n/).map((s) => s.replace(/^[\s\-*\d.]+\s*/, '').trim()).filter(Boolean);
+        if (byLine.length >= 2) multiPrompts = byLine;
+        else multiPrompts = [raw];
+      }
+      if (multiPrompts.length === 0) multiPrompts = [raw];
+      return {
+        statusCode: 200,
+        headers: corsHeaders(),
+        body: JSON.stringify({ prompt: multiPrompts.join('\n\n'), multi_prompts: multiPrompts })
+      };
+    }
+
     return {
       statusCode: 200,
       headers: corsHeaders(),
-      body: JSON.stringify({ prompt })
+      body: JSON.stringify({ prompt: raw })
     };
   } catch (err) {
     console.error('openai-cine-prompt error:', err);
