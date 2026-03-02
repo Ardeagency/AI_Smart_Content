@@ -1,6 +1,6 @@
 # Video API Documentation (KIE)
 
-> Generate content using the Video model
+> Generate content using the Video model (Kling 3.0).
 
 ## Overview
 
@@ -8,7 +8,40 @@ The process consists of two steps:
 1. Create a generation task
 2. Query task status and results
 
-## Authentication
+In este proyecto se usa un **proxy Netlify** (`/.netlify/functions/kie-video`) que envía las peticiones a la API de KIE usando la variable de entorno `KIE_API_KEY`.
+
+---
+
+## Proxy Netlify (uso en la app)
+
+### Endpoint
+
+- **POST** `https://aismartcontent.io/.netlify/functions/kie-video` — crear tarea
+- **GET** `https://aismartcontent.io/.netlify/functions/kie-video?taskId=xxx` — consultar estado
+
+### Body para crear tarea (POST)
+
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| action | string | Sí | Debe ser `"createTask"` |
+| mode | string | No | `"pro"` \| `"std"` (default: `pro`) |
+| prompt | string | Sí* | Director Brief (texto del video). Obligatorio si no se envía `multi_shots`. |
+| multi_shots | array | No | Array de `{ prompt: string }`. Si se envía, se usa en lugar de `prompt` único. La función siempre envía `input.multi_shots` a KIE (con un solo shot si solo hay `prompt`). |
+| duration | string | No | `"5"` \| `"10"` \| `"15"` (default: `"5"`) |
+| aspect_ratio | string | No | `"16:9"` \| `"9:16"` \| `"1:1"` |
+| sound | boolean | No | Incluir sonido |
+| kling_elements | array | No | Elementos de referencia: `{ name, element_input_urls?, element_input_video_urls?, description? }` |
+
+### Respuesta del proxy
+
+- **200**: `{ taskId: "..." }` (createTask) o objeto `recordInfo` (GET).
+- **4xx/5xx**: `{ error, code?, failCode?, failMsg? }` — si KIE devuelve error, se reenvía el status y el mensaje (`failMsg`/`failCode`).
+
+---
+
+## API KIE (directa)
+
+### Authentication
 
 All API requests require a Bearer Token in the request header:
 
@@ -22,7 +55,7 @@ Get API Key:
 
 ---
 
-## 1. Create Generation Task
+### 1. Create Generation Task
 
 ### API Information
 - **URL**: `POST https://api.kie.ai/api/v1/jobs/createTask`
@@ -46,6 +79,15 @@ Get API Key:
 
 ### input Object Parameters
 
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| mode | string | Yes | `std` \| `pro` |
+| multi_shots | array | Yes* | Array of `{ prompt: string }`. La API puede requerir que no esté vacío; en nuestro proxy siempre se envía (un shot si solo hay prompt único). |
+| duration | string | No | `"5"` \| `"10"` \| `"15"` |
+| aspect_ratio | string | No | `"16:9"` \| `"9:16"` \| `"1:1"` |
+| sound | boolean | No | Include sound |
+| kling_elements | array | No | Reference elements: `{ name, element_input_urls?, element_input_video_urls?, description? }` |
+
 #### mode
 - **Type**: `string`
 - **Required**: Yes
@@ -59,7 +101,11 @@ Get API Key:
 {
   "model": "kling-3.0/video",
   "input": {
-    "mode": "std"
+    "mode": "pro",
+    "multi_shots": [{ "prompt": "A sunny kitchen with a blender on the counter." }],
+    "duration": "5",
+    "aspect_ratio": "16:9",
+    "sound": false
   }
 }
 ```
@@ -78,7 +124,7 @@ Get API Key:
 
 ---
 
-## 2. Query Task Status
+### 2. Query Task Status
 
 ### API Information
 - **URL**: `GET https://api.kie.ai/api/v1/jobs/recordInfo`
@@ -121,14 +167,14 @@ GET https://api.kie.ai/api/v1/jobs/recordInfo?taskId=281e5b0********************
 
 ---
 
-## Usage Flow
+### Usage Flow
 
 1. **Create Task**: Call `POST createTask` to create a generation task
 2. **Get Task ID**: Extract `taskId` from the response
 3. **Wait for Results**: Poll `GET recordInfo?taskId=...` until `state` is `success` or `fail`
 4. **Get Results**: When `state` is `success`, parse `resultJson` and use `resultUrls[0]` for the video URL
 
-## Error Codes
+### Error Codes
 
 | Status Code | Description |
 |-------------|-------------|

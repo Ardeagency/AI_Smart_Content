@@ -425,6 +425,10 @@ class VideoView extends BaseView {
   closeProductionsPanel() {
     const panel = this.container.querySelector('#videoProductionsPanel');
     if (!panel) return;
+    const productionsBtn = this.container.querySelector('#videoProductionsBtn');
+    if (productionsBtn && typeof productionsBtn.focus === 'function') {
+      productionsBtn.focus();
+    }
     panel.style.display = 'none';
     panel.setAttribute('aria-hidden', 'true');
   }
