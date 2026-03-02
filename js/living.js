@@ -1548,6 +1548,16 @@ class LivingManager {
             document.body.style.overflow = '';
         };
         
+        const deleteBtn = document.getElementById('livingViewerDelete');
+        if (deleteBtn) {
+            const newDeleteBtn = deleteBtn.cloneNode(true);
+            deleteBtn.parentNode.replaceChild(newDeleteBtn, deleteBtn);
+            newDeleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.handleViewerDeleteOutput(data, closeModal);
+            });
+        }
+        
         const newCloseBtn = closeBtn.cloneNode(true);
         closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
         const newBackdrop = backdrop.cloneNode(true);
@@ -1577,6 +1587,39 @@ class LivingManager {
             }
         };
         document.addEventListener('keydown', handleEsc);
+    }
+    
+    /**
+     * Elimina el output mostrado en el modal: borra en BD, actualiza listas y cierra el modal.
+     * @param {Object} data - Objeto con item.output o item.item (runs_outputs)
+     * @param {Function} closeModal - Función para cerrar el modal
+     */
+    async handleViewerDeleteOutput(data, closeModal) {
+        const itemBlock = data?.item || {};
+        const outputId = itemBlock.output?.id ?? itemBlock.item?.id;
+        if (!outputId) {
+            if (typeof window.showToast === 'function') window.showToast('No se puede eliminar este output');
+            return;
+        }
+        if (!confirm('¿Eliminar este output por completo? Esta acción no se puede deshacer.')) {
+            return;
+        }
+        try {
+            if (this.supabase && this.isValidSupabaseClient(this.supabase)) {
+                const { error } = await this.supabase.from('runs_outputs').delete().eq('id', outputId);
+                if (error) throw error;
+            }
+            this.flowOutputs = (this.flowOutputs || []).filter(o => o.id !== outputId);
+            this.latestGeneratedContent = (this.latestGeneratedContent || []).filter(o => o.id !== outputId);
+            closeModal();
+            await this.renderHistorySection();
+            const heroGrid = document.getElementById('livingHeroGrid');
+            if (heroGrid) await this.renderHeroSection();
+            if (typeof window.showToast === 'function') window.showToast('Output eliminado');
+        } catch (err) {
+            console.error('❌ Error al eliminar output:', err);
+            if (typeof window.showToast === 'function') window.showToast('Error al eliminar: ' + (err?.message || 'Error desconocido'));
+        }
     }
     
     setupViewerSeeAllButtons(modal) {
