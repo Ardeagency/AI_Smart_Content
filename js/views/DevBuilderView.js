@@ -807,6 +807,8 @@ class DevBuilderView extends DevBaseView {
       }
       if (main) main.classList.add('builder-mode-automated');
       if (componentsSidebar) componentsSidebar.style.display = 'none';
+      const builderCanvas = this.querySelector('#builderCanvas');
+      if (builderCanvas) builderCanvas.classList.add('builder-canvas--automated');
       if (canvasEmpty) canvasEmpty.style.display = 'none';
       if (canvasAutomated) canvasAutomated.style.display = 'none';
       if (canvasFields) canvasFields.style.display = 'block';
@@ -831,6 +833,8 @@ class DevBuilderView extends DevBaseView {
 
     // Flujo manual: lista de componentes visible, canvas con input_schema
     if (main) main.classList.remove('builder-mode-automated');
+    const builderCanvas = this.querySelector('#builderCanvas');
+    if (builderCanvas) builderCanvas.classList.remove('builder-canvas--automated');
     if (componentsSidebar) componentsSidebar.style.display = '';
     if (canvasEmpty) canvasEmpty.style.display = (this.inputSchema.length === 0) ? 'flex' : 'none';
     if (canvasAutomated) canvasAutomated.style.display = 'none';

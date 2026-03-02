@@ -35,7 +35,11 @@ La primera ronda **no tocaba** por qué “todo es negro” ni el ancho. Causas 
    - **Cambio:** `.builder-main .builder-canvas` usa `background: var(--bg-card)` y borde con `--builder-input-border`. Estados drag-active/drag-over con más contraste.
 
 5. **Tab Inputs: 3 columnas y manual vs automatizado**  
-   Sigue pendiente de revisión específica (columnas componentes | canvas | propiedades; estados manual/automatizado). Las correcciones anteriores mejoran la base (canvas con superficie, variables de Builder).
+   **Aplicado (ronda 3):**  
+   - **Grid en modo automatizado:** Antes se usaban 2 columnas (`1fr 280px`) con 3 hijos en el DOM (componentes, canvas, propiedades), por lo que el tercer hijo pasaba a una segunda fila. Ahora se mantienen 3 columnas con la primera a ancho 0: `grid-template-columns: 0 1fr 280px`, de modo que el canvas y propiedades ocupan la fila correctamente.  
+   - **Media queries:** Mismo criterio en 1200px (`0 1fr 240px`), 992px (`0 1fr`) y 768px (`1fr`).  
+   - **Canvas estable:** `.builder-canvas-wrapper` con `min-width: 0` y `flex: 1 1 0` en tab Inputs para que la columna central no colapse.  
+   - **Señal visual automatizado:** La clase `.builder-canvas--automated` se añade al canvas en flujos automatizados (borde sólido y tono cian) para distinguirlo del modo manual.
 
 ---
 

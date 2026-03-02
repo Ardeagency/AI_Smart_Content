@@ -12942,9 +12942,14 @@ body.production-filters-in-header .living-container > .living-history-section {
   grid-template-columns: 260px 1fr 280px;
 }
 
-/* Modo Sistema: flujo automatizado (sin componentes ni webhook) */
+/* Modo automatizado: misma estructura de 3 columnas pero columna componentes a 0 (no se elimina del DOM) */
 .builder-main.builder-mode-automated.builder-tab-inputs-active {
-  grid-template-columns: 1fr 280px;
+  grid-template-columns: 0 1fr 280px;
+}
+
+.builder-main.builder-mode-automated.builder-tab-inputs-active .builder-sidebar.builder-components {
+  min-width: 0;
+  overflow: hidden;
 }
 
 .builder-sidebar.builder-sidebar-hidden {
@@ -13420,13 +13425,18 @@ body.production-filters-in-header .living-container > .living-history-section {
   .builder-main.builder-tab-inputs-active {
     grid-template-columns: 220px 1fr 240px;
   }
+  .builder-main.builder-mode-automated.builder-tab-inputs-active {
+    grid-template-columns: 0 1fr 240px;
+  }
 }
 
 @media (max-width: 992px) {
   .builder-main.builder-tab-inputs-active {
     grid-template-columns: 200px 1fr;
   }
-  
+  .builder-main.builder-mode-automated.builder-tab-inputs-active {
+    grid-template-columns: 0 1fr;
+  }
   .builder-properties {
     display: none;
   }
@@ -13437,7 +13447,9 @@ body.production-filters-in-header .living-container > .living-history-section {
     grid-template-columns: 1fr;
     margin-left: 0;
   }
-  
+  .builder-main.builder-mode-automated.builder-tab-inputs-active {
+    grid-template-columns: 1fr;
+  }
   .builder-components {
     display: none;
   }
@@ -13662,13 +13674,18 @@ body.production-filters-in-header .living-container > .living-history-section {
   text-overflow: ellipsis;
 }
 
-/* Canvas Wrapper: scroll propio del panel central */
+/* Canvas Wrapper: scroll propio del panel central; ancho estable en tab Inputs */
 .builder-canvas-wrapper {
   display: flex;
   flex-direction: column;
   background: var(--bg-primary);
   min-height: 0;
+  min-width: 0;
   overflow-y: auto;
+}
+
+.builder-main.builder-tab-inputs-active .builder-canvas-wrapper {
+  flex: 1 1 0;
 }
 
 /* Tabs del Builder — Design system: glass, radius, hover/active */
@@ -13735,6 +13752,13 @@ body.production-filters-in-header .living-container > .living-history-section {
   background: var(--bg-card);
   border-color: var(--builder-input-border, var(--border-color));
 }
+
+/* Canvas en modo automatizado: señal visual (programación, no inputs de usuario) */
+.builder-canvas.builder-canvas--automated {
+  border-style: solid;
+  border-color: rgba(0, 231, 255, 0.25);
+}
+
 
 .builder-canvas.drag-active {
   border-color: var(--dev-primary);
