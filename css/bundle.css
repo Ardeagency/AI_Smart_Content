@@ -8899,7 +8899,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  padding: 2rem 2rem 1rem;
+  padding: 0;
 }
 
 .studio-canvas-empty {
