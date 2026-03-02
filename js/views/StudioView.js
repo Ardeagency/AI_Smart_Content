@@ -436,6 +436,9 @@ class StudioView extends BaseView {
     const weekdayCheckboxes = weekdays.map(d => (
       '<label class="studio-weekday-check"><input type="checkbox" data-schedule-key="schedule_dow" data-dow="' + d.value + '"><span>' + this.escapeHtml(d.label) + '</span></label>'
     )).join('');
+    const weekdayCheckboxesCustom = weekdays.map(d => (
+      '<label class="studio-weekday-check"><input type="checkbox" data-schedule-key="schedule_custom_dow" data-dow="' + d.value + '"><span>' + this.escapeHtml(d.label) + '</span></label>'
+    )).join('');
     return (
       '<div class="studio-programacion-widget" id="' + prefix + '-widget">' +
       '<select class="modern-input input-dropdown-select" id="' + prefix + '-type" data-schedule-key="schedule_type" aria-label="Tipo de programación">' +
@@ -460,10 +463,21 @@ class StudioView extends BaseView {
       stepper('schedule_week_hour', 0, 23, 1, 9, 'A la hora', '') +
       stepper('schedule_week_minute', 0, 59, 1, 0, 'En el minuto', '') +
       '</div>' +
-      '<div class="schedule-panel" data-panel="personalizado" style="display:none">' +
-      '<div class="studio-programacion-row">' +
-      '<label class="studio-programacion-label">Expresión cron</label>' +
-      '<input type="text" class="modern-input" data-schedule-key="schedule_cron_custom" placeholder="0 9 * * *" value="" pattern="[0-9*,\\-/ ]+">' +
+      '<div class="schedule-panel schedule-panel--personalizado" data-panel="personalizado" style="display:none">' +
+      '<div class="studio-programacion-section"><span class="studio-programacion-section-title">Por horas</span>' +
+      stepper('schedule_custom_hours_interval', 1, 24, 1, 1, 'Cada', 'horas') +
+      stepper('schedule_custom_minutes_at', 0, 59, 1, 0, 'En el minuto', '') +
+      '</div>' +
+      '<div class="studio-programacion-section"><span class="studio-programacion-section-title">Por día</span>' +
+      stepper('schedule_custom_days_interval', 1, 31, 1, 1, 'Cada', 'días') +
+      stepper('schedule_custom_hour_at', 0, 23, 1, 6, 'A la hora', '') +
+      stepper('schedule_custom_minute_at', 0, 59, 1, 6, 'En el minuto', '') +
+      '</div>' +
+      '<div class="studio-programacion-section"><span class="studio-programacion-section-title">Por semana</span>' +
+      stepper('schedule_custom_weeks_interval', 1, 4, 1, 1, 'Cada', 'semanas') +
+      '<div class="studio-programacion-row"><span class="studio-programacion-label">Días de la semana</span><div class="studio-weekdays">' + weekdayCheckboxesCustom + '</div></div>' +
+      stepper('schedule_custom_week_hour', 0, 23, 1, 9, 'A la hora', '') +
+      stepper('schedule_custom_week_minute', 0, 59, 1, 0, 'En el minuto', '') +
       '</div></div></div>'
     );
   }
@@ -503,8 +517,22 @@ class StudioView extends BaseView {
     const buildCron = () => {
       const type = typeSelect.value || 'por_horas';
       if (type === 'personalizado') {
-        const custom = getVal('schedule_cron_custom');
-        return (custom && /^[\d*,\-\/ ]+$/.test(custom)) ? custom : '0 9 * * *';
+        const customChecked = widgetEl.querySelectorAll('[data-schedule-key="schedule_custom_dow"]:checked');
+        const customDow = Array.from(customChecked).map(c => c.getAttribute('data-dow')).filter(Boolean);
+        const customDays = getVal('schedule_custom_days_interval');
+        if (customDow.length > 0) {
+          const h = getVal('schedule_custom_week_hour') != null ? getVal('schedule_custom_week_hour') : 9;
+          const m = getVal('schedule_custom_week_minute') != null ? getVal('schedule_custom_week_minute') : 0;
+          return m + ' ' + h + ' * * ' + customDow.join(',');
+        }
+        if (customDays != null && customDays >= 1) {
+          const h = getVal('schedule_custom_hour_at') != null ? getVal('schedule_custom_hour_at') : 6;
+          const m = getVal('schedule_custom_minute_at') != null ? getVal('schedule_custom_minute_at') : 6;
+          return m + ' ' + h + ' */' + customDays + ' * *';
+        }
+        const h = getVal('schedule_custom_hours_interval') || 1;
+        const m = getVal('schedule_custom_minutes_at') != null ? getVal('schedule_custom_minutes_at') : 0;
+        return m + ' */' + h + ' * * *';
       }
       if (type === 'por_horas') {
         const h = getVal('schedule_hours_interval') || 1;
@@ -538,11 +566,6 @@ class StudioView extends BaseView {
       panels.forEach(p => {
         p.style.display = p.dataset.panel === type ? '' : 'none';
       });
-      if (type === 'personalizado') {
-        const custom = hiddenCron.value;
-        const customInput = widgetEl.querySelector('[data-schedule-key="schedule_cron_custom"]');
-        if (customInput && custom && /^[\d*,\-\/ ]+$/.test(custom)) customInput.value = custom;
-      }
       updateCron();
     });
 
@@ -573,8 +596,9 @@ class StudioView extends BaseView {
     widgetEl.querySelectorAll('[data-schedule-key="schedule_dow"]').forEach(cb => {
       cb.addEventListener('change', updateCron);
     });
-    const customInput = widgetEl.querySelector('[data-schedule-key="schedule_cron_custom"]');
-    if (customInput) customInput.addEventListener('input', updateCron);
+    widgetEl.querySelectorAll('[data-schedule-key="schedule_custom_dow"]').forEach(cb => {
+      cb.addEventListener('change', updateCron);
+    });
 
     updateCron();
   }

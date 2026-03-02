@@ -9013,6 +9013,23 @@ body.production-filters-in-header .living-container > .living-history-section {
   margin: 0;
 }
 
+.studio-programacion-section {
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid var(--border-color);
+}
+.studio-programacion-section:last-child {
+  border-bottom: none;
+}
+.studio-programacion-section-title {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin-bottom: 0.35rem;
+}
+
 /* ========== Footer (créditos + Producir) ========== */
 .studio-footer {
   display: flex;
