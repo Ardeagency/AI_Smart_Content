@@ -109,7 +109,6 @@ class VideoView extends BaseView {
             <div class="video-productions-carousel-wrap">
               <div class="video-productions-carousel" id="videoProductionsCarousel"></div>
             </div>
-            <p class="video-productions-panel-hint" id="videoProductionsPanelHint">Selecciona una o más producciones</p>
           </div>
         </div>
 
@@ -489,43 +488,31 @@ class VideoView extends BaseView {
     carousel.innerHTML = this.videoProductions.map((p) => {
       const id = p.id;
       const selected = this.selectedProductionIds.has(id);
-      const dateStr = p.created_at ? new Date(p.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '';
       const mediaUrl = (p.media_url || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
       const isImg = p.isImage && !p.isVideo;
       const thumbContent = isImg
         ? `<img class="video-production-thumb video-production-thumb-img" src="${mediaUrl}" alt="" loading="lazy" decoding="async">`
         : `<video class="video-production-thumb" src="${mediaUrl}" preload="metadata" muted playsinline crossorigin="anonymous"></video>`;
       return `
-        <div class="video-production-item" data-id="${id}" role="button" tabindex="0">
-          <input type="checkbox" class="video-production-check" id="prod-${id}" ${selected ? 'checked' : ''} aria-label="Seleccionar producción">
+        <div class="video-production-item ${selected ? 'is-selected' : ''}" data-id="${id}" role="button" tabindex="0" aria-pressed="${selected}" aria-label="Seleccionar producción">
           <div class="video-production-thumb-wrap">
             ${thumbContent}
           </div>
-          <span class="video-production-date">${dateStr}</span>
         </div>
       `;
     }).join('');
     carousel.querySelectorAll('.video-production-item').forEach((el) => {
-      el.addEventListener('click', (e) => {
-        if (e.target.classList.contains('video-production-check')) return;
+      el.addEventListener('click', () => {
         const id = el.dataset.id;
-        const check = el.querySelector('.video-production-check');
         if (this.selectedProductionIds.has(id)) {
           this.selectedProductionIds.delete(id);
-          if (check) check.checked = false;
+          el.classList.remove('is-selected');
+          el.setAttribute('aria-pressed', 'false');
         } else {
           this.selectedProductionIds.add(id);
-          if (check) check.checked = true;
+          el.classList.add('is-selected');
+          el.setAttribute('aria-pressed', 'true');
         }
-      });
-    });
-    carousel.querySelectorAll('.video-production-check').forEach((check) => {
-      check.addEventListener('change', (e) => {
-        const item = e.target.closest('.video-production-item');
-        const id = item?.dataset?.id;
-        if (!id) return;
-        if (e.target.checked) this.selectedProductionIds.add(id);
-        else this.selectedProductionIds.delete(id);
       });
     });
   }
