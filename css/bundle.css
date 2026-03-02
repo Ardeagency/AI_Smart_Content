@@ -8917,7 +8917,8 @@ body.production-filters-in-header .living-container > .living-history-section {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  overflow-y: auto;
+  min-height: 0;
+  overflow: hidden;
   padding: var(--spacing-lg);
   gap: var(--spacing-lg);
 }
@@ -8926,13 +8927,17 @@ body.production-filters-in-header .living-container > .living-history-section {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xl);
+  flex: 1;
+  min-height: 0;
 }
 
 .studio-automation-shell {
   display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(260px, 260px);
-  gap: var(--spacing-xl);
-  align-items: flex-start;
+  grid-template-columns: 1fr 260px;
+  gap: 0;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
 }
 
 @media (max-width: 1024px) {
@@ -8945,6 +8950,9 @@ body.production-filters-in-header .living-container > .living-history-section {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: var(--spacing-md);
 }
 
 .studio-back-flows--automated {
@@ -9041,10 +9049,18 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 
 .studio-schedule-card-icon {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: rgba(59, 130, 246, 0.95);
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.studio-schedule-card-icon i {
+  font-size: 18px;
+  color: #e2e8f0;
 }
 
 .studio-schedule-card-title {
@@ -9094,10 +9110,10 @@ body.production-filters-in-header .living-container > .living-history-section {
   width: 28px;
   height: 22px;
   padding: 0;
-  border: 1px solid var(--glass-border);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #e2e8f0;
+  background: var(--brand-gradient-dynamic, var(--brand-gradient));
+  color: #fff;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -9128,7 +9144,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   height: 0;
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
-  border-bottom: 6px solid currentColor;
+  border-bottom: 6px solid #fff;
 }
 .studio-schedule-card .input-stepper-btn[data-dir="down"]::before {
   content: "";
@@ -9136,7 +9152,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   height: 0;
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
-  border-top: 6px solid currentColor;
+  border-top: 6px solid #fff;
 }
 
 .studio-schedule-card .input-stepper-unit {
@@ -9192,12 +9208,14 @@ body.production-filters-in-header .living-container > .living-history-section {
 /* Ocultar controles nativos del number (evitar “botones blancos” duplicados) */
 .studio-programacion-row .input-stepper-input,
 .studio-schedule-card .input-stepper-input {
+  appearance: textfield;
   -moz-appearance: textfield;
 }
 .studio-programacion-row .input-stepper-input::-webkit-outer-spin-button,
 .studio-programacion-row .input-stepper-input::-webkit-inner-spin-button,
 .studio-schedule-card .input-stepper-input::-webkit-outer-spin-button,
 .studio-schedule-card .input-stepper-input::-webkit-inner-spin-button {
+  appearance: none;
   -webkit-appearance: none;
   margin: 0;
 }
@@ -9223,10 +9241,10 @@ body.production-filters-in-header .living-container > .living-history-section {
   width: 26px;
   height: 22px;
   padding: 0;
-  border: 1px solid var(--glass-border);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #e2e8f0;
+  background: var(--brand-gradient-dynamic, var(--brand-gradient));
+  color: #fff;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -9259,7 +9277,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   height: 0;
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
-  border-bottom: 6px solid currentColor;
+  border-bottom: 6px solid #fff;
 }
 .studio-programacion-row .input-stepper-btn[data-dir="down"]::before {
   content: "";
@@ -9267,11 +9285,13 @@ body.production-filters-in-header .living-container > .living-history-section {
   height: 0;
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
-  border-top: 6px solid currentColor;
+  border-top: 6px solid #fff;
 }
 
 .studio-automation-summary {
-  position: relative;
+  position: sticky;
+  top: 0;
+  align-self: start;
   width: 233px;
   max-width: 100%;
   border-radius: var(--glass-radius);

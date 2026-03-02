@@ -720,21 +720,21 @@ class StudioView extends BaseView {
     grid.className = 'studio-schedule-grid';
     formEl.appendChild(grid);
 
-    const makeCard = (title, iconClass, modifier) => {
+    const makeCard = (title, modifier) => {
       const section = document.createElement('section');
       section.className = 'studio-schedule-card' + (modifier ? ' ' + modifier : '');
       section.innerHTML =
         '<header class="studio-schedule-card-header">' +
-        '<div class="studio-schedule-card-icon ' + this.escapeHtml(iconClass || '') + '"></div>' +
+        '<div class="studio-schedule-card-icon"><i class="ph ph-list-checks"></i></div>' +
         '<h3 class="studio-schedule-card-title">' + this.escapeHtml(title) + '</h3>' +
         '</header>' +
         '<div class="studio-schedule-card-body"></div>';
       return section;
     };
 
-    const freqCard = makeCard('Frecuencia', 'studio-schedule-card-icon--clock', 'studio-schedule-card--frequency');
-    const ctxCard = makeCard('Contexto de producción', 'studio-schedule-card-icon--context', 'studio-schedule-card--context');
-    const specsCard = makeCard('Especificaciones', 'studio-schedule-card-icon--specs', 'studio-schedule-card--specs');
+    const freqCard = makeCard('Frecuencia', 'studio-schedule-card--frequency');
+    const ctxCard = makeCard('Contexto de producción', 'studio-schedule-card--context');
+    const specsCard = makeCard('Especificaciones', 'studio-schedule-card--specs');
 
     const freqBody = freqCard.querySelector('.studio-schedule-card-body');
     const ctxBody = ctxCard.querySelector('.studio-schedule-card-body');
