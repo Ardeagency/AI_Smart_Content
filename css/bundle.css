@@ -10243,6 +10243,80 @@ body.production-filters-in-header .living-container > .living-history-section {
   background: var(--icon-button);
 }
 
+/* Acciones esquina superior derecha: like, run, save */
+.flow-card-actions-top {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  z-index: 3;
+  pointer-events: none;
+}
+.flow-card-actions-top .flow-card-action-btn,
+.flow-card-actions-top .flow-card-action-run {
+  pointer-events: auto;
+}
+.flow-card-action-btn,
+.flow-card-action-run {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.4rem;
+  font-size: 0.7rem;
+  color: var(--color-white);
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+.flow-card-action-run {
+  cursor: default;
+  border-color: transparent;
+}
+.flow-card-action-btn {
+  cursor: pointer;
+  transition: var(--transition);
+}
+.flow-card-action-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+.flow-card-action-btn.is-active,
+.flow-card-action-like.is-active {
+  color: #ff6b9d;
+  border-color: rgba(255, 107, 157, 0.5);
+}
+.flow-card-action-save.is-active {
+  color: var(--accent-yellow);
+  border-color: rgba(255, 229, 0, 0.5);
+}
+.flow-card-action-count {
+  font-weight: 600;
+  opacity: 0.95;
+}
+
+/* Footer: coste (créditos) + meta */
+.flow-card-footer {
+  padding: 0.6rem 0.75rem;
+  background: var(--bg-hover);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+.flow-card-cost {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+  margin-bottom: 0.25rem;
+}
+.flow-card-meta {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
 /* Overlay por defecto: solo nombre (minimalista tipo referencia) */
 .flow-card-overlay--default {
   position: absolute;

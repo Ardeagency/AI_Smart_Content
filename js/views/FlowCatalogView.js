@@ -279,7 +279,7 @@ class FlowCatalogView extends BaseView {
       const baseFilter = () => {
         let q = this.supabase
           .from('content_flows')
-          .select('id, name, description, token_cost, output_type, flow_image_url, category_id, subcategory_id, flow_category_type, likes_count, saves_count, run_count, created_at, status')
+          .select('id, name, description, token_cost, output_type, flow_image_url, category_id, subcategory_id, flow_category_type, likes_count, saves_count, run_count, created_at, status, execution_mode, version')
           .eq('is_active', true);
         if (this.selectedSubcategoryId) q = q.eq('subcategory_id', this.selectedSubcategoryId);
         else if (this.selectedCategoryId) q = q.eq('category_id', this.selectedCategoryId);
@@ -308,8 +308,7 @@ class FlowCatalogView extends BaseView {
       const { data, error } = await this.supabase
         .from('user_flow_favorites')
         .select('flow_id, rating, is_favorite, last_used_at')
-        .eq('user_id', this.userId)
-        .eq('is_favorite', true);
+        .eq('user_id', this.userId);
       if (!error && data) this.favorites = data;
     } catch (e) {
       console.error('FlowCatalog loadFavorites:', e);
@@ -376,6 +375,7 @@ class FlowCatalogView extends BaseView {
 
   getSavedFlows() {
     return this.favorites
+      .filter(fav => fav.is_favorite)
       .map(fav => this.flowsById.get(fav.flow_id))
       .filter(Boolean);
   }
@@ -570,6 +570,20 @@ class FlowCatalogView extends BaseView {
     return labels[t] || t;
   }
 
+  getExecutionModeLabel(mode) {
+    const m = (mode || 'single_step').toLowerCase();
+    const labels = { single_step: 'Un paso', multi_step: 'Multi paso', sequential: 'Secuencial' };
+    return labels[m] || m;
+  }
+
+  isFlowLikedByUser(flowId) {
+    return this.favorites.some(f => f.flow_id === flowId && f.rating != null && f.rating >= 4);
+  }
+
+  isFlowSavedByUser(flowId) {
+    return this.favorites.some(f => f.flow_id === flowId && f.is_favorite);
+  }
+
   escapeHtml(text) {
     if (text == null) return '';
     const div = document.createElement('div');
@@ -583,6 +597,8 @@ class FlowCatalogView extends BaseView {
     const likes = flow.likes_count || 0;
     const saves = flow.saves_count || 0;
     const runs = flow.run_count || 0;
+    const isLiked = this.isFlowLikedByUser(flow.id);
+    const isSaved = this.isFlowSavedByUser(flow.id);
     const badges = [];
     if (this.isNew(flow)) badges.push('<span class="flow-card-badge flow-card-badge--new">Nuevo</span>');
     if (this.isTrending(flow)) badges.push('<span class="flow-card-badge flow-card-badge--trending">Trending</span>');
@@ -594,27 +610,37 @@ class FlowCatalogView extends BaseView {
     if (flow._categoryName) subcategoryLabels.push(this.escapeHtml(flow._categoryName));
     if (flow._subcategoryName) subcategoryLabels.push(this.escapeHtml(flow._subcategoryName));
     const outputTypeLabel = this.getOutputTypeLabel(flow.output_type);
+    const executionModeLabel = this.getExecutionModeLabel(flow.execution_mode);
+    const version = (flow.version || '1.0.0').toString();
     const tagsHtml = subcategoryLabels.map(t => `<span class="flow-card-tag">${t}</span>`).join('');
+    const categoryName = flow._categoryName ? this.escapeHtml(flow._categoryName) : '';
+    const subcategoryName = flow._subcategoryName ? this.escapeHtml(flow._subcategoryName) : '';
+    const metaParts = [categoryName, subcategoryName, outputTypeLabel, executionModeLabel, version].filter(Boolean);
+    const metaHtml = metaParts.length ? `<div class="flow-card-meta">${metaParts.join(' · ')}</div>` : '';
     return `
       <article class="flow-card flow-card--catalog" data-flow-id="${flow.id}" role="button" tabindex="0">
         <div class="flow-card-media">
           ${img}
           <div class="flow-card-media-veil" aria-hidden="true"></div>
           <div class="flow-card-badges">${badges.join('')}</div>
+          <div class="flow-card-actions-top" aria-label="Acciones del flujo">
+            <button type="button" class="flow-card-action-btn flow-card-action-like ${isLiked ? 'is-active' : ''}" data-flow-id="${flow.id}" data-action="like" title="Me gusta"><i class="fas fa-heart"></i><span class="flow-card-action-count">${likes}</span></button>
+            <span class="flow-card-action-run" title="Ejecuciones"><i class="fas fa-play"></i><span class="flow-card-action-count">${runs}</span></span>
+            <button type="button" class="flow-card-action-btn flow-card-action-save ${isSaved ? 'is-active' : ''}" data-flow-id="${flow.id}" data-action="save" title="Guardar"><i class="fas fa-bookmark"></i><span class="flow-card-action-count">${saves}</span></button>
+          </div>
           <div class="flow-card-overlay flow-card-overlay--default">
             <h3 class="flow-card-title">${name}</h3>
           </div>
           <div class="flow-card-overlay flow-card-overlay--hover">
             <div class="flow-card-hover-content">
               ${tagsHtml ? `<div class="flow-card-tags">${tagsHtml}</div>` : ''}
-              <div class="flow-card-metrics">
-                <span class="flow-card-metric" title="Likes"><i class="fas fa-heart"></i> ${likes}</span>
-                <span class="flow-card-metric" title="Ejecuciones"><i class="fas fa-play"></i> ${runs}</span>
-                <span class="flow-card-metric" title="Guardados"><i class="fas fa-bookmark"></i> ${saves}</span>
-              </div>
               <span class="flow-card-output-type"><i class="fas ${this.getOutputTypeIcon(flow.output_type)}"></i> ${outputTypeLabel}</span>
             </div>
           </div>
+        </div>
+        <div class="flow-card-footer">
+          <div class="flow-card-cost">${cost}</div>
+          ${metaHtml}
         </div>
       </article>
     `;
@@ -764,12 +790,7 @@ class FlowCatalogView extends BaseView {
     }
     el.closest('.flow-catalog-row-section').style.display = '';
     el.innerHTML = flows.map(f => this.renderFlowCard(f)).join('');
-    el.querySelectorAll('.flow-card').forEach(card => {
-      card.addEventListener('click', () => this.openFlow(card.getAttribute('data-flow-id')));
-      card.addEventListener('keydown', e => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
-      });
-    });
+    this.bindFlowCardActions(el);
   }
 
   /** Continuar donde lo dejaste: solo runs recientes del usuario; sección oculta si no hay runs. */
@@ -828,9 +849,7 @@ class FlowCatalogView extends BaseView {
         `).join('')}
       </div>
     `).join('');
-    gallery.querySelectorAll('.flow-card').forEach(card => {
-      card.addEventListener('click', () => this.openFlow(card.getAttribute('data-flow-id')));
-    });
+    this.bindFlowCardActions(gallery);
   }
 
   renderGalleryBySubcategoryHome() {
@@ -849,9 +868,7 @@ class FlowCatalogView extends BaseView {
         <div class="flow-catalog-row-scroll">${flows.map(f => this.renderFlowCard(f)).join('')}</div>
       </section>
     `).join('');
-    gallery.querySelectorAll('.flow-card').forEach(card => {
-      card.addEventListener('click', () => this.openFlow(card.getAttribute('data-flow-id')));
-    });
+    this.bindFlowCardActions(gallery);
   }
 
   renderRecentInCategory() {
@@ -875,9 +892,7 @@ class FlowCatalogView extends BaseView {
         <div class="flow-catalog-row-scroll">${flows.map(f => this.renderFlowCard(f)).join('')}</div>
       </section>
     `).join('');
-    gallery.querySelectorAll('.flow-card').forEach(card => {
-      card.addEventListener('click', () => this.openFlow(card.getAttribute('data-flow-id')));
-    });
+    this.bindFlowCardActions(gallery);
     gallery.querySelectorAll('.flow-catalog-sub-row').forEach(row => {
       const subId = row.querySelector('.flow-card')?.closest('.flow-catalog-sub-row')?.dataset?.subcategoryId;
       if (subId) row.dataset.subcategoryId = subId;
@@ -922,6 +937,96 @@ class FlowCatalogView extends BaseView {
     if (window.appState) window.appState.set('selectedFlowId', flowId, true);
     else localStorage.setItem('selectedFlowId', flowId);
     if (window.router) window.router.navigate(this.getStudioPath());
+  }
+
+  /**
+   * Enlaza click en card y botones like/save dentro de un contenedor.
+   */
+  bindFlowCardActions(container) {
+    if (!container) return;
+    container.querySelectorAll('.flow-card').forEach(card => {
+      const flowId = card.getAttribute('data-flow-id');
+      if (!flowId) return;
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.flow-card-action-btn')) return;
+        this.openFlow(flowId);
+      });
+      card.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (!e.target.closest('.flow-card-action-btn')) this.openFlow(flowId);
+        }
+      });
+    });
+    container.querySelectorAll('.flow-card-action-like, .flow-card-action-save').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const flowId = btn.getAttribute('data-flow-id');
+        const action = btn.getAttribute('data-action');
+        if (!flowId || !action) return;
+        if (action === 'like') this.toggleLike(flowId, btn);
+        if (action === 'save') this.toggleSave(flowId, btn);
+      });
+    });
+  }
+
+  async toggleLike(flowId, btnEl) {
+    if (!this.supabase || !this.userId) return;
+    const flow = this.flowsById.get(flowId);
+    const isLiked = this.isFlowLikedByUser(flowId);
+    const newLiked = !isLiked;
+    try {
+      const { data: existing } = await this.supabase.from('user_flow_favorites').select('id, is_favorite').eq('user_id', this.userId).eq('flow_id', flowId).maybeSingle();
+      if (existing) {
+        await this.supabase.from('user_flow_favorites').update({ rating: newLiked ? 5 : null }).eq('id', existing.id);
+      } else if (newLiked) {
+        await this.supabase.from('user_flow_favorites').insert({ user_id: this.userId, flow_id: flowId, is_favorite: false, rating: 5 });
+      }
+      let fav = this.favorites.find(f => f.flow_id === flowId);
+      if (fav) fav.rating = newLiked ? 5 : null;
+      else if (newLiked) this.favorites.push({ flow_id: flowId, rating: 5, is_favorite: false });
+      if (flow) {
+        flow.likes_count = (flow.likes_count || 0) + (newLiked ? 1 : -1);
+        if (flow.likes_count < 0) flow.likes_count = 0;
+      }
+      if (btnEl) {
+        btnEl.classList.toggle('is-active', newLiked);
+        const countEl = btnEl.querySelector('.flow-card-action-count');
+        if (countEl) countEl.textContent = flow ? (flow.likes_count || 0) : (parseInt(countEl.textContent, 10) + (newLiked ? 1 : -1));
+      }
+    } catch (e) {
+      console.error('toggleLike:', e);
+    }
+  }
+
+  async toggleSave(flowId, btnEl) {
+    if (!this.supabase || !this.userId) return;
+    const flow = this.flowsById.get(flowId);
+    const isSaved = this.isFlowSavedByUser(flowId);
+    const newSaved = !isSaved;
+    try {
+      const { data: existing } = await this.supabase.from('user_flow_favorites').select('id, rating').eq('user_id', this.userId).eq('flow_id', flowId).maybeSingle();
+      if (existing) {
+        await this.supabase.from('user_flow_favorites').update({ is_favorite: newSaved }).eq('id', existing.id);
+      } else if (newSaved) {
+        await this.supabase.from('user_flow_favorites').insert({ user_id: this.userId, flow_id: flowId, is_favorite: true });
+      }
+      let fav = this.favorites.find(f => f.flow_id === flowId);
+      if (fav) fav.is_favorite = newSaved;
+      else if (newSaved) this.favorites.push({ flow_id: flowId, is_favorite: true, rating: null });
+      if (flow) {
+        flow.saves_count = (flow.saves_count || 0) + (newSaved ? 1 : -1);
+        if (flow.saves_count < 0) flow.saves_count = 0;
+      }
+      if (btnEl) {
+        btnEl.classList.toggle('is-active', newSaved);
+        const countEl = btnEl.querySelector('.flow-card-action-count');
+        if (countEl) countEl.textContent = flow ? (flow.saves_count || 0) : (parseInt(countEl.textContent, 10) + (newSaved ? 1 : -1));
+      }
+    } catch (e) {
+      console.error('toggleSave:', e);
+    }
   }
 }
 
