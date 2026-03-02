@@ -8889,8 +8889,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   right: 0;
   bottom: 0;
   display: flex;
-  background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.99)),
-    var(--living-bg-deep, var(--bg-primary));
+  background: #000000;
   overflow: hidden;
 }
 
@@ -9022,6 +9021,50 @@ body.production-filters-in-header .living-container > .living-history-section {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
+}
+
+.studio-schedule-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.studio-schedule-card {
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  padding: 24px;
+}
+
+.studio-schedule-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.studio-schedule-card-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.95);
+}
+
+.studio-schedule-card-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.studio-schedule-card--frequency .studio-programacion-slot {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px dashed rgba(148, 163, 184, 0.7);
+  background: rgba(15, 23, 42, 0.85);
 }
 
 .studio-schedule-form .studio-field {

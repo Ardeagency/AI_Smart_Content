@@ -455,6 +455,7 @@ class StudioView extends BaseView {
       if (Registry.initFormPickers) Registry.initFormPickers(formEl);
       this._applyScheduleProgramacionWidget(formEl);
       this._applyScheduleFormEntityByType(formEl);
+      this._decorateScheduleFormGrid(formEl);
     } else {
       formEl.innerHTML = fields.map(f => this.renderFormField(f)).join('');
     }
@@ -704,6 +705,74 @@ class StudioView extends BaseView {
     update();
     controlSlot.replaceWith(container);
     tipoSelect.addEventListener('change', update);
+  }
+
+  /**
+   * Reorganiza los campos del formulario de programación en un grid de 3 tarjetas:
+   * Frecuencia, Contexto de producción y Especificaciones.
+   */
+  _decorateScheduleFormGrid(formEl) {
+    if (!formEl || formEl.dataset.studioScheduleGrid === '1') return;
+    formEl.dataset.studioScheduleGrid = '1';
+
+    const existingFields = Array.from(formEl.querySelectorAll('.studio-field'));
+    if (existingFields.length === 0) return;
+
+    const grid = document.createElement('div');
+    grid.className = 'studio-schedule-grid';
+    formEl.appendChild(grid);
+
+    const makeCard = (title, iconClass, modifier) => {
+      const section = document.createElement('section');
+      section.className = 'studio-schedule-card' + (modifier ? ' ' + modifier : '');
+      section.innerHTML =
+        '<header class="studio-schedule-card-header">' +
+        '<div class="studio-schedule-card-icon ' + this.escapeHtml(iconClass || '') + '"></div>' +
+        '<h3 class="studio-schedule-card-title">' + this.escapeHtml(title) + '</h3>' +
+        '</header>' +
+        '<div class="studio-schedule-card-body"></div>';
+      return section;
+    };
+
+    const freqCard = makeCard('Frecuencia', 'studio-schedule-card-icon--clock', 'studio-schedule-card--frequency');
+    const ctxCard = makeCard('Contexto de producción', 'studio-schedule-card-icon--context', 'studio-schedule-card--context');
+    const specsCard = makeCard('Especificaciones', 'studio-schedule-card-icon--specs', 'studio-schedule-card--specs');
+
+    const freqBody = freqCard.querySelector('.studio-schedule-card-body');
+    const ctxBody = ctxCard.querySelector('.studio-schedule-card-body');
+    const specsBody = specsCard.querySelector('.studio-schedule-card-body');
+
+    grid.appendChild(freqCard);
+    grid.appendChild(ctxCard);
+    grid.appendChild(specsCard);
+
+    const moveFieldByKey = (key, target) => {
+      if (!key || !target) return;
+      const field = formEl.querySelector('.studio-field[data-key="' + key + '"]');
+      if (field) target.appendChild(field);
+    };
+
+    // Frecuencia: cron + volumen + formato
+    moveFieldByKey('cron_expression', freqBody);
+    moveFieldByKey('production_count', freqBody);
+    moveFieldByKey('aspect_ratio', freqBody);
+
+    // Contexto de producción
+    moveFieldByKey('tipo_entidad', ctxBody);
+    moveFieldByKey('entity_id', ctxBody);
+    moveFieldByKey('campaign_id', ctxBody);
+    moveFieldByKey('audience_id', ctxBody);
+
+    // Especificaciones: primer textarea que quede disponible
+    let specsField = formEl.querySelector('.studio-field textarea');
+    if (specsField) {
+      specsField = specsField.closest('.studio-field');
+      if (specsField) specsBody.appendChild(specsField);
+    }
+
+    // Mover cualquier campo que haya quedado suelto al contexto, para no perder nada.
+    const remaining = Array.from(formEl.querySelectorAll('.studio-field')).filter(el => !grid.contains(el));
+    remaining.forEach(el => ctxBody.appendChild(el));
   }
 
   renderFlowForm(flow) {
