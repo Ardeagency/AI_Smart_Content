@@ -146,7 +146,7 @@ class App {
     r.register('/living', livingLoader, auth);
 
     // ── Org: Tasks (registrar pronto para que /org/.../tasks coincida con prioridad) ──
-    const tasksLoader = this._lazy('TasksView', ['/js/views/TasksView.js']);
+    const tasksLoader = this._lazy('TasksView', ['/js/views/TasksView.js?v=3']);
     r.register('/org/:orgIdShort/:orgNameSlug/tasks', tasksLoader, auth);
     r.register('/org/:orgIdShort/:orgNameSlug/tasks/:taskId', tasksLoader, auth);
     r.register('/tasks', tasksLoader, auth);

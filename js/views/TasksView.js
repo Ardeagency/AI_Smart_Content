@@ -1,7 +1,11 @@
 /**
  * TasksView - Vista de tareas programadas (flow_schedules)
  * Lista las tareas del usuario y permite asignar entidad, campaña, audiencia y editar configuración.
+ * IMPORTANTE: Supabase usa campaign_ids (array), no campaign_id.
  */
+const FLOW_SCHEDULES_LIST_COLS = 'id, user_id, flow_id, brand_id, cron_expression, is_active, job_name, created_at, entity_ids, campaign_ids, audience_id, production_count, aspect_ratio, production_specifications';
+const FLOW_SCHEDULES_DETAIL_COLS = 'id, user_id, flow_id, brand_id, cron_expression, is_active, job_name, created_at, entity_ids, campaign_ids, audience_id, metadata_config, production_count, aspect_ratio, production_specifications';
+
 class TasksView extends BaseView {
   constructor() {
     super();
@@ -128,7 +132,7 @@ class TasksView extends BaseView {
     try {
       const { data, error } = await this.supabase
         .from('flow_schedules')
-        .select('id, user_id, flow_id, brand_id, cron_expression, is_active, job_name, created_at, entity_ids, campaign_ids, audience_id, production_count, aspect_ratio, production_specifications')
+        .select(FLOW_SCHEDULES_LIST_COLS)
         .eq('user_id', this.userId)
         .order('created_at', { ascending: false });
       if (error) {
@@ -197,7 +201,7 @@ class TasksView extends BaseView {
     try {
       const { data, error } = await this.supabase
         .from('flow_schedules')
-        .select('id, user_id, flow_id, brand_id, cron_expression, is_active, job_name, created_at, entity_ids, campaign_ids, audience_id, metadata_config, production_count, aspect_ratio, production_specifications')
+        .select(FLOW_SCHEDULES_DETAIL_COLS)
         .eq('id', id)
         .eq('user_id', this.userId)
         .single();
