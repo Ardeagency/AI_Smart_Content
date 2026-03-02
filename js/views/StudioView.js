@@ -493,7 +493,6 @@ class StudioView extends BaseView {
     )).join('');
     return (
       '<div class="studio-programacion-widget" id="' + prefix + '-widget">' +
-      '<label class="studio-field-label-inline" for="' + prefix + '-type">Programación</label>' +
       '<select class="modern-input input-dropdown-select studio-programacion-select" id="' + prefix + '-type" data-schedule-key="schedule_type" aria-label="Tipo de programación">' +
       '<option value="por_dia">Día</option>' +
       '<option value="por_horas">Hora</option>' +
