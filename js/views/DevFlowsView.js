@@ -241,54 +241,59 @@ class DevFlowsView extends DevBaseView {
    * Renderizar card de flujo
    */
   renderFlowCard(flow) {
-    const statusClass = `status-${flow.status}`;
-    const statusLabel = this.getStatusLabel(flow.status);
-    
-    return `
-      <div class="dev-flow-card" data-flow-id="${flow.id}">
-        <div class="dev-flow-card-header">
-          <div class="dev-flow-card-image">
-            ${flow.flow_image_url 
-              ? `<img src="${flow.flow_image_url}" alt="${this.escapeHtml(flow.name)}">`
-              : `<div class="dev-flow-card-placeholder"><i class="fas fa-diagram-project"></i></div>`
-            }
-          </div>
-          <span class="dev-flow-card-status ${statusClass}">${statusLabel}</span>
-        </div>
-        
-        <div class="dev-flow-card-body">
-          <h3 class="dev-flow-card-title">${this.escapeHtml(flow.name)}</h3>
-          <p class="dev-flow-card-desc">${this.escapeHtml(this.truncateText(flow.description, 100))}</p>
-          
-          <div class="dev-flow-card-meta">
-            <span class="dev-flow-card-category">
-              <i class="fas fa-tag"></i>
-              ${this.escapeHtml(flow.content_categories?.name || flow.output_type)}
-            </span>
-            <span class="dev-flow-card-version">
-              v${flow.version || '1.0.0'}
-            </span>
-          </div>
-        </div>
+    const name = this.escapeHtml(flow.name);
+    const cost = flow.token_cost ?? 1;
+    const likes = flow.likes_count || 0;
+    const saves = flow.saves_count || 0;
+    const runs = flow.run_count || 0;
 
-        <div class="dev-flow-card-stats">
-          <div class="dev-flow-stat">
-            <i class="fas fa-play"></i>
-            <span>${this.formatNumber(flow.run_count || 0)}</span>
+    const badges = [];
+    if (this.isNew(flow)) {
+      badges.push('<span class="flow-card-badge flow-card-badge--new">Nuevo</span>');
+    }
+    if (this.isTrending(flow)) {
+      badges.push('<span class="flow-card-badge flow-card-badge--trending">Trending</span>');
+    }
+
+    const img = flow.flow_image_url
+      ? `<img src="${this.escapeHtml(flow.flow_image_url)}" alt="${name}" class="flow-card-img" loading="lazy">`
+      : `<div class="flow-card-placeholder"><i class="fas ${this.getOutputTypeIcon(flow.output_type)}"></i></div>`;
+
+    const tags = [];
+    if (flow.content_categories?.name) {
+      tags.push(this.escapeHtml(flow.content_categories.name));
+    }
+    const outputTypeLabel = this.getOutputTypeLabel(flow.output_type);
+
+    const tagsHtml = tags.map(t => `<span class="flow-card-tag">${t}</span>`).join('');
+
+    return `
+      <div class="dev-flow-card-wrapper" data-flow-id="${flow.id}">
+        <article class="flow-card flow-card--catalog" data-flow-id="${flow.id}" role="button" tabindex="0">
+          <div class="flow-card-media">
+            ${img}
+            <div class="flow-card-media-veil" aria-hidden="true"></div>
+            <div class="flow-card-badges">${badges.join('')}</div>
+            <div class="flow-card-overlay flow-card-overlay--default">
+              <h3 class="flow-card-title">${name}</h3>
+            </div>
+            <div class="flow-card-overlay flow-card-overlay--hover">
+              <div class="flow-card-hover-content">
+                ${tagsHtml ? `<div class="flow-card-tags">${tagsHtml}</div>` : ''}
+                <div class="flow-card-metrics">
+                  <span class="flow-card-metric" title="Likes"><i class="fas fa-heart"></i> ${likes}</span>
+                  <span class="flow-card-metric" title="Ejecuciones"><i class="fas fa-play"></i> ${runs}</span>
+                  <span class="flow-card-metric" title="Guardados"><i class="fas fa-bookmark"></i> ${saves}</span>
+                  <span class="flow-card-metric" title="Coste tokens"><i class="fas fa-coins"></i> ${cost}</span>
+                </div>
+                <span class="flow-card-output-type">
+                  <i class="fas ${this.getOutputTypeIcon(flow.output_type)}"></i>
+                  ${outputTypeLabel}
+                </span>
+              </div>
+            </div>
           </div>
-          <div class="dev-flow-stat">
-            <i class="fas fa-heart"></i>
-            <span>${this.formatNumber(flow.likes_count || 0)}</span>
-          </div>
-          <div class="dev-flow-stat">
-            <i class="fas fa-bookmark"></i>
-            <span>${this.formatNumber(flow.saves_count || 0)}</span>
-          </div>
-          <div class="dev-flow-stat">
-            <i class="fas fa-coins"></i>
-            <span>${flow.token_cost || 1}</span>
-          </div>
-        </div>
+        </article>
 
         <div class="dev-flow-card-actions">
           <button class="dev-flow-action-btn edit" title="Editar flujo" data-action="edit">
@@ -351,17 +356,27 @@ class DevFlowsView extends DevBaseView {
    * Configurar listeners de las cards de flujos
    */
   setupFlowCardListeners() {
-    const cards = document.querySelectorAll('.dev-flow-card');
+    const cards = document.querySelectorAll('#devFlowsGrid .dev-flow-card-wrapper');
     
     cards.forEach(card => {
       const flowId = card.dataset.flowId;
 
+      const clickable = card.querySelector('.flow-card');
+
       // Click en la card (no en los botones) → editar
-      card.addEventListener('click', (e) => {
-        if (!e.target.closest('.dev-flow-action-btn')) {
-          this.navigateToBuilder(flowId);
-        }
-      });
+      if (clickable) {
+        clickable.addEventListener('click', (e) => {
+          if (!e.target.closest('.dev-flow-action-btn')) {
+            this.navigateToBuilder(flowId);
+          }
+        });
+        clickable.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            this.navigateToBuilder(flowId);
+          }
+        });
+      }
 
       // Acciones específicas
       card.querySelectorAll('.dev-flow-action-btn').forEach(btn => {
@@ -505,6 +520,50 @@ class DevFlowsView extends DevBaseView {
   }
 
   // ========== Utilidades ==========
+
+  getOutputTypeIcon(type) {
+    const t = (type || 'text').toLowerCase();
+    if (t === 'video') return 'fa-video';
+    if (t === 'image' || t === 'imagen') return 'fa-image';
+    if (t === 'audio') return 'fa-music';
+    if (t === 'document') return 'fa-file-alt';
+    if (t === 'mixed') return 'fa-layer-group';
+    return 'fa-align-left';
+  }
+
+  getOutputTypeLabel(type) {
+    const t = (type || 'text').toLowerCase();
+    const labels = {
+      text: 'Texto',
+      image: 'Imagen',
+      video: 'Video',
+      audio: 'Audio',
+      document: 'Documento',
+      mixed: 'Mixto'
+    };
+    return labels[t] || t;
+  }
+
+  getPublishedFlows() {
+    const published = this.flows.filter(f => f.status === 'published');
+    return published.length > 0 ? published : this.flows;
+  }
+
+  isNew(flow) {
+    if (!flow.created_at) return false;
+    const days = (Date.now() - new Date(flow.created_at).getTime()) / (1000 * 60 * 60 * 24);
+    return days <= 30;
+  }
+
+  isTrending(flow) {
+    const published = this.getPublishedFlows();
+    const sorted = [...published].sort((a, b) =>
+      (b.run_count || 0) + (b.likes_count || 0) + (b.saves_count || 0) -
+      (a.run_count || 0) - (a.likes_count || 0) - (a.saves_count || 0)
+    );
+    const top = sorted.slice(0, Math.max(5, Math.ceil(published.length * 0.2)));
+    return top.some(f => f.id === flow.id);
+  }
 
   getStatusLabel(status) {
     const labels = {
