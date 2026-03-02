@@ -354,7 +354,22 @@ class StudioView extends BaseView {
     const formEl = document.getElementById('studioScheduleForm');
     if (!formEl || !flow) return;
     const schema = flow.schedule_schema || {};
-    const fields = Array.isArray(schema.fields) ? schema.fields : [];
+    let fields = Array.isArray(schema.fields) ? schema.fields : [];
+    // Flujos antiguos pueden no tener tipo_entidad: inyectarlo para mostrar image_selector/dropdown en Entidad
+    const hasTipoEntidad = fields.some(f => (f.key || f.name) === 'tipo_entidad');
+    const hasEntityId = fields.some(f => (f.key || f.name) === 'entity_id');
+    if (hasEntityId && !hasTipoEntidad) {
+      const entityIdx = fields.findIndex(f => (f.key || f.name) === 'entity_id');
+      const tipoField = {
+        key: 'tipo_entidad',
+        label: 'Tipo de entidad',
+        input_type: 'select',
+        required: true,
+        options: [{ value: 'productos', label: 'Productos' }, { value: 'servicio', label: 'Servicio' }],
+        defaultValue: 'productos'
+      };
+      fields = [...fields.slice(0, entityIdx), tipoField, ...fields.slice(entityIdx)];
+    }
     if (fields.length === 0) {
       formEl.innerHTML = '<p class="studio-form-empty">Este flujo no tiene campos de programación definidos.</p>';
       return;
