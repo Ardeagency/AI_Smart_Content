@@ -406,12 +406,14 @@ class Navigation {
             </div>
           </div>
           <div class="header-right">
-            <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
-              <i class="fas fa-chevron-down"></i>
-            </button>
+            <div class="header-user-menu-wrap">
+              <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
+                <i class="fas fa-chevron-down"></i>
+              </button>
+              ${this.getUserDropdownHTML(settingsHref)}
+            </div>
           </div>
         </div>
-        ${this.getUserDropdownHTML(settingsHref)}
       </header>`;
   }
 
@@ -528,13 +530,15 @@ class Navigation {
             <h1 class="header-title" id="headerTitle">Production</h1>
           </div>
           <div class="header-right">
-            <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
-              <i class="fas fa-chevron-down"></i>
-            </button>
+            <div class="header-user-menu-wrap">
+              <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
+                <i class="fas fa-chevron-down"></i>
+              </button>
+              ${this.getUserDropdownHTML('/settings')}
+            </div>
           </div>
         </div>
         <div class="header-production-slot" id="headerProductionSlot" aria-hidden="true"></div>
-        ${this.getUserDropdownHTML('/settings')}
       </header>
 
       <nav class="side-navigation nav-mode-user" id="sideNavigation" aria-label="Navegación principal">
@@ -614,12 +618,14 @@ class Navigation {
             <h1 class="header-title" id="headerTitle">Developer Portal</h1>
           </div>
           <div class="header-right">
-            <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
-              <i class="fas fa-chevron-down"></i>
-            </button>
+            <div class="header-user-menu-wrap">
+              <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
+                <i class="fas fa-chevron-down"></i>
+              </button>
+              ${this.getUserDropdownHTML('/settings')}
+            </div>
           </div>
         </div>
-        ${this.getUserDropdownHTML('/settings')}
       </header>
 
       <nav class="side-navigation nav-mode-developer" id="sideNavigation" aria-label="Navegación desarrollador">
