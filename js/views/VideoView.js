@@ -148,20 +148,6 @@ class VideoView extends BaseView {
                     </div>
                   </div>
                 </div>
-                <div class="video-brand-context-block">
-                  <button type="button" class="video-collapse-header" id="videoBrandContextToggle" aria-expanded="false">
-                    <span>Brand Context Included</span><i class="fas fa-chevron-down video-collapse-icon"></i>
-                  </button>
-                  <div class="video-collapse-content video-collapse-content-closed" id="videoBrandContextContent">
-                    <ul class="video-brand-context-list">
-                      <li>Visual identity</li>
-                      <li>Product specs</li>
-                      <li>Material textures</li>
-                      <li>Brand tone</li>
-                      <li>Logo rules</li>
-                    </ul>
-                  </div>
-                </div>
               </div>
             </div>
             <div class="video-prompt-footer-card video-prompt-footer-card-center">
@@ -169,7 +155,6 @@ class VideoView extends BaseView {
                 <h3 class="video-section-label video-director-title">Director Console</h3>
                 <input type="file" id="videoImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
                 <div class="video-kling-elements-list" id="videoKlingElementsList" aria-live="polite"></div>
-                <label for="videoPromptInput" class="video-cine-label">Director Brief</label>
                 <textarea
                   id="videoPromptInput"
                   class="video-prompt-input video-director-brief-input"
@@ -184,7 +169,7 @@ class VideoView extends BaseView {
                     <select id="videoAspectRatio" class="video-prompt-aspect" aria-label="Format"><option value="16:9">16:9</option><option value="9:16">9:16</option><option value="1:1">1:1</option></select>
                     <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
                   </div>
-                  <button type="button" class="video-prompt-btn video-prompt-btn-add" id="videoPromptAdd" aria-label="Scene"><i class="fas fa-plus"></i> Scene</button>
+                  <button type="button" class="video-prompt-btn video-prompt-btn-add" id="videoPromptAdd" aria-label="Add"><i class="fas fa-plus"></i></button>
                   <div class="video-prompt-duration-wrap">
                     <select id="videoDuration" class="video-prompt-aspect" aria-label="Duration"><option value="5">5s</option><option value="10">10s</option><option value="15">15s</option></select>
                     <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
@@ -199,7 +184,7 @@ class VideoView extends BaseView {
             </div>
             <div class="video-prompt-footer-card video-prompt-footer-card-right">
               <div class="video-prompt-footer-card-inner glass-black video-cinematography-panel">
-                <h3 class="video-prompt-panel-title">🎥 Cinematography</h3>
+                <h3 class="video-prompt-panel-title">Cinematography</h3>
                 <div class="video-cine-preset-wrap">
                   <label class="video-cine-label">Production Preset</label>
                   <select id="videoCinePreset" class="video-cine-select" aria-label="Production Preset">
@@ -245,19 +230,6 @@ class VideoView extends BaseView {
                       <div class="video-cine-row"><label class="video-cine-label">Color Grade</label><select id="videoCineColorGrade" class="video-cine-select"></select></div>
                       <div class="video-cine-row"><label class="video-cine-label">Energy Level</label><select id="videoCineEnergyLevel" class="video-cine-select"></select></div>
                     </div>
-                  </div>
-                </div>
-              </div>
-              <div class="video-prompt-preview-block">
-                <button type="button" class="video-collapse-header" id="videoPromptPreviewToggle" aria-expanded="false">
-                  <span>AI Prompt Preview</span><i class="fas fa-chevron-down video-collapse-icon"></i>
-                </button>
-                <div class="video-collapse-content video-collapse-content-closed" id="videoPromptPreviewContent">
-                  <div class="video-prompt-preview-placeholder" id="videoPromptPreviewPlaceholder">Generate to see the production prompt.</div>
-                  <div class="video-prompt-preview-generated" id="videoPromptPreviewGenerated" style="display: none;">
-                    <h4 class="video-prompt-preview-title">Generated Production Prompt</h4>
-                    <div class="video-prompt-preview-body" id="videoPromptPreviewBody"></div>
-                    <div class="video-prompt-preview-score" id="videoPromptPreviewScore">Brand Lock Score: 94%</div>
                   </div>
                 </div>
               </div>
@@ -323,28 +295,6 @@ class VideoView extends BaseView {
     }
     const changeAssetBtn = this.container.querySelector('#videoAssetChangeBtn');
     if (changeAssetBtn) changeAssetBtn.addEventListener('click', () => this.clearAssetSelection());
-    const brandContextToggle = this.container.querySelector('#videoBrandContextToggle');
-    const brandContextContent = this.container.querySelector('#videoBrandContextContent');
-    if (brandContextToggle && brandContextContent) {
-      brandContextToggle.addEventListener('click', () => {
-        this.brandContextCollapsed = !this.brandContextCollapsed;
-        brandContextContent.classList.toggle('video-collapse-content-closed', this.brandContextCollapsed);
-        brandContextToggle.setAttribute('aria-expanded', !this.brandContextCollapsed);
-        const icon = brandContextToggle.querySelector('.video-collapse-icon');
-        if (icon) icon.style.transform = this.brandContextCollapsed ? 'rotate(-90deg)' : 'rotate(0)';
-      });
-    }
-    const promptPreviewToggle = this.container.querySelector('#videoPromptPreviewToggle');
-    const promptPreviewContent = this.container.querySelector('#videoPromptPreviewContent');
-    if (promptPreviewToggle && promptPreviewContent) {
-      promptPreviewToggle.addEventListener('click', () => {
-        this.promptPreviewCollapsed = !this.promptPreviewCollapsed;
-        promptPreviewContent.classList.toggle('video-collapse-content-closed', this.promptPreviewCollapsed);
-        promptPreviewToggle.setAttribute('aria-expanded', !this.promptPreviewCollapsed);
-        const icon = promptPreviewToggle.querySelector('.video-collapse-icon');
-        if (icon) icon.style.transform = this.promptPreviewCollapsed ? 'rotate(-90deg)' : 'rotate(0)';
-      });
-    }
     const productionsBtn = this.container.querySelector('#videoProductionsBtn');
     const panelClose = this.container.querySelector('#videoProductionsPanelClose');
     const panelBackdrop = this.container.querySelector('#videoProductionsPanelBackdrop');
@@ -1062,7 +1012,6 @@ class VideoView extends BaseView {
           const url = Array.isArray(urls) && urls.length > 0 ? urls[0] : null;
           if (url) {
             this.showResult(url);
-            this.showGeneratedPromptPreview();
           } else {
             this.showError('No se encontró URL del video en la respuesta');
           }

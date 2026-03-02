@@ -245,7 +245,7 @@ CREATE TABLE public.content_flows (
   execution_mode text DEFAULT 'single_step'::text CHECK (execution_mode = ANY (ARRAY['single_step'::text, 'multi_step'::text, 'sequential'::text])),
   execution_strategy text DEFAULT 'linear'::text CHECK (execution_strategy = ANY (ARRAY['linear'::text, 'conditional'::text, 'parallel'::text])),
   show_in_catalog boolean DEFAULT false,
-  schedule_schema jsonb DEFAULT '{"fields":[]}'::jsonb,
+  schedule_schema jsonb DEFAULT '{"fields": []}'::jsonb,
   CONSTRAINT content_flows_pkey PRIMARY KEY (id),
   CONSTRAINT content_flows_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.content_categories(id),
   CONSTRAINT content_flows_subcategory_id_fkey FOREIGN KEY (subcategory_id) REFERENCES public.content_subcategories(id),
@@ -368,25 +368,21 @@ CREATE TABLE public.flow_schedules (
   is_active boolean DEFAULT true,
   job_name text NOT NULL UNIQUE,
   created_at timestamp with time zone DEFAULT now(),
-  entity_id uuid,
-  campaign_id uuid,
-  audience_id uuid,
+  entity_ids ARRAY,
+  campaign_ids ARRAY,
+  audience_ids ARRAY,
   metadata_config jsonb DEFAULT '{}'::jsonb,
   production_count integer DEFAULT 1,
   aspect_ratio text DEFAULT '1:1'::text CHECK (aspect_ratio = ANY (ARRAY['1:1'::text, '9:16'::text, '16:9'::text, '4:5'::text])),
   production_specifications text,
+  composition_mode text DEFAULT 'individual'::text,
   CONSTRAINT flow_schedules_pkey PRIMARY KEY (id),
   CONSTRAINT flow_schedules_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id),
   CONSTRAINT flow_schedules_flow_id_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id),
-  CONSTRAINT flow_schedules_brand_id_fkey FOREIGN KEY (brand_id) REFERENCES public.brands(id),
-  CONSTRAINT flow_schedules_entity_id_fkey FOREIGN KEY (entity_id) REFERENCES public.brand_entities(id),
-  CONSTRAINT flow_schedules_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns(id),
-  CONSTRAINT flow_schedules_audience_id_fkey FOREIGN KEY (audience_id) REFERENCES public.audiences(id)
+  CONSTRAINT flow_schedules_brand_id_fkey FOREIGN KEY (brand_id) REFERENCES public.brands(id)
 );
 CREATE TABLE public.flow_technical_details (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
-  flow_module_id uuid NOT NULL UNIQUE,
-  webhook_method text NOT NULL DEFAULT 'POST'::text,
   platform_name text DEFAULT 'n8n'::text,
   platform_flow_id text,
   platform_flow_name text,
@@ -397,6 +393,8 @@ CREATE TABLE public.flow_technical_details (
   avg_execution_time_ms integer,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  flow_module_id uuid NOT NULL UNIQUE,
+  webhook_method text NOT NULL DEFAULT 'POST'::text,
   CONSTRAINT flow_technical_details_pkey PRIMARY KEY (id),
   CONSTRAINT fk_tech_module FOREIGN KEY (flow_module_id) REFERENCES public.flow_modules(id)
 );
@@ -574,7 +572,7 @@ CREATE TABLE public.ui_component_templates (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   template_level text DEFAULT 'core'::text CHECK (template_level = ANY (ARRAY['shell'::text, 'core'::text, 'preset'::text, 'domain'::text])),
-  for_flow_type text DEFAULT NULL CHECK (for_flow_type IS NULL OR for_flow_type = ANY (ARRAY['manual'::text, 'automated'::text])),
+  for_flow_type text CHECK (for_flow_type IS NULL OR (for_flow_type = ANY (ARRAY['manual'::text, 'automated'::text]))),
   CONSTRAINT ui_component_templates_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.user_flow_favorites (
