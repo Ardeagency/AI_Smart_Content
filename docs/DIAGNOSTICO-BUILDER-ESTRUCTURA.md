@@ -6,6 +6,15 @@
 
 ---
 
+## ✅ Cambios aplicados (corrección de problemas)
+
+- **Padding unificado:** `.technical-tab-main` usa `var(--spacing-xl)` como el resto de tabs.
+- **Variable única max-width:** `--builder-form-max-width: 720px` en `#app-container:has(.builder-footer)`; `.builder-config-fullwidth` y `.builder-settings-form` usan `var(--builder-form-max-width, 720px)`.
+- **Espaciado en variables:** px sustituidos por `--spacing-*` en: config-cell--catalog, flow-url-field/flow-url-input, ficha (body, sidebar, meta, stats, title, description), canvas (empty-state, fields, field, field-remove, field-header), footer-actions, sidebar-header, components-header/search/list, settings-section (scoped a `.builder-main .settings-section`), settings-field/label/inputs, field-help, settings-row, flow-type-picker/option, technical-tab-main, technical-module-name, badges y dropdowns del footer.
+- **Settings section acotada:** Estilos de sección del Builder aplican solo dentro de `.builder-main .settings-section` (padding/margin en variables); la definición global `.settings-section` (línea ~7200) queda para otras vistas (p. ej. settings.html).
+
+---
+
 ## Resumen ejecutivo
 
 La página Builder sufre **inconsistencias claras** en:
