@@ -10243,81 +10243,56 @@ body.production-filters-in-header .living-container > .living-history-section {
   background: var(--icon-button);
 }
 
-/* Acciones esquina superior derecha: like, run, save */
-.flow-card-actions-top {
+/* Iconos esquina superior derecha: like, run, save (vertical) */
+.flow-card-icons {
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
+  left: auto;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.5rem;
   z-index: 3;
   pointer-events: none;
 }
-.flow-card-actions-top .flow-card-action-btn,
-.flow-card-actions-top .flow-card-action-run {
+.flow-card-icons .flow-card-icon-btn {
   pointer-events: auto;
 }
-.flow-card-action-btn,
-.flow-card-action-run {
+.flow-card-icon-btn,
+.flow-card-icon-stat {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
   padding: 0.25rem 0.4rem;
-  font-size: 0.7rem;
-  color: var(--color-white);
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: var(--black-50);
   border-radius: var(--radius-sm);
-  white-space: nowrap;
-}
-.flow-card-action-run {
-  cursor: default;
-  border-color: transparent;
-}
-.flow-card-action-btn {
+  color: var(--color-white);
+  font-size: var(--font-size-xs);
+  border: none;
   cursor: pointer;
   transition: var(--transition);
 }
-.flow-card-action-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.35);
+.flow-card-icon-stat {
+  cursor: default;
+  pointer-events: none;
 }
-.flow-card-action-btn.is-active,
-.flow-card-action-like.is-active {
-  color: #ff6b9d;
-  border-color: rgba(255, 107, 157, 0.5);
+.flow-card-icon-btn:hover {
+  background: var(--white-20);
+  color: var(--color-white);
 }
-.flow-card-action-save.is-active {
-  color: var(--accent-yellow);
-  border-color: rgba(255, 229, 0, 0.5);
+.flow-card-icon-btn.is-active {
+  color: var(--color-error);
 }
-.flow-card-action-count {
+.flow-card-icon-btn.flow-card-icon-save.is-active {
+  color: var(--color-info);
+}
+.flow-card-icon-count {
   font-weight: 600;
-  opacity: 0.95;
+  min-width: 1ch;
 }
 
-/* Footer: coste (créditos) + meta */
-.flow-card-footer {
-  padding: 0.6rem 0.75rem;
-  background: var(--bg-hover);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 0 0 var(--radius-md) var(--radius-md);
-}
-.flow-card-cost {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  line-height: 1.2;
-  margin-bottom: 0.25rem;
-}
-.flow-card-meta {
-  font-size: 0.65rem;
-  color: var(--text-muted);
-  line-height: 1.35;
-}
-
-/* Overlay por defecto: solo nombre (minimalista tipo referencia) */
+/* Overlay por defecto: nombre + etiquetas (tipo flujo, nuevo, etc.) */
 .flow-card-overlay--default {
   position: absolute;
   left: 0;
@@ -10346,8 +10321,18 @@ body.production-filters-in-header .living-container > .living-history-section {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+.flow-card-tags--default {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+.flow-card-tags--default .flow-card-tag {
+  padding: 0.2rem 0.45rem;
+  font-size: 0.6rem;
+}
 
-/* Overlay hover: subcategorías, likes, runs, save, tipo de output */
+/* Overlay hover: créditos + categoría, subcategoría, tipo output, modo ejecución, versión */
 .flow-card-overlay--hover {
   position: absolute;
   inset: 0;
@@ -10372,9 +10357,29 @@ body.production-filters-in-header .living-container > .living-history-section {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   text-align: center;
   width: 100%;
+}
+.flow-card-credits {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-white);
+}
+.flow-card-meta-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: var(--font-size-sm);
+  color: var(--white-95);
+}
+.flow-card-meta-item {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 .flow-card-overlay--hover .flow-card-tags {
   display: flex;

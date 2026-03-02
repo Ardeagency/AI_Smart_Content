@@ -15,7 +15,6 @@ class DevFlowsView extends DevBaseView {
     this.userId = null;
     this.flows = [];
     this.filteredFlows = [];
-    this.favorites = [];
     this.currentFilter = 'all';
     this.searchQuery = '';
   }
@@ -109,7 +108,6 @@ class DevFlowsView extends DevBaseView {
   async init() {
     await this.initSupabase();
     await this.loadFlows();
-    if (this.userId) await this.loadFavorites();
     this.setupEventListeners();
   }
 
@@ -158,11 +156,10 @@ class DevFlowsView extends DevBaseView {
           saves_count,
           token_cost,
           version,
+          execution_mode,
+          flow_category_type,
           flow_image_url,
           created_at,
-          category_id,
-          subcategory_id,
-          execution_mode,
           content_categories (name),
           content_subcategories (name)
         `)
@@ -177,28 +174,6 @@ class DevFlowsView extends DevBaseView {
       console.error('Error cargando flujos:', error);
       this.showError('Error cargando flujos');
     }
-  }
-
-  async loadFavorites() {
-    this.favorites = [];
-    if (!this.supabase || !this.userId) return;
-    try {
-      const { data, error } = await this.supabase
-        .from('user_flow_favorites')
-        .select('flow_id, rating, is_favorite')
-        .eq('user_id', this.userId);
-      if (!error && data) this.favorites = data;
-    } catch (e) {
-      console.error('DevFlows loadFavorites:', e);
-    }
-  }
-
-  isFlowLikedByUser(flowId) {
-    return this.favorites.some(f => f.flow_id === flowId && f.rating != null && f.rating >= 4);
-  }
-
-  isFlowSavedByUser(flowId) {
-    return this.favorites.some(f => f.flow_id === flowId && f.is_favorite);
   }
 
   /**
@@ -266,7 +241,7 @@ class DevFlowsView extends DevBaseView {
   }
 
   /**
-   * Renderizar card de flujo (misma estructura que catálogo: iconos arriba derecha, footer con coste y meta)
+   * Renderizar card de flujo
    */
   renderFlowCard(flow) {
     const name = this.escapeHtml(flow.name);
@@ -274,13 +249,6 @@ class DevFlowsView extends DevBaseView {
     const likes = flow.likes_count || 0;
     const saves = flow.saves_count || 0;
     const runs = flow.run_count || 0;
-    const outputTypeLabel = this.getOutputTypeLabel(flow.output_type);
-    const executionModeLabel = this.getExecutionModeLabel(flow.execution_mode);
-    const version = (flow.version || '1.0.0').toString();
-    const categoryName = flow.content_categories?.name ? this.escapeHtml(flow.content_categories.name) : '';
-    const subcategoryName = flow.content_subcategories?.name ? this.escapeHtml(flow.content_subcategories.name) : '';
-    const metaParts = [categoryName, subcategoryName, outputTypeLabel, executionModeLabel, version].filter(Boolean);
-    const metaHtml = metaParts.length ? `<div class="flow-card-meta">${metaParts.join(' · ')}</div>` : '';
 
     const badges = [];
     if (this.isNew(flow)) {
@@ -288,6 +256,9 @@ class DevFlowsView extends DevBaseView {
     }
     if (this.isTrending(flow)) {
       badges.push('<span class="flow-card-badge flow-card-badge--trending">Trending</span>');
+    }
+    if ((flow.flow_category_type || 'manual') === 'automated') {
+      badges.push('<span class="flow-card-badge flow-card-badge--auto">Automated</span>');
     }
 
     const img = flow.flow_image_url
@@ -297,7 +268,14 @@ class DevFlowsView extends DevBaseView {
     const tags = [];
     if (flow.content_categories?.name) tags.push(this.escapeHtml(flow.content_categories.name));
     if (flow.content_subcategories?.name) tags.push(this.escapeHtml(flow.content_subcategories.name));
+    if ((flow.flow_category_type || 'manual') === 'automated') tags.push('Automated');
     const tagsHtml = tags.map(t => `<span class="flow-card-tag">${t}</span>`).join('');
+
+    const categoryName = flow.content_categories?.name ? this.escapeHtml(flow.content_categories.name) : '—';
+    const subcategoryName = flow.content_subcategories?.name ? this.escapeHtml(flow.content_subcategories.name) : '—';
+    const outputTypeLabel = this.getOutputTypeLabel(flow.output_type);
+    const executionLabel = this.getExecutionModeLabel(flow.execution_mode);
+    const version = (flow.version || '1.0.0').toString();
 
     return `
       <div class="dev-flow-card-wrapper" data-flow-id="${flow.id}">
@@ -306,24 +284,27 @@ class DevFlowsView extends DevBaseView {
             ${img}
             <div class="flow-card-media-veil" aria-hidden="true"></div>
             <div class="flow-card-badges">${badges.join('')}</div>
-            <div class="flow-card-actions-top" aria-label="Acciones del flujo">
-              <button type="button" class="flow-card-action-btn flow-card-action-like ${this.isFlowLikedByUser(flow.id) ? 'is-active' : ''}" data-flow-id="${flow.id}" data-action="like" title="Me gusta"><i class="fas fa-heart"></i><span class="flow-card-action-count">${likes}</span></button>
-              <span class="flow-card-action-run" title="Ejecuciones"><i class="fas fa-play"></i><span class="flow-card-action-count">${runs}</span></span>
-              <button type="button" class="flow-card-action-btn flow-card-action-save ${this.isFlowSavedByUser(flow.id) ? 'is-active' : ''}" data-flow-id="${flow.id}" data-action="save" title="Guardar"><i class="fas fa-bookmark"></i><span class="flow-card-action-count">${saves}</span></button>
+            <div class="flow-card-icons flow-card-icons--default">
+              <span class="flow-card-icon-stat" title="Likes"><i class="fas fa-heart"></i><span class="flow-card-icon-count">${likes}</span></span>
+              <span class="flow-card-icon-stat" title="Ejecuciones"><i class="fas fa-play"></i><span class="flow-card-icon-count">${runs}</span></span>
+              <span class="flow-card-icon-stat" title="Guardados"><i class="fas fa-bookmark"></i><span class="flow-card-icon-count">${saves}</span></span>
             </div>
             <div class="flow-card-overlay flow-card-overlay--default">
               <h3 class="flow-card-title">${name}</h3>
+              ${tagsHtml ? `<div class="flow-card-tags flow-card-tags--default">${tagsHtml}</div>` : ''}
             </div>
             <div class="flow-card-overlay flow-card-overlay--hover">
               <div class="flow-card-hover-content">
-                ${tagsHtml ? `<div class="flow-card-tags">${tagsHtml}</div>` : ''}
-                <span class="flow-card-output-type"><i class="fas ${this.getOutputTypeIcon(flow.output_type)}"></i> ${outputTypeLabel}</span>
+                <div class="flow-card-credits">${cost}</div>
+                <div class="flow-card-meta-list">
+                  <span class="flow-card-meta-item">${categoryName}</span>
+                  <span class="flow-card-meta-item">${subcategoryName}</span>
+                  <span class="flow-card-meta-item">${outputTypeLabel}</span>
+                  <span class="flow-card-meta-item">${executionLabel}</span>
+                  <span class="flow-card-meta-item">v${version}</span>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="flow-card-footer">
-            <div class="flow-card-cost">${cost}</div>
-            ${metaHtml}
           </div>
         </article>
 
@@ -389,38 +370,30 @@ class DevFlowsView extends DevBaseView {
    */
   setupFlowCardListeners() {
     const cards = document.querySelectorAll('#devFlowsGrid .dev-flow-card-wrapper');
-
+    
     cards.forEach(card => {
       const flowId = card.dataset.flowId;
-      const clickable = card.querySelector('.flow-card');
 
+      const clickable = card.querySelector('.flow-card');
       if (clickable) {
         clickable.addEventListener('click', (e) => {
-          if (e.target.closest('.dev-flow-action-btn') || e.target.closest('.flow-card-action-btn')) return;
+          if (e.target.closest('.dev-flow-action-btn') || e.target.closest('.flow-card-icons')) return;
           this.navigateToBuilder(flowId);
         });
         clickable.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            if (!e.target.closest('.flow-card-action-btn')) this.navigateToBuilder(flowId);
+            this.navigateToBuilder(flowId);
           }
         });
       }
 
-      card.querySelectorAll('.flow-card-action-like, .flow-card-action-save').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          const action = btn.getAttribute('data-action');
-          if (action === 'like') this.toggleLike(flowId, btn);
-          if (action === 'save') this.toggleSave(flowId, btn);
-        });
-      });
-
+      // Acciones específicas
       card.querySelectorAll('.dev-flow-action-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
-          this.handleFlowAction(btn.dataset.action, flowId);
+          const action = btn.dataset.action;
+          this.handleFlowAction(action, flowId);
         });
       });
     });
@@ -585,64 +558,6 @@ class DevFlowsView extends DevBaseView {
     const m = (mode || 'single_step').toLowerCase();
     const labels = { single_step: 'Un paso', multi_step: 'Multi paso', sequential: 'Secuencial' };
     return labels[m] || m;
-  }
-
-  async toggleLike(flowId, btnEl) {
-    if (!this.supabase || !this.userId) return;
-    const flow = this.flows.find(f => f.id === flowId);
-    const isLiked = this.isFlowLikedByUser(flowId);
-    const newLiked = !isLiked;
-    try {
-      const { data: existing } = await this.supabase.from('user_flow_favorites').select('id, is_favorite').eq('user_id', this.userId).eq('flow_id', flowId).maybeSingle();
-      if (existing) {
-        await this.supabase.from('user_flow_favorites').update({ rating: newLiked ? 5 : null }).eq('id', existing.id);
-      } else if (newLiked) {
-        await this.supabase.from('user_flow_favorites').insert({ user_id: this.userId, flow_id: flowId, is_favorite: false, rating: 5 });
-      }
-      let fav = this.favorites.find(f => f.flow_id === flowId);
-      if (fav) fav.rating = newLiked ? 5 : null;
-      else if (newLiked) this.favorites.push({ flow_id: flowId, rating: 5, is_favorite: false });
-      if (flow) {
-        flow.likes_count = (flow.likes_count || 0) + (newLiked ? 1 : -1);
-        if (flow.likes_count < 0) flow.likes_count = 0;
-      }
-      if (btnEl) {
-        btnEl.classList.toggle('is-active', newLiked);
-        const countEl = btnEl.querySelector('.flow-card-action-count');
-        if (countEl) countEl.textContent = flow ? (flow.likes_count || 0) : (parseInt(countEl.textContent, 10) + (newLiked ? 1 : -1));
-      }
-    } catch (e) {
-      console.error('toggleLike:', e);
-    }
-  }
-
-  async toggleSave(flowId, btnEl) {
-    if (!this.supabase || !this.userId) return;
-    const flow = this.flows.find(f => f.id === flowId);
-    const isSaved = this.isFlowSavedByUser(flowId);
-    const newSaved = !isSaved;
-    try {
-      const { data: existing } = await this.supabase.from('user_flow_favorites').select('id').eq('user_id', this.userId).eq('flow_id', flowId).maybeSingle();
-      if (existing) {
-        await this.supabase.from('user_flow_favorites').update({ is_favorite: newSaved }).eq('id', existing.id);
-      } else if (newSaved) {
-        await this.supabase.from('user_flow_favorites').insert({ user_id: this.userId, flow_id: flowId, is_favorite: true });
-      }
-      let fav = this.favorites.find(f => f.flow_id === flowId);
-      if (fav) fav.is_favorite = newSaved;
-      else if (newSaved) this.favorites.push({ flow_id: flowId, is_favorite: true, rating: null });
-      if (flow) {
-        flow.saves_count = (flow.saves_count || 0) + (newSaved ? 1 : -1);
-        if (flow.saves_count < 0) flow.saves_count = 0;
-      }
-      if (btnEl) {
-        btnEl.classList.toggle('is-active', newSaved);
-        const countEl = btnEl.querySelector('.flow-card-action-count');
-        if (countEl) countEl.textContent = flow ? (flow.saves_count || 0) : (parseInt(countEl.textContent, 10) + (newSaved ? 1 : -1));
-      }
-    } catch (e) {
-      console.error('toggleSave:', e);
-    }
   }
 
   getPublishedFlows() {
