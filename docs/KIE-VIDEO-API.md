@@ -37,6 +37,16 @@ In este proyecto se usa un **proxy Netlify** (`/.netlify/functions/kie-video`) q
 - **200**: `{ taskId: "..." }` (createTask) o objeto `recordInfo` (GET).
 - **4xx/5xx**: `{ error, code?, failCode?, failMsg? }` — si KIE devuelve error, se reenvía el status y el mensaje (`failMsg`/`failCode`).
 
+### Flujo en la app (página Video)
+
+1. **Crear tarea**: POST a `kie-video` con `action: "createTask"` → se obtiene `taskId`.
+2. **Esperar resultado**: polling cada **15 segundos** a `GET kie-video?taskId=xxx` hasta que `data.state` sea `success` o `fail`.
+3. **Cuando `state === 'success`**: la app descarga el video (vía proxy `kie-video-download?videoUrl=...` para evitar CORS), lo sube al bucket Supabase `production-outputs` en `kie-videos/{user_id}/{taskId}.mp4` y muestra al usuario la URL pública de Supabase (no la URL temporal de KIE).
+
+### Proxy de descarga
+
+- **GET** `/.netlify/functions/kie-video-download?videoUrl=<url codificada>` — descarga el video desde la URL de KIE en el servidor y lo devuelve en binario. Usado por la app para luego subir ese binario a Supabase.
+
 ---
 
 ## API KIE (directa)

@@ -1,9 +1,15 @@
 /**
  * VideoView - Página de generación de video con Kling 3.0 (KIE API).
  * Misma estructura que el resto de vistas: renderHTML() sin template, layout organization-* del bundle.
- * Flujo: crear tarea (createTask) → consultar estado (recordInfo) hasta success/fail → mostrar video o error.
+ * Flujo: crear tarea (createTask) → consultar estado (recordInfo) cada 15s hasta success/fail
+ * → descargar video, subir a Supabase, mostrar URL de Supabase al usuario.
  */
 class VideoView extends BaseView {
+  /** Intervalo de polling a KIE (recordInfo) en milisegundos. */
+  static get POLL_INTERVAL_MS() {
+    return 15000;
+  }
+
   constructor() {
     super();
     this.templatePath = null;
@@ -935,6 +941,44 @@ class VideoView extends BaseView {
     }
   }
 
+  /**
+   * Descarga el video desde la URL de KIE (vía proxy para evitar CORS) y lo sube a Supabase.
+   * @param {string} kieVideoUrl - URL del video devuelta por KIE (resultUrls[0])
+   * @param {string} taskId - ID de la tarea KIE (para nombre de archivo)
+   * @returns {{ publicUrl: string, storagePath: string } | null}
+   */
+  async downloadAndUploadKieVideo(kieVideoUrl, taskId) {
+    if (!this.supabase?.storage) return null;
+    const { data: { user } } = await this.supabase.auth.getUser();
+    if (!user?.id) return null;
+    const bucket = 'production-outputs';
+    const ext = (kieVideoUrl.split('.').pop() || 'mp4').split('?')[0].toLowerCase() || 'mp4';
+    const safeTaskId = (taskId || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 32) || Date.now();
+    const storagePath = `kie-videos/${user.id}/${safeTaskId}.${ext}`;
+
+    this.showStatus('Descargando y guardando en tu cuenta…', true);
+    try {
+      const proxyUrl = `/.netlify/functions/kie-video-download?videoUrl=${encodeURIComponent(kieVideoUrl)}`;
+      const res = await fetch(proxyUrl);
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `Descarga fallida: ${res.status}`);
+      }
+      const blob = await res.blob();
+      const contentType = res.headers.get('content-type') || 'video/mp4';
+      const { error } = await this.supabase.storage.from(bucket).upload(storagePath, blob, {
+        contentType,
+        upsert: true
+      });
+      if (error) throw error;
+      const { data: urlData } = this.supabase.storage.from(bucket).getPublicUrl(storagePath);
+      return { publicUrl: urlData?.publicUrl || null, storagePath };
+    } catch (err) {
+      console.error('VideoView downloadAndUploadKieVideo:', err);
+      throw err;
+    }
+  }
+
   showError(message) {
     this.hideAllFeedback();
     if (this.errorArea) this.errorArea.style.display = 'block';
@@ -1214,16 +1258,34 @@ class VideoView extends BaseView {
             } catch (_) {}
           }
           const urls = resultJson?.resultUrls;
-          const url = Array.isArray(urls) && urls.length > 0 ? urls[0] : null;
-          if (url) {
-            this.showResult(url);
-            if (this._lastKieOutputId) {
-              await this.updateSystemAIOutput(this._lastKieOutputId, {
-                status: 'completed',
-                metadata: { resultUrls: urls, video_url: url },
-                error_message: null
-              });
-              this._lastKieOutputId = null;
+          const kieUrl = Array.isArray(urls) && urls.length > 0 ? urls[0] : null;
+          if (kieUrl) {
+            try {
+              const uploaded = await this.downloadAndUploadKieVideo(kieUrl, taskId);
+              if (uploaded?.publicUrl) {
+                this.showResult(uploaded.publicUrl);
+                if (this._lastKieOutputId) {
+                  await this.updateSystemAIOutput(this._lastKieOutputId, {
+                    status: 'completed',
+                    storage_path: uploaded.storagePath,
+                    metadata: { resultUrls: urls, video_url: uploaded.publicUrl, kie_source_url: kieUrl },
+                    error_message: null
+                  });
+                  this._lastKieOutputId = null;
+                }
+              } else {
+                this.showError('No se pudo guardar el video en tu cuenta');
+                if (this._lastKieOutputId) {
+                  await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: 'No se pudo guardar el video en tu cuenta' });
+                  this._lastKieOutputId = null;
+                }
+              }
+            } catch (err) {
+              this.showError(err.message || 'Error al descargar o guardar el video');
+              if (this._lastKieOutputId) {
+                await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: err.message || 'Error al descargar o guardar el video' });
+                this._lastKieOutputId = null;
+              }
             }
           } else {
             this.showError('No se encontró URL del video en la respuesta');
@@ -1257,7 +1319,7 @@ class VideoView extends BaseView {
     };
 
     await poll();
-    this._pollInterval = setInterval(poll, 4000);
+    this._pollInterval = setInterval(poll, VideoView.POLL_INTERVAL_MS);
   }
 
   onLeave() {
