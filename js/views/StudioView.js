@@ -76,7 +76,6 @@ class StudioView extends BaseView {
               <div class="studio-automation-shell">
                 <div class="studio-automation-main">
                   <div class="studio-schedule-form-wrap" id="studioScheduleFormWrap">
-                    <h2 class="studio-schedule-title">Programar este flujo automático</h2>
                     <form class="studio-schedule-form" id="studioScheduleForm"></form>
                   </div>
                 </div>

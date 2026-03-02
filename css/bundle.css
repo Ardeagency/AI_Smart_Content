@@ -9001,20 +9001,15 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 .studio-schedule-form-wrap {
   max-width: 810px;
-  border-radius: var(--glass-radius);
-  background: var(--glass-white-bg);
-  border: 1px solid var(--glass-white-border);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  padding: 24px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  background: transparent;
+  border: none;
+  padding: 0;
+  box-shadow: none;
+  border-radius: 0;
 }
 
-.studio-schedule-title {
-  margin: 0 0 var(--spacing-lg) 0;
-  font-size: var(--font-size-xl);
-  font-weight: 600;
-  color: #ffffff;
+.studio-schedule-form-wrap:focus {
+  outline: none;
 }
 
 .studio-schedule-form {
@@ -9031,8 +9026,8 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 .studio-schedule-card {
   border-radius: 12px;
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   padding: 24px;
@@ -9063,8 +9058,8 @@ body.production-filters-in-header .living-container > .living-history-section {
   margin-top: 16px;
   padding: 16px;
   border-radius: 8px;
-  border: 1px dashed rgba(148, 163, 184, 0.7);
-  background: rgba(15, 23, 42, 0.85);
+  border: 1px dashed var(--glass-border);
+  background: var(--glass-bg);
 }
 
 .studio-schedule-form .studio-field {
@@ -9131,12 +9126,11 @@ body.production-filters-in-header .living-container > .living-history-section {
   width: 233px;
   max-width: 100%;
   border-radius: var(--glass-radius);
-  background: rgba(15, 23, 42, 0.9);
+  background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   padding: 24px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
 }
 
 .studio-automation-summary-inner {
@@ -9323,6 +9317,10 @@ body.production-filters-in-header .living-container > .living-history-section {
   gap: 1rem;
   padding: 0.75rem 0;
   border-top: 1px solid var(--border-divider);
+}
+
+.studio-layout--automated .studio-footer {
+  display: none;
 }
 
 .studio-footer-credits {
