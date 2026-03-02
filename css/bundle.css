@@ -8973,6 +8973,8 @@ body.production-filters-in-header .living-container > .living-history-section {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
+  min-width: 0;
+  padding-right: 0;
 }
 
 .studio-back-flows--automated {
@@ -9288,9 +9290,6 @@ body.production-filters-in-header .living-container > .living-history-section {
 .studio-programacion-row .input-stepper-btn i,
 .studio-programacion-row .input-stepper-btn .ph {
   display: none;
-}
-.studio-programacion-row .input-stepper-btn {
-  color: #ffffff;
 }
 .studio-programacion-row .input-stepper-btn[data-dir="up"]::before {
   content: "";
