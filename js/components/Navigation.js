@@ -6,9 +6,9 @@
 const SIDEBAR_USER_CONFIG = {
   main: [
     { type: 'page', id: 'activity', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
-    { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-area', iconSrc: null, route: 'dashboard' },
-    { type: 'page', id: 'tasks', label: 'Task', icon: 'fa-clock', iconSrc: '/recursos/icons/taks.svg', route: 'tasks' },
-    { type: 'page', id: 'video', label: 'Video', icon: 'fa-play', iconSrc: null, route: 'video' },
+    { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-area', iconSrc: '/recursos/icons/dashboard.svg', route: 'dashboard' },
+    { type: 'page', id: 'tasks', label: 'Task', icon: 'fa-clock', iconSrc: '/recursos/icons/task.svg', route: 'tasks' },
+    { type: 'page', id: 'video', label: 'Video', icon: 'fa-play', iconSrc: '/recursos/icons/video.svg', route: 'video' },
     {
       type: 'container',
       id: 'catalog',
@@ -33,9 +33,9 @@ const SIDEBAR_USER_CONFIG = {
     }
   ],
   footer: [
-    { label: 'Configuración', icon: 'fa-cog', iconSrc: '/recursos/icons/settings.svg', route: 'organization' },
-    { label: 'Notificaciones', icon: 'fa-bell', iconSrc: null, flyout: 'notifications' },
-    { label: 'Créditos', icon: 'fa-coins', iconSrc: '/recursos/icons/credits.svg', route: 'credits' }
+    { label: 'Settings', icon: 'fa-cog', iconSrc: '/recursos/icons/settings.svg', route: 'organization' },
+    { label: 'Notifications', icon: 'fa-bell', iconSrc: '/recursos/icons/notification.svg', flyout: 'notifications' },
+    { label: 'Credits', icon: 'fa-coins', iconSrc: '/recursos/icons/credits.svg', route: 'credits' }
   ]
 };
 
@@ -554,7 +554,7 @@ class Navigation {
         <div class="nav-footer" role="navigation" aria-label="Administración organizacional">
           ${footerHTML}
           <div class="nav-org-credits" id="navOrgCreditsBlock">
-            <span class="nav-org-credits-label">Créditos</span>
+            <span class="nav-org-credits-label">Credits</span>
             <span class="nav-org-credits-value" id="navTokensValue">—</span>
             <div class="nav-org-credits-bar" aria-hidden="true"><div class="nav-org-credits-bar-fill" style="width:0%"></div></div>
           </div>
@@ -990,7 +990,7 @@ class Navigation {
       return;
     }
 
-    this._renderNotificationsFlyoutContent(flyout, null, 'Cargando…', false);
+    this._renderNotificationsFlyoutContent(flyout, null, 'Loading…', false);
     this._showNotificationsFlyout(flyout, triggerEl);
 
     const { data: notifications, error } = await supabase
@@ -1018,7 +1018,7 @@ class Navigation {
     } else if (loadingLabel) {
       bodyHtml = `<div class="nav-flyout-notifications-loading">${_escapeHtml(loadingLabel)}</div>`;
     } else if (list.length === 0) {
-      bodyHtml = '<div class="nav-flyout-notifications-empty">No hay notificaciones</div>';
+      bodyHtml = '<div class="nav-flyout-notifications-empty">No notifications</div>';
     } else {
       bodyHtml = '<div class="nav-flyout-list nav-flyout-notifications-list">' + list.map((n) => {
         const type = (n.type || 'info');
@@ -1036,7 +1036,7 @@ class Navigation {
 
     const footerHtml = configHref
       ? `<div class="nav-flyout-footer">
-          <a href="${configHref}" class="nav-flyout-cta nav-flyout-cta-link" data-route="${configHref}">Configuración <i class="fas fa-chevron-right"></i></a>
+          <a href="${configHref}" class="nav-flyout-cta nav-flyout-cta-link" data-route="${configHref}">Settings <i class="fas fa-chevron-right"></i></a>
         </div>`
       : '';
 
@@ -1045,7 +1045,7 @@ class Navigation {
       <div class="nav-flyout-inner">
         <div class="nav-flyout-header">
           <span class="nav-flyout-header-icon"><i class="fas fa-bell"></i></span>
-          <span class="nav-flyout-header-label">Notificaciones</span>
+          <span class="nav-flyout-header-label">Notifications</span>
         </div>
         <div class="nav-flyout-body nav-flyout-notifications-body">${bodyHtml}</div>
         ${footerHtml}
@@ -1225,9 +1225,9 @@ class Navigation {
       '/content': 'Identity',
       '/video': 'Video',
       '/servicios': 'Identity',
-      '/settings': 'Configuración',
-      '/organization': 'Configuración',
-      '/credits': 'Créditos',
+      '/settings': 'Settings',
+      '/organization': 'Settings',
+      '/credits': 'Credits',
       '/dev/dashboard': 'Dashboard',
       '/dev/flows': 'Mis Flujos',
       '/dev/builder': 'Builder',
