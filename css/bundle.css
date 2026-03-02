@@ -9120,9 +9120,23 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 .studio-schedule-card .input-stepper-btn i,
 .studio-schedule-card .input-stepper-btn .ph {
-  font-size: 12px;
-  line-height: 1;
-  display: block;
+  display: none;
+}
+.studio-schedule-card .input-stepper-btn[data-dir="up"]::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 6px solid currentColor;
+}
+.studio-schedule-card .input-stepper-btn[data-dir="down"]::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid currentColor;
 }
 
 .studio-schedule-card .input-stepper-unit {
@@ -9146,6 +9160,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   color: #e2e8f0;
   padding-right: 32px;
 }
+#studio-schedule-programacion-widget > .schedule-panel,
 .schedule-panel {
   display: flex;
   flex-wrap: wrap;
@@ -9154,8 +9169,8 @@ body.production-filters-in-header .living-container > .living-history-section {
   margin-top: var(--spacing-md);
   padding: 16px;
   border-radius: 8px;
-  border: 1px dashed rgba(148, 163, 184, 0.7);
-  background: rgba(15, 23, 42, 0.75);
+  border: 1px dashed var(--glass-border);
+  background: var(--glass-bg);
 }
 .studio-programacion-row {
   display: flex;
@@ -9233,11 +9248,26 @@ body.production-filters-in-header .living-container > .living-history-section {
   color: #fff;
 }
 
+/* Iconos flecha arriba/abajo con CSS (visibles sin depender de fuente) */
 .studio-programacion-row .input-stepper-btn i,
 .studio-programacion-row .input-stepper-btn .ph {
-  font-size: 12px;
-  line-height: 1;
-  display: block;
+  display: none;
+}
+.studio-programacion-row .input-stepper-btn[data-dir="up"]::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 6px solid currentColor;
+}
+.studio-programacion-row .input-stepper-btn[data-dir="down"]::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid currentColor;
 }
 
 .studio-automation-summary {
