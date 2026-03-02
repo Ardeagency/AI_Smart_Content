@@ -228,6 +228,10 @@ class App {
     // ── Org: Organization ──
     r.register('/org/:orgIdShort/:orgNameSlug/organization', this._lazy('OrganizationView', ['/js/views/OrganizationView.js']), auth);
 
+    // ── Org: Dashboard (datos falsos / demo) ──
+    r.register('/org/:orgIdShort/:orgNameSlug/dashboard', this._lazy('DashboardView', ['/js/views/DashboardView.js']), auth);
+    r.register('/dashboard', this._lazy('DashboardView', ['/js/views/DashboardView.js']), auth);
+
     // ── Create / Form ──
     r.register('/create', this._lazy('CreateView', ['/js/views/CreateView.js']), auth);
     r.register('/form_org', this._lazy('FormRecordView', ['/js/views/FormRecordView.js']), auth);

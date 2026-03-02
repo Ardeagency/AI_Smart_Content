@@ -11552,6 +11552,321 @@ body.production-filters-in-header .living-container > .living-history-section {
     font-size: var(--font-size-base);
 }
 
+/* ========== Dashboard (org) — datos falsos / demo ========== */
+.page-content {
+    padding-top: calc(48px + 1rem);
+    padding-bottom: 2rem;
+}
+.dashboard-container {
+    min-height: calc(100vh - 48px);
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    background: var(--living-bg-deep, var(--bg-primary));
+}
+.dashboard-header {
+    margin-bottom: 2rem;
+}
+.dashboard-title {
+    font-size: var(--font-size-3xl);
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.dashboard-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin-top: 0.5rem;
+}
+.dashboard-section-title {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+.dashboard-charts-row,
+.dashboard-charts-row-2 {
+    display: grid;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+.dashboard-charts-row-2 {
+    grid-template-columns: 1fr 1fr;
+}
+.dashboard-chart-wrap {
+    background: var(--living-bg-card, rgba(21, 23, 28, 0.6));
+    border: 1px solid var(--border-divider);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.25rem;
+}
+.dashboard-chart-full {
+    margin-top: 0.5rem;
+}
+.dashboard-chart-title {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+}
+.dashboard-chart-inner {
+    height: 280px;
+    position: relative;
+}
+.dashboard-chart-inner-sm {
+    height: 200px;
+}
+.dashboard-grid-2x3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+@media (max-width: 1024px) {
+    .dashboard-charts-row-2 { grid-template-columns: 1fr; }
+    .dashboard-grid-2x3 { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 768px) {
+    .dashboard-container { padding: 1rem; }
+    .dashboard-grid-2x3 { grid-template-columns: 1fr; }
+}
+/* Estado estratégico: borde azul izquierdo */
+.dashboard-estado-card {
+    border-left: 4px solid #1e3a5f;
+    background: var(--living-bg-card, rgba(21, 23, 28, 0.6));
+    padding: 1.25rem 1.5rem;
+    border-radius: var(--radius-sm);
+    margin-bottom: 1.5rem;
+}
+.dashboard-estado-texto {
+    color: var(--text-primary);
+    font-size: var(--font-size-base);
+    line-height: 1.5;
+    margin: 0;
+}
+/* Indicadores clave: mini-cards en fila */
+.dashboard-indicadores {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+.dashboard-indicador {
+    flex: 1;
+    min-width: 140px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+.dashboard-indicador-label {
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--text-secondary);
+}
+.dashboard-indicador-value {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+/* Tabla ecosistema / mapa */
+.dashboard-table-wrap {
+    overflow-x: auto;
+    margin-top: 0.5rem;
+}
+.dashboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--font-size-base);
+}
+.dashboard-table th,
+.dashboard-table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-divider);
+}
+.dashboard-table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: var(--font-size-xs);
+    letter-spacing: 0.03em;
+    color: var(--text-secondary);
+}
+.dashboard-table td {
+    color: var(--text-primary);
+}
+.dashboard-ecosistema {
+    color: var(--color-info, #00e7ff);
+}
+.dashboard-tu-perfil {
+    color: var(--text-muted);
+}
+/* Badges (tono, formato, CTA, sentimiento) */
+.dashboard-badge {
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    border-radius: var(--radius-pill);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+}
+.dashboard-badge-tono {
+    background: rgba(90, 155, 213, 0.25);
+    color: var(--text-primary);
+}
+.dashboard-badge-formato {
+    background: rgba(147, 112, 219, 0.25);
+    color: var(--text-primary);
+}
+.dashboard-badge-cta {
+    background: rgba(255, 229, 0, 0.2);
+    color: var(--text-primary);
+}
+.dashboard-sentimiento-negativo {
+    background: rgba(255, 0, 0, 0.2);
+    color: #ff6b6b;
+}
+.dashboard-sentimiento-neutral {
+    background: rgba(158, 158, 158, 0.25);
+    color: var(--text-secondary);
+}
+.dashboard-sentimiento-positivo {
+    background: rgba(0, 214, 20, 0.15);
+    color: var(--color-success);
+}
+/* Oportunidades */
+.dashboard-oportunidades {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.dashboard-oportunidad-card {
+    padding: 1.25rem 1.5rem;
+}
+.dashboard-oportunidad-titulo {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 0.5rem 0;
+}
+.dashboard-oportunidad-desc {
+    font-size: var(--font-size-base);
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0;
+}
+/* Estrategia MANTÉN / AJUSTA / PRUEBA */
+.dashboard-estrategia-columnas {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+.dashboard-estrategia-col {
+    padding: 1.25rem 1.5rem;
+}
+.dashboard-estrategia-col-titulo {
+    font-size: var(--font-size-base);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 0.75rem 0;
+}
+.dashboard-estrategia-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: var(--font-size-base);
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+.dashboard-estrategia-list li {
+    margin-bottom: 0.35rem;
+}
+@media (max-width: 768px) {
+    .dashboard-estrategia-columnas { grid-template-columns: 1fr; }
+}
+/* Radar estratégico: grid de cards */
+.dashboard-radar-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+.dashboard-radar-card {
+    padding: 1.25rem;
+}
+.dashboard-radar-card-title {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+.dashboard-radar-card .dashboard-badge {
+    margin-bottom: 0.75rem;
+}
+.dashboard-radar-metrics {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+.dashboard-radar-metrics li {
+    margin-bottom: 0.25rem;
+}
+@media (max-width: 900px) {
+    .dashboard-radar-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 600px) {
+    .dashboard-radar-grid { grid-template-columns: 1fr; }
+}
+/* Evolución del perfil: timeline + mejor período */
+.dashboard-evolucion-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem 0;
+}
+.dashboard-evolucion-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+.dashboard-evolucion-dot {
+    flex-shrink: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--border-divider);
+    border: 2px solid #2c5f8d;
+    margin-top: 0.35rem;
+}
+.dashboard-evolucion-item mark {
+    background: rgba(255, 229, 0, 0.25);
+    color: var(--text-primary);
+    padding: 0.1rem 0.25rem;
+    border-radius: 2px;
+}
+.dashboard-mejor-periodo {
+    border-left: 4px solid #1e3a5f;
+    background: rgba(30, 58, 95, 0.12);
+    padding: 1.25rem 1.5rem;
+    border-radius: var(--radius-sm);
+}
+.dashboard-mejor-periodo-titulo {
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 0.5rem 0;
+}
+.dashboard-mejor-periodo-texto {
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+    line-height: 1.5;
+    margin: 0;
+}
+
 /* ========== Credits Shop (comprar créditos en org) ========== */
 .credits-shop-container {
     padding-top: calc(48px + 2rem);
