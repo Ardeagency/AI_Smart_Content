@@ -167,7 +167,7 @@ class DashboardView extends BaseView {
 
     const fechas = ['23 Feb 2026', '24 Feb 2026', '25 Feb 2026', '26 Feb 2026', '27 Feb 2026', '28 Feb 2026', '01 Mar 2026', '02 Mar 2026'];
     const fechasShort = ['23/02', '24/02', '25/02', '26/02', '27/02', '28/02', '01/03', '02/03'];
-    const perfiles = ['Andrés Guerra', 'Andrés Tobón', 'Anibal Gaviria', 'Daniel Quintero Calle', 'Fico Gutiérrez', 'Manuel Villa Mejia', 'Sebastián López', 'David Escobar'];
+    const perfiles = ['Nutribullet', 'Ninja', 'Vitamix', 'Hamilton Beach', 'KitchenAid', 'Braun', 'Philips', 'Cuisinart'];
     const colores = ['#1e3a5f', '#2c5f8d', '#3d7ab5', '#5a9bd5', '#7eb8e8', '#a3d0f0', '#6b7b8a', '#9ca3af'];
 
     // 1. Historial de Actividades (line/area, Y 0-12)
@@ -265,7 +265,7 @@ class DashboardView extends BaseView {
     // 5. Crecimiento (%)
     const c5 = document.getElementById('chartCrecimiento');
     if (c5) {
-      const nombresCrec = ['Daniel Quintero Calle', 'Fico Gutiérrez', 'Andrés Tobón', 'Aníbal Gaviria', 'Andrés Guerra', 'Manuel Villa Mejía', 'Sebastián López'];
+      const nombresCrec = ['Nutribullet', 'Ninja', 'Vitamix', 'Hamilton Beach', 'KitchenAid', 'Braun', 'Philips'];
       const coloresCrec = ['#1e3a5f', '#3d7ab5', '#5a9bd5', '#7eb8e8', '#9ca3af', '#2c5f8d', '#6b7b8a'];
       const datasets = nombresCrec.map((n, i) => ({
         label: n,
@@ -290,7 +290,7 @@ class DashboardView extends BaseView {
     // 6. Comparación de Perfiles (grouped bar: Cantidad Contenido + % Engagement en eje derecho)
     const c6 = document.getElementById('chartComparacionPerfiles');
     if (c6) {
-      const perfilesC = ['Fico', 'Daniel Q.', 'Andrés T.', 'Sebastián L.', 'Anibal G.', 'Manuel V.', 'Andrés G.', 'David E.'];
+      const perfilesC = ['Nutribullet', 'Ninja', 'Vitamix', 'Hamilton B.', 'KitchenAid', 'Braun', 'Philips', 'Cuisinart'];
       this.chartInstances.push(new Chart(c6, {
         type: 'bar',
         data: {
@@ -355,7 +355,7 @@ class DashboardView extends BaseView {
     // 9. Índice de Presencia Digital
     const c9 = document.getElementById('chartIndicePresencia');
     if (c9) {
-      const nombres = ['Fico Gutiérrez', 'Daniel Quintero Calle', 'Sebastián López', 'Andrés Tobón', 'Anibal Gaviria', 'Andrés Guerra', 'Manuel Villa Mejía', 'David Escobar'];
+      const nombres = ['Nutribullet', 'Ninja', 'Vitamix', 'Hamilton Beach', 'KitchenAid', 'Braun', 'Philips', 'Cuisinart'];
       const vals = [85, 40, 25, 25, 22, 20, 18, 5];
       this.chartInstances.push(new Chart(c9, {
         type: 'bar',
@@ -413,7 +413,7 @@ class DashboardView extends BaseView {
     // 12. Sentimientos por Perfiles (stacked bar)
     const c12 = document.getElementById('chartSentimientosPerfiles');
     if (c12) {
-      const perfilesS = ['Fico Gutiérrez', 'Daniel Quintero Calle', 'Andrés Tobón', 'Sebastián López', 'Anibal Gaviria', 'Manuel Vila Mejía', 'Andrés Guerra', 'David Escobar'];
+      const perfilesS = ['Nutribullet', 'Ninja', 'Vitamix', 'Hamilton Beach', 'KitchenAid', 'Braun', 'Philips', 'Cuisinart'];
       this.chartInstances.push(new Chart(c12, {
         type: 'bar',
         data: {
