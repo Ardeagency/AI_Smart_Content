@@ -725,7 +725,7 @@ class StudioView extends BaseView {
       section.className = 'studio-schedule-card' + (modifier ? ' ' + modifier : '');
       section.innerHTML =
         '<header class="studio-schedule-card-header">' +
-        '<div class="studio-schedule-card-icon"><i class="ph ph-list-checks"></i></div>' +
+        '<div class="studio-schedule-card-icon"><i class="ph ph-list-checks" aria-hidden="true"></i></div>' +
         '<h3 class="studio-schedule-card-title">' + this.escapeHtml(title) + '</h3>' +
         '</header>' +
         '<div class="studio-schedule-card-body"></div>';
