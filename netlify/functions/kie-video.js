@@ -65,24 +65,24 @@ exports.handler = async (event, context) => {
         };
       }
       const mode = body.mode === 'pro' ? 'pro' : 'std';
-      const multiShots = Array.isArray(body.multi_shots) && body.multi_shots.length > 0
-        ? body.multi_shots.filter((s) => s && (typeof s.prompt === 'string' ? s.prompt.trim() : ''))
-        : [];
+      const promptSingle = typeof body.prompt === 'string' ? body.prompt.trim() : '';
+      const rawMulti = Array.isArray(body.multi_shots) ? body.multi_shots : [];
+      const multiShots = rawMulti
+        .map((s) => (s && typeof s === 'object' ? (typeof s.prompt === 'string' ? s.prompt.trim() : String(s.prompt || '')) : ''))
+        .filter(Boolean);
 
       const input = { mode };
 
       if (multiShots.length > 0) {
-        input.multi_shots = multiShots.map((s) => ({ prompt: typeof s.prompt === 'string' ? s.prompt.trim() : String(s.prompt || '') }));
+        input.multi_shots = multiShots.map((p) => ({ prompt: p }));
+      } else if (promptSingle) {
+        input.multi_shots = [{ prompt: promptSingle }];
       } else {
-        const prompt = typeof body.prompt === 'string' ? body.prompt.trim() : '';
-        if (!prompt) {
-          return {
-            statusCode: 400,
-            headers: corsHeaders(),
-            body: JSON.stringify({ error: 'Falta el prompt. Indica el texto del video en Director Brief o genera uno con el botón de estrellas. Si usas Multi Shot, actívalo y genera prompts multi shot.' })
-          };
-        }
-        input.prompt = prompt;
+        return {
+          statusCode: 400,
+          headers: corsHeaders(),
+          body: JSON.stringify({ error: 'Falta el prompt. Escribe o genera un prompt en Director Brief antes de enviar.' })
+        };
       }
 
       if (typeof body.duration === 'string' && /^[0-9]+$/.test(body.duration)) {
@@ -107,11 +107,12 @@ exports.handler = async (event, context) => {
       });
       const createData = await createRes.json();
       if (createRes.status !== 200 || createData.code !== 200) {
+        const failMsg = createData.data?.failMsg || createData.data?.failCode || createData.msg || 'Error al crear la tarea';
         return {
           statusCode: createRes.status >= 400 ? createRes.status : 500,
           headers: corsHeaders(),
           body: JSON.stringify({
-            error: createData.msg || 'Error al crear la tarea',
+            error: failMsg,
             code: createData.code,
             failCode: createData.data?.failCode,
             failMsg: createData.data?.failMsg
