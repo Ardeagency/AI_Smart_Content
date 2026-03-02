@@ -2698,6 +2698,7 @@ body.has-sidebar #app-container:has(> main.living-main-content) {
     z-index: 900;
     display: flex;
     align-items: center;
+    overflow: visible;
 }
 .app-header .header-title,
 .app-header .header-left,
@@ -2904,7 +2905,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     color: var(--text-primary);
 }
 
-/* User Dropdown — mismo efecto glass que .app-header */
+/* User Dropdown — glass-black, anclado al header */
 #userDropdown.user-dropdown,
 .user-dropdown {
     box-sizing: border-box;
@@ -2926,14 +2927,16 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     opacity: 0;
     visibility: hidden;
     transform: translateY(-10px);
-    transition: var(--transition);
-    z-index: 1000;
+    transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+    z-index: 1100;
+    pointer-events: none;
 }
 
 .user-dropdown.active {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
+    pointer-events: auto;
 }
 
 .user-dropdown-header {

@@ -746,11 +746,14 @@ class Navigation {
     // Un solo listener en document para cerrar todos los dropdowns (evita duplicados al re-render)
     if (!this._documentClickAttached) {
       this._documentClickAttached = true;
-      document.addEventListener('click', () => {
+      document.addEventListener('click', (e) => {
         const ud = document.getElementById('userDropdown');
         const od = document.getElementById('navOrgDropdown');
-        if (ud) ud.classList.remove('active');
-        if (od) od.classList.remove('active');
+        const userBtn = document.getElementById('userMenuBtn');
+        const clickedInsideUserDropdown = ud && (ud.contains(e.target) || (userBtn && userBtn.contains(e.target)));
+        const clickedInsideOrgDropdown = od && od.contains(e.target);
+        if (ud && !clickedInsideUserDropdown) ud.classList.remove('active');
+        if (od && !clickedInsideOrgDropdown) od.classList.remove('active');
       });
     }
 
