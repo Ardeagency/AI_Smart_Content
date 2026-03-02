@@ -128,7 +128,7 @@ class TasksView extends BaseView {
     try {
       const { data, error } = await this.supabase
         .from('flow_schedules')
-        .select('id, user_id, flow_id, brand_id, cron_expression, is_active, job_name, created_at, entity_ids, campaign_id, audience_id, production_count, aspect_ratio, production_specifications')
+        .select('id, user_id, flow_id, brand_id, cron_expression, is_active, job_name, created_at, entity_ids, campaign_ids, audience_id, production_count, aspect_ratio, production_specifications')
         .eq('user_id', this.userId)
         .order('created_at', { ascending: false });
       if (error) {
@@ -142,7 +142,7 @@ class TasksView extends BaseView {
       }
       const flowIds = [...new Set(schedules.map(s => s.flow_id).filter(Boolean))];
       const entityIds = [...new Set(schedules.flatMap(s => Array.isArray(s.entity_ids) ? s.entity_ids : (s.entity_ids ? [s.entity_ids] : [])).filter(Boolean))];
-      const campaignIds = [...new Set(schedules.map(s => s.campaign_id).filter(Boolean))];
+      const campaignIds = [...new Set(schedules.flatMap(s => Array.isArray(s.campaign_ids) ? s.campaign_ids : (s.campaign_ids ? [s.campaign_ids] : [])).filter(Boolean))];
       const audienceIds = [...new Set(schedules.map(s => s.audience_id).filter(Boolean))];
       const brandIds = [...new Set(schedules.map(s => s.brand_id).filter(Boolean))];
 
@@ -171,7 +171,8 @@ class TasksView extends BaseView {
         const flowName = (s.flow_id && flowMap[s.flow_id]) || '—';
         const firstEntityId = Array.isArray(s.entity_ids) ? s.entity_ids[0] : s.entity_ids;
         const entityName = (firstEntityId && entityMap[firstEntityId]) || '—';
-        const campaignName = (s.campaign_id && campaignMap[s.campaign_id]) || '—';
+        const firstCampaignId = Array.isArray(s.campaign_ids) ? s.campaign_ids[0] : s.campaign_ids;
+        const campaignName = (firstCampaignId && campaignMap[firstCampaignId]) || '—';
         const audienceName = (s.audience_id && audienceMap[s.audience_id]) || '—';
         const projectId = s.brand_id ? brandProjectMap[s.brand_id] : null;
         const brandName = projectId ? (brandNames[projectId] || '—') : '—';
@@ -196,7 +197,7 @@ class TasksView extends BaseView {
     try {
       const { data, error } = await this.supabase
         .from('flow_schedules')
-        .select('id, user_id, flow_id, brand_id, cron_expression, is_active, job_name, created_at, entity_ids, campaign_id, audience_id, metadata_config, production_count, aspect_ratio, production_specifications')
+        .select('id, user_id, flow_id, brand_id, cron_expression, is_active, job_name, created_at, entity_ids, campaign_ids, audience_id, metadata_config, production_count, aspect_ratio, production_specifications')
         .eq('id', id)
         .eq('user_id', this.userId)
         .single();
@@ -216,8 +217,9 @@ class TasksView extends BaseView {
         const { data: e } = await this.supabase.from('brand_entities').select('name').eq('id', firstEntityId).maybeSingle();
         if (e?.name) entityName = e.name;
       }
-      if (s.campaign_id) {
-        const { data: c } = await this.supabase.from('campaigns').select('nombre_campana').eq('id', s.campaign_id).maybeSingle();
+      const firstCampaignId = Array.isArray(s.campaign_ids) ? s.campaign_ids[0] : s.campaign_ids;
+      if (firstCampaignId) {
+        const { data: c } = await this.supabase.from('campaigns').select('nombre_campana').eq('id', firstCampaignId).maybeSingle();
         if (c?.nombre_campana) campaignName = c.nombre_campana;
       }
       if (s.audience_id) {
@@ -474,7 +476,7 @@ class TasksView extends BaseView {
       is_active: false,
       job_name: jobName,
       entity_ids: Array.isArray(task.entity_ids) ? (task.entity_ids.length ? task.entity_ids : null) : (task.entity_ids || null),
-      campaign_id: task.campaign_id || null,
+      campaign_ids: Array.isArray(task.campaign_ids) ? (task.campaign_ids.length ? task.campaign_ids : null) : (task.campaign_ids ? [task.campaign_ids] : null),
       audience_id: task.audience_id || null,
       metadata_config: task.metadata_config ?? {},
       production_count: task.production_count ?? 1,
@@ -524,7 +526,8 @@ class TasksView extends BaseView {
       modal.id = 'taskEditModal';
       const taskEntityId = Array.isArray(task.entity_ids) ? task.entity_ids[0] : task.entity_ids;
       const entityOpts = this.entities.map(e => `<option value="${e.id}" ${e.id === taskEntityId ? 'selected' : ''}>${this.escapeHtml(e.name)}${e.entity_type ? ' (' + this.escapeHtml(e.entity_type) + ')' : ''}</option>`).join('');
-      const campaignOpts = this.campaigns.map(c => `<option value="${c.id}" ${c.id === task.campaign_id ? 'selected' : ''}>${this.escapeHtml(c.nombre_campana)}</option>`).join('');
+      const taskCampaignId = Array.isArray(task.campaign_ids) ? task.campaign_ids[0] : task.campaign_ids;
+      const campaignOpts = this.campaigns.map(c => `<option value="${c.id}" ${c.id === taskCampaignId ? 'selected' : ''}>${this.escapeHtml(c.nombre_campana)}</option>`).join('');
       const audienceOpts = this.audiences.map(a => `<option value="${a.id}" ${a.id === task.audience_id ? 'selected' : ''}>${this.escapeHtml(a.name)}</option>`).join('');
       const aspectOpts = this.ASPECT_RATIOS.map(ar => `<option value="${ar}" ${ar === (task.aspect_ratio || '1:1') ? 'selected' : ''}>${ar}</option>`).join('');
       modal.innerHTML = `
@@ -579,7 +582,7 @@ class TasksView extends BaseView {
           .from('flow_schedules')
           .update({
             entity_ids: entityId ? (Array.isArray(entityId) ? entityId : [entityId]) : null,
-            campaign_id: campaignId,
+            campaign_ids: campaignId ? [campaignId] : null,
             audience_id: audienceId,
             aspect_ratio: aspectRatio,
             production_count: productionCount,
