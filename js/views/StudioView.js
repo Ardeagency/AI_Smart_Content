@@ -169,7 +169,11 @@ class StudioView extends BaseView {
         this.credits.available = data.credits_available ?? 0;
         this.credits.total = data.credits_total ?? 0;
       }
+      this.updateCreditsDisplay();
       document.dispatchEvent(new CustomEvent('credits-updated'));
+      if (window.appNavigation && typeof window.appNavigation.loadCreditsFromDb === 'function') {
+        await window.appNavigation.loadCreditsFromDb(this.organizationId);
+      }
     } catch (e) {
       console.error('Studio loadCredits:', e);
     }
@@ -355,7 +359,7 @@ class StudioView extends BaseView {
     if (!formEl || !flow) return;
     const schema = flow.schedule_schema || {};
     let fields = Array.isArray(schema.fields) ? schema.fields : [];
-    // Flujos antiguos pueden no tener tipo_entidad: inyectarlo para mostrar image_selector/dropdown en Entidad
+    // Flujos antiguos: inyectar/normalizar campos para tipo_entidad, campaña/audiencia como dropdown, production_count como num_stepper
     const hasTipoEntidad = fields.some(f => (f.key || f.name) === 'tipo_entidad');
     const hasEntityId = fields.some(f => (f.key || f.name) === 'entity_id');
     if (hasEntityId && !hasTipoEntidad) {
@@ -370,6 +374,19 @@ class StudioView extends BaseView {
       };
       fields = [...fields.slice(0, entityIdx), tipoField, ...fields.slice(entityIdx)];
     }
+    fields = fields.map(f => {
+      const key = f.key || f.name;
+      if (key === 'campaign_id' && (f.input_type === 'campaign_selector' || f.type === 'campaign_selector')) {
+        return { ...f, input_type: 'select', options: f.options && f.options.length ? f.options : [{ value: '', label: 'Selecciona campaña...' }] };
+      }
+      if (key === 'audience_id' && (f.input_type === 'audience_selector' || f.type === 'audience_selector')) {
+        return { ...f, input_type: 'select', options: f.options && f.options.length ? f.options : [{ value: '', label: 'Selecciona audiencia...' }] };
+      }
+      if (key === 'production_count' && (f.input_type === 'number' || f.type === 'number')) {
+        return { ...f, input_type: 'num_stepper', step: f.step != null ? f.step : 1, min: f.min != null ? f.min : 1, max: f.max != null ? f.max : 10, defaultValue: f.defaultValue != null ? f.defaultValue : 1 };
+      }
+      return f;
+    });
     if (fields.length === 0) {
       formEl.innerHTML = '<p class="studio-form-empty">Este flujo no tiene campos de programación definidos.</p>';
       return;
@@ -397,16 +414,17 @@ class StudioView extends BaseView {
     const id = 'studio-schedule-entity_id';
     const name = 'entity_id';
     if (tipoEntidad === 'productos') {
+      // id en el contenedor visible (para que <label for> apunte a un control focusable y no al hidden)
       return (
-        '<div class="image-selector-carousel" data-media-source="products" data-selection-mode="multiple" data-key="entity_id" data-field-name="' + name + '">' +
+        '<div class="image-selector-carousel" id="' + id + '" tabindex="0" role="group" aria-label="Entidad" data-media-source="products" data-selection-mode="multiple" data-key="entity_id" data-field-name="' + name + '">' +
         '<div class="image-selector-carousel-track image-selector-carousel-track--empty" data-empty-msg="Selecciona producto(s)..."></div>' +
-        '<input type="hidden" id="' + id + '" name="' + name + '" value="">' +
+        '<input type="hidden" id="studio-schedule-entity_id_value" name="' + name + '" value="">' +
         '</div>'
       );
     }
     return (
       '<div class="input-dropdown-wrap">' +
-      '<select class="modern-input input-dropdown-select" id="' + id + '" name="' + name + '">' +
+      '<select class="modern-input input-dropdown-select" id="' + id + '" name="' + name + '" aria-label="Entidad">' +
       '<option value="">Selecciona un servicio...</option>' +
       '</select>' +
       '</div>'

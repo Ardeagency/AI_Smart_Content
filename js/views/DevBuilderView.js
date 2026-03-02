@@ -36,10 +36,10 @@ class DevBuilderView extends DevBaseView {
         { key: 'cron_expression', label: 'Programación', input_type: 'cron_schedule', required: true },
         { key: 'tipo_entidad', label: 'Tipo de entidad', input_type: 'select', required: true, options: [{ value: 'productos', label: 'Productos' }, { value: 'servicio', label: 'Servicio' }], defaultValue: 'productos' },
         { key: 'entity_id', label: 'Entidad', input_type: 'entity_selector' },
-        { key: 'campaign_id', label: 'Campaña', input_type: 'campaign_selector' },
-        { key: 'audience_id', label: 'Audiencia', input_type: 'audience_selector' },
+        { key: 'campaign_id', label: 'Campaña', input_type: 'select', required: true, options: [{ value: '', label: 'Selecciona campaña...' }] },
+        { key: 'audience_id', label: 'Audiencia', input_type: 'select', required: true, options: [{ value: '', label: 'Selecciona audiencia...' }] },
         { key: 'aspect_ratio', label: 'Formato', input_type: 'aspect_ratio', options: [{ value: '1:1', label: '1:1' }, { value: '9:16', label: '9:16' }, { value: '16:9', label: '16:9' }, { value: '4:5', label: '4:5' }], defaultValue: '1:1' },
-        { key: 'production_count', label: 'Producciones por ejecución', input_type: 'number', min: 1, max: 10, defaultValue: 1 },
+        { key: 'production_count', label: 'Producciones por ejecución', input_type: 'num_stepper', min: 1, max: 10, step: 1, defaultValue: 1 },
         { key: 'production_specifications', label: 'Especificaciones', input_type: 'textarea' }
       ]
     };
