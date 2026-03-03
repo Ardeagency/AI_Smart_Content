@@ -353,6 +353,7 @@ CREATE TABLE public.flow_runs (
   total_modules_count integer,
   is_paused boolean DEFAULT false,
   step_history jsonb DEFAULT '[]'::jsonb,
+  n8n_execution_id text UNIQUE,
   CONSTRAINT flow_runs_pkey PRIMARY KEY (id),
   CONSTRAINT flow_runs_audience_id_fkey FOREIGN KEY (audience_id) REFERENCES public.audiences(id),
   CONSTRAINT flow_runs_brand_id_fkey FOREIGN KEY (brand_id) REFERENCES public.brands(id),
@@ -365,7 +366,6 @@ CREATE TABLE public.flow_schedules (
   flow_id uuid,
   brand_id uuid,
   cron_expression text NOT NULL,
-  is_active boolean DEFAULT true,
   job_name text NOT NULL UNIQUE,
   created_at timestamp with time zone DEFAULT now(),
   entity_ids ARRAY,
@@ -376,6 +376,7 @@ CREATE TABLE public.flow_schedules (
   aspect_ratio text DEFAULT '1:1'::text CHECK (aspect_ratio = ANY (ARRAY['1:1'::text, '9:16'::text, '16:9'::text, '4:5'::text])),
   production_specifications text,
   composition_mode text DEFAULT 'individual'::text,
+  status text DEFAULT 'draft'::text CHECK (status = ANY (ARRAY['draft'::text, 'active'::text, 'paused'::text])),
   CONSTRAINT flow_schedules_pkey PRIMARY KEY (id),
   CONSTRAINT flow_schedules_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id),
   CONSTRAINT flow_schedules_flow_id_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id),
@@ -559,7 +560,6 @@ CREATE TABLE public.subscriptions (
   CONSTRAINT subscriptions_pkey PRIMARY KEY (id),
   CONSTRAINT subscriptions_organization_id_fkey FOREIGN KEY (organization_id) REFERENCES public.organizations(id)
 );
--- Producciones nativas de la página Video (Kie API, OpenAI, etc.)
 CREATE TABLE public.system_ai_outputs (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   brand_container_id uuid NOT NULL,

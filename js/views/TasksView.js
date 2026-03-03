@@ -128,7 +128,7 @@ class TasksView extends BaseView {
     try {
       const { data, error } = await this.supabase
         .from('flow_schedules')
-        .select('id, user_id, flow_id, brand_id, cron_expression, is_active, job_name, created_at, entity_ids, campaign_ids, audience_ids, production_count, aspect_ratio, production_specifications')
+        .select('id, user_id, flow_id, brand_id, cron_expression, status, job_name, created_at, entity_ids, campaign_ids, audience_ids, production_count, aspect_ratio, production_specifications')
         .eq('user_id', this.userId)
         .order('created_at', { ascending: false });
       if (error) {
@@ -179,6 +179,7 @@ class TasksView extends BaseView {
         const brandName = projectId ? (brandNames[projectId] || '—') : '—';
         return {
           ...s,
+          is_active: s.status === 'active',
           flow_name: flowName,
           entity_name: entityName,
           campaign_name: campaignName,
@@ -198,12 +199,12 @@ class TasksView extends BaseView {
     try {
       const { data, error } = await this.supabase
         .from('flow_schedules')
-        .select('id, user_id, flow_id, brand_id, cron_expression, is_active, job_name, created_at, entity_ids, campaign_ids, audience_ids, metadata_config, production_count, aspect_ratio, production_specifications')
+        .select('id, user_id, flow_id, brand_id, cron_expression, status, job_name, created_at, entity_ids, campaign_ids, audience_ids, metadata_config, production_count, aspect_ratio, production_specifications')
         .eq('id', id)
         .eq('user_id', this.userId)
         .single();
       if (error || !data) return null;
-      const s = data;
+      const s = { ...data, is_active: data.status === 'active' };
       const firstEntityId = Array.isArray(s.entity_ids) ? s.entity_ids[0] : s.entity_ids;
       let flowName = '—';
       let entityName = '—';
@@ -443,13 +444,13 @@ class TasksView extends BaseView {
     if (deleteBtn) deleteBtn.onclick = () => this.confirmDeleteSchedule(task);
   }
 
-  /** Activar o pausar la tarea (toggle is_active). */
+  /** Activar o pausar la tarea (toggle status). */
   async toggleActive(task) {
     if (!this.supabase || !task?.id) return;
     const newActive = !task.is_active;
     const { error } = await this.supabase
       .from('flow_schedules')
-      .update({ is_active: newActive })
+      .update({ status: newActive ? 'active' : 'paused' })
       .eq('id', task.id)
       .eq('user_id', this.userId);
     if (error) {
@@ -475,7 +476,7 @@ class TasksView extends BaseView {
       flow_id: task.flow_id,
       brand_id: task.brand_id,
       cron_expression: task.cron_expression,
-      is_active: false,
+      status: 'paused',
       job_name: jobName,
       entity_ids: Array.isArray(task.entity_ids) ? (task.entity_ids.length ? task.entity_ids : null) : (task.entity_ids || null),
       campaign_ids: Array.isArray(task.campaign_ids) ? (task.campaign_ids.length ? task.campaign_ids : null) : (task.campaign_ids ? [task.campaign_ids] : null),
@@ -589,7 +590,7 @@ class TasksView extends BaseView {
             audience_ids: audienceId ? [audienceId] : null,
             aspect_ratio: aspectRatio,
             production_count: productionCount,
-            is_active: isActive
+            status: isActive ? 'active' : 'paused'
           })
           .eq('id', task.id)
           .eq('user_id', this.userId);
