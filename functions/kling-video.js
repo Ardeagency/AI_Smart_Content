@@ -193,9 +193,9 @@ exports.handler = async (event, context) => {
             scene_prompt: scenePrompt,
             duration: Math.max(3, Math.min(15, Math.floor(duration / multiShots.length)))
           }));
-        }
-        if (imageUrls.length >= 1) payload.first_frame = imageUrls[0];
-        if (imageUrls.length >= 2) payload.end_frame = imageUrls[1];
+      }
+      if (imageUrls.length >= 1) payload.first_frame = imageUrls[0];
+      if (imageUrls.length >= 2) payload.end_frame = imageUrls[1];
       } else {
         createUrl = `${baseUrl}/${createPathUnified}`;
         const model = mode === 'pro' ? 'kling/kling-v2-1-master' : 'kling/kling-v2-1';
