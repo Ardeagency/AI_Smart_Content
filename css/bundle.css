@@ -20861,38 +20861,65 @@ body.production-filters-in-header .living-container > .living-history-section {
 .organization-container.video-view-container {
     padding: 0;
     min-height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
-/* Layout: main (canva + director) a la izquierda, sidebar (context + cine) a la derecha */
+/* Layout: content-row (canvas + sidebar) con scroll propio cada uno; Director Console fijo abajo, sin scroll */
 .video-layout {
     display: flex;
+    flex-direction: column;
     flex-wrap: nowrap;
     gap: 0;
     min-height: 100vh;
+    overflow: hidden;
+    flex: 1;
+    min-height: 0;
+}
+.video-content-row {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    overflow: hidden;
 }
 .video-main {
     flex: 1;
     min-width: 0;
+    min-height: 0;
     display: flex;
     flex-direction: column;
-    padding: 1rem 1rem 1.5rem;
+    overflow: hidden;
+    padding: 1rem 1rem 0.75rem;
 }
 .video-main .video-canvas,
 .video-main .video-canva-view {
     flex: 1;
-    min-height: 200px;
-    margin-bottom: 1rem;
+    min-height: 0;
+    overflow-y: auto;
+    margin-bottom: 0;
 }
 .video-director-console-zone,
 .video-director-wrap {
     flex-shrink: 0;
     width: 100%;
     max-width: 100%;
+    padding: 0.75rem 1rem 1rem;
 }
 .video-director-console-zone .video-prompt-footer-card,
 .video-director-wrap .video-prompt-footer-card {
     width: 100%;
 }
-/* Sin degradado, sombra ni brillo en los contenedores de la página Video */
+/* Director Console: efecto glass-black explícito (estático, no scrollea) */
+.video-director-console-zone .video-prompt-footer-card-inner.glass-black {
+    background: var(--glass-black-bg);
+    border: 1px solid var(--glass-black-border);
+    color: var(--glass-black-text);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: var(--glass-radius);
+    box-shadow: none;
+}
+/* Sin degradado/sombra en cards de la página Video (excepto glass-black del Director) */
 .video-view-container .video-prompt-footer-card::after,
 .video-view-container .video-prompt-footer-card::before {
     display: none;
@@ -20907,6 +20934,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 .video-sidebar-console {
     width: 360px;
     flex-shrink: 0;
+    min-height: 0;
     padding: 1rem 1rem 1.5rem 1rem;
     overflow-y: auto;
     border-left: 1px solid var(--border-divider);
