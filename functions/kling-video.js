@@ -154,12 +154,18 @@ exports.handler = async (event, context) => {
       const durationRaw = typeof body.duration === 'string' && /^[0-9]+$/.test(body.duration) ? body.duration : '5';
       const duration = Math.min(15, Math.max(3, parseInt(durationRaw, 10) || 5));
 
-      // Payload API Kling 3.0: prompt, duration (3-15), cfg_scale, multi_shot, first_frame, end_frame, negative_prompt
+      // Payload API Kling 3.0: prompt, duration (3-15), cfg_scale, aspect_ratio, sound, multi_shot, first_frame, end_frame, negative_prompt
       const payload = {
         prompt,
         duration,
         cfg_scale: 0.65
       };
+      const aspectRatio = typeof body.aspect_ratio === 'string' && /^(16:9|9:16|1:1)$/.test(body.aspect_ratio.trim()) ? body.aspect_ratio.trim() : '16:9';
+      payload.aspect_ratio = aspectRatio;
+      if (typeof body.sound === 'boolean') payload.sound = body.sound;
+      else if (body.sound === true || body.sound === 'true') payload.sound = true;
+      else payload.sound = false;
+
       if (typeof body.negative_prompt === 'string' && body.negative_prompt.trim()) payload.negative_prompt = body.negative_prompt.trim();
 
       if (multiShots.length > 0) {
