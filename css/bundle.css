@@ -6781,14 +6781,14 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   align-items: center;
   flex-direction: row;
   position: absolute;
-  left: 1.25rem;
-  right: 1.25rem;
+  left: 10px;
+  right: 10px;
   bottom: 0;
   transform: translateY(42%);
   gap: 0;
   z-index: 2;
   min-width: 0;
-  max-width: calc(100% - 2.5rem);
+  max-width: calc(100% - 20px);
 }
 
 .task-card-avatar {
