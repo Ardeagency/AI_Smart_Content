@@ -6703,6 +6703,7 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   overflow: hidden;
+  min-width: 0;
 }
 
 .task-card:hover {
@@ -6780,12 +6781,14 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   align-items: center;
   flex-direction: row;
   position: absolute;
-  left: 1rem;
-  right: 1rem;
+  left: 1.25rem;
+  right: 1.25rem;
   bottom: 0;
   transform: translateY(42%);
   gap: 0;
   z-index: 2;
+  min-width: 0;
+  max-width: calc(100% - 2.5rem);
 }
 
 .task-card-avatar {
