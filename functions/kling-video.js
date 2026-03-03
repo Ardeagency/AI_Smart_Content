@@ -60,11 +60,14 @@ exports.handler = async (event, context) => {
         return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Acción no válida. Use action: "createTask"' }) };
       }
 
-      // Doc KIE: solo model + input con mode. Cualquier otro campo puede provocar 422/500.
+      // Doc KIE: model + input (mode obligatorio). 422 suele indicar validación; kling-3.0/video puede requerir prompt en input.
       const mode = body.mode === 'pro' ? 'pro' : 'std';
+      const promptText = typeof body.prompt === 'string' ? body.prompt.trim() : '';
+      const input = { mode };
+      if (promptText) input.prompt = promptText;
       const kiePayload = {
         model: 'kling-3.0/video',
-        input: { mode }
+        input
       };
 
       const createUrl = `${KIE_BASE}${CREATE_PATH}`;
@@ -82,7 +85,11 @@ exports.handler = async (event, context) => {
       }
 
       if (!createRes.ok || createData.code !== 200) {
-        const errMsg = createData.msg || createData.message || createData.error || (createRes.status === 401 ? 'API Key inválida (revisa KIE_API_KEY)' : createRes.status === 402 ? 'Saldo insuficiente en KIE' : 'Error al crear la tarea');
+        let errMsg = createData.msg || createData.message || createData.error || (createRes.status === 401 ? 'API Key inválida (revisa KIE_API_KEY)' : createRes.status === 402 ? 'Saldo insuficiente en KIE' : 'Error al crear la tarea');
+        if (createData.data?.errors && Array.isArray(createData.data.errors) && createData.data.errors.length) {
+          const details = createData.data.errors.map((e) => (typeof e === 'string' ? e : e.message || e.field || JSON.stringify(e))).join('; ');
+          errMsg = errMsg + (details ? ' — ' + details : '');
+        }
         console.error('kling-video KIE createTask error:', createRes.status, createData);
         // Devolver HTTP no-2xx cuando KIE indica error (code !== 200) para que el front muestre error y no espere taskId
         const httpStatus = !createRes.ok
