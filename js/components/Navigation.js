@@ -5,14 +5,14 @@
  */
 const SIDEBAR_USER_CONFIG = {
   main: [
-    { type: 'page', id: 'activity', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
-    { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-area', iconSrc: '/recursos/icons/dashboard.svg', route: 'dashboard' },
-    { type: 'page', id: 'tasks', label: 'Task', icon: 'fa-clock', iconSrc: '/recursos/icons/task.svg', route: 'tasks' },
-    { type: 'page', id: 'video', label: 'Video', icon: 'fa-play', iconSrc: '/recursos/icons/video.svg', route: 'video' },
+    { type: 'page', id: 'activity', label: 'PRODUCTION', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
+    { type: 'page', id: 'dashboard', label: 'DASHBOARD', icon: 'fa-chart-area', iconSrc: '/recursos/icons/dashboard.svg', route: 'dashboard' },
+    { type: 'page', id: 'tasks', label: 'TASK', icon: 'fa-clock', iconSrc: '/recursos/icons/task.svg', route: 'tasks' },
+    { type: 'page', id: 'video', label: 'VIDEO', icon: 'fa-play', iconSrc: '/recursos/icons/video.svg', route: 'video' },
     {
       type: 'container',
       id: 'catalog',
-      label: 'Flows',
+      label: 'FLOWS',
       icon: 'fa-th-large',
       iconSrc: '/recursos/icons/flows.svg',
       children: [] // Se rellenan con content_categories (schema 218-224) en render
@@ -20,22 +20,22 @@ const SIDEBAR_USER_CONFIG = {
     {
       type: 'container',
       id: 'identity',
-      label: 'Identity',
+      label: 'IDENTITY',
       icon: 'fa-layer-group',
       iconSrc: '/recursos/icons/Identity-Brands.svg',
       children: [
-        { label: 'Brand', route: 'brand' },
-        { label: 'Products', route: 'products' },
-        { label: 'Services', route: 'servicios' },
-        { label: 'Audiences', route: 'audiences' },
-        { label: 'Campaigns', route: 'campaigns' }
+        { label: 'BRAND', route: 'brand' },
+        { label: 'PRODUCTS', route: 'products' },
+        { label: 'SERVICES', route: 'servicios' },
+        { label: 'AUDIENCES', route: 'audiences' },
+        { label: 'CAMPAIGNS', route: 'campaigns' }
       ]
     }
   ],
   footer: [
-    { label: 'Settings', icon: 'fa-cog', iconSrc: '/recursos/icons/settings.svg', route: 'organization' },
-    { label: 'Notifications', icon: 'fa-bell', iconSrc: '/recursos/icons/notification.svg', flyout: 'notifications' },
-    { label: 'Credits', icon: 'fa-coins', iconSrc: '/recursos/icons/credits.svg', route: 'credits' }
+    { label: 'SETTINGS', icon: 'fa-cog', iconSrc: '/recursos/icons/settings.svg', route: 'organization' },
+    { label: 'NOTIFICATIONS', icon: 'fa-bell', iconSrc: '/recursos/icons/notification.svg', flyout: 'notifications' },
+    { label: 'CREDITS', icon: 'fa-coins', iconSrc: '/recursos/icons/credits.svg', route: 'credits' }
   ]
 };
 
@@ -68,58 +68,58 @@ const SIDEBAR_TOGGLE_ICON_COLAPSADO = `<svg class="nav-sidebar-toggle-icon" widt
  * Sidebar desarrollador — Build, Operations, Observability, Resources, Lead (solo lead).
  */
 const SIDEBAR_DEVELOPER_CONFIG = [
-  { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-line', route: '/dev/dashboard' },
+  { type: 'page', id: 'dashboard', label: 'DASHBOARD', icon: 'fa-chart-line', route: '/dev/dashboard' },
   {
     type: 'container',
     id: 'build',
-    label: 'Build',
+    label: 'BUILD',
     icon: 'fa-wrench',
     children: [
-      { label: 'Mis Flujos', route: '/dev/flows' },
-      { label: 'Builder', route: '/dev/builder' }
+      { label: 'MIS FLUJOS', route: '/dev/flows' },
+      { label: 'BUILDER', route: '/dev/builder' }
     ]
   },
   {
     type: 'container',
     id: 'operations',
-    label: 'Operations',
+    label: 'OPERATIONS',
     icon: 'fa-cogs',
     children: [
-      { label: 'Test de Flujos', route: '/dev/test' },
-      { label: 'Webhooks', route: '/dev/webhooks' }
+      { label: 'TEST DE FLUJOS', route: '/dev/test' },
+      { label: 'WEBHOOKS', route: '/dev/webhooks' }
     ]
   },
   {
     type: 'container',
     id: 'observability',
-    label: 'Observability',
+    label: 'OBSERVABILITY',
     icon: 'fa-chart-area',
     children: [
-      { label: 'Debug', route: '/dev/test' },
-      { label: 'Logs', route: '/dev/logs' }
+      { label: 'DEBUG', route: '/dev/test' },
+      { label: 'LOGS', route: '/dev/logs' }
     ]
   },
   {
     type: 'container',
     id: 'resources',
-    label: 'Resources',
+    label: 'RESOURCES',
     icon: 'fa-book',
     children: [
-      { label: 'Referencias visuales', route: '/dev/lead/references' }
+      { label: 'REFERENCIAS VISUALES', route: '/dev/lead/references' }
     ]
   },
   {
     type: 'container',
     id: 'lead',
-    label: 'Lead',
+    label: 'LEAD',
     icon: 'fa-shield-alt',
     role_required: 'lead',
     children: [
-      { label: 'Equipo', route: '/dev/lead/team' },
-      { label: 'Categorías', route: '/dev/lead/categories' },
-      { label: 'Input Schemas', route: '/dev/lead/input-schemas' },
-      { label: 'Base conocimiento IA', route: '/dev/lead/ai-vectors' },
-      { label: 'Todos los flujos', route: '/dev/lead/flows' }
+      { label: 'EQUIPO', route: '/dev/lead/team' },
+      { label: 'CATEGORÍAS', route: '/dev/lead/categories' },
+      { label: 'INPUT SCHEMAS', route: '/dev/lead/input-schemas' },
+      { label: 'BASE CONOCIMIENTO IA', route: '/dev/lead/ai-vectors' },
+      { label: 'TODOS LOS FLUJOS', route: '/dev/lead/flows' }
     ]
   }
 ];
@@ -527,7 +527,7 @@ class Navigation {
       <header class="app-header with-sidebar" id="appHeader">
         <div class="header-content">
           <div class="header-left">
-            <h1 class="header-title" id="headerTitle">Production</h1>
+            <h1 class="header-title" id="headerTitle">PRODUCTION</h1>
           </div>
           <div class="header-right">
             <div class="header-user-menu-wrap">
@@ -558,7 +558,7 @@ class Navigation {
         <div class="nav-footer" role="navigation" aria-label="Administración organizacional">
           ${footerHTML}
           <div class="nav-org-credits" id="navOrgCreditsBlock">
-            <span class="nav-org-credits-label">Credits</span>
+            <span class="nav-org-credits-label">CREDITS</span>
             <span class="nav-org-credits-value" id="navTokensValue">—</span>
             <div class="nav-org-credits-bar" aria-hidden="true"><div class="nav-org-credits-bar-fill" style="width:0%"></div></div>
           </div>
@@ -615,7 +615,7 @@ class Navigation {
       <header class="app-header with-sidebar" id="appHeader">
         <div class="header-content">
           <div class="header-left">
-            <h1 class="header-title" id="headerTitle">Developer Portal</h1>
+            <h1 class="header-title" id="headerTitle">DEVELOPER PORTAL</h1>
           </div>
           <div class="header-right">
             <div class="header-user-menu-wrap">
@@ -641,7 +641,7 @@ class Navigation {
                 <i class="fas fa-code"></i>
               </div>
               <div class="nav-identity-info">
-                <div class="nav-org-name" id="navDevName">Developer Portal</div>
+                <div class="nav-org-name" id="navDevName">DEVELOPER PORTAL</div>
                 <div class="nav-org-type" id="navDevTier">—</div>
               </div>
             </div>
@@ -1063,7 +1063,7 @@ class Navigation {
       <div class="nav-flyout-inner">
         <div class="nav-flyout-header">
           <span class="nav-flyout-header-icon"><i class="fas fa-bell"></i></span>
-          <span class="nav-flyout-header-label">Notifications</span>
+          <span class="nav-flyout-header-label">NOTIFICATIONS</span>
         </div>
         <div class="nav-flyout-body nav-flyout-notifications-body">${bodyHtml}</div>
         ${footerHtml}
@@ -1226,38 +1226,38 @@ class Navigation {
     const pathWithoutOrg = path.replace(/^\/org\/[^/]+\/[^/]+/, '') || '/';
 
     const titles = {
-      '/production': 'Production',
-      '/historial': 'Production',
-      '/living': 'Production',
-      '/dashboard': 'Dashboard',
-      '/brand': 'Identity',
-      '/brands': 'Identity',
-      '/products': 'Identity',
-      '/product-detail': 'Identity',
-      '/studio/flows': 'flows',
-      '/studio/catalog': 'flows',
-      '/studio': 'Studio',
-      '/audiences': 'Identity',
-      '/marketing': 'Identity',
-      '/campaigns': 'Identity',
-      '/content': 'Identity',
-      '/video': 'Video',
-      '/servicios': 'Identity',
-      '/settings': 'Settings',
-      '/organization': 'Settings',
-      '/credits': 'Credits',
-      '/dev/dashboard': 'Dashboard',
-      '/dev/flows': 'Mis Flujos',
-      '/dev/builder': 'Builder',
-      '/dev/test': 'Test de Flujos',
-      '/dev/logs': 'Logs',
-      '/dev/webhooks': 'Webhooks',
-      '/dev/lead/flows': 'Todos los flujos',
-      '/dev/lead/team': 'Equipo',
-      '/dev/lead/categories': 'Categorías',
-      '/dev/lead/input-schemas': 'Input Schemas',
-      '/dev/lead/ai-vectors': 'Base de conocimientos IA',
-      '/dev/lead/references': 'Referencias visuales'
+      '/production': 'PRODUCTION',
+      '/historial': 'PRODUCTION',
+      '/living': 'PRODUCTION',
+      '/dashboard': 'DASHBOARD',
+      '/brand': 'IDENTITY',
+      '/brands': 'IDENTITY',
+      '/products': 'IDENTITY',
+      '/product-detail': 'IDENTITY',
+      '/studio/flows': 'FLOWS',
+      '/studio/catalog': 'FLOWS',
+      '/studio': 'STUDIO',
+      '/audiences': 'IDENTITY',
+      '/marketing': 'IDENTITY',
+      '/campaigns': 'IDENTITY',
+      '/content': 'IDENTITY',
+      '/video': 'VIDEO',
+      '/servicios': 'IDENTITY',
+      '/settings': 'SETTINGS',
+      '/organization': 'SETTINGS',
+      '/credits': 'CREDITS',
+      '/dev/dashboard': 'DASHBOARD',
+      '/dev/flows': 'MIS FLUJOS',
+      '/dev/builder': 'BUILDER',
+      '/dev/test': 'TEST DE FLUJOS',
+      '/dev/logs': 'LOGS',
+      '/dev/webhooks': 'WEBHOOKS',
+      '/dev/lead/flows': 'TODOS LOS FLUJOS',
+      '/dev/lead/team': 'EQUIPO',
+      '/dev/lead/categories': 'CATEGORÍAS',
+      '/dev/lead/input-schemas': 'INPUT SCHEMAS',
+      '/dev/lead/ai-vectors': 'BASE DE CONOCIMIENTOS IA',
+      '/dev/lead/references': 'REFERENCIAS VISUALES'
     };
 
     for (const [route, title] of Object.entries(titles)) {
@@ -1650,7 +1650,7 @@ class Navigation {
       iconWrap.innerHTML = `<span class="nav-dev-initials">${initials}</span>`;
     }
     const nameEl = document.getElementById('navDevName');
-    if (nameEl) nameEl.textContent = profile?.full_name?.trim() || profile?.email?.trim() || email || 'Developer Portal';
+    if (nameEl) nameEl.textContent = profile?.full_name?.trim() || profile?.email?.trim() || email || 'DEVELOPER PORTAL';
 
     const tierEl = document.getElementById('navDevTier');
     if (tierEl && profile) {
