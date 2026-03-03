@@ -2077,9 +2077,9 @@ body.sidebar-collapsed .main-header,
 
 
 .nav-icon {
-    width: 28px;
-    height: 28px;
-    font-size: 16px;
+    width: 12px;
+    height: 12px;
+    font-size: 12px;
     font-weight: 900;
     font-style: normal;
     font-family: "Font Awesome 6 Free";
@@ -2098,7 +2098,7 @@ body.sidebar-collapsed .main-header,
 
 .nav-text {
     flex: 1;
-    font-size: 14px;
+    font-size: 11px;
     font-family: var(--font-family);
     transition: var(--transition-fast);
     opacity: 1;
@@ -3398,7 +3398,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     border-radius: var(--radius-sm);
     color: var(--sidebar-text-secondary);
     text-decoration: none;
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 500;
     transition: background 0.12s ease, color 0.12s ease;
     cursor: pointer;
@@ -3421,16 +3421,17 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 }
 
 .nav-mode-user .nav-icon {
-    width: 16px;
-    font-size: 16px;
+    width: 12px;
+    height: 12px;
+    font-size: 12px;
     text-align: center;
     flex-shrink: 0;
     color: var(--sidebar-icon-color);
 }
 
 .nav-mode-user .nav-icon-img {
-    width: 20px;
-    height: 20px;
+    width: 12px;
+    height: 12px;
     object-fit: contain;
     flex-shrink: 0;
 }
@@ -3468,7 +3469,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     min-height: 36px;
     color: var(--text-muted);
     text-decoration: none;
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 400;
     border-radius: var(--radius-sm);
     transition: background 0.12s ease, color 0.12s ease;
@@ -3494,7 +3495,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     border-radius: var(--radius-md);
     color: var(--sidebar-text-secondary);
     text-decoration: none;
-    font-size: 14px;
+    font-size: 11px;
     font-weight: 400;
     transition: background 0.15s ease, color 0.15s ease;
     cursor: pointer;
@@ -3516,8 +3517,9 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 }
 
 .side-navigation:not(.nav-mode-user) .nav-icon {
-    width: 20px;
-    font-size: 16px;
+    width: 12px;
+    height: 12px;
+    font-size: 12px;
     text-align: center;
     flex-shrink: 0;
     color: var(--sidebar-icon-color);
@@ -3530,7 +3532,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     padding: 10px 14px 10px 48px;
     color: var(--text-muted);
     text-decoration: none;
-    font-size: 13px;
+    font-size: 11px;
     border-radius: var(--radius-sm);
     transition: var(--transition);
 }
@@ -3605,7 +3607,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 }
 
 .nav-org-credits-label {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 500;
     color: var(--text-muted);
 }
@@ -21240,6 +21242,29 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 .video-director-btn-generate i {
     font-size: 0.6rem;
+}
+.video-director-controls .video-director-btn-regenerate {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid var(--white-20);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+}
+.video-director-controls .video-director-btn-regenerate:hover {
+    color: var(--glass-black-text);
+    border-color: var(--white-40);
+    background: var(--white-8);
+}
+.video-director-controls .video-director-btn-regenerate:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .video-prompt-actions-row1,

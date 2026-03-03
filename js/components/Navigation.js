@@ -5,14 +5,14 @@
  */
 const SIDEBAR_USER_CONFIG = {
   main: [
-    { type: 'page', id: 'activity', label: 'PRODUCTION', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
-    { type: 'page', id: 'dashboard', label: 'DASHBOARD', icon: 'fa-chart-area', iconSrc: '/recursos/icons/dashboard.svg', route: 'dashboard' },
-    { type: 'page', id: 'tasks', label: 'TASK', icon: 'fa-clock', iconSrc: '/recursos/icons/task.svg', route: 'tasks' },
-    { type: 'page', id: 'video', label: 'VIDEO', icon: 'fa-play', iconSrc: '/recursos/icons/video.svg', route: 'video' },
+    { type: 'page', id: 'activity', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
+    { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-area', iconSrc: '/recursos/icons/dashboard.svg', route: 'dashboard' },
+    { type: 'page', id: 'tasks', label: 'Task', icon: 'fa-clock', iconSrc: '/recursos/icons/task.svg', route: 'tasks' },
+    { type: 'page', id: 'video', label: 'Video', icon: 'fa-play', iconSrc: '/recursos/icons/video.svg', route: 'video' },
     {
       type: 'container',
       id: 'catalog',
-      label: 'FLOWS',
+      label: 'Flows',
       icon: 'fa-th-large',
       iconSrc: '/recursos/icons/flows.svg',
       children: [] // Se rellenan con content_categories (schema 218-224) en render
@@ -20,22 +20,22 @@ const SIDEBAR_USER_CONFIG = {
     {
       type: 'container',
       id: 'identity',
-      label: 'IDENTITY',
+      label: 'Identity',
       icon: 'fa-layer-group',
       iconSrc: '/recursos/icons/Identity-Brands.svg',
       children: [
-        { label: 'BRAND', route: 'brand' },
-        { label: 'PRODUCTS', route: 'products' },
-        { label: 'SERVICES', route: 'servicios' },
-        { label: 'AUDIENCES', route: 'audiences' },
-        { label: 'CAMPAIGNS', route: 'campaigns' }
+        { label: 'Brand', route: 'brand' },
+        { label: 'Products', route: 'products' },
+        { label: 'Services', route: 'servicios' },
+        { label: 'Audiences', route: 'audiences' },
+        { label: 'Campaigns', route: 'campaigns' }
       ]
     }
   ],
   footer: [
-    { label: 'SETTINGS', icon: 'fa-cog', iconSrc: '/recursos/icons/settings.svg', route: 'organization' },
-    { label: 'NOTIFICATIONS', icon: 'fa-bell', iconSrc: '/recursos/icons/notification.svg', flyout: 'notifications' },
-    { label: 'CREDITS', icon: 'fa-coins', iconSrc: '/recursos/icons/credits.svg', route: 'credits' }
+    { label: 'Settings', icon: 'fa-cog', iconSrc: '/recursos/icons/settings.svg', route: 'organization' },
+    { label: 'Notifications', icon: 'fa-bell', iconSrc: '/recursos/icons/notification.svg', flyout: 'notifications' },
+    { label: 'Credits', icon: 'fa-coins', iconSrc: '/recursos/icons/credits.svg', route: 'credits' }
   ]
 };
 
@@ -68,58 +68,58 @@ const SIDEBAR_TOGGLE_ICON_COLAPSADO = `<svg class="nav-sidebar-toggle-icon" widt
  * Sidebar desarrollador — Build, Operations, Observability, Resources, Lead (solo lead).
  */
 const SIDEBAR_DEVELOPER_CONFIG = [
-  { type: 'page', id: 'dashboard', label: 'DASHBOARD', icon: 'fa-chart-line', route: '/dev/dashboard' },
+  { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-line', route: '/dev/dashboard' },
   {
     type: 'container',
     id: 'build',
-    label: 'BUILD',
+    label: 'Build',
     icon: 'fa-wrench',
     children: [
-      { label: 'MIS FLUJOS', route: '/dev/flows' },
-      { label: 'BUILDER', route: '/dev/builder' }
+      { label: 'Mis Flujos', route: '/dev/flows' },
+      { label: 'Builder', route: '/dev/builder' }
     ]
   },
   {
     type: 'container',
     id: 'operations',
-    label: 'OPERATIONS',
+    label: 'Operations',
     icon: 'fa-cogs',
     children: [
-      { label: 'TEST DE FLUJOS', route: '/dev/test' },
-      { label: 'WEBHOOKS', route: '/dev/webhooks' }
+      { label: 'Test De Flujos', route: '/dev/test' },
+      { label: 'Webhooks', route: '/dev/webhooks' }
     ]
   },
   {
     type: 'container',
     id: 'observability',
-    label: 'OBSERVABILITY',
+    label: 'Observability',
     icon: 'fa-chart-area',
     children: [
-      { label: 'DEBUG', route: '/dev/test' },
-      { label: 'LOGS', route: '/dev/logs' }
+      { label: 'Debug', route: '/dev/test' },
+      { label: 'Logs', route: '/dev/logs' }
     ]
   },
   {
     type: 'container',
     id: 'resources',
-    label: 'RESOURCES',
+    label: 'Resources',
     icon: 'fa-book',
     children: [
-      { label: 'REFERENCIAS VISUALES', route: '/dev/lead/references' }
+      { label: 'Referencias Visuales', route: '/dev/lead/references' }
     ]
   },
   {
     type: 'container',
     id: 'lead',
-    label: 'LEAD',
+    label: 'Lead',
     icon: 'fa-shield-alt',
     role_required: 'lead',
     children: [
-      { label: 'EQUIPO', route: '/dev/lead/team' },
-      { label: 'CATEGORÍAS', route: '/dev/lead/categories' },
-      { label: 'INPUT SCHEMAS', route: '/dev/lead/input-schemas' },
-      { label: 'BASE CONOCIMIENTO IA', route: '/dev/lead/ai-vectors' },
-      { label: 'TODOS LOS FLUJOS', route: '/dev/lead/flows' }
+      { label: 'Equipo', route: '/dev/lead/team' },
+      { label: 'Categorías', route: '/dev/lead/categories' },
+      { label: 'Input Schemas', route: '/dev/lead/input-schemas' },
+      { label: 'Base Conocimiento IA', route: '/dev/lead/ai-vectors' },
+      { label: 'Todos Los Flujos', route: '/dev/lead/flows' }
     ]
   }
 ];
@@ -457,7 +457,7 @@ class Navigation {
     const expandedId = localStorage.getItem(SIDEBAR_USER_EXPANDED_KEY) || '';
 
     const iconHTML = (item) => item.iconSrc
-      ? `<img src="${item.iconSrc}" class="nav-icon nav-icon-img" alt="" width="20" height="20">`
+      ? `<img src="${item.iconSrc}" class="nav-icon nav-icon-img" alt="" width="12" height="12">`
       : `<i class="fas ${item.icon} nav-icon"></i>`;
 
     const mainHTML = SIDEBAR_USER_CONFIG.main.map((item) => {
@@ -502,7 +502,7 @@ class Navigation {
     }).join('');
 
     const footerIconHTML = (f) => f.iconSrc
-      ? `<img src="${f.iconSrc}" class="nav-icon nav-icon-img" alt="" width="20" height="20">`
+      ? `<img src="${f.iconSrc}" class="nav-icon nav-icon-img" alt="" width="12" height="12">`
       : `<i class="fas ${f.icon} nav-icon"></i>`;
 
     const footerHTML = SIDEBAR_USER_CONFIG.footer.map((f) => {
@@ -558,7 +558,7 @@ class Navigation {
         <div class="nav-footer" role="navigation" aria-label="Administración organizacional">
           ${footerHTML}
           <div class="nav-org-credits" id="navOrgCreditsBlock">
-            <span class="nav-org-credits-label">CREDITS</span>
+            <span class="nav-org-credits-label">Credits</span>
             <span class="nav-org-credits-value" id="navTokensValue">—</span>
             <div class="nav-org-credits-bar" aria-hidden="true"><div class="nav-org-credits-bar-fill" style="width:0%"></div></div>
           </div>
@@ -1063,7 +1063,7 @@ class Navigation {
       <div class="nav-flyout-inner">
         <div class="nav-flyout-header">
           <span class="nav-flyout-header-icon"><i class="fas fa-bell"></i></span>
-          <span class="nav-flyout-header-label">NOTIFICATIONS</span>
+          <span class="nav-flyout-header-label">Notifications</span>
         </div>
         <div class="nav-flyout-body nav-flyout-notifications-body">${bodyHtml}</div>
         ${footerHtml}
