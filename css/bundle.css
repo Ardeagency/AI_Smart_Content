@@ -20885,7 +20885,7 @@ body.production-filters-in-header .living-container > .living-history-section {
     min-height: 120px;
 }
 .video-production-cards-row {
-    align-items: start; /* cada slot solo ocupa la altura de su contenido */
+    align-items: end; /* cards alineadas desde abajo */
 }
 .video-prompt-cards-row {
     align-items: stretch; /* compatibilidad si se usa en otro sitio */
