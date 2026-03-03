@@ -60,7 +60,7 @@ exports.handler = async (event, context) => {
         return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Acción no válida. Use action: "createTask"' }) };
       }
 
-      // Input tal como exige KIE (cuerpo completo). kling_elements no lo usamos por ahora: existe pero va vacío.
+      // Doc KIE: mínimo requerido es model + input.mode ("std"|"pro"). Añadimos opcionales: prompt, image_urls, sound, duration, aspect_ratio, multi_shots.
       const mode = body.mode === 'pro' ? 'pro' : 'std';
       const promptText = typeof body.prompt === 'string' ? body.prompt.trim() : '';
       const rawMulti = Array.isArray(body.multi_shots) ? body.multi_shots : [];
@@ -78,14 +78,13 @@ exports.handler = async (event, context) => {
 
       const input = {
         mode,
-        sound: body.sound === true || body.sound === 'true',
-        duration: typeof body.duration === 'string' ? body.duration : String(body.duration || '5'),
-        aspect_ratio: typeof body.aspect_ratio === 'string' ? body.aspect_ratio : (body.aspect_ratio || '16:9'),
-        multi_shots: multiShots.length > 1,
         prompt: promptForKie
       };
+      input.sound = body.sound === true || body.sound === 'true';
+      input.duration = typeof body.duration === 'string' ? body.duration : String(body.duration || '5');
+      input.aspect_ratio = typeof body.aspect_ratio === 'string' ? body.aspect_ratio : (body.aspect_ratio || '16:9');
+      input.multi_shots = multiShots.length > 1;
       if (image_urls.length) input.image_urls = image_urls;
-      // kling_elements no lo usamos; si se envía vacío [] KIE puede devolver 422, así que no lo incluimos
 
       const kiePayload = {
         model: 'kling-3.0/video',
