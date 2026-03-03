@@ -98,6 +98,14 @@
   [headers.values]
     Cache-Control = "public, max-age=86400"
 
+# Cross-origin isolation para FFmpeg.wasm (SharedArrayBuffer) en la SPA
+# Aplica al documento index.html servido por el fallback "/*"
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Embedder-Policy = "require-corp"
+
 # Variables de entorno deben configurarse en Netlify Dashboard:
 # - SUPABASE_DATABASE_URL
 # - SUPABASE_ANON_KEY

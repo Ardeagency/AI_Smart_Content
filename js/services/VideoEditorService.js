@@ -30,12 +30,16 @@
     if (loadPromise) return loadPromise;
 
     const { createFFmpeg } = getFFmpegLib();
-    const ffmpeg = createFFmpeg({ log: opts.log !== false });
-
-    loadPromise = ffmpeg.load({
-      coreURL: opts.coreURL || `${CORE_ST_BASE}/ffmpeg-core.js`,
-      wasmURL: opts.wasmURL || `${CORE_ST_BASE}/ffmpeg-core.wasm`
+    const coreURL = opts.coreURL || `${CORE_ST_BASE}/ffmpeg-core.js`;
+    const wasmURL = opts.wasmURL || `${CORE_ST_BASE}/ffmpeg-core.wasm`;
+    // En 0.11 el core se elige en createFFmpeg (core-st = single-thread, sin SharedArrayBuffer)
+    const ffmpeg = createFFmpeg({
+      log: opts.log !== false,
+      coreURL: coreURL,
+      wasmURL: wasmURL
     });
+
+    loadPromise = ffmpeg.load();
     await loadPromise;
     ffmpegInstance = ffmpeg;
     return ffmpeg;

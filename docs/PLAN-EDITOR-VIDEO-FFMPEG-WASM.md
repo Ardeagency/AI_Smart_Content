@@ -182,12 +182,8 @@ Implementación: cargar `@ffmpeg/ffmpeg` y al hacer `load()` pasar la URL/base d
 
 Mantener la misma idea que ya tienes en el pseudocódigo (concat n=2:v=1:a=1), adaptando a la API exacta del build que uses (nombres de paquete y de export).
 
-### Fase 3 (opcional): Pasar a multihilo (Opción B)
-
-- Añadir en `netlify.toml` el bloque de headers `for = "/*"` con COOP/COEP.
-- Desplegar en staging y ejecutar la **lista de comprobación** (sección 6).
-- Si todo pasa, cambiar el editor a la variante multihilo de FFmpeg.wasm.
-- Si algo falla, documentar el recurso y decidir: self-host, proxy con CORP o mantener single-thread.
+### Fase 3: Headers COOP/COEP activados (Opción B)
+**Aplicado:** Tras el error "SharedArrayBuffer is not defined" en el editor, se añadieron en `netlify.toml` los headers de cross-origin isolation para `/*`, de modo que el core de FFmpeg.wasm (por defecto multihilo) funcione. El servicio sigue intentando usar core-st vía `createFFmpeg({ coreURL, wasmURL })`; si la build 0.11 no lo respeta, el core por defecto ya puede usarse gracias a los headers. Conviene ejecutar la **lista de comprobación** (sección 6) tras desplegar; si algún recurso externo falla (p. ej. logo Wompi), self-host o proxy con CORP.
 
 ---
 
