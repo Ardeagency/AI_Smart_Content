@@ -564,7 +564,6 @@ class ProductsView extends BaseView {
     });
 
     const uploadInput = container.querySelector('#productViewImageUpload');
-    const uploadLabel = container.querySelector('#productViewUploadBtn');
     if (uploadInput) {
       uploadInput.removeEventListener('change', this._boundUploadChange);
       this._boundUploadChange = (e) => {
@@ -574,16 +573,7 @@ class ProductsView extends BaseView {
       };
       uploadInput.addEventListener('change', this._boundUploadChange);
     }
-    // Fallback: si el label no abre el selector, abrirlo por JS al hacer clic
-    if (uploadLabel && uploadInput) {
-      uploadLabel.removeEventListener('click', this._boundUploadLabelClick);
-      this._boundUploadLabelClick = (e) => {
-        if (e.target.tagName === 'INPUT') return;
-        e.preventDefault();
-        uploadInput.click();
-      };
-      uploadLabel.addEventListener('click', this._boundUploadLabelClick);
-    }
+    // El selector se abre por el <label for="productViewImageUpload"> (comportamiento nativo). No usar preventDefault ni click() programático para evitar que el navegador bloquee la apertura.
   }
 
   /**
