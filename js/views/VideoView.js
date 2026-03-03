@@ -123,9 +123,10 @@ class VideoView extends BaseView {
           </div>
         </section>
 
-        <footer class="video-footer-control video-page-footer video-prompt-wrap" id="videoFooterControl" aria-label="Controles de producción y prompt">
-          <div class="video-prompt-cards-row">
-            <div class="video-prompt-footer-card video-prompt-footer-card-left">
+        <section class="video-footer-control video-production-bar video-prompt-wrap" id="videoFooterControl" aria-label="Controles de producción">
+          <div class="video-production-cards-row">
+            <div class="video-production-card-slot video-production-card-slot--left">
+              <div class="video-prompt-footer-card video-prompt-footer-card-left">
               <div class="video-prompt-footer-card-inner glass-black video-left-inner">
                 <h3 class="video-section-label">Production Context</h3>
                 <div class="video-left-block">
@@ -134,32 +135,11 @@ class VideoView extends BaseView {
                     <i class="fas fa-play"></i> Production Queue
                   </button>
                 </div>
-                <div class="video-left-block video-asset-stack-block">
-                  <h4 class="video-prompt-panel-title">Asset Stack</h4>
-                  <div class="video-asset-scope-wrap">
-                    <select id="videoAssetScope" class="video-prompt-db-select video-asset-scope-select" aria-label="Scope">
-                      <option value="product">Product</option>
-                      <option value="service">Service</option>
-                      <option value="brand_world">Brand World</option>
-                      <option value="campaign">Campaign</option>
-                      <option value="collection">Collection</option>
-                    </select>
-                  </div>
-                  <select id="videoAssetSelect" class="video-prompt-db-select video-asset-select" aria-label="Asset" style="margin-top: 0.35rem;">
-                    <option value="">— None</option>
-                  </select>
-                  <div class="video-asset-card" id="videoAssetCard">
-                    <div class="video-asset-card-placeholder" id="videoAssetCardPlaceholder">Select an asset</div>
-                    <div class="video-asset-card-active" id="videoAssetCardActive" style="display: none;">
-                      <div class="video-asset-card-name" id="videoAssetCardName"></div>
-                      <ul class="video-asset-card-locks" id="videoAssetCardLocks"></ul>
-                      <button type="button" class="video-asset-change-btn" id="videoAssetChangeBtn">Change Asset</button>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
-            <div class="video-prompt-footer-card video-prompt-footer-card-center">
+            </div>
+            <div class="video-production-card-slot video-production-card-slot--center">
+              <div class="video-prompt-footer-card video-prompt-footer-card-center">
               <div class="video-prompt-footer-card-inner glass-black video-director-console">
                 <h3 class="video-section-label video-director-title">Director Console</h3>
                 <input type="file" id="videoImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
@@ -193,7 +173,9 @@ class VideoView extends BaseView {
                 </div>
               </div>
             </div>
-            <div class="video-prompt-footer-card video-prompt-footer-card-right">
+            </div>
+            <div class="video-production-card-slot video-production-card-slot--right">
+              <div class="video-prompt-footer-card video-prompt-footer-card-right">
               <div class="video-prompt-footer-card-inner glass-black video-cinematography-panel">
                 <h3 class="video-prompt-panel-title">Cinematography</h3>
                 <div class="video-cine-preset-wrap">
@@ -245,8 +227,9 @@ class VideoView extends BaseView {
                 </div>
               </div>
             </div>
+            </div>
           </div>
-        </footer>
+        </section>
       </div>
     `;
   }

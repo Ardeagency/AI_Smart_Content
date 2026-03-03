@@ -20862,7 +20862,9 @@ body.production-filters-in-header .living-container > .living-history-section {
     padding-bottom: 7rem;
 }
 /* Footer: card tipo prompt — borde con degradado dinámico completo (--brand-gradient-dynamic) */
-.video-page-footer.video-prompt-wrap {
+/* Barra de producción (antes footer): fixed abajo; las cards están en contenedores independientes */
+.video-page-footer.video-prompt-wrap,
+.video-production-bar.video-footer-control {
     position: fixed;
     left: 0;
     right: 0;
@@ -20871,16 +20873,26 @@ body.production-filters-in-header .living-container > .living-history-section {
     z-index: 100;
     pointer-events: none;
 }
-/* Filas de 3 cards en el footer */
+/* Fila de 3 contenedores: cada card en su slot para que al expandirse una no afecte a las otras */
+.video-production-cards-row,
 .video-prompt-cards-row {
     display: grid;
     grid-template-columns: 1fr 2fr 1fr;
     gap: 1rem;
-    align-items: stretch;
     max-width: 1200px;
     margin: 0 auto;
     width: 100%;
     min-height: 120px;
+}
+.video-production-cards-row {
+    align-items: start; /* cada slot solo ocupa la altura de su contenido */
+}
+.video-prompt-cards-row {
+    align-items: stretch; /* compatibilidad si se usa en otro sitio */
+}
+.video-production-card-slot {
+    min-width: 0;
+    pointer-events: auto;
 }
 /* Borde = degradado dinámico discreto (50% opacidad) */
 .video-prompt-footer-card {
@@ -21622,7 +21634,8 @@ body.production-filters-in-header .living-container > .living-history-section {
     padding: 0.5rem 0;
 }
 @media (max-width: 900px) {
-    .video-prompt-cards-row {
+    .video-prompt-cards-row,
+    .video-production-cards-row {
         grid-template-columns: 1fr;
         max-width: 100%;
     }
