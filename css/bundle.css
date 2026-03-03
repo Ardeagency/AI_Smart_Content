@@ -6720,6 +6720,37 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   gap: 0.65rem;
 }
 
+.task-card-cover {
+  width: calc(100% + 1.5rem * 2);
+  margin: -1.25rem -1.5rem 0 -1.5rem;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  overflow: hidden;
+  background: var(--bg-tertiary, #0d0d0f);
+  flex-shrink: 0;
+}
+
+.task-card-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.task-card-cover-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--brand-gradient-dynamic, var(--brand-gradient));
+  background-size: 200% 200%;
+  opacity: 0.85;
+}
+
+.task-card-cover-placeholder i {
+  font-size: 2rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
 .task-card-header {
   display: flex;
   justify-content: space-between;

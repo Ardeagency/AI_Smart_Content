@@ -150,7 +150,7 @@ class TasksView extends BaseView {
       const brandIds = [...new Set(schedules.map(s => s.brand_id).filter(Boolean))];
 
       const [flowsRes, entitiesRes, campaignsRes, audiencesRes, brandsRes] = await Promise.all([
-        flowIds.length ? this.supabase.from('content_flows').select('id, name').in('id', flowIds) : { data: [] },
+        flowIds.length ? this.supabase.from('content_flows').select('id, name, flow_image_url').in('id', flowIds) : { data: [] },
         entityIds.length ? this.supabase.from('brand_entities').select('id, name').in('id', entityIds) : { data: [] },
         campaignIds.length ? this.supabase.from('campaigns').select('id, nombre_campana').in('id', campaignIds) : { data: [] },
         audienceIds.length ? this.supabase.from('audiences').select('id, name').in('id', audienceIds) : { data: [] },
@@ -158,6 +158,7 @@ class TasksView extends BaseView {
       ]);
 
       const flowMap = (flowsRes.data || []).reduce((acc, r) => { acc[r.id] = r.name; return acc; }, {});
+      const flowImageMap = (flowsRes.data || []).reduce((acc, r) => { acc[r.id] = r.flow_image_url || null; return acc; }, {});
       const entityMap = (entitiesRes.data || []).reduce((acc, r) => { acc[r.id] = r.name; return acc; }, {});
       const campaignMap = (campaignsRes.data || []).reduce((acc, r) => { acc[r.id] = r.nombre_campana; return acc; }, {});
       const audienceMap = (audiencesRes.data || []).reduce((acc, r) => { acc[r.id] = r.name; return acc; }, {});
@@ -172,6 +173,7 @@ class TasksView extends BaseView {
 
       this.schedules = schedules.map(s => {
         const flowName = (s.flow_id && flowMap[s.flow_id]) || '—';
+        const flowImageUrl = (s.flow_id && flowImageMap[s.flow_id]) || null;
         const firstEntityId = Array.isArray(s.entity_ids) ? s.entity_ids[0] : s.entity_ids;
         const entityName = (firstEntityId && entityMap[firstEntityId]) || '—';
         const firstCampaignId = Array.isArray(s.campaign_ids) ? s.campaign_ids[0] : s.campaign_ids;
@@ -184,6 +186,7 @@ class TasksView extends BaseView {
           ...s,
           is_active: s.status === 'active',
           flow_name: flowName,
+          flow_image_url: flowImageUrl,
           entity_name: entityName,
           campaign_name: campaignName,
           audience_name: audienceName,
@@ -461,9 +464,13 @@ class TasksView extends BaseView {
     const campaignAudience = [t.campaign_name, t.audience_name].filter(Boolean).join(' / ') || '—';
     const statusClass = t.is_active ? 'task-card-badge-active' : 'task-card-badge-paused';
     const statusLabel = t.is_active ? 'ACTIVA' : 'Pausada';
+    const coverHtml = t.flow_image_url
+      ? `<div class="task-card-cover"><img src="${this.escapeHtml(t.flow_image_url)}" alt="" loading="lazy"></div>`
+      : `<div class="task-card-cover task-card-cover-placeholder"><i class="fas fa-project-diagram"></i></div>`;
     return `
       <article class="task-card" data-task-id="${t.id}" role="button" tabindex="0">
         <div class="task-card-inner">
+          ${coverHtml}
           <div class="task-card-header">
             <h3 class="task-card-title">${this.escapeHtml(t.job_name || 'Sin nombre')}</h3>
             <span class="task-card-badge ${statusClass}">
