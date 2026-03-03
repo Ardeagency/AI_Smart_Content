@@ -146,7 +146,7 @@ class VideoView extends BaseView {
                   <button type="button" class="video-prompt-db-select video-prompt-productions-btn" id="videoProductionsBtn" aria-label="Production Queue">
                     <i class="fas fa-play"></i> Production Queue
                   </button>
-                  <a href="${this._getEditorVideoPath()}" class="video-prompt-db-select video-prompt-editor-link" data-router-link aria-label="Editor de video (unir)">
+                  <a href="${this._getEditorVideoPath()}" class="video-prompt-db-select video-prompt-editor-link" target="_blank" rel="noopener noreferrer" aria-label="Editor de video (unir)">
                     <i class="fas fa-scissors"></i> Unir videos (FFmpeg)
                   </a>
                 </div>

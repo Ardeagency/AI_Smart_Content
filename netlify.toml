@@ -78,9 +78,16 @@
   to = "/index.html"
   status = 200
 
-# Headers obligatorios para FFmpeg.wasm (SharedArrayBuffer en el navegador)
+# Headers para FFmpeg.wasm SOLO en la ruta del editor (evitar bloquear Cloudinary/otros en el resto)
+# Si abres el editor desde un enlace interno (SPA), la página se cargó sin estos headers:
+# abre /editor-video o /org/.../editor-video directamente en la barra de direcciones para mejor compatibilidad.
 [[headers]]
-  for = "/*"
+  for = "/editor-video"
+  [headers.values]
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Embedder-Policy = "require-corp"
+[[headers]]
+  for = "/org/*/*/editor-video"
   [headers.values]
     Cross-Origin-Opener-Policy = "same-origin"
     Cross-Origin-Embedder-Policy = "require-corp"
