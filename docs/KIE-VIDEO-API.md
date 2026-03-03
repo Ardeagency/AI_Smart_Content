@@ -207,6 +207,20 @@ GET https://api.kie.ai/api/v1/jobs/recordInfo?taskId=281e5b0********************
 | 422 | Parameter validation failed |
 | 429 | Request rate limit exceeded |
 | 500 | Internal server error |
+| **524** | **Timeout de generación** — la tarea tardó demasiado en los servidores de KIE y se canceló (mensaje: "generate task timeout."). |
+
+### Error 524 — Timeout y cómo prevenirlo
+
+**Qué es:** El código **524** (junto con el mensaje "generate task timeout.") indica que la generación del video **superó el tiempo máximo** que KIE permite en sus servidores. La tarea se marca como fallida; no es un fallo de nuestra app ni de la red.
+
+**Cómo reducir la probabilidad de 524:**
+
+1. **Acortar el prompt** — Prompts muy largos y detallados requieren más tiempo de proceso. Resumir la idea (personaje, escena, estilo) suele ser suficiente y reduce timeouts.
+2. **Menos imágenes de referencia** — Usar una o dos imágenes en `image_urls` / `kling_elements` en lugar de muchas acelera el procesamiento.
+3. **Reintentar** — A veces es carga del servidor; volver a lanzar la misma tarea puede completar en el siguiente intento.
+4. **Duración de video** — Pedir 5s en lugar de 10s o 15s puede ayudar (menos tiempo de generación).
+
+En el dashboard de KIE, la columna "Duration" indica cuántos segundos tardó la tarea antes de fallar; si se acerca al límite interno de KIE, simplificar el input suele evitar el 524.
 
 ### Troubleshooting (mensajes desde KIE)
 

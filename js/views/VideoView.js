@@ -253,6 +253,7 @@ class VideoView extends BaseView {
                       autocomplete="off"
                       aria-label="Tu idea (la IA genera el prompt final)"
                     ></textarea>
+                    <p class="video-field-help video-prompt-timeout-hint" id="videoPromptTimeoutHint" style="display: none;" role="status">Prompt largo: si aparece «timeout» (error 524), prueba acortar el texto o usar menos imágenes de referencia.</p>
                   </div>
                   <div class="video-director-separator" aria-hidden="true"></div>
                   <div class="video-director-controls">
@@ -335,6 +336,15 @@ class VideoView extends BaseView {
           }
         }
       });
+      const timeoutHint = this.container.querySelector('#videoPromptTimeoutHint');
+      const updateTimeoutHint = () => {
+        if (!timeoutHint) return;
+        const len = (this.promptInput.value || '').trim().length;
+        timeoutHint.style.display = len > 450 ? 'block' : 'none';
+      };
+      this.promptInput.addEventListener('input', updateTimeoutHint);
+      this.promptInput.addEventListener('change', updateTimeoutHint);
+      updateTimeoutHint();
     }
     const addBtn = this.container.querySelector('#videoPromptAdd');
     const fileInput = this.container.querySelector('#videoImageUpload');
@@ -1248,6 +1258,8 @@ class VideoView extends BaseView {
         if (this.promptInput) {
           this.promptInput.value = this.multiPrompts.map((p, i) => `--- Shot ${i + 1} ---\n${p}`).join('\n\n');
         }
+        const hint = this.container.querySelector('#videoPromptTimeoutHint');
+        if (hint) hint.style.display = (this.promptInput.value || '').trim().length > 450 ? 'block' : 'none';
         this.hideAllFeedback();
         this.updatePromptButtonState(true);
         await this.saveSystemAIOutput({
@@ -1261,6 +1273,8 @@ class VideoView extends BaseView {
       } else if (data.prompt && this.promptInput) {
         this.multiPrompts = [];
         this.promptInput.value = data.prompt;
+        const hintEl = this.container.querySelector('#videoPromptTimeoutHint');
+        if (hintEl) hintEl.style.display = (data.prompt || '').trim().length > 450 ? 'block' : 'none';
         this.hideAllFeedback();
         this.updatePromptButtonState(true);
         await this.saveSystemAIOutput({
