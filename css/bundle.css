@@ -20954,20 +20954,15 @@ body.production-filters-in-header .living-container > .living-history-section {
     margin-bottom: 0.2rem;
 }
 
-/* Director Console — estilo minimalista (referencia): contenido + separador + controles */
-.video-director-console-content {
-    position: relative;
-    min-height: 120px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: var(--radius-sm);
-    background: rgba(0, 0, 0, 0.35);
-    overflow: hidden;
+/* Director Console — top-row (+, adjuntos) FUERA del contenedor del input; content = solo textarea */
+.video-director-top-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
 }
 .video-director-btn-add {
-    position: absolute;
-    top: 0.5rem;
-    left: 0.5rem;
-    z-index: 1;
+    flex-shrink: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -20985,39 +20980,38 @@ body.production-filters-in-header .living-container > .living-history-section {
     background: rgba(255, 255, 255, 0.1);
     border-color: rgba(255, 255, 255, 0.25);
 }
-.video-director-console-content .video-director-brief-input {
-    display: block;
-    width: 100%;
-    min-height: 118px;
-    padding: 2.5rem 0.75rem 0.6rem 2.75rem;
-    margin: 0;
-    font-size: var(--font-size-base);
-    color: var(--glass-black-text);
-    background: transparent;
-    border: none;
-    outline: none;
-    resize: vertical;
-    box-sizing: border-box;
-}
-.video-director-console-content .video-director-brief-input::placeholder {
-    color: rgba(255, 255, 255, 0.4);
-}
-.video-director-console-content .video-director-brief-input:focus {
-    box-shadow: none;
-}
-.video-director-console-content .video-kling-elements-list {
-    position: absolute;
-    top: 0.5rem;
-    left: 2.75rem;
-    right: 0.5rem;
+.video-director-top-row .video-kling-elements-list {
     display: flex;
     flex-wrap: wrap;
     gap: 0.35rem;
-    z-index: 1;
-    pointer-events: none;
+    align-items: center;
 }
-.video-director-console-content .video-kling-elements-list .video-kling-element-chip {
-    pointer-events: auto;
+.video-director-console-content {
+    display: block;
+    min-height: 100px;
+}
+.video-director-console-content .video-director-brief-input {
+    display: block;
+    width: 100%;
+    min-height: 100px;
+    padding: 0.6rem 0.75rem;
+    margin: 0;
+    font-size: var(--font-size-base);
+    color: var(--glass-black-text);
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: var(--radius-sm);
+    outline: none;
+    resize: vertical;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.video-director-console-content .video-director-brief-input::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+}
+.video-director-console-content .video-director-brief-input:focus {
+    border-color: rgba(255, 255, 255, 0.28);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 .video-director-separator {
     height: 1px;
