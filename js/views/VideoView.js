@@ -143,8 +143,10 @@ class VideoView extends BaseView {
               <div class="video-prompt-footer-card-inner glass-black video-director-console">
                 <input type="file" id="videoImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
                 <div class="video-director-console-content">
-                  <button type="button" class="video-director-btn-add" id="videoPromptAdd" aria-label="Añadir imagen o video"><i class="fas fa-plus"></i></button>
-                  <div class="video-kling-elements-list" id="videoKlingElementsList" aria-live="polite"></div>
+                  <div class="video-director-top-row">
+                    <button type="button" class="video-director-btn-add" id="videoPromptAdd" aria-label="Añadir imagen o video"><i class="fas fa-plus"></i></button>
+                    <div class="video-kling-elements-list" id="videoKlingElementsList" aria-live="polite"></div>
+                  </div>
                   <textarea
                     id="videoPromptInput"
                     class="video-director-brief-input"
@@ -166,7 +168,6 @@ class VideoView extends BaseView {
                     <select id="videoDuration" class="video-director-select" aria-label="Duration"><option value="5">5s</option><option value="10">10s</option><option value="15">15s</option></select>
                     <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
                   </div>
-                  <button type="button" class="video-prompt-btn video-prompt-btn-ai" id="videoPromptAI" aria-label="Generar prompt con IA" title="Generar prompt con IA"><i class="fas fa-star"></i></button>
                   <button type="button" class="video-director-btn-generate" id="videoPromptSend" aria-label="Generar"><i class="fas fa-play"></i><span>GENERAR</span></button>
                 </div>
                 <div class="video-storyboard-wrap" id="videoStoryboardWrap" style="display: none;">

@@ -78,13 +78,6 @@
   to = "/index.html"
   status = 200
 
-# Headers globales para FFmpeg.wasm (SharedArrayBuffer requiere COOP/COEP)
-[[headers]]
-  for = "/*"
-  [headers.values]
-    Cross-Origin-Opener-Policy = "same-origin"
-    Cross-Origin-Embedder-Policy = "require-corp"
-
 # Headers para las funciones
 [[headers]]
   for = "/.netlify/functions/*"
