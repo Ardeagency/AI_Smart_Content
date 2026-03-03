@@ -9,7 +9,7 @@ const SIDEBAR_USER_CONFIG = {
     { type: 'page', id: 'dashboard', label: 'DASHBOARD', icon: 'fa-chart-area', iconSrc: '/recursos/icons/dashboard.svg', route: 'dashboard' },
     { type: 'page', id: 'tasks', label: 'TASK', icon: 'fa-clock', iconSrc: '/recursos/icons/task.svg', route: 'tasks' },
     { type: 'page', id: 'video', label: 'VIDEO', icon: 'fa-play', iconSrc: '/recursos/icons/video.svg', route: 'video' },
-    { type: 'page', id: 'editor-video', label: 'EDITOR VIDEO', icon: 'fa-cut', iconSrc: '/recursos/icons/video.svg', route: 'editor-video' },
+    { type: 'page', id: 'editor-video', label: 'EDITOR VIDEO', icon: 'fa-cut', iconSrc: '/recursos/icons/video.svg', route: 'editor-video', externalHref: '/editor-video.html' },
     {
       type: 'container',
       id: 'catalog',
@@ -463,10 +463,10 @@ class Navigation {
 
     const mainHTML = SIDEBAR_USER_CONFIG.main.map((item) => {
       if (item.type === 'page') {
-        const href = full(item.route);
+        const href = item.externalHref || full(item.route);
         return `
           <div class="nav-item">
-            <a href="${href}" class="nav-link nav-main-link" data-route="${href}" data-tooltip="${item.label}">
+            <a href="${href}" class="nav-link nav-main-link" data-route="${href}" data-tooltip="${item.label}"${item.externalHref ? ' data-router="1"' : ''}>
               ${iconHTML(item)}
               <span class="nav-text">${item.label}</span>
             </a>

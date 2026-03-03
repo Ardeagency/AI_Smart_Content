@@ -72,6 +72,12 @@
   to = "/SQL/:splat"
   status = 200
 
+# Editor de video: página aislada con COOP/COEP (FFmpeg SharedArrayBuffer), antes del fallback SPA
+[[redirects]]
+  from = "/editor-video.html"
+  to = "/editor-video.html"
+  status = 200
+
 # SPA Fallback - todas las demás rutas van a index.html (/.netlify/* ya cubierto arriba)
 [[redirects]]
   from = "/*"
@@ -98,10 +104,10 @@
   [headers.values]
     Cache-Control = "public, max-age=86400"
 
-# Cross-origin isolation para FFmpeg.wasm (SharedArrayBuffer) en la SPA
-# Aplica al documento index.html servido por el fallback "/*"
+# Solo la página del editor: cross-origin isolation para FFmpeg.wasm (SharedArrayBuffer)
+# El resto de la SPA no usa estos headers, así Cloudinary/Supabase no se bloquean
 [[headers]]
-  for = "/*"
+  for = "/editor-video.html"
   [headers.values]
     Cross-Origin-Opener-Policy = "same-origin"
     Cross-Origin-Embedder-Policy = "require-corp"

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editor de video - AI Smart Content</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0d0d0f;
+      color: #ecebda;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+    .editor-wrap {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 1.5rem;
+      color: #a0a0a0;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .back-link:hover { color: #ecebda; }
+    h1 { font-size: 1.25rem; margin: 0 0 0.25rem 0; font-weight: 600; }
+    .sub { color: #a0a0a0; font-size: 0.9rem; margin-bottom: 1.5rem; }
+    .card {
+      background: rgba(21, 23, 28, 0.6);
+      border: 1px solid #2a2a2e;
+      border-radius: 8px;
+      padding: 1.5rem 2rem;
+    }
+    .card h2 { font-size: 1.1rem; margin: 0 0 0.5rem 0; }
+    .card .desc { color: #a0a0a0; margin: 0 0 1.5rem 0; font-size: 0.95rem; }
+    .inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+    .input-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .input-group label { font-size: 0.875rem; color: #a0a0a0; }
+    .input-group input[type=file] {
+      padding: 0.5rem;
+      border: 1px solid #2a2a2e;
+      border-radius: 6px;
+      background: #1a1a1a;
+      color: #ecebda;
+      font-size: 0.875rem;
+    }
+    .actions { margin-bottom: 1rem; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-primary { background: #e09145; color: #0d0d0f; }
+    .btn-primary:hover:not(:disabled) { background: #e9a55a; }
+    .btn-secondary { background: #2a2a2e; color: #ecebda; margin-top: 0.5rem; text-decoration: none; }
+    .btn-secondary:hover { background: #3a3a3e; }
+    .progress-box {
+      padding: 0.75rem 1rem;
+      background: rgba(224, 145, 69, 0.1);
+      border: 1px solid #e09145;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .progress-box.show { display: block; }
+    .error-box {
+      padding: 1rem;
+      background: rgba(200, 80, 60, 0.15);
+      border: 1px solid #e09145;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .error-box.show { display: block; }
+    .error-box p { margin: 0; color: #e09145; font-size: 0.9rem; }
+    .result-box { display: none; margin-top: 1rem; }
+    .result-box.show { display: block; }
+    .result-box h3 { font-size: 1rem; margin: 0 0 1rem 0; }
+    .result-box video { width: 100%; max-height: 400px; display: block; border-radius: 6px; background: #000; }
+    @media (max-width: 640px) { .inputs { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="editor-wrap">
+    <a href="/" class="back-link">← Volver a la app</a>
+    <h1>Editor de video</h1>
+    <p class="sub">Unir vídeos en el navegador (FFmpeg.wasm)</p>
+
+    <div class="card">
+      <h2>Unir dos vídeos</h2>
+      <p class="desc">Selecciona dos archivos de vídeo (MP4 recomendado). Se unirán en orden.</p>
+
+      <div class="inputs">
+        <div class="input-group">
+          <label for="f1">Vídeo 1</label>
+          <input type="file" id="f1" accept="video/mp4,video/webm,video/quicktime">
+        </div>
+        <div class="input-group">
+          <label for="f2">Vídeo 2</label>
+          <input type="file" id="f2" accept="video/mp4,video/webm,video/quicktime">
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="button" id="btnJoin" class="btn btn-primary" disabled>Unir vídeos</button>
+      </div>
+
+      <div id="progress" class="progress-box" aria-live="polite">
+        <span id="progressText">—</span>
+      </div>
+      <div id="error" class="error-box" role="alert">
+        <p id="errorText"></p>
+      </div>
+      <div id="result" class="result-box">
+        <h3>Vídeo unido</h3>
+        <video id="player" controls playsinline></video>
+        <a id="download" class="btn btn-secondary" href="#" download="video-unido.mp4" target="_blank" rel="noopener">Descargar</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js" crossorigin="anonymous"></script>
+  <script src="/js/services/VideoEditorService.js"></script>
+  <script>
+    (function () {
+      var f1 = document.getElementById('f1');
+      var f2 = document.getElementById('f2');
+      var btnJoin = document.getElementById('btnJoin');
+      var progress = document.getElementById('progress');
+      var progressText = document.getElementById('progressText');
+      var error = document.getElementById('error');
+      var errorText = document.getElementById('errorText');
+      var result = document.getElementById('result');
+      var player = document.getElementById('player');
+      var download = document.getElementById('download');
+      var outputURL = null;
+
+      function updateBtn() {
+        btnJoin.disabled = !(f1.files.length && f2.files.length);
+      }
+      f1.addEventListener('change', updateBtn);
+      f2.addEventListener('change', updateBtn);
+
+      function showProgress(text) {
+        progress.classList.add('show');
+        progressText.textContent = text || 'Procesando…';
+        error.classList.remove('show');
+        result.classList.remove('show');
+      }
+      function showError(msg) {
+        progress.classList.remove('show');
+        error.classList.add('show');
+        errorText.textContent = msg || 'Error desconocido';
+        result.classList.remove('show');
+      }
+      function showResult(url) {
+        progress.classList.remove('show');
+        error.classList.remove('show');
+        result.classList.add('show');
+        player.src = url;
+        player.load();
+        download.href = url;
+      }
+
+      btnJoin.addEventListener('click', function () {
+        if (!f1.files.length || !f2.files.length) return;
+        var service = window.VideoEditorService;
+        if (!service || !service.concatVideos) {
+          showError('Servicio no disponible. Recarga la página.');
+          return;
+        }
+        if (outputURL) {
+          service.revokeOutputURL(outputURL);
+          outputURL = null;
+        }
+        btnJoin.disabled = true;
+        showProgress('Cargando FFmpeg…');
+        service.concatVideos(f1.files[0], f2.files[0], {
+          onProgress: function (msg) { progressText.textContent = msg || 'Procesando…'; }
+        }).then(function (url) {
+          outputURL = url;
+          showResult(url);
+        }).catch(function (err) {
+          showError(err && err.message ? err.message : 'Error al unir los vídeos.');
+        }).finally(function () {
+          btnJoin.disabled = false;
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
