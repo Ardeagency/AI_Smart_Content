@@ -275,9 +275,9 @@ class ProductsView extends BaseView {
             <div class="product-view-thumbnails" id="productViewThumbnails" style="${thumbnails.length === 0 ? 'display: none;' : ''}">${thumbsHtml}</div>
             <div class="product-view-gallery-upload">
               <input type="file" id="productViewImageUpload" accept="image/*" multiple style="display: none;">
-              <button type="button" class="product-view-upload-btn" id="productViewUploadBtn">
+              <label for="productViewImageUpload" class="product-view-upload-btn" id="productViewUploadBtn" role="button">
                 <i class="fas fa-plus"></i> Añadir fotos
-              </button>
+              </label>
             </div>
           </div>
           <div class="product-view-info">
@@ -455,27 +455,40 @@ class ProductsView extends BaseView {
     const images = await this.loadProductImagesForDetail(this.productId);
     this.productImages = images;
 
-    const mainImg = this.container.querySelector('#productViewMainImage');
     const thumbnailsWrap = this.container.querySelector('#productViewThumbnails');
     const gallery = this.container.querySelector('.product-view-gallery');
     if (!gallery) return;
+    const mainWrapRef = gallery.querySelector('.product-view-main-wrap');
+    if (!mainWrapRef) return;
 
     const mainImage = images.length > 0 ? images[0].image_url : '';
-    if (mainImg) {
-      if (mainImage) {
-        mainImg.src = mainImage;
-        mainImg.alt = (this.productData && this.productData.nombre_producto) || 'Producto';
-        mainImg.style.display = '';
-        mainImg.parentElement.querySelector('.product-view-loading')?.remove();
+    const mainImgRef = mainWrapRef.querySelector('#productViewMainImage');
+    const placeholderEl = mainWrapRef.querySelector('.product-view-loading');
+
+    if (mainImage) {
+      if (mainImgRef) {
+        mainImgRef.src = mainImage;
+        mainImgRef.alt = (this.productData && this.productData.nombre_producto) || 'Producto';
+        mainImgRef.style.display = '';
+        placeholderEl?.remove();
       } else {
-        mainImg.style.display = 'none';
-        if (!mainImg.nextElementSibling?.classList?.contains('product-view-loading')) {
-          const placeholder = document.createElement('div');
-          placeholder.className = 'product-view-loading';
-          placeholder.style.minHeight = '200px';
-          placeholder.innerHTML = '<i class="fas fa-image"></i><span>Sin imagen</span>';
-          mainImg.parentElement.appendChild(placeholder);
-        }
+        placeholderEl?.remove();
+        const img = document.createElement('img');
+        img.id = 'productViewMainImage';
+        img.src = mainImage;
+        img.alt = (this.productData && this.productData.nombre_producto) || 'Producto';
+        mainWrapRef.appendChild(img);
+      }
+    } else {
+      if (mainImgRef) {
+        mainImgRef.style.display = 'none';
+      }
+      if (!placeholderEl) {
+        const placeholder = document.createElement('div');
+        placeholder.className = 'product-view-loading';
+        placeholder.style.minHeight = '200px';
+        placeholder.innerHTML = '<i class="fas fa-image"></i><span>Sin imagen</span>';
+        mainWrapRef.appendChild(placeholder);
       }
     }
 
@@ -536,14 +549,14 @@ class ProductsView extends BaseView {
     });
 
     const uploadInput = container.querySelector('#productViewImageUpload');
-    const uploadBtn = container.querySelector('#productViewUploadBtn');
-    if (uploadBtn && uploadInput) {
-      uploadBtn.onclick = () => uploadInput.click();
-      uploadInput.onchange = (e) => {
+    if (uploadInput) {
+      uploadInput.removeEventListener('change', this._boundUploadChange);
+      this._boundUploadChange = (e) => {
         const files = e.target.files;
         if (files && files.length) this.uploadProductImages(files);
         e.target.value = '';
       };
+      uploadInput.addEventListener('change', this._boundUploadChange);
     }
   }
 
