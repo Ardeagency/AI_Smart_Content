@@ -363,9 +363,10 @@ class ProductsView extends BaseView {
    */
   async uploadProductImages(files) {
     if (!this.supabase || !this.productId || !files || files.length === 0) return;
-    const userId = (await this.supabase.auth.getUser()).data?.user?.id;
+    const { data: { user } } = await this.supabase.auth.getUser();
+    const userId = user?.id;
     if (!userId) {
-      this.showNotification('Sesión no disponible', 'error');
+      this.showNotification('Sesión no disponible. Inicia sesión de nuevo.', 'error');
       return;
     }
     const validFiles = Array.from(files).filter((file) => {
@@ -381,6 +382,8 @@ class ProductsView extends BaseView {
     });
     if (validFiles.length === 0) return;
 
+    this.showNotification('Subiendo fotos...', 'info');
+
     try {
       const { data: existing } = await this.supabase
         .from('product_images')
@@ -395,7 +398,12 @@ class ProductsView extends BaseView {
         const { error: uploadError } = await this.supabase.storage
           .from('product-images')
           .upload(fileName, file, { contentType: file.type, cacheControl: '3600', upsert: false });
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error('Supabase storage upload error:', uploadError);
+          const msg = uploadError.message || 'Error al subir archivo';
+          this.showNotification(msg.length > 80 ? msg.slice(0, 80) + '…' : msg, 'error');
+          return;
+        }
 
         const { data: { publicUrl } } = this.supabase.storage.from('product-images').getPublicUrl(fileName);
         const { data: hasPrincipal } = await this.supabase
@@ -406,7 +414,7 @@ class ProductsView extends BaseView {
           .limit(1);
         const imageType = (!hasPrincipal || hasPrincipal.length === 0) && nextOrder === 0 ? 'principal' : 'secundaria';
 
-        await this.supabase
+        const { error: insertError } = await this.supabase
           .from('product_images')
           .insert({
             product_id: this.productId,
@@ -414,13 +422,20 @@ class ProductsView extends BaseView {
             image_type: imageType,
             image_order: nextOrder
           });
+        if (insertError) {
+          console.error('Supabase product_images insert error:', insertError);
+          const msg = insertError.message || 'Error al guardar la imagen en la base de datos';
+          this.showNotification(msg.length > 80 ? msg.slice(0, 80) + '…' : msg, 'error');
+          return;
+        }
         nextOrder++;
       }
       await this.refreshDetailImages();
       this.showNotification(`${validFiles.length} foto(s) añadida(s)`, 'success');
     } catch (err) {
       console.error('Error subiendo imágenes:', err);
-      this.showNotification('Error al subir fotos', 'error');
+      const msg = (err && err.message) ? err.message : 'Error al subir fotos';
+      this.showNotification(msg.length > 80 ? msg.slice(0, 80) + '…' : msg, 'error');
     }
   }
 
@@ -549,6 +564,7 @@ class ProductsView extends BaseView {
     });
 
     const uploadInput = container.querySelector('#productViewImageUpload');
+    const uploadLabel = container.querySelector('#productViewUploadBtn');
     if (uploadInput) {
       uploadInput.removeEventListener('change', this._boundUploadChange);
       this._boundUploadChange = (e) => {
@@ -557,6 +573,16 @@ class ProductsView extends BaseView {
         e.target.value = '';
       };
       uploadInput.addEventListener('change', this._boundUploadChange);
+    }
+    // Fallback: si el label no abre el selector, abrirlo por JS al hacer clic
+    if (uploadLabel && uploadInput) {
+      uploadLabel.removeEventListener('click', this._boundUploadLabelClick);
+      this._boundUploadLabelClick = (e) => {
+        if (e.target.tagName === 'INPUT') return;
+        e.preventDefault();
+        uploadInput.click();
+      };
+      uploadLabel.addEventListener('click', this._boundUploadLabelClick);
     }
   }
 
