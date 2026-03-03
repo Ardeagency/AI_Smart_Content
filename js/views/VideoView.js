@@ -1372,7 +1372,7 @@ class VideoView extends BaseView {
       payload.prompt = promptText;
     }
 
-    // Todas las referencias como image_urls: escena, productos e imágenes que adjunte el usuario
+    // Solo image_urls (escena, productos, imágenes usuario). kling_elements no se usa por ahora; el backend lo envía vacío para cumplir el cuerpo KIE.
     const imageUrls = [];
     for (const el of this.klingElements || []) {
       const urls = el.element_input_urls || [];
@@ -1383,7 +1383,7 @@ class VideoView extends BaseView {
     if (imageUrls.length) payload.image_urls = imageUrls;
 
     const createUrl = VideoView.KLING_VIDEO_API;
-    console.log('[Video] POST crear tarea →', createUrl, { action: 'createTask', mode, duration: payload.duration, hasPrompt: !!payload.prompt, image_urls_count: payload.image_urls?.length || 0 });
+    console.log('[Video] POST crear tarea →', createUrl, { action: 'createTask', mode, duration: payload.duration, hasPrompt: !!payload.prompt, image_urls: payload.image_urls?.length || 0 });
 
     try {
       const createRes = await fetch(createUrl, {

@@ -91,13 +91,14 @@ Get API Key:
 | **Type** | string | Must be passed as a string value |
 | **Required** | Yes | This parameter is mandatory for all requests |
 
-### input Object Parameters (uso en esta app)
+### input Object Parameters (KIE exige este cuerpo)
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
 | mode | string | Yes | `std` \| `pro` |
-| prompt | string | Yes | Texto del prompt para el video. |
-| image_urls | string[] | No | Todas las referencias en una sola lista: imagen/video de escena, productos, imágenes que adjunte el usuario. No se usa `kling_elements`. |
+| prompt | string | Yes | Texto del prompt (puede referenciar elementos con `@name`). |
+| image_urls | string[] | No | URLs de referencia (escena, productos, imágenes usuario). |
+| kling_elements | array | No | En esta app se envía siempre `[]` (existe en el cuerpo que exige KIE pero no lo usamos por ahora). |
 | sound | boolean | No | Incluir sonido. |
 | duration | string | No | `"5"` \| `"10"` \| `"15"` |
 | aspect_ratio | string | No | `"16:9"` \| `"9:16"` \| `"1:1"` |
@@ -110,7 +111,7 @@ Get API Key:
 - **Options**: `std` | `pro`
 - **Default Value**: `"std"`
 
-### Request Example (esta app: solo image_urls)
+### Request Example (esta app: image_urls + kling_elements vacío)
 
 ```json
 {
@@ -122,7 +123,8 @@ Get API Key:
     "duration": "5",
     "aspect_ratio": "16:9",
     "multi_shots": false,
-    "prompt": "Capture a warm kitchen scene with the blender in focus..."
+    "prompt": "Capture a warm kitchen scene with the blender in focus...",
+    "kling_elements": []
   }
 }
 ```

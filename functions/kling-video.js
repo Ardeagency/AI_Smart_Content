@@ -60,7 +60,7 @@ exports.handler = async (event, context) => {
         return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Acción no válida. Use action: "createTask"' }) };
       }
 
-      // Input KIE: solo image_urls (escena, productos e imágenes del usuario); sin kling_elements
+      // Input tal como exige KIE (cuerpo completo). kling_elements no lo usamos por ahora: existe pero va vacío.
       const mode = body.mode === 'pro' ? 'pro' : 'std';
       const promptText = typeof body.prompt === 'string' ? body.prompt.trim() : '';
       const rawMulti = Array.isArray(body.multi_shots) ? body.multi_shots : [];
@@ -82,7 +82,8 @@ exports.handler = async (event, context) => {
         duration: typeof body.duration === 'string' ? body.duration : String(body.duration || '5'),
         aspect_ratio: typeof body.aspect_ratio === 'string' ? body.aspect_ratio : (body.aspect_ratio || '16:9'),
         multi_shots: multiShots.length > 1,
-        prompt: promptForKie
+        prompt: promptForKie,
+        kling_elements: []
       };
       if (image_urls.length) input.image_urls = image_urls;
 
