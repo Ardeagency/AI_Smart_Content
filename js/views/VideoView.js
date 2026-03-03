@@ -86,7 +86,7 @@ class VideoView extends BaseView {
       <div class="organization-container video-view-container" id="videoPage">
         <div class="video-layout">
           <main class="video-main">
-            <section class="video-canva-view" id="videoCanvaView" aria-label="Vista de resultado y estado">
+            <section class="video-canvas video-canva-view" id="videoCanvaView" aria-label="Canvas — producción">
               <div class="video-status-area" id="videoStatusArea" style="display: none;">
                 <div class="video-status-card" id="videoStatusCard">
                   <p class="video-status-text" id="videoStatusText">—</p>
@@ -121,7 +121,7 @@ class VideoView extends BaseView {
                 </div>
               </div>
             </section>
-            <section class="video-director-wrap video-prompt-wrap" id="videoFooterControl" aria-label="Director Console">
+            <section class="video-director-console-zone video-prompt-wrap" id="videoFooterControl" aria-label="Director Console — adjuntos y prompt">
               <div class="video-prompt-footer-card video-prompt-footer-card-center">
                 <div class="video-prompt-footer-card-inner glass-black video-director-console">
                   <input type="file" id="videoImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
@@ -161,7 +161,7 @@ class VideoView extends BaseView {
               </div>
             </section>
           </main>
-          <aside class="video-sidebar" aria-label="Contexto y cinematografía">
+          <aside class="video-sidebar-console" aria-label="Sidebar — configuraciones predefinidas">
             <div class="video-prompt-footer-card video-sidebar-card">
               <div class="video-prompt-footer-card-inner glass-black video-sidebar-inner">
                 <div class="video-sidebar-section">
