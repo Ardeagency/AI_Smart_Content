@@ -20933,9 +20933,6 @@ body.production-filters-in-header .living-container > .living-history-section {
     -webkit-backdrop-filter: var(--glass-blur);
     color: var(--glass-black-text);
 }
-.video-prompt-footer-card-center .video-prompt-footer-card-inner {
-    padding: 0.5rem 1rem 1rem;
-}
 .video-director-console {
     display: flex;
     flex-direction: column;
@@ -21013,9 +21010,6 @@ body.production-filters-in-header .living-container > .living-history-section {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-}
-.video-prompt-footer-card-right .video-prompt-footer-card-inner.video-cinematography-panel {
-    flex: 0 0 auto;
 }
 .video-cine-tag {
     display: inline-flex;
@@ -21409,34 +21403,7 @@ body.production-filters-in-header .living-container > .living-history-section {
     color: rgba(255, 255, 255, 0.6);
     text-align: center;
 }
-/* Cinematography panel (card derecha) — altura fija 250px y scroll interno */
-.video-prompt-footer-card-inner.video-cinematography-panel {
-    box-sizing: border-box;
-    height: 250px;
-    min-height: 250px;
-    max-height: 250px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
-}
-.video-prompt-footer-card-inner.video-cinematography-panel::-webkit-scrollbar {
-    width: 6px;
-}
-.video-prompt-footer-card-inner.video-cinematography-panel::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.06);
-    border-radius: 3px;
-}
-.video-prompt-footer-card-inner.video-cinematography-panel::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 3px;
-}
-.video-prompt-footer-card-inner.video-cinematography-panel::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.35);
-}
-.video-prompt-footer-card-inner.video-cinematography-panel .video-prompt-panel-title {
-    margin: 0 0 0.5rem 0;
-}
+/* Las 3 cards del footer comparten el mismo estilo (padding y crecimiento vía .video-prompt-footer-card-inner.glass-black). */
 .video-cine-preset-wrap {
     margin-bottom: 0.5rem;
 }
