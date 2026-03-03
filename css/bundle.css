@@ -1241,10 +1241,10 @@ body.sidebar-collapsed .main-header,
     margin: 0;
 }
 
-/* Vertical spacing 12px entre ítems */
+/* Vertical spacing entre ítems (reducido) */
 .side-navigation.collapsed .nav-menu .nav-item,
 .side-navigation.collapsed .nav-menu .nav-group {
-    margin-bottom: 12px;
+    margin-bottom: 6px;
 }
 
 .side-navigation.collapsed .nav-menu .nav-item:last-child,
@@ -1950,7 +1950,7 @@ body.sidebar-collapsed .main-header,
    ========================================= */
 
 .nav-menu {
-    padding: 0 12px 16px 12px;
+    padding: 0 10px 12px 10px;
     display: flex;
     flex-direction: column;
     gap: 0;
@@ -2075,9 +2075,9 @@ body.sidebar-collapsed .main-header,
 
 
 .nav-icon {
-    width: 14px;
-    height: 14px;
-    font-size: 14px;
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
     font-weight: 900;
     font-style: normal;
     font-family: "Font Awesome 6 Free";
@@ -2096,7 +2096,7 @@ body.sidebar-collapsed .main-header,
 
 .nav-text {
     flex: 1;
-    font-size: 11px;
+    font-size: 12px;
     font-family: var(--font-family);
     transition: var(--transition-fast);
     opacity: 1;
@@ -3386,18 +3386,18 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     margin-bottom: 0;
 }
 
-/* Reglas visuales sidebar usuario: 36px altura, 13px, 16px padding, 10px icon spacing, 8px radius */
+/* Reglas visuales sidebar usuario: menos altura y padding, texto 12px, iconos 16px */
 .nav-mode-user .nav-link,
 .nav-mode-user .nav-main-link {
     display: flex;
     align-items: center;
-    gap: 10px;
-    min-height: 36px;
-    padding: 0 16px;
+    gap: 8px;
+    min-height: 30px;
+    padding: 0 12px;
     border-radius: var(--radius-sm);
     color: var(--sidebar-text-secondary);
     text-decoration: none;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 500;
     text-transform: none;
     transition: background 0.12s ease, color 0.12s ease;
@@ -3421,28 +3421,28 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 }
 
 .nav-mode-user .nav-icon {
-    width: 14px;
-    height: 14px;
-    font-size: 14px;
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
     text-align: center;
     flex-shrink: 0;
     color: var(--sidebar-icon-color);
 }
 
 .nav-mode-user .nav-icon-img {
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
     object-fit: contain;
     flex-shrink: 0;
 }
 
-/* Iconos SVG del sidebar: forzar 14×14 (img dentro de #sideNavigation .nav-menu y .nav-footer) */
+/* Iconos SVG del sidebar: forzar 16×16 */
 #sideNavigation .nav-menu .nav-icon-img,
 #sideNavigation .nav-menu .nav-link .nav-icon-img,
 #sideNavigation .nav-menu .nav-submenu-toggle .nav-icon-img,
 #sideNavigation .nav-footer .nav-icon-img {
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
 }
 
 .nav-mode-user .nav-text {
@@ -3474,11 +3474,11 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 .nav-mode-user .nav-submenu-link {
     display: flex;
     align-items: center;
-    padding: 0 16px 0 34px; /* 16 + 18px indent */
-    min-height: 36px;
+    padding: 0 12px 0 28px; /* 12 + 16px indent */
+    min-height: 30px;
     color: var(--text-muted);
     text-decoration: none;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 400;
     text-transform: none;
     border-radius: var(--radius-sm);
@@ -3499,13 +3499,13 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 .side-navigation:not(.nav-mode-user) .nav-link {
     display: flex;
     align-items: center;
-    gap: 12px;
-    min-height: var(--nav-item-height);
-    padding: 12px 14px;
+    gap: 8px;
+    min-height: 30px;
+    padding: 6px 12px;
     border-radius: var(--radius-md);
     color: var(--sidebar-text-secondary);
     text-decoration: none;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 400;
     text-transform: none;
     transition: background 0.15s ease, color 0.15s ease;
@@ -3528,9 +3528,9 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 }
 
 .side-navigation:not(.nav-mode-user) .nav-icon {
-    width: 14px;
-    height: 14px;
-    font-size: 14px;
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
     text-align: center;
     flex-shrink: 0;
     color: var(--sidebar-icon-color);
@@ -3539,11 +3539,11 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 .side-navigation:not(.nav-mode-user) .nav-submenu-link {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px 14px 10px 48px;
+    gap: 8px;
+    padding: 6px 12px 6px 44px;
     color: var(--text-muted);
     text-decoration: none;
-    font-size: 11px;
+    font-size: 12px;
     text-transform: none;
     border-radius: var(--radius-sm);
     transition: var(--transition);
@@ -3569,7 +3569,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 /* Zona 2: Footer organizacional (Configuración, Planes, Créditos, Salir) */
 .nav-mode-user .nav-footer {
     flex-shrink: 0;
-    padding: 12px 16px 16px;
+    padding: 10px 12px 12px;
     border: none;
     background: transparent;
     display: flex;
@@ -3581,13 +3581,13 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 .nav-mode-user .nav-footer-action {
     display: flex;
     align-items: center;
-    gap: 10px;
-    min-height: 36px;
-    padding: 0 16px;
+    gap: 8px;
+    min-height: 30px;
+    padding: 0 12px;
     border-radius: var(--radius-sm);
     color: var(--sidebar-text-secondary);
     text-decoration: none;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     text-transform: none;
     transition: background 0.12s ease, color 0.12s ease;
