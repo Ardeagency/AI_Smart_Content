@@ -84,178 +84,172 @@ class VideoView extends BaseView {
   renderHTML() {
     return `
       <div class="organization-container video-view-container" id="videoPage">
-        <section class="video-canva-view" id="videoCanvaView" aria-label="Vista de resultado y estado">
-          <div class="video-status-area" id="videoStatusArea" style="display: none;">
-            <div class="video-status-card" id="videoStatusCard">
-              <p class="video-status-text" id="videoStatusText">—</p>
-              <div class="video-status-spinner" id="videoStatusSpinner" style="display: none;"></div>
-            </div>
-          </div>
-
-          <div class="video-result-area" id="videoResultArea" style="display: none;">
-            <div class="video-result-card">
-              <h2 class="video-result-title">Video generado</h2>
-              <div class="video-result-player-wrap">
-                <video id="videoResultPlayer" class="video-result-player" controls playsinline></video>
-              </div>
-              <a id="videoResultDownload" class="btn btn-secondary video-download-btn" href="#" download target="_blank" rel="noopener">
-                <i class="fas fa-download"></i> Descargar
-              </a>
-            </div>
-          </div>
-
-          <div class="video-error-area" id="videoErrorArea" style="display: none;">
-            <div class="video-error-card">
-              <p class="video-error-text" id="videoErrorText">—</p>
-            </div>
-          </div>
-
-          <div class="video-productions-panel video-productions-panel-inline" id="videoProductionsPanel" aria-hidden="true" style="display: none;">
-            <div class="video-productions-panel-card">
-              <div class="video-productions-panel-header">
-                <h3 class="video-prompt-panel-title">Production Queue</h3>
-                <button type="button" class="video-productions-panel-close" id="videoProductionsPanelClose" aria-label="Cerrar"><i class="fas fa-times"></i></button>
-              </div>
-              <div class="video-productions-carousel-wrap">
-                <div class="video-productions-carousel" id="videoProductionsCarousel"></div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="video-footer-control video-production-bar video-prompt-wrap" id="videoFooterControl" aria-label="Controles de producción">
-          <div class="video-production-cards-row">
-            <div class="video-production-card-slot video-production-card-slot--left">
-              <div class="video-prompt-footer-card video-prompt-footer-card-left">
-              <div class="video-prompt-footer-card-inner glass-black video-left-inner">
-                <h3 class="video-section-label">Production Context</h3>
-                <div class="video-left-block">
-                  <h4 class="video-prompt-panel-title">Producciones</h4>
-                  <button type="button" class="video-prompt-db-select video-prompt-productions-btn" id="videoProductionsBtn" aria-label="Production Queue">
-                    <i class="fas fa-play"></i> Production Queue
-                  </button>
+        <div class="video-layout">
+          <main class="video-main">
+            <section class="video-canva-view" id="videoCanvaView" aria-label="Vista de resultado y estado">
+              <div class="video-status-area" id="videoStatusArea" style="display: none;">
+                <div class="video-status-card" id="videoStatusCard">
+                  <p class="video-status-text" id="videoStatusText">—</p>
+                  <div class="video-status-spinner" id="videoStatusSpinner" style="display: none;"></div>
                 </div>
-                <div class="video-left-block video-asset-stack-block">
-                  <h4 class="video-prompt-panel-title">Asset Stack</h4>
-                  <div class="video-asset-scope-wrap">
-                    <select id="videoAssetScope" class="video-prompt-db-select video-asset-scope-select" aria-label="Scope">
-                      <option value="product">Product</option>
-                      <option value="service">Service</option>
-                      <option value="brand_world">Brand World</option>
-                      <option value="campaign">Campaign</option>
-                      <option value="collection">Collection</option>
+              </div>
+              <div class="video-result-area" id="videoResultArea" style="display: none;">
+                <div class="video-result-card">
+                  <h2 class="video-result-title">Video generado</h2>
+                  <div class="video-result-player-wrap">
+                    <video id="videoResultPlayer" class="video-result-player" controls playsinline></video>
+                  </div>
+                  <a id="videoResultDownload" class="btn btn-secondary video-download-btn" href="#" download target="_blank" rel="noopener">
+                    <i class="fas fa-download"></i> Descargar
+                  </a>
+                </div>
+              </div>
+              <div class="video-error-area" id="videoErrorArea" style="display: none;">
+                <div class="video-error-card">
+                  <p class="video-error-text" id="videoErrorText">—</p>
+                </div>
+              </div>
+              <div class="video-productions-panel video-productions-panel-inline" id="videoProductionsPanel" aria-hidden="true" style="display: none;">
+                <div class="video-productions-panel-card">
+                  <div class="video-productions-panel-header">
+                    <h3 class="video-prompt-panel-title">Production Queue</h3>
+                    <button type="button" class="video-productions-panel-close" id="videoProductionsPanelClose" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+                  </div>
+                  <div class="video-productions-carousel-wrap">
+                    <div class="video-productions-carousel" id="videoProductionsCarousel"></div>
+                  </div>
+                </div>
+              </div>
+            </section>
+            <section class="video-director-wrap video-prompt-wrap" id="videoFooterControl" aria-label="Director Console">
+              <div class="video-prompt-footer-card video-prompt-footer-card-center">
+                <div class="video-prompt-footer-card-inner glass-black video-director-console">
+                  <input type="file" id="videoImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
+                  <div class="video-director-top-row">
+                    <button type="button" class="video-director-btn-add" id="videoPromptAdd" aria-label="Añadir imagen o video"><i class="fas fa-plus"></i></button>
+                    <div class="video-kling-elements-list" id="videoKlingElementsList" aria-live="polite"></div>
+                  </div>
+                  <div class="video-director-console-content">
+                    <textarea
+                      id="videoPromptInput"
+                      class="video-director-brief-input"
+                      placeholder="Describe the intention. We handle the production."
+                      rows="4"
+                      autocomplete="off"
+                      aria-label="Director Brief"
+                    ></textarea>
+                  </div>
+                  <div class="video-director-separator" aria-hidden="true"></div>
+                  <div class="video-director-controls">
+                    <button type="button" class="video-director-toggle video-prompt-toggle video-prompt-sound active" id="videoSound" title="Sound" aria-pressed="true"><i class="fas fa-volume-up"></i><span>Sound</span></button>
+                    <button type="button" class="video-director-toggle video-prompt-toggle video-prompt-multi-shot" id="videoMultiShot" title="Multi Shot" aria-pressed="false"><i class="fas fa-film"></i><span>Multi Shot</span></button>
+                    <div class="video-prompt-aspect-wrap">
+                      <select id="videoAspectRatio" class="video-director-select" aria-label="Format"><option value="16:9">16:9</option><option value="9:16">9:16</option><option value="1:1">1:1</option></select>
+                      <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
+                    </div>
+                    <div class="video-prompt-duration-wrap">
+                      <select id="videoDuration" class="video-director-select" aria-label="Duration"><option value="5">5s</option><option value="10">10s</option><option value="15">15s</option></select>
+                      <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
+                    </div>
+                    <button type="button" class="video-director-btn-generate" id="videoPromptSend" aria-label="Generar"><i class="fas fa-play"></i><span>GENERAR</span></button>
+                  </div>
+                  <div class="video-storyboard-wrap" id="videoStoryboardWrap" style="display: none;">
+                    <h4 class="video-storyboard-title">Storyboard</h4>
+                    <div class="video-storyboard-scenes" id="videoStoryboardScenes"></div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </main>
+          <aside class="video-sidebar" aria-label="Contexto y cinematografía">
+            <div class="video-prompt-footer-card video-sidebar-card">
+              <div class="video-prompt-footer-card-inner glass-black video-sidebar-inner">
+                <div class="video-sidebar-section">
+                  <h3 class="video-section-label">Production Context</h3>
+                  <div class="video-left-block">
+                    <h4 class="video-prompt-panel-title">Producciones</h4>
+                    <button type="button" class="video-prompt-db-select video-prompt-productions-btn" id="videoProductionsBtn" aria-label="Production Queue">
+                      <i class="fas fa-play"></i> Production Queue
+                    </button>
+                  </div>
+                  <div class="video-left-block video-asset-stack-block">
+                    <h4 class="video-prompt-panel-title">Asset Stack</h4>
+                    <div class="video-asset-scope-wrap">
+                      <select id="videoAssetScope" class="video-prompt-db-select video-asset-scope-select" aria-label="Scope">
+                        <option value="product">Product</option>
+                        <option value="service">Service</option>
+                        <option value="brand_world">Brand World</option>
+                        <option value="campaign">Campaign</option>
+                        <option value="collection">Collection</option>
+                      </select>
+                    </div>
+                    <select id="videoAssetSelect" class="video-prompt-db-select video-asset-select" aria-label="Asset" style="margin-top: 0.35rem;">
+                      <option value="">— None</option>
+                    </select>
+                    <div class="video-asset-card" id="videoAssetCard">
+                      <div class="video-asset-card-placeholder" id="videoAssetCardPlaceholder">Select an asset</div>
+                      <div class="video-asset-card-active" id="videoAssetCardActive" style="display: none;">
+                        <div class="video-asset-card-name" id="videoAssetCardName"></div>
+                        <ul class="video-asset-card-locks" id="videoAssetCardLocks"></ul>
+                        <button type="button" class="video-asset-change-btn" id="videoAssetChangeBtn">Change Asset</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="video-sidebar-section video-sidebar-cine">
+                  <h3 class="video-prompt-panel-title">Cinematography</h3>
+                  <div class="video-cine-preset-wrap">
+                    <label class="video-cine-label">Production Preset</label>
+                    <select id="videoCinePreset" class="video-cine-select" aria-label="Production Preset">
+                      <option value="">None</option>
+                      <option value="product-launch">Product Launch</option>
+                      <option value="luxury-hero">Luxury Hero</option>
+                      <option value="social-performance">Social Performance</option>
+                      <option value="cinematic-teaser">Cinematic Teaser</option>
+                      <option value="ecommerce-clean">Ecommerce Clean</option>
+                      <option value="tech-explainer">Tech Explainer</option>
                     </select>
                   </div>
-                  <select id="videoAssetSelect" class="video-prompt-db-select video-asset-select" aria-label="Asset" style="margin-top: 0.35rem;">
-                    <option value="">— None</option>
-                  </select>
-                  <div class="video-asset-card" id="videoAssetCard">
-                    <div class="video-asset-card-placeholder" id="videoAssetCardPlaceholder">Select an asset</div>
-                    <div class="video-asset-card-active" id="videoAssetCardActive" style="display: none;">
-                      <div class="video-asset-card-name" id="videoAssetCardName"></div>
-                      <ul class="video-asset-card-locks" id="videoAssetCardLocks"></ul>
-                      <button type="button" class="video-asset-change-btn" id="videoAssetChangeBtn">Change Asset</button>
+                  <div class="video-cine-selected-tags" id="videoCineSelectedTags" aria-live="polite"></div>
+                  <div class="video-cine-blocks">
+                    <div class="video-cine-block" data-block="camera">
+                      <button type="button" class="video-cine-block-header" aria-expanded="true"><span>Camera</span><i class="fas fa-chevron-down"></i></button>
+                      <div class="video-cine-block-content">
+                        <div class="video-cine-row"><label class="video-cine-label">Shot Type</label><select id="videoCineShotType" class="video-cine-select"></select></div>
+                        <div class="video-cine-row"><label class="video-cine-label">Lens</label><select id="videoCineLens" class="video-cine-select"></select></div>
+                        <div class="video-cine-row"><label class="video-cine-label">Framing</label><select id="videoCineFraming" class="video-cine-select"></select></div>
+                      </div>
+                    </div>
+                    <div class="video-cine-block" data-block="movement">
+                      <button type="button" class="video-cine-block-header" aria-expanded="false"><span>Movement</span><i class="fas fa-chevron-down"></i></button>
+                      <div class="video-cine-block-content video-cine-block-collapsed">
+                        <div class="video-cine-row"><label class="video-cine-label">Movement Type</label><select id="videoCineMovement" class="video-cine-select"></select></div>
+                        <div class="video-cine-row"><label class="video-cine-label">Speed</label><select id="videoCineMotionSpeed" class="video-cine-select"></select></div>
+                        <div class="video-cine-row"><label class="video-cine-label">Motion Intensity</label><select id="videoCineMotionIntensity" class="video-cine-select"></select></div>
+                      </div>
+                    </div>
+                    <div class="video-cine-block" data-block="lighting">
+                      <button type="button" class="video-cine-block-header" aria-expanded="false"><span>Lighting</span><i class="fas fa-chevron-down"></i></button>
+                      <div class="video-cine-block-content video-cine-block-collapsed">
+                        <div class="video-cine-row"><label class="video-cine-label">Light Type</label><select id="videoCineLightType" class="video-cine-select"></select></div>
+                        <div class="video-cine-row"><label class="video-cine-label">Contrast</label><select id="videoCineContrast" class="video-cine-select"></select></div>
+                        <div class="video-cine-row"><label class="video-cine-label">Temperature</label><select id="videoCineTemperature" class="video-cine-select"></select></div>
+                      </div>
+                    </div>
+                    <div class="video-cine-block" data-block="mood">
+                      <button type="button" class="video-cine-block-header" aria-expanded="false"><span>Mood</span><i class="fas fa-chevron-down"></i></button>
+                      <div class="video-cine-block-content video-cine-block-collapsed">
+                        <div class="video-cine-row"><label class="video-cine-label">Tone</label><select id="videoCineTone" class="video-cine-select"></select></div>
+                        <div class="video-cine-row"><label class="video-cine-label">Color Grade</label><select id="videoCineColorGrade" class="video-cine-select"></select></div>
+                        <div class="video-cine-row"><label class="video-cine-label">Energy Level</label><select id="videoCineEnergyLevel" class="video-cine-select"></select></div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            </div>
-            <div class="video-production-card-slot video-production-card-slot--center">
-              <div class="video-prompt-footer-card video-prompt-footer-card-center">
-              <div class="video-prompt-footer-card-inner glass-black video-director-console">
-                <input type="file" id="videoImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
-                <div class="video-director-top-row">
-                  <button type="button" class="video-director-btn-add" id="videoPromptAdd" aria-label="Añadir imagen o video"><i class="fas fa-plus"></i></button>
-                  <div class="video-kling-elements-list" id="videoKlingElementsList" aria-live="polite"></div>
-                </div>
-                <div class="video-director-console-content">
-                  <textarea
-                    id="videoPromptInput"
-                    class="video-director-brief-input"
-                    placeholder="Describe the intention. We handle the production."
-                    rows="4"
-                    autocomplete="off"
-                    aria-label="Director Brief"
-                  ></textarea>
-                </div>
-                <div class="video-director-separator" aria-hidden="true"></div>
-                <div class="video-director-controls">
-                  <button type="button" class="video-director-toggle video-prompt-toggle video-prompt-sound active" id="videoSound" title="Sound" aria-pressed="true"><i class="fas fa-volume-up"></i><span>Sound</span></button>
-                  <button type="button" class="video-director-toggle video-prompt-toggle video-prompt-multi-shot" id="videoMultiShot" title="Multi Shot" aria-pressed="false"><i class="fas fa-film"></i><span>Multi Shot</span></button>
-                  <div class="video-prompt-aspect-wrap">
-                    <select id="videoAspectRatio" class="video-director-select" aria-label="Format"><option value="16:9">16:9</option><option value="9:16">9:16</option><option value="1:1">1:1</option></select>
-                    <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
-                  </div>
-                  <div class="video-prompt-duration-wrap">
-                    <select id="videoDuration" class="video-director-select" aria-label="Duration"><option value="5">5s</option><option value="10">10s</option><option value="15">15s</option></select>
-                    <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
-                  </div>
-                  <button type="button" class="video-director-btn-generate" id="videoPromptSend" aria-label="Generar"><i class="fas fa-play"></i><span>GENERAR</span></button>
-                </div>
-                <div class="video-storyboard-wrap" id="videoStoryboardWrap" style="display: none;">
-                  <h4 class="video-storyboard-title">Storyboard</h4>
-                  <div class="video-storyboard-scenes" id="videoStoryboardScenes"></div>
-                </div>
-              </div>
-            </div>
-            </div>
-            <div class="video-production-card-slot video-production-card-slot--right">
-              <div class="video-prompt-footer-card video-prompt-footer-card-right">
-              <div class="video-prompt-footer-card-inner glass-black video-cinematography-panel">
-                <h3 class="video-prompt-panel-title">Cinematography</h3>
-                <div class="video-cine-preset-wrap">
-                  <label class="video-cine-label">Production Preset</label>
-                  <select id="videoCinePreset" class="video-cine-select" aria-label="Production Preset">
-                    <option value="">None</option>
-                    <option value="product-launch">Product Launch</option>
-                    <option value="luxury-hero">Luxury Hero</option>
-                    <option value="social-performance">Social Performance</option>
-                    <option value="cinematic-teaser">Cinematic Teaser</option>
-                    <option value="ecommerce-clean">Ecommerce Clean</option>
-                    <option value="tech-explainer">Tech Explainer</option>
-                  </select>
-                </div>
-                <div class="video-cine-selected-tags" id="videoCineSelectedTags" aria-live="polite"></div>
-                <div class="video-cine-blocks">
-                  <div class="video-cine-block" data-block="camera">
-                    <button type="button" class="video-cine-block-header" aria-expanded="true"><span>Camera</span><i class="fas fa-chevron-down"></i></button>
-                    <div class="video-cine-block-content">
-                      <div class="video-cine-row"><label class="video-cine-label">Shot Type</label><select id="videoCineShotType" class="video-cine-select"></select></div>
-                      <div class="video-cine-row"><label class="video-cine-label">Lens</label><select id="videoCineLens" class="video-cine-select"></select></div>
-                      <div class="video-cine-row"><label class="video-cine-label">Framing</label><select id="videoCineFraming" class="video-cine-select"></select></div>
-                    </div>
-                  </div>
-                  <div class="video-cine-block" data-block="movement">
-                    <button type="button" class="video-cine-block-header" aria-expanded="false"><span>Movement</span><i class="fas fa-chevron-down"></i></button>
-                    <div class="video-cine-block-content video-cine-block-collapsed">
-                      <div class="video-cine-row"><label class="video-cine-label">Movement Type</label><select id="videoCineMovement" class="video-cine-select"></select></div>
-                      <div class="video-cine-row"><label class="video-cine-label">Speed</label><select id="videoCineMotionSpeed" class="video-cine-select"></select></div>
-                      <div class="video-cine-row"><label class="video-cine-label">Motion Intensity</label><select id="videoCineMotionIntensity" class="video-cine-select"></select></div>
-                    </div>
-                  </div>
-                  <div class="video-cine-block" data-block="lighting">
-                    <button type="button" class="video-cine-block-header" aria-expanded="false"><span>Lighting</span><i class="fas fa-chevron-down"></i></button>
-                    <div class="video-cine-block-content video-cine-block-collapsed">
-                      <div class="video-cine-row"><label class="video-cine-label">Light Type</label><select id="videoCineLightType" class="video-cine-select"></select></div>
-                      <div class="video-cine-row"><label class="video-cine-label">Contrast</label><select id="videoCineContrast" class="video-cine-select"></select></div>
-                      <div class="video-cine-row"><label class="video-cine-label">Temperature</label><select id="videoCineTemperature" class="video-cine-select"></select></div>
-                    </div>
-                  </div>
-                  <div class="video-cine-block" data-block="mood">
-                    <button type="button" class="video-cine-block-header" aria-expanded="false"><span>Mood</span><i class="fas fa-chevron-down"></i></button>
-                    <div class="video-cine-block-content video-cine-block-collapsed">
-                      <div class="video-cine-row"><label class="video-cine-label">Tone</label><select id="videoCineTone" class="video-cine-select"></select></div>
-                      <div class="video-cine-row"><label class="video-cine-label">Color Grade</label><select id="videoCineColorGrade" class="video-cine-select"></select></div>
-                      <div class="video-cine-row"><label class="video-cine-label">Energy Level</label><select id="videoCineEnergyLevel" class="video-cine-select"></select></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            </div>
-          </div>
-        </section>
+          </aside>
+        </div>
       </div>
     `;
   }

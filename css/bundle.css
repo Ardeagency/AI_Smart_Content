@@ -20859,10 +20859,65 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 /* ========== Video (Kling 3.0 / KIE) ========== */
 .organization-container.video-view-container {
-    padding-bottom: 7rem;
+    padding: 0;
+    min-height: 100vh;
 }
-/* Footer: card tipo prompt — borde con degradado dinámico completo (--brand-gradient-dynamic) */
-/* Barra de producción (antes footer): fixed abajo; las cards están en contenedores independientes */
+/* Layout: main (canva + director) a la izquierda, sidebar (context + cine) a la derecha */
+.video-layout {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0;
+    min-height: 100vh;
+}
+.video-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem 1rem 1.5rem;
+}
+.video-main .video-canva-view {
+    flex: 1;
+    min-height: 200px;
+    margin-bottom: 1rem;
+}
+.video-director-wrap {
+    flex-shrink: 0;
+    width: 100%;
+    max-width: 100%;
+}
+.video-director-wrap .video-prompt-footer-card {
+    width: 100%;
+}
+.video-sidebar {
+    width: 360px;
+    flex-shrink: 0;
+    padding: 1rem 1rem 1.5rem 1rem;
+    overflow-y: auto;
+    border-left: 1px solid var(--border-divider);
+}
+.video-sidebar-card {
+    width: 100%;
+}
+.video-sidebar-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+.video-sidebar-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.video-sidebar-section .video-section-label,
+.video-sidebar-section .video-prompt-panel-title {
+    margin: 0 0 0.35rem 0;
+}
+.video-sidebar-cine {
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+/* Compatibilidad: barra fija (si se usa en otra vista) */
 .video-page-footer.video-prompt-wrap,
 .video-production-bar.video-footer-control {
     position: fixed;
@@ -20873,7 +20928,6 @@ body.production-filters-in-header .living-container > .living-history-section {
     z-index: 100;
     pointer-events: none;
 }
-/* Fila de 3 contenedores: cada card en su slot para que al expandirse una no afecte a las otras */
 .video-production-cards-row,
 .video-prompt-cards-row {
     display: grid;
@@ -20885,16 +20939,20 @@ body.production-filters-in-header .living-container > .living-history-section {
     min-height: 120px;
 }
 .video-production-cards-row {
-    align-items: end; /* cards alineadas desde abajo */
+    align-items: end;
 }
 .video-prompt-cards-row {
-    align-items: stretch; /* compatibilidad si se usa en otro sitio */
+    align-items: stretch;
 }
 .video-production-card-slot {
     min-width: 0;
     pointer-events: auto;
 }
-/* Borde = degradado dinámico discreto (50% opacidad) */
+/* Borde = degradado dinámico (animado o de marca), 50% opacidad */
+@keyframes video-card-gradient-border {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+}
 .video-prompt-footer-card {
     position: relative;
     pointer-events: auto;
@@ -20912,6 +20970,8 @@ body.production-filters-in-header .living-container > .living-history-section {
     z-index: 0;
     border-radius: inherit;
     background: var(--brand-gradient-dynamic, var(--brand-gradient));
+    background-size: 200% 100%;
+    animation: video-card-gradient-border 6s linear infinite;
     opacity: 0.5;
     pointer-events: none;
 }
@@ -20923,6 +20983,8 @@ body.production-filters-in-header .living-container > .living-history-section {
     z-index: -1;
     border-radius: inherit;
     background: var(--brand-gradient-dynamic, var(--brand-gradient));
+    background-size: 200% 100%;
+    animation: video-card-gradient-border 6s linear infinite;
     opacity: 0.1;
     filter: blur(20px);
     pointer-events: none;
@@ -21794,6 +21856,14 @@ body.production-filters-in-header .living-container > .living-history-section {
     padding: 0.5rem 0;
 }
 @media (max-width: 900px) {
+    .video-layout {
+        flex-direction: column;
+    }
+    .video-sidebar {
+        width: 100%;
+        border-left: none;
+        border-top: 1px solid var(--border-divider);
+    }
     .video-prompt-cards-row,
     .video-production-cards-row {
         grid-template-columns: 1fr;
