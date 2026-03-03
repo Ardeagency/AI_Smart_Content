@@ -218,6 +218,11 @@ class App {
     r.register('/org/:orgIdShort/:orgNameSlug/video', videoLoader, auth);
     r.register('/video', videoLoader, auth);
 
+    // ── Org: Editor de video (FFmpeg.wasm en navegador) ──
+    const videoEditorLoader = this._lazy('VideoEditorView', ['/js/views/VideoEditorView.js']);
+    r.register('/org/:orgIdShort/:orgNameSlug/editor-video', videoEditorLoader, auth);
+    r.register('/editor-video', videoEditorLoader, auth);
+
     // ── Settings ──
     r.register('/settings', this._lazy('SettingsView', ['/js/views/SettingsView.js']), auth);
 
