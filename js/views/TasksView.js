@@ -517,14 +517,14 @@ class TasksView extends BaseView {
         <div class="task-card-inner">
           <div class="task-card-cover-wrap">
             ${coverHtml}
+            <span class="task-card-badge task-card-badge-cover ${statusClass}">
+              <span class="task-card-badge-dot"></span>${statusLabel}
+            </span>
             ${avatarsHtml}
           </div>
           <div class="task-card-body">
             <div class="task-card-header">
               <h3 class="task-card-title">${this.escapeHtml(t.job_name || 'Sin nombre')}</h3>
-              <span class="task-card-badge ${statusClass}">
-                <span class="task-card-badge-dot"></span>${statusLabel}
-              </span>
             </div>
             <p class="task-card-subtitle">${this.escapeHtml(t.flow_name)}</p>
             <div class="task-card-tags">

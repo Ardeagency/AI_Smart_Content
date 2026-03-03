@@ -6670,8 +6670,8 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 
 .tasks-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
 }
 
 .tasks-load-more-wrap {
@@ -6726,6 +6726,25 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   flex-shrink: 0;
 }
 
+.task-card-badge-cover {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 3;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-pill);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.task-card-badge-cover.task-card-badge-active {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.task-card-badge-cover.task-card-badge-paused {
+  background: rgba(0, 0, 0, 0.5);
+}
+
 .task-card-cover {
   width: 100%;
   aspect-ratio: 16 / 9;
@@ -6768,14 +6787,14 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 }
 
 .task-card-avatar {
-  width: 48px;
-  height: 48px;
+  width: 88px;
+  height: 88px;
   border-radius: 50%;
   overflow: hidden;
-  border: 3px solid var(--bg-secondary, #1a1a1d);
+  border: 4px solid var(--bg-secondary, #1a1a1d);
   background: var(--bg-tertiary);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  margin-left: -12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  margin-left: -22px;
   flex-shrink: 0;
 }
 
@@ -6794,7 +6813,7 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-primary);
   background: var(--border-divider);
@@ -6805,15 +6824,15 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   align-items: center;
   justify-content: center;
   color: var(--text-tertiary);
-  font-size: 1.125rem;
+  font-size: 1.75rem;
 }
 
 .task-card-body {
-  padding: 2rem 1.25rem 1.25rem;
-  padding-top: 2.25rem;
+  padding: 1.25rem 1rem 1rem;
+  padding-top: 1.75rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .task-card-header {
@@ -6824,7 +6843,7 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 }
 
 .task-card-title {
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0;
@@ -6867,7 +6886,7 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 }
 
 .task-card-subtitle {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   color: var(--text-secondary);
   margin: 0;
   font-weight: 400;
@@ -6891,9 +6910,9 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  padding: 0.75rem 0;
-  margin: 0.25rem 0 0;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  margin: 0.15rem 0 0;
 }
 
 .task-card-metric {
@@ -6904,13 +6923,13 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 }
 
 .task-card-metric-value {
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   font-weight: 700;
   color: var(--text-primary);
 }
 
 .task-card-metric-label {
-  font-size: 0.6875rem;
+  font-size: 0.625rem;
   font-weight: 500;
   letter-spacing: 0.03em;
   color: var(--text-tertiary);
@@ -6918,24 +6937,24 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 
 .task-card-metric-divider {
   width: 1px;
-  height: 28px;
+  height: 24px;
   background: var(--border-divider);
   flex-shrink: 0;
 }
 
 .task-card-actions {
   display: flex;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-  padding-top: 0.75rem;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+  padding-top: 0.5rem;
   border-top: 1px solid var(--border-divider);
 }
 
 .task-card-actions .btn {
   flex: 1;
   justify-content: center;
-  padding: 0.6rem 0.75rem;
-  font-size: 0.875rem;
+  padding: 0.5rem 0.6rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 
