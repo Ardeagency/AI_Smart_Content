@@ -157,11 +157,11 @@ class VideoView extends BaseView {
               <div class="video-prompt-footer-card video-prompt-footer-card-center">
               <div class="video-prompt-footer-card-inner glass-black video-director-console">
                 <input type="file" id="videoImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
+                <div class="video-director-top-row">
+                  <button type="button" class="video-director-btn-add" id="videoPromptAdd" aria-label="Añadir imagen o video"><i class="fas fa-plus"></i></button>
+                  <div class="video-kling-elements-list" id="videoKlingElementsList" aria-live="polite"></div>
+                </div>
                 <div class="video-director-console-content">
-                  <div class="video-director-top-row">
-                    <button type="button" class="video-director-btn-add" id="videoPromptAdd" aria-label="Añadir imagen o video"><i class="fas fa-plus"></i></button>
-                    <div class="video-kling-elements-list" id="videoKlingElementsList" aria-live="polite"></div>
-                  </div>
                   <textarea
                     id="videoPromptInput"
                     class="video-director-brief-input"
