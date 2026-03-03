@@ -172,7 +172,7 @@ class VideoView extends BaseView {
                       </div>
                     </div>
                   </div>
-                  <div class="video-sidebar-section video-sidebar-cine">
+                  <div class="video-sidebar-section video-sidebar-cine video-cinematography-panel">
                     <h3 class="video-prompt-panel-title">Cinematography</h3>
                     <div class="video-cine-preset-wrap">
                       <label class="video-cine-label">Production Preset</label>
@@ -664,16 +664,18 @@ class VideoView extends BaseView {
       });
     });
 
-    this.container.querySelectorAll('.video-cine-block-header').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const block = btn.closest('.video-cine-block');
-        const content = block?.querySelector('.video-cine-block-content');
-        if (!content) return;
-        const collapsed = content.classList.toggle('video-cine-block-collapsed');
-        btn.setAttribute('aria-expanded', !collapsed);
-        const icon = btn.querySelector('i.fa-chevron-down');
-        if (icon) icon.style.transform = collapsed ? 'rotate(-90deg)' : 'rotate(0)';
-      });
+    /* Acordeones cine: delegación para que funcione aunque el DOM se monte después */
+    this.container.addEventListener('click', (e) => {
+      const btn = e.target.closest('.video-cine-block-header');
+      if (!btn) return;
+      const block = btn.closest('.video-cine-block');
+      const content = block?.querySelector('.video-cine-block-content');
+      if (!content) return;
+      e.preventDefault();
+      const collapsed = content.classList.toggle('video-cine-block-collapsed');
+      btn.setAttribute('aria-expanded', !collapsed);
+      const icon = btn.querySelector('i.fa-chevron-down, i.fas.fa-chevron-down');
+      if (icon) icon.style.transform = collapsed ? 'rotate(-90deg)' : 'rotate(0)';
     });
 
     this.renderCinematographySelectedTags();

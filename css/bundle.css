@@ -21781,7 +21781,9 @@ body.production-filters-in-header .living-container > .living-history-section {
     box-shadow: 0 0 14px var(--color-info-light);
     background: var(--black-40);
 }
-.video-cinematography-panel .video-cine-block-header {
+/* Cabeceras de acordeón: mismo tono oscuro que el bloque, texto claro (evitar estilo por defecto del botón) */
+.video-cinematography-panel .video-cine-block-header,
+.video-sidebar-cine .video-cine-block-header {
     width: 100%;
     display: flex;
     align-items: center;
@@ -21796,13 +21798,25 @@ body.production-filters-in-header .living-container > .living-history-section {
     border: none;
     cursor: pointer;
     transition: var(--transition);
+    font-family: var(--font-family);
+    text-align: left;
 }
-.video-cinematography-panel .video-cine-block-header:hover {
+.video-cinematography-panel .video-cine-block-header:hover,
+.video-sidebar-cine .video-cine-block-header:hover {
     background: var(--white-8);
+    color: var(--glass-black-text);
 }
-.video-cinematography-panel .video-cine-block-header i {
+.video-cinematography-panel .video-cine-block-header i,
+.video-sidebar-cine .video-cine-block-header i {
     font-size: 0.6rem;
+    color: var(--glass-black-text);
     transition: var(--transition);
+    flex-shrink: 0;
+    margin-left: var(--spacing-sm);
+}
+.video-cinematography-panel .video-cine-block-header[aria-expanded="false"] i,
+.video-sidebar-cine .video-cine-block-header[aria-expanded="false"] i {
+    transform: rotate(-90deg);
 }
 .video-cinematography-panel .video-cine-block-content {
     padding: var(--spacing-xs) var(--spacing-sm) var(--spacing-sm);
