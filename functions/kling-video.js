@@ -82,15 +82,17 @@ exports.handler = async (event, context) => {
         duration: typeof body.duration === 'string' ? body.duration : String(body.duration || '5'),
         aspect_ratio: typeof body.aspect_ratio === 'string' ? body.aspect_ratio : (body.aspect_ratio || '16:9'),
         multi_shots: multiShots.length > 1,
-        prompt: promptForKie,
-        kling_elements: []
+        prompt: promptForKie
       };
       if (image_urls.length) input.image_urls = image_urls;
+      // kling_elements no lo usamos; si se envía vacío [] KIE puede devolver 422, así que no lo incluimos
 
       const kiePayload = {
         model: 'kling-3.0/video',
         input
       };
+      const promptPreview = (input.prompt || '').length > 80 ? (input.prompt.slice(0, 80) + '...') : input.prompt;
+      console.log('kling-video KIE createTask payload:', JSON.stringify({ model: kiePayload.model, input: { ...input, prompt: promptPreview } }));
 
       const createUrl = `${KIE_BASE}${CREATE_PATH}`;
       const createRes = await fetch(createUrl, {
