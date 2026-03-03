@@ -1511,7 +1511,10 @@ class VideoView extends BaseView {
         }
         if (state === 'fail') {
           this.stopPolling();
-          const msg = data.data?.failMsg || data.data?.failCode || 'La generación falló';
+          const rawMsg = data.data?.failMsg || data.data?.failCode || 'La generación falló';
+          const msg = /timeout/i.test(rawMsg)
+            ? 'La generación del video tardó demasiado en los servidores de KIE. Prueba de nuevo o simplifica un poco el prompt.'
+            : rawMsg;
           this.showError(msg);
           if (this._lastKieOutputId) {
             await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: msg });
