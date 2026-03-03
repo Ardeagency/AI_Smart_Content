@@ -1222,6 +1222,11 @@ class VideoView extends BaseView {
       element_input_urls: el.element_input_urls || undefined,
       element_input_video_urls: el.element_input_video_urls || undefined
     }));
+    const sceneImageUrls = [];
+    for (const el of sceneElements) {
+      const urls = el.element_input_urls || el.element_input_video_urls || [];
+      urls.forEach((u) => { if (typeof u === 'string' && u.startsWith('http')) sceneImageUrls.push(u); });
+    }
     const productLockElements = (this.klingElements || []).filter((el) => el._fromProductSelection).map((el) => ({
       name: el.name,
       description: el.description,
@@ -1234,6 +1239,7 @@ class VideoView extends BaseView {
       director_brief: idea,
       multi_prompt: this.multiShotEnabled,
       scene_elements: sceneElements,
+      scene_image_urls: sceneImageUrls,
       product_lock_elements: productLockElements,
       campaign: brandContext.selected_campaign,
       audience: brandContext.selected_audience,
@@ -1366,18 +1372,18 @@ class VideoView extends BaseView {
       payload.prompt = promptText;
     }
 
-    // Todas las URLs de escena (imágenes + videos) y productos en image_urls; sin kling_elements
+    // Todas las referencias como image_urls: escena, productos e imágenes que adjunte el usuario
     const imageUrls = [];
     for (const el of this.klingElements || []) {
-      const imgUrls = el.element_input_urls || [];
-      for (const u of imgUrls) if (typeof u === 'string' && u.startsWith('http')) imageUrls.push(u);
+      const urls = el.element_input_urls || [];
       const videoUrls = el.element_input_video_urls || [];
-      for (const u of videoUrls) if (typeof u === 'string' && u.startsWith('http')) imageUrls.push(u);
+      urls.forEach((u) => { if (typeof u === 'string' && u.startsWith('http')) imageUrls.push(u); });
+      videoUrls.forEach((u) => { if (typeof u === 'string' && u.startsWith('http')) imageUrls.push(u); });
     }
     if (imageUrls.length) payload.image_urls = imageUrls;
 
     const createUrl = VideoView.KLING_VIDEO_API;
-    console.log('[Video] POST crear tarea →', createUrl, { action: 'createTask', mode, duration: payload.duration, hasPrompt: !!payload.prompt, image_urls_count: (payload.image_urls || []).length });
+    console.log('[Video] POST crear tarea →', createUrl, { action: 'createTask', mode, duration: payload.duration, hasPrompt: !!payload.prompt, image_urls_count: payload.image_urls?.length || 0 });
 
     try {
       const createRes = await fetch(createUrl, {
@@ -1421,7 +1427,7 @@ class VideoView extends BaseView {
         status: 'processing',
         external_job_id: taskId,
         prompt_used: promptText,
-        metadata: { mode: payload.mode || 'pro', duration: payload.duration, aspect_ratio: payload.aspect_ratio, image_urls_count: (payload.image_urls || []).length }
+        metadata: { mode: payload.mode || 'pro', duration: payload.duration, aspect_ratio: payload.aspect_ratio, image_urls_count: payload.image_urls?.length || 0 }
       });
 
       this.showStatus('Generando video (Kling 3.0). Esto puede tardar unos minutos…', true);

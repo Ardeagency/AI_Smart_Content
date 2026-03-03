@@ -60,7 +60,7 @@ exports.handler = async (event, context) => {
         return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Acción no válida. Use action: "createTask"' }) };
       }
 
-      // Input KIE: mode, image_urls (escena + productos), sound, duration, aspect_ratio, multi_shots, prompt. Sin kling_elements.
+      // Input KIE: solo image_urls (escena, productos e imágenes del usuario); sin kling_elements
       const mode = body.mode === 'pro' ? 'pro' : 'std';
       const promptText = typeof body.prompt === 'string' ? body.prompt.trim() : '';
       const rawMulti = Array.isArray(body.multi_shots) ? body.multi_shots : [];

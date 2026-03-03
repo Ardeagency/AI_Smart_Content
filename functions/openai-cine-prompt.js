@@ -5,14 +5,11 @@
  * El input de texto del usuario (idea) NUNCA es el prompt final: es la idea escrita. La IA genera el prompt
  * adaptado al lenguaje comunicacional/publicitario de la marca.
  *
+ * Respuesta: ÚNICAMENTE el prompt para el video. No extender, no explicar, nada más que el prompt.
+ * Opcional: scene_image_urls (URLs de la escena) se envían a OpenAI visión para que el prompt se base en esa imagen.
+ *
  * POST body:
- *   idea / director_brief: string — idea escrita del usuario (no el prompt final)
- *   scene_elements: Array — escena a producir (producciones adjuntas; referencias visuales de la escena)
- *   product_lock_elements: Array — imágenes de producto; el video NO debe cambiar el producto
- *   campaign: object — campaña seleccionada (enfoque: ej. campaña navidad)
- *   audience: object — audiencia seleccionada (enfoque: ej. audiencia familiar)
- *   brand_context: { brand_voice?, brand_profiles?, entities?, products?, audiences?, campaigns? }
- *   cinematography: { shotType, lens, framing, ... }
+ *   idea / director_brief, scene_image_urls[], scene_elements, product_lock_elements, campaign, audience, brand_context, cinematography
  *
  * Respuesta: { prompt: string } o { multi_prompts: string[] }
  */
@@ -146,6 +143,10 @@ exports.handler = async (event, context) => {
   const brandContext = body.brand_context || {};
   const cinematography = body.cinematography || {};
   const multiPrompt = !!body.multi_prompt;
+  const sceneImageUrls = body.scene_image_urls || [];
+  const firstSceneImageUrl = Array.isArray(sceneImageUrls) && sceneImageUrls.length
+    ? sceneImageUrls.find((u) => typeof u === 'string' && u.startsWith('http'))
+    : (sceneElements[0] && (sceneElements[0].element_input_urls || sceneElements[0].element_input_video_urls) && (sceneElements[0].element_input_urls || sceneElements[0].element_input_video_urls)[0]);
 
   const brandVoiceText = buildBrandVoiceText(brandContext);
   const campaignAudienceText = buildCampaignAudienceText(campaign, audience);
@@ -155,34 +156,36 @@ exports.handler = async (event, context) => {
 
   const systemContent = multiPrompt
     ? `Eres un experto en redactar prompts para generación de video con IA (Kling), en modo MULTI SHOT.
-Adapta el lenguaje del prompt al lenguaje comunicacional y publicitario de la marca (tono, estilo, palabras clave) usando los datos de voz de marca que te proporcionan.
-Tu tarea es devolver un JSON válido con un array de 2 a 4 prompts cinematográficos, uno por shot/escena.
-Cada prompt debe ser: descriptivo, visual, en inglés (salvo que la marca indique otro idioma), y coherente con el anterior.
-Formato de respuesta ÚNICAMENTE: ["prompt del shot 1", "prompt del shot 2", ...]
-No incluyas explicaciones, títulos ni texto fuera del JSON.`
-    : `Eres un experto en redactar prompts para generación de video con IA (Kling/Sora).
-Tu tarea es devolver UN ÚNICO prompt cinematográfico listo para pegar en Kling.
-Adapta el prompt al lenguaje comunicacional y publicitario de la marca: usa el tono, estilo de escritura, palabras clave y restricciones de la voz de marca que te proporcionan.
-El prompt debe ser descriptivo, visual, en inglés (salvo que la marca o el usuario indiquen otro idioma), e integrar de forma natural: la idea del usuario, la escena a producir, la cinematografía indicada y la restricción de no alterar el producto cuando aplique.
-Responde ÚNICAMENTE con el texto del prompt, sin explicaciones, títulos ni prefijos.`;
+Adapta el lenguaje al tono y voz de la marca.
+Tu respuesta debe ser ÚNICAMENTE un JSON válido: ["prompt shot 1", "prompt shot 2", ...]. No extiendas, no expliques, no escribas nada más que el array JSON.`
+    : `Eres un experto en redactar prompts para generación de video con IA (Kling).
+Tu respuesta debe ser ÚNICAMENTE el texto del prompt para generar el video. Nada más: no extiendas, no expliques, no introducciones ni conclusiones. Solo el prompt.
+Si te envían una imagen de la escena, úsala para escribir el prompt que describa el video a generar para esa escena; no inventes escenario ni producto, enfócate en el prompt del video.`;
 
   const userParts = [];
-  if (brandVoiceText) userParts.push('VOZ DE MARCA (adaptar el prompt a este lenguaje)\n' + brandVoiceText);
-  if (campaignAudienceText) userParts.push('Campaña y audiencia (enfoque de la producción)\n' + campaignAudienceText);
+  if (firstSceneImageUrl) userParts.push('Imagen de la escena de referencia (genera el prompt del video para esta escena):');
+  if (brandVoiceText) userParts.push('VOZ DE MARCA\n' + brandVoiceText);
+  if (campaignAudienceText) userParts.push('Campaña y audiencia\n' + campaignAudienceText);
   if (productLockText) userParts.push(productLockText);
-  if (sceneText) userParts.push(sceneText);
+  if (sceneText && !firstSceneImageUrl) userParts.push(sceneText);
+  if (sceneText && firstSceneImageUrl) userParts.push('Contexto escena: ' + sceneText.replace(/\n/g, ' '));
   if (cineText) userParts.push(cineText);
-  if (idea) userParts.push('IDEA ESCRITA DEL USUARIO (no es el prompt final; genera el prompt a partir de esta idea)\n' + idea);
+  if (idea) userParts.push('IDEA DEL USUARIO (genera solo el prompt a partir de esta idea)\n' + idea);
 
   if (userParts.length === 0) {
-    userParts.push(multiPrompt
-      ? 'Genera 2 o 3 prompts cinematográficos en secuencia para un video comercial (array JSON).'
-      : 'Genera un prompt cinematográfico corto y atractivo para un video comercial genérico.');
+    userParts.push(multiPrompt ? 'Genera 2 o 3 prompts en secuencia (array JSON).' : 'Genera un prompt cinematográfico para video.');
   } else if (multiPrompt) {
-    userParts.push('Genera 2 a 4 prompts (shots) en secuencia basados en lo anterior. Responde solo con un array JSON de strings.');
+    userParts.push('Responde solo con un array JSON de strings, sin otro texto.');
   }
 
-  const userContent = userParts.join('\n\n---\n\n');
+  const userTextContent = userParts.join('\n\n---\n\n');
+
+  const userMessageContent = firstSceneImageUrl
+    ? [
+        { type: 'text', text: userTextContent },
+        { type: 'image_url', image_url: { url: firstSceneImageUrl } }
+      ]
+    : userTextContent;
 
   try {
     const res = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -195,7 +198,7 @@ Responde ÚNICAMENTE con el texto del prompt, sin explicaciones, títulos ni pre
         model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemContent },
-          { role: 'user', content: userContent }
+          { role: 'user', content: userMessageContent }
         ],
         max_tokens: multiPrompt ? 800 : 400,
         temperature: 0.6

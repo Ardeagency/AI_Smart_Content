@@ -34,7 +34,7 @@ En este proyecto se usa un **proxy Netlify** (`/.netlify/functions/kling-video`)
 | duration | string | No | `"5"` \| `"10"` \| `"15"` (default: `"5"`) |
 | aspect_ratio | string | No | `"16:9"` \| `"9:16"` \| `"1:1"` |
 | sound | boolean | No | Incluir sonido |
-| image_urls | string[] | No | URLs de imagen/video de escena y productos (todas en un solo array). La app construye esta lista desde Production Queue + Asset Stack. |
+| kling_elements | array | No | Elementos de referencia: `{ name, element_input_urls?, element_input_video_urls?, description? }` |
 
 ### Respuesta del proxy
 
@@ -91,13 +91,13 @@ Get API Key:
 | **Type** | string | Must be passed as a string value |
 | **Required** | Yes | This parameter is mandatory for all requests |
 
-### input Object Parameters (según proxy actual)
+### input Object Parameters (uso en esta app)
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
 | mode | string | Yes | `std` \| `pro` |
-| prompt | string | Yes | Texto del video. |
-| image_urls | string[] | No | URLs de imagen/video de escena y productos (una sola lista). |
+| prompt | string | Yes | Texto del prompt para el video. |
+| image_urls | string[] | No | Todas las referencias en una sola lista: imagen/video de escena, productos, imágenes que adjunte el usuario. No se usa `kling_elements`. |
 | sound | boolean | No | Incluir sonido. |
 | duration | string | No | `"5"` \| `"10"` \| `"15"` |
 | aspect_ratio | string | No | `"16:9"` \| `"9:16"` \| `"1:1"` |
@@ -110,22 +110,19 @@ Get API Key:
 - **Options**: `std` | `pro`
 - **Default Value**: `"std"`
 
-### Request Example (formato actual, sin kling_elements)
+### Request Example (esta app: solo image_urls)
 
 ```json
 {
   "model": "kling-3.0/video",
   "input": {
     "mode": "pro",
-    "image_urls": [
-      "https://example.com/escena1.jpg",
-      "https://example.com/producto1.jpg"
-    ],
+    "image_urls": ["https://.../escena.jpg", "https://.../producto.jpg"],
     "sound": true,
     "duration": "5",
     "aspect_ratio": "16:9",
     "multi_shots": false,
-    "prompt": "In a bright room, sunlight streams through the window."
+    "prompt": "Capture a warm kitchen scene with the blender in focus..."
   }
 }
 ```
