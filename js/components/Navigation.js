@@ -9,6 +9,7 @@ const SIDEBAR_USER_CONFIG = {
     { type: 'page', id: 'dashboard', label: 'DASHBOARD', icon: 'fa-chart-area', iconSrc: '/recursos/icons/dashboard.svg', route: 'dashboard' },
     { type: 'page', id: 'tasks', label: 'TASK', icon: 'fa-clock', iconSrc: '/recursos/icons/task.svg', route: 'tasks' },
     { type: 'page', id: 'video', label: 'VIDEO', icon: 'fa-play', iconSrc: '/recursos/icons/video.svg', route: 'video' },
+    { type: 'page', id: 'editor-video', label: 'EDITOR VIDEO', icon: 'fa-wand-magic-sparkles', route: 'editor-video' },
     {
       type: 'container',
       id: 'catalog',
@@ -276,7 +277,7 @@ class Navigation {
     }
     
     // Rutas legacy sin /org/ - usar org actual si existe (para mostrar créditos reales en sidebar)
-    if (['/production', '/historial', '/living', '/dashboard', '/brands', '/products', '/studio', '/audiences', '/marketing', '/campaigns', '/content', '/video', '/tasks', '/organization', '/servicios', '/credits'].some(r => path.startsWith(r))) {
+    if (['/production', '/historial', '/living', '/dashboard', '/brands', '/products', '/studio', '/audiences', '/marketing', '/campaigns', '/content', '/video', '/editor-video', '/tasks', '/organization', '/servicios', '/credits'].some(r => path.startsWith(r))) {
       return { mode: 'user', showSidebar: true, showHeader: true, orgId: window.currentOrgId || null, brandId: null };
     }
     
@@ -1242,6 +1243,7 @@ class Navigation {
       '/campaigns': 'IDENTITY',
       '/content': 'IDENTITY',
       '/video': 'VIDEO',
+      '/editor-video': 'EDITOR VIDEO',
       '/servicios': 'IDENTITY',
       '/settings': 'SETTINGS',
       '/organization': 'SETTINGS',
