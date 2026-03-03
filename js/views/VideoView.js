@@ -135,6 +135,29 @@ class VideoView extends BaseView {
                     <i class="fas fa-play"></i> Production Queue
                   </button>
                 </div>
+                <div class="video-left-block video-asset-stack-block">
+                  <h4 class="video-prompt-panel-title">Asset Stack</h4>
+                  <div class="video-asset-scope-wrap">
+                    <select id="videoAssetScope" class="video-prompt-db-select video-asset-scope-select" aria-label="Scope">
+                      <option value="product">Product</option>
+                      <option value="service">Service</option>
+                      <option value="brand_world">Brand World</option>
+                      <option value="campaign">Campaign</option>
+                      <option value="collection">Collection</option>
+                    </select>
+                  </div>
+                  <select id="videoAssetSelect" class="video-prompt-db-select video-asset-select" aria-label="Asset" style="margin-top: 0.35rem;">
+                    <option value="">— None</option>
+                  </select>
+                  <div class="video-asset-card" id="videoAssetCard">
+                    <div class="video-asset-card-placeholder" id="videoAssetCardPlaceholder">Select an asset</div>
+                    <div class="video-asset-card-active" id="videoAssetCardActive" style="display: none;">
+                      <div class="video-asset-card-name" id="videoAssetCardName"></div>
+                      <ul class="video-asset-card-locks" id="videoAssetCardLocks"></ul>
+                      <button type="button" class="video-asset-change-btn" id="videoAssetChangeBtn">Change Asset</button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             </div>
