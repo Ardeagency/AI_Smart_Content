@@ -141,31 +141,33 @@ class VideoView extends BaseView {
             <div class="video-production-card-slot video-production-card-slot--center">
               <div class="video-prompt-footer-card video-prompt-footer-card-center">
               <div class="video-prompt-footer-card-inner glass-black video-director-console">
-                <h3 class="video-section-label video-director-title">Director Console</h3>
                 <input type="file" id="videoImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
-                <div class="video-kling-elements-list" id="videoKlingElementsList" aria-live="polite"></div>
-                <textarea
-                  id="videoPromptInput"
-                  class="video-prompt-input video-director-brief-input"
-                  placeholder="Describe the intention. We handle the production. Use @product to reference assets."
-                  rows="4"
-                  autocomplete="off"
-                  aria-label="Director Brief"
-                ></textarea>
-                <div class="video-prompt-actions video-prompt-actions-row2">
-                  <button type="button" class="video-prompt-toggle video-prompt-sound active" id="videoSound" title="Sound" aria-pressed="true"><i class="fas fa-volume-up"></i><span>Sound</span></button>
-                  <button type="button" class="video-prompt-toggle video-prompt-multi-shot" id="videoMultiShot" title="Multi Shot" aria-pressed="false"><i class="fas fa-film"></i><span>Multi Shot</span></button>
+                <div class="video-director-console-content">
+                  <button type="button" class="video-director-btn-add" id="videoPromptAdd" aria-label="Añadir imagen o video"><i class="fas fa-plus"></i></button>
+                  <div class="video-kling-elements-list" id="videoKlingElementsList" aria-live="polite"></div>
+                  <textarea
+                    id="videoPromptInput"
+                    class="video-director-brief-input"
+                    placeholder="Describe the intention. We handle the production."
+                    rows="4"
+                    autocomplete="off"
+                    aria-label="Director Brief"
+                  ></textarea>
+                </div>
+                <div class="video-director-separator" aria-hidden="true"></div>
+                <div class="video-director-controls">
+                  <button type="button" class="video-director-toggle video-prompt-toggle video-prompt-sound active" id="videoSound" title="Sound" aria-pressed="true"><i class="fas fa-volume-up"></i><span>Sound</span></button>
+                  <button type="button" class="video-director-toggle video-prompt-toggle video-prompt-multi-shot" id="videoMultiShot" title="Multi Shot" aria-pressed="false"><i class="fas fa-film"></i><span>Multi Shot</span></button>
                   <div class="video-prompt-aspect-wrap">
-                    <select id="videoAspectRatio" class="video-prompt-aspect" aria-label="Format"><option value="16:9">16:9</option><option value="9:16">9:16</option><option value="1:1">1:1</option></select>
+                    <select id="videoAspectRatio" class="video-director-select" aria-label="Format"><option value="16:9">16:9</option><option value="9:16">9:16</option><option value="1:1">1:1</option></select>
                     <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
                   </div>
-                  <button type="button" class="video-prompt-btn video-prompt-btn-add" id="videoPromptAdd" aria-label="Add"><i class="fas fa-plus"></i></button>
                   <div class="video-prompt-duration-wrap">
-                    <select id="videoDuration" class="video-prompt-aspect" aria-label="Duration"><option value="5">5s</option><option value="10">10s</option><option value="15">15s</option></select>
+                    <select id="videoDuration" class="video-director-select" aria-label="Duration"><option value="5">5s</option><option value="10">10s</option><option value="15">15s</option></select>
                     <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
                   </div>
-                  <button type="button" class="video-prompt-btn video-prompt-btn-ai" id="videoPromptAI" aria-label="Generar prompt con IA" title="Generar prompt cinematográfico con IA"><i class="fas fa-star"></i></button>
-                  <button type="button" class="video-prompt-btn video-prompt-btn-send" id="videoPromptSend" aria-label="Generate"><i class="fas fa-paper-plane"></i></button>
+                  <button type="button" class="video-prompt-btn video-prompt-btn-ai" id="videoPromptAI" aria-label="Generar prompt con IA" title="Generar prompt con IA"><i class="fas fa-star"></i></button>
+                  <button type="button" class="video-director-btn-generate" id="videoPromptSend" aria-label="Generar"><i class="fas fa-play"></i><span>GENERAR</span></button>
                 </div>
                 <div class="video-storyboard-wrap" id="videoStoryboardWrap" style="display: none;">
                   <h4 class="video-storyboard-title">Storyboard</h4>
