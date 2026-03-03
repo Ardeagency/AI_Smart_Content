@@ -24,6 +24,7 @@ class VideoView extends BaseView {
     this.selectedProductionIds = new Set();
     this.selectedCampaignId = '';
     this.selectedAudienceId = '';
+    this.hasGeneratedPrompt = false;
     this.cinematography = {
       preset: '',
       shotType: 'Hero Product Frame',
@@ -258,7 +259,8 @@ class VideoView extends BaseView {
                       <select id="videoDuration" class="video-director-select" aria-label="Duration"><option value="5">5s</option><option value="10">10s</option><option value="15">15s</option></select>
                       <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
                     </div>
-                    <button type="button" class="video-director-btn-generate" id="videoPromptSend" aria-label="Generar"><i class="fas fa-play"></i><span>GENERAR</span></button>
+                    <button type="button" class="video-director-btn-generate" id="videoPromptSend" aria-label="Generar prompt" data-state="prompt"><i class="fas fa-wand-magic-sparkles"></i><span id="videoPromptSendLabel">PROMPT</span></button>
+                    <button type="button" class="video-director-btn-regenerate" id="videoRegeneratePromptBtn" aria-label="Volver a producir prompt" style="display: none;"><i class="fas fa-rotate-right"></i><span>Volver a producir</span></button>
                   </div>
                   <div class="video-storyboard-wrap" id="videoStoryboardWrap" style="display: none;">
                     <h4 class="video-storyboard-title">Storyboard</h4>
@@ -291,11 +293,17 @@ class VideoView extends BaseView {
     this.errorText = this.container.querySelector('#videoErrorText');
 
     if (this.sendBtn) {
-      this.sendBtn.addEventListener('click', () => this.startGeneration());
+      this.sendBtn.addEventListener('click', () => {
+        if (this.hasGeneratedPrompt) {
+          this.startGeneration();
+        } else {
+          this.requestCinePrompt();
+        }
+      });
     }
-    const aiBtn = this.container.querySelector('#videoPromptAI');
-    if (aiBtn) {
-      aiBtn.addEventListener('click', () => this.requestCinePrompt());
+    const regenerateBtn = this.container.querySelector('#videoRegeneratePromptBtn');
+    if (regenerateBtn) {
+      regenerateBtn.addEventListener('click', () => this.requestCinePrompt());
     }
     if (this.promptInput) {
       this.promptInput.addEventListener('keydown', (e) => {
@@ -1168,8 +1176,10 @@ class VideoView extends BaseView {
   }
 
   async requestCinePrompt() {
-    const aiBtn = this.container.querySelector('#videoPromptAI');
-    if (aiBtn) aiBtn.disabled = true;
+    const sendBtn = this.container.querySelector('#videoPromptSend');
+    const regenerateBtn = this.container.querySelector('#videoRegeneratePromptBtn');
+    if (sendBtn) sendBtn.disabled = true;
+    if (regenerateBtn) regenerateBtn.disabled = true;
     this.showStatus('Generando prompt cinematográfico con IA…', true);
 
     const idea = (this.promptInput && this.promptInput.value) ? this.promptInput.value.trim() : '';
@@ -1215,6 +1225,7 @@ class VideoView extends BaseView {
           this.promptInput.value = this.multiPrompts.map((p, i) => `--- Shot ${i + 1} ---\n${p}`).join('\n\n');
         }
         this.hideAllFeedback();
+        this.updatePromptButtonState(true);
         await this.saveSystemAIOutput({
           provider: 'openai',
           output_type: 'text',
@@ -1227,6 +1238,7 @@ class VideoView extends BaseView {
         this.multiPrompts = [];
         this.promptInput.value = data.prompt;
         this.hideAllFeedback();
+        this.updatePromptButtonState(true);
         await this.saveSystemAIOutput({
           provider: 'openai',
           output_type: 'text',
@@ -1241,8 +1253,26 @@ class VideoView extends BaseView {
     } catch (err) {
       this.showError(err.message || 'Error de conexión');
     } finally {
-      if (aiBtn) aiBtn.disabled = false;
+      if (sendBtn) sendBtn.disabled = false;
+      if (regenerateBtn) regenerateBtn.disabled = false;
     }
+  }
+
+  updatePromptButtonState(hasPrompt) {
+    this.hasGeneratedPrompt = !!hasPrompt;
+    const sendBtn = this.container.querySelector('#videoPromptSend');
+    const labelEl = this.container.querySelector('#videoPromptSendLabel');
+    const regenerateBtn = this.container.querySelector('#videoRegeneratePromptBtn');
+    if (sendBtn) {
+      sendBtn.setAttribute('data-state', hasPrompt ? 'production' : 'prompt');
+      sendBtn.setAttribute('aria-label', hasPrompt ? 'Generar video (producción)' : 'Generar prompt');
+      const icon = sendBtn.querySelector('i');
+      if (icon) {
+        icon.className = hasPrompt ? 'fas fa-play' : 'fas fa-wand-magic-sparkles';
+      }
+    }
+    if (labelEl) labelEl.textContent = hasPrompt ? 'PRODUCCIÓN' : 'PROMPT';
+    if (regenerateBtn) regenerateBtn.style.display = hasPrompt ? '' : 'none';
   }
 
   parseMultiShotsFromText(text) {
@@ -1256,9 +1286,13 @@ class VideoView extends BaseView {
   }
 
   async startGeneration() {
+    if (!this.hasGeneratedPrompt) {
+      this.showError('Genera primero el prompt con el botón PROMPT.');
+      return;
+    }
     const promptText = (this.promptInput && this.promptInput.value) ? this.promptInput.value.trim() : '';
     if (!promptText) {
-      this.showError('Escribe tu idea y genera el prompt con IA, o el prompt final, antes de enviar.');
+      this.showError('No hay prompt. Usa "Volver a producir" para regenerar el prompt.');
       return;
     }
 
