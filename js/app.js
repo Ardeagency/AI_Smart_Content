@@ -218,17 +218,6 @@ class App {
     r.register('/org/:orgIdShort/:orgNameSlug/video', videoLoader, auth);
     r.register('/video', videoLoader, auth);
 
-    // ── Editor de video: redirige a la página aislada (COOP/COEP solo ahí, sin romper Cloudinary/Supabase) ──
-    const redirectToEditorVideo = class extends (window.BaseView || class {}) {
-      async render() {
-        window.location.href = '/editor-video.html';
-        const c = document.getElementById('app-container');
-        if (c) c.innerHTML = '<div class="page-content"><p class="text-muted">Redirigiendo al editor…</p></div>';
-      }
-    };
-    r.register('/org/:orgIdShort/:orgNameSlug/editor-video', redirectToEditorVideo, auth);
-    r.register('/editor-video', redirectToEditorVideo, auth);
-
     // ── Settings ──
     r.register('/settings', this._lazy('SettingsView', ['/js/views/SettingsView.js']), auth);
 
