@@ -17,6 +17,9 @@ class TasksView extends BaseView {
     this.audiences = [];
     this.brands = [];
     this.ASPECT_RATIOS = ['1:1', '9:16', '16:9', '4:5'];
+    this.currentFilter = 'active';
+    this.taskCardLimit = 9;
+    this.taskCardDisplayCount = 9;
   }
 
   async onEnter() {
@@ -319,6 +322,30 @@ class TasksView extends BaseView {
     return cron;
   }
 
+  /** Para la tarjeta: "12:00 PM - Semanal" (hora + frecuencia). */
+  cronToScheduleLabel(cron) {
+    if (!cron || typeof cron !== 'string') return '—';
+    const parts = cron.trim().split(/\s+/);
+    if (parts.length < 2) return cron;
+    const hour = parseInt(parts[1], 10);
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const h = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    const timeStr = `${h}:00 ${period}`;
+    if (parts[4] !== '*' && parts[4].length > 0) return `${timeStr} - Semanal`;
+    if (parts[2] !== '*' && parts[3] === '*') return `${timeStr} - Mensual`;
+    return `${timeStr} - Diario`;
+  }
+
+  /** Etiqueta corta de frecuencia: Semanal, Diario, etc. */
+  cronToFreqLabel(cron) {
+    if (!cron || typeof cron !== 'string') return '—';
+    const p = cron.trim().split(/\s+/);
+    if (p.length < 5) return '—';
+    if (p[4] !== '*' && p[4].length > 0) return 'Semanal';
+    if (p[2] !== '*' && p[3] === '*') return 'Mensual';
+    return 'Diario';
+  }
+
   escapeHtml(s) {
     if (s == null || s === '') return '';
     const div = document.createElement('div');
@@ -339,51 +366,165 @@ class TasksView extends BaseView {
     setTimeout(() => notification.remove(), 3500);
   }
 
+  getFilteredSchedules() {
+    const list = this.schedules || [];
+    if (this.currentFilter === 'active') return list.filter(t => t.is_active);
+    if (this.currentFilter === 'paused') return list.filter(t => !t.is_active);
+    if (this.currentFilter === 'completed' || this.currentFilter === 'archived') return [];
+    return list;
+  }
+
+  updateTasksTabCounts() {
+    const list = this.schedules || [];
+    const activeCount = list.filter(t => t.is_active).length;
+    const pausedCount = list.filter(t => !t.is_active).length;
+    const elActive = document.getElementById('tasksCountActive');
+    const elPaused = document.getElementById('tasksCountPaused');
+    const elCompleted = document.getElementById('tasksCountCompleted');
+    if (elActive) elActive.textContent = String(activeCount);
+    if (elPaused) elPaused.textContent = String(pausedCount);
+    if (document.getElementById('tasksCountCompleted')) document.getElementById('tasksCountCompleted').textContent = '0';
+  }
+
   async renderTasksList() {
     const list = await this.loadSchedules();
     const grid = document.getElementById('tasksGrid');
     const empty = document.getElementById('tasksEmpty');
+    const loadMoreWrap = document.getElementById('tasksLoadMoreWrap');
     if (!grid) return;
-    if (!list.length) {
+
+    this.updateTasksTabCounts();
+    this.setupTasksTabs();
+    this.setupCreateNewTaskButton();
+
+    const filtered = this.getFilteredSchedules();
+    const visible = filtered.slice(0, this.taskCardDisplayCount);
+    const hasMore = filtered.length > this.taskCardDisplayCount;
+
+    if (!filtered.length) {
       grid.innerHTML = '';
-      if (empty) {
-        empty.style.display = 'block';
-      }
+      if (empty) empty.style.display = 'block';
+      if (loadMoreWrap) loadMoreWrap.style.display = 'none';
       return;
     }
     if (empty) empty.style.display = 'none';
-    grid.innerHTML = list.map(t => `
-      <article class="task-card" data-task-id="${t.id}" role="button" tabindex="0">
-        <div class="task-card-inner">
-          <div class="task-card-header">
-            <h3 class="task-card-title">${this.escapeHtml(t.job_name)}</h3>
-            <span class="task-card-badge ${t.is_active ? 'task-card-badge-active' : 'task-card-badge-paused'}">${t.is_active ? 'Activa' : 'Pausada'}</span>
-          </div>
-          <p class="task-card-flow">Flujo: ${this.escapeHtml(t.flow_name)}</p>
-          <p class="task-card-cron"><i class="fas fa-clock"></i> ${this.escapeHtml(this.cronDescription(t.cron_expression))}</p>
-          <div class="task-card-meta">
-            <span><strong>Entidad:</strong> ${this.escapeHtml(t.entity_name)}</span>
-            <span><strong>Campaña:</strong> ${this.escapeHtml(t.campaign_name)}</span>
-            <span><strong>Audiencia:</strong> ${this.escapeHtml(t.audience_name)}</span>
-          </div>
-          <div class="task-card-footer">
-            Aspecto: ${this.escapeHtml(t.aspect_ratio || '1:1')} · Producciones: ${t.production_count ?? 1}
-          </div>
-        </div>
-      </article>
-    `).join('');
+
+    grid.innerHTML = visible.map(t => this.renderTaskCard(t)).join('');
+
     grid.querySelectorAll('.task-card').forEach(card => {
-      card.addEventListener('click', () => {
-        const id = card.getAttribute('data-task-id');
+      const id = card.getAttribute('data-task-id');
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.task-card-actions')) return;
         if (id) this.navigateToTask(id);
       });
       card.addEventListener('keydown', (e) => {
+        if (e.target.closest('.task-card-actions')) return;
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          card.click();
+          if (id) this.navigateToTask(id);
         }
       });
     });
+
+    grid.querySelectorAll('.task-card-btn-edit').forEach((btn) => {
+      const card = btn.closest('.task-card');
+      const taskId = card?.getAttribute('data-task-id');
+      const task = visible.find(t => t.id === taskId);
+      if (task) {
+        btn.onclick = (e) => { e.stopPropagation(); this.openEditModal(task); };
+      }
+    });
+    grid.querySelectorAll('.task-card-btn-details').forEach((btn) => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const card = btn.closest('.task-card');
+        const id = card?.getAttribute('data-task-id');
+        if (id) this.navigateToTask(id);
+      };
+    });
+
+    if (loadMoreWrap) {
+      loadMoreWrap.style.display = hasMore ? 'block' : 'none';
+    }
+    const loadMoreBtn = document.getElementById('tasksLoadMoreBtn');
+    if (loadMoreBtn) {
+      loadMoreBtn.onclick = () => {
+        this.taskCardDisplayCount += this.taskCardLimit;
+        this.renderTasksList();
+      };
+    }
+  }
+
+  renderTaskCard(t) {
+    const scheduleLabel = this.cronToScheduleLabel(t.cron_expression);
+    const freqLabel = this.cronToFreqLabel(t.cron_expression);
+    const campaignAudience = [t.campaign_name, t.audience_name].filter(Boolean).join(' / ') || '—';
+    const statusClass = t.is_active ? 'task-card-badge-active' : 'task-card-badge-paused';
+    const statusLabel = t.is_active ? 'ACTIVA' : 'Pausada';
+    return `
+      <article class="task-card" data-task-id="${t.id}" role="button" tabindex="0">
+        <div class="task-card-inner">
+          <div class="task-card-header">
+            <h3 class="task-card-title">${this.escapeHtml(t.job_name || 'Sin nombre')}</h3>
+            <span class="task-card-badge ${statusClass}">
+              <span class="task-card-badge-dot"></span>${statusLabel}
+            </span>
+          </div>
+          <p class="task-card-flow"><i class="fas fa-project-diagram"></i> Flujo: ${this.escapeHtml(t.flow_name)}</p>
+          <p class="task-card-cron"><i class="fas fa-clock"></i> ${this.escapeHtml(scheduleLabel)}</p>
+          <p class="task-card-entity"><i class="fas fa-box"></i> ${this.escapeHtml(t.entity_name)}</p>
+          <div class="task-card-divider"></div>
+          <div class="task-card-campaign-section">
+            <span class="task-card-campaign-label">CAMPAIGN & AUDIENCE</span>
+            <p class="task-card-campaign-value">${this.escapeHtml(campaignAudience)}</p>
+          </div>
+          <div class="task-card-meta-boxes">
+            <div class="task-card-meta-box">
+              <span class="task-card-meta-label">FORMATO</span>
+              <span class="task-card-meta-value">${this.escapeHtml(t.aspect_ratio || '1:1')}</span>
+            </div>
+            <div class="task-card-meta-box">
+              <span class="task-card-meta-label">PRODS</span>
+              <span class="task-card-meta-value">${t.production_count ?? 1}</span>
+            </div>
+            <div class="task-card-meta-box">
+              <span class="task-card-meta-label">FREQ</span>
+              <span class="task-card-meta-value">${this.escapeHtml(freqLabel)}</span>
+            </div>
+          </div>
+          <div class="task-card-actions">
+            <button type="button" class="btn btn-primary task-card-btn-edit">Editar</button>
+            <button type="button" class="btn btn-outline task-card-btn-details">Ver Detalles</button>
+          </div>
+        </div>
+      </article>
+    `;
+  }
+
+  setupTasksTabs() {
+    const tabs = document.querySelectorAll('.tasks-tab');
+    tabs.forEach(tab => {
+      tab.classList.toggle('active', (tab.getAttribute('data-filter') || '') === this.currentFilter);
+      tab.onclick = () => {
+        this.currentFilter = tab.getAttribute('data-filter') || 'active';
+        this.taskCardDisplayCount = this.taskCardLimit;
+        this.renderTasksList();
+      };
+    });
+  }
+
+  setupCreateNewTaskButton() {
+    const btn = document.getElementById('tasksCreateNewBtn');
+    if (!btn) return;
+    const base = this.getTasksBasePath();
+    const studioPath = this.organizationId && typeof window.getOrgPathPrefix === 'function'
+      ? (window.getOrgPathPrefix(this.organizationId, window.currentOrgName || '') + '/studio')
+      : (this.organizationId ? `/org/${this.organizationId}/studio` : '/studio');
+    btn.href = studioPath;
+    btn.onclick = (e) => {
+      e.preventDefault();
+      if (window.router) window.router.navigate(studioPath, true);
+    };
   }
 
   getTasksBasePath() {

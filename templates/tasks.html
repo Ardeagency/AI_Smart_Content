@@ -1,15 +1,40 @@
 <!-- Vista Tareas programadas (flow_schedules) -->
 <div class="tasks-page" id="tasksPage">
   <div class="tasks-container tasks-list-view" id="tasksListContainer">
-    <div class="tasks-header">
-      <h1 class="tasks-title">Tareas programadas</h1>
-      <p class="tasks-subtitle">Gestiona tus flujos programados y asigna entidad, campaña y audiencia a cada tarea.</p>
+    <div class="tasks-header-row">
+      <div class="tasks-header">
+        <h1 class="tasks-title">Tareas programadas</h1>
+        <p class="tasks-subtitle">Gestiona tus flujos programados y asigna entidad, campaña y audiencia a cada tarea.</p>
+      </div>
+      <a class="btn btn-primary tasks-create-btn" id="tasksCreateNewBtn" href="#">
+        <i class="fas fa-plus"></i> Create New Task
+      </a>
     </div>
+
+    <nav class="tasks-tabs" id="tasksTabs" aria-label="Filtrar tareas">
+      <button type="button" class="tasks-tab active" data-filter="active" id="tasksTabActive">
+        Active Tasks (<span id="tasksCountActive">0</span>)
+      </button>
+      <button type="button" class="tasks-tab" data-filter="paused" id="tasksTabPaused">
+        Paused (<span id="tasksCountPaused">0</span>)
+      </button>
+      <button type="button" class="tasks-tab" data-filter="completed" id="tasksTabCompleted">
+        Completed (<span id="tasksCountCompleted">0</span>)
+      </button>
+      <button type="button" class="tasks-tab" data-filter="archived" id="tasksTabArchived">
+        Archived
+      </button>
+    </nav>
+
     <div class="tasks-cards-grid" id="tasksGrid"></div>
     <div class="tasks-empty" id="tasksEmpty" style="display: none;">
       <div class="tasks-empty-icon"><i class="fas fa-calendar-alt"></i></div>
       <p>Aún no tienes tareas programadas.</p>
       <p class="tasks-empty-hint">Las tareas se crean al programar un flujo desde el Estudio. Cuando tengas alguna, aparecerán aquí y podrás asignarles entidad, campaña y audiencia.</p>
+    </div>
+
+    <div class="tasks-load-more-wrap" id="tasksLoadMoreWrap" style="display: none;">
+      <button type="button" class="btn tasks-load-more" id="tasksLoadMoreBtn">Load More Tasks</button>
     </div>
   </div>
 
