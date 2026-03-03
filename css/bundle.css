@@ -3436,6 +3436,15 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     flex-shrink: 0;
 }
 
+/* Iconos SVG del sidebar: forzar 14×14 (img dentro de #sideNavigation .nav-menu y .nav-footer) */
+#sideNavigation .nav-menu .nav-icon-img,
+#sideNavigation .nav-menu .nav-link .nav-icon-img,
+#sideNavigation .nav-menu .nav-submenu-toggle .nav-icon-img,
+#sideNavigation .nav-footer .nav-icon-img {
+    width: 14px;
+    height: 14px;
+}
+
 .nav-mode-user .nav-text {
     flex: 1;
 }
