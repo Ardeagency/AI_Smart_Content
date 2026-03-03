@@ -60,9 +60,9 @@ function _formatNotificationDate(iso) {
   return d.toLocaleDateString();
 }
 
-/** SVG inline para el botón toggle del sidebar (hereda color del botón). */
-const SIDEBAR_TOGGLE_ICON_DESPLEGADO = `<svg class="nav-sidebar-toggle-icon" width="21" height="18" viewBox="0 0 20 17" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8.29167 0.999999L1 8.29166L8.29167 15.5833M18.5 1L11.2083 8.29167L18.5 15.5833" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-const SIDEBAR_TOGGLE_ICON_COLAPSADO = `<svg class="nav-sidebar-toggle-icon" width="21" height="18" viewBox="0 0 20 17" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M11.2083 15.5833L18.5 8.29167L11.2083 1M1 15.5833L8.29167 8.29167L1 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+/** SVG inline para el botón toggle del sidebar (hereda color del botón). Desplegado = colapsado.svg, colapsado = desplegado.svg */
+const SIDEBAR_TOGGLE_ICON_DESPLEGADO = `<svg class="nav-sidebar-toggle-icon" width="12" height="10" viewBox="0 0 12 10" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M4.79167 0.624996L0.624999 4.79166L4.79167 8.95833M10.625 0.624996L6.45833 4.79166L10.625 8.95833" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const SIDEBAR_TOGGLE_ICON_COLAPSADO = `<svg class="nav-sidebar-toggle-icon" width="12" height="10" viewBox="0 0 12 10" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M6.45833 0.624996L10.625 4.79166L6.45833 8.95833M0.624999 0.624996L4.79167 4.79166L0.625 8.95833" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
 /**
  * Sidebar desarrollador — Build, Operations, Observability, Resources, Lead (solo lead).
