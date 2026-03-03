@@ -11980,26 +11980,30 @@ body.production-filters-in-header .living-container > .living-history-section {
 .product-view-thumb-actions .product-view-thumb-delete:hover {
   background: #ef4444;
 }
-.product-view-gallery-upload {
-  padding: 1rem;
-  border-top: 1px solid var(--border-divider);
-}
-.product-view-upload-btn {
-  display: inline-flex;
+.product-view-thumbnails-wrap {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: var(--living-bg-surface, rgba(255,255,255,0.08));
-  border: 1px dashed var(--border-color, rgba(255,255,255,0.2));
+}
+.product-view-add-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--border-color, rgba(255,255,255,0.2));
   border-radius: var(--radius-sm);
+  background: var(--living-bg-surface, rgba(255,255,255,0.08));
   color: var(--living-text-light);
   cursor: pointer;
-  font-size: 0.9rem;
   transition: border-color 0.2s, background 0.2s;
 }
-.product-view-upload-btn:hover {
+.product-view-add-btn:hover {
   border-color: var(--accent-warm, #ff6500);
-  background: rgba(255, 101, 0, 0.08);
+  background: rgba(255, 101, 0, 0.1);
 }
 
 /* ============================================

@@ -272,12 +272,10 @@ class ProductsView extends BaseView {
                 : `<div class="product-view-loading" style="min-height: 200px;"><i class="fas fa-image"></i><span>Sin imagen</span></div>`
               }
             </div>
-            <div class="product-view-thumbnails" id="productViewThumbnails" style="${thumbnails.length === 0 ? 'display: none;' : ''}">${thumbsHtml}</div>
-            <div class="product-view-gallery-upload">
-              <input type="file" id="productViewImageUpload" accept="image/*" multiple style="display: none;">
-              <label for="productViewImageUpload" class="product-view-upload-btn" id="productViewUploadBtn" role="button">
-                <i class="fas fa-plus"></i> Añadir fotos
-              </label>
+            <div class="product-view-thumbnails-wrap">
+              <div class="product-view-thumbnails" id="productViewThumbnails" style="${thumbnails.length === 0 ? 'display: none;' : ''}">${thumbsHtml}</div>
+              <input type="file" id="productViewImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
+              <button type="button" class="product-view-add-btn" id="productViewAddBtn" aria-label="Añadir fotos"><i class="fas fa-plus"></i></button>
             </div>
           </div>
           <div class="product-view-info">
@@ -563,17 +561,16 @@ class ProductsView extends BaseView {
       });
     });
 
-    const uploadInput = container.querySelector('#productViewImageUpload');
-    if (uploadInput) {
-      uploadInput.removeEventListener('change', this._boundUploadChange);
-      this._boundUploadChange = (e) => {
+    const addBtn = container.querySelector('#productViewAddBtn');
+    const fileInput = container.querySelector('#productViewImageUpload');
+    if (addBtn && fileInput) {
+      addBtn.onclick = () => fileInput.click();
+      fileInput.onchange = (e) => {
         const files = e.target.files;
         if (files && files.length) this.uploadProductImages(files);
         e.target.value = '';
       };
-      uploadInput.addEventListener('change', this._boundUploadChange);
     }
-    // El selector se abre por el <label for="productViewImageUpload"> (comportamiento nativo). No usar preventDefault ni click() programático para evitar que el navegador bloquee la apertura.
   }
 
   /**
