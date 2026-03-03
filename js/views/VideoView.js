@@ -22,6 +22,8 @@ class VideoView extends BaseView {
     this.dbData = { products: [], services: [], entities: [], audiences: [], campaigns: [] };
     this.videoProductions = [];
     this.selectedProductionIds = new Set();
+    this.selectedCampaignId = '';
+    this.selectedAudienceId = '';
     this.cinematography = {
       preset: '',
       shotType: 'Hero Product Frame',
@@ -128,19 +130,32 @@ class VideoView extends BaseView {
                   <div class="video-sidebar-section">
                     <h3 class="video-section-label">Production Context</h3>
                     <div class="video-left-block">
-                      <h4 class="video-prompt-panel-title">Producciones</h4>
+                      <h4 class="video-prompt-panel-title">Escena</h4>
+                      <p class="video-field-help">Producciones = escena a producir (imagen/video de referencia)</p>
                       <button type="button" class="video-prompt-db-select video-prompt-productions-btn" id="videoProductionsBtn" aria-label="Production Queue">
                         <i class="fas fa-play"></i> Production Queue
                       </button>
                     </div>
+                    <div class="video-left-block">
+                      <h4 class="video-prompt-panel-title">Campaña</h4>
+                      <select id="videoCampaignSelect" class="video-prompt-db-select video-asset-scope-select" aria-label="Campaña">
+                        <option value="">— Ninguna</option>
+                      </select>
+                    </div>
+                    <div class="video-left-block">
+                      <h4 class="video-prompt-panel-title">Audiencia</h4>
+                      <select id="videoAudienceSelect" class="video-prompt-db-select video-asset-scope-select" aria-label="Audiencia">
+                        <option value="">— Ninguna</option>
+                      </select>
+                    </div>
                     <div class="video-left-block video-asset-stack-block">
                       <h4 class="video-prompt-panel-title">Asset Stack</h4>
+                      <p class="video-field-help">Producto = referencia (el video no debe cambiar el producto)</p>
                       <div class="video-asset-scope-wrap">
                         <select id="videoAssetScope" class="video-prompt-db-select video-asset-scope-select" aria-label="Scope">
                           <option value="product">Product</option>
                           <option value="service">Service</option>
                           <option value="brand_world">Brand World</option>
-                          <option value="campaign">Campaign</option>
                           <option value="collection">Collection</option>
                         </select>
                       </div>
@@ -220,14 +235,15 @@ class VideoView extends BaseView {
                     <button type="button" class="video-director-btn-add" id="videoPromptAdd" aria-label="Añadir imagen o video"><i class="fas fa-plus"></i></button>
                     <div class="video-kling-elements-list" id="videoKlingElementsList" aria-live="polite"></div>
                   </div>
+                  <div class="video-director-variables-row" id="videoDirectorVariables" aria-label="Variables de cinematografía"></div>
                   <div class="video-director-console-content">
                     <textarea
                       id="videoPromptInput"
                       class="video-director-brief-input"
-                      placeholder="Describe the intention. We handle the production."
+                      placeholder="Tu idea en texto — no es el prompt final. La IA generará el prompt con la voz de la marca."
                       rows="4"
                       autocomplete="off"
-                      aria-label="Director Brief"
+                      aria-label="Tu idea (la IA genera el prompt final)"
                     ></textarea>
                   </div>
                   <div class="video-director-separator" aria-hidden="true"></div>
@@ -327,6 +343,19 @@ class VideoView extends BaseView {
     this.renderAssetCard();
     await this.loadVideoProductions();
     this.initCinematography();
+    this.renderDirectorVariables();
+    const campaignSelect = this.container.querySelector('#videoCampaignSelect');
+    const audienceSelect = this.container.querySelector('#videoAudienceSelect');
+    if (campaignSelect) {
+      campaignSelect.addEventListener('change', () => {
+        this.selectedCampaignId = campaignSelect.value || '';
+      });
+    }
+    if (audienceSelect) {
+      audienceSelect.addEventListener('change', () => {
+        this.selectedAudienceId = audienceSelect.value || '';
+      });
+    }
     this.container.querySelectorAll('.video-prompt-toggle').forEach((btn) => {
       btn.addEventListener('click', () => {
         const pressed = btn.getAttribute('aria-pressed') !== 'true';
@@ -352,7 +381,6 @@ class VideoView extends BaseView {
     const scope = this.assetScope || 'product';
     if (scope === 'product') return (this.dbData.products || []).map((p) => ({ id: p.id, name: p.nombre_producto || 'Product', type: 'product' }));
     if (scope === 'service') return (this.dbData.services || []).map((s) => ({ id: s.id, name: s.nombre_servicio || 'Service', type: 'service' }));
-    if (scope === 'campaign') return (this.dbData.campaigns || []).map((c) => ({ id: c.id, name: c.nombre_campana || 'Campaign', type: 'campaign' }));
     if (scope === 'brand_world') return (this.dbData.entities || []).map((e) => ({ id: e.id, name: e.name || 'Entity', type: 'entity' }));
     return [];
   }
@@ -389,9 +417,6 @@ class VideoView extends BaseView {
     } else if (scope === 'service') {
       const s = (this.dbData.services || []).find((x) => String(x.id) === String(id));
       displayName = s?.nombre_servicio || 'Service';
-    } else if (scope === 'campaign') {
-      const c = (this.dbData.campaigns || []).find((x) => String(x.id) === String(id));
-      displayName = c?.nombre_campana || 'Campaign';
     } else {
       const e = (this.dbData.entities || []).find((x) => String(x.id) === String(id));
       displayName = e?.name || 'Asset';
@@ -619,6 +644,7 @@ class VideoView extends BaseView {
           presetKeys.forEach((k) => { if (p[k] != null) this.cinematography[k] = p[k]; });
           this.syncCinematographyToSelects();
           this.renderCinematographySelectedTags();
+          this.renderDirectorVariables();
         }
       });
     }
@@ -634,6 +660,7 @@ class VideoView extends BaseView {
       if (el) el.addEventListener('change', () => {
         this.cinematography[key] = el.value;
         this.renderCinematographySelectedTags();
+        this.renderDirectorVariables();
       });
     });
 
@@ -743,14 +770,20 @@ class VideoView extends BaseView {
     if (!this.supabase || !this.brandContainerId) return;
     try {
       const bcId = this.brandContainerId;
-      const { data: brandRow } = await this.supabase.from('brands').select('id').eq('project_id', bcId).maybeSingle();
+      const { data: brandRow } = await this.supabase.from('brands').select('id, tono_comunicacion, estilo_publicidad, estilo_escritura, palabras_clave, palabras_prohibidas, arquetipo_personalidad, enfoque_marca, estilo_visual, transmitir_visualmente, evitar_visualmente, objetivos_marca').eq('project_id', bcId).maybeSingle();
       const brandId = brandRow?.id || null;
+      this.dbData.brand = brandRow || null;
+      this.dbData.brandProfiles = [];
+      if (brandId) {
+        const { data: profiles } = await this.supabase.from('brand_profiles').select('section, content').eq('brand_id', brandId);
+        this.dbData.brandProfiles = profiles || [];
+      }
       const [productsRes, servicesRes, entitiesRes, audiencesRes, campaignsRes] = await Promise.all([
         this.supabase.from('products').select('id, nombre_producto, brand_container_id').eq('brand_container_id', bcId).order('created_at', { ascending: false }).limit(50),
         this.supabase.from('services').select('id, nombre_servicio, brand_container_id').eq('brand_container_id', bcId).order('created_at', { ascending: false }).limit(50),
         this.supabase.from('brand_entities').select('id, name, entity_type, description').eq('brand_container_id', bcId).order('created_at', { ascending: false }).limit(50),
-        brandId ? this.supabase.from('audiences').select('id, name, description').eq('brand_id', brandId).limit(50) : { data: [], error: null },
-        this.supabase.from('campaigns').select('id, nombre_campana, descripcion_interna').eq('brand_container_id', bcId).order('created_at', { ascending: false }).limit(50)
+        brandId ? this.supabase.from('audiences').select('id, name, description, estilo_lenguaje').eq('brand_id', brandId).limit(50) : { data: [], error: null },
+        this.supabase.from('campaigns').select('id, nombre_campana, descripcion_interna, audience_id, contexto_temporal, objetivos_estrategicos, tono_modificador').eq('brand_container_id', bcId).order('created_at', { ascending: false }).limit(50)
       ]);
       this.dbData.products = productsRes.data || [];
       this.dbData.services = servicesRes.data || [];
@@ -769,9 +802,52 @@ class VideoView extends BaseView {
           p.image_urls = (byProduct[p.id] || []).slice(0, 4);
         });
       }
+      this.renderCampaignDropdown();
+      this.renderAudienceDropdown();
     } catch (e) {
       console.error('VideoView loadBrandData:', e);
     }
+  }
+
+  renderCampaignDropdown() {
+    const select = this.container.querySelector('#videoCampaignSelect');
+    if (!select) return;
+    const campaigns = this.dbData.campaigns || [];
+    const current = this.selectedCampaignId;
+    select.innerHTML = '<option value="">— Ninguna</option>' + campaigns.map((c) => `<option value="${c.id}">${(c.nombre_campana || '').slice(0, 50)}</option>`).join('');
+    if (current && campaigns.some((c) => String(c.id) === current)) select.value = current;
+  }
+
+  renderAudienceDropdown() {
+    const select = this.container.querySelector('#videoAudienceSelect');
+    if (!select) return;
+    const audiences = this.dbData.audiences || [];
+    const current = this.selectedAudienceId;
+    select.innerHTML = '<option value="">— Ninguna</option>' + audiences.map((a) => `<option value="${a.id}">${(a.name || '').slice(0, 50)}</option>`).join('');
+    if (current && audiences.some((a) => String(a.id) === current)) select.value = current;
+  }
+
+  renderDirectorVariables() {
+    const el = this.container.querySelector('#videoDirectorVariables');
+    if (!el) return;
+    const c = this.cinematography;
+    const opts = VideoView.CINE_OPTIONS;
+    const tags = [
+      c.shotType && { label: c.shotType, key: 'shotType' },
+      c.lens && { label: c.lens, key: 'lens' },
+      c.framing && { label: c.framing, key: 'framing' },
+      c.cameraMovement && { label: c.cameraMovement, key: 'cameraMovement' },
+      c.lightType && { label: c.lightType, key: 'lightType' },
+      c.tone && { label: c.tone, key: 'tone' }
+    ].filter(Boolean);
+    if (tags.length === 0) {
+      el.innerHTML = '';
+      el.style.display = 'none';
+      return;
+    }
+    el.style.display = 'flex';
+    el.className = 'video-director-variables-row video-cine-selected-tags';
+    el.innerHTML = '<span class="video-cine-selected-label">Variables:</span>' + tags.map((t) => `<span class="video-cine-tag video-director-variable-tag" data-key="${t.key}">${t.label.replace(/"/g, '&quot;')}</span>`).join('');
   }
 
   /**
@@ -1029,11 +1105,29 @@ class VideoView extends BaseView {
 
   buildBrandContextForAPI() {
     const d = this.dbData || {};
+    const brand = d.brand || {};
+    const arr = (v) => (Array.isArray(v) ? v : []);
     return {
+      brand_voice: {
+        tono_comunicacion: arr(brand.tono_comunicacion),
+        estilo_publicidad: arr(brand.estilo_publicidad),
+        estilo_escritura: arr(brand.estilo_escritura),
+        palabras_clave: arr(brand.palabras_clave),
+        palabras_prohibidas: arr(brand.palabras_prohibidas),
+        arquetipo_personalidad: arr(brand.arquetipo_personalidad),
+        enfoque_marca: arr(brand.enfoque_marca),
+        estilo_visual: arr(brand.estilo_visual),
+        transmitir_visualmente: arr(brand.transmitir_visualmente),
+        evitar_visualmente: arr(brand.evitar_visualmente),
+        objetivos_marca: arr(brand.objetivos_marca)
+      },
+      brand_profiles: (d.brandProfiles || []).map((p) => ({ section: p.section, content: p.content })),
       entities: (d.entities || []).map((e) => ({ name: e.name, entity_type: e.entity_type, description: e.description })),
       products: (d.products || []).map((p) => ({ name: p.nombre_producto })),
-      audiences: (d.audiences || []).map((a) => ({ name: a.name, description: a.description })),
-      campaigns: (d.campaigns || []).map((c) => ({ name: c.nombre_campana, description: c.descripcion_interna }))
+      audiences: (d.audiences || []).map((a) => ({ name: a.name, description: a.description, estilo_lenguaje: a.estilo_lenguaje })),
+      campaigns: (d.campaigns || []).map((c) => ({ name: c.nombre_campana, description: c.descripcion_interna, audience_id: c.audience_id, contexto_temporal: c.contexto_temporal, objetivos_estrategicos: c.objetivos_estrategicos, tono_modificador: c.tono_modificador })),
+      selected_campaign: this.selectedCampaignId ? (d.campaigns || []).find((c) => String(c.id) === String(this.selectedCampaignId)) || null : null,
+      selected_audience: this.selectedAudienceId ? (d.audiences || []).find((a) => String(a.id) === String(this.selectedAudienceId)) || null : null
     };
   }
 
@@ -1076,15 +1170,28 @@ class VideoView extends BaseView {
     if (aiBtn) aiBtn.disabled = true;
     this.showStatus('Generando prompt cinematográfico con IA…', true);
 
+    const idea = (this.promptInput && this.promptInput.value) ? this.promptInput.value.trim() : '';
+    const sceneElements = (this.klingElements || []).filter((el) => el._fromProductionQueue).map((el) => ({
+      name: el.name,
+      element_input_urls: el.element_input_urls || undefined,
+      element_input_video_urls: el.element_input_video_urls || undefined
+    }));
+    const productLockElements = (this.klingElements || []).filter((el) => el._fromProductSelection).map((el) => ({
+      name: el.name,
+      description: el.description,
+      element_input_urls: el.element_input_urls || undefined
+    }));
+    const brandContext = this.buildBrandContextForAPI();
+
     const payload = {
-      director_brief: (this.promptInput && this.promptInput.value) ? this.promptInput.value.trim() : '',
+      idea,
+      director_brief: idea,
       multi_prompt: this.multiShotEnabled,
-      kling_elements: (this.klingElements || []).map((el) => ({
-        name: el.name,
-        element_input_urls: el.element_input_urls || undefined,
-        element_input_video_urls: el.element_input_video_urls || undefined
-      })),
-      brand_context: this.buildBrandContextForAPI(),
+      scene_elements: sceneElements,
+      product_lock_elements: productLockElements,
+      campaign: brandContext.selected_campaign,
+      audience: brandContext.selected_audience,
+      brand_context: brandContext,
       cinematography: { ...this.cinematography }
     };
 
@@ -1110,7 +1217,7 @@ class VideoView extends BaseView {
           provider: 'openai',
           output_type: 'text',
           status: 'completed',
-          prompt_used: payload.director_brief || null,
+          prompt_used: payload.idea || null,
           text_content: this.multiPrompts.join('\n\n'),
           metadata: { source: 'openai-cine-prompt', multi_prompt: true, shots: this.multiPrompts.length }
         });
@@ -1122,7 +1229,7 @@ class VideoView extends BaseView {
           provider: 'openai',
           output_type: 'text',
           status: 'completed',
-          prompt_used: payload.director_brief || null,
+          prompt_used: payload.idea || null,
           text_content: data.prompt,
           metadata: { source: 'openai-cine-prompt', has_cinematography: true }
         });
@@ -1149,7 +1256,7 @@ class VideoView extends BaseView {
   async startGeneration() {
     const promptText = (this.promptInput && this.promptInput.value) ? this.promptInput.value.trim() : '';
     if (!promptText) {
-      this.showError('Escribe o genera un prompt en Director Brief antes de enviar.');
+      this.showError('Escribe tu idea y genera el prompt con IA, o el prompt final, antes de enviar.');
       return;
     }
 
@@ -1185,8 +1292,9 @@ class VideoView extends BaseView {
       payload.prompt = promptText;
     }
 
-    if (this.klingElements.length > 0) {
-      payload.kling_elements = this.klingElements.map((el) => {
+    const sceneElementsForKling = (this.klingElements || []).filter((el) => !el._fromProductSelection);
+    if (sceneElementsForKling.length > 0) {
+      payload.kling_elements = sceneElementsForKling.map((el) => {
         const o = { name: el.name };
         if (el.description) o.description = el.description;
         if (el.element_input_urls && el.element_input_urls.length) o.element_input_urls = el.element_input_urls;
