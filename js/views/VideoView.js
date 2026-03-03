@@ -211,7 +211,8 @@ class VideoView extends BaseView {
               </div>
             </aside>
           </div>
-          <section class="video-director-console-zone video-prompt-wrap" id="videoFooterControl" aria-label="Director Console — adjuntos y prompt">
+          <footer class="video-app-footer" role="contentinfo" aria-label="Footer de la app — Director Console">
+            <section class="video-director-console-zone video-prompt-wrap" id="videoFooterControl" aria-label="Director Console — adjuntos y prompt">
             <div class="video-prompt-footer-card video-prompt-footer-card-center">
               <div class="video-prompt-footer-card-inner glass-black video-director-console">
                   <input type="file" id="videoImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
@@ -250,6 +251,7 @@ class VideoView extends BaseView {
                 </div>
               </div>
             </section>
+          </footer>
         </div>
       </div>
     `;

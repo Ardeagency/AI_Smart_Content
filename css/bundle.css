@@ -20858,23 +20858,30 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 
 /* ========== Video (Kling 3.0 / KIE) ========== */
+/* Vista Video: app-container no hace scroll; solo hay scroll dentro del Canvas y dentro del Sidebar Console; Director Console en el footer del app-container */
+#app-container:has(.video-view-container) {
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
 .organization-container.video-view-container {
     padding: 0;
-    min-height: 100vh;
+    min-height: 0;
+    flex: 1;
     overflow: hidden;
     display: flex;
     flex-direction: column;
 }
-/* Layout: content-row (canvas + sidebar) con scroll propio cada uno; Director Console fijo abajo, sin scroll */
+/* Layout: fila de contenido (canvas + sidebar), cada uno con su propio scroll; footer = Director Console (no scrollea) */
 .video-layout {
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
     gap: 0;
-    min-height: 100vh;
+    min-height: 0;
     overflow: hidden;
     flex: 1;
-    min-height: 0;
 }
 .video-content-row {
     flex: 1;
@@ -20882,6 +20889,7 @@ body.production-filters-in-header .living-container > .living-history-section {
     display: flex;
     overflow: hidden;
 }
+/* Canvas: scroll propio dentro de su contenedor (independiente del app-container) */
 .video-main {
     flex: 1;
     min-width: 0;
@@ -20896,7 +20904,14 @@ body.production-filters-in-header .living-container > .living-history-section {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    overflow-x: hidden;
     margin-bottom: 0;
+    -webkit-overflow-scrolling: touch;
+}
+/* Footer del app-container: Director Console (estático, no scroll) */
+.video-app-footer {
+    flex-shrink: 0;
+    width: 100%;
 }
 .video-director-console-zone,
 .video-director-wrap {
@@ -20930,6 +20945,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 .video-view-container .video-prompt-footer-card-inner.glass-black {
     box-shadow: none;
 }
+/* Sidebar Console: scroll propio dentro de su contenedor (independiente del app-container y del canvas) */
 .video-sidebar,
 .video-sidebar-console {
     width: 360px;
@@ -20937,6 +20953,8 @@ body.production-filters-in-header .living-container > .living-history-section {
     min-height: 0;
     padding: 1rem 1rem 1.5rem 1rem;
     overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
     border-left: 1px solid var(--border-divider);
 }
 .video-sidebar-card {
