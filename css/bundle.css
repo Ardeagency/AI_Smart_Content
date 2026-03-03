@@ -1476,7 +1476,6 @@ body.sidebar-collapsed .main-header,
     font-size: var(--font-size-sm);
     font-weight: 600;
     color: var(--text-muted);
-    text-transform: uppercase;
     letter-spacing: 0.5px;
     border-bottom: 1px solid var(--glass-border);
 }
@@ -1969,7 +1968,6 @@ body.sidebar-collapsed .main-header,
     font-size: var(--font-size-sm);
     font-weight: 600;
     color: var(--text-muted);
-    text-transform: uppercase;
     letter-spacing: 0.5px;
     padding: 0 12px 8px 12px;
     margin-bottom: 4px;
@@ -2077,9 +2075,9 @@ body.sidebar-collapsed .main-header,
 
 
 .nav-icon {
-    width: 12px;
-    height: 12px;
-    font-size: 12px;
+    width: 14px;
+    height: 14px;
+    font-size: 14px;
     font-weight: 900;
     font-style: normal;
     font-family: "Font Awesome 6 Free";
@@ -2105,6 +2103,7 @@ body.sidebar-collapsed .main-header,
     overflow: visible;
     line-height: 1.4;
     padding-top: 0;
+    text-transform: none;
 }
 
 .nav-badge {
@@ -3400,6 +3399,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     text-decoration: none;
     font-size: 11px;
     font-weight: 500;
+    text-transform: none;
     transition: background 0.12s ease, color 0.12s ease;
     cursor: pointer;
     border: none;
@@ -3421,17 +3421,17 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 }
 
 .nav-mode-user .nav-icon {
-    width: 12px;
-    height: 12px;
-    font-size: 12px;
+    width: 14px;
+    height: 14px;
+    font-size: 14px;
     text-align: center;
     flex-shrink: 0;
     color: var(--sidebar-icon-color);
 }
 
 .nav-mode-user .nav-icon-img {
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
     object-fit: contain;
     flex-shrink: 0;
 }
@@ -3471,6 +3471,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     text-decoration: none;
     font-size: 11px;
     font-weight: 400;
+    text-transform: none;
     border-radius: var(--radius-sm);
     transition: background 0.12s ease, color 0.12s ease;
 }
@@ -3497,6 +3498,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     text-decoration: none;
     font-size: 11px;
     font-weight: 400;
+    text-transform: none;
     transition: background 0.15s ease, color 0.15s ease;
     cursor: pointer;
     border: none;
@@ -3517,9 +3519,9 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 }
 
 .side-navigation:not(.nav-mode-user) .nav-icon {
-    width: 12px;
-    height: 12px;
-    font-size: 12px;
+    width: 14px;
+    height: 14px;
+    font-size: 14px;
     text-align: center;
     flex-shrink: 0;
     color: var(--sidebar-icon-color);
@@ -3533,6 +3535,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     color: var(--text-muted);
     text-decoration: none;
     font-size: 11px;
+    text-transform: none;
     border-radius: var(--radius-sm);
     transition: var(--transition);
 }
@@ -3577,6 +3580,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     text-decoration: none;
     font-size: 13px;
     font-weight: 500;
+    text-transform: none;
     transition: background 0.12s ease, color 0.12s ease;
     cursor: pointer;
     border: none;

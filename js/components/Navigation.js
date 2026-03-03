@@ -457,7 +457,7 @@ class Navigation {
     const expandedId = localStorage.getItem(SIDEBAR_USER_EXPANDED_KEY) || '';
 
     const iconHTML = (item) => item.iconSrc
-      ? `<img src="${item.iconSrc}" class="nav-icon nav-icon-img" alt="" width="12" height="12">`
+      ? `<img src="${item.iconSrc}" class="nav-icon nav-icon-img" alt="" width="14" height="14">`
       : `<i class="fas ${item.icon} nav-icon"></i>`;
 
     const mainHTML = SIDEBAR_USER_CONFIG.main.map((item) => {
@@ -502,7 +502,7 @@ class Navigation {
     }).join('');
 
     const footerIconHTML = (f) => f.iconSrc
-      ? `<img src="${f.iconSrc}" class="nav-icon nav-icon-img" alt="" width="12" height="12">`
+      ? `<img src="${f.iconSrc}" class="nav-icon nav-icon-img" alt="" width="14" height="14">`
       : `<i class="fas ${f.icon} nav-icon"></i>`;
 
     const footerHTML = SIDEBAR_USER_CONFIG.footer.map((f) => {
