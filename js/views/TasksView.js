@@ -171,10 +171,44 @@ class TasksView extends BaseView {
         (containers || []).forEach(c => { brandNames[c.id] = c.nombre_marca || '—'; });
       }
 
+      let entityIdToImageUrl = {};
+      if (entityIds.length) {
+        const { data: products } = await this.supabase
+          .from('products')
+          .select('id, entity_id')
+          .in('entity_id', entityIds)
+          .order('created_at', { ascending: true });
+        const entityToProductId = {};
+        (products || []).forEach(p => {
+          if (p.entity_id && !entityToProductId[p.entity_id]) entityToProductId[p.entity_id] = p.id;
+        });
+        const productIds = [...new Set(Object.values(entityToProductId).filter(Boolean))];
+        if (productIds.length) {
+          const { data: imgs } = await this.supabase
+            .from('product_images')
+            .select('product_id, image_url, image_type, image_order')
+            .in('product_id', productIds)
+            .order('image_order', { ascending: true });
+          const byProduct = {};
+          (imgs || []).forEach(img => {
+            if (!byProduct[img.product_id]) byProduct[img.product_id] = [];
+            byProduct[img.product_id].push(img);
+          });
+          Object.keys(entityToProductId).forEach(entityId => {
+            const pid = entityToProductId[entityId];
+            const list = byProduct[pid] || [];
+            const main = list.find(i => (i.image_type || '').toLowerCase() === 'principal') || list[0];
+            if (main && main.image_url) entityIdToImageUrl[entityId] = main.image_url;
+          });
+        }
+      }
+
       this.schedules = schedules.map(s => {
         const flowName = (s.flow_id && flowMap[s.flow_id]) || '—';
         const flowImageUrl = (s.flow_id && flowImageMap[s.flow_id]) || null;
-        const firstEntityId = Array.isArray(s.entity_ids) ? s.entity_ids[0] : s.entity_ids;
+        const eids = Array.isArray(s.entity_ids) ? s.entity_ids : (s.entity_ids ? [s.entity_ids] : []);
+        const entityImageUrls = eids.map(id => entityIdToImageUrl[id]).filter(Boolean);
+        const firstEntityId = eids[0];
         const entityName = (firstEntityId && entityMap[firstEntityId]) || '—';
         const firstCampaignId = Array.isArray(s.campaign_ids) ? s.campaign_ids[0] : s.campaign_ids;
         const campaignName = (firstCampaignId && campaignMap[firstCampaignId]) || '—';
@@ -187,6 +221,7 @@ class TasksView extends BaseView {
           is_active: s.status === 'active',
           flow_name: flowName,
           flow_image_url: flowImageUrl,
+          entity_image_urls: entityImageUrls,
           entity_name: entityName,
           campaign_name: campaignName,
           audience_name: audienceName,
@@ -467,41 +502,54 @@ class TasksView extends BaseView {
     const coverHtml = t.flow_image_url
       ? `<div class="task-card-cover"><img src="${this.escapeHtml(t.flow_image_url)}" alt="" loading="lazy"></div>`
       : `<div class="task-card-cover task-card-cover-placeholder"><i class="fas fa-project-diagram"></i></div>`;
+    const productImages = t.entity_image_urls || [];
+    const maxAvatars = 5;
+    const avatarUrls = productImages.slice(0, maxAvatars);
+    const extraCount = productImages.length > maxAvatars ? productImages.length - maxAvatars : 0;
+    const avatarsHtml = avatarUrls.length
+      ? `<div class="task-card-avatars">
+          ${avatarUrls.map((url, i) => `<div class="task-card-avatar" style="z-index: ${10 + i};"><img src="${this.escapeHtml(url)}" alt="" loading="lazy"></div>`).join('')}
+          ${extraCount ? `<div class="task-card-avatar task-card-avatar-extra" style="z-index: 5;">+${extraCount}</div>` : ''}
+        </div>`
+      : `<div class="task-card-avatars"><div class="task-card-avatar task-card-avatar-placeholder"><i class="fas fa-box"></i></div></div>`;
     return `
       <article class="task-card" data-task-id="${t.id}" role="button" tabindex="0">
         <div class="task-card-inner">
-          ${coverHtml}
-          <div class="task-card-header">
-            <h3 class="task-card-title">${this.escapeHtml(t.job_name || 'Sin nombre')}</h3>
-            <span class="task-card-badge ${statusClass}">
-              <span class="task-card-badge-dot"></span>${statusLabel}
-            </span>
+          <div class="task-card-cover-wrap">
+            ${coverHtml}
+            ${avatarsHtml}
           </div>
-          <p class="task-card-flow"><i class="fas fa-project-diagram"></i> Flujo: ${this.escapeHtml(t.flow_name)}</p>
-          <p class="task-card-cron"><i class="fas fa-clock"></i> ${this.escapeHtml(scheduleLabel)}</p>
-          <p class="task-card-entity"><i class="fas fa-box"></i> ${this.escapeHtml(t.entity_name)}</p>
-          <div class="task-card-divider"></div>
-          <div class="task-card-campaign-section">
-            <span class="task-card-campaign-label">CAMPAIGN & AUDIENCE</span>
-            <p class="task-card-campaign-value">${this.escapeHtml(campaignAudience)}</p>
-          </div>
-          <div class="task-card-meta-boxes">
-            <div class="task-card-meta-box">
-              <span class="task-card-meta-label">FORMATO</span>
-              <span class="task-card-meta-value">${this.escapeHtml(t.aspect_ratio || '1:1')}</span>
+          <div class="task-card-body">
+            <div class="task-card-header">
+              <h3 class="task-card-title">${this.escapeHtml(t.job_name || 'Sin nombre')}</h3>
+              <span class="task-card-badge ${statusClass}">
+                <span class="task-card-badge-dot"></span>${statusLabel}
+              </span>
             </div>
-            <div class="task-card-meta-box">
-              <span class="task-card-meta-label">PRODS</span>
-              <span class="task-card-meta-value">${t.production_count ?? 1}</span>
+            <p class="task-card-subtitle">${this.escapeHtml(t.flow_name)}</p>
+            <div class="task-card-tags">
+              <span class="task-card-tag">${this.escapeHtml(campaignAudience)}</span>
             </div>
-            <div class="task-card-meta-box">
-              <span class="task-card-meta-label">FREQ</span>
-              <span class="task-card-meta-value">${this.escapeHtml(freqLabel)}</span>
+            <div class="task-card-metrics">
+              <div class="task-card-metric">
+                <span class="task-card-metric-value">${this.escapeHtml(t.aspect_ratio || '1:1')}</span>
+                <span class="task-card-metric-label">FORMATO</span>
+              </div>
+              <div class="task-card-metric-divider"></div>
+              <div class="task-card-metric">
+                <span class="task-card-metric-value">${t.production_count ?? 1}</span>
+                <span class="task-card-metric-label">PRODS</span>
+              </div>
+              <div class="task-card-metric-divider"></div>
+              <div class="task-card-metric">
+                <span class="task-card-metric-value">${this.escapeHtml(freqLabel)}</span>
+                <span class="task-card-metric-label">FREQ</span>
+              </div>
             </div>
-          </div>
-          <div class="task-card-actions">
-            <button type="button" class="btn btn-primary task-card-btn-edit">Editar</button>
-            <button type="button" class="btn btn-outline task-card-btn-details">Ver Detalles</button>
+            <div class="task-card-actions">
+              <button type="button" class="btn btn-primary task-card-btn-edit">Editar</button>
+              <button type="button" class="btn btn-outline task-card-btn-details">Ver Detalles</button>
+            </div>
           </div>
         </div>
       </article>
