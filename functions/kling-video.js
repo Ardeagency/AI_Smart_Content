@@ -84,8 +84,12 @@ exports.handler = async (event, context) => {
       if (!createRes.ok || createData.code !== 200) {
         const errMsg = createData.msg || createData.message || createData.error || (createRes.status === 401 ? 'API Key inválida (revisa KIE_API_KEY)' : createRes.status === 402 ? 'Saldo insuficiente en KIE' : 'Error al crear la tarea');
         console.error('kling-video KIE createTask error:', createRes.status, createData);
+        // Devolver HTTP no-2xx cuando KIE indica error (code !== 200) para que el front muestre error y no espere taskId
+        const httpStatus = !createRes.ok
+          ? (createRes.status >= 400 ? createRes.status : 502)
+          : (createData.code >= 400 && createData.code < 600 ? createData.code : 502);
         return {
-          statusCode: createRes.ok ? 200 : (createRes.status >= 400 ? createRes.status : 502),
+          statusCode: httpStatus,
           headers: corsHeaders(),
           body: JSON.stringify({
             error: errMsg,
