@@ -20954,15 +20954,20 @@ body.production-filters-in-header .living-container > .living-history-section {
     margin-bottom: 0.2rem;
 }
 
-/* Director Console — top-row (+, adjuntos) fuera del contenedor del input; contenido = solo textarea */
-.video-director-top-row {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.5rem;
+/* Director Console — estilo minimalista (referencia): contenido + separador + controles */
+.video-director-console-content {
+    position: relative;
+    min-height: 120px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius-sm);
+    background: rgba(0, 0, 0, 0.35);
+    overflow: hidden;
 }
 .video-director-btn-add {
-    flex-shrink: 0;
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 1;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -20980,38 +20985,39 @@ body.production-filters-in-header .living-container > .living-history-section {
     background: rgba(255, 255, 255, 0.1);
     border-color: rgba(255, 255, 255, 0.25);
 }
-.video-director-top-row .video-kling-elements-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem;
-    align-items: center;
-}
-.video-director-console-content {
-    display: block;
-    min-height: 100px;
-}
 .video-director-console-content .video-director-brief-input {
     display: block;
     width: 100%;
-    min-height: 100px;
-    padding: 0.6rem 0.75rem;
+    min-height: 118px;
+    padding: 2.5rem 0.75rem 0.6rem 2.75rem;
     margin: 0;
     font-size: var(--font-size-base);
     color: var(--glass-black-text);
-    background: rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: var(--radius-sm);
+    background: transparent;
+    border: none;
     outline: none;
     resize: vertical;
     box-sizing: border-box;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .video-director-console-content .video-director-brief-input::placeholder {
-    color: rgba(255, 255, 255, 0.45);
+    color: rgba(255, 255, 255, 0.4);
 }
 .video-director-console-content .video-director-brief-input:focus {
-    border-color: rgba(255, 255, 255, 0.28);
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+    box-shadow: none;
+}
+.video-director-console-content .video-kling-elements-list {
+    position: absolute;
+    top: 0.5rem;
+    left: 2.75rem;
+    right: 0.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    z-index: 1;
+    pointer-events: none;
+}
+.video-director-console-content .video-kling-elements-list .video-kling-element-chip {
+    pointer-events: auto;
 }
 .video-director-separator {
     height: 1px;
@@ -21725,18 +21731,6 @@ body.production-filters-in-header .living-container > .living-history-section {
     appearance: none;
     -webkit-appearance: none;
 }
-a.video-prompt-editor-link {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.35rem;
-    margin-top: 0.5rem;
-    text-decoration: none;
-    transition: background 0.2s ease;
-}
-a.video-prompt-editor-link:hover {
-    background: var(--brand-primary-brillo-strong, rgba(255, 255, 255, 0.18));
-}
 .video-prompt-ai-prompt-btn {
     display: inline-flex;
     align-items: center;
@@ -22056,127 +22050,4 @@ a.video-prompt-editor-link:hover {
 .video-error-text {
     margin: 0;
     color: var(--accent-warm, #e09145);
-}
-
-/* ── Video Editor View (FFmpeg.wasm) ── */
-.video-editor-view .page-content {
-    max-width: 720px;
-    margin: 0 auto;
-    padding: 1.5rem 1rem;
-}
-.video-editor-header {
-    margin-bottom: 1.5rem;
-}
-.video-editor-back {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--text-secondary);
-    text-decoration: none;
-    font-size: var(--font-size-sm);
-    margin-bottom: 0.75rem;
-}
-.video-editor-back:hover {
-    color: var(--text-primary);
-}
-.video-editor-title {
-    font-size: var(--font-size-2xl);
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0 0 0.35rem 0;
-}
-.video-editor-subtitle {
-    font-size: var(--font-size-sm);
-    color: var(--text-muted);
-    margin: 0;
-}
-.video-editor-card {
-    padding: 1.5rem;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-divider);
-}
-.video-editor-card-title {
-    font-size: var(--font-size-lg);
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0 0 1rem 0;
-}
-.video-editor-inputs {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
-}
-.video-editor-file-label {
-    display: block;
-    padding: 0.75rem 1rem;
-    background: var(--white-5);
-    border: 1px dashed var(--border-divider);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
-}
-.video-editor-file-label:hover {
-    background: var(--white-8);
-    border-color: var(--text-muted);
-}
-.video-editor-file-name {
-    font-size: var(--font-size-sm);
-    color: var(--text-secondary);
-}
-.video-editor-file-input {
-    position: absolute;
-    width: 0;
-    height: 0;
-    opacity: 0;
-    overflow: hidden;
-}
-.video-editor-actions {
-    margin-bottom: 1rem;
-}
-.video-editor-progress {
-    margin: 1rem 0;
-    text-align: center;
-}
-.video-editor-progress .loader {
-    margin: 0 auto 0.5rem;
-}
-.video-editor-progress-text {
-    margin: 0;
-    font-size: var(--font-size-sm);
-    color: var(--text-muted);
-}
-.video-editor-error {
-    margin: 1rem 0;
-    padding: 1rem;
-    background: var(--color-error-bg);
-    border: 1px solid var(--color-error-light);
-    border-radius: var(--radius-sm);
-}
-.video-editor-error-text {
-    margin: 0;
-    color: var(--color-error);
-    font-size: var(--font-size-sm);
-}
-.video-editor-result {
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--border-divider);
-}
-.video-editor-result-title {
-    font-size: var(--font-size-md);
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0 0 1rem 0;
-}
-.video-editor-result-player-wrap {
-    margin-bottom: 1rem;
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-    background: #000;
-}
-.video-editor-result-player {
-    width: 100%;
-    max-height: 400px;
-    display: block;
 }

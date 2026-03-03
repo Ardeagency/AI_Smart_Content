@@ -81,18 +81,6 @@ class VideoView extends BaseView {
     this.organizationId = window.currentOrgId || this.routeParams?.orgId || null;
   }
 
-  _getEditorVideoPath() {
-    const rp = this.routeParams || {};
-    if (rp.orgIdShort && rp.orgNameSlug) {
-      return `/org/${rp.orgIdShort}/${rp.orgNameSlug}/editor-video`;
-    }
-    const orgId = window.currentOrgId || rp.orgId;
-    const prefix = typeof window.getOrgPathPrefix === 'function' && orgId
-      ? window.getOrgPathPrefix(orgId, window.currentOrgName || '')
-      : '';
-    return prefix ? `${prefix}/editor-video` : '/editor-video';
-  }
-
   renderHTML() {
     return `
       <div class="organization-container video-view-container" id="videoPage">
@@ -146,9 +134,6 @@ class VideoView extends BaseView {
                   <button type="button" class="video-prompt-db-select video-prompt-productions-btn" id="videoProductionsBtn" aria-label="Production Queue">
                     <i class="fas fa-play"></i> Production Queue
                   </button>
-                  <a href="${this._getEditorVideoPath()}" class="video-prompt-db-select video-prompt-editor-link" target="_blank" rel="noopener noreferrer" aria-label="Editor de video (unir)">
-                    <i class="fas fa-scissors"></i> Unir videos (FFmpeg)
-                  </a>
                 </div>
               </div>
             </div>
@@ -157,11 +142,11 @@ class VideoView extends BaseView {
               <div class="video-prompt-footer-card video-prompt-footer-card-center">
               <div class="video-prompt-footer-card-inner glass-black video-director-console">
                 <input type="file" id="videoImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
-                <div class="video-director-top-row">
-                  <button type="button" class="video-director-btn-add" id="videoPromptAdd" aria-label="Añadir imagen o video"><i class="fas fa-plus"></i></button>
-                  <div class="video-kling-elements-list" id="videoKlingElementsList" aria-live="polite"></div>
-                </div>
                 <div class="video-director-console-content">
+                  <div class="video-director-top-row">
+                    <button type="button" class="video-director-btn-add" id="videoPromptAdd" aria-label="Añadir imagen o video"><i class="fas fa-plus"></i></button>
+                    <div class="video-kling-elements-list" id="videoKlingElementsList" aria-live="polite"></div>
+                  </div>
                   <textarea
                     id="videoPromptInput"
                     class="video-director-brief-input"
