@@ -218,6 +218,16 @@ class App {
     r.register('/org/:orgIdShort/:orgNameSlug/video', videoLoader, auth);
     r.register('/video', videoLoader, auth);
 
+    // ── Editor de video (FFmpeg.wasm, unir 2 vídeos en navegador) ──
+    const editorVideoDeps = [
+      'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js',
+      '/js/services/VideoEditorService.js',
+      '/js/views/VideoEditorView.js'
+    ];
+    const editorVideoLoader = this._lazy('VideoEditorView', editorVideoDeps);
+    r.register('/org/:orgIdShort/:orgNameSlug/editor-video', editorVideoLoader, auth);
+    r.register('/editor-video', editorVideoLoader, auth);
+
     // ── Settings ──
     r.register('/settings', this._lazy('SettingsView', ['/js/views/SettingsView.js']), auth);
 

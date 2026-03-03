@@ -29,14 +29,13 @@
     if (ffmpegInstance) return ffmpegInstance;
     if (loadPromise) return loadPromise;
 
-    const { createFFmpeg, fetchFile } = getFFmpegLib();
-    const ffmpeg = createFFmpeg({
-      log: opts.log !== false,
+    const { createFFmpeg } = getFFmpegLib();
+    const ffmpeg = createFFmpeg({ log: opts.log !== false });
+
+    loadPromise = ffmpeg.load({
       coreURL: opts.coreURL || `${CORE_ST_BASE}/ffmpeg-core.js`,
       wasmURL: opts.wasmURL || `${CORE_ST_BASE}/ffmpeg-core.wasm`
     });
-
-    loadPromise = ffmpeg.load();
     await loadPromise;
     ffmpegInstance = ffmpeg;
     return ffmpeg;
