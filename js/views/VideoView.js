@@ -84,44 +84,46 @@ class VideoView extends BaseView {
   renderHTML() {
     return `
       <div class="organization-container video-view-container" id="videoPage">
-        <div class="video-status-area" id="videoStatusArea" style="display: none;">
-          <div class="video-status-card" id="videoStatusCard">
-            <p class="video-status-text" id="videoStatusText">—</p>
-            <div class="video-status-spinner" id="videoStatusSpinner" style="display: none;"></div>
-          </div>
-        </div>
-
-        <div class="video-result-area" id="videoResultArea" style="display: none;">
-          <div class="video-result-card">
-            <h2 class="video-result-title">Video generado</h2>
-            <div class="video-result-player-wrap">
-              <video id="videoResultPlayer" class="video-result-player" controls playsinline></video>
-            </div>
-            <a id="videoResultDownload" class="btn btn-secondary video-download-btn" href="#" download target="_blank" rel="noopener">
-              <i class="fas fa-download"></i> Descargar
-            </a>
-          </div>
-        </div>
-
-        <div class="video-error-area" id="videoErrorArea" style="display: none;">
-          <div class="video-error-card">
-            <p class="video-error-text" id="videoErrorText">—</p>
-          </div>
-        </div>
-
-        <div class="video-productions-panel video-productions-panel-inline" id="videoProductionsPanel" aria-hidden="true" style="display: none;">
-          <div class="video-productions-panel-card">
-            <div class="video-productions-panel-header">
-              <h3 class="video-prompt-panel-title">Production Queue</h3>
-              <button type="button" class="video-productions-panel-close" id="videoProductionsPanelClose" aria-label="Cerrar"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="video-productions-carousel-wrap">
-              <div class="video-productions-carousel" id="videoProductionsCarousel"></div>
+        <section class="video-canva-view" id="videoCanvaView" aria-label="Vista de resultado y estado">
+          <div class="video-status-area" id="videoStatusArea" style="display: none;">
+            <div class="video-status-card" id="videoStatusCard">
+              <p class="video-status-text" id="videoStatusText">—</p>
+              <div class="video-status-spinner" id="videoStatusSpinner" style="display: none;"></div>
             </div>
           </div>
-        </div>
 
-        <footer class="video-page-footer video-prompt-wrap" aria-label="Director Console">
+          <div class="video-result-area" id="videoResultArea" style="display: none;">
+            <div class="video-result-card">
+              <h2 class="video-result-title">Video generado</h2>
+              <div class="video-result-player-wrap">
+                <video id="videoResultPlayer" class="video-result-player" controls playsinline></video>
+              </div>
+              <a id="videoResultDownload" class="btn btn-secondary video-download-btn" href="#" download target="_blank" rel="noopener">
+                <i class="fas fa-download"></i> Descargar
+              </a>
+            </div>
+          </div>
+
+          <div class="video-error-area" id="videoErrorArea" style="display: none;">
+            <div class="video-error-card">
+              <p class="video-error-text" id="videoErrorText">—</p>
+            </div>
+          </div>
+
+          <div class="video-productions-panel video-productions-panel-inline" id="videoProductionsPanel" aria-hidden="true" style="display: none;">
+            <div class="video-productions-panel-card">
+              <div class="video-productions-panel-header">
+                <h3 class="video-prompt-panel-title">Production Queue</h3>
+                <button type="button" class="video-productions-panel-close" id="videoProductionsPanelClose" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+              </div>
+              <div class="video-productions-carousel-wrap">
+                <div class="video-productions-carousel" id="videoProductionsCarousel"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <footer class="video-footer-control video-page-footer video-prompt-wrap" id="videoFooterControl" aria-label="Controles de producción y prompt">
           <div class="video-prompt-cards-row">
             <div class="video-prompt-footer-card video-prompt-footer-card-left">
               <div class="video-prompt-footer-card-inner glass-black video-left-inner">

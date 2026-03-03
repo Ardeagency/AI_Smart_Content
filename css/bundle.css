@@ -6694,7 +6694,9 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   border-color: var(--border-light);
 }
 
+/* Regla: distancia mínima fija al borde para los círculos de producto (--task-card-edge-rule) */
 .task-card {
+  --task-card-edge-rule: 1.5rem;
   background: var(--bg-secondary, #1a1a1d);
   border: 1px solid var(--border-divider, rgba(255, 255, 255, 0.08));
   border-radius: var(--radius-lg);
@@ -6781,14 +6783,15 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   align-items: center;
   flex-direction: row;
   position: absolute;
-  left: 10px;
-  right: 10px;
+  left: var(--task-card-edge-rule, 1.5rem);
+  right: var(--task-card-edge-rule, 1.5rem);
   bottom: 0;
   transform: translateY(42%);
   gap: 0;
   z-index: 2;
   min-width: 0;
-  max-width: calc(100% - 20px);
+  max-width: calc(100% - 2 * var(--task-card-edge-rule, 1.5rem));
+  box-sizing: border-box;
 }
 
 .task-card-avatar {
