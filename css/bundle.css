@@ -6789,19 +6789,66 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 }
 
 .task-card-avatar {
-  width: 120px;
-  height: 120px;
   border-radius: 50%;
   overflow: hidden;
-  border: 4px solid var(--bg-secondary, #1a1a1d);
+  border: 3px solid var(--bg-secondary, #1a1a1d);
   background: var(--bg-tertiary);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
-  margin-left: -28px;
   flex-shrink: 0;
 }
 
 .task-card-avatar:first-child {
   margin-left: 0;
+}
+
+/* 1 producto: círculo grande */
+.task-card-avatars.product-count-1 .task-card-avatar {
+  width: 120px;
+  height: 120px;
+  margin-left: -28px;
+  border-width: 4px;
+}
+
+/* 2 productos */
+.task-card-avatars.product-count-2 .task-card-avatar {
+  width: 100px;
+  height: 100px;
+  margin-left: -24px;
+}
+
+/* 3 productos */
+.task-card-avatars.product-count-3 .task-card-avatar {
+  width: 88px;
+  height: 88px;
+  margin-left: -20px;
+}
+
+/* 4 productos */
+.task-card-avatars.product-count-4 .task-card-avatar {
+  width: 76px;
+  height: 76px;
+  margin-left: -18px;
+}
+
+/* 5 productos */
+.task-card-avatars.product-count-5 .task-card-avatar {
+  width: 68px;
+  height: 68px;
+  margin-left: -16px;
+}
+
+/* 6 productos: todos visibles y juntos */
+.task-card-avatars.product-count-6 .task-card-avatar {
+  width: 58px;
+  height: 58px;
+  margin-left: -14px;
+}
+
+/* 7+ productos: más pequeños para caber 6 + "+N" */
+.task-card-avatars.product-count-7 .task-card-avatar {
+  width: 52px;
+  height: 52px;
+  margin-left: -12px;
 }
 
 .task-card-avatar img {
@@ -6821,6 +6868,11 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   background: var(--border-divider);
 }
 
+.task-card-avatars.product-count-5 .task-card-avatar-extra,
+.task-card-avatars.product-count-6 .task-card-avatar-extra { font-size: 0.875rem; }
+
+.task-card-avatars.product-count-7 .task-card-avatar-extra { font-size: 0.75rem; }
+
 .task-card-avatar-placeholder {
   display: flex;
   align-items: center;
@@ -6828,6 +6880,13 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   color: var(--text-tertiary);
   font-size: 2.5rem;
 }
+
+.task-card-avatars.product-count-2 .task-card-avatar-placeholder { font-size: 2rem; }
+.task-card-avatars.product-count-3 .task-card-avatar-placeholder { font-size: 1.75rem; }
+.task-card-avatars.product-count-4 .task-card-avatar-placeholder { font-size: 1.5rem; }
+.task-card-avatars.product-count-5 .task-card-avatar-placeholder { font-size: 1.25rem; }
+.task-card-avatars.product-count-6 .task-card-avatar-placeholder,
+.task-card-avatars.product-count-7 .task-card-avatar-placeholder { font-size: 1.125rem; }
 
 .task-card-body {
   padding: 1.25rem 1rem 1rem;

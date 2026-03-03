@@ -484,15 +484,17 @@ class TasksView extends BaseView {
       ? `<div class="task-card-cover"><img src="${this.escapeHtml(t.flow_image_url)}" alt="" loading="lazy"></div>`
       : `<div class="task-card-cover task-card-cover-placeholder"><i class="fas fa-project-diagram"></i></div>`;
     const productImages = t.entity_image_urls || [];
-    const maxAvatars = 5;
+    const productCount = productImages.length;
+    const maxAvatars = 6;
     const avatarUrls = productImages.slice(0, maxAvatars);
-    const extraCount = productImages.length > maxAvatars ? productImages.length - maxAvatars : 0;
+    const extraCount = productCount > maxAvatars ? productCount - maxAvatars : 0;
+    const countClass = 'product-count-' + Math.min(Math.max(productCount || 1, 1), 7);
     const avatarsHtml = avatarUrls.length
-      ? `<div class="task-card-avatars">
+      ? `<div class="task-card-avatars ${countClass}">
           ${avatarUrls.map((url, i) => `<div class="task-card-avatar" style="z-index: ${10 + i};"><img src="${this.escapeHtml(url)}" alt="" loading="lazy"></div>`).join('')}
           ${extraCount ? `<div class="task-card-avatar task-card-avatar-extra" style="z-index: 5;">+${extraCount}</div>` : ''}
         </div>`
-      : `<div class="task-card-avatars"><div class="task-card-avatar task-card-avatar-placeholder"><i class="fas fa-box"></i></div></div>`;
+      : `<div class="task-card-avatars product-count-1"><div class="task-card-avatar task-card-avatar-placeholder"><i class="fas fa-box"></i></div></div>`;
     return `
       <article class="task-card" data-task-id="${t.id}" role="button" tabindex="0">
         <div class="task-card-inner">
