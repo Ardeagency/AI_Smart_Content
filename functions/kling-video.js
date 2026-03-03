@@ -60,18 +60,12 @@ exports.handler = async (event, context) => {
         return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Acción no válida. Use action: "createTask"' }) };
       }
 
-      // Input según ejemplo KIE: mode, image_urls, sound, duration, aspect_ratio, multi_shots, prompt, kling_elements
+      // Input KIE: mode, image_urls (escena + productos), sound, duration, aspect_ratio, multi_shots, prompt. Sin kling_elements.
       const mode = body.mode === 'pro' ? 'pro' : 'std';
       const promptText = typeof body.prompt === 'string' ? body.prompt.trim() : '';
       const rawMulti = Array.isArray(body.multi_shots) ? body.multi_shots : [];
       const multiShots = rawMulti.map((s) => (s && typeof s === 'object' ? (typeof s.prompt === 'string' ? s.prompt.trim() : String(s.prompt || '')) : '')).filter(Boolean);
-      const klingElements = Array.isArray(body.kling_elements) ? body.kling_elements : [];
-
-      const image_urls = [];
-      for (const el of klingElements) {
-        const urls = el.element_input_urls || [];
-        if (urls.length) image_urls.push(urls[0]);
-      }
+      const image_urls = Array.isArray(body.image_urls) ? body.image_urls.filter((u) => typeof u === 'string' && u.startsWith('http')) : [];
 
       const promptForKie = promptText || (multiShots.length ? multiShots[0] : '');
       if (!promptForKie) {
@@ -91,14 +85,6 @@ exports.handler = async (event, context) => {
         prompt: promptForKie
       };
       if (image_urls.length) input.image_urls = image_urls;
-      if (klingElements.length) {
-        input.kling_elements = klingElements.map((el) => {
-          const o = { name: el.name || 'element_' + Math.random().toString(36).slice(2, 8) };
-          if (el.description) o.description = el.description;
-          if (Array.isArray(el.element_input_urls) && el.element_input_urls.length) o.element_input_urls = el.element_input_urls;
-          return o;
-        });
-      }
 
       const kiePayload = {
         model: 'kling-3.0/video',

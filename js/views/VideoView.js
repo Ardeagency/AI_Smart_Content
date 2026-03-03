@@ -1366,19 +1366,18 @@ class VideoView extends BaseView {
       payload.prompt = promptText;
     }
 
-    const sceneElementsForKling = (this.klingElements || []).filter((el) => !el._fromProductSelection);
-    if (sceneElementsForKling.length > 0) {
-      payload.kling_elements = sceneElementsForKling.map((el) => {
-        const o = { name: el.name };
-        if (el.description) o.description = el.description;
-        if (el.element_input_urls && el.element_input_urls.length) o.element_input_urls = el.element_input_urls;
-        if (el.element_input_video_urls && el.element_input_video_urls.length) o.element_input_video_urls = el.element_input_video_urls;
-        return o;
-      });
+    // Todas las URLs de escena (imágenes + videos) y productos en image_urls; sin kling_elements
+    const imageUrls = [];
+    for (const el of this.klingElements || []) {
+      const imgUrls = el.element_input_urls || [];
+      for (const u of imgUrls) if (typeof u === 'string' && u.startsWith('http')) imageUrls.push(u);
+      const videoUrls = el.element_input_video_urls || [];
+      for (const u of videoUrls) if (typeof u === 'string' && u.startsWith('http')) imageUrls.push(u);
     }
+    if (imageUrls.length) payload.image_urls = imageUrls;
 
     const createUrl = VideoView.KLING_VIDEO_API;
-    console.log('[Video] POST crear tarea →', createUrl, { action: 'createTask', mode, duration: payload.duration, hasPrompt: !!payload.prompt, hasMultiShots: !!(payload.multi_shots && payload.multi_shots.length) });
+    console.log('[Video] POST crear tarea →', createUrl, { action: 'createTask', mode, duration: payload.duration, hasPrompt: !!payload.prompt, image_urls_count: (payload.image_urls || []).length });
 
     try {
       const createRes = await fetch(createUrl, {
@@ -1422,7 +1421,7 @@ class VideoView extends BaseView {
         status: 'processing',
         external_job_id: taskId,
         prompt_used: promptText,
-        metadata: { mode: payload.mode || 'pro', duration: payload.duration, aspect_ratio: payload.aspect_ratio, kling_elements_count: (payload.kling_elements || []).length }
+        metadata: { mode: payload.mode || 'pro', duration: payload.duration, aspect_ratio: payload.aspect_ratio, image_urls_count: (payload.image_urls || []).length }
       });
 
       this.showStatus('Generando video (Kling 3.0). Esto puede tardar unos minutos…', true);

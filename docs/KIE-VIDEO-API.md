@@ -34,7 +34,7 @@ En este proyecto se usa un **proxy Netlify** (`/.netlify/functions/kling-video`)
 | duration | string | No | `"5"` \| `"10"` \| `"15"` (default: `"5"`) |
 | aspect_ratio | string | No | `"16:9"` \| `"9:16"` \| `"1:1"` |
 | sound | boolean | No | Incluir sonido |
-| kling_elements | array | No | Elementos de referencia: `{ name, element_input_urls?, element_input_video_urls?, description? }` |
+| image_urls | string[] | No | URLs de imagen/video de escena y productos (todas en un solo array). La app construye esta lista desde Production Queue + Asset Stack. |
 
 ### Respuesta del proxy
 
@@ -91,18 +91,17 @@ Get API Key:
 | **Type** | string | Must be passed as a string value |
 | **Required** | Yes | This parameter is mandatory for all requests |
 
-### input Object Parameters (según ejemplo KIE)
+### input Object Parameters (según proxy actual)
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
 | mode | string | Yes | `std` \| `pro` |
-| prompt | string | Yes | Texto del video; puede referenciar elementos con `@nombre` (ver kling_elements). |
-| image_urls | string[] | No | URLs de imagen de referencia (p. ej. primer frame). |
+| prompt | string | Yes | Texto del video. |
+| image_urls | string[] | No | URLs de imagen/video de escena y productos (una sola lista). |
 | sound | boolean | No | Incluir sonido. |
 | duration | string | No | `"5"` \| `"10"` \| `"15"` |
 | aspect_ratio | string | No | `"16:9"` \| `"9:16"` \| `"1:1"` |
 | multi_shots | boolean | No | `true` si hay varios shots. |
-| kling_elements | array | No | Elementos referenciables: `{ name, description?, element_input_urls[] }`. En el prompt se referencian con `@name`. |
 
 #### mode
 - **Type**: `string`
@@ -111,22 +110,22 @@ Get API Key:
 - **Options**: `std` | `pro`
 - **Default Value**: `"std"`
 
-### Request Example (formato KIE)
+### Request Example (formato actual, sin kling_elements)
 
 ```json
 {
   "model": "kling-3.0/video",
   "input": {
     "mode": "pro",
-    "image_urls": ["https://example.com/frame.png"],
+    "image_urls": [
+      "https://example.com/escena1.jpg",
+      "https://example.com/producto1.jpg"
+    ],
     "sound": true,
     "duration": "5",
     "aspect_ratio": "16:9",
     "multi_shots": false,
-    "prompt": "In a bright room, sunlight streams through the window@element_dog",
-    "kling_elements": [
-      { "name": "element_dog", "description": "dog", "element_input_urls": ["https://..."] }
-    ]
+    "prompt": "In a bright room, sunlight streams through the window."
   }
 }
 ```
