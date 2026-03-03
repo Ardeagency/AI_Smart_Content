@@ -91,16 +91,18 @@ Get API Key:
 | **Type** | string | Must be passed as a string value |
 | **Required** | Yes | This parameter is mandatory for all requests |
 
-### input Object Parameters
+### input Object Parameters (según ejemplo KIE)
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
 | mode | string | Yes | `std` \| `pro` |
-| multi_shots | array | Yes* | Array of `{ prompt: string }`. La API puede requerir que no esté vacío; en nuestro proxy siempre se envía (un shot si solo hay prompt único). |
+| prompt | string | Yes | Texto del video; puede referenciar elementos con `@nombre` (ver kling_elements). |
+| image_urls | string[] | No | URLs de imagen de referencia (p. ej. primer frame). |
+| sound | boolean | No | Incluir sonido. |
 | duration | string | No | `"5"` \| `"10"` \| `"15"` |
 | aspect_ratio | string | No | `"16:9"` \| `"9:16"` \| `"1:1"` |
-| sound | boolean | No | Include sound |
-| kling_elements | array | No | Reference elements: `{ name, element_input_urls?, element_input_video_urls?, description? }` |
+| multi_shots | boolean | No | `true` si hay varios shots. |
+| kling_elements | array | No | Elementos referenciables: `{ name, description?, element_input_urls[] }`. En el prompt se referencian con `@name`. |
 
 #### mode
 - **Type**: `string`
@@ -109,17 +111,22 @@ Get API Key:
 - **Options**: `std` | `pro`
 - **Default Value**: `"std"`
 
-### Request Example
+### Request Example (formato KIE)
 
 ```json
 {
   "model": "kling-3.0/video",
   "input": {
     "mode": "pro",
-    "multi_shots": [{ "prompt": "A sunny kitchen with a blender on the counter." }],
+    "image_urls": ["https://example.com/frame.png"],
+    "sound": true,
     "duration": "5",
     "aspect_ratio": "16:9",
-    "sound": false
+    "multi_shots": false,
+    "prompt": "In a bright room, sunlight streams through the window@element_dog",
+    "kling_elements": [
+      { "name": "element_dog", "description": "dog", "element_input_urls": ["https://..."] }
+    ]
   }
 }
 ```

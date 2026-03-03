@@ -60,11 +60,46 @@ exports.handler = async (event, context) => {
         return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Acción no válida. Use action: "createTask"' }) };
       }
 
-      // Doc KIE: model + input (mode obligatorio). 422 suele indicar validación; kling-3.0/video puede requerir prompt en input.
+      // Input según ejemplo KIE: mode, image_urls, sound, duration, aspect_ratio, multi_shots, prompt, kling_elements
       const mode = body.mode === 'pro' ? 'pro' : 'std';
       const promptText = typeof body.prompt === 'string' ? body.prompt.trim() : '';
-      const input = { mode };
-      if (promptText) input.prompt = promptText;
+      const rawMulti = Array.isArray(body.multi_shots) ? body.multi_shots : [];
+      const multiShots = rawMulti.map((s) => (s && typeof s === 'object' ? (typeof s.prompt === 'string' ? s.prompt.trim() : String(s.prompt || '')) : '')).filter(Boolean);
+      const klingElements = Array.isArray(body.kling_elements) ? body.kling_elements : [];
+
+      const image_urls = [];
+      for (const el of klingElements) {
+        const urls = el.element_input_urls || [];
+        if (urls.length) image_urls.push(urls[0]);
+      }
+
+      const promptForKie = promptText || (multiShots.length ? multiShots[0] : '');
+      if (!promptForKie) {
+        return {
+          statusCode: 400,
+          headers: corsHeaders(),
+          body: JSON.stringify({ error: 'Falta el prompt. Escribe o genera el prompt en Director Brief antes de Producción.' })
+        };
+      }
+
+      const input = {
+        mode,
+        sound: body.sound === true || body.sound === 'true',
+        duration: typeof body.duration === 'string' ? body.duration : String(body.duration || '5'),
+        aspect_ratio: typeof body.aspect_ratio === 'string' ? body.aspect_ratio : (body.aspect_ratio || '16:9'),
+        multi_shots: multiShots.length > 1,
+        prompt: promptForKie
+      };
+      if (image_urls.length) input.image_urls = image_urls;
+      if (klingElements.length) {
+        input.kling_elements = klingElements.map((el) => {
+          const o = { name: el.name || 'element_' + Math.random().toString(36).slice(2, 8) };
+          if (el.description) o.description = el.description;
+          if (Array.isArray(el.element_input_urls) && el.element_input_urls.length) o.element_input_urls = el.element_input_urls;
+          return o;
+        });
+      }
+
       const kiePayload = {
         model: 'kling-3.0/video',
         input
