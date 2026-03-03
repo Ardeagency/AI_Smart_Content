@@ -1,6 +1,6 @@
-# Video API Documentation (KIE) — **Deprecado**
+# Video API Documentation (KIE)
 
-> **Ya no se usa KIE en este proyecto.** La app usa la **API oficial de Kling** (Access Key + Secret Key). Ver [KLING-VIDEO-API.md](./KLING-VIDEO-API.md).
+> **En uso.** La app genera video mediante la **API de KIE** (modelo `kling-3.0/video`). El proxy Netlify `kling-video` llama a `api.kie.ai` usando `KIE_API_KEY`.
 
 ---
 
@@ -12,7 +12,7 @@ The process consists of two steps:
 1. Create a generation task
 2. Query task status and results
 
-In este proyecto se usa un **proxy Netlify** (`/.netlify/functions/kie-video`) que envía las peticiones a la API de KIE usando la variable de entorno `KIE_API_KEY`.
+En este proyecto se usa un **proxy Netlify** (`/.netlify/functions/kling-video`) que envía las peticiones a la API de KIE usando la variable de entorno `KIE_API_KEY`.
 
 ---
 
@@ -20,8 +20,8 @@ In este proyecto se usa un **proxy Netlify** (`/.netlify/functions/kie-video`) q
 
 ### Endpoint
 
-- **POST** `https://aismartcontent.io/.netlify/functions/kie-video` — crear tarea
-- **GET** `https://aismartcontent.io/.netlify/functions/kie-video?taskId=xxx` — consultar estado
+- **POST** `/.netlify/functions/kling-video` — crear tarea (body: `action: "createTask"`, `mode`, `prompt`, etc.)
+- **GET** `/.netlify/functions/kling-video?taskId=xxx` — consultar estado
 
 ### Body para crear tarea (POST)
 
@@ -43,8 +43,8 @@ In este proyecto se usa un **proxy Netlify** (`/.netlify/functions/kie-video`) q
 
 ### Flujo en la app (página Video)
 
-1. **Crear tarea**: POST a `kie-video` con `action: "createTask"` → se obtiene `taskId`.
-2. **Esperar resultado**: polling cada **15 segundos** a `GET kie-video?taskId=xxx` hasta que `data.state` sea `success` o `fail`.
+1. **Crear tarea**: POST a `kling-video` con `action: "createTask"` → se obtiene `taskId`.
+2. **Esperar resultado**: polling cada **15 segundos** a `GET kling-video?taskId=xxx` hasta que `data.state` sea `success` o `fail`.
 3. **Cuando `state === 'success`**: la app descarga el video (vía proxy `kie-video-download?videoUrl=...` para evitar CORS), lo sube al bucket Supabase `production-outputs` en `kie-videos/{user_id}/{taskId}.mp4` y muestra al usuario la URL pública de Supabase (no la URL temporal de KIE).
 
 ### Proxy de descarga

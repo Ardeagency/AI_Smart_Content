@@ -2,8 +2,7 @@
 
 ## Resumen ejecutivo
 
-- **La app actualmente usa la API de Kling** (proxy `kling-video` → `api.klingai.com`), **no la plataforma KIE**.
-- KIE fue deprecado en este proyecto; ver [KIE-VIDEO-API.md](./KIE-VIDEO-API.md) (marcado como deprecado).
+- **La app usa la API de KIE** (proxy `kling-video` → `api.kie.ai`, modelo `kling-3.0/video`). Ver [KIE-VIDEO-API.md](./KIE-VIDEO-API.md).
 - Se detectaron **errores en la forma de llamar a la API**: el front envía `aspect_ratio` y `sound` pero el proxy **no los reenvía** al backend de Kling.
 - El **polling** (cada 15 s) y la **normalización de estado** están bien planteados; la respuesta se adapta a varios formatos (Kling oficial, KIE, kling3api.com).
 
@@ -33,8 +32,7 @@
 
 ### Uso en este proyecto
 
-- **No se usa KIE en la implementación actual.** El proxy activo es `kling-video`, que llama a **api.klingai.com** (API de Kling), no a api.kie.ai.
-- Si se quisiera volver a KIE (p. ej. por precios o por usar Runway/Veo), habría que implementar un proxy que llame a `api.kie.ai` con `KIE_API_KEY` y mapear el body/recordInfo al contrato actual del front (taskId, state, resultJson).
+- **Se usa KIE.** El proxy `kling-video` llama a **api.kie.ai** (createTask + recordInfo) con `KIE_API_KEY`. El front no cambia: mismo contrato (taskId, state, resultJson).
 
 ---
 

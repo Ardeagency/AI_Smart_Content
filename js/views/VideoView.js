@@ -1,11 +1,11 @@
 /**
- * VideoView - Página de generación de video con la API oficial de Kling.
+ * VideoView - Página de generación de video con la API de KIE (modelo kling-3.0/video).
  * Flujo: crear tarea (POST /.netlify/functions/kling-video) → polling cada 15s (GET ?taskId=) hasta success/fail
  * → descargar video (proxy kie-video-download), subir a Supabase, mostrar URL al usuario.
- * Proxy: Netlify Function kling-video (URL directa /.netlify/functions/kling-video para evitar 404 con redirect /api/*).
+ * Proxy: Netlify Function kling-video llama a api.kie.ai (KIE_API_KEY).
  */
 class VideoView extends BaseView {
-  /** URL base de la función kling-video. Usar directo para evitar 404 si el redirect /api/kling-video no aplica. */
+  /** URL base de la función kling-video (proxy a API KIE). */
   static get KLING_VIDEO_API() {
     return '/.netlify/functions/kling-video';
   }
