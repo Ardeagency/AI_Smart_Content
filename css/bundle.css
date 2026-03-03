@@ -6747,7 +6747,7 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 
 .task-card-cover {
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 2.4 / 1;
   border-radius: 0;
   overflow: hidden;
   background: var(--bg-tertiary, #0d0d0f);
@@ -6776,25 +6776,27 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 
 .task-card-avatars {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
+  flex-direction: row;
   position: absolute;
-  left: 50%;
+  left: 1rem;
+  right: 1rem;
   bottom: 0;
-  transform: translate(-50%, 50%);
+  transform: translateY(42%);
   gap: 0;
   z-index: 2;
 }
 
 .task-card-avatar {
-  width: 88px;
-  height: 88px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   overflow: hidden;
   border: 4px solid var(--bg-secondary, #1a1a1d);
   background: var(--bg-tertiary);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  margin-left: -22px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  margin-left: -28px;
   flex-shrink: 0;
 }
 
@@ -6813,7 +6815,7 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary);
   background: var(--border-divider);
@@ -6824,12 +6826,12 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   align-items: center;
   justify-content: center;
   color: var(--text-tertiary);
-  font-size: 1.75rem;
+  font-size: 2.5rem;
 }
 
 .task-card-body {
   padding: 1.25rem 1rem 1rem;
-  padding-top: 1.75rem;
+  padding-top: 3.25rem;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
@@ -6942,45 +6944,6 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   flex-shrink: 0;
 }
 
-.task-card-actions {
-  display: flex;
-  gap: 0.4rem;
-  margin-top: 0.35rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid var(--border-divider);
-}
-
-.task-card-actions .btn {
-  flex: 1;
-  justify-content: center;
-  padding: 0.5rem 0.6rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
-}
-
-.task-card-btn-edit {
-  background: var(--brand-gradient-dynamic, var(--brand-gradient));
-  color: #fff;
-  border: none;
-  border-radius: var(--radius-sm);
-}
-
-.task-card-btn-edit:hover {
-  filter: brightness(1.08);
-  color: #fff;
-}
-
-.task-card-actions .btn-outline {
-  background: transparent;
-  color: var(--text-primary);
-  border: 1px solid var(--border-divider);
-  border-radius: var(--radius-sm);
-}
-
-.task-card-actions .btn-outline:hover {
-  background: var(--brillo-hover);
-  border-color: var(--border-light);
-}
 
 .tasks-empty {
   text-align: center;

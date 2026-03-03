@@ -451,34 +451,15 @@ class TasksView extends BaseView {
 
     grid.querySelectorAll('.task-card').forEach(card => {
       const id = card.getAttribute('data-task-id');
-      card.addEventListener('click', (e) => {
-        if (e.target.closest('.task-card-actions')) return;
+      card.addEventListener('click', () => {
         if (id) this.navigateToTask(id);
       });
       card.addEventListener('keydown', (e) => {
-        if (e.target.closest('.task-card-actions')) return;
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           if (id) this.navigateToTask(id);
         }
       });
-    });
-
-    grid.querySelectorAll('.task-card-btn-edit').forEach((btn) => {
-      const card = btn.closest('.task-card');
-      const taskId = card?.getAttribute('data-task-id');
-      const task = visible.find(t => t.id === taskId);
-      if (task) {
-        btn.onclick = (e) => { e.stopPropagation(); this.openEditModal(task); };
-      }
-    });
-    grid.querySelectorAll('.task-card-btn-details').forEach((btn) => {
-      btn.onclick = (e) => {
-        e.stopPropagation();
-        const card = btn.closest('.task-card');
-        const id = card?.getAttribute('data-task-id');
-        if (id) this.navigateToTask(id);
-      };
     });
 
     if (loadMoreWrap) {
@@ -545,10 +526,6 @@ class TasksView extends BaseView {
                 <span class="task-card-metric-value">${this.escapeHtml(freqLabel)}</span>
                 <span class="task-card-metric-label">FREQ</span>
               </div>
-            </div>
-            <div class="task-card-actions">
-              <button type="button" class="btn btn-primary task-card-btn-edit">Editar</button>
-              <button type="button" class="btn btn-outline task-card-btn-details">Ver Detalles</button>
             </div>
           </div>
         </div>
