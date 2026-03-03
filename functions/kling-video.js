@@ -60,50 +60,40 @@ exports.handler = async (event, context) => {
         return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Acción no válida. Use action: "createTask"' }) };
       }
 
+      // Doc KIE: solo model + input con mode. Cualquier otro campo puede provocar 422/500.
       const mode = body.mode === 'pro' ? 'pro' : 'std';
-      const promptSingle = typeof body.prompt === 'string' ? body.prompt.trim() : '';
-      const rawMulti = Array.isArray(body.multi_shots) ? body.multi_shots : [];
-      const multiShots = rawMulti
-        .map((s) => (s && typeof s === 'object' ? (typeof s.prompt === 'string' ? s.prompt.trim() : String(s.prompt || '')) : ''))
-        .filter(Boolean);
-      let prompt = promptSingle;
-      if (!prompt && multiShots.length > 0) prompt = multiShots[0];
-      if (!prompt) {
-        return {
-          statusCode: 400,
-          headers: corsHeaders(),
-          body: JSON.stringify({ error: 'Falta el prompt. Escribe o genera un prompt en Director Brief antes de enviar.' })
-        };
-      }
-
-      // KIE createTask: model + input. Doc oficial: input.mode obligatorio (std|pro). Se envían también prompt y opcionales por si la API los admite.
-      const input = { mode };
-      if (prompt) input.prompt = prompt;
-      if (body.duration) input.duration = Number(body.duration) || 5;
-      if (body.aspect_ratio) input.aspect_ratio = String(body.aspect_ratio).trim();
-      if (typeof body.sound === 'boolean') input.sound = body.sound;
-      if (body.sound === 'true') input.sound = true;
-      if (body.sound === 'false') input.sound = false;
-      if (multiShots.length > 1) input.multi_shots = multiShots;
-
       const kiePayload = {
         model: 'kling-3.0/video',
-        input
+        input: { mode }
       };
+
       const createUrl = `${KIE_BASE}${CREATE_PATH}`;
       const createRes = await fetch(createUrl, {
         method: 'POST',
         headers,
         body: JSON.stringify(kiePayload)
       });
-      const createData = await createRes.json().catch(() => ({}));
+      const rawText = await createRes.text();
+      let createData = {};
+      try {
+        createData = rawText ? JSON.parse(rawText) : {};
+      } catch (_) {
+        console.error('kling-video KIE createTask: respuesta no JSON', createRes.status, rawText?.slice(0, 500));
+      }
 
-      if (createRes.status !== 200 || createData.code !== 200) {
-        const errMsg = createData.msg || createData.message || createData.error || 'Error al crear la tarea';
+      if (!createRes.ok || createData.code !== 200) {
+        const errMsg = createData.msg || createData.message || createData.error || (createRes.status === 401 ? 'API Key inválida (revisa KIE_API_KEY)' : createRes.status === 402 ? 'Saldo insuficiente en KIE' : 'Error al crear la tarea');
+        console.error('kling-video KIE createTask error:', createRes.status, createData);
         return {
-          statusCode: createRes.status >= 400 ? createRes.status : 500,
+          statusCode: createRes.ok ? 200 : (createRes.status >= 400 ? createRes.status : 502),
           headers: corsHeaders(),
-          body: JSON.stringify({ error: errMsg, code: createData.code, failMsg: errMsg })
+          body: JSON.stringify({
+            error: errMsg,
+            code: createData.code,
+            failMsg: errMsg,
+            kieStatus: createRes.status,
+            kieBody: createData
+          })
         };
       }
 
