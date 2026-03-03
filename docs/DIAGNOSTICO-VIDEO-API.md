@@ -45,11 +45,12 @@ Hay dos referencias útiles: la **oficial** (Kling) y la de **terceros** (kling3
 ### 2.1 API oficial (api.klingai.com) — lo que usa nuestro proxy
 
 - Base URL configurable: por defecto `https://api.klingai.com` (env: `KLING_API_BASE_URL`).
-- Rutas que usa nuestro proxy:
-  - Crear: `POST /v1/ai/video/kling-v3-pro` (modo pro) o `/v1/ai/video/kling-v3-std` (modo std).
-  - Estado: `GET /v1/ai/video/kling-v3/{task-id}` (o con query `?task_id=xxx` si `KLING_API_STATUS_USE_QUERY=1`).
+- **Por defecto** el proxy usa la **API unificada oficial**:
+  - Crear: `POST /v1/video/generations` con body `model`, `prompt`, `mode`, `aspect_ratio`, `duration`, `image` / `image_tail` / `image_list`, `sound`.
+  - Estado: `GET /v1/video/generations/{task_id}`.
+- Si se configura **`KLING_USE_V3_PATHS=1`**, se usan las rutas alternativas: `POST /v1/ai/video/kling-v3-pro` (o `-std`) y `GET /v1/ai/video/kling-v3/{task-id}`.
 - Autenticación: `KLING_API_KEY` (Bearer) o `KLING_ACCESS_KEY` + `KLING_SECRET_KEY` (JWT HS256 generado por el proxy).
-- Documentación oficial (app.klingai.com) se carga por JS; en el repo está el análisis en [KLING-API-ANALISIS-TEXT-IMAGE-VIDEO.md](./KLING-API-ANALISIS-TEXT-IMAGE-VIDEO.md), que menciona **un solo endpoint** `POST /v1/video/generations` con el tipo de tarea definido por el body (text-to-video, image-to-video, multi-image). Si la API real de Kling usa ese esquema y no `/v1/ai/video/kling-v3-*`, puede haber discrepancia; en ese caso conviene revisar en app.klingai.com o con soporte de Kling y, si hace falta, usar variables de entorno para base/path (ya existen `KLING_API_BASE_URL`, `KLING_API_STATUS_PATH`, `KLING_API_STATUS_USE_QUERY`).
+- Referencia en el repo: [KLING-API-ANALISIS-TEXT-IMAGE-VIDEO.md](./KLING-API-ANALISIS-TEXT-IMAGE-VIDEO.md).
 
 ### 2.2 Kling 3.0 vía terceros (kling3api.com)
 

@@ -1,12 +1,11 @@
 /**
- * VideoView - Página de generación de video con Kling 3.0 (KIE API).
- * Misma estructura que el resto de vistas: renderHTML() sin template, layout organization-* del bundle.
- * Flujo: crear tarea (API Kling oficial) → consultar estado cada 15s hasta success/fail
- * → descargar video, subir a Supabase, mostrar URL de Supabase al usuario.
- * Proxy: /api/kling-video (rewrite a Netlify Function; auth KLING_ACCESS_KEY + KLING_SECRET_KEY).
+ * VideoView - Página de generación de video con la API oficial de Kling.
+ * Flujo: crear tarea (POST /api/kling-video) → polling cada 15s (GET ?taskId=) hasta success/fail
+ * → descargar video (proxy kie-video-download), subir a Supabase, mostrar URL al usuario.
+ * Proxy: /api/kling-video (Netlify Function; auth KLING_API_KEY o KLING_ACCESS_KEY + KLING_SECRET_KEY).
  */
 class VideoView extends BaseView {
-  /** Intervalo de polling a KIE (recordInfo) en milisegundos. */
+  /** Intervalo de polling al estado de la tarea Kling (ms). */
   static get POLL_INTERVAL_MS() {
     return 15000;
   }

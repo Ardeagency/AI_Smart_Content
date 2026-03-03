@@ -1,13 +1,13 @@
-# API de video Kling 3.0 – Uso en el proyecto
+# API de video Kling – Uso en el proyecto
 
-> Integración con la **API Kling 3.0** (`https://api.klingai.com`).  
-> Endpoints: crear video (Pro/Standard) y consultar estado por `task_id`.
+> Integración con la **API oficial de Kling** (`https://api.klingai.com`).
 
 ## Resumen
 
-- El proxy Netlify `kling-video` llama a la **API Kling 3.0**:
-  - **Crear:** `POST /v1/ai/video/kling-v3-pro` (modo pro) o `kling-v3-std` (modo standard).
-  - **Estado:** `GET /v1/ai/video/kling-v3/{task-id}` hasta `status: completed` y se obtiene `video_url`.
+- El proxy Netlify `kling-video` usa por defecto la **API unificada oficial**:
+  - **Crear:** `POST /v1/video/generations` (body: `model`, `prompt`, `mode`, `aspect_ratio`, `duration`, `image` / `image_tail` / `image_list`, `sound`).
+  - **Estado:** `GET /v1/video/generations/{task_id}` hasta `status: completed`/`success` y se obtiene la URL del video.
+- Si en Netlify configuras **`KLING_USE_V3_PATHS=1`**, se usan las rutas alternativas: `POST /v1/ai/video/kling-v3-pro` (o `-std`) y `GET /v1/ai/video/kling-v3/{task-id}`.
 - Autenticación: **Bearer token**. Puedes usar `KLING_API_KEY` (token directo) o **Access Key + Secret Key** (el proxy genera JWT).
 
 ## Variables de entorno (Netlify)
@@ -18,8 +18,10 @@
 | `KLING_ACCESS_KEY` o `KLING_ACCESSS_KEY` | Sí* | Access Key (si usas JWT). |
 | `KLING_SECRET_KEY` | Sí* | Secret Key para firmar el JWT. |
 | `KLING_API_BASE_URL` | No | Base URL. Por defecto: `https://api.klingai.com`. |
-| `KLING_API_STATUS_PATH` | No | Ruta base para estado. Por defecto: `/v1/ai/video/kling-v3`. |
-| `KLING_API_STATUS_USE_QUERY` | No | `1` o `true` para usar `?task_id=xxx` en lugar de `/{taskId}`. |
+| `KLING_USE_V3_PATHS` | No | `1` o `true` para usar rutas v3 (`/v1/ai/video/kling-v3-pro`, etc.) en lugar de la API unificada. |
+| `KLING_API_CREATE_PATH` | No | Ruta POST crear. Por defecto: `/v1/video/generations`. |
+| `KLING_API_STATUS_PATH` | No | Ruta base GET estado. Por defecto: `/v1/video/generations`. |
+| `KLING_API_STATUS_USE_QUERY` | No | `1` o `true` para usar `?task_id=xxx` en lugar de `/{task_id}`. |
 
 \* Una de estas opciones: **solo** `KLING_API_KEY`, **o** `KLING_ACCESS_KEY` + `KLING_SECRET_KEY`.
 
@@ -57,15 +59,18 @@ Igual que con KIE:
 - **200 (GET status):** Objeto normalizado con `data.state` (`waiting` \| `success` \| `fail`), `data.resultJson` (cuando success, `{ resultUrls: [...] }`), `data.failMsg` (cuando fail).
 - **4xx/5xx:** `{ error, code?, failMsg? }`
 
-## API Kling 3.0 (referencia)
+## API oficial (referencia)
+
+**Por defecto (API unificada):**
 
 | Operación | Método | Endpoint |
 |-----------|--------|----------|
-| Crear video (Pro) | POST | `/v1/ai/video/kling-v3-pro` |
-| Crear video (Standard) | POST | `/v1/ai/video/kling-v3-std` |
-| Estado de tarea | GET | `/v1/ai/video/kling-v3/{task-id}` |
+| Crear video | POST | `/v1/video/generations` |
+| Estado de tarea | GET | `/v1/video/generations/{task_id}` |
 
-**Body al crear:** `prompt`, `duration` (3–15 s), `cfg_scale` (ej. 0.65), opcional `first_frame`, `end_frame`, `multi_shot` (array de `{ scene_prompt, duration }`), `negative_prompt`. Cuando la tarea termina, la respuesta de estado incluye `video_url`.
+**Body al crear (unificado):** `model` (ej. `kling/kling-v2-1-master`), `prompt`, `mode` (`pro`\|`std`), `aspect_ratio`, `duration` (3–15), `sound`, opcional `negative_prompt`. Con imágenes: 1 → `image`; 2 → `image` + `image_tail`; 3–4 → `image_list` (array de `{ image: url }`).
+
+**Con `KLING_USE_V3_PATHS=1`:** Crear con `POST /v1/ai/video/kling-v3-pro` o `-std`; estado con `GET /v1/ai/video/kling-v3/{task-id}`. Body: `first_frame`, `end_frame`, `multi_shot`, etc.
 
 ## Flujo en la app (página Video)
 
