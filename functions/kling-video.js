@@ -76,13 +76,14 @@ exports.handler = async (event, context) => {
         };
       }
 
-      const minimalPayload = process.env.KIE_VIDEO_MINIMAL_PAYLOAD === '1' || process.env.KIE_VIDEO_MINIMAL_PAYLOAD === 'true';
+      // Por defecto solo enviamos mode + prompt (mínimo que acepta KIE). 422 suele venir de parámetros opcionales.
+      const fullPayload = process.env.KIE_VIDEO_FULL_PAYLOAD === '1' || process.env.KIE_VIDEO_FULL_PAYLOAD === 'true';
 
       const input = {
         mode,
         prompt: promptForKie
       };
-      if (!minimalPayload) {
+      if (fullPayload) {
         const durationNum = parseInt(body.duration, 10);
         const durationVal = (Number.isFinite(durationNum) && durationNum >= 3 && durationNum <= 15) ? durationNum : 5;
         const aspectRatio = (typeof body.aspect_ratio === 'string' && /^(16:9|9:16|1:1)$/.test(body.aspect_ratio.trim()))
