@@ -41,6 +41,20 @@ class DashboardView extends BaseView {
   async render() {
     await super.render();
     this.updateHeaderContext('Dashboard', null, this.orgName);
+    // Aplicar tema de marca (degradado dinámico) si hay org, para que el fondo y acentos usen los colores de la marca
+    if (this.orgId && window.OrgBrandTheme && typeof window.OrgBrandTheme.applyOrgBrandTheme === 'function') {
+      await window.OrgBrandTheme.applyOrgBrandTheme(this.orgId);
+    }
+    // Mostrar fondo con degradado dinámico (mismo que toda la plataforma)
+    const wrapper = this.container?.querySelector('.dashboard-page-wrapper');
+    if (wrapper) {
+      const gradientEl = wrapper.querySelector('#dashboardBackgroundGradient');
+      const dynamicGradient = getComputedStyle(document.documentElement).getPropertyValue('--brand-gradient-dynamic').trim();
+      if (gradientEl && dynamicGradient) {
+        gradientEl.style.background = dynamicGradient;
+      }
+      requestAnimationFrame(() => wrapper.classList.add('dashboard-background-ready'));
+    }
   }
 
   async init() {
