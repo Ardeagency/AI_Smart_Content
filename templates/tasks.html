@@ -38,53 +38,98 @@
     </div>
   </div>
 
-  <!-- Vista detalle de una tarea -->
+  <!-- Vista detalle/edición de una tarea (estado de edición como en referencia) -->
   <div class="task-detail-wrapper" id="taskDetailContainer" style="display: none;">
     <div class="task-detail">
-      <header class="task-detail-header">
+      <header class="task-detail-header task-detail-header--edit">
         <div class="task-detail-header-top">
-          <a class="btn btn-ghost task-detail-back" id="backToTasksBtn">
-            <i class="fas fa-arrow-left"></i>
-            Volver a tareas
-          </a>
-          <div class="task-detail-actions">
+          <div class="task-detail-header-left">
+            <a class="btn btn-ghost task-detail-back" id="backToTasksBtn">
+              <i class="fas fa-arrow-left"></i>
+              Volver
+            </a>
             <button type="button" class="btn btn-ghost" id="taskDetailToggleActiveBtn" title="Activar o pausar"><i class="fas fa-pause-circle"></i> <span id="taskDetailToggleActiveLabel">Pausar</span></button>
             <button type="button" class="btn btn-ghost" id="taskDetailDuplicateBtn"><i class="fas fa-copy"></i> Duplicar</button>
             <button type="button" class="btn btn-ghost task-detail-danger" id="taskDetailDeleteBtn"><i class="fas fa-trash-alt"></i> Eliminar</button>
-            <button type="button" class="btn btn-primary" id="taskDetailEditBtn"><i class="fas fa-cog"></i> Configurar tarea</button>
           </div>
-        </div>
-        <div class="task-detail-hero">
-          <h1 class="task-detail-title" id="taskDetailTitle">Tarea programada</h1>
-          <p class="task-detail-flow" id="taskDetailFlow">Flujo: —</p>
-          <span class="task-detail-status" id="taskDetailStatus">Activa</span>
+          <button type="button" class="btn btn-primary" id="taskDetailSaveBtn"><i class="fas fa-save"></i> Guardar cambios</button>
         </div>
       </header>
 
-      <div class="task-detail-sections">
-        <section class="task-section">
-          <h2 class="task-section-title">Programación</h2>
-          <p class="task-detail-cron" id="taskDetailCron"><i class="fas fa-clock"></i> —</p>
-          <p class="task-detail-meta">Creada: <span id="taskDetailCreated">—</span></p>
+      <div class="task-detail-cards">
+        <section class="task-detail-card">
+          <h2 class="task-detail-card-title">Programación</h2>
+          <div class="task-detail-card-body">
+            <div class="task-detail-field">
+              <label class="task-detail-label">FRECUENCIA</label>
+              <select id="taskDetailFreq" class="task-detail-select" aria-label="Frecuencia" disabled>
+                <option value="daily">Diario</option>
+                <option value="weekly">Semanal</option>
+                <option value="monthly">Mensual</option>
+              </select>
+            </div>
+            <div class="task-detail-field">
+              <label class="task-detail-label">REGLA ACTIVA</label>
+              <p class="task-detail-readonly" id="taskDetailRuleActive">—</p>
+            </div>
+            <div class="task-detail-field">
+              <label class="task-detail-label">CREACIÓN</label>
+              <p class="task-detail-readonly" id="taskDetailCreated">—</p>
+            </div>
+          </div>
         </section>
 
-        <section class="task-section">
-          <h2 class="task-section-title">Asignaciones</h2>
-          <ul class="task-detail-list">
-            <li><strong>Marca:</strong> <span id="taskDetailBrand">—</span></li>
-            <li><strong>Entidad:</strong> <span id="taskDetailEntity">—</span></li>
-            <li><strong>Campaña:</strong> <span id="taskDetailCampaign">—</span></li>
-            <li><strong>Audiencia:</strong> <span id="taskDetailAudience">—</span></li>
-          </ul>
+        <section class="task-detail-card">
+          <h2 class="task-detail-card-title">Asignaciones</h2>
+          <div class="task-detail-card-body">
+            <div class="task-detail-field">
+              <label class="task-detail-label">MARCA</label>
+              <select id="taskDetailBrandSelect" class="task-detail-select" aria-label="Marca">
+                <option value="">—</option>
+              </select>
+            </div>
+            <div class="task-detail-field">
+              <label class="task-detail-label">CAMPAÑA</label>
+              <select id="taskDetailCampaignSelect" class="task-detail-select" aria-label="Campaña">
+                <option value="">—</option>
+              </select>
+            </div>
+            <div class="task-detail-field">
+              <label class="task-detail-label">ENTIDAD</label>
+              <select id="taskDetailEntitySelect" class="task-detail-select" aria-label="Entidad">
+                <option value="">—</option>
+              </select>
+            </div>
+            <div class="task-detail-field">
+              <label class="task-detail-label">AUDIENCIA</label>
+              <select id="taskDetailAudienceSelect" class="task-detail-select" aria-label="Audiencia">
+                <option value="">—</option>
+              </select>
+            </div>
+          </div>
         </section>
 
-        <section class="task-section">
-          <h2 class="task-section-title">Producción</h2>
-          <ul class="task-detail-list">
-            <li><strong>Relación de aspecto:</strong> <span id="taskDetailAspect">1:1</span></li>
-            <li><strong>Producciones por ejecución:</strong> <span id="taskDetailProductionCount">1</span></li>
-            <li><strong>Especificaciones:</strong> <span id="taskDetailSpecs">—</span></li>
-          </ul>
+        <section class="task-detail-card">
+          <h2 class="task-detail-card-title">Producción</h2>
+          <div class="task-detail-card-body">
+            <div class="task-detail-field">
+              <label class="task-detail-label">ASPECT RATIO</label>
+              <select id="taskDetailAspectSelect" class="task-detail-select" aria-label="Aspect ratio">
+                <option value="1:1">1:1</option>
+                <option value="9:16">9:16 (Vertical Reels)</option>
+                <option value="16:9">16:9</option>
+                <option value="4:5">4:5</option>
+              </select>
+            </div>
+            <div class="task-detail-field">
+              <label class="task-detail-label">PRODUCCIONES POR EJECUCIÓN</label>
+              <p class="task-detail-production-count"><input type="number" id="taskDetailProductionCountInput" class="task-detail-production-input" min="1" value="1" aria-label="Número de producciones" /> variaciones automáticas</p>
+            </div>
+            <div class="task-detail-field task-detail-field--specs">
+              <label class="task-detail-label">ESPECIFICACIONES ADICIONALES</label>
+              <textarea id="taskDetailSpecsText" class="task-detail-textarea" rows="4" placeholder="Instrucciones de producción..."></textarea>
+            </div>
+          </div>
         </section>
       </div>
     </div>

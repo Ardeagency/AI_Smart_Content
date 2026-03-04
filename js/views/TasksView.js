@@ -345,6 +345,33 @@ class TasksView extends BaseView {
     }
   }
 
+  /** Marcas (brands) del container actual para el dropdown. */
+  async loadBrands() {
+    if (!this.supabase || !this.brandContainerId) return [];
+    try {
+      const { data: container } = await this.supabase
+        .from('brand_containers')
+        .select('nombre_marca')
+        .eq('id', this.brandContainerId)
+        .maybeSingle();
+      const containerName = container?.nombre_marca || '—';
+      const { data, error } = await this.supabase
+        .from('brands')
+        .select('id')
+        .eq('project_id', this.brandContainerId)
+        .order('id');
+      if (error || !data?.length) {
+        this.brands = [];
+        return [];
+      }
+      this.brands = data.map(b => ({ id: b.id, name: containerName }));
+      return this.brands;
+    } catch (e) {
+      console.error('TasksView loadBrands:', e);
+      return [];
+    }
+  }
+
   formatDate(ts) {
     if (!ts) return '—';
     return new Date(ts).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -382,6 +409,38 @@ class TasksView extends BaseView {
     if (p[4] !== '*' && p[4].length > 0) return 'Semanal';
     if (p[2] !== '*' && p[3] === '*') return 'Mensual';
     return 'Diario';
+  }
+
+  /** Valor para select FRECUENCIA: weekly, daily, monthly. */
+  cronToFreqValue(cron) {
+    const label = this.cronToFreqLabel(cron);
+    if (label === 'Semanal') return 'weekly';
+    if (label === 'Mensual') return 'monthly';
+    return 'daily';
+  }
+
+  /** Regla activa en formato "Cada 1 semana · Lun · 09:00". */
+  cronToRuleLabel(cron) {
+    if (!cron || typeof cron !== 'string') return '—';
+    const parts = cron.trim().split(/\s+/);
+    if (parts.length < 5) return this.cronDescription(cron);
+    const hour = parseInt(parts[1], 10);
+    const min = parseInt(parts[0], 10) || 0;
+    const hourStr = String(hour).padStart(2, '0') + ':' + String(min).padStart(2, '0');
+    const dowNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const freq = this.cronToFreqLabel(cron);
+    if (freq === 'Semanal') {
+      const dowPart = parts[4];
+      let dayStr = '—';
+      if (dowPart && dowPart !== '*') {
+        const days = dowPart.indexOf(',') >= 0 ? dowPart.split(',') : [dowPart];
+        dayStr = days.map(d => dowNames[parseInt(d, 10)] || d).join(', ');
+      }
+      const weekNum = 1;
+      return `Cada ${weekNum} semana · ${dayStr} · ${hourStr}`;
+    }
+    if (freq === 'Mensual') return `Mensual · ${hourStr}`;
+    return `Diario · ${hourStr}`;
   }
 
   escapeHtml(s) {
@@ -581,22 +640,51 @@ class TasksView extends BaseView {
       document.getElementById('tasksListContainer').style.display = 'block';
       return;
     }
-    document.getElementById('taskDetailTitle').textContent = task.job_name || 'Tarea programada';
-    document.getElementById('taskDetailFlow').textContent = `Flujo: ${task.flow_name}`;
-    document.getElementById('taskDetailCron').textContent = this.cronDescription(task.cron_expression);
-    document.getElementById('taskDetailStatus').textContent = task.is_active ? 'Activa' : 'Pausada';
-    document.getElementById('taskDetailStatus').className = 'task-detail-status ' + (task.is_active ? 'task-detail-status-active' : 'task-detail-status-paused');
-    document.getElementById('taskDetailEntity').textContent = task.entity_name || '—';
-    document.getElementById('taskDetailCampaign').textContent = task.campaign_name || '—';
-    document.getElementById('taskDetailAudience').textContent = task.audience_name || '—';
-    document.getElementById('taskDetailBrand').textContent = task.brand_name || '—';
-    document.getElementById('taskDetailAspect').textContent = task.aspect_ratio || '1:1';
-    document.getElementById('taskDetailProductionCount').textContent = String(task.production_count ?? 1);
-    document.getElementById('taskDetailSpecs').textContent = task.production_specifications || '—';
-    document.getElementById('taskDetailCreated').textContent = this.formatDate(task.created_at);
 
-    const editBtn = document.getElementById('taskDetailEditBtn');
-    if (editBtn) editBtn.onclick = () => this.openEditModal(task);
+    await Promise.all([this.loadEntities(), this.loadCampaigns(), this.loadAudiences(), this.loadBrands()]);
+
+    const ruleEl = document.getElementById('taskDetailRuleActive');
+    const createdEl = document.getElementById('taskDetailCreated');
+    const freqSelect = document.getElementById('taskDetailFreq');
+    const brandSelect = document.getElementById('taskDetailBrandSelect');
+    const campaignSelect = document.getElementById('taskDetailCampaignSelect');
+    const entitySelect = document.getElementById('taskDetailEntitySelect');
+    const audienceSelect = document.getElementById('taskDetailAudienceSelect');
+    const aspectSelect = document.getElementById('taskDetailAspectSelect');
+    const productionInput = document.getElementById('taskDetailProductionCountInput');
+    const specsText = document.getElementById('taskDetailSpecsText');
+
+    if (ruleEl) ruleEl.textContent = this.cronToRuleLabel(task.cron_expression);
+    if (createdEl) createdEl.textContent = this.formatDate(task.created_at);
+    if (freqSelect) freqSelect.value = this.cronToFreqValue(task.cron_expression);
+
+    const taskEntityId = Array.isArray(task.entity_ids) ? task.entity_ids[0] : task.entity_ids;
+    const taskCampaignId = Array.isArray(task.campaign_ids) ? task.campaign_ids[0] : task.campaign_ids;
+    const taskAudienceId = Array.isArray(task.audience_ids) ? task.audience_ids[0] : task.audience_ids;
+
+    if (brandSelect) {
+      brandSelect.innerHTML = '<option value="">—</option>' + (this.brands || []).map(b =>
+        `<option value="${b.id}" ${b.id === task.brand_id ? 'selected' : ''}>${this.escapeHtml(b.name)}</option>`
+      ).join('');
+    }
+    if (campaignSelect) {
+      campaignSelect.innerHTML = '<option value="">—</option>' + (this.campaigns || []).map(c =>
+        `<option value="${c.id}" ${c.id === taskCampaignId ? 'selected' : ''}>${this.escapeHtml(c.nombre_campana)}</option>`
+      ).join('');
+    }
+    if (entitySelect) {
+      entitySelect.innerHTML = '<option value="">—</option>' + (this.entities || []).map(e =>
+        `<option value="${e.id}" ${e.id === taskEntityId ? 'selected' : ''}>${this.escapeHtml(e.name)}${e.entity_type ? ' (' + this.escapeHtml(e.entity_type) + ')' : ''}</option>`
+      ).join('');
+    }
+    if (audienceSelect) {
+      audienceSelect.innerHTML = '<option value="">—</option>' + (this.audiences || []).map(a =>
+        `<option value="${a.id}" ${a.id === taskAudienceId ? 'selected' : ''}>${this.escapeHtml(a.name)}</option>`
+      ).join('');
+    }
+    if (aspectSelect) aspectSelect.value = task.aspect_ratio || '1:1';
+    if (productionInput) productionInput.value = String(task.production_count ?? 1);
+    if (specsText) specsText.value = task.production_specifications || '';
 
     const toggleBtn = document.getElementById('taskDetailToggleActiveBtn');
     const toggleLabel = document.getElementById('taskDetailToggleActiveLabel');
@@ -617,6 +705,50 @@ class TasksView extends BaseView {
 
     const deleteBtn = document.getElementById('taskDetailDeleteBtn');
     if (deleteBtn) deleteBtn.onclick = () => this.confirmDeleteSchedule(task);
+
+    const saveBtn = document.getElementById('taskDetailSaveBtn');
+    if (saveBtn) saveBtn.onclick = () => this.saveTaskDetail(task);
+  }
+
+  /** Guardar cambios desde la vista de edición del schedule. */
+  async saveTaskDetail(task) {
+    const brandSelect = document.getElementById('taskDetailBrandSelect');
+    const campaignSelect = document.getElementById('taskDetailCampaignSelect');
+    const entitySelect = document.getElementById('taskDetailEntitySelect');
+    const audienceSelect = document.getElementById('taskDetailAudienceSelect');
+    const aspectSelect = document.getElementById('taskDetailAspectSelect');
+    const productionInput = document.getElementById('taskDetailProductionCountInput');
+    const specsText = document.getElementById('taskDetailSpecsText');
+
+    const brandId = brandSelect?.value || null;
+    const campaignId = campaignSelect?.value || null;
+    const entityId = entitySelect?.value || null;
+    const audienceId = audienceSelect?.value || null;
+    const aspectRatio = aspectSelect?.value || '1:1';
+    const productionCount = parseInt(productionInput?.value, 10) || 1;
+    const productionSpecifications = (specsText?.value || '').trim() || null;
+
+    if (!this.supabase || !task?.id) return;
+    const { error } = await this.supabase
+      .from('flow_schedules')
+      .update({
+        brand_id: brandId || null,
+        entity_ids: entityId ? [entityId] : null,
+        campaign_ids: campaignId ? [campaignId] : null,
+        audience_ids: audienceId ? [audienceId] : null,
+        aspect_ratio: aspectRatio,
+        production_count: productionCount,
+        production_specifications: productionSpecifications
+      })
+      .eq('id', task.id)
+      .eq('user_id', this.userId);
+    if (error) {
+      console.error('TasksView saveTaskDetail:', error);
+      this.showNotification('No se pudieron guardar los cambios', 'error');
+      return;
+    }
+    this.showNotification('Cambios guardados', 'success');
+    await this.renderTaskDetail();
   }
 
   /** Activar o pausar la tarea (toggle status). */
