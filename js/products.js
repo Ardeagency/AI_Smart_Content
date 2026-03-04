@@ -1063,9 +1063,10 @@ if (typeof window.ProductsManager === 'undefined') {
             });
         }
 
+        const atMaxImages = (images && images.length >= 6);
         html += `
                 </div>
-                <div class="add-image-section" style="margin-top: 1rem;">
+                <div class="add-image-section" style="margin-top: 1rem; ${atMaxImages ? 'display: none;' : ''}">
                     <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">
                         Agregar nueva imagen
                     </label>
@@ -1075,9 +1076,10 @@ if (typeof window.ProductsManager === 'undefined') {
                                onchange="productsManager.handleNewImageUpload(event, '${productId}')" multiple>
                         <i class="fas fa-plus" style="font-size: 1.5rem; color: var(--text-secondary); margin-bottom: 0.5rem;"></i>
                         <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">Haz clic para agregar imagen</p>
-                        <p style="color: var(--text-muted); font-size: 0.75rem; margin: 0.25rem 0 0 0;">Máximo 5MB por imagen</p>
+                        <p style="color: var(--text-muted); font-size: 0.75rem; margin: 0.25rem 0 0 0;">Máximo 6 imágenes por producto · 5MB por imagen</p>
                     </div>
                 </div>
+                ${atMaxImages ? `<p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem;">Máx. 6 imágenes. Elimina una para añadir otra.</p>` : ''}
             </div>
         `;
 
@@ -1269,7 +1271,26 @@ if (typeof window.ProductsManager === 'undefined') {
             return;
         }
 
+        const MAX_PRODUCT_IMAGES = 6;
+
         try {
+            // Contar imágenes existentes y aplicar límite
+            const { count: existingCount } = await this.supabase
+                .from('product_images')
+                .select('*', { count: 'exact', head: true })
+                .eq('product_id', productId);
+            const currentCount = existingCount ?? 0;
+            if (currentCount >= MAX_PRODUCT_IMAGES) {
+                this.showNotification(`Máximo ${MAX_PRODUCT_IMAGES} imágenes por producto. Elimina alguna para añadir más.`, 'error');
+                event.target.value = '';
+                return;
+            }
+            const slotsLeft = MAX_PRODUCT_IMAGES - currentCount;
+            const toUpload = validFiles.slice(0, slotsLeft);
+            if (toUpload.length < validFiles.length) {
+                this.showNotification(`Solo se pueden añadir ${slotsLeft} más (máx. ${MAX_PRODUCT_IMAGES} por producto).`, 'info');
+            }
+
             // Obtener número de imágenes existentes para el orden
             const { data: existingImages } = await this.supabase
                 .from('product_images')
@@ -1282,8 +1303,8 @@ if (typeof window.ProductsManager === 'undefined') {
                 ? existingImages[0].image_order + 1 
                 : 0;
 
-            // Subir todas las imágenes
-            const uploadPromises = validFiles.map(async (file) => {
+            // Subir todas las imágenes (solo toUpload)
+            const uploadPromises = toUpload.map(async (file) => {
             const rawExt = (file.name && file.name.split('.').pop()) || 'jpg';
             const fileExt = rawExt.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'jpg';
                 const fileName = `${this.userId}/${productId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
@@ -1337,7 +1358,7 @@ if (typeof window.ProductsManager === 'undefined') {
 
             await this.loadProducts();
 
-            this.showNotification(`✅ ${validFiles.length} imagen(es) agregada(s) exitosamente`, 'success');
+            this.showNotification(`✅ ${toUpload.length} imagen(es) agregada(s) exitosamente`, 'success');
         } catch (error) {
             console.error('Error subiendo imagen:', error);
             this.showNotification(`❌ Error al subir imagen(es): ${error.message}`, 'error');

@@ -12106,6 +12106,13 @@ body.production-filters-in-header .living-container > .living-history-section {
   background: rgba(255, 101, 0, 0.1);
 }
 
+.product-view-max-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted, #888);
+  margin-left: 0.5rem;
+  align-self: center;
+}
+
 /* ============================================
    INFO (DERECHA)
    ============================================ */

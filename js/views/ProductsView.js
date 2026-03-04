@@ -1,6 +1,8 @@
 /**
  * ProductsView - Vista de gestión de productos (lista + detalle tipo e-commerce)
  */
+const MAX_PRODUCT_IMAGES = 6;
+
 class ProductsView extends BaseView {
   constructor() {
     super();
@@ -275,7 +277,8 @@ class ProductsView extends BaseView {
             <div class="product-view-thumbnails-wrap">
               <div class="product-view-thumbnails" id="productViewThumbnails" style="${thumbnails.length === 0 ? 'display: none;' : ''}">${thumbsHtml}</div>
               <input type="file" id="productViewImageUpload" accept="image/*" multiple style="position: absolute; width: 0; height: 0; opacity: 0; overflow: hidden; pointer-events: none;" aria-label="Añadir fotos al producto">
-              <label for="productViewImageUpload" class="product-view-add-btn" id="productViewAddBtn" role="button" aria-label="Añadir fotos"><i class="fas fa-plus"></i></label>
+              <label for="productViewImageUpload" class="product-view-add-btn" id="productViewAddBtn" role="button" aria-label="Añadir fotos" style="${thumbnails.length >= MAX_PRODUCT_IMAGES ? 'display: none;' : ''}"><i class="fas fa-plus"></i></label>
+              ${thumbnails.length >= MAX_PRODUCT_IMAGES ? `<span class="product-view-max-hint" aria-live="polite">Máx. ${MAX_PRODUCT_IMAGES} imágenes</span>` : ''}
             </div>
           </div>
           <div class="product-view-info">
@@ -380,9 +383,24 @@ class ProductsView extends BaseView {
     });
     if (validFiles.length === 0) return;
 
-    this.showNotification('Subiendo fotos...', 'info');
-
     try {
+      const { count: existingCount } = await this.supabase
+        .from('product_images')
+        .select('*', { count: 'exact', head: true })
+        .eq('product_id', this.productId);
+      const currentCount = existingCount ?? 0;
+      if (currentCount >= MAX_PRODUCT_IMAGES) {
+        this.showNotification(`Máximo ${MAX_PRODUCT_IMAGES} imágenes por producto. Elimina alguna para añadir más.`, 'error');
+        return;
+      }
+      const slotsLeft = MAX_PRODUCT_IMAGES - currentCount;
+      const toUpload = validFiles.slice(0, slotsLeft);
+      if (toUpload.length < validFiles.length) {
+        this.showNotification(`Solo se pueden añadir ${slotsLeft} más (máx. ${MAX_PRODUCT_IMAGES} por producto).`, 'info');
+      }
+
+      this.showNotification('Subiendo fotos...', 'info');
+
       const { data: existing } = await this.supabase
         .from('product_images')
         .select('image_order')
@@ -391,7 +409,7 @@ class ProductsView extends BaseView {
         .limit(1);
       let nextOrder = (existing && existing.length > 0) ? (existing[0].image_order + 1) : 0;
 
-      for (const file of validFiles) {
+      for (const file of toUpload) {
         const ext = (file.name && file.name.split('.').pop()) || 'jpg';
         const safeExt = ext.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'jpg';
         const fileName = `${userId}/${this.productId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${safeExt}`;
@@ -431,7 +449,7 @@ class ProductsView extends BaseView {
         nextOrder++;
       }
       await this.refreshDetailImages();
-      this.showNotification(`${validFiles.length} foto(s) añadida(s)`, 'success');
+      this.showNotification(`${toUpload.length} foto(s) añadida(s)`, 'success');
     } catch (err) {
       console.error('Error subiendo imágenes:', err);
       const msg = (err && err.message) ? err.message : 'Error al subir fotos';
@@ -526,6 +544,22 @@ class ProductsView extends BaseView {
       thumbnailsWrap.innerHTML = thumbsHtml;
       if (thumbnails.length === 0) thumbnailsWrap.style.display = 'none';
       else thumbnailsWrap.style.display = 'flex';
+    }
+
+    const addBtn = this.container.querySelector('#productViewAddBtn');
+    const thumbWrap = this.container.querySelector('.product-view-thumbnails-wrap');
+    if (addBtn) addBtn.style.display = images.length >= MAX_PRODUCT_IMAGES ? 'none' : '';
+    if (thumbWrap) {
+      let hintEl = thumbWrap.querySelector('.product-view-max-hint');
+      if (images.length >= MAX_PRODUCT_IMAGES) {
+        if (!hintEl) {
+          hintEl = document.createElement('span');
+          hintEl.className = 'product-view-max-hint';
+          hintEl.setAttribute('aria-live', 'polite');
+          hintEl.textContent = `Máx. ${MAX_PRODUCT_IMAGES} imágenes`;
+          thumbWrap.appendChild(hintEl);
+        }
+      } else if (hintEl) hintEl.remove();
     }
 
     this.bindGalleryEvents();
