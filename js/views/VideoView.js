@@ -422,6 +422,11 @@ class VideoView extends BaseView {
         }
       });
     });
+    const multiShotBtn = this.container.querySelector('#videoMultiShot');
+    if (multiShotBtn) {
+      this.multiShotEnabled = multiShotBtn.getAttribute('aria-pressed') === 'true';
+      if (!this.multiShotEnabled) this.multiPrompts = [];
+    }
     this.updatePromptButtonState(false);
   }
 
