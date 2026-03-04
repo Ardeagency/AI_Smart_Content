@@ -253,12 +253,19 @@ class VideoView extends BaseView {
                       autocomplete="off"
                       aria-label="Tu idea (la IA genera el prompt final)"
                     ></textarea>
-                    <p class="video-field-help video-prompt-timeout-hint" id="videoPromptTimeoutHint" style="display: none;" role="status">Prompt largo: si aparece «timeout» (error 524), prueba acortar el texto o usar menos imágenes de referencia.</p>
+                    <p class="video-field-help video-prompt-timeout-hint" id="videoPromptTimeoutHint" style="display: none;" role="status">Prompt largo: para evitar timeout (524), usa modo Estándar, duración 5s, una imagen de referencia, o acorta el texto.</p>
                   </div>
                   <div class="video-director-separator" aria-hidden="true"></div>
                   <div class="video-director-controls">
                     <button type="button" class="video-director-toggle video-prompt-toggle video-prompt-sound active" id="videoSound" title="Sound" aria-pressed="true"><i class="fas fa-volume-up"></i><span>Sound</span></button>
                     <button type="button" class="video-director-toggle video-prompt-toggle video-prompt-multi-shot" id="videoMultiShot" title="Multi Shot" aria-pressed="false"><i class="fas fa-film"></i><span>Multi Shot</span></button>
+                    <div class="video-prompt-mode-wrap">
+                      <select id="videoMode" class="video-director-select" aria-label="Modo (Estándar reduce riesgo de timeout)">
+                        <option value="std" selected>Estándar</option>
+                        <option value="pro">Pro</option>
+                      </select>
+                      <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
+                    </div>
                     <div class="video-prompt-aspect-wrap">
                       <select id="videoAspectRatio" class="video-director-select" aria-label="Format"><option value="16:9">16:9</option><option value="9:16">9:16</option><option value="1:1">1:1</option></select>
                       <i class="fas fa-chevron-down video-prompt-aspect-chevron" aria-hidden="true"></i>
@@ -1340,7 +1347,8 @@ class VideoView extends BaseView {
       return;
     }
 
-    const mode = 'pro';
+    const modeEl = this.container.querySelector('#videoMode');
+    const mode = modeEl && modeEl.value === 'pro' ? 'pro' : 'std';
     if (this.sendBtn) this.sendBtn.disabled = true;
     this.showStatus('Creando tarea de generación…', true);
 
@@ -1536,8 +1544,9 @@ class VideoView extends BaseView {
         if (state === 'fail') {
           this.stopPolling();
           const rawMsg = data.data?.failMsg || data.data?.failCode || 'La generación falló';
-          const msg = /timeout/i.test(rawMsg)
-            ? 'La generación del video tardó demasiado en los servidores de KIE. Prueba de nuevo o simplifica un poco el prompt.'
+          const is524 = String(data.data?.failCode || '') === '524' || /timeout/i.test(rawMsg);
+          const msg = is524
+            ? 'La generación tardó demasiado en KIE (error 524). Prueba: modo Estándar, duración 5s, una sola imagen de referencia, o acorta el prompt.'
             : rawMsg;
           this.showError(msg);
           if (this._lastKieOutputId) {

@@ -82,13 +82,20 @@ exports.handler = async (event, context) => {
         };
       }
 
+      // Limitar longitud del prompt para reducir riesgo de timeout 524 en KIE (max 2500 en doc; 1500 más seguro)
+      const promptMaxLen = 1500;
+      const promptTruncated = promptForKie.length > promptMaxLen ? promptForKie.slice(0, promptMaxLen) : promptForKie;
+      if (promptForKie.length > promptMaxLen) {
+        console.log('kling-video: prompt truncado a', promptMaxLen, 'caracteres para reducir timeout');
+      }
+
       const input = {
         mode,
         sound: body.sound === true || body.sound === 'true',
         duration: typeof body.duration === 'string' ? body.duration : String(body.duration || '5'),
         aspect_ratio: typeof body.aspect_ratio === 'string' ? body.aspect_ratio : (body.aspect_ratio || '16:9'),
         multi_shots: multiShots.length > 1,
-        prompt: promptForKie
+        prompt: promptTruncated
       };
       if (image_urls.length) input.image_urls = image_urls;
       if (klingElements.length) {

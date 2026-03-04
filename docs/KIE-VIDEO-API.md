@@ -200,7 +200,20 @@ GET https://api.kie.ai/api/v1/jobs/recordInfo?taskId=281e5b0********************
 
 ## Notas para esta app
 
-- **Body enviado a KIE**: el proxy envía todos los **Required** (model, input.mode, input.duration, input.multi_shots, input.sound, input.image_urls, y prompt o multi_prompt según modo) y los **Optional** solo cuando aplican (aspect_ratio, kling_elements).
-- **Error 524** (timeout): mensaje "generate task timeout." — la tarea tardó demasiado en KIE. Reducir longitud del prompt o número de imágenes; reintentar.
+- **Body enviado a KIE**: ver sección "Uso en esta app" al inicio. El proxy construye `image_urls` desde `kling_elements` y trunca el prompt a 1500 caracteres para reducir riesgo de timeout.
 - **Troubleshooting**: 401 → revisar `KIE_API_KEY` en Netlify; 402 → saldo insuficiente en KIE.
-- **422 (Unprocessable Content)**: revisar en consola del navegador el cuerpo de la respuesta (campo `kieBody`) para ver el mensaje de validación de KIE.
+- **422 (Unprocessable Content)**: revisar en consola el cuerpo de la respuesta (campo `kieBody`).
+
+## Prevención del error 524 (generate task timeout)
+
+El **524** significa que los servidores de KIE tardaron demasiado en generar el video y cancelaron la tarea. La petición inicial (createTask) puede ser correcta; el fallo ocurre durante la generación.
+
+**Qué hacer para reducir 524:**
+
+1. **Modo Estándar (std)** en lugar de Pro: en la UI de Video, usar el selector "Estándar" (menor resolución, menos carga en KIE).
+2. **Duración 5s**: elegir 5 segundos en lugar de 10 o 15.
+3. **Una sola imagen de referencia**: enviar solo un elemento de escena (producción); evitar varias imágenes.
+4. **Prompt más corto**: el proxy trunca a 1500 caracteres; conviene mantener el prompt por debajo de ~500 si ya has tenido 524.
+5. **Reintentar**: a veces el fallo es puntual; probar de nuevo sin cambiar nada.
+
+Si el error persiste, la limitación está en la capacidad o tiempos de KIE; no en el formato del request.

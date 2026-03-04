@@ -21309,7 +21309,8 @@ body.production-filters-in-header .living-container > .living-history-section {
     -webkit-appearance: none;
 }
 .video-director-console .video-prompt-aspect-wrap,
-.video-director-console .video-prompt-duration-wrap {
+.video-director-console .video-prompt-duration-wrap,
+.video-director-console .video-prompt-mode-wrap {
     position: relative;
     display: inline-flex;
     align-items: center;
@@ -22245,12 +22246,14 @@ body.production-filters-in-header .living-container > .living-history-section {
     opacity: 0.6;
     cursor: not-allowed;
 }
-.video-prompt-duration-wrap {
+.video-prompt-duration-wrap,
+.video-prompt-mode-wrap {
     position: relative;
     display: inline-flex;
     align-items: center;
 }
-.video-prompt-duration-wrap .video-prompt-aspect-chevron {
+.video-prompt-duration-wrap .video-prompt-aspect-chevron,
+.video-prompt-mode-wrap .video-prompt-aspect-chevron {
     position: absolute;
     right: 0.5rem;
     pointer-events: none;
