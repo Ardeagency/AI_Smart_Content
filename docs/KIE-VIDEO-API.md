@@ -4,7 +4,23 @@
 
 ## Uso en esta app
 
-La app genera video mediante la **API de KIE** (modelo `kling-3.0/video`). Proxy Netlify: `/.netlify/functions/kling-video` (variable de entorno `KIE_API_KEY`). El proxy envía a KIE el mínimo requerido (`model` + `input.mode`) y, cuando hay datos, campos opcionales: `prompt`, `image_urls`, `sound`, `duration`, `aspect_ratio`, `multi_shots`.
+La app genera video mediante la **API de KIE** (modelo `kling-3.0/video`). Proxy Netlify: `/.netlify/functions/kling-video` (variable de entorno `KIE_API_KEY`).
+
+**Según documentación KIE (Required/Optional):**
+
+| Campo | Nivel | Requerido | Descripción |
+|-------|--------|-----------|-------------|
+| model | root | **Sí** | `"kling-3.0/video"` |
+| callBackUrl | root | No | URL para callback al terminar |
+| input.mode | input | **Sí** | `"std"` \| `"pro"` |
+| input.duration | input | **Sí** | string `"3"`–`"15"` (segundos) |
+| input.multi_shots | input | **Sí** | boolean; si true → usar multi_prompt |
+| input.sound | input | **Sí** | boolean; si multi_shots true debe ser true |
+| input.prompt | input | **Sí (single shot)** | cuando multi_shots es false |
+| input.multi_prompt | input | **Sí (multi-shot)** | array de `{ prompt, duration }` cuando multi_shots true |
+| input.image_urls | input | **Sí** | array (vacío si no hay imágenes) |
+| input.aspect_ratio | input | No | `"16:9"` \| `"9:16"` \| `"1:1"` |
+| input.kling_elements | input | No | array de `{ name, description?, element_input_urls?, element_input_video_urls? }` para @nombre en el prompt |
 
 ---
 
@@ -193,7 +209,7 @@ GET https://api.kie.ai/api/v1/jobs/recordInfo?taskId=281e5b0********************
 
 ## Notas para esta app
 
-- **Mínimo según doc**: `model: "kling-3.0/video"` + `input: { mode: "std" | "pro" }`. El proxy envía además, cuando aplica: `prompt`, `image_urls`, `sound`, `duration`, `aspect_ratio`, `multi_shots` (campos opcionales para generación con prompt e imágenes).
+- **Body enviado a KIE**: el proxy envía todos los **Required** (model, input.mode, input.duration, input.multi_shots, input.sound, input.image_urls, y prompt o multi_prompt según modo) y los **Optional** solo cuando aplican (aspect_ratio, kling_elements).
 - **Error 524** (timeout): mensaje "generate task timeout." — la tarea tardó demasiado en KIE. Reducir longitud del prompt o número de imágenes; reintentar.
 - **Troubleshooting**: 401 → revisar `KIE_API_KEY` en Netlify; 402 → saldo insuficiente en KIE.
-- **422 (Unprocessable Content)**: validación de parámetros fallida. **Por defecto el proxy ya envía solo el mínimo:** `model` + `input: { mode, prompt }`, que es lo que acepta la API KIE sin 422. Si aun así aparece 422, revisar en consola del navegador el cuerpo de la respuesta (campo `kieBody`). Para intentar enviar parámetros extra (duration, aspect_ratio, sound, multi_shot, image_urls) define en Netlify `KIE_VIDEO_FULL_PAYLOAD=1`; en ese caso la API podría volver a devolver 422 si no acepta alguno de esos campos.
+- **422 (Unprocessable Content)**: revisar en consola del navegador el cuerpo de la respuesta (campo `kieBody`) para ver el mensaje de validación de KIE.

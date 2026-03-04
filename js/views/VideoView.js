@@ -1372,15 +1372,26 @@ class VideoView extends BaseView {
       payload.prompt = promptText;
     }
 
-    // Solo image_urls (escena, productos, imágenes usuario). kling_elements no se usa por ahora; el backend lo envía vacío para cumplir el cuerpo KIE.
+    // image_urls: todas las URLs de imagen/video para referencia directa; kling_elements: formato KIE para @element_name en el prompt
     const imageUrls = [];
+    const klingElementsForKie = [];
     for (const el of this.klingElements || []) {
       const urls = el.element_input_urls || [];
       const videoUrls = el.element_input_video_urls || [];
       urls.forEach((u) => { if (typeof u === 'string' && u.startsWith('http')) imageUrls.push(u); });
       videoUrls.forEach((u) => { if (typeof u === 'string' && u.startsWith('http')) imageUrls.push(u); });
+      const allUrls = [...(el.element_input_urls || []), ...(el.element_input_video_urls || [])].filter((u) => typeof u === 'string' && u.startsWith('http'));
+      if (el.name && allUrls.length) {
+        klingElementsForKie.push({
+          name: el.name,
+          description: el.description || undefined,
+          element_input_urls: allUrls,
+          element_input_video_urls: el.element_input_video_urls || undefined
+        });
+      }
     }
     if (imageUrls.length) payload.image_urls = imageUrls;
+    if (klingElementsForKie.length) payload.kling_elements = klingElementsForKie;
 
     const createUrl = VideoView.KLING_VIDEO_API;
     console.log('[Video] POST crear tarea →', createUrl, { action: 'createTask', mode, duration: payload.duration, hasPrompt: !!payload.prompt, image_urls: payload.image_urls?.length || 0 });

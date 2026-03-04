@@ -60,13 +60,14 @@ exports.handler = async (event, context) => {
         return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Acción no válida. Use action: "createTask"' }) };
       }
 
-      // Doc KIE: mínimo requerido es model + input.mode ("std"|"pro"). Añadimos opcionales: prompt, image_urls, sound, duration, aspect_ratio, multi_shots.
+      // Body según doc KIE: Required = model, input.mode, input.duration, input.multi_shots, input.sound, input.prompt (single) o input.multi_prompt (multi). Optional = image_urls, aspect_ratio, kling_elements.
       const mode = body.mode === 'pro' ? 'pro' : 'std';
       const promptText = typeof body.prompt === 'string' ? body.prompt.trim() : '';
       const rawMulti = Array.isArray(body.multi_shots) ? body.multi_shots : [];
       const multiShots = rawMulti.map((s) => (s && typeof s === 'object' ? (typeof s.prompt === 'string' ? s.prompt.trim() : String(s.prompt || '')) : '')).filter(Boolean);
       const image_urls = Array.isArray(body.image_urls) ? body.image_urls.filter((u) => typeof u === 'string' && u.startsWith('http')) : [];
 
+      const hasMultiShots = multiShots.length > 1;
       const promptForKie = promptText || (multiShots.length ? multiShots[0] : '');
       if (!promptForKie) {
         return {
@@ -76,37 +77,68 @@ exports.handler = async (event, context) => {
         };
       }
 
-      // Por defecto solo enviamos mode + prompt (mínimo que acepta KIE). 422 suele venir de parámetros opcionales.
-      const fullPayload = process.env.KIE_VIDEO_FULL_PAYLOAD === '1' || process.env.KIE_VIDEO_FULL_PAYLOAD === 'true';
+      // Required: duration (string "3"–"15"), multi_shots (boolean), sound (boolean). Cuando multi_shots true, sound debe ser true (doc KIE).
+      const durationStr = typeof body.duration === 'string' ? body.duration.trim() : String(body.duration || '5');
+      const duration = /^(3|5|10|15)$/.test(durationStr) ? durationStr : '5';
+      const sound = hasMultiShots ? true : (body.sound === true || body.sound === 'true');
 
       const input = {
         mode,
-        prompt: promptForKie
+        duration,
+        multi_shots: hasMultiShots,
+        sound
       };
-      if (fullPayload) {
-        const durationNum = parseInt(body.duration, 10);
-        const durationVal = (Number.isFinite(durationNum) && durationNum >= 3 && durationNum <= 15) ? durationNum : 5;
-        const aspectRatio = (typeof body.aspect_ratio === 'string' && /^(16:9|9:16|1:1)$/.test(body.aspect_ratio.trim()))
-          ? body.aspect_ratio.trim()
-          : '16:9';
-        const soundVal = body.sound === true || body.sound === 'true';
-        input.sound = soundVal;
-        input.duration = durationVal;
-        input.aspect_ratio = aspectRatio;
-        if (multiShots.length > 1) {
-          input.multi_shots = true;
-          const multiPromptArr = multiShots.map((p) => ({ prompt: String(p).trim() })).filter((o) => o.prompt);
-          if (multiPromptArr.length) input.multi_prompt = multiPromptArr;
-        }
-        if (image_urls.length) input.image_urls = image_urls;
+
+      if (hasMultiShots) {
+        // Required (multi-shot): multi_prompt = array of { prompt, duration } (duration number 1–12, total ≤15s, max 5 shots)
+        const totalSec = Math.min(15, Math.max(3, parseInt(duration, 10) || 5));
+        const n = Math.min(5, multiShots.length);
+        const secPerShot = Math.min(12, Math.max(1, Math.floor(totalSec / n)));
+        input.multi_prompt = multiShots.slice(0, n).map((p) => ({
+          prompt: String(p).trim().slice(0, 500),
+          duration: secPerShot
+        }));
+      } else {
+        // Required (single shot): prompt (string)
+        input.prompt = promptForKie.slice(0, 2500);
+      }
+
+      // Required cuando hay imágenes o referencias @element: image_urls. Si no hay, enviamos array vacío por si la API lo exige.
+      input.image_urls = image_urls.length ? image_urls : [];
+
+      // Optional: aspect_ratio (solo si queremos forzar; si no, KIE usa default)
+      const aspectRatio = (typeof body.aspect_ratio === 'string' && /^(16:9|9:16|1:1)$/.test(body.aspect_ratio.trim())) ? body.aspect_ratio.trim() : null;
+      if (aspectRatio) input.aspect_ratio = aspectRatio;
+
+      // Optional: kling_elements (referencias @nombre en el prompt). KIE: name required; element_input_urls (2-4 imágenes) o element_input_video_urls (1 video) opcionales.
+      if (Array.isArray(body.kling_elements) && body.kling_elements.length > 0) {
+        const kling_elements = body.kling_elements
+          .filter((el) => el && typeof el.name === 'string' && el.name.trim())
+          .map((el) => {
+            const urls = Array.isArray(el.element_input_urls) ? el.element_input_urls.filter((u) => typeof u === 'string' && u.startsWith('http')) : [];
+            const videoUrls = Array.isArray(el.element_input_video_urls) ? el.element_input_video_urls.filter((u) => typeof u === 'string' && u.startsWith('http')) : [];
+            const out = {
+              name: String(el.name).trim().slice(0, 64),
+              description: typeof el.description === 'string' ? el.description.trim().slice(0, 500) : undefined
+            };
+            if (urls.length) out.element_input_urls = urls;
+            if (videoUrls.length) out.element_input_video_urls = videoUrls;
+            return out;
+          })
+          .filter((el) => (el.element_input_urls && el.element_input_urls.length > 0) || (el.element_input_video_urls && el.element_input_video_urls.length > 0));
+        if (kling_elements.length) input.kling_elements = kling_elements;
       }
 
       const kiePayload = {
         model: 'kling-3.0/video',
         input
       };
+      const callBackUrl = process.env.KIE_VIDEO_CALLBACK_URL;
+      if (callBackUrl && typeof callBackUrl === 'string' && callBackUrl.startsWith('http')) {
+        kiePayload.callBackUrl = callBackUrl.trim();
+      }
       const promptPreview = (input.prompt || '').length > 80 ? (input.prompt.slice(0, 80) + '...') : input.prompt;
-      console.log('kling-video KIE createTask payload:', JSON.stringify({ model: kiePayload.model, input: { ...input, prompt: promptPreview } }));
+      console.log('kling-video KIE createTask payload:', JSON.stringify({ model: kiePayload.model, callBackUrl: kiePayload.callBackUrl, input: { ...input, prompt: promptPreview } }));
 
       const createUrl = `${KIE_BASE}${CREATE_PATH}`;
       const createRes = await fetch(createUrl, {
