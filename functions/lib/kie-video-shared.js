@@ -81,6 +81,15 @@ async function handleCreate(body, headers) {
     kling_elements.push(o);
   }
 
+  const includedElementNames = new Set(kling_elements.map((el) => el.name));
+  const stripOrphanRefs = (text) => {
+    if (!text || typeof text !== 'string') return text;
+    return text.replace(/\s*@[\w-]+\s*/g, (m) => {
+      const name = m.replace(/^\s*@|\s*$/g, '');
+      return includedElementNames.has(name) ? m : ' ';
+    }).replace(/\s+/g, ' ').trim();
+  };
+
   let image_urls = [];
   if (kling_elements.length > 0) {
     const first = kling_elements[0];
@@ -93,18 +102,27 @@ async function handleCreate(body, headers) {
     }
   }
 
-  const input = { mode, sound, duration, aspect_ratio };
+  const promptFinal = stripOrphanRefs(promptTruncated);
+  if (!promptFinal) {
+    return { statusCode: 400, headers: c, body: JSON.stringify({ error: 'El prompt no puede quedar vacío tras validar referencias. Usa texto o elimina referencias @element sin suficientes imágenes.' }) };
+  }
+
+  const input = { mode, sound, duration: totalSec, aspect_ratio };
   if (image_urls.length > 0) input.image_urls = image_urls;
   if (hasMultiShots) {
     input.multi_shots = true;
     const n = Math.min(5, multiShots.length);
     const durations = distributeDuration(totalSec, n);
-    input.multi_prompt = multiShots.slice(0, n).map((p, i) => ({
-      prompt: String(p).trim().slice(0, 500),
+    const multiPromptRaw = multiShots.slice(0, n).map((p, i) => ({
+      prompt: stripOrphanRefs(String(p).trim().slice(0, 500)),
       duration: durations[i] || 1
     }));
+    input.multi_prompt = multiPromptRaw.filter((item) => item.prompt.length > 0);
+    if (input.multi_prompt.length === 0) {
+      return { statusCode: 400, headers: c, body: JSON.stringify({ error: 'Ningún prompt válido en multi-shot. Añade texto o verifica las referencias @element.' }) };
+    }
   } else {
-    input.prompt = promptTruncated;
+    input.prompt = promptFinal;
   }
   if (kling_elements.length > 0) input.kling_elements = kling_elements;
 
@@ -136,7 +154,10 @@ async function handleCreate(body, headers) {
       const details = createData.data.errors.map((e) => (typeof e === 'string' ? e : e.message || e.field || JSON.stringify(e))).join('; ');
       errMsg = errMsg + (details ? ' — ' + details : '');
     }
-    console.error('kie-video-shared createTask error:', createRes.status, createData);
+    if (createRes.status === 422) {
+      errMsg = errMsg + ' (Revisa consola: respuesta del servidor tiene más detalle)';
+    }
+    console.error('kie-video-shared createTask error:', createRes.status, JSON.stringify(createData));
     const httpStatus = !createRes.ok ? (createRes.status >= 400 ? createRes.status : 502) : (createData.code >= 400 && createData.code < 600 ? createData.code : 502);
     return {
       statusCode: httpStatus,

@@ -1438,9 +1438,10 @@ class VideoView extends BaseView {
       if (!createRes.ok) {
         console.warn('[Video] POST', createUrl, 'error:', createRes.status, createData);
         if (createRes.status === 422 && createData.kieBody) {
-          console.warn('[Video] 422 detalle KIE (validación):', createData.kieBody);
+          console.warn('[Video] 422 KIE (validación):', createData.kieBody);
         }
-        this.showError(createData.error || createData.failMsg || 'Error al crear la tarea');
+        const serverMsg = (createData.kieBody && (createData.kieBody.msg || createData.kieBody.message)) || createData.error || createData.failMsg || 'Error al crear la tarea';
+        this.showError(serverMsg);
         if (this.sendBtn) this.sendBtn.disabled = false;
         return;
       }
