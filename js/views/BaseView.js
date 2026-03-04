@@ -43,12 +43,12 @@ class BaseView {
 
     try {
       let url = `/templates/${this.templatePath}`;
-      const skipCache = this.templatePath === 'signin.html';
+      const skipCache = this.templatePath === 'signin.html' || this.templatePath === 'tasks.html';
       if (!skipCache && BaseView._templateCache.has(this.templatePath)) {
         return BaseView._templateCache.get(this.templatePath);
       }
       if (skipCache) {
-        url += '?v=logo02';
+        url += this.templatePath === 'signin.html' ? '?v=logo02' : '?v=edit';
       }
       const response = await fetch(url);
       

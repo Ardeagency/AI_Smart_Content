@@ -1406,6 +1406,9 @@ class VideoView extends BaseView {
 
       if (!createRes.ok) {
         console.warn('[Video] POST', createUrl, 'error:', createRes.status, createData);
+        if (createRes.status === 422 && createData.kieBody) {
+          console.warn('[Video] 422 detalle KIE (validación):', createData.kieBody);
+        }
         this.showError(createData.error || createData.failMsg || 'Error al crear la tarea');
         if (this.sendBtn) this.sendBtn.disabled = false;
         return;

@@ -7156,8 +7156,9 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
 .task-detail-card {
   background: var(--bg-secondary, rgba(255, 255, 255, 0.04));
   border: 1px solid var(--border-divider, rgba(255, 255, 255, 0.08));
-  border-radius: var(--radius-md, 12px);
+  border-radius: 12px;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 .task-detail-card-title {
   font-size: 1rem;
@@ -7166,12 +7167,14 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   margin: 0;
   padding: 1rem 1.25rem;
   border-bottom: 1px solid var(--border-divider, rgba(255, 255, 255, 0.08));
+  background: rgba(0, 0, 0, 0.15);
 }
 .task-detail-card-body {
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  background: rgba(0, 0, 0, 0.12);
 }
 .task-detail-field { }
 .task-detail-label {
@@ -7189,8 +7192,8 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   padding: 0.5rem 0.75rem;
   font-size: 0.9375rem;
   border: 1px solid var(--border-divider);
-  border-radius: var(--radius-sm);
-  background: var(--bg-primary);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.2);
   color: var(--text-primary);
 }
 .task-detail-readonly {
@@ -7224,8 +7227,8 @@ body.campaign-drawer-open .campaign-drawer[aria-hidden="false"] { transform: tra
   font-size: 0.9375rem;
   line-height: 1.5;
   border: 1px solid var(--border-divider);
-  border-radius: var(--radius-sm);
-  background: var(--bg-primary);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.2);
   color: var(--text-primary);
   resize: vertical;
 }

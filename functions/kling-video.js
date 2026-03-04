@@ -76,14 +76,27 @@ exports.handler = async (event, context) => {
         };
       }
 
+      // KIE input: solo incluir campos con valor (evitar 422 por parámetros no reconocidos o tipos incorrectos)
+      const durationNum = parseInt(body.duration, 10);
+      const durationVal = (Number.isFinite(durationNum) && durationNum >= 3 && durationNum <= 15) ? durationNum : 5;
+      const aspectRatio = (typeof body.aspect_ratio === 'string' && /^(16:9|9:16|1:1)$/.test(body.aspect_ratio.trim()))
+        ? body.aspect_ratio.trim()
+        : '16:9';
+      const soundVal = body.sound === true || body.sound === 'true';
+
       const input = {
         mode,
         prompt: promptForKie
       };
-      input.sound = body.sound === true || body.sound === 'true';
-      input.duration = typeof body.duration === 'string' ? body.duration : String(body.duration || '5');
-      input.aspect_ratio = typeof body.aspect_ratio === 'string' ? body.aspect_ratio : (body.aspect_ratio || '16:9');
-      input.multi_shots = multiShots.length > 1;
+      input.sound = soundVal;
+      input.duration = durationVal;
+      input.aspect_ratio = aspectRatio;
+      if (multiShots.length > 1) {
+        input.multi_shots = true;
+        // Algunas versiones de la API KIE esperan multi_prompt (array) en modo multi-shot
+        const multiPromptArr = multiShots.map((p) => ({ prompt: String(p).trim() })).filter((o) => o.prompt);
+        if (multiPromptArr.length) input.multi_prompt = multiPromptArr;
+      }
       if (image_urls.length) input.image_urls = image_urls;
 
       const kiePayload = {
@@ -108,13 +121,15 @@ exports.handler = async (event, context) => {
       }
 
       if (!createRes.ok || createData.code !== 200) {
-        let errMsg = createData.msg || createData.message || createData.error || (createRes.status === 401 ? 'API Key inválida (revisa KIE_API_KEY)' : createRes.status === 402 ? 'Saldo insuficiente en KIE' : 'Error al crear la tarea');
+        let errMsg = createData.msg || createData.message || createData.error || (createRes.status === 401 ? 'API Key inválida (revisa KIE_API_KEY)' : createRes.status === 402 ? 'Saldo insuficiente en KIE' : createRes.status === 422 ? 'Parámetros inválidos (422)' : 'Error al crear la tarea');
         if (createData.data?.errors && Array.isArray(createData.data.errors) && createData.data.errors.length) {
           const details = createData.data.errors.map((e) => (typeof e === 'string' ? e : e.message || e.field || JSON.stringify(e))).join('; ');
           errMsg = errMsg + (details ? ' — ' + details : '');
         }
+        if (createRes.status === 422 && createData.data && !createData.data.errors) {
+          errMsg = errMsg + (typeof createData.data === 'object' ? ' — ' + JSON.stringify(createData.data) : '');
+        }
         console.error('kling-video KIE createTask error:', createRes.status, createData);
-        // Devolver HTTP no-2xx cuando KIE indica error (code !== 200) para que el front muestre error y no espere taskId
         const httpStatus = !createRes.ok
           ? (createRes.status >= 400 ? createRes.status : 502)
           : (createData.code >= 400 && createData.code < 600 ? createData.code : 502);
