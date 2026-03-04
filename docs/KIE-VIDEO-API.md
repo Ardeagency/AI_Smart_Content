@@ -12,7 +12,7 @@ La app genera video mediante la **API de KIE** (modelo `kling-3.0/video`). Proxy
 - **callBackUrl**: opcional; se añade si en Netlify está definido `KIE_VIDEO_CALLBACK_URL`
 - **input**: objeto con todos los campos:
   - **mode**: `"pro"` \| `"std"`
-  - **image_urls**: array (vacío `[]` si no hay imágenes)
+  - **image_urls**: array; en single-shot **máximo 2** (start_frame, end_frame), en multi-shot **máximo 1** (start_frame). El front prioriza: 1) imagen de escena (producción), 2) imagen principal del producto. El proxy recorta si llegan más de 2.
   - **sound**: boolean
   - **duration**: string `"3"`–`"15"`
   - **aspect_ratio**: `"16:9"` \| `"9:16"` \| `"1:1"`

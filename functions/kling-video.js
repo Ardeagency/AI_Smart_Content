@@ -98,9 +98,13 @@ exports.handler = async (event, context) => {
         }
       }
 
+      // KIE: single-shot → image_urls máx 2 (start_frame, end_frame); multi-shot → máx 1 (start_frame)
+      const maxImageUrls = hasMultiShots ? 1 : 2;
+      const imageUrlsLimited = image_urls.length > maxImageUrls ? image_urls.slice(0, maxImageUrls) : (image_urls.length ? image_urls : []);
+
       const input = {
         mode,
-        image_urls: image_urls.length ? image_urls : [],
+        image_urls: imageUrlsLimited,
         sound,
         duration,
         aspect_ratio,

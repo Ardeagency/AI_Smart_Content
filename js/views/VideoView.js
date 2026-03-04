@@ -1372,24 +1372,26 @@ class VideoView extends BaseView {
       payload.prompt = promptText;
     }
 
-    // image_urls: todas las URLs de imagen/video para referencia directa; kling_elements: formato KIE para @element_name en el prompt
-    const imageUrls = [];
+    // image_urls: KIE permite máx 2 en single-shot (start_frame, end_frame). Prioridad: 1) imagen de escena (producción), 2) imagen principal del producto.
+    let sceneFirstUrl = null;
+    let productMainUrl = null;
     const klingElementsForKie = [];
     for (const el of this.klingElements || []) {
-      const urls = el.element_input_urls || [];
-      const videoUrls = el.element_input_video_urls || [];
-      urls.forEach((u) => { if (typeof u === 'string' && u.startsWith('http')) imageUrls.push(u); });
-      videoUrls.forEach((u) => { if (typeof u === 'string' && u.startsWith('http')) imageUrls.push(u); });
-      const allUrls = [...(el.element_input_urls || []), ...(el.element_input_video_urls || [])].filter((u) => typeof u === 'string' && u.startsWith('http'));
+      const urls = (el.element_input_urls || []).filter((u) => typeof u === 'string' && u.startsWith('http'));
+      const videoUrls = (el.element_input_video_urls || []).filter((u) => typeof u === 'string' && u.startsWith('http'));
+      const allUrls = [...urls, ...videoUrls];
+      if (el._fromProductionQueue && allUrls.length && !sceneFirstUrl) sceneFirstUrl = allUrls[0];
+      if (el._fromProductSelection && urls.length && !productMainUrl) productMainUrl = urls[0];
       if (el.name && allUrls.length) {
         klingElementsForKie.push({
           name: el.name,
           description: el.description || undefined,
-          element_input_urls: allUrls,
-          element_input_video_urls: el.element_input_video_urls || undefined
+          element_input_urls: urls.length ? urls : undefined,
+          element_input_video_urls: videoUrls.length ? videoUrls : undefined
         });
       }
     }
+    const imageUrls = [sceneFirstUrl, productMainUrl].filter(Boolean);
     if (imageUrls.length) payload.image_urls = imageUrls;
     if (klingElementsForKie.length) payload.kling_elements = klingElementsForKie;
 
