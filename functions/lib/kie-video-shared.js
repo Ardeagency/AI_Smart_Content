@@ -107,25 +107,30 @@ async function handleCreate(body, headers) {
     return { statusCode: 400, headers: c, body: JSON.stringify({ error: 'El prompt no puede quedar vacío tras validar referencias. Usa texto o elimina referencias @element sin suficientes imágenes.' }) };
   }
 
+  // Doc KIE: multi_shots es REQUERIDO (boolean). false → usar prompt; true → usar multi_prompt (array no vacío).
   const input = { mode, sound, duration: totalSec, aspect_ratio };
   if (image_urls.length > 0) input.image_urls = image_urls;
+
   if (hasMultiShots) {
     const n = Math.min(5, multiShots.length);
     const durations = distributeDuration(totalSec, n);
-    const multiShotsArray = multiShots.slice(0, n).map((p, i) => ({
+    const multiPromptArray = multiShots.slice(0, n).map((p, i) => ({
       prompt: stripOrphanRefs(String(p).trim().slice(0, 500)),
       duration: durations[i] || 1
     })).filter((item) => item.prompt.length > 0);
-    if (multiShotsArray.length === 0) {
-      return { statusCode: 400, headers: c, body: JSON.stringify({ error: 'Ningún prompt válido en multi-shot. Añade texto o verifica las referencias @element.' }) };
+    if (multiPromptArray.length === 0) {
+      return { statusCode: 400, headers: c, body: JSON.stringify({ error: 'Con Multi Shots activado necesitas al menos un shot con texto. Añade contenido o desactiva Multi Shots.' }) };
     }
-    if (multiShotsArray.length === 1) {
-      input.prompt = multiShotsArray[0].prompt;
-      input.duration = multiShotsArray[0].duration;
+    if (multiPromptArray.length === 1) {
+      input.multi_shots = false;
+      input.prompt = multiPromptArray[0].prompt;
+      input.duration = multiPromptArray[0].duration;
     } else {
-      input.multi_shots = multiShotsArray;
+      input.multi_shots = true;
+      input.multi_prompt = multiPromptArray;
     }
   } else {
+    input.multi_shots = false;
     input.prompt = promptFinal;
   }
   if (kling_elements.length > 0) input.kling_elements = kling_elements;
