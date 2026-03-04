@@ -76,28 +76,29 @@ exports.handler = async (event, context) => {
         };
       }
 
-      // KIE input: solo incluir campos con valor (evitar 422 por parámetros no reconocidos o tipos incorrectos)
-      const durationNum = parseInt(body.duration, 10);
-      const durationVal = (Number.isFinite(durationNum) && durationNum >= 3 && durationNum <= 15) ? durationNum : 5;
-      const aspectRatio = (typeof body.aspect_ratio === 'string' && /^(16:9|9:16|1:1)$/.test(body.aspect_ratio.trim()))
-        ? body.aspect_ratio.trim()
-        : '16:9';
-      const soundVal = body.sound === true || body.sound === 'true';
+      const minimalPayload = process.env.KIE_VIDEO_MINIMAL_PAYLOAD === '1' || process.env.KIE_VIDEO_MINIMAL_PAYLOAD === 'true';
 
       const input = {
         mode,
         prompt: promptForKie
       };
-      input.sound = soundVal;
-      input.duration = durationVal;
-      input.aspect_ratio = aspectRatio;
-      if (multiShots.length > 1) {
-        input.multi_shots = true;
-        // Algunas versiones de la API KIE esperan multi_prompt (array) en modo multi-shot
-        const multiPromptArr = multiShots.map((p) => ({ prompt: String(p).trim() })).filter((o) => o.prompt);
-        if (multiPromptArr.length) input.multi_prompt = multiPromptArr;
+      if (!minimalPayload) {
+        const durationNum = parseInt(body.duration, 10);
+        const durationVal = (Number.isFinite(durationNum) && durationNum >= 3 && durationNum <= 15) ? durationNum : 5;
+        const aspectRatio = (typeof body.aspect_ratio === 'string' && /^(16:9|9:16|1:1)$/.test(body.aspect_ratio.trim()))
+          ? body.aspect_ratio.trim()
+          : '16:9';
+        const soundVal = body.sound === true || body.sound === 'true';
+        input.sound = soundVal;
+        input.duration = durationVal;
+        input.aspect_ratio = aspectRatio;
+        if (multiShots.length > 1) {
+          input.multi_shots = true;
+          const multiPromptArr = multiShots.map((p) => ({ prompt: String(p).trim() })).filter((o) => o.prompt);
+          if (multiPromptArr.length) input.multi_prompt = multiPromptArr;
+        }
+        if (image_urls.length) input.image_urls = image_urls;
       }
-      if (image_urls.length) input.image_urls = image_urls;
 
       const kiePayload = {
         model: 'kling-3.0/video',
