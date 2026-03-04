@@ -200,7 +200,7 @@ GET https://api.kie.ai/api/v1/jobs/recordInfo?taskId=281e5b0********************
 
 ## Notas para esta app
 
-- **Body enviado a KIE**: ver sección "Uso en esta app" al inicio. El proxy construye `image_urls` desde `kling_elements` y trunca el prompt a 1500 caracteres para reducir riesgo de timeout.
+- **Body enviado a KIE**: alineado con la doc oficial (kie.ai). Siempre se envían los Required: `mode`, `image_urls` (array; vacío si no hay imágenes), `sound`, `duration`, `aspect_ratio`, `multi_shots`, `prompt` o `multi_prompt`. Solo se incluyen URLs de imagen en formato **png, jpg, jpeg**. Single-shot: hasta 2 URLs (start/end frame); multi-shot: 1 URL (start). El proxy trunca el prompt a 1500 caracteres.
 - **Troubleshooting**: 401 → revisar `KIE_API_KEY` en Netlify; 402 → saldo insuficiente en KIE.
 - **422 (Unprocessable Content)**: revisar en consola el cuerpo de la respuesta (campo `kieBody`).
 

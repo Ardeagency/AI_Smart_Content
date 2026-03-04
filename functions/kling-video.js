@@ -60,17 +60,27 @@ exports.handler = async (event, context) => {
         return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Acción no válida. Use action: "createTask"' }) };
       }
 
-      // Input según ejemplo KIE que funcionó: mode, image_urls (derivado de kling_elements), sound, duration, aspect_ratio, multi_shots, prompt, kling_elements
+      // Payload según doc oficial KIE: https://kie.ai — Todos los Required siempre presentes; image_urls solo png/jpg/jpeg.
       const mode = body.mode === 'pro' ? 'pro' : 'std';
       const promptText = typeof body.prompt === 'string' ? body.prompt.trim() : '';
       const rawMulti = Array.isArray(body.multi_shots) ? body.multi_shots : [];
       const multiShots = rawMulti.map((s) => (s && typeof s === 'object' ? (typeof s.prompt === 'string' ? s.prompt.trim() : String(s.prompt || '')) : '')).filter(Boolean);
       const klingElements = Array.isArray(body.kling_elements) ? body.kling_elements : [];
 
-      const image_urls = [];
-      for (const el of klingElements) {
-        const urls = el.element_input_urls || [];
-        if (urls.length) image_urls.push(urls[0]);
+      const hasMultiShots = multiShots.length > 1;
+      // KIE solo acepta png, jpg, jpeg; filtramos por extensión cuando existe; si la URL no tiene extensión (p. ej. Supabase) la permitimos
+      const isImageUrl = (u) => typeof u === 'string' && u.startsWith('http') && (!/\.(mp4|mov|webm|gif|svg|webp)(\?|$)/i.test(u));
+
+      let image_urls = [];
+      if (klingElements.length > 0) {
+        const first = klingElements[0];
+        const urls = (first.element_input_urls || []).filter(isImageUrl);
+        if (hasMultiShots) {
+          if (urls.length) image_urls = [urls[0]];
+        } else {
+          if (urls.length >= 2) image_urls = [urls[0], urls[1]];
+          else if (urls.length === 1) image_urls = [urls[0]];
+        }
       }
 
       const promptForKie = promptText || (multiShots.length ? multiShots[0] : '');
@@ -82,27 +92,43 @@ exports.handler = async (event, context) => {
         };
       }
 
-      // Limitar longitud del prompt para reducir riesgo de timeout 524 en KIE (max 2500 en doc; 1500 más seguro)
       const promptMaxLen = 1500;
       const promptTruncated = promptForKie.length > promptMaxLen ? promptForKie.slice(0, promptMaxLen) : promptForKie;
       if (promptForKie.length > promptMaxLen) {
-        console.log('kling-video: prompt truncado a', promptMaxLen, 'caracteres para reducir timeout');
+        console.log('kling-video: prompt truncado a', promptMaxLen, 'caracteres');
       }
+
+      const duration = typeof body.duration === 'string' ? body.duration : String(body.duration || '5');
+      const aspect_ratio = typeof body.aspect_ratio === 'string' ? body.aspect_ratio : (body.aspect_ratio || '16:9');
+      const sound = body.sound === true || body.sound === 'true';
 
       const input = {
         mode,
-        sound: body.sound === true || body.sound === 'true',
-        duration: typeof body.duration === 'string' ? body.duration : String(body.duration || '5'),
-        aspect_ratio: typeof body.aspect_ratio === 'string' ? body.aspect_ratio : (body.aspect_ratio || '16:9'),
-        multi_shots: multiShots.length > 1,
-        prompt: promptTruncated
+        image_urls,
+        sound,
+        duration,
+        aspect_ratio,
+        multi_shots: hasMultiShots
       };
-      if (image_urls.length) input.image_urls = image_urls;
-      if (klingElements.length) {
+      if (hasMultiShots) {
+        const totalSec = Math.min(15, Math.max(3, parseInt(duration, 10) || 5));
+        const n = Math.min(5, multiShots.length);
+        const secPerShot = Math.min(12, Math.max(1, Math.floor(totalSec / n)));
+        input.multi_prompt = multiShots.slice(0, n).map((p) => ({
+          prompt: String(p).trim().slice(0, 500),
+          duration: secPerShot
+        }));
+      } else {
+        input.prompt = promptTruncated;
+      }
+      if (klingElements.length > 0) {
         input.kling_elements = klingElements.map((el) => {
           const o = { name: el.name || 'element_' + Math.random().toString(36).slice(2, 8) };
           if (el.description) o.description = el.description;
-          if (Array.isArray(el.element_input_urls) && el.element_input_urls.length) o.element_input_urls = el.element_input_urls;
+          const imgUrls = (el.element_input_urls || []).filter((u) => typeof u === 'string' && u.startsWith('http'));
+          if (imgUrls.length) o.element_input_urls = imgUrls;
+          const vidUrls = Array.isArray(el.element_input_video_urls) ? el.element_input_video_urls.filter((u) => typeof u === 'string' && u.startsWith('http')) : [];
+          if (vidUrls.length) o.element_input_video_urls = vidUrls;
           return o;
         });
       }
