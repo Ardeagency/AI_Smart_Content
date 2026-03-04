@@ -68,7 +68,10 @@ class SupabaseService {
       console.error('❌ No se pudo inicializar Supabase');
       return null;
     } catch (error) {
-      console.error('❌ Error inicializando Supabase:', error);
+      // Timeout o fallo de carga: un solo mensaje para no llenar la consola
+      if (error?.message !== 'Timeout esperando Supabase') {
+        console.error('❌ Error inicializando Supabase:', error);
+      }
       return null;
     } finally {
       this.initPromise = null;

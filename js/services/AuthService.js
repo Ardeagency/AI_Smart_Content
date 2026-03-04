@@ -45,9 +45,13 @@ class AuthService {
   async getSupabaseClient() {
     if (typeof window.appLoader !== 'undefined' && window.appLoader.waitFor) {
       try {
-        return await window.appLoader.waitFor();
+        const client = await window.appLoader.waitFor();
+        return client || null;
       } catch (error) {
-        console.error('Error obteniendo Supabase:', error);
+        // Timeout o fallo de carga: no duplicar mensaje (app-loader ya avisa); el app sigue sin Supabase
+        if (error?.message !== 'Timeout esperando Supabase') {
+          console.error('Error obteniendo Supabase:', error);
+        }
         return null;
       }
     }

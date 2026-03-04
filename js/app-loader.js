@@ -99,9 +99,12 @@
                 return loadSupabaseConfig(attempt + 1);
             }
             
-            // Si falló después de todos los intentos
+            // Si falló después de todos los intentos: avisar a quien esté esperando (sin esperar 25s)
             window.SUPABASE_CONFIG_READY = false;
             state.supabaseReady = false;
+            window.supabase = null;
+            console.warn('Supabase no disponible. Comprueba /.netlify/functions/supabase-config y las variables de entorno.');
+            executeCallbacks(null);
             
             return false;
         }
@@ -123,13 +126,14 @@
     }
     
     /**
-     * Ejecuta todos los callbacks pendientes
+     * Ejecuta todos los callbacks pendientes (client = null si la carga falló)
      */
-    function executeCallbacks() {
+    function executeCallbacks(client) {
+        const value = client !== undefined ? client : window.supabase;
         while (state.callbacks.length > 0) {
             const callback = state.callbacks.shift();
             try {
-                callback(window.supabase);
+                callback(value);
             } catch (error) {
                 console.error('Error en callback de Supabase:', error);
             }
