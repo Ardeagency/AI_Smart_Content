@@ -1,6 +1,6 @@
-# API de video Kling – Uso en el proyecto
+# API de video Kling – Referencia (no usada en este proyecto)
 
-> Integración con la **API oficial de Kling** (`https://api.klingai.com`).
+> **En este proyecto usamos la API de KIE (kie.ai), no la API oficial de Kling.** La implementación real está en [KIE-VIDEO-API.md](./KIE-VIDEO-API.md). Este documento es de referencia o comparación con la API oficial de Kling (`https://api.klingai.com`).
 
 ## Resumen
 

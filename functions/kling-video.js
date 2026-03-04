@@ -1,5 +1,7 @@
 /**
- * Netlify Function: router de compatibilidad para generación de video vía API de KIE (Kling 3.0).
+ * Netlify Function: router de compatibilidad para generación de video vía API de KIE (kie.ai).
+ *
+ * Usamos la API de KIE (https://api.kie.ai), no la API oficial de Kling. KIE expone el modelo kling-3.0/video.
  *
  * - POST con action: 'createTask' → delega a kling-video-create (responde solo con taskId).
  * - GET ?taskId=xxx → delega a kling-video-status.

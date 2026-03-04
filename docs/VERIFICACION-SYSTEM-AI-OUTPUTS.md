@@ -26,7 +26,9 @@ LIMIT 5;
 
 - Debe haber una fila con `provider = 'openai'`, `output_type = 'text'`, `status = 'completed'` y `text_content` con el prompt generado.
 
-### 2. Kie (generación de video)
+### 2. KIE (generación de video)
+
+La app usa la **API de KIE** (kie.ai), no la API oficial de Kling. Modelo: kling-3.0/video.
 
 1. En la página **Video**, tener un Director Brief (texto o el generado por IA).
 2. Pulsar el botón **Enviar** (avión de papel).
@@ -58,5 +60,5 @@ LIMIT 5;
 
 - **Insert devuelve error / no aparece fila**: revisar RLS (usuario debe ser `user_id` del registro o developer). Revisar que `brand_container_id` y `user_id` estén definidos en la sesión.
 - **OpenAI no responde**: revisar `OPENAI_API_KEY` en Netlify y que la función `openai-cine-prompt` esté desplegada.
-- **Kie no crea tarea**: revisar `KIE_API_KEY` en Netlify y función `kie-video`.
+- **KIE no crea tarea**: revisar `KIE_API_KEY` en Netlify y funciones `kling-video-create` / `kling-video-status`.
 - Errores en consola del navegador (F12): `saveSystemAIOutput` y `updateSystemAIOutput` hacen `console.warn` si falla la escritura en Supabase, sin bloquear el flujo.

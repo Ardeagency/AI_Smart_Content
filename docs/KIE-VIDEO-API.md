@@ -2,6 +2,8 @@
 
 > Generate content using the Video model
 
+**Importante:** En este proyecto usamos **solo la API de KIE** (https://api.kie.ai), no la API oficial de Kling (api.klingai.com). KIE expone el modelo `kling-3.0/video`; toda la generación de video pasa por KIE con `KIE_API_KEY`.
+
 ## Uso en esta app
 
 La app genera video mediante la **API de KIE** (modelo `kling-3.0/video`). Variable de entorno: `KIE_API_KEY`.

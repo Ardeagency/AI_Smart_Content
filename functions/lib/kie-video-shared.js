@@ -1,5 +1,6 @@
 /**
- * Lógica compartida para createTask y recordInfo (KIE Kling 3.0).
+ * Lógica compartida para createTask y recordInfo.
+ * API: KIE (https://api.kie.ai), no la API oficial de Kling. Modelo: kling-3.0/video.
  * Usado por: kling-video-create, kling-video-status, kling-video (router).
  */
 

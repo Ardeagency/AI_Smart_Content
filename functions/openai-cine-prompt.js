@@ -1,5 +1,5 @@
 /**
- * Netlify Function: genera un prompt cinematográfico para Kling usando OpenAI.
+ * Netlify Function: genera un prompt cinematográfico para generación de video (KIE, modelo Kling) usando OpenAI.
  * Requiere OPENAI_API_KEY en variables de entorno.
  *
  * El input de texto del usuario (idea) NUNCA es el prompt final: es la idea escrita. La IA genera el prompt

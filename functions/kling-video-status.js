@@ -1,6 +1,6 @@
 /**
- * Netlify Function: solo consultar estado de una tarea de video en KIE (Kling 3.0).
- * GET ?taskId=xxx → devuelve estado (waiting, success, fail) y resultUrls cuando success.
+ * Netlify Function: solo consultar estado de una tarea de video en KIE (api.kie.ai, modelo kling-3.0/video).
+ * No usamos la API oficial de Kling. GET ?taskId=xxx → devuelve estado (waiting, success, fail) y resultUrls cuando success.
  * Cada invocación es rápida (< 2 s); el polling lo hace el frontend o un worker.
  */
 

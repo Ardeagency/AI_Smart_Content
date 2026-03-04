@@ -1,9 +1,9 @@
-# Flujo Video: OpenAI → Kling
+# Flujo Video: OpenAI → KIE (Kling 3.0)
 
 ## Orden del flujo
 
 1. **Usuario genera el prompt con OpenAI** (botón estrellas en Director Console).
-2. **Usuario produce el contenido con Kling** (botón enviar): se usa el texto del Director Brief como prompt de video (API oficial de Kling, proxy `kling-video`).
+2. **Usuario produce el contenido con video** (botón enviar): se usa el texto del Director Brief como prompt; la generación se hace vía **API de KIE** (modelo kling-3.0/video), proxy `kling-video-create` / `kling-video-status`.
 
 ## 1. Body hacia OpenAI (openai-cine-prompt)
 
@@ -31,9 +31,9 @@ El front envía `POST /.netlify/functions/openai-cine-prompt` con:
 - La función construye un único mensaje de usuario con contexto de marca, recursos adjuntos, cinematografía y brief, y llama a OpenAI.
 - **Respuesta:** `{ "prompt": "..." }`. El front escribe ese texto en el Director Brief.
 
-## 2. Body hacia Kling (kling-video createTask)
+## 2. Body hacia KIE (kling-video-create)
 
-El front envía `POST /.netlify/functions/kling-video` con:
+El front envía `POST /.netlify/functions/kling-video-create` (o el router `kling-video` con `action: 'createTask'`) con:
 
 ```json
 {
@@ -56,9 +56,9 @@ El front envía `POST /.netlify/functions/kling-video` con:
 - **aspect_ratio:** valor del selector (16:9, 9:16, 1:1).
 - **sound:** según el toggle Sound (aria-pressed del botón).
 
-La función valida que exista `prompt` o `multi_shots` con prompts, genera un JWT con las claves Kling y reenvía a la API oficial de Kling (`model`, `prompt`, `mode`, `duration`, `aspect_ratio`, `sound`, `image_list` si hay kling_elements). Detalle completo en [KLING-VIDEO-API.md](./KLING-VIDEO-API.md).
+La función valida que exista `prompt` o `multi_shots` con prompts y reenvía a la **API de KIE** (Bearer `KIE_API_KEY`) con `model: 'kling-3.0/video'`, `input` (prompt, mode, duration, aspect_ratio, sound, image_urls/kling_elements). Detalle completo en [KIE-VIDEO-API.md](./KIE-VIDEO-API.md).
 
 ## Validaciones
 
-- **Enviar (Kling):** Si el Director Brief está vacío, se muestra error y no se llama a la API Kling.
+- **Enviar (video):** Si el Director Brief está vacío, se muestra error y no se llama a la API de KIE.
 - **openai-cine-prompt:** Si no hay brief ni contexto, la función pide a OpenAI un prompt genérico.

@@ -1,6 +1,6 @@
 /**
- * Netlify Function: solo crear tarea de video en KIE (Kling 3.0).
- * POST con body: mode, prompt (o multi_shots), duration, aspect_ratio, sound, kling_elements.
+ * Netlify Function: solo crear tarea de video en KIE (api.kie.ai, modelo kling-3.0/video).
+ * No usamos la API oficial de Kling. POST con body: mode, prompt (o multi_shots), duration, aspect_ratio, sound, kling_elements.
  * Responde de inmediato con { taskId }. No espera la generación del video (evita timeout serverless).
  * Arquitectura asíncrona: el frontend hace polling a kling-video-status o usa callBackUrl.
  */
