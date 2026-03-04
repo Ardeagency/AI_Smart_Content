@@ -392,7 +392,9 @@ class ProductsView extends BaseView {
       let nextOrder = (existing && existing.length > 0) ? (existing[0].image_order + 1) : 0;
 
       for (const file of validFiles) {
-        const fileName = `${userId}/${this.productId}/${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name}`;
+        const ext = (file.name && file.name.split('.').pop()) || 'jpg';
+        const safeExt = ext.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'jpg';
+        const fileName = `${userId}/${this.productId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${safeExt}`;
         const { error: uploadError } = await this.supabase.storage
           .from('product-images')
           .upload(fileName, file, { contentType: file.type, cacheControl: '3600', upsert: false });

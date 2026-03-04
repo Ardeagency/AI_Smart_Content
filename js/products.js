@@ -1284,8 +1284,9 @@ if (typeof window.ProductsManager === 'undefined') {
 
             // Subir todas las imágenes
             const uploadPromises = validFiles.map(async (file) => {
-            const fileExt = file.name.split('.').pop();
-                const fileName = `${this.userId}/${productId}/${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name}`;
+            const rawExt = (file.name && file.name.split('.').pop()) || 'jpg';
+            const fileExt = rawExt.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'jpg';
+                const fileName = `${this.userId}/${productId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
 
             // Subir imagen
             const { error: uploadError } = await this.supabase.storage
