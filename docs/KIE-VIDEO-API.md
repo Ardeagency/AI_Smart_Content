@@ -6,12 +6,13 @@
 
 La app genera video mediante la **API de KIE** (modelo `kling-3.0/video`). Proxy Netlify: `/.netlify/functions/kling-video` (variable de entorno `KIE_API_KEY`).
 
-**Body enviado a KIE (formato que funcionó 2026-03-03):**
+**Body enviado a KIE:**
 
 - **model**: `"kling-3.0/video"`
-- **input**: objeto con `mode`, `sound`, `duration`, `aspect_ratio`, `multi_shots`, `prompt`; si hay elementos de escena (producción), el proxy añade `image_urls` (primera URL de cada elemento) y `kling_elements` (name, description?, element_input_urls).
+- **input**: siempre un **objeto** (nunca string). Contiene `mode`, `sound`, `duration`, `aspect_ratio`; `image_urls` solo si hay URLs (no se envía array vacío); `prompt` en single-shot o `multi_shots` + `multi_prompt` en multi-shot; `kling_elements` solo si el prompt incluye `@element_name` y el elemento tiene ≥2 imágenes (o 1 video).
+- **callBackUrl**: opcional; si existe `KIE_VIDEO_CALLBACK_URL` en Netlify se añade al payload.
 
-El front solo envía a la función: `action`, `mode`, `duration`, `aspect_ratio`, `sound`, `prompt` (o `multi_shots`), y `kling_elements` (solo elementos de escena/producción, no producto). La función construye `image_urls` desde `kling_elements` y reenvía a KIE.
+El front envía: `action`, `mode`, `duration` (1–12), `aspect_ratio`, `sound`, `prompt` (o `multi_shots`), y `kling_elements` (solo escena). El front añade automáticamente las referencias `@name` al prompt cuando hay `kling_elements`. La función valida tipos, construye `image_urls` desde elementos referenciados y reparte la duración en multi-shot con `distributeDuration(totalSec, n)`.
 
 ---
 
@@ -200,20 +201,37 @@ GET https://api.kie.ai/api/v1/jobs/recordInfo?taskId=281e5b0********************
 
 ## Notas para esta app
 
-- **Body enviado a KIE**: alineado con la doc oficial (kie.ai). Siempre se envían los Required: `mode`, `image_urls` (array; vacío si no hay imágenes), `sound`, `duration`, `aspect_ratio`, `multi_shots`, `prompt` o `multi_prompt`. Solo se incluyen URLs de imagen en formato **png, jpg, jpeg**. Single-shot: hasta 2 URLs (start/end frame); multi-shot: 1 URL (start). El proxy trunca el prompt a 1500 caracteres.
+- **Body enviado a KIE**: `input` siempre objeto (nunca `JSON.stringify(input)`). `image_urls` solo se añade si hay al menos una URL (no se envía `[]`). `duration` validado 1–12; `aspect_ratio` uno de `16:9`, `9:16`, `1:1`. `multi_shots` solo cuando hay varios shots; en multi-shot la duración se reparte con `distributeDuration(totalSec, n)`. `kling_elements` solo los referenciados en el prompt como `@name` y con ≥2 imágenes (o 1 video). Prompt truncado a 2500 caracteres.
+- **Estados**: el GET recordInfo devuelve `data.state` (waiting, success, fail); el proxy normaliza `status` → `state` y `failed` → `fail` para compatibilidad.
 - **Troubleshooting**: 401 → revisar `KIE_API_KEY` en Netlify; 402 → saldo insuficiente en KIE.
 - **422 (Unprocessable Content)**: revisar en consola el cuerpo de la respuesta (campo `kieBody`).
 
 ## Prevención del error 524 (generate task timeout)
 
-El **524** significa que los servidores de KIE tardaron demasiado en generar el video y cancelaron la tarea. La petición inicial (createTask) puede ser correcta; el fallo ocurre durante la generación.
+El **524** significa que los servidores de KIE tardaron demasiado en generar el video y cancelaron la tarea. La petición inicial (createTask) puede ser correcta; el fallo ocurre **durante la generación** en sus servidores, no por nuestro formato de request.
 
 **Qué hacer para reducir 524:**
 
-1. **Modo Estándar (std)** en lugar de Pro: en la UI de Video, usar el selector "Estándar" (menor resolución, menos carga en KIE).
-2. **Duración 5s**: elegir 5 segundos en lugar de 10 o 15.
-3. **Una sola imagen de referencia**: enviar solo un elemento de escena (producción); evitar varias imágenes.
-4. **Prompt más corto**: el proxy trunca a 1500 caracteres; conviene mantener el prompt por debajo de ~500 si ya has tenido 524.
+1. **Modo Estándar (std)** en lugar de Pro: menor resolución, menos carga en KIE.
+2. **Duración 5s**: elegir 5 segundos en lugar de 10 o 12.
+3. **Una sola imagen de referencia**: enviar solo un elemento de escena; evitar varias imágenes.
+4. **Prompt más corto**: el proxy trunca a 2500 caracteres; conviene mantener el prompt por debajo de ~500 si ya has tenido 524.
 5. **Reintentar**: a veces el fallo es puntual; probar de nuevo sin cambiar nada.
 
 Si el error persiste, la limitación está en la capacidad o tiempos de KIE; no en el formato del request.
+
+---
+
+## Investigación documentación oficial KIE (docs.kie.ai)
+
+Resumen de lo que indica la documentación y mejores prácticas:
+
+- **createTask**: `POST https://api.kie.ai/api/v1/jobs/createTask`. Autenticación: `Authorization: Bearer YOUR_API_KEY`.
+- **image_urls**: Es **opcional** para modo solo texto; cuando no hay imágenes, el video se genera solo con el prompt y hay que enviar `aspect_ratio`. Cuando hay elementos referenciados con `@element_name`, sí se requieren imágenes.
+- **Estados de la tarea**: `waiting` → `queuing` → `generating` → `success` o `fail`. Se consultan con `GET /api/v1/jobs/recordInfo?taskId=...`.
+- **Mejores prácticas (doc KIE)**:
+  - **Usar callBackUrl en producción**: Incluir `callBackUrl` al crear la tarea para recibir notificaciones al terminar y evitar depender solo del polling.
+  - **Polling**: Si se hace polling, empezar con intervalos de **2–3 segundos** y aumentar gradualmente; **dejar de hacer polling después de 10–15 minutos**.
+  - **Descargar enseguida**: Las URLs del contenido generado suelen expirar a las **24 horas**; descargar en cuanto esté disponible.
+- **524 (generate task timeout)**: Es un fallo **del lado de KIE** (su proceso de generación supera su límite de tiempo). No es un error de validación del request. Reducir complejidad (modo std, 5s, menos imágenes, prompt más corto) para minimizar la probabilidad.
+- En esta app: polling cada 3s, tope 12 min; opcionalmente `KIE_VIDEO_CALLBACK_URL` en Netlify para enviar `callBackUrl` a KIE.

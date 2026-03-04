@@ -12,10 +12,9 @@ class VideoView extends BaseView {
   static get KIE_VIDEO_DOWNLOAD_API() {
     return '/.netlify/functions/kie-video-download';
   }
-  /** Intervalo de polling al estado de la tarea Kling (ms). */
-  static get POLL_INTERVAL_MS() {
-    return 15000;
-  }
+  /** Doc KIE: empezar polling 2-3s; dejar de hacer polling a los 10-15 min. Usamos 3s y máximo 12 min. */
+  static get POLL_INTERVAL_MS() { return 3000; }
+  static get POLL_MAX_DURATION_MS() { return 12 * 60 * 1000; }
 
   constructor() {
     super();
@@ -1380,7 +1379,7 @@ class VideoView extends BaseView {
       payload.prompt = promptText;
     }
 
-    // kling_elements: solo escena (producción). El backend construye image_urls desde aquí. Formato que funcionó (2026-03-03).
+    // kling_elements: solo escena (producción). El backend solo envía elementos referenciados en el prompt como @name.
     const sceneElementsForKling = (this.klingElements || []).filter((el) => !el._fromProductSelection);
     if (sceneElementsForKling.length > 0) {
       payload.kling_elements = sceneElementsForKling.map((el) => {
@@ -1390,6 +1389,20 @@ class VideoView extends BaseView {
         if (el.element_input_video_urls && el.element_input_video_urls.length) o.element_input_video_urls = el.element_input_video_urls;
         return o;
       });
+      // Referencias @name en el prompt para que KIE use los elementos (requerido por la API).
+      const refs = sceneElementsForKling.map((el) => `@${el.name}`).filter((ref) => {
+        if (payload.prompt && payload.prompt.includes(ref)) return false;
+        if (payload.multi_shots) return payload.multi_shots.some((s) => s.prompt && s.prompt.includes(ref));
+        return true;
+      });
+      if (refs.length) {
+        const suffix = ' ' + refs.join(' ');
+        if (this.multiShotEnabled && payload.multi_shots && payload.multi_shots.length) {
+          payload.multi_shots[0].prompt = (payload.multi_shots[0].prompt || '').trim() + suffix;
+        } else if (payload.prompt) {
+          payload.prompt = payload.prompt.trim() + suffix;
+        }
+      }
     }
 
     const createUrl = VideoView.KLING_VIDEO_API;
@@ -1462,9 +1475,19 @@ class VideoView extends BaseView {
 
   async pollTask(taskId) {
     const statusUrl = `${VideoView.KLING_VIDEO_API}?taskId=${encodeURIComponent(taskId)}`;
-    console.log('[Video] Polling estado → GET', statusUrl);
+    const pollStartedAt = Date.now();
+    console.log('[Video] Polling estado → GET', statusUrl, '(cada', VideoView.POLL_INTERVAL_MS / 1000, 's, máx', VideoView.POLL_MAX_DURATION_MS / 60000, 'min)');
 
     const poll = async () => {
+      if (Date.now() - pollStartedAt > VideoView.POLL_MAX_DURATION_MS) {
+        this.stopPolling();
+        this.showError('La generación superó el tiempo máximo de espera (12 min). Comprueba el estado en KIE o reintenta con un prompt más corto.');
+        if (this._lastKieOutputId) {
+          await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: 'Timeout de polling (12 min)' });
+          this._lastKieOutputId = null;
+        }
+        return;
+      }
       try {
         const res = await fetch(statusUrl);
         let data = {};
