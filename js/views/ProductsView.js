@@ -656,19 +656,23 @@ class ProductsView extends BaseView {
       });
     }
 
-    // Listener para subida de fotos por delegación (captura el "change" aunque Safari/macOS lo dispare raro)
-    const self = this;
-    const uploadHandler = function(e) {
-      if (e.target && e.target.id === 'productViewImageUpload') {
-        const input = e.target;
-        const fileArray = input.files ? Array.from(input.files) : [];
-        input.value = '';
-        if (fileArray.length) self.uploadProductImages(fileArray);
-      }
-    };
-    container.removeEventListener('change', self._productViewUploadHandler);
-    self._productViewUploadHandler = uploadHandler;
-    container.addEventListener('change', uploadHandler);
+    // Un solo listener en el container; la vista actual se guarda en el container para que al cambiar de producto siga funcionando
+    const containerEl = container;
+    containerEl._productViewUploadRef = this;
+    if (!containerEl._productViewUploadListenerBound) {
+      containerEl._productViewUploadListenerBound = true;
+      containerEl.addEventListener('change', function productViewUploadDelegate(e) {
+        if (e.target && e.target.id === 'productViewImageUpload') {
+          const input = e.target;
+          const fileArray = input.files ? Array.from(input.files) : [];
+          input.value = '';
+          const view = containerEl._productViewUploadRef;
+          if (fileArray.length && view && typeof view.uploadProductImages === 'function') {
+            view.uploadProductImages(fileArray);
+          }
+        }
+      });
+    }
 
     this.bindGalleryEvents();
 
