@@ -25,7 +25,7 @@ El endpoint legacy `/.netlify/functions/kling-video` sigue disponible (POST con 
 **Body enviado a KIE:**
 
 - **model**: `"kling-3.0/video"`
-- **input**: siempre un **objeto** (nunca string). Contiene `mode`, `sound`, `duration`, `aspect_ratio`; `image_urls` solo si hay URLs (no se envía array vacío); `prompt` en single-shot o `multi_shots` + `multi_prompt` en multi-shot; `kling_elements` solo si el prompt incluye `@element_name` y el elemento tiene ≥2 imágenes (o 1 video).
+- **input**: siempre un **objeto** (nunca string). Contiene `mode`, `sound`, `duration`, `aspect_ratio`; `image_urls` solo si hay URLs (no se envía array vacío); `prompt` en single-shot o **`multi_shots`** (array de `{ prompt, duration }`) cuando hay 2+ shots — KIE exige que `multi_shots` no esté vacío ([doc](https://kie.ai/kling-3-0)); `kling_elements` solo si el prompt incluye `@element_name` y el elemento tiene ≥2 imágenes (o 1 video).
 - **callBackUrl**: opcional; si existe `KIE_VIDEO_CALLBACK_URL` en Netlify se añade al payload.
 
 El front envía: `action`, `mode`, `duration` (1–12), `aspect_ratio`, `sound`, `prompt` (o `multi_shots`), y `kling_elements` (solo escena). El front añade automáticamente las referencias `@name` al prompt cuando hay `kling_elements`. La función valida tipos, construye `image_urls` desde elementos referenciados y reparte la duración en multi-shot con `distributeDuration(totalSec, n)`.
@@ -217,7 +217,7 @@ GET https://api.kie.ai/api/v1/jobs/recordInfo?taskId=281e5b0********************
 
 ## Notas para esta app
 
-- **Body enviado a KIE**: `input` siempre objeto (nunca `JSON.stringify(input)`). `image_urls` solo se añade si hay al menos una URL (no se envía `[]`). `duration` validado 1–12; `aspect_ratio` uno de `16:9`, `9:16`, `1:1`. `multi_shots` solo cuando hay varios shots; en multi-shot la duración se reparte con `distributeDuration(totalSec, n)`. `kling_elements` solo los referenciados en el prompt como `@name` y con ≥2 imágenes (o 1 video). Prompt truncado a 2500 caracteres.
+- **Body enviado a KIE**: `input` siempre objeto (nunca `JSON.stringify(input)`). `image_urls` solo se añade si hay al menos una URL (no se envía `[]`). `duration` validado 1–12; `aspect_ratio` uno de `16:9`, `9:16`, `1:1`. **multi_shots**: KIE espera un **array** de `{ prompt, duration }` (no un booleano); solo se envía cuando hay **2 o más** shots; si queda 1 shot se manda como single-shot (`prompt` + `duration`). `kling_elements` solo los referenciados en el prompt como `@name` y con ≥2 imágenes (o 1 video). Prompt truncado a 2500 caracteres.
 - **Estados**: el GET recordInfo devuelve `data.state` (waiting, success, fail); el proxy normaliza `status` → `state` y `failed` → `fail` para compatibilidad.
 - **Troubleshooting**: 401 → revisar `KIE_API_KEY` en Netlify; 402 → saldo insuficiente en KIE.
 - **422 (Unprocessable Content)**: revisar en consola el cuerpo de la respuesta (campo `kieBody`).

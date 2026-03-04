@@ -110,16 +110,20 @@ async function handleCreate(body, headers) {
   const input = { mode, sound, duration: totalSec, aspect_ratio };
   if (image_urls.length > 0) input.image_urls = image_urls;
   if (hasMultiShots) {
-    input.multi_shots = true;
     const n = Math.min(5, multiShots.length);
     const durations = distributeDuration(totalSec, n);
-    const multiPromptRaw = multiShots.slice(0, n).map((p, i) => ({
+    const multiShotsArray = multiShots.slice(0, n).map((p, i) => ({
       prompt: stripOrphanRefs(String(p).trim().slice(0, 500)),
       duration: durations[i] || 1
-    }));
-    input.multi_prompt = multiPromptRaw.filter((item) => item.prompt.length > 0);
-    if (input.multi_prompt.length === 0) {
+    })).filter((item) => item.prompt.length > 0);
+    if (multiShotsArray.length === 0) {
       return { statusCode: 400, headers: c, body: JSON.stringify({ error: 'Ningún prompt válido en multi-shot. Añade texto o verifica las referencias @element.' }) };
+    }
+    if (multiShotsArray.length === 1) {
+      input.prompt = multiShotsArray[0].prompt;
+      input.duration = multiShotsArray[0].duration;
+    } else {
+      input.multi_shots = multiShotsArray;
     }
   } else {
     input.prompt = promptFinal;
