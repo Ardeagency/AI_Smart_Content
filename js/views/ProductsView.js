@@ -561,17 +561,7 @@ class ProductsView extends BaseView {
       });
     });
 
-    const fileInput = container.querySelector('#productViewImageUpload');
-    if (fileInput) {
-      // Usar addEventListener para no pisar otros posibles listeners y asegurar el handler
-      fileInput.removeEventListener('change', fileInput._productViewUploadHandler);
-      fileInput._productViewUploadHandler = (e) => {
-        const files = e.target && e.target.files;
-        if (files && files.length) this.uploadProductImages(files);
-        e.target.value = '';
-      };
-      fileInput.addEventListener('change', fileInput._productViewUploadHandler);
-    }
+    // La subida de fotos se maneja por delegación en initProductDetail (listener en container)
   }
 
   /**
@@ -663,6 +653,20 @@ class ProductsView extends BaseView {
         if (window.router) window.router.navigate(url);
       });
     }
+
+    // Listener para subida de fotos por delegación (captura el "change" aunque Safari/macOS lo dispare raro)
+    const self = this;
+    const uploadHandler = function(e) {
+      if (e.target && e.target.id === 'productViewImageUpload') {
+        const input = e.target;
+        const fileArray = input.files ? Array.from(input.files) : [];
+        input.value = '';
+        if (fileArray.length) self.uploadProductImages(fileArray);
+      }
+    };
+    container.removeEventListener('change', self._productViewUploadHandler);
+    self._productViewUploadHandler = uploadHandler;
+    container.addEventListener('change', uploadHandler);
 
     this.bindGalleryEvents();
 
