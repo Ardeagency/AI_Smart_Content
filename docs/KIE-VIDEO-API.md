@@ -6,21 +6,19 @@
 
 La app genera video mediante la **API de KIE** (modelo `kling-3.0/video`). Proxy Netlify: `/.netlify/functions/kling-video` (variable de entorno `KIE_API_KEY`).
 
-**Según documentación KIE (Required/Optional):**
+**Body enviado:** siempre el body completo como en el ejemplo de KIE (todos los campos requeridos presentes):
 
-| Campo | Nivel | Requerido | Descripción |
-|-------|--------|-----------|-------------|
-| model | root | **Sí** | `"kling-3.0/video"` |
-| callBackUrl | root | No | URL para callback al terminar |
-| input.mode | input | **Sí** | `"std"` \| `"pro"` |
-| input.duration | input | **Sí** | string `"3"`–`"15"` (segundos) |
-| input.multi_shots | input | **Sí** | boolean; si true → usar multi_prompt |
-| input.sound | input | **Sí** | boolean; si multi_shots true debe ser true |
-| input.prompt | input | **Sí (single shot)** | cuando multi_shots es false |
-| input.multi_prompt | input | **Sí (multi-shot)** | array de `{ prompt, duration }` cuando multi_shots true |
-| input.image_urls | input | **Sí** | array (vacío si no hay imágenes) |
-| input.aspect_ratio | input | No | `"16:9"` \| `"9:16"` \| `"1:1"` |
-| input.kling_elements | input | No | array de `{ name, description?, element_input_urls?, element_input_video_urls? }` para @nombre en el prompt |
+- **model**: `"kling-3.0/video"`
+- **callBackUrl**: opcional; se añade si en Netlify está definido `KIE_VIDEO_CALLBACK_URL`
+- **input**: objeto con todos los campos:
+  - **mode**: `"pro"` \| `"std"`
+  - **image_urls**: array (vacío `[]` si no hay imágenes)
+  - **sound**: boolean
+  - **duration**: string `"3"`–`"15"`
+  - **aspect_ratio**: `"16:9"` \| `"9:16"` \| `"1:1"`
+  - **multi_shots**: boolean
+  - **prompt**: string (cuando multi_shots es false) **o** **multi_prompt**: array de `{ prompt, duration }` (cuando multi_shots es true)
+  - **kling_elements**: array de `{ name, description, element_input_urls?, element_input_video_urls? }` (vacío `[]` si no hay elementos)
 
 ---
 

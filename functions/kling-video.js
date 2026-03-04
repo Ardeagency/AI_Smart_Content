@@ -60,7 +60,7 @@ exports.handler = async (event, context) => {
         return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Acción no válida. Use action: "createTask"' }) };
       }
 
-      // Body según doc KIE: Required = model, input.mode, input.duration, input.multi_shots, input.sound, input.prompt (single) o input.multi_prompt (multi). Optional = image_urls, aspect_ratio, kling_elements.
+      // Body completo como requiere KIE (mismo formato que el ejemplo oficial). Todos los campos siempre presentes.
       const mode = body.mode === 'pro' ? 'pro' : 'std';
       const promptText = typeof body.prompt === 'string' ? body.prompt.trim() : '';
       const rawMulti = Array.isArray(body.multi_shots) ? body.multi_shots : [];
@@ -77,20 +77,38 @@ exports.handler = async (event, context) => {
         };
       }
 
-      // Required: duration (string "3"–"15"), multi_shots (boolean), sound (boolean). Cuando multi_shots true, sound debe ser true (doc KIE).
       const durationStr = typeof body.duration === 'string' ? body.duration.trim() : String(body.duration || '5');
       const duration = /^(3|5|10|15)$/.test(durationStr) ? durationStr : '5';
+      const aspect_ratio = (typeof body.aspect_ratio === 'string' && /^(16:9|9:16|1:1)$/.test(body.aspect_ratio.trim())) ? body.aspect_ratio.trim() : '16:9';
       const sound = hasMultiShots ? true : (body.sound === true || body.sound === 'true');
+
+      const kling_elements = [];
+      if (Array.isArray(body.kling_elements) && body.kling_elements.length > 0) {
+        for (const el of body.kling_elements) {
+          if (!el || typeof el.name !== 'string' || !el.name.trim()) continue;
+          const urls = Array.isArray(el.element_input_urls) ? el.element_input_urls.filter((u) => typeof u === 'string' && u.startsWith('http')) : [];
+          const videoUrls = Array.isArray(el.element_input_video_urls) ? el.element_input_video_urls.filter((u) => typeof u === 'string' && u.startsWith('http')) : [];
+          const out = {
+            name: String(el.name).trim().slice(0, 64),
+            description: typeof el.description === 'string' ? el.description.trim().slice(0, 500) : ''
+          };
+          if (urls.length) out.element_input_urls = urls;
+          if (videoUrls.length) out.element_input_video_urls = videoUrls;
+          if (urls.length || videoUrls.length) kling_elements.push(out);
+        }
+      }
 
       const input = {
         mode,
+        image_urls: image_urls.length ? image_urls : [],
+        sound,
         duration,
+        aspect_ratio,
         multi_shots: hasMultiShots,
-        sound
+        kling_elements
       };
 
       if (hasMultiShots) {
-        // Required (multi-shot): multi_prompt = array of { prompt, duration } (duration number 1–12, total ≤15s, max 5 shots)
         const totalSec = Math.min(15, Math.max(3, parseInt(duration, 10) || 5));
         const n = Math.min(5, multiShots.length);
         const secPerShot = Math.min(12, Math.max(1, Math.floor(totalSec / n)));
@@ -99,34 +117,7 @@ exports.handler = async (event, context) => {
           duration: secPerShot
         }));
       } else {
-        // Required (single shot): prompt (string)
         input.prompt = promptForKie.slice(0, 2500);
-      }
-
-      // Required cuando hay imágenes o referencias @element: image_urls. Si no hay, enviamos array vacío por si la API lo exige.
-      input.image_urls = image_urls.length ? image_urls : [];
-
-      // Optional: aspect_ratio (solo si queremos forzar; si no, KIE usa default)
-      const aspectRatio = (typeof body.aspect_ratio === 'string' && /^(16:9|9:16|1:1)$/.test(body.aspect_ratio.trim())) ? body.aspect_ratio.trim() : null;
-      if (aspectRatio) input.aspect_ratio = aspectRatio;
-
-      // Optional: kling_elements (referencias @nombre en el prompt). KIE: name required; element_input_urls (2-4 imágenes) o element_input_video_urls (1 video) opcionales.
-      if (Array.isArray(body.kling_elements) && body.kling_elements.length > 0) {
-        const kling_elements = body.kling_elements
-          .filter((el) => el && typeof el.name === 'string' && el.name.trim())
-          .map((el) => {
-            const urls = Array.isArray(el.element_input_urls) ? el.element_input_urls.filter((u) => typeof u === 'string' && u.startsWith('http')) : [];
-            const videoUrls = Array.isArray(el.element_input_video_urls) ? el.element_input_video_urls.filter((u) => typeof u === 'string' && u.startsWith('http')) : [];
-            const out = {
-              name: String(el.name).trim().slice(0, 64),
-              description: typeof el.description === 'string' ? el.description.trim().slice(0, 500) : undefined
-            };
-            if (urls.length) out.element_input_urls = urls;
-            if (videoUrls.length) out.element_input_video_urls = videoUrls;
-            return out;
-          })
-          .filter((el) => (el.element_input_urls && el.element_input_urls.length > 0) || (el.element_input_video_urls && el.element_input_video_urls.length > 0));
-        if (kling_elements.length) input.kling_elements = kling_elements;
       }
 
       const kiePayload = {
