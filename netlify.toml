@@ -24,6 +24,18 @@
   force = true
 
 [[redirects]]
+  from = "/api/kling-video-create"
+  to = "/.netlify/functions/kling-video-create"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/kling-video-status"
+  to = "/.netlify/functions/kling-video-status"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/kie-video-download"
   to = "/.netlify/functions/kie-video-download"
   status = 200

@@ -4,7 +4,21 @@
 
 ## Uso en esta app
 
-La app genera video mediante la **API de KIE** (modelo `kling-3.0/video`). Proxy Netlify: `/.netlify/functions/kling-video` (variable de entorno `KIE_API_KEY`).
+La app genera video mediante la **API de KIE** (modelo `kling-3.0/video`). Variable de entorno: `KIE_API_KEY`.
+
+**Arquitectura asíncrona (evita timeout 524):**
+
+Las Netlify Functions tienen un límite de ejecución (~10–26 s). La generación de video en KIE tarda 30–120 s, por lo que **nunca** se debe esperar dentro de la función. Se usan tres funciones separadas:
+
+| Función | Método | Uso | Tiempo típico |
+|--------|--------|-----|----------------|
+| **kling-video-create** | POST | Crear tarea en KIE; devuelve `taskId` | &lt; 2 s |
+| **kling-video-status** | GET ?taskId= | Consultar estado (polling desde el cliente) | &lt; 2 s |
+| **kie-video-download** | GET ?videoUrl= | Descargar video cuando `state === 'success'` | variable |
+
+Flujo: **Frontend** → POST create → recibe `taskId` → **polling** GET status cada 3 s (máx 12 min) → cuando `success`, descarga con kie-video-download y sube a Supabase. Opcional: `KIE_VIDEO_CALLBACK_URL` para que KIE notifique al terminar y se pueda reducir polling.
+
+El endpoint legacy `/.netlify/functions/kling-video` sigue disponible (POST con `action: 'createTask'` y GET con `taskId`); internamente delega a la misma lógica.
 
 **Body enviado a KIE:**
 

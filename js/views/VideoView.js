@@ -1,11 +1,19 @@
 /**
  * VideoView - Página de generación de video con la API de KIE (modelo kling-3.0/video).
- * Flujo: crear tarea (POST /.netlify/functions/kling-video) → polling cada 15s (GET ?taskId=) hasta success/fail
+ * Flujo: crear tarea (POST kling-video-create) → polling desde cliente (GET kling-video-status?taskId=) hasta success/fail
  * → descargar video (proxy kie-video-download), subir a Supabase, mostrar URL al usuario.
- * Proxy: Netlify Function kling-video llama a api.kie.ai (KIE_API_KEY).
+ * Arquitectura asíncrona: las funciones solo crean/consultan; no esperan la generación (evita timeout 524).
  */
 class VideoView extends BaseView {
-  /** URL base de la función kling-video (proxy a API KIE). */
+  /** POST: crear tarea en KIE. Responde de inmediato con taskId (< 2 s). */
+  static get KLING_VIDEO_CREATE_API() {
+    return '/.netlify/functions/kling-video-create';
+  }
+  /** GET: consultar estado de la tarea. Usado para polling desde el cliente. */
+  static get KLING_VIDEO_STATUS_API() {
+    return '/.netlify/functions/kling-video-status';
+  }
+  /** Compatibilidad: router que une create + status (legacy). */
   static get KLING_VIDEO_API() {
     return '/.netlify/functions/kling-video';
   }
@@ -1405,7 +1413,7 @@ class VideoView extends BaseView {
       }
     }
 
-    const createUrl = VideoView.KLING_VIDEO_API;
+    const createUrl = VideoView.KLING_VIDEO_CREATE_API;
     console.log('[Video] POST crear tarea →', createUrl, { action: 'createTask', mode, duration: payload.duration, hasPrompt: !!payload.prompt, kling_elements: (payload.kling_elements || []).length });
 
     try {
@@ -1420,7 +1428,7 @@ class VideoView extends BaseView {
         createData = await createRes.json();
       } catch (parseErr) {
         console.error('[Video] POST', createUrl, ': respuesta no es JSON (p. ej. 404 devuelve HTML). Status:', createRes.status, 'parseErr:', parseErr);
-        this.showError('El servidor respondió con ' + createRes.status + '. ¿Está desplegada la función kling-video en Netlify?');
+        this.showError('El servidor respondió con ' + createRes.status + '. ¿Están desplegadas las funciones kling-video-create / kling-video-status en Netlify?');
         if (this.sendBtn) this.sendBtn.disabled = false;
         return;
       }
@@ -1474,7 +1482,7 @@ class VideoView extends BaseView {
   }
 
   async pollTask(taskId) {
-    const statusUrl = `${VideoView.KLING_VIDEO_API}?taskId=${encodeURIComponent(taskId)}`;
+    const statusUrl = `${VideoView.KLING_VIDEO_STATUS_API}?taskId=${encodeURIComponent(taskId)}`;
     const pollStartedAt = Date.now();
     console.log('[Video] Polling estado → GET', statusUrl, '(cada', VideoView.POLL_INTERVAL_MS / 1000, 's, máx', VideoView.POLL_MAX_DURATION_MS / 60000, 'min)');
 
@@ -1496,7 +1504,7 @@ class VideoView extends BaseView {
         } catch (parseErr) {
           console.error('[Video] GET', statusUrl, ': respuesta no es JSON. Status:', res.status, '→ ¿función desplegada?', parseErr);
           this.stopPolling();
-          this.showError('El servidor respondió ' + res.status + ' (respuesta no JSON). Revisa que la función kling-video esté desplegada en Netlify.');
+          this.showError('El servidor respondió ' + res.status + ' (respuesta no JSON). Revisa que kling-video-status esté desplegada en Netlify.');
           if (this._lastKieOutputId) {
             await this.updateSystemAIOutput(this._lastKieOutputId, { status: 'failed', error_message: 'Status ' + res.status });
             this._lastKieOutputId = null;
