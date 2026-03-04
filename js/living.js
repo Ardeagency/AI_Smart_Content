@@ -1548,16 +1548,6 @@ class LivingManager {
             document.body.style.overflow = '';
         };
         
-        const deleteBtn = document.getElementById('livingViewerDelete');
-        if (deleteBtn) {
-            const newDeleteBtn = deleteBtn.cloneNode(true);
-            deleteBtn.parentNode.replaceChild(newDeleteBtn, deleteBtn);
-            newDeleteBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.handleViewerDeleteOutput(data, closeModal);
-            });
-        }
-        
         const newCloseBtn = closeBtn.cloneNode(true);
         closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
         const newBackdrop = backdrop.cloneNode(true);
