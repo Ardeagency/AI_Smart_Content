@@ -274,8 +274,8 @@ class ProductsView extends BaseView {
             </div>
             <div class="product-view-thumbnails-wrap">
               <div class="product-view-thumbnails" id="productViewThumbnails" style="${thumbnails.length === 0 ? 'display: none;' : ''}">${thumbsHtml}</div>
-              <input type="file" id="productViewImageUpload" accept="image/*" multiple style="display: none;" aria-hidden="true">
-              <button type="button" class="product-view-add-btn" id="productViewAddBtn" aria-label="Añadir fotos"><i class="fas fa-plus"></i></button>
+              <input type="file" id="productViewImageUpload" accept="image/*" multiple style="position: absolute; width: 0; height: 0; opacity: 0; overflow: hidden; pointer-events: none;" aria-label="Añadir fotos al producto">
+              <label for="productViewImageUpload" class="product-view-add-btn" id="productViewAddBtn" role="button" aria-label="Añadir fotos"><i class="fas fa-plus"></i></label>
             </div>
           </div>
           <div class="product-view-info">
@@ -561,15 +561,16 @@ class ProductsView extends BaseView {
       });
     });
 
-    const addBtn = container.querySelector('#productViewAddBtn');
     const fileInput = container.querySelector('#productViewImageUpload');
-    if (addBtn && fileInput) {
-      addBtn.onclick = () => fileInput.click();
-      fileInput.onchange = (e) => {
-        const files = e.target.files;
+    if (fileInput) {
+      // Usar addEventListener para no pisar otros posibles listeners y asegurar el handler
+      fileInput.removeEventListener('change', fileInput._productViewUploadHandler);
+      fileInput._productViewUploadHandler = (e) => {
+        const files = e.target && e.target.files;
         if (files && files.length) this.uploadProductImages(files);
         e.target.value = '';
       };
+      fileInput.addEventListener('change', fileInput._productViewUploadHandler);
     }
   }
 
