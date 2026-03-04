@@ -60,14 +60,19 @@ exports.handler = async (event, context) => {
         return { statusCode: 400, headers: corsHeaders(), body: JSON.stringify({ error: 'Acción no válida. Use action: "createTask"' }) };
       }
 
-      // Body completo como requiere KIE (mismo formato que el ejemplo oficial). Todos los campos siempre presentes.
+      // Input según ejemplo KIE que funcionó: mode, image_urls (derivado de kling_elements), sound, duration, aspect_ratio, multi_shots, prompt, kling_elements
       const mode = body.mode === 'pro' ? 'pro' : 'std';
       const promptText = typeof body.prompt === 'string' ? body.prompt.trim() : '';
       const rawMulti = Array.isArray(body.multi_shots) ? body.multi_shots : [];
       const multiShots = rawMulti.map((s) => (s && typeof s === 'object' ? (typeof s.prompt === 'string' ? s.prompt.trim() : String(s.prompt || '')) : '')).filter(Boolean);
-      const image_urls = Array.isArray(body.image_urls) ? body.image_urls.filter((u) => typeof u === 'string' && u.startsWith('http')) : [];
+      const klingElements = Array.isArray(body.kling_elements) ? body.kling_elements : [];
 
-      const hasMultiShots = multiShots.length > 1;
+      const image_urls = [];
+      for (const el of klingElements) {
+        const urls = el.element_input_urls || [];
+        if (urls.length) image_urls.push(urls[0]);
+      }
+
       const promptForKie = promptText || (multiShots.length ? multiShots[0] : '');
       if (!promptForKie) {
         return {
@@ -77,63 +82,28 @@ exports.handler = async (event, context) => {
         };
       }
 
-      const durationStr = typeof body.duration === 'string' ? body.duration.trim() : String(body.duration || '5');
-      const duration = /^(3|5|10|15)$/.test(durationStr) ? durationStr : '5';
-      const aspect_ratio = (typeof body.aspect_ratio === 'string' && /^(16:9|9:16|1:1)$/.test(body.aspect_ratio.trim())) ? body.aspect_ratio.trim() : '16:9';
-      const sound = hasMultiShots ? true : (body.sound === true || body.sound === 'true');
-
-      const kling_elements = [];
-      if (Array.isArray(body.kling_elements) && body.kling_elements.length > 0) {
-        for (const el of body.kling_elements) {
-          if (!el || typeof el.name !== 'string' || !el.name.trim()) continue;
-          const urls = Array.isArray(el.element_input_urls) ? el.element_input_urls.filter((u) => typeof u === 'string' && u.startsWith('http')) : [];
-          const videoUrls = Array.isArray(el.element_input_video_urls) ? el.element_input_video_urls.filter((u) => typeof u === 'string' && u.startsWith('http')) : [];
-          const out = {
-            name: String(el.name).trim().slice(0, 64),
-            description: typeof el.description === 'string' ? el.description.trim().slice(0, 500) : ''
-          };
-          if (urls.length) out.element_input_urls = urls;
-          if (videoUrls.length) out.element_input_video_urls = videoUrls;
-          if (urls.length || videoUrls.length) kling_elements.push(out);
-        }
-      }
-
-      // KIE: single-shot → image_urls máx 2 (start_frame, end_frame); multi-shot → máx 1 (start_frame)
-      const maxImageUrls = hasMultiShots ? 1 : 2;
-      const imageUrlsLimited = image_urls.length > maxImageUrls ? image_urls.slice(0, maxImageUrls) : (image_urls.length ? image_urls : []);
-
       const input = {
         mode,
-        image_urls: imageUrlsLimited,
-        sound,
-        duration,
-        aspect_ratio,
-        multi_shots: hasMultiShots,
-        kling_elements
+        sound: body.sound === true || body.sound === 'true',
+        duration: typeof body.duration === 'string' ? body.duration : String(body.duration || '5'),
+        aspect_ratio: typeof body.aspect_ratio === 'string' ? body.aspect_ratio : (body.aspect_ratio || '16:9'),
+        multi_shots: multiShots.length > 1,
+        prompt: promptForKie
       };
-
-      if (hasMultiShots) {
-        const totalSec = Math.min(15, Math.max(3, parseInt(duration, 10) || 5));
-        const n = Math.min(5, multiShots.length);
-        const secPerShot = Math.min(12, Math.max(1, Math.floor(totalSec / n)));
-        input.multi_prompt = multiShots.slice(0, n).map((p) => ({
-          prompt: String(p).trim().slice(0, 500),
-          duration: secPerShot
-        }));
-      } else {
-        input.prompt = promptForKie.slice(0, 2500);
+      if (image_urls.length) input.image_urls = image_urls;
+      if (klingElements.length) {
+        input.kling_elements = klingElements.map((el) => {
+          const o = { name: el.name || 'element_' + Math.random().toString(36).slice(2, 8) };
+          if (el.description) o.description = el.description;
+          if (Array.isArray(el.element_input_urls) && el.element_input_urls.length) o.element_input_urls = el.element_input_urls;
+          return o;
+        });
       }
 
       const kiePayload = {
         model: 'kling-3.0/video',
         input
       };
-      const callBackUrl = process.env.KIE_VIDEO_CALLBACK_URL;
-      if (callBackUrl && typeof callBackUrl === 'string' && callBackUrl.startsWith('http')) {
-        kiePayload.callBackUrl = callBackUrl.trim();
-      }
-      const promptPreview = (input.prompt || '').length > 80 ? (input.prompt.slice(0, 80) + '...') : input.prompt;
-      console.log('kling-video KIE createTask payload:', JSON.stringify({ model: kiePayload.model, callBackUrl: kiePayload.callBackUrl, input: { ...input, prompt: promptPreview } }));
 
       const createUrl = `${KIE_BASE}${CREATE_PATH}`;
       const createRes = await fetch(createUrl, {
@@ -150,13 +120,10 @@ exports.handler = async (event, context) => {
       }
 
       if (!createRes.ok || createData.code !== 200) {
-        let errMsg = createData.msg || createData.message || createData.error || (createRes.status === 401 ? 'API Key inválida (revisa KIE_API_KEY)' : createRes.status === 402 ? 'Saldo insuficiente en KIE' : createRes.status === 422 ? 'Parámetros inválidos (422)' : 'Error al crear la tarea');
+        let errMsg = createData.msg || createData.message || createData.error || (createRes.status === 401 ? 'API Key inválida (revisa KIE_API_KEY)' : createRes.status === 402 ? 'Saldo insuficiente en KIE' : 'Error al crear la tarea');
         if (createData.data?.errors && Array.isArray(createData.data.errors) && createData.data.errors.length) {
           const details = createData.data.errors.map((e) => (typeof e === 'string' ? e : e.message || e.field || JSON.stringify(e))).join('; ');
           errMsg = errMsg + (details ? ' — ' + details : '');
-        }
-        if (createRes.status === 422 && createData.data && !createData.data.errors) {
-          errMsg = errMsg + (typeof createData.data === 'object' ? ' — ' + JSON.stringify(createData.data) : '');
         }
         console.error('kling-video KIE createTask error:', createRes.status, createData);
         const httpStatus = !createRes.ok
@@ -212,7 +179,6 @@ exports.handler = async (event, context) => {
         };
       }
 
-      // KIE ya devuelve { code, msg, data: { taskId, model, state, resultJson, failMsg, ... } } — el front espera ese formato
       return {
         statusCode: 200,
         headers: corsHeaders(),

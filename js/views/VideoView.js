@@ -1372,31 +1372,20 @@ class VideoView extends BaseView {
       payload.prompt = promptText;
     }
 
-    // image_urls: KIE permite máx 2 en single-shot (start_frame, end_frame). Prioridad: 1) imagen de escena (producción), 2) imagen principal del producto.
-    let sceneFirstUrl = null;
-    let productMainUrl = null;
-    const klingElementsForKie = [];
-    for (const el of this.klingElements || []) {
-      const urls = (el.element_input_urls || []).filter((u) => typeof u === 'string' && u.startsWith('http'));
-      const videoUrls = (el.element_input_video_urls || []).filter((u) => typeof u === 'string' && u.startsWith('http'));
-      const allUrls = [...urls, ...videoUrls];
-      if (el._fromProductionQueue && allUrls.length && !sceneFirstUrl) sceneFirstUrl = allUrls[0];
-      if (el._fromProductSelection && urls.length && !productMainUrl) productMainUrl = urls[0];
-      if (el.name && allUrls.length) {
-        klingElementsForKie.push({
-          name: el.name,
-          description: el.description || undefined,
-          element_input_urls: urls.length ? urls : undefined,
-          element_input_video_urls: videoUrls.length ? videoUrls : undefined
-        });
-      }
+    // kling_elements: solo escena (producción). El backend construye image_urls desde aquí. Formato que funcionó (2026-03-03).
+    const sceneElementsForKling = (this.klingElements || []).filter((el) => !el._fromProductSelection);
+    if (sceneElementsForKling.length > 0) {
+      payload.kling_elements = sceneElementsForKling.map((el) => {
+        const o = { name: el.name };
+        if (el.description) o.description = el.description;
+        if (el.element_input_urls && el.element_input_urls.length) o.element_input_urls = el.element_input_urls;
+        if (el.element_input_video_urls && el.element_input_video_urls.length) o.element_input_video_urls = el.element_input_video_urls;
+        return o;
+      });
     }
-    const imageUrls = [sceneFirstUrl, productMainUrl].filter(Boolean);
-    if (imageUrls.length) payload.image_urls = imageUrls;
-    if (klingElementsForKie.length) payload.kling_elements = klingElementsForKie;
 
     const createUrl = VideoView.KLING_VIDEO_API;
-    console.log('[Video] POST crear tarea →', createUrl, { action: 'createTask', mode, duration: payload.duration, hasPrompt: !!payload.prompt, image_urls: payload.image_urls?.length || 0 });
+    console.log('[Video] POST crear tarea →', createUrl, { action: 'createTask', mode, duration: payload.duration, hasPrompt: !!payload.prompt, kling_elements: (payload.kling_elements || []).length });
 
     try {
       const createRes = await fetch(createUrl, {
@@ -1443,7 +1432,7 @@ class VideoView extends BaseView {
         status: 'processing',
         external_job_id: taskId,
         prompt_used: promptText,
-        metadata: { mode: payload.mode || 'pro', duration: payload.duration, aspect_ratio: payload.aspect_ratio, image_urls_count: payload.image_urls?.length || 0 }
+        metadata: { mode: payload.mode || 'pro', duration: payload.duration, aspect_ratio: payload.aspect_ratio, kling_elements_count: (payload.kling_elements || []).length }
       });
 
       this.showStatus('Generando video (Kling 3.0). Esto puede tardar unos minutos…', true);

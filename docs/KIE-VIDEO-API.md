@@ -6,19 +6,12 @@
 
 La app genera video mediante la **API de KIE** (modelo `kling-3.0/video`). Proxy Netlify: `/.netlify/functions/kling-video` (variable de entorno `KIE_API_KEY`).
 
-**Body enviado:** siempre el body completo como en el ejemplo de KIE (todos los campos requeridos presentes):
+**Body enviado a KIE (formato que funcionó 2026-03-03):**
 
 - **model**: `"kling-3.0/video"`
-- **callBackUrl**: opcional; se añade si en Netlify está definido `KIE_VIDEO_CALLBACK_URL`
-- **input**: objeto con todos los campos:
-  - **mode**: `"pro"` \| `"std"`
-  - **image_urls**: array; en single-shot **máximo 2** (start_frame, end_frame), en multi-shot **máximo 1** (start_frame). El front prioriza: 1) imagen de escena (producción), 2) imagen principal del producto. El proxy recorta si llegan más de 2.
-  - **sound**: boolean
-  - **duration**: string `"3"`–`"15"`
-  - **aspect_ratio**: `"16:9"` \| `"9:16"` \| `"1:1"`
-  - **multi_shots**: boolean
-  - **prompt**: string (cuando multi_shots es false) **o** **multi_prompt**: array de `{ prompt, duration }` (cuando multi_shots es true)
-  - **kling_elements**: array de `{ name, description, element_input_urls?, element_input_video_urls? }` (vacío `[]` si no hay elementos)
+- **input**: objeto con `mode`, `sound`, `duration`, `aspect_ratio`, `multi_shots`, `prompt`; si hay elementos de escena (producción), el proxy añade `image_urls` (primera URL de cada elemento) y `kling_elements` (name, description?, element_input_urls).
+
+El front solo envía a la función: `action`, `mode`, `duration`, `aspect_ratio`, `sound`, `prompt` (o `multi_shots`), y `kling_elements` (solo elementos de escena/producción, no producto). La función construye `image_urls` desde `kling_elements` y reenvía a KIE.
 
 ---
 
