@@ -1,48 +1,31 @@
 # Lógica del body para video (KIE createTask)
 
-Alineado al [ejemplo oficial KIE](https://kie.ai): `duration` en string, `image_urls` con al menos una URL, `kling_elements` con `element_input_urls` de **2 URLs** (first frame + end frame; si solo hay 1 imagen se duplica).
+- **image_urls:** TODAS las imágenes (producto, escena, adjuntos) se envían aquí por defecto.
+- **kling_elements:** Solo los elementos que el usuario **ancla** con el ícono de chincheta; esos van con `element_input_urls` (o `element_input_video_urls`) para referencias nombradas en el prompt (`@nombre`).
 
 ---
 
 ## Cuándo se selecciona escena o producto
 
-### Frontend (VideoView.js) – qué se envía al proxy
+### Frontend (VideoView.js)
 
-1. **Payload base:** `action: 'createTask'`, `mode` (pro/std), `duration` (string "5"/"10"/"12"), `aspect_ratio`, `sound`, y **o bien** `prompt` (single) **o bien** `multi_shots` (array de `{ prompt }`).
+1. **Payload base:** `action: 'createTask'`, `mode`, `duration`, `aspect_ratio`, `sound`, y `prompt` o `multi_shots`.
 
-2. **kling_elements:** Se envían **todos** los elementos que tengan al menos una URL (imagen o video):
-   - **Producto:** si en Asset Stack eliges un producto, se añade un elemento con `name` (ej. `Licuadora_Oster`), `element_input_urls` = `product.image_urls`, y `_fromProductSelection: true`. Ese elemento **sí** se incluye en el payload (escena + producto).
-   - **Escena:** si eliges producciones en la galería, cada una es un elemento con `name` tipo `produccion_123`, `element_input_urls: [p.media_url]` (1 URL), `_fromProductionQueue: true`. También se incluyen en el payload.
-   - **Elementos manuales:** los que subes con “Añadir elemento” (2–4 imágenes o 1 video). Se envían igual.
+2. **image_urls:** Se construye con **todas** las URLs de imagen de todos los elementos (producto, escena, adjuntos). Por defecto todo va como referencia visual en `image_urls`.
 
-3. **Referencias @name en el prompt:** Para que KIE use cada elemento, el prompt debe contener `@nombre`. El frontend añade al final del prompt las que falten (ej. `" ... @Licuadora_Oster @produccion_123"`).
+3. **kling_elements:** Solo se envían elementos **anclados** (chincheta activa):
+   - Cada imagen tiene un botón de chincheta (📌). Si el usuario hace clic y **ancla** una imagen, esa imagen pasa a formar parte de un elemento en `kling_elements` con `element_input_urls` (y se añade `@nombre` al prompt si falta).
+   - Elementos solo-video tienen una chincheta a nivel de chip; al anclar, el elemento va a `kling_elements` con `element_input_video_urls`.
+   - Si ninguna imagen/chip está anclada, `kling_elements` no se envía; solo se envían `image_urls`.
 
-4. **Resumen:** Con producto + escena seleccionados, el body al proxy tiene `prompt` (o `multi_shots`), `kling_elements: [ { name, description?, element_input_urls, element_input_video_urls? }, ... ]` con ambos tipos, y el prompt ya incluye los `@name` necesarios.
-
----
-
-## Backend (kie-video-shared.js) – qué se envía a KIE
-
-1. **Filtrado de elementos:** Solo se mantienen elementos cuyo `@name` aparece en el prompt y que tienen al menos 1 imagen (o 1 video). Se construye `kling_elements` y se eliminan referencias huérfanas del texto.
-
-2. **element_input_urls:** El ejemplo KIE usa **2 URLs** por elemento (first frame, end frame). Si un elemento viene con **1 sola imagen**, el backend la duplica: `[url, url]`, para cumplir el formato esperado por la API.
-
-3. **image_urls:** Se derivan del **primer** elemento de `kling_elements`: 1 URL (multi_shot) o 1–2 URLs (single). Así KIE recibe siempre `image_urls` cuando hay elementos con imágenes.
-
-4. **input hacia KIE (como en el ejemplo):**
-   - `mode`, `sound`, `aspect_ratio`
-   - **duration:** siempre **string** (ej. `"5"`), no número.
-   - `multi_shots`: `false` → se envía `prompt`; `true` → se envía `multi_prompt`.
-   - `image_urls` (array), si hay elementos con imágenes.
-   - `kling_elements` (array), cada uno con `name`, opcional `description`, `element_input_urls` (2–4 URLs; si había 1, se duplicó).
-
-5. **Payload final:** `{ model: 'kling-3.0/video', input: { ... }, callBackUrl? }`.
+4. **Resumen:** Todas las imágenes → `image_urls`. Solo las ancladas → además en `kling_elements` con nombre y sus URLs, y referencias `@nombre` en el prompt.
 
 ---
 
-## Cambios para evitar 422 (Unprocessable Content)
+## Backend (kie-video-shared.js)
 
-- **duration:** Antes se enviaba como número (`5`). KIE en el ejemplo usa string (`"5"`). Ahora `input.duration` es siempre string.
-- **element_input_urls con 1 imagen:** KIE espera 2 URLs por elemento (first/end frame). Si el elemento tenía solo 1 URL, ahora se envía `[url, url]` en lugar de `[url]`.
+1. **image_urls:** Si el body trae `body.image_urls` (array), se usa tal cual para `input.image_urls`. Si no, se deriva del primer `kling_element` (compatibilidad).
 
-Con esto el body queda alineado al ejemplo oficial y se evita el 422 por tipo o estructura.
+2. **kling_elements:** Vienen solo los anclados desde el frontend. Se filtran por `@name` en el prompt; si un elemento tiene 1 imagen se duplica a 2 URLs para el formato KIE.
+
+3. **input hacia KIE:** `mode`, `sound`, `duration` (string), `aspect_ratio`, `image_urls`, `multi_shots`/`prompt` o `multi_prompt`, y opcionalmente `kling_elements`.

@@ -22415,6 +22415,61 @@ body.production-filters-in-header .living-container > .living-history-section {
     background: var(--accent-warm, var(--color-warning));
     color: #fff;
 }
+.video-kling-element-pin-thumb {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    padding: 0;
+    margin: 0;
+    width: 14px;
+    height: 14px;
+    min-width: 14px;
+    min-height: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.5rem;
+    line-height: 1;
+    color: var(--glass-black-text);
+    background: var(--black-60);
+    border: none;
+    border-radius: 0 0 0 var(--radius-xs);
+    cursor: pointer;
+    opacity: 0.85;
+    transition: var(--transition);
+}
+.video-kling-element-pin-thumb:hover {
+    opacity: 1;
+    background: var(--brand-primary-brillo, rgba(255,255,255,0.2));
+    color: #fff;
+}
+.video-kling-element-pin-thumb .video-kling-pin-active,
+.video-kling-pin-active {
+    color: var(--accent-warm, var(--color-warning));
+}
+.video-kling-element-pin-chip {
+    padding: 0 0.2rem;
+    margin: 0;
+    min-width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--glass-black-text);
+    cursor: pointer;
+    font-size: 0.65rem;
+    opacity: 0.8;
+    border-radius: var(--radius-xs);
+}
+.video-kling-element-pin-chip:hover {
+    opacity: 1;
+    background: var(--brand-primary-brillo, rgba(255,255,255,0.12));
+}
+.video-kling-element-pin-chip .video-kling-pin-active {
+    color: var(--accent-warm, var(--color-warning));
+}
 .video-kling-element-thumb {
     width: 40px;
     height: 40px;

@@ -94,8 +94,11 @@ async function handleCreate(body, headers) {
     }).replace(/\s+/g, ' ').trim();
   };
 
+  // image_urls: el frontend envía TODAS las imágenes aquí (producto, escena, adjuntos). Si no viene, se deriva del primer kling_element (compat).
   let image_urls = [];
-  if (kling_elements.length > 0) {
+  if (Array.isArray(body.image_urls) && body.image_urls.length > 0) {
+    image_urls = body.image_urls.filter(isImageUrl);
+  } else if (kling_elements.length > 0) {
     const first = kling_elements[0];
     const urls = first.element_input_urls || [];
     if (hasMultiShots) {

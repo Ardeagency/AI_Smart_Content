@@ -697,14 +697,16 @@ class VideoView extends BaseView {
           name,
           element_input_video_urls: [p.media_url],
           _fromProductionQueue: true,
-          _productionOutputId: p.id
+          _productionOutputId: p.id,
+          _pinned: false
         });
       } else {
         this.klingElements.push({
           name,
           element_input_urls: [p.media_url],
           _fromProductionQueue: true,
-          _productionOutputId: p.id
+          _productionOutputId: p.id,
+          _pinned: false
         });
       }
     });
@@ -989,7 +991,7 @@ class VideoView extends BaseView {
       const product = (this.dbData.products || []).find((p) => String(p.id) === String(productId));
       if (product && Array.isArray(product.image_urls) && product.image_urls.length >= 1) {
         const name = this.sanitizeElementName((product.nombre_producto || 'product').slice(0, 24));
-        this.klingElements.push({ name, description: product.nombre_producto || undefined, element_input_urls: [...product.image_urls], _fromProductSelection: true });
+        this.klingElements.push({ name, description: product.nombre_producto || undefined, element_input_urls: [...product.image_urls], _fromProductSelection: true, _pinned: false });
       }
     }
     this.renderKlingElementsList();
@@ -1050,7 +1052,8 @@ class VideoView extends BaseView {
         this.klingElements.push({
           name,
           description: description || undefined,
-          element_input_urls: urls
+          element_input_urls: urls,
+          _pinned: false
         });
       } else if (videoFile) {
         const ext = (videoFile.name.split('.').pop() || 'mp4').toLowerCase();
@@ -1061,7 +1064,8 @@ class VideoView extends BaseView {
         this.klingElements.push({
           name,
           description: description || undefined,
-          element_input_video_urls: [publicUrl]
+          element_input_video_urls: [publicUrl],
+          _pinned: false
         });
       }
       this.renderKlingElementsList();
@@ -1082,25 +1086,58 @@ class VideoView extends BaseView {
     listEl.style.display = 'flex';
     listEl.innerHTML = this.klingElements.map((el, idx) => {
       const urls = Array.isArray(el.element_input_urls) ? el.element_input_urls : [];
-      const isProductMulti = el._fromProductSelection && urls.length >= 1;
+      const pinnedIndices = Array.isArray(el._pinnedIndices) ? el._pinnedIndices : [];
       const thumbnails = urls.length > 0
         ? urls.map((url, urlIdx) => {
             const safe = String(url).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-            if (isProductMulti) {
-              return `<span class="video-kling-element-thumb-wrap"><img src="${safe}" alt="" class="video-kling-element-thumb" loading="lazy"><button type="button" class="video-kling-element-remove-thumb" data-element-index="${idx}" data-url-index="${urlIdx}" aria-label="Quitar esta imagen">&times;</button></span>`;
-            }
-            return `<img src="${safe}" alt="" class="video-kling-element-thumb" loading="lazy">`;
-          }).join(isProductMulti ? '' : '')
+            const isPinned = pinnedIndices.includes(urlIdx);
+            return `<span class="video-kling-element-thumb-wrap">
+              <img src="${safe}" alt="" class="video-kling-element-thumb" loading="lazy">
+              <button type="button" class="video-kling-element-pin-thumb" data-element-index="${idx}" data-url-index="${urlIdx}" aria-label="${isPinned ? 'Desanclar imagen' : 'Anclar imagen (usar como elemento de referencia)'}" title="${isPinned ? 'Desanclar' : 'Anclar'}"><i class="fas fa-thumbtack${isPinned ? ' video-kling-pin-active' : ''}"></i></button>
+              <button type="button" class="video-kling-element-remove-thumb" data-element-index="${idx}" data-url-index="${urlIdx}" aria-label="Quitar esta imagen">&times;</button>
+            </span>`;
+          }).join('')
         : '';
-      const thumbsContainer = thumbnails ? (isProductMulti ? `<span class="video-kling-element-thumbs">${thumbnails}</span>` : `<span class="video-kling-element-thumbs">${thumbnails}</span>`) : '';
+      const hasVideo = (el.element_input_video_urls || []).length > 0;
+      const videoPinned = hasVideo && (el._pinned === true);
+      const thumbsContainer = thumbnails ? `<span class="video-kling-element-thumbs">${thumbnails}</span>` : '';
+      const videoLabel = hasVideo ? `<span class="video-kling-element-video-label">@${el.name}</span><button type="button" class="video-kling-element-pin-chip" data-element-index="${idx}" aria-label="${videoPinned ? 'Desanclar' : 'Anclar'} (elemento video)" title="${videoPinned ? 'Desanclar' : 'Anclar'}"><i class="fas fa-thumbtack${videoPinned ? ' video-kling-pin-active' : ''}"></i></button>` : '';
       return `
       <span class="video-kling-element-chip" data-index="${idx}">
         ${thumbsContainer}
-        ${thumbnails ? '' : `@${el.name}`}
+        ${!thumbsContainer ? `@${el.name}` : ''}
+        ${videoLabel}
         <button type="button" class="video-kling-element-remove" aria-label="Quitar elemento ${el.name}">&times;</button>
       </span>
     `;
     }).join('');
+    listEl.querySelectorAll('.video-kling-element-pin-thumb').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const elIdx = parseInt(btn.dataset.elementIndex, 10);
+        const urlIdx = parseInt(btn.dataset.urlIndex, 10);
+        if (isNaN(elIdx) || isNaN(urlIdx)) return;
+        const el = this.klingElements[elIdx];
+        if (!el) return;
+        if (!Array.isArray(el._pinnedIndices)) el._pinnedIndices = [];
+        const i = el._pinnedIndices.indexOf(urlIdx);
+        if (i >= 0) el._pinnedIndices.splice(i, 1);
+        else el._pinnedIndices.push(urlIdx);
+        el._pinnedIndices.sort((a, b) => a - b);
+        this.renderKlingElementsList();
+      });
+    });
+    listEl.querySelectorAll('.video-kling-element-pin-chip').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const elIdx = parseInt(btn.dataset.elementIndex, 10);
+        if (isNaN(elIdx)) return;
+        const el = this.klingElements[elIdx];
+        if (!el) return;
+        el._pinned = !el._pinned;
+        this.renderKlingElementsList();
+      });
+    });
     listEl.querySelectorAll('.video-kling-element-remove-thumb').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -1110,6 +1147,10 @@ class VideoView extends BaseView {
         const el = this.klingElements[elIdx];
         if (!el || !Array.isArray(el.element_input_urls)) return;
         el.element_input_urls.splice(urlIdx, 1);
+        if (el._pinnedIndices) {
+          el._pinnedIndices = el._pinnedIndices.filter((i) => i !== urlIdx).map((i) => (i > urlIdx ? i - 1 : i));
+          if (el._pinnedIndices.length === 0) delete el._pinnedIndices;
+        }
         if (el.element_input_urls.length === 0) {
           this.klingElements.splice(elIdx, 1);
           if (this.klingElements.every((e) => !e._fromProductSelection)) {
@@ -1122,6 +1163,7 @@ class VideoView extends BaseView {
     });
     listEl.querySelectorAll('.video-kling-element-remove').forEach((btn) => {
       btn.addEventListener('click', (e) => {
+        if (e.target.closest('.video-kling-element-pin-thumb') || e.target.closest('.video-kling-element-pin-chip')) return;
         const chip = e.target.closest('.video-kling-element-chip');
         const index = chip ? parseInt(chip.dataset.index, 10) : -1;
         if (index >= 0) {
@@ -1472,22 +1514,38 @@ class VideoView extends BaseView {
       payload.prompt = promptText;
     }
 
-    // kling_elements: escena + producto. El backend solo envía elementos referenciados en el prompt como @name (y con al menos 1 imagen o 1 video).
-    const allElementsForKling = (this.klingElements || []).filter((el) => {
-      if (!el || !el.name) return false;
-      const hasUrls = (el.element_input_urls && el.element_input_urls.length > 0) || (el.element_input_video_urls && el.element_input_video_urls.length > 0);
-      return hasUrls;
+    // image_urls: TODAS las imágenes (producto, escena, adjuntos). Por defecto todo va como image_urls.
+    const allImageUrls = [];
+    (this.klingElements || []).forEach((el) => {
+      const urls = Array.isArray(el.element_input_urls) ? el.element_input_urls : [];
+      urls.forEach((u) => { if (typeof u === 'string' && u.startsWith('http')) allImageUrls.push(u); });
     });
-    if (allElementsForKling.length > 0) {
-      payload.kling_elements = allElementsForKling.map((el) => {
-        const o = { name: el.name };
-        if (el.description) o.description = el.description;
-        if (el.element_input_urls && el.element_input_urls.length) o.element_input_urls = el.element_input_urls;
-        if (el.element_input_video_urls && el.element_input_video_urls.length) o.element_input_video_urls = el.element_input_video_urls;
-        return o;
-      });
-      // Referencias @name en el prompt para que KIE use los elementos (requerido por la API). Añadimos las que falten.
-      const refs = allElementsForKling.map((el) => `@${el.name}`).filter((ref) => {
+    if (allImageUrls.length > 0) payload.image_urls = [...new Set(allImageUrls)];
+
+    // kling_elements: solo elementos "anclados" (chincheta). Si el usuario ancla una imagen, esa entra como element_input_urls; el resto solo en image_urls.
+    const pinnedElements = [];
+    (this.klingElements || []).forEach((el) => {
+      if (!el || !el.name) return;
+      const pinnedIndices = Array.isArray(el._pinnedIndices) ? el._pinnedIndices : [];
+      const urls = Array.isArray(el.element_input_urls) ? el.element_input_urls : [];
+      const hasPinnedImages = pinnedIndices.length > 0 && urls.length > 0;
+      const hasPinnedVideo = (el.element_input_video_urls || []).length > 0 && el._pinned === true;
+      if (hasPinnedImages) {
+        const pinnedUrls = pinnedIndices.filter((i) => i >= 0 && i < urls.length).map((i) => urls[i]).filter((u) => typeof u === 'string' && u.startsWith('http'));
+        if (pinnedUrls.length > 0) {
+          pinnedElements.push({ name: el.name, description: el.description, element_input_urls: pinnedUrls });
+        }
+      } else if (hasPinnedVideo) {
+        pinnedElements.push({
+          name: el.name,
+          description: el.description,
+          element_input_video_urls: (el.element_input_video_urls || []).slice(0, 1)
+        });
+      }
+    });
+    if (pinnedElements.length > 0) {
+      payload.kling_elements = pinnedElements;
+      const refs = pinnedElements.map((el) => `@${el.name}`).filter((ref) => {
         if (payload.prompt && payload.prompt.includes(ref)) return false;
         if (payload.multi_shots) return !payload.multi_shots.some((s) => s.prompt && s.prompt.includes(ref));
         return true;
@@ -1503,7 +1561,7 @@ class VideoView extends BaseView {
     }
 
     const createUrl = VideoView.KLING_VIDEO_CREATE_API;
-    console.log('[Video] POST crear tarea →', createUrl, { action: 'createTask', mode, duration: payload.duration, hasPrompt: !!payload.prompt, kling_elements: (payload.kling_elements || []).length });
+    console.log('[Video] POST crear tarea →', createUrl, { action: 'createTask', mode, duration: payload.duration, hasPrompt: !!payload.prompt, image_urls: (payload.image_urls || []).length, kling_elements: (payload.kling_elements || []).length });
 
     try {
       const createRes = await fetch(createUrl, {
