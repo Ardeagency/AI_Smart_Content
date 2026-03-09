@@ -17,6 +17,7 @@ class LivingManager {
         this.brandContainerId = null;
         this.organizationId = null;
         this.latestGeneratedContent = [];
+        this.systemAiOutputs = []; // Producciones de system_ai_outputs (excl. OpenAI)
         this.eventListenersSetup = false;
         this.initialized = false;
         // Filtros del historial
@@ -105,6 +106,9 @@ class LivingManager {
 
             // Cargar contenido generado después de obtener brand_id
             await this.loadLatestGeneratedContent();
+
+            // Cargar producciones de system_ai_outputs (no OpenAI)
+            await this.loadSystemAiOutputs();
 
             // Renderizar solo Historial (sin sección 3 ni hero)
             await this.renderAll();
@@ -222,7 +226,7 @@ class LivingManager {
                 .from('flow_runs')
                 .select('*, content_flows(name)')
                 .order('created_at', { ascending: false })
-                .limit(100);
+                .limit(300);
 
             query = this.brandId ? query.eq('brand_id', this.brandId) : query.eq('user_id', this.userId);
             let { data, error } = await query;
@@ -230,7 +234,7 @@ class LivingManager {
             if (error) {
                 // Fallback sin join si la relación falla
                 query = this.supabase.from('flow_runs').select('*')
-                    .order('created_at', { ascending: false }).limit(100);
+                    .order('created_at', { ascending: false }).limit(300);
                 query = this.brandId ? query.eq('brand_id', this.brandId) : query.eq('user_id', this.userId);
                 const res = await query;
                 this.flowRuns = res.error ? [] : (res.data || []);
@@ -337,6 +341,36 @@ class LivingManager {
         } catch (error) {
             console.error('❌ Error loading latest generated content:', error);
             this.latestGeneratedContent = [];
+        }
+    }
+
+    /**
+     * Carga producciones de system_ai_outputs (solo las que NO son de OpenAI).
+     * Se usa brand_container_id y user_id; provider != 'openai'.
+     */
+    async loadSystemAiOutputs() {
+        if (!this.supabase || !this.brandContainerId || !this.userId) {
+            this.systemAiOutputs = [];
+            return;
+        }
+        try {
+            const { data, error } = await this.supabase
+                .from('system_ai_outputs')
+                .select('id, brand_container_id, user_id, provider, output_type, status, storage_path, storage_object_id, prompt_used, text_content, metadata, created_at')
+                .eq('brand_container_id', this.brandContainerId)
+                .eq('user_id', this.userId)
+                .neq('provider', 'openai')
+                .order('created_at', { ascending: false })
+                .limit(500);
+            if (error) {
+                console.warn('⚠️ Error cargando system_ai_outputs:', error.message || error.code);
+                this.systemAiOutputs = [];
+                return;
+            }
+            this.systemAiOutputs = data || [];
+        } catch (error) {
+            console.error('❌ Error cargando system_ai_outputs:', error);
+            this.systemAiOutputs = [];
         }
     }
 
@@ -622,41 +656,41 @@ class LivingManager {
         const container = document.getElementById('livingHistoryContent');
         if (!container) return;
 
-        // Todo el contenido producido: flow runs + contenido generado (sin excluir)
-        const fromRuns = (this.flowRuns || []).map(run => {
-                const output = this.flowOutputs.find(o => o.run_id === run.id);
-                const fileUrl = output?.file_url || output?.storage_path || null;
-                let contentType = 'text';
-                if (fileUrl) {
+        // Todo el contenido producido: una tarjeta por cada output (flow_outputs), no una por run
+        const fromRuns = (this.flowOutputs || []).map(output => {
+            const run = (this.flowRuns || []).find(r => r.id === output.run_id);
+            const fileUrl = output?.file_url || output?.storage_path || null;
+            let contentType = 'text';
+            if (fileUrl) {
                 const url = (fileUrl + '').toLowerCase();
                 if (url.includes('.mp4') || url.includes('.mov') || url.includes('.webm') || url.includes('video') || url.includes('reel') || url.includes('clip')) {
-                        contentType = 'video';
+                    contentType = 'video';
                 } else if (url.includes('.jpg') || url.includes('.jpeg') || url.includes('.png') || url.includes('.webp') || url.includes('image') || url.includes('img')) {
-                        contentType = 'image';
-                    }
-                } else if (output?.output_type) {
+                    contentType = 'image';
+                }
+            } else if (output?.output_type) {
                 const type = (output.output_type + '').toLowerCase();
                 if (type.includes('video') || type.includes('reel') || type.includes('clip')) contentType = 'video';
                 else if (type.includes('image') || type.includes('img') || type.includes('still')) contentType = 'image';
             }
             let prompt = output?.prompt_used || output?.prompt || output?.generated_copy || output?.text_content || '';
-                if (!prompt && output?.metadata) {
+            if (!prompt && output?.metadata) {
                 try {
                     const meta = typeof output.metadata === 'string' ? JSON.parse(output.metadata) : output.metadata;
                     prompt = meta?.prompt || meta?.prompt_used || meta?.generated_prompt || '';
                 } catch (_) {}
             }
-            if (!prompt) prompt = run.status || '';
+            if (!prompt && run) prompt = run.status || '';
             return {
                 contentType,
                 fileUrl,
                 prompt,
-                run,
+                run: run || { id: output.run_id },
                 output,
-                created_at: run.created_at || output?.created_at,
+                created_at: output?.created_at || run?.created_at,
                 _outputId: output?.id
             };
-        });
+        }).filter(it => it.output != null);
 
         const fromGenerated = (this.latestGeneratedContent || []).map(item => {
             const fileUrl = item.image_url || item.url || item.storage_url || item.file_url || null;
@@ -690,6 +724,38 @@ class LivingManager {
             };
         });
 
+        // Producciones de system_ai_outputs (no OpenAI): mismo formato que fromGenerated
+        const fromSystemAi = (this.systemAiOutputs || []).map(item => {
+            let resolvedUrl = null;
+            if (item.storage_path && typeof item.storage_path === 'string' && item.storage_path.trim() !== '') {
+                resolvedUrl = this.getPublicUrlFromStorage('production-outputs', item.storage_path);
+            }
+            if (!resolvedUrl && item.storage_object_id && typeof item.storage_object_id === 'string' && (item.storage_object_id.includes('/') || item.storage_object_id.includes('.'))) {
+                resolvedUrl = this.getPublicUrlFromStorage('production-outputs', item.storage_object_id);
+            }
+            let prompt = item.prompt_used || item.text_content || '';
+            if (!prompt && item.metadata) {
+                try {
+                    const meta = typeof item.metadata === 'string' ? JSON.parse(item.metadata) : item.metadata;
+                    prompt = meta?.prompt || meta?.prompt_used || meta?.generated_prompt || (meta?.text_content || '');
+                } catch (_) {}
+            }
+            const outputType = (item.output_type || '').toLowerCase();
+            let contentType = 'image';
+            if (outputType.includes('video') || outputType.includes('reel') || outputType.includes('clip')) contentType = 'video';
+            else if (outputType.includes('image') || outputType.includes('img') || resolvedUrl) contentType = 'image';
+            else contentType = 'text';
+            return {
+                contentType,
+                fileUrl: resolvedUrl,
+                prompt,
+                run: { id: null, content_flows: { name: 'System AI' } },
+                output: item,
+                created_at: item.created_at,
+                _outputId: item.id
+            };
+        });
+
         const hasTextContent = (it) => {
             const prompt = (it.prompt || '').trim();
             if (prompt) return true;
@@ -699,7 +765,7 @@ class LivingManager {
         };
 
         const seenIds = new Set();
-        let allItems = [...fromRuns, ...fromGenerated]
+        let allItems = [...fromRuns, ...fromGenerated, ...fromSystemAi]
             .filter(it => {
                 const id = it._outputId || it.run?.id + '-' + (it.output?.id || it.created_at);
                 if (seenIds.has(id)) return false;
@@ -946,6 +1012,10 @@ class LivingManager {
             const name = this.getFlowName(run);
             if (name && !set.has(name)) { set.add(name); names.push(name); }
         });
+        if ((this.systemAiOutputs || []).length > 0 && !set.has('System AI')) {
+            set.add('System AI');
+            names.push('System AI');
+        }
         const current = flowSelect.value;
         flowSelect.innerHTML = '<option value="">Todos los flujos</option>' + names.map(n => `<option value="${this.escapeHtml(n)}">${this.escapeHtml(n)}</option>`).join('');
         if (set.has(current)) flowSelect.value = current;
@@ -1295,7 +1365,7 @@ class LivingManager {
             }
             
             // Producciones totales
-            const totalProductions = (this.latestGeneratedContent?.length || 0) + this.flowRuns.length;
+            const totalProductions = (this.flowOutputs?.length || 0) + (this.systemAiOutputs?.length || 0);
             if (totalProductions > 0) {
                 highlights.push({
                     title: 'Producido',
@@ -1601,6 +1671,7 @@ class LivingManager {
             }
             this.flowOutputs = (this.flowOutputs || []).filter(o => o.id !== outputId);
             this.latestGeneratedContent = (this.latestGeneratedContent || []).filter(o => o.id !== outputId);
+            this.systemAiOutputs = (this.systemAiOutputs || []).filter(o => o.id !== outputId);
             closeModal();
             await this.renderHistorySection();
             const heroGrid = document.getElementById('livingHeroGrid');
@@ -1863,6 +1934,7 @@ class LivingManager {
         this.flowRuns = [];
         this.flowOutputs = [];
         this.latestGeneratedContent = [];
+        this.systemAiOutputs = [];
         this.initialized = false;
         this.eventListenersSetup = false;
         this._historyFiltersSetup = false;
