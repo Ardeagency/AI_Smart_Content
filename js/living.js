@@ -1185,6 +1185,25 @@ class LivingManager {
                 });
             });
             
+            // Reproducción al pasar el cursor sobre la tarjeta de vídeo
+            if (card.classList.contains('history-video-card')) {
+                const wrap = card.querySelector('.history-video-card-thumbnail-wrap');
+                card.addEventListener('mouseenter', () => {
+                    const video = wrap && wrap.querySelector('video');
+                    if (video) {
+                        video.muted = true;
+                        video.play().catch(() => {});
+                    }
+                });
+                card.addEventListener('mouseleave', () => {
+                    const video = wrap && wrap.querySelector('video');
+                    if (video) {
+                        video.pause();
+                        video.currentTime = 0;
+                    }
+                });
+            }
+            
             card.addEventListener('click', (e) => {
                 if (e.target.closest('.history-card-download, .history-card-copy-prompt')) return;
                 
@@ -1559,6 +1578,7 @@ class LivingManager {
     openViewerModal(data) {
         const modal = document.getElementById('livingViewerModal');
         const image = document.getElementById('livingViewerImage');
+        const videoEl = document.getElementById('livingViewerVideo');
         const promptEl = document.getElementById('livingViewerPrompt');
         const metadataEl = document.getElementById('livingViewerMetadata');
         const closeBtn = document.getElementById('livingViewerClose');
@@ -1572,18 +1592,40 @@ class LivingManager {
         const item = data.item || {};
         const output = item.output || {};
         const run = item.run || {};
+        const mediaUrl = data.imageUrl && (data.imageUrl.startsWith('http') || data.imageUrl.startsWith('//')) ? data.imageUrl : '';
+        const outputType = (output.output_type || '').toLowerCase();
+        const isVideo = !!(mediaUrl && /\.(mp4|webm|mov)(\?|$)/i.test(mediaUrl)) || outputType.includes('video') || outputType.includes('reel') || outputType.includes('clip');
 
-        if (data.imageUrl) {
-            image.src = data.imageUrl;
-            image.alt = data.prompt || 'Producción';
-            image.style.transform = 'scale(1)';
-            image.style.transformOrigin = 'center center';
-        } else {
-            image.src = '';
-            image.alt = 'Sin imagen disponible';
+        if (videoEl) {
+            videoEl.pause();
+            videoEl.removeAttribute('src');
+            videoEl.load();
+            videoEl.style.display = 'none';
         }
-        
-        this.setupImageZoom(image);
+        image.style.display = '';
+
+        if (isVideo && videoEl && mediaUrl) {
+            image.src = '';
+            image.alt = '';
+            image.style.display = 'none';
+            videoEl.src = mediaUrl;
+            videoEl.style.display = 'block';
+            videoEl.controls = true;
+            videoEl.muted = false;
+            videoEl.play().catch(() => {});
+            this.setupImageZoom(null);
+        } else {
+            if (mediaUrl) {
+                image.src = mediaUrl;
+                image.alt = data.prompt || 'Producción';
+                image.style.transform = 'scale(1)';
+                image.style.transformOrigin = 'center center';
+            } else {
+                image.src = '';
+                image.alt = 'Sin imagen disponible';
+            }
+            this.setupImageZoom(image);
+        }
         
         const promptText = data.prompt || 'Sin prompt disponible';
         promptEl.textContent = promptText;
@@ -1600,11 +1642,11 @@ class LivingManager {
         if (output.created_at) creationDate = new Date(output.created_at).toLocaleString('es-ES');
         else if (item.item && item.item.created_at) creationDate = new Date(item.item.created_at).toLocaleString('es-ES');
         
-        const productionImageUrl = (data.imageUrl && typeof data.imageUrl === 'string' && data.imageUrl.startsWith('http')) ? data.imageUrl : '';
+        const productionImageUrl = (data.imageUrl && typeof data.imageUrl === 'string' && (data.imageUrl.startsWith('http') || data.imageUrl.startsWith('//'))) ? data.imageUrl : '';
         const rows = [];
         rows.push(`<div class="info-row"><span class="info-label">Model</span><span class="info-value">${this.escapeHtml(modelName)}</span></div>`);
         if (outputType) rows.push(`<div class="info-row"><span class="info-label">Type</span><span class="info-value">${this.escapeHtml(outputType)}</span></div>`);
-        rows.push(`<div class="info-row info-row-images"><span class="info-label">Images</span>${productionImageUrl ? `<img class="info-thumb info-thumb-production" src="${this.escapeHtml(productionImageUrl)}" alt="Producción" loading="lazy" />` : '<span class="info-value">—</span>'}</div>`);
+        rows.push(`<div class="info-row info-row-images"><span class="info-label">${isVideo ? 'Video' : 'Images'}</span>${isVideo ? (productionImageUrl ? `<span class="info-value">Vídeo</span>` : '<span class="info-value">—</span>') : (productionImageUrl ? `<img class="info-thumb info-thumb-production" src="${this.escapeHtml(productionImageUrl)}" alt="Producción" loading="lazy" />` : '<span class="info-value">—</span>')}</div>`);
         if (quality) rows.push(`<div class="info-row"><span class="info-label">Quality</span><span class="info-value">${this.escapeHtml(String(quality))}</span></div>`);
         if (creationDate) rows.push(`<div class="info-row"><span class="info-label">Created</span><span class="info-value">${this.escapeHtml(creationDate)}</span></div>`);
         if (output.generated_copy && output.generated_copy.trim()) rows.push(`<div class="info-row info-row-copy"><span class="info-label">Copy</span><span class="info-value">${this.escapeHtml(output.generated_copy.trim())}</span></div>`);
@@ -1620,6 +1662,15 @@ class LivingManager {
         document.body.style.overflow = 'hidden';
         
         const closeModal = () => {
+            const v = document.getElementById('livingViewerVideo');
+            if (v) {
+                v.pause();
+                v.removeAttribute('src');
+                v.load();
+                v.style.display = 'none';
+            }
+            const img = document.getElementById('livingViewerImage');
+            if (img) img.style.display = '';
             modal.classList.remove('active');
             document.body.style.overflow = '';
         };
