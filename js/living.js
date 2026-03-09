@@ -1596,6 +1596,14 @@ class LivingManager {
         if (!mediaUrl && output) mediaUrl = this.resolveOutputMediaUrl(output) || '';
         const outputType = (output.output_type || '').toLowerCase();
         const isVideo = !!(mediaUrl && /\.(mp4|webm|mov)(\?|$)/i.test(mediaUrl)) || outputType.includes('video') || outputType.includes('reel') || outputType.includes('clip');
+        if (isVideo && !mediaUrl && output) {
+            const rawPath = output.storage_path && typeof output.storage_path === 'string' ? output.storage_path.trim() : '';
+            if (rawPath) mediaUrl = this.getPublicUrlFromStorage('production-outputs', rawPath) || this.getPublicUrlFromStorage('outputs', rawPath) || '';
+            if (!mediaUrl && output.metadata) {
+                const meta = typeof output.metadata === 'object' ? output.metadata : (() => { try { return JSON.parse(output.metadata || '{}'); } catch (_) { return {}; } })();
+                mediaUrl = meta.video_url || meta.url || meta.file_url || meta.videoUrl || meta.output_url || meta.publicUrl || meta.src || '';
+            }
+        }
 
         if (videoEl) {
             videoEl.pause();
@@ -1604,15 +1612,19 @@ class LivingManager {
             videoEl.style.display = 'none';
         }
         image.style.display = '';
+        const visualWrap = modal.querySelector('.living-viewer-visual');
+        if (visualWrap) visualWrap.classList.remove('living-viewer-visual--video');
 
         if (isVideo && videoEl && mediaUrl) {
             image.src = '';
             image.alt = '';
             image.style.display = 'none';
-            videoEl.src = mediaUrl;
+            if (visualWrap) visualWrap.classList.add('living-viewer-visual--video');
+            videoEl.setAttribute('src', mediaUrl);
             videoEl.style.display = 'block';
             videoEl.controls = true;
             videoEl.muted = false;
+            videoEl.load();
             videoEl.play().catch(() => {});
             this.setupImageZoom(null);
         } else {
@@ -1660,7 +1672,13 @@ class LivingManager {
         
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
-        
+        const portal = document.getElementById('modals-portal');
+        if (portal) portal.setAttribute('aria-hidden', 'false');
+        setTimeout(() => {
+            const btn = document.getElementById('livingViewerClose');
+            if (btn && typeof btn.focus === 'function') btn.focus();
+        }, 0);
+
         const closeModal = () => {
             const v = document.getElementById('livingViewerVideo');
             if (v) {
@@ -1671,8 +1689,11 @@ class LivingManager {
             }
             const img = document.getElementById('livingViewerImage');
             if (img) img.style.display = '';
+            const wrap = document.querySelector('.living-viewer-visual');
+            if (wrap) wrap.classList.remove('living-viewer-visual--video');
             modal.classList.remove('active');
             document.body.style.overflow = '';
+            if (portal) portal.setAttribute('aria-hidden', 'true');
         };
         
         const newCloseBtn = closeBtn.cloneNode(true);
