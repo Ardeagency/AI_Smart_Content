@@ -127,3 +127,9 @@ El frontend usa un **Render Container Registry** que:
 Ver **docs/ARQUITECTURA_CONTENEDORES.md** para el contrato de contenedores y el mapeo input_type → contenedor.
 
 Archivo: `js/input-registry.js`.
+
+## Capas creativas (Dev Builder)
+
+Para el Builder, cada template ahora tiene también una **categoría creativa** que determina en qué bloque aparece en la barra lateral (Presets, Estilo, Motion, Escenarios, Protagonista, Branding, Distribución, Contexto, Media, Controles, Estructura, Básicos).
+
+Esto permite trabajar como en Figma/Wix: arrastras el bloque correcto sin tener que construir cada input desde cero.
