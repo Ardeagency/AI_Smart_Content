@@ -590,27 +590,24 @@ class VideoView extends BaseView {
     }
   }
 
-  /** Carrusel del sidebar: solo las producciones seleccionadas (escenas). Click = quitar de la selección. */
+  /** Carrusel del sidebar: todas las producciones, seleccionables (toggle). Las seleccionadas se ven en el video prompt footer. */
   renderEscenasCarousel() {
     const carousel = this.container.querySelector('#videoEscenasCarousel');
     if (!carousel) return;
-    const selectedIds = Array.from(this.selectedProductionIds);
-    const items = selectedIds
-      .map((id) => this.videoProductions.find((p) => String(p.id) === String(id)))
-      .filter(Boolean);
-    if (items.length === 0) {
-      carousel.innerHTML = '<p class="video-escenas-empty">Ninguna escena seleccionada. Usa "All production" para elegir.</p>';
+    if (this.videoProductions.length === 0) {
+      carousel.innerHTML = '<p class="video-escenas-empty">Aún no hay producciones. Las producciones de tus flows aparecerán aquí.</p>';
       return;
     }
-    carousel.innerHTML = items.map((p) => {
+    carousel.innerHTML = this.videoProductions.map((p) => {
       const id = p.id;
+      const selected = this.selectedProductionIds.has(id);
       const mediaUrl = (p.media_url || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
       const isImg = p.isImage && !p.isVideo;
       const thumbContent = isImg
         ? `<img class="video-escena-thumb video-escena-thumb-img" src="${mediaUrl}" alt="" loading="lazy" decoding="async">`
         : `<video class="video-escena-thumb" src="${mediaUrl}" preload="metadata" muted playsinline crossorigin="anonymous"></video>`;
       return `
-        <div class="video-escena-item" data-id="${id}" role="button" tabindex="0" aria-label="Quitar de escenas">
+        <div class="video-escena-item ${selected ? 'is-selected' : ''}" data-id="${id}" role="button" tabindex="0" aria-pressed="${selected}" aria-label="Seleccionar como escena">
           <div class="video-escena-thumb-wrap">${thumbContent}</div>
         </div>
       `;
@@ -618,9 +615,16 @@ class VideoView extends BaseView {
     carousel.querySelectorAll('.video-escena-item').forEach((el) => {
       el.addEventListener('click', () => {
         const id = el.dataset.id;
-        this.selectedProductionIds.delete(id);
+        if (this.selectedProductionIds.has(id)) {
+          this.selectedProductionIds.delete(id);
+          el.classList.remove('is-selected');
+          el.setAttribute('aria-pressed', 'false');
+        } else {
+          this.selectedProductionIds.add(id);
+          el.classList.add('is-selected');
+          el.setAttribute('aria-pressed', 'true');
+        }
         this.syncProductionSelectionToKling();
-        this.renderEscenasCarousel();
       });
     });
   }

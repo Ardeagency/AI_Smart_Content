@@ -21805,6 +21805,9 @@ body.production-filters-in-header .living-container > .living-history-section {
 .video-escena-item:hover {
     opacity: 0.9;
 }
+.video-escena-item.is-selected {
+    box-shadow: 0 0 0 2px var(--accent-brand, var(--color-info));
+}
 .video-escena-thumb-wrap {
     width: 72px;
     height: 72px;
