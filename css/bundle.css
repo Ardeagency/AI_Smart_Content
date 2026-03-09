@@ -21119,9 +21119,14 @@ body.production-filters-in-header .living-container > .living-history-section {
 .video-sidebar-console .video-prompt-footer-card-inner.glass-black {
     padding: var(--spacing-md) var(--spacing-md) var(--spacing-lg);
 }
-/* Página Video usa el mismo degradado dinámico que el resto de la plataforma (borde + brillo en cards) */
+/* Página Video: degradado dinámico sin animación (borde + brillo estáticos) */
 .video-view-container .video-prompt-footer-card {
     box-shadow: none;
+}
+.video-view-container .video-prompt-footer-card::after,
+.video-view-container .video-prompt-footer-card::before {
+    animation: none;
+    background-position: 0% 50%;
 }
 .video-view-container .video-prompt-footer-card-inner.glass-black {
     box-shadow: none;
