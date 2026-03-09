@@ -987,7 +987,7 @@ class VideoView extends BaseView {
     this.klingElements = this.klingElements.filter((el) => !el._fromProductSelection);
     if (productId) {
       const product = (this.dbData.products || []).find((p) => String(p.id) === String(productId));
-      if (product && Array.isArray(product.image_urls) && product.image_urls.length >= 2 && product.image_urls.length <= 4) {
+      if (product && Array.isArray(product.image_urls) && product.image_urls.length >= 1) {
         const name = this.sanitizeElementName((product.nombre_producto || 'product').slice(0, 24));
         this.klingElements.push({ name, description: product.nombre_producto || undefined, element_input_urls: product.image_urls.slice(0, 4), _fromProductSelection: true });
       }
