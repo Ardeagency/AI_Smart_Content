@@ -989,7 +989,7 @@ class VideoView extends BaseView {
       const product = (this.dbData.products || []).find((p) => String(p.id) === String(productId));
       if (product && Array.isArray(product.image_urls) && product.image_urls.length >= 1) {
         const name = this.sanitizeElementName((product.nombre_producto || 'product').slice(0, 24));
-        this.klingElements.push({ name, description: product.nombre_producto || undefined, element_input_urls: product.image_urls.slice(0, 4), _fromProductSelection: true });
+        this.klingElements.push({ name, description: product.nombre_producto || undefined, element_input_urls: [...product.image_urls], _fromProductSelection: true });
       }
     }
     this.renderKlingElementsList();
@@ -1082,17 +1082,44 @@ class VideoView extends BaseView {
     listEl.style.display = 'flex';
     listEl.innerHTML = this.klingElements.map((el, idx) => {
       const urls = Array.isArray(el.element_input_urls) ? el.element_input_urls : [];
+      const isProductMulti = el._fromProductSelection && urls.length >= 1;
       const thumbnails = urls.length > 0
-        ? urls.map((url) => `<img src="${String(url).replace(/"/g, '&quot;')}" alt="" class="video-kling-element-thumb" loading="lazy">`).join('')
+        ? urls.map((url, urlIdx) => {
+            const safe = String(url).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            if (isProductMulti) {
+              return `<span class="video-kling-element-thumb-wrap"><img src="${safe}" alt="" class="video-kling-element-thumb" loading="lazy"><button type="button" class="video-kling-element-remove-thumb" data-element-index="${idx}" data-url-index="${urlIdx}" aria-label="Quitar esta imagen">&times;</button></span>`;
+            }
+            return `<img src="${safe}" alt="" class="video-kling-element-thumb" loading="lazy">`;
+          }).join(isProductMulti ? '' : '')
         : '';
+      const thumbsContainer = thumbnails ? (isProductMulti ? `<span class="video-kling-element-thumbs">${thumbnails}</span>` : `<span class="video-kling-element-thumbs">${thumbnails}</span>`) : '';
       return `
       <span class="video-kling-element-chip" data-index="${idx}">
-        ${thumbnails ? `<span class="video-kling-element-thumbs">${thumbnails}</span>` : ''}
+        ${thumbsContainer}
         ${thumbnails ? '' : `@${el.name}`}
         <button type="button" class="video-kling-element-remove" aria-label="Quitar elemento ${el.name}">&times;</button>
       </span>
     `;
     }).join('');
+    listEl.querySelectorAll('.video-kling-element-remove-thumb').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const elIdx = parseInt(btn.dataset.elementIndex, 10);
+        const urlIdx = parseInt(btn.dataset.urlIndex, 10);
+        if (isNaN(elIdx) || isNaN(urlIdx)) return;
+        const el = this.klingElements[elIdx];
+        if (!el || !Array.isArray(el.element_input_urls)) return;
+        el.element_input_urls.splice(urlIdx, 1);
+        if (el.element_input_urls.length === 0) {
+          this.klingElements.splice(elIdx, 1);
+          if (this.klingElements.every((e) => !e._fromProductSelection)) {
+            this.selectedAssetId = '';
+            if (this.assetScope === 'product') this.renderAssetProductsCarousel();
+          }
+        }
+        this.renderKlingElementsList();
+      });
+    });
     listEl.querySelectorAll('.video-kling-element-remove').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         const chip = e.target.closest('.video-kling-element-chip');

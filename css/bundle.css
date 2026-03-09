@@ -22379,6 +22379,42 @@ body.production-filters-in-header .living-container > .living-history-section {
     gap: 0.25rem;
     align-items: center;
 }
+.video-kling-element-thumb-wrap {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+}
+.video-kling-element-thumb-wrap .video-kling-element-thumb {
+    display: block;
+}
+.video-kling-element-remove-thumb {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 0;
+    margin: 0;
+    width: 14px;
+    height: 14px;
+    min-width: 14px;
+    min-height: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    line-height: 1;
+    color: var(--glass-black-text);
+    background: var(--black-60);
+    border: none;
+    border-radius: 0 var(--radius-xs) 0 0;
+    cursor: pointer;
+    opacity: 0.85;
+    transition: var(--transition);
+}
+.video-kling-element-remove-thumb:hover {
+    opacity: 1;
+    background: var(--accent-warm, var(--color-warning));
+    color: #fff;
+}
 .video-kling-element-thumb {
     width: 40px;
     height: 40px;
