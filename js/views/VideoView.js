@@ -129,12 +129,10 @@ class VideoView extends BaseView {
                 <div class="video-productions-panel video-productions-panel-inline" id="videoProductionsPanel" aria-hidden="true" style="display: none;">
                   <div class="video-productions-panel-card">
                     <div class="video-productions-panel-header">
-                      <h3 class="video-prompt-panel-title">Production Queue</h3>
+                      <h3 class="video-prompt-panel-title">Productions</h3>
                       <button type="button" class="video-productions-panel-close" id="videoProductionsPanelClose" aria-label="Cerrar"><i class="fas fa-times"></i></button>
                     </div>
-                    <div class="video-productions-carousel-wrap">
-                      <div class="video-productions-carousel" id="videoProductionsCarousel"></div>
-                    </div>
+                    <div class="video-productions-gallery" id="videoProductionsGallery"></div>
                   </div>
                 </div>
               </section>
@@ -144,12 +142,14 @@ class VideoView extends BaseView {
                 <div class="video-prompt-footer-card-inner glass-black video-sidebar-inner">
                   <div class="video-sidebar-section">
                     <h3 class="video-section-label">Production Context</h3>
-                    <div class="video-left-block">
-                      <h4 class="video-prompt-panel-title">Escena</h4>
-                      <p class="video-field-help">Producciones = escena a producir (imagen/video de referencia)</p>
-                      <button type="button" class="video-prompt-db-select video-prompt-productions-btn" id="videoProductionsBtn" aria-label="Production Queue">
-                        <i class="fas fa-play"></i> Production Queue
-                      </button>
+                    <div class="video-escenas-block">
+                      <div class="video-escenas-header">
+                        <h4 class="video-prompt-panel-title">Escenas</h4>
+                        <button type="button" class="video-escenas-all-btn" id="videoProductionsBtn" aria-label="All production">All production</button>
+                      </div>
+                      <div class="video-escenas-carousel-wrap">
+                        <div class="video-escenas-carousel" id="videoEscenasCarousel"></div>
+                      </div>
                     </div>
                     <div class="video-left-block">
                       <h4 class="video-prompt-panel-title">Campaña</h4>
@@ -397,6 +397,7 @@ class VideoView extends BaseView {
     this.renderAssetDropdown();
     this.renderAssetCard();
     await this.loadVideoProductions();
+    this.renderEscenasCarousel();
     this.initCinematography();
     this.renderDirectorVariables();
     const campaignSelect = this.container.querySelector('#videoCampaignSelect');
@@ -520,7 +521,7 @@ class VideoView extends BaseView {
     panel.style.display = 'block';
     panel.setAttribute('aria-hidden', 'false');
     await this.loadVideoProductions();
-    this.renderProductionsCarousel();
+    this.renderProductionsGallery();
   }
 
   closeProductionsPanel() {
@@ -532,6 +533,7 @@ class VideoView extends BaseView {
     }
     panel.style.display = 'none';
     panel.setAttribute('aria-hidden', 'true');
+    this.renderEscenasCarousel();
   }
 
   getPublicUrlFromStorage(bucketName, filePath) {
@@ -588,14 +590,50 @@ class VideoView extends BaseView {
     }
   }
 
-  renderProductionsCarousel() {
-    const carousel = this.container.querySelector('#videoProductionsCarousel');
+  /** Carrusel del sidebar: solo las producciones seleccionadas (escenas). Click = quitar de la selección. */
+  renderEscenasCarousel() {
+    const carousel = this.container.querySelector('#videoEscenasCarousel');
     if (!carousel) return;
-    if (this.videoProductions.length === 0) {
-      carousel.innerHTML = '<p class="video-productions-empty">Aún no hay producciones. Las producciones de tus flows aparecerán aquí.</p>';
+    const selectedIds = Array.from(this.selectedProductionIds);
+    const items = selectedIds
+      .map((id) => this.videoProductions.find((p) => String(p.id) === String(id)))
+      .filter(Boolean);
+    if (items.length === 0) {
+      carousel.innerHTML = '<p class="video-escenas-empty">Ninguna escena seleccionada. Usa "All production" para elegir.</p>';
       return;
     }
-    carousel.innerHTML = this.videoProductions.map((p) => {
+    carousel.innerHTML = items.map((p) => {
+      const id = p.id;
+      const mediaUrl = (p.media_url || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      const isImg = p.isImage && !p.isVideo;
+      const thumbContent = isImg
+        ? `<img class="video-escena-thumb video-escena-thumb-img" src="${mediaUrl}" alt="" loading="lazy" decoding="async">`
+        : `<video class="video-escena-thumb" src="${mediaUrl}" preload="metadata" muted playsinline crossorigin="anonymous"></video>`;
+      return `
+        <div class="video-escena-item" data-id="${id}" role="button" tabindex="0" aria-label="Quitar de escenas">
+          <div class="video-escena-thumb-wrap">${thumbContent}</div>
+        </div>
+      `;
+    }).join('');
+    carousel.querySelectorAll('.video-escena-item').forEach((el) => {
+      el.addEventListener('click', () => {
+        const id = el.dataset.id;
+        this.selectedProductionIds.delete(id);
+        this.syncProductionSelectionToKling();
+        this.renderEscenasCarousel();
+      });
+    });
+  }
+
+  /** Galería del panel: todas las producciones. Click = toggle selección; actualiza escenas y kling. */
+  renderProductionsGallery() {
+    const gallery = this.container.querySelector('#videoProductionsGallery');
+    if (!gallery) return;
+    if (this.videoProductions.length === 0) {
+      gallery.innerHTML = '<p class="video-productions-empty">Aún no hay producciones. Las producciones de tus flows aparecerán aquí.</p>';
+      return;
+    }
+    gallery.innerHTML = this.videoProductions.map((p) => {
       const id = p.id;
       const selected = this.selectedProductionIds.has(id);
       const mediaUrl = (p.media_url || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -605,13 +643,11 @@ class VideoView extends BaseView {
         : `<video class="video-production-thumb" src="${mediaUrl}" preload="metadata" muted playsinline crossorigin="anonymous"></video>`;
       return `
         <div class="video-production-item ${selected ? 'is-selected' : ''}" data-id="${id}" role="button" tabindex="0" aria-pressed="${selected}" aria-label="Seleccionar producción">
-          <div class="video-production-thumb-wrap">
-            ${thumbContent}
-          </div>
+          <div class="video-production-thumb-wrap">${thumbContent}</div>
         </div>
       `;
     }).join('');
-    carousel.querySelectorAll('.video-production-item').forEach((el) => {
+    gallery.querySelectorAll('.video-production-item').forEach((el) => {
       el.addEventListener('click', () => {
         const id = el.dataset.id;
         if (this.selectedProductionIds.has(id)) {
@@ -624,6 +660,7 @@ class VideoView extends BaseView {
           el.setAttribute('aria-pressed', 'true');
         }
         this.syncProductionSelectionToKling();
+        this.renderEscenasCarousel();
       });
     });
   }
