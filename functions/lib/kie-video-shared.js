@@ -76,7 +76,11 @@ async function handleCreate(body, headers) {
     if (!hasEnoughMedia) continue;
     const o = { name: el.name.trim() };
     if (typeof el.description === 'string' && el.description.trim()) o.description = el.description.trim();
-    if (imgUrls.length) o.element_input_urls = imgUrls.slice(0, 4);
+    if (imgUrls.length) {
+      let urls = imgUrls.slice(0, 4);
+      if (urls.length === 1) urls = [urls[0], urls[0]];
+      o.element_input_urls = urls;
+    }
     if (vidUrls.length) o.element_input_video_urls = vidUrls.slice(0, 1);
     kling_elements.push(o);
   }
@@ -107,8 +111,8 @@ async function handleCreate(body, headers) {
     return { statusCode: 400, headers: c, body: JSON.stringify({ error: 'El prompt no puede quedar vacío tras validar referencias. Usa texto o elimina referencias @element sin suficientes imágenes.' }) };
   }
 
-  // Doc KIE: multi_shots es REQUERIDO (boolean). false → usar prompt; true → usar multi_prompt (array no vacío).
-  const input = { mode, sound, duration: totalSec, aspect_ratio };
+  // Doc KIE: multi_shots es REQUERIDO (boolean). Ejemplo KIE usa duration como string ("5").
+  const input = { mode, sound, duration: duration, aspect_ratio };
   if (image_urls.length > 0) input.image_urls = image_urls;
 
   if (hasMultiShots) {
@@ -124,7 +128,7 @@ async function handleCreate(body, headers) {
     if (multiPromptArray.length === 1) {
       input.multi_shots = false;
       input.prompt = multiPromptArray[0].prompt;
-      input.duration = multiPromptArray[0].duration;
+      input.duration = String(multiPromptArray[0].duration);
     } else {
       input.multi_shots = true;
       input.multi_prompt = multiPromptArray;
