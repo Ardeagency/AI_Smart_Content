@@ -1,7 +1,7 @@
 # Lógica del body para video (KIE createTask)
 
 - **image_urls:** TODAS las imágenes (producto, escena, adjuntos) se envían aquí por defecto.
-- **kling_elements:** Solo los elementos que el usuario **ancla** con el ícono de chincheta; esos van con `element_input_urls` (o `element_input_video_urls`) para referencias nombradas en el prompt (`@nombre`).
+- **kling_elements:** **Solo productos** y solo si el usuario activa la chincheta en ese producto. Escenas y archivos adjuntos **nunca** son `kling_elements`; solo contribuyen a `image_urls`.
 
 ---
 
@@ -13,12 +13,13 @@
 
 2. **image_urls:** Se construye con **todas** las URLs de imagen de todos los elementos (producto, escena, adjuntos). Por defecto todo va como referencia visual en `image_urls`.
 
-3. **kling_elements:** Solo se envían elementos **anclados** (chincheta activa):
-   - Cada imagen tiene un botón de chincheta (📌). Si el usuario hace clic y **ancla** una imagen, esa imagen pasa a formar parte de un elemento en `kling_elements` con `element_input_urls` (y se añade `@nombre` al prompt si falta).
-   - Elementos solo-video tienen una chincheta a nivel de chip; al anclar, el elemento va a `kling_elements` con `element_input_video_urls`.
-   - Si ninguna imagen/chip está anclada, `kling_elements` no se envía; solo se envían `image_urls`.
+3. **kling_elements:** Solo **productos** con chincheta activada. Formato obligatorio por elemento:
+   - `name`: nombre del producto.
+   - `description`: descripción del producto (si no hay, se usa el nombre).
+   - `element_input_urls`: exactamente 2 URLs del producto (si el producto tiene 1 imagen se duplica; si tiene 2 o más se usan las 2 primeras).
+   - La chincheta solo se muestra en chips de **producto**; escenas y adjuntos no tienen chincheta y nunca se envían como `kling_elements`.
 
-4. **Resumen:** Todas las imágenes → `image_urls`. Solo las ancladas → además en `kling_elements` con nombre y sus URLs, y referencias `@nombre` en el prompt.
+4. **Resumen:** Todas las imágenes → `image_urls`. Solo productos anclados (chincheta activa) → `kling_elements` con name, description y element_input_urls (2 URLs). Se añaden `@nombre` al prompt solo para esos productos.
 
 ---
 
@@ -26,6 +27,6 @@
 
 1. **image_urls:** Si el body trae `body.image_urls` (array), se usa tal cual para `input.image_urls`. Si no, se deriva del primer `kling_element` (compatibilidad).
 
-2. **kling_elements:** Vienen solo los anclados desde el frontend. Se filtran por `@name` en el prompt; si un elemento tiene 1 imagen se duplica a 2 URLs para el formato KIE.
+2. **kling_elements:** Solo productos anclados; el frontend ya envía el formato correcto (name, description, element_input_urls con 2 URLs). El backend sigue validando y duplicando URL si recibe 1.
 
 3. **input hacia KIE:** `mode`, `sound`, `duration` (string), `aspect_ratio`, `image_urls`, `multi_shots`/`prompt` o `multi_prompt`, y opcionalmente `kling_elements`.

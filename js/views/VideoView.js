@@ -991,7 +991,8 @@ class VideoView extends BaseView {
       const product = (this.dbData.products || []).find((p) => String(p.id) === String(productId));
       if (product && Array.isArray(product.image_urls) && product.image_urls.length >= 1) {
         const name = this.sanitizeElementName((product.nombre_producto || 'product').slice(0, 24));
-        this.klingElements.push({ name, description: product.nombre_producto || undefined, element_input_urls: [...product.image_urls], _fromProductSelection: true, _pinned: false });
+        const description = (product.descripcion || product.nombre_producto || '').trim() || undefined;
+        this.klingElements.push({ name, description, element_input_urls: [...product.image_urls], _fromProductSelection: true, _pinned: false });
       }
     }
     this.renderKlingElementsList();
@@ -1086,54 +1087,38 @@ class VideoView extends BaseView {
     listEl.style.display = 'flex';
     listEl.innerHTML = this.klingElements.map((el, idx) => {
       const urls = Array.isArray(el.element_input_urls) ? el.element_input_urls : [];
-      const pinnedIndices = Array.isArray(el._pinnedIndices) ? el._pinnedIndices : [];
+      const isProduct = el._fromProductSelection === true;
+      const productPinned = isProduct && el._pinned === true;
       const thumbnails = urls.length > 0
         ? urls.map((url, urlIdx) => {
             const safe = String(url).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-            const isPinned = pinnedIndices.includes(urlIdx);
             return `<span class="video-kling-element-thumb-wrap">
               <img src="${safe}" alt="" class="video-kling-element-thumb" loading="lazy">
-              <button type="button" class="video-kling-element-pin-thumb" data-element-index="${idx}" data-url-index="${urlIdx}" aria-label="${isPinned ? 'Desanclar imagen' : 'Anclar imagen (usar como elemento de referencia)'}" title="${isPinned ? 'Desanclar' : 'Anclar'}"><i class="fas fa-thumbtack${isPinned ? ' video-kling-pin-active' : ''}"></i></button>
               <button type="button" class="video-kling-element-remove-thumb" data-element-index="${idx}" data-url-index="${urlIdx}" aria-label="Quitar esta imagen">&times;</button>
             </span>`;
           }).join('')
         : '';
-      const hasVideo = (el.element_input_video_urls || []).length > 0;
-      const videoPinned = hasVideo && (el._pinned === true);
       const thumbsContainer = thumbnails ? `<span class="video-kling-element-thumbs">${thumbnails}</span>` : '';
-      const videoLabel = hasVideo ? `<span class="video-kling-element-video-label">@${el.name}</span><button type="button" class="video-kling-element-pin-chip" data-element-index="${idx}" aria-label="${videoPinned ? 'Desanclar' : 'Anclar'} (elemento video)" title="${videoPinned ? 'Desanclar' : 'Anclar'}"><i class="fas fa-thumbtack${videoPinned ? ' video-kling-pin-active' : ''}"></i></button>` : '';
+      const hasVideo = (el.element_input_video_urls || []).length > 0;
+      const videoLabel = hasVideo ? `<span class="video-kling-element-video-label">@${el.name}</span>` : '';
+      const productPinBtn = isProduct ? `<button type="button" class="video-kling-element-pin-chip" data-element-index="${idx}" aria-label="${productPinned ? 'Desanclar producto (dejar solo como imagen de referencia)' : 'Anclar producto (usar como kling_element en el prompt)'}" title="${productPinned ? 'Desanclar' : 'Anclar como elemento de referencia'}"><i class="fas fa-thumbtack${productPinned ? ' video-kling-pin-active' : ''}"></i></button>` : '';
       return `
       <span class="video-kling-element-chip" data-index="${idx}">
         ${thumbsContainer}
         ${!thumbsContainer ? `@${el.name}` : ''}
         ${videoLabel}
+        ${productPinBtn}
         <button type="button" class="video-kling-element-remove" aria-label="Quitar elemento ${el.name}">&times;</button>
       </span>
     `;
     }).join('');
-    listEl.querySelectorAll('.video-kling-element-pin-thumb').forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const elIdx = parseInt(btn.dataset.elementIndex, 10);
-        const urlIdx = parseInt(btn.dataset.urlIndex, 10);
-        if (isNaN(elIdx) || isNaN(urlIdx)) return;
-        const el = this.klingElements[elIdx];
-        if (!el) return;
-        if (!Array.isArray(el._pinnedIndices)) el._pinnedIndices = [];
-        const i = el._pinnedIndices.indexOf(urlIdx);
-        if (i >= 0) el._pinnedIndices.splice(i, 1);
-        else el._pinnedIndices.push(urlIdx);
-        el._pinnedIndices.sort((a, b) => a - b);
-        this.renderKlingElementsList();
-      });
-    });
     listEl.querySelectorAll('.video-kling-element-pin-chip').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const elIdx = parseInt(btn.dataset.elementIndex, 10);
         if (isNaN(elIdx)) return;
         const el = this.klingElements[elIdx];
-        if (!el) return;
+        if (!el || !el._fromProductSelection) return;
         el._pinned = !el._pinned;
         this.renderKlingElementsList();
       });
@@ -1522,30 +1507,23 @@ class VideoView extends BaseView {
     });
     if (allImageUrls.length > 0) payload.image_urls = [...new Set(allImageUrls)];
 
-    // kling_elements: solo elementos "anclados" (chincheta). Si el usuario ancla una imagen, esa entra como element_input_urls; el resto solo en image_urls.
-    const pinnedElements = [];
+    // kling_elements: SOLO productos con chincheta activada. Escenas y adjuntos NUNCA son kling_elements; solo image_urls.
+    // Formato obligatorio: name (nombre producto), description (descripción producto), element_input_urls (2 URLs; duplicar si 1).
+    const pinnedProducts = [];
     (this.klingElements || []).forEach((el) => {
-      if (!el || !el.name) return;
-      const pinnedIndices = Array.isArray(el._pinnedIndices) ? el._pinnedIndices : [];
-      const urls = Array.isArray(el.element_input_urls) ? el.element_input_urls : [];
-      const hasPinnedImages = pinnedIndices.length > 0 && urls.length > 0;
-      const hasPinnedVideo = (el.element_input_video_urls || []).length > 0 && el._pinned === true;
-      if (hasPinnedImages) {
-        const pinnedUrls = pinnedIndices.filter((i) => i >= 0 && i < urls.length).map((i) => urls[i]).filter((u) => typeof u === 'string' && u.startsWith('http'));
-        if (pinnedUrls.length > 0) {
-          pinnedElements.push({ name: el.name, description: el.description, element_input_urls: pinnedUrls });
-        }
-      } else if (hasPinnedVideo) {
-        pinnedElements.push({
-          name: el.name,
-          description: el.description,
-          element_input_video_urls: (el.element_input_video_urls || []).slice(0, 1)
-        });
-      }
+      if (!el || !el.name || !el._fromProductSelection || el._pinned !== true) return;
+      const urls = (Array.isArray(el.element_input_urls) ? el.element_input_urls : []).filter((u) => typeof u === 'string' && u.startsWith('http'));
+      if (urls.length === 0) return;
+      const element_input_urls = urls.length === 1 ? [urls[0], urls[0]] : urls.slice(0, 2);
+      pinnedProducts.push({
+        name: el.name,
+        description: typeof el.description === 'string' && el.description.trim() ? el.description.trim() : el.name,
+        element_input_urls
+      });
     });
-    if (pinnedElements.length > 0) {
-      payload.kling_elements = pinnedElements;
-      const refs = pinnedElements.map((el) => `@${el.name}`).filter((ref) => {
+    if (pinnedProducts.length > 0) {
+      payload.kling_elements = pinnedProducts;
+      const refs = pinnedProducts.map((el) => `@${el.name}`).filter((ref) => {
         if (payload.prompt && payload.prompt.includes(ref)) return false;
         if (payload.multi_shots) return !payload.multi_shots.some((s) => s.prompt && s.prompt.includes(ref));
         return true;
