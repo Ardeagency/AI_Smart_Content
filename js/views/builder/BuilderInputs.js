@@ -10,18 +10,20 @@
     const container = this.querySelector('#componentsList');
     if (!container) return;
     
-    // Agrupar por categoría (taxonomía: basic, smart_text, semantic, brand, media, controls, structural)
+    // Agrupar por categoría creativa (Style, Escenario, Protagonista, Branding, Motion, etc.)
     const groups = {
-      basic: { name: 'Básicos', icon: 'shapes', items: [] },
-      smart_text: { name: 'Texto / IA', icon: 'terminal', items: [] },
-      semantic: { name: 'Semánticos', icon: 'microphone', items: [] },
-      brand: { name: 'Marca y contexto', icon: 'storefront', items: [] },
-      context: { name: 'Contexto', icon: 'database', items: [] },
-      media: { name: 'Media', icon: 'image', items: [] },
-      controls: { name: 'Controles', icon: 'sliders', items: [] },
-      advanced: { name: 'Avanzados', icon: 'gear-six', items: [] },
+      preset: { name: 'Presets', icon: 'sparkle', items: [] },
+      style: { name: 'Estilo & Cámara', icon: 'aperture', items: [] },
+      motion: { name: 'Motion & Perspectiva', icon: 'video-camera', items: [] },
+      scene: { name: 'Escenarios', icon: 'mountains', items: [] },
+      protagonist: { name: 'Protagonistas', icon: 'user', items: [] },
+      branding: { name: 'Branding & Copy', icon: 'megaphone', items: [] },
+      distribution: { name: 'Distribución / Operación', icon: 'share-network', items: [] },
+      context: { name: 'Contexto & Productos', icon: 'database', items: [] },
+      media: { name: 'Media / Referencias', icon: 'image', items: [] },
+      controls: { name: 'Controles UI', icon: 'sliders', items: [] },
       structural: { name: 'Estructura', icon: 'square', items: [] },
-      ai: { name: 'IA', icon: 'magic-wand', items: [] }
+      basic: { name: 'Básicos', icon: 'shapes', items: [] }
     };
     this.componentTemplates.forEach(template => {
       const category = template.category || 'basic';
