@@ -1472,20 +1472,24 @@ class VideoView extends BaseView {
       payload.prompt = promptText;
     }
 
-    // kling_elements: solo escena (producción). El backend solo envía elementos referenciados en el prompt como @name.
-    const sceneElementsForKling = (this.klingElements || []).filter((el) => !el._fromProductSelection);
-    if (sceneElementsForKling.length > 0) {
-      payload.kling_elements = sceneElementsForKling.map((el) => {
+    // kling_elements: escena + producto. El backend solo envía elementos referenciados en el prompt como @name (y con al menos 1 imagen o 1 video).
+    const allElementsForKling = (this.klingElements || []).filter((el) => {
+      if (!el || !el.name) return false;
+      const hasUrls = (el.element_input_urls && el.element_input_urls.length > 0) || (el.element_input_video_urls && el.element_input_video_urls.length > 0);
+      return hasUrls;
+    });
+    if (allElementsForKling.length > 0) {
+      payload.kling_elements = allElementsForKling.map((el) => {
         const o = { name: el.name };
         if (el.description) o.description = el.description;
         if (el.element_input_urls && el.element_input_urls.length) o.element_input_urls = el.element_input_urls;
         if (el.element_input_video_urls && el.element_input_video_urls.length) o.element_input_video_urls = el.element_input_video_urls;
         return o;
       });
-      // Referencias @name en el prompt para que KIE use los elementos (requerido por la API).
-      const refs = sceneElementsForKling.map((el) => `@${el.name}`).filter((ref) => {
+      // Referencias @name en el prompt para que KIE use los elementos (requerido por la API). Añadimos las que falten.
+      const refs = allElementsForKling.map((el) => `@${el.name}`).filter((ref) => {
         if (payload.prompt && payload.prompt.includes(ref)) return false;
-        if (payload.multi_shots) return payload.multi_shots.some((s) => s.prompt && s.prompt.includes(ref));
+        if (payload.multi_shots) return !payload.multi_shots.some((s) => s.prompt && s.prompt.includes(ref));
         return true;
       });
       if (refs.length) {

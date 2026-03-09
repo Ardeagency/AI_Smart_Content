@@ -72,7 +72,7 @@ async function handleCreate(body, headers) {
     if (!promptTruncated.includes(ref)) continue;
     const imgUrls = (el.element_input_urls || []).filter(isImageUrl);
     const vidUrls = (el.element_input_video_urls || []).filter((u) => typeof u === 'string' && u.startsWith('http'));
-    const hasEnoughMedia = (imgUrls.length >= 2 && imgUrls.length <= 4) || vidUrls.length === 1;
+    const hasEnoughMedia = (imgUrls.length >= 1 && imgUrls.length <= 4) || vidUrls.length === 1;
     if (!hasEnoughMedia) continue;
     const o = { name: el.name.trim() };
     if (typeof el.description === 'string' && el.description.trim()) o.description = el.description.trim();

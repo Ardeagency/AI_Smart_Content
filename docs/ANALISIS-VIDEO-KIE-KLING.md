@@ -63,7 +63,7 @@ El módulo compartido `functions/lib/kie-video-shared.js` construye el body que 
     - `false`: single-shot → se envía `prompt` (string).
     - `true`: multi-shot → se envía `multi_prompt` (array de `{ prompt, duration }`).
   - `image_urls`: opcional; se deriva del primer `kling_element` referenciado (1–2 URLs para single, 1 para multi).
-  - `kling_elements`: solo elementos cuyo `@name` aparece en el prompt y con ≥2 imágenes (o 1 video); máximo 4 imágenes por elemento.
+  - `kling_elements`: solo elementos cuyo `@name` aparece en el prompt y con ≥1 imagen (o 1 video); máximo 4 imágenes por elemento.
 
 - **callBackUrl:** opcional; se añade si existe `KIE_VIDEO_CALLBACK_URL` en Netlify.
 
@@ -137,7 +137,7 @@ Manejo de errores KIE en el proxy:
 
 - Uso correcto del modelo `kling-3.0/video` y de los endpoints createTask y recordInfo.
 - `multi_shots` siempre definido (boolean + `prompt` o `multi_prompt`).
-- Elementos enviados solo si están referenciados en el prompt y cumplen requisitos de medios (≥2 imágenes o 1 video).
+- Elementos enviados solo si están referenciados en el prompt y cumplen requisitos de medios (≥1 imagen o 1 video).
 - Buen manejo de errores y de estados (waiting/success/fail).
 
 ### 5.4 Mejoras opcionales
