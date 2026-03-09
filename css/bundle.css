@@ -21119,14 +21119,19 @@ body.production-filters-in-header .living-container > .living-history-section {
 .video-sidebar-console .video-prompt-footer-card-inner.glass-black {
     padding: var(--spacing-md) var(--spacing-md) var(--spacing-lg);
 }
-/* Página Video: degradado dinámico sin animación (borde + brillo estáticos) */
+/* Página Video: degradado estático y más visible (borde y brillo con mayor opacidad) */
 .video-view-container .video-prompt-footer-card {
     box-shadow: none;
 }
-.video-view-container .video-prompt-footer-card::after,
+.video-view-container .video-prompt-footer-card::after {
+    animation: none;
+    background-position: 0% 50%;
+    opacity: 0.85;
+}
 .video-view-container .video-prompt-footer-card::before {
     animation: none;
     background-position: 0% 50%;
+    opacity: 0.28;
 }
 .video-view-container .video-prompt-footer-card-inner.glass-black {
     box-shadow: none;
