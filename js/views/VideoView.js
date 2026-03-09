@@ -163,9 +163,9 @@ class VideoView extends BaseView {
                         <option value="">— Ninguna</option>
                       </select>
                     </div>
-                    <div class="video-left-block video-asset-stack-block">
+                    <div class="video-left-block video-asset-stack-block" id="videoAssetStackBlock">
                       <h4 class="video-prompt-panel-title">Asset Stack</h4>
-                      <p class="video-field-help">Producto = referencia (el video no debe cambiar el producto)</p>
+                      <p class="video-field-help video-asset-stack-help" id="videoAssetStackHelp">Producto = referencia (el video no debe cambiar el producto)</p>
                       <div class="video-asset-scope-wrap">
                         <select id="videoAssetScope" class="video-prompt-db-select video-asset-scope-select" aria-label="Scope">
                           <option value="product">Product</option>
@@ -174,17 +174,12 @@ class VideoView extends BaseView {
                           <option value="collection">Collection</option>
                         </select>
                       </div>
-                      <select id="videoAssetSelect" class="video-prompt-db-select video-asset-select" aria-label="Asset" style="margin-top: 0.35rem;">
+                      <div class="video-asset-products-carousel-wrap" id="videoAssetProductsCarouselWrap">
+                        <div class="video-asset-products-carousel" id="videoAssetProductsCarousel"></div>
+                      </div>
+                      <select id="videoAssetSelect" class="video-prompt-db-select video-asset-select video-asset-select-other" aria-label="Asset" style="display: none;">
                         <option value="">— None</option>
                       </select>
-                      <div class="video-asset-card" id="videoAssetCard">
-                        <div class="video-asset-card-placeholder" id="videoAssetCardPlaceholder">Select an asset</div>
-                        <div class="video-asset-card-active" id="videoAssetCardActive" style="display: none;">
-                          <div class="video-asset-card-name" id="videoAssetCardName"></div>
-                          <ul class="video-asset-card-locks" id="videoAssetCardLocks"></ul>
-                          <button type="button" class="video-asset-change-btn" id="videoAssetChangeBtn">Change Asset</button>
-                        </div>
-                      </div>
                     </div>
                   </div>
                   <div class="video-sidebar-section video-sidebar-cine video-cinematography-panel">
@@ -373,20 +368,15 @@ class VideoView extends BaseView {
       assetScope.addEventListener('change', () => {
         this.assetScope = assetScope.value;
         this.selectedAssetId = '';
-        this.renderAssetDropdown();
-        this.renderAssetCard();
-        this.syncProductSelectionToKling();
+        this.updateAssetStackScopeUI();
       });
     }
     if (assetSelect) {
       assetSelect.addEventListener('change', () => {
         this.selectedAssetId = assetSelect.value || '';
-        this.renderAssetCard();
         this.syncProductSelectionToKling();
       });
     }
-    const changeAssetBtn = this.container.querySelector('#videoAssetChangeBtn');
-    if (changeAssetBtn) changeAssetBtn.addEventListener('click', () => this.clearAssetSelection());
     const productionsBtn = this.container.querySelector('#videoProductionsBtn');
     const panelClose = this.container.querySelector('#videoProductionsPanelClose');
     if (productionsBtn) productionsBtn.addEventListener('click', () => this.openProductionsPanel());
@@ -394,8 +384,7 @@ class VideoView extends BaseView {
     await this.loadBrandData();
     const scopeEl = this.container.querySelector('#videoAssetScope');
     if (scopeEl) this.assetScope = scopeEl.value || 'product';
-    this.renderAssetDropdown();
-    this.renderAssetCard();
+    this.updateAssetStackScopeUI();
     await this.loadVideoProductions();
     this.renderEscenasCarousel();
     this.initCinematography();
@@ -435,7 +424,25 @@ class VideoView extends BaseView {
     const assetSelect = this.container.querySelector('#videoAssetSelect');
     if (assetSelect) assetSelect.value = '';
     this.selectedAssetId = '';
-    this.renderAssetCard();
+    if (this.assetScope === 'product') this.renderAssetProductsCarousel();
+    this.syncProductSelectionToKling();
+  }
+
+  /** Muestra carrusel de productos u otro scope (dropdown); oculta la descripción cuando scope es product. */
+  updateAssetStackScopeUI() {
+    const block = this.container.querySelector('#videoAssetStackBlock');
+    const carouselWrap = this.container.querySelector('#videoAssetProductsCarouselWrap');
+    const assetSelect = this.container.querySelector('#videoAssetSelect');
+    const scope = this.assetScope || 'product';
+    if (block) block.setAttribute('data-scope', scope);
+    const isProduct = scope === 'product';
+    if (carouselWrap) carouselWrap.style.display = isProduct ? 'block' : 'none';
+    if (assetSelect) assetSelect.style.display = isProduct ? 'none' : 'block';
+    if (isProduct) {
+      this.renderAssetProductsCarousel();
+    } else {
+      this.renderAssetDropdown();
+    }
     this.syncProductSelectionToKling();
   }
 
@@ -451,42 +458,51 @@ class VideoView extends BaseView {
     const select = this.container.querySelector('#videoAssetSelect');
     if (!select) return;
     const items = this.getAssetListByScope();
-    const current = select.value;
+    const current = select.value || this.selectedAssetId;
     const options = items.map((item) => `<option value="${String(item.id)}">${(item.name || '').slice(0, 50)}</option>`).join('');
     select.innerHTML = '<option value="">— None</option>' + options;
     if (current && items.some((i) => String(i.id) === current)) select.value = current;
     else this.selectedAssetId = '';
   }
 
-  renderAssetCard() {
-    const placeholder = this.container.querySelector('#videoAssetCardPlaceholder');
-    const active = this.container.querySelector('#videoAssetCardActive');
-    const nameEl = this.container.querySelector('#videoAssetCardName');
-    const locksEl = this.container.querySelector('#videoAssetCardLocks');
-    if (!placeholder || !active) return;
-    const id = this.container.querySelector('#videoAssetSelect')?.value || this.selectedAssetId;
-    if (!id) {
-      placeholder.style.display = 'block';
-      active.style.display = 'none';
+  /** Carrusel de productos en Asset Stack (solo cuando scope es Product). Imagen seleccionable. */
+  renderAssetProductsCarousel() {
+    const carousel = this.container.querySelector('#videoAssetProductsCarousel');
+    if (!carousel) return;
+    const products = (this.dbData.products || []).filter((p) => Array.isArray(p.image_urls) && p.image_urls.length > 0);
+    if (products.length === 0) {
+      carousel.innerHTML = '<p class="video-asset-products-empty">No hay productos con imágenes.</p>';
       return;
     }
-    const scope = this.assetScope || 'product';
-    let displayName = '';
-    const locks = ['Packaging locked', 'Color palette locked', 'Tone locked'];
-    if (scope === 'product') {
-      const p = (this.dbData.products || []).find((x) => String(x.id) === String(id));
-      displayName = p?.nombre_producto || 'Product';
-    } else if (scope === 'service') {
-      const s = (this.dbData.services || []).find((x) => String(x.id) === String(id));
-      displayName = s?.nombre_servicio || 'Service';
-    } else {
-      const e = (this.dbData.entities || []).find((x) => String(x.id) === String(id));
-      displayName = e?.name || 'Asset';
-    }
-    placeholder.style.display = 'none';
-    active.style.display = 'block';
-    if (nameEl) nameEl.textContent = displayName;
-    if (locksEl) locksEl.innerHTML = locks.map((l) => `<li><i class="fas fa-check"></i> ${l}</li>`).join('');
+    carousel.innerHTML = products.map((p) => {
+      const id = p.id;
+      const selected = String(this.selectedAssetId) === String(id);
+      const imgUrl = (p.image_urls[0] || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      return `
+        <div class="video-asset-product-item ${selected ? 'is-selected' : ''}" data-id="${id}" role="button" tabindex="0" aria-pressed="${selected}" aria-label="Seleccionar producto">
+          <div class="video-asset-product-thumb-wrap"><img class="video-asset-product-thumb" src="${imgUrl}" alt="" loading="lazy"></div>
+        </div>
+      `;
+    }).join('');
+    carousel.querySelectorAll('.video-asset-product-item').forEach((el) => {
+      el.addEventListener('click', () => {
+        const id = el.dataset.id;
+        if (this.selectedAssetId === id) {
+          this.selectedAssetId = '';
+          el.classList.remove('is-selected');
+          el.setAttribute('aria-pressed', 'false');
+        } else {
+          this.selectedAssetId = id;
+          carousel.querySelectorAll('.video-asset-product-item').forEach((i) => {
+            i.classList.remove('is-selected');
+            i.setAttribute('aria-pressed', 'false');
+          });
+          el.classList.add('is-selected');
+          el.setAttribute('aria-pressed', 'true');
+        }
+        this.syncProductSelectionToKling();
+      });
+    });
   }
 
   renderStoryboardScenes() {
@@ -961,24 +977,19 @@ class VideoView extends BaseView {
    */
   syncProductSelectionToKling() {
     const scopeSelect = this.container.querySelector('#videoAssetScope');
-    const assetSelect = this.container.querySelector('#videoAssetSelect');
-    if (!assetSelect || (scopeSelect && scopeSelect.value !== 'product')) {
+    const scope = scopeSelect ? scopeSelect.value : this.assetScope;
+    if (scope !== 'product') {
       this.klingElements = this.klingElements.filter((el) => !el._fromProductSelection);
       this.renderKlingElementsList();
       return;
     }
-    const productId = assetSelect.value;
+    const productId = this.selectedAssetId || '';
     this.klingElements = this.klingElements.filter((el) => !el._fromProductSelection);
     if (productId) {
       const product = (this.dbData.products || []).find((p) => String(p.id) === String(productId));
       if (product && Array.isArray(product.image_urls) && product.image_urls.length >= 2 && product.image_urls.length <= 4) {
         const name = this.sanitizeElementName((product.nombre_producto || 'product').slice(0, 24));
-        this.klingElements.push({
-          name,
-          description: product.nombre_producto || undefined,
-          element_input_urls: product.image_urls.slice(0, 4),
-          _fromProductSelection: true
-        });
+        this.klingElements.push({ name, description: product.nombre_producto || undefined, element_input_urls: product.image_urls.slice(0, 4), _fromProductSelection: true });
       }
     }
     this.renderKlingElementsList();
@@ -1091,13 +1102,14 @@ class VideoView extends BaseView {
           this.klingElements.splice(index, 1);
           if (removed && removed._fromProductionQueue && removed._productionOutputId) {
             this.selectedProductionIds.delete(removed._productionOutputId);
-            this.renderProductionsCarousel();
+            this.renderEscenasCarousel();
           }
           this.renderKlingElementsList();
           if (this.klingElements.every((el) => !el._fromProductSelection)) {
+            this.selectedAssetId = '';
             const assetSelect = this.container.querySelector('#videoAssetSelect');
             if (assetSelect) assetSelect.value = '';
-            this.renderAssetCard();
+            if (this.assetScope === 'product') this.renderAssetProductsCarousel();
           }
         }
       });
