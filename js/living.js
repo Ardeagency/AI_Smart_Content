@@ -1634,7 +1634,6 @@ class LivingManager {
         const modelName = (output.metadata && typeof output.metadata === 'object' && output.metadata.model)
             ? output.metadata.model
             : this.getFlowName(run);
-        const outputType = output.output_type || '';
         const technicalParams = output.technical_params && typeof output.technical_params === 'object' ? output.technical_params : {};
         const meta = output.metadata && typeof output.metadata === 'object' ? output.metadata : {};
         const quality = technicalParams.quality || meta.quality || '';
