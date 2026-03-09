@@ -1542,7 +1542,7 @@ class VideoView extends BaseView {
       console.log('[Video] Tarea creada, taskId:', taskId, '→ iniciando polling');
 
       this._lastKieOutputId = await this.saveSystemAIOutput({
-        provider: 'kling_api',
+        provider: 'kie_api',
         output_type: 'video',
         status: 'processing',
         external_job_id: taskId,
