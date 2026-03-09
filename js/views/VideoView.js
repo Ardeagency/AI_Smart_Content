@@ -41,19 +41,19 @@ class VideoView extends BaseView {
     this.hasGeneratedPrompt = false;
     this.cinematography = {
       preset: '',
-      shotType: 'Hero Product Frame',
-      lens: '50mm (Balanced)',
-      framing: 'Centered',
-      cameraMovement: 'Static',
-      motionSpeed: 'Subtle',
-      motionIntensity: 'Subtle',
-      lightType: 'Soft diffused',
-      contrastLevel: 'Medium',
-      temperature: 'Neutral',
-      tone: 'Clean commercial',
-      colorGrade: 'Neutral',
-      colorTemp: 'Neutral',
-      energyLevel: 'Moderate'
+      shotType: '',
+      lens: '',
+      framing: '',
+      cameraMovement: '',
+      motionSpeed: '',
+      motionIntensity: '',
+      lightType: '',
+      contrastLevel: '',
+      temperature: '',
+      tone: '',
+      colorGrade: '',
+      colorTemp: '',
+      energyLevel: ''
     };
     this.cineBlocksCollapsed = { camera: false, movement: false, lighting: false, mood: false };
     this.assetScope = 'product';
@@ -736,7 +736,7 @@ class VideoView extends BaseView {
     const fill = (id, values, current) => {
       const el = this.container.querySelector(id);
       if (!el) return;
-      el.innerHTML = values.map((v) => `<option value="${v}" ${v === current ? 'selected' : ''}>${v}</option>`).join('');
+      el.innerHTML = '<option value="">— Ninguno</option>' + values.map((v) => `<option value="${v}" ${v === current ? 'selected' : ''}>${v}</option>`).join('');
     };
     fill('#videoCineShotType', opts.shotType, this.cinematography.shotType);
     fill('#videoCineLens', opts.lens, this.cinematography.lens);
@@ -799,13 +799,15 @@ class VideoView extends BaseView {
     });
 
     this.renderCinematographySelectedTags();
+    this.renderDirectorVariables();
   }
 
   syncCinematographyToSelects() {
     const c = this.cinematography;
     const set = (id, value) => {
       const el = this.container.querySelector(id);
-      if (el && value) el.value = value;
+      if (!el) return;
+      el.value = value !== undefined && value !== null ? String(value) : '';
     };
     set('#videoCineShotType', c.shotType);
     set('#videoCineLens', c.lens);
@@ -847,10 +849,11 @@ class VideoView extends BaseView {
         e.preventDefault();
         const tag = btn.closest('.video-cine-tag');
         const key = tag?.dataset?.key;
-        if (key && opts[key] && opts[key][0]) {
-          this.cinematography[key] = opts[key][0];
+        if (key) {
+          this.cinematography[key] = '';
           this.syncCinematographyToSelects();
           this.renderCinematographySelectedTags();
+          this.renderDirectorVariables();
         }
       });
     });
@@ -953,7 +956,6 @@ class VideoView extends BaseView {
     const el = this.container.querySelector('#videoDirectorVariables');
     if (!el) return;
     const c = this.cinematography;
-    const opts = VideoView.CINE_OPTIONS;
     const tags = [
       c.shotType && { label: c.shotType, key: 'shotType' },
       c.lens && { label: c.lens, key: 'lens' },
@@ -969,7 +971,22 @@ class VideoView extends BaseView {
     }
     el.style.display = 'flex';
     el.className = 'video-director-variables-row video-cine-selected-tags';
-    el.innerHTML = '<span class="video-cine-selected-label">Variables:</span>' + tags.map((t) => `<span class="video-cine-tag video-director-variable-tag" data-key="${t.key}">${t.label.replace(/"/g, '&quot;')}</span>`).join('');
+    el.innerHTML = '<span class="video-cine-selected-label">Variables:</span>' + tags.map((t) =>
+      `<span class="video-cine-tag video-director-variable-tag" data-key="${t.key}">${t.label.replace(/"/g, '&quot;')}<button type="button" class="video-cine-tag-remove" aria-label="Quitar ${t.key}">&times;</button></span>`
+    ).join('');
+    el.querySelectorAll('.video-cine-tag-remove').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const tag = btn.closest('.video-cine-tag');
+        const key = tag?.dataset?.key;
+        if (key) {
+          this.cinematography[key] = '';
+          this.syncCinematographyToSelects();
+          this.renderCinematographySelectedTags();
+          this.renderDirectorVariables();
+        }
+      });
+    });
   }
 
   /**
