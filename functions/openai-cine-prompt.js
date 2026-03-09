@@ -1,17 +1,13 @@
 /**
- * Netlify Function: genera un prompt cinematográfico para generación de video (KIE, modelo Kling) usando OpenAI.
- * Requiere OPENAI_API_KEY en variables de entorno.
+ * Netlify Function: genera prompt(s) cinematográficos para KIE/Kling usando OpenAI.
+ * Pipeline: IDEA → INTERPRETATION (shot design) → PROMPT(s). Salida siempre en inglés.
  *
- * El input de texto del usuario (idea) NUNCA es el prompt final: es la idea escrita. La IA genera el prompt
- * adaptado al lenguaje comunicacional/publicitario de la marca.
+ * - System: director de video (camera behavior, motion, lens; no describir escena). Con imagen: solo comportamiento de cámara.
+ * - Cinematografía en narrativa (no metadatos). Brand tone/energy para coherencia visual.
+ * - Opcional OPENAI_CINE_MODEL (default gpt-4o-mini; ej. gpt-4.1-mini si está disponible).
  *
- * Respuesta: ÚNICAMENTE el prompt para el video. No extender, no explicar, nada más que el prompt.
- * Opcional: scene_image_urls (URLs de la escena) se envían a OpenAI visión para que el prompt se base en esa imagen.
- *
- * POST body:
- *   idea / director_brief, scene_image_urls[], scene_elements, product_lock_elements, campaign, audience, brand_context, cinematography
- *
- * Respuesta: { prompt: string } o { multi_prompts: string[] }
+ * POST body: idea, director_brief, scene_image_urls[], scene_elements, product_lock_elements, campaign, audience, brand_context, cinematography, multi_prompt
+ * Respuesta: { prompt: string } o { multi_prompts: string[] } — siempre en inglés.
  */
 
 function corsHeaders() {
@@ -83,23 +79,36 @@ function buildProductLockText(elements) {
   }).join('\n');
 }
 
-function buildCinematographyText(cine) {
+/** Convierte metadatos de cinematografía en narrativa para que la IA los use como dirección, no como etiquetas. */
+function buildCinematographyNarrative(cine) {
   if (!cine || typeof cine !== 'object') return '';
-  const lines = [
-    cine.shotType && `Shot: ${cine.shotType}`,
-    cine.lens && `Lens: ${cine.lens}`,
-    cine.framing && `Framing: ${cine.framing}`,
-    cine.cameraMovement && `Camera movement: ${cine.cameraMovement}`,
-    cine.motionSpeed && `Motion speed: ${cine.motionSpeed}`,
-    cine.motionIntensity && `Motion intensity: ${cine.motionIntensity}`,
-    cine.lightType && `Lighting: ${cine.lightType}`,
-    cine.contrastLevel && `Contrast: ${cine.contrastLevel}`,
-    cine.temperature && `Temperature: ${cine.temperature}`,
-    cine.tone && `Tone: ${cine.tone}`,
-    cine.colorGrade && `Color grade: ${cine.colorGrade}`,
-    cine.energyLevel && `Energy level: ${cine.energyLevel}`
-  ].filter(Boolean);
-  return lines.length ? 'Cinematografía deseada:\n' + lines.join('\n') : '';
+  const parts = [];
+  if (cine.lens) parts.push(`The shot uses a ${cine.lens} cinematic lens.`);
+  if (cine.framing) parts.push(`Framing is ${cine.framing.toLowerCase()} with the subject dominating the frame.`);
+  if (cine.shotType) parts.push(`Shot type: ${cine.shotType}.`);
+  if (cine.cameraMovement) parts.push(`The camera movement is ${cine.cameraMovement.toLowerCase()}.`);
+  if (cine.motionSpeed) parts.push(`Motion is ${cine.motionSpeed.toLowerCase()} and ${(cine.motionIntensity || '').toLowerCase() || 'controlled'}.`);
+  if (cine.lightType) parts.push(`Lighting: ${cine.lightType}.`);
+  if (cine.contrastLevel) parts.push(`Contrast level: ${cine.contrastLevel}.`);
+  if (cine.temperature) parts.push(`Color temperature: ${cine.temperature}.`);
+  if (cine.tone) parts.push(`Tone: ${cine.tone}.`);
+  if (cine.colorGrade) parts.push(`Color grade: ${cine.colorGrade}.`);
+  if (cine.energyLevel) parts.push(`Energy: ${cine.energyLevel}.`);
+  return parts.length ? 'Shot direction (use this as camera and lighting direction):\n' + parts.join(' ') : '';
+}
+
+/** Extrae tone, energy y personalidad de marca para coherencia visual del video. */
+function buildBrandToneForPrompt(brandContext) {
+  const voice = brandContext?.brand_voice || {};
+  const parts = [];
+  if (voice.estilo_publicidad?.length) parts.push(`Tone: ${voice.estilo_publicidad.join(', ')}`);
+  if (voice.estilo_visual?.length) parts.push(`Visual style: ${voice.estilo_visual.join(', ')}`);
+  if (voice.arquetipo_personalidad?.length) parts.push(`Brand personality: ${voice.arquetipo_personalidad.join(', ')}`);
+  if (voice.transmitir_visualmente?.length) parts.push(`Convey visually: ${voice.transmitir_visualmente.join(', ')}`);
+  const energyRaw = voice.objetivos_marca;
+  const energy = Array.isArray(energyRaw) && energyRaw.length ? energyRaw.join(', ') : (typeof energyRaw === 'string' ? energyRaw : '');
+  if (energy) parts.push(`Energy: ${energy}`);
+  return parts.length ? parts.join('. ') : '';
 }
 
 exports.handler = async (event, context) => {
@@ -149,94 +158,92 @@ exports.handler = async (event, context) => {
     : (sceneElements[0] && (sceneElements[0].element_input_urls || sceneElements[0].element_input_video_urls) && (sceneElements[0].element_input_urls || sceneElements[0].element_input_video_urls)[0]);
 
   const brandVoiceText = buildBrandVoiceText(brandContext);
+  const brandToneText = buildBrandToneForPrompt(brandContext);
   const campaignAudienceText = buildCampaignAudienceText(campaign, audience);
   const sceneText = buildSceneText(sceneElements);
   const productLockText = buildProductLockText(productLockElements);
-  const cineText = buildCinematographyText(cinematography);
+  const cineNarrative = buildCinematographyNarrative(cinematography);
 
-  const systemContent = multiPrompt
-    ? `Eres un experto en redactar prompts para generación de video con IA (Kling), en modo MULTI SHOT.
-Adapta el lenguaje al tono y voz de la marca.
-Tu respuesta debe ser ÚNICAMENTE un JSON válido: ["prompt shot 1", "prompt shot 2", ...]. No extiendas, no expliques, no escribas nada más que el array JSON.`
-    : `Eres un experto en redactar prompts para generación de video con IA (Kling).
-Tu respuesta debe ser ÚNICAMENTE el texto del prompt para generar el video. Nada más: no extiendas, no expliques, no introducciones ni conclusiones. Solo el prompt.
-Si te envían una imagen de la escena, úsala para escribir el prompt que describa el video a generar para esa escena; no inventes escenario ni producto, enfócate en el prompt del video.`;
+  const model = (process.env.OPENAI_CINE_MODEL || 'gpt-4o-mini').trim();
 
-  const userParts = [];
-  if (firstSceneImageUrl) userParts.push('Imagen de la escena de referencia (genera el prompt del video para esta escena):');
-  if (brandVoiceText) userParts.push('VOZ DE MARCA\n' + brandVoiceText);
-  if (campaignAudienceText) userParts.push('Campaña y audiencia\n' + campaignAudienceText);
-  if (productLockText) userParts.push(productLockText);
-  if (sceneText && !firstSceneImageUrl) userParts.push(sceneText);
-  if (sceneText && firstSceneImageUrl) userParts.push('Contexto escena: ' + sceneText.replace(/\n/g, ' '));
-  if (cineText) userParts.push(cineText);
-  if (idea) userParts.push('IDEA DEL USUARIO (genera solo el prompt a partir de esta idea)\n' + idea);
+  const systemDirector = `You are a cinematic video prompt director specialized in AI video generation (Kling).
+Your job is NOT to describe images or the scene.
+Your job is to direct the camera behavior and motion of the shot.
+Focus on: camera movement, subject interaction, lighting behavior, cinematic lens, physical realism, continuous motion.
+Never invent products or scenes that are not visible in the references.
+Write prompts like a film director describing a shot. Do not explain anything. Output only the video prompt, in English.
+If an image is provided: do NOT describe the scene itself (e.g. do not describe the kitchen or the product). Only describe the camera behavior and motion for the video.`;
 
-  if (userParts.length === 0) {
-    userParts.push(multiPrompt ? 'Genera 2 o 3 prompts en secuencia (array JSON).' : 'Genera un prompt cinematográfico para video.');
-  } else if (multiPrompt) {
-    userParts.push('Responde solo con un array JSON de strings, sin otro texto.');
-  }
+  const systemMultiShot = `You are a cinematic video prompt director for AI video (Kling) in MULTI SHOT mode.
+Your job is to output a mini storyboard: a sequence of shot prompts that direct camera behavior and motion.
+Each prompt must focus on: camera movement, lighting, lens, motion—not describing the scene.
+Output ONLY a valid JSON array of English strings, e.g. ["macro shot of finger pressing button...", "camera transitions into product hero...", "wide shot revealing environment..."].
+No other text. Never invent elements not in the references.`;
 
-  const userTextContent = userParts.join('\n\n---\n\n');
-
-  const userMessageContent = firstSceneImageUrl
-    ? [
-        { type: 'text', text: userTextContent },
-        { type: 'image_url', image_url: { url: firstSceneImageUrl } }
-      ]
-    : userTextContent;
-
-  try {
+  async function openaiChat(messages, maxTokens, temp = 0.5) {
     const res = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemContent },
-          { role: 'user', content: userMessageContent }
-        ],
-        max_tokens: multiPrompt ? 800 : 400,
-        temperature: 0.6
-      })
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      body: JSON.stringify({ model, messages, max_tokens: maxTokens, temperature: temp })
     });
-
     const data = await res.json();
+    if (data.error) throw new Error(data.error.message || 'OpenAI error');
+    const content = data.choices?.[0]?.message?.content;
+    return typeof content === 'string' ? content.trim() : '';
+  }
 
-    if (data.error) {
-      return {
-        statusCode: res.status >= 400 ? res.status : 500,
-        headers: corsHeaders(),
-        body: JSON.stringify({ error: data.error.message || 'Error de OpenAI' })
-      };
+  try {
+    let shotDesign = '';
+    if (idea) {
+      const interpretSystem = `You interpret the user's creative idea into a short shot design for AI video (Kling).
+Output only 2-4 bullet lines in English: camera move, lens/style, lighting, energy. No explanations.
+Example: "Camera orbit around the product. Slow movement. Hero product commercial. Warm key light."`;
+      const interpretUser = `User idea:\n${idea}`;
+      shotDesign = await openaiChat(
+        [{ role: 'system', content: interpretSystem }, { role: 'user', content: interpretUser }],
+        200,
+        0.4
+      );
     }
 
-    const raw = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content)
-      ? String(data.choices[0].message.content).trim()
-      : '';
+    const userParts = [];
+    if (firstSceneImageUrl) userParts.push('Reference image provided. Describe ONLY camera behavior and motion for the video—do not describe the scene or objects.');
+    if (brandToneText) userParts.push('Brand and tone (keep visual coherence): ' + brandToneText);
+    if (brandVoiceText) userParts.push('Brand voice context:\n' + brandVoiceText);
+    if (campaignAudienceText) userParts.push('Campaign and audience:\n' + campaignAudienceText);
+    if (productLockText) userParts.push(productLockText);
+    if (sceneText && !firstSceneImageUrl) userParts.push(sceneText);
+    if (sceneText && firstSceneImageUrl) userParts.push('Scene context: ' + sceneText.replace(/\n/g, ' '));
+    if (cineNarrative) userParts.push(cineNarrative);
+    if (shotDesign) userParts.push('Shot design (turn this into the final Kling prompt):\n' + shotDesign);
+    if (idea && !shotDesign) userParts.push('User idea:\n' + idea);
+
+    if (userParts.length === 0) userParts.push(multiPrompt ? 'Generate 2-3 shot prompts as a JSON array (mini storyboard).' : 'Generate one cinematic video prompt in English.');
+
+    const userTextContent = userParts.join('\n\n---\n\n');
+    const userMessageContent = firstSceneImageUrl
+      ? [{ type: 'text', text: userTextContent }, { type: 'image_url', image_url: { url: firstSceneImageUrl } }]
+      : userTextContent;
+
+    const systemContent = multiPrompt ? systemMultiShot : systemDirector;
+    const raw = await openaiChat(
+      [{ role: 'system', content: systemContent }, { role: 'user', content: userMessageContent }],
+      multiPrompt ? 900 : 500,
+      0.5
+    );
+
     if (!raw) {
-      return {
-        statusCode: 500,
-        headers: corsHeaders(),
-        body: JSON.stringify({ error: 'OpenAI no devolvió texto' })
-      };
+      return { statusCode: 500, headers: corsHeaders(), body: JSON.stringify({ error: 'OpenAI returned no content' }) };
     }
 
     if (multiPrompt) {
       let multiPrompts = [];
       try {
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
-          multiPrompts = parsed.map((p) => (typeof p === 'string' ? p.trim() : String(p))).filter(Boolean);
-        }
+        if (Array.isArray(parsed)) multiPrompts = parsed.map((p) => (typeof p === 'string' ? p.trim() : String(p))).filter(Boolean);
       } catch (_) {
         const byLine = raw.split(/\n/).map((s) => s.replace(/^[\s\-*\d.]+\s*/, '').trim()).filter(Boolean);
-        if (byLine.length >= 2) multiPrompts = byLine;
-        else multiPrompts = [raw];
+        multiPrompts = byLine.length >= 2 ? byLine : [raw];
       }
       if (multiPrompts.length === 0) multiPrompts = [raw];
       return {

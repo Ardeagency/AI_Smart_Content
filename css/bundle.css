@@ -21105,8 +21105,9 @@ body.production-filters-in-header .living-container > .living-history-section {
 .video-director-wrap .video-prompt-footer-card {
     width: 100%;
 }
-/* Director Console: efecto glass-black explícito (estático, no scrollea) */
-.video-director-console-zone .video-prompt-footer-card-inner.glass-black {
+/* Director Console y Sidebar Console: mismo efecto glass-black (fondo, borde, blur, radio) */
+.video-director-console-zone .video-prompt-footer-card-inner.glass-black,
+.video-sidebar-console .video-prompt-footer-card-inner.glass-black {
     background: var(--glass-black-bg);
     border: 1px solid var(--glass-black-border);
     color: var(--glass-black-text);
@@ -21115,7 +21116,10 @@ body.production-filters-in-header .living-container > .living-history-section {
     border-radius: var(--glass-radius);
     box-shadow: none;
 }
-/* Sin degradado/sombra en cards de la página Video (excepto glass-black del Director) */
+.video-sidebar-console .video-prompt-footer-card-inner.glass-black {
+    padding: var(--spacing-md) var(--spacing-md) var(--spacing-lg);
+}
+/* Sin degradado/sombra en cards de la página Video (glass unificado en Director y Sidebar) */
 .video-view-container .video-prompt-footer-card::after,
 .video-view-container .video-prompt-footer-card::before {
     display: none;
@@ -21126,20 +21130,21 @@ body.production-filters-in-header .living-container > .living-history-section {
 .video-view-container .video-prompt-footer-card-inner.glass-black {
     box-shadow: none;
 }
-/* Sidebar Console: scroll propio dentro de su contenedor (independiente del app-container y del canvas) */
+/* Sidebar Console: scroll propio; el contenido vive dentro de la card con efecto glass */
 .video-sidebar,
 .video-sidebar-console {
     width: 360px;
     flex-shrink: 0;
     min-height: 0;
-    padding: var(--spacing-md) var(--spacing-md) var(--spacing-lg) var(--spacing-md);
+    padding: var(--spacing-md);
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
-    border-left: 1px solid var(--border-divider);
+    border-left: 1px solid var(--glass-black-border);
 }
-.video-sidebar-card {
+.video-sidebar-console .video-sidebar-card {
     width: 100%;
+    border-radius: var(--glass-radius);
 }
 .video-sidebar-inner {
     display: flex;
