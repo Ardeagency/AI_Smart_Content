@@ -659,7 +659,7 @@ class LivingManager {
         // Todo el contenido producido: una tarjeta por cada output (flow_outputs), no una por run
         const fromRuns = (this.flowOutputs || []).map(output => {
             const run = (this.flowRuns || []).find(r => r.id === output.run_id);
-            const fileUrl = output?.file_url || output?.storage_path || null;
+            const fileUrl = this.resolveOutputMediaUrl(output) || output?.file_url || output?.storage_path || null;
             let contentType = 'text';
             if (fileUrl) {
                 const url = (fileUrl + '').toLowerCase();
@@ -681,9 +681,10 @@ class LivingManager {
                 } catch (_) {}
             }
             if (!prompt && run) prompt = run.status || '';
+            const resolvedUrl = fileUrl && (String(fileUrl).startsWith('http') || String(fileUrl).startsWith('//')) ? fileUrl : (output?.storage_path ? (this.getPublicUrlFromStorage('production-outputs', output.storage_path) || this.getPublicUrlFromStorage('outputs', output.storage_path)) : null) || fileUrl;
             return {
                 contentType,
-                fileUrl,
+                fileUrl: resolvedUrl,
                 prompt,
                 run: run || { id: output.run_id },
                 output,
@@ -693,14 +694,14 @@ class LivingManager {
         }).filter(it => it.output != null);
 
         const fromGenerated = (this.latestGeneratedContent || []).map(item => {
-            const fileUrl = item.image_url || item.url || item.storage_url || item.file_url || null;
-            let resolvedUrl = fileUrl;
+            let resolvedUrl = this.resolveOutputMediaUrl(item) || item.image_url || item.url || item.storage_url || item.file_url || null;
             if (!resolvedUrl && item.storage_path && typeof item.storage_path === 'string' && item.storage_path.trim() !== '') {
-                resolvedUrl = this.getPublicUrlFromStorage('production-outputs', item.storage_path);
+                resolvedUrl = this.getPublicUrlFromStorage('production-outputs', item.storage_path) || this.getPublicUrlFromStorage('outputs', item.storage_path);
             }
             if (!resolvedUrl && item.storage_object_id && typeof item.storage_object_id === 'string' && (item.storage_object_id.includes('/') || item.storage_object_id.includes('.'))) {
                 resolvedUrl = this.getPublicUrlFromStorage('production-outputs', item.storage_object_id);
             }
+            if (resolvedUrl && !resolvedUrl.startsWith('http') && !resolvedUrl.startsWith('//')) resolvedUrl = null;
             let prompt = item.prompt_used || item.prompt || item.generated_copy || item.text_content || '';
             if (!prompt && item.metadata) {
                 try {
@@ -726,13 +727,14 @@ class LivingManager {
 
         // Producciones de system_ai_outputs (no OpenAI): mismo formato que fromGenerated
         const fromSystemAi = (this.systemAiOutputs || []).map(item => {
-            let resolvedUrl = null;
-            if (item.storage_path && typeof item.storage_path === 'string' && item.storage_path.trim() !== '') {
-                resolvedUrl = this.getPublicUrlFromStorage('production-outputs', item.storage_path);
+            let resolvedUrl = this.resolveOutputMediaUrl(item) || null;
+            if (!resolvedUrl && item.storage_path && typeof item.storage_path === 'string' && item.storage_path.trim() !== '') {
+                resolvedUrl = this.getPublicUrlFromStorage('production-outputs', item.storage_path) || this.getPublicUrlFromStorage('outputs', item.storage_path);
             }
             if (!resolvedUrl && item.storage_object_id && typeof item.storage_object_id === 'string' && (item.storage_object_id.includes('/') || item.storage_object_id.includes('.'))) {
                 resolvedUrl = this.getPublicUrlFromStorage('production-outputs', item.storage_object_id);
             }
+            if (resolvedUrl && !resolvedUrl.startsWith('http') && !resolvedUrl.startsWith('//')) resolvedUrl = null;
             let prompt = item.prompt_used || item.text_content || '';
             if (!prompt && item.metadata) {
                 try {
@@ -812,10 +814,11 @@ class LivingManager {
         const itemHtmls = allItems.map((item, index) => {
             if (item.contentType === 'video') {
                 let thumbnailUrl = item.fileUrl;
-                if (thumbnailUrl && !thumbnailUrl.startsWith('http') && item.output) {
-                    const sp = item.output.storage_path || item.output.storage_object_id;
+                if (!thumbnailUrl && item.output) thumbnailUrl = this.resolveOutputMediaUrl(item.output);
+                if (thumbnailUrl && !thumbnailUrl.startsWith('http') && !thumbnailUrl.startsWith('//') && item.output) {
+                    const sp = item.output.storage_path;
                     if (sp && typeof sp === 'string' && sp.trim() !== '') {
-                        const u = this.getPublicUrlFromStorage('production-outputs', sp);
+                        const u = this.getPublicUrlFromStorage('production-outputs', sp) || this.getPublicUrlFromStorage('outputs', sp);
                         if (u) thumbnailUrl = u;
                     }
                 }
@@ -1030,7 +1033,7 @@ class LivingManager {
     }
     
     renderVideoCard(thumbnailUrl, run, output, prompt, index) {
-        const finalUrl = thumbnailUrl && thumbnailUrl.startsWith('http') ? thumbnailUrl : null;
+        const finalUrl = thumbnailUrl && (thumbnailUrl.startsWith('http') || thumbnailUrl.startsWith('//')) ? thumbnailUrl : null;
         const productionId = run?.id || output?.id;
         const flowName = this.getFlowName(run);
         const promptSafe = (prompt || '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -1040,14 +1043,17 @@ class LivingManager {
             item: { item: null, output: output, run: run }
         }).replace(/"/g, '&quot;');
         
+        const isVideoUrl = finalUrl && /\.(mp4|webm|mov)(\?|$)/i.test(finalUrl);
+        const thumbnailHtml = finalUrl
+            ? (isVideoUrl
+                ? `<video class="history-video-card-thumbnail" src="${this.escapeHtml(finalUrl)}" muted playsinline preload="metadata" loading="lazy" crossorigin="anonymous" onerror="var w=this.closest('.history-video-card-thumbnail-wrap'); if(w){ var d=document.createElement('div'); d.className='history-video-card-thumbnail'; d.style.cssText='background:#0F1115;display:flex;align-items:center;justify-content:center;min-width:180px;min-height:120px'; d.innerHTML='<i class=\\'fas fa-video\\' style=\\'font-size:2rem;color:var(--living-text-muted)\\'>\\x3c/i>'; w.innerHTML=''; w.appendChild(d); }"></video>`
+                : `<img src="${this.escapeHtml(finalUrl)}" alt="Video thumbnail" class="history-video-card-thumbnail" loading="lazy" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'history-video-card-thumbnail\\' style=\\'background: #0F1115; display: flex; align-items: center; justify-content: center;\\'><i class=\\'fas fa-video\\' style=\\'font-size: 2rem; color: var(--living-text-muted);\\'></i></div>';" onload="this.parentElement.style.width=this.naturalWidth/(this.naturalHeight/240)+'px';" />`)
+            : `<div class="history-video-card-thumbnail" style="background: #0F1115; display: flex; align-items: center; justify-content: center; width: 180px;">
+                <i class="fas fa-video" style="font-size: 2rem; color: var(--living-text-muted);"></i>
+            </div>`;
         return `
             <div class="history-video-card" data-production-id="${productionId}" data-run-id="${run?.id || ''}" data-card-info="${this.escapeHtml(cardData)}">
-                ${finalUrl
-                    ? `<img src="${this.escapeHtml(finalUrl)}" alt="Video thumbnail" class="history-video-card-thumbnail" loading="lazy" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'history-video-card-thumbnail\\' style=\\'background: #0F1115; display: flex; align-items: center; justify-content: center;\\'><i class=\\'fas fa-video\\' style=\\'font-size: 2rem; color: var(--living-text-muted);\\'></i></div>';" onload="this.parentElement.style.width=this.naturalWidth/(this.naturalHeight/240)+'px';" />`
-                    : `<div class="history-video-card-thumbnail" style="background: #0F1115; display: flex; align-items: center; justify-content: center; width: 180px;">
-                        <i class="fas fa-video" style="font-size: 2rem; color: var(--living-text-muted);"></i>
-                    </div>`
-                }
+                <div class="history-video-card-thumbnail-wrap">${thumbnailHtml}</div>
                 <div class="history-card-actions">
                     <button class="history-card-download" title="Descargar" data-image-url="${this.escapeHtml(finalUrl || '')}">
                     <i class="fas fa-download"></i>
@@ -1772,6 +1778,25 @@ class LivingManager {
     setupEventListeners() {
         // Los event listeners para las cards se configuran en setupDownloadButtons()
         // después de que se renderizan las cards
+    }
+
+    /**
+     * Resuelve la URL pública de un output (imagen o video).
+     * Prueba storage_path en 'production-outputs' y 'outputs', y metadata (video_url, url, file_url, etc.).
+     */
+    resolveOutputMediaUrl(output) {
+        if (!output) return null;
+        let url = output.file_url || output.image_url || output.url || output.storage_url || null;
+        const rawPath = output.storage_path && typeof output.storage_path === 'string' ? output.storage_path.trim() : '';
+        if (!url && rawPath) {
+            if (rawPath.startsWith('http')) url = rawPath;
+            else url = this.getPublicUrlFromStorage('production-outputs', rawPath) || this.getPublicUrlFromStorage('outputs', rawPath);
+        }
+        if (!url && output.metadata) {
+            const meta = typeof output.metadata === 'string' ? (() => { try { return JSON.parse(output.metadata); } catch (_) { return {}; } })() : output.metadata;
+            url = meta.video_url || meta.url || meta.file_url || meta.videoUrl || meta.output_url || meta.publicUrl || meta.src || null;
+        }
+        return url && (url.startsWith('http') || url.startsWith('//')) ? url : null;
     }
 
     getPublicUrlFromStorage(bucketName, filePath) {
