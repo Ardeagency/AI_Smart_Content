@@ -21119,11 +21119,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 .video-sidebar-console .video-prompt-footer-card-inner.glass-black {
     padding: var(--spacing-md) var(--spacing-md) var(--spacing-lg);
 }
-/* Sin degradado/sombra en cards de la página Video (glass unificado en Director y Sidebar) */
-.video-view-container .video-prompt-footer-card::after,
-.video-view-container .video-prompt-footer-card::before {
-    display: none;
-}
+/* Página Video usa el mismo degradado dinámico que el resto de la plataforma (borde + brillo en cards) */
 .video-view-container .video-prompt-footer-card {
     box-shadow: none;
 }
