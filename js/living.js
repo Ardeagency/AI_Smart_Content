@@ -1592,7 +1592,8 @@ class LivingManager {
         const item = data.item || {};
         const output = item.output || {};
         const run = item.run || {};
-        const mediaUrl = data.imageUrl && (data.imageUrl.startsWith('http') || data.imageUrl.startsWith('//')) ? data.imageUrl : '';
+        let mediaUrl = data.imageUrl && (data.imageUrl.startsWith('http') || data.imageUrl.startsWith('//')) ? data.imageUrl : '';
+        if (!mediaUrl && output) mediaUrl = this.resolveOutputMediaUrl(output) || '';
         const outputType = (output.output_type || '').toLowerCase();
         const isVideo = !!(mediaUrl && /\.(mp4|webm|mov)(\?|$)/i.test(mediaUrl)) || outputType.includes('video') || outputType.includes('reel') || outputType.includes('clip');
 
