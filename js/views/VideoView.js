@@ -1483,6 +1483,26 @@ class VideoView extends BaseView {
       return;
     }
 
+    const VIDEO_CREDITS_REQUIRED = 25;
+    if (!this.organizationId) {
+      this.showError('Selecciona una organización para producir videos.');
+      return;
+    }
+    if (this.supabase) {
+      const { data, error } = await this.supabase
+        .from('organization_credits')
+        .select('credits_available')
+        .eq('organization_id', this.organizationId)
+        .maybeSingle();
+      if (!error && data != null) {
+        const available = data.credits_available ?? 0;
+        if (available < VIDEO_CREDITS_REQUIRED) {
+          this.showError(`Tu organización no tiene créditos suficientes. Necesitas al menos ${VIDEO_CREDITS_REQUIRED} créditos para producir un video.`);
+          return;
+        }
+      }
+    }
+
     const modeEl = this.container.querySelector('#videoMode');
     const mode = modeEl && modeEl.value === 'pro' ? 'pro' : 'std';
     if (this.sendBtn) this.sendBtn.disabled = true;
@@ -1691,6 +1711,30 @@ class VideoView extends BaseView {
                     error_message: null
                   });
                   this._lastKieOutputId = null;
+                }
+                // Cobro automático de 25 créditos al guardar el video exitosamente
+                const VIDEO_CREDITS = 25;
+                if (this.supabase && this.organizationId) {
+                  try {
+                    const { data: { user } } = await this.supabase.auth.getUser();
+                    if (user?.id) {
+                      const { data: deductResult, error: rpcError } = await this.supabase
+                        .rpc('deduct_credits_for_video', {
+                          p_organization_id: this.organizationId,
+                          p_user_id: user.id,
+                          p_amount: VIDEO_CREDITS
+                        });
+                      if (!rpcError && deductResult?.success === true) {
+                        if (window.appNavigation && typeof window.appNavigation.loadCreditsFromDb === 'function') {
+                          window.appNavigation.loadCreditsFromDb(this.organizationId);
+                        }
+                      } else if (deductResult?.error_message === 'insufficient_credits') {
+                        console.warn('[Video] Video guardado pero créditos insuficientes para cobrar', deductResult.credits_available);
+                      }
+                    }
+                  } catch (e) {
+                    console.warn('[Video] Error al cobrar créditos:', e);
+                  }
                 }
               } else {
                 this.showError('No se pudo guardar el video en tu cuenta');

@@ -304,6 +304,11 @@ class StudioView extends BaseView {
         costEl.style.display = 'none';
       }
     }
+    const btn = document.getElementById('studioProducirBtn');
+    if (btn && this.selectedFlow) {
+      const cost = this.selectedFlow.token_cost ?? 1;
+      btn.disabled = !this.selectedFlow.webhook_url || this.credits.available < cost;
+    }
   }
 
   renderFlowsList() {
@@ -382,7 +387,8 @@ class StudioView extends BaseView {
       this.renderFlowForm(flow);
       if (btn) {
         btn.style.display = '';
-        btn.disabled = !flow.webhook_url;
+        const cost = flow.token_cost ?? 1;
+        btn.disabled = !flow.webhook_url || this.credits.available < cost;
       }
     }
   }
