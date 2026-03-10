@@ -264,7 +264,8 @@ class StudioView extends BaseView {
 
   /**
    * Adaptador canónico: construye el objeto flujo que usa Studio a partir de content_flows + flow_modules.
-   * Toma el primer módulo (por step_order) para input_schema y webhooks. URL de webhook vía FlowWebhookService.
+   * Toma el primer módulo (por step_order) para input_schema y webhooks. Para manual y automated
+   * los campos de entrada/programación viven en flow_modules.input_schema (único formato).
    */
   buildFlowFromFirstModule(flow) {
     const modules = (flow.flow_modules || []).slice().sort((a, b) => (a.step_order ?? 0) - (b.step_order ?? 0));
@@ -280,7 +281,6 @@ class StudioView extends BaseView {
       execution_mode: flow.execution_mode || 'single_step',
       flow_category_type: flow.flow_category_type || 'manual',
       flow_image_url: flow.flow_image_url || null,
-      schedule_schema: flow.schedule_schema && Array.isArray(flow.schedule_schema.fields) ? flow.schedule_schema : { fields: [] },
       input_schema: first?.input_schema ?? {},
       webhook_url: webhookUrlProd,
       webhook_url_test: first?.webhook_url_test,
@@ -403,11 +403,11 @@ class StudioView extends BaseView {
     }
   }
 
-  /** Rellena el formulario de programación (schedule_schema) para flujos automáticos. */
+  /** Rellena el formulario de programación con input_schema del primer módulo (flujos automáticos). */
   renderScheduleForm(flow) {
     const formEl = document.getElementById('studioScheduleForm');
     if (!formEl || !flow) return;
-    const schema = flow.schedule_schema || {};
+    const schema = flow.input_schema || {};
     let fields = Array.isArray(schema.fields) ? schema.fields : [];
     // Flujos antiguos: inyectar/normalizar campos para tipo_entidad, campaña/audiencia como dropdown, production_count como num_stepper
     const hasTipoEntidad = fields.some(f => (f.key || f.name) === 'tipo_entidad');

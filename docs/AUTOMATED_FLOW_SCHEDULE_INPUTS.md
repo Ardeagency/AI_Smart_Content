@@ -28,13 +28,13 @@ Así, el usuario puede **personalizar la programación** (horario), la **entidad
 
 1. **Reutilizar** input_types ya existentes donde aplique: `entity_selector`, `campaign_selector`, `audience_selector`, `aspect_ratio`, `number`, `string`, `textarea`, `toggle_switch`, `brand_selector`.
 2. **Añadir** un input_type nuevo exclusivo de este contexto: **`cron_schedule`** (selector de programación de horas / expresión cron o presets como "Diario 9:00", "Cada 6 horas").
-3. **Definir** un **schedule_schema** por flujo automatizado (en `content_flows` o derivado) que liste qué campos del schedule se muestran y con qué `input_type`, igual que `input_schema` pero para la pantalla "Programar tarea".
+3. **Definir** los campos de programación en **`flow_modules.input_schema`** del primer módulo: mismo formato que para flujos manuales; para flujos `flow_category_type = 'automated'` ese `input_schema` define qué campos ve quien programa la tarea.
 
-## Schema propuesto
+## Schema: un solo formato en `flow_modules.input_schema`
 
-### 1. `content_flows.schedule_schema` (jsonb, opcional)
+### 1. `flow_modules.input_schema` (primer módulo del flujo)
 
-Solo tiene sentido cuando `flow_category_type = 'automated'`. Estructura igual que `input_schema`: array de campos.
+Para **manual** y **automated** los formatos de entrada viven en `flow_modules.input_schema`. En flujos automatizados, ese schema se usa para el formulario "Programar tarea" (Studio) y para el canvas del Builder.
 
 ```json
 {
@@ -50,7 +50,7 @@ Solo tiene sentido cuando `flow_category_type = 'automated'`. Estructura igual q
 }
 ```
 
-Así el desarrollador puede, en el Builder, definir qué campos del schedule verá el usuario al programar la tarea (y en qué orden).
+Así el desarrollador define en el Builder (canvas del primer módulo) qué campos de programación se muestran y con qué control.
 
 ### 2. `ui_component_templates.for_flow_type` (opcional)
 
@@ -69,5 +69,5 @@ Plantillas exclusivas de **automated** (ejemplo):
 
 - **flow_schedules** ya tiene las columnas que el usuario configura al programar una tarea (cron, entidad, campaña, audiencia, aspect_ratio, production_count, etc.).
 - Los **input_types** para este contexto son en su mayoría existentes; el único nuevo necesario es **cron_schedule** (programación de horas).
-- Añadir **schedule_schema** en `content_flows` permite que cada flujo automatizado defina qué campos de programación se muestran y con qué control.
+- Los campos de programación se definen en **flow_modules.input_schema** (primer módulo); no existe columna `schedule_schema` en `content_flows` para evitar redundancia.
 - Opcional: **for_flow_type** en `ui_component_templates` para filtrar plantillas por tipo de flujo (manual vs automated).

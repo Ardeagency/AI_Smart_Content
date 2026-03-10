@@ -25,11 +25,10 @@ class DevBuilderView extends DevBaseView {
       status: 'draft',
       version: '1.0.0',
       execution_mode: 'single_step',
-      show_in_catalog: false,
-      schedule_schema: { fields: [] }
+      show_in_catalog: false
     };
 
-    /** Schema por defecto para flujos automated (programación de tareas). Se establece al cambiar tipo a automated.
+    /** Campos por defecto para flujos automated (programación). Se guardan en flow_modules.input_schema del primer módulo.
      * tipo_entidad condiciona el campo Entidad: productos → image_selector (carrusel múltiple), servicio → dropdown. */
     this.DEFAULT_SCHEDULE_SCHEMA = {
       fields: [
@@ -799,12 +798,9 @@ class DevBuilderView extends DevBaseView {
     const tabModules = this.querySelector('.builder-tab[data-tab="technical"]');
 
     if (this.isAutomatedFlow) {
-      // Flujo automated: sin lista de componentes; canvas muestra schedule_schema (programación)
-      if (!this.flowData.schedule_schema || !Array.isArray(this.flowData.schedule_schema.fields)) {
-        this.flowData.schedule_schema = { fields: [] };
-      }
-      if (this.flowData.schedule_schema.fields.length === 0) {
-        this.flowData.schedule_schema = JSON.parse(JSON.stringify(this.DEFAULT_SCHEDULE_SCHEMA));
+      // Flujo automated: canvas usa input_schema del primer módulo (flow_modules.input_schema)
+      if (this.inputSchema.length === 0) {
+        this.inputSchema = JSON.parse(JSON.stringify(this.DEFAULT_SCHEDULE_SCHEMA.fields));
         this.hasUnsavedChanges = true;
       }
       if (main) main.classList.add('builder-mode-automated');

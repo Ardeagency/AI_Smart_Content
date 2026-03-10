@@ -1,6 +1,6 @@
 # Verificación: flujo automatizado → programable como task (flow_schedules)
 
-Para que un flujo con `flow_category_type = 'automated'` pueda ser **programado** como tarea, debe cumplirse la relación entre `content_flows.schedule_schema` y la tabla `flow_schedules`, más el trigger que sincroniza con el cron.
+Para que un flujo con `flow_category_type = 'automated'` pueda ser **programado** como tarea, debe cumplirse la relación entre el **input_schema del primer flow_module** y la tabla `flow_schedules`, más el trigger que sincroniza con el cron.
 
 ---
 
@@ -8,17 +8,17 @@ Para que un flujo con `flow_category_type = 'automated'` pueda ser **programado*
 
 | Origen | Uso |
 |--------|-----|
-| **content_flows.schedule_schema** | Define *qué campos* ve quien programa la tarea (Builder y/o pantalla “Programar”). Se guarda en el flujo y se usa para generar el formulario de programación. |
+| **flow_modules.input_schema** (primer módulo) | Define *qué campos* ve quien programa la tarea (Builder y/o pantalla “Programar”). Un solo formato para manual y automated; se usa para generar el formulario de programación. |
 | **flow_schedules** | Cada fila = una *tarea programada* (cuándo corre, con qué entidad/campaña/audiencia, etc.). Obligatorios: `cron_expression`, `job_name`. |
 | **Trigger `tr_sync_flow_cron`** | Después de INSERT/UPDATE/DELETE en `flow_schedules`, ejecuta `sync_flow_to_cron()` para mantener el sistema de cron (n8n, pg_cron, etc.) al día. |
 
 ---
 
-## 2. Mapeo: schedule_schema.fields → flow_schedules
+## 2. Mapeo: input_schema.fields (primer módulo) → flow_schedules
 
-El `DEFAULT_SCHEDULE_SCHEMA` del Builder (DevBuilderView.js) y la doc (AUTOMATED_FLOW_SCHEDULE_INPUTS.md) definen campos que deben corresponder a columnas de `flow_schedules`:
+El Builder usa `DEFAULT_SCHEDULE_SCHEMA.fields` como valores por defecto para el primer módulo en flujos automated; esos campos se guardan en `flow_modules.input_schema` y deben corresponder a columnas de `flow_schedules`:
 
-| schedule_schema field (key) | flow_schedules columna | Notas |
+| input_schema field (key) | flow_schedules columna | Notas |
 |-----------------------------|-------------------------|--------|
 | `cron_expression` | `cron_expression` | NOT NULL. Requerido para programar. |
 | `entity_id` | `entity_id` o `entity_ids` | Ver diferencia de esquema más abajo. |
@@ -34,7 +34,7 @@ Además, al **crear** una fila en `flow_schedules` hacen falta:
 - `flow_id`: flujo que se programa (FK a content_flows).
 - `user_id` / `brand_id`: según tu modelo de permisos y contexto.
 
-**Conclusión:** Los campos del `schedule_schema` están alineados con las columnas de `flow_schedules` que el código y la doc asumen. Si en tu BD usas `entity_ids`, `campaign_ids`, `audience_ids` (arrays), el mapeo lógico es el mismo; solo cambia el tipo y cómo se escribe/lee en el backend o en una API.
+**Conclusión:** Los campos del `input_schema` del primer módulo están alineados con las columnas de `flow_schedules` que el código y la doc asumen. Si en tu BD usas `entity_ids`, `campaign_ids`, `audience_ids` (arrays), el mapeo lógico es el mismo; solo cambia el tipo y cómo se escribe/lee en el backend o en una API.
 
 ---
 
@@ -54,7 +54,7 @@ Tú has indicado un esquema con:
 
 - Si la **BD real** usa `entity_ids`/`campaign_ids`/`audience_ids` y `composition_mode`, hay que:
   - Actualizar el schema del repo (o una migración) para reflejar esas columnas.
-  - En el backend/API que crea o actualiza `flow_schedules`, rellenar esos arrays (y `composition_mode`) en lugar de los singulares, o mapear desde el formulario generado por `schedule_schema`.
+  - En el backend/API que crea o actualiza `flow_schedules`, rellenar esos arrays (y `composition_mode`) en lugar de los singulares, o mapear desde el formulario generado por el `input_schema` del primer módulo.
 - Si la BD real sigue con `entity_id`/`campaign_id`/`audience_id` (singular), el código actual de TasksView (select/update por `entity_id`, `campaign_id`, `audience_id`) está alineado con el schema del repo.
 
 ---
@@ -78,7 +78,7 @@ El trigger y la función `sync_flow_to_cron` ya existen en la base de datos; no 
 
 Para que un flujo automatizado sea realmente “programable” como task hace falta:
 
-1. Algún flujo de UI/API que, a partir de un `content_flow` con `flow_category_type = 'automated'` y su `schedule_schema`, muestre un formulario con los campos del schema (cron, entity, campaign, audience, aspect_ratio, production_count, etc.).
+1. Algún flujo de UI/API que, a partir de un `content_flow` con `flow_category_type = 'automated'` y el `input_schema` del primer `flow_module`, muestre un formulario con los campos del schema (cron, entity, campaign, audience, aspect_ratio, production_count, etc.).
 2. Al enviar ese formulario, hacer **INSERT** en `flow_schedules` con:
    - `cron_expression`, `job_name` (obligatorios),
    - `flow_id`, `user_id`, `brand_id` (según modelo),
@@ -91,11 +91,11 @@ Para que un flujo automatizado sea realmente “programable” como task hace fa
 
 | Requisito | Estado en repo |
 |-----------|----------------|
-| content_flows.schedule_schema definido y guardado | Sí (Builder guarda schedule_schema). |
-| schedule_schema.fields alineados con columnas de flow_schedules | Sí (cron_expression, entity_id, campaign_id, audience_id, aspect_ratio, production_count, production_specifications). |
+| input_schema del primer flow_module para automated | Sí (Builder guarda en flow_modules.input_schema). |
+| input_schema.fields alineados con columnas de flow_schedules | Sí (cron_expression, entity_id, campaign_id, audience_id, aspect_ratio, production_count, production_specifications). |
 | flow_schedules en schema.sql | Sí (con entity_id, campaign_id, audience_id singulares). |
 | Tu BD con entity_ids/campaign_ids/audience_ids y composition_mode | Pendiente de alinear en repo/migración si aplica. |
 | Trigger tr_sync_flow_cron + sync_flow_to_cron() | Ya existen en la BD (no en repo). |
 | INSERT en flow_schedules (programar flujo) | No implementado en el frontend revisado. |
 
-Si quieres, el siguiente paso puede ser: (1) añadir un stub de `sync_flow_to_cron` + trigger en SQL, y (2) esbozar el flujo (o endpoint) para crear una fila en `flow_schedules` desde el formulario generado por `schedule_schema`.
+Si quieres, el siguiente paso puede ser: (1) añadir un stub de `sync_flow_to_cron` + trigger en SQL, y (2) esbozar el flujo (o endpoint) para crear una fila en `flow_schedules` desde el formulario generado por el `input_schema` del primer módulo.

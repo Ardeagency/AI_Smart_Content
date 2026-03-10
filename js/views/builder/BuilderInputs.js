@@ -253,11 +253,8 @@
     return index;
   };
 
-  /** Campos que se muestran en el canvas: input_schema (manual) o schedule_schema.fields (automated). */
+  /** Campos del canvas: siempre input_schema del primer módulo (manual = inputs, automated = programación). */
   P.getCanvasFields = function () {
-    if (this.isAutomatedFlow && this.flowData.schedule_schema && Array.isArray(this.flowData.schedule_schema.fields)) {
-      return this.flowData.schedule_schema.fields;
-    }
     return this.inputSchema;
   };
 
@@ -1991,12 +1988,8 @@
   P.updateJsonPreview = function () {
     const preview = this.querySelector('#jsonSchemaPreview code');
     if (!preview) return;
-    
     const fields = this.getCanvasFields();
-    const schema = this.isAutomatedFlow
-      ? { schedule_schema: { fields } }
-      : { fields };
-
+    const schema = { fields };
     preview.textContent = JSON.stringify(schema, null, 2);
   };
 
