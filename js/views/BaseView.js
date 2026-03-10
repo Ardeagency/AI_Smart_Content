@@ -138,17 +138,13 @@ class BaseView {
   }
 
   /**
-   * Mueve todos los modales de la vista al #modals-portal (fuera de #app-container)
-   * para que no scrollen con el contenido y queden centrados en pantalla.
+   * Antes movía los modales al #modals-portal; desactivado para que los modales
+   * permanezcan en la vista y no se separen del overlay (evita bugs de cierre/click).
+   * Se vacía el portal al cambiar de vista para no dejar modales de la vista anterior.
    */
   moveModalsToPortal() {
     const portal = document.getElementById('modals-portal');
-    if (!portal) return;
-    portal.innerHTML = '';
-    const modals = this.container.querySelectorAll('.modal');
-    modals.forEach((modal) => {
-      portal.appendChild(modal);
-    });
+    if (portal) portal.innerHTML = '';
   }
 
   /**
