@@ -15,6 +15,39 @@ CREATE TABLE public.ai_brand_vectors (
   created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT ai_brand_vectors_pkey PRIMARY KEY (id)
 );
+CREATE TABLE public.ai_chat_actions (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  message_id uuid NOT NULL,
+  action_type text NOT NULL CHECK (action_type = ANY (ARRAY['trigger_flow'::text, 'update_brand_voice'::text, 'generate_image'::text, 'analyze_competitor'::text])),
+  related_flow_run_id uuid,
+  status text DEFAULT 'completed'::text,
+  CONSTRAINT ai_chat_actions_pkey PRIMARY KEY (id),
+  CONSTRAINT ai_chat_actions_msg_fkey FOREIGN KEY (message_id) REFERENCES public.ai_messages(id)
+);
+CREATE TABLE public.ai_chat_context (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  conversation_id uuid NOT NULL,
+  entity_type text NOT NULL CHECK (entity_type = ANY (ARRAY['product'::text, 'service'::text, 'campaign'::text, 'audience'::text, 'intelligence_signal'::text, 'intelligence_entity'::text])),
+  entity_id uuid NOT NULL,
+  importance_weight numeric DEFAULT 1.0,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT ai_chat_context_pkey PRIMARY KEY (id),
+  CONSTRAINT ai_chat_context_conv_fkey FOREIGN KEY (conversation_id) REFERENCES public.ai_conversations(id)
+);
+CREATE TABLE public.ai_conversations (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  brand_container_id uuid NOT NULL,
+  user_id uuid NOT NULL,
+  title text DEFAULT 'Nueva Consultoría Semántica'::text,
+  system_prompt_override text,
+  metadata jsonb DEFAULT '{}'::jsonb,
+  is_active boolean DEFAULT true,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT ai_conversations_pkey PRIMARY KEY (id),
+  CONSTRAINT ai_conversations_brand_fkey FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id),
+  CONSTRAINT ai_conversations_user_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
+);
 CREATE TABLE public.ai_global_vectors (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   source_bucket text NOT NULL,
@@ -26,6 +59,19 @@ CREATE TABLE public.ai_global_vectors (
   metadata jsonb DEFAULT '{}'::jsonb,
   created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT ai_global_vectors_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.ai_messages (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  conversation_id uuid NOT NULL,
+  role text NOT NULL CHECK (role = ANY (ARRAY['system'::text, 'user'::text, 'assistant'::text])),
+  content text NOT NULL,
+  related_flow_run_id uuid,
+  attachments jsonb DEFAULT '[]'::jsonb,
+  tokens_used integer DEFAULT 0,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT ai_messages_pkey PRIMARY KEY (id),
+  CONSTRAINT ai_messages_conv_fkey FOREIGN KEY (conversation_id) REFERENCES public.ai_conversations(id),
+  CONSTRAINT ai_messages_run_fkey FOREIGN KEY (related_flow_run_id) REFERENCES public.flow_runs(id)
 );
 CREATE TABLE public.audiences (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -245,7 +291,6 @@ CREATE TABLE public.content_flows (
   execution_mode text DEFAULT 'single_step'::text CHECK (execution_mode = ANY (ARRAY['single_step'::text, 'multi_step'::text, 'sequential'::text])),
   execution_strategy text DEFAULT 'linear'::text CHECK (execution_strategy = ANY (ARRAY['linear'::text, 'conditional'::text, 'parallel'::text])),
   show_in_catalog boolean DEFAULT false,
-  schedule_schema jsonb DEFAULT '{"fields": []}'::jsonb,
   CONSTRAINT content_flows_pkey PRIMARY KEY (id),
   CONSTRAINT content_flows_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.content_categories(id),
   CONSTRAINT content_flows_subcategory_id_fkey FOREIGN KEY (subcategory_id) REFERENCES public.content_subcategories(id),
@@ -411,6 +456,32 @@ CREATE TABLE public.flow_test_cases (
   CONSTRAINT flow_test_cases_pkey PRIMARY KEY (id),
   CONSTRAINT flow_test_cases_flow_fkey FOREIGN KEY (flow_id) REFERENCES public.content_flows(id),
   CONSTRAINT flow_test_cases_user_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
+);
+CREATE TABLE public.intelligence_entities (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  brand_container_id uuid NOT NULL,
+  name text NOT NULL,
+  domain text NOT NULL CHECK (domain = ANY (ARRAY['social'::text, 'marketplace'::text, 'web'::text, 'news'::text])),
+  target_identifier text NOT NULL,
+  is_active boolean DEFAULT true,
+  metadata jsonb DEFAULT '{}'::jsonb,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT intelligence_entities_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_ie_brand FOREIGN KEY (brand_container_id) REFERENCES public.brand_containers(id)
+);
+CREATE TABLE public.intelligence_signals (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  entity_id uuid NOT NULL,
+  run_id uuid,
+  signal_type text NOT NULL,
+  content_text text,
+  content_numeric numeric,
+  media_assets jsonb DEFAULT '[]'::jsonb,
+  ai_analysis jsonb DEFAULT '{}'::jsonb,
+  captured_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT intelligence_signals_pkey PRIMARY KEY (id),
+  CONSTRAINT fk_is_entity FOREIGN KEY (entity_id) REFERENCES public.intelligence_entities(id),
+  CONSTRAINT fk_is_run FOREIGN KEY (run_id) REFERENCES public.flow_runs(id)
 );
 CREATE TABLE public.organization_credits (
   organization_id uuid NOT NULL,

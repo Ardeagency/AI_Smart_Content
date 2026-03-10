@@ -242,8 +242,7 @@
         version: this.flowData.version,
         execution_mode: this.flowData.execution_mode || 'single_step',
         show_in_catalog: !!this.flowData.show_in_catalog,
-        ui_layout_config: this.uiLayoutConfig,
-        schedule_schema: this.flowData.schedule_schema && Array.isArray(this.flowData.schedule_schema.fields) ? this.flowData.schedule_schema : { fields: [] }
+        ui_layout_config: this.uiLayoutConfig
       };
       
       let flowId = this.flowId;

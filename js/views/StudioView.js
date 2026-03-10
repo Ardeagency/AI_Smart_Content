@@ -248,7 +248,6 @@ class StudioView extends BaseView {
           execution_mode,
           flow_category_type,
           flow_image_url,
-          schedule_schema,
           flow_modules ( step_order, input_schema, webhook_url_test, webhook_url_prod )
         `)
         .eq('is_active', true);
