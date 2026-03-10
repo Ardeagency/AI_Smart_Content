@@ -802,10 +802,11 @@ class Navigation {
       });
     });
 
-    // Escuchar cambios de ruta (solo una vez para no acumular)
+    // Escuchar cambios de ruta (solo una vez para no acumular).
+    // No usar popstate → this.render(): el router ya llama a appNavigation.render() dentro de handleRoute;
+    // un segundo render aquí causaba parpadeo/doble carga.
     if (!this._routeListenersAttached) {
       this._routeListenersAttached = true;
-      window.addEventListener('popstate', () => this.render());
       window.addEventListener('routechange', () => {
         this.updateActiveLink();
         this.updateHeaderTitle();

@@ -304,7 +304,10 @@ class Router {
       if (this._pendingRoute) {
         const pending = this._pendingRoute;
         this._pendingRoute = null;
-        this.handleRoute();
+        // Evitar doble render/parpadeo: no volver a manejar la misma ruta que acabamos de renderizar
+        if (pending !== this.currentRoute) {
+          this.handleRoute();
+        }
       }
     }
   }
