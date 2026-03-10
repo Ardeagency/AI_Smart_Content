@@ -1,0 +1,30 @@
+<div class="signals-feed-page page-content" id="signalsFeedPage">
+  <div class="signals-feed-header">
+    <h1 class="signals-feed-title">Signals Feed</h1>
+    <p class="signals-feed-subtitle">Actividad en tiempo real: posts, cambios de precio, tendencias y análisis capturados por tus objetivos.</p>
+  </div>
+  <div class="signals-feed-toolbar">
+    <select id="signalsFeedFilterEntity" class="signals-feed-filter" aria-label="Filtrar por objetivo">
+      <option value="">Todos los objetivos</option>
+    </select>
+    <select id="signalsFeedFilterType" class="signals-feed-filter" aria-label="Filtrar por tipo">
+      <option value="">Todos los tipos</option>
+      <option value="social">Redes</option>
+      <option value="price">Precio</option>
+      <option value="trend">Tendencia</option>
+      <option value="keyword">Palabra clave</option>
+      <option value="news">Noticias</option>
+    </select>
+  </div>
+  <div class="signals-feed-list" id="signalsFeedList">
+    <div class="signals-feed-empty" id="signalsFeedEmpty" style="display: none;">
+      <div class="signals-feed-empty-icon"><i class="fas fa-rss"></i></div>
+      <p>Aún no hay señales.</p>
+      <p class="signals-feed-empty-hint">Configura objetivos en Intel Radar y programa el scraping en Task. Las señales aparecerán aquí.</p>
+    </div>
+    <div class="signals-feed-items" id="signalsFeedItems"></div>
+  </div>
+  <div class="signals-feed-load-more" id="signalsFeedLoadMore" style="display: none;">
+    <button type="button" class="btn btn-ghost" id="signalsFeedLoadMoreBtn">Cargar más</button>
+  </div>
+</div>

@@ -40,7 +40,8 @@ class DashboardView extends BaseView {
 
   async render() {
     await super.render();
-    this.updateHeaderContext('Dashboard', null, this.orgName);
+    const isMarketInsights = (window.location.pathname || '').includes('market-insights');
+    this.updateHeaderContext(isMarketInsights ? 'Market Insights' : 'Dashboard', null, this.orgName);
     // Aplicar tema de marca (degradado dinámico) si hay org, para que el fondo y acentos usen los colores de la marca
     if (this.orgId && window.OrgBrandTheme && typeof window.OrgBrandTheme.applyOrgBrandTheme === 'function') {
       await window.OrgBrandTheme.applyOrgBrandTheme(this.orgId);

@@ -22718,3 +22718,185 @@ body.production-filters-in-header .living-container > .living-history-section {
     margin: 0;
     color: var(--accent-warm, var(--color-warning));
 }
+
+/* ========== Intel Radar & Signals Feed (Discovery) ========== */
+.intel-radar-page,
+.signals-feed-page {
+  min-height: 100%;
+  padding: 15px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-top: calc(48px + 15px);
+  background: var(--living-bg-deep, var(--bg-primary));
+}
+.intel-radar-header,
+.signals-feed-header {
+  margin-bottom: 1.5rem;
+}
+.intel-radar-title,
+.signals-feed-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 0.35rem 0;
+}
+.intel-radar-subtitle,
+.signals-feed-subtitle {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  margin: 0 0 1rem 0;
+}
+.intel-radar-empty,
+.signals-feed-empty {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--text-secondary);
+}
+.intel-radar-empty-icon,
+.signals-feed-empty-icon {
+  font-size: 2.5rem;
+  color: var(--text-tertiary);
+  margin-bottom: 1rem;
+}
+.intel-radar-empty-hint,
+.signals-feed-empty-hint {
+  font-size: 0.875rem;
+  margin: 0.5rem 0 1rem 0;
+}
+.intel-radar-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+.intel-radar-card {
+  background: var(--white-8, rgba(255,255,255,0.06));
+  border: 1px solid var(--border-divider);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.intel-radar-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border-color: var(--accent-brand);
+}
+.intel-radar-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.intel-radar-card-domain {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.intel-radar-card-status {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-pill);
+}
+.intel-radar-card-status.active {
+  background: rgba(107, 207, 127, 0.2);
+  color: #6bcf7f;
+}
+.intel-radar-card-status.paused {
+  background: var(--white-8);
+  color: var(--text-tertiary);
+}
+.intel-radar-card-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 0.25rem 0;
+}
+.intel-radar-card-target {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  margin: 0 0 0.75rem 0;
+  word-break: break-all;
+}
+.intel-radar-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.signals-feed-toolbar {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.signals-feed-filter {
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-divider);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+.signals-feed-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.signals-feed-item {
+  background: var(--white-8, rgba(255,255,255,0.06));
+  border: 1px solid var(--border-divider);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+}
+.signals-feed-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+.signals-feed-item-entity {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+.signals-feed-item-type {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+}
+.signals-feed-item-time {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  margin-left: auto;
+}
+.signals-feed-item-text {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  margin: 0 0 0.35rem 0;
+  line-height: 1.4;
+}
+.signals-feed-item-numeric {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--accent-brand);
+  margin: 0 0 0.25rem 0;
+}
+.signals-feed-item-analysis {
+  font-size: 0.8125rem;
+  color: var(--text-tertiary);
+  margin: 0;
+  font-style: italic;
+}
+.signals-feed-load-more {
+  text-align: center;
+  padding: 1.5rem 0;
+}
+.intel-radar-modal .form-group {
+  margin-bottom: 1rem;
+}
+.intel-radar-modal .form-hint {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  margin-top: 0.25rem;
+}

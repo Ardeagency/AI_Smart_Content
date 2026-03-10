@@ -6,7 +6,17 @@
 const SIDEBAR_USER_CONFIG = {
   main: [
     { type: 'page', id: 'activity', label: 'Production', icon: 'fa-chart-line', iconSrc: '/recursos/icons/Production.svg', route: 'production' },
-    { type: 'page', id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-area', iconSrc: '/recursos/icons/dashboard.svg', route: 'dashboard' },
+    {
+      type: 'container',
+      id: 'discovery',
+      label: 'Discovery',
+      icon: 'fa-satellite-dish',
+      children: [
+        { label: 'Intel Radar', route: 'intel-radar' },
+        { label: 'Signals Feed', route: 'signals-feed' },
+        { label: 'Market Insights', route: 'market-insights' }
+      ]
+    },
     { type: 'page', id: 'tasks', label: 'Task', icon: 'fa-clock', iconSrc: '/recursos/icons/task.svg', route: 'tasks' },
     { type: 'page', id: 'video', label: 'Video', icon: 'fa-play', iconSrc: '/recursos/icons/video.svg', route: 'video' },
     {
@@ -1231,6 +1241,10 @@ class Navigation {
       '/historial': 'PRODUCTION',
       '/living': 'PRODUCTION',
       '/dashboard': 'DASHBOARD',
+      '/market-insights': 'MARKET INSIGHTS',
+      '/intel-radar': 'INTEL RADAR',
+      '/signals-feed': 'SIGNALS FEED',
+      '/tasks': 'TASKS',
       '/brand': 'IDENTITY',
       '/brands': 'IDENTITY',
       '/products': 'IDENTITY',

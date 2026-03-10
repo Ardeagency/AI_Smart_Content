@@ -1,0 +1,54 @@
+<!-- Intel Radar - Catálogo de objetivos (intelligence_entities) -->
+<div class="intel-radar-page page-content" id="intelRadarPage">
+  <div class="intel-radar-header">
+    <h1 class="intel-radar-title">Intel Radar</h1>
+    <p class="intel-radar-subtitle">Configura qué quieres monitorear: perfiles, tendencias, productos o palabras clave. Cada objetivo se vigila con flujos de scraping programados.</p>
+    <button type="button" class="btn btn-primary" id="intelRadarAddBtn"><i class="fas fa-plus"></i> Añadir objetivo</button>
+  </div>
+  <div class="intel-radar-list" id="intelRadarList">
+    <div class="intel-radar-empty" id="intelRadarEmpty" style="display: none;">
+      <div class="intel-radar-empty-icon"><i class="fas fa-satellite-dish"></i></div>
+      <p>No tienes objetivos configurados.</p>
+      <p class="intel-radar-empty-hint">Añade perfiles de competencia, hashtags, productos en mercado o palabras clave para que el sistema los vigile y genere señales en el Feed.</p>
+      <button type="button" class="btn btn-primary" id="intelRadarEmptyAddBtn"><i class="fas fa-plus"></i> Añadir primer objetivo</button>
+    </div>
+    <div class="intel-radar-cards" id="intelRadarCards"></div>
+  </div>
+</div>
+<div class="modal-overlay" id="intelRadarEntityModal" style="display: none;" aria-hidden="true">
+  <div class="modal intel-radar-modal">
+    <div class="modal-header">
+      <h3 id="intelRadarModalTitle">Añadir objetivo</h3>
+      <button type="button" class="modal-close" id="intelRadarModalClose" aria-label="Cerrar"><i class="fas fa-times"></i></button>
+    </div>
+    <form id="intelRadarEntityForm" class="modal-body">
+      <input type="hidden" id="intelRadarEntityId" name="id" value="" />
+      <div class="form-group">
+        <label for="intelRadarEntityName">Nombre (referencia interna)</label>
+        <input type="text" id="intelRadarEntityName" name="name" placeholder="Ej: Competidor X, #BackToSchool" required />
+      </div>
+      <div class="form-group">
+        <label for="intelRadarDomain">¿Qué quieres monitorear?</label>
+        <select id="intelRadarDomain" name="domain" required>
+          <option value="">Selecciona tipo</option>
+          <option value="social">Perfil de Competencia (Instagram / TikTok)</option>
+          <option value="marketplace">Producto en Mercado (Amazon, etc.)</option>
+          <option value="web">Palabra Clave</option>
+          <option value="news">Noticias / Prensa (marca o industria)</option>
+        </select>
+      </div>
+      <div class="form-group" id="intelRadarTargetGroup">
+        <label for="intelRadarTargetIdentifier">Identificador / URL</label>
+        <input type="text" id="intelRadarTargetIdentifier" name="target_identifier" placeholder="URL o @usuario o hashtag o frase" required />
+        <small class="form-hint" id="intelRadarTargetHint">URL de red social, @usuario, link de Amazon/ASIN, frase clave o nombre de marca.</small>
+      </div>
+      <div class="form-group">
+        <label><input type="checkbox" id="intelRadarIsActive" name="is_active" checked /> Activo</label>
+      </div>
+    </form>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" id="intelRadarModalCancel">Cancelar</button>
+      <button type="submit" class="btn btn-primary" form="intelRadarEntityForm" id="intelRadarModalSave">Guardar</button>
+    </div>
+  </div>
+</div>
