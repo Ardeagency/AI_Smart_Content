@@ -214,11 +214,44 @@ class DashboardView extends BaseView {
     const Chart = window.Chart;
     if (!Chart) return;
 
+    const darkChartOpts = {
+      color: 'rgba(255,255,255,0.85)',
+      scales: {
+        x: { ticks: { color: 'rgba(255,255,255,0.75)' }, grid: { color: 'rgba(255,255,255,0.06)' } },
+        y: { ticks: { color: 'rgba(255,255,255,0.75)' }, grid: { color: 'rgba(255,255,255,0.06)' } },
+        y1: { ticks: { color: 'rgba(255,255,255,0.75)' }, grid: { color: 'rgba(255,255,255,0.06)' } }
+      },
+      plugins: { legend: { labels: { color: 'rgba(255,255,255,0.9)' } } }
+    };
+    const mergeOpts = (opts) => ({
+      ...darkChartOpts,
+      ...opts,
+      scales: { ...darkChartOpts.scales, ...(opts.scales || {}) },
+      plugins: { ...(opts.plugins || {}), legend: { ...darkChartOpts.plugins.legend, ...(opts.plugins && opts.plugins.legend) } }
+    });
+
     const fechas = ['23 Feb 2026', '24 Feb 2026', '25 Feb 2026', '26 Feb 2026', '27 Feb 2026', '28 Feb 2026', '01 Mar 2026', '02 Mar 2026'];
     const fechasShort = ['23/02', '24/02', '25/02', '26/02', '27/02', '28/02', '01/03', '02/03'];
     const perfiles = ['Nutribullet', 'Ninja', 'Vitamix', 'Hamilton Beach', 'KitchenAid', 'Braun', 'Philips', 'Cuisinart'];
     const coloresFallback = ['#1e3a5f', '#2c5f8d', '#3d7ab5', '#5a9bd5', '#7eb8e8', '#a3d0f0', '#6b7b8a', '#9ca3af'];
     const colores = perfiles.map((_, i) => this.getBrandColor(i, coloresFallback[i]));
+
+    const hexes = window.OrgBrandTheme && window.OrgBrandTheme.getLastBrandHexes();
+    const gradientFill = (ctx, colorFallback) => {
+      const chart = ctx.chart;
+      const area = chart.chartArea;
+      if (!area) return (colorFallback || '#5a9bd5') + '40';
+      const h = hexes.length ? hexes : (colorFallback ? [colorFallback] : []);
+      const g = this.createChartGradient(chart.ctx, area, h, { transparentTop: true, alpha: 0.45 });
+      return g || (colorFallback || '#5a9bd5') + '40';
+    };
+    const barGradient = (ctx) => {
+      const chart = ctx.chart;
+      const area = chart.chartArea;
+      if (!area) return colores[ctx.dataIndex % colores.length];
+      const g = this.createChartGradient(chart.ctx, area, hexes.length ? hexes : [colores[ctx.dataIndex % colores.length]], { vertical: true, alpha: 0.9 });
+      return g || colores[ctx.dataIndex % colores.length];
+    };
 
     // 1. Historial de Actividades (line/area, Y 0-12)
     const c1 = document.getElementById('chartActividades');
@@ -227,19 +260,19 @@ class DashboardView extends BaseView {
         label: p,
         data: [2, 4, 3, 6, 5, 8, 7, 10],
         borderColor: colores[i],
-        backgroundColor: colores[i] + '40',
+        backgroundColor: (ctx) => gradientFill(ctx, colores[i]),
         fill: true,
         tension: 0.3
       }));
       this.chartInstances.push(new Chart(c1, {
         type: 'line',
         data: { labels: fechas, datasets },
-        options: {
+        options: mergeOpts({
           responsive: true,
           maintainAspectRatio: false,
           plugins: { legend: { position: 'top' } },
           scales: { y: { min: 0, max: 12 }, x: { grid: { display: false } } }
-        }
+        })
       }));
     }
 
@@ -250,14 +283,14 @@ class DashboardView extends BaseView {
         label: p,
         data: [40e3, 80e3, 120e3, 180e3, 220e3, 250e3, 270e3, 290e3].map((v, j) => v + (j * 1e3 * (i + 1)) % 30e3),
         borderColor: colores[i],
-        backgroundColor: colores[i] + '40',
+        backgroundColor: (ctx) => gradientFill(ctx, colores[i]),
         fill: true,
         tension: 0.3
       }));
       this.chartInstances.push(new Chart(c2, {
         type: 'line',
         data: { labels: fechasShort, datasets },
-        options: {
+        options: mergeOpts({
           responsive: true,
           maintainAspectRatio: false,
           plugins: { legend: { position: 'top' } },
@@ -265,7 +298,7 @@ class DashboardView extends BaseView {
             y: { min: 0, max: 300000, ticks: { callback: v => (v / 1000).toFixed(0) + 'K' } },
             x: { grid: { display: false } }
           }
-        }
+        })
       }));
     }
 
@@ -276,39 +309,40 @@ class DashboardView extends BaseView {
       const stackData = perfiles.map((p, i) => ({
         label: p,
         data: horas.map((_, h) => (h >= 8 && h <= 12 ? 2 : h >= 18 && h <= 21 ? 3 : 1) + (i % 2)),
-        backgroundColor: colores[i]
+        backgroundColor: (ctx) => barGradient(ctx)
       }));
       this.chartInstances.push(new Chart(c3, {
         type: 'bar',
         data: { labels: horas, datasets: stackData },
-        options: {
+        options: mergeOpts({
           responsive: true,
           maintainAspectRatio: false,
           plugins: { legend: { position: 'top' } },
           scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, max: 30 } }
-        }
+        })
       }));
     }
 
     // 4. Actividad de Sentimientos (Positivo, Negativo, Neutro)
     const c4 = document.getElementById('chartSentimientos');
     if (c4) {
+      const sentColors = [this.getBrandColor(0, '#5a9bd5'), '#6bbf9a', this.getBrandColor(1, '#1e3a5f')];
       this.chartInstances.push(new Chart(c4, {
         type: 'line',
         data: {
           labels: fechasShort,
           datasets: [
-            { label: 'Positivo', data: [6, 8, 10, 14, 12, 10, 11, 9], borderColor: '#5a9bd5', backgroundColor: '#5a9bd540', fill: true, tension: 0.3 },
-            { label: 'Neutro', data: [4, 5, 4, 5, 5, 6, 5, 5], borderColor: '#6bbf9a', backgroundColor: '#6bbf9a40', fill: true, tension: 0.3 },
-            { label: 'Negativo', data: [0.5, 0.2, 0.3, 0.1, 0.2, 0.4, 0.2, 0.3], borderColor: '#1e3a5f', backgroundColor: '#1e3a5f40', fill: true, tension: 0.3 }
+            { label: 'Positivo', data: [6, 8, 10, 14, 12, 10, 11, 9], borderColor: sentColors[0], backgroundColor: (ctx) => gradientFill(ctx, sentColors[0]), fill: true, tension: 0.3 },
+            { label: 'Neutro', data: [4, 5, 4, 5, 5, 6, 5, 5], borderColor: sentColors[1], backgroundColor: (ctx) => gradientFill(ctx, sentColors[1]), fill: true, tension: 0.3 },
+            { label: 'Negativo', data: [0.5, 0.2, 0.3, 0.1, 0.2, 0.4, 0.2, 0.3], borderColor: sentColors[2], backgroundColor: (ctx) => gradientFill(ctx, sentColors[2]), fill: true, tension: 0.3 }
           ]
         },
-        options: {
+        options: mergeOpts({
           responsive: true,
           maintainAspectRatio: false,
           plugins: { legend: { position: 'top' } },
           scales: { y: { min: 0, max: 14 }, x: { grid: { display: false } } }
-        }
+        })
       }));
     }
 
@@ -316,24 +350,24 @@ class DashboardView extends BaseView {
     const c5 = document.getElementById('chartCrecimiento');
     if (c5) {
       const nombresCrec = ['Nutribullet', 'Ninja', 'Vitamix', 'Hamilton Beach', 'KitchenAid', 'Braun', 'Philips'];
-      const coloresCrec = ['#1e3a5f', '#3d7ab5', '#5a9bd5', '#7eb8e8', '#9ca3af', '#2c5f8d', '#6b7b8a'];
+      const coloresCrec = nombresCrec.map((_, i) => this.getBrandColor(i, ['#1e3a5f', '#3d7ab5', '#5a9bd5', '#7eb8e8', '#9ca3af', '#2c5f8d', '#6b7b8a'][i]));
       const datasets = nombresCrec.map((n, i) => ({
         label: n,
         data: [50, 200, 150, 100, 80, 400, 300].map((b, j) => b + (i * 20) + (j * 10)),
         borderColor: coloresCrec[i],
-        backgroundColor: coloresCrec[i] + '30',
+        backgroundColor: (ctx) => gradientFill(ctx, coloresCrec[i]),
         fill: true,
         tension: 0.3
       }));
       this.chartInstances.push(new Chart(c5, {
         type: 'line',
         data: { labels: fechasShort, datasets },
-        options: {
+        options: mergeOpts({
           responsive: true,
           maintainAspectRatio: false,
           plugins: { legend: { position: 'top' } },
           scales: { y: { min: -100, max: 500, ticks: { callback: v => v + '%' } }, x: { grid: { display: false } } }
-        }
+        })
       }));
     }
 
@@ -346,11 +380,11 @@ class DashboardView extends BaseView {
         data: {
           labels: perfilesC,
           datasets: [
-            { label: 'Cantidad de Contenido', data: [55, 38, 38, 38, 38, 38, 38, 35], backgroundColor: '#5a9bd5', yAxisID: 'y' },
-            { label: '% Engagement', data: [52, 48, 65, 58, 45, 50, 72, 40], backgroundColor: '#1e3a5f', yAxisID: 'y1' }
+            { label: 'Cantidad de Contenido', data: [55, 38, 38, 38, 38, 38, 38, 35], backgroundColor: (ctx) => barGradient(ctx), yAxisID: 'y' },
+            { label: '% Engagement', data: [52, 48, 65, 58, 45, 50, 72, 40], backgroundColor: (ctx) => barGradient(ctx), yAxisID: 'y1' }
           ]
         },
-        options: {
+        options: mergeOpts({
           responsive: true,
           maintainAspectRatio: false,
           plugins: { legend: { position: 'top' } },
@@ -358,7 +392,7 @@ class DashboardView extends BaseView {
             y: { min: 0, max: 60, title: { display: true, text: 'Cantidad de Contenido' } },
             y1: { position: 'right', min: 40, max: 100, ticks: { callback: v => v + '%' }, title: { display: true, text: '% Engagement' }, grid: { drawOnChartArea: false } }
           }
-        }
+        })
       }));
     }
 
@@ -371,14 +405,14 @@ class DashboardView extends BaseView {
         type: 'bar',
         data: {
           labels: temas,
-          datasets: [{ label: 'Frecuencia', data: valores, backgroundColor: '#2c5f8d' }]
+          datasets: [{ label: 'Frecuencia', data: valores, backgroundColor: barGradient }]
         },
-        options: {
+        options: mergeOpts({
           indexAxis: 'y',
           responsive: true,
           maintainAspectRatio: false,
           scales: { x: { max: 140 }, y: { grid: { display: false } } }
-        }
+        })
       }));
     }
 
@@ -391,14 +425,14 @@ class DashboardView extends BaseView {
         type: 'bar',
         data: {
           labels: tags,
-          datasets: [{ label: 'Frecuencia', data: vals, backgroundColor: '#2c5f8d' }]
+          datasets: [{ label: 'Frecuencia', data: vals, backgroundColor: barGradient }]
         },
-        options: {
+        options: mergeOpts({
           indexAxis: 'y',
           responsive: true,
           maintainAspectRatio: false,
           scales: { x: { max: 9 }, y: { grid: { display: false } } }
-        }
+        })
       }));
     }
 
@@ -411,14 +445,14 @@ class DashboardView extends BaseView {
         type: 'bar',
         data: {
           labels: nombres,
-          datasets: [{ label: '%', data: vals, backgroundColor: ['#3d7ab5', '#5a9bd5', '#3d7ab5', '#5a9bd5', '#3d7ab5', '#5a9bd5', '#3d7ab5', '#5a9bd5'] }]
+          datasets: [{ label: '%', data: vals, backgroundColor: barGradient }]
         },
-        options: {
+        options: mergeOpts({
           indexAxis: 'y',
           responsive: true,
           maintainAspectRatio: false,
           scales: { x: { min: 0, max: 100, ticks: { callback: v => v + '%' } }, y: { grid: { display: false } } }
-        }
+        })
       }));
     }
 
@@ -429,14 +463,14 @@ class DashboardView extends BaseView {
         type: 'bar',
         data: {
           labels: ['X/Twitter', 'Instagram'],
-          datasets: [{ label: 'Puntuación de Calidad', data: [72, 55], backgroundColor: '#2c5f8d' }]
+          datasets: [{ label: 'Puntuación de Calidad', data: [72, 55], backgroundColor: barGradient }]
         },
-        options: {
+        options: mergeOpts({
           indexAxis: 'y',
           responsive: true,
           maintainAspectRatio: false,
           scales: { x: { min: 0, max: 80 }, y: { grid: { display: false } } }
-        }
+        })
       }));
     }
 
@@ -449,14 +483,14 @@ class DashboardView extends BaseView {
         type: 'bar',
         data: {
           labels: tonos,
-          datasets: [{ label: 'Puntuación de Tono', data: vals, backgroundColor: '#1e3a5f' }]
+          datasets: [{ label: 'Puntuación de Tono', data: vals, backgroundColor: barGradient }]
         },
-        options: {
+        options: mergeOpts({
           indexAxis: 'y',
           responsive: true,
           maintainAspectRatio: false,
           scales: { x: { min: 0, max: 70 }, y: { grid: { display: false } } }
-        }
+        })
       }));
     }
 
@@ -469,17 +503,17 @@ class DashboardView extends BaseView {
         data: {
           labels: perfilesS,
           datasets: [
-            { label: 'Positivo', data: [9, 6, 8, 10, 7, 9, 13, 0], backgroundColor: '#2c5f8d' },
-            { label: 'Neutro', data: [0, 8, 2, 3, 5, 2, 5, 0], backgroundColor: '#9ca3af' },
-            { label: 'Negativo', data: [0, 0, 0, 0, 0, 0, 0, 0], backgroundColor: '#1e3a5f' }
+            { label: 'Positivo', data: [9, 6, 8, 10, 7, 9, 13, 0], backgroundColor: barGradient },
+            { label: 'Neutro', data: [0, 8, 2, 3, 5, 2, 5, 0], backgroundColor: barGradient },
+            { label: 'Negativo', data: [0, 0, 0, 0, 0, 0, 0, 0], backgroundColor: barGradient }
           ]
         },
-        options: {
+        options: mergeOpts({
           responsive: true,
           maintainAspectRatio: false,
           plugins: { legend: { position: 'bottom' } },
           scales: { x: { stacked: true }, y: { stacked: true, max: 20 } }
-        }
+        })
       }));
     }
   }

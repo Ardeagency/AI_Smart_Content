@@ -12648,6 +12648,28 @@ body.production-filters-in-header .living-container > .living-history-section {
     position: relative;
     min-height: calc(100vh - 48px);
     overflow: hidden;
+    --dashboard-text: rgba(255, 255, 255, 0.95);
+    --dashboard-text-secondary: rgba(255, 255, 255, 0.65);
+    --dashboard-text-muted: rgba(255, 255, 255, 0.5);
+}
+.dashboard-page-wrapper .dashboard-container,
+.dashboard-page-wrapper .org-section {
+    color: var(--dashboard-text);
+}
+.dashboard-page-wrapper .dashboard-table th,
+.dashboard-page-wrapper .dashboard-table td,
+.dashboard-page-wrapper .dashboard-estado-texto,
+.dashboard-page-wrapper .dashboard-mejor-periodo-texto,
+.dashboard-page-wrapper .dashboard-oportunidad-desc,
+.dashboard-page-wrapper .dashboard-estrategia-list li {
+    color: var(--dashboard-text);
+}
+.dashboard-page-wrapper .dashboard-indicador-label,
+.dashboard-page-wrapper .dashboard-oportunidad-titulo {
+    color: var(--dashboard-text-secondary);
+}
+.dashboard-page-wrapper .dashboard-indicador-value {
+    color: var(--dashboard-text);
 }
 .dashboard-background {
     position: absolute;
@@ -12691,6 +12713,14 @@ body.production-filters-in-header .living-container > .living-history-section {
     max-width: 1400px;
     margin: 0 auto;
     background: transparent;
+}
+.dashboard-page-wrapper .dashboard-title,
+.dashboard-page-wrapper .dashboard-section-title,
+.dashboard-page-wrapper .dashboard-chart-title {
+    color: rgba(255, 255, 255, 0.95);
+}
+.dashboard-page-wrapper .dashboard-subtitle {
+    color: rgba(255, 255, 255, 0.65);
 }
 .dashboard-container {
     min-height: calc(100vh - 48px);
