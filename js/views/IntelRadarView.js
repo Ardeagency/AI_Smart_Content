@@ -48,6 +48,7 @@ class IntelRadarView extends BaseView {
       await this.loadEntities();
       this.renderList();
       this.setupEventListeners();
+      this.closeModal(); // Asegurar que el modal no se abra solo al entrar a la vista
       if (typeof this.updateLinksForRouter === 'function') this.updateLinksForRouter();
     } catch (err) {
       console.error('IntelRadarView render:', err);

@@ -22922,8 +22922,11 @@ body.production-filters-in-header .living-container > .living-history-section {
   text-align: center;
   padding: 1.5rem 0;
 }
-.intel-radar-modal-overlay {
-  display: flex;
+.intel-radar-modal-overlay[aria-hidden="true"] {
+  display: none !important;
+}
+.intel-radar-modal-overlay[aria-hidden="false"] {
+  display: flex !important;
   align-items: center;
   justify-content: center;
   padding: var(--spacing-md);
