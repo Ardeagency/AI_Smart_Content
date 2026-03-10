@@ -8,6 +8,8 @@
   'use strict';
 
   const root = document.documentElement;
+  /** Hexes usados en el último applyOrgBrandTheme (para gráficos con degradado dinámico) */
+  let lastAppliedHexes = [];
 
   function getSupabase() {
     return window.supabase || null;
@@ -160,8 +162,14 @@
     return 'linear-gradient(' + angle + 'deg, ' + stops.join(', ') + ')';
   }
 
+  /** Devuelve los hexes de marca del último applyOrgBrandTheme (para degradados en gráficos). */
+  function getLastBrandHexes() {
+    return lastAppliedHexes.length ? lastAppliedHexes.slice() : [];
+  }
+
   /** Quita todas las variables de tema de marca en :root */
   function clearOrgBrandTheme() {
+    lastAppliedHexes = [];
     root.style.removeProperty('--brand-primary');
     root.style.removeProperty('--brand-primary-rgb');
     root.style.removeProperty('--brand-primary-brillo');
@@ -181,6 +189,7 @@
       return;
     }
     const hexes = await getOrganizationBrandColors(organizationId);
+    lastAppliedHexes = hexes && hexes.length ? hexes.slice(0, 4) : [];
     if (hexes.length === 0) {
       clearOrgBrandTheme();
       return;
@@ -207,6 +216,7 @@
   window.OrgBrandTheme = {
     applyOrgBrandTheme,
     clearOrgBrandTheme,
-    getOrganizationBrandColors
+    getOrganizationBrandColors,
+    getLastBrandHexes
   };
 })();

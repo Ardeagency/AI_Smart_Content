@@ -176,6 +176,40 @@ class DashboardView extends BaseView {
     if (mejorPeriodoEl) mejorPeriodoEl.textContent = 'Hace 4-6 meses fue tu mejor momento con un engagement promedio de 1.0K. El tono neutro y el sentimiento positivo fueron clave en este período.';
   }
 
+  /** Crea un degradado para relleno de gráficos usando colores de marca (dinámico). */
+  createChartGradient(ctx, chartArea, hexes, opts = {}) {
+    if (!ctx || !chartArea || !hexes || !hexes.length) return null;
+    const vertical = opts.vertical !== false;
+    const alpha = opts.alpha != null ? opts.alpha : 0.5;
+    const transparentTop = opts.transparentTop === true;
+    const hexToRgba = (hex, a) => {
+      const h = (hex || '').replace(/^#/, '');
+      if (h.length !== 6) return hex;
+      const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+      return `rgba(${r},${g},${b},${a})`;
+    };
+    if (vertical) {
+      const g = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+      if (transparentTop) {
+        g.addColorStop(0, hexToRgba(hexes[0], 0));
+        g.addColorStop(1, hexToRgba(hexes[hexes.length - 1] || hexes[0], alpha));
+      } else {
+        hexes.forEach((hex, i) => g.addColorStop(i / (hexes.length - 1) || 0, hexToRgba(hex, alpha)));
+      }
+      return g;
+    }
+    const g = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+    hexes.forEach((hex, i) => g.addColorStop(i / (hexes.length - 1) || 0, hexToRgba(hex, alpha)));
+    return g;
+  }
+
+  /** Color sólido de marca o fallback para bordes/datos. */
+  getBrandColor(index, fallback) {
+    const hexes = window.OrgBrandTheme && window.OrgBrandTheme.getLastBrandHexes();
+    if (hexes && hexes.length) return hexes[index % hexes.length] || fallback;
+    return fallback;
+  }
+
   initAllCharts() {
     const Chart = window.Chart;
     if (!Chart) return;
@@ -183,7 +217,8 @@ class DashboardView extends BaseView {
     const fechas = ['23 Feb 2026', '24 Feb 2026', '25 Feb 2026', '26 Feb 2026', '27 Feb 2026', '28 Feb 2026', '01 Mar 2026', '02 Mar 2026'];
     const fechasShort = ['23/02', '24/02', '25/02', '26/02', '27/02', '28/02', '01/03', '02/03'];
     const perfiles = ['Nutribullet', 'Ninja', 'Vitamix', 'Hamilton Beach', 'KitchenAid', 'Braun', 'Philips', 'Cuisinart'];
-    const colores = ['#1e3a5f', '#2c5f8d', '#3d7ab5', '#5a9bd5', '#7eb8e8', '#a3d0f0', '#6b7b8a', '#9ca3af'];
+    const coloresFallback = ['#1e3a5f', '#2c5f8d', '#3d7ab5', '#5a9bd5', '#7eb8e8', '#a3d0f0', '#6b7b8a', '#9ca3af'];
+    const colores = perfiles.map((_, i) => this.getBrandColor(i, coloresFallback[i]));
 
     // 1. Historial de Actividades (line/area, Y 0-12)
     const c1 = document.getElementById('chartActividades');

@@ -181,6 +181,14 @@ class IntelRadarView extends BaseView {
 
     if (closeBtn) closeBtn.addEventListener('click', () => this.closeModal());
     if (cancelBtn) cancelBtn.addEventListener('click', () => this.closeModal());
+    if (modal) {
+      modal.addEventListener('click', (e) => { if (e.target === modal) this.closeModal(); });
+      if (this._boundEscClose) document.removeEventListener('keydown', this._boundEscClose);
+      this._boundEscClose = (e) => {
+        if (e.key === 'Escape' && document.getElementById('intelRadarEntityModal')?.style.display === 'flex') this.closeModal();
+      };
+      document.addEventListener('keydown', this._boundEscClose);
+    }
     if (form) {
       form.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -234,6 +242,14 @@ class IntelRadarView extends BaseView {
       modal.style.display = 'none';
       modal.setAttribute('aria-hidden', 'true');
     }
+  }
+
+  destroy() {
+    if (this._boundEscClose) {
+      document.removeEventListener('keydown', this._boundEscClose);
+      this._boundEscClose = null;
+    }
+    super.destroy?.();
   }
 
   async saveEntity() {

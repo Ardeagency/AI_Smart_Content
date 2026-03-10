@@ -12653,12 +12653,13 @@ body.production-filters-in-header .living-container > .living-history-section {
     position: absolute;
     inset: 0;
     z-index: 0;
+    background: #000;
 }
 .dashboard-background .dashboard-bg-skeleton {
     position: absolute;
     inset: 0;
     z-index: 0;
-    background: var(--bg-primary);
+    background: #000;
     transition: opacity 1s cubic-bezier(0.33, 0, 0.2, 1);
 }
 .dashboard-background .dashboard-bg-gradient {
@@ -12675,7 +12676,7 @@ body.production-filters-in-header .living-container > .living-history-section {
     pointer-events: none;
 }
 .dashboard-page-wrapper.dashboard-background-ready .dashboard-bg-gradient {
-    opacity: 1;
+    opacity: 0.18;
 }
 
 .page-content {
@@ -12727,8 +12728,8 @@ body.production-filters-in-header .living-container > .living-history-section {
     grid-template-columns: 1fr 1fr;
 }
 .dashboard-chart-wrap {
-    background: var(--living-bg-card, rgba(21, 23, 28, 0.6));
-    border: 1px solid var(--border-divider);
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: var(--radius-md);
     padding: 1rem 1.25rem;
 }
@@ -22891,10 +22892,31 @@ body.production-filters-in-header .living-container > .living-history-section {
   text-align: center;
   padding: 1.5rem 0;
 }
+.intel-radar-modal-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-md);
+  z-index: var(--z-modal-backdrop, 2000);
+}
+.intel-radar-modal-overlay .intel-radar-modal-box {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: min(500px, calc(100vw - 2rem));
+  max-height: 90vh;
+  background: var(--glass-bg, var(--bg-secondary));
+  border: 1px solid var(--glass-border, var(--border-divider));
+  border-radius: var(--glass-radius, var(--radius-md));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 .intel-radar-modal .form-group {
   margin-bottom: 1rem;
 }
-.intel-radar-modal .form-hint {
+.intel-radar-modal .form-hint,
+.intel-radar-modal-box .form-hint {
   display: block;
   font-size: 0.75rem;
   color: var(--text-tertiary);
