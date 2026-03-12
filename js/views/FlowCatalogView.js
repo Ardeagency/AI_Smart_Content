@@ -712,7 +712,7 @@ class FlowCatalogView extends BaseView {
         if (maxScroll <= 0) return;
         const next = track.scrollLeft + track.offsetWidth;
         track.scrollTo({ left: next > maxScroll ? 0 : next, behavior: 'smooth' });
-      }, 7000);
+      }, 40000);
     }
   }
 
