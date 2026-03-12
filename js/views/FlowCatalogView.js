@@ -136,11 +136,9 @@ class FlowCatalogView extends BaseView {
             <p class="flow-catalog-empty-text">PROXIMAMENTE</p>
           </div>
 
-          <!-- HERO: carousel horizontal (nuevos en home / populares en categoría) -->
+          <!-- HERO: carrusel full-bleed por categoría, auto-avance, sin flechas -->
           <section class="flow-catalog-hero-section" id="flowCatalogHeroSection">
             <div class="flow-catalog-hero-track" id="flowCatalogHeroTrack"></div>
-            <button type="button" class="flow-catalog-hero-nav flow-catalog-hero-prev" id="heroPrev" aria-label="Anterior"><i class="fas fa-chevron-left"></i></button>
-            <button type="button" class="flow-catalog-hero-nav flow-catalog-hero-next" id="heroNext" aria-label="Siguiente"><i class="fas fa-chevron-right"></i></button>
           </section>
 
           ${!isCategoryView ? `
@@ -212,7 +210,6 @@ class FlowCatalogView extends BaseView {
     } else {
       this.renderSectionAllFlows();
     }
-    this.bindHeroNav();
     this.bindCategoryClicks();
 
     const emptyEl = document.getElementById('flowCatalogEmpty');
@@ -237,19 +234,6 @@ class FlowCatalogView extends BaseView {
     } catch (e) {
       console.error('FlowCatalog initSupabase:', e);
     }
-  }
-
-  bindHeroNav() {
-    const track = document.getElementById('flowCatalogHeroTrack');
-    const prev = document.getElementById('heroPrev');
-    const next = document.getElementById('heroNext');
-    if (!track || !prev || !next) return;
-    const scroll = (dir) => {
-      const step = track.offsetWidth * 0.8;
-      track.scrollBy({ left: dir * step, behavior: 'smooth' });
-    };
-    prev.addEventListener('click', () => scroll(-1));
-    next.addEventListener('click', () => scroll(1));
   }
 
   async loadCategories() {
@@ -661,28 +645,25 @@ class FlowCatalogView extends BaseView {
   }
 
   /**
-   * Slide de hero basado en categoría (no en flow).
-   * Usa cover_url / cover_type de content_categories como portada.
+   * Slide de hero: portada de categoría a pantalla completa, degradado abajo, minimalista.
    */
   renderHeroSlide(category) {
     const name = this.escapeHtml(category.name);
-    const desc = category.description ? this.escapeHtml(category.description.slice(0, 140)) + (category.description.length > 140 ? '…' : '') : '';
     const coverUrl = category.cover_url || '';
     const isVideo = (category.cover_type || '').toLowerCase() === 'video';
-    const media = coverUrl
+    const bg = coverUrl
       ? (isVideo
-          ? `<video class="flow-hero-slide-media flow-hero-slide-video" src="${this.escapeHtml(coverUrl)}" muted loop playsinline aria-hidden="true"></video>`
-          : `<img src="${this.escapeHtml(coverUrl)}" alt="" class="flow-hero-slide-img">`)
+          ? `<video class="flow-hero-slide-bg-media flow-hero-slide-video" src="${this.escapeHtml(coverUrl)}" muted loop playsinline aria-hidden="true"></video>`
+          : `<img src="${this.escapeHtml(coverUrl)}" alt="" class="flow-hero-slide-bg-media">`)
       : `<div class="flow-hero-slide-placeholder"><i class="fas fa-layer-group"></i></div>`;
     return `
       <div class="flow-hero-slide" data-category-id="${this.escapeHtml(category.id)}">
-        <div class="flow-hero-slide-inner">
+        <div class="flow-hero-slide-bg">${bg}</div>
+        <div class="flow-hero-slide-overlay">
           <div class="flow-hero-slide-content">
             <h2 class="flow-hero-slide-title">${name}</h2>
-            ${desc ? `<p class="flow-hero-slide-desc">${desc}</p>` : ''}
-            <button type="button" class="flow-hero-slide-cta" data-category-id="${this.escapeHtml(category.id)}">Ver flows</button>
+            <span class="flow-hero-slide-cta" data-category-id="${this.escapeHtml(category.id)}">Ver flows</span>
           </div>
-          <div class="flow-hero-slide-media">${media}</div>
         </div>
       </div>
     `;
@@ -694,6 +675,10 @@ class FlowCatalogView extends BaseView {
     const section = document.getElementById('flowCatalogHeroSection');
     const track = document.getElementById('flowCatalogHeroTrack');
     if (!section || !track) return;
+    if (this.heroAutoAdvanceTimer) {
+      clearInterval(this.heroAutoAdvanceTimer);
+      this.heroAutoAdvanceTimer = null;
+    }
     if (list.length === 0) {
       section.style.display = 'none';
       return;
@@ -704,7 +689,7 @@ class FlowCatalogView extends BaseView {
       const categoryId = el.dataset.categoryId || el.closest('[data-category-id]')?.dataset?.categoryId;
       if (categoryId) {
         el.addEventListener('click', (e) => {
-          if (e.target.classList.contains('flow-hero-slide-cta')) e.preventDefault();
+          if (el.classList.contains('flow-hero-slide-cta')) e.preventDefault();
           const path = this.getCatalogPath(categoryId);
           if (window.router) {
             e.preventDefault();
@@ -721,6 +706,14 @@ class FlowCatalogView extends BaseView {
       slide.addEventListener('mouseenter', () => { video.play().catch(() => {}); });
       slide.addEventListener('mouseleave', () => { video.pause(); });
     });
+    if (list.length > 1) {
+      this.heroAutoAdvanceTimer = setInterval(() => {
+        const maxScroll = track.scrollWidth - track.offsetWidth;
+        if (maxScroll <= 0) return;
+        const next = track.scrollLeft + track.offsetWidth;
+        track.scrollTo({ left: next > maxScroll ? 0 : next, behavior: 'smooth' });
+      }, 7000);
+    }
   }
 
   /**
