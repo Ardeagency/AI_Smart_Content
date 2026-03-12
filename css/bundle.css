@@ -10688,6 +10688,15 @@ body.production-filters-in-header .living-container > .living-history-section {
   gap: 0.35rem;
   pointer-events: none;
   z-index: 2;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+.flow-card:hover .flow-card-badges,
+.flow-card:focus-visible .flow-card-badges {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 .flow-card-badge {
   padding: 0.2rem 0.5rem;
@@ -10800,13 +10809,13 @@ body.production-filters-in-header .living-container > .living-history-section {
   font-size: 0.6rem;
 }
 
-/* Overlay hover: créditos + categoría, subcategoría, tipo output, modo ejecución, versión */
+/* Overlay hover: créditos + categoría, subcategoría, tipo output, modo ejecución, versión — organizado abajo a la izquierda */
 .flow-card-overlay--hover {
   position: absolute;
   inset: 0;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-end;
+  justify-content: flex-start;
   padding: 1rem 0.75rem;
   background: var(--black-50);
   color: var(--color-white);
@@ -10823,11 +10832,12 @@ body.production-filters-in-header .living-container > .living-history-section {
 .flow-card-hover-content {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-end;
   gap: 0.5rem;
-  text-align: center;
+  text-align: left;
   width: 100%;
+  max-width: 100%;
 }
 .flow-card-credits {
   font-size: 2rem;
@@ -10838,7 +10848,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 .flow-card-meta-list {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.25rem;
   font-size: var(--font-size-sm);
   color: var(--white-95);
@@ -10852,8 +10862,8 @@ body.production-filters-in-header .living-container > .living-history-section {
 .flow-card-overlay--hover .flow-card-tags {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   gap: 0.35rem;
 }
 .flow-card-tag {
@@ -10868,9 +10878,9 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 .flow-card-overlay--hover .flow-card-metrics {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.75rem;
   font-size: var(--font-size-sm);
   color: var(--white-95);
