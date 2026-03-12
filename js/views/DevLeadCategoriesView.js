@@ -18,7 +18,7 @@ class DevLeadCategoriesView extends DevBaseView {
   async getSupabase() {
     if (this.supabase) return this.supabase;
     this.supabase = await this.getSupabaseClient();
-    this.coverBucket = 'flow-categories';
+    this.coverBucket = 'images_flows';
     return this.supabase;
   }
 
