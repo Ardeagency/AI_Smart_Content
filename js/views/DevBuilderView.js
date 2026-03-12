@@ -801,48 +801,42 @@ class DevBuilderView extends DevBaseView {
     const testFlowBtn = this.querySelector('#testFlowBtn');
     const tabModules = this.querySelector('.builder-tab[data-tab="technical"]');
 
-    if (this.isAutomatedFlow) {
-      // Flujo automated: canvas usa input_schema del primer módulo (flow_modules.input_schema)
-      if (this.inputSchema.length === 0) {
-        this.inputSchema = JSON.parse(JSON.stringify(this.DEFAULT_SCHEDULE_SCHEMA.fields));
-        this.hasUnsavedChanges = true;
-      }
-      if (main) main.classList.add('builder-mode-automated');
-      if (componentsSidebar) componentsSidebar.style.display = 'none';
-      const builderCanvas = this.querySelector('#builderCanvas');
-      if (builderCanvas) builderCanvas.classList.add('builder-canvas--automated');
-      if (canvasEmpty) canvasEmpty.style.display = 'none';
-      if (canvasAutomated) canvasAutomated.style.display = 'none';
-      if (canvasFields) canvasFields.style.display = 'block';
-      if (technicalWebhook) technicalWebhook.style.display = 'none';
-      if (technicalAutomated) technicalAutomated.style.display = 'block';
-      if (tokenCostInput) {
-        tokenCostInput.min = 0;
-        tokenCostInput.max = 100;
-        tokenCostInput.disabled = false;
-        tokenCostInput.value = this.flowData.token_cost ?? 1;
-      }
-      if (uiShowInCatalog) {
-        uiShowInCatalog.disabled = true;
-        uiShowInCatalog.checked = false;
-      }
-      if (testFlowBtn) testFlowBtn.style.display = 'none';
-      if (tabModules) tabModules.style.display = '';
-      this.renderCanvas();
-      this.updateJsonPreview();
-      return;
+    // Todos los tipos de flujo (manual, autopilot, system, scraping) comparten la misma
+    // experiencia de Builder: siempre con módulos e inputs disponibles.
+    // Para tipos autopilot/scraping, si no hay schema aún, se preinicializa con DEFAULT_SCHEDULE_SCHEMA,
+    // pero no se oculta nada de la UI.
+    if (isAutopilotLike && this.inputSchema.length === 0) {
+      this.inputSchema = JSON.parse(JSON.stringify(this.DEFAULT_SCHEDULE_SCHEMA.fields));
+      this.hasUnsavedChanges = true;
     }
 
-    // Flujo manual: lista de componentes visible, canvas con input_schema
-    if (main) main.classList.remove('builder-mode-automated');
+    if (main) {
+      main.classList.remove('builder-mode-automated');
+    }
     const builderCanvas = this.querySelector('#builderCanvas');
-    if (builderCanvas) builderCanvas.classList.remove('builder-canvas--automated');
-    if (componentsSidebar) componentsSidebar.style.display = '';
-    if (canvasEmpty) canvasEmpty.style.display = (this.inputSchema.length === 0) ? 'flex' : 'none';
-    if (canvasAutomated) canvasAutomated.style.display = 'none';
-    if (canvasFields) canvasFields.style.display = (this.inputSchema.length > 0) ? 'block' : 'none';
-    if (technicalWebhook) technicalWebhook.style.display = 'block';
-    if (technicalAutomated) technicalAutomated.style.display = 'none';
+    if (builderCanvas) {
+      builderCanvas.classList.remove('builder-canvas--automated');
+    }
+    if (componentsSidebar) {
+      componentsSidebar.style.display = '';
+    }
+    if (canvasEmpty) {
+      canvasEmpty.style.display = (this.inputSchema.length === 0) ? 'flex' : 'none';
+    }
+    if (canvasAutomated) {
+      // Mantener este empty state oculto; ya no se usa para bloquear inputs.
+      canvasAutomated.style.display = 'none';
+    }
+    if (canvasFields) {
+      canvasFields.style.display = (this.inputSchema.length > 0) ? 'block' : 'none';
+    }
+    if (technicalWebhook) {
+      technicalWebhook.style.display = 'block';
+    }
+    if (technicalAutomated) {
+      // El panel técnico de "tipo de ejecución" se mantiene disponible; no se oculta por tipo.
+      technicalAutomated.style.display = 'block';
+    }
     if (tokenCostInput) {
       tokenCostInput.min = 0;
       tokenCostInput.max = 100;
@@ -854,8 +848,12 @@ class DevBuilderView extends DevBaseView {
       uiShowInCatalog.disabled = isSystem;
       uiShowInCatalog.checked = isSystem ? false : !!this.flowData.show_in_catalog;
     }
-    if (testFlowBtn) testFlowBtn.style.display = '';
-    if (tabModules) tabModules.style.display = '';
+    if (testFlowBtn) {
+      testFlowBtn.style.display = '';
+    }
+    if (tabModules) {
+      tabModules.style.display = '';
+    }
     this.renderCanvas();
     this.updateJsonPreview();
   }
