@@ -1,7 +1,8 @@
 /**
- * IntelRadarView - Catálogo de objetivos (intelligence_entities).
- * El usuario añade Targets a vigilar: perfiles sociales, hashtags, productos, palabras clave o noticias.
- * Opcional: vincular a flow_schedules para "encender el radar" (scraping programado).
+ * IntelRadarView - Catálogo de perfiles a monitorear (intelligence_entities).
+ * Solo perfiles: el usuario/organización añade perfiles (redes sociales) a vigilar.
+ * Los flujos scraper monitorean el contenido diario de estos perfiles; no crean contenido.
+ * Opcional: vincular a flow_schedules para activar el scraping programado.
  */
 class IntelRadarView extends BaseView {
   constructor() {
@@ -12,12 +13,8 @@ class IntelRadarView extends BaseView {
     this.organizationId = null;
     this.brandContainerId = null;
     this.entities = [];
-    this.DOMAINS = [
-      { value: 'social', label: 'Perfil de Competencia', hint: 'URL de Instagram/TikTok o @usuario' },
-      { value: 'marketplace', label: 'Producto en Mercado', hint: 'URL de Amazon, Mercado Libre, eBay o ASIN' },
-      { value: 'web', label: 'Palabra Clave', hint: 'Frase de búsqueda (ej: freidoras aire)' },
-      { value: 'news', label: 'Noticias / Prensa', hint: 'Nombre de marca o industria' }
-    ];
+    // Flujos scraper: solo perfiles a monitorear (no palabras clave, productos ni noticias).
+    this.DOMAIN_PROFILE = { value: 'social', label: 'Perfil a monitorear' };
   }
 
   async onEnter() {
@@ -109,6 +106,7 @@ class IntelRadarView extends BaseView {
       .from('intelligence_entities')
       .select('id, name, domain, target_identifier, is_active, metadata, created_at')
       .eq('brand_container_id', this.brandContainerId)
+      .eq('domain', this.DOMAIN_PROFILE.value)
       .order('created_at', { ascending: false });
     if (error) {
       console.error('IntelRadarView loadEntities:', error);
@@ -131,7 +129,7 @@ class IntelRadarView extends BaseView {
     }
     emptyEl.style.display = 'none';
 
-    const domainLabel = (d) => this.DOMAINS.find(x => x.value === d)?.label || d;
+    const domainLabel = (d) => (d === this.DOMAIN_PROFILE.value ? this.DOMAIN_PROFILE.label : d);
     cardsEl.innerHTML = this.entities.map(e => `
       <div class="intel-radar-card" data-entity-id="${e.id}">
         <div class="intel-radar-card-header">
@@ -164,21 +162,12 @@ class IntelRadarView extends BaseView {
     const emptyAddBtn = document.getElementById('intelRadarEmptyAddBtn');
     const modal = document.getElementById('intelRadarEntityModal');
     const form = document.getElementById('intelRadarEntityForm');
-    const domainSelect = document.getElementById('intelRadarDomain');
     const closeBtn = document.getElementById('intelRadarModalClose');
     const cancelBtn = document.getElementById('intelRadarModalCancel');
 
     [addBtn, emptyAddBtn].filter(Boolean).forEach(btn => {
       btn.addEventListener('click', () => this.openModal());
     });
-
-    if (domainSelect) {
-      domainSelect.addEventListener('change', () => {
-        const hint = document.getElementById('intelRadarTargetHint');
-        const opt = this.DOMAINS.find(x => x.value === domainSelect.value);
-        if (hint) hint.textContent = opt ? opt.hint : '';
-      });
-    }
 
     if (closeBtn) closeBtn.addEventListener('click', () => this.closeModal());
     if (cancelBtn) cancelBtn.addEventListener('click', () => this.closeModal());
@@ -210,7 +199,6 @@ class IntelRadarView extends BaseView {
     const title = document.getElementById('intelRadarModalTitle');
     const idInput = document.getElementById('intelRadarEntityId');
     const nameInput = document.getElementById('intelRadarEntityName');
-    const domainSelect = document.getElementById('intelRadarDomain');
     const targetInput = document.getElementById('intelRadarTargetIdentifier');
     const activeCheck = document.getElementById('intelRadarIsActive');
     if (!modal) return;
@@ -218,18 +206,16 @@ class IntelRadarView extends BaseView {
     if (entityId) {
       const e = this.entities.find(x => x.id === entityId);
       if (e) {
-        if (title) title.textContent = 'Editar objetivo';
+        if (title) title.textContent = 'Editar perfil';
         if (idInput) idInput.value = e.id;
         if (nameInput) nameInput.value = e.name || '';
-        if (domainSelect) domainSelect.value = e.domain || '';
         if (targetInput) targetInput.value = e.target_identifier || '';
         if (activeCheck) activeCheck.checked = !!e.is_active;
       }
     } else {
-      if (title) title.textContent = 'Añadir objetivo';
+      if (title) title.textContent = 'Añadir perfil a monitorear';
       if (idInput) idInput.value = '';
       if (nameInput) nameInput.value = '';
-      if (domainSelect) domainSelect.value = '';
       if (targetInput) targetInput.value = '';
       if (activeCheck) activeCheck.checked = true;
     }
@@ -256,12 +242,12 @@ class IntelRadarView extends BaseView {
   async saveEntity() {
     const idInput = document.getElementById('intelRadarEntityId');
     const name = document.getElementById('intelRadarEntityName')?.value?.trim();
-    const domain = document.getElementById('intelRadarDomain')?.value;
     const target_identifier = document.getElementById('intelRadarTargetIdentifier')?.value?.trim();
     const is_active = document.getElementById('intelRadarIsActive')?.checked ?? true;
+    const domain = this.DOMAIN_PROFILE.value; // Solo perfiles (social)
 
-    if (!name || !domain || !target_identifier) {
-      this.showNotification('Completa nombre, tipo y identificador.', 'warning');
+    if (!name || !target_identifier) {
+      this.showNotification('Completa nombre y perfil (URL o @usuario).', 'warning');
       return;
     }
     if (!this.supabase || !this.brandContainerId) {
@@ -282,7 +268,7 @@ class IntelRadarView extends BaseView {
     if (entityId) {
       const { error } = await this.supabase
         .from('intelligence_entities')
-        .update({ name, domain, target_identifier, is_active })
+        .update({ name, target_identifier, is_active })
         .eq('id', entityId)
         .eq('brand_container_id', this.brandContainerId);
       if (error) {
@@ -290,7 +276,7 @@ class IntelRadarView extends BaseView {
         this.showNotification('Error al actualizar.', 'error');
         return;
       }
-      this.showNotification('Objetivo actualizado.', 'success');
+      this.showNotification('Perfil actualizado.', 'success');
     } else {
       const { error } = await this.supabase
         .from('intelligence_entities')
@@ -300,7 +286,7 @@ class IntelRadarView extends BaseView {
         this.showNotification('Error al crear.', 'error');
         return;
       }
-      this.showNotification('Objetivo creado. Configura la programación en Task para activar el scraping.', 'success');
+      this.showNotification('Perfil añadido. Configura la programación en Task para activar el monitoreo.', 'success');
     }
     this.closeModal();
     await this.loadEntities();
@@ -309,7 +295,7 @@ class IntelRadarView extends BaseView {
 
   async confirmDelete(entityId) {
     const e = this.entities.find(x => x.id === entityId);
-    if (!e || !confirm(`¿Eliminar el objetivo "${this.escapeHtml(e.name)}"?`)) return;
+    if (!e || !confirm(`¿Eliminar el perfil "${this.escapeHtml(e.name)}"?`)) return;
     await this.deleteEntity(entityId);
   }
 
@@ -325,7 +311,7 @@ class IntelRadarView extends BaseView {
       this.showNotification('Error al eliminar.', 'error');
       return;
     }
-    this.showNotification('Objetivo eliminado.', 'success');
+    this.showNotification('Perfil eliminado.', 'success');
     await this.loadEntities();
     this.renderList();
   }
