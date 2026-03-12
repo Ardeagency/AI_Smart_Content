@@ -55,6 +55,7 @@ class DevLeadCategoriesView extends DevBaseView {
                   <th>Nombre</th>
                   <th>Descripción</th>
                   <th>Portada</th>
+                  <th>Catálogo</th>
                   <th class="dev-lead-actions">Acciones</th>
                 </tr>
               </thead>
@@ -114,6 +115,13 @@ class DevLeadCategoriesView extends DevBaseView {
             <div class="form-group">
               <label for="categoryOrder">Orden</label>
               <input type="number" id="categoryOrder" min="0" value="0" placeholder="0">
+            </div>
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input type="checkbox" id="categoryIsVisible" checked>
+                <span>Visible en catálogo de flows</span>
+              </label>
+              <span class="field-help">Si está desmarcada, la categoría no aparecerá en el catálogo ni en el menú de flows.</span>
             </div>
             <div class="form-group">
               <label>Portada (imagen o video)</label>
@@ -199,7 +207,7 @@ class DevLeadCategoriesView extends DevBaseView {
   async loadCategories() {
     const { data, error } = await this.supabase
       .from('content_categories')
-      .select('id, name, description, order_index, cover_url, cover_type, cover_storage_path')
+      .select('id, name, description, order_index, cover_url, cover_type, cover_storage_path, is_visible, hidden_at')
       .order('order_index', { ascending: true, nullsFirst: false });
 
     if (error) {
@@ -220,7 +228,9 @@ class DevLeadCategoriesView extends DevBaseView {
       return;
     }
     if (empty) empty.style.display = 'none';
-    tbody.innerHTML = this.categories.map(c => `
+    tbody.innerHTML = this.categories.map(c => {
+      const visible = c.is_visible !== false;
+      return `
       <tr data-id="${c.id}">
         <td>${c.order_index != null ? c.order_index : '-'}</td>
         <td>${this.escapeHtml(c.name)}</td>
@@ -229,9 +239,10 @@ class DevLeadCategoriesView extends DevBaseView {
           ${c.cover_url
             ? (c.cover_type === 'video'
               ? '<span class="dev-lead-cover-chip"><i class="fas fa-video"></i> Video</span>'
-              : `<span class="dev-lead-cover-chip"><i class="fas fa-image"></i> Img</span>`)
+              : '<span class="dev-lead-cover-chip"><i class="fas fa-image"></i> Img</span>')
             : '<span class="dev-lead-cover-chip dev-lead-cover-chip--empty">—</span>'}
         </td>
+        <td><span class="dev-lead-badge ${visible ? 'dev-lead-badge--visible' : 'dev-lead-badge--hidden'}">${visible ? 'Visible' : 'Oculta'}</span></td>
         <td class="dev-lead-actions">
           <button type="button" class="btn-icon edit-category" title="Editar" data-id="${c.id}">
             <i class="fas fa-edit"></i>
@@ -241,7 +252,8 @@ class DevLeadCategoriesView extends DevBaseView {
           </button>
         </td>
       </tr>
-    `).join('');
+    `;
+    }).join('');
     this.container.querySelectorAll('.edit-category').forEach(btn => {
       btn.addEventListener('click', () => this.openCategoryModal(btn.getAttribute('data-id')));
     });
@@ -334,6 +346,8 @@ class DevLeadCategoriesView extends DevBaseView {
     document.getElementById('categoryName').value = '';
     document.getElementById('categoryDescription').value = '';
     document.getElementById('categoryOrder').value = '0';
+    const isVisibleEl = document.getElementById('categoryIsVisible');
+    if (isVisibleEl) isVisibleEl.checked = true;
     const coverPreview = document.getElementById('categoryCoverPreview');
     const coverFileInput = document.getElementById('categoryCoverFile');
     if (coverFileInput) coverFileInput.value = '';
@@ -345,6 +359,7 @@ class DevLeadCategoriesView extends DevBaseView {
         document.getElementById('categoryName').value = c.name || '';
         document.getElementById('categoryDescription').value = c.description || '';
         document.getElementById('categoryOrder').value = c.order_index != null ? c.order_index : 0;
+        if (isVisibleEl) isVisibleEl.checked = c.is_visible !== false;
         if (coverPreview) {
           if (c.cover_url) {
             const safeUrl = this.escapeHtml(c.cover_url);
@@ -376,10 +391,17 @@ class DevLeadCategoriesView extends DevBaseView {
     }
     const description = (document.getElementById('categoryDescription').value || '').trim();
     const orderIndex = parseInt(document.getElementById('categoryOrder').value, 10) || 0;
+    const isVisible = document.getElementById('categoryIsVisible') ? document.getElementById('categoryIsVisible').checked : true;
     const coverFileInput = document.getElementById('categoryCoverFile');
     const coverFile = coverFileInput && coverFileInput.files && coverFileInput.files[0] ? coverFileInput.files[0] : null;
 
-    const basePayload = { name, description, order_index: orderIndex };
+    const basePayload = {
+      name,
+      description,
+      order_index: orderIndex,
+      is_visible: isVisible,
+      hidden_at: isVisible ? null : new Date().toISOString()
+    };
 
     if (id) {
       const payload = { ...basePayload };

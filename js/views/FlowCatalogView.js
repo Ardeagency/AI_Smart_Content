@@ -245,6 +245,7 @@ class FlowCatalogView extends BaseView {
       const { data, error } = await this.supabase
         .from('content_categories')
         .select('id, name, description, order_index, cover_url, cover_type, cover_storage_path')
+        .eq('is_visible', true)
         .order('order_index', { ascending: true, nullsFirst: false })
         .order('name');
       this.categories = !error && data ? data : [];

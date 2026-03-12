@@ -242,6 +242,7 @@ class Navigation {
       const { data, error } = await supabase
         .from('content_categories')
         .select('id, name')
+        .eq('is_visible', true)
         .order('order_index', { ascending: true, nullsFirst: false })
         .order('name');
       if (error) return [];

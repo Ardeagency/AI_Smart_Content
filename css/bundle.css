@@ -17774,6 +17774,22 @@ body.production-filters-in-header .living-container > .living-history-section {
   color: var(--dev-error);
 }
 
+.dev-lead-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+.dev-lead-badge--visible {
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--success, #22c55e);
+}
+.dev-lead-badge--hidden {
+  background: var(--black-20);
+  color: var(--text-muted);
+}
+
 .dev-lead-empty {
   display: flex;
   flex-direction: column;

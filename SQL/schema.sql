@@ -269,6 +269,8 @@ CREATE TABLE public.content_categories (
   cover_type text CHECK (cover_type = ANY (ARRAY['image'::text, 'video'::text])),
   cover_storage_path text,
   updated_at timestamp with time zone DEFAULT now(),
+  is_visible boolean DEFAULT true,
+  hidden_at timestamp with time zone,
   CONSTRAINT content_categories_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.content_flows (
