@@ -1,5 +1,5 @@
 /**
- * Form Record - Onboarding de organización + integración directa con el servicio de super scraping.
+ * Form Record - Onboarding de organización + integración con el servicio del super scraper.
  */
 
 class FormRecord {
@@ -15,6 +15,16 @@ class FormRecord {
         this.submitBtn = null;
         this.lastScraperResponse = null;
         this.scraperEndpoint = null;
+        this.competitorSection = null;
+        this.competitorListEl = null;
+        this.manualNameInput = null;
+        this.manualUrlInput = null;
+        this.manualPillsEl = null;
+        this.confirmBtn = null;
+        this.skipBtn = null;
+        this.hideReviewBtn = null;
+        this.manualCompetitors = [];
+        this.competitorSelections = [];
     }
 
     async init() {
@@ -28,6 +38,28 @@ class FormRecord {
     cacheDom() {
         this.statusEl = document.getElementById('formStatus');
         this.submitBtn = document.getElementById('btnSubmit');
+        this.competitorSection = document.getElementById('competitorReview');
+        this.competitorListEl = document.getElementById('competitorList');
+        this.manualNameInput = document.getElementById('manualCompetitorName');
+        this.manualUrlInput = document.getElementById('manualCompetitorUrl');
+        this.manualPillsEl = document.getElementById('manualCompetitorPills');
+        this.confirmBtn = document.getElementById('btnConfirmCompetitors');
+        this.skipBtn = document.getElementById('btnSkipCompetitors');
+        this.hideReviewBtn = document.getElementById('btnHideCompetitorReview');
+
+        const addButton = document.getElementById('btnAddManualCompetitor');
+        if (addButton) {
+            addButton.addEventListener('click', () => this.handleAddManualCompetitor());
+        }
+        if (this.confirmBtn) {
+            this.confirmBtn.addEventListener('click', () => this.handleConfirmCompetitors());
+        }
+        if (this.skipBtn) {
+            this.skipBtn.addEventListener('click', () => this.handleSkipCompetitors());
+        }
+        if (this.hideReviewBtn) {
+            this.hideReviewBtn.addEventListener('click', () => this.toggleCompetitorSection(false));
+        }
     }
 
     async ensureSupabase() {
@@ -266,9 +298,11 @@ class FormRecord {
     handleScraperOutcome(data) {
         const competitorCount = Array.isArray(data?.competitors) ? data.competitors.length : 0;
         if (data.status === 'needs_confirmation' && competitorCount > 0) {
-            this.setStatus('success', `Scraping completado. Detectamos ${competitorCount} posibles competidores. Pronto podrás confirmarlos.`);
+            this.setStatus('success', `Scraping completado. Detectamos ${competitorCount} posibles competidores.`);
+            this.renderCompetitorReview(data);
             return;
         }
+        this.renderCompetitorReview(null);
         if (data.status === 'saved_without_competitors') {
             this.setStatus('success', 'Scraping completado. No detectamos competencia directa todavía.');
             return;
@@ -279,6 +313,124 @@ class FormRecord {
             return;
         }
         this.setStatus('success', 'Scraping completado correctamente.');
+    }
+
+    renderCompetitorReview(response) {
+        if (!this.competitorSection || !this.competitorListEl) return;
+        if (!response || !Array.isArray(response.competitors) || !response.competitors.length) {
+            this.competitorSection.style.display = 'none';
+            this.competitorListEl.innerHTML = '';
+            this.manualCompetitors = [];
+            this.updateManualPills();
+            return;
+        }
+        this.competitorSelections = response.competitors.map((comp, index) => ({
+            index,
+            selected: true,
+            data: comp
+        }));
+        const cards = response.competitors.map((comp, index) => `
+            <div class="competitor-card" data-index="${index}">
+                <input type="checkbox" class="competitor-toggle" data-index="${index}" checked>
+                <div>
+                    <h4>${this.escape(comp.name)}</h4>
+                    <div class="competitor-meta">
+                        <a href="${this.escape(comp.url)}" target="_blank" rel="noopener">${this.escape(comp.url)}</a>
+                        <span>Confianza ${(comp.confidence * 100).toFixed(0)}%</span>
+                        <span>Origen: ${comp.detectedBy}</span>
+                    </div>
+                    ${comp.reason ? `<p class="field-hint">${this.escape(comp.reason)}</p>` : ''}
+                </div>
+            </div>
+        `).join('');
+        this.competitorListEl.innerHTML = cards;
+        this.competitorSection.style.display = 'block';
+        this.manualCompetitors = [];
+        this.updateManualPills();
+        this.competitorSection.querySelectorAll('.competitor-toggle').forEach(input => {
+            input.addEventListener('change', (ev) => {
+                const idx = Number(ev.target.getAttribute('data-index'));
+                this.toggleCompetitorSelection(idx, ev.target.checked);
+            });
+        });
+    }
+
+    toggleCompetitorSelection(index, selected) {
+        const target = this.competitorSelections.find(item => item.index === index);
+        if (target) target.selected = selected;
+    }
+
+    handleAddManualCompetitor() {
+        const name = this.manualNameInput?.value.trim();
+        const url = this.normalizeUrl(this.manualUrlInput?.value.trim());
+        if (!name || !url) {
+            this.setStatus('error', 'Completa nombre y URL para agregar competencia manual.');
+            return;
+        }
+        this.manualCompetitors.push({ name, url });
+        this.manualNameInput.value = '';
+        this.manualUrlInput.value = '';
+        this.updateManualPills();
+        this.setStatus('info', 'Competidor manual agregado.');
+    }
+
+    removeManualCompetitor(index) {
+        this.manualCompetitors.splice(index, 1);
+        this.updateManualPills();
+    }
+
+    updateManualPills() {
+        if (!this.manualPillsEl) return;
+        if (!this.manualCompetitors.length) {
+            this.manualPillsEl.innerHTML = '';
+            return;
+        }
+        this.manualPillsEl.innerHTML = this.manualCompetitors.map((comp, index) => `
+            <span class="manual-pill">
+                ${this.escape(comp.name)}
+                <button type="button" data-index="${index}" aria-label="Eliminar">×</button>
+            </span>
+        `).join('');
+        this.manualPillsEl.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', (ev) => {
+                const idx = Number(ev.currentTarget.getAttribute('data-index'));
+                this.removeManualCompetitor(idx);
+            });
+        });
+    }
+
+    toggleCompetitorSection(show) {
+        if (!this.competitorSection) return;
+        this.competitorSection.style.display = show ? 'block' : 'none';
+    }
+
+    handleConfirmCompetitors() {
+        const approved = this.competitorSelections
+            .filter(item => item.selected)
+            .map(item => item.data);
+        const rejected = this.competitorSelections
+            .filter(item => !item.selected)
+            .map(item => item.data);
+        const payload = {
+            approved,
+            rejected,
+            manualAdds: this.manualCompetitors,
+            originalResponse: this.lastScraperResponse
+        };
+        console.log('Competitor confirmation pending implementation:', payload);
+        this.setStatus('info', 'Próximamente enviaremos esta selección al super scraping.');
+    }
+
+    handleSkipCompetitors() {
+        this.toggleCompetitorSection(false);
+        this.setStatus('info', 'Puedes confirmar la competencia más tarde desde la sección de inteligencia.');
+    }
+
+    escape(str) {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = String(str);
+        return div.innerHTML;
     }
 
     setStatus(type, message) {

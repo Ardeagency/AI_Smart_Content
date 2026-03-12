@@ -23045,3 +23045,83 @@ body.production-filters-in-header .living-container > .living-history-section {
   background: rgba(236, 235, 218, 0.08);
   border: 1px solid rgba(236, 235, 218, 0.2);
 }
+
+
+.competitor-review {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: rgba(20, 20, 20, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+}
+.competitor-review-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.competitor-list {
+  margin: 1.5rem 0;
+  display: grid;
+  gap: 1rem;
+}
+.competitor-card {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  background: rgba(255, 255, 255, 0.02);
+}
+.competitor-card input[type="checkbox"] {
+  margin-top: 0.4rem;
+}
+.competitor-card h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+.competitor-meta {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: var(--text-secondary, #a0a0a0);
+}
+.manual-competitor {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 1rem;
+}
+.manual-competitor-fields {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.manual-competitor-pills {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.manual-pill {
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 0.85rem;
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+.manual-pill button {
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+}
+.competitor-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+

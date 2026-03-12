@@ -63,3 +63,36 @@
             </div>
         </div>
     </div>
+
+    <div id="competitorReview" class="competitor-review" style="display: none;">
+        <div class="competitor-review-header">
+            <div>
+                <h2>Confirma a tu competencia</h2>
+                <p class="step-subtitle">
+                    Estas marcas fueron detectadas automáticamente. Selecciona cuáles competirán en tu radar
+                    o agrega otras manualmente.
+                </p>
+            </div>
+            <button type="button" class="btn btn-link" id="btnHideCompetitorReview">Ocultar</button>
+        </div>
+        <div id="competitorList" class="competitor-list"></div>
+
+        <div class="manual-competitor">
+            <h3>Agregar competencia manual</h3>
+            <div class="manual-competitor-fields">
+                <input type="text" id="manualCompetitorName" class="form-input" placeholder="Nombre de la marca">
+                <input type="url" id="manualCompetitorUrl" class="form-input" placeholder="https://sitio.com">
+                <button type="button" class="btn btn-secondary" id="btnAddManualCompetitor">Agregar</button>
+            </div>
+            <div id="manualCompetitorPills" class="manual-competitor-pills"></div>
+        </div>
+
+        <div class="competitor-actions">
+            <button type="button" class="btn btn-primary" id="btnConfirmCompetitors">
+                Confirmar selección
+            </button>
+            <button type="button" class="btn btn-secondary" id="btnSkipCompetitors">
+                Revisar más tarde
+            </button>
+        </div>
+    </div>
