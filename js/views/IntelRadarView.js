@@ -286,7 +286,7 @@ class IntelRadarView extends BaseView {
         this.showNotification('Error al crear.', 'error');
         return;
       }
-      this.showNotification('Perfil añadido. Configura la programación en Task para activar el monitoreo.', 'success');
+      // Perfil creado correctamente, no mostramos notificación modal para evitar ruido.
     }
     this.closeModal();
     await this.loadEntities();
