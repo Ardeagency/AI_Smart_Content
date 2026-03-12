@@ -18,6 +18,7 @@ class DevLeadCategoriesView extends DevBaseView {
   async getSupabase() {
     if (this.supabase) return this.supabase;
     this.supabase = await this.getSupabaseClient();
+    this.coverBucket = 'flow-categories';
     return this.supabase;
   }
 
@@ -53,6 +54,7 @@ class DevLeadCategoriesView extends DevBaseView {
                   <th>Orden</th>
                   <th>Nombre</th>
                   <th>Descripción</th>
+                  <th>Portada</th>
                   <th class="dev-lead-actions">Acciones</th>
                 </tr>
               </thead>
@@ -112,6 +114,12 @@ class DevLeadCategoriesView extends DevBaseView {
             <div class="form-group">
               <label for="categoryOrder">Orden</label>
               <input type="number" id="categoryOrder" min="0" value="0" placeholder="0">
+            </div>
+            <div class="form-group">
+              <label>Portada (imagen o video)</label>
+              <div class="dev-lead-cover-preview" id="categoryCoverPreview"></div>
+              <input type="file" id="categoryCoverFile" accept="image/*,video/*">
+              <small class="form-hint">Se usará como hero visual en el catálogo de flujos.</small>
             </div>
           </div>
           <div class="modal-footer">
@@ -191,7 +199,7 @@ class DevLeadCategoriesView extends DevBaseView {
   async loadCategories() {
     const { data, error } = await this.supabase
       .from('content_categories')
-      .select('id, name, description, order_index')
+      .select('id, name, description, order_index, cover_url, cover_type, cover_storage_path')
       .order('order_index', { ascending: true, nullsFirst: false });
 
     if (error) {
@@ -217,6 +225,13 @@ class DevLeadCategoriesView extends DevBaseView {
         <td>${c.order_index != null ? c.order_index : '-'}</td>
         <td>${this.escapeHtml(c.name)}</td>
         <td>${this.escapeHtml((c.description || '').slice(0, 60))}${(c.description || '').length > 60 ? '…' : ''}</td>
+        <td>
+          ${c.cover_url
+            ? (c.cover_type === 'video'
+              ? '<span class="dev-lead-cover-chip"><i class="fas fa-video"></i> Video</span>'
+              : `<span class="dev-lead-cover-chip"><i class="fas fa-image"></i> Img</span>`)
+            : '<span class="dev-lead-cover-chip dev-lead-cover-chip--empty">—</span>'}
+        </td>
         <td class="dev-lead-actions">
           <button type="button" class="btn-icon edit-category" title="Editar" data-id="${c.id}">
             <i class="fas fa-edit"></i>
@@ -319,6 +334,10 @@ class DevLeadCategoriesView extends DevBaseView {
     document.getElementById('categoryName').value = '';
     document.getElementById('categoryDescription').value = '';
     document.getElementById('categoryOrder').value = '0';
+    const coverPreview = document.getElementById('categoryCoverPreview');
+    const coverFileInput = document.getElementById('categoryCoverFile');
+    if (coverFileInput) coverFileInput.value = '';
+    if (coverPreview) coverPreview.innerHTML = '';
     if (id) {
       const c = this.categories.find(x => x.id === id);
       if (c) {
@@ -326,9 +345,24 @@ class DevLeadCategoriesView extends DevBaseView {
         document.getElementById('categoryName').value = c.name || '';
         document.getElementById('categoryDescription').value = c.description || '';
         document.getElementById('categoryOrder').value = c.order_index != null ? c.order_index : 0;
+        if (coverPreview) {
+          if (c.cover_url) {
+            const safeUrl = this.escapeHtml(c.cover_url);
+            if ((c.cover_type || '').toLowerCase() === 'video') {
+              coverPreview.innerHTML = `<video src="${safeUrl}" class="dev-lead-cover-thumb" muted loop playsinline></video>`;
+            } else {
+              coverPreview.innerHTML = `<img src="${safeUrl}" class="dev-lead-cover-thumb" alt="Portada categoría">`;
+            }
+          } else {
+            coverPreview.innerHTML = '<span class="dev-lead-cover-chip dev-lead-cover-chip--empty">Sin portada</span>';
+          }
+        }
       }
     } else {
       if (titleEl) titleEl.textContent = 'Nueva categoría';
+      if (coverPreview) {
+        coverPreview.innerHTML = '<span class="dev-lead-cover-chip dev-lead-cover-chip--empty">Sin portada</span>';
+      }
     }
     if (modal) { modal.style.display = 'flex'; modal.classList.add('is-open'); }
   }
@@ -342,11 +376,45 @@ class DevLeadCategoriesView extends DevBaseView {
     }
     const description = (document.getElementById('categoryDescription').value || '').trim();
     const orderIndex = parseInt(document.getElementById('categoryOrder').value, 10) || 0;
+    const coverFileInput = document.getElementById('categoryCoverFile');
+    const coverFile = coverFileInput && coverFileInput.files && coverFileInput.files[0] ? coverFileInput.files[0] : null;
+
+    const basePayload = { name, description, order_index: orderIndex };
 
     if (id) {
+      const payload = { ...basePayload };
+      if (coverFile) {
+        try {
+          if (!this.supabase || !this.supabase.storage || typeof this.supabase.storage.from !== 'function') {
+            throw new Error('Storage no disponible en Supabase.');
+          }
+          const ext = (coverFile.name && coverFile.name.split('.').pop()) || 'bin';
+          const safeExt = ext.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'bin';
+          const type = (coverFile.type || '').toLowerCase();
+          const isVideo = type.startsWith('video/');
+          const coverType = isVideo ? 'video' : 'image';
+          const fileName = `category-${id}/${Date.now()}_${Math.random().toString(36).substring(2)}.${safeExt}`;
+          const storagePath = `covers/${fileName}`;
+          const { error: uploadError } = await this.supabase.storage
+            .from(this.coverBucket)
+            .upload(storagePath, coverFile, { contentType: coverFile.type || undefined, upsert: true });
+          if (uploadError) throw uploadError;
+          const { data: urlData } = this.supabase.storage.from(this.coverBucket).getPublicUrl(storagePath);
+          if (!urlData || !urlData.publicUrl) {
+            throw new Error('No se pudo obtener la URL pública de la portada.');
+          }
+          payload.cover_url = urlData.publicUrl;
+          payload.cover_type = coverType;
+          payload.cover_storage_path = storagePath;
+        } catch (err) {
+          console.error('Error subiendo portada:', err);
+          alert('Error al subir la portada: ' + (err && err.message ? err.message : ''));
+          return;
+        }
+      }
       const { error } = await this.supabase
         .from('content_categories')
-        .update({ name, description, order_index: orderIndex })
+        .update(payload)
         .eq('id', id);
       if (error) {
         console.error(error);
@@ -354,13 +422,52 @@ class DevLeadCategoriesView extends DevBaseView {
         return;
       }
     } else {
-      const { error } = await this.supabase
+      // Crear la categoría primero
+      const { data, error } = await this.supabase
         .from('content_categories')
-        .insert({ name, description, order_index: orderIndex });
+        .insert(basePayload)
+        .select('id')
+        .single();
       if (error) {
         console.error(error);
         alert('Error al crear: ' + (error.message || ''));
         return;
+      }
+      const newId = data && data.id;
+      if (coverFile && newId) {
+        try {
+          if (!this.supabase || !this.supabase.storage || typeof this.supabase.storage.from !== 'function') {
+            throw new Error('Storage no disponible en Supabase.');
+          }
+          const ext = (coverFile.name && coverFile.name.split('.').pop()) || 'bin';
+          const safeExt = ext.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'bin';
+          const type = (coverFile.type || '').toLowerCase();
+          const isVideo = type.startsWith('video/');
+          const coverType = isVideo ? 'video' : 'image';
+          const fileName = `category-${newId}/${Date.now()}_${Math.random().toString(36).substring(2)}.${safeExt}`;
+          const storagePath = `covers/${fileName}`;
+          const { error: uploadError } = await this.supabase.storage
+            .from(this.coverBucket)
+            .upload(storagePath, coverFile, { contentType: coverFile.type || undefined, upsert: true });
+          if (uploadError) throw uploadError;
+          const { data: urlData } = this.supabase.storage.from(this.coverBucket).getPublicUrl(storagePath);
+          if (urlData && urlData.publicUrl) {
+            const { error: updateError } = await this.supabase
+              .from('content_categories')
+              .update({
+                cover_url: urlData.publicUrl,
+                cover_type: coverType,
+                cover_storage_path: storagePath
+              })
+              .eq('id', newId);
+            if (updateError) {
+              console.error('Error guardando portada en la categoría nueva:', updateError);
+            }
+          }
+        } catch (err) {
+          console.error('Error subiendo portada para nueva categoría:', err);
+          // No bloqueamos la creación de la categoría si la portada falla
+        }
       }
     }
     document.getElementById('categoryModal').style.display = 'none';
