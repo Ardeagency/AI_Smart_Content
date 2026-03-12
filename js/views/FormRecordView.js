@@ -30,10 +30,6 @@ class FormRecordView extends BaseView {
       await window.appNavigation.render();
     }
 
-    if (!window.FlowWebhookService) {
-      await this.loadScript('js/services/FlowWebhookService.js', 'FlowWebhookService');
-    }
-
     if (!window.FormRecord) {
       await this.loadScript('js/form-record.js', 'FormRecord');
     }

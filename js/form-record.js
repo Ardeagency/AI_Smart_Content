@@ -1,5 +1,5 @@
 /**
- * Form Record - Onboarding de organización + disparo de webhook para el super scraping.
+ * Form Record - Onboarding de organización + integración directa con el servicio de super scraping.
  */
 
 class FormRecord {
@@ -9,20 +9,20 @@ class FormRecord {
         this.currentStep = 1;
         this.totalSteps = 4;
         this.formData = {};
-        this.flowConfig = null;
-        this.statusEl = null;
-        this.submitBtn = null;
         this.environment = 'test';
         this.listenersAttached = false;
+        this.statusEl = null;
+        this.submitBtn = null;
+        this.lastScraperResponse = null;
+        this.scraperEndpoint = null;
     }
 
     async init() {
         await this.ensureSupabase();
-        await this.loadFlowConfig();
         this.cacheDom();
         this.setupEventListeners();
         this.showStep(1);
-        this.setStatus('info', 'Completa los campos para disparar automáticamente el scraping inteligente.');
+        this.setStatus('info', 'Completa los campos y enviaremos los datos al scraper inteligente.');
     }
 
     cacheDom() {
@@ -95,60 +95,6 @@ class FormRecord {
         }
     }
 
-    async loadFlowConfig() {
-        try {
-            const { data: flow } = await this.supabase
-                .from('content_flows')
-                .select('id, name, slug')
-                .eq('slug', 'org-intel-onboarding')
-                .maybeSingle();
-            if (!flow) {
-                this.setStatus('error', 'No se encontró el flujo de onboarding. Contacta al equipo.');
-                this.disableSubmit();
-                return;
-            }
-            const { data: module } = await this.supabase
-                .from('flow_modules')
-                .select('id, step_order, webhook_url_test, webhook_url_prod')
-                .eq('content_flow_id', flow.id)
-                .order('step_order')
-                .limit(1)
-                .maybeSingle();
-            if (!module) {
-                this.setStatus('error', 'El flujo no tiene módulos configurados.');
-                this.disableSubmit();
-                return;
-            }
-            const { data: tech } = await this.supabase
-                .from('flow_technical_details')
-                .select('webhook_method')
-                .eq('flow_module_id', module.id)
-                .maybeSingle();
-            const webhookUrl = module.webhook_url_test || module.webhook_url_prod || null;
-            if (!webhookUrl) {
-                this.setStatus('error', 'No hay webhook configurado para este flujo.');
-                this.disableSubmit();
-                return;
-            }
-            this.flowConfig = {
-                flowId: flow.id,
-                moduleId: module.id,
-                webhookUrl,
-                webhookMethod: tech?.webhook_method || 'POST'
-            };
-        } catch (err) {
-            console.error('Error cargando flujo de onboarding', err);
-            this.setStatus('error', 'No se pudo preparar el flujo de scraping.');
-            this.disableSubmit();
-        }
-    }
-
-    disableSubmit() {
-        if (this.submitBtn) {
-            this.submitBtn.disabled = true;
-        }
-    }
-
     setupEventListeners() {
         if (this.listenersAttached) return;
         const form = document.getElementById('form_org');
@@ -180,7 +126,7 @@ class FormRecord {
         if (this.currentStep === 1) {
             const plan = document.getElementById('plan_organizacion');
             if (!plan?.value) {
-                alert('Por favor selecciona un plan.');
+                alert('Selecciona un plan para continuar.');
                 return;
             }
         } else if (this.currentStep === 2) {
@@ -192,7 +138,7 @@ class FormRecord {
         } else if (this.currentStep === 3) {
             const nicho = document.getElementById('nicho_organizacion');
             if (!nicho?.value.trim()) {
-                alert('Describe el nicho o industria principal.');
+                alert('Describe el nicho o mercado principal.');
                 return;
             }
         }
@@ -209,111 +155,130 @@ class FormRecord {
 
     collectFormData() {
         const getVal = (id) => document.getElementById(id)?.value?.trim() || '';
+        const websiteRaw = getVal('url_web');
         this.formData = {
             plan: getVal('plan_organizacion'),
             nombre: getVal('nombre_organizacion'),
             nicho: getVal('nicho_organizacion'),
-            website: getVal('url_web'),
+            website: websiteRaw,
+            websiteNormalized: this.normalizeUrl(websiteRaw),
             socials: {
-                instagram: getVal('instagram_url'),
-                tiktok: getVal('tiktok_url'),
-                youtube: getVal('youtube_url'),
-                facebook: getVal('facebook_url'),
-                linkedin: getVal('linkedin_url'),
-                twitter: getVal('twitter_url'),
-                pinterest: getVal('pinterest_url'),
-                others: getVal('otros_canales')
+                instagram: this.normalizeUrl(getVal('instagram_url')),
+                tiktok: this.normalizeUrl(getVal('tiktok_url')),
+                youtube: this.normalizeUrl(getVal('youtube_url')),
+                facebook: this.normalizeUrl(getVal('facebook_url')),
+                linkedin: this.normalizeUrl(getVal('linkedin_url')),
+                twitter: this.normalizeUrl(getVal('twitter_url')),
+                pinterest: this.normalizeUrl(getVal('pinterest_url')),
+                others: getVal('otros_canales').split(',').map(s => this.normalizeUrl(s.trim())).filter(Boolean)
             }
         };
     }
 
     normalizeUrl(url) {
         if (!url) return '';
-        if (!/^https?:\/\//i.test(url)) {
-            return `https://${url}`;
-        }
-        return url;
+        if (/^https?:\/\//i.test(url)) return url;
+        return `https://${url}`;
     }
 
-    buildPayload() {
+    ensureValidForm() {
+        const { plan, nombre, websiteNormalized, socials } = this.formData;
+        if (!plan) throw new Error('Selecciona un plan.');
+        if (!nombre) throw new Error('Ingresa el nombre de la organización.');
+        if (!websiteNormalized) throw new Error('Incluye la URL principal de la organización.');
+        const hasSocial = Object.values(socials).some(value => {
+            if (Array.isArray(value)) return value.length > 0;
+            return Boolean(value);
+        });
+        if (!hasSocial) throw new Error('Agrega al menos una red social o canal digital.');
+    }
+
+    buildRequestPayload() {
         this.collectFormData();
-        const { plan, nombre, nicho, website, socials } = this.formData;
-        if (!plan || !nombre || !nicho || !website) {
-            throw new Error('Faltan campos obligatorios.');
-        }
-        const socialLinks = {
-            instagram: this.normalizeUrl(socials.instagram),
-            tiktok: this.normalizeUrl(socials.tiktok),
-            youtube: this.normalizeUrl(socials.youtube),
-            facebook: this.normalizeUrl(socials.facebook),
-            linkedin: this.normalizeUrl(socials.linkedin),
-            twitter: this.normalizeUrl(socials.twitter),
-            pinterest: this.normalizeUrl(socials.pinterest)
-        };
-        const otherLinks = (socials.others || '')
-            .split(',')
-            .map(s => this.normalizeUrl(s.trim()))
-            .filter(Boolean);
-        const atLeastOneSocial = Object.values(socialLinks).some(Boolean) || otherLinks.length > 0;
-        if (!atLeastOneSocial) {
-            throw new Error('Agrega al menos una red social o canal digital.');
-        }
+        this.ensureValidForm();
         return {
-            plan_type: plan,
-            organization: {
-                name: nombre,
-                niche: nicho,
-                website: this.normalizeUrl(website),
-                social_links: { ...socialLinks, others: otherLinks }
-            },
-            submitted_by: this.userId,
-            context: {
-                source: 'form_org',
-                environment: this.environment,
-                form_version: '2026.03.10'
+            url: this.formData.websiteNormalized,
+            userId: this.userId,
+            organizationName: this.formData.nombre,
+            plan: this.formData.plan,
+            environment: this.environment,
+            organizationInput: {
+                niche: this.formData.nicho,
+                socials: this.formData.socials,
+                originalWebsite: this.formData.website,
+                normalizedWebsite: this.formData.websiteNormalized
             }
         };
     }
 
+    getScraperEndpoint() {
+        if (this.scraperEndpoint) return this.scraperEndpoint;
+        const fromWindow = window.SCRAPER_API_URL || window.SCRAPER_SERVER_URL || (window.ENV && window.ENV.SCRAPER_API_URL);
+        const stored = typeof localStorage !== 'undefined' ? localStorage.getItem('SCRAPER_API_URL') : '';
+        this.scraperEndpoint = fromWindow || stored || '/api/scrape';
+        return this.scraperEndpoint;
+    }
+
     async handleSubmit() {
-        if (!this.flowConfig?.webhookUrl) {
-            this.setStatus('error', 'Webhook no disponible.');
+        if (!this.userId) {
+            this.setStatus('error', 'No se encontró el usuario autenticado.');
             return;
         }
-        if (!window.FlowWebhookService) {
-            this.setStatus('error', 'Servicio de webhooks no inicializado.');
-            return;
-        }
-        let payload;
+        let requestBody;
         try {
-            payload = this.buildPayload();
+            requestBody = this.buildRequestPayload();
         } catch (err) {
             this.setStatus('error', err.message || 'Formulario incompleto.');
             return;
         }
+
+        const endpoint = this.getScraperEndpoint();
+        if (!endpoint) {
+            this.setStatus('error', 'No hay endpoint configurado para el super scraper.');
+            return;
+        }
+
         try {
             this.setStatus('loading', 'Enviando datos al scraper inteligente...');
             if (this.submitBtn) this.submitBtn.disabled = true;
-            const result = await window.FlowWebhookService.executeWebhook({
-                url: this.flowConfig.webhookUrl,
-                method: this.flowConfig.webhookMethod || 'POST',
-                body: payload,
-                timeoutMs: 180000
+
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody)
             });
-            if (result.ok) {
-                this.setStatus('success', '¡Listo! Estamos creando la organización y detectando competencia. Recibirás una notificación cuando finalice.');
-                document.getElementById('form_org')?.reset();
-                this.showStep(1);
-            } else {
-                const errMsg = result.error || 'El webhook respondió con un error.';
-                this.setStatus('error', errMsg);
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data?.error || 'El servidor devolvió un error.');
             }
-        } catch (err) {
-            console.error('Error enviando webhook', err);
-            this.setStatus('error', err.message || 'No se pudo contactar el scraper.');
+
+            this.lastScraperResponse = data;
+            this.handleScraperOutcome(data);
+        } catch (error) {
+            console.error('Error enviando al scraper:', error);
+            this.setStatus('error', error.message || 'No se pudo contactar el scraper.');
         } finally {
             if (this.submitBtn) this.submitBtn.disabled = false;
         }
+    }
+
+    handleScraperOutcome(data) {
+        const competitorCount = Array.isArray(data?.competitors) ? data.competitors.length : 0;
+        if (data.status === 'needs_confirmation' && competitorCount > 0) {
+            this.setStatus('success', `Scraping completado. Detectamos ${competitorCount} posibles competidores. Pronto podrás confirmarlos.`);
+            return;
+        }
+        if (data.status === 'saved_without_competitors') {
+            this.setStatus('success', 'Scraping completado. No detectamos competencia directa todavía.');
+            return;
+        }
+        if (data.status === 'error') {
+            const msg = data.errors?.join(', ') || 'El scraper reportó un error.';
+            this.setStatus('error', msg);
+            return;
+        }
+        this.setStatus('success', 'Scraping completado correctamente.');
     }
 
     setStatus(type, message) {
