@@ -241,12 +241,12 @@ class Navigation {
       if (!supabase) return [];
       const { data, error } = await supabase
         .from('content_categories')
-        .select('id, name')
-        .eq('is_visible', true)
+        .select('id, name, is_visible')
         .order('order_index', { ascending: true, nullsFirst: false })
         .order('name');
       if (error) return [];
-      this._catalogCategories = Array.isArray(data) ? data : [];
+      const list = Array.isArray(data) ? data : [];
+      this._catalogCategories = list.filter((c) => c.is_visible !== false);
       return this._catalogCategories;
     } catch (e) {
       console.warn('Navigation: no se pudieron cargar content_categories', e);
