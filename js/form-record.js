@@ -15,6 +15,7 @@ class FormRecord {
         this.submitBtn = null;
         this.lastScraperResponse = null;
         this.scraperEndpoint = null;
+        this.scraperBaseUrl = null;
         this.competitorSection = null;
         this.competitorListEl = null;
         this.manualNameInput = null;
@@ -248,7 +249,26 @@ class FormRecord {
         const fromWindow = window.SCRAPER_API_URL || window.SCRAPER_SERVER_URL || (window.ENV && window.ENV.SCRAPER_API_URL);
         const stored = typeof localStorage !== 'undefined' ? localStorage.getItem('SCRAPER_API_URL') : '';
         this.scraperEndpoint = fromWindow || stored || '/api/scrape';
+        this.scraperBaseUrl = this.computeBaseUrl(this.scraperEndpoint);
         return this.scraperEndpoint;
+    }
+
+    getScraperBaseUrl() {
+        if (this.scraperBaseUrl) return this.scraperBaseUrl;
+        const endpoint = this.getScraperEndpoint();
+        this.scraperBaseUrl = this.computeBaseUrl(endpoint);
+        return this.scraperBaseUrl;
+    }
+
+    computeBaseUrl(endpoint) {
+        if (!endpoint) return '';
+        try {
+            const absolute = new URL(endpoint, window.location.origin);
+            absolute.pathname = absolute.pathname.replace(/\/?scrape$/, '');
+            return absolute.toString().replace(/\/$/, '');
+        } catch {
+            return endpoint.replace(/\/?scrape$/, '').replace(/\/$/, '');
+        }
     }
 
     async handleSubmit() {
@@ -324,12 +344,8 @@ class FormRecord {
             this.updateManualPills();
             return;
         }
-        this.competitorSelections = response.competitors.map((comp, index) => ({
-            index,
-            selected: true,
-            data: comp
-        }));
-        const cards = response.competitors.map((comp, index) => `
+        this.competitorSelections = response.competitors.map((comp, index) => ({ index, selected: true, data: comp }));
+        this.competitorListEl.innerHTML = response.competitors.map((comp, index) => `
             <div class="competitor-card" data-index="${index}">
                 <input type="checkbox" class="competitor-toggle" data-index="${index}" checked>
                 <div>
@@ -343,7 +359,6 @@ class FormRecord {
                 </div>
             </div>
         `).join('');
-        this.competitorListEl.innerHTML = cards;
         this.competitorSection.style.display = 'block';
         this.manualCompetitors = [];
         this.updateManualPills();
@@ -399,31 +414,101 @@ class FormRecord {
         });
     }
 
+    cleanCompetitorPayload(data = {}) {
+        return {
+            name: data.name || 'Sin nombre',
+            url: this.normalizeUrl(data.url),
+            source: data.source,
+            reason: data.reason,
+            confidence: typeof data.confidence === 'number' ? data.confidence : undefined,
+            detectedBy: data.detectedBy
+        };
+    }
+
+    buildConfirmUrl() {
+        const base = this.getScraperBaseUrl();
+        if (!base) return '';
+        return `${base}/competitors/confirm`;
+    }
+
+    async handleConfirmCompetitors() {
+        if (!this.lastScraperResponse?.organization?.brandContainerId) {
+            this.setStatus('error', 'Aún no hay datos de organización para confirmar.');
+            return;
+        }
+        const approved = this.competitorSelections
+            .filter(item => item.selected)
+            .map(item => this.cleanCompetitorPayload(item.data));
+        const rejected = this.competitorSelections
+            .filter(item => !item.selected)
+            .map(item => this.cleanCompetitorPayload(item.data));
+        const manualAdds = this.manualCompetitors
+            .map(comp => ({ name: comp.name, url: this.normalizeUrl(comp.url) }))
+            .filter(comp => comp.url);
+        const confirmUrl = this.buildConfirmUrl();
+        if (!confirmUrl) {
+            this.setStatus('error', 'No se pudo determinar el endpoint de confirmación.');
+            return;
+        }
+        const body = {
+            userId: this.userId,
+            brandContainerId: this.lastScraperResponse.organization.brandContainerId,
+            organizationId: this.lastScraperResponse.organization.organizationId,
+            approved,
+            rejected,
+            manualAdds
+        };
+        try {
+            this.setStatus('loading', 'Enviando confirmación de competencia...');
+            const res = await fetch(confirmUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                throw new Error(data?.error || 'Error confirmando competencia');
+            }
+            this.setStatus('success', 'Competencia confirmada. Actualizaremos tu radar con estos datos.');
+            this.toggleCompetitorSection(false);
+        } catch (error) {
+            console.error('Confirm competitors error:', error);
+            this.setStatus('error', error.message || 'No se pudo confirmar la competencia.');
+        }
+    }
+
+    async handleSkipCompetitors() {
+        const confirmUrl = this.buildConfirmUrl();
+        const brandContainerId = this.lastScraperResponse?.organization?.brandContainerId;
+        if (confirmUrl && brandContainerId) {
+            try {
+                await fetch(confirmUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: this.userId,
+                        brandContainerId,
+                        organizationId: this.lastScraperResponse.organization.organizationId,
+                        skip: true
+                    })
+                });
+            } catch (error) {
+                console.warn('Skip competitor confirmation failed', error);
+            }
+        }
+        this.toggleCompetitorSection(false);
+        this.setStatus('info', 'Guardado. Puedes revisar la competencia más tarde.');
+    }
+
     toggleCompetitorSection(show) {
         if (!this.competitorSection) return;
         this.competitorSection.style.display = show ? 'block' : 'none';
     }
 
-    handleConfirmCompetitors() {
-        const approved = this.competitorSelections
-            .filter(item => item.selected)
-            .map(item => item.data);
-        const rejected = this.competitorSelections
-            .filter(item => !item.selected)
-            .map(item => item.data);
-        const payload = {
-            approved,
-            rejected,
-            manualAdds: this.manualCompetitors,
-            originalResponse: this.lastScraperResponse
-        };
-        console.log('Competitor confirmation pending implementation:', payload);
-        this.setStatus('info', 'Próximamente enviaremos esta selección al super scraping.');
-    }
-
-    handleSkipCompetitors() {
-        this.toggleCompetitorSection(false);
-        this.setStatus('info', 'Puedes confirmar la competencia más tarde desde la sección de inteligencia.');
+    setStatus(type, message) {
+        if (!this.statusEl) return;
+        this.statusEl.className = `form-status ${type ? type : ''} ${message ? 'show' : ''}`.trim();
+        this.statusEl.textContent = message || '';
     }
 
     escape(str) {
@@ -431,12 +516,6 @@ class FormRecord {
         const div = document.createElement('div');
         div.textContent = String(str);
         return div.innerHTML;
-    }
-
-    setStatus(type, message) {
-        if (!this.statusEl) return;
-        this.statusEl.className = `form-status ${type ? type : ''} ${message ? 'show' : ''}`.trim();
-        this.statusEl.textContent = message || '';
     }
 }
 
