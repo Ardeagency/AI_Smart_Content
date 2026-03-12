@@ -30,6 +30,10 @@ class FormRecordView extends BaseView {
       await window.appNavigation.render();
     }
 
+    if (!window.FlowWebhookService) {
+      await this.loadScript('js/services/FlowWebhookService.js', 'FlowWebhookService');
+    }
+
     if (!window.FormRecord) {
       await this.loadScript('js/form-record.js', 'FormRecord');
     }
@@ -40,7 +44,9 @@ class FormRecordView extends BaseView {
     }
 
     const supabase = await this.getSupabaseClient();
-    this.formRecord = new window.FormRecord({ supabase });
+    const existingInstance = window.formRecordInstance instanceof window.FormRecord ? window.formRecordInstance : null;
+    this.formRecord = existingInstance || new window.FormRecord();
+    this.formRecord.supabase = supabase;
     await this.formRecord.init();
   }
 
