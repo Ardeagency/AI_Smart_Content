@@ -14682,7 +14682,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   margin-top: 0;
 }
 
-/* Tipo de flujo: picker Manual / Automatizado */
+/* Tipo de flujo: picker Manual | System | Autopilot | Scraping */
 .flow-type-picker {
   display: flex;
   flex-direction: column;
@@ -14691,6 +14691,11 @@ body.production-filters-in-header .living-container > .living-history-section {
   background: var(--bg-secondary);
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-color);
+}
+.flow-type-picker--four {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-xs);
 }
 
 /* Builder: picker con superficie visible */

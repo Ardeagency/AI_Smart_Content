@@ -204,16 +204,18 @@ class DevBuilderView extends DevBaseView {
                     <option value="">Seleccionar subcategoría...</option>
                   </select>
                 </div>
-                <div class="settings-field builder-config-cell">
+                <div class="settings-field builder-config-cell builder-config-cell--flow-type">
                   <label for="flowTypePicker">Tipo de flujo</label>
                   <input type="hidden" id="flowType" value="manual">
-                  <div class="flow-type-picker" id="flowTypePicker" role="listbox" aria-label="Tipo de flujo">
-                    <div class="flow-type-picker-option" data-value="manual" role="option">Manual</div>
-                    <div class="flow-type-picker-option" data-value="autopilot" role="option"><i class="ph ph-check"></i> Autopilot / Scraping</div>
+                  <div class="flow-type-picker flow-type-picker--four" id="flowTypePicker" role="listbox" aria-label="Tipo de flujo">
+                    <div class="flow-type-picker-option" data-value="manual" role="option" title="Input 100% dinámico, personalizable para el usuario consumidor">Manual</div>
+                    <div class="flow-type-picker-option" data-value="system" role="option" title="Funciones de plataforma, no catálogo">System</div>
+                    <div class="flow-type-picker-option" data-value="autopilot" role="option" title="Generación autónoma y programable con datos de marca">Autopilot</div>
+                    <div class="flow-type-picker-option" data-value="scraping" role="option" title="Scrapeo: perfiles, palabras, URLs">Scraping</div>
                   </div>
+                  <span class="field-help">Manual: inputs dinámicos. System: funciones de plataforma (no catálogo). Autopilot: contenido programable. Scraping: sistemas de scrapeo.</span>
                 </div>
               </div>
-              <span class="field-help block">Los flujos Autopilot / Scraping no aparecen en la librería de usuarios.</span>
             </div>
           </div>
 
@@ -1099,15 +1101,16 @@ class DevBuilderView extends DevBaseView {
       }
     });
 
-    // Tipo de flujo: picker Manual / Autopilot + input hidden
+    // Tipo de flujo: picker Manual | System | Autopilot | Scraping
     const flowTypeInput = this.querySelector('#flowType');
     const flowTypePicker = this.querySelector('#flowTypePicker');
+    const leadOnlyTypes = ['autopilot', 'scraping'];
     if (flowTypePicker && flowTypeInput) {
       flowTypePicker.querySelectorAll('.flow-type-picker-option').forEach((opt) => {
         opt.addEventListener('click', () => {
           const v = opt.getAttribute('data-value');
-          if (v === 'autopilot' && !this.isLead()) {
-            this.showNotification('Solo los Lead pueden crear o convertir flujos en modo Autopilot/Scraping.', 'warning');
+          if (leadOnlyTypes.includes(v) && !this.isLead()) {
+            this.showNotification('Solo los Lead pueden crear o convertir flujos en Autopilot o Scraping.', 'warning');
             return;
           }
           flowTypeInput.value = v;
@@ -1118,9 +1121,9 @@ class DevBuilderView extends DevBaseView {
     if (flowTypeInput) {
       flowTypeInput.addEventListener('change', (e) => {
         const v = e.target.value;
-        if (v === 'autopilot' && !this.isLead()) {
+        if (leadOnlyTypes.includes(v) && !this.isLead()) {
           e.target.value = this.flowData.flow_category_type || 'manual';
-          this.showNotification('Solo los Lead pueden crear o convertir flujos en modo Autopilot/Scraping.', 'warning');
+          this.showNotification('Solo los Lead pueden crear o convertir flujos en Autopilot o Scraping.', 'warning');
           this.updateFlowTypePicker(e.target.value);
           return;
         }
