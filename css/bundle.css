@@ -10550,6 +10550,13 @@ body.production-filters-in-header .living-container > .living-history-section {
   margin: 0 0 0.5rem 0;
   line-height: 1.2;
 }
+.flow-hero-slide-desc {
+  max-width: 520px;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.82);
+  margin: 0;
+  line-height: 1.45;
+}
 .flow-hero-slide-cta {
   display: inline-block;
   font-size: 0.9rem;
@@ -10562,6 +10569,22 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 .flow-hero-slide-cta:hover {
   color: var(--color-white);
+  opacity: 1;
+}
+.flow-hero-cursor {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0) 60%);
+  pointer-events: none;
+  opacity: 0;
+  filter: blur(30px);
+  transform: translate(-9999px, -9999px);
+  transition: opacity 0.25s ease;
+  z-index: 2;
+}
+.flow-hero-cursor.is-visible {
   opacity: 1;
 }
 .flow-hero-empty {

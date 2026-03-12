@@ -38,6 +38,9 @@ class FlowCatalogView extends BaseView {
       return;
     }
     localStorage.setItem('selectedOrganizationId', this.organizationId);
+    if (document && document.body) {
+      document.body.classList.add('route-flows');
+    }
     this.selectedSubcategoryId = this.routeParams?.subcategoryId || null;
     this.selectedCategoryId = this.routeParams?.categoryId || null;
   }
@@ -138,6 +141,7 @@ class FlowCatalogView extends BaseView {
 
           <!-- HERO: carrusel full-bleed por categoría, auto-avance, sin flechas -->
           <section class="flow-catalog-hero-section" id="flowCatalogHeroSection">
+            <div class="flow-hero-cursor" id="flowHeroCursor"></div>
             <div class="flow-catalog-hero-track" id="flowCatalogHeroTrack"></div>
           </section>
 
@@ -649,6 +653,7 @@ class FlowCatalogView extends BaseView {
    */
   renderHeroSlide(category) {
     const name = this.escapeHtml(category.name);
+    const desc = category.description ? this.escapeHtml(category.description.slice(0, 140)) + (category.description.length > 140 ? '…' : '') : '';
     const coverUrl = category.cover_url || '';
     const isVideo = (category.cover_type || '').toLowerCase() === 'video';
     const bg = coverUrl
@@ -662,7 +667,7 @@ class FlowCatalogView extends BaseView {
         <div class="flow-hero-slide-overlay">
           <div class="flow-hero-slide-content">
             <h2 class="flow-hero-slide-title">${name}</h2>
-            <span class="flow-hero-slide-cta" data-category-id="${this.escapeHtml(category.id)}">Ver flows</span>
+            ${desc ? `<p class="flow-hero-slide-desc">${desc}</p>` : ''}
           </div>
         </div>
       </div>
@@ -674,6 +679,7 @@ class FlowCatalogView extends BaseView {
     const list = onHome ? this.getHeroCategories() : [];
     const section = document.getElementById('flowCatalogHeroSection');
     const track = document.getElementById('flowCatalogHeroTrack');
+    const cursor = document.getElementById('flowHeroCursor');
     if (!section || !track) return;
     if (this.heroAutoAdvanceTimer) {
       clearInterval(this.heroAutoAdvanceTimer);
@@ -706,6 +712,20 @@ class FlowCatalogView extends BaseView {
       slide.addEventListener('mouseenter', () => { video.play().catch(() => {}); });
       slide.addEventListener('mouseleave', () => { video.pause(); });
     });
+    if (cursor && !section._heroCursorBound) {
+      section._heroCursorBound = true;
+      const showCursor = () => { cursor.classList.add('is-visible'); };
+      const hideCursor = () => { cursor.classList.remove('is-visible'); };
+      const moveCursor = (e) => {
+        const rect = section.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        cursor.style.transform = `translate(${x - cursor.offsetWidth / 2}px, ${y - cursor.offsetHeight / 2}px)`;
+      };
+      section.addEventListener('mouseenter', showCursor);
+      section.addEventListener('mouseleave', hideCursor);
+      section.addEventListener('mousemove', moveCursor);
+    }
     if (list.length > 1) {
       this.heroAutoAdvanceTimer = setInterval(() => {
         const maxScroll = track.scrollWidth - track.offsetWidth;
@@ -713,6 +733,16 @@ class FlowCatalogView extends BaseView {
         const next = track.scrollLeft + track.offsetWidth;
         track.scrollTo({ left: next > maxScroll ? 0 : next, behavior: 'smooth' });
       }, 40000);
+    }
+  }
+
+  async onLeave() {
+    if (this.heroAutoAdvanceTimer) {
+      clearInterval(this.heroAutoAdvanceTimer);
+      this.heroAutoAdvanceTimer = null;
+    }
+    if (document && document.body) {
+      document.body.classList.remove('route-flows');
     }
   }
 
