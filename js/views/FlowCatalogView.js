@@ -280,7 +280,8 @@ class FlowCatalogView extends BaseView {
         let q = this.supabase
           .from('content_flows')
           .select('id, name, description, token_cost, output_type, flow_image_url, category_id, subcategory_id, flow_category_type, likes_count, saves_count, run_count, created_at, status, version, execution_mode')
-          .eq('is_active', true);
+          .eq('is_active', true)
+          .neq('flow_category_type', 'system'); // Flujos system nunca aparecen en catálogo
         if (this.selectedSubcategoryId) q = q.eq('subcategory_id', this.selectedSubcategoryId);
         else if (this.selectedCategoryId) q = q.eq('category_id', this.selectedCategoryId);
         return q;
@@ -598,7 +599,9 @@ class FlowCatalogView extends BaseView {
     const badges = [];
     if (this.isNew(flow)) badges.push('<span class="flow-card-badge flow-card-badge--new">Nuevo</span>');
     if (this.isTrending(flow)) badges.push('<span class="flow-card-badge flow-card-badge--trending">Trending</span>');
-    if ((flow.flow_category_type || 'manual') === 'automated') badges.push('<span class="flow-card-badge flow-card-badge--auto">Automated</span>');
+    const t = flow.flow_category_type || 'manual';
+    const isAutopilotLike = (t === 'autopilot' || t === 'scraping');
+    if (isAutopilotLike) badges.push('<span class="flow-card-badge flow-card-badge--auto">Autopilot</span>');
     const img = flow.flow_image_url
       ? `<img src="${this.escapeHtml(flow.flow_image_url)}" alt="${name}" class="flow-card-img" loading="lazy">`
       : `<div class="flow-card-placeholder"><i class="fas ${this.getOutputTypeIcon(flow.output_type)}"></i></div>`;
@@ -606,7 +609,7 @@ class FlowCatalogView extends BaseView {
     const tags = [];
     if (flow._categoryName) tags.push(this.escapeHtml(flow._categoryName));
     if (flow._subcategoryName) tags.push(this.escapeHtml(flow._subcategoryName));
-    if ((flow.flow_category_type || 'manual') === 'automated') tags.push('Automated');
+    if (isAutopilotLike) tags.push('Autopilot');
     const tagsHtml = tags.map(t => `<span class="flow-card-tag">${t}</span>`).join('');
 
     const categoryName = flow._categoryName ? this.escapeHtml(flow._categoryName) : '—';

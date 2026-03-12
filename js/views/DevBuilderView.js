@@ -19,6 +19,7 @@ class DevBuilderView extends DevBaseView {
       category_id: null,
       subcategory_id: null,
       output_type: 'text',
+      // Valores posibles en BD: manual | autopilot | system | scraping
       flow_category_type: 'manual',
       token_cost: 1,
       flow_image_url: null,
@@ -208,11 +209,11 @@ class DevBuilderView extends DevBaseView {
                   <input type="hidden" id="flowType" value="manual">
                   <div class="flow-type-picker" id="flowTypePicker" role="listbox" aria-label="Tipo de flujo">
                     <div class="flow-type-picker-option" data-value="manual" role="option">Manual</div>
-                    <div class="flow-type-picker-option" data-value="automated" role="option"><i class="ph ph-check"></i> Automatizado (sistema)</div>
+                    <div class="flow-type-picker-option" data-value="autopilot" role="option"><i class="ph ph-check"></i> Autopilot / Scraping</div>
                   </div>
                 </div>
               </div>
-              <span class="field-help block">Los flujos automatizados no aparecen en la librería de usuarios.</span>
+              <span class="field-help block">Los flujos Autopilot / Scraping no aparecen en la librería de usuarios.</span>
             </div>
           </div>
 
@@ -783,7 +784,10 @@ class DevBuilderView extends DevBaseView {
   }
 
   applyFlowTypeUI() {
-    this.isAutomatedFlow = this.flowData.flow_category_type === 'automated';
+    const type = this.flowData.flow_category_type || 'manual';
+    const isAutopilotLike = (type === 'autopilot' || type === 'scraping');
+    const isSystem = type === 'system';
+    this.isAutomatedFlow = isAutopilotLike;
 
     const main = this.querySelector('.builder-main');
     const componentsSidebar = this.querySelector('.builder-sidebar.builder-components');
@@ -846,8 +850,9 @@ class DevBuilderView extends DevBaseView {
       tokenCostInput.value = this.flowData.token_cost ?? 1;
     }
     if (uiShowInCatalog) {
-      uiShowInCatalog.disabled = false;
-      uiShowInCatalog.checked = !!this.flowData.show_in_catalog;
+      // Flujos de sistema se comportan como manuales pero nunca deben aparecer en catálogo
+      uiShowInCatalog.disabled = isSystem;
+      uiShowInCatalog.checked = isSystem ? false : !!this.flowData.show_in_catalog;
     }
     if (testFlowBtn) testFlowBtn.style.display = '';
     if (tabModules) tabModules.style.display = '';
@@ -1096,15 +1101,15 @@ class DevBuilderView extends DevBaseView {
       }
     });
 
-    // Tipo de flujo: picker Manual / Automatizado + input hidden
+    // Tipo de flujo: picker Manual / Autopilot + input hidden
     const flowTypeInput = this.querySelector('#flowType');
     const flowTypePicker = this.querySelector('#flowTypePicker');
     if (flowTypePicker && flowTypeInput) {
       flowTypePicker.querySelectorAll('.flow-type-picker-option').forEach((opt) => {
         opt.addEventListener('click', () => {
           const v = opt.getAttribute('data-value');
-          if (v === 'automated' && !this.isLead()) {
-            this.showNotification('Solo los Lead pueden crear o convertir flujos en automatizados.', 'warning');
+          if (v === 'autopilot' && !this.isLead()) {
+            this.showNotification('Solo los Lead pueden crear o convertir flujos en modo Autopilot/Scraping.', 'warning');
             return;
           }
           flowTypeInput.value = v;
@@ -1115,9 +1120,9 @@ class DevBuilderView extends DevBaseView {
     if (flowTypeInput) {
       flowTypeInput.addEventListener('change', (e) => {
         const v = e.target.value;
-        if (v === 'automated' && !this.isLead()) {
+        if (v === 'autopilot' && !this.isLead()) {
           e.target.value = this.flowData.flow_category_type || 'manual';
-          this.showNotification('Solo los Lead pueden crear o convertir flujos en automatizados.', 'warning');
+          this.showNotification('Solo los Lead pueden crear o convertir flujos en modo Autopilot/Scraping.', 'warning');
           this.updateFlowTypePicker(e.target.value);
           return;
         }

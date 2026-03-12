@@ -358,7 +358,8 @@ class StudioView extends BaseView {
    * o automático (solo hero + formulario de programación, sin sidebar ni canvas).
    */
   applyStudioMode(flow) {
-    const isAutomated = flow && (flow.flow_category_type === 'automated');
+    const type = flow && flow.flow_category_type ? flow.flow_category_type : 'manual';
+    const isAutomated = (type === 'autopilot' || type === 'scraping');
     const container = document.getElementById('studioContainer');
     const canvasEl = document.getElementById('studioCanvas');
     const automatedWrap = document.getElementById('studioAutomatedWrap');

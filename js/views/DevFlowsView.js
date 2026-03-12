@@ -257,8 +257,10 @@ class DevFlowsView extends DevBaseView {
     if (this.isTrending(flow)) {
       badges.push('<span class="flow-card-badge flow-card-badge--trending">Trending</span>');
     }
-    if ((flow.flow_category_type || 'manual') === 'automated') {
-      badges.push('<span class="flow-card-badge flow-card-badge--auto">Automated</span>');
+    const t = flow.flow_category_type || 'manual';
+    const isAutopilotLike = (t === 'autopilot' || t === 'scraping');
+    if (isAutopilotLike) {
+      badges.push('<span class="flow-card-badge flow-card-badge--auto">Autopilot</span>');
     }
 
     const img = flow.flow_image_url
@@ -268,7 +270,7 @@ class DevFlowsView extends DevBaseView {
     const tags = [];
     if (flow.content_categories?.name) tags.push(this.escapeHtml(flow.content_categories.name));
     if (flow.content_subcategories?.name) tags.push(this.escapeHtml(flow.content_subcategories.name));
-    if ((flow.flow_category_type || 'manual') === 'automated') tags.push('Automated');
+    if (isAutopilotLike) tags.push('Autopilot');
     const tagsHtml = tags.map(t => `<span class="flow-card-tag">${t}</span>`).join('');
 
     const categoryName = flow.content_categories?.name ? this.escapeHtml(flow.content_categories.name) : '—';

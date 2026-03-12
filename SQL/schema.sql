@@ -280,7 +280,7 @@ CREATE TABLE public.content_flows (
   created_at timestamp with time zone DEFAULT now(),
   flow_image_url text,
   description text,
-  flow_category_type text DEFAULT 'manual'::text CHECK (flow_category_type = ANY (ARRAY['manual'::text, 'automated'::text])),
+  flow_category_type text DEFAULT 'manual'::text CHECK (flow_category_type = ANY (ARRAY['manual'::text, 'autopilot'::text, 'system'::text, 'scraping'::text])),
   token_cost integer DEFAULT 1,
   owner_id uuid,
   version text DEFAULT '1.0.0'::text,
@@ -669,7 +669,7 @@ CREATE TABLE public.ui_component_templates (
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   template_level text DEFAULT 'core'::text CHECK (template_level = ANY (ARRAY['shell'::text, 'core'::text, 'preset'::text, 'domain'::text])),
-  for_flow_type text CHECK (for_flow_type IS NULL OR (for_flow_type = ANY (ARRAY['manual'::text, 'automated'::text]))),
+  for_flow_type text CHECK (for_flow_type IS NULL OR (for_flow_type = ANY (ARRAY['manual'::text, 'autopilot'::text, 'system'::text, 'scraping'::text]))),
   CONSTRAINT ui_component_templates_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.user_flow_favorites (
