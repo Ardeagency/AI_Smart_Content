@@ -36,7 +36,7 @@ Resumen de **todos** los patrones de contenedores que muestran imágenes o medio
 | **Flow card** | `.flow-card`, `.flow-card-media`, `.flow-card-img`, `.flow-card-media-veil`, `.flow-card-placeholder` | Card de flujo (imagen + overlay) |
 | **Flow card overlay** | `.flow-card-overlay--default`, `.flow-card-overlay--hover`, `.flow-card-hover-content`, `.flow-card-badges`, `.flow-card-badge` | Overlays y badges |
 | **Categoría catálogo** | `.flow-catalog-category-card`, `.flow-catalog-category-card-name` | Cards de categoría en catálogo |
-| **Hero slide** | `.flow-hero-slide-media`, `.flow-hero-slide-img` | Media en slides del hero |
+| **Hero por categoría** | `.flow-category-hero`, `.flow-category-hero-media`, `.flow-category-hero-overlay`, `.flow-category-hero-title` | Portada principal por categoría (cover de content_categories) |
 
 ---
 

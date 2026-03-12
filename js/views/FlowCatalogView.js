@@ -136,11 +136,9 @@ class FlowCatalogView extends BaseView {
             <p class="flow-catalog-empty-text">PROXIMAMENTE</p>
           </div>
 
-          <!-- HERO: carousel horizontal (nuevos en home / populares en categoría) -->
-          <section class="flow-catalog-hero-section" id="flowCatalogHeroSection">
-            <div class="flow-catalog-hero-track" id="flowCatalogHeroTrack"></div>
-            <button type="button" class="flow-catalog-hero-nav flow-catalog-hero-prev" id="heroPrev" aria-label="Anterior"><i class="fas fa-chevron-left"></i></button>
-            <button type="button" class="flow-catalog-hero-nav flow-catalog-hero-next" id="heroNext" aria-label="Siguiente"><i class="fas fa-chevron-right"></i></button>
+          <!-- HERO: una portada principal por categoría (cover de content_categories) -->
+          <section class="flow-catalog-hero-section flow-catalog-hero-by-category" id="flowCatalogHeroSection">
+            <div class="flow-catalog-hero-categories" id="flowCatalogHeroCategories"></div>
           </section>
 
           ${!isCategoryView ? `
@@ -212,7 +210,6 @@ class FlowCatalogView extends BaseView {
     } else {
       this.renderSectionAllFlows();
     }
-    this.bindHeroNav();
     this.bindCategoryClicks();
 
     const emptyEl = document.getElementById('flowCatalogEmpty');
@@ -244,7 +241,7 @@ class FlowCatalogView extends BaseView {
     try {
       const { data, error } = await this.supabase
         .from('content_categories')
-        .select('id, name, description, order_index')
+        .select('id, name, description, order_index, cover_url, cover_type, cover_storage_path')
         .order('order_index', { ascending: true, nullsFirst: false })
         .order('name');
       this.categories = !error && data ? data : [];
@@ -360,18 +357,6 @@ class FlowCatalogView extends BaseView {
   getPublishedFlows() {
     const published = this.flows.filter(f => f.status === 'published');
     return published.length > 0 ? published : this.flows;
-  }
-
-  getHeroFlows() {
-    const published = this.getPublishedFlows();
-    if (this.selectedCategoryId || this.selectedSubcategoryId) {
-      return [...published].sort((a, b) => {
-        const scoreA = (a.run_count || 0) + (a.likes_count || 0) + (a.saves_count || 0);
-        const scoreB = (b.run_count || 0) + (b.likes_count || 0) + (b.saves_count || 0);
-        return scoreB - scoreA;
-      }).slice(0, 10);
-    }
-    return [...published].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 10);
   }
 
   getSavedFlows() {
@@ -645,45 +630,59 @@ class FlowCatalogView extends BaseView {
     `;
   }
 
-  renderHeroSlide(flow) {
-    const name = this.escapeHtml(flow.name);
-    const desc = flow.description ? this.escapeHtml(flow.description.slice(0, 120)) + (flow.description.length > 120 ? '…' : '') : '';
-    const img = flow.flow_image_url
-      ? `<img src="${this.escapeHtml(flow.flow_image_url)}" alt="" class="flow-hero-slide-img">`
-      : `<div class="flow-hero-slide-placeholder"><i class="fas ${this.getOutputTypeIcon(flow.output_type)}"></i></div>`;
+  /**
+   * Renderiza una portada hero por categoría (cover de content_categories).
+   * Solo en vista home: una portada principal por categoría, sin carrusel.
+   */
+  renderCategoryHeroBlock(category) {
+    const name = this.escapeHtml(category.name);
+    const desc = category.description ? this.escapeHtml(category.description.slice(0, 160)) + (category.description.length > 160 ? '…' : '') : '';
+    const coverUrl = category.cover_url || '';
+    const isVideo = (category.cover_type || '').toLowerCase() === 'video';
+    const mediaHtml = coverUrl
+      ? (isVideo
+          ? `<video class="flow-category-hero-media flow-category-hero-video" src="${this.escapeHtml(coverUrl)}" muted loop playsinline aria-hidden="true"></video>`
+          : `<img src="${this.escapeHtml(coverUrl)}" alt="" class="flow-category-hero-media flow-category-hero-img" loading="lazy">`)
+      : `<div class="flow-category-hero-placeholder"><i class="fas fa-layer-group"></i></div>`;
+    const path = this.getCatalogPath(category.id);
     return `
-      <div class="flow-hero-slide" data-flow-id="${flow.id}">
-        <div class="flow-hero-slide-inner">
-          <div class="flow-hero-slide-content">
-            <h2 class="flow-hero-slide-title">${this.escapeHtml(flow.description ? flow.description.slice(0, 50) : flow.name)}</h2>
-            <p class="flow-hero-slide-sub">${name}</p>
-            ${desc ? `<p class="flow-hero-slide-desc">${desc}</p>` : ''}
-            <button type="button" class="flow-hero-slide-cta" data-flow-id="${flow.id}">Iniciar flujo</button>
-          </div>
-          <div class="flow-hero-slide-media">${img}</div>
+      <a href="${this.escapeHtml(path)}" class="flow-category-hero" data-category-id="${this.escapeHtml(category.id)}">
+        <div class="flow-category-hero-media-wrap">${mediaHtml}</div>
+        <div class="flow-category-hero-overlay">
+          <h2 class="flow-category-hero-title">${name}</h2>
+          ${desc ? `<p class="flow-category-hero-desc">${desc}</p>` : ''}
+          <span class="flow-category-hero-cta">Ver flows</span>
         </div>
-      </div>
+      </a>
     `;
   }
 
   renderHero() {
-    const list = this.getHeroFlows();
     const section = document.getElementById('flowCatalogHeroSection');
-    const track = document.getElementById('flowCatalogHeroTrack');
-    if (!section || !track) return;
-    if (list.length === 0) {
+    const container = document.getElementById('flowCatalogHeroCategories');
+    if (!section || !container) return;
+    const onHome = !this.selectedCategoryId && !this.selectedSubcategoryId;
+    if (!onHome || this.categories.length === 0) {
       section.style.display = 'none';
       return;
     }
     section.style.display = '';
-    track.innerHTML = list.map(f => this.renderHeroSlide(f)).join('');
-    track.querySelectorAll('.flow-hero-slide-cta, .flow-hero-slide').forEach(el => {
-      const flowId = el.dataset.flowId || el.closest('[data-flow-id]')?.dataset?.flowId;
-      if (flowId) {
-        el.addEventListener('click', (e) => {
-          if (e.target.classList.contains('flow-hero-slide-cta')) e.preventDefault();
-          this.openFlow(flowId);
-        });
+    container.innerHTML = this.categories.map(cat => this.renderCategoryHeroBlock(cat)).join('');
+    container.querySelectorAll('.flow-category-hero').forEach(link => {
+      link.addEventListener('click', (e) => {
+        const id = link.getAttribute('data-category-id');
+        const path = id ? this.getCatalogPath(id) : this.getCatalogBasePath();
+        if (window.router) {
+          e.preventDefault();
+          window.router.navigate(path);
+        }
+      });
+    });
+    container.querySelectorAll('.flow-category-hero-video').forEach(video => {
+      const wrap = video.closest('.flow-category-hero');
+      if (wrap) {
+        wrap.addEventListener('mouseenter', () => { video.play().catch(() => {}); });
+        wrap.addEventListener('mouseleave', () => { video.pause(); });
       }
     });
   }
@@ -896,19 +895,6 @@ class FlowCatalogView extends BaseView {
       const subId = row.querySelector('.flow-card')?.closest('.flow-catalog-sub-row')?.dataset?.subcategoryId;
       if (subId) row.dataset.subcategoryId = subId;
     });
-  }
-
-  bindHeroNav() {
-    const track = document.getElementById('flowCatalogHeroTrack');
-    const prev = document.getElementById('heroPrev');
-    const next = document.getElementById('heroNext');
-    if (!track || !prev || !next) return;
-    const scroll = (dir) => {
-      const step = track.offsetWidth * 0.8;
-      track.scrollBy({ left: dir * step, behavior: 'smooth' });
-    };
-    prev.addEventListener('click', () => scroll(-1));
-    next.addEventListener('click', () => scroll(1));
   }
 
   bindCategoryClicks() {

@@ -10469,77 +10469,44 @@ body.production-filters-in-header .living-container > .living-history-section {
   margin-bottom: 2rem;
   overflow: hidden;
 }
-.flow-catalog-hero-track {
-  display: flex;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  gap: 0;
-  padding: 0 3rem;
-}
-.flow-catalog-hero-track::-webkit-scrollbar { height: 6px; }
-.flow-catalog-hero-track::-webkit-scrollbar-thumb { background: var(--icon-button); border-radius: 3px; }
 
-.flow-hero-slide {
-  flex: 0 0 100%;
-  scroll-snap-align: start;
-  min-height: 320px;
+/* Hero por categoría: una portada principal por categoría (sin carrusel) */
+.flow-catalog-hero-by-category .flow-catalog-hero-categories {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 0 1rem;
 }
-.flow-hero-slide-inner {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  align-items: center;
-  min-height: 320px;
-  padding: 2rem 2.5rem;
-  background: linear-gradient(135deg, var(--bg-hover) 0%, var(--black-50) 50%);
+.flow-category-hero {
+  position: relative;
+  display: block;
+  min-height: 220px;
   border-radius: var(--radius-lg);
-  margin: 0 0.5rem;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
   border: 1px solid var(--border-divider);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
-@media (max-width: 768px) {
-  .flow-hero-slide-inner { grid-template-columns: 1fr; padding: 1.5rem; }
-  .flow-hero-slide-media { order: -1; }
+.flow-category-hero:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
 }
-.flow-hero-slide-title {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 0.5rem 0;
-  line-height: 1.3;
+.flow-category-hero-media-wrap {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--bg-hover) 0%, var(--black-50) 50%);
 }
-.flow-hero-slide-sub {
-  font-size: 0.95rem;
-  color: var(--text-secondary);
-  margin: 0 0 0.75rem 0;
+.flow-category-hero-media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
 }
-.flow-hero-slide-desc {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  margin: 0 0 1.25rem 0;
-  line-height: 1.45;
+.flow-category-hero-video {
+  pointer-events: none;
 }
-.flow-hero-slide-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #000000;
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-    transition: var(--transition);
-}
-.flow-hero-slide-cta:hover {
-  background: #f3f4f6;
-  color: #000000;
-  transform: translateY(-1px);
-}
-.flow-hero-slide-placeholder {
+.flow-category-hero-placeholder {
   width: 100%;
   height: 100%;
   display: flex;
@@ -10547,7 +10514,56 @@ body.production-filters-in-header .living-container > .living-history-section {
   justify-content: center;
   color: var(--text-muted);
   font-size: 3rem;
+  background: var(--black-40);
 }
+.flow-category-hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  padding: 1.75rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.35) 45%, transparent 70%);
+  color: var(--color-white);
+}
+.flow-category-hero-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 0.35rem 0;
+  line-height: 1.25;
+  color: var(--color-white);
+}
+.flow-category-hero-desc {
+  font-size: 0.9rem;
+  color: var(--white-95);
+  margin: 0 0 0.75rem 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.flow-category-hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-white);
+  opacity: 0.95;
+  transition: opacity 0.2s ease;
+}
+.flow-category-hero:hover .flow-category-hero-cta {
+  opacity: 1;
+}
+@media (min-width: 769px) {
+  .flow-category-hero { min-height: 280px; }
+  .flow-category-hero-overlay { min-height: 280px; padding: 2rem 2rem; }
+  .flow-category-hero-title { font-size: 1.75rem; }
+}
+
 .flow-hero-empty {
   display: flex;
   align-items: center;
@@ -10555,30 +10571,6 @@ body.production-filters-in-header .living-container > .living-history-section {
   min-height: 200px;
   color: var(--text-muted);
 }
-
-.flow-catalog-hero-nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: var(--black-50);
-  border: 1px solid var(--white-15);
-  color: var(--color-white);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2;
-    transition: var(--transition);
-}
-.flow-catalog-hero-nav:hover {
-  background: var(--bg-hover);
-  transform: translateY(-50%) scale(1.05);
-}
-.flow-catalog-hero-prev { left: 0.5rem; }
-.flow-catalog-hero-next { right: 0.5rem; }
 
 /* ---------- ROW SECTIONS ---------- */
 .flow-catalog-row-section {
