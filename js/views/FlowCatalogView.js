@@ -141,7 +141,6 @@ class FlowCatalogView extends BaseView {
 
           <!-- HERO: carrusel full-bleed por categoría, auto-avance, sin flechas -->
           <section class="flow-catalog-hero-section" id="flowCatalogHeroSection">
-            <div class="flow-hero-cursor" id="flowHeroCursor"></div>
             <div class="flow-catalog-hero-track" id="flowCatalogHeroTrack"></div>
           </section>
 
@@ -679,7 +678,6 @@ class FlowCatalogView extends BaseView {
     const list = onHome ? this.getHeroCategories() : [];
     const section = document.getElementById('flowCatalogHeroSection');
     const track = document.getElementById('flowCatalogHeroTrack');
-    const cursor = document.getElementById('flowHeroCursor');
     if (!section || !track) return;
     if (this.heroAutoAdvanceTimer) {
       clearInterval(this.heroAutoAdvanceTimer);
@@ -712,20 +710,6 @@ class FlowCatalogView extends BaseView {
       slide.addEventListener('mouseenter', () => { video.play().catch(() => {}); });
       slide.addEventListener('mouseleave', () => { video.pause(); });
     });
-    if (cursor && !section._heroCursorBound) {
-      section._heroCursorBound = true;
-      const showCursor = () => { cursor.classList.add('is-visible'); };
-      const hideCursor = () => { cursor.classList.remove('is-visible'); };
-      const moveCursor = (e) => {
-        const rect = section.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        cursor.style.transform = `translate(${x - cursor.offsetWidth / 2}px, ${y - cursor.offsetHeight / 2}px)`;
-      };
-      section.addEventListener('mouseenter', showCursor);
-      section.addEventListener('mouseleave', hideCursor);
-      section.addEventListener('mousemove', moveCursor);
-    }
     if (list.length > 1) {
       this.heroAutoAdvanceTimer = setInterval(() => {
         const maxScroll = track.scrollWidth - track.offsetWidth;
