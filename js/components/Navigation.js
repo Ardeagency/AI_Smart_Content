@@ -644,19 +644,7 @@ class Navigation {
           <button type="button" class="nav-sidebar-toggle" id="sidebarToggleBtn" aria-label="Abrir o cerrar menú">
             ${SIDEBAR_TOGGLE_ICON_DESPLEGADO}
           </button>
-        </div>
-        <div class="nav-identity-section">
-          <div class="nav-identity-card dev-identity" id="navIdentityCard">
-            <div class="nav-identity-content">
-              <div class="nav-dev-icon" id="navDevIcon">
-                <i class="fas fa-code"></i>
-              </div>
-              <div class="nav-identity-info">
-                <div class="nav-org-name" id="navDevName">DEVELOPER PORTAL</div>
-                <div class="nav-org-type" id="navDevTier">—</div>
-              </div>
-            </div>
-          </div>
+          <span class="nav-dev-header-name" id="navDevHeaderName">DEVELOPER PORTAL</span>
         </div>
 
         <div class="nav-menu" role="navigation" aria-label="Menú desarrollador">
@@ -1660,20 +1648,9 @@ class Navigation {
     if (!this._devCache) return;
     const { profile, runsCount, avgRating, email } = this._devCache;
 
-    const iconWrap = document.getElementById('navDevIcon');
-    if (iconWrap && profile?.full_name) {
-      const initials = (profile.full_name || profile.email || 'D').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-      iconWrap.innerHTML = `<span class="nav-dev-initials">${initials}</span>`;
-    }
-    const nameEl = document.getElementById('navDevName');
-    if (nameEl) nameEl.textContent = profile?.full_name?.trim() || profile?.email?.trim() || email || 'DEVELOPER PORTAL';
-
-    const tierEl = document.getElementById('navDevTier');
-    if (tierEl && profile) {
-      const role = profile.dev_role ? String(profile.dev_role).replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '';
-      const rank = profile.dev_rank ? String(profile.dev_rank).replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '';
-      const parts = [role, rank].filter(Boolean);
-      tierEl.textContent = parts.length ? parts.join(' · ') : '—';
+    const headerNameEl = document.getElementById('navDevHeaderName');
+    if (headerNameEl) {
+      headerNameEl.textContent = profile?.full_name?.trim() || profile?.email?.trim() || email || 'DEVELOPER PORTAL';
     }
 
     const leadSection = document.getElementById('navLeadSection');
