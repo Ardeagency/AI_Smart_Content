@@ -148,9 +148,10 @@ class DevBuilderView extends DevBaseView {
                   <input type="file" id="flowImageInput" accept="image/*,video/*" style="display: none;">
                 </div>
                 <div class="builder-config-meta">
-                  <label class="toggle-field">
-                    <input type="checkbox" id="uiShowInCatalog" checked>
-                    <span>Mostrar en catálogo</span>
+                  <label class="toggle-switch-row">
+                    <input type="checkbox" id="uiShowInCatalog" checked class="toggle-switch-input">
+                    <span class="toggle-switch" aria-hidden="true"></span>
+                    <span class="toggle-switch-label">Mostrar en catálogo</span>
                   </label>
                   <div class="settings-field">
                     <label for="flowVersion">Versión</label>
@@ -178,11 +179,11 @@ class DevBuilderView extends DevBaseView {
                 <div class="settings-field">
                   <label for="flowTypePicker">Tipo de flujo</label>
                   <input type="hidden" id="flowType" value="manual">
-                  <div class="flow-type-picker flow-type-picker--four" id="flowTypePicker" role="listbox" aria-label="Tipo de flujo">
-                    <div class="flow-type-picker-option" data-value="manual" role="option" title="Input 100% dinámico">Manual</div>
-                    <div class="flow-type-picker-option" data-value="system" role="option" title="Funciones de plataforma">System</div>
-                    <div class="flow-type-picker-option" data-value="autopilot" role="option" title="Generación programable">Autopilot</div>
-                    <div class="flow-type-picker-option" data-value="scraping" role="option" title="Scrapeo">Scraping</div>
+                  <div class="flow-type-tabs" id="flowTypePicker" role="tablist" aria-label="Tipo de flujo">
+                    <button type="button" class="flow-type-tab" role="tab" data-value="manual" title="Input 100% dinámico">Manual</button>
+                    <button type="button" class="flow-type-tab" role="tab" data-value="system" title="Funciones de plataforma">System</button>
+                    <button type="button" class="flow-type-tab" role="tab" data-value="autopilot" title="Generación programable">Autopilot</button>
+                    <button type="button" class="flow-type-tab" role="tab" data-value="scraping" title="Scrapeo">Scraping</button>
                   </div>
                 </div>
                 <div class="settings-field">
@@ -771,9 +772,11 @@ class DevBuilderView extends DevBaseView {
   updateFlowTypePicker(value) {
     const picker = this.querySelector('#flowTypePicker');
     if (!picker) return;
-    picker.querySelectorAll('.flow-type-picker-option').forEach((opt) => {
-      const optValue = opt.getAttribute('data-value');
-      opt.classList.toggle('is-selected', optValue === value);
+    picker.querySelectorAll('.flow-type-tab').forEach((tab) => {
+      const tabValue = tab.getAttribute('data-value');
+      const selected = tabValue === value;
+      tab.classList.toggle('is-selected', selected);
+      tab.setAttribute('aria-selected', selected ? 'true' : 'false');
     });
   }
 
@@ -1072,9 +1075,9 @@ class DevBuilderView extends DevBaseView {
     const flowTypePicker = this.querySelector('#flowTypePicker');
     const leadOnlyTypes = ['autopilot', 'scraping'];
     if (flowTypePicker && flowTypeInput) {
-      flowTypePicker.querySelectorAll('.flow-type-picker-option').forEach((opt) => {
-        opt.addEventListener('click', () => {
-          const v = opt.getAttribute('data-value');
+      flowTypePicker.querySelectorAll('.flow-type-tab').forEach((tab) => {
+        tab.addEventListener('click', () => {
+          const v = tab.getAttribute('data-value');
           if (leadOnlyTypes.includes(v) && !this.isLead()) {
             this.showNotification('Solo los Lead pueden crear o convertir flujos en Autopilot o Scraping.', 'warning');
             return;
@@ -1100,6 +1103,7 @@ class DevBuilderView extends DevBaseView {
         this.renderFooter();
       });
     }
+    this.updateFlowTypePicker(this.flowData.flow_category_type || 'manual');
 
     const uiShowInCatalog = this.querySelector('#uiShowInCatalog');
     if (uiShowInCatalog) {
