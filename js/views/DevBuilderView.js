@@ -356,35 +356,21 @@ class DevBuilderView extends DevBaseView {
             </div>
           </div>
 
-          <!-- Tab 4: Ficha del Flujo (vista oficial: imagen, nombre, descripción, inputs preview, métricas si publicado) -->
+          <!-- Tab 4: Ficha del Flujo: visualización de la card de flow + visualización del formulario -->
           <div class="builder-tab-content" id="tabFicha">
             <div class="builder-ficha-wrapper" id="builderFichaWrapper">
-              <div class="ficha-card" id="fichaCard">
-                <div class="ficha-image" id="fichaImage">
-                  <i class="ph ph-image"></i>
-                  <span>Sin imagen</span>
+              <section class="ficha-section ficha-section--card" aria-labelledby="fichaCardHeading">
+                <h3 id="fichaCardHeading" class="ficha-section-title"><i class="ph ph-cardholder"></i> Vista de la card</h3>
+                <div class="ficha-flow-card-wrap" id="fichaFlowCardWrap">
+                  <!-- Se rellena con renderFichaFlowCard() -->
                 </div>
-                <div class="ficha-body">
-                  <h2 class="ficha-title" id="fichaTitle">Nombre del flujo</h2>
-                  <p class="ficha-description" id="fichaDescription">Descripción del flujo.</p>
-                  <div class="ficha-meta" id="fichaMeta">
-                    <span class="ficha-version" id="fichaVersion">v1.0.0</span>
-                    <span class="ficha-credits" id="fichaCredits">— créditos</span>
-                    <span class="ficha-output" id="fichaOutput">—</span>
-                  </div>
-                  <div class="ficha-stats" id="fichaStats" style="display: none;">
-                    <span class="ficha-stat"><i class="ph ph-heart"></i> <strong id="fichaLikes">0</strong> likes</span>
-                    <span class="ficha-stat"><i class="ph ph-bookmark-simple"></i> <strong id="fichaSaves">0</strong> guardados</span>
-                    <span class="ficha-stat"><i class="ph ph-play"></i> <strong id="fichaRuns">0</strong> ejecuciones</span>
-                  </div>
-                </div>
-              </div>
-              <aside class="ficha-sidebar">
-                <h4><i class="ph ph-textbox"></i> Inputs (vista consumidor)</h4>
+              </section>
+              <section class="ficha-section ficha-section--form" aria-labelledby="fichaFormHeading">
+                <h3 id="fichaFormHeading" class="ficha-section-title"><i class="ph ph-textbox"></i> Vista del formulario</h3>
                 <div class="ficha-inputs-preview" id="fichaInputsPreview">
                   <p class="ficha-inputs-empty">Sin campos de entrada.</p>
                 </div>
-              </aside>
+              </section>
             </div>
           </div>
         </div>
@@ -730,46 +716,13 @@ class DevBuilderView extends DevBaseView {
   }
 
   /**
-   * Actualiza la vista "Ficha del Flujo" (tarjeta oficial + preview inputs + métricas si publicado).
+   * Actualiza la vista "Ficha del Flujo": visualización de la card de flow + visualización del formulario.
    */
   renderFicha() {
-    const title = this.querySelector('#fichaTitle');
-    const desc = this.querySelector('#fichaDescription');
-    const imgWrap = this.querySelector('#fichaImage');
-    const version = this.querySelector('#fichaVersion');
-    const credits = this.querySelector('#fichaCredits');
-    const output = this.querySelector('#fichaOutput');
-    const stats = this.querySelector('#fichaStats');
-    const likesEl = this.querySelector('#fichaLikes');
-    const savesEl = this.querySelector('#fichaSaves');
-    const runsEl = this.querySelector('#fichaRuns');
+    const cardWrap = this.querySelector('#fichaFlowCardWrap');
     const inputsPreview = this.querySelector('#fichaInputsPreview');
 
-    if (title) title.textContent = this.flowData.name || 'Sin nombre';
-    if (desc) desc.textContent = this.flowData.description || 'Sin descripción.';
-    if (version) version.textContent = 'v' + (this.flowData.version || '1.0.0');
-    if (credits) credits.textContent = (this.flowData.token_cost ?? 0) + ' créditos por ejecución';
-    if (output) output.textContent = this.flowData.output_type || '—';
-
-    if (imgWrap) {
-      if (this.flowData.flow_image_url) {
-        const url = this.flowData.flow_image_url;
-        const isVideo = /\.(mp4|webm|ogg|mov)$/i.test(url) || url.includes('video');
-        if (isVideo) {
-          imgWrap.innerHTML = `<video src="${url}" alt="" muted playsinline></video>`;
-        } else {
-          imgWrap.innerHTML = `<img src="${url}" alt="">`;
-        }
-      } else {
-        imgWrap.innerHTML = '<i class="ph ph-image"></i><span>Sin imagen</span>';
-      }
-    }
-
-    const isPublished = this.flowData.status === 'published';
-    if (stats) stats.style.display = isPublished ? 'flex' : 'none';
-    if (isPublished && likesEl) likesEl.textContent = this.flowData.likes_count ?? 0;
-    if (isPublished && savesEl) savesEl.textContent = this.flowData.saves_count ?? 0;
-    if (isPublished && runsEl) runsEl.textContent = this.flowData.run_count ?? 0;
+    if (cardWrap) cardWrap.innerHTML = this.renderFichaFlowCard();
 
     if (inputsPreview) {
       if (this.inputSchema.length === 0) {
@@ -778,6 +731,94 @@ class DevBuilderView extends DevBaseView {
         inputsPreview.innerHTML = this.generateFormPreview();
       }
     }
+  }
+
+  /** Icono Phosphor para tipo de output (usado en la card de la ficha). */
+  getOutputTypeIconPhosphor(type) {
+    const t = (type || 'text').toLowerCase();
+    if (t === 'video') return 'ph-video';
+    if (t === 'image' || t === 'imagen') return 'ph-image';
+    if (t === 'audio') return 'ph-music-note';
+    if (t === 'document') return 'ph-file';
+    if (t === 'mixed') return 'ph-stack';
+    return 'ph-text-align-left';
+  }
+
+  getOutputTypeLabel(type) {
+    const t = (type || 'text').toLowerCase();
+    const labels = { text: 'Texto', image: 'Imagen', video: 'Video', audio: 'Audio', document: 'Documento', mixed: 'Mixto' };
+    return labels[t] || t;
+  }
+
+  getExecutionModeLabel(mode) {
+    const m = (mode || 'single_step').toLowerCase();
+    const labels = { single_step: 'Un paso', multi_step: 'Multi paso', sequential: 'Secuencial' };
+    return labels[m] || m;
+  }
+
+  /**
+   * Genera el HTML de la card de flujo como en catálogo (visualización oficial) para la Ficha.
+   */
+  renderFichaFlowCard() {
+    const name = this.escapeHtml(this.flowData.name || 'Sin nombre');
+    const cost = this.flowData.token_cost ?? 1;
+    const likes = this.flowData.likes_count ?? 0;
+    const saves = this.flowData.saves_count ?? 0;
+    const runs = this.flowData.run_count ?? 0;
+    const version = (this.flowData.version || '1.0.0').toString();
+    const type = this.flowData.flow_category_type || 'manual';
+    const isAutopilotLike = (type === 'autopilot' || type === 'scraping');
+
+    const badges = [];
+    if (isAutopilotLike) badges.push('<span class="flow-card-badge flow-card-badge--auto">Autopilot</span>');
+
+    const categoryOpt = this.querySelector('#flowCategory option:checked');
+    const subcategoryOpt = this.querySelector('#flowSubcategory option:checked');
+    const categoryName = categoryOpt ? this.escapeHtml(categoryOpt.textContent.trim()) : '—';
+    const subcategoryName = subcategoryOpt ? this.escapeHtml(subcategoryOpt.textContent.trim()) : '—';
+    const outputTypeLabel = this.getOutputTypeLabel(this.flowData.output_type);
+    const executionLabel = this.getExecutionModeLabel(this.flowData.execution_mode);
+
+    const tags = [];
+    if (categoryOpt?.textContent?.trim()) tags.push(this.escapeHtml(categoryOpt.textContent.trim()));
+    if (subcategoryOpt?.textContent?.trim()) tags.push(this.escapeHtml(subcategoryOpt.textContent.trim()));
+    if (isAutopilotLike) tags.push('Autopilot');
+    const tagsHtml = tags.map(t => `<span class="flow-card-tag">${t}</span>`).join('');
+
+    const img = this.flowData.flow_image_url
+      ? `<img src="${this.escapeHtml(this.flowData.flow_image_url)}" alt="${name}" class="flow-card-img" loading="lazy">`
+      : `<div class="flow-card-placeholder"><i class="ph ${this.getOutputTypeIconPhosphor(this.flowData.output_type)}"></i></div>`;
+
+    return `
+      <article class="flow-card flow-card--catalog flow-card--ficha-preview" aria-hidden="true">
+        <div class="flow-card-media">
+          ${img}
+          <div class="flow-card-media-veil" aria-hidden="true"></div>
+          <div class="flow-card-badges">${badges.join('')}</div>
+          <div class="flow-card-icons flow-card-icons--default">
+            <span class="flow-card-icon-stat" title="Likes"><i class="ph ph-heart"></i><span class="flow-card-icon-count">${likes}</span></span>
+            <span class="flow-card-icon-stat" title="Ejecuciones"><i class="ph ph-play"></i><span class="flow-card-icon-count">${runs}</span></span>
+            <span class="flow-card-icon-stat" title="Guardados"><i class="ph ph-bookmark-simple"></i><span class="flow-card-icon-count">${saves}</span></span>
+          </div>
+          <div class="flow-card-overlay flow-card-overlay--default">
+            <h3 class="flow-card-title">${name}</h3>
+            ${tagsHtml ? `<div class="flow-card-tags flow-card-tags--default">${tagsHtml}</div>` : ''}
+          </div>
+          <div class="flow-card-overlay flow-card-overlay--hover">
+            <div class="flow-card-hover-content">
+              <div class="flow-card-credits">${cost}</div>
+              <div class="flow-card-meta-list">
+                <span class="flow-card-meta-item">${categoryName}</span>
+                <span class="flow-card-meta-item">${subcategoryName}</span>
+                <span class="flow-card-meta-item">${outputTypeLabel}</span>
+                <span class="flow-card-meta-item">${executionLabel}</span>
+                <span class="flow-card-meta-item">v${version}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+    `;
   }
 
   /**

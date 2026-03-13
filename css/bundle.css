@@ -15035,77 +15035,24 @@ body.production-filters-in-header .living-container > .living-history-section {
   margin-top: var(--spacing-sm);
 }
 
-/* Ficha del Flujo */
+/* Ficha del Flujo: visualización de la card + visualización del formulario */
 .builder-ficha-wrapper {
   display: grid;
-  grid-template-columns: 1fr 300px;
+  grid-template-columns: 1fr 1fr;
   gap: var(--spacing-xl);
-  max-width: 900px;
+  max-width: 1000px;
   margin: 0 auto;
+  align-items: start;
 }
 
-.ficha-card {
+.ficha-section {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  overflow: hidden;
-}
-
-.ficha-body {
   padding: var(--spacing-lg);
 }
 
-.ficha-title {
-  margin: 0 0 var(--spacing-md) 0;
-  font-size: var(--font-size-xl);
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.ficha-description {
-  margin: 0 0 var(--spacing-md) 0;
-  font-size: var(--font-size-base);
-  color: var(--text-secondary);
-  line-height: 1.5;
-}
-
-.ficha-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-md);
-  font-size: 0.8125rem;
-  color: var(--text-muted);
-  margin-bottom: var(--spacing-md);
-}
-
-.ficha-stats {
-  display: flex;
-  gap: var(--spacing-md);
-  padding-top: var(--spacing-md);
-  border-top: 1px solid var(--border-color);
-  font-size: var(--font-size-base);
-  color: var(--text-secondary);
-}
-
-.ficha-stats .ficha-stat {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-}
-
-.ficha-stats .ficha-stat i {
-  color: var(--dev-primary);
-}
-
-.ficha-sidebar {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-md);
-  height: fit-content;
-}
-
-.ficha-sidebar h4 {
+.ficha-section-title {
   margin: 0 0 var(--spacing-md) 0;
   font-size: var(--font-size-base);
   font-weight: 600;
@@ -15113,6 +15060,39 @@ body.production-filters-in-header .living-container > .living-history-section {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
+}
+
+.ficha-section-title .ph {
+  color: var(--text-secondary);
+}
+
+/* Contenedor de la card de flujo (mismo estilo que en catálogo) */
+.ficha-flow-card-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 120px;
+}
+
+.flow-card--ficha-preview {
+  pointer-events: none;
+  cursor: default;
+  width: 100%;
+  max-width: 280px;
+  flex: 0 0 auto;
+}
+
+.flow-card--ficha-preview .flow-card-media {
+  aspect-ratio: 4 / 3;
+}
+
+.flow-card--ficha-preview .flow-card-placeholder .ph {
+  font-size: 2.5rem;
+  color: var(--text-muted);
+}
+
+.ficha-section--form .ficha-inputs-preview {
+  margin-top: 0;
 }
 
 .ficha-inputs-preview {
