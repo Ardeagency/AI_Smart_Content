@@ -218,17 +218,6 @@ class DevBuilderView extends DevBaseView {
             <div class="technical-tab-layout">
               <div class="technical-tab-main">
             <div class="builder-settings-form builder-config-fullwidth">
-                  <div class="settings-section technical-section-mode" id="technicalWebhookSection">
-                    <h4 class="technical-section-title"><i class="ph ph-play-circle"></i> Modo de ejecución del flujo</h4>
-                <div class="settings-field">
-                      <label for="executionMode">Modo</label>
-                      <select id="executionMode">
-                        <option value="single_step">Un solo módulo</option>
-                        <option value="multi_step">Varios módulos (lineal)</option>
-                        <option value="sequential">Secuencial con decisiones</option>
-                      </select>
-                </div>
-                </div>
                   <div class="settings-section technical-section-modules">
                     <h4 class="technical-section-title"><i class="ph ph-stack"></i> Módulos del flujo</h4>
                     <div id="technicalModulesList" class="technical-modules-list"></div>
@@ -776,7 +765,6 @@ class DevBuilderView extends DevBaseView {
     const canvasEmpty = this.querySelector('#canvasEmptyState');
     const canvasAutomated = this.querySelector('#canvasAutomatedState');
     const canvasFields = this.querySelector('#canvasFields');
-    const technicalWebhook = this.querySelector('#technicalWebhookSection');
     const tokenCostInput = this.querySelector('#flowTokenCost');
     const uiShowInCatalog = this.querySelector('#uiShowInCatalog');
     const testFlowBtn = this.querySelector('#testFlowBtn');
@@ -810,9 +798,6 @@ class DevBuilderView extends DevBaseView {
     }
     if (canvasFields) {
       canvasFields.style.display = (this.inputSchema.length > 0) ? 'block' : 'none';
-    }
-    if (technicalWebhook) {
-      technicalWebhook.style.display = 'block';
     }
     if (tokenCostInput) {
       tokenCostInput.min = 0;

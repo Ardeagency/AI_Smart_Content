@@ -85,21 +85,17 @@
     }).join('');
   };
 
+  P.syncExecutionModeFromModules = function () {
+    this.flowData.execution_mode = this.flowModules.length <= 1 ? 'single_step' : 'sequential';
+  };
+
   P.setupTechnicalModulesListeners = function () {
-    const executionMode = this.querySelector('#executionMode');
-    if (executionMode) {
-      executionMode.removeEventListener('change', this._boundExecutionModeChange);
-      this._boundExecutionModeChange = () => {
-        this.flowData.execution_mode = executionMode.value;
-        this.onFieldChange();
-      };
-      executionMode.addEventListener('change', this._boundExecutionModeChange);
-    }
     const addBtn = this.querySelector('#technicalAddModuleBtn');
     if (addBtn) {
       addBtn.onclick = () => {
         const nextOrder = this.flowModules.length + 1;
         this.flowModules.push({ name: 'Módulo ' + nextOrder, step_order: nextOrder, execution_type: 'webhook', webhook_url_test: '', webhook_url_prod: '', is_human_approval_required: false, next_module_id: null, output_schema: null, routing_rules: null });
+        this.syncExecutionModeFromModules();
         this.renderTechnicalModulesList();
         this.setupTechnicalModulesListeners();
         this.onFieldChange();
@@ -118,6 +114,7 @@
         if (removeBtn) {
           removeBtn.onclick = () => {
             this.flowModules.splice(idx, 1);
+            this.syncExecutionModeFromModules();
             this.flowModules.forEach((m, i) => { m.step_order = i + 1; });
             this.renderTechnicalModulesList();
             this.setupTechnicalModulesListeners();

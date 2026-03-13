@@ -124,7 +124,9 @@
       }
       // Normalizar input_type en cada campo para que el canvas muestre el cascarón correcto (number, select, checkbox, etc.)
       this.inputSchema = this.inputSchema.map(f => ({ ...f, input_type: f.input_type || f.type || 'text' }));
-      
+      // Modo de ejecución: 1 módulo = lineal (single_step), 2+ = secuencial
+      if (typeof this.syncExecutionModeFromModules === 'function') this.syncExecutionModeFromModules();
+
       // Actualizar UI (manual y automatizado usan la misma interfaz)
       this.populateForm();
       this.applyFlowTypeUI();
@@ -185,11 +187,9 @@
     const uiShowInCatalog = this.querySelector('#uiShowInCatalog');
     if (uiShowInCatalog) uiShowInCatalog.checked = !!this.flowData.show_in_catalog;
     
-    // Técnico: modo de ejecución y lista de módulos
-    const executionMode = this.querySelector('#executionMode');
-    if (executionMode) executionMode.value = this.flowData.execution_mode || 'single_step';
+    // Técnico: lista de módulos; modo de ejecución se deriva del número de módulos (1 = lineal, 2+ = secuencial)
     this.renderTechnicalModulesList();
-    
+    if (typeof this.syncExecutionModeFromModules === 'function') this.syncExecutionModeFromModules();
     this.setupTechnicalModulesListeners();
     
     // Render canvas
@@ -216,6 +216,7 @@
     }
     
     try {
+      if (typeof this.syncExecutionModeFromModules === 'function') this.syncExecutionModeFromModules();
       const flowPayload = {
         name: this.flowData.name.trim(),
         description: this.flowData.description,
