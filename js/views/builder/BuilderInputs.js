@@ -6,6 +6,17 @@
   'use strict';
   const P = DevBuilderView.prototype;
 
+  /** Mapeo de icon_name a nombre de icono Phosphor cuando no coincide (Phosphor no tiene "type", etc.) */
+  const PHOSPHOR_ICON_MAP = {
+    type: 'text-h',
+    placeholder: 'square'
+  };
+
+  P.getPhosphorIconName = function (iconName) {
+    if (!iconName) return 'textbox';
+    return PHOSPHOR_ICON_MAP[iconName] || iconName;
+  };
+
   P.renderComponentsList = function () {
     const container = this.querySelector('#componentsList');
     if (!container) return;
@@ -50,7 +61,7 @@
           <div class="component-group-items component-group-grid">
             ${group.items.map(template => {
               const searchText = [template.name, template.description].filter(Boolean).join(' ').toLowerCase();
-              const iconName = template.icon_name || 'textbox';
+              const iconName = this.getPhosphorIconName(template.icon_name);
               const templateJson = JSON.stringify(template.base_schema).replace(/'/g, '&#39;');
               return `
               <div class="component-item" 

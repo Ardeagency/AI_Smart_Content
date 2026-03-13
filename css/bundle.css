@@ -15523,10 +15523,20 @@ body.production-filters-in-header .living-container > .living-history-section {
   display: none;
 }
 
-.component-item i {
+.component-item i,
+.component-item .ph {
+  display: inline-block;
+  min-width: 1.25em;
+  min-height: 1.25em;
   font-size: var(--font-size-xl);
   color: var(--text-primary);
   flex-shrink: 0;
+  vertical-align: middle;
+  text-align: center;
+}
+.component-item i::before,
+.component-item .ph::before {
+  display: block;
 }
 
 .component-item .component-name {
