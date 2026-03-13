@@ -17,62 +17,76 @@
   DevBuilderView.EXECUTION_TYPES = EXECUTION_TYPES;
 
   P.renderTechnicalModulesList = function () {
-    const listEl = this.querySelector('#technicalModulesList');
-    if (!listEl) return;
-    const executionTypes = EXECUTION_TYPES;
+    const mapEl = this.querySelector('#modulesNodeMap');
+    if (!mapEl) return;
     const mods = this.flowModules.length ? this.flowModules : [{ name: 'Módulo 1', step_order: 1, execution_type: 'webhook', webhook_url_test: '', webhook_url_prod: '', is_human_approval_required: false, next_module_id: null, output_schema: null, routing_rules: null, input_schema: null }];
     if (this.flowModules.length === 0) this.flowModules = mods;
-    listEl.innerHTML = mods.map((m, i) => {
-      const nextOpts = mods.filter((o, j) => j !== i && o.id).map(o => `<option value="${o.id}" ${m.next_module_id === o.id ? 'selected' : ''}>${this.escapeHtml(o.name || 'Módulo')}</option>`).join('');
+    const nodes = mods.map((m, i) => {
+      const name = (m.name || 'Módulo ' + (i + 1)).trim() || 'Módulo ' + (i + 1);
+      const removeBtn = mods.length > 1
+        ? `<button type="button" class="module-node-remove" data-module-index="${i}" title="Quitar módulo" aria-label="Quitar módulo"><i class="ph ph-x"></i></button>`
+        : '';
       return `
-        <div class="technical-module-card" data-module-index="${i}">
-          <div class="technical-module-header">
-            <span class="technical-module-order">${i + 1}</span>
-            <input type="text" class="technical-module-name" data-field="name" value="${this.escapeHtml(m.name || '')}" placeholder="Nombre del módulo">
-            ${mods.length > 1 ? `<button type="button" class="btn-icon technical-module-remove" title="Quitar módulo"><i class="ph ph-trash"></i></button>` : ''}
-          </div>
-          <div class="technical-module-fields">
-            <h5 class="technical-module-subtitle">Configuración técnica del módulo</h5>
-            <div class="settings-row">
-              <div class="settings-field">
-                <label>Tipo ejecución</label>
-                <select class="technical-module-execution" data-field="execution_type">
-                  ${executionTypes.map(et => `<option value="${et.value}" ${(m.execution_type || 'webhook') === et.value ? 'selected' : ''}>${et.label}</option>`).join('')}
-                </select>
-              </div>
-              <div class="settings-field">
-                <label>URL Test</label>
-                <input type="url" class="technical-module-webhook-test" data-field="webhook_url_test" value="${this.escapeHtml(m.webhook_url_test || '')}" placeholder="https://...">
-              </div>
-            </div>
-            <div class="settings-field">
-              <label>URL Producción</label>
-              <input type="url" class="technical-module-webhook-prod" data-field="webhook_url_prod" value="${this.escapeHtml(m.webhook_url_prod || '')}" placeholder="https://...">
-            </div>
-            <div class="settings-row">
-              <label class="technical-module-approval">
-                <input type="checkbox" class="technical-module-human-approval" data-field="is_human_approval_required" ${m.is_human_approval_required ? 'checked' : ''}>
-                <span>Requiere aprobación humana</span>
-              </label>
-            </div>
-            <div class="settings-field">
-              <label>Siguiente módulo</label>
-              <select class="technical-module-next" data-field="next_module_id">
-                <option value="">— Ninguno —</option>
-                ${nextOpts}
-              </select>
-            </div>
-          </div>
-          <div class="technical-module-footer">
-            <button type="button" class="btn-icon btn-ghost technical-module-details-btn" data-module-index="${i}" title="Detalles técnicos de este módulo"><i class="ph ph-wrench"></i></button>
+        <div class="module-node" data-module-index="${i}" title="Doble clic para editar">
+          <div class="module-node-inner">
+            <span class="module-node-order">${i + 1}</span>
+            <span class="module-node-name">${this.escapeHtml(name)}</span>
+            ${removeBtn}
           </div>
         </div>
+        ${i < mods.length - 1 ? '<div class="module-node-connector" aria-hidden="true"></div>' : ''}
       `;
     }).join('');
+    mapEl.innerHTML = nodes;
   };
 
   P.syncExecutionModeFromModules = function () {
     this.flowData.execution_mode = this.flowModules.length <= 1 ? 'single_step' : 'sequential';
+  };
+
+  P.openModuleNodeModal = function (index) {
+    const mod = this.flowModules[index];
+    if (!mod) return;
+    this._moduleNodeModalIndex = index;
+    const nameEl = this.querySelector('#moduleNodeModalName');
+    const typeEl = this.querySelector('#moduleNodeModalExecutionType');
+    const urlTestEl = this.querySelector('#moduleNodeModalUrlTest');
+    const urlProdEl = this.querySelector('#moduleNodeModalUrlProd');
+    const indexEl = this.querySelector('#moduleNodeModalIndex');
+    if (nameEl) nameEl.value = mod.name || '';
+    if (typeEl) typeEl.value = mod.execution_type || 'webhook';
+    if (urlTestEl) urlTestEl.value = mod.webhook_url_test || '';
+    if (urlProdEl) urlProdEl.value = mod.webhook_url_prod || '';
+    if (indexEl) indexEl.value = String(index);
+    const modal = this.querySelector('#moduleNodeModal');
+    if (modal) modal.style.display = 'flex';
+  };
+
+  P.closeModuleNodeModal = function () {
+    const modal = this.querySelector('#moduleNodeModal');
+    if (modal) modal.style.display = 'none';
+    this._moduleNodeModalIndex = null;
+  };
+
+  P.saveModuleNodeModal = function () {
+    const index = this._moduleNodeModalIndex;
+    if (index == null || !this.flowModules[index]) return;
+    const nameEl = this.querySelector('#moduleNodeModalName');
+    const typeEl = this.querySelector('#moduleNodeModalExecutionType');
+    const urlTestEl = this.querySelector('#moduleNodeModalUrlTest');
+    const urlProdEl = this.querySelector('#moduleNodeModalUrlProd');
+    this.flowModules[index].name = (nameEl && nameEl.value.trim()) || 'Módulo ' + (index + 1);
+    this.flowModules[index].execution_type = (typeEl && typeEl.value) || 'webhook';
+    this.flowModules[index].webhook_url_test = (urlTestEl && urlTestEl.value.trim()) || '';
+    this.flowModules[index].webhook_url_prod = (urlProdEl && urlProdEl.value.trim()) || '';
+    if (index === 0) {
+      this.technicalDetails.webhook_url_test = this.flowModules[0].webhook_url_test;
+      this.technicalDetails.webhook_url_prod = this.flowModules[0].webhook_url_prod;
+    }
+    this.closeModuleNodeModal();
+    this.renderTechnicalModulesList();
+    this.setupTechnicalModulesListeners();
+    this.onFieldChange();
   };
 
   P.setupTechnicalModulesListeners = function () {
@@ -87,18 +101,19 @@
         this.onFieldChange();
       };
     }
-    const listEl = this.querySelector('#technicalModulesList');
-    if (listEl) {
-      listEl.querySelectorAll('.technical-module-card').forEach(card => {
-        const idx = parseInt(card.dataset.moduleIndex, 10);
+    const mapEl = this.querySelector('#modulesNodeMap');
+    if (mapEl) {
+      mapEl.querySelectorAll('.module-node').forEach(nodeEl => {
+        const idx = parseInt(nodeEl.dataset.moduleIndex, 10);
         if (isNaN(idx)) return;
-        card.querySelectorAll('[data-field]').forEach(el => {
-          el.addEventListener('input', () => this.syncModuleField(idx, el.dataset.field, el.type === 'checkbox' ? el.checked : el.value));
-          el.addEventListener('change', () => this.syncModuleField(idx, el.dataset.field, el.type === 'checkbox' ? el.checked : el.value));
+        nodeEl.addEventListener('dblclick', (e) => {
+          if (e.target.closest('.module-node-remove')) return;
+          this.openModuleNodeModal(idx);
         });
-        const removeBtn = card.querySelector('.technical-module-remove');
+        const removeBtn = nodeEl.querySelector('.module-node-remove');
         if (removeBtn) {
-          removeBtn.onclick = () => {
+          removeBtn.onclick = (e) => {
+            e.stopPropagation();
             this.flowModules.splice(idx, 1);
             this.syncExecutionModeFromModules();
             this.flowModules.forEach((m, i) => { m.step_order = i + 1; });
@@ -111,15 +126,19 @@
             this.onFieldChange();
           };
         }
-        const detailsBtn = card.querySelector('.technical-module-details-btn');
-        if (detailsBtn) {
-          detailsBtn.onclick = () => {
-            const mod = this.flowModules[idx];
-            const key = mod?.id || `idx_${idx}`;
-            this.openTechnicalDetailsPanel(key);
-          };
-        }
       });
+    }
+    const modal = this.querySelector('#moduleNodeModal');
+    const modalClose = this.querySelector('#moduleNodeModalClose');
+    const modalCancel = this.querySelector('#moduleNodeModalCancel');
+    const modalSave = this.querySelector('#moduleNodeModalSave');
+    if (modalClose) modalClose.onclick = () => this.closeModuleNodeModal();
+    if (modalCancel) modalCancel.onclick = () => this.closeModuleNodeModal();
+    if (modalSave) modalSave.onclick = () => this.saveModuleNodeModal();
+    if (modal && modal.querySelector('.modal-overlay')) {
+      modal.addEventListener('click', (e) => { if (e.target === modal) this.closeModuleNodeModal(); });
+    } else if (modal) {
+      modal.addEventListener('click', (e) => { if (e.target === modal) this.closeModuleNodeModal(); });
     }
     this.setupTechnicalDetailsPanel();
   };

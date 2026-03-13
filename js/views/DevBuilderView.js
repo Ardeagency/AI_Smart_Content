@@ -220,10 +220,51 @@ class DevBuilderView extends DevBaseView {
             <div class="builder-settings-form builder-config-fullwidth">
                   <div class="settings-section technical-section-modules">
                     <h4 class="technical-section-title"><i class="ph ph-stack"></i> Módulos del flujo</h4>
-                    <div id="technicalModulesList" class="technical-modules-list"></div>
-                    <div class="technical-modules-actions">
-                      <button type="button" class="btn-small btn-primary-modules" id="technicalAddModuleBtn"><i class="ph ph-plus"></i> Nuevo módulo</button>
-                      <button type="button" class="btn-small btn-ghost" id="technicalDetailsPanelBtn" title="Abrir detalles técnicos del módulo seleccionado"><i class="ph ph-wrench"></i> Detalles técnicos</button>
+                    <div id="technicalModulesList" class="modules-node-map-wrap">
+                      <div class="modules-node-map" id="modulesNodeMap"></div>
+                      <div class="modules-node-map-actions">
+                        <button type="button" class="btn-small btn-primary-modules" id="technicalAddModuleBtn"><i class="ph ph-plus"></i> Añadir módulo</button>
+                        <button type="button" class="btn-small btn-ghost" id="technicalDetailsPanelBtn" title="Detalles técnicos"><i class="ph ph-wrench"></i> Detalles técnicos</button>
+                      </div>
+                    </div>
+                    <!-- Modal: editar nodo (doble clic en un nodo) -->
+                    <div class="modal-overlay" id="moduleNodeModal" role="dialog" aria-labelledby="moduleNodeModalTitle" aria-modal="true" style="display: none;">
+                      <div class="modal-content modal-module-node">
+                        <div class="modal-header">
+                          <h3 id="moduleNodeModalTitle">Editar módulo</h3>
+                          <button type="button" class="btn-icon btn-ghost modal-close" id="moduleNodeModalClose" aria-label="Cerrar"><i class="ph ph-x"></i></button>
+                        </div>
+                        <div class="modal-body">
+                          <input type="hidden" id="moduleNodeModalIndex" value="">
+                          <div class="settings-field">
+                            <label for="moduleNodeModalName">Nombre del nodo</label>
+                            <input type="text" id="moduleNodeModalName" placeholder="Ej: Módulo 1">
+                          </div>
+                          <div class="settings-field">
+                            <label for="moduleNodeModalExecutionType">Tipo de ejecución</label>
+                            <select id="moduleNodeModalExecutionType">
+                              <option value="webhook">Webhook</option>
+                              <option value="python">Python</option>
+                              <option value="make">Make</option>
+                              <option value="internal">Internal</option>
+                              <option value="ai_direct">AI direct</option>
+                              <option value="aggregator">Aggregator</option>
+                            </select>
+                          </div>
+                          <div class="settings-field">
+                            <label for="moduleNodeModalUrlTest">URL Test</label>
+                            <input type="url" id="moduleNodeModalUrlTest" placeholder="https://...">
+                          </div>
+                          <div class="settings-field">
+                            <label for="moduleNodeModalUrlProd">URL Producción</label>
+                            <input type="url" id="moduleNodeModalUrlProd" placeholder="https://...">
+                          </div>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn-small btn-ghost" id="moduleNodeModalCancel">Cancelar</button>
+                          <button type="button" class="btn-small btn-primary-modules" id="moduleNodeModalSave"><i class="ph ph-check"></i> Guardar</button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
