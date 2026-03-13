@@ -15513,6 +15513,11 @@ body.production-filters-in-header .living-container > .living-history-section {
   box-shadow: var(--shadow-card);
 }
 
+/* Cuando las tabs viven dentro del header principal (Builder), usar fondo blanco en lugar de warm-1 naranja. */
+.app-header.app-header--builder .builder-tab.active {
+  background: var(--color-white, #ffffff);
+}
+
 /* Tab Content */
 .builder-tab-content {
   display: none;
