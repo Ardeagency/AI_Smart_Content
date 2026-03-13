@@ -15081,19 +15081,21 @@ body.production-filters-in-header .living-container > .living-history-section {
   align-items: center;
   justify-content: space-between;
   gap: var(--spacing-md);
-  padding: var(--spacing-md) var(--spacing-xl);
+  padding: 0 var(--spacing-xl);
+  height: var(--app-header-height, 45.8px);
+  min-height: var(--app-header-height, 45.8px);
   background: var(--bg-secondary);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border-top: 1px solid var(--border-divider);
-  min-height: 56px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   transition: var(--transition);
 }
 
 .builder-footer .flow-status-badge,
 .builder-footer .builder-status-badge {
-  margin-left: var(--spacing-xs);
+  flex-shrink: 0;
+  margin: 0;
 }
 
 .builder-footer-more {
@@ -15129,24 +15131,6 @@ body.production-filters-in-header .living-container > .living-history-section {
   border-color: rgba(255, 255, 255, 0.6);
   color: #000000;
   box-shadow: var(--shadow-hover);
-}
-
-.builder-footer-message {
-  font-size: var(--font-size-base);
-  color: var(--text-secondary);
-}
-
-.builder-footer-message.has-changes {
-  color: var(--dev-warning);
-}
-
-.builder-footer-message.waiting {
-  color: var(--dev-info);
-}
-
-.builder-footer-message.published-warning {
-  color: var(--color-warning);
-  font-weight: 500;
 }
 
 .builder-footer-actions {

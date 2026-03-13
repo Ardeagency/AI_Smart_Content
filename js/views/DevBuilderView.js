@@ -394,35 +394,18 @@ class DevBuilderView extends DevBaseView {
         </aside>
       </main>
 
-      <!-- Footer: mensaje + estado + todas las acciones -->
+      <!-- Footer: etiqueta de estado a la izquierda, botones a la derecha (sin iconos, misma altura que header) -->
       <footer class="builder-footer" id="builderFooter">
-        <div class="builder-footer-message" id="builderFooterMessage"></div>
         <span class="flow-status-badge draft" id="flowStatusBadge">Borrador</span>
         <div class="builder-footer-actions" id="builderFooterActions">
-          <button type="button" class="btn-builder-footer btn-save-draft" id="btnSaveDraft" style="display: none;">
-            <i class="ph ph-floppy-disk"></i> Guardar flujo
-          </button>
-          <button type="button" class="btn-builder-footer btn-update-flow" id="btnUpdateFlow" style="display: none;">
-            <i class="ph ph-pencil-simple"></i> Actualizar flujo
-          </button>
-          <button type="button" class="btn-builder-footer" id="testFlowBtn">
-            <i class="ph ph-play"></i> Probar
-          </button>
-          <button type="button" class="btn-builder-footer btn-primary-footer" id="btnPublish" style="display: none;">
-            <i class="ph ph-rocket-launch"></i> Publicar
-          </button>
-          <button type="button" class="btn-builder-footer btn-request-review" id="btnRequestReview" style="display: none;">
-            <i class="ph ph-hand-waving"></i> Solicitar revisión
-          </button>
-          <button type="button" class="btn-builder-footer btn-approve-publish" id="btnApprovePublish" style="display: none;">
-            <i class="ph ph-check-circle"></i> Aprobar y publicar
-          </button>
-          <button type="button" class="btn-builder-footer btn-reject" id="btnReject" style="display: none;">
-            <i class="ph ph-x-circle"></i> Rechazar
-          </button>
-          <button type="button" class="btn-builder-footer btn-unpublish" id="btnUnpublish" style="display: none;">
-            <i class="ph ph-arrow-counter-clockwise"></i> Despublicar
-          </button>
+          <button type="button" class="btn-builder-footer btn-save-draft" id="btnSaveDraft" style="display: none;">Guardar flujo</button>
+          <button type="button" class="btn-builder-footer btn-update-flow" id="btnUpdateFlow" style="display: none;">Actualizar flujo</button>
+          <button type="button" class="btn-builder-footer" id="testFlowBtn">Probar</button>
+          <button type="button" class="btn-builder-footer btn-primary-footer" id="btnPublish" style="display: none;">Publicar</button>
+          <button type="button" class="btn-builder-footer btn-request-review" id="btnRequestReview" style="display: none;">Solicitar revisión</button>
+          <button type="button" class="btn-builder-footer btn-approve-publish" id="btnApprovePublish" style="display: none;">Aprobar y publicar</button>
+          <button type="button" class="btn-builder-footer btn-reject" id="btnReject" style="display: none;">Rechazar</button>
+          <button type="button" class="btn-builder-footer btn-unpublish" id="btnUnpublish" style="display: none;">Despublicar</button>
         </div>
       </footer>
 
@@ -904,9 +887,8 @@ class DevBuilderView extends DevBaseView {
   }
 
   renderFooter() {
-    const messageEl = this.querySelector('#builderFooterMessage');
     const actionsEl = this.querySelector('#builderFooterActions');
-    if (!messageEl || !actionsEl) return;
+    if (!actionsEl) return;
 
     const status = this.flowData.status || 'draft';
     const isLead = this.isLead();
@@ -925,34 +907,21 @@ class DevBuilderView extends DevBaseView {
     };
     const show = (btn) => { if (btn) btn.style.display = 'inline-flex'; };
 
-    messageEl.textContent = '';
-    messageEl.className = 'builder-footer-message';
     hideAll();
 
     if (status === 'draft') {
-      if (this.hasUnsavedChanges) {
-        messageEl.textContent = 'Tienes cambios sin guardar.';
-        messageEl.classList.add('has-changes');
-      }
       show(buttons.saveDraft);
       if (isLead) show(buttons.publish);
       else show(buttons.requestReview);
     } else if (status === 'checking') {
       if (isLead) {
-        messageEl.textContent = 'Flujo en revisión. Puedes aprobar o rechazar.';
         show(buttons.approvePublish);
         show(buttons.reject);
-      } else {
-        messageEl.textContent = 'Esperando aprobación...';
-        messageEl.classList.add('waiting');
       }
     } else if (status === 'published') {
-      messageEl.textContent = 'Estás editando un flujo en vivo. Los cambios afectarán a los clientes.';
-      messageEl.classList.add('published-warning');
       show(buttons.updateFlow);
       if (isLead) show(buttons.unpublish);
     } else {
-      messageEl.textContent = '';
       show(buttons.saveDraft);
     }
   }
