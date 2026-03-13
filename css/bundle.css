@@ -14944,15 +14944,17 @@ body.production-filters-in-header .living-container > .living-history-section {
   }
 }
 
-/* Tipo de flujo: tabs (contenedor claro, activo = píldora azul con texto blanco) */
+/* Tipo de flujo: tabs (mismo lenguaje visual que la plataforma: glass-white, activo = dev-primary) */
 .flow-type-tabs {
   display: flex;
   flex-direction: row;
   gap: 4px;
   padding: 4px;
-  background: #e0e7ff;
+  background: var(--glass-white-bg);
+  border: 1px solid var(--glass-white-border);
   border-radius: var(--radius-md);
-  border: none;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
 }
 
 .flow-type-tab {
@@ -14961,7 +14963,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   padding: 8px 12px;
   font-size: var(--font-size-base);
   font-weight: 400;
-  color: #1e40af;
+  color: var(--text-secondary);
   background: transparent;
   border: none;
   border-radius: calc(var(--radius-md) - 2px);
@@ -14970,14 +14972,14 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 
 .flow-type-tab:hover {
-  color: #1e3a8a;
+  color: var(--text-primary);
 }
 
 .flow-type-tab.is-selected {
-  background: #2563eb;
-  color: #fff;
+  background: var(--dev-primary);
+  color: var(--bg-primary);
   font-weight: 600;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
 
@@ -17152,8 +17154,9 @@ body.production-filters-in-header .living-container > .living-history-section {
   height: 24px;
   flex-shrink: 0;
   border-radius: 12px;
-  background: #d1d5db;
-  transition: background 0.2s ease;
+  background: var(--glass-white-bg);
+  border: 1px solid var(--glass-white-border);
+  transition: background 0.2s ease, border-color 0.2s ease;
   box-sizing: border-box;
 }
 
@@ -17165,17 +17168,20 @@ body.production-filters-in-header .living-container > .living-history-section {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  transition: transform 0.2s ease;
+  background: var(--color-white, #fff);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s ease, background 0.2s ease;
 }
 
 .toggle-switch-row .toggle-switch-input:checked + .toggle-switch {
-  background: #2563eb;
+  background: var(--dev-primary);
+  border-color: var(--dev-primary);
 }
 
 .toggle-switch-row .toggle-switch-input:checked + .toggle-switch::after {
   transform: translateX(20px);
+  background: var(--bg-primary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .toggle-switch-label {
