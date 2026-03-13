@@ -13358,6 +13358,18 @@ body.production-filters-in-header .living-container > .living-history-section {
   --builder-input-border: var(--glass-white-border);
 }
 
+/* En Builder: iconos Phosphor (.ph) no colapsar a 0x0 */
+#app-container:has(.builder-footer) .builder-main .ph,
+#app-container:has(.builder-footer) .builder-main i[class*="ph-"],
+#builderTabsHeader .ph,
+#builderTabsHeader i[class*="ph-"] {
+  display: inline-block;
+  min-width: 1em;
+  min-height: 1em;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
 /* En Builder: cards y superficies usan superficie visible (contraste con fondo) */
 #app-container:has(.builder-footer) .builder-main,
 #app-container:has(.builder-footer) .builder-canvas-wrapper,
@@ -15588,6 +15600,22 @@ body.production-filters-in-header .living-container > .living-history-section {
   font-weight: 500;
   cursor: pointer;
   transition: var(--transition);
+}
+
+/* Iconos en tabs del Builder: evitar colapso 0x0 (Phosphor Icons) */
+.builder-tab i,
+.builder-tab .ph {
+  display: inline-block;
+  width: 1.25em;
+  height: 1.25em;
+  flex-shrink: 0;
+  font-size: 1.125em;
+  line-height: 1;
+  text-align: center;
+}
+.builder-tab i::before,
+.builder-tab .ph::before {
+  display: block;
 }
 
 .builder-tab:hover {
