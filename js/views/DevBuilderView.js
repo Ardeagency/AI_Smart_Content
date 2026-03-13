@@ -809,7 +809,8 @@ class DevBuilderView extends DevBaseView {
     const tokenCostInput = this.querySelector('#flowTokenCost');
     const uiShowInCatalog = this.querySelector('#uiShowInCatalog');
     const testFlowBtn = this.querySelector('#testFlowBtn');
-    const tabModules = this.querySelector('.builder-tab[data-tab="technical"]');
+    const tabsHeader = document.getElementById('builderTabsHeader');
+    const tabModules = tabsHeader ? tabsHeader.querySelector('.builder-tab[data-tab="technical"]') : this.querySelector('.builder-tab[data-tab="technical"]');
 
     // Todos los tipos de flujo (manual, autopilot, system, scraping) comparten la misma
     // experiencia de Builder: siempre con módulos e inputs disponibles.
@@ -1033,11 +1034,13 @@ class DevBuilderView extends DevBaseView {
   }
 
   switchTab(tabId) {
-    // Update tab buttons
-    this.querySelectorAll('.builder-tab').forEach(tab => {
+    // Update tab buttons (viven en #builderTabsHeader, movidos al header de la app)
+    const tabsContainer = document.getElementById('builderTabsHeader');
+    const tabButtons = tabsContainer ? tabsContainer.querySelectorAll('.builder-tab') : this.querySelectorAll('.builder-tab');
+    tabButtons.forEach(tab => {
       tab.classList.toggle('active', tab.dataset.tab === tabId);
     });
-    
+
     // Update tab content (tabFicha → id="tabFicha")
     const tabContentId = tabId === 'ficha' ? 'tabFicha' : `tab${tabId.charAt(0).toUpperCase() + tabId.slice(1)}`;
     this.querySelectorAll('.builder-tab-content').forEach(content => {
