@@ -757,7 +757,8 @@ class DevBuilderView extends DevBaseView {
   }
 
   /**
-   * Genera el HTML de la card de flujo como en catálogo (visualización oficial) para la Ficha.
+   * Genera el HTML de la card de flujo igual que en "Mis flujos" (DevFlowsView): misma estructura
+   * dev-flow-card-wrapper + flow-card--with-footer + flow-card-footer--dev.
    */
   renderFichaFlowCard() {
     const name = this.escapeHtml(this.flowData.name || 'Sin nombre');
@@ -790,34 +791,42 @@ class DevBuilderView extends DevBaseView {
       : `<div class="flow-card-placeholder"><i class="fas ${this.getOutputTypeIcon(this.flowData.output_type)}"></i></div>`;
 
     return `
-      <article class="flow-card flow-card--catalog flow-card--ficha-preview" aria-hidden="true">
-        <div class="flow-card-media">
-          ${img}
-          <div class="flow-card-media-veil" aria-hidden="true"></div>
-          <div class="flow-card-badges">${badges.join('')}</div>
-          <div class="flow-card-icons flow-card-icons--default">
-            <span class="flow-card-icon-stat" title="Likes"><i class="fas fa-heart"></i><span class="flow-card-icon-count">${likes}</span></span>
-            <span class="flow-card-icon-stat" title="Ejecuciones"><i class="fas fa-play"></i><span class="flow-card-icon-count">${runs}</span></span>
-            <span class="flow-card-icon-stat" title="Guardados"><i class="fas fa-bookmark"></i><span class="flow-card-icon-count">${saves}</span></span>
-          </div>
-          <div class="flow-card-overlay flow-card-overlay--default">
-            <h3 class="flow-card-title">${name}</h3>
-            ${tagsHtml ? `<div class="flow-card-tags flow-card-tags--default">${tagsHtml}</div>` : ''}
-          </div>
-          <div class="flow-card-overlay flow-card-overlay--hover">
-            <div class="flow-card-hover-content">
-              <div class="flow-card-credits">${cost}</div>
-              <div class="flow-card-meta-list">
-                <span class="flow-card-meta-item">${categoryName}</span>
-                <span class="flow-card-meta-item">${subcategoryName}</span>
-                <span class="flow-card-meta-item">${outputTypeLabel}</span>
-                <span class="flow-card-meta-item">${executionLabel}</span>
-                <span class="flow-card-meta-item">v${version}</span>
+      <div class="dev-flow-card-wrapper dev-flow-card-wrapper--ficha-preview">
+        <article class="flow-card flow-card--catalog flow-card--with-footer flow-card--ficha-preview" aria-hidden="true">
+          <div class="flow-card-media">
+            ${img}
+            <div class="flow-card-media-veil" aria-hidden="true"></div>
+            <div class="flow-card-badges">${badges.join('')}</div>
+            <div class="flow-card-icons flow-card-icons--default">
+              <span class="flow-card-icon-stat" title="Likes"><i class="fas fa-heart"></i><span class="flow-card-icon-count">${likes}</span></span>
+              <span class="flow-card-icon-stat" title="Ejecuciones"><i class="fas fa-play"></i><span class="flow-card-icon-count">${runs}</span></span>
+              <span class="flow-card-icon-stat" title="Guardados"><i class="fas fa-bookmark"></i><span class="flow-card-icon-count">${saves}</span></span>
+            </div>
+            <div class="flow-card-overlay flow-card-overlay--default">
+              <h3 class="flow-card-title">${name}</h3>
+              ${tagsHtml ? `<div class="flow-card-tags flow-card-tags--default">${tagsHtml}</div>` : ''}
+            </div>
+            <div class="flow-card-overlay flow-card-overlay--hover">
+              <div class="flow-card-hover-content">
+                <div class="flow-card-credits">${cost}</div>
+                <div class="flow-card-meta-list">
+                  <span class="flow-card-meta-item">${categoryName}</span>
+                  <span class="flow-card-meta-item">${subcategoryName}</span>
+                  <span class="flow-card-meta-item">${outputTypeLabel}</span>
+                  <span class="flow-card-meta-item">${executionLabel}</span>
+                  <span class="flow-card-meta-item">v${version}</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </article>
+          <div class="flow-card-footer flow-card-footer--dev">
+            <button type="button" class="flow-card-footer-btn edit" title="Editar flujo" aria-label="Editar" disabled><i class="fas fa-edit"></i></button>
+            <button type="button" class="flow-card-footer-btn test" title="Probar flujo" aria-label="Probar" disabled><i class="fas fa-play"></i></button>
+            <button type="button" class="flow-card-footer-btn logs" title="Ver logs" aria-label="Logs" disabled><i class="fas fa-terminal"></i></button>
+            <button type="button" class="flow-card-footer-btn delete" title="Eliminar flujo" aria-label="Eliminar" disabled><i class="fas fa-trash"></i></button>
+          </div>
+        </article>
+      </div>
     `;
   }
 
