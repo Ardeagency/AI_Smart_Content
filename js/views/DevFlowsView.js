@@ -281,7 +281,7 @@ class DevFlowsView extends DevBaseView {
 
     return `
       <div class="dev-flow-card-wrapper" data-flow-id="${flow.id}">
-        <article class="flow-card flow-card--catalog" data-flow-id="${flow.id}" role="button" tabindex="0">
+        <article class="flow-card flow-card--catalog flow-card--with-footer" data-flow-id="${flow.id}" role="button" tabindex="0">
           <div class="flow-card-media">
             ${img}
             <div class="flow-card-media-veil" aria-hidden="true"></div>
@@ -308,22 +308,13 @@ class DevFlowsView extends DevBaseView {
               </div>
             </div>
           </div>
+          <div class="flow-card-footer flow-card-footer--dev">
+            <button type="button" class="flow-card-footer-btn edit" title="Editar flujo" data-action="edit" aria-label="Editar"><i class="fas fa-edit"></i></button>
+            <button type="button" class="flow-card-footer-btn test" title="Probar flujo" data-action="test" aria-label="Probar"><i class="fas fa-play"></i></button>
+            <button type="button" class="flow-card-footer-btn logs" title="Ver logs" data-action="logs" aria-label="Logs"><i class="fas fa-terminal"></i></button>
+            <button type="button" class="flow-card-footer-btn delete" title="Eliminar flujo" data-action="delete" aria-label="Eliminar"><i class="fas fa-trash"></i></button>
+          </div>
         </article>
-
-        <div class="dev-flow-card-actions">
-          <button class="dev-flow-action-btn edit" title="Editar flujo" data-action="edit">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="dev-flow-action-btn test" title="Probar flujo" data-action="test">
-            <i class="fas fa-play"></i>
-          </button>
-          <button class="dev-flow-action-btn logs" title="Ver logs" data-action="logs">
-            <i class="fas fa-terminal"></i>
-          </button>
-          <button class="dev-flow-action-btn delete" title="Eliminar flujo" data-action="delete">
-            <i class="fas fa-trash"></i>
-          </button>
-        </div>
       </div>
     `;
   }
@@ -379,7 +370,7 @@ class DevFlowsView extends DevBaseView {
       const clickable = card.querySelector('.flow-card');
       if (clickable) {
         clickable.addEventListener('click', (e) => {
-          if (e.target.closest('.dev-flow-action-btn') || e.target.closest('.flow-card-icons')) return;
+          if (e.target.closest('.flow-card-footer') || e.target.closest('.flow-card-icons')) return;
           this.navigateToBuilder(flowId);
         });
         clickable.addEventListener('keydown', (e) => {
@@ -390,8 +381,8 @@ class DevFlowsView extends DevBaseView {
         });
       }
 
-      // Acciones específicas
-      card.querySelectorAll('.dev-flow-action-btn').forEach(btn => {
+      // Acciones específicas (footer de la card)
+      card.querySelectorAll('.flow-card-footer-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
           const action = btn.dataset.action;
