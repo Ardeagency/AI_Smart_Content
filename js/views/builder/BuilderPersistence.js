@@ -139,20 +139,6 @@
     const nameConfig = this.querySelector('#flowNameConfig');
     if (nameConfig) nameConfig.value = this.flowData.name;
 
-    // URL del flujo (editable para copiar/pegar o ajustar)
-    const flowUrlInput = this.querySelector('#flowUrlInput');
-    const copyFlowUrlBtn = this.querySelector('#copyFlowUrlBtn');
-    const flowUrl = this.getFlowPublicUrl();
-    if (flowUrlInput) {
-      flowUrlInput.value = flowUrl || '';
-      flowUrlInput.placeholder = '— Guarda el flujo para ver la URL';
-    }
-    if (copyFlowUrlBtn) copyFlowUrlBtn.style.display = flowUrl ? 'inline-flex' : 'none';
-
-    // Nombre técnico (ui_layout_config.technical_name)
-    const technicalName = this.querySelector('#flowTechnicalName');
-    if (technicalName) technicalName.value = this.uiLayoutConfig.technical_name || '';
-    
     // Status badge
     this.updateStatusBadge();
     
@@ -163,6 +149,7 @@
     const flowTypeSelect = this.querySelector('#flowType');
     const tokenCostInput = this.querySelector('#flowTokenCost');
     const versionInput = this.querySelector('#flowVersion');
+    const outputTypeSelect = this.querySelector('#flowOutputType');
     
     if (descInput) descInput.value = this.flowData.description;
     if (categorySelect) categorySelect.value = this.flowData.category_id || '';
@@ -173,6 +160,7 @@
     }
     if (tokenCostInput) tokenCostInput.value = this.flowData.token_cost ?? 1;
     if (versionInput) versionInput.value = this.flowData.version;
+    if (outputTypeSelect) outputTypeSelect.value = this.flowData.output_type || 'text';
     
     // Image preview
     if (this.flowData.flow_image_url) {

@@ -131,89 +131,82 @@ class DevBuilderView extends DevBaseView {
 
         <!-- Panel central: contenido de pestañas -->
         <div class="builder-canvas-wrapper">
-          <!-- Tab 1: Configuración — grid: portada|nombre, descripción, url, técnico, versión|créditos|catálogo, categoría|subcategoría|tipo -->
+          <!-- Tab 1: Configuración — grid 2 columnas, derecha en 2 filas (3 secciones) -->
           <div class="builder-tab-content active" id="tabSettings">
-            <div class="builder-settings-form builder-config-grid">
-              <div class="builder-config-row builder-config-row--portada-name">
-                <div class="settings-field builder-config-cell builder-config-cell--portada">
-                  <label for="flowImagePreview">Portada / media</label>
-                  <div class="flow-image-upload" id="flowImageUpload">
-                    <div class="image-preview image-preview--upload" id="flowImagePreview" title="Subir portada">
-                      <i class="ph ph-image"></i>
-                      <span>Subir portada</span>
-                    </div>
-                    <div class="image-actions">
-                      <button type="button" class="btn-small secondary" id="removeImageBtn" style="display: none;"><i class="ph ph-trash"></i> Eliminar</button>
-                    </div>
-                    <input type="file" id="flowImageInput" accept="image/*,video/*" style="display: none;">
+            <div class="builder-config-layout">
+              <!-- Sección 1: portada grande + mostrar en catálogo, versión, créditos -->
+              <div class="builder-config-section builder-config-section--cover">
+                <div class="flow-cover-container" id="flowImageUpload">
+                  <div class="flow-cover-preview" id="flowImagePreview" title="Subir portada">
+                    <i class="ph ph-image"></i>
+                    <span>Subir portada</span>
+                  </div>
+                  <div class="flow-cover-actions" aria-hidden="true">
+                    <button type="button" class="flow-cover-btn glass-black" id="removeImageBtn" title="Quitar portada" aria-label="Quitar portada" style="display: none;"><i class="ph ph-trash"></i></button>
+                    <button type="button" class="flow-cover-btn glass-black" id="changeCoverBtn" title="Cambiar portada" aria-label="Cambiar portada"><i class="ph ph-image"></i></button>
+                  </div>
+                  <input type="file" id="flowImageInput" accept="image/*,video/*" style="display: none;">
+                </div>
+                <div class="builder-config-meta">
+                  <label class="toggle-field">
+                    <input type="checkbox" id="uiShowInCatalog" checked>
+                    <span>Mostrar en catálogo</span>
+                  </label>
+                  <div class="settings-field">
+                    <label for="flowVersion">Versión</label>
+                    <input type="text" id="flowVersion" value="1.0.0" placeholder="1.0.0">
+                  </div>
+                  <div class="settings-field" id="settingsTokenCostWrap">
+                    <label for="flowTokenCost">Créditos (por ejecución)</label>
+                    <input type="number" id="flowTokenCost" min="0" max="100" value="1">
                   </div>
                 </div>
-                <div class="settings-field builder-config-cell builder-config-cell--name">
+              </div>
+              <!-- Sección 2: nombre, descripción -->
+              <div class="builder-config-section builder-config-section--name">
+                <div class="settings-field">
                   <label for="flowNameConfig">Nombre del flujo *</label>
                   <input type="text" id="flowNameConfig" placeholder="Ej: Generador de Reels Virales" maxlength="100">
                 </div>
-              </div>
-              <div class="builder-config-row builder-config-row--description">
-                <div class="settings-field builder-config-cell builder-config-cell--full">
+                <div class="settings-field">
                   <label for="flowDescription">Descripción</label>
-                  <textarea id="flowDescription" placeholder="Describe qué hace este flujo..." rows="3"></textarea>
+                  <textarea id="flowDescription" placeholder="Describe qué hace este flujo..." rows="4"></textarea>
                 </div>
               </div>
-              <div class="builder-config-row builder-config-row--url">
-                <div class="settings-field builder-config-cell builder-config-cell--full">
-                  <label for="flowUrlInput">URL del flujo</label>
-                  <div class="flow-url-field" id="flowUrlWrap">
-                    <input type="text" class="flow-url-input" id="flowUrlInput" placeholder="— Guarda el flujo para ver la URL">
-                    <button type="button" class="btn-small" id="copyFlowUrlBtn" style="display: none;"><i class="ph ph-copy"></i> Copiar</button>
+              <!-- Sección 3: tipo de flujo, categoría, subcategoría, tipo de output -->
+              <div class="builder-config-section builder-config-section--meta">
+                <div class="settings-field">
+                  <label for="flowTypePicker">Tipo de flujo</label>
+                  <input type="hidden" id="flowType" value="manual">
+                  <div class="flow-type-picker flow-type-picker--four" id="flowTypePicker" role="listbox" aria-label="Tipo de flujo">
+                    <div class="flow-type-picker-option" data-value="manual" role="option" title="Input 100% dinámico">Manual</div>
+                    <div class="flow-type-picker-option" data-value="system" role="option" title="Funciones de plataforma">System</div>
+                    <div class="flow-type-picker-option" data-value="autopilot" role="option" title="Generación programable">Autopilot</div>
+                    <div class="flow-type-picker-option" data-value="scraping" role="option" title="Scrapeo">Scraping</div>
                   </div>
                 </div>
-              </div>
-              <div class="builder-config-row builder-config-row--technical-name">
-                <div class="settings-field builder-config-cell builder-config-cell--full">
-                  <label for="flowTechnicalName">Nombre técnico</label>
-                  <input type="text" id="flowTechnicalName" placeholder="Ej: reels_viral_generator (solo referencia interna)">
-                  <span class="field-help">Referencia para desarrolladores y n8n. No se muestra a usuarios.</span>
-                </div>
-              </div>
-              <div class="builder-config-row builder-config-row--version-credits-catalog">
-                <div class="settings-field builder-config-cell">
-                  <label for="flowVersion">Versión</label>
-                  <input type="text" id="flowVersion" value="1.0.0" placeholder="1.0.0">
-                </div>
-                <div class="settings-field builder-config-cell" id="settingsTokenCostWrap">
-                  <label for="flowTokenCost">Créditos (por ejecución)</label>
-                  <input type="number" id="flowTokenCost" min="0" max="100" value="1">
-                </div>
-                <div class="settings-field builder-config-cell builder-config-cell--catalog">
-                  <label class="toggle-field">
-                    <input type="checkbox" id="uiShowInCatalog">
-                    <span>Mostrar en catálogo</span>
-                  </label>
-                </div>
-              </div>
-              <div class="builder-config-row builder-config-row--category-type">
-                <div class="settings-field builder-config-cell">
+                <div class="settings-field">
                   <label for="flowCategory">Categoría</label>
                   <select id="flowCategory">
                     <option value="">Seleccionar categoría...</option>
                   </select>
                 </div>
-                <div class="settings-field builder-config-cell">
+                <div class="settings-field">
                   <label for="flowSubcategory">Subcategoría</label>
                   <select id="flowSubcategory">
                     <option value="">Seleccionar subcategoría...</option>
                   </select>
                 </div>
-                <div class="settings-field builder-config-cell builder-config-cell--flow-type">
-                  <label for="flowTypePicker">Tipo de flujo</label>
-                  <input type="hidden" id="flowType" value="manual">
-                  <div class="flow-type-picker flow-type-picker--four" id="flowTypePicker" role="listbox" aria-label="Tipo de flujo">
-                    <div class="flow-type-picker-option" data-value="manual" role="option" title="Input 100% dinámico, personalizable para el usuario consumidor">Manual</div>
-                    <div class="flow-type-picker-option" data-value="system" role="option" title="Funciones de plataforma, no catálogo">System</div>
-                    <div class="flow-type-picker-option" data-value="autopilot" role="option" title="Generación autónoma y programable con datos de marca">Autopilot</div>
-                    <div class="flow-type-picker-option" data-value="scraping" role="option" title="Scrapeo: perfiles, palabras, URLs">Scraping</div>
-                  </div>
-                  <span class="field-help">Manual: inputs dinámicos. System: funciones de plataforma (no catálogo). Autopilot: contenido programable. Scraping: sistemas de scrapeo.</span>
+                <div class="settings-field">
+                  <label for="flowOutputType">Tipo de output</label>
+                  <select id="flowOutputType">
+                    <option value="text">Texto</option>
+                    <option value="image">Imagen</option>
+                    <option value="video">Video</option>
+                    <option value="audio">Audio</option>
+                    <option value="document">Documento</option>
+                    <option value="mixed">Mixto</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -959,18 +952,6 @@ class DevBuilderView extends DevBaseView {
       });
     }
 
-    // URL del flujo: copiar
-    const copyFlowUrlBtn = this.querySelector('#copyFlowUrlBtn');
-    if (copyFlowUrlBtn) {
-      copyFlowUrlBtn.addEventListener('click', () => {
-        const urlEl = this.querySelector('#flowUrlInput');
-        const url = urlEl?.value?.trim() || this.getFlowPublicUrl();
-        if (url) {
-          navigator.clipboard.writeText(url).then(() => this.showNotification('URL copiada', 'success')).catch(() => {});
-        }
-      });
-    }
-    
     // Tabs
     this.querySelectorAll('.builder-tab').forEach(tab => {
       tab.addEventListener('click', () => this.switchTab(tab.dataset.tab));
@@ -1128,10 +1109,10 @@ class DevBuilderView extends DevBaseView {
       });
     }
 
-    const flowTechnicalName = this.querySelector('#flowTechnicalName');
-    if (flowTechnicalName) {
-      flowTechnicalName.addEventListener('input', (e) => {
-        this.uiLayoutConfig.technical_name = e.target.value || '';
+    const flowOutputType = this.querySelector('#flowOutputType');
+    if (flowOutputType) {
+      flowOutputType.addEventListener('change', (e) => {
+        this.flowData.output_type = e.target.value || 'text';
         this.hasUnsavedChanges = true;
       });
     }
@@ -1209,22 +1190,27 @@ class DevBuilderView extends DevBaseView {
   setupImageUpload() {
     const preview = this.querySelector('#flowImagePreview');
     const removeBtn = this.querySelector('#removeImageBtn');
+    const changeCoverBtn = this.querySelector('#changeCoverBtn');
     const fileInput = this.querySelector('#flowImageInput');
     
-    if (preview && fileInput) {
-      preview.addEventListener('click', (e) => {
-        if (!e.target.closest('#removeImageBtn')) fileInput.click();
-      });
-      
+    if (fileInput) {
       fileInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
-        if (file) {
-          await this.uploadImage(file);
-        }
+        if (file) await this.uploadImage(file);
         e.target.value = '';
       });
     }
-    
+    if (changeCoverBtn && fileInput) {
+      changeCoverBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        fileInput.click();
+      });
+    }
+    if (preview && fileInput) {
+      preview.addEventListener('click', (e) => {
+        if (!e.target.closest('.flow-cover-btn')) fileInput.click();
+      });
+    }
     if (removeBtn) {
       removeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
