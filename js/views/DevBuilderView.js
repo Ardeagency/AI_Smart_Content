@@ -505,12 +505,28 @@ class DevBuilderView extends DevBaseView {
 
     this.setupEventListeners();
     this.setupFooterListeners();
+    this.moveBuilderTabsToAppHeader();
     this.renderCanvas();
     this.updateJsonPreview();
     this.renderFooter();
     this.applyFlowTypeUI();
     // Aplicar layout de la pestaña activa al cargar (oculta Componentes/Propiedades si está en Configuración)
     this.applyTabLayout('settings');
+  }
+
+  /**
+   * Mover las pestañas del Builder (Configuración, Módulos, Inputs, Ficha) al header principal de la app.
+   * Solo en Builder: las tabs viven en #headerBuilderSlot dentro de #appHeader.
+   */
+  moveBuilderTabsToAppHeader() {
+    const tabsHeader = document.getElementById('builderTabsHeader');
+    const slot = document.getElementById('headerBuilderSlot');
+    const appHeader = document.getElementById('appHeader');
+    if (tabsHeader && slot && appHeader) {
+      slot.appendChild(tabsHeader);
+      slot.setAttribute('aria-hidden', 'false');
+      appHeader.classList.add('app-header--builder');
+    }
   }
 
   async initSupabase() {

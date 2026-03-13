@@ -628,6 +628,7 @@ class Navigation {
           <div class="header-left">
             <h1 class="header-title" id="headerTitle">DEVELOPER PORTAL</h1>
           </div>
+          <div class="header-center header-builder-slot" id="headerBuilderSlot" aria-hidden="true"></div>
           <div class="header-right">
             <div class="header-user-menu-wrap">
               <button class="user-menu-btn" id="userMenuBtn" aria-label="Menú de usuario">
@@ -1211,6 +1212,18 @@ class Navigation {
     const path = window.location.pathname;
     // Normalizar: quitar prefijo /org/:short/:slug para comparar segmento de vista
     const pathWithoutOrg = path.replace(/^\/org\/[^/]+\/[^/]+/, '') || '/';
+
+    // Solo en Builder: las pestañas se inyectan en #headerBuilderSlot por DevBuilderView.
+    // Al salir de Builder, vaciar el slot para que no queden tabs en el header.
+    const isBuilder = pathWithoutOrg === '/dev/builder' || pathWithoutOrg.startsWith('/dev/builder/');
+    const builderSlot = document.getElementById('headerBuilderSlot');
+    if (builderSlot && !isBuilder) {
+      builderSlot.innerHTML = '';
+      builderSlot.setAttribute('aria-hidden', 'true');
+      document.getElementById('appHeader')?.classList.remove('app-header--builder');
+    } else if (builderSlot && isBuilder) {
+      builderSlot.setAttribute('aria-hidden', 'false');
+    }
 
     const titles = {
       '/production': 'PRODUCTION',

@@ -2875,9 +2875,38 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
 }
 
 .app-header .header-center {
-    flex: 1;
-    display: flex;
-    justify-content: center;
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+/* Slot para pestañas del Builder: oculto cuando está vacío (resto de páginas dev) */
+.app-header .header-builder-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  flex: 1;
+}
+.app-header .header-builder-slot:empty {
+  display: none;
+}
+
+/* Builder: pestañas (Configuración, Módulos, Inputs, Ficha) integradas en el header principal */
+.app-header.app-header--builder .header-builder-slot .builder-tabs-header {
+  background: transparent;
+  border-bottom: none;
+  flex: 0 0 auto;
+  padding: 0;
+  margin: 0;
+  height: auto;
+}
+.app-header.app-header--builder .header-builder-slot .builder-tabs-header .builder-tabs {
+  padding: 0;
+  gap: 6px;
+}
+.app-header.app-header--builder .header-left .header-title {
+  margin-right: 8px;
 }
 
 .app-header .header-right {
