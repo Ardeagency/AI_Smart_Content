@@ -13310,14 +13310,16 @@ body.production-filters-in-header .living-container > .living-history-section {
   background: var(--bg-primary);
 }
 
-/* Builder = misma identidad que dev/: acento cian #00E7FF (no naranja) */
-/* Jerarquía visual: superficie para cards e inputs (no negro sobre negro) */
+/* Builder = identidad dev unificada: blanco/glass (no cian) */
 #app-container:has(.builder-footer) {
-  --warm-1: var(--dev-primary);
-  --warm-2: var(--dev-primary-dark);
-  --warm-10: rgba(0, 231, 255, 0.1);
-  --warm-20: rgba(0, 231, 255, 0.2);
-  --accent-cta: var(--dev-primary);
+  --warm-1: var(--color-white, #ffffff);
+  --warm-2: rgba(255, 255, 255, 0.9);
+  --warm-10: rgba(255, 255, 255, 0.1);
+  --warm-20: rgba(255, 255, 255, 0.2);
+  --accent-cta: var(--color-white, #ffffff);
+  --dev-primary: var(--color-white, #ffffff);
+  --dev-primary-light: rgba(255, 255, 255, 0.9);
+  --dev-primary-dark: #e0e0e0;
   --builder-form-max-width: min(100%, 1280px);
   --builder-input-bg: var(--dev-bg-surface);
   --builder-input-border: rgba(255, 255, 255, 0.12);
@@ -13335,12 +13337,28 @@ body.production-filters-in-header .living-container > .living-history-section {
    ========================================== */
 .dev-dashboard-container,
 .dev-flows-container,
-.dev-logs-container {
+.dev-logs-container,
+.dev-test-container,
+.dev-webhooks-container,
+.dev-lead-container {
   padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
   background: var(--living-bg-deep, var(--bg-primary));
   min-height: 100vh;
+}
+
+/* Todas las vistas dev: acento blanco (iconos, botones CTA, glass) */
+.dev-dashboard-container,
+.dev-flows-container,
+.dev-logs-container,
+.dev-test-container,
+.dev-webhooks-container,
+.dev-lead-container {
+  --dev-primary: var(--color-white, #ffffff);
+  --dev-primary-light: rgba(255, 255, 255, 0.9);
+  --dev-primary-dark: #e0e0e0;
+  --dev-info: var(--color-white, #ffffff);
 }
 
 /* Header común */
@@ -14138,8 +14156,9 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 
 .log-action-btn:hover {
-  background: var(--dev-primary);
-  color: white;
+  background: var(--glass-white-bg);
+  border: 1px solid var(--glass-white-border);
+  color: var(--color-white, #ffffff);
 }
 
 /* Paginación */
@@ -14162,14 +14181,15 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 
 .pagination-btn:hover:not(:disabled) {
-  border-color: var(--dev-primary);
-  color: var(--dev-primary);
+  background: var(--glass-white-bg);
+  border-color: var(--glass-white-border);
+  color: var(--text-primary);
 }
 
 .pagination-btn.active {
-  background: var(--dev-primary);
-  border-color: var(--dev-primary);
-  color: white;
+  background: var(--color-white, #ffffff);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #000000;
 }
 
 .pagination-btn:disabled {
@@ -14326,7 +14346,7 @@ body.production-filters-in-header .living-container > .living-history-section {
   max-width: 400px;
 }
 
-/* Botones primarios en sección dev: blanco con texto negro (no cyan) */
+/* Botones primarios en toda la sección dev: blanco con texto negro (no cyan) */
 .dev-flows-container .btn-primary,
 .dev-flows-header .btn-primary,
 .dev-flows-empty .btn-primary,
@@ -14334,6 +14354,13 @@ body.production-filters-in-header .living-container > .living-history-section {
 .dev-dashboard-header .btn-primary,
 .dev-logs-container .btn-primary,
 .dev-logs-header .btn-primary,
+.dev-test-container .btn-primary,
+.dev-test-header .btn-primary,
+.dev-webhooks-container .btn-primary,
+.dev-webhooks-header .btn-primary,
+.dev-lead-container .btn-primary,
+.dev-lead-header .btn-primary,
+.dev-lead-toolbar .btn-primary,
 .dev-header-actions .btn-primary {
   background: var(--color-white, #ffffff);
   color: #000000;
@@ -14346,6 +14373,13 @@ body.production-filters-in-header .living-container > .living-history-section {
 .dev-dashboard-header .btn-primary:hover:not(:disabled),
 .dev-logs-container .btn-primary:hover:not(:disabled),
 .dev-logs-header .btn-primary:hover:not(:disabled),
+.dev-test-container .btn-primary:hover:not(:disabled),
+.dev-test-header .btn-primary:hover:not(:disabled),
+.dev-webhooks-container .btn-primary:hover:not(:disabled),
+.dev-webhooks-header .btn-primary:hover:not(:disabled),
+.dev-lead-container .btn-primary:hover:not(:disabled),
+.dev-lead-header .btn-primary:hover:not(:disabled),
+.dev-lead-toolbar .btn-primary:hover:not(:disabled),
 .dev-header-actions .btn-primary:hover:not(:disabled) {
   background: #e8e8e8;
   color: #000000;
@@ -14485,15 +14519,15 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 /* Estilos de badge de estado: ver bloque unificado .flow-status-badge más arriba */
 
-/* Botones del Builder */
+/* Botones del Builder: blanco con texto negro */
 .btn-builder-primary {
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  background: var(--dev-primary);
-  color: white;
-  border: none;
+  background: var(--color-white, #ffffff);
+  color: #000000;
+  border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: var(--radius-sm);
   font-size: var(--font-size-base);
   font-weight: 500;
@@ -14502,7 +14536,8 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 
 .btn-builder-primary:hover {
-  background: var(--dev-primary-dark);
+  background: #e8e8e8;
+  color: #000000;
 }
 
 .btn-builder-primary:disabled {
@@ -15051,15 +15086,15 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 .btn-builder-footer.btn-primary-footer {
   background: var(--warm-1);
-  border: 1px solid transparent;
-  color: var(--color-white);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  color: #000000;
   font-weight: 600;
 }
 
 .btn-builder-footer.btn-primary-footer:hover {
   background: var(--warm-2);
-  border-color: transparent;
-  color: var(--color-white);
+  border-color: rgba(255, 255, 255, 0.6);
+  color: #000000;
   box-shadow: var(--shadow-hover);
 }
 
@@ -15112,15 +15147,15 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 
 .btn-builder-footer.btn-approve-publish {
-  background: var(--dev-primary);
-  border-color: var(--dev-primary);
-  color: white;
+  background: var(--color-white, #ffffff);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #000000;
 }
 
 .btn-builder-footer.btn-approve-publish:hover {
-  background: var(--dev-primary-dark);
-  border-color: var(--dev-primary-dark);
-  color: white;
+  background: #e8e8e8;
+  border-color: rgba(255, 255, 255, 0.6);
+  color: #000000;
 }
 
 .btn-builder-footer.btn-reject {
@@ -16214,12 +16249,12 @@ body.production-filters-in-header .living-container > .living-history-section {
 .preview-chip--selected {
   background: var(--dev-primary);
   border-color: var(--dev-primary);
-  color: white;
+  color: #000000;
 }
 .preview-chip--multi-selected {
   border-color: var(--dev-primary);
   color: var(--dev-primary);
-  background: rgba(0, 231, 255, 0.12);
+  background: rgba(255, 255, 255, 0.12);
 }
 .preview-chip--multi-selected .ph { margin-right: 4px; font-size: var(--font-size-sm); }
 
@@ -16320,7 +16355,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 .input-choice-chip input:checked + .input-choice-chip-label {
   background: var(--dev-primary);
   border-color: var(--dev-primary);
-  color: white;
+  color: #000000;
 }
 .input-choice-chip:hover .input-choice-chip-label {
   border-color: var(--border-light);
@@ -17398,8 +17433,8 @@ body.production-filters-in-header .living-container > .living-history-section {
   gap: 8px;
   padding: 12px 24px;
   background: var(--dev-primary);
-  color: white;
-  border: none;
+  color: #000000;
+  border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: var(--radius-sm);
   font-size: 0.9375rem;
   font-weight: 600;
@@ -17712,9 +17747,11 @@ body.production-filters-in-header .living-container > .living-history-section {
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--glass-radius);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   color: var(--text-secondary);
   font-size: var(--font-size-base);
   font-weight: 500;
@@ -17723,14 +17760,15 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 
 .dev-lead-tab:hover {
-  background: var(--bg-hover);
+  background: var(--glass-white-bg);
+  border-color: var(--glass-white-border);
   color: var(--text-primary);
 }
 
 .dev-lead-tab.active {
-  background: var(--dev-primary);
-  border-color: var(--dev-primary);
-  color: white;
+  background: var(--color-white, #ffffff);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #000000;
 }
 
 /* Toolbar y tabla Lead */
@@ -17756,8 +17794,9 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 .dev-lead-breadcrumb-item {
   cursor: pointer;
-  color: var(--dev-primary);
+  color: var(--color-white, #ffffff);
   text-decoration: none;
+  opacity: 0.9;
 }
 
 .dev-lead-breadcrumb-item:hover {
@@ -17778,7 +17817,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 
 .dev-lead-file-row.folder td:first-child {
-  color: var(--dev-primary);
+  color: var(--color-white, #ffffff);
 }
 
 .dev-lead-table-wrap {
@@ -17833,8 +17872,8 @@ body.production-filters-in-header .living-container > .living-history-section {
 }
 
 .dev-lead-actions .btn-icon:hover {
-  background: var(--bg-hover);
-  color: var(--dev-primary);
+  background: var(--glass-white-bg);
+  color: var(--color-white, #ffffff);
 }
 
 .dev-lead-actions .btn-icon.delete-category:hover,
@@ -18402,7 +18441,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 .env-btn.active {
   background: var(--dev-primary);
   border-color: var(--dev-primary);
-  color: white;
+  color: #000000;
 }
 
 .webhook-info {
@@ -18527,7 +18566,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 .test-tab.active {
   background: var(--dev-primary);
-  color: white;
+  color: #000000;
 }
 
 .tab-badge {
@@ -19546,7 +19585,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 .filter-btn.active {
   background: var(--dev-primary);
   border-color: var(--dev-primary);
-  color: white;
+  color: #000000;
 }
 
 .webhooks-search-area {
