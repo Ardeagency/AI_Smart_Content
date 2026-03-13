@@ -3376,6 +3376,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     left: 0;
     width: var(--nav-width, 260px);
     height: 100vh;
+    background-color: #1D1E22;
     background-image: url(https://res.cloudinary.com/dmruwjuxn/image/upload/v1772483555/hf_20260223_080105_d9817589-891b-418a-bd4e-e5cf141899e1_copia_1_l9gy2h.png);
     background-size: cover;
     background-position: center;
@@ -3400,9 +3401,7 @@ body.production-filters-in-header .app-header .header-production-slot .living-hi
     content: '';
     position: absolute;
     inset: 0;
-    background: var(--glass-black-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
+    background: #1D1E22;
     border-radius: 0;
     pointer-events: none;
     z-index: 0;
