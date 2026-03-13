@@ -9,6 +9,7 @@
   /** Mapeo de icon_name a nombre de icono Phosphor cuando no coincide (Phosphor no tiene "type", etc.) */
   const PHOSPHOR_ICON_MAP = {
     type: 'text-h',
+    tags: 'tag',
     placeholder: 'square'
   };
 
