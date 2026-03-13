@@ -237,21 +237,6 @@ class DevBuilderView extends DevBaseView {
                       <button type="button" class="btn-small btn-ghost" id="technicalDetailsPanelBtn" title="Abrir detalles técnicos del módulo seleccionado"><i class="ph ph-wrench"></i> Detalles técnicos</button>
                     </div>
                   </div>
-                  <div class="settings-section technical-automated-block" id="technicalAutomatedBlock" style="display: none;">
-                    <h4><i class="ph ph-clock-countdown"></i> Tipo de ejecución</h4>
-                    <div class="automated-execution-info">
-                      <p><strong>CRON JOB / PROGRAMADO</strong></p>
-                      <p>Estado: Activo en n8n</p>
-                      <p class="field-help">Este flujo no usa webhook; se dispara por el sistema.</p>
-                    </div>
-                  </div>
-                  <div class="settings-section">
-                    <h4><i class="ph ph-code"></i> Schema JSON (input_schema)</h4>
-                    <div class="json-preview" id="jsonSchemaPreview">
-                      <pre><code>{ "fields": [] }</code></pre>
-                    </div>
-                    <button class="btn-small" id="copySchemaBtn"><i class="ph ph-copy"></i> Copiar JSON</button>
-                  </div>
                 </div>
               </div>
               <!-- Panel derecho: dentro del tab, debajo del header y respetando footer -->
@@ -792,7 +777,6 @@ class DevBuilderView extends DevBaseView {
     const canvasAutomated = this.querySelector('#canvasAutomatedState');
     const canvasFields = this.querySelector('#canvasFields');
     const technicalWebhook = this.querySelector('#technicalWebhookSection');
-    const technicalAutomated = this.querySelector('#technicalAutomatedBlock');
     const tokenCostInput = this.querySelector('#flowTokenCost');
     const uiShowInCatalog = this.querySelector('#uiShowInCatalog');
     const testFlowBtn = this.querySelector('#testFlowBtn');
@@ -829,10 +813,6 @@ class DevBuilderView extends DevBaseView {
     }
     if (technicalWebhook) {
       technicalWebhook.style.display = 'block';
-    }
-    if (technicalAutomated) {
-      // El panel técnico de "tipo de ejecución" se mantiene disponible; no se oculta por tipo.
-      technicalAutomated.style.display = 'block';
     }
     if (tokenCostInput) {
       tokenCostInput.min = 0;
@@ -978,12 +958,6 @@ class DevBuilderView extends DevBaseView {
     // Image upload
     this.setupImageUpload();
     
-    // Copy schema button
-    const copySchemaBtn = this.querySelector('#copySchemaBtn');
-    if (copySchemaBtn) {
-      copySchemaBtn.addEventListener('click', () => this.copySchema());
-    }
-
     // Tecla Delete/Backspace: eliminar el input seleccionado (solo en pestaña Inputs y si no estamos en un input de texto)
     var keydownHandler = (e) => this.handleBuilderKeydown(e);
     document.addEventListener('keydown', keydownHandler);
