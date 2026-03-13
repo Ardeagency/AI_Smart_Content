@@ -215,8 +215,9 @@ class FlowCatalogView extends BaseView {
     }
     this.bindCategoryClicks();
 
+    // Sin flujos: solo heroes + "Próximamente" (el mensaje va dentro de la sección All Flows); ocultamos el empty global
     const emptyEl = document.getElementById('flowCatalogEmpty');
-    if (emptyEl) emptyEl.style.display = this.flows.length === 0 ? '' : 'none';
+    if (emptyEl) emptyEl.style.display = 'none';
   }
 
   showContentError() {
@@ -272,8 +273,8 @@ class FlowCatalogView extends BaseView {
   }
 
   /**
-   * Carga flujos del catálogo. Filtra por category_id o subcategory_id (content_flows)
-   * según la vista activa. Incluye flujos manuales y automatizados con show_in_catalog=true.
+   * Carga flujos del catálogo. Solo flujos publicados y con "mostrar en catálogo" activado.
+   * Filtra por category_id o subcategory_id según la vista activa.
    */
   async loadFlows() {
     if (!this.supabase) return;
@@ -283,18 +284,14 @@ class FlowCatalogView extends BaseView {
           .from('content_flows')
           .select('id, name, description, token_cost, output_type, flow_image_url, category_id, subcategory_id, flow_category_type, likes_count, saves_count, run_count, created_at, status, version, execution_mode')
           .eq('is_active', true)
-          .neq('flow_category_type', 'system'); // Flujos system nunca aparecen en catálogo
+          .eq('status', 'published')
+          .eq('show_in_catalog', true)
+          .neq('flow_category_type', 'system');
         if (this.selectedSubcategoryId) q = q.eq('subcategory_id', this.selectedSubcategoryId);
         else if (this.selectedCategoryId) q = q.eq('category_id', this.selectedCategoryId);
         return q;
       };
-      let q = baseFilter().eq('show_in_catalog', true);
-      let { data, error } = await q.order('created_at', { ascending: false });
-      if (!this.selectedCategoryId && !this.selectedSubcategoryId && (!data || data.length === 0)) {
-        const res = await baseFilter().order('created_at', { ascending: false });
-        data = res.data;
-        error = res.error;
-      }
+      const { data, error } = await baseFilter().order('created_at', { ascending: false });
       this.flows = !error && data ? data : [];
       this.flowsById = new Map(this.flows.map(f => [f.id, f]));
     } catch (e) {
@@ -871,19 +868,21 @@ class FlowCatalogView extends BaseView {
   }
 
   /**
-   * Sección Todos los flujos: mismo catálogo por categoría y subcategoría (content_categories → content_subcategories).
+   * Sección Todos los flujos: mismo catálogo por categoría y subcategoría, o "Próximamente" si no hay flujos.
    */
   renderSectionAllFlows() {
     const section = document.getElementById('sectionAllFlows');
     const gallery = document.getElementById('galleryAllByCategorySub');
     if (!section || !gallery) return;
     const data = this.getFlowsByCategoryAndSubcategory();
+    section.style.display = '';
     if (data.length === 0) {
-      section.style.display = 'none';
-      gallery.innerHTML = '';
+      gallery.innerHTML = `
+        <div class="flow-catalog-empty flow-catalog-empty--in-section" aria-live="polite">
+          <p class="flow-catalog-empty-text">Próximamente</p>
+        </div>`;
       return;
     }
-    section.style.display = '';
     gallery.innerHTML = data.map(({ category, rows }) => `
       <div class="flow-catalog-category-block" data-category-id="${this.escapeHtml(category?.id || '')}">
         <h3 class="flow-catalog-category-block-title">${this.escapeHtml(category?.name || '')}</h3>

@@ -10476,6 +10476,10 @@ body.production-filters-in-header .living-container > .living-history-section {
   color: var(--text-muted);
   text-transform: uppercase;
 }
+.flow-catalog-empty--in-section {
+  min-height: 24vh;
+  padding: 2rem 1.5rem;
+}
 
 /* Hero carrusel: full-bleed por categoría, minimalista, sin flechas */
 .flow-catalog-hero-section {
@@ -15475,7 +15479,7 @@ body.production-filters-in-header .living-container > .living-history-section {
 
 .builder-tab.active {
   background: var(--warm-1);
-  color: var(--color-white);
+  color: #000000;
   border-color: transparent;
   box-shadow: var(--shadow-card);
 }
