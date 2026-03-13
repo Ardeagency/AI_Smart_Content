@@ -650,19 +650,6 @@ class Navigation {
         <div class="nav-menu" role="navigation" aria-label="Menú desarrollador">
           ${mainHTML}
         </div>
-
-        <div class="nav-footer">
-          <div class="nav-dev-stats" id="navDevStats">
-            <div class="nav-dev-stat">
-              <i class="fas fa-play"></i>
-              <span id="navRunsCount">0</span>
-            </div>
-            <div class="nav-dev-stat">
-              <i class="fas fa-star"></i>
-              <span id="navRatingValue">0.0</span>
-            </div>
-          </div>
-        </div>
       </nav>
       <div class="nav-flyout" id="navFlyout" aria-hidden="true"></div>
     `;
@@ -1623,20 +1610,10 @@ class Navigation {
       const user = window.authService?.getCurrentUser();
       if (!user) return;
 
-      const [profileRes, runsRes, favsRes] = await Promise.all([
-        supabase.from('profiles').select('full_name, email, dev_rank, dev_role').eq('id', user.id).maybeSingle(),
-        supabase.from('flow_runs').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
-        supabase.from('user_flow_favorites').select('rating').eq('user_id', user.id).not('rating', 'is', null)
-      ]);
-
+      const profileRes = await supabase.from('profiles').select('full_name, email, dev_rank, dev_role').eq('id', user.id).maybeSingle();
       const profile = profileRes.data;
-      const runsCount = runsRes.count ?? 0;
-      const favs = favsRes.data;
-      const avgRating = favs && favs.length > 0
-        ? (favs.reduce((s, f) => s + (f.rating || 0), 0) / favs.length).toFixed(1)
-        : null;
 
-      this._devCache = { profile, runsCount, avgRating, userId: user.id, email: user.email };
+      this._devCache = { profile, userId: user.id, email: user.email };
       this._devCacheTime = Date.now();
       this._applyDevCache();
     } catch (err) {
@@ -1646,7 +1623,7 @@ class Navigation {
 
   _applyDevCache() {
     if (!this._devCache) return;
-    const { profile, runsCount, avgRating, email } = this._devCache;
+    const { profile, email } = this._devCache;
 
     const headerNameEl = document.getElementById('navDevHeaderName');
     if (headerNameEl) {
@@ -1655,14 +1632,6 @@ class Navigation {
 
     const leadSection = document.getElementById('navLeadSection');
     if (leadSection && profile?.dev_role === 'lead') leadSection.style.display = '';
-
-    const runsEl = document.getElementById('navRunsCount');
-    if (runsEl) runsEl.textContent = runsCount;
-
-    if (avgRating) {
-      const ratingEl = document.getElementById('navRatingValue');
-      if (ratingEl) ratingEl.textContent = avgRating;
-    }
   }
 
   /**
