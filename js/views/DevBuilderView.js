@@ -733,15 +733,15 @@ class DevBuilderView extends DevBaseView {
     }
   }
 
-  /** Icono Phosphor para tipo de output (usado en la card de la ficha). */
-  getOutputTypeIconPhosphor(type) {
+  /** Icono Font Awesome para tipo de output (igual que en catálogo de flows). */
+  getOutputTypeIcon(type) {
     const t = (type || 'text').toLowerCase();
-    if (t === 'video') return 'ph-video';
-    if (t === 'image' || t === 'imagen') return 'ph-image';
-    if (t === 'audio') return 'ph-music-note';
-    if (t === 'document') return 'ph-file';
-    if (t === 'mixed') return 'ph-stack';
-    return 'ph-text-align-left';
+    if (t === 'video') return 'fa-video';
+    if (t === 'image' || t === 'imagen') return 'fa-image';
+    if (t === 'audio') return 'fa-music';
+    if (t === 'document') return 'fa-file-alt';
+    if (t === 'mixed') return 'fa-layer-group';
+    return 'fa-align-left';
   }
 
   getOutputTypeLabel(type) {
@@ -787,7 +787,7 @@ class DevBuilderView extends DevBaseView {
 
     const img = this.flowData.flow_image_url
       ? `<img src="${this.escapeHtml(this.flowData.flow_image_url)}" alt="${name}" class="flow-card-img" loading="lazy">`
-      : `<div class="flow-card-placeholder"><i class="ph ${this.getOutputTypeIconPhosphor(this.flowData.output_type)}"></i></div>`;
+      : `<div class="flow-card-placeholder"><i class="fas ${this.getOutputTypeIcon(this.flowData.output_type)}"></i></div>`;
 
     return `
       <article class="flow-card flow-card--catalog flow-card--ficha-preview" aria-hidden="true">
@@ -796,9 +796,9 @@ class DevBuilderView extends DevBaseView {
           <div class="flow-card-media-veil" aria-hidden="true"></div>
           <div class="flow-card-badges">${badges.join('')}</div>
           <div class="flow-card-icons flow-card-icons--default">
-            <span class="flow-card-icon-stat" title="Likes"><i class="ph ph-heart"></i><span class="flow-card-icon-count">${likes}</span></span>
-            <span class="flow-card-icon-stat" title="Ejecuciones"><i class="ph ph-play"></i><span class="flow-card-icon-count">${runs}</span></span>
-            <span class="flow-card-icon-stat" title="Guardados"><i class="ph ph-bookmark-simple"></i><span class="flow-card-icon-count">${saves}</span></span>
+            <span class="flow-card-icon-stat" title="Likes"><i class="fas fa-heart"></i><span class="flow-card-icon-count">${likes}</span></span>
+            <span class="flow-card-icon-stat" title="Ejecuciones"><i class="fas fa-play"></i><span class="flow-card-icon-count">${runs}</span></span>
+            <span class="flow-card-icon-stat" title="Guardados"><i class="fas fa-bookmark"></i><span class="flow-card-icon-count">${saves}</span></span>
           </div>
           <div class="flow-card-overlay flow-card-overlay--default">
             <h3 class="flow-card-title">${name}</h3>

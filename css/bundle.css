@@ -15074,21 +15074,12 @@ body.production-filters-in-header .living-container > .living-history-section {
   min-height: 120px;
 }
 
+/* Misma card que en catálogo de flows: 200px, 4/5, sin interacción */
 .flow-card--ficha-preview {
   pointer-events: none;
   cursor: default;
-  width: 100%;
-  max-width: 280px;
-  flex: 0 0 auto;
-}
-
-.flow-card--ficha-preview .flow-card-media {
-  aspect-ratio: 4 / 3;
-}
-
-.flow-card--ficha-preview .flow-card-placeholder .ph {
-  font-size: 2.5rem;
-  color: var(--text-muted);
+  width: 200px;
+  flex: 0 0 200px;
 }
 
 .ficha-section--form .ficha-inputs-preview {
