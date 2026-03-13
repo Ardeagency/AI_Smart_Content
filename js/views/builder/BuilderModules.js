@@ -24,8 +24,6 @@
     if (this.flowModules.length === 0) this.flowModules = mods;
     listEl.innerHTML = mods.map((m, i) => {
       const nextOpts = mods.filter((o, j) => j !== i && o.id).map(o => `<option value="${o.id}" ${m.next_module_id === o.id ? 'selected' : ''}>${this.escapeHtml(o.name || 'Módulo')}</option>`).join('');
-      const outputSchemaStr = m.output_schema != null ? (typeof m.output_schema === 'string' ? m.output_schema : JSON.stringify(m.output_schema, null, 2)) : '';
-      const routingRulesStr = m.routing_rules != null ? (typeof m.routing_rules === 'string' ? m.routing_rules : JSON.stringify(m.routing_rules, null, 2)) : '';
       return `
         <div class="technical-module-card" data-module-index="${i}">
           <div class="technical-module-header">
@@ -63,18 +61,6 @@
                 <option value="">— Ninguno —</option>
                 ${nextOpts}
               </select>
-            </div>
-            <div class="settings-field">
-              <label>input_schema (JSON)</label>
-              ${i === 0 ? '<p class="field-help"><i class="ph ph-info"></i> Definido en la pestaña Inputs.</p>' : `<textarea class="technical-module-input-schema property-json-editor" data-field="input_schema" rows="2" placeholder="{}">${this.escapeHtml((m.input_schema != null && typeof m.input_schema === 'object') ? JSON.stringify(m.input_schema, null, 2) : (m.input_schema && typeof m.input_schema === 'string' ? m.input_schema : ''))}</textarea>`}
-            </div>
-            <div class="settings-field">
-              <label>output_schema (JSON)</label>
-              <textarea class="technical-module-output-schema property-json-editor" data-field="output_schema" rows="2" placeholder="{}">${this.escapeHtml(outputSchemaStr)}</textarea>
-            </div>
-            <div class="settings-field">
-              <label>routing_rules (JSON)</label>
-              <textarea class="technical-module-routing-rules property-json-editor" data-field="routing_rules" rows="2" placeholder='{"conditions":[],"default":null}'>${this.escapeHtml(routingRulesStr)}</textarea>
             </div>
           </div>
           <div class="technical-module-footer">
